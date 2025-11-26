@@ -105,9 +105,9 @@ BODY=$(echo "$RESPONSE" | sed '$d')
 
 case "$HTTP_CODE" in
     201)
-        CONNECTION_STRING=$(echo "$BODY" | jq -r '.data.connection_string')
+        # Get connection string and replace Docker hostname with localhost
+        CONNECTION_STRING=$(echo "$BODY" | jq -r '.data.connection_string' | sed 's/@postgres:/@localhost:/')
         echo -e "${GREEN}✓${NC} Database provisioned successfully"
-        echo -e "${GREEN}✓${NC} Connection: $CONNECTION_STRING"
         ;;
     409)
         echo -e "${YELLOW}!${NC} Tenant '$TENANT_NAME' already exists"
@@ -137,12 +137,10 @@ if [ ! -f ".env.secrets" ]; then
     echo -e "${GREEN}✓${NC} Created .env.secrets from template"
 fi
 
-# Update DATABASE_URL in .env.secrets
-if grep -q "^DATABASE_URL=" .env.secrets; then
-    sed -i "s|^DATABASE_URL=.*|DATABASE_URL=$CONNECTION_STRING|" .env.secrets
-else
-    echo "DATABASE_URL=$CONNECTION_STRING" >> .env.secrets
-fi
+# Update DATABASE_URL in .env.secrets (using grep+cat to handle special chars in password)
+grep -v "^DATABASE_URL=" .env.secrets > .env.secrets.tmp || true
+echo "DATABASE_URL=$CONNECTION_STRING" >> .env.secrets.tmp
+mv .env.secrets.tmp .env.secrets
 echo -e "${GREEN}✓${NC} DATABASE_URL saved to .env.secrets"
 
 echo ""
