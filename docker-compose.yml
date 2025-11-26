@@ -1,0 +1,23 @@
+# SystemPrompt Template - Local Development
+# Run: docker-compose up -d
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: systemprompt-postgres
+    environment:
+      POSTGRES_USER: systemprompt
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: systemprompt
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U systemprompt"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

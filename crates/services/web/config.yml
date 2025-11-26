@@ -1,0 +1,240 @@
+# Web Service Configuration
+# Theme and branding for your SystemPrompt implementation
+
+content:
+  config_file: "crates/services/content/config.yml"
+  sources:
+    - blog
+    - legal
+
+# Branding - Customize for your site
+branding:
+  name: "template"
+  title: "SystemPrompt Template"
+  description: "Your SystemPrompt implementation"
+  themeColor: "#404040"
+  display_sitename: true
+  twitter_handle: "@yourhandle"
+
+  logo:
+    primary:
+      svg: "/assets/logos/logo.svg"
+      webp: "/assets/logos/logo.webp"
+      png: "/assets/logos/logo.png"
+
+  favicon: "/vite.svg"
+
+# Fonts - Using system fonts by default
+fonts:
+  body:
+    family: "system-ui"
+    fallback: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+
+  heading:
+    family: "system-ui"
+    fallback: "Georgia, serif"
+
+  brand:
+    family: "system-ui"
+    fallback: "Impact, sans-serif"
+
+# Grayscale Color Theme
+colors:
+  light:
+    primary:
+      hsl: "hsl(0, 0%, 35%)"
+      rgb: [89, 89, 89]
+    secondary:
+      hsl: "hsl(0, 0%, 55%)"
+      rgb: [140, 140, 140]
+    success: "#4A4A4A"
+    warning: "#606060"
+    error: "#404040"
+
+    surface:
+      default: "#FFFFFF"
+      dark: "#F5F5F5"
+      variant: "hsl(0, 0%, 97%)"
+      secondaryContainer: "hsl(0, 0%, 95%)"
+      errorContainer: "#F0F0F0"
+
+    text:
+      primary: "#111111"
+      secondary: "#666666"
+      inverted: "#FFFFFF"
+      disabled: "#999999"
+
+    background:
+      default: "hsl(0, 0%, 100%)"
+      dark: "hsl(0, 0%, 98%)"
+
+    border:
+      default: "hsl(0, 0%, 85%)"
+      dark: "hsl(0, 0%, 80%)"
+      outline: "hsl(0, 0%, 75%)"
+
+  dark:
+    primary:
+      hsl: "hsl(0, 0%, 60%)"
+      rgb: [153, 153, 153]
+    secondary:
+      hsl: "hsl(0, 0%, 70%)"
+      rgb: [179, 179, 179]
+    success: "#A0A0A0"
+    warning: "#B0B0B0"
+    error: "#909090"
+
+    surface:
+      default: "#2A2A2A"
+      dark: "#1A1A1A"
+      variant: "#3A3A3A"
+      secondaryContainer: "rgba(150, 150, 150, 0.1)"
+      errorContainer: "rgba(100, 100, 100, 0.1)"
+
+    text:
+      primary: "#FFFFFF"
+      secondary: "#CCCCCC"
+      inverted: "#111111"
+      disabled: "#808080"
+
+    background:
+      default: "#1A1A1A"
+      dark: "#000000"
+
+    border:
+      default: "rgba(150, 150, 150, 0.3)"
+      dark: "hsl(0, 0%, 45%)"
+      outline: "hsl(0, 0%, 50%)"
+
+typography:
+  sizes:
+    xs: "12px"
+    sm: "14px"
+    md: "15px"
+    lg: "18px"
+    xl: "20px"
+    xxl: "28px"
+
+  weights:
+    regular: 400
+    medium: 500
+    semibold: 600
+    bold: 700
+
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "32px"
+  xxl: "48px"
+
+radius:
+  xs: "2px"
+  sm: "4px"
+  md: "8px"
+  lg: "12px"
+  xl: "16px"
+  xxl: "24px"
+  round: "9999px"
+
+shadows:
+  light:
+    sm: "0 1px 2px rgba(0, 0, 0, 0.08)"
+    md: "0 4px 6px rgba(0, 0, 0, 0.12)"
+    lg: "0 10px 15px rgba(0, 0, 0, 0.15)"
+    accent: "0 4px 12px rgba(100, 100, 100, 0.2)"
+
+  dark:
+    sm: "0 2px 4px rgba(0, 0, 0, 0.5)"
+    md: "0 4px 8px rgba(0, 0, 0, 0.6)"
+    lg: "0 10px 20px rgba(0, 0, 0, 0.7)"
+    accent: "0 4px 12px rgba(100, 100, 100, 0.3)"
+
+animation:
+  fast: "150ms"
+  normal: "300ms"
+  slow: "500ms"
+
+zIndex:
+  base: 1
+  content: 10
+  navigation: 100
+  modal: 1000
+  tooltip: 2000
+
+layout:
+  headerHeight: "48px"
+  sidebarLeft:
+    width: "20%"
+    minWidth: "240px"
+    maxWidth: "320px"
+  sidebarRight:
+    width: "15%"
+    minWidth: "200px"
+    maxWidth: "280px"
+  navHeight: "64px"
+  contentMaxWidth: "1600px"
+
+card:
+  radius:
+    default: "12px"
+    cut: "4px"
+  padding:
+    sm: "12px"
+    md: "16px"
+    lg: "20px"
+  gradient:
+    start: "rgba(100, 100, 100, 0.08)"
+    mid: "rgba(100, 100, 100, 0.04)"
+    end: "rgba(100, 100, 100, 0.02)"
+
+mobile:
+  spacing:
+    xs: "4px"
+    sm: "8px"
+    md: "12px"
+    lg: "16px"
+    xl: "24px"
+    xxl: "32px"
+
+  typography:
+    sizes:
+      xs: "11px"
+      sm: "13px"
+      md: "14px"
+      lg: "16px"
+      xl: "18px"
+      xxl: "24px"
+
+  layout:
+    headerHeight: "56px"
+    navHeight: "64px"
+
+  card:
+    padding:
+      sm: "10px"
+      md: "12px"
+      lg: "14px"
+
+touchTargets:
+  default: "44px"
+  sm: "40px"
+  lg: "48px"
+
+navigation:
+  footer:
+    legal:
+      - path: "/legal/privacy-policy"
+        label: "Privacy Policy"
+      - path: "/legal/cookie-policy"
+        label: "Cookie Policy"
+    resources:
+      - path: "/blog"
+        label: "Blog"
+      - path: "/"
+        label: "Chat"
+  social:
+    - href: "https://github.com/your-org"
+      type: "github"
+      label: "GitHub"

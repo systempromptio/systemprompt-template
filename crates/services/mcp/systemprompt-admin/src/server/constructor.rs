@@ -1,0 +1,68 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use systemprompt_core_agent::services::mcp::ToolResultHandler;
+use systemprompt_core_agent::services::ArtifactPublishingService;
+use systemprompt_core_database::DbPool;
+use systemprompt_core_logging::LogService;
+
+use crate::prompts::AdminPrompts;
+use crate::resources::AdminResources;
+
+#[derive(Clone)]
+pub struct AdminServer {
+    pub(super) db_pool: DbPool,
+    pub(super) server_name: String,
+    pub(super) prompts: Arc<AdminPrompts>,
+    pub(super) resources: Arc<AdminResources>,
+    pub(super) system_log: LogService,
+    pub(super) tool_result_handler: Arc<ToolResultHandler>,
+    pub(super) publishing_service: Arc<ArtifactPublishingService>,
+    pub(super) tool_schemas: Arc<HashMap<String, serde_json::Value>>,
+}
+
+impl AdminServer {
+    pub fn new(db_pool: DbPool, server_name: String) -> Self {
+        let prompts = Arc::new(AdminPrompts::new(db_pool.clone(), server_name.clone()));
+        let resources = Arc::new(AdminResources::new(db_pool.clone(), server_name.clone()));
+        let system_log = LogService::system(db_pool.clone());
+        let tool_result_handler =
+            Arc::new(ToolResultHandler::new(db_pool.clone(), system_log.clone()));
+        let publishing_service = Arc::new(ArtifactPublishingService::new(
+            db_pool.clone(),
+            system_log.clone(),
+        ));
+
+        let tool_schemas = Self::build_tool_schema_cache();
+
+        Self {
+            db_pool,
+            server_name,
+            prompts,
+            resources,
+            system_log,
+            tool_result_handler,
+            publishing_service,
+            tool_schemas: Arc::new(tool_schemas),
+        }
+    }
+
+    fn build_tool_schema_cache() -> HashMap<String, serde_json::Value> {
+        let mut schemas = HashMap::new();
+        let tools = crate::tools::register_tools();
+
+        for tool in tools {
+            if let Some(output_schema) = tool.output_schema {
+                let schema_value =
+                    serde_json::to_value(&*output_schema).unwrap_or_else(|_| serde_json::json!({}));
+                schemas.insert(tool.name.to_string(), schema_value);
+            }
+        }
+
+        schemas
+    }
+
+    pub(super) fn get_output_schema_for_tool(&self, tool_name: &str) -> Option<serde_json::Value> {
+        self.tool_schemas.get(tool_name).cloned()
+    }
+}

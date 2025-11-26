@@ -1,0 +1,17 @@
+# SystemPrompt Template - Services Configuration
+# This root configuration imports agents and MCP servers from subdirectories
+
+includes:
+  - ../mcp/systemprompt-admin.yml
+  - ../ai/config.yml
+  - ../web/config.yml
+
+agents: {}
+mcp_servers: {}
+
+settings:
+  agentPortRange: [9000, 9999]
+  mcpPortRange: [5000, 5999]
+  autoStartEnabled: true
+  validationStrict: true
+  schemaValidationMode: "skip"

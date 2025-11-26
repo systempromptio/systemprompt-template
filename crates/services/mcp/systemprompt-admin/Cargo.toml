@@ -1,0 +1,46 @@
+[package]
+name = "systemprompt-admin"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "systemprompt-admin"
+path = "src/main.rs"
+
+[dependencies]
+# Direct runtime dependencies
+anyhow = { workspace = true }
+tokio = { workspace = true }
+dotenvy = { workspace = true }
+
+# MCP Protocol
+rmcp = { workspace = true }
+
+# Web framework (axum::http::request::Parts used in initialization)
+axum = { workspace = true }
+
+# Serialization (direct usage)
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Time handling (direct Utc usage)
+chrono = { workspace = true }
+
+# UUID generation
+uuid = { workspace = true }
+
+# Cryptographic hashing
+sha2 = { workspace = true }
+
+# Core modules (provide all other transitive dependencies)
+systemprompt-core-system = { workspace = true }
+systemprompt-core-mcp = { workspace = true }
+systemprompt-core-logging = { workspace = true }
+systemprompt-core-users = { workspace = true }
+systemprompt-core-database = { workspace = true }
+systemprompt-core-agent = { workspace = true }
+systemprompt-core-config = { workspace = true }
+systemprompt-core-blog = { workspace = true }
+systemprompt-models = { workspace = true }
+systemprompt-identifiers = { workspace = true }
+systemprompt-traits = { workspace = true }

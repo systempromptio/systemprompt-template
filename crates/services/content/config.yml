@@ -1,0 +1,90 @@
+# Content Sources Configuration
+# Defines all markdown content sources for your SystemPrompt implementation
+
+content_sources:
+  blog:
+    path: "crates/services/content/blog"
+    source_id: "blog"
+    category_id: "blog"
+    enabled: true
+    description: "Blog articles"
+    allowed_content_types:
+      - "article"
+      - "blog"
+      - "post"
+    branding:
+      name: "Blog"
+      description: "Your blog description"
+      image: "/images/og-default.png"
+    indexing:
+      clear_before: false
+      recursive: true
+      preserve_revisions: true
+    sitemap:
+      enabled: true
+      url_pattern: "/blog/{slug}"
+      priority: 0.8
+      changefreq: "weekly"
+      fetch_from: "database"
+      parent_route:
+        enabled: true
+        url: "/blog"
+        priority: 0.9
+        changefreq: "daily"
+
+  legal:
+    path: "crates/services/content/legal"
+    source_id: "legal"
+    category_id: "pages"
+    enabled: true
+    description: "Legal notices, privacy policy, terms of service"
+    allowed_content_types:
+      - "page"
+      - "documentation"
+    indexing:
+      clear_before: false
+      recursive: true
+      preserve_revisions: true
+    sitemap:
+      enabled: true
+      url_pattern: "/legal/{slug}"
+      priority: 0.3
+      changefreq: "monthly"
+      fetch_from: "database"
+
+# Content Categories
+categories:
+  blog:
+    name: "Blog"
+    slug: "blog"
+    description: "Blog articles and updates"
+
+  pages:
+    name: "Pages"
+    slug: "pages"
+    description: "Static pages (legal, about, contact)"
+
+# Metadata defaults
+metadata:
+  default_author: "template"
+  language: "en"
+
+  structured_data:
+    organization:
+      name: "Your Organization"
+      url: "https://example.com"
+      logo: "https://example.com/logo.png"
+      description: "Your organization description"
+
+    blog:
+      type: "Blog"
+      name: "Your Blog"
+      url: "https://example.com/blog"
+      description: "Blog description"
+      article_section: "Technology"
+      language: "en-US"
+
+    article:
+      type: "BlogPosting"
+      language: "en-US"
+      article_section: "Technology"
