@@ -1,0 +1,49 @@
+# Core Scheduler Module Manifest
+# Infrastructure module for background jobs and scheduled tasks
+
+name: scheduler
+version: "1.0.0"
+display_name: "Task Scheduler"
+description: "Infrastructure module for scheduling background jobs, cron tasks, and agentic workflows"
+authors: ["systemprompt-os"]
+license: "Apache-2.0"
+
+# Installation weight (lower numbers install first)
+# Range: -100 to 100 (Core foundation modules: negative, Application modules: positive)
+weight: 5
+category: core
+dependencies: ["log", "ai", "agent"]
+
+# Schema files with validation metadata
+schemas:
+  - file: "schema/scheduled_jobs.sql"
+    table: "scheduled_jobs"
+    required_columns:
+      - "id"
+      - "job_name"
+      - "schedule"
+      - "enabled"
+      - "last_run"
+      - "next_run"
+
+  - file: "schema/conversation_evaluations.sql"
+    table: "conversation_evaluations"
+    required_columns:
+      - "id"
+      - "task_id"
+      - "agent_goal"
+      - "goal_achieved"
+      - "analyzed_at"
+
+# Tables created by this module
+tables_created:
+  - "scheduled_jobs"
+  - "conversation_evaluations"
+
+# Seed files
+seeds: []
+
+# API configuration
+api:
+  enabled: false
+  path_prefix: "/api/v1/scheduler"

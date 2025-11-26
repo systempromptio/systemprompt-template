@@ -1,0 +1,1 @@
+UPDATE users SET roles = $1, updated_at = CURRENT_TIMESTAMP WHERE name = $2 AND status != 'deleted'

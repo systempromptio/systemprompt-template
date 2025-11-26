@@ -1,0 +1,74 @@
+name: blog
+version: "0.1.0"
+display_name: "Blog & Content Management"
+description: "Blog content management with markdown support and full-text search"
+authors: ["systemprompt-os"]
+license: "Apache-2.0"
+
+weight: 30
+category: core
+
+dependencies:
+  - users
+  - oauth
+  - config
+
+schemas:
+  - file: "schema/markdown_categories.sql"
+    table: "markdown_categories"
+    required_columns: ["id", "name"]
+
+  - file: "schema/markdown_tags.sql"
+    table: "markdown_tags"
+    required_columns: ["id", "name"]
+
+  - file: "schema/markdown_content.sql"
+    table: "markdown_content"
+    required_columns: ["id", "slug", "title"]
+
+  - file: "schema/markdown_content_tags.sql"
+    table: "markdown_content_tags"
+    required_columns: ["content_id", "tag_id"]
+
+  - file: "schema/markdown_fts.sql"
+    table: "markdown_fts"
+    required_columns: []
+
+  - file: "schema/content_performance_metrics.sql"
+    table: "content_performance_metrics"
+    required_columns: ["id", "content_id"]
+
+  - file: "schema/003_add_link_tracking_tables.sql"
+    table: "campaign_links"
+    required_columns: ["id", "short_code"]
+
+  - file: "schema/004_fix_link_clicks_session_fk.sql"
+    table: "link_clicks"
+    required_columns: ["id", "link_id"]
+
+  - file: "schema/005_create_skills_table.sql"
+    table: "agent_skills"
+    required_columns: ["id", "name"]
+
+  - file: "schema/008_add_social_content_support.sql"
+    table: "markdown_content"
+    required_columns: ["id", "parent_content_id"]
+
+  - file: "schema/009_add_links_column.sql"
+    table: "markdown_content"
+    required_columns: ["links"]
+
+tables_created:
+  - "markdown_categories"
+  - "markdown_tags"
+  - "markdown_content"
+  - "markdown_content_tags"
+  - "markdown_fts"
+  - "content_performance_metrics"
+  - "campaign_links"
+  - "link_clicks"
+  - "agent_skills"
+
+api:
+  enabled: true
+  path_prefix: "/api/v1/rag"

@@ -1,0 +1,54 @@
+[package]
+name = "systemprompt-core-logging"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Core logging module for SystemPrompt OS"
+
+[lints]
+workspace = true
+
+[dependencies]
+# Core dependencies
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+chrono = { workspace = true }
+tokio-cron-scheduler = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+
+# UUID for log entry IDs
+uuid = { workspace = true }
+
+# CLI formatting and display
+colored = { workspace = true }
+console = { workspace = true }
+dialoguer = { workspace = true }
+indicatif = { workspace = true }
+
+# Core libs
+systemprompt-core-database = { path = "../database" }
+systemprompt-traits = { path = "../../shared/traits" }
+systemprompt-identifiers = { path = "../../shared/identifiers" }
+
+# Traits
+async-trait = { workspace = true }
+thiserror = { workspace = true }
+inventory = { workspace = true }
+
+# Validation
+validator = { workspace = true }
+
+# Web interface dependencies
+axum = { workspace = true }
+
+[features]
+default = ["web"]
+web = []

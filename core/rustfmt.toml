@@ -1,0 +1,103 @@
+# Rustfmt configuration for SystemPrompt code formatting standards
+# Using only stable options that work without nightly Rust
+# See: tests/validator/coding-standards.md
+
+# ============================================================================
+# EDITION
+# ============================================================================
+edition = "2021"
+
+# ============================================================================
+# LINE WIDTH AND INDENTATION
+# ============================================================================
+
+# Maximum line width - balances readability with horizontal space
+max_width = 100
+
+# Use spaces, not tabs (consistency across editors)
+hard_tabs = false
+tab_spaces = 4
+
+# ============================================================================
+# IMPORT ORGANIZATION
+# ============================================================================
+
+# Automatically reorder imports (std -> external -> workspace -> local)
+reorder_imports = true
+
+# Group imports by module
+# Example:
+#   use std::collections::HashMap;
+#   use std::sync::Arc;
+#
+#   use anyhow::Result;
+#   use tokio::sync::RwLock;
+imports_granularity = "Module"
+
+# ============================================================================
+# FUNCTION AND TYPE FORMATTING
+# ============================================================================
+
+# Force explicit ABI on extern functions for clarity
+force_explicit_abi = true
+
+# Remove unnecessary nested parentheses
+remove_nested_parens = true
+
+# Control heuristics for formatting small items
+use_small_heuristics = "Default"
+
+# Prefer explicit Ok/Err over try! macro (try! is deprecated)
+use_try_shorthand = false
+
+# Prefer explicit field initialization over shorthand
+# Example: Agent { id: id } instead of Agent { id }
+# Rationale: Explicit is clearer, matches our "no abbreviations" rule
+use_field_init_shorthand = false
+
+# ============================================================================
+# WHITESPACE AND NEWLINES
+# ============================================================================
+
+# Unix line endings (LF not CRLF)
+newline_style = "Unix"
+
+# Blank lines - preserve structure
+blank_lines_upper_bound = 2
+blank_lines_lower_bound = 0
+
+# ============================================================================
+# COMMENTS
+# ============================================================================
+
+# Normalize comment formatting
+normalize_comments = true
+
+# Wrap comments at max_width
+wrap_comments = true
+
+# Format code in doc comments (``` blocks)
+format_code_in_doc_comments = true
+
+# ============================================================================
+# MATCH AND CONTROL FLOW
+# ============================================================================
+
+# Control flow brace style
+brace_style = "SameLineWhere"
+
+# Match block formatting - prefer block style
+match_block_trailing_comma = true
+
+# ============================================================================
+# MISCELLANEOUS
+# ============================================================================
+
+# Group related struct fields
+# reorder_impl_items = false  # Unstable, keep manual control
+
+# Format string literals
+format_strings = true
+
+# Merge derives into single line when possible
+merge_derives = true

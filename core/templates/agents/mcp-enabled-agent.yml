@@ -1,0 +1,43 @@
+agents:
+  mcp-enabled-agent:
+    uuid: "00000000-0000-0000-0000-000000000000"  # Replace with unique UUID
+    name: "mcp-enabled-agent"
+    port: 9002
+    enabled: false
+    card:
+      protocolVersion: "0.3.0"
+      displayName: "MCP-Enabled Agent"
+      description: "Agent with access to MCP server tools for extended capabilities"
+      version: "1.0.0"
+      preferredTransport: "JSONRPC"
+      capabilities:
+        streaming: true
+        pushNotifications: false
+        stateTransitionHistory: true
+      defaultInputModes:
+        - "text/plain"
+      defaultOutputModes:
+        - "text/plain"
+        - "text/markdown"
+    metadata:
+      systemPrompt: |
+        You are an AI assistant with access to system tools via MCP servers.
+        Use these tools to help users with tasks requiring external integrations.
+
+        Available MCP servers:
+        - filesystem: Read/write files, list directories
+        - github: Repository management, issues, PRs
+
+        Always explain what you're doing when using tools.
+      mcpServers:
+        - "filesystem"
+        - "github"
+    oauth:
+      required: false
+      scopes: []
+      audience: "a2a"
+
+settings:
+  agentPortRange: [9000, 9999]
+  autoStartEnabled: true
+  validationStrict: true

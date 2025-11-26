@@ -1,0 +1,9 @@
+/**
+ * SystemPrompt Main Stylesheet
+ *
+ * This file imports the auto-generated theme from crates/services/web.yaml
+ * DO NOT add theme variables here - edit web.yaml instead
+ * Run 'npm run theme:generate' to regenerate theme
+ */
+
+@import "./styles/theme.generated.css";

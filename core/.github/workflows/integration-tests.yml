@@ -1,0 +1,201 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'tests/integration/**'
+      - 'crates/**'
+      - 'web/**'
+      - '.github/workflows/integration-tests.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'tests/integration/**'
+      - 'crates/**'
+      - 'web/**'
+
+jobs:
+  integration-tests:
+    name: Run Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test-suite:
+          - 'api/**'
+          - 'a2a/**'
+          - 'system/**'
+          - 'e2e/**'
+          - 'mcp/**'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'tests/integration/package-lock.json'
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install dependencies
+        working-directory: tests/integration
+        run: npm install
+
+      - name: Build project
+        run: just build
+        timeout-minutes: 30
+
+      - name: Generate configuration
+        run: just config
+
+      - name: Start API server
+        run: |
+          timeout 30 bash -c 'until curl -f http://localhost:8080/api/v1/health > /dev/null 2>&1; do sleep 2; done' || true
+          just api &
+          sleep 10
+        timeout-minutes: 5
+
+      - name: Wait for API availability
+        run: |
+          echo "Waiting for API server to be ready..."
+          for i in {1..30}; do
+            if curl -f http://localhost:8080/api/v1/health > /dev/null 2>&1; then
+              echo "API server is ready!"
+              exit 0
+            fi
+            echo "Attempt $i/30 - waiting for API..."
+            sleep 2
+          done
+          echo "API server failed to start"
+          exit 1
+        timeout-minutes: 2
+
+      - name: Run integration tests - ${{ matrix.test-suite }}
+        working-directory: tests/integration
+        run: npm test -- '${{ matrix.test-suite }}' --reporter=verbose
+        timeout-minutes: 45
+        env:
+          CI: true
+          API_SERVER_URL: http://localhost:8080
+          DATABASE_URL: database/systemprompt.db
+
+      - name: Generate coverage report
+        if: always()
+        working-directory: tests/integration
+        run: npm test -- --coverage
+        continue-on-error: true
+
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./tests/integration/coverage/coverage-final.json
+          flags: integration-${{ matrix.test-suite }}
+          name: integration-tests
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ matrix.test-suite }}
+          path: |
+            tests/integration/coverage/
+            tests/integration/dist/
+          retention-days: 30
+
+      - name: Stop API server
+        if: always()
+        run: |
+          pkill -f "just api" || true
+          pkill -f "systemprompt" || true
+          sleep 2
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.integration-tests.result }}" == "success" ]; then
+            echo "✅ All integration tests passed!"
+            exit 0
+          else
+            echo "❌ Some integration tests failed"
+            exit 1
+          fi
+
+  coverage-check:
+    name: Coverage Verification
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    if: always()
+
+    steps:
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          path: coverage-reports
+
+      - name: Check coverage thresholds
+        run: |
+          echo "Coverage Report Summary"
+          echo "======================"
+
+          # Check if coverage files exist
+          if [ -f "coverage-reports/coverage-final.json" ]; then
+            echo "Coverage files found"
+            # Parse coverage metrics (simplified check)
+            echo "✅ Coverage data collected"
+          else
+            echo "⚠️  Coverage files not found - tests may have failed"
+          fi
+
+  notify:
+    name: Notify Status
+    runs-on: ubuntu-latest
+    needs: [integration-tests, test-summary]
+    if: always()
+
+    steps:
+      - name: Set status
+        id: status
+        run: |
+          if [ "${{ needs.integration-tests.result }}" == "success" ]; then
+            echo "status=✅ PASS" >> $GITHUB_OUTPUT
+            echo "color=00FF00" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ FAIL" >> $GITHUB_OUTPUT
+            echo "color=FF0000" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Print summary
+        run: |
+          echo "Integration Tests: ${{ steps.status.outputs.status }}"
+          echo "Test Results: ${{ needs.integration-tests.result }}"

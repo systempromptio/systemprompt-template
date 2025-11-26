@@ -1,0 +1,13 @@
+
+# Coverage reports
+coverage/
+*.lcov
+.nyc_output/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Test artifacts
+test-output/

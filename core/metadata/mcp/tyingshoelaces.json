@@ -1,0 +1,47 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/registry.json",
+  "name": "tyingshoelaces",
+  "version": "1.0.0",
+  "description": "TyingShoeaces MCP Server - Provides blog introduction and content search capabilities with webpage artifact rendering",
+  "websiteUrl": "https://systemprompt.io/servers/tyingshoelaces",
+  "status": "stable",
+
+  "repository": {
+    "url": "https://github.com/systemprompt/systemprompt-os-rust-2",
+    "source": "github",
+    "subfolder": "crates/services/mcp/tyingshoelaces",
+    "id": "systemprompt/tyingshoelaces"
+  },
+
+  "packages": [{
+    "identifier": "tyingshoelaces",
+    "version": "1.0.0",
+    "runtimeHint": "cargo",
+    "registryType": "local",
+    "registryBaseUrl": "./target/release",
+    "fileSha256": "",
+    "environmentVariables": [],
+    "packageArguments": [],
+    "runtimeArguments": ["--port", "5000"],
+    "transport": {
+      "headers": []
+    }
+  }],
+
+  "remotes": [{
+    "type": "stdio",
+    "url": "stdio://tyingshoelaces",
+    "headers": []
+  }],
+
+  "_meta": {
+    "io.modelcontextprotocol.registry/official": {
+      "isLatest": true,
+      "publishedAt": "2025-01-26T00:00:00Z",
+      "serverId": "tyingshoelaces",
+      "versionId": "1.0.0",
+      "updatedAt": "2025-01-26T00:00:00Z"
+    },
+    "io.modelcontextprotocol.registry/publisher-provided": {}
+  }
+}

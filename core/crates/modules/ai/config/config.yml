@@ -1,0 +1,45 @@
+ai:
+  default_provider: gemini
+  sampling:
+    enable_smart_routing: true
+    fallback_enabled: true
+  providers:
+    openai:
+      enabled: false
+      api_key: ${OPENAI_API_KEY}
+      endpoint: https://api.openai.com/v1
+      default_model: gpt-4-turbo
+    anthropic:
+      enabled: false
+      api_key: ${ANTHROPIC_API_KEY}
+      endpoint: https://api.anthropic.com/v1
+      default_model: claude-3-sonnet-20240229
+    gemini:
+      enabled: true
+      api_key: ${GEMINI_API_KEY}
+      endpoint: https://generativelanguage.googleapis.com/v1beta
+      default_model: gemini-2.5-flash-lite
+  mcp:
+    auto_discover: true
+    connect_timeout_ms: 5000
+    execution_timeout_ms: 30000
+    retry_attempts: 3
+  history:
+    retention_days: 30
+    log_tool_executions: true
+  image_generation:
+    enabled: true
+    default_provider: gemini-image
+    storage:
+      base_path: ${STORAGE_PATH}/generated_images
+      url_prefix: /generated/images
+      max_file_size_bytes: 10485760  # 10MB
+      organize_by_date: true
+    providers:
+      gemini-image:
+        enabled: true
+        api_key: ${GEMINI_API_KEY}
+        endpoint: https://generativelanguage.googleapis.com/v1beta
+        default_model: gemini-2.5-flash-image
+        default_resolution: 1K
+        default_aspect_ratio: "1:1"

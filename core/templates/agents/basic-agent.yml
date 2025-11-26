@@ -1,0 +1,34 @@
+agents:
+  basic-agent:
+    uuid: "00000000-0000-0000-0000-000000000000"  # Replace with unique UUID
+    name: "basic-agent"
+    port: 9001
+    enabled: false
+    card:
+      protocolVersion: "0.3.0"
+      displayName: "Basic Agent"
+      description: "A simple conversational agent with text-only I/O"
+      version: "1.0.0"
+      preferredTransport: "JSONRPC"
+      capabilities:
+        streaming: false
+        pushNotifications: false
+        stateTransitionHistory: false
+      defaultInputModes:
+        - "text/plain"
+      defaultOutputModes:
+        - "text/plain"
+    metadata:
+      systemPrompt: |
+        You are a helpful AI assistant.
+        Respond to user queries clearly and concisely.
+      mcpServers: []
+    oauth:
+      required: false
+      scopes: []
+      audience: "a2a"
+
+settings:
+  agentPortRange: [9000, 9999]
+  autoStartEnabled: true
+  validationStrict: true

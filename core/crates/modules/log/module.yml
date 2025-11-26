@@ -1,0 +1,47 @@
+# Core Logging Module Manifest
+# Infrastructure module for system logging and monitoring
+
+name: log
+version: "1.0.0"
+display_name: "System Logs"
+description: "Infrastructure module for system logging and monitoring with database persistence"
+authors: ["systemprompt-os"]
+license: "Apache-2.0"
+
+# Installation weight (lower numbers install first)
+# Range: -100 to 100 (Core foundation modules: negative, Application modules: positive)
+weight: -90
+category: core
+dependencies: ["users"]
+
+# Schema files with validation metadata
+schemas:
+  - file: "schema/log.sql"
+    table: "logs"
+    required_columns:
+      - "id"
+      - "level"
+      - "module"
+      - "message"
+      - "metadata"
+      - "timestamp"
+  - file: "schema/analytics.sql"
+    table: "analytics_events"
+    required_columns:
+      - "id"
+      - "event_type"
+      - "event_category"
+      - "timestamp"
+
+# Tables created by this module
+tables_created:
+  - "logs"
+  - "analytics_events"
+
+# Seed files
+seeds: []
+
+# API configuration
+api:
+  enabled: true
+  path_prefix: "/api/v1/log"

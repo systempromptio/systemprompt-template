@@ -1,0 +1,28 @@
+pub mod analytics_extractor;
+pub mod analytics_service;
+pub mod auth_error;
+pub mod bootstrap;
+pub mod broadcaster;
+pub mod cookie_extraction;
+pub mod header_injection;
+pub mod install;
+pub mod jwt_service;
+pub mod process_monitor;
+pub mod scanner_detector;
+pub mod shared;
+pub mod token_extraction;
+pub mod update;
+pub mod validation;
+
+pub use analytics_extractor::{GeoIpReader, SessionAnalytics};
+pub use analytics_service::AnalyticsService;
+pub use auth_error::AuthError;
+pub use broadcaster::{ContextBroadcaster, EventSender, CONTEXT_BROADCASTER};
+pub use cookie_extraction::{CookieExtractionError, CookieExtractor};
+pub use header_injection::HeaderInjector;
+pub use jwt_service::JwtService;
+pub use process_monitor::{HealthSummary, ModuleHealth, ProcessMonitor};
+pub use scanner_detector::ScannerDetector;
+pub use systemprompt_models::execution::BroadcastEvent;
+pub use token_extraction::{ExtractionMethod, TokenExtractionError, TokenExtractor};
+pub use validation::validate_system;

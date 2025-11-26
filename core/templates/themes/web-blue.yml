@@ -1,0 +1,232 @@
+# SystemPrompt Blue Cyberpunk Theme
+# Completely different theme to test YAML-driven styling system
+
+branding:
+  name: "SystemPrompt"
+  title: "SystemPrompt | Neural Network Platform"
+  description: "Next-generation AI agent orchestration with neural architecture"
+  themeColor: "#00D9FF"
+
+  logo:
+    primary: "/src/assets/logos/logo.png"
+    dark: "/src/assets/logos/logo-dark.png"
+    small: "/src/assets/logos/logo-512.png"
+
+  favicon: "/vite.svg"
+
+fonts:
+  body:
+    family: "OpenSans"
+    fallback: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    files:
+      - path: "/src/assets/fonts/OpenSans/OpenSans-Regular.ttf"
+        weight: 400
+        style: "normal"
+      - path: "/src/assets/fonts/OpenSans/OpenSans-Medium.ttf"
+        weight: 500
+        style: "normal"
+      - path: "/src/assets/fonts/OpenSans/OpenSans-SemiBold.ttf"
+        weight: 600
+        style: "normal"
+      - path: "/src/assets/fonts/OpenSans/OpenSans-Bold.ttf"
+        weight: 700
+        style: "normal"
+
+  heading:
+    family: "ArchivoBlack"
+    fallback: "Impact, sans-serif"
+    files:
+      - path: "/src/assets/fonts/ArchivoBlack/ArchivoBlack-Regular.ttf"
+        weight: 400
+        style: "normal"
+
+  brand:
+    family: "ArchivoBlack"
+    fallback: "Impact, sans-serif"
+    files:
+      - path: "/src/assets/fonts/ArchivoBlack/ArchivoBlack-Regular.ttf"
+        weight: 400
+        style: "normal"
+
+colors:
+  light:
+    primary:
+      hsl: "hsl(190, 100%, 50%)"
+      rgb: [0, 217, 255]
+    secondary:
+      hsl: "hsl(280, 85%, 65%)"
+      rgb: [178, 69, 237]
+    success: "#00FF88"
+    warning: "#FFD700"
+    error: "#FF2D55"
+
+    surface:
+      default: "#F0F4F8"
+      dark: "#0A1929"
+      variant: "hsl(210, 40%, 96%)"
+      secondaryContainer: "hsl(190, 100%, 90%)"
+      errorContainer: "#FFE5E9"
+
+    text:
+      primary: "#0A1929"
+      secondary: "#1E3A5F"
+      inverted: "#FFFFFF"
+      disabled: "#94A3B8"
+
+    background:
+      default: "hsl(210, 40%, 98%)"
+      dark: "hsl(220, 40%, 10%)"
+
+    border:
+      default: "hsl(210, 40%, 85%)"
+      dark: "hsl(190, 100%, 40%)"
+      outline: "hsl(190, 100%, 60%)"
+
+  dark:
+    primary:
+      hsl: "hsl(190, 100%, 50%)"
+      rgb: [0, 217, 255]
+    secondary:
+      hsl: "hsl(280, 85%, 65%)"
+      rgb: [178, 69, 237]
+    success: "#00FF88"
+    warning: "#FFD700"
+    error: "#FF2D55"
+
+    surface:
+      default: "#0D1B2A"
+      dark: "#050A0F"
+      variant: "#1B263B"
+      secondaryContainer: "rgba(0, 217, 255, 0.15)"
+      errorContainer: "rgba(255, 45, 85, 0.1)"
+
+    text:
+      primary: "#E0F2FE"
+      secondary: "hsl(190, 100%, 70%)"
+      inverted: "#0A1929"
+      disabled: "#475569"
+
+    background:
+      default: "#030712"
+      dark: "#000000"
+
+    border:
+      default: "rgba(0, 217, 255, 0.3)"
+      dark: "hsl(190, 100%, 35%)"
+      outline: "hsl(190, 100%, 50%)"
+
+typography:
+  sizes:
+    xs: "11px"
+    sm: "13px"
+    md: "14px"
+    lg: "17px"
+    xl: "22px"
+    xxl: "32px"
+
+  weights:
+    regular: 400
+    medium: 500
+    semibold: 600
+    bold: 700
+
+spacing:
+  xs: "6px"
+  sm: "10px"
+  md: "18px"
+  lg: "28px"
+  xl: "36px"
+  xxl: "52px"
+
+radius:
+  xs: "4px"
+  sm: "6px"
+  md: "10px"
+  lg: "16px"
+  xl: "24px"
+  xxl: "32px"
+  round: "9999px"
+
+shadows:
+  light:
+    sm: "0 1px 3px rgba(0, 217, 255, 0.2)"
+    md: "0 4px 6px rgba(0, 217, 255, 0.25)"
+    lg: "0 10px 15px rgba(0, 217, 255, 0.3)"
+    accent: "0 0 20px rgba(0, 217, 255, 0.5)"
+
+  dark:
+    sm: "0 1px 3px rgba(0, 0, 0, 0.9)"
+    md: "0 4px 6px rgba(0, 0, 0, 0.9)"
+    lg: "0 10px 15px rgba(0, 0, 0, 0.95)"
+    accent: "0 0 30px rgba(0, 217, 255, 0.6)"
+
+animation:
+  fast: "200ms"
+  normal: "400ms"
+  slow: "600ms"
+
+zIndex:
+  base: 1
+  content: 10
+  navigation: 100
+  modal: 1000
+  tooltip: 2000
+
+layout:
+  headerHeight: "56px"
+  sidebarLeft:
+    width: "22%"
+    minWidth: "260px"
+    maxWidth: "340px"
+  sidebarRight:
+    width: "18%"
+    minWidth: "220px"
+    maxWidth: "300px"
+  navHeight: "72px"
+  contentMaxWidth: "1800px"
+
+card:
+  radius:
+    default: "12px"
+    cut: "4px"
+  padding:
+    sm: "14px"
+    md: "18px"
+    lg: "24px"
+  gradient:
+    start: "rgba(0, 217, 255, 0.2)"
+    mid: "rgba(178, 69, 237, 0.15)"
+    end: "rgba(0, 217, 255, 0.1)"
+
+mobile:
+  spacing:
+    xs: "4px"
+    sm: "8px"
+    md: "12px"
+    lg: "18px"
+    xl: "24px"
+    xxl: "36px"
+
+  typography:
+    sizes:
+      xs: "10px"
+      sm: "12px"
+      md: "13px"
+      lg: "15px"
+      xl: "19px"
+      xxl: "26px"
+
+  layout:
+    headerHeight: "60px"
+    navHeight: "68px"
+
+  card:
+    padding:
+      sm: "12px"
+      md: "14px"
+      lg: "18px"
+
+touchTargets:
+  default: "48px"
+  sm: "44px"
+  lg: "52px"

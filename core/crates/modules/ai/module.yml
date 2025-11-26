@@ -1,0 +1,40 @@
+name: "ai"
+version: "0.1.0"
+display_name: "AI Service"
+description: "Artificial Intelligence service for natural language processing and intelligent automation"
+authors: ["systemprompt-os"]
+license: "Apache-2.0"
+weight: 60
+category: core
+dependencies: []
+schemas:
+  - file: "schema/ai_requests.sql"
+    table: "ai_requests"
+    required_columns: ["id", "request_id", "provider", "model"]
+  - file: "schema/ai_request_messages.sql"
+    table: "ai_request_messages"
+    required_columns: ["id", "request_id", "role", "content"]
+  - file: "schema/ai_request_tool_calls.sql"
+    table: "ai_request_tool_calls"
+    required_columns: ["id", "request_id", "tool_name", "tool_input", "mcp_execution_id"]
+  - file: "schema/001_add_ai_requests_foreign_keys.sql"
+    table: "ai_requests"
+    required_columns: []
+  - file: "schema/002_make_user_id_not_null.sql"
+    table: "ai_requests"
+    required_columns: []
+  - file: "schema/003_document_tool_call_execution_linkage.sql"
+    table: "ai_request_tool_calls"
+    required_columns: []
+
+tables_created:
+  - "ai_requests"
+  - "ai_request_messages"
+  - "ai_request_tool_calls"
+
+seeds: []
+
+api:
+  enabled: true
+  path_prefix: "/api/v1/ai"
+  openapi_path: "/api/v1/ai/docs"

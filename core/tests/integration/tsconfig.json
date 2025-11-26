@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@test/shared": ["./shared/index.ts"],
+      "@test/shared/*": ["./shared/*"],
+      "@test/types": ["./shared/types/index.ts"],
+      "@test/types/*": ["./shared/types/*"],
+      "@test/utils": ["./shared/utils/index.ts"],
+      "@test/utils/*": ["./shared/utils/*"],
+      "@test/db": ["./shared/utils/db/index.ts"],
+      "@test/config": ["./shared/config.ts"]
+    },
+
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noEmit": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.d.ts"]
+}
