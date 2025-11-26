@@ -15,6 +15,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Configuration
+DB_API_URL="${SYSTEMPROMPT_DB_API_URL:-http://localhost:8085}"
+
 # Check prerequisites
 echo "Checking prerequisites..."
 
@@ -32,6 +35,8 @@ MISSING=0
 check_command "cargo" || MISSING=1
 check_command "docker" || MISSING=1
 check_command "just" || { echo -e "${YELLOW}!${NC} 'just' not found - install with: cargo install just"; MISSING=1; }
+check_command "curl" || MISSING=1
+check_command "jq" || { echo -e "${YELLOW}!${NC} 'jq' not found - install with: sudo apt install jq"; MISSING=1; }
 
 if [ $MISSING -eq 1 ]; then
     echo ""
@@ -53,17 +58,97 @@ fi
 
 echo ""
 
-# Setup environment
-echo "Setting up environment..."
+# Check systemprompt-db is running
+echo "Checking systemprompt-db API..."
+if ! curl -sf "$DB_API_URL/health" >/dev/null 2>&1; then
+    echo -e "${RED}✗${NC} systemprompt-db API not running at $DB_API_URL"
+    echo ""
+    echo "Please start systemprompt-db first:"
+    echo "  cd ../systemprompt-db && docker-compose -f docker-compose.local.yml up -d"
+    echo ""
+    echo "Or set SYSTEMPROMPT_DB_API_URL if using a different host."
+    exit 1
+fi
+echo -e "${GREEN}✓${NC} systemprompt-db API available"
+
+echo ""
+
+# Prompt for tenant name
+DEFAULT_TENANT=$(basename "$(pwd)" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
+echo "Database provisioning"
+echo "---------------------"
+echo "A tenant name is used to create an isolated database for this project."
+echo ""
+read -p "Tenant name [$DEFAULT_TENANT]: " TENANT_NAME
+TENANT_NAME="${TENANT_NAME:-$DEFAULT_TENANT}"
+
+# Validate: lowercase, alphanumeric, underscores only, 3-32 chars
+if ! [[ "$TENANT_NAME" =~ ^[a-z][a-z0-9_]{2,31}$ ]]; then
+    echo -e "${RED}✗${NC} Invalid tenant name."
+    echo "  - Must start with a lowercase letter"
+    echo "  - Only lowercase letters, numbers, and underscores"
+    echo "  - 3-32 characters"
+    exit 1
+fi
+
+echo ""
+
+# Provision database via API
+echo "Provisioning database '$TENANT_NAME'..."
+
+RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$DB_API_URL/api/v1/tenants" \
+    -H "Content-Type: application/json" \
+    -d "{\"name\":\"$TENANT_NAME\",\"metadata\":{\"environment\":\"development\",\"source\":\"systemprompt-template\"}}")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+case "$HTTP_CODE" in
+    201)
+        CONNECTION_STRING=$(echo "$BODY" | jq -r '.data.connection_string')
+        echo -e "${GREEN}✓${NC} Database provisioned successfully"
+        echo -e "${GREEN}✓${NC} Connection: $CONNECTION_STRING"
+        ;;
+    409)
+        echo -e "${YELLOW}!${NC} Tenant '$TENANT_NAME' already exists"
+        echo ""
+        echo "Enter the DATABASE_URL for your existing tenant."
+        echo "Format: postgresql://USER:PASSWORD@localhost:6432/DATABASE"
+        echo ""
+        read -p "DATABASE_URL: " CONNECTION_STRING
+        if [ -z "$CONNECTION_STRING" ]; then
+            echo -e "${RED}✗${NC} DATABASE_URL is required"
+            exit 1
+        fi
+        ;;
+    *)
+        echo -e "${RED}✗${NC} Failed to provision database (HTTP $HTTP_CODE)"
+        echo "$BODY" | jq . 2>/dev/null || echo "$BODY"
+        exit 1
+        ;;
+esac
+
+echo ""
+
+# Setup .env.secrets
+echo "Setting up .env.secrets..."
 if [ ! -f ".env.secrets" ]; then
     cp .env.secrets.example .env.secrets
     echo -e "${GREEN}✓${NC} Created .env.secrets from template"
-    echo -e "${YELLOW}!${NC} Please edit .env.secrets with your configuration"
-else
-    echo -e "${GREEN}✓${NC} .env.secrets already exists"
 fi
 
+# Update DATABASE_URL in .env.secrets
+if grep -q "^DATABASE_URL=" .env.secrets; then
+    sed -i "s|^DATABASE_URL=.*|DATABASE_URL=$CONNECTION_STRING|" .env.secrets
+else
+    echo "DATABASE_URL=$CONNECTION_STRING" >> .env.secrets
+fi
+echo -e "${GREEN}✓${NC} DATABASE_URL saved to .env.secrets"
+
+echo ""
+
 # Create .env.local for local development
+echo "Setting up .env.local..."
 if [ ! -f ".env.local" ]; then
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -86,14 +171,14 @@ PORT=8080
 API_SERVER_URL=http://localhost:8080
 
 # Site
-SITENAME=template
+SITENAME=$TENANT_NAME
 GITHUB_LINK=https://github.com/your-org/your-repo
 
 # Logging
 RUST_LOG=info
 
 # JWT
-JWT_ISSUER=systemprompt-template
+JWT_ISSUER=systemprompt-$TENANT_NAME
 JWT_ACCESS_TOKEN_EXPIRATION=86400
 JWT_REFRESH_TOKEN_EXPIRATION=2592000
 
@@ -103,19 +188,6 @@ EOF
     echo -e "${GREEN}✓${NC} Created .env.local"
 else
     echo -e "${GREEN}✓${NC} .env.local already exists"
-fi
-
-echo ""
-
-# Start PostgreSQL
-echo "Starting PostgreSQL..."
-if docker ps --format '{{.Names}}' | grep -q 'systemprompt-postgres'; then
-    echo -e "${GREEN}✓${NC} PostgreSQL already running"
-else
-    docker-compose up -d postgres
-    echo "Waiting for PostgreSQL to be ready..."
-    sleep 5
-    echo -e "${GREEN}✓${NC} PostgreSQL started"
 fi
 
 echo ""
@@ -133,7 +205,10 @@ set -a
 source .env.local
 if [ -f .env.secrets ]; then source .env.secrets; fi
 set +a
-./core/target/debug/systemprompt db migrate || true
+./core/target/debug/systemprompt db migrate || {
+    echo -e "${RED}✗${NC} Migration failed - check your DATABASE_URL"
+    exit 1
+}
 echo -e "${GREEN}✓${NC} Migrations complete"
 
 echo ""
@@ -141,8 +216,9 @@ echo "=========================================="
 echo -e "${GREEN}  Setup Complete!${NC}"
 echo "=========================================="
 echo ""
+echo "Your database: $TENANT_NAME"
+echo ""
 echo "Next steps:"
-echo "  1. Edit .env.secrets with your database and API keys"
-echo "  2. Run: just start"
-echo "  3. Open: http://localhost:8080"
+echo "  1. Run: just start"
+echo "  2. Open: http://localhost:8080"
 echo ""

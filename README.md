@@ -5,15 +5,16 @@ A working skeleton for building your own SystemPrompt implementation.
 ## Quick Start
 
 ```bash
-# 1. Clone the repository
+# 1. Start systemprompt-db (multi-tenant database service)
+cd ../systemprompt-db
+docker-compose -f docker-compose.local.yml up -d
+
+# 2. Clone this template
 git clone https://github.com/systempromptio/systemprompt-template my-project
 cd my-project
 
-# 2. Run setup (installs hooks, creates configs, starts DB, builds)
+# 3. Run setup (provisions database, builds, runs migrations)
 just setup
-
-# 3. Edit your secrets
-nano .env.secrets  # Add DATABASE_URL, JWT_SECRET, etc.
 
 # 4. Start the server
 just start
@@ -24,8 +25,10 @@ just start
 ## Prerequisites
 
 - **Rust** (1.75+) - https://rustup.rs/
-- **Docker** - For PostgreSQL
+- **Docker** - For running systemprompt-db
 - **just** - Command runner: `cargo install just`
+- **jq** - JSON processor: `sudo apt install jq`
+- **systemprompt-db** - Multi-tenant PostgreSQL service (must be running)
 
 ## Project Structure
 
@@ -49,10 +52,9 @@ systemprompt-template/
 
 | Command | Description |
 |---------|-------------|
-| `just setup` | First-time setup |
+| `just setup` | First-time setup (provisions DB, builds, migrates) |
 | `just build` | Build debug binaries |
 | `just start` | Start API server |
-| `just db-up` | Start PostgreSQL |
 | `just db-migrate` | Run migrations |
 | `just core-sync` | Update core subtree |
 | `just test` | Run tests |
@@ -62,7 +64,7 @@ systemprompt-template/
 
 ### Environment Files
 
-- `.env.secrets` - Database, API keys, JWT secret (gitignored)
+- `.env.secrets` - Database URL, API keys, JWT secret (gitignored)
 - `.env.local` - Local development paths and settings
 
 ### Key Configuration Files
@@ -74,6 +76,30 @@ systemprompt-template/
 | `crates/services/web/config.yml` | Theme and branding |
 | `crates/services/ai/config.yml` | AI providers |
 | `config/ai.yaml` | Root AI config |
+
+## Database Setup
+
+This template uses **systemprompt-db** for multi-tenant database management.
+
+The `just setup` command will:
+1. Prompt for a tenant name (default: directory name)
+2. Call the systemprompt-db API to provision an isolated database
+3. Save the connection string to `.env.secrets`
+
+If your tenant already exists, you'll be prompted to enter your existing DATABASE_URL.
+
+### Manual Database Setup
+
+If you need to provision manually:
+
+```bash
+# Create tenant via API
+curl -X POST http://localhost:8085/api/v1/tenants \
+  -H "Content-Type: application/json" \
+  -d '{"name": "mytenant"}'
+
+# Save the returned connection_string to .env.secrets
+```
 
 ## Core Subtree (READ-ONLY)
 

@@ -42,14 +42,6 @@ start-debug:
 # DATABASE
 # ============================================================================
 
-# Start PostgreSQL container
-db-up:
-    docker-compose up -d postgres
-
-# Stop PostgreSQL container
-db-down:
-    docker-compose down
-
 # Run database migrations
 db-migrate:
     #!/usr/bin/env bash
