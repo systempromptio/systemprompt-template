@@ -1,0 +1,74 @@
+[package]
+name = "systemprompt-core-oauth"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OAuth 2.0 authentication and authorization module for SystemPrompt OS"
+
+[lints]
+workspace = true
+
+[dependencies]
+# Core dependencies
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+chrono = { workspace = true }
+inventory = { workspace = true }
+systemprompt-models = { path = "../../shared/models" }
+systemprompt-core-system = { path = "../core" }
+
+# Database
+sqlx = { workspace = true }
+
+# Traits
+async-trait = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+# Utilities
+uuid = { workspace = true }
+dotenv = { workspace = true }
+urlencoding = { workspace = true }
+once_cell = { workspace = true }
+
+# Validation
+validator = { workspace = true }
+
+# OAuth and crypto specific
+rand = { workspace = true }
+base64 = { workspace = true }
+jsonwebtoken = { workspace = true }
+sha2 = { workspace = true }
+bcrypt = { workspace = true }
+
+# WebAuthn
+webauthn-rs = { workspace = true }
+bincode = { workspace = true }
+
+# Web interface dependencies
+axum = { workspace = true }
+
+# HTTP client for CLI-to-REST calls
+reqwest = { workspace = true }
+
+# Core module dependencies
+systemprompt-core-users = { path = "../users" }
+systemprompt-core-logging = { path = "../log" }
+systemprompt-core-database = { path = "../database" }
+systemprompt-traits = { path = "../../shared/traits" }
+systemprompt-identifiers = { path = "../../shared/identifiers" }
+
+
+[features]
+default = ["web"]
+web = []
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+tempfile = { workspace = true }

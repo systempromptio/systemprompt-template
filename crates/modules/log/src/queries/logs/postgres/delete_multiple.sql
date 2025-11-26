@@ -1,0 +1,1 @@
+DELETE FROM logs WHERE id IN ({placeholders})

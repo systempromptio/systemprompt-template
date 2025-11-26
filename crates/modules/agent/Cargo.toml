@@ -1,0 +1,130 @@
+[package]
+name = "systemprompt-core-agent"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Core Agent protocol module for SystemPrompt"
+
+[lints]
+workspace = true
+
+[features]
+default = ["web"]
+cli = []
+web = [
+    "dep:axum",
+    "dep:tower", 
+    "dep:tower-http",
+    "dep:bytes",
+    "dep:jsonwebtoken",
+    "dep:tokio-stream",
+    "dep:urlencoding"
+]
+
+[dependencies]
+# Core traits for interface definitions (no circular dependencies)
+systemprompt-models = { path = "../../shared/models" }
+systemprompt-traits = { path = "../../shared/traits" }
+systemprompt-identifiers = { path = "../../shared/identifiers" }
+systemprompt-core-system = { path = "../core" }
+inventory = { workspace = true }
+
+# Core module dependencies
+systemprompt-core-config = { path = "../config" }
+systemprompt-core-oauth = { path = "../oauth" }
+systemprompt-core-users = { path = "../users" }
+systemprompt-core-logging = { path = "../log" }
+systemprompt-core-database = { path = "../database" }
+systemprompt-core-ai = { path = "../ai" }
+systemprompt-core-blog = { path = "../blog" }
+
+# Agent specific - now using internal SDK
+jsonrpc-core = { workspace = true }
+jsonrpc-derive = { workspace = true }
+
+# MCP functionality
+systemprompt-core-mcp = { path = "../mcp" }
+rmcp = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+futures = { workspace = true }
+futures-util = { workspace = true }
+async-trait = { workspace = true }
+
+# Web framework (optional, only for web builds)
+axum = { workspace = true, optional = true }
+tower = { workspace = true, optional = true }
+tower-http = { workspace = true, optional = true }
+
+# Templating (optional, only for web builds)
+
+# OpenAPI Documentation (optional, only for web builds)
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+bytes = { workspace = true, optional = true }
+
+# Database
+sqlx = { workspace = true }
+
+# Security
+argon2 = { workspace = true }
+jsonwebtoken = { workspace = true, optional = true }
+sha2 = { workspace = true }
+base64 = { workspace = true }
+rand = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Configuration
+dotenv = { workspace = true }
+clap = { workspace = true }
+
+# Utilities
+uuid = { workspace = true }
+chrono = { workspace = true }
+regex = { workspace = true }
+md5 = { workspace = true }
+
+# HTTP client
+reqwest = { workspace = true }
+url = { workspace = true }
+
+# OAuth2 client
+oauth2 = { workspace = true }
+
+# Cryptographic hashing for webhooks
+hmac = { workspace = true }
+
+# Hex encoding/decoding
+hex = { workspace = true }
+
+# Streaming and async (optional, only for web builds)
+tokio-stream = { workspace = true, optional = true }
+
+# URL encoding (optional, only for web builds)
+urlencoding = { workspace = true, optional = true }
+
+# Unix system utilities
+nix = { workspace = true }
+
+# File walking
+walkdir = "2"
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+tempfile = { workspace = true }
+axum-test = { workspace = true }
+url = { workspace = true }
+futures = { workspace = true }

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background -->
+  <rect width="200" height="200" fill="none"/>
+
+  <!-- Left Shoelace -->
+  <path d="M 60 50 Q 70 70 75 100 Q 80 130 65 150"
+        stroke="#1e40af" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Right Shoelace -->
+  <path d="M 140 50 Q 130 70 125 100 Q 120 130 135 150"
+        stroke="#3b82f6" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Shoelace Cross/Knot at Center -->
+  <g transform="translate(100, 100)">
+    <!-- Cross pattern -->
+    <circle cx="-8" cy="-8" r="6" fill="#1e40af" opacity="0.8"/>
+    <circle cx="8" cy="-8" r="6" fill="#3b82f6" opacity="0.8"/>
+    <circle cx="-8" cy="8" r="6" fill="#3b82f6" opacity="0.8"/>
+    <circle cx="8" cy="8" r="6" fill="#1e40af" opacity="0.8"/>
+
+    <!-- Center accent -->
+    <circle cx="0" cy="0" r="4" fill="#1e40af"/>
+  </g>
+
+  <!-- Top accent (shoe eyelet suggestion) -->
+  <ellipse cx="100" cy="35" rx="8" ry="12" fill="none" stroke="#60a5fa" stroke-width="2" opacity="0.6"/>
+</svg>

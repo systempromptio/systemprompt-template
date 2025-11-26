@@ -1,0 +1,569 @@
+cargo build --bin systemprompt-api --package systemprompt-core-api
+warning: unused import: `crate::models::a2a::AgentCard`
+ --> crates/modules/agent/src/api/rest/create_agent.rs:8:5
+  |
+8 | use crate::models::a2a::AgentCard;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `crate::models::a2a::AgentCard`
+ --> crates/modules/agent/src/api/rest/get_agent.rs:7:5
+  |
+7 | use crate::models::a2a::AgentCard;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::models::a2a::AgentCard`
+ --> crates/modules/agent/src/api/rest/list_agents.rs:8:5
+  |
+8 | use crate::models::a2a::AgentCard;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: braces around generate_unique_slug is unnecessary
+  --> crates/modules/agent/src/services/agent_registry/registry.rs:10:1
+   |
+10 | use crate::utils::slugify::{generate_unique_slug};
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-import-braces`
+
+warning: unused variable: `max_failures`
+   --> crates/modules/agent/src/services/agent_orchestration/database.rs:174:49
+    |
+174 |     pub async fn get_unresponsive_agents(&self, max_failures: u32) -> OrchestrationResult<Vec<(String, Option<u32>)>> {
+    |                                                 ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_max_failures`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: variable does not need to be mutable
+  --> crates/modules/agent/src/services/agent_orchestration/reconciler.rs:52:13
+   |
+52 |         let mut fixed = 0;
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` on by default
+
+warning: constant `LIST_ALL_AGENTS_QUERY` is never used
+  --> crates/modules/agent/src/repository/a2a_agent_repository.rs:19:7
+   |
+19 | const LIST_ALL_AGENTS_QUERY: &str = include_str!("../queries/core/agents/list_all_agents.sql");
+   |       ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: constant `LIST_AGENTS_BY_STATUS_QUERY` is never used
+  --> crates/modules/agent/src/repository/a2a_agent_repository.rs:20:7
+   |
+20 | const LIST_AGENTS_BY_STATUS_QUERY: &str = include_str!("../queries/core/agents/list_agents_by_status.sql");
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: methods `construct_urls` and `ensure_mcp_extension` are never used
+   --> crates/modules/agent/src/repository/agent_aggregate_repository.rs:201:8
+    |
+26  | impl AgentAggregateRepository {
+    | ----------------------------- methods in this implementation
+...
+201 |     fn construct_urls(&self, metadata: &AgentMetadata) -> AgentUrls {
+    |        ^^^^^^^^^^^^^^
+...
+229 |     fn ensure_mcp_extension(&self, agent_card: &mut AgentCard) {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+   --> crates/modules/agent/src/models/web.rs:177:1
+    |
+177 | / pub struct AgentCounts {
+178 | |     pub total: usize,
+179 | |     pub active: usize,
+180 | |     pub enabled: usize,
+181 | | }
+    | |_^
+    |
+    = note: requested on the command line with `-W missing-copy-implementations`
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/repository/agent_service_repository.rs:21:1
+   |
+21 | / pub struct AgentServiceRow {
+22 | |     pub server_id: String,
+23 | |     pub pid: Option<i32>,
+24 | |     pub port: i32,
+25 | |     pub status: String,
+26 | | }
+   | |_^
+   |
+   = note: requested on the command line with `-W missing-debug-implementations`
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/repository/agent_service_repository.rs:29:1
+   |
+29 | / pub struct AgentServerIdRow {
+30 | |     pub server_id: String,
+31 | | }
+   | |_^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+  --> crates/modules/agent/src/repository/agent_service_repository.rs:34:1
+   |
+34 | / pub struct AgentCountRow {
+35 | |     pub count: i64,
+36 | | }
+   | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/repository/agent_service_repository.rs:34:1
+   |
+34 | / pub struct AgentCountRow {
+35 | |     pub count: i64,
+36 | | }
+   | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/repository/agent_service_repository.rs:39:1
+   |
+39 | / pub struct AgentConfigRow {
+40 | |     pub name: String,
+41 | |     pub port: i32,
+42 | | }
+   | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/repository/agent_service_repository.rs:45:1
+   |
+45 | / pub struct AgentServerIdPidRow {
+46 | |     pub server_id: String,
+47 | |     pub pid: i32,
+48 | | }
+   | |_^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+  --> crates/modules/agent/src/services/a2a_client/protocol.rs:77:1
+   |
+77 | / pub struct MessageConfiguration {
+78 | |     pub blocking: Option<bool>,
+79 | |     pub history_length: Option<u32>,
+80 | | }
+   | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/services/a2a_client/transport.rs:14:1
+   |
+14 | / pub struct HttpTransport {
+15 | |     client: Client,
+16 | |     base_url: String,
+17 | |     headers: HeaderMap,
+18 | | }
+   | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/services/cli_adapter/adapter.rs:15:1
+   |
+15 | / pub struct CliAdapter {
+16 | |     registry: Arc<Registry>,
+17 | |     manager: Arc<AgentManager>,
+18 | |     skill_loader: McpSkillLoader,
+19 | |     metadata_repo: AgentMetadataRepository,
+20 | |     log: LogService,
+21 | | }
+   | |_^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+  --> crates/modules/agent/src/services/agent_orchestration/mod.rs:19:1
+   |
+19 | / pub enum AgentStatus {
+20 | |     Running { pid: u32, port: u16 },
+21 | |     Stopped,
+22 | |     Crashed,
+23 | |     NotFound,
+24 | | }
+   | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/services/agent_orchestration/orchestrator.rs:19:1
+   |
+19 | / pub struct AgentOrchestrator {
+20 | |     db_service: AgentDatabaseService,
+21 | |     lifecycle: AgentLifecycle,
+22 | |     reconciler: AgentReconciler,
+23 | |     monitor: AgentMonitor,
+24 | |     monitoring_handle: Option<JoinHandle<Result<()>>>,
+25 | | }
+   | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/services/agent_orchestration/lifecycle.rs:13:1
+   |
+13 | / pub struct AgentLifecycle {
+14 | |     db_service: AgentDatabaseService,
+15 | | }
+   | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/services/agent_orchestration/database.rs:9:1
+   |
+9  | / pub struct AgentDatabaseService {
+10 | |     pub repository: AgentServiceRepository,
+11 | | }
+   | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/services/agent_orchestration/monitor.rs:13:1
+   |
+13 | / pub struct AgentMonitor {
+14 | |     db_service: AgentDatabaseService,
+15 | | }
+   | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/agent/src/services/agent_orchestration/reconciler.rs:9:1
+   |
+9  | / pub struct AgentReconciler {
+10 | |     db_service: AgentDatabaseService,
+11 | | }
+   | |_^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+ --> crates/modules/agent/src/services/external_integrations/mcp/client/adapter.rs:4:1
+  |
+4 | pub struct McpClientAdapter;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/agent/src/services/external_integrations/mcp/client/adapter.rs:4:1
+  |
+4 | pub struct McpClientAdapter;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+ --> crates/modules/agent/src/services/external_integrations/mcp/converter/tool_to_skill.rs:4:1
+  |
+4 | pub struct SkillConverter;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/agent/src/services/external_integrations/mcp/converter/tool_to_skill.rs:4:1
+  |
+4 | pub struct SkillConverter;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+   --> crates/modules/agent/src/services/mcp_skill_service.rs:265:1
+    |
+265 | / pub struct McpSkillStats {
+266 | |     pub active_servers: usize,
+267 | |     pub total_tools: usize,
+268 | |     pub active_assignments: usize,
+...   |
+271 | |     pub agents_with_skills: usize,
+272 | | }
+    | |_^
+
+warning: `systemprompt-core-agent` (lib) generated 30 warnings (run `cargo fix --lib -p systemprompt-core-agent` to apply 4 suggestions)
+warning: unused import: `HeaderValue`
+ --> crates/modules/api/src/services/middleware/auth.rs:3:35
+  |
+3 |     http::{StatusCode, HeaderMap, HeaderValue},
+  |                                   ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unnecessary qualification
+   --> crates/modules/api/src/services/middleware/auth.rs:280:42
+    |
+280 |                     let permissions_set: std::collections::HashSet<String> =
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+280 -                     let permissions_set: std::collections::HashSet<String> =
+280 +                     let permissions_set: HashSet<String> =
+    |
+
+warning: function `get_mcp_services` is never used
+   --> crates/modules/api/src/api/routes/discovery.rs:219:10
+    |
+219 | async fn get_mcp_services(ctx: &AppContext) -> Result<Vec<ServiceSummary>> {
+    |          ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: function `get_agents` is never used
+   --> crates/modules/api/src/api/routes/discovery.rs:247:10
+    |
+247 | async fn get_agents(ctx: &AppContext) -> Result<Vec<serde_json::Value>> {
+    |          ^^^^^^^^^^
+
+warning: function `build_api_list` is never used
+   --> crates/modules/api/src/api/routes/discovery.rs:344:4
+    |
+344 | fn build_api_list(ctx: &AppContext) -> Vec<ApiEndpoint> {
+    |    ^^^^^^^^^^^^^^
+
+warning: function `build_root_links` is never used
+   --> crates/modules/api/src/api/routes/discovery.rs:354:4
+    |
+354 | fn build_root_links(ctx: &AppContext) -> HashMap<String, Link> {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `add_meta_endpoints` is never used
+   --> crates/modules/api/src/api/routes/discovery.rs:387:4
+    |
+387 | fn add_meta_endpoints(apis: &mut Vec<ApiEndpoint>, base_url: &str) {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `add_module_endpoints` is never used
+   --> crates/modules/api/src/api/routes/discovery.rs:417:4
+    |
+417 | fn add_module_endpoints(apis: &mut Vec<ApiEndpoint>, base_url: &str, ctx: &AppContext) {
+    |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: field `config` is never read
+  --> crates/modules/api/src/services/server/builder.rs:21:5
+   |
+19 | pub struct ApiServer {
+   |            --------- field in this struct
+20 |     router: Router,
+21 |     config: ServerConfig,
+   |     ^^^^^^
+   |
+   = note: `ApiServer` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+  --> crates/modules/api/src/models/proxy/client.rs:6:1
+   |
+6  | / pub struct ProxyClientConfig {
+7  | |     pub pool_idle_timeout: Option<std::time::Duration>,
+8  | |     pub pool_max_idle_per_host: usize,
+9  | |     pub http2_keep_alive_interval: Option<std::time::Duration>,
+10 | |     pub http2_keep_alive_timeout: std::time::Duration,
+11 | |     pub tcp_keepalive: Option<std::time::Duration>,
+12 | | }
+   | |_^
+   |
+   = note: requested on the command line with `-W missing-copy-implementations`
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/models/registry/module.rs:4:1
+  |
+4 | / pub struct ModuleRouteInfo {
+5 | |     pub name: String,
+6 | |     pub router: Router<AppContext>,
+7 | |     pub prefix: String,
+8 | | }
+  | |_^
+  |
+  = note: requested on the command line with `-W missing-debug-implementations`
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+  --> crates/modules/api/src/services/api_lifecycle/health.rs:17:1
+   |
+17 | / pub struct DatabaseHealthInfo {
+18 | |     pub connected: bool,
+19 | |     pub pool_size: Option<u32>,
+20 | | }
+   | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/services/links/builder.rs:6:1
+  |
+6 | / pub struct LinkBuilder {
+7 | |     pub template: LinkTemplate,
+8 | | }
+  | |_^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/api/src/services/links/templates.rs:40:1
+   |
+40 | / pub struct LinkTemplate {
+41 | |     pub base_url: String,
+42 | | }
+   | |_^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+   --> crates/modules/api/src/services/middleware/auth.rs:181:1
+    |
+181 | pub struct AuthMiddleware;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+   --> crates/modules/api/src/services/middleware/auth.rs:181:1
+    |
+181 | pub struct AuthMiddleware;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+ --> crates/modules/api/src/services/middleware/cors.rs:4:1
+  |
+4 | pub struct CorsMiddleware;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/services/middleware/cors.rs:4:1
+  |
+4 | pub struct CorsMiddleware;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+ --> crates/modules/api/src/services/middleware/path.rs:9:1
+  |
+9 | pub struct PathMiddleware;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/services/middleware/path.rs:9:1
+  |
+9 | pub struct PathMiddleware;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+  --> crates/modules/api/src/services/middleware/redirect.rs:13:1
+   |
+13 | pub struct RedirectMiddleware;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/api/src/services/middleware/redirect.rs:13:1
+   |
+13 | pub struct RedirectMiddleware;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+ --> crates/modules/api/src/services/proxy/auth/validator.rs:8:1
+  |
+8 | pub struct AuthValidator {}
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/services/proxy/auth/validator.rs:8:1
+  |
+8 | pub struct AuthValidator {}
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+ --> crates/modules/api/src/services/proxy/auth/challenge.rs:6:1
+  |
+6 | pub struct OAuthChallengeBuilder;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/services/proxy/auth/challenge.rs:6:1
+  |
+6 | pub struct OAuthChallengeBuilder;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+ --> crates/modules/api/src/services/proxy/backend/request_builder.rs:6:1
+  |
+6 | pub struct RequestBuilder;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/services/proxy/backend/request_builder.rs:6:1
+  |
+6 | pub struct RequestBuilder;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+ --> crates/modules/api/src/services/proxy/backend/response_handler.rs:6:1
+  |
+6 | pub struct ResponseHandler;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/services/proxy/backend/response_handler.rs:6:1
+  |
+6 | pub struct ResponseHandler;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+ --> crates/modules/api/src/services/proxy/backend/url_resolver.rs:1:1
+  |
+1 | pub struct UrlResolver;
+  | ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/services/proxy/backend/url_resolver.rs:1:1
+  |
+1 | pub struct UrlResolver;
+  | ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/api/src/services/proxy/engine.rs:17:1
+   |
+17 | / pub struct ProxyEngine {
+18 | |     client_pool: ClientPool,
+19 | | }
+   | |_^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+ --> crates/modules/api/src/services/proxy/protocol/mcp.rs:3:1
+  |
+3 | pub struct McpProtocol;
+  | ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/services/proxy/protocol/mcp.rs:3:1
+  |
+3 | pub struct McpProtocol;
+  | ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+ --> crates/modules/api/src/services/proxy/protocol/a2a.rs:3:1
+  |
+3 | pub struct A2aProtocol;
+  | ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/services/proxy/protocol/a2a.rs:3:1
+  |
+3 | pub struct A2aProtocol;
+  | ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+ --> crates/modules/api/src/services/registry/route_builder.rs:7:1
+  |
+7 | / pub struct RouteBuilder {
+8 | |     log: LogService,
+9 | | }
+  | |_^
+
+warning: type could implement `Copy`; consider adding `impl Copy`
+  --> crates/modules/api/src/services/registry/route_inspector.rs:24:1
+   |
+24 | pub struct RouteInspector;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type does not implement `std::fmt::Debug`; consider adding `#[derive(Debug)]` or a manual implementation
+  --> crates/modules/api/src/services/registry/route_inspector.rs:24:1
+   |
+24 | pub struct RouteInspector;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `systemprompt-core-api` (lib) generated 40 warnings (run `cargo fix --lib -p systemprompt-core-api` to apply 2 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.21s
+./target/debug/systemprompt-api 
+ℹ Loading 7 route modules for inventory registration:
+ℹ    - config (Core) - config proxy routes
+ℹ    - users (Core) - users proxy routes
+ℹ    - oauth (Core) - oauth proxy routes
+ℹ    - agent (Core) - agent proxy routes
+ℹ    - mcp (Mcp) - mcp proxy routes
+ℹ    - api (Meta) - api proxy routes
+ℹ    - agents (Agent) - agents proxy routes
+ℹ Running system validation...
+ℹ Module System Status:
+ℹ   Total modules: 8
+ℹ   Active: 8
+ℹ   Enabled: 8
+09:35:43.094 [[32mINFO [0m] validation: Permission Summary:
+09:35:43.094 [[32mINFO [0m] validation: Total defined permissions: 0
+09:35:43.094 [[32mINFO [0m] validation: Total used permissions: 0
+09:35:43.094 [[32mINFO [0m] validation: Valid permissions: 0
+ℹ 🔄 Restarting API server...
+ℹ 🛑 Stopping API server (PID: 322159)...
+✓ ✅ API server stopped successfully
+ℹ 🚀 Starting API server in daemon mode...
+✓ ✅ API server started successfully (PID: 329124)

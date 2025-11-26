@@ -1,0 +1,16 @@
+[package]
+name = "systemprompt-identifiers"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Core identifier types for SystemPrompt OS"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { workspace = true }
+uuid = { workspace = true }
+systemprompt-core-database = { path = "../../modules/database" }
+sqlx = { workspace = true }

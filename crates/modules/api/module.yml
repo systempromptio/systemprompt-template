@@ -1,0 +1,26 @@
+# Core API Module Manifest
+# HTTP API server and request routing orchestration
+name: api
+version: "1.0.0"
+display_name: "API Gateway"
+description: "HTTP API server, request routing, authentication middleware, and service proxy"
+authors: ["systemprompt-os"]
+license: "Apache-2.0"
+weight: -100  # Load early as foundational service
+category: core
+dependencies:
+  - config
+  - users
+  - oauth
+  - log
+
+# No schemas needed - API is a pure gateway/router
+schemas: []
+tables_created: []
+seeds: []
+
+api:
+  enabled: true
+  path_prefix: "/api/v1"
+  openapi_path: "/api/docs"
+  root_handler: true  # This module handles the root "/" endpoint

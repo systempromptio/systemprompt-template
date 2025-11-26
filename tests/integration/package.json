@@ -1,0 +1,31 @@
+{
+  "name": "systemprompt-integration-tests",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Integration tests for SystemPrompt OS",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:a2a": "vitest run a2a --exclude '**/agents/**'",
+    "test:agents": "vitest run a2a/agents",
+    "test:edward": "vitest run a2a/agents/edward-agent",
+    "test:mcp": "vitest run mcp"
+  },
+  "dependencies": {
+    "@a2a-js/sdk": "^0.3.4",
+    "eventsource": "^2.0.2",
+    "eventsource-parser": "^3.0.1",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.1",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^22.0.0",
+    "@vitest/ui": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "typescript": "^5.6.3",
+    "vitest": "^1.0.0"
+  }
+}

@@ -1,0 +1,66 @@
+/**
+ * SystemPrompt Font Declarations
+ *
+ * Defines @font-face rules for custom fonts used in the application.
+ * Fonts: Open Sans (body), Zepto (headings), Archivo Black (brand)
+ */
+
+/* Open Sans - Regular */
+@font-face {
+  font-family: 'OpenSans';
+  src: url('/src/assets/fonts/OpenSans/OpenSans-Regular.woff2') format('woff2'),
+       url('/src/assets/fonts/OpenSans/OpenSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Open Sans - Medium */
+@font-face {
+  font-family: 'OpenSans';
+  src: url('/src/assets/fonts/OpenSans/OpenSans-Medium.woff2') format('woff2'),
+       url('/src/assets/fonts/OpenSans/OpenSans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Open Sans - SemiBold */
+@font-face {
+  font-family: 'OpenSans';
+  src: url('/src/assets/fonts/OpenSans/OpenSans-SemiBold.woff2') format('woff2'),
+       url('/src/assets/fonts/OpenSans/OpenSans-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Open Sans - Bold */
+@font-face {
+  font-family: 'OpenSans';
+  src: url('/src/assets/fonts/OpenSans/OpenSans-Bold.woff2') format('woff2'),
+       url('/src/assets/fonts/OpenSans/OpenSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Zepto - Heading Font */
+@font-face {
+  font-family: 'Zepto';
+  src: url('/src/assets/fonts/Zepto/Zepto-Regular.woff2') format('woff2'),
+       url('/src/assets/fonts/Zepto/Zepto-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Archivo Black - Brand Font */
+@font-face {
+  font-family: 'ArchivoBlack';
+  src: url('/src/assets/fonts/ArchivoBlack/ArchivoBlack-Regular.woff2') format('woff2'),
+       url('/src/assets/fonts/ArchivoBlack/ArchivoBlack-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

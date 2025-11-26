@@ -1,0 +1,353 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SystemPrompt Theme Configuration",
+  "description": "Schema for validating SystemPrompt web theme YAML files",
+  "type": "object",
+  "required": ["branding", "fonts", "colors", "typography", "spacing", "radius", "shadows", "animation", "zIndex", "layout", "card", "mobile", "touchTargets"],
+  "properties": {
+    "branding": {
+      "type": "object",
+      "required": ["name", "title", "description", "themeColor", "logo", "favicon"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "themeColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "logo": {
+          "type": "object",
+          "required": ["primary", "dark", "small"],
+          "properties": {
+            "primary": {
+              "type": "object",
+              "properties": {
+                "svg": { "type": "string" },
+                "webp": { "type": "string" },
+                "png": { "type": "string" }
+              }
+            },
+            "dark": {
+              "type": "object",
+              "properties": {
+                "svg": { "type": "string" },
+                "webp": { "type": "string" },
+                "png": { "type": "string" }
+              }
+            },
+            "small": {
+              "type": "object",
+              "properties": {
+                "svg": { "type": "string" },
+                "webp": { "type": "string" },
+                "png": { "type": "string" }
+              }
+            }
+          }
+        },
+        "favicon": { "type": "string" }
+      }
+    },
+    "fonts": {
+      "type": "object",
+      "required": ["body", "heading", "brand"],
+      "properties": {
+        "body": { "$ref": "#/definitions/fontDefinition" },
+        "heading": { "$ref": "#/definitions/fontDefinition" },
+        "brand": { "$ref": "#/definitions/fontDefinition" }
+      }
+    },
+    "colors": {
+      "type": "object",
+      "required": ["light", "dark"],
+      "properties": {
+        "light": { "$ref": "#/definitions/colorPalette" },
+        "dark": { "$ref": "#/definitions/colorPalette" }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "required": ["sizes", "weights"],
+      "properties": {
+        "sizes": {
+          "type": "object",
+          "required": ["xs", "sm", "md", "lg", "xl", "xxl"],
+          "properties": {
+            "xs": { "type": "string", "pattern": "^[0-9]+(px|rem|em)$" },
+            "sm": { "type": "string", "pattern": "^[0-9]+(px|rem|em)$" },
+            "md": { "type": "string", "pattern": "^[0-9]+(px|rem|em)$" },
+            "lg": { "type": "string", "pattern": "^[0-9]+(px|rem|em)$" },
+            "xl": { "type": "string", "pattern": "^[0-9]+(px|rem|em)$" },
+            "xxl": { "type": "string", "pattern": "^[0-9]+(px|rem|em)$" }
+          }
+        },
+        "weights": {
+          "type": "object",
+          "required": ["regular", "medium", "semibold", "bold"],
+          "properties": {
+            "regular": { "type": "number", "minimum": 100, "maximum": 900 },
+            "medium": { "type": "number", "minimum": 100, "maximum": 900 },
+            "semibold": { "type": "number", "minimum": 100, "maximum": 900 },
+            "bold": { "type": "number", "minimum": 100, "maximum": 900 }
+          }
+        }
+      }
+    },
+    "spacing": { "$ref": "#/definitions/spacingScale" },
+    "radius": { "$ref": "#/definitions/radiusScale" },
+    "shadows": {
+      "type": "object",
+      "required": ["light", "dark"],
+      "properties": {
+        "light": { "$ref": "#/definitions/shadowScale" },
+        "dark": { "$ref": "#/definitions/shadowScale" }
+      }
+    },
+    "animation": {
+      "type": "object",
+      "required": ["fast", "normal", "slow"],
+      "properties": {
+        "fast": { "type": "string", "pattern": "^[0-9]+(ms|s)$" },
+        "normal": { "type": "string", "pattern": "^[0-9]+(ms|s)$" },
+        "slow": { "type": "string", "pattern": "^[0-9]+(ms|s)$" }
+      }
+    },
+    "zIndex": {
+      "type": "object",
+      "required": ["base", "content", "navigation", "modal", "tooltip"],
+      "properties": {
+        "base": { "type": "number" },
+        "content": { "type": "number" },
+        "navigation": { "type": "number" },
+        "modal": { "type": "number" },
+        "tooltip": { "type": "number" }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "required": ["headerHeight", "sidebarLeft", "sidebarRight", "navHeight", "contentMaxWidth"],
+      "properties": {
+        "headerHeight": { "type": "string" },
+        "sidebarLeft": { "$ref": "#/definitions/sidebarConfig" },
+        "sidebarRight": { "$ref": "#/definitions/sidebarConfig" },
+        "navHeight": { "type": "string" },
+        "contentMaxWidth": { "type": "string" }
+      }
+    },
+    "card": {
+      "type": "object",
+      "required": ["radius", "padding", "gradient"],
+      "properties": {
+        "radius": {
+          "type": "object",
+          "required": ["default", "cut"],
+          "properties": {
+            "default": { "type": "string" },
+            "cut": { "type": "string" }
+          }
+        },
+        "padding": {
+          "type": "object",
+          "required": ["sm", "md", "lg"],
+          "properties": {
+            "sm": { "type": "string" },
+            "md": { "type": "string" },
+            "lg": { "type": "string" }
+          }
+        },
+        "gradient": {
+          "type": "object",
+          "required": ["start", "mid", "end"],
+          "properties": {
+            "start": { "type": "string" },
+            "mid": { "type": "string" },
+            "end": { "type": "string" }
+          }
+        }
+      }
+    },
+    "mobile": {
+      "type": "object",
+      "required": ["spacing", "typography", "layout", "card"],
+      "properties": {
+        "spacing": { "$ref": "#/definitions/spacingScale" },
+        "typography": {
+          "type": "object",
+          "required": ["sizes"],
+          "properties": {
+            "sizes": {
+              "type": "object",
+              "required": ["xs", "sm", "md", "lg", "xl", "xxl"],
+              "additionalProperties": { "type": "string" }
+            }
+          }
+        },
+        "layout": {
+          "type": "object",
+          "required": ["headerHeight", "navHeight"],
+          "properties": {
+            "headerHeight": { "type": "string" },
+            "navHeight": { "type": "string" }
+          }
+        },
+        "card": {
+          "type": "object",
+          "required": ["padding"],
+          "properties": {
+            "padding": {
+              "type": "object",
+              "required": ["sm", "md", "lg"],
+              "additionalProperties": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "touchTargets": {
+      "type": "object",
+      "required": ["default", "sm", "lg"],
+      "properties": {
+        "default": { "type": "string" },
+        "sm": { "type": "string" },
+        "lg": { "type": "string" }
+      }
+    }
+  },
+  "definitions": {
+    "fontDefinition": {
+      "type": "object",
+      "required": ["family", "fallback", "files"],
+      "properties": {
+        "family": { "type": "string" },
+        "fallback": { "type": "string" },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "weight", "style"],
+            "properties": {
+              "path": { "type": "string" },
+              "weight": { "type": "number", "minimum": 100, "maximum": 900 },
+              "style": { "type": "string", "enum": ["normal", "italic", "oblique"] }
+            }
+          }
+        }
+      }
+    },
+    "colorPalette": {
+      "type": "object",
+      "required": ["primary", "secondary", "success", "warning", "error", "surface", "text", "background", "border"],
+      "properties": {
+        "primary": {
+          "type": "object",
+          "required": ["hsl", "rgb"],
+          "properties": {
+            "hsl": { "type": "string" },
+            "rgb": {
+              "oneOf": [
+                { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+                { "type": "null" }
+              ]
+            }
+          }
+        },
+        "secondary": {
+          "type": "object",
+          "required": ["hsl", "rgb"],
+          "properties": {
+            "hsl": { "type": "string" },
+            "rgb": {
+              "oneOf": [
+                { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+                { "type": "null" }
+              ]
+            }
+          }
+        },
+        "success": { "type": "string" },
+        "warning": { "type": "string" },
+        "error": { "type": "string" },
+        "surface": {
+          "type": "object",
+          "required": ["default", "dark", "variant", "secondaryContainer", "errorContainer"],
+          "properties": {
+            "default": { "type": "string" },
+            "dark": { "type": "string" },
+            "variant": { "type": "string" },
+            "secondaryContainer": { "type": "string" },
+            "errorContainer": { "type": "string" }
+          }
+        },
+        "text": {
+          "type": "object",
+          "required": ["primary", "secondary", "inverted", "disabled"],
+          "properties": {
+            "primary": { "type": "string" },
+            "secondary": { "type": "string" },
+            "inverted": { "type": "string" },
+            "disabled": { "type": "string" }
+          }
+        },
+        "background": {
+          "type": "object",
+          "required": ["default", "dark"],
+          "properties": {
+            "default": { "type": "string" },
+            "dark": { "type": "string" }
+          }
+        },
+        "border": {
+          "type": "object",
+          "required": ["default", "dark", "outline"],
+          "properties": {
+            "default": { "type": "string" },
+            "dark": { "type": "string" },
+            "outline": { "type": "string" }
+          }
+        }
+      }
+    },
+    "spacingScale": {
+      "type": "object",
+      "required": ["xs", "sm", "md", "lg", "xl", "xxl"],
+      "properties": {
+        "xs": { "type": "string" },
+        "sm": { "type": "string" },
+        "md": { "type": "string" },
+        "lg": { "type": "string" },
+        "xl": { "type": "string" },
+        "xxl": { "type": "string" }
+      }
+    },
+    "radiusScale": {
+      "type": "object",
+      "required": ["xs", "sm", "md", "lg", "xl", "xxl", "round"],
+      "properties": {
+        "xs": { "type": "string" },
+        "sm": { "type": "string" },
+        "md": { "type": "string" },
+        "lg": { "type": "string" },
+        "xl": { "type": "string" },
+        "xxl": { "type": "string" },
+        "round": { "type": "string" }
+      }
+    },
+    "shadowScale": {
+      "type": "object",
+      "required": ["sm", "md", "lg", "accent"],
+      "properties": {
+        "sm": { "type": "string" },
+        "md": { "type": "string" },
+        "lg": { "type": "string" },
+        "accent": { "type": "string" }
+      }
+    },
+    "sidebarConfig": {
+      "type": "object",
+      "required": ["width", "minWidth", "maxWidth"],
+      "properties": {
+        "width": { "type": "string" },
+        "minWidth": { "type": "string" },
+        "maxWidth": { "type": "string" }
+      }
+    }
+  }
+}

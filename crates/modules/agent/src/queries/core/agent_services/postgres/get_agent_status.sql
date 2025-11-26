@@ -1,0 +1,1 @@
+SELECT name, pid, port, status FROM services WHERE name = $1 AND module_name = 'agent'

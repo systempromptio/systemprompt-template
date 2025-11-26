@@ -1,0 +1,142 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, postgresql-migration-refactor]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-sqlite:
+    name: Test SQLite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run unit tests
+        run: cargo test --lib --all-features
+
+      - name: Run integration tests
+        run: cargo test --test '*' --all-features
+
+      - name: Build benchmarks
+        run: cargo bench --no-run
+
+  test-postgres:
+    name: Test PostgreSQL
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run PostgreSQL unit tests
+        env:
+          TEST_DATABASE_URL: postgresql://test:test@localhost:5432/test
+          DATABASE_TYPE: postgres
+        run: cargo test --lib --all-features
+
+      - name: Run PostgreSQL integration tests
+        env:
+          TEST_DATABASE_URL: postgresql://test:test@localhost:5432/test
+          DATABASE_TYPE: postgres
+        run: cargo test --test '*' --all-features
+
+      - name: Build benchmarks for PostgreSQL
+        env:
+          TEST_DATABASE_URL: postgresql://test:test@localhost:5432/test
+        run: cargo bench --no-run
+
+  check-formatting:
+    name: Check Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+  clippy:
+    name: Clippy Lints
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: clippy
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings

@@ -1,0 +1,68 @@
+[package]
+name = "systemprompt-core-blog"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Blog module for SystemPrompt with content management, analytics, and event tracking"
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "export"
+path = "src/bin/export.rs"
+
+[dependencies]
+# Core modules
+systemprompt-core-database = { path = "../database" }
+systemprompt-core-config = { path = "../config" }
+systemprompt-core-logging = { path = "../log" }
+systemprompt-core-users = { path = "../users" }
+systemprompt-core-system = { path = "../core" }
+systemprompt-models = { path = "../../shared/models" }
+systemprompt-identifiers = { path = "../../shared/identifiers" }
+
+# Web framework
+axum = { workspace = true }
+tower = { workspace = true }
+
+# Async
+tokio = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+
+# Markdown processing
+pulldown-cmark = "0.12"
+
+# CLI
+clap = { workspace = true }
+
+# Environment
+dotenvy = { workspace = true }
+
+# Utilities
+anyhow = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+walkdir = { workspace = true }
+sha2 = { workspace = true }
+tracing = { workspace = true }
+
+# HTTP
+reqwest = { workspace = true }
+
+# UUID to hex conversion
+hex = { workspace = true }
+
+# URL encoding
+urlencoding = "2.1"
+
+# Random number generation
+rand = "0.8"
+
+[dev-dependencies]
+tempfile = { workspace = true }

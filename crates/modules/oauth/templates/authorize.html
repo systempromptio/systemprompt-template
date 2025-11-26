@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OAuth Authorization</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 400px; margin: 0 auto; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 8px; }
+        button { padding: 10px 20px; margin: 5px; }
+        .allow { background-color: #4CAF50; color: white; }
+        .deny { background-color: #f44336; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Authorization Request</h2>
+        <p>Client <strong>{client_id}</strong> is requesting access to your account.</p>
+        <p>Requested scopes: <strong>{scope}</strong></p>
+        
+        <form method="post" action="/api/v1/core/oauth/authorize">
+            <input type="hidden" name="response_type" value="{response_type}">
+            <input type="hidden" name="client_id" value="{client_id}">
+            <input type="hidden" name="redirect_uri" value="{redirect_uri}">
+            <input type="hidden" name="scope" value="{scope}">
+            <input type="hidden" name="state" value="{state}">
+            <input type="hidden" name="code_challenge" value="{code_challenge}">
+            <input type="hidden" name="code_challenge_method" value="{code_challenge_method}">
+            
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" name="user_consent" value="allow" class="allow">Allow</button>
+                <button type="submit" name="user_consent" value="deny" class="deny">Deny</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

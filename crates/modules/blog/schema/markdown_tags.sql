@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS markdown_tags (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    slug TEXT NOT NULL UNIQUE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_markdown_tags_slug ON markdown_tags(slug);

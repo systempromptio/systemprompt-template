@@ -1,0 +1,47 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/registry.json",
+  "name": "systemprompt-admin",
+  "version": "1.0.0",
+  "description": "Administrative tools for system monitoring and management",
+  "websiteUrl": "https://systemprompt.io/servers/systemprompt-admin",
+  "status": "stable",
+
+  "repository": {
+    "url": "https://github.com/systemprompt/systemprompt-os-rust-2",
+    "source": "github",
+    "subfolder": "crates/mcp-servers/systemprompt-admin",
+    "id": "systemprompt/systemprompt-admin"
+  },
+
+  "packages": [{
+    "identifier": "systemprompt-admin",
+    "version": "1.0.0",
+    "runtimeHint": "cargo",
+    "registryType": "local",
+    "registryBaseUrl": "./target/release",
+    "fileSha256": "",
+    "environmentVariables": [],
+    "packageArguments": [],
+    "runtimeArguments": ["--port", "5002"],
+    "transport": {
+      "headers": []
+    }
+  }],
+
+  "remotes": [{
+    "type": "stdio",
+    "url": "stdio://systemprompt-admin",
+    "headers": []
+  }],
+
+  "_meta": {
+    "io.modelcontextprotocol.registry/official": {
+      "isLatest": true,
+      "publishedAt": "2025-01-26T00:00:00Z",
+      "serverId": "systemprompt-admin",
+      "versionId": "1.0.0",
+      "updatedAt": "2025-01-26T00:00:00Z"
+    },
+    "io.modelcontextprotocol.registry/publisher-provided": {}
+  }
+}

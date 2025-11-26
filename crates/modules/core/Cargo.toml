@@ -1,0 +1,73 @@
+[package]
+name = "systemprompt-core-system"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Core system module for SystemPrompt - shared types, traits, and system services"
+
+[lints]
+workspace = true
+
+[dependencies]
+# Core runtime
+tokio = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+dotenvy = { workspace = true }
+inventory = { workspace = true }
+tracing = { workspace = true }
+
+# CLI tools
+clap = { workspace = true }
+console = { workspace = true }
+dialoguer = { workspace = true }
+colored = { workspace = true }
+tabled = { workspace = true }
+
+# Database - now using the database module
+sqlx = { workspace = true }  # Still needed for bridge functionality
+
+# Serialization & file handling
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+serde_json = { workspace = true }
+indexmap = { workspace = true }
+walkdir = { workspace = true }
+chrono = { workspace = true }
+semver = { workspace = true }
+
+# Web framework
+axum = { workspace = true }
+async-trait = { workspace = true }
+url = { workspace = true }
+tower = { workspace = true }
+once_cell = { workspace = true }
+
+# Security
+uuid = { workspace = true }
+urlencoding = { workspace = true }
+validator = { workspace = true }
+argon2 = { workspace = true }
+rand = { workspace = true }
+jsonwebtoken = { workspace = true }
+
+# HTTP Client
+reqwest = { workspace = true }
+
+# GeoIP
+maxminddb = { workspace = true }
+
+# MCP support
+rmcp = { workspace = true }
+
+# SystemPrompt dependencies
+systemprompt-models = { path = "../../shared/models" }
+systemprompt-identifiers = { path = "../../shared/identifiers" }
+systemprompt-traits = { path = "../../shared/traits" }
+systemprompt-core-database = { path = "../database" }
+systemprompt-core-logging = { path = "../log" }
+
+[features]
+default = ["web"]
+web = []

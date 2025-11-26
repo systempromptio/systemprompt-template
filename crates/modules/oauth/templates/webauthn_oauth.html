@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-param name="Expires" content="0">
+    <title>SystemPrompt OAuth - Sign In v2.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'OpenSans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: hsl(28, 91%, 98%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: hsl(28, 91%, 60%);
+            margin-bottom: 10px;
+            font-family: 'ArchivoBlack', Impact, sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            color: #3C3C43;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .oauth-info {
+            background: hsl(28, 91%, 95%);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid hsl(28, 91%, 60%);
+        }
+
+        .oauth-info h3 {
+            color: #000000;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-family: 'Zepto', Georgia, serif;
+        }
+
+        .oauth-info p {
+            color: #3C3C43;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .email-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid hsl(28, 91%, 80%);
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+            background: #FFFFFF;
+            color: #000000;
+        }
+
+        .email-input:focus {
+            outline: none;
+            border-color: hsl(28, 91%, 60%);
+            box-shadow: 0 0 0 3px rgba(246, 147, 60, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: hsl(28, 91%, 60%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: hsl(28, 91%, 55%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 6.25px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-secondary {
+            background: #FFFFFF;
+            color: #000000;
+            border: 2px solid hsl(28, 91%, 80%);
+        }
+
+        .btn-secondary:hover {
+            background: hsl(28, 91%, 98%);
+            border-color: hsl(28, 91%, 60%);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error {
+            background: #FFEBE9;
+            color: #FF3B30;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #FF3B30;
+        }
+
+        .success {
+            background: rgba(52, 199, 89, 0.1);
+            color: #34C759;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #34C759;
+        }
+
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid hsl(28, 91%, 60%);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .fingerprint-icon {
+            font-size: 20px;
+        }
+
+        .divider {
+            margin: 25px 0;
+            position: relative;
+            color: #3C3C43;
+            font-size: 14px;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: hsl(28, 91%, 80%);
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">SystemPrompt</div>
+        <div class="subtitle">Secure Authentication</div>
+
+        <div class="oauth-info">
+            <h3>Authorization Request</h3>
+            <p><strong>Client:</strong> <span id="client-name">{client_id}</span></p>
+            <p><strong>Scopes:</strong> <span id="scopes">{scope}</span></p>
+            <input type="hidden" id="oauth-client-id" value="{client_id}">
+            <input type="hidden" id="oauth-response-type" value="{response_type}">
+            <input type="hidden" id="oauth-redirect-uri" value="{redirect_uri}">
+            <input type="hidden" id="oauth-scope" value="{scope}">
+            <input type="hidden" id="oauth-state" value="{state}">
+            <input type="hidden" id="oauth-code-challenge" value="{code_challenge}">
+            <input type="hidden" id="oauth-code-challenge-method" value="{code_challenge_method}">
+        </div>
+
+        <div id="error-message" class="error hidden"></div>
+        <div id="success-message" class="success hidden"></div>
+
+        <div id="email-section">
+            <input type="email" id="email" class="email-input" placeholder="Enter your email address" required>
+
+            <button id="sign-in-btn" class="btn btn-primary">
+                <span class="fingerprint-icon">🔐</span>
+                Sign in with Passkey
+            </button>
+
+            <div class="divider">
+                <span>or</span>
+            </div>
+
+            <button id="register-btn" class="btn btn-secondary">
+                <span>📱</span>
+                Create New Passkey
+            </button>
+        </div>
+
+        <div id="loading-section" class="hidden">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px;">Authenticating...</p>
+        </div>
+    </div>
+
+    <script>
+        // Extract OAuth parameters from server-rendered hidden inputs
+        const oauthState = {
+            response_type: document.getElementById('oauth-response-type').value,
+            client_id: document.getElementById('oauth-client-id').value,
+            redirect_uri: document.getElementById('oauth-redirect-uri').value,
+            scope: document.getElementById('oauth-scope').value,
+            state: document.getElementById('oauth-state').value,
+            code_challenge: document.getElementById('oauth-code-challenge').value,
+            code_challenge_method: document.getElementById('oauth-code-challenge-method').value
+        };
+
+        // UI Elements - declare first
+        const emailInput = document.getElementById('email');
+        const signInBtn = document.getElementById('sign-in-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const errorDiv = document.getElementById('error-message');
+        const successDiv = document.getElementById('success-message');
+        const emailSection = document.getElementById('email-section');
+        const loadingSection = document.getElementById('loading-section');
+
+        // Update UI with OAuth info - validate required parameters
+        function initializeOAuthForm() {
+            if (!oauthState.client_id) {
+                document.getElementById('client-name').textContent = 'Missing client_id';
+                showError('Missing client_id in authorization request');
+                return false;
+            }
+
+            if (!oauthState.scope) {
+                document.getElementById('scopes').textContent = 'Missing scope';
+                showError('Missing scope in authorization request');
+                return false;
+            }
+
+            document.getElementById('client-name').textContent = oauthState.client_id;
+            document.getElementById('scopes').textContent = oauthState.scope;
+            return true;
+        }
+
+        // Initialize the form
+        const isValidOAuth = initializeOAuthForm();
+
+        // Helper functions
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            successDiv.classList.add('hidden');
+        }
+
+        function showSuccess(message) {
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+        }
+
+        function hideMessages() {
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+        }
+
+        function showLoading() {
+            emailSection.classList.add('hidden');
+            loadingSection.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            emailSection.classList.remove('hidden');
+            loadingSection.classList.add('hidden');
+        }
+
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function base64urlToArrayBuffer(base64url) {
+            const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+            const padding = '='.repeat((4 - base64.length % 4) % 4);
+            const base64Padded = base64 + padding;
+            const binary = atob(base64Padded);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function preparePublicKeyCredentialCreationOptions(options) {
+            return {
+                ...options,
+                challenge: base64urlToArrayBuffer(options.challenge),
+                user: {
+                    ...options.user,
+                    id: base64urlToArrayBuffer(options.user.id)
+                },
+                excludeCredentials: options.excludeCredentials?.map(cred => ({
+                    ...cred,
+                    id: base64urlToArrayBuffer(cred.id)
+                }))
+            };
+        }
+
+        function preparePublicKeyCredentialRequestOptions(options) {
+            return {
+                ...options,
+                challenge: base64urlToArrayBuffer(options.challenge),
+                allowCredentials: options.allowCredentials?.map(cred => ({
+                    ...cred,
+                    id: base64urlToArrayBuffer(cred.id)
+                }))
+            };
+        }
+
+        async function makeRequest(url, method, body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(url, options);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error_description || data.error || 'Request failed');
+            }
+
+            return {
+                data,
+                challengeId: response.headers.get('x-challenge-id')
+            };
+        }
+
+        // WebAuthn Registration Flow
+        async function registerPasskey() {
+            const email = emailInput.value.trim();
+
+            if (!email) {
+                showError('Please enter your email address');
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                showError('Please enter a valid email address');
+                return;
+            }
+
+            try {
+                showLoading();
+                hideMessages();
+
+                // Start registration
+                // Extract username from email (part before @)
+                const username = email.split('@')[0];
+                const response = await makeRequest(
+                    `/api/v1/core/oauth/webauthn/register/start?username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}`,
+                    'POST'
+                );
+
+                // Create credential with WebAuthn API
+                const publicKeyOptions = preparePublicKeyCredentialCreationOptions(response.data.publicKey);
+                const credential = await navigator.credentials.create({
+                    publicKey: publicKeyOptions
+                });
+
+                if (!credential) {
+                    throw new Error('Passkey creation was cancelled');
+                }
+
+                // Finish registration
+                const finishResponse = await makeRequest('/api/v1/core/oauth/webauthn/register/finish', 'POST', {
+                    challenge_id: response.challengeId,
+                    username: username,
+                    email: email,
+                    credential: {
+                        id: credential.id,
+                        rawId: Array.from(new Uint8Array(credential.rawId)),
+                        response: {
+                            attestationObject: Array.from(new Uint8Array(credential.response.attestationObject)),
+                            clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON))
+                        },
+                        type: credential.type
+                    }
+                });
+
+                showSuccess('Passkey created successfully! Redirecting...');
+
+                // Complete OAuth flow - use user_id from registration
+                const completeParams = new URLSearchParams();
+                completeParams.append('user_id', finishResponse.data.user_id);
+
+                // Pass through OAuth parameters individually
+                if (oauthState.response_type) completeParams.append('response_type', oauthState.response_type);
+                if (oauthState.client_id) completeParams.append('client_id', oauthState.client_id);
+                if (oauthState.redirect_uri) completeParams.append('redirect_uri', oauthState.redirect_uri);
+                if (oauthState.scope) completeParams.append('scope', oauthState.scope);
+                if (oauthState.state) completeParams.append('state', oauthState.state);
+                if (oauthState.code_challenge) completeParams.append('code_challenge', oauthState.code_challenge);
+                if (oauthState.code_challenge_method) completeParams.append('code_challenge_method', oauthState.code_challenge_method);
+
+                setTimeout(() => {
+                    window.location.href = `/api/v1/core/oauth/webauthn/complete?${completeParams.toString()}`;
+                }, 1500);
+
+            } catch (error) {
+                hideLoading();
+                if (error.name === 'NotAllowedError') {
+                    showError('Passkey creation was cancelled or failed');
+                } else if (error.name === 'NotSupportedError') {
+                    showError('WebAuthn is not supported on this device');
+                } else {
+                    showError(error.message);
+                }
+            }
+        }
+
+        // WebAuthn Authentication Flow
+        async function authenticateUser(email = null) {
+            const userEmail = email || emailInput.value.trim();
+
+            if (!userEmail) {
+                showError('Please enter your email address');
+                return;
+            }
+
+            if (!validateEmail(userEmail)) {
+                showError('Please enter a valid email address');
+                return;
+            }
+
+            try {
+                showLoading();
+                hideMessages();
+
+                // Start authentication with OAuth state
+                const authParams = new URLSearchParams({
+                    email: userEmail,
+                    oauth_state: JSON.stringify(oauthState)
+                });
+
+                const startResponse = await makeRequest(
+                    `/api/v1/core/oauth/webauthn/auth/start?${authParams}`,
+                    'POST'
+                );
+
+                // Get credential with WebAuthn API
+                const publicKeyOptions = preparePublicKeyCredentialRequestOptions(startResponse.data.publicKey);
+                const credential = await navigator.credentials.get({
+                    publicKey: publicKeyOptions
+                });
+
+                if (!credential) {
+                    throw new Error('Authentication was cancelled');
+                }
+
+                // Finish authentication
+                const finishResponse = await makeRequest('/api/v1/core/oauth/webauthn/auth/finish', 'POST', {
+                    challenge_id: startResponse.data.challenge_id,
+                    credential: {
+                        id: credential.id,
+                        rawId: Array.from(new Uint8Array(credential.rawId)),
+                        response: {
+                            authenticatorData: Array.from(new Uint8Array(credential.response.authenticatorData)),
+                            clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
+                            signature: Array.from(new Uint8Array(credential.response.signature)),
+                            userHandle: credential.response.userHandle ? Array.from(new Uint8Array(credential.response.userHandle)) : null
+                        },
+                        type: credential.type
+                    }
+                });
+
+                // Authentication successful - redirect to OAuth completion endpoint
+                showSuccess('Authentication successful! Redirecting...');
+
+                // Redirect to WebAuthn completion endpoint with OAuth parameters
+                const completeParams = new URLSearchParams();
+                completeParams.append('user_id', finishResponse.data.user_id);
+
+                // Pass through OAuth parameters individually
+                if (oauthState.response_type) completeParams.append('response_type', oauthState.response_type);
+                if (oauthState.client_id) completeParams.append('client_id', oauthState.client_id);
+                if (oauthState.redirect_uri) completeParams.append('redirect_uri', oauthState.redirect_uri);
+                if (oauthState.scope) completeParams.append('scope', oauthState.scope);
+                if (oauthState.state) completeParams.append('state', oauthState.state);
+                if (oauthState.code_challenge) completeParams.append('code_challenge', oauthState.code_challenge);
+                if (oauthState.code_challenge_method) completeParams.append('code_challenge_method', oauthState.code_challenge_method);
+
+                setTimeout(() => {
+                    window.location.href = `/api/v1/core/oauth/webauthn/complete?${completeParams.toString()}`;
+                }, 1500);
+
+            } catch (error) {
+                hideLoading();
+                if (error.name === 'NotAllowedError') {
+                    showError('Authentication was cancelled or failed');
+                } else if (error.name === 'NotSupportedError') {
+                    showError('WebAuthn is not supported on this device');
+                } else {
+                    showError(error.message || 'Authentication failed');
+                }
+            }
+        }
+
+        // Event listeners - only if OAuth is valid
+        if (isValidOAuth) {
+            signInBtn.addEventListener('click', () => authenticateUser());
+            registerBtn.addEventListener('click', registerPasskey);
+
+            emailInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    authenticateUser();
+                }
+            });
+        }
+
+        // Check WebAuthn support - only if OAuth is valid
+        if (isValidOAuth) {
+            if (!window.PublicKeyCredential) {
+                showError('WebAuthn is not supported on this browser. Please use a modern browser like Chrome, Firefox, or Safari.');
+                signInBtn.disabled = true;
+                registerBtn.disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>
