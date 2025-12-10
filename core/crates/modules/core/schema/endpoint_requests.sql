@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS endpoint_requests (
     http_method VARCHAR(10) NOT NULL,
     response_status INTEGER,
     response_time_ms INTEGER,
-    requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    requested_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (session_id) REFERENCES user_sessions(session_id) ON DELETE CASCADE
 );

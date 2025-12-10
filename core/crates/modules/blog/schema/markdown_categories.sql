@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS markdown_categories (
     description TEXT,
     parent_id TEXT,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (parent_id) REFERENCES markdown_categories(id) ON DELETE CASCADE
 );

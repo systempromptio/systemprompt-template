@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS services (
     -- Binary version tracking for automatic restarts on rebuild
     binary_mtime BIGINT DEFAULT NULL,
     -- Minimal timestamps
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_services_status ON services(status);
 CREATE INDEX IF NOT EXISTS idx_services_module ON services(module_name);

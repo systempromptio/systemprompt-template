@@ -34,9 +34,9 @@ CREATE TABLE IF NOT EXISTS generated_images (
     trace_id VARCHAR(255),
 
     -- Lifecycle management
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP,
-    deleted_at TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMPTZ,
+    deleted_at TIMESTAMPTZ,
 
     -- Indexes
     CONSTRAINT fk_request FOREIGN KEY (request_id) REFERENCES ai_requests(request_id) ON DELETE CASCADE

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS conversation_subjects (
     extracted_keywords TEXT,  -- JSON array of strings: ["keyword1", "keyword2"]
     primary_topic VARCHAR(255),  -- Classified primary topic
     topic_confidence DOUBLE PRECISION DEFAULT 0.0,  -- Confidence score 0-1
-    analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    analyzed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (task_id) REFERENCES agent_tasks(task_id) ON DELETE CASCADE
 );
 

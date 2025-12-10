@@ -6,15 +6,15 @@ CREATE TABLE IF NOT EXISTS oauth_auth_codes (
     user_id VARCHAR(255) NOT NULL,                                         -- Resource owner identifier
     redirect_uri TEXT NOT NULL,                                    -- RFC 6749 Section 4.1.3 - REQUIRED if in auth request
     scope TEXT NOT NULL,                                           -- RFC 6749 Section 4.1.3 - Granted scope
-    expires_at TIMESTAMP NOT NULL,                                 -- RFC 6749 Section 4.1.2 - Short-lived (≤10 minutes)
+    expires_at TIMESTAMPTZ NOT NULL,                                 -- RFC 6749 Section 4.1.2 - Short-lived (≤10 minutes)
     -- PKCE Extension (RFC 7636 - Proof Key for Code Exchange)
     code_challenge TEXT,                                           -- RFC 7636 Section 4.3
     code_challenge_method TEXT,                                    -- "S256" or "plain"
     -- OpenID Connect Extension
     nonce TEXT,                                                    -- OIDC Section 3.1.2.1 - Replay protection
     -- Administrative Fields
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,                -- Creation timestamp
-    used_at TIMESTAMP,                                             -- Single-use enforcement
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,                -- Creation timestamp
+    used_at TIMESTAMPTZ,                                             -- Single-use enforcement
     -- Foreign Key Constraints
     FOREIGN KEY (client_id) REFERENCES oauth_clients(client_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

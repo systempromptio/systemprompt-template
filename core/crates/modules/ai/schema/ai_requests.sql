@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS ai_requests (
     status VARCHAR(255) NOT NULL DEFAULT 'pending',
     error_message TEXT,
     -- Timestamps
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP
 );
 -- Performance Indexes

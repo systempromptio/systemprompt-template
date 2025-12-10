@@ -4,13 +4,13 @@
 CREATE TABLE IF NOT EXISTS user_sessions (
     session_id TEXT PRIMARY KEY,
     user_id VARCHAR(255),  -- Nullable to support anonymous users
-    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_activity_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ended_at TIMESTAMP,
+    started_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    last_activity_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    ended_at TIMESTAMPTZ,
     duration_seconds INTEGER,
     user_type VARCHAR(255) DEFAULT 'registered' CHECK (user_type IN ('anon', 'registered')),
-    converted_at TIMESTAMP,
-    expires_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL '7 days'),
+    converted_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ DEFAULT (CURRENT_TIMESTAMP + INTERVAL '7 days'),
     client_id VARCHAR(255) NOT NULL DEFAULT 'sp_web',
     client_type VARCHAR(255) NOT NULL DEFAULT 'firstparty' CHECK (client_type IN ('cimd', 'firstparty', 'thirdparty', 'system', 'unknown')),
     request_count INTEGER DEFAULT 0,

@@ -6,13 +6,13 @@ CREATE TABLE IF NOT EXISTS scheduled_jobs (
     job_name TEXT NOT NULL UNIQUE,
     schedule TEXT NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT true,
-    last_run TIMESTAMP,
-    next_run TIMESTAMP,
+    last_run TIMESTAMPTZ,
+    next_run TIMESTAMPTZ,
     last_status TEXT,
     last_error TEXT,
     run_count INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_scheduled_jobs_job_name ON scheduled_jobs(job_name);

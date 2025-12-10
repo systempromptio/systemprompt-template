@@ -27,11 +27,11 @@ CREATE TABLE IF NOT EXISTS campaign_links (
 
     -- Status
     is_active BOOLEAN DEFAULT TRUE,
-    expires_at TIMESTAMP,
+    expires_at TIMESTAMPTZ,
 
     -- Timestamps
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     -- Foreign keys
     FOREIGN KEY (source_content_id) REFERENCES markdown_content(id) ON DELETE SET NULL

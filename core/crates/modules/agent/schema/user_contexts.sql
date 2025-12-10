@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS user_contexts (
     name TEXT NOT NULL,
 
     -- Timestamps
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     -- Foreign keys for data protection
     CONSTRAINT fk_user_contexts_session

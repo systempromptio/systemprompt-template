@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS agent_tasks (
             'canceled', 'failed', 'rejected', 'auth-required', 'unknown'
         )
     ),
-    status_timestamp TIMESTAMP,
+    status_timestamp TIMESTAMPTZ,
 
     -- Analytics Context (promoted from metadata for fast queries)
     user_id TEXT,
@@ -25,16 +25,16 @@ CREATE TABLE IF NOT EXISTS agent_tasks (
     agent_name TEXT,
 
     -- Task execution timing
-    started_at TIMESTAMP,
-    completed_at TIMESTAMP,
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
     execution_time_ms INTEGER,
 
     -- A2A Task optional metadata field (JSON for A2A protocol extensions only)
     metadata JSONB DEFAULT '{}',
 
     -- Standard audit fields
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     -- Foreign key constraints
     FOREIGN KEY (context_id) REFERENCES user_contexts(context_id) ON DELETE CASCADE

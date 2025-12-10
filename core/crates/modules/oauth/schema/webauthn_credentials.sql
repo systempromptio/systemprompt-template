@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS webauthn_credentials (
     device_type TEXT CHECK(device_type IN ('platform', 'cross-platform')) DEFAULT 'platform',
     transports TEXT DEFAULT '["internal"]',
     -- Timestamps
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_used_at TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TIMESTAMPTZ,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 -- Performance indexes

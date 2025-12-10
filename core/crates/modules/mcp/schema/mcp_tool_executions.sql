@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS mcp_tool_executions (
     tool_name VARCHAR(255) NOT NULL,
     mcp_server_name VARCHAR(255) NOT NULL,
     -- Execution timing
-    started_at TIMESTAMP NOT NULL,
-    completed_at TIMESTAMP,
+    started_at TIMESTAMPTZ NOT NULL,
+    completed_at TIMESTAMPTZ,
     execution_time_ms INTEGER,
     -- Execution data
     input TEXT NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS mcp_tool_executions (
     request_source TEXT,
     ai_tool_call_id VARCHAR(255),
     -- Audit
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 -- Performance indexes
 CREATE INDEX IF NOT EXISTS idx_mcp_tool_executions_tool_name ON mcp_tool_executions(tool_name);
