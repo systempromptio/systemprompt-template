@@ -4,7 +4,16 @@ display_name: "Database"
 type: infrastructure
 description: PostgreSQL database abstraction layer with type-safe query management and compile-time validation
 
+# Must run first - provides shared functions like update_timestamp_trigger()
+weight: -100
+
 dependencies: []
+
+# Shared database functions must be created before any module uses them
+schemas:
+  - file: "schema/functions.sql"
+    table: ""
+    required_columns: []
 
 queries:
   agent:
