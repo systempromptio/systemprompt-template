@@ -14,6 +14,18 @@ set -e
 
 # Configuration
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+
+# Source environment files for sqlx compile-time checks
+if [ -f "$REPO_ROOT/.env.local" ]; then
+    set -a
+    source "$REPO_ROOT/.env.local"
+    set +a
+fi
+if [ -f "$REPO_ROOT/.env.secrets" ]; then
+    set -a
+    source "$REPO_ROOT/.env.secrets"
+    set +a
+fi
 MODE="${1:-debug}"
 BUILD_WEB=false
 BUILD_DOCKER=false
