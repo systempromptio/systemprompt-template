@@ -32,11 +32,11 @@ CREATE TABLE IF NOT EXISTS campaign_links (
 
     -- Status
     is_active BOOLEAN DEFAULT TRUE,
-    expires_at TIMESTAMP,
+    expires_at TIMESTAMPTZ,
 
     -- Timestamps
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     -- Foreign keys
     FOREIGN KEY (source_content_id) REFERENCES markdown_content(id) ON DELETE SET NULL
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS link_clicks (
     -- Click context
     referrer_page TEXT, -- Page user was on when they clicked
     referrer_url TEXT, -- Full referrer URL
-    clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    clicked_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     -- User context (copied from session for performance)
     user_agent TEXT,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS link_clicks (
     -- Journey tracking
     is_first_click BOOLEAN DEFAULT FALSE, -- First time this session clicked this link
     is_conversion BOOLEAN DEFAULT FALSE, -- Did this click lead to a conversion?
-    conversion_at TIMESTAMP,
+    conversion_at TIMESTAMPTZ,
 
     -- Analytics
     time_on_page_seconds INTEGER, -- How long they spent on the page before clicking

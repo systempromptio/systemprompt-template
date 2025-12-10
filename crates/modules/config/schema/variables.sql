@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS variables (
     is_required BOOLEAN DEFAULT TRUE,   -- Whether this variable is required for system operation
     default_value TEXT,                 -- Default value if not set
     -- Lifecycle tracking
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT type_check CHECK (type IN ('string', 'integer', 'boolean', 'json')),
     CONSTRAINT category_check CHECK (category IN ('system', 'database', 'web', 'security', 'logging', 'module'))
 );

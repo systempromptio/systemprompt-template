@@ -51,8 +51,8 @@ CREATE TABLE IF NOT EXISTS users (
     -- Profile data
     avatar_url TEXT,
     -- Timestamps
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);

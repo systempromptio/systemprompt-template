@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS task_messages (
 
     -- Timestamps for ordering
     sequence_number INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     -- Metadata for A2A protocol extensions only
     metadata JSONB DEFAULT '{}',

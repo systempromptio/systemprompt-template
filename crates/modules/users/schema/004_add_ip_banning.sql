@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS banned_ips (
     ip_address VARCHAR(45) PRIMARY KEY,
     reason VARCHAR(255) NOT NULL,
-    banned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP,
+    banned_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMPTZ,
     ban_count INTEGER DEFAULT 1,
     last_offense_path VARCHAR(512),
     last_user_agent TEXT,

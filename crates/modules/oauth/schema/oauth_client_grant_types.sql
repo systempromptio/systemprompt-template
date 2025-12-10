@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS oauth_client_grant_types (
     grant_type VARCHAR(255) NOT NULL CHECK (grant_type IN (
         'authorization_code', 'refresh_token', 'client_credentials', 'password'
     )),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (client_id, grant_type),
     FOREIGN KEY (client_id) REFERENCES oauth_clients(client_id) ON DELETE CASCADE
 );

@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS task_artifacts (
     metadata JSONB DEFAULT '{}',
 
     -- Timestamps
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (task_id) REFERENCES agent_tasks(task_id) ON DELETE CASCADE,
     FOREIGN KEY (mcp_execution_id) REFERENCES mcp_tool_executions(mcp_execution_id) ON DELETE SET NULL,

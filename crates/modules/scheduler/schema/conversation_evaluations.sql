@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS conversation_evaluations (
     -- === META ===
     overall_score REAL NOT NULL CHECK(overall_score BETWEEN 0 AND 1),
     evaluation_summary TEXT NOT NULL,
-    analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    analyzed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     analysis_version VARCHAR(10) DEFAULT 'v4'
 );
 

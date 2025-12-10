@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS ai_request_messages (
     -- Optional fields
     name VARCHAR(255),              -- For function/tool messages
     tool_call_id VARCHAR(255),      -- For tool response messages
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (request_id) REFERENCES ai_requests(id) ON DELETE CASCADE,
     UNIQUE(request_id, sequence_number)
 );

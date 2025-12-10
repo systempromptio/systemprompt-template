@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS context_notifications (
     notification_data JSONB NOT NULL,
 
     -- When notification was received
-    received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    received_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     -- Whether notification has been broadcasted to SSE stream
     broadcasted BOOLEAN DEFAULT FALSE,

@@ -15,10 +15,10 @@ CREATE TABLE IF NOT EXISTS context_agents (
     agent_name TEXT NOT NULL,
 
     -- When the agent was added to this context
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    added_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     -- Last time this agent was active in this context
-    last_active_at TIMESTAMP,
+    last_active_at TIMESTAMPTZ,
 
     -- Foreign key constraints
     FOREIGN KEY (context_id) REFERENCES user_contexts(context_id) ON DELETE CASCADE,

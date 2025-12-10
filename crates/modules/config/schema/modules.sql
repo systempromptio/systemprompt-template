@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS modules (
     -- Control flags
     enabled BOOLEAN DEFAULT TRUE,
     -- Timestamps
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_modules_name ON modules(name);

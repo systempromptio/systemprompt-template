@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS ai_request_tool_calls (
     mcp_execution_id VARCHAR(255),
     ai_tool_call_id VARCHAR(255),
     sequence_number INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (request_id) REFERENCES ai_requests(id) ON DELETE CASCADE,
     FOREIGN KEY (mcp_execution_id) REFERENCES mcp_tool_executions(mcp_execution_id) ON DELETE SET NULL,
     UNIQUE(request_id, sequence_number)

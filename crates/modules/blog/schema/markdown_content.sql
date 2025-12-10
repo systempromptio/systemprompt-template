@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS markdown_content (
     body TEXT NOT NULL,
 
     author TEXT NOT NULL,
-    published_at TIMESTAMP NOT NULL,
+    published_at TIMESTAMPTZ NOT NULL,
     keywords TEXT NOT NULL,
     kind TEXT NOT NULL DEFAULT 'article',
     image TEXT,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS markdown_content (
     public BOOLEAN NOT NULL DEFAULT true,
     links JSONB DEFAULT '[]'::jsonb,
 
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_markdown_content_category ON markdown_content(category_id);

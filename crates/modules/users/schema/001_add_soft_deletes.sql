@@ -7,15 +7,15 @@
 
 -- Add deleted_at column to user_sessions table
 ALTER TABLE IF EXISTS user_sessions
-ADD COLUMN deleted_at TIMESTAMP DEFAULT NULL;
+ADD COLUMN deleted_at TIMESTAMPTZ DEFAULT NULL;
 
 -- Add deleted_at column to analytics_events table
 ALTER TABLE IF EXISTS analytics_events
-ADD COLUMN deleted_at TIMESTAMP DEFAULT NULL;
+ADD COLUMN deleted_at TIMESTAMPTZ DEFAULT NULL;
 
 -- Add deleted_at column to endpoint_requests table
 ALTER TABLE IF EXISTS endpoint_requests
-ADD COLUMN deleted_at TIMESTAMP DEFAULT NULL;
+ADD COLUMN deleted_at TIMESTAMPTZ DEFAULT NULL;
 
 -- Create indexes for soft delete queries (WHERE deleted_at IS NULL)
 -- These enable efficient filtering of "active" (non-deleted) records

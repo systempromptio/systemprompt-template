@@ -26,9 +26,9 @@ CREATE TABLE IF NOT EXISTS content_performance_metrics (
     bounce_rate DOUBLE PRECISION DEFAULT 0.0,
 
     -- Tracking timestamps
-    first_view_at TIMESTAMP,
-    last_view_at TIMESTAMP,
-    last_calculated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    first_view_at TIMESTAMPTZ,
+    last_view_at TIMESTAMPTZ,
+    last_calculated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     -- Constraints
     CONSTRAINT fk_content

@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS oauth_clients (
     logo_uri TEXT,
     -- Administrative Fields
     is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     last_used_at TIMESTAMP
 );
 -- Performance index
