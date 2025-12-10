@@ -45,7 +45,7 @@ impl AgentMonitor {
                     Ok(result) => Ok(result),
                     Err(e) => Ok(HealthCheckResult {
                         healthy: false,
-                        message: format!("TCP check failed: {}", e),
+                        message: format!("TCP check failed: {e}"),
                         response_time_ms: 0,
                     }),
                 }
@@ -107,7 +107,7 @@ impl AgentMonitor {
                 if process::kill_process(pid) {
                     self.db_service.mark_crashed(&agent_id).await?;
                     cleaned_up += 1;
-                    CliService::success(&format!("✅ Cleaned up agent {}", agent_id));
+                    CliService::success(&format!("✅ Cleaned up agent {agent_id}"));
                 } else {
                     CliService::error(&format!(
                         "❌ Failed to kill agent {} (PID {})",
@@ -142,7 +142,7 @@ pub struct MonitoringReport {
 }
 
 impl MonitoringReport {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             healthy_agents: Vec::new(),
             unhealthy_agents: Vec::new(),
@@ -171,7 +171,7 @@ pub async fn check_agent_health(agent_id: &str) -> Result<HealthCheckResult> {
 
 async fn perform_tcp_health_check(host: &str, port: u16) -> Result<HealthCheckResult> {
     let start = std::time::Instant::now();
-    let address = format!("{}:{}", host, port);
+    let address = format!("{host}:{port}");
 
     CliService::info(&format!(
         "🏥 Health check: attempting TCP connection to {}",
@@ -198,7 +198,7 @@ async fn perform_tcp_health_check(host: &str, port: u16) -> Result<HealthCheckRe
             ));
             Ok(HealthCheckResult {
                 healthy: false,
-                message: format!("Connection failed: {}", e),
+                message: format!("Connection failed: {e}"),
                 response_time_ms: 0,
             })
         },
@@ -232,7 +232,7 @@ async fn get_agent_port_simple(agent_id: &str) -> Result<u16> {
 
 pub async fn check_agent_responsiveness(agent_id: &str, timeout_secs: u64) -> Result<bool> {
     let port = get_agent_port_simple(agent_id).await?;
-    let address = format!("127.0.0.1:{}", port);
+    let address = format!("127.0.0.1:{port}");
 
     match timeout(
         Duration::from_secs(timeout_secs),
@@ -245,7 +245,7 @@ pub async fn check_agent_responsiveness(agent_id: &str, timeout_secs: u64) -> Re
             Ok(true)
         },
         Ok(Err(e)) => {
-            CliService::warning(&format!("⚠️ Agent {} connection failed: {}", agent_id, e));
+            CliService::warning(&format!("⚠️ Agent {agent_id} connection failed: {e}"));
             Ok(false)
         },
         Err(_) => {

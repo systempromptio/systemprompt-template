@@ -93,7 +93,7 @@ export function formatDuration(ms: number): string {
  * ```
  */
 export function calculateTaskDuration(task: Task): string {
-  if (!task.status) return 'Unknown'
+  if (!task.status) return 'No status'
 
   const isCompleted = ['completed', 'failed', 'rejected'].includes(task.status.state)
 
@@ -101,21 +101,24 @@ export function calculateTaskDuration(task: Task): string {
     return 'In Progress'
   }
 
-  const metadata = task.metadata as Record<string, unknown> | undefined
-  if (metadata?.execution_time_ms && typeof metadata.execution_time_ms === 'number') {
-    return formatDuration(metadata.execution_time_ms)
+  // Use typed metadata - TaskMetadata already defines these fields
+  const { execution_time_ms, started_at, completed_at } = task.metadata
+
+  // Prefer execution_time_ms as it's most reliable
+  if (execution_time_ms !== undefined) {
+    return formatDuration(execution_time_ms)
   }
 
-  const startedAt = metadata?.started_at as string | undefined
-  const completedAt = metadata?.completed_at as string | undefined
-  const startedMs = startedAt ? parseSQLiteDateTime(startedAt) : 0
-  const completedMs = completedAt ? parseSQLiteDateTime(completedAt) : 0
-
-  if (startedMs > 0 && completedMs > 0) {
-    return formatDuration(completedMs - startedMs)
+  // Fallback to calculating from timestamps
+  if (started_at && completed_at) {
+    const startedMs = parseSQLiteDateTime(started_at)
+    const completedMs = parseSQLiteDateTime(completed_at)
+    if (startedMs > 0 && completedMs > 0) {
+      return formatDuration(completedMs - startedMs)
+    }
   }
 
-  return 'Unknown'
+  return 'No timing data'
 }
 
 /**
@@ -346,9 +349,7 @@ export function filterTasksByState(tasks: Task[], states: string | string[]): Ta
  * ```
  */
 export function getTaskAgentName(task: Task): string {
-  const metadata = task.metadata as Record<string, unknown> | undefined
-  const name = metadata?.agent_name as string | undefined
-  return name || 'Unknown Agent'
+  return task.metadata.agent_name || 'Unknown Agent'
 }
 
 /**
@@ -365,7 +366,5 @@ export function getTaskAgentName(task: Task): string {
  * ```
  */
 export function getTaskMcpServer(task: Task): string {
-  const metadata = task.metadata as Record<string, unknown> | undefined
-  const name = metadata?.mcp_server_name as string | undefined
-  return name || 'Unknown Server'
+  return task.metadata.mcp_server_name || 'Unknown Server'
 }

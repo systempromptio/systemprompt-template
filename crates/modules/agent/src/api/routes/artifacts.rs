@@ -1,9 +1,7 @@
-use axum::{
-    extract::{Path, Query, State},
-    http::StatusCode,
-    response::{IntoResponse, Json},
-    Extension,
-};
+use axum::extract::{Path, Query, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Json};
+use axum::Extension;
 use serde::Deserialize;
 
 use crate::repository::ArtifactRepository;
@@ -23,9 +21,9 @@ pub async fn list_artifacts_by_context(
     let logger = LogService::new(app_context.db_pool().clone(), req_ctx.log_context());
 
     logger
-        .info(
+        .debug(
             "artifacts_api",
-            &format!("Listing artifacts for context: {}", context_id),
+            &format!("Listing artifacts | context_id={context_id}"),
         )
         .await
         .ok();
@@ -35,12 +33,12 @@ pub async fn list_artifacts_by_context(
     match artifact_repo.get_artifacts_by_context(&context_id).await {
         Ok(artifacts) => {
             logger
-                .info(
+                .debug(
                     "artifacts_api",
                     &format!(
-                        "Found {} artifacts for context {}",
-                        artifacts.len(),
-                        context_id
+                        "Artifacts listed | context_id={}, count={}",
+                        context_id,
+                        artifacts.len()
                     ),
                 )
                 .await
@@ -49,7 +47,7 @@ pub async fn list_artifacts_by_context(
         },
         Err(e) => {
             logger
-                .error("artifacts_api", &format!("Failed to list artifacts: {}", e))
+                .error("artifacts_api", &format!("Failed to list artifacts: {e}"))
                 .await
                 .ok();
             (
@@ -72,9 +70,9 @@ pub async fn list_artifacts_by_task(
     let logger = LogService::new(app_context.db_pool().clone(), req_ctx.log_context());
 
     logger
-        .info(
+        .debug(
             "artifacts_api",
-            &format!("Listing artifacts for task: {}", task_id),
+            &format!("Listing artifacts | task_id={task_id}"),
         )
         .await
         .ok();
@@ -84,9 +82,13 @@ pub async fn list_artifacts_by_task(
     match artifact_repo.get_artifacts_by_task(&task_id).await {
         Ok(artifacts) => {
             logger
-                .info(
+                .debug(
                     "artifacts_api",
-                    &format!("Found {} artifacts for task {}", artifacts.len(), task_id),
+                    &format!(
+                        "Artifacts listed | task_id={}, count={}",
+                        task_id,
+                        artifacts.len()
+                    ),
                 )
                 .await
                 .ok();
@@ -94,7 +96,7 @@ pub async fn list_artifacts_by_task(
         },
         Err(e) => {
             logger
-                .error("artifacts_api", &format!("Failed to list artifacts: {}", e))
+                .error("artifacts_api", &format!("Failed to list artifacts: {e}"))
                 .await
                 .ok();
             (
@@ -117,9 +119,9 @@ pub async fn get_artifact(
     let logger = LogService::new(app_context.db_pool().clone(), req_ctx.log_context());
 
     logger
-        .info(
+        .debug(
             "artifacts_api",
-            &format!("Retrieving artifact: {}", artifact_id),
+            &format!("Retrieving artifact | artifact_id={artifact_id}"),
         )
         .await
         .ok();
@@ -129,14 +131,14 @@ pub async fn get_artifact(
     match artifact_repo.get_artifact_by_id(&artifact_id).await {
         Ok(Some(artifact)) => {
             logger
-                .info("artifacts_api", "Artifact retrieved successfully")
+                .debug("artifacts_api", "Artifact retrieved successfully")
                 .await
                 .ok();
             (StatusCode::OK, Json(artifact)).into_response()
         },
         Ok(None) => {
             logger
-                .info("artifacts_api", "Artifact not found")
+                .debug("artifacts_api", "Artifact not found")
                 .await
                 .ok();
             (
@@ -152,7 +154,7 @@ pub async fn get_artifact(
             logger
                 .error(
                     "artifacts_api",
-                    &format!("Failed to retrieve artifact: {}", e),
+                    &format!("Failed to retrieve artifact: {e}"),
                 )
                 .await
                 .ok();
@@ -178,9 +180,9 @@ pub async fn list_artifacts_by_user(
     let user_id = req_ctx.auth.user_id.as_str();
 
     logger
-        .info(
+        .debug(
             "artifacts_api",
-            &format!("Listing artifacts for user: {}", user_id),
+            &format!("Listing artifacts | user_id={user_id}"),
         )
         .await
         .ok();
@@ -193,9 +195,13 @@ pub async fn list_artifacts_by_user(
     {
         Ok(artifacts) => {
             logger
-                .info(
+                .debug(
                     "artifacts_api",
-                    &format!("Found {} artifacts for user {}", artifacts.len(), user_id),
+                    &format!(
+                        "Artifacts listed | user_id={}, count={}",
+                        user_id,
+                        artifacts.len()
+                    ),
                 )
                 .await
                 .ok();
@@ -203,7 +209,7 @@ pub async fn list_artifacts_by_user(
         },
         Err(e) => {
             logger
-                .error("artifacts_api", &format!("Failed to list artifacts: {}", e))
+                .error("artifacts_api", &format!("Failed to list artifacts: {e}"))
                 .await
                 .ok();
             (

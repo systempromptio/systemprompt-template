@@ -1,14 +1,11 @@
-use axum::{
-    extract::{Json, Request, State},
-    http::StatusCode,
-    response::{
-        sse::{Event, KeepAlive, Sse},
-        IntoResponse,
-    },
-};
+use axum::extract::{Json, Request, State};
+use axum::http::StatusCode;
+use axum::response::sse::{Event, KeepAlive, Sse};
+use axum::response::IntoResponse;
 use serde_json::json;
 use std::sync::Arc;
-use systemprompt_core_system::RequestContext;
+use systemprompt_core_logging::LogService;
+use systemprompt_core_system::{create_webhook_broadcaster, RequestContext};
 
 use super::state::AgentHandlerState;
 use crate::models::a2a::Task;
@@ -22,18 +19,36 @@ pub async fn handle_agent_request(
     State(state): State<Arc<AgentHandlerState>>,
     request: Request,
 ) -> impl IntoResponse {
-    let log = state.log.clone();
     let start_time = std::time::Instant::now();
 
-    log.info("a2a_request", "🚨 Agent request handler invoked")
+    let context = match request.extensions().get::<RequestContext>().cloned() {
+        Some(ctx) => ctx,
+        None => {
+            state
+                .log
+                .error(
+                    "a2a_request",
+                    "RequestContext missing from request extensions - middleware configuration \
+                     error",
+                )
+                .await
+                .ok();
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "jsonrpc": "2.0",
+                    "error": {"code": -32603, "message": "Internal server error: request context unavailable"},
+                    "id": null
+                })),
+            )
+                .into_response();
+        },
+    };
+
+    let log = LogService::new(state.db_pool.clone(), context.log_context());
+    log.info("a2a_request", "Agent request handler invoked")
         .await
         .ok();
-
-    let context = request
-        .extensions()
-        .get::<RequestContext>()
-        .cloned()
-        .expect("RequestContext must be present after middleware - this is a bug if missing");
 
     let (parts, body) = request.into_parts();
     let headers = parts.headers.clone();
@@ -76,7 +91,7 @@ pub async fn handle_agent_request(
                     .with_data(json!(
                         "Request must be valid JSON-RPC 2.0 with jsonrpc, method, params, and id"
                     ))
-                    .log_error(format!("Invalid JSON-RPC request: {}", e))
+                    .log_error(format!("Invalid JSON-RPC request: {e}"))
                     .build(
                         &crate::models::a2a::jsonrpc::NumberOrString::Number(0),
                         &log,
@@ -216,9 +231,6 @@ pub async fn handle_agent_request(
         .await
         .ok();
 
-        log.info("a2a_request", "DEBUG: After first log, before match")
-            .await
-            .ok();
 
         let request_id_value = Some(match request_id {
             crate::models::a2a::jsonrpc::NumberOrString::String(ref s) => {
@@ -232,7 +244,7 @@ pub async fn handle_agent_request(
         log.info(
             "a2a_request",
             &format!(
-                "🔷 Calling handle_streaming_request with request_id: {:?}",
+                "Calling handle_streaming_request with request_id: {:?}",
                 request_id_value
             ),
         )
@@ -249,7 +261,7 @@ pub async fn handle_agent_request(
 
         log.info(
             "a2a_request",
-            "🔶 handle_streaming_request returned, stream created",
+            "handle_streaming_request returned, stream created",
         )
         .await
         .ok();
@@ -379,15 +391,15 @@ pub async fn handle_agent_request(
             Err(e) => {
                 JsonRpcErrorBuilder::internal_error()
                     .with_data(json!("Task serialization failed"))
-                    .log_error(format!("Failed to serialize task response: {}", e))
+                    .log_error(format!("Failed to serialize task response: {e}"))
                     .build(&request_id, &log)
                     .await
             },
         },
         Err(e) => {
             JsonRpcErrorBuilder::internal_error()
-                .with_data(json!(format!("Request handling failed: {}", e)))
-                .log_error(format!("A2A request handling failed: {}", e))
+                .with_data(json!(format!("Request handling failed: {e}")))
+                .log_error(format!("A2A request handling failed: {e}"))
                 .build(&request_id, &log)
                 .await
         },
@@ -418,25 +430,19 @@ async fn validate_message_context(
     let user_id =
         user_id.ok_or_else(|| "User authentication required for message processing".to_string())?;
 
-    // Fail immediately if user_id is missing or invalid (security check)
     if user_id == "missing-user-id" || user_id.is_empty() {
         return Err(
-            "Authentication required: x-user-id header must be set by API proxy after JWT validation"
+            "Authentication required: x-user-id header must be set by API proxy after JWT \
+             validation"
                 .to_string(),
         );
     }
 
-    // Note: Anonymous users (with regular UUIDs) and authenticated users are both allowed
-    // Context ownership validation will check if they own the context
-
-    let task_repo = Arc::new(crate::repository::TaskRepository::new(db_pool.clone()));
-    let artifact_repo = Arc::new(crate::repository::ArtifactRepository::new(db_pool.clone()));
-    let context_repo =
-        crate::repository::ContextRepository::new(db_pool.clone(), task_repo, artifact_repo);
+    let context_repo = crate::repository::ContextRepository::new(db_pool.clone());
     context_repo
         .validate_context_ownership(context_id.as_str(), user_id)
         .await
-        .map_err(|e| format!("Context validation failed: {}", e))?;
+        .map_err(|e| format!("Context validation failed: {e}"))?;
 
     Ok(())
 }
@@ -447,7 +453,7 @@ async fn handle_non_streaming_request(
     context: &RequestContext,
 ) -> Result<Task, Box<dyn std::error::Error + Send + Sync>> {
     use crate::models::a2a::*;
-    let log = state.log.clone();
+    let log = LogService::new(state.db_pool.clone(), context.log_context());
 
     let config = state.config.read().await;
     let agent_name = config.name.clone();
@@ -466,8 +472,13 @@ async fn handle_non_streaming_request(
             )
             .await?;
 
-            let message_processor =
-                MessageProcessor::new(state.db_pool.clone(), state.ai_service.clone(), log.clone());
+            let broadcaster = create_webhook_broadcaster(context.auth.auth_token.as_str());
+            let message_processor = MessageProcessor::new(
+                state.db_pool.clone(),
+                state.ai_service.clone(),
+                log.clone(),
+                broadcaster,
+            );
 
             message_processor
                 .handle_message(params.message, &agent_name, context)
@@ -489,8 +500,13 @@ async fn handle_non_streaming_request(
             )
             .await?;
 
-            let message_processor =
-                MessageProcessor::new(state.db_pool.clone(), state.ai_service.clone(), log.clone());
+            let broadcaster = create_webhook_broadcaster(context.auth.auth_token.as_str());
+            let message_processor = MessageProcessor::new(
+                state.db_pool.clone(),
+                state.ai_service.clone(),
+                log.clone(),
+                broadcaster,
+            );
 
             message_processor
                 .handle_message(params.message, &agent_name, context)
@@ -511,7 +527,7 @@ async fn handle_non_streaming_request(
             match task_repo.get_task(&params.id).await {
                 Ok(Some(task)) => Ok(task),
                 Ok(None) => Err(format!("Task not found: {}", params.id).into()),
-                Err(e) => Err(format!("Failed to retrieve task: {}", e).into()),
+                Err(e) => Err(format!("Failed to retrieve task: {e}").into()),
             }
         },
         A2aRequestParams::CancelTask(params) => {
@@ -528,7 +544,7 @@ async fn handle_non_streaming_request(
             match task_repo.get_task(&params.id).await {
                 Ok(Some(task)) => Ok(build_canceled_task(params.id.into(), task.context_id)),
                 Ok(None) => Err(format!("Task not found: {}", params.id).into()),
-                Err(e) => Err(format!("Failed to look up task: {}", e).into()),
+                Err(e) => Err(format!("Failed to look up task: {e}").into()),
             }
         },
         A2aRequestParams::SetTaskPushNotificationConfig(_)
@@ -540,7 +556,7 @@ async fn handle_non_streaming_request(
         _ => {
             log.warn(
                 "a2a_request",
-                &format!("Unsupported A2A request type: {:?}", request),
+                &format!("Unsupported A2A request type: {request:?}"),
             )
             .await
             .ok();
@@ -559,12 +575,12 @@ async fn handle_streaming_request(
     use futures::StreamExt;
     use tokio_stream::wrappers::UnboundedReceiverStream;
 
-    let log = state.log.clone();
+    let log = LogService::new(state.db_pool.clone(), context.log_context());
 
     log.info(
         "a2a_request",
         &format!(
-            "🟦 handle_streaming_request called with request type: {:?}",
+            "handle_streaming_request called with request type: {:?}",
             match &request {
                 A2aRequestParams::SendStreamingMessage(_) => "SendStreamingMessage",
                 A2aRequestParams::SendMessage(_) => "SendMessage",
@@ -585,7 +601,7 @@ async fn handle_streaming_request(
         A2aRequestParams::SendStreamingMessage(params) => {
             log.info(
                 "a2a_request",
-                "✅ Matched SendStreamingMessage - calling create_sse_stream",
+                "Matched SendStreamingMessage, calling create_sse_stream",
             )
             .await
             .ok();
@@ -599,7 +615,7 @@ async fn handle_streaming_request(
             {
                 log.error(
                     "a2a_request",
-                    &format!("Context validation failed for streaming request: {}", err),
+                    &format!("Context validation failed for streaming request: {err}"),
                 )
                 .await
                 .ok();
@@ -619,7 +635,6 @@ async fn handle_streaming_request(
                 return UnboundedReceiverStream::new(rx).map(Ok);
             }
 
-            // Extract pushNotificationConfig from params (A2A spec-compliant)
             let callback_config = params
                 .configuration
                 .as_ref()
@@ -639,7 +654,7 @@ async fn handle_streaming_request(
         _ => {
             log.warn(
                 "a2a_request",
-                "❌ Did NOT match SendStreamingMessage - returning error stream",
+                "Request type not SendStreamingMessage, returning error stream",
             )
             .await
             .ok();

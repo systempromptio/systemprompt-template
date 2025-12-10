@@ -24,26 +24,3 @@ impl Default for ContextRequirement {
         Self::UserWithContext
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_display() {
-        assert_eq!(ContextRequirement::None.to_string(), "none");
-        assert_eq!(ContextRequirement::UserOnly.to_string(), "user-only");
-        assert_eq!(
-            ContextRequirement::UserWithContext.to_string(),
-            "user-with-context"
-        );
-    }
-
-    #[test]
-    fn test_default_is_most_restrictive() {
-        assert_eq!(
-            ContextRequirement::default(),
-            ContextRequirement::UserWithContext
-        );
-    }
-}

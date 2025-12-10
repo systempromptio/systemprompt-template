@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use serde_json::Value;
 
 pub async fn fetch_content_from_api(api_url: &str, source_id: &str) -> Result<Vec<Value>> {
-    let url = format!("{}/api/v1/content/{}", api_url, source_id);
+    let url = format!("{api_url}/api/v1/content/{source_id}");
 
     let response = reqwest::Client::new()
         .get(&url)

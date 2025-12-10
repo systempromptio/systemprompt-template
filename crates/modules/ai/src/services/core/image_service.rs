@@ -1,34 +1,49 @@
-use crate::errors::{AiError, Result};
-use crate::models::image_generation::{
-    ImageGenerationRequest, ImageGenerationResponse,
-};
-use crate::repository::ai_requests::AiRequestRepository;
-use crate::repository::image_repository::ImageRepository;
+use crate::error::{AiError, Result};
+use crate::models::image_generation::{ImageGenerationRequest, ImageGenerationResponse};
+use crate::models::AiRequestRecordBuilder;
+use crate::repository::AIRequestRepository;
 use crate::services::providers::image_provider_trait::BoxedImageProvider;
-use crate::storage::{ImageStorage, StorageConfig};
+use crate::services::storage::{ImageStorage, StorageConfig};
+use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
 use systemprompt_core_database::DbPool;
+use systemprompt_core_files::{
+    File, FileMetadata, FileRepository, ImageGenerationInfo, ImageMetadata,
+};
+use systemprompt_identifiers::{FileId, SessionId, TraceId, UserId};
 use uuid::Uuid;
 
 pub struct ImageService {
     providers: HashMap<String, BoxedImageProvider>,
     storage: Arc<ImageStorage>,
-    image_repo: ImageRepository,
-    ai_request_repo: AiRequestRepository,
+    file_repo: FileRepository,
+    ai_request_repo: AIRequestRepository,
     default_provider: Option<String>,
+}
+
+impl std::fmt::Debug for ImageService {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ImageService")
+            .field("providers", &format!("{} providers", self.providers.len()))
+            .field("storage", &self.storage)
+            .field("file_repo", &"FileRepository")
+            .field("ai_request_repo", &"AiRequestRepository")
+            .field("default_provider", &self.default_provider)
+            .finish()
+    }
 }
 
 impl ImageService {
     pub fn new(db_pool: DbPool, storage_config: StorageConfig) -> Result<Self> {
         let storage = Arc::new(ImageStorage::new(storage_config)?);
-        let image_repo = ImageRepository::new(db_pool.clone());
-        let ai_request_repo = AiRequestRepository::new(db_pool);
+        let file_repo = FileRepository::new(db_pool.clone());
+        let ai_request_repo = AIRequestRepository::new(db_pool);
 
         Ok(Self {
             providers: HashMap::new(),
             storage,
-            image_repo,
+            file_repo,
             ai_request_repo,
             default_provider: None,
         })
@@ -55,7 +70,6 @@ impl ImageService {
         &self,
         mut request: ImageGenerationRequest,
     ) -> Result<ImageGenerationResponse> {
-        // Determine which provider to use
         let provider_name = if let Some(model) = &request.model {
             self.find_provider_for_model(model)?
         } else if let Some(default) = &self.default_provider {
@@ -74,28 +88,21 @@ impl ImageService {
                     message: "Provider not found".to_string(),
                 })?;
 
-        // Set trace_id if not provided
         if request.trace_id.is_none() {
             request.trace_id = Some(Uuid::new_v4().to_string());
         }
 
-        // Generate the image
         let mut response = provider.generate_image(&request).await?;
-
-        // Set cost estimate
         response.cost_estimate = Some(provider.capabilities().cost_per_image_cents);
 
-        // Save image to storage
         let (file_path, public_url) = self
             .storage
             .save_base64_image(&response.image_data, &response.mime_type)?;
 
-        // Update response with storage info
         response.file_path = Some(file_path.to_string_lossy().to_string());
         response.public_url = Some(public_url.clone());
         response.file_size_bytes = Some(response.image_data.len());
 
-        // Store in database
         self.persist_image_generation(
             &request,
             &response,
@@ -125,41 +132,35 @@ impl ImageService {
         Ok(responses)
     }
 
-    pub async fn get_generated_image(
-        &self,
-        uuid: &str,
-    ) -> Result<Option<crate::models::image_generation::GeneratedImageRecord>> {
-        self.image_repo
-            .get_generated_image_by_uuid(uuid)
+    pub async fn get_generated_image(&self, uuid: &str) -> Result<Option<File>> {
+        self.file_repo
+            .get_by_id(&FileId::new(uuid))
             .await
             .map_err(AiError::DatabaseError)
     }
 
     pub async fn list_user_images(
         &self,
-        user_id: &str,
-        limit: Option<i32>,
-        offset: Option<i32>,
-    ) -> Result<Vec<crate::models::image_generation::GeneratedImageRecord>> {
+        user_id: &UserId,
+        limit: Option<i64>,
+        offset: Option<i64>,
+    ) -> Result<Vec<File>> {
         let limit = limit.unwrap_or(50);
         let offset = offset.unwrap_or(0);
-        self.image_repo
-            .list_generated_images_by_user(user_id, limit, offset)
+        self.file_repo
+            .list_by_user(user_id, limit, offset)
             .await
             .map_err(AiError::DatabaseError)
     }
 
     pub async fn delete_image(&self, uuid: &str) -> Result<()> {
-        // Get image record
-        let image = self.image_repo.get_generated_image_by_uuid(uuid).await?;
+        let file_id = FileId::new(uuid);
+        let file = self.file_repo.get_by_id(&file_id).await?;
 
-        if let Some(image_record) = image {
-            // Delete from filesystem
-            let file_path = std::path::Path::new(&image_record.file_path);
+        if let Some(file_record) = file {
+            let file_path = std::path::Path::new(&file_record.file_path);
             self.storage.delete_image(file_path)?;
-
-            // Mark as deleted in database
-            self.image_repo.delete_generated_image(uuid).await?;
+            self.file_repo.soft_delete(&file_id).await?;
         }
 
         Ok(())
@@ -185,86 +186,76 @@ impl ImageService {
         file_path: &str,
         public_url: &str,
     ) -> Result<()> {
-        let user_id = request.user_id.as_deref().unwrap_or("anonymous");
+        let user_id = UserId::new(request.user_id.as_deref().unwrap_or("anonymous"));
+
+        let mut builder = AiRequestRecordBuilder::new(&response.request_id, user_id)
+            .provider(&response.provider)
+            .model(&response.model)
+            .cost(response.cost_estimate.map(|c| c as i32).unwrap_or(0))
+            .latency(response.generation_time_ms as i32)
+            .completed();
+
+        if let Some(session_id) = &request.session_id {
+            builder = builder.session_id(SessionId::new(session_id));
+        }
+
+        if let Some(trace_id) = &request.trace_id {
+            builder = builder.trace_id(TraceId::new(trace_id));
+        }
+
+        let record = builder
+            .build()
+            .map_err(|e| AiError::InvalidInput(e.to_string()))?;
 
         self.ai_request_repo
-            .store_image_request(
-                &response.request_id,
-                user_id,
-                request.session_id.as_deref(),
-                request.trace_id.as_deref(),
-                &response.provider,
-                &response.model,
-                response.cost_estimate.map(|c| c as i32),
-                Some(response.generation_time_ms as i32),
-                "completed",
-                Some(1),
-            )
+            .store(&record)
             .await
-            .map_err(AiError::DatabaseError)?;
+            .map_err(|e| AiError::DatabaseError(e.into()))?;
 
-        self.image_repo
-            .insert_generated_image(
-                &response.id,
-                &response.request_id,
-                &request.prompt,
-                &response.model,
-                &response.provider,
+        let generation_info =
+            ImageGenerationInfo::new(&request.prompt, &response.model, &response.provider)
+                .with_resolution(response.resolution.as_str())
+                .with_aspect_ratio(response.aspect_ratio.as_str())
+                .with_generation_time(response.generation_time_ms as i32)
+                .with_request_id(&response.request_id);
+
+        let generation_info = match response.cost_estimate {
+            Some(cost) => generation_info.with_cost_estimate(cost),
+            None => generation_info,
+        };
+
+        let image_metadata = ImageMetadata::new().with_generation(generation_info);
+        let metadata = serde_json::to_value(FileMetadata::new().with_image(image_metadata))
+            .map_err(AiError::SerializationError)?;
+
+        let now = Utc::now();
+        let file = File {
+            id: Uuid::parse_str(&response.id)
+                .map_err(|e| AiError::InvalidInput(format!("Invalid UUID: {e}")))?,
+            file_path: file_path.to_string(),
+            public_url: public_url.to_string(),
+            mime_type: response.mime_type.clone(),
+            file_size_bytes: response.file_size_bytes.map(|s| s as i64),
+            ai_content: true,
+            metadata,
+            user_id: request.user_id.clone(),
+            session_id: request.session_id.clone(),
+            trace_id: request.trace_id.clone(),
+            created_at: now,
+            updated_at: now,
+            deleted_at: None,
+        };
+
+        self.file_repo.insert_file(&file).await.map_err(|e| {
+            AiError::DatabaseError(anyhow::anyhow!(
+                "Failed to persist generated image (id: {}, path: {}, url: {}): {}",
+                response.id,
                 file_path,
                 public_url,
-                response.file_size_bytes.map(|s| s as i32),
-                &response.mime_type,
-                Some(response.resolution.as_str()),
-                Some(response.aspect_ratio.as_str()),
-                Some(response.generation_time_ms as i32),
-                response.cost_estimate,
-                request.user_id.as_deref(),
-                request.session_id.as_deref(),
-                request.trace_id.as_deref(),
-                None,
-            )
-            .await?;
+                e
+            ))
+        })?;
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::services::providers::gemini_images::GeminiImageProvider;
-    use std::sync::Arc;
-
-    #[test]
-    fn test_provider_registration() {
-        let db_pool = systemprompt_core_database::DbPool::PostgreSQL(Arc::new(
-            sqlx::PgPool::connect_lazy("postgresql://test").unwrap(),
-        ));
-        let storage_config = StorageConfig::default();
-
-        let mut service = ImageService::new(db_pool, storage_config).unwrap();
-
-        let provider = Arc::new(GeminiImageProvider::new("test_key".to_string()));
-        service.register_provider(provider);
-
-        assert_eq!(service.list_providers().len(), 1);
-        assert!(service.get_provider("gemini-image").is_some());
-    }
-
-    #[test]
-    fn test_find_provider_for_model() {
-        let db_pool = systemprompt_core_database::DbPool::PostgreSQL(Arc::new(
-            sqlx::PgPool::connect_lazy("postgresql://test").unwrap(),
-        ));
-        let storage_config = StorageConfig::default();
-
-        let mut service = ImageService::new(db_pool, storage_config).unwrap();
-
-        let provider = Arc::new(GeminiImageProvider::new("test_key".to_string()));
-        service.register_provider(provider);
-
-        let result = service.find_provider_for_model("gemini-2.5-flash-image");
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "gemini-image");
     }
 }

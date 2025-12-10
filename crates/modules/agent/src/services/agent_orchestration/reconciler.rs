@@ -31,7 +31,11 @@ impl AgentReconciler {
             match status {
                 crate::services::agent_orchestration::AgentStatus::Running { pid, .. } => {
                     if !process::process_exists(pid) {
-                        CliService::warning(&format!("🔍 Agent {} (PID {}) marked as running but process not found - marking as failed", agent_id, pid));
+                        CliService::warning(&format!(
+                            "🔍 Agent {} (PID {}) marked as running but process not found - \
+                             marking as failed",
+                            agent_id, pid
+                        ));
                         self.db_service
                             .mark_failed(&agent_id, "Process died unexpectedly")
                             .await?;
@@ -115,7 +119,7 @@ impl AgentReconciler {
         let mut fixed = 0;
 
         for (agent_id, pid) in &report.inconsistent_running {
-            CliService::warning(&format!("🔧 Fixing inconsistent agent: {}", agent_id));
+            CliService::warning(&format!("🔧 Fixing inconsistent agent: {agent_id}"));
             self.db_service
                 .mark_failed(agent_id, &format!("Process {} died", pid))
                 .await?;
@@ -128,7 +132,7 @@ impl AgentReconciler {
                 agent_id
             ));
             self.db_service
-                .mark_failed(agent_id, &format!("Orphaned process {}", pid))
+                .mark_failed(agent_id, &format!("Orphaned process {pid}"))
                 .await?;
             fixed += 1;
         }
@@ -150,7 +154,7 @@ pub struct ConsistencyReport {
 }
 
 impl ConsistencyReport {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             consistent_running: Vec::new(),
             inconsistent_running: Vec::new(),

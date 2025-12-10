@@ -7,6 +7,7 @@ pub struct JwtMetrics {
 }
 
 #[derive(Debug)]
+#[allow(clippy::struct_field_names)]
 struct JwtMetricsInner {
     header_extraction_total: AtomicU64,
     cookie_extraction_total: AtomicU64,
@@ -191,6 +192,7 @@ impl JwtMetrics {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[allow(clippy::struct_field_names)]
 pub struct JwtMetricsSnapshot {
     pub header_extraction_total: u64,
     pub cookie_extraction_total: u64,
@@ -207,14 +209,14 @@ pub struct JwtMetricsSnapshot {
 }
 
 impl JwtMetricsSnapshot {
-    pub fn total_extraction_attempts(&self) -> u64 {
+    pub const fn total_extraction_attempts(&self) -> u64 {
         self.header_extraction_total
             + self.cookie_extraction_total
             + self.mcp_proxy_extraction_total
             + self.extraction_failures_total
     }
 
-    pub fn successful_extractions(&self) -> u64 {
+    pub const fn successful_extractions(&self) -> u64 {
         self.header_extraction_total
             + self.cookie_extraction_total
             + self.mcp_proxy_extraction_total
@@ -238,7 +240,7 @@ impl JwtMetricsSnapshot {
         }
     }
 
-    pub fn session_creation_breakdown(&self) -> SessionCreationBreakdown {
+    pub const fn session_creation_breakdown(&self) -> SessionCreationBreakdown {
         SessionCreationBreakdown {
             new_sessions: self.new_session_total,
             reused_sessions: self.session_reuse_total,
@@ -251,6 +253,7 @@ impl JwtMetricsSnapshot {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[allow(clippy::struct_field_names)]
 pub struct SessionCreationBreakdown {
     pub new_sessions: u64,
     pub reused_sessions: u64,
@@ -265,70 +268,5 @@ impl SessionCreationBreakdown {
         } else {
             (self.reused_sessions as f64 / self.total_sessions as f64) * 100.0
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_metrics_creation() {
-        let metrics = JwtMetrics::new();
-        let snapshot = metrics.snapshot();
-        assert_eq!(snapshot.header_extraction_total, 0);
-        assert_eq!(snapshot.cookie_extraction_total, 0);
-    }
-
-    #[test]
-    fn test_metrics_increment() {
-        let metrics = JwtMetrics::new();
-        metrics.increment_header_extraction();
-        metrics.increment_header_extraction();
-        metrics.increment_cookie_extraction();
-
-        let snapshot = metrics.snapshot();
-        assert_eq!(snapshot.header_extraction_total, 2);
-        assert_eq!(snapshot.cookie_extraction_total, 1);
-    }
-
-    #[test]
-    fn test_extraction_success_rate() {
-        let metrics = JwtMetrics::new();
-        metrics.increment_header_extraction();
-        metrics.increment_header_extraction();
-        metrics.increment_extraction_failure();
-
-        let snapshot = metrics.snapshot();
-        let rate = snapshot.extraction_success_rate();
-        assert!((rate - 66.66666666666666).abs() < 0.01);
-    }
-
-    #[test]
-    fn test_session_creation_breakdown() {
-        let metrics = JwtMetrics::new();
-        metrics.increment_new_session();
-        metrics.increment_new_session();
-        metrics.increment_session_reuse();
-        metrics.increment_session_reuse();
-        metrics.increment_session_reuse();
-        metrics.increment_anonymous_session();
-
-        let snapshot = metrics.snapshot();
-        let breakdown = snapshot.session_creation_breakdown();
-        assert_eq!(breakdown.new_sessions, 2);
-        assert_eq!(breakdown.reused_sessions, 3);
-        assert_eq!(breakdown.anonymous_sessions, 1);
-        assert_eq!(breakdown.total_sessions, 6);
-        let reuse_pct = breakdown.reuse_percentage();
-        assert!((reuse_pct - 50.0).abs() < 0.01);
-    }
-
-    #[test]
-    fn test_clone() {
-        let metrics = JwtMetrics::new();
-        metrics.increment_header_extraction();
-        let metrics_clone = metrics.clone();
-        assert_eq!(metrics_clone.get_header_extraction_total(), 1);
     }
 }

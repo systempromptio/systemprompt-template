@@ -1,12 +1,15 @@
-use crate::artifacts::{
-    metadata::ExecutionMetadata,
-    traits::Artifact,
-    types::{ArtifactType, AxisType, ChartType},
-};
+use crate::artifacts::metadata::ExecutionMetadata;
+use crate::artifacts::traits::Artifact;
+use crate::artifacts::types::{ArtifactType, AxisType, ChartType};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+fn default_artifact_type() -> String {
+    "chart".to_string()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ChartDataset {
     pub label: String,
     pub data: Vec<f64>,
@@ -21,29 +24,40 @@ impl ChartDataset {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ChartArtifact {
+    #[serde(rename = "x-artifact-type")]
+    #[serde(default = "default_artifact_type")]
+    pub artifact_type: String,
     pub labels: Vec<String>,
     pub datasets: Vec<ChartDataset>,
     #[serde(skip)]
+    #[schemars(skip)]
     chart_type: ChartType,
     #[serde(skip)]
+    #[schemars(skip)]
     title: String,
     #[serde(skip)]
+    #[schemars(skip)]
     x_axis_label: String,
     #[serde(skip)]
+    #[schemars(skip)]
     y_axis_label: String,
     #[serde(skip)]
+    #[schemars(skip)]
     x_axis_type: AxisType,
     #[serde(skip)]
+    #[schemars(skip)]
     y_axis_type: AxisType,
     #[serde(skip)]
+    #[schemars(skip)]
     metadata: ExecutionMetadata,
 }
 
 impl ChartArtifact {
     pub fn new(title: impl Into<String>, chart_type: ChartType) -> Self {
         Self {
+            artifact_type: "chart".to_string(),
             labels: Vec::new(),
             datasets: Vec::new(),
             chart_type,
@@ -103,19 +117,6 @@ impl ChartArtifact {
     ) -> Self {
         self.metadata = self.metadata.with_skill(skill_id.into(), skill_name.into());
         self
-    }
-
-    pub fn to_response(&self) -> JsonValue {
-        let mut response = json!({
-            "labels": self.labels,
-            "datasets": self.datasets
-        });
-
-        if let Some(ref id) = self.metadata.execution_id {
-            response["_execution_id"] = json!(id);
-        }
-
-        response
     }
 }
 

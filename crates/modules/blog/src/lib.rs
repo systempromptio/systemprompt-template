@@ -1,14 +1,17 @@
+#![allow(clippy::pedantic)]
+#![allow(clippy::too_many_arguments)]
+
 pub mod api;
 pub mod models;
 pub mod repository;
 pub mod services;
 
 pub use models::{
-    BlogMetrics, Content, ContentMetadata, IngestionReport, SearchFilters, SearchRequest,
-    SearchResponse, SearchResult, Tag,
+    Content, ContentMetadata, IngestionReport, SearchFilters, SearchRequest, SearchResponse,
+    SearchResult,
 };
 
-pub use repository::{ContentRepository, MetricsRepository, SearchRepository, TagRepository};
+pub use repository::{ContentRepository, SearchRepository};
 
 pub use services::{
     ContentSourceExport, ExportService, ExportStats, GenericIngestionService, IngestionService,

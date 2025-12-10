@@ -1,10 +1,8 @@
-use axum::{
-    extract::{Path, State},
-    http::StatusCode,
-    response::IntoResponse,
-    routing::get,
-    Json, Router,
-};
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::routing::get;
+use axum::{Json, Router};
 use serde_json::json;
 use systemprompt_core_agent::services::registry::AgentRegistry;
 use systemprompt_core_system::AppContext;

@@ -20,7 +20,7 @@ impl fmt::Debug for ToolResultHandler {
 }
 
 impl ToolResultHandler {
-    pub fn new(db_pool: DbPool, log: LogService) -> Self {
+    pub const fn new(db_pool: DbPool, log: LogService) -> Self {
         Self { db_pool, log }
     }
 
@@ -29,8 +29,8 @@ impl ToolResultHandler {
     /// SECURITY: context must come from validated JWT (enforced by middleware)
     /// GUARANTEE: task_id must exist (enforced by middleware)
     ///
-    /// NOTE: This method only transforms the result. Persistence and broadcasting
-    /// are handled by ArtifactPublishingService.
+    /// NOTE: This method only transforms the result. Persistence and
+    /// broadcasting are handled by ArtifactPublishingService.
     pub async fn process_tool_result(
         &self,
         tool_name: &str,
@@ -68,17 +68,26 @@ impl ToolResultHandler {
             context_id.as_str(),
             task_id.as_str(),
             tool_arguments,
-        );
+        )
+        .map_err(|e| anyhow::anyhow!("Artifact transform failed: {}", e))?;
 
         use systemprompt_traits::validation::Validate;
-        artifact.metadata.validate_or_panic();
+        artifact
+            .metadata
+            .validate()
+            .map_err(|e| anyhow::anyhow!("Artifact metadata validation failed: {}", e))?;
 
         self.log
             .info(
                 "tool_result_handler",
                 &format!(
-                    "✅ Transformed tool result to artifact {} (tool: {}, user: {}, task: {}, fingerprint: {:?})",
-                    artifact.artifact_id, tool_name, context.user_id(), task_id, artifact.metadata.fingerprint
+                    "Transformed tool result to artifact {} (tool: {}, user: {}, task: {}, \
+                     fingerprint: {:?})",
+                    artifact.artifact_id,
+                    tool_name,
+                    context.user_id(),
+                    task_id,
+                    artifact.metadata.fingerprint
                 ),
             )
             .await

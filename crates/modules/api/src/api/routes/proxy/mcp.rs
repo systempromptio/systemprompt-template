@@ -1,10 +1,8 @@
 use crate::services::proxy::ProxyEngine;
-use axum::{
-    extract::{Path, State},
-    response::IntoResponse,
-    routing::{any, get},
-    Json, Router,
-};
+use axum::extract::{Path, State};
+use axum::response::IntoResponse;
+use axum::routing::{any, get};
+use axum::{Json, Router};
 use serde::Serialize;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_mcp::repository::ToolUsageRepository;
@@ -30,39 +28,42 @@ pub async fn handle_get_execution(
     let repo = ToolUsageRepository::new(ctx.db_pool().clone());
 
     logger
-        .info("mcp_api", &format!("Fetching execution: {}", execution_id))
+        .info("mcp_api", &format!("Fetching execution: {execution_id}"))
         .await
         .ok();
 
-    match repo.get_execution_by_id(&execution_id).await {
-        Ok(execution) => {
+    match repo.get_by_id(&execution_id).await {
+        Ok(Some(execution)) => {
             let server_endpoint = format!("/api/v1/mcp/{}/mcp", execution.mcp_server_name);
 
             let response = ToolExecutionResponse {
-                id: execution.mcp_execution_id.as_ref().to_string(),
+                id: execution.mcp_execution_id.clone(),
                 tool_name: execution.tool_name,
                 mcp_server_name: execution.mcp_server_name.clone(),
                 server_endpoint,
                 input: serde_json::from_str(&execution.input).unwrap_or_default(),
-                output: execution.output.and_then(|o| serde_json::from_str(&o).ok()),
+                output: execution.output.and_then(|s| serde_json::from_str(&s).ok()),
                 status: execution.status,
             };
 
             logger
-                .info("mcp_api", &format!("Execution found: {}", execution_id))
+                .info("mcp_api", &format!("Execution found: {execution_id}"))
                 .await
                 .ok();
             Json(response).into_response()
+        },
+        Ok(None) => {
+            ApiError::not_found(format!("Execution not found: {execution_id}")).into_response()
         },
         Err(e) => {
             logger
                 .error(
                     "mcp_api",
-                    &format!("Failed to get execution {}: {}", execution_id, e),
+                    &format!("Failed to get execution {execution_id}: {e}"),
                 )
                 .await
                 .ok();
-            ApiError::not_found(format!("Execution not found: {}", execution_id)).into_response()
+            ApiError::internal_error(format!("Failed to get execution: {e}")).into_response()
         },
     }
 }

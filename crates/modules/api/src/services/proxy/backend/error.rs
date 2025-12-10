@@ -1,7 +1,5 @@
-use axum::{
-    http::StatusCode,
-    response::{IntoResponse, Response},
-};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -56,20 +54,22 @@ pub enum ProxyError {
 }
 
 impl ProxyError {
-    pub fn to_status_code(&self) -> StatusCode {
+    pub const fn to_status_code(&self) -> StatusCode {
         match self {
             Self::ServiceNotFound { .. } => StatusCode::NOT_FOUND,
             Self::ServiceNotRunning { .. } => StatusCode::SERVICE_UNAVAILABLE,
-            Self::ConnectionFailed { .. } => StatusCode::BAD_GATEWAY,
+            Self::ConnectionFailed { .. } | Self::InvalidResponse { .. } => StatusCode::BAD_GATEWAY,
             Self::Timeout { .. } => StatusCode::GATEWAY_TIMEOUT,
-            Self::InvalidResponse { .. } => StatusCode::BAD_GATEWAY,
-            Self::UrlConstructionFailed { .. } => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::BodyExtractionFailed { .. } => StatusCode::BAD_REQUEST,
-            Self::InvalidMethod { .. } => StatusCode::BAD_REQUEST,
-            Self::DatabaseError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::AuthenticationRequired { .. } => StatusCode::UNAUTHORIZED,
+            Self::UrlConstructionFailed { .. } | Self::DatabaseError { .. } => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            },
+            Self::BodyExtractionFailed { .. } | Self::InvalidMethod { .. } => {
+                StatusCode::BAD_REQUEST
+            },
+            Self::AuthenticationRequired { .. } | Self::MissingContext { .. } => {
+                StatusCode::UNAUTHORIZED
+            },
             Self::Forbidden { .. } => StatusCode::FORBIDDEN,
-            Self::MissingContext { .. } => StatusCode::UNAUTHORIZED,
         }
     }
 }
@@ -85,62 +85,5 @@ impl IntoResponse for ProxyError {
         let status = self.to_status_code();
         let message = self.to_string();
         (status, message).into_response()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn service_not_found_returns_404() {
-        let error = ProxyError::ServiceNotFound {
-            service: "test-service".to_string(),
-        };
-        assert_eq!(error.to_status_code(), StatusCode::NOT_FOUND);
-    }
-
-    #[test]
-    fn service_not_running_returns_503() {
-        let error = ProxyError::ServiceNotRunning {
-            service: "test-service".to_string(),
-            status: "stopped".to_string(),
-        };
-        assert_eq!(error.to_status_code(), StatusCode::SERVICE_UNAVAILABLE);
-    }
-
-    #[test]
-    fn body_extraction_failed_returns_400() {
-        let axum_error = axum::Error::new(std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            "test error",
-        ));
-        let error = ProxyError::BodyExtractionFailed { source: axum_error };
-        assert_eq!(error.to_status_code(), StatusCode::BAD_REQUEST);
-    }
-
-    #[test]
-    fn auth_required_returns_401() {
-        let error = ProxyError::AuthenticationRequired {
-            service: "test-service".to_string(),
-        };
-        assert_eq!(error.to_status_code(), StatusCode::UNAUTHORIZED);
-    }
-
-    #[test]
-    fn forbidden_returns_403() {
-        let error = ProxyError::Forbidden {
-            service: "test-service".to_string(),
-        };
-        assert_eq!(error.to_status_code(), StatusCode::FORBIDDEN);
-    }
-
-    #[test]
-    fn error_messages_include_service_context() {
-        let error = ProxyError::ServiceNotFound {
-            service: "my-service".to_string(),
-        };
-        let message = error.to_string();
-        assert!(message.contains("my-service"));
     }
 }

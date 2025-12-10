@@ -1,8 +1,9 @@
-use crate::services::static_content::{generate_sitemap, prerender_content};
+use crate::services::static_content::{generate_sitemap, optimize_images, prerender_content};
 use anyhow::Result;
+use serde_json::json;
 use std::sync::Arc;
 use systemprompt_core_database::DbPool;
-use systemprompt_core_logging::LogService;
+use systemprompt_core_logging::{LogLevel, LogService};
 use systemprompt_core_system::AppContext;
 
 pub async fn regenerate_static_content(
@@ -10,63 +11,81 @@ pub async fn regenerate_static_content(
     logger: LogService,
     app_context: Arc<AppContext>,
 ) -> Result<()> {
-    println!("\n📄 Regenerating static content...\n");
+    let start_time = std::time::Instant::now();
+
     logger
-        .info(
-            "content",
-            "Starting static content regeneration (prerender + sitemap)",
-        )
+        .info("scheduler", "Job started | job=regenerate_static_content")
         .await
         .ok();
 
-    println!("   1️⃣  Prerendering content pages...");
-    logger
-        .info("content", "Running content prerendering...")
-        .await
-        .ok();
+    // Optimize images FIRST so prerender uses optimized versions
+    let mut images_success = false;
+    match optimize_images(db_pool.clone(), logger.clone()).await {
+        Ok(_) => {
+            images_success = true;
+        },
+        Err(e) => {
+            logger
+                .warn(
+                    "scheduler",
+                    &format!("Image optimization failed | error={e}"),
+                )
+                .await
+                .ok();
+        },
+    }
 
+    let mut prerender_success = false;
     match prerender_content(db_pool.clone(), logger.clone(), app_context.clone()).await {
         Ok(_) => {
-            println!("      ✅ Content prerendering completed");
-            logger
-                .info("content", "Content prerendering completed successfully")
-                .await
-                .ok();
+            prerender_success = true;
         },
         Err(e) => {
-            println!("      ⚠️  Prerendering warning: {}", e);
             logger
-                .warn("content", &format!("Prerendering warning: {}", e))
+                .warn("scheduler", &format!("Prerendering failed | error={e}"))
                 .await
                 .ok();
         },
     }
 
-    println!("   2️⃣  Generating sitemap...");
-    logger.info("content", "Generating sitemap...").await.ok();
-
+    let mut sitemap_success = false;
     match generate_sitemap(db_pool.clone(), logger.clone(), app_context.clone()).await {
         Ok(_) => {
-            println!("      ✅ Sitemap generated");
-            logger
-                .info("content", "Sitemap generated successfully")
-                .await
-                .ok();
+            sitemap_success = true;
         },
         Err(e) => {
-            println!("      ⚠️  Sitemap generation warning: {}", e);
             logger
-                .warn("content", &format!("Sitemap generation warning: {}", e))
+                .warn(
+                    "scheduler",
+                    &format!("Sitemap generation failed | error={e}"),
+                )
                 .await
                 .ok();
         },
     }
 
-    println!("   ✨ Static content regeneration complete\n");
     logger
-        .info(
-            "content",
-            "Static content regeneration completed successfully",
+        .log(
+            LogLevel::Info,
+            "scheduler",
+            &format!(
+                "Job completed | job=regenerate_static_content, images={}, prerender={}, \
+                 sitemap={}",
+                if images_success { "success" } else { "failed" },
+                if prerender_success {
+                    "success"
+                } else {
+                    "failed"
+                },
+                if sitemap_success { "success" } else { "failed" },
+            ),
+            Some(json!({
+                "job_name": "regenerate_static_content",
+                "images_success": images_success,
+                "prerender_success": prerender_success,
+                "sitemap_success": sitemap_success,
+                "duration_ms": start_time.elapsed().as_millis(),
+            })),
         )
         .await
         .ok();

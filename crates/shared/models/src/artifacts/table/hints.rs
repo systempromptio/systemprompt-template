@@ -1,5 +1,6 @@
 use super::column::Column;
-use crate::artifacts::{traits::ArtifactSchema, types::SortOrder};
+use crate::artifacts::traits::ArtifactSchema;
+use crate::artifacts::types::SortOrder;
 use serde_json::{json, Value as JsonValue};
 
 #[derive(Debug, Clone, Default)]
@@ -9,6 +10,7 @@ pub struct TableHints {
     pub default_sort: Option<(String, SortOrder)>,
     pub filterable: bool,
     pub page_size: Option<usize>,
+    pub row_click_enabled: bool,
 }
 
 impl TableHints {
@@ -40,6 +42,11 @@ impl TableHints {
         self.page_size = Some(size);
         self
     }
+
+    pub const fn with_row_click_enabled(mut self, enabled: bool) -> Self {
+        self.row_click_enabled = enabled;
+        self
+    }
 }
 
 impl ArtifactSchema for TableHints {
@@ -59,6 +66,10 @@ impl ArtifactSchema for TableHints {
 
         if let Some(size) = self.page_size {
             hints["page_size"] = json!(size);
+        }
+
+        if self.row_click_enabled {
+            hints["row_click_enabled"] = json!(true);
         }
 
         let column_types: serde_json::Map<String, JsonValue> = self

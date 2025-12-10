@@ -44,7 +44,8 @@ impl BinaryPaths {
             (false, true) => Ok(debug_path),
             (false, false) => {
                 bail!(
-                    "Binary '{}' not found at either:\n  - {} (release)\n  - {} (debug)\n\nRun: cargo build --bin {}",
+                    "Binary '{}' not found at either:\n  - {} (release)\n  - {} (debug)\n\nRun: \
+                     cargo build --bin {}",
                     binary_name,
                     release_path.display(),
                     debug_path.display(),

@@ -1,21 +1,15 @@
 pub mod blog;
 pub mod links;
-pub mod metrics;
 pub mod query;
 
-use axum::{
-    routing::{get, post},
-    Router,
-};
+use axum::routing::{get, post};
+use axum::Router;
 use systemprompt_core_system::AppContext;
 
 pub use blog::{get_content_handler, list_content_by_source_handler};
 pub use links::{
     generate_link_handler, get_campaign_performance_handler, get_content_journey_handler,
     get_link_clicks_handler, get_link_performance_handler, list_links_handler, redirect_handler,
-};
-pub use metrics::{
-    get_article_analytics, get_article_trend, get_dashboard_analytics, get_top_articles,
 };
 pub use query::query_handler;
 
@@ -24,10 +18,6 @@ pub fn router(ctx: &AppContext) -> Router {
         .route("/query", post(query_handler))
         .route("/{source_id}", get(list_content_by_source_handler))
         .route("/{source_id}/{slug}", get(get_content_handler))
-        .route("/analytics", get(get_dashboard_analytics))
-        .route("/analytics/top", get(get_top_articles))
-        .route("/analytics/{id}", get(get_article_analytics))
-        .route("/analytics/{id}/trend", get(get_article_trend))
         .route("/links/generate", post(generate_link_handler))
         .route("/links", get(list_links_handler))
         .route(

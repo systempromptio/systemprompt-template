@@ -1,228 +1,261 @@
 use crate::models::Content;
-use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
+use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt_core_database::DatabaseProvider;
-use systemprompt_core_database::DatabaseQueryEnum;
+use systemprompt_core_database::DbPool;
+use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct ContentRepository {
-    db: Arc<dyn DatabaseProvider>,
+    pool: Arc<PgPool>,
 }
 
 impl ContentRepository {
-    pub fn new(db: Arc<dyn DatabaseProvider>) -> Self {
-        Self { db }
+    pub fn new(db: DbPool) -> Self {
+        let pool = db.pool_arc().expect("Database must be PostgreSQL");
+        Self { pool }
     }
 
-    pub async fn create(&self, content: &Content) -> Result<()> {
-        let query = DatabaseQueryEnum::CreateContent.get(self.db.as_ref());
-        let links_json = serde_json::to_string(&content.links)?;
-
-        self.db
-            .execute(
-                &query,
-                &[
-                    &content.id,
-                    &content.slug,
-                    &content.title,
-                    &content.description,
-                    &content.body,
-                    &content.author,
-                    &content.published_at,
-                    &content.keywords,
-                    &content.kind,
-                    &content.image,
-                    &content.category_id,
-                    &content.source_id,
-                    &content.version_hash,
-                    &content.public,
-                    &content.parent_content_id,
-                    &links_json,
-                ],
+    pub async fn create(
+        &self,
+        slug: &str,
+        title: &str,
+        description: &str,
+        body: &str,
+        author: &str,
+        published_at: DateTime<Utc>,
+        keywords: &str,
+        kind: &str,
+        image: Option<&str>,
+        category_id: Option<&str>,
+        source_id: &str,
+        version_hash: &str,
+        links: &serde_json::Value,
+    ) -> Result<Content, sqlx::Error> {
+        let id = Uuid::new_v4().to_string();
+        let now = Utc::now();
+        sqlx::query_as!(
+            Content,
+            r#"
+            INSERT INTO markdown_content (
+                id, slug, title, description, body, author,
+                published_at, keywords, kind, image, category_id, source_id,
+                version_hash, links, updated_at
             )
-            .await
-            .context(format!("Failed to create content: {}", content.title))?;
-
-        Ok(())
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            RETURNING id, slug, title, description, body, author,
+                      published_at, keywords, kind, image, category_id, source_id,
+                      version_hash, COALESCE(links, '[]'::jsonb) as "links!", updated_at
+            "#,
+            id,
+            slug,
+            title,
+            description,
+            body,
+            author,
+            published_at,
+            keywords,
+            kind,
+            image,
+            category_id,
+            source_id,
+            version_hash,
+            links,
+            now
+        )
+        .fetch_one(&*self.pool)
+        .await
     }
 
-    pub async fn get_by_id(&self, id: &str) -> Result<Option<Content>> {
-        let query = DatabaseQueryEnum::GetContentById.get(self.db.as_ref());
-
-        let row = self
-            .db
-            .fetch_optional(&query, &[&id])
-            .await
-            .context(format!("Failed to get content by id: {id}"))?;
-
-        row.map(|r| Content::from_json_row(&r)).transpose()
+    pub async fn get_by_id(&self, id: &str) -> Result<Option<Content>, sqlx::Error> {
+        sqlx::query_as!(
+            Content,
+            r#"
+            SELECT id, slug, title, description, body, author,
+                   published_at, keywords, kind, image, category_id, source_id,
+                   version_hash, COALESCE(links, '[]'::jsonb) as "links!", updated_at
+            FROM markdown_content
+            WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_optional(&*self.pool)
+        .await
     }
 
-    pub async fn get_by_slug(&self, slug: &str) -> Result<Option<Content>> {
-        let query = DatabaseQueryEnum::GetContentByUrl.get(self.db.as_ref());
-
-        let row = self
-            .db
-            .fetch_optional(&query, &[&slug])
-            .await
-            .context(format!("Failed to get content by slug: {slug}"))?;
-
-        row.map(|r| Content::from_json_row(&r)).transpose()
+    pub async fn get_by_slug(&self, slug: &str) -> Result<Option<Content>, sqlx::Error> {
+        sqlx::query_as!(
+            Content,
+            r#"
+            SELECT id, slug, title, description, body, author,
+                   published_at, keywords, kind, image, category_id, source_id,
+                   version_hash, COALESCE(links, '[]'::jsonb) as "links!", updated_at
+            FROM markdown_content
+            WHERE slug = $1
+            "#,
+            slug
+        )
+        .fetch_optional(&*self.pool)
+        .await
     }
 
     pub async fn get_by_source_and_slug(
         &self,
         source_id: &str,
         slug: &str,
-    ) -> Result<Option<Content>> {
-        let query = DatabaseQueryEnum::GetContentBySourceAndSlug.get(self.db.as_ref());
-
-        let row = self
-            .db
-            .fetch_optional(&query, &[&source_id, &slug])
-            .await
-            .context(format!(
-                "Failed to get content by source {source_id} and slug: {slug}"
-            ))?;
-
-        row.map(|r| Content::from_json_row(&r)).transpose()
+    ) -> Result<Option<Content>, sqlx::Error> {
+        sqlx::query_as!(
+            Content,
+            r#"
+            SELECT id, slug, title, description, body, author,
+                   published_at, keywords, kind, image, category_id, source_id,
+                   version_hash, COALESCE(links, '[]'::jsonb) as "links!", updated_at
+            FROM markdown_content
+            WHERE source_id = $1 AND slug = $2
+            "#,
+            source_id,
+            slug
+        )
+        .fetch_optional(&*self.pool)
+        .await
     }
 
-    pub async fn list(&self, source_id: &str, limit: i64, offset: i64) -> Result<Vec<Content>> {
-        let query = DatabaseQueryEnum::ListContent.get(self.db.as_ref());
-
-        let rows = self
-            .db
-            .fetch_all(&query, &[&source_id, &limit, &offset])
-            .await
-            .context(format!(
-                "Failed to list content for source: {source_id}, limit: {limit}, offset: {offset}"
-            ))?;
-
-        rows.iter()
-            .map(Content::from_json_row)
-            .collect::<Result<Vec<_>>>()
+    pub async fn list(&self, limit: i64, offset: i64) -> Result<Vec<Content>, sqlx::Error> {
+        sqlx::query_as!(
+            Content,
+            r#"
+            SELECT id, slug, title, description, body, author,
+                   published_at, keywords, kind, image, category_id, source_id,
+                   version_hash, COALESCE(links, '[]'::jsonb) as "links!", updated_at
+            FROM markdown_content
+            ORDER BY published_at DESC
+            LIMIT $1 OFFSET $2
+            "#,
+            limit,
+            offset
+        )
+        .fetch_all(&*self.pool)
+        .await
     }
 
-    pub async fn list_all(&self, limit: i64, offset: i64) -> Result<Vec<Content>> {
-        let query = DatabaseQueryEnum::ListAllContent.get(self.db.as_ref());
-
-        let rows = self
-            .db
-            .fetch_all(&query, &[&limit, &offset])
-            .await
-            .context(format!(
-                "Failed to list all content with limit: {limit}, offset: {offset}"
-            ))?;
-
-        rows.iter()
-            .map(Content::from_json_row)
-            .collect::<Result<Vec<_>>>()
+    pub async fn list_by_source(&self, source_id: &str) -> Result<Vec<Content>, sqlx::Error> {
+        sqlx::query_as!(
+            Content,
+            r#"
+            SELECT id, slug, title, description, body, author,
+                   published_at, keywords, kind, image, category_id, source_id,
+                   version_hash, COALESCE(links, '[]'::jsonb) as "links!", updated_at
+            FROM markdown_content
+            WHERE source_id = $1
+            ORDER BY published_at DESC
+            "#,
+            source_id
+        )
+        .fetch_all(&*self.pool)
+        .await
     }
 
-    pub async fn update(&self, id: &str, content: &Content) -> Result<()> {
-        let query = DatabaseQueryEnum::UpdateContent.get(self.db.as_ref());
-        let links_json = serde_json::to_string(&content.links)?;
+    pub async fn update(
+        &self,
+        id: &str,
+        title: &str,
+        description: &str,
+        body: &str,
+        keywords: &str,
+        image: Option<&str>,
+        version_hash: &str,
+    ) -> Result<Content, sqlx::Error> {
+        let now = Utc::now();
+        sqlx::query_as!(
+            Content,
+            r#"
+            UPDATE markdown_content
+            SET title = $1, description = $2, body = $3, keywords = $4,
+                image = $5, version_hash = $6, updated_at = $7
+            WHERE id = $8
+            RETURNING id, slug, title, description, body, author,
+                      published_at, keywords, kind, image, category_id, source_id,
+                      version_hash, COALESCE(links, '[]'::jsonb) as "links!", updated_at
+            "#,
+            title,
+            description,
+            body,
+            keywords,
+            image,
+            version_hash,
+            now,
+            id
+        )
+        .fetch_one(&*self.pool)
+        .await
+    }
 
-        self.db
-            .execute(
-                &query,
-                &[
-                    &content.title,
-                    &content.description,
-                    &content.body,
-                    &content.author,
-                    &content.published_at,
-                    &content.keywords,
-                    &content.kind,
-                    &content.image,
-                    &content.category_id,
-                    &content.source_id,
-                    &content.version_hash,
-                    &links_json,
-                    &id,
-                ],
-            )
-            .await
-            .context(format!("Failed to update content: {id}"))?;
-
+    pub async fn delete(&self, id: &str) -> Result<(), sqlx::Error> {
+        sqlx::query!("DELETE FROM markdown_content WHERE id = $1", id)
+            .execute(&*self.pool)
+            .await?;
         Ok(())
     }
 
-    pub async fn update_image(&self, id: &str, image_url: &str) -> Result<()> {
-        let query = DatabaseQueryEnum::UpdateContentImage.get(self.db.as_ref());
-
-        self.db
-            .execute(&query, &[&image_url, &chrono::Utc::now(), &id])
-            .await
-            .context(format!("Failed to update image for content: {id}"))?;
-
-        Ok(())
+    pub async fn delete_by_source(&self, source_id: &str) -> Result<u64, sqlx::Error> {
+        let result = sqlx::query!(
+            "DELETE FROM markdown_content WHERE source_id = $1",
+            source_id
+        )
+        .execute(&*self.pool)
+        .await?;
+        Ok(result.rows_affected())
     }
 
-    pub async fn get_social_content_by_parent(&self, parent_id: &str) -> Result<Vec<Content>> {
-        let query = DatabaseQueryEnum::GetSocialContentByParent.get(self.db.as_ref());
-
-        let rows = self
-            .db
-            .fetch_all(&query, &[&parent_id])
-            .await
-            .context(format!(
-                "Failed to get social content by parent: {parent_id}"
-            ))?;
-
-        rows.iter()
-            .map(Content::from_json_row)
-            .collect::<Result<Vec<_>>>()
+    pub async fn list_all(&self, limit: i64, offset: i64) -> Result<Vec<Content>, sqlx::Error> {
+        sqlx::query_as!(
+            Content,
+            r#"
+            SELECT id, slug, title, description, body, author,
+                   published_at, keywords, kind, image, category_id, source_id,
+                   version_hash, COALESCE(links, '[]'::jsonb) as "links!", updated_at
+            FROM markdown_content
+            ORDER BY published_at DESC
+            LIMIT $1 OFFSET $2
+            "#,
+            limit,
+            offset
+        )
+        .fetch_all(&*self.pool)
+        .await
     }
 
-    pub async fn get_by_version_hash(&self, version_hash: &str) -> Result<Option<Content>> {
-        let query = DatabaseQueryEnum::GetContentByVersionHash.get(self.db.as_ref());
+    pub async fn get_popular_content_ids(
+        &self,
+        source_id: &str,
+        days: i32,
+        limit: i64,
+    ) -> Result<Vec<String>, sqlx::Error> {
+        let rows = sqlx::query_scalar!(
+            r#"
+            SELECT mc.id
+            FROM markdown_content mc
+            LEFT JOIN analytics_events ae ON
+                ae.event_type = 'page_view'
+                AND ae.event_category = 'content'
+                AND ae.endpoint = 'GET /blog/' || mc.slug
+                AND ae.timestamp >= CURRENT_TIMESTAMP - ($2 || ' days')::INTERVAL
+            LEFT JOIN users u ON ae.user_id = u.id
+            WHERE mc.source_id = $1
+            GROUP BY mc.id, mc.published_at
+            ORDER BY COUNT(DISTINCT CASE
+                WHEN u.id IS NOT NULL AND u.is_bot = FALSE AND u.is_scanner = FALSE
+                THEN ae.user_id
+            END) DESC, mc.published_at DESC
+            LIMIT $3
+            "#,
+            source_id,
+            days.to_string(),
+            limit
+        )
+        .fetch_all(&*self.pool)
+        .await?;
 
-        let row = self
-            .db
-            .fetch_optional(&query, &[&version_hash])
-            .await
-            .context(format!(
-                "Failed to get content by version_hash: {version_hash}"
-            ))?;
-
-        row.map(|r| Content::from_json_row(&r)).transpose()
-    }
-
-    pub async fn delete(&self, id: &str) -> Result<()> {
-        let query = DatabaseQueryEnum::DeleteContent.get(self.db.as_ref());
-
-        self.db
-            .execute(&query, &[&id])
-            .await
-            .context(format!("Failed to delete content with id: {id}"))?;
-
-        Ok(())
-    }
-
-    pub async fn delete_by_source(&self, source_id: &str) -> Result<u64> {
-        let query = DatabaseQueryEnum::DeleteContentBySource.get(self.db.as_ref());
-
-        self.db
-            .execute(&query, &[&source_id])
-            .await
-            .context(format!(
-                "Failed to delete content for source: {source_id}"
-            ))
-    }
-
-    pub async fn list_by_source(&self, source_id: &str) -> Result<Vec<Content>> {
-        let query = DatabaseQueryEnum::ListContentBySource.get(self.db.as_ref());
-
-        let rows = self
-            .db
-            .fetch_all(&query, &[&source_id])
-            .await
-            .context(format!("Failed to list content by source: {source_id}"))?;
-
-        rows.iter()
-            .map(Content::from_json_row)
-            .collect::<Result<Vec<_>>>()
+        Ok(rows)
     }
 }

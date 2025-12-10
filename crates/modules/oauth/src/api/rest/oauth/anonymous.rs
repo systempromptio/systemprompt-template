@@ -1,12 +1,11 @@
-use axum::{
-    extract::State,
-    http::{header, HeaderMap, StatusCode},
-    response::IntoResponse,
-    Json,
-};
+use axum::extract::State;
+use axum::http::{header, HeaderMap, StatusCode};
+use axum::response::IntoResponse;
+use axum::Json;
 use serde::{Deserialize, Serialize};
 
-use crate::services::{cimd::ClientValidator, SessionCreationService};
+use crate::services::cimd::ClientValidator;
+use crate::services::SessionCreationService;
 use systemprompt_core_system::AppContext;
 use systemprompt_core_users::UserRepository;
 use systemprompt_identifiers::ClientId;
@@ -56,7 +55,7 @@ pub async fn generate_anonymous_token(
                 StatusCode::BAD_REQUEST,
                 Json(serde_json::json!({
                     "error": "invalid_client",
-                    "error_description": format!("Client validation failed: {}", e)
+                    "error_description": format!("Client validation failed: {e}")
                 })),
             )
                 .into_response();
@@ -104,7 +103,7 @@ pub async fn generate_anonymous_token(
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({
                 "error": "server_error",
-                "error_description": format!("Failed to create session: {}", e)
+                "error_description": format!("Failed to create session: {e}")
             })),
         )
             .into_response(),

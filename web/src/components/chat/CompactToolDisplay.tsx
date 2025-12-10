@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import type { Artifact } from '@a2a-js/sdk'
+import { useState, useMemo } from 'react'
+import type { Artifact, DataPart } from '@a2a-js/sdk'
 import { ChevronDown, Wrench, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -8,13 +8,27 @@ interface CompactToolDisplayProps {
   dimmed?: boolean
 }
 
+interface ToolDisplayData {
+  toolName: string
+  isError: boolean
+  data: unknown | null
+}
+
+function extractToolData(artifact: Artifact): ToolDisplayData {
+  const metadata = artifact.metadata as Record<string, unknown> | undefined
+  const toolName = typeof metadata?.tool_name === 'string' ? metadata.tool_name : 'Unknown tool'
+  const isError = metadata?.type === 'tool_error'
+
+  // Single search for data part
+  const dataPart = artifact.parts.find((p): p is DataPart => p.kind === 'data')
+  const data = dataPart?.data ?? null
+
+  return { toolName, isError, data }
+}
+
 export function CompactToolDisplay({ artifact, dimmed = false }: CompactToolDisplayProps) {
   const [expanded, setExpanded] = useState(false)
-  const toolName = artifact.metadata?.tool_name as string | undefined
-  const isError = artifact.metadata?.type === 'tool_error'
-  const data = artifact.parts.find(p => p.kind === 'data')?.kind === 'data'
-    ? artifact.parts.find(p => p.kind === 'data')?.data
-    : null
+  const { toolName, isError, data } = useMemo(() => extractToolData(artifact), [artifact])
 
   return (
     <div
@@ -39,7 +53,7 @@ export function CompactToolDisplay({ artifact, dimmed = false }: CompactToolDisp
             'text-sm font-medium font-body',
             isError ? 'text-error' : 'text-text-primary'
           )}>
-            {toolName || 'Unknown tool'}
+            {toolName}
           </span>
           {dimmed && (
             <span className="text-xs px-xs py-0.5 bg-warning/20 text-warning border border-warning/30 rounded">
@@ -70,7 +84,7 @@ export function CompactToolDisplay({ artifact, dimmed = false }: CompactToolDisp
               </p>
             )}
 
-            {data && (
+            {data !== null && (
               <div className="bg-surface-dark/50 rounded p-xs overflow-x-auto">
                 <pre className="text-xs text-text-primary font-mono">
                   {JSON.stringify(data, null, 2)}

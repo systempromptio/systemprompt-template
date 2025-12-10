@@ -1,7 +1,5 @@
 use anyhow::Result;
-use chrono::NaiveDateTime;
-use systemprompt_core_database::{DatabaseProvider, DatabaseQueryEnum, JsonRow};
-use systemprompt_traits::Repository as _;
+use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone)]
 pub struct WebAuthnCredential {
@@ -13,108 +11,8 @@ pub struct WebAuthnCredential {
     pub display_name: String,
     pub device_type: String,
     pub transports: Vec<String>,
-    pub created_at: NaiveDateTime,
-    pub last_used_at: Option<NaiveDateTime>,
-}
-
-impl WebAuthnCredential {
-    pub fn from_json_row(row: &JsonRow) -> Result<Self> {
-        use anyhow::anyhow;
-
-        let id = row
-            .get("id")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing id"))?
-            .to_string();
-
-        let user_id = row
-            .get("user_id")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing user_id"))?
-            .to_string();
-
-        let credential_id = row
-            .get("credential_id")
-            .and_then(|v| {
-                use base64::{engine::general_purpose::STANDARD, Engine};
-                if let Some(s) = v.as_str() {
-                    STANDARD.decode(s).ok()
-                } else {
-                    serde_json::from_value(v.clone()).ok()
-                }
-            })
-            .ok_or_else(|| anyhow!("Missing or invalid credential_id"))?;
-
-        let public_key = row
-            .get("public_key")
-            .and_then(|v| {
-                use base64::{engine::general_purpose::STANDARD, Engine};
-                if let Some(s) = v.as_str() {
-                    STANDARD.decode(s).ok()
-                } else {
-                    serde_json::from_value(v.clone()).ok()
-                }
-            })
-            .ok_or_else(|| anyhow!("Missing or invalid public_key"))?;
-
-        let counter = row
-            .get("counter")
-            .and_then(serde_json::Value::as_i64)
-            .ok_or_else(|| anyhow!("Missing counter"))? as u32;
-
-        let display_name = row
-            .get("display_name")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing display_name"))?
-            .to_string();
-
-        let device_type = row
-            .get("device_type")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing device_type"))?
-            .to_string();
-
-        let transports = row
-            .get("transports")
-            .and_then(|v| {
-                if let Some(arr) = v.as_array() {
-                    Some(
-                        arr.iter()
-                            .filter_map(|t| t.as_str().map(ToString::to_string))
-                            .collect(),
-                    )
-                } else if let Some(s) = v.as_str() {
-                    serde_json::from_str::<Vec<String>>(s).ok()
-                } else {
-                    None
-                }
-            })
-            .unwrap_or_else(|| vec!["internal".to_string()]);
-
-        let created_at = row
-            .get("created_at")
-            .and_then(systemprompt_core_database::parse_database_datetime)
-            .ok_or_else(|| anyhow!("Missing or invalid created_at field"))?
-            .naive_utc();
-
-        let last_used_at = row
-            .get("last_used_at")
-            .and_then(systemprompt_core_database::parse_database_datetime)
-            .map(|dt| dt.naive_utc());
-
-        Ok(Self {
-            id,
-            user_id,
-            credential_id,
-            public_key,
-            counter,
-            display_name,
-            device_type,
-            transports,
-            created_at,
-            last_used_at,
-        })
-    }
+    pub created_at: DateTime<Utc>,
+    pub last_used_at: Option<DateTime<Utc>>,
 }
 
 impl crate::repository::OAuthRepository {
@@ -129,43 +27,63 @@ impl crate::repository::OAuthRepository {
         device_type: &str,
         transports: &[String],
     ) -> Result<()> {
-        let counter_i64 = i64::from(counter);
         let transports_json = serde_json::to_string(transports)?;
+        let counter_i32 = counter as i32;
+        let now = Utc::now();
 
-        self.pool()
-            .as_ref()
-            .execute(
-                &DatabaseQueryEnum::InsertCredential.get(self.pool().as_ref()),
-                &[
-                    &id,
-                    &user_id,
-                    &credential_id,
-                    &public_key,
-                    &counter_i64,
-                    &display_name,
-                    &device_type,
-                    &transports_json,
-                ],
-            )
-            .await?;
+        sqlx::query!(
+            "INSERT INTO webauthn_credentials
+             (id, user_id, credential_id, public_key, counter, display_name, device_type,
+             transports, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+            id,
+            user_id,
+            credential_id,
+            public_key,
+            counter_i32,
+            display_name,
+            device_type,
+            transports_json,
+            now
+        )
+        .execute(self.pool_ref())
+        .await?;
 
         Ok(())
     }
 
     pub async fn get_webauthn_credentials(&self, user_id: &str) -> Result<Vec<WebAuthnCredential>> {
-        let rows = self
-            .pool()
-            .as_ref()
-            .fetch_all(
-                &DatabaseQueryEnum::GetCredentialsByUserId.get(self.pool().as_ref()),
-                &[&user_id],
-            )
-            .await?;
+        let rows = sqlx::query!(
+            "SELECT id, user_id, credential_id, public_key, counter, display_name,
+                    device_type, transports, created_at, last_used_at
+             FROM webauthn_credentials WHERE user_id = $1 ORDER BY created_at DESC",
+            user_id
+        )
+        .fetch_all(self.pool_ref())
+        .await?;
 
         let credentials = rows
             .into_iter()
-            .map(|row| WebAuthnCredential::from_json_row(&row))
-            .collect::<Result<Vec<_>, _>>()?;
+            .map(|row| {
+                let transports: Vec<String> = row
+                    .transports
+                    .as_ref()
+                    .and_then(|t| serde_json::from_str(t).ok())
+                    .unwrap_or_else(|| vec!["internal".to_string()]);
+                WebAuthnCredential {
+                    id: row.id,
+                    user_id: row.user_id,
+                    credential_id: row.credential_id,
+                    public_key: row.public_key,
+                    counter: row.counter as u32,
+                    display_name: row.display_name,
+                    device_type: row.device_type.unwrap_or_else(|| "platform".to_string()),
+                    transports,
+                    created_at: row.created_at,
+                    last_used_at: row.last_used_at,
+                }
+            })
+            .collect();
 
         Ok(credentials)
     }
@@ -175,16 +93,18 @@ impl crate::repository::OAuthRepository {
         credential_id: &[u8],
         counter: u32,
     ) -> Result<()> {
-        let now = chrono::Utc::now();
-        let counter_i64 = i64::from(counter);
+        let counter_i32 = counter as i32;
+        let now = Utc::now();
 
-        self.db_pool
-            .as_ref()
-            .execute(
-                &DatabaseQueryEnum::UpdateCredentialCounter.get(self.db_pool.as_ref()),
-                &[&counter_i64, &now, &credential_id],
-            )
-            .await?;
+        sqlx::query!(
+            "UPDATE webauthn_credentials SET counter = $1, last_used_at = $2
+             WHERE credential_id = $3",
+            counter_i32,
+            now,
+            credential_id
+        )
+        .execute(self.pool_ref())
+        .await?;
 
         Ok(())
     }

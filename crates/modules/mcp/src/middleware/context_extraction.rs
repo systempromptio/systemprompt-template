@@ -1,4 +1,5 @@
-use rmcp::{service::RequestContext, ErrorData as McpError, RoleServer};
+use rmcp::service::RequestContext;
+use rmcp::{ErrorData as McpError, RoleServer};
 use systemprompt_core_system::RequestContext as SysRequestContext;
 use systemprompt_traits::ContextPropagation;
 

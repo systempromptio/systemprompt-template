@@ -14,6 +14,7 @@ export const EventType = {
   ARTIFACT_CREATED: 'artifact_created',
   TOOL_EXECUTION_COMPLETED: 'tool_execution_completed',
   SKILL_LOADED: 'skill_loaded',
+  EXECUTION_STEP: 'execution_step',
 } as const
 
 export type EventType = typeof EventType[keyof typeof EventType]
@@ -29,15 +30,3 @@ export const ExecutionStatus = {
 } as const
 
 export type ExecutionStatus = typeof ExecutionStatus[keyof typeof ExecutionStatus]
-
-/**
- * Render Behavior - Controls how artifacts are displayed to users
- */
-export const RenderBehavior = {
-  MODAL: 'modal',
-  INLINE: 'inline',
-  SILENT: 'silent',
-  BOTH: 'both',
-} as const
-
-export type RenderBehavior = typeof RenderBehavior[keyof typeof RenderBehavior]

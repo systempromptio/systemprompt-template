@@ -36,8 +36,7 @@ impl WhereClause {
 
     pub fn in_list(mut self, field: &str, values: Vec<String>) -> Self {
         let placeholders = values.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
-        self.conditions
-            .push(format!("{field} IN ({placeholders})"));
+        self.conditions.push(format!("{field} IN ({placeholders})"));
         self.params.extend(values);
         self
     }

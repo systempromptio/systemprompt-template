@@ -30,7 +30,7 @@ impl AgentOAuthState {
         })
     }
 
-    pub fn auth_mode(&self) -> AuthMode {
+    pub const fn auth_mode(&self) -> AuthMode {
         if self.config.required {
             AuthMode::Required
         } else {

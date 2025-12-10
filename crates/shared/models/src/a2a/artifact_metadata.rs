@@ -18,7 +18,8 @@ pub struct ArtifactMetadata {
     /// ISO 8601 timestamp when artifact was created
     pub created_at: String,
 
-    /// Task ID that generated this artifact - REQUIRED (artifacts belong to tasks)
+    /// Task ID that generated this artifact - REQUIRED (artifacts belong to
+    /// tasks)
     pub task_id: TaskId,
 
     /// Rendering hints for UI display
@@ -53,11 +54,6 @@ pub struct ArtifactMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub execution_index: Option<usize>,
 
-    /// Render behavior controlling how artifact is displayed
-    /// Values: "modal" (modal only), "inline" (conversation only), "silent" (no UI), "both" (default)
-    #[serde(default = "default_render_behavior")]
-    pub render_behavior: String,
-
     /// Skill ID that generated this artifact
     #[serde(skip_serializing_if = "Option::is_none")]
     pub skill_id: Option<String>,
@@ -65,10 +61,6 @@ pub struct ArtifactMetadata {
     /// Skill name that generated this artifact
     #[serde(skip_serializing_if = "Option::is_none")]
     pub skill_name: Option<String>,
-}
-
-fn default_render_behavior() -> String {
-    "both".to_string()
 }
 
 impl ArtifactMetadata {
@@ -87,7 +79,6 @@ impl ArtifactMetadata {
             fingerprint: None,
             tool_name: None,
             execution_index: None,
-            render_behavior: "both".to_string(),
             skill_id: None,
             skill_name: None,
         }
@@ -130,11 +121,6 @@ impl ArtifactMetadata {
 
     pub const fn with_execution_index(mut self, index: usize) -> Self {
         self.execution_index = Some(index);
-        self
-    }
-
-    pub fn with_render_behavior(mut self, behavior: String) -> Self {
-        self.render_behavior = behavior;
         self
     }
 
@@ -182,7 +168,6 @@ impl ArtifactMetadata {
             fingerprint: None,
             tool_name: None,
             execution_index: None,
-            render_behavior: "both".to_string(),
             skill_id: None,
             skill_name: None,
         };

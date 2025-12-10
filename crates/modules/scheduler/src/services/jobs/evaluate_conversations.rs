@@ -7,8 +7,8 @@ use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::AppContext;
 use systemprompt_identifiers::{AgentName, ContextId, SessionId, TraceId, UserId};
-use systemprompt_models::ai::request::{AiMessage, GenerateRequest};
-use systemprompt_models::ai::response_format::{ResponseFormat, StructuredOutputOptions};
+use systemprompt_models::ai::request::{AiMessage, AiRequest};
+use systemprompt_models::ai::response_format::StructuredOutputOptions;
 use systemprompt_models::execution::context::RequestContext;
 
 use crate::models::{AiEvaluationResponse, ConversationEvaluation};
@@ -89,40 +89,31 @@ pub async fn evaluate_conversations(
     logger: LogService,
     app_context: Arc<AppContext>,
 ) -> Result<()> {
-    println!("\n🔍 Evaluating conversations...\n");
+    let start_time = std::time::Instant::now();
+
     logger
         .info(
-            "evaluations",
-            "Starting conversation evaluation job (batch size: 50)",
+            "scheduler",
+            "Job started | job=evaluate_conversations, batch_size=50",
         )
         .await
         .ok();
 
     let repository = SchedulerRepository::new(db_pool.clone());
-
-    println!("   1️⃣  Fetching unevaluated conversations...");
     let conversations = repository.get_unevaluated_conversations(50).await?;
 
     if conversations.is_empty() {
-        println!("      ✅ No conversations to evaluate");
         logger
-            .info("evaluations", "No unevaluated conversations found")
+            .debug("scheduler", "No unevaluated conversations found")
             .await
             .ok();
         return Ok(());
     }
 
-    println!(
-        "      📊 Found {} conversations to evaluate",
-        conversations.len()
-    );
     logger
-        .info(
-            "evaluations",
-            &format!(
-                "Found {} unevaluated conversations to process",
-                conversations.len()
-            ),
+        .debug(
+            "scheduler",
+            &format!("Conversations found | count={}", conversations.len()),
         )
         .await
         .ok();
@@ -132,24 +123,11 @@ pub async fn evaluate_conversations(
     let mut success_count = 0;
     let mut error_count = 0;
 
-    for (index, conversation) in conversations.iter().enumerate() {
+    for conversation in conversations.iter() {
         let context_id = conversation
             .get("context_id")
             .and_then(|v| v.as_str())
             .ok_or_else(|| anyhow!("Missing context_id"))?;
-
-        let agent_name = conversation
-            .get("agent_name")
-            .and_then(|v| v.as_str())
-            .unwrap_or("unknown");
-
-        println!(
-            "   2️⃣  [{}/{}] Evaluating conversation {} (agent: {})...",
-            index + 1,
-            conversations.len(),
-            context_id,
-            agent_name
-        );
 
         match evaluate_single_conversation(
             context_id,
@@ -163,15 +141,13 @@ pub async fn evaluate_conversations(
         {
             Ok(_) => {
                 success_count += 1;
-                println!("      ✅ Evaluation saved");
             },
             Err(e) => {
                 error_count += 1;
-                println!("      ⚠️  Evaluation failed: {}", e);
                 logger
                     .error(
-                        "evaluations",
-                        &format!("Failed to evaluate conversation {}: {}", context_id, e),
+                        "scheduler",
+                        &format!("Evaluation failed | context_id={context_id}, error={e}"),
                     )
                     .await
                     .ok();
@@ -179,17 +155,21 @@ pub async fn evaluate_conversations(
         }
     }
 
-    println!(
-        "\n   ✨ Conversation evaluation complete: {} succeeded, {} failed\n",
-        success_count, error_count
-    );
     logger
-        .info(
-            "evaluations",
+        .log(
+            systemprompt_core_logging::LogLevel::Info,
+            "scheduler",
             &format!(
-                "Conversation evaluation job completed: {} succeeded, {} failed",
+                "Job completed | job=evaluate_conversations, succeeded={}, failed={}",
                 success_count, error_count
             ),
+            Some(serde_json::json!({
+                "job_name": "evaluate_conversations",
+                "succeeded": success_count,
+                "failed": error_count,
+                "total_evaluated": success_count + error_count,
+                "duration_ms": start_time.elapsed().as_millis(),
+            })),
         )
         .await
         .ok();
@@ -199,7 +179,7 @@ pub async fn evaluate_conversations(
 
 async fn evaluate_single_conversation(
     context_id: &str,
-    conversation: &systemprompt_core_database::JsonRow,
+    conversation: &serde_json::Value,
     db_pool: &DbPool,
     ai_service: &AiService,
     repository: &SchedulerRepository,
@@ -244,7 +224,7 @@ async fn evaluate_single_conversation(
         call_ai_evaluator(ai_service, &conversation_text, &req_context, logger).await?;
 
     logger
-        .info(
+        .debug(
             "evaluations",
             &format!(
                 "AI response JSON: {}",
@@ -282,7 +262,8 @@ async fn evaluate_single_conversation(
             .warn(
                 "evaluations",
                 &format!(
-                    "Zero-score conversation detected {}: quality={}, user_satisfied={}, score={:.2}",
+                    "Zero-score conversation detected {}: quality={}, user_satisfied={}, \
+                     score={:.2}",
                     context_id, eval.conversation_quality, eval.user_satisfied, eval.overall_score
                 ),
             )
@@ -293,11 +274,16 @@ async fn evaluate_single_conversation(
     repository.create_evaluation(&eval).await?;
 
     logger
-        .info(
+        .debug(
             "evaluations",
             &format!(
-                "Evaluated conversation {}: quality={}, user_satisfied={}, score={:.2}, goal_achieved={}",
-                context_id, eval.conversation_quality, eval.user_satisfied, eval.overall_score, eval.goal_achieved
+                "Evaluated conversation {}: quality={}, user_satisfied={}, score={:.2}, \
+                 goal_achieved={}",
+                context_id,
+                eval.conversation_quality,
+                eval.user_satisfied,
+                eval.overall_score,
+                eval.goal_achieved
             ),
         )
         .await
@@ -318,7 +304,7 @@ fn create_evaluation_request_context(_task_id: &str) -> RequestContext {
 
 async fn get_context_messages_with_content(
     db_pool: &DbPool,
-    conversation: &systemprompt_core_database::JsonRow,
+    conversation: &serde_json::Value,
 ) -> Result<Vec<Message>> {
     let context_id = conversation
         .get("context_id")
@@ -389,23 +375,17 @@ async fn call_ai_evaluator(
     req_context: &RequestContext,
     logger: &LogService,
 ) -> Result<String> {
-    let request = GenerateRequest {
-        messages: vec![
-            AiMessage::system(EVALUATION_PROMPT),
-            AiMessage::user(format!(
-                "Evaluate this conversation:\n\n{}",
-                conversation_text
-            )),
-        ],
-        provider: None,
-        model: None,
-        response_format: Some(ResponseFormat::JsonObject),
-        structured_output: Some(StructuredOutputOptions::with_json_object()),
-        metadata: None,
-    };
+    let mut request = AiRequest::new(vec![
+        AiMessage::system(EVALUATION_PROMPT),
+        AiMessage::user(format!(
+            "Evaluate this conversation:\n\n{}",
+            conversation_text
+        )),
+    ]);
+    request.structured_output = Some(StructuredOutputOptions::with_json_object());
 
     logger
-        .info(
+        .debug(
             "evaluations",
             "Calling AI service for evaluation (using default provider/model)...",
         )
@@ -415,7 +395,7 @@ async fn call_ai_evaluator(
     let response = ai_service.generate(request, req_context.clone()).await?;
 
     logger
-        .info(
+        .debug(
             "evaluations",
             &format!(
                 "AI evaluation completed (tokens: {})",

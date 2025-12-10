@@ -44,6 +44,7 @@ pub struct TaskBuilder {
     message_id: String,
     user_message: Option<Message>,
     artifacts: Vec<Artifact>,
+    metadata: Option<TaskMetadata>,
 }
 
 impl TaskBuilder {
@@ -56,6 +57,7 @@ impl TaskBuilder {
             message_id: Uuid::new_v4().to_string(),
             user_message: None,
             artifacts: Vec::new(),
+            metadata: None,
         }
     }
 
@@ -64,7 +66,7 @@ impl TaskBuilder {
         self
     }
 
-    pub fn with_state(mut self, state: TaskState) -> Self {
+    pub const fn with_state(mut self, state: TaskState) -> Self {
         self.state = state;
         self
     }
@@ -86,6 +88,11 @@ impl TaskBuilder {
 
     pub fn with_artifacts(mut self, artifacts: Vec<Artifact>) -> Self {
         self.artifacts = artifacts;
+        self
+    }
+
+    pub fn with_metadata(mut self, metadata: TaskMetadata) -> Self {
+        self.metadata = Some(metadata);
         self
     }
 
@@ -140,7 +147,7 @@ impl TaskBuilder {
             } else {
                 Some(self.artifacts)
             },
-            metadata: None,
+            metadata: self.metadata,
         }
     }
 }
@@ -178,6 +185,27 @@ pub fn build_mock_task(task_id: TaskId) -> Task {
         .build()
 }
 
+pub fn build_submitted_task(
+    task_id: TaskId,
+    context_id: ContextId,
+    user_message: Message,
+    agent_name: &str,
+) -> Task {
+    Task {
+        id: task_id,
+        context_id,
+        kind: "task".to_string(),
+        status: TaskStatus {
+            state: TaskState::Submitted,
+            message: None,
+            timestamp: Some(chrono::Utc::now()),
+        },
+        history: Some(vec![user_message]),
+        artifacts: None,
+        metadata: Some(TaskMetadata::new_agent_message(agent_name.to_string())),
+    }
+}
+
 pub fn build_multiturn_task(
     context_id: ContextId,
     task_id: TaskId,
@@ -187,11 +215,11 @@ pub fn build_multiturn_task(
     final_response: String,
     total_iterations: usize,
 ) -> Task {
-    let ctx_id = context_id.clone();
+    let ctx_id = context_id;
 
     let mut history = Vec::new();
 
-    history.push(user_message.clone());
+    history.push(user_message);
 
     let mut iteration = 1;
     let mut call_idx = 0;
@@ -297,7 +325,7 @@ pub fn build_multiturn_task(
             Some(Artifact {
                 artifact_id: Uuid::new_v4().to_string(),
                 name: Some(format!("tool_execution_{}", idx + 1)),
-                description: Some(format!("Result from tool: {}", tool_name)),
+                description: Some(format!("Result from tool: {tool_name}")),
                 parts: vec![Part::Data(DataPart { data: data_map })],
                 extensions: vec![],
                 metadata: ArtifactMetadata::new(
@@ -321,11 +349,11 @@ pub fn build_multiturn_task(
             message: Some(Message {
                 role: "agent".to_string(),
                 parts: vec![Part::Text(TextPart {
-                    text: final_response.clone(),
+                    text: final_response,
                 })],
                 message_id: Uuid::new_v4().to_string(),
-                task_id: Some(task_id.clone()),
-                context_id: ctx_id.clone(),
+                task_id: Some(task_id),
+                context_id: ctx_id,
                 kind: "message".to_string(),
                 metadata: None,
                 extensions: None,

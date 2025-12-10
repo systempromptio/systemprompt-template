@@ -1,1 +1,0 @@
-DELETE FROM logs WHERE timestamp < $1

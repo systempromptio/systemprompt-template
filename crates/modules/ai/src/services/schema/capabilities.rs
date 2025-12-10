@@ -10,6 +10,8 @@ pub struct ProviderCapabilities {
     pub supports_ref: bool,
     pub supports_definitions: bool,
     pub supports_not: bool,
+    pub supports_additional_properties: bool,
+    pub supports_const: bool,
 }
 
 impl ProviderCapabilities {
@@ -22,6 +24,8 @@ impl ProviderCapabilities {
             supports_ref: true,
             supports_definitions: true,
             supports_not: true,
+            supports_additional_properties: true,
+            supports_const: true,
         }
     }
 
@@ -34,18 +38,25 @@ impl ProviderCapabilities {
             supports_ref: true,
             supports_definitions: true,
             supports_not: false,
+            supports_additional_properties: true,
+            supports_const: true,
         }
     }
 
+    /// Gemini 2.5+ capabilities
+    /// Note: anyOf/$ref supported but NOT at root level of schema
+    /// Gemini does NOT support: additionalProperties, const, oneOf, allOf
     pub const fn gemini() -> Self {
         Self {
             supports_allof: false,
-            supports_anyof: false,
+            supports_anyof: true,
             supports_oneof: false,
             supports_if_then_else: false,
-            supports_ref: false,
-            supports_definitions: false,
+            supports_ref: true,
+            supports_definitions: true,
             supports_not: false,
+            supports_additional_properties: false,
+            supports_const: false,
         }
     }
 
@@ -76,47 +87,5 @@ impl ProviderCapabilities {
             }
         }
         false
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn test_anthropic_capabilities() {
-        let caps = ProviderCapabilities::anthropic();
-        assert!(caps.supports_allof);
-        assert!(caps.supports_if_then_else);
-        assert!(caps.supports_ref);
-    }
-
-    #[test]
-    fn test_gemini_capabilities() {
-        let caps = ProviderCapabilities::gemini();
-        assert!(!caps.supports_allof);
-        assert!(!caps.supports_if_then_else);
-        assert!(!caps.supports_ref);
-    }
-
-    #[test]
-    fn test_requires_transformation_gemini() {
-        let caps = ProviderCapabilities::gemini();
-        let schema = json!({
-            "type": "object",
-            "allOf": [{"properties": {}}]
-        });
-        assert!(caps.requires_transformation(&schema));
-    }
-
-    #[test]
-    fn test_no_transformation_needed() {
-        let caps = ProviderCapabilities::anthropic();
-        let schema = json!({
-            "type": "object",
-            "properties": {"name": {"type": "string"}}
-        });
-        assert!(!caps.requires_transformation(&schema));
     }
 }

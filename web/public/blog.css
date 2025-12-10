@@ -275,14 +275,13 @@ svg {
    ============================================ */
 
 .site-header {
-  border-bottom: 1px solid var(--color-border);
-  padding: var(--spacing-md) 0;
-  background: rgba(26, 26, 26, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   position: sticky;
   top: 0;
   z-index: var(--z-navigation);
+  padding: var(--spacing-lg) 0;
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .site-nav {
@@ -371,7 +370,7 @@ article .post-header h1,
    ============================================ */
 
 .featured-image {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto var(--spacing-xxl);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -972,7 +971,16 @@ footer {
   margin-top: var(--spacing-xxl);
 }
 
-.related-articles h3 {
+.related-section {
+  margin-bottom: var(--spacing-xxl);
+}
+
+.related-section:last-child {
+  margin-bottom: 0;
+}
+
+.related-section h3,
+.related-articles > h3 {
   font-family: var(--font-heading);
   font-size: 1.5rem;
   color: var(--color-text-primary);

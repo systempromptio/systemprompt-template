@@ -39,7 +39,8 @@ async fn test_no_orphaned_records_exist() -> Result<()> {
 async fn test_all_required_columns_have_values() -> Result<()> {
     let ctx = TestContext::new().await?;
 
-    let query = "SELECT COUNT(*) as not_null_count FROM information_schema.columns WHERE table_schema = 'public' AND is_nullable = 'NO'";
+    let query = "SELECT COUNT(*) as not_null_count FROM information_schema.columns WHERE \
+                 table_schema = 'public' AND is_nullable = 'NO'";
     let rows = ctx.db.fetch_all(&query, &[]).await?;
     let not_null_count = rows[0]
         .get("not_null_count")

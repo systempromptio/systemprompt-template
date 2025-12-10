@@ -36,7 +36,8 @@ pub enum AgentCommands {
     Status,
     /// List all registered agents with their current state
     List,
-    /// Validate agent configuration and connectivity (provide agent name or use --all)
+    /// Validate agent configuration and connectivity (provide agent name or use
+    /// --all)
     Validate {
         /// Agent name to validate
         agent_name: Option<String>,
@@ -44,7 +45,8 @@ pub enum AgentCommands {
         #[arg(long)]
         all: bool,
     },
-    /// Perform health checks on running agents (provide agent name or use --all)
+    /// Perform health checks on running agents (provide agent name or use
+    /// --all)
     Health {
         /// Agent name to check
         agent_name: Option<String>,

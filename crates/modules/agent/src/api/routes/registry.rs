@@ -1,11 +1,14 @@
-use axum::{extract::State, response::IntoResponse, routing::get, Extension, Router};
+use axum::extract::State;
+use axum::response::IntoResponse;
+use axum::routing::get;
+use axum::{Extension, Router};
 use std::sync::Arc;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::api::ApiError;
 use systemprompt_core_system::{AppContext, CollectionResponse, RequestContext};
 use systemprompt_models::repository::ServiceRepository;
 
-use crate::services::external_integrations::McpSkillLoader;
+use crate::services::external_integrations::McpToolLoader;
 use crate::services::registry::AgentRegistry;
 
 pub async fn handle_agent_registry(
@@ -19,16 +22,16 @@ pub async fn handle_agent_registry(
             logger
                 .error(
                     "agent_api",
-                    &format!("Failed to load agent registry: {}", e),
+                    &format!("Failed to load agent registry: {e}"),
                 )
                 .await
                 .ok();
-            return ApiError::internal_error(format!("Failed to load agent registry: {}", e))
+            return ApiError::internal_error(format!("Failed to load agent registry: {e}"))
                 .into_response();
         },
     };
     let service_repo = ServiceRepository::new(ctx.db_pool().clone());
-    let skill_loader = McpSkillLoader::new(ctx.db_pool().clone());
+    let tool_loader = McpToolLoader::new(ctx.db_pool().clone());
     let api_external_url = &ctx.config().api_external_url;
 
     match registry.list_agents().await {
@@ -55,7 +58,7 @@ pub async fn handle_agent_registry(
                             agent_config.name.clone(),
                         ));
 
-                let mcp_extensions = skill_loader
+                let mcp_extensions = tool_loader
                     .create_mcp_extensions(
                         &agent_config.metadata.mcp_servers,
                         api_external_url,
@@ -80,7 +83,7 @@ pub async fn handle_agent_registry(
                         logger
                             .error(
                                 "agent_api",
-                                &format!("Failed to convert agent to card: {}", e),
+                                &format!("Failed to convert agent to card: {e}"),
                             )
                             .await
                             .ok();
@@ -116,10 +119,10 @@ pub async fn handle_agent_registry(
         },
         Err(e) => {
             logger
-                .error("agent_api", &format!("Failed to list agents: {}", e))
+                .error("agent_api", &format!("Failed to list agents: {e}"))
                 .await
                 .ok();
-            ApiError::internal_error(format!("Failed to retrieve agent registry: {}", e))
+            ApiError::internal_error(format!("Failed to retrieve agent registry: {e}"))
                 .into_response()
         },
     }

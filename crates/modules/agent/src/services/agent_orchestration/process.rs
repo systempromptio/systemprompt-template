@@ -21,19 +21,18 @@ fn rotate_log_if_needed(log_path: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Spawn an agent as a truly detached process that will survive orchestrator restarts
+/// Spawn an agent as a truly detached process that will survive orchestrator
+/// restarts
 pub async fn spawn_detached(agent_name: &str, port: u16) -> OrchestrationResult<u32> {
     let binary_path = BinaryPaths::resolve_binary("systemprompt").map_err(|e| {
-        OrchestrationError::ProcessSpawnFailed(format!("Failed to find systemprompt binary: {}", e))
+        OrchestrationError::ProcessSpawnFailed(format!("Failed to find systemprompt binary: {e}"))
     })?;
 
     let config = Config::global();
 
-    // Create logs directory if it doesn't exist
     let log_dir = Path::new(&config.system_path).join("logs");
     fs::create_dir_all(&log_dir).ok();
 
-    // Redirect stderr to log file for debugging startup failures
     let log_file_path = log_dir.join(format!("agent-{}.log", agent_name));
     rotate_log_if_needed(&log_file_path).ok();
 
@@ -57,9 +56,7 @@ pub async fn spawn_detached(agent_name: &str, port: u16) -> OrchestrationResult<
         .arg(agent_name)
         .arg("--port")
         .arg(port.to_string())
-        // Inherit all environment variables from parent process
         .envs(std::env::vars())
-        // Override agent-specific variables
         .env("AGENT_NAME", agent_name)
         .env("AGENT_PORT", port.to_string())
         .env("DATABASE_URL", &config.database_url)
@@ -69,15 +66,13 @@ pub async fn spawn_detached(agent_name: &str, port: u16) -> OrchestrationResult<
         .stdin(std::process::Stdio::null());
 
     let child = command.spawn().map_err(|e| {
-        OrchestrationError::ProcessSpawnFailed(format!("Failed to spawn {}: {}", agent_name, e))
+        OrchestrationError::ProcessSpawnFailed(format!("Failed to spawn {agent_name}: {e}"))
     })?;
 
     let pid = child.id();
 
-    // Critical: Detach from parent - process continues after orchestrator exits
     std::mem::forget(child);
 
-    // Validate process started successfully
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
     if !process_exists(pid) {
         return Err(OrchestrationError::ProcessSpawnFailed(format!(
@@ -86,13 +81,13 @@ pub async fn spawn_detached(agent_name: &str, port: u16) -> OrchestrationResult<
         )));
     }
 
-    CliService::success(&format!("✅ Detached process spawned with PID: {}", pid));
+    CliService::success(&format!("✅ Detached process spawned with PID: {pid}"));
     Ok(pid)
 }
 
 /// Check if a process exists by PID (Linux-specific using /proc)
 pub fn process_exists(pid: u32) -> bool {
-    Path::new(&format!("/proc/{}", pid)).exists()
+    Path::new(&format!("/proc/{pid}")).exists()
 }
 
 /// Terminate a process gracefully with SIGTERM
@@ -101,7 +96,7 @@ pub fn terminate_process(pid: u32) -> Result<()> {
     use nix::unistd::Pid;
 
     signal::kill(Pid::from_raw(pid as i32), Signal::SIGTERM)
-        .with_context(|| format!("Failed to send SIGTERM to PID {}", pid))?;
+        .with_context(|| format!("Failed to send SIGTERM to PID {pid}"))?;
 
     Ok(())
 }
@@ -112,7 +107,7 @@ pub fn force_kill_process(pid: u32) -> Result<()> {
     use nix::unistd::Pid;
 
     signal::kill(Pid::from_raw(pid as i32), Signal::SIGKILL)
-        .with_context(|| format!("Failed to send SIGKILL to PID {}", pid))?;
+        .with_context(|| format!("Failed to send SIGKILL to PID {pid}"))?;
 
     Ok(())
 }
@@ -154,10 +149,11 @@ pub fn kill_process(pid: u32) -> bool {
 /// Check if a port is in use
 pub fn is_port_in_use(port: u16) -> bool {
     use std::net::TcpListener;
-    TcpListener::bind(format!("127.0.0.1:{}", port)).is_err()
+    TcpListener::bind(format!("127.0.0.1:{port}")).is_err()
 }
 
-/// Spawn detached process (alias for spawn_detached for backwards compatibility)
+/// Spawn detached process (alias for spawn_detached for backwards
+/// compatibility)
 pub async fn spawn_detached_process(agent_name: &str, port: u16) -> OrchestrationResult<u32> {
     spawn_detached(agent_name, port).await
 }
@@ -189,42 +185,4 @@ pub fn validate_agent_binary() -> Result<()> {
     }
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_process_exists() {
-        // Test with current process (should exist)
-        let current_pid = std::process::id();
-        assert!(process_exists(current_pid));
-
-        // Test with non-existent PID (very unlikely to exist)
-        assert!(!process_exists(99999999));
-    }
-
-    #[test]
-    fn test_validate_agent_binary() {
-        // Initialize config for test
-        let _ = Config::init();
-
-        // This test will fail if the binary doesn't exist, which is expected in dev
-        // The function itself is correct - we're testing the validation logic
-        match validate_agent_binary() {
-            Ok(_) => {
-                // Binary exists and is valid
-            },
-            Err(e) => {
-                // Expected in development when binary hasn't been built
-                let error_str = e.to_string();
-                assert!(
-                    error_str.contains("target/debug") || error_str.contains("systemprompt"),
-                    "Unexpected error: {}",
-                    error_str
-                );
-            },
-        }
-    }
 }

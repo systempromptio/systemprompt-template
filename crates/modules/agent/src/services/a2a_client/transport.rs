@@ -20,10 +20,12 @@ pub struct HttpTransport {
 
 impl HttpTransport {
     pub fn new(base_url: impl Into<String>) -> ClientResult<Self> {
+        use reqwest::header::HeaderValue;
+
         let client = Client::builder().timeout(Duration::from_secs(30)).build()?;
 
         let mut headers = HeaderMap::new();
-        headers.insert("Content-Type", "application/json".parse().unwrap());
+        headers.insert("Content-Type", HeaderValue::from_static("application/json"));
 
         Ok(Self {
             client,
@@ -37,11 +39,15 @@ impl HttpTransport {
         Ok(self)
     }
 
-    pub fn with_auth_token(mut self, token: impl AsRef<str>) -> Self {
+    pub fn with_auth_token(mut self, token: impl AsRef<str>) -> ClientResult<Self> {
+        use reqwest::header::HeaderValue;
+
         let bearer_value = format!("Bearer {}", token.as_ref());
-        self.headers
-            .insert("Authorization", bearer_value.parse().unwrap());
-        self
+        let header_value = HeaderValue::from_str(&bearer_value).map_err(|e| {
+            super::error::ClientError::invalid_response(format!("Invalid auth token header: {e}"))
+        })?;
+        self.headers.insert("Authorization", header_value);
+        Ok(self)
     }
 
     fn build_url(&self, path: &str) -> String {

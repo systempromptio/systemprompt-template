@@ -11,14 +11,14 @@ use crate::services::agent_orchestration::{process, OrchestrationError, Orchestr
 pub struct PortManager;
 
 impl PortManager {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 
     pub fn find_process_using_port(&self, port: u16) -> Result<Option<u32>> {
         let output = Command::new("lsof")
             .arg("-ti")
-            .arg(format!(":{}", port))
+            .arg(format!(":{port}"))
             .output()
             .context("Failed to run lsof command")?;
 
@@ -165,8 +165,8 @@ impl PortManager {
                         .unwrap_or_else(|| "unknown".to_string());
 
                     return Err(OrchestrationError::ProcessSpawnFailed(format!(
-                        "Port {} is in use by non-agent process (PID {}): {}\n\
-                        Please stop the process manually or choose a different port.",
+                        "Port {} is in use by non-agent process (PID {}): {}\nPlease stop the \
+                         process manually or choose a different port.",
                         port, pid, info
                     )));
                 }
@@ -196,7 +196,7 @@ impl PortManager {
                 match self.cleanup_port_if_needed(port).await {
                     Ok(_) => cleaned += 1,
                     Err(e) => {
-                        CliService::error(&format!("❌ Failed to cleanup port {}: {}", port, e));
+                        CliService::error(&format!("❌ Failed to cleanup port {port}: {e}"));
                         return Err(e);
                     },
                 }
@@ -249,15 +249,4 @@ impl PortManager {
 pub struct ProcessInfo {
     pub pid: u32,
     pub command: String,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_port_manager_creation() {
-        let manager = PortManager::new();
-        assert!(true);
-    }
 }

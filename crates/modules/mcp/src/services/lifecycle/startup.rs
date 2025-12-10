@@ -6,53 +6,43 @@ use systemprompt_core_logging::CliService;
 
 pub async fn start_server(manager: &LifecycleManager, config: &McpServerConfig) -> Result<()> {
     CliService::info(&format!(
-        "🚀 Starting server: {} on port {} (OAuth: {})",
+        "Starting server: {} on port {} (OAuth: {})",
         config.name, config.port, config.oauth.required
     ));
 
-    // 1. Verify prerequisites
     verify_prerequisites(manager, config).await?;
 
-    // 2. Prepare network resources
     manager.network().prepare_port(config.port).await?;
 
-    // 3. Start the process
     let pid = manager.process().spawn_server(config).await?;
 
-    // 4. Wait for startup and validate
     let startup_time = wait_for_startup(manager, config, pid).await?;
 
-    // 5. Register in database
     let service_id = manager
         .database()
         .register_service(config, pid, startup_time)
         .await?;
 
-    // 6. Initialize monitoring
     manager
         .monitoring()
         .start_monitoring(config, service_id.clone())
         .await?;
 
-    CliService::success(&format!("✅ Server {} started successfully", config.name));
-    CliService::info(&format!("   📋 PID: {pid}"));
-    CliService::info(&format!("   🗃️  Service ID: {service_id}"));
-    CliService::info(&format!("   🌐 Port: {}", config.port));
-    CliService::info(&format!(
-        "   🔗 URL: http://{}:{}",
-        config.host, config.port
-    ));
+    CliService::success(&format!("Server {} started successfully", config.name));
+    CliService::info(&format!("   PID: {pid}"));
+    CliService::info(&format!("   Service ID: {service_id}"));
+    CliService::info(&format!("   Port: {}", config.port));
+    CliService::info(&format!("   URL: http://{}:{}", config.host, config.port));
     if let Some(startup_time) = startup_time {
-        CliService::info(&format!("   ⏱️  Startup Time: {startup_time}ms"));
+        CliService::info(&format!("   Startup Time: {startup_time}ms"));
     }
 
     Ok(())
 }
 
 async fn verify_prerequisites(manager: &LifecycleManager, config: &McpServerConfig) -> Result<()> {
-    CliService::info("🔍 Verifying prerequisites...");
+    CliService::info("Verifying prerequisites...");
 
-    // Check if already running
     if let Some(pid) = manager.process().find_pid_by_port(config.port).await? {
         return Err(anyhow::anyhow!(
             "Service already running on port {} (PID: {})",
@@ -61,10 +51,9 @@ async fn verify_prerequisites(manager: &LifecycleManager, config: &McpServerConf
         ));
     }
 
-    // Verify binary exists
     manager.process().verify_binary(config).await?;
 
-    CliService::success("✅ Prerequisites verified");
+    CliService::success("Prerequisites verified");
     Ok(())
 }
 
@@ -73,7 +62,7 @@ async fn wait_for_startup(
     config: &McpServerConfig,
     expected_pid: u32,
 ) -> Result<Option<i32>> {
-    CliService::info("⏳ Waiting for service to become available...");
+    CliService::info("Waiting for service to become available...");
 
     let start_time = std::time::Instant::now();
     let max_attempts = 15;
@@ -109,11 +98,12 @@ async fn wait_for_startup(
                     HealthStatus::Healthy => {
                         if health_result.details.requires_auth {
                             CliService::success(&format!(
-                                "✅ Service responding (OAuth required) - startup: {startup_time_ms}ms"
+                                "Service responding (OAuth required) - startup: \
+                                 {startup_time_ms}ms"
                             ));
                         } else {
                             CliService::success(&format!(
-                                "✅ MCP service validated: {} tools available (startup: {}ms)",
+                                "MCP service validated: {} tools available (startup: {}ms)",
                                 health_result.details.tools_available, startup_time_ms
                             ));
                         }
@@ -128,7 +118,8 @@ async fn wait_for_startup(
                                 .filter(|e| !e.is_empty())
                                 .unwrap_or("[degraded - no error message]");
                             CliService::warning(&format!(
-                                "⚠️  Service degraded but accepting: {error_msg} (startup: {startup_time_ms}ms)"
+                                "Service degraded but accepting: {error_msg} (startup: \
+                                 {startup_time_ms}ms)"
                             ));
                             return Ok(Some(startup_time_ms));
                         }

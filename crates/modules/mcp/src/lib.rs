@@ -1,3 +1,6 @@
+#![allow(clippy::pedantic)]
+#![allow(clippy::too_many_arguments)]
+
 pub mod api;
 pub mod cli;
 pub mod middleware;
@@ -25,7 +28,8 @@ pub mod registry {
 pub use cli::{list_services, show_status, start_services, stop_services, McpServiceDisplay};
 
 pub use rmcp::model::ProtocolVersion;
-use rmcp::transport::{streamable_http_server::StreamableHttpServerConfig, StreamableHttpService};
+use rmcp::transport::streamable_http_server::StreamableHttpServerConfig;
+use rmcp::transport::StreamableHttpService;
 use rmcp::ServerHandler;
 use std::sync::Arc;
 use std::time::Duration;

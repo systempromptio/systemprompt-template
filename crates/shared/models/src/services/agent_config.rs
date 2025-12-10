@@ -1,3 +1,4 @@
+use super::super::ai::ToolModelOverrides;
 use super::super::auth::{JwtAudience, Permission};
 use serde::{Deserialize, Serialize};
 
@@ -70,8 +71,10 @@ pub struct AgentSkillConfig {
 
 /// Information about the organization providing this agent.
 ///
-/// This is metadata about the provider, not configuration for calling AI providers.
-/// For AI provider configuration, see `crates/modules/ai/src/services/providers/provider_factory.rs::AiProviderConfig`.
+/// This is metadata about the provider, not configuration for calling AI
+/// providers. For AI provider configuration, see
+/// `crates/modules/ai/src/services/providers/provider_factory.
+/// rs::AiProviderConfig`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentProviderInfo {
     pub organization: String,
@@ -103,6 +106,8 @@ pub struct AgentMetadataConfig {
     pub provider: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub model: Option<String>,
+    #[serde(default)]
+    pub tool_model_overrides: ToolModelOverrides,
 }
 
 /// OAuth configuration for A2A agent authentication requirements.
@@ -199,7 +204,6 @@ impl Default for CapabilitiesConfig {
         }
     }
 }
-
 
 impl Default for OAuthConfig {
     fn default() -> Self {

@@ -1,11 +1,10 @@
 use anyhow::{anyhow, Result};
-use std::sync::Arc;
 use systemprompt_core_database::DbPool;
 use systemprompt_core_system::RequestContext;
 use systemprompt_identifiers::{ContextId, TaskId};
 
 use crate::models::{AgentRuntimeInfo, Message};
-use crate::repository::{ArtifactRepository, ContextRepository, TaskRepository};
+use crate::repository::ContextRepository;
 use crate::services::registry::AgentRegistry;
 
 #[derive(Clone, Debug)]
@@ -24,7 +23,7 @@ pub struct MessageValidationService {
 }
 
 impl MessageValidationService {
-    pub fn new(db_pool: DbPool) -> Self {
+    pub const fn new(db_pool: DbPool) -> Self {
         Self { db_pool }
     }
 
@@ -69,9 +68,7 @@ impl MessageValidationService {
         message: &Message,
         context: &RequestContext,
     ) -> Result<()> {
-        let task_repo = Arc::new(TaskRepository::new(self.db_pool.clone()));
-        let artifact_repo = Arc::new(ArtifactRepository::new(self.db_pool.clone()));
-        let context_repo = ContextRepository::new(self.db_pool.clone(), task_repo, artifact_repo);
+        let context_repo = ContextRepository::new(self.db_pool.clone());
 
         context_repo
             .get_context(message.context_id.as_str(), context.user_id().as_str())

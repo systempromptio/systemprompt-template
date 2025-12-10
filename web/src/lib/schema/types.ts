@@ -110,13 +110,13 @@ export function getDefaultValue(property: JSONSchema7): FieldValue | undefined {
  */
 export function getNestedValue(obj: FormValues, path: string): FieldValue {
   const parts = path.split('.')
-  let current: any = obj
+  let current: unknown = obj
 
   for (const part of parts) {
     if (current === undefined || current === null || typeof current !== 'object') {
       return undefined
     }
-    current = current[part]
+    current = (current as Record<string, unknown>)[part]
   }
 
   return current as FieldValue
@@ -132,7 +132,7 @@ export function getNestedValue(obj: FormValues, path: string): FieldValue {
 export function setNestedValue(obj: FormValues, path: string, value: FieldValue): FormValues {
   const parts = path.split('.')
   const result = { ...obj }
-  let current: any = result
+  let current: Record<string, unknown> = result
 
   // Navigate to the parent of the target property
   for (let i = 0; i < parts.length - 1; i++) {
@@ -142,10 +142,10 @@ export function setNestedValue(obj: FormValues, path: string, value: FieldValue)
     if (current[part] === undefined || typeof current[part] !== 'object' || Array.isArray(current[part])) {
       current[part] = {}
     } else {
-      current[part] = { ...current[part] }
+      current[part] = { ...(current[part] as Record<string, unknown>) }
     }
 
-    current = current[part]
+    current = current[part] as Record<string, unknown>
   }
 
   // Set the value at the final key
@@ -160,7 +160,7 @@ export function setNestedValue(obj: FormValues, path: string, value: FieldValue)
  * @example
  * flattenErrors({card: {name: 'Required'}}) // {'card.name': 'Required'}
  */
-export function flattenErrors(errors: any, prefix = ''): Record<string, string> {
+export function flattenErrors(errors: Record<string, unknown>, prefix = ''): Record<string, string> {
   const flattened: Record<string, string> = {}
 
   for (const [key, value] of Object.entries(errors)) {
@@ -169,7 +169,7 @@ export function flattenErrors(errors: any, prefix = ''): Record<string, string> 
     if (typeof value === 'string') {
       flattened[fullKey] = value
     } else if (typeof value === 'object' && value !== null) {
-      Object.assign(flattened, flattenErrors(value, fullKey))
+      Object.assign(flattened, flattenErrors(value as Record<string, unknown>, fullKey))
     }
   }
 

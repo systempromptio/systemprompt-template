@@ -1,5 +1,4 @@
-use crate::McpServerConfig;
-use crate::{ERROR, RUNNING};
+use crate::{McpServerConfig, ERROR, RUNNING};
 use anyhow::Result;
 use systemprompt_core_logging::CliService;
 use systemprompt_core_system::Config;
@@ -78,7 +77,8 @@ impl McpServiceDisplay {
     fn format_row(service: &ServiceConfig, registry_servers: &[McpServerConfig]) -> Vec<String> {
         let description = registry_servers
             .iter()
-            .find(|s| s.name == service.name).map_or_else(|| "[no description]".to_string(), |s| s.description.clone());
+            .find(|s| s.name == service.name)
+            .map_or_else(|| "[no description]".to_string(), |s| s.description.clone());
         vec![
             service.name.clone(),
             description,

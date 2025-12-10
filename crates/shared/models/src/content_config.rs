@@ -49,7 +49,7 @@ pub struct IndexingConfig {
     #[serde(default)]
     pub recursive: bool,
     #[serde(default)]
-    pub preserve_revisions: bool,
+    pub override_existing: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

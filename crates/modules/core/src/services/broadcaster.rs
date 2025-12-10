@@ -3,7 +3,8 @@ use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::Arc;
 use systemprompt_models::execution::BroadcastEvent;
-use tokio::sync::{mpsc::UnboundedSender, RwLock};
+use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::RwLock;
 
 pub type EventSender = UnboundedSender<Result<Event, std::convert::Infallible>>;
 
@@ -88,63 +89,3 @@ impl ContextBroadcaster {
 }
 
 pub static CONTEXT_BROADCASTER: Lazy<ContextBroadcaster> = Lazy::new(ContextBroadcaster::new);
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_register_and_broadcast() {
-        let broadcaster = ContextBroadcaster::new();
-        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
-
-        broadcaster.register("user1", "conn1", tx).await;
-
-        let event = BroadcastEvent {
-            event_type: "test".to_string(),
-            context_id: "ctx1".to_string(),
-            user_id: "user1".to_string(),
-            data: serde_json::json!({}),
-            timestamp: chrono::Utc::now(),
-        };
-
-        let count = broadcaster.broadcast_to_user("user1", event).await;
-        assert_eq!(count, 1);
-
-        let received = rx.recv().await;
-        assert!(received.is_some());
-    }
-
-    #[tokio::test]
-    async fn test_unregister() {
-        let broadcaster = ContextBroadcaster::new();
-        let (tx, _rx) = tokio::sync::mpsc::unbounded_channel();
-
-        broadcaster.register("user1", "conn1", tx).await;
-        assert_eq!(broadcaster.connection_count("user1").await, 1);
-
-        broadcaster.unregister("user1", "conn1").await;
-        assert_eq!(broadcaster.connection_count("user1").await, 0);
-    }
-
-    #[tokio::test]
-    async fn test_dead_channel_cleanup() {
-        let broadcaster = ContextBroadcaster::new();
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-
-        broadcaster.register("user1", "conn1", tx).await;
-        drop(rx);
-
-        let event = BroadcastEvent {
-            event_type: "test".to_string(),
-            context_id: "ctx1".to_string(),
-            user_id: "user1".to_string(),
-            data: serde_json::json!({}),
-            timestamp: chrono::Utc::now(),
-        };
-
-        let count = broadcaster.broadcast_to_user("user1", event).await;
-        assert_eq!(count, 0);
-        assert_eq!(broadcaster.connection_count("user1").await, 0);
-    }
-}

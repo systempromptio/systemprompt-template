@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use crate::models::tools::{CallToolResult, McpTool, ToolCall};
 use crate::services::mcp::McpClientManager;
+use systemprompt_models::ai::ToolModelOverrides;
 
 #[derive(Debug)]
 pub struct TooledExecutor {
@@ -19,20 +20,26 @@ impl TooledExecutor {
         tool_calls: Vec<ToolCall>,
         tools: &[McpTool],
         context: &systemprompt_core_system::RequestContext,
+        agent_overrides: Option<&ToolModelOverrides>,
     ) -> (Vec<ToolCall>, Vec<CallToolResult>) {
+        let default_overrides = ToolModelOverrides::new();
+        let overrides = agent_overrides.unwrap_or(&default_overrides);
         let mut tool_results = Vec::new();
 
         for tool_call in &tool_calls {
-            if tool_call.is_meta_tool() {
-                continue;
-            }
-
             let tool = tools.iter().find(|t| t.name == tool_call.name);
 
             if let Some(tool) = tool {
+                let resolved_config = resolve_model_config(tool, overrides);
+                let enriched_ctx = if let Some(config) = resolved_config {
+                    context.clone().with_tool_model_config(config)
+                } else {
+                    context.clone()
+                };
+
                 match self
                     .client_manager
-                    .execute_tool(tool_call, &tool.service_id, context)
+                    .execute_tool(tool_call, &tool.service_id, &enriched_ctx)
                     .await
                 {
                     Ok(result) => tool_results.push(result),
@@ -64,4 +71,16 @@ impl TooledExecutor {
 
         (tool_calls, tool_results)
     }
+}
+
+fn resolve_model_config(
+    tool: &McpTool,
+    agent_overrides: &ToolModelOverrides,
+) -> Option<systemprompt_models::ai::ToolModelConfig> {
+    if let Some(server_overrides) = agent_overrides.get(&tool.service_id) {
+        if let Some(tool_override) = server_overrides.get(&tool.name) {
+            return Some(tool_override.clone());
+        }
+    }
+    tool.model_config.clone()
 }

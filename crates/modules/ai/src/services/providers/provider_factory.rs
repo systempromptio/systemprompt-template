@@ -54,9 +54,9 @@ impl ProviderFactory {
             },
             "gemini" => {
                 let mut provider = if let Some(endpoint) = &config.endpoint {
-                    GeminiProvider::with_endpoint(config.api_key.clone(), endpoint.clone())
+                    GeminiProvider::with_endpoint(config.api_key.clone(), endpoint.clone())?
                 } else {
-                    GeminiProvider::new(config.api_key.clone())
+                    GeminiProvider::new(config.api_key.clone())?
                 };
 
                 if config.google_search_enabled {
@@ -87,9 +87,7 @@ impl ProviderFactory {
                     Ok(provider) => {
                         providers.insert(name, provider);
                     },
-                    Err(_e) => {
-                        // Provider creation failed, skip this provider
-                    },
+                    Err(_e) => {},
                 }
             }
         }

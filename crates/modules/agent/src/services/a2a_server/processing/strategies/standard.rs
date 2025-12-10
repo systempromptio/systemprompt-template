@@ -5,17 +5,17 @@
 use anyhow::Result;
 use async_trait::async_trait;
 use systemprompt_core_ai::AiMessage;
-use uuid::Uuid;
+use systemprompt_identifiers::TaskId;
 
 use super::{ExecutionContext, ExecutionResult, ExecutionStrategy};
-use crate::models::a2a::{Message as A2aMessage, Part, TextPart};
 use crate::services::a2a_server::processing::ai_executor::process_without_tools;
+use crate::services::ExecutionTrackingService;
 
 #[derive(Debug, Clone, Copy)]
 pub struct StandardExecutionStrategy;
 
 impl StandardExecutionStrategy {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }
@@ -39,6 +39,11 @@ impl ExecutionStrategy for StandardExecutionStrategy {
             .await
             .ok();
 
+        let tracking = ExecutionTrackingService::new(context.execution_step_repo.clone());
+        let task_id = TaskId::new(context.task_id.as_str());
+
+        tracking.track_understanding(task_id.clone()).await.ok();
+
         let (accumulated_text, tool_calls, tool_results) = process_without_tools(
             context.ai_service.clone(),
             &context.agent_runtime,
@@ -49,26 +54,13 @@ impl ExecutionStrategy for StandardExecutionStrategy {
         .await
         .map_err(|_| anyhow::anyhow!("Standard execution failed"))?;
 
-        let agent_message = A2aMessage {
-            role: "agent".to_string(),
-            parts: vec![Part::Text(TextPart {
-                text: accumulated_text.clone(),
-            })],
-            message_id: Uuid::new_v4().to_string(),
-            task_id: Some(context.task_id.clone()),
-            context_id: context.context_id.clone(),
-            kind: "message".to_string(),
-            metadata: None,
-            extensions: None,
-            reference_task_ids: None,
-        };
+        tracking.track_completion(task_id).await.ok();
 
         Ok(ExecutionResult {
             accumulated_text,
             tool_calls,
             tool_results,
             iterations: 1,
-            conversation_history: vec![agent_message],
         })
     }
 

@@ -16,28 +16,22 @@ impl ProxyHealthCheck {
     }
 
     pub async fn can_route_traffic(&self, service_name: &str, port: u16) -> Result<bool> {
-        // Step 1: Check if service exists and get PID
         let Some(service) = self.service_repo.get_service_by_name(service_name).await? else {
-            return Ok(false); // Service not registered
+            return Ok(false);
         };
 
-        // Step 2: Check if marked as running (this also verifies PID)
         if service.status != "running" {
             return Ok(false);
         }
 
-        // Step 3: Check if port is actually open and responsive
         if !Self::is_port_responsive(port).await {
-            // Port not responsive, update database
             self.service_repo
                 .update_service_status(service_name, "stopped")
                 .await?;
             return Ok(false);
         }
 
-        // Step 4: For MCP services, verify protocol handshake (quick check)
         if !Self::can_connect_mcp(port).await {
-            // Can't establish MCP connection
             self.service_repo
                 .update_service_status(service_name, "error")
                 .await?;
@@ -51,23 +45,20 @@ impl ProxyHealthCheck {
         TcpStream::connect_timeout(
             &std::net::SocketAddr::from(([127, 0, 0, 1], port)),
             Duration::from_millis(100),
-        ).is_ok()
+        )
+        .is_ok()
     }
 
     async fn can_connect_mcp(port: u16) -> bool {
-        use crate::services::client::McpClient;
+        use crate::services::client::validate_connection;
 
-        // Quick MCP protocol check without full validation
         match tokio::time::timeout(
             Duration::from_millis(500),
-            McpClient::validate_connection("proxy_check", "127.0.0.1", port),
+            validate_connection("proxy_check", "127.0.0.1", port),
         )
         .await
         {
-            Ok(Ok(result)) => {
-                // Service responded to MCP protocol
-                result.success || result.validation_type == "auth_required"
-            },
+            Ok(Ok(result)) => result.success || result.validation_type == "auth_required",
             _ => false,
         }
     }
@@ -87,7 +78,6 @@ impl ProxyHealthCheck {
                         health: "healthy".to_string(),
                     });
                 } else {
-                    // Update database to reflect reality
                     self.service_repo
                         .update_service_status(&service.name, "stopped")
                         .await?;

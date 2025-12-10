@@ -7,8 +7,7 @@
  */
 
 import React from 'react'
-import type { Artifact } from '@/types/artifact'
-import type { ColumnType } from '@/types/artifacts'
+import type { Artifact, ColumnType } from '@/types/artifact'
 import { TableRenderer } from '../TableRenderer'
 
 interface TableSectionProps {

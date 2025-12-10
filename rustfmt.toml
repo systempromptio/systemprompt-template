@@ -1,5 +1,5 @@
 # Rustfmt configuration for SystemPrompt code formatting standards
-# Using only stable options that work without nightly Rust
+# Requires nightly Rust (configured via rust-toolchain.toml)
 # See: tests/validator/coding-standards.md
 
 # ============================================================================
@@ -92,9 +92,6 @@ match_block_trailing_comma = true
 # ============================================================================
 # MISCELLANEOUS
 # ============================================================================
-
-# Group related struct fields
-# reorder_impl_items = false  # Unstable, keep manual control
 
 # Format string literals
 format_strings = true

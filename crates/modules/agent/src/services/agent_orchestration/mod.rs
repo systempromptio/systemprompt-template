@@ -1,7 +1,7 @@
 //! Agent Orchestration - Clean Database-Driven Implementation
 //!
-//! This module provides a complete replacement for the old agent management system.
-//! Key principles:
+//! This module provides a complete replacement for the old agent management
+//! system. Key principles:
 //! - Database is the only source of truth (no in-memory state)
 //! - Processes are fully detached (survive orchestrator restarts)
 //! - Direct PID management (validate against OS, not memory)
@@ -17,7 +17,7 @@ pub mod reconciler;
 pub use orchestrator::AgentOrchestrator;
 pub use port_manager::PortManager;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AgentStatus {
     Running {
         pid: u32,
@@ -44,7 +44,7 @@ pub struct ValidationReport {
 }
 
 impl ValidationReport {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             valid: true,
             issues: Vec::new(),

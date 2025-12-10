@@ -1,5 +1,5 @@
 use crate::models::a2a::{Artifact, Message, Part, Task, TaskState, TaskStatus, TextPart};
-use crate::repository::{ArtifactRepository, ContextRepository, TaskRepository};
+use crate::repository::{ContextRepository, TaskRepository};
 use crate::services::MessageService;
 use rmcp::ErrorData as McpError;
 use systemprompt_core_database::DbPool;
@@ -10,31 +10,41 @@ use systemprompt_models::auth::UserType;
 use systemprompt_models::TaskMetadata;
 use uuid::Uuid;
 
+/// Result of ensure_task_exists - includes whether task was newly created
+#[derive(Debug)]
+pub struct TaskResult {
+    pub task_id: TaskId,
+    /// True if this MCP tool created the task, false if reused from parent
+    /// (e.g., A2A agent)
+    pub is_owner: bool,
+}
+
 pub async fn ensure_task_exists(
     db_pool: &DbPool,
     request_context: &mut systemprompt_models::execution::context::RequestContext,
     tool_name: &str,
     mcp_server_name: &str,
     logger: &LogService,
-) -> Result<TaskId, McpError> {
+) -> Result<TaskResult, McpError> {
     if let Some(task_id) = request_context.task_id() {
         logger
             .info(
                 "mcp_task",
-                &format!("Reusing existing task from header: {}", task_id.as_str()),
+                &format!("Task reused from parent | task_id={}", task_id.as_str()),
             )
             .await
             .ok();
-        return Ok(task_id.clone());
+        return Ok(TaskResult {
+            task_id: task_id.clone(),
+            is_owner: false,
+        });
     }
 
     if !matches!(
         request_context.user_type(),
         UserType::Unknown | UserType::Anon
     ) {
-        let task_repo = std::sync::Arc::new(TaskRepository::new(db_pool.clone()));
-        let artifact_repo = std::sync::Arc::new(ArtifactRepository::new(db_pool.clone()));
-        let context_repo = ContextRepository::new(db_pool.clone(), task_repo, artifact_repo);
+        let context_repo = ContextRepository::new(db_pool.clone());
 
         if let Err(_) = context_repo
             .validate_context_ownership(
@@ -44,7 +54,9 @@ pub async fn ensure_task_exists(
             .await
         {
             let error_msg = format!(
-                "Invalid context_id '{}'. Please select a valid context for this user. Create a context via POST /api/v1/core/contexts or list existing contexts via GET /api/v1/core/contexts",
+                "Invalid context_id '{}'. Please select a valid context for this user. Create a \
+                 context via POST /api/v1/core/contexts or list existing contexts via GET \
+                 /api/v1/core/contexts",
                 request_context.context_id().as_str()
             );
 
@@ -52,39 +64,16 @@ pub async fn ensure_task_exists(
 
             return Err(McpError::invalid_params(error_msg, None));
         }
-    } else {
-        logger
-            .info(
-                "mcp_task",
-                &format!(
-                    "Skipping context validation for anonymous/unknown user (user_type: {})",
-                    request_context.user_type()
-                ),
-            )
-            .await
-            .ok();
     }
 
     let task_repo = TaskRepository::new(db_pool.clone());
 
     let task_id = TaskId::generate();
 
-    // Agent name is guaranteed to be present (non-optional field in RequestContext)
-    let agent_name = request_context.agent_name().as_str();
-
-    logger
-        .info(
-            "mcp_task",
-            &format!(
-                "Creating task for MCP tool execution: agent={}, server={}, tool={}",
-                agent_name, mcp_server_name, tool_name
-            ),
-        )
-        .await
-        .ok();
+    let agent_name = request_context.agent_name().to_string();
 
     let metadata = TaskMetadata::new_mcp_execution(
-        agent_name.to_string(),
+        agent_name.clone(),
         tool_name.to_string(),
         mcp_server_name.to_string(),
     );
@@ -112,17 +101,27 @@ pub async fn ensure_task_exists(
             &agent_name,
         )
         .await
-        .map_err(|e| McpError::internal_error(format!("Failed to create task: {}", e), None))?;
+        .map_err(|e| McpError::internal_error(format!("Failed to create task: {e}"), None))?;
+
+    request_context.execution.task_id = Some(task_id.clone());
 
     logger
         .info(
             "mcp_task",
-            &format!("Task created: {} (tool: {})", task_id.as_str(), tool_name),
+            &format!(
+                "Task created | task_id={}, tool={}, agent={}",
+                task_id.as_str(),
+                tool_name,
+                agent_name
+            ),
         )
         .await
         .ok();
 
-    Ok(task_id)
+    Ok(TaskResult {
+        task_id,
+        is_owner: true,
+    })
 }
 
 pub async fn complete_task(
@@ -131,23 +130,15 @@ pub async fn complete_task(
     jwt_token: &str,
     logger: &LogService,
 ) -> Result<(), McpError> {
-    logger
-        .info(
-            "mcp_task",
-            &format!(
-                "Triggering webhook for task completion: {}",
-                task_id.as_str()
-            ),
-        )
-        .await
-        .ok();
-
     if let Err(e) = trigger_task_completion_broadcast(db_pool, task_id, jwt_token, logger).await {
-        eprintln!("[MCP-TASK] Failed to trigger webhook broadcast: {:?}", e);
         logger
             .error(
                 "mcp_task",
-                &format!("Failed to trigger webhook broadcast: {:?}", e),
+                &format!(
+                    "Webhook broadcast failed | task_id={}, error={:?}",
+                    task_id.as_str(),
+                    e
+                ),
             )
             .await
             .ok();
@@ -162,29 +153,18 @@ async fn trigger_task_completion_broadcast(
     jwt_token: &str,
     logger: &LogService,
 ) -> Result<(), McpError> {
-    use systemprompt_core_database::{DatabaseProvider, DatabaseQueryEnum};
+    let task_repo = TaskRepository::new(db_pool.clone());
 
-    let query = DatabaseQueryEnum::GetTaskContextUser.get(db_pool.as_ref());
-    let row = db_pool
-        .as_ref()
-        .fetch_optional(&query, &[&task_id.as_str()])
+    let task_info = task_repo
+        .get_task_context_info(task_id.as_str())
         .await
         .map_err(|e| {
-            McpError::internal_error(format!("Failed to load task for webhook: {}", e), None)
+            McpError::internal_error(format!("Failed to load task for webhook: {e}"), None)
         })?;
 
-    if let Some(row) = row {
-        let context_id = row
-            .get("context_id")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| McpError::internal_error("Missing context_id".to_string(), None))?
-            .to_string();
-
-        let user_id = row
-            .get("user_id")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| McpError::internal_error("Missing user_id".to_string(), None))?
-            .to_string();
+    if let Some(info) = task_info {
+        let context_id = info.context_id;
+        let user_id = info.user_id;
 
         let config = Config::global();
         let webhook_url = format!("{}/api/v1/webhook/broadcast", config.api_server_url);
@@ -195,23 +175,13 @@ async fn trigger_task_completion_broadcast(
             "user_id": user_id,
         });
 
-        eprintln!(
-            "[MCP-WEBHOOK] Triggering webhook for task {}",
-            task_id.as_str()
-        );
-        eprintln!("[MCP-WEBHOOK] URL: {}", webhook_url);
-        eprintln!("[MCP-WEBHOOK] JWT Token present: yes");
-        eprintln!(
-            "[MCP-WEBHOOK] Payload: {}",
-            serde_json::to_string_pretty(&webhook_payload).unwrap_or_default()
-        );
-
         logger
-            .info(
+            .debug(
                 "mcp_task",
                 &format!(
-                    "🔔 Triggering webhook for task completion: {}",
-                    task_id.as_str()
+                    "Webhook triggering | task_id={}, context_id={}",
+                    task_id.as_str(),
+                    context_id
                 ),
             )
             .await
@@ -220,7 +190,7 @@ async fn trigger_task_completion_broadcast(
         let client = reqwest::Client::new();
         match client
             .post(webhook_url)
-            .header("Authorization", format!("Bearer {}", jwt_token))
+            .header("Authorization", format!("Bearer {jwt_token}"))
             .json(&webhook_payload)
             .timeout(std::time::Duration::from_secs(5))
             .send()
@@ -228,15 +198,11 @@ async fn trigger_task_completion_broadcast(
         {
             Ok(response) => {
                 if response.status().is_success() {
-                    eprintln!(
-                        "[MCP-WEBHOOK] SUCCESS: Webhook returned status {}",
-                        response.status()
-                    );
                     logger
-                        .info(
+                        .debug(
                             "mcp_task",
                             &format!(
-                                "✅ Webhook triggered successfully for task {}",
+                                "Task completed | task_id={}, webhook=success",
                                 task_id.as_str()
                             ),
                         )
@@ -244,18 +210,13 @@ async fn trigger_task_completion_broadcast(
                         .ok();
                 } else {
                     let status = response.status();
-                    let body = response.text().await.unwrap_or_default();
-                    eprintln!(
-                        "[MCP-WEBHOOK] ERROR: Webhook returned status {} - {}",
-                        status, body
-                    );
                     logger
                         .error(
                             "mcp_task",
                             &format!(
-                                "❌ Webhook returned error status: {} for task {}",
-                                status,
-                                task_id.as_str()
+                                "Task completed | task_id={}, webhook=failed, status={}",
+                                task_id.as_str(),
+                                status
                             ),
                         )
                         .await
@@ -263,14 +224,10 @@ async fn trigger_task_completion_broadcast(
                 }
             },
             Err(e) => {
-                eprintln!(
-                    "[MCP-WEBHOOK] CRITICAL ERROR: Failed to trigger webhook: {}",
-                    e
-                );
                 logger
                     .error(
                         "mcp_task",
-                        &format!("❌ CRITICAL: Failed to trigger webhook: {}", e),
+                        &format!("Webhook failed | task_id={}, error={}", task_id.as_str(), e),
                     )
                     .await
                     .ok();
@@ -295,18 +252,10 @@ pub async fn save_messages_for_tool_execution(
 ) -> Result<(), McpError> {
     let message_service = MessageService::new(db_pool.clone(), logger.clone());
 
-    logger
-        .info(
-            "mcp_task",
-            &format!("Creating messages for MCP tool execution: {}", tool_name),
-        )
-        .await
-        .ok();
-
     let user_message = Message {
         role: "user".to_string(),
         parts: vec![Part::Text(TextPart {
-            text: format!("Execute tool: {}", tool_name),
+            text: format!("Execute tool: {tool_name}"),
         })],
         message_id: Uuid::new_v4().to_string(),
         task_id: Some(task_id.clone()),
@@ -323,7 +272,7 @@ pub async fn save_messages_for_tool_execution(
             tool_result, artifact.artifact_id, artifact.metadata.artifact_type
         )
     } else {
-        format!("Tool execution completed. Result: {}", tool_result)
+        format!("Tool execution completed. Result: {tool_result}")
     };
 
     let agent_message = Message {
@@ -348,15 +297,7 @@ pub async fn save_messages_for_tool_execution(
             trace_id,
         )
         .await
-        .map_err(|e| McpError::internal_error(format!("Failed to save messages: {}", e), None))?;
-
-    logger
-        .info(
-            "mcp_task",
-            &format!("Messages saved for task {}", task_id.as_str()),
-        )
-        .await
-        .ok();
+        .map_err(|e| McpError::internal_error(format!("Failed to save messages: {e}"), None))?;
 
     Ok(())
 }

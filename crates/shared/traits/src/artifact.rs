@@ -57,12 +57,14 @@ use serde_json::Value;
 /// }
 /// ```
 pub trait ArtifactSupport {
-    /// Resolves the output schema for a given tool based on its name and runtime arguments.
+    /// Resolves the output schema for a given tool based on its name and
+    /// runtime arguments.
     ///
     /// # Arguments
     ///
     /// * `tool_name` - The name of the tool being invoked
-    /// * `arguments` - The arguments passed to the tool (may be used for dynamic schema selection)
+    /// * `arguments` - The arguments passed to the tool (may be used for
+    ///   dynamic schema selection)
     ///
     /// # Returns
     ///
@@ -71,7 +73,8 @@ pub trait ArtifactSupport {
     ///
     /// # Important
     ///
-    /// - This method MUST return a schema for any tool that returns `structured_content`
+    /// - This method MUST return a schema for any tool that returns
+    ///   `structured_content`
     /// - The schema MUST include an `x-artifact-type` field
     /// - Without a schema, the frontend CANNOT render artifacts
     fn get_output_schema_for_tool(
@@ -93,7 +96,8 @@ pub trait ArtifactSupport {
     ///
     /// # Returns
     ///
-    /// `true` if validation passes (schema present when output exists), `false` otherwise
+    /// `true` if validation passes (schema present when output exists), `false`
+    /// otherwise
     fn validate_artifact_schema(
         &self,
         _tool_name: &str,

@@ -1,11 +1,11 @@
 use crate::cli::config::{get_global_config, OutputFormat};
 use anyhow::{anyhow, Result};
 use clap::Subcommand;
-use sqlx::{Column, Row};
+use sqlx::{Column, PgPool, Row};
 use std::collections::HashMap;
+use std::sync::Arc;
 use systemprompt_core_database::{
-    ColumnInfo, DatabaseCliDisplay, DatabaseInfo, DatabaseProvider, DatabaseQueryEnum, QueryResult,
-    TableInfo,
+    ColumnInfo, DatabaseCliDisplay, DatabaseInfo, QueryResult, TableInfo,
 };
 use systemprompt_core_logging::CliService;
 use systemprompt_core_system::models::AppContext;
@@ -49,13 +49,17 @@ pub enum DbCommands {
 
 struct DatabaseTool {
     ctx: AppContext,
+    pool: Arc<PgPool>,
 }
 
 impl DatabaseTool {
     async fn new() -> Result<Self> {
-        Ok(Self {
-            ctx: AppContext::new().await?,
-        })
+        let ctx = AppContext::new().await?;
+        let pool = ctx
+            .db_pool()
+            .pool_arc()
+            .expect("Database must be PostgreSQL");
+        Ok(Self { ctx, pool })
     }
 
     async fn execute_query(&self, query: &str, read_only: bool) -> Result<QueryResult> {
@@ -67,11 +71,8 @@ impl DatabaseTool {
             ));
         }
 
-        let db_pool = self.ctx.db_pool();
+        let rows = sqlx::query(query).fetch_all(&*self.pool).await?;
         let execution_time = start.elapsed().as_millis() as u64;
-
-        let pg_pool = db_pool.get_postgres_pool_arc()?;
-        let rows = sqlx::query(query).fetch_all(pg_pool.as_ref()).await?;
 
         let mut columns = Vec::new();
         let mut result_rows = Vec::new();
@@ -87,10 +88,7 @@ impl DatabaseTool {
         for row in &rows {
             let mut row_map = HashMap::new();
             for (i, column) in row.columns().iter().enumerate() {
-                row_map.insert(
-                    column.name().to_string(),
-                    self.extract_value_postgres(row, i)?,
-                );
+                row_map.insert(column.name().to_string(), self.extract_value(row, i)?);
             }
             result_rows.push(row_map);
         }
@@ -115,26 +113,25 @@ impl DatabaseTool {
     }
 
     async fn list_tables(&self) -> Result<Vec<TableInfo>> {
-        let db_pool = self.ctx.db_pool();
-        let query = DatabaseQueryEnum::CliListTables.get(db_pool.as_ref());
-
-        let rows = db_pool.fetch_all(&query, &[]).await?;
+        let rows = sqlx::query(
+            "SELECT table_name as name FROM information_schema.tables WHERE table_schema = \
+             'public' ORDER BY table_name",
+        )
+        .fetch_all(&*self.pool)
+        .await?;
 
         let tables = rows
-            .into_iter()
+            .iter()
             .map(|row| {
-                let name = row
-                    .get("name")
-                    .and_then(|v| v.as_str())
-                    .ok_or_else(|| anyhow!("Missing name"))?
-                    .to_string();
-                Ok(TableInfo {
+                let name: String = row.get("name");
+                TableInfo {
                     name,
                     row_count: 0,
                     columns: vec![],
-                })
+                }
             })
-            .collect::<Result<Vec<_>>>()?;
+            .collect();
+
         Ok(tables)
     }
 
@@ -143,62 +140,45 @@ impl DatabaseTool {
             return Err(anyhow!("Invalid table name"));
         }
 
-        let db_pool = self.ctx.db_pool();
-        let columns_query = DatabaseQueryEnum::CliDescribeTable.get(db_pool.as_ref());
-
-        let rows = db_pool.fetch_all(&columns_query, &[&table_name]).await?;
+        let rows = sqlx::query(
+            "SELECT column_name, data_type, is_nullable, column_default FROM \
+             information_schema.columns WHERE table_name = $1 ORDER BY ordinal_position",
+        )
+        .bind(table_name)
+        .fetch_all(&*self.pool)
+        .await?;
 
         let columns = rows
-            .into_iter()
+            .iter()
             .map(|row| {
-                let name = row
-                    .get("column_name")
-                    .and_then(|v| v.as_str())
-                    .ok_or_else(|| anyhow!("Missing column_name"))?
-                    .to_string();
-                let data_type = row
-                    .get("data_type")
-                    .and_then(|v| v.as_str())
-                    .ok_or_else(|| anyhow!("Missing data_type"))?
-                    .to_string();
-                let nullable_str = row
-                    .get("is_nullable")
-                    .and_then(|v| v.as_str())
-                    .ok_or_else(|| anyhow!("Missing is_nullable"))?;
+                let name: String = row.get("column_name");
+                let data_type: String = row.get("data_type");
+                let nullable_str: String = row.get("is_nullable");
                 let nullable = nullable_str.to_uppercase() == "YES";
-                let default = row
-                    .get("column_default")
-                    .and_then(|v| v.as_str())
-                    .map(String::from);
+                let default: Option<String> = row.get("column_default");
 
-                Ok(ColumnInfo {
+                ColumnInfo {
                     name,
                     data_type,
                     nullable,
                     default,
                     primary_key: false,
-                })
+                }
             })
-            .collect::<Result<Vec<_>>>()?;
+            .collect();
 
-        let pg_pool = db_pool.get_postgres_pool_arc()?;
         let count_query = format!("SELECT COUNT(*) as count FROM {}", table_name);
         let row_count: i64 = sqlx::query_scalar(&count_query)
-            .fetch_one(pg_pool.as_ref())
+            .fetch_one(&*self.pool)
             .await?;
 
         Ok((columns, row_count))
     }
 
     async fn get_db_info(&self) -> Result<DatabaseInfo> {
-        let db_pool = self.ctx.db_pool();
-        let query = DatabaseQueryEnum::CliGetDbVersion.get(db_pool.as_ref());
-
-        let version_value = db_pool.fetch_scalar_value(&query, &[]).await?;
-        let version = match version_value {
-            systemprompt_core_database::DbValue::String(s) => s,
-            _ => "Unknown".to_string(),
-        };
+        let version: String = sqlx::query_scalar("SELECT version()")
+            .fetch_one(&*self.pool)
+            .await?;
 
         Ok(DatabaseInfo {
             path: "postgresql://database".to_string(),
@@ -208,7 +188,7 @@ impl DatabaseTool {
         })
     }
 
-    fn extract_value_postgres(
+    fn extract_value(
         &self,
         row: &sqlx::postgres::PgRow,
         column_index: usize,
@@ -245,13 +225,11 @@ impl DatabaseTool {
         if let Ok(val) = row.try_get::<Option<bool>, _>(column_index) {
             return Ok(val.map_or(serde_json::Value::Null, serde_json::Value::Bool));
         }
-        // Handle TEXT[] arrays (PostgreSQL native arrays)
         if let Ok(val) = row.try_get::<Option<Vec<String>>, _>(column_index) {
             return Ok(val.map_or(serde_json::Value::Null, |arr| {
                 serde_json::Value::Array(arr.into_iter().map(serde_json::Value::String).collect())
             }));
         }
-        // Handle JSONB types (PostgreSQL native JSON)
         if let Ok(val) = row.try_get::<Option<serde_json::Value>, _>(column_index) {
             return Ok(val.unwrap_or(serde_json::Value::Null));
         }
@@ -277,16 +255,13 @@ impl DatabaseTool {
 }
 
 async fn migrate_standalone() -> Result<()> {
-    use std::sync::Arc;
     use systemprompt_core_database::Database;
-    use systemprompt_core_system::{
-        models::modules::Modules, services::install::install_module_with_db, Config,
-    };
+    use systemprompt_core_system::models::modules::Modules;
+    use systemprompt_core_system::services::install::install_module_with_db;
+    use systemprompt_core_system::Config;
     use systemprompt_models::config::VerbosityLevel;
 
     let verbosity = VerbosityLevel::resolve();
-
-    // Load config from environment (don't use Config::init to avoid OnceLock issue)
     let config = Config::from_env()?;
 
     if verbosity.should_show_verbose() {
@@ -295,7 +270,6 @@ async fn migrate_standalone() -> Result<()> {
         CliService::info(&format!("Database URL: {}", config.database_url));
     }
 
-    // For SQLite, ensure parent directory and database file exist
     if config.database_type.eq_ignore_ascii_case("sqlite") {
         let db_path = std::path::Path::new(&config.database_url);
         if let Some(parent) = db_path.parent() {
@@ -308,11 +282,9 @@ async fn migrate_standalone() -> Result<()> {
         }
     }
 
-    // Create database with automatic type selection (SQLite or PostgreSQL)
     let database =
         Arc::new(Database::from_config(&config.database_type, &config.database_url).await?);
 
-    // Discover modules from module.yaml files
     let modules = Modules::load(&config.system_path)?;
     let all_modules = modules.all();
 
@@ -328,7 +300,6 @@ async fn migrate_standalone() -> Result<()> {
         }
     }
 
-    // Install each module
     let mut error_count = 0;
 
     for module in all_modules {
@@ -349,7 +320,6 @@ async fn migrate_standalone() -> Result<()> {
 }
 
 pub async fn execute(cmd: DbCommands) -> Result<()> {
-    // Handle Migrate separately to avoid triggering ModuleManager via AppContext
     if matches!(cmd, DbCommands::Migrate) {
         return match migrate_standalone().await {
             Ok(()) => {
@@ -470,10 +440,10 @@ pub async fn execute(cmd: DbCommands) -> Result<()> {
                         new_roles.push("user".to_string());
                     }
 
-                    user_repo.assign_roles(&u.name, &new_roles).await?;
+                    user_repo.assign_roles(&u.id, &new_roles).await?;
 
                     CliService::success(&format!(
-                        "✅ Admin role assigned to user '{}' ({})",
+                        "Admin role assigned to user '{}' ({})",
                         u.name, u.email
                     ));
                     CliService::info(&format!("   Roles: {:?}", new_roles));

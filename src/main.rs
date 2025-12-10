@@ -8,7 +8,8 @@ mod cli;
 #[derive(Parser)]
 #[command(name = "systemprompt")]
 #[command(
-    about = "SystemPrompt OS - Unified CLI for agent orchestration, AI operations, and system management"
+    about = "SystemPrompt OS - Unified CLI for agent orchestration, AI operations, and system \
+             management"
 )]
 #[command(version = "0.1.0")]
 #[command(long_about = None)]
@@ -49,22 +50,24 @@ struct Cli {
 enum Commands {
     /// Manage system services
     ///
-    /// Start the API server, which automatically manages all enabled agents and MCP servers.
-    /// For manual control, use 'agents' and 'mcp' commands.
+    /// Start the API server, which automatically manages all enabled agents and
+    /// MCP servers. For manual control, use 'agents' and 'mcp' commands.
     #[command(subcommand)]
     Serve(cli::serve::ServeCommands),
 
     /// Agent orchestration and lifecycle management
     ///
-    /// Manual control for agents. When API server is running, agents auto-start.
-    /// Use these commands for manual operations or when API is not running.
+    /// Manual control for agents. When API server is running, agents
+    /// auto-start. Use these commands for manual operations or when API is
+    /// not running.
     #[command(subcommand)]
     Agents(cli::agents::AgentCommands),
 
     /// MCP server management
     ///
-    /// Manual control for MCP servers. When API server is running, MCP servers auto-start.
-    /// Use these commands for manual operations or when API is not running.
+    /// Manual control for MCP servers. When API server is running, MCP servers
+    /// auto-start. Use these commands for manual operations or when API is
+    /// not running.
     #[command(subcommand)]
     Mcp(cli::mcp::McpCommands),
 
@@ -80,18 +83,32 @@ enum Commands {
     #[command(subcommand)]
     Scheduler(cli::scheduler::SchedulerCommands),
 
+    /// Deployment management
+    #[command(subcommand)]
+    Deploy(cli::deploy::DeployCommands),
+
     /// User analytics and reporting
     User(cli::user::UserArgs),
 
     /// Log streaming and inspection
     Logs(cli::logs::LogsArgs),
 
-    /// Trace viewer
+    /// Trace viewer - send test message or query existing trace
+    ///
+    /// With no arguments: sends "Hello" to first available agent and displays
+    /// trace. With trace_id: queries and displays existing trace data.
     Trace {
-        trace_id: String,
+        /// Trace ID to query (optional - if not provided, sends test message)
+        trace_id: Option<String>,
         #[command(flatten)]
         options: cli::trace::TraceOptions,
     },
+
+    /// AI trace viewer - inspect task execution details
+    ///
+    /// Shows task info, execution steps, AI requests, messages, and tool calls
+    /// for a given task ID.
+    AiTrace(cli::ai_trace::AiTraceOptions),
 
     /// Generate authentication tokens
     Login(cli::login::LoginArgs),
@@ -101,6 +118,10 @@ enum Commands {
 
     /// Sync skills to Claude Code
     Skills(cli::skills::SkillsArgs),
+
+    /// Sync content or skills between disk and database
+    #[command(subcommand)]
+    Sync(cli::sync::SyncCommands),
 
     /// Show status of all services (API, agents, MCP servers)
     Status,
@@ -162,6 +183,9 @@ async fn main() -> Result<()> {
             );
             cli::scheduler::execute(cmd, ctx).await?;
         },
+        Commands::Deploy(cmd) => {
+            cli::deploy::handle_deploy_command(cmd).await?;
+        },
         Commands::User(args) => {
             cli::user::execute(args).await?;
         },
@@ -169,7 +193,10 @@ async fn main() -> Result<()> {
             cli::logs::execute(args).await?;
         },
         Commands::Trace { trace_id, options } => {
-            cli::trace::execute(&trace_id, options).await?;
+            cli::trace::execute(trace_id.as_deref(), options).await?;
+        },
+        Commands::AiTrace(options) => {
+            cli::ai_trace::execute(options).await?;
         },
         Commands::Login(args) => {
             cli::login::execute(args).await?;
@@ -179,6 +206,9 @@ async fn main() -> Result<()> {
         },
         Commands::Skills(cmd) => {
             cli::skills::execute(cmd).await?;
+        },
+        Commands::Sync(cmd) => {
+            cli::sync::execute(cmd).await?;
         },
         Commands::Status => {
             cli::status::execute().await?;

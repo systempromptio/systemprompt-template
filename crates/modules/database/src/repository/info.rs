@@ -19,6 +19,7 @@ impl RepositoryTrait for DatabaseInfoRepository {
 }
 
 impl DatabaseInfoRepository {
+    #[must_use]
     pub const fn new(db: Arc<Database>) -> Self {
         Self { db }
     }

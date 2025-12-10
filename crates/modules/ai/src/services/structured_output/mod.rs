@@ -15,11 +15,9 @@ impl StructuredOutputProcessor {
         format: &ResponseFormat,
         options: &StructuredOutputOptions,
     ) -> Result<JsonValue> {
-        // First, try to extract JSON from the content
         let json_value =
             parser::JsonParser::extract_json(content, options.extraction_pattern.as_deref())?;
 
-        // If we have a schema, validate against it
         if let ResponseFormat::JsonSchema { schema, strict, .. } = format {
             if options.validate_schema.unwrap_or(true) {
                 let is_strict = strict.unwrap_or(true);
@@ -44,9 +42,9 @@ impl StructuredOutputProcessor {
             ResponseFormat::Text => original_prompt.to_string(),
             ResponseFormat::JsonObject => {
                 format!(
-                    "{original_prompt}\n\nIMPORTANT: You must respond with valid JSON only. \
-                    Do not include any text before or after the JSON object. \
-                    Your entire response must be a valid JSON object."
+                    "{original_prompt}\n\nIMPORTANT: You must respond with valid JSON only. Do \
+                     not include any text before or after the JSON object. Your entire response \
+                     must be a valid JSON object."
                 )
             },
             ResponseFormat::JsonSchema { schema, name, .. } => {
@@ -56,11 +54,11 @@ impl StructuredOutputProcessor {
                 let schema_name = name.as_deref().unwrap_or("response");
 
                 format!(
-                    "{original_prompt}\n\nIMPORTANT: You must respond with valid JSON that conforms to this schema:\n\
-                    Schema Name: {schema_name}\n\
-                    ```json\n{schema_str}\n```\n\
-                    Do not include any text before or after the JSON. \
-                    Your entire response must be valid JSON matching this exact schema."
+                    "{original_prompt}\n\nIMPORTANT: You must respond with valid JSON that \
+                     conforms to this schema:\nSchema Name: \
+                     {schema_name}\n```json\n{schema_str}\n```\nDo not include any text before or \
+                     after the JSON. Your entire response must be valid JSON matching this exact \
+                     schema."
                 )
             },
         }
@@ -81,22 +79,18 @@ impl StructuredOutputProcessor {
 
         for attempt in 0..=max_retries {
             match generator().await {
-                Ok(content) => {
-                    match Self::process_response(&content, format, options) {
-                        Ok(json) => return Ok(json),
-                        Err(e) => {
-                            if attempt < max_retries {
-                                // JSON parsing failed, will retry
-                                last_error = Some(e);
-                            } else {
-                                return Err(e);
-                            }
-                        },
-                    }
+                Ok(content) => match Self::process_response(&content, format, options) {
+                    Ok(json) => return Ok(json),
+                    Err(e) => {
+                        if attempt < max_retries {
+                            last_error = Some(e);
+                        } else {
+                            return Err(e);
+                        }
+                    },
                 },
                 Err(e) => {
                     if attempt < max_retries {
-                        // Generation failed, will retry
                         last_error = Some(e);
                     } else {
                         return Err(e);

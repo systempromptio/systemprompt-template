@@ -4,8 +4,6 @@ use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use systemprompt_identifiers::AiToolCallId;
 
-pub const EXECUTION_CONTROL_TOOL_NAME: &str = "__execution_control";
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolCall {
     pub ai_tool_call_id: AiToolCallId,
@@ -13,50 +11,13 @@ pub struct ToolCall {
     pub arguments: JsonValue,
 }
 
-impl ToolCall {
-    pub fn is_meta_tool(&self) -> bool {
-        self.name == EXECUTION_CONTROL_TOOL_NAME
-    }
-
-    pub fn is_executable(&self) -> bool {
-        !self.is_meta_tool()
-    }
-}
-
-pub trait ToolCallExt {
-    fn filter_executable(&self) -> Vec<ToolCall>;
-    fn filter_storable(&self) -> Vec<ToolCall>;
-}
-
-impl ToolCallExt for [ToolCall] {
-    fn filter_executable(&self) -> Vec<ToolCall> {
-        self.iter()
-            .filter(|tc| tc.is_executable())
-            .cloned()
-            .collect()
-    }
-
-    fn filter_storable(&self) -> Vec<ToolCall> {
-        self.filter_executable()
-    }
-}
-
-impl ToolCallExt for Vec<ToolCall> {
-    fn filter_executable(&self) -> Vec<ToolCall> {
-        self.as_slice().filter_executable()
-    }
-
-    fn filter_storable(&self) -> Vec<ToolCall> {
-        self.as_slice().filter_storable()
-    }
-}
-
 /// MCP protocol result - this is the ONLY tool result type in the system.
 /// All tool execution flows through MCP and returns this type.
 ///
 /// This type contains:
 /// - `content: Vec<Content>` - Text, images, resources returned by the tool
-/// - `structured_content: Option<JsonValue>` - Rich UI data (presentation cards, tables, etc.)
+/// - `structured_content: Option<JsonValue>` - Rich UI data (presentation
+///   cards, tables, etc.)
 /// - `is_error: Option<bool>` - Whether the execution failed
 /// - `meta: Option<JsonValue>` - Additional metadata
 pub use rmcp::model::CallToolResult;

@@ -3,7 +3,7 @@ import { ChevronRight, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 interface StreamingDataProps {
-  data: Record<string, any>
+  data: Record<string, unknown>
   isComplete?: boolean
   level?: number
 }
@@ -29,9 +29,9 @@ export function StreamingData({ data, isComplete = true, level = 0 }: StreamingD
   )
 }
 
-function JSONTree({ data, level = 0 }: { data: any; level?: number }) {
+function JSONTree({ data, level = 0 }: { data: unknown; level?: number }) {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(
-    new Set(level < 2 ? Object.keys(data || {}) : [])
+    new Set(level < 2 ? Object.keys((data && typeof data === 'object' ? data : {}) as Record<string, unknown>) : [])
   )
 
   if (data === null) {
@@ -120,7 +120,7 @@ function JSONTree({ data, level = 0 }: { data: any; level?: number }) {
   )
 }
 
-function getValueColor(value: any): string {
+function getValueColor(value: unknown): string {
   if (typeof value === 'string') return 'text-success'
   if (typeof value === 'number') return 'text-primary'
   if (typeof value === 'boolean') return 'text-warning'

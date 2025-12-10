@@ -60,17 +60,19 @@ impl DatabaseCliDisplay for QueryResult {
         println!("{}", self.columns.join(" | "));
         println!("{}", "-".repeat(80));
 
-        // Print rows
         for row in &self.rows {
             let values: Vec<String> = self
                 .columns
                 .iter()
                 .map(|col| {
-                    row.get(col).map_or("NULL".to_string(), |v| match v {
-                        serde_json::Value::String(s) => s.clone(),
-                        serde_json::Value::Null => "NULL".to_string(),
-                        _ => v.to_string(),
-                    })
+                    row.get(col).map_or_else(
+                        || "NULL".to_string(),
+                        |v| match v {
+                            serde_json::Value::String(s) => s.clone(),
+                            serde_json::Value::Null => "NULL".to_string(),
+                            _ => v.to_string(),
+                        },
+                    )
                 })
                 .collect();
             println!("{}", values.join(" | "));

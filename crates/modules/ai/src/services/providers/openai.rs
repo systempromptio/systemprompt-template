@@ -7,13 +7,13 @@ use std::pin::Pin;
 use std::time::Instant;
 use uuid::Uuid;
 
-use crate::models::ai::{AiMessage, ResponseFormat, SamplingMetadata, SamplingResponse};
+use crate::models::ai::{AiMessage, AiResponse, ResponseFormat, SamplingMetadata};
 use crate::models::providers::openai::{
     OpenAiFunction, OpenAiJsonSchema, OpenAiRequest, OpenAiResponse, OpenAiResponseFormat,
     OpenAiTool,
 };
 use crate::models::tools::{McpTool, ToolCall};
-use crate::services::providers::AiProvider;
+use crate::services::providers::{AiProvider, ModelPricing};
 use crate::services::schema::ProviderCapabilities;
 use systemprompt_identifiers::AiToolCallId;
 
@@ -134,9 +134,7 @@ impl OpenAiProvider {
             .collect()
     }
 
-    fn convert_response_format(
-        format: &ResponseFormat,
-    ) -> Result<Option<OpenAiResponseFormat>> {
+    fn convert_response_format(format: &ResponseFormat) -> Result<Option<OpenAiResponseFormat>> {
         match format {
             ResponseFormat::Text => Ok(None),
             ResponseFormat::JsonObject => Ok(Some(OpenAiResponseFormat::JsonObject)),
@@ -167,6 +165,10 @@ impl AiProvider for OpenAiProvider {
         "openai"
     }
 
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities::openai()
     }
@@ -186,21 +188,30 @@ impl AiProvider for OpenAiProvider {
         "gpt-4-turbo"
     }
 
-    fn get_cost_per_1k_tokens(&self, model: &str) -> f32 {
+    fn get_pricing(&self, model: &str) -> ModelPricing {
         match model {
-            "gpt-4" | "gpt-4-turbo" => 0.03,
-            "gpt-4o" => 0.005,
-            "gpt-4o-mini" | "gpt-3.5-turbo" => 0.0005,
-            _ => 0.01,
+            // GPT-4 Turbo: $10/1M input, $30/1M output
+            "gpt-4" | "gpt-4-turbo" | "gpt-4-turbo-preview" => ModelPricing::new(0.01, 0.03),
+            // GPT-4o: $2.50/1M input, $10/1M output
+            "gpt-4o" | "gpt-4o-2024-11-20" | "gpt-4o-2024-08-06" => ModelPricing::new(0.0025, 0.01),
+            // GPT-4o-mini: $0.15/1M input, $0.60/1M output
+            "gpt-4o-mini" | "gpt-4o-mini-2024-07-18" => ModelPricing::new(0.00015, 0.0006),
+            // GPT-3.5 Turbo: $0.50/1M input, $1.50/1M output
+            "gpt-3.5-turbo" | "gpt-3.5-turbo-0125" => ModelPricing::new(0.0005, 0.0015),
+            // o1: $15/1M input, $60/1M output
+            "o1" | "o1-2024-12-17" => ModelPricing::new(0.015, 0.06),
+            // o1-mini: $3/1M input, $12/1M output
+            "o1-mini" | "o1-mini-2024-09-12" => ModelPricing::new(0.003, 0.012),
+            _ => ModelPricing::new(0.0025, 0.01),
         }
     }
 
-    async fn sample(
+    async fn generate(
         &self,
         messages: &[AiMessage],
         metadata: &SamplingMetadata,
         model: &str,
-    ) -> Result<SamplingResponse> {
+    ) -> Result<AiResponse> {
         let start = Instant::now();
         let request_id = Uuid::new_v4();
 
@@ -263,7 +274,7 @@ impl AiProvider for OpenAiProvider {
                 (None, None, None, false, None)
             };
 
-        Ok(SamplingResponse {
+        Ok(AiResponse {
             request_id,
             content,
             provider: self.name().to_string(),
@@ -277,16 +288,18 @@ impl AiProvider for OpenAiProvider {
             cache_creation_tokens: None,
             is_streaming: false,
             latency_ms: start.elapsed().as_millis() as u64,
+            tool_calls: Vec::new(),
+            tool_results: Vec::new(),
         })
     }
 
-    async fn sample_with_tools(
+    async fn generate_with_tools(
         &self,
         messages: &[AiMessage],
         tools: Vec<McpTool>,
         metadata: &SamplingMetadata,
         model: &str,
-    ) -> Result<(SamplingResponse, Vec<ToolCall>)> {
+    ) -> Result<(AiResponse, Vec<ToolCall>)> {
         let start = Instant::now();
         let request_id = Uuid::new_v4();
 
@@ -327,11 +340,7 @@ impl AiProvider for OpenAiProvider {
             .first()
             .ok_or_else(|| anyhow!("No response from OpenAI"))?;
 
-        let content = choice
-            .message
-            .content
-            .clone()
-            .unwrap_or_else(String::new);
+        let content = choice.message.content.clone().unwrap_or_else(String::new);
 
         let tool_calls = choice
             .message
@@ -368,7 +377,7 @@ impl AiProvider for OpenAiProvider {
                 (None, None, None, false, None)
             };
 
-        let response = SamplingResponse {
+        let response = AiResponse {
             request_id,
             content,
             provider: self.name().to_string(),
@@ -382,18 +391,20 @@ impl AiProvider for OpenAiProvider {
             cache_creation_tokens: None,
             is_streaming: false,
             latency_ms: start.elapsed().as_millis() as u64,
+            tool_calls: Vec::new(),
+            tool_results: Vec::new(),
         };
 
         Ok((response, tool_calls))
     }
 
-    async fn sample_structured(
+    async fn generate_structured(
         &self,
         messages: &[AiMessage],
         metadata: &SamplingMetadata,
         model: &str,
         response_format: &ResponseFormat,
-    ) -> Result<SamplingResponse> {
+    ) -> Result<AiResponse> {
         let start = Instant::now();
         let request_id = Uuid::new_v4();
 
@@ -456,7 +467,7 @@ impl AiProvider for OpenAiProvider {
                 (None, None, None, false, None)
             };
 
-        Ok(SamplingResponse {
+        Ok(AiResponse {
             request_id,
             content,
             provider: self.name().to_string(),
@@ -470,6 +481,102 @@ impl AiProvider for OpenAiProvider {
             cache_creation_tokens: None,
             is_streaming: false,
             latency_ms: start.elapsed().as_millis() as u64,
+            tool_calls: Vec::new(),
+            tool_results: Vec::new(),
+        })
+    }
+
+    async fn generate_with_schema(
+        &self,
+        messages: &[AiMessage],
+        response_schema: serde_json::Value,
+        metadata: &SamplingMetadata,
+        model: &str,
+    ) -> Result<AiResponse> {
+        let start = Instant::now();
+        let request_id = Uuid::new_v4();
+
+        let openai_messages: Vec<crate::models::providers::openai::OpenAiMessage> =
+            messages.iter().map(Into::into).collect();
+
+        let request = OpenAiRequest {
+            model: model.to_string(),
+            messages: openai_messages,
+            temperature: metadata.temperature,
+            top_p: metadata.top_p,
+            presence_penalty: None,
+            frequency_penalty: None,
+            max_tokens: Some(8192),
+            tools: None,
+            response_format: Some(OpenAiResponseFormat::JsonSchema {
+                json_schema: OpenAiJsonSchema {
+                    name: "structured_output".to_string(),
+                    schema: response_schema,
+                    strict: Some(true),
+                },
+            }),
+        };
+
+        let response = self
+            .client
+            .post(format!("{}/chat/completions", self.endpoint))
+            .header("Authorization", format!("Bearer {}", self.api_key))
+            .json(&request)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error_text = response.text().await?;
+            return Err(anyhow!("OpenAI API error: {error_text}"));
+        }
+
+        let openai_response: OpenAiResponse = response.json().await?;
+
+        let choice = openai_response
+            .choices
+            .first()
+            .ok_or_else(|| anyhow!("No response from OpenAI"))?;
+
+        let content = choice
+            .message
+            .content
+            .clone()
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(String::new);
+
+        let (tokens_used, input_tokens, output_tokens, cache_hit, cache_read_tokens) =
+            if let Some(usage) = openai_response.usage {
+                let cache_tokens = usage
+                    .prompt_tokens_details
+                    .and_then(|details| details.cached_tokens);
+                let cache_hit = cache_tokens.is_some_and(|t| t > 0);
+                (
+                    Some(usage.total_tokens),
+                    Some(usage.prompt_tokens),
+                    Some(usage.completion_tokens),
+                    cache_hit,
+                    cache_tokens,
+                )
+            } else {
+                (None, None, None, false, None)
+            };
+
+        Ok(AiResponse {
+            request_id,
+            content,
+            provider: self.name().to_string(),
+            model: model.to_string(),
+            finish_reason: choice.finish_reason.clone(),
+            tokens_used,
+            input_tokens,
+            output_tokens,
+            cache_hit,
+            cache_read_tokens,
+            cache_creation_tokens: None,
+            is_streaming: false,
+            latency_ms: start.elapsed().as_millis() as u64,
+            tool_calls: Vec::new(),
+            tool_results: Vec::new(),
         })
     }
 
@@ -485,7 +592,7 @@ impl AiProvider for OpenAiProvider {
         true
     }
 
-    async fn sample_stream(
+    async fn generate_stream(
         &self,
         messages: &[AiMessage],
         metadata: &SamplingMetadata,
@@ -495,7 +602,7 @@ impl AiProvider for OpenAiProvider {
             .await
     }
 
-    async fn sample_with_tools_stream(
+    async fn generate_with_tools_stream(
         &self,
         messages: &[AiMessage],
         tools: Vec<McpTool>,

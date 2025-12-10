@@ -1,4 +1,4 @@
-use crate::errors::Result;
+use crate::error::Result;
 use crate::models::image_generation::{
     AspectRatio, ImageGenerationRequest, ImageGenerationResponse, ImageResolution,
 };
@@ -88,13 +88,12 @@ pub trait ImageProvider: Send + Sync {
         requests: &[ImageGenerationRequest],
     ) -> Result<Vec<ImageGenerationResponse>> {
         if !self.capabilities().supports_batch {
-            return Err(crate::errors::AiError::ProviderError {
+            return Err(crate::error::AiError::ProviderError {
                 provider: self.name().to_string(),
                 message: "Batch generation not supported by this provider".to_string(),
             });
         }
 
-        // Default implementation: generate one by one
         let mut responses = Vec::new();
         for request in requests {
             responses.push(self.generate_image(request).await?);

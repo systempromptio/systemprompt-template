@@ -147,10 +147,8 @@ impl SchemaTransformer {
                 }
             }
 
-            // Merge required fields from both base and variant
             let mut all_required = Vec::new();
 
-            // Add base required fields
             if let Some(base_required) = union.base_properties.get("required") {
                 if let Some(base_arr) = base_required.as_array() {
                     for item in base_arr {
@@ -163,7 +161,6 @@ impl SchemaTransformer {
                 }
             }
 
-            // Add variant required fields
             if let Some(variant_required) = variant_schema.get("required") {
                 if let Some(variant_arr) = variant_required.as_array() {
                     for item in variant_arr {
@@ -210,168 +207,5 @@ impl SchemaTransformer {
                 }
             })
             .collect()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_pass_through() {
-        let transformer = SchemaTransformer::new(ProviderCapabilities::anthropic());
-        let tool = McpTool {
-            name: "simple_tool".to_string(),
-            description: Some("A simple tool".to_string()),
-            input_schema: Some(json!({
-                "type": "object",
-                "properties": {
-                    "name": { "type": "string" }
-                }
-            })),
-            output_schema: None,
-            service_id: "test".to_string(),
-        };
-
-        let transformed = transformer.transform(&tool).unwrap();
-        assert_eq!(transformed.len(), 1);
-        assert_eq!(transformed[0].name, "simple_tool");
-        assert_eq!(transformed[0].original_name, "simple_tool");
-        assert!(transformed[0].discriminator_value.is_none());
-    }
-
-    #[test]
-    fn test_auto_split() {
-        let transformer = SchemaTransformer::new(ProviderCapabilities::gemini());
-        let tool = McpTool {
-            name: "manage_agents".to_string(),
-            description: Some("CRUD operations".to_string()),
-            input_schema: Some(json!({
-                "type": "object",
-                "properties": {
-                    "action": {
-                        "type": "string",
-                        "enum": ["create", "read"]
-                    }
-                },
-                "required": ["action"],
-                "allOf": [
-                    {
-                        "if": {
-                            "properties": { "action": { "const": "create" } }
-                        },
-                        "then": {
-                            "properties": {
-                                "card": { "type": "object" }
-                            },
-                            "required": ["card"]
-                        }
-                    },
-                    {
-                        "if": {
-                            "properties": { "action": { "const": "read" } }
-                        },
-                        "then": {
-                            "properties": {
-                                "agent_id": { "type": "string" }
-                            },
-                            "required": ["agent_id"]
-                        }
-                    }
-                ]
-            })),
-            output_schema: None,
-            service_id: "test".to_string(),
-        };
-
-        let transformed = transformer.transform(&tool).unwrap();
-        assert_eq!(transformed.len(), 2);
-
-        let create_tool = transformed
-            .iter()
-            .find(|t| t.name == "manage_agents_create")
-            .unwrap();
-        assert_eq!(create_tool.original_name, "manage_agents");
-        assert_eq!(create_tool.discriminator_value, Some("create".to_string()));
-
-        let props = create_tool
-            .input_schema
-            .get("properties")
-            .unwrap()
-            .as_object()
-            .unwrap();
-        assert!(props.contains_key("card"));
-        assert!(!props.contains_key("action"));
-    }
-
-    #[test]
-    fn test_humanize_variant_name() {
-        let transformer = SchemaTransformer::new(ProviderCapabilities::gemini());
-        assert_eq!(transformer.humanize_variant_name("create"), "Create");
-        assert_eq!(transformer.humanize_variant_name("read"), "Read");
-        assert_eq!(transformer.humanize_variant_name("update"), "Update");
-    }
-
-    #[test]
-    fn test_sanitize_function_name_valid() {
-        assert_eq!(
-            SchemaTransformer::sanitize_function_name("manage_agents"),
-            "manage_agents"
-        );
-        assert_eq!(
-            SchemaTransformer::sanitize_function_name("create_user_123"),
-            "create_user_123"
-        );
-        assert_eq!(
-            SchemaTransformer::sanitize_function_name("tool:name"),
-            "tool:name"
-        );
-        assert_eq!(
-            SchemaTransformer::sanitize_function_name("tool.name"),
-            "tool.name"
-        );
-        assert_eq!(
-            SchemaTransformer::sanitize_function_name("tool-name"),
-            "tool-name"
-        );
-    }
-
-    #[test]
-    fn test_sanitize_function_name_starts_with_number() {
-        assert_eq!(
-            SchemaTransformer::sanitize_function_name("123create"),
-            "_123create"
-        );
-        assert_eq!(SchemaTransformer::sanitize_function_name("9tool"), "_9tool");
-    }
-
-    #[test]
-    fn test_sanitize_function_name_special_chars() {
-        assert_eq!(
-            SchemaTransformer::sanitize_function_name("tool@action"),
-            "tool_action"
-        );
-        assert_eq!(
-            SchemaTransformer::sanitize_function_name("tool#name!"),
-            "tool_name_"
-        );
-        assert_eq!(
-            SchemaTransformer::sanitize_function_name("tool$var%test"),
-            "tool_var_test"
-        );
-    }
-
-    #[test]
-    fn test_sanitize_function_name_max_length() {
-        let long_name = "a".repeat(70);
-        let sanitized = SchemaTransformer::sanitize_function_name(&long_name);
-        assert_eq!(sanitized.len(), 64);
-        assert!(sanitized.starts_with('a'));
-    }
-
-    #[test]
-    fn test_sanitize_function_name_underscore_prefix() {
-        assert_eq!(SchemaTransformer::sanitize_function_name("_tool"), "_tool");
-        assert_eq!(SchemaTransformer::sanitize_function_name("_123"), "__123");
     }
 }

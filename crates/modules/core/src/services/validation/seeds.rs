@@ -9,7 +9,7 @@ pub async fn validate_module_seeds(module: &Module) -> Result<Vec<ModuleSeed>> {
         return Ok(Vec::new());
     };
 
-    let app_context = crate::AppContext::new().await.unwrap();
+    let app_context = crate::AppContext::new().await?;
     let db = app_context.db_pool();
     let mut missing_seeds = Vec::new();
 
@@ -45,7 +45,7 @@ pub async fn apply_seed(module: &Module, seed: &ModuleSeed) -> Result<()> {
     let seed_content = std::fs::read_to_string(&seed_path)
         .with_context(|| format!("Failed to read seed file: {}", seed_path.display()))?;
 
-    let app_context = crate::AppContext::new().await.unwrap();
+    let app_context = crate::AppContext::new().await?;
     let db = app_context.db_pool();
     SqlExecutor::execute_statements(db.as_ref(), &seed_content).await?;
 

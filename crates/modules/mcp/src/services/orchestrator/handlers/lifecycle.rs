@@ -1,7 +1,8 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use crate::services::{lifecycle::LifecycleManager, registry::RegistryManager};
+use crate::services::lifecycle::LifecycleManager;
+use crate::services::registry::RegistryManager;
 
 use super::{EventHandler, McpEvent};
 

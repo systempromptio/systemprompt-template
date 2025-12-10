@@ -1,5 +1,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
+
+pub use systemprompt_models::services::{JobConfig, SchedulerConfig};
 
 #[derive(Debug, thiserror::Error)]
 pub enum SchedulerError {
@@ -52,7 +55,7 @@ impl SchedulerError {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct ScheduledJob {
     pub id: String,
     pub job_name: String,
@@ -62,138 +65,9 @@ pub struct ScheduledJob {
     pub next_run: Option<DateTime<Utc>>,
     pub last_status: Option<String>,
     pub last_error: Option<String>,
-    pub run_count: i64,
+    pub run_count: i32,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-}
-
-impl ScheduledJob {
-    pub fn from_json_row(row: &systemprompt_core_database::JsonRow) -> anyhow::Result<Self> {
-        use anyhow::anyhow;
-
-        let id = row
-            .get("id")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing id"))?
-            .to_string();
-
-        let job_name = row
-            .get("job_name")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing job_name"))?
-            .to_string();
-
-        let schedule = row
-            .get("schedule")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing schedule"))?
-            .to_string();
-
-        let enabled = row
-            .get("enabled")
-            .and_then(|v| v.as_bool())
-            .ok_or_else(|| anyhow!("Missing enabled"))?;
-
-        let last_run = row
-            .get("last_run")
-            .and_then(systemprompt_core_database::parse_database_datetime);
-
-        let next_run = row
-            .get("next_run")
-            .and_then(systemprompt_core_database::parse_database_datetime);
-
-        let last_status = row
-            .get("last_status")
-            .and_then(|v| v.as_str())
-            .map(String::from);
-
-        let last_error = row
-            .get("last_error")
-            .and_then(|v| v.as_str())
-            .map(String::from);
-
-        let run_count = row
-            .get("run_count")
-            .and_then(|v| v.as_i64())
-            .ok_or_else(|| anyhow!("Missing run_count"))?;
-
-        let created_at = row
-            .get("created_at")
-            .and_then(systemprompt_core_database::parse_database_datetime)
-            .ok_or_else(|| anyhow!("Invalid created_at"))?;
-
-        let updated_at = row
-            .get("updated_at")
-            .and_then(systemprompt_core_database::parse_database_datetime)
-            .ok_or_else(|| anyhow!("Invalid updated_at"))?;
-
-        Ok(Self {
-            id,
-            job_name,
-            schedule,
-            enabled,
-            last_run,
-            next_run,
-            last_status,
-            last_error,
-            run_count,
-            created_at,
-            updated_at,
-        })
-    }
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct JobConfig {
-    pub name: String,
-    pub enabled: bool,
-    pub schedule: String,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct SchedulerConfig {
-    pub enabled: bool,
-    pub jobs: Vec<JobConfig>,
-}
-
-impl Default for SchedulerConfig {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            jobs: vec![
-                JobConfig {
-                    name: "cleanup_anonymous_users".to_string(),
-                    enabled: true,
-                    schedule: "0 0 3 * * *".to_string(),
-                },
-                JobConfig {
-                    name: "cleanup_inactive_sessions".to_string(),
-                    enabled: true,
-                    schedule: "0 0 * * * *".to_string(),
-                },
-                JobConfig {
-                    name: "database_cleanup".to_string(),
-                    enabled: true,
-                    schedule: "0 0 4 * * *".to_string(),
-                },
-                JobConfig {
-                    name: "ingest_content".to_string(),
-                    enabled: true,
-                    schedule: "0 */30 * * * *".to_string(), // Every 30 minutes
-                },
-                JobConfig {
-                    name: "regenerate_static_content".to_string(),
-                    enabled: true,
-                    schedule: "0 0 0 * * *".to_string(), // Daily at midnight
-                },
-                JobConfig {
-                    name: "evaluate_conversations".to_string(),
-                    enabled: true,
-                    schedule: "0 */30 * * * *".to_string(), // Every 30 minutes
-                },
-            ],
-        }
-    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -217,14 +91,14 @@ pub struct AiEvaluationResponse {
     pub evaluation_summary: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, FromRow)]
 pub struct ConversationEvaluation {
-    pub id: Option<i64>,
+    pub id: Option<i32>,
     pub context_id: String,
 
     pub agent_goal: String,
     pub goal_achieved: String,
-    pub goal_achievement_confidence: f64,
+    pub goal_achievement_confidence: f32,
     pub goal_achievement_notes: Option<String>,
 
     pub primary_category: String,
@@ -242,151 +116,13 @@ pub struct ConversationEvaluation {
     pub user_initiated: bool,
     pub completion_status: String,
 
-    pub overall_score: f64,
+    pub overall_score: f32,
     pub evaluation_summary: String,
     pub analyzed_at: Option<DateTime<Utc>>,
-    pub analysis_version: String,
+    pub analysis_version: Option<String>,
 }
 
 impl ConversationEvaluation {
-    pub fn from_json_row(row: &systemprompt_core_database::JsonRow) -> anyhow::Result<Self> {
-        use anyhow::anyhow;
-
-        let id = row.get("id").and_then(|v| v.as_i64());
-
-        let context_id = row
-            .get("context_id")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing context_id"))?
-            .to_string();
-
-        let agent_goal = row
-            .get("agent_goal")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing required field: agent_goal"))?
-            .to_string();
-
-        let goal_achieved = row
-            .get("goal_achieved")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing required field: goal_achieved"))?
-            .to_string();
-
-        let goal_achievement_confidence = row
-            .get("goal_achievement_confidence")
-            .and_then(|v| v.as_f64())
-            .ok_or_else(|| anyhow!("Missing required field: goal_achievement_confidence"))?;
-
-        let primary_category = row
-            .get("primary_category")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing required field: primary_category"))?
-            .to_string();
-
-        let topics_discussed = row
-            .get("topics_discussed")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing required field: topics_discussed"))?
-            .to_string();
-
-        let keywords = row
-            .get("keywords")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing required field: keywords"))?
-            .to_string();
-
-        let user_satisfied = row
-            .get("user_satisfied")
-            .and_then(|v| v.as_i64())
-            .ok_or_else(|| anyhow!("Missing required field: user_satisfied"))?
-            as i32;
-
-        let conversation_quality = row
-            .get("conversation_quality")
-            .and_then(|v| v.as_i64())
-            .ok_or_else(|| anyhow!("Missing required field: conversation_quality"))?
-            as i32;
-
-        let agent_name = row
-            .get("agent_name")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing required field: agent_name"))?
-            .to_string();
-
-        let total_turns =
-            row.get("total_turns")
-                .and_then(|v| v.as_i64())
-                .ok_or_else(|| anyhow!("Missing required field: total_turns"))? as i32;
-
-        let conversation_duration_seconds = row
-            .get("conversation_duration_seconds")
-            .and_then(|v| v.as_i64())
-            .ok_or_else(|| anyhow!("Missing required field: conversation_duration_seconds"))?
-            as i32;
-
-        let user_initiated = row
-            .get("user_initiated")
-            .and_then(|v| v.as_bool())
-            .ok_or_else(|| anyhow!("Missing required field: user_initiated"))?;
-
-        let completion_status = row
-            .get("completion_status")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing required field: completion_status"))?
-            .to_string();
-
-        let overall_score = row
-            .get("overall_score")
-            .and_then(|v| v.as_f64())
-            .ok_or_else(|| anyhow!("Missing required field: overall_score"))?;
-
-        let evaluation_summary = row
-            .get("evaluation_summary")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing required field: evaluation_summary"))?
-            .to_string();
-
-        Ok(Self {
-            id,
-            context_id,
-            agent_goal,
-            goal_achieved,
-            goal_achievement_confidence,
-            goal_achievement_notes: row
-                .get("goal_achievement_notes")
-                .and_then(|v| v.as_str())
-                .map(String::from),
-            primary_category,
-            topics_discussed,
-            keywords,
-            user_satisfied,
-            conversation_quality,
-            quality_notes: row
-                .get("quality_notes")
-                .and_then(|v| v.as_str())
-                .map(String::from),
-            issues_encountered: row
-                .get("issues_encountered")
-                .and_then(|v| v.as_str())
-                .map(String::from),
-            agent_name,
-            total_turns,
-            conversation_duration_seconds,
-            user_initiated,
-            completion_status,
-            overall_score,
-            evaluation_summary,
-            analyzed_at: row
-                .get("analyzed_at")
-                .and_then(systemprompt_core_database::parse_database_datetime),
-            analysis_version: row
-                .get("analysis_version")
-                .and_then(|v| v.as_str())
-                .unwrap_or("v4")
-                .to_string(),
-        })
-    }
-
     pub fn from_ai_response(
         ai_response: AiEvaluationResponse,
         context_id: String,
@@ -396,7 +132,7 @@ impl ConversationEvaluation {
     ) -> Self {
         let normalized_category = normalize_category(&ai_response.primary_category);
         let normalized_status = normalize_completion_status(&ai_response.completion_status);
-        let validated_score = validate_overall_score(ai_response.overall_score);
+        let validated_score = validate_overall_score(ai_response.overall_score) as f32;
 
         Self {
             id: None,
@@ -406,10 +142,10 @@ impl ConversationEvaluation {
             conversation_duration_seconds,
             user_initiated: true,
             analyzed_at: Some(Utc::now()),
-            analysis_version: "v4".to_string(),
+            analysis_version: Some("v4".to_string()),
             agent_goal: ai_response.agent_goal,
             goal_achieved: ai_response.goal_achieved,
-            goal_achievement_confidence: ai_response.goal_achievement_confidence,
+            goal_achievement_confidence: ai_response.goal_achievement_confidence as f32,
             goal_achievement_notes: ai_response.goal_achievement_notes,
             primary_category: normalized_category,
             topics_discussed: ai_response.topics_discussed,

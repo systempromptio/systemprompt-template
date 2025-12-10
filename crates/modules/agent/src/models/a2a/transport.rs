@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Supported A2A transport protocols as specified in A2A spec section 5.5.5
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum TransportProtocol {
     #[serde(rename = "JSONRPC")]
     JsonRpc,
@@ -22,7 +22,7 @@ impl Default for TransportProtocol {
 }
 
 impl From<TransportProtocol> for String {
-    fn from(transport: TransportProtocol) -> String {
+    fn from(transport: TransportProtocol) -> Self {
         match transport {
             TransportProtocol::JsonRpc => "JSONRPC".to_string(),
             TransportProtocol::Grpc => "GRPC".to_string(),
@@ -51,11 +51,11 @@ impl ToString for TransportProtocol {
 }
 
 impl TransportProtocol {
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            TransportProtocol::JsonRpc => "JSONRPC",
-            TransportProtocol::Grpc => "GRPC",
-            TransportProtocol::HttpJson => "HTTP+JSON",
+            Self::JsonRpc => "JSONRPC",
+            Self::Grpc => "GRPC",
+            Self::HttpJson => "HTTP+JSON",
         }
     }
 }

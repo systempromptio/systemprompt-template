@@ -101,7 +101,8 @@ impl ResponseSynthesizer {
                         logger
                             .warn(
                                 "synthesis",
-                                "AI returned empty content after tool execution - this may indicate the model needs explicit synthesis instructions"
+                                "AI returned empty content after tool execution - this may \
+                                 indicate the model needs explicit synthesis instructions",
                             )
                             .await
                             .ok();
@@ -129,7 +130,13 @@ impl ResponseSynthesizer {
         model: &str,
     ) -> SynthesisResult {
         match provider
-            .sample_with_tool_results(original_messages, tool_calls, tool_results, metadata, model)
+            .generate_with_tool_results(
+                original_messages,
+                tool_calls,
+                tool_results,
+                metadata,
+                model,
+            )
             .await
         {
             Ok(response) if !response.content.is_empty() => {
@@ -144,7 +151,7 @@ impl ResponseSynthesizer {
             tool_results,
         ));
 
-        match provider.sample(&enhanced_messages, metadata, model).await {
+        match provider.generate(&enhanced_messages, metadata, model).await {
             Ok(response) if !response.content.is_empty() => {
                 SynthesisResult::Success(response.content)
             },

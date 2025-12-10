@@ -1,11 +1,10 @@
-use axum::{
-    body::Body,
-    extract::{Path, Request, State},
-    http::StatusCode,
-    response::Response,
-};
+use axum::body::Body;
+use axum::extract::{Path, Request, State};
+use axum::http::StatusCode;
+use axum::response::Response;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::AppContext;
+use systemprompt_identifiers::AgentName;
 use systemprompt_models::repository::{ServiceConfig, ServiceRepository};
 
 use super::auth::{AuthValidator, OAuthChallengeBuilder};
@@ -15,6 +14,12 @@ use super::client::ClientPool;
 #[derive(Debug, Clone)]
 pub struct ProxyEngine {
     client_pool: ClientPool,
+}
+
+impl Default for ProxyEngine {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ProxyEngine {
@@ -63,17 +68,14 @@ impl ProxyEngine {
             },
         };
 
-        let service = match service {
-            Some(svc) => svc,
-            None => {
-                logger
-                    .warn("api_proxy", &format!("Service not found: {}", service_name))
-                    .await
-                    .ok();
-                return Err(ProxyError::ServiceNotFound {
-                    service: service_name.to_string(),
-                });
-            },
+        let Some(service) = service else {
+            logger
+                .warn("api_proxy", &format!("Service not found: {service_name}"))
+                .await
+                .ok();
+            return Err(ProxyError::ServiceNotFound {
+                service: service_name.to_string(),
+            });
         };
 
         if service.status != "running" {
@@ -81,14 +83,14 @@ impl ProxyEngine {
                 logger
                     .info(
                         "api_proxy",
-                        &format!("Service {} crashed, attempting restart", service_name),
+                        &format!("Service {service_name} crashed, attempting restart"),
                     )
                     .await
                     .ok();
 
-                if let Ok(_) = self
-                    .attempt_service_restart(service_name, ctx, &logger)
-                    .await
+                if matches!(self
+                    .attempt_service_restart(service_name, ctx, logger)
+                    .await, Ok(()))
                 {
                     logger
                         .info(
@@ -136,7 +138,7 @@ impl ProxyEngine {
                 Ok(registry) => match registry.get_agent(service_name).await {
                     Ok(agent_config) => (
                         agent_config.oauth.required,
-                        agent_config.oauth.scopes.clone(),
+                        agent_config.oauth.scopes,
                     ),
                     Err(e) => {
                         return Err(ProxyError::ServiceNotFound {
@@ -150,7 +152,7 @@ impl ProxyEngine {
                 Err(e) => {
                     return Err(ProxyError::ServiceNotRunning {
                         service: service_name.to_string(),
-                        status: format!("Failed to load agent registry: {}", e),
+                        status: format!("Failed to load agent registry: {e}"),
                     });
                 },
             }
@@ -159,7 +161,7 @@ impl ProxyEngine {
                 Ok(registry) => match registry.get_server(service_name).await {
                     Ok(server_config) => (
                         server_config.oauth.required,
-                        server_config.oauth.scopes.clone(),
+                        server_config.oauth.scopes,
                     ),
                     Err(e) => {
                         return Err(ProxyError::ServiceNotFound {
@@ -173,7 +175,7 @@ impl ProxyEngine {
                 Err(e) => {
                     return Err(ProxyError::ServiceNotRunning {
                         service: service_name.to_string(),
-                        status: format!("Failed to load MCP registry: {}", e),
+                        status: format!("Failed to load MCP registry: {e}"),
                     });
                 },
             }
@@ -302,7 +304,7 @@ impl ProxyEngine {
         let orchestrator = McpManager::new(Arc::new(ctx.clone())).await.map_err(|e| {
             ProxyError::ServiceNotRunning {
                 service: service_name.to_string(),
-                status: format!("Failed to create orchestrator: {}", e),
+                status: format!("Failed to create orchestrator: {e}"),
             }
         })?;
 
@@ -310,18 +312,18 @@ impl ProxyEngine {
             .start_services(Some(service_name.to_string()))
             .await
         {
-            Ok(_) => {},
+            Ok(()) => {},
             Err(e) => {
                 logger
                     .error(
                         "api_proxy",
-                        &format!("Failed to restart service {}: {}", service_name, e),
+                        &format!("Failed to restart service {service_name}: {e}"),
                     )
                     .await
                     .ok();
                 return Err(ProxyError::ServiceNotRunning {
                     service: service_name.to_string(),
-                    status: format!("Restart failed: {}", e),
+                    status: format!("Restart failed: {e}"),
                 });
             },
         }
@@ -342,20 +344,17 @@ impl ProxyEngine {
 
         let request_context = request.extensions().get::<RequestContext>();
 
-        let log_context = match request_context {
-            Some(req_ctx) => req_ctx.log_context(),
-            None => {
-                let system_context = LogContext::system();
-                let temp_logger = LogService::new(ctx.db_pool().clone(), system_context.clone());
-                temp_logger
-                    .warn(
-                        "api_proxy",
-                        "RequestContext missing from request extensions, using system context",
-                    )
-                    .await
-                    .ok();
-                system_context
-            },
+        let log_context = if let Some(req_ctx) = request_context { req_ctx.log_context() } else {
+            let system_context = LogContext::system();
+            let temp_logger = LogService::new(ctx.db_pool().clone(), system_context.clone());
+            temp_logger
+                .warn(
+                    "api_proxy",
+                    "RequestContext missing from request extensions, using system context",
+                )
+                .await
+                .ok();
+            system_context
         };
 
         let logger = LogService::new(ctx.db_pool().clone(), log_context);
@@ -390,7 +389,6 @@ impl ProxyEngine {
 
         // Set agent name from service_name for both agent and MCP services
         // This ensures tasks are always attributed to the service that executes them
-        use systemprompt_identifiers::AgentName;
         if service.module_name == "agent" || service.module_name == "mcp" {
             req_context = req_context.with_agent_name(AgentName::new(service_name.to_string()));
         }
@@ -448,13 +446,13 @@ impl ProxyEngine {
                 logger
                     .error(
                         "api_proxy",
-                        &format!("Failed to build response from {}: {}", service_name, e),
+                        &format!("Failed to build response from {service_name}: {e}"),
                     )
                     .await
                     .ok();
                 Err(ProxyError::InvalidResponse {
                     service: service_name.to_string(),
-                    reason: format!("Failed to build response: {}", e),
+                    reason: format!("Failed to build response: {e}"),
                 })
             },
         }

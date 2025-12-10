@@ -33,11 +33,22 @@ export function getMcpServerName(task: Task): string {
  *
  * @param contextId - Context ID
  * @param conversationMap - Map of context IDs to conversation objects
- * @returns Conversation name or shortened context ID
+ * @returns Conversation display name with explicit fallback indicator
  */
 export function getConversationName(contextId: string, conversationMap: Map<string, { name: string }>): string {
   const conversation = conversationMap.get(contextId)
-  return conversation?.name || contextId.substring(0, 8)
+
+  if (!conversation) {
+    // New or unloaded conversation - show as new with ID prefix
+    return `New (${contextId.substring(0, 8)})`
+  }
+
+  if (!conversation.name) {
+    // Conversation exists but unnamed
+    return `Unnamed (${contextId.substring(0, 8)})`
+  }
+
+  return conversation.name
 }
 
 /**

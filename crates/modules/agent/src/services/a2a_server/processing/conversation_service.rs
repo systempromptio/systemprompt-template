@@ -12,7 +12,7 @@ pub struct ConversationService {
 }
 
 impl ConversationService {
-    pub fn new(db_pool: DbPool) -> Self {
+    pub const fn new(db_pool: DbPool) -> Self {
         Self { db_pool }
     }
 

@@ -15,7 +15,7 @@ pub struct AgentInterface {
 }
 
 /// Agent Provider as specified in A2A spec section 5.5.1
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AgentProvider {
     pub organization: String,
     pub url: String,
@@ -53,7 +53,7 @@ impl AgentCapabilities {
     /// - streaming: true (most agents support streaming)
     /// - push_notifications: false (opt-in feature)
     /// - state_transition_history: true (useful for debugging)
-    pub fn normalize(mut self) -> Self {
+    pub const fn normalize(mut self) -> Self {
         if self.streaming.is_none() {
             self.streaming = Some(true);
         }
@@ -68,7 +68,7 @@ impl AgentCapabilities {
 }
 
 /// Agent Extension as specified in A2A spec section 5.5.2.1
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AgentExtension {
     pub uri: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -187,7 +187,7 @@ impl AgentExtension {
 }
 
 /// Agent Skill as specified in A2A spec section 5.5.4
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentSkill {
     pub id: String,
@@ -209,7 +209,7 @@ impl AgentSkill {
     ///
     /// CRITICAL: This is the ONLY way to create skills in SystemPrompt.
     /// Skills are NEVER hardcoded - always derived from MCP registry.
-    pub fn from_mcp_server(
+    pub const fn from_mcp_server(
         server_name: String,
         display_name: String,
         description: String,
@@ -233,7 +233,7 @@ impl AgentSkill {
 }
 
 /// Agent Card Signature as specified in A2A spec section 5.5.6
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AgentCardSignature {
     pub protected: String,
     pub signature: String,
@@ -302,20 +302,14 @@ impl AgentCard {
             .unwrap_or(false)
     }
 
-    /// Add MCP tools extension if not present
     pub fn ensure_mcp_extension(&mut self) {
         if self.has_mcp_extension() {
             return;
         }
 
-        if self.capabilities.extensions.is_none() {
-            self.capabilities.extensions = Some(Vec::new());
-        }
-
         self.capabilities
             .extensions
-            .as_mut()
-            .unwrap()
+            .get_or_insert_with(Vec::new)
             .push(AgentExtension::mcp_tools_extension());
     }
 }
@@ -370,12 +364,12 @@ impl AgentCardBuilder {
         self
     }
 
-    pub fn with_streaming(mut self) -> Self {
+    pub const fn with_streaming(mut self) -> Self {
         self.agent_card.capabilities.streaming = Some(true);
         self
     }
 
-    pub fn with_push_notifications(mut self) -> Self {
+    pub const fn with_push_notifications(mut self) -> Self {
         self.agent_card.capabilities.push_notifications = Some(true);
         self
     }
@@ -410,14 +404,9 @@ impl AgentCardBuilder {
             description: Some("OAuth 2.0 authorization code flow for secure access".to_string()),
         };
 
-        if self.agent_card.security_schemes.is_none() {
-            self.agent_card.security_schemes = Some(HashMap::new());
-        }
-
         self.agent_card
             .security_schemes
-            .as_mut()
-            .unwrap()
+            .get_or_insert_with(HashMap::new)
             .insert("oauth2".to_string(), oauth2_scheme);
 
         let mut authentication_requirement = HashMap::new();
@@ -426,14 +415,9 @@ impl AgentCardBuilder {
             vec!["admin".to_string(), "user".to_string()],
         );
 
-        if self.agent_card.security.is_none() {
-            self.agent_card.security = Some(vec![]);
-        }
-
         self.agent_card
             .security
-            .as_mut()
-            .unwrap()
+            .get_or_insert_with(Vec::new)
             .push(authentication_requirement);
 
         self

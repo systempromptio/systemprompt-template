@@ -1,3 +1,4 @@
+use crate::ai::ToolModelConfig;
 use crate::auth::{AuthenticatedUser, UserType};
 use anyhow::anyhow;
 use axum::http::{HeaderMap, HeaderValue};
@@ -6,7 +7,8 @@ use std::str::FromStr;
 use std::time::{Duration, Instant};
 use systemprompt_core_logging::LogContext;
 use systemprompt_identifiers::{
-    AgentName, AiToolCallId, ClientId, ContextId, JwtToken, SessionId, TaskId, TraceId, UserId,
+    AgentName, AiToolCallId, ClientId, ContextId, JwtToken, McpExecutionId, SessionId, TaskId,
+    TraceId, UserId,
 };
 use systemprompt_traits::{ContextPropagation, InjectContextHeaders};
 use thiserror::Error;
@@ -52,8 +54,11 @@ pub struct ExecutionContext {
     pub context_id: ContextId,
     pub task_id: Option<TaskId>,
     pub ai_tool_call_id: Option<AiToolCallId>,
+    pub mcp_execution_id: Option<McpExecutionId>,
     pub call_source: Option<CallSource>,
     pub agent_name: AgentName,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_model_config: Option<ToolModelConfig>,
 }
 
 impl Default for ExecutionContext {
@@ -63,8 +68,10 @@ impl Default for ExecutionContext {
             context_id: ContextId::new(String::new()),
             task_id: None,
             ai_tool_call_id: None,
+            mcp_execution_id: None,
             call_source: None,
             agent_name: AgentName::system(),
+            tool_model_config: None,
         }
     }
 }
@@ -121,14 +128,16 @@ pub struct RequestContext {
 impl RequestContext {
     /// Creates a new `RequestContext` - the ONLY way to construct a context.
     ///
-    /// This is the single constructor for `RequestContext`. All contexts must be
-    /// created through this method, ensuring consistent initialization.
+    /// This is the single constructor for `RequestContext`. All contexts must
+    /// be created through this method, ensuring consistent initialization.
     ///
     /// # Required Fields
     /// - `session_id`: Identifies the user session
     /// - `trace_id`: For distributed tracing
-    /// - `context_id`: Conversation/execution context (empty string for user-level contexts)
-    /// - `agent_name`: The agent handling this request (use `AgentName::system()` for system operations)
+    /// - `context_id`: Conversation/execution context (empty string for
+    ///   user-level contexts)
+    /// - `agent_name`: The agent handling this request (use
+    ///   `AgentName::system()` for system operations)
     ///
     /// # Optional Fields
     /// Use builder methods to set optional fields:
@@ -177,8 +186,10 @@ impl RequestContext {
                 context_id,
                 task_id: None,
                 ai_tool_call_id: None,
+                mcp_execution_id: None,
                 call_source: None,
                 agent_name,
+                tool_model_config: None,
             },
             settings: ExecutionSettings::default(),
             user: None,
@@ -223,6 +234,11 @@ impl RequestContext {
         self
     }
 
+    pub fn with_mcp_execution_id(mut self, mcp_execution_id: McpExecutionId) -> Self {
+        self.execution.mcp_execution_id = Some(mcp_execution_id);
+        self
+    }
+
     pub fn with_client_id(mut self, client_id: ClientId) -> Self {
         self.request.client_id = Some(client_id);
         self
@@ -256,6 +272,15 @@ impl RequestContext {
     pub const fn with_tracked(mut self, is_tracked: bool) -> Self {
         self.request.is_tracked = is_tracked;
         self
+    }
+
+    pub fn with_tool_model_config(mut self, config: ToolModelConfig) -> Self {
+        self.execution.tool_model_config = Some(config);
+        self
+    }
+
+    pub const fn tool_model_config(&self) -> Option<&ToolModelConfig> {
+        self.execution.tool_model_config.as_ref()
     }
 
     pub const fn session_id(&self) -> &SessionId {
@@ -296,6 +321,10 @@ impl RequestContext {
 
     pub const fn ai_tool_call_id(&self) -> Option<&AiToolCallId> {
         self.execution.ai_tool_call_id.as_ref()
+    }
+
+    pub const fn mcp_execution_id(&self) -> Option<&McpExecutionId> {
+        self.execution.mcp_execution_id.as_ref()
     }
 
     pub const fn call_source(&self) -> Option<CallSource> {
@@ -373,7 +402,10 @@ pub enum ContextExtractionError {
     #[error("JWT missing required 'sub' (user_id) claim")]
     MissingUserId,
 
-    #[error("Missing required 'x-context-id' header (for MCP routes) or contextId in body (for A2A routes)")]
+    #[error(
+        "Missing required 'x-context-id' header (for MCP routes) or contextId in body (for A2A \
+         routes)"
+    )]
     MissingContextId,
 
     #[error("Invalid header value: {header}, reason: {reason}")]
@@ -465,7 +497,11 @@ impl ContextPropagation for RequestContext {
 
         let context_id = headers
             .get("x-context-id")
-            .and_then(|v| v.to_str().ok()).map_or_else(|| ContextId::new(String::new()), |s| ContextId::new(s.to_string()));
+            .and_then(|v| v.to_str().ok())
+            .map_or_else(
+                || ContextId::new(String::new()),
+                |s| ContextId::new(s.to_string()),
+            );
 
         let agent_name = headers
             .get("x-agent-name")

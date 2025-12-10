@@ -1,3 +1,7 @@
+#![allow(clippy::pedantic)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::explicit_deref_methods)]
+
 pub mod api;
 pub mod models;
 pub mod queries;

@@ -89,7 +89,7 @@ fn override_oauth_urls(schemes: &mut HashMap<String, SecurityScheme>, api_extern
             // Always convert relative URLs to absolute
             auth_code.authorization_url = auth_code.authorization_url.as_ref().map(|url| {
                 if url.starts_with('/') {
-                    format!("{}{}", api_external_url, url)
+                    format!("{api_external_url}{url}")
                 } else {
                     url.clone()
                 }
@@ -97,7 +97,7 @@ fn override_oauth_urls(schemes: &mut HashMap<String, SecurityScheme>, api_extern
 
             auth_code.token_url = auth_code.token_url.as_ref().map(|url| {
                 if url.starts_with('/') {
-                    format!("{}{}", api_external_url, url)
+                    format!("{api_external_url}{url}")
                 } else {
                     url.clone()
                 }
@@ -105,7 +105,7 @@ fn override_oauth_urls(schemes: &mut HashMap<String, SecurityScheme>, api_extern
 
             auth_code.refresh_url = auth_code.refresh_url.as_ref().map(|url| {
                 if url.starts_with('/') {
-                    format!("{}{}", api_external_url, url)
+                    format!("{api_external_url}{url}")
                 } else {
                     url.clone()
                 }
@@ -275,7 +275,7 @@ impl AgentRegistry {
 
     pub async fn get_mcp_servers(&self, agent_name: &str) -> Result<Vec<String>> {
         let agent = self.get_agent(agent_name).await?;
-        Ok(agent.metadata.mcp_servers.clone())
+        Ok(agent.metadata.mcp_servers)
     }
 
     pub async fn find_next_available_port(&self) -> Result<u16> {

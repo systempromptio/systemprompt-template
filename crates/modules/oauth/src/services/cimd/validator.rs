@@ -37,11 +37,9 @@ impl ClientValidator {
                 client_id: client_id.clone(),
             }),
             systemprompt_identifiers::ClientType::Unknown => Err(anyhow!(
-                "Invalid client_id format: '{client_id}'. Expected patterns:\n\
-                     - https://* (CIMD decentralized client)\n\
-                     - sp_* (first-party SystemPrompt client)\n\
-                     - client_* (third-party registered client)\n\
-                     - sys_* (internal system service)"
+                "Invalid client_id format: '{client_id}'. Expected patterns:\n- https://* (CIMD \
+                 decentralized client)\n- sp_* (first-party SystemPrompt client)\n- client_* \
+                 (third-party registered client)\n- sys_* (internal system service)"
             )),
         }
     }

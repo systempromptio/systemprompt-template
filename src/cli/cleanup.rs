@@ -1,21 +1,53 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::process::Command;
+use std::sync::Arc;
 use systemprompt_core_logging::CliService;
+use systemprompt_core_system::AppContext;
+use systemprompt_models::repository::ServiceRepository;
 
 pub async fn execute() -> Result<()> {
     CliService::section("Cleaning Up Services");
 
-    // Note: Skip database lookups to avoid prepared statement conflicts with PgBouncer
-    // Just clean up common service ports instead
-    CliService::info("ℹ  Cleaning up common service ports...");
+    let ctx = Arc::new(
+        AppContext::new()
+            .await
+            .context("Failed to initialize application context")?,
+    );
+
+    let service_repo = ServiceRepository::new(ctx.db_pool().clone());
+
+    CliService::info("🔍 Finding running services...");
+    let running_services = service_repo.get_running_services_with_pid().await?;
+
+    if running_services.is_empty() {
+        CliService::info("  No running services found in database");
+    } else {
+        CliService::info(&format!(
+            "  Found {} running service(s)",
+            running_services.len()
+        ));
+
+        for service in &running_services {
+            if let Some(pid) = service.pid {
+                CliService::info(&format!(
+                    "🛑 Stopping {} (PID: {}, port: {})...",
+                    service.name, pid, service.port
+                ));
+
+                kill_process(pid);
+                kill_port(service.port as u16);
+
+                service_repo
+                    .update_service_stopped(&service.name)
+                    .await
+                    .ok();
+            }
+        }
+    }
 
     CliService::info("🛑 Stopping API server...");
     kill_port(8080);
     kill_by_name("systemprompt serve api");
-
-    // Note: Skip database cleanup to avoid prepared statement conflicts with PgBouncer
-    // Database will be cleaned up on next migration or manual command
-    CliService::info("ℹ  (Skipping database cleanup to preserve connection pool)");
 
     CliService::info("🔍 Verifying port 8080 is free...");
     verify_port_free(8080, 3)?;
@@ -26,19 +58,18 @@ pub async fn execute() -> Result<()> {
 
 fn kill_process(pid: i32) {
     Command::new("kill")
-        .args(&["-9", &pid.to_string()])
+        .args(["-9", &pid.to_string()])
         .output()
         .ok();
 }
 
 fn kill_port(port: u16) {
-    // Don't kill database-related ports
     if port == 5432 || port == 6432 {
         return;
     }
 
     let output = Command::new("lsof")
-        .args(&["-ti", &format!(":{}", port)])
+        .args(["-ti", &format!(":{}", port)])
         .output();
 
     if let Ok(output) = output {
@@ -52,20 +83,16 @@ fn kill_port(port: u16) {
 }
 
 fn kill_by_name(name: &str) {
-    // Don't kill database-related processes
     if name.contains("postgres") || name.contains("pgbouncer") || name.contains("psql") {
         return;
     }
 
-    Command::new("pkill")
-        .args(&["-9", "-f", name])
-        .output()
-        .ok();
+    Command::new("pkill").args(["-9", "-f", name]).output().ok();
 }
 
 pub fn check_port_available(port: u16) -> Option<i32> {
     let output = Command::new("lsof")
-        .args(&["-ti", &format!(":{}", port)])
+        .args(["-ti", &format!(":{}", port)])
         .output()
         .ok()?;
 
@@ -90,8 +117,8 @@ fn verify_port_free(port: u16, max_retries: u8) -> Result<()> {
                 std::thread::sleep(std::time::Duration::from_secs(1));
             } else {
                 return Err(anyhow::anyhow!(
-                    "Port {} is still occupied by PID {} after {} attempts. \
-                     Try running: kill -9 {} or just api-nuke",
+                    "Port {} is still occupied by PID {} after {} attempts. Try running: kill -9 \
+                     {} or just api-nuke",
                     port,
                     pid,
                     max_retries,

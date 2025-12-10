@@ -1,29 +1,42 @@
 use axum::http::Method;
+use thiserror::Error;
 use tower_http::cors::{AllowOrigin, CorsLayer};
+
+#[derive(Debug, Error)]
+pub enum CorsError {
+    #[error("CORS_ALLOWED_ORIGINS environment variable must be set")]
+    MissingEnvVar,
+    #[error("Invalid origin in CORS_ALLOWED_ORIGINS: {0}")]
+    InvalidOrigin(String),
+    #[error("CORS_ALLOWED_ORIGINS must contain at least one valid origin")]
+    EmptyOrigins,
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct CorsMiddleware;
 
 impl CorsMiddleware {
-    pub fn build_layer() -> CorsLayer {
-        let origins_str = std::env::var("CORS_ALLOWED_ORIGINS")
-            .expect("CORS_ALLOWED_ORIGINS environment variable must be set");
+    pub fn build_layer() -> Result<CorsLayer, CorsError> {
+        let origins_str =
+            std::env::var("CORS_ALLOWED_ORIGINS").map_err(|_| CorsError::MissingEnvVar)?;
 
-        let origins: Vec<_> = origins_str
+        let mut origins = Vec::new();
+        for origin in origins_str
             .split(',')
-            .map(|s| s.trim())
+            .map(str::trim)
             .filter(|s| !s.is_empty())
-            .map(|s| {
-                s.parse::<http::HeaderValue>()
-                    .unwrap_or_else(|_| panic!("Invalid origin in CORS_ALLOWED_ORIGINS: {}", s))
-            })
-            .collect();
-
-        if origins.is_empty() {
-            panic!("CORS_ALLOWED_ORIGINS must contain at least one valid origin");
+        {
+            let header_value = origin
+                .parse::<http::HeaderValue>()
+                .map_err(|_| CorsError::InvalidOrigin(origin.to_string()))?;
+            origins.push(header_value);
         }
 
-        CorsLayer::new()
+        if origins.is_empty() {
+            return Err(CorsError::EmptyOrigins);
+        }
+
+        Ok(CorsLayer::new()
             .allow_origin(AllowOrigin::list(origins))
             .allow_credentials(true)
             .allow_methods([
@@ -44,6 +57,6 @@ impl CorsMiddleware {
                 http::HeaderName::from_static("x-context-id"),
                 http::HeaderName::from_static("x-trace-id"),
                 http::HeaderName::from_static("x-call-source"),
-            ])
+            ]))
     }
 }

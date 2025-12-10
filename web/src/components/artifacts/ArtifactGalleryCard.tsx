@@ -9,7 +9,7 @@ import {
   Package,
   Calendar
 } from 'lucide-react'
-import type { ArtifactMetadata } from '@/types/artifacts'
+import type { ArtifactMetadata } from '@/types/artifact'
 
 interface ArtifactGalleryCardProps {
   artifact: Artifact

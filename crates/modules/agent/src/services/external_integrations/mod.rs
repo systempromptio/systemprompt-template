@@ -1,7 +1,8 @@
 //! External Integrations Service
 //!
-//! Provides unified access to OAuth providers, MCP servers, and webhook endpoints.
-//! Designed for simplicity and maintainability with clear separation of concerns.
+//! Provides unified access to OAuth providers, MCP servers, and webhook
+//! endpoints. Designed for simplicity and maintainability with clear separation
+//! of concerns.
 //!
 //! ## Core Services
 //!
@@ -18,14 +19,20 @@
 //! let manager = IntegrationManager::new(db_pool);
 //!
 //! // OAuth operations
-//! let auth_request = manager.start_oauth_flow("github", "agent-123", vec!["repo".to_string()]).await?;
+//! let auth_request = manager
+//!     .start_oauth_flow("github", "agent-123", vec!["repo".to_string()])
+//!     .await?;
 //!
 //! // MCP operations
 //! let tools = manager.get_agent_capabilities("agent-123").await?;
-//! let result = manager.execute_agent_tool("agent-123", "database_query", arguments).await?;
+//! let result = manager
+//!     .execute_agent_tool("agent-123", "database_query", arguments)
+//!     .await?;
 //!
 //! // Webhook operations
-//! manager.notify_external_service("https://api.example.com/webhook", event_data).await?;
+//! manager
+//!     .notify_external_service("https://api.example.com/webhook", event_data)
+//!     .await?;
 //! ```
 
 pub mod mcp;
@@ -36,5 +43,5 @@ pub use crate::models::external_integrations::{
     WebhookRequest, WebhookResponse,
 };
 
-pub use mcp::{McpClient, McpServiceState, McpSkillLoader, McpTool, ServiceStateManager};
+pub use mcp::{McpClient, McpServiceState, McpTool, McpToolLoader, ServiceStateManager};
 pub use webhook::{RetryPolicy, WebhookConfig, WebhookDeliveryResult, WebhookService};

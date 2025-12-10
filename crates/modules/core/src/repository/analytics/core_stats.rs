@@ -1,369 +1,192 @@
-use anyhow::{anyhow, Context, Result};
-use serde::Serialize;
-use systemprompt_core_database::{DatabaseProvider, DatabaseQueryEnum, DbPool, JsonRow};
-use systemprompt_traits::{Repository as RepositoryTrait, RepositoryError};
+use anyhow::Result;
+use chrono::{Duration, Utc};
+use sqlx::PgPool;
+use std::sync::Arc;
+use systemprompt_core_database::DbPool;
 
-#[derive(Debug, Clone)]
+use crate::models::analytics::*;
+
+#[derive(Debug)]
 pub struct CoreStatsRepository {
-    db_pool: DbPool,
-}
-
-impl RepositoryTrait for CoreStatsRepository {
-    type Pool = DbPool;
-    type Error = RepositoryError;
-
-    fn pool(&self) -> &Self::Pool {
-        &self.db_pool
-    }
+    pool: Arc<PgPool>,
 }
 
 impl CoreStatsRepository {
-    pub const fn new(db_pool: DbPool) -> Self {
-        Self { db_pool }
+    pub fn new(db: DbPool) -> Self {
+        let pool = db.pool_arc().expect("Database must be PostgreSQL");
+        Self { pool }
     }
 
-    pub async fn get_platform_overview(&self, hours: i32) -> Result<PlatformOverview> {
-        let query = DatabaseQueryEnum::GetPlatformOverview.get(self.db_pool.as_ref());
-        let row = self
-            .db_pool
-            .fetch_one(
-                &query,
-                &[&hours, &hours, &hours, &hours, &hours, &hours, &hours],
-            )
-            .await
-            .context("Failed to fetch platform overview")?;
-
-        PlatformOverview::from_json_row(&row)
+    pub async fn get_platform_overview(&self) -> Result<PlatformOverview> {
+        let now = Utc::now();
+        let last_24h = now - Duration::hours(24);
+        let last_7d = now - Duration::days(7);
+        sqlx::query_as!(
+            PlatformOverview,
+            r#"
+            SELECT
+                (SELECT COUNT(*) FROM users WHERE status != 'deleted') as "total_users!",
+                (SELECT COUNT(DISTINCT user_id) FROM user_sessions WHERE last_activity_at > $1) as "active_users_24h!",
+                (SELECT COUNT(DISTINCT user_id) FROM user_sessions WHERE last_activity_at > $2) as "active_users_7d!",
+                (SELECT COUNT(*) FROM user_sessions) as "total_sessions!",
+                (SELECT COUNT(*) FROM user_sessions WHERE ended_at IS NULL) as "active_sessions!",
+                (SELECT COUNT(*) FROM user_contexts) as "total_contexts!",
+                (SELECT COUNT(*) FROM agent_tasks) as "total_tasks!",
+                (SELECT COUNT(*) FROM ai_requests) as "total_ai_requests!"
+            "#,
+            last_24h,
+            last_7d
+        )
+        .fetch_one(&*self.pool)
+        .await
+        .map_err(Into::into)
     }
 
-    pub async fn get_user_metrics(&self) -> Result<UserMetrics> {
-        let query = DatabaseQueryEnum::GetUserMetrics.get(self.db_pool.as_ref());
-        let row = self
-            .db_pool
-            .fetch_one(&query, &[])
-            .await
-            .context("Failed to fetch user metrics")?;
-        UserMetrics::from_json_row(&row)
+    pub async fn get_cost_overview(&self) -> Result<CostOverview> {
+        let now = Utc::now();
+        let last_24h = now - Duration::hours(24);
+        let last_7d = now - Duration::days(7);
+        let last_30d = now - Duration::days(30);
+        sqlx::query_as!(
+            CostOverview,
+            r#"
+            SELECT
+                COALESCE(SUM(cost_cents)::float / 100.0, 0.0) as "total_cost!",
+                COALESCE(SUM(cost_cents) FILTER (WHERE created_at > $1)::float / 100.0, 0.0) as "cost_24h!",
+                COALESCE(SUM(cost_cents) FILTER (WHERE created_at > $2)::float / 100.0, 0.0) as "cost_7d!",
+                COALESCE(SUM(cost_cents) FILTER (WHERE created_at > $3)::float / 100.0, 0.0) as "cost_30d!",
+                COALESCE(AVG(cost_cents)::float / 100.0, 0.0) as "avg_cost_per_request!"
+            FROM ai_requests
+            "#,
+            last_24h,
+            last_7d,
+            last_30d
+        )
+        .fetch_one(&*self.pool)
+        .await
+        .map_err(Into::into)
     }
 
-    pub async fn get_cost_breakdown(&self, days: i32) -> Result<Vec<CostBreakdownRow>> {
-        let query = DatabaseQueryEnum::GetCostBreakdown.get(self.db_pool.as_ref());
-        let rows = self
-            .db_pool
-            .fetch_all(&query, &[&days])
-            .await
-            .context("Failed to fetch cost breakdown")?;
-        rows.iter()
-            .map(CostBreakdownRow::from_json_row)
-            .collect()
+    pub async fn get_activity_trend(&self, days: i32) -> Result<Vec<ActivityTrend>> {
+        let cutoff = Utc::now() - Duration::days(days as i64);
+        sqlx::query_as!(
+            ActivityTrend,
+            r#"
+            SELECT
+                date_trunc('day', gs.date) as "date!",
+                COALESCE(s.sessions, 0) as "sessions!",
+                COALESCE(c.contexts, 0) as "contexts!",
+                COALESCE(t.tasks, 0) as "tasks!",
+                COALESCE(a.ai_requests, 0) as "ai_requests!",
+                COALESCE(e.tool_executions, 0) as "tool_executions!"
+            FROM generate_series($1::timestamptz, NOW(), '1 day') gs(date)
+            LEFT JOIN (
+                SELECT date_trunc('day', started_at) as day, COUNT(*) as sessions
+                FROM user_sessions WHERE started_at > $1
+                GROUP BY 1
+            ) s ON s.day = date_trunc('day', gs.date)
+            LEFT JOIN (
+                SELECT date_trunc('day', created_at) as day, COUNT(*) as contexts
+                FROM user_contexts WHERE created_at > $1
+                GROUP BY 1
+            ) c ON c.day = date_trunc('day', gs.date)
+            LEFT JOIN (
+                SELECT date_trunc('day', created_at) as day, COUNT(*) as tasks
+                FROM agent_tasks WHERE created_at > $1
+                GROUP BY 1
+            ) t ON t.day = date_trunc('day', gs.date)
+            LEFT JOIN (
+                SELECT date_trunc('day', created_at) as day, COUNT(*) as ai_requests
+                FROM ai_requests WHERE created_at > $1
+                GROUP BY 1
+            ) a ON a.day = date_trunc('day', gs.date)
+            LEFT JOIN (
+                SELECT date_trunc('day', created_at) as day, COUNT(*) as tool_executions
+                FROM mcp_tool_executions WHERE created_at > $1
+                GROUP BY 1
+            ) e ON e.day = date_trunc('day', gs.date)
+            ORDER BY date ASC
+            "#,
+            cutoff
+        )
+        .fetch_all(&*self.pool)
+        .await
+        .map_err(Into::into)
     }
 
-    pub async fn get_system_health(&self) -> Result<SystemHealth> {
-        let query = DatabaseQueryEnum::GetSystemHealth.get(self.db_pool.as_ref());
-        let row = self
-            .db_pool
-            .fetch_one(&query, &[])
-            .await
-            .context("Failed to fetch system health")?;
-        SystemHealth::from_json_row(&row)
+    pub async fn get_top_users(&self, limit: i64) -> Result<Vec<TopUser>> {
+        sqlx::query_as!(
+            TopUser,
+            r#"
+            SELECT
+                u.id as user_id,
+                u.name as user_name,
+                COUNT(DISTINCT s.session_id) as "session_count!",
+                COUNT(DISTINCT t.task_id) as "task_count!",
+                COUNT(DISTINCT a.request_id) as "ai_request_count!",
+                COALESCE(SUM(a.cost_cents)::float / 100.0, 0.0) as "total_cost!"
+            FROM users u
+            LEFT JOIN user_sessions s ON s.user_id = u.id
+            LEFT JOIN agent_tasks t ON t.user_id = u.id
+            LEFT JOIN ai_requests a ON a.user_id = u.id
+            WHERE u.status NOT IN ('deleted', 'temporary') AND NOT ('anonymous' = ANY(u.roles))
+            GROUP BY u.id, u.name
+            ORDER BY "ai_request_count!" DESC
+            LIMIT $1
+            "#,
+            limit
+        )
+        .fetch_all(&*self.pool)
+        .await
+        .map_err(Into::into)
     }
 
-    pub async fn get_top_activity(&self, days: i32, limit: i32) -> Result<TopActivity> {
-        let query_users = DatabaseQueryEnum::GetTopUsers.get(self.db_pool.as_ref());
-        let query_agents = DatabaseQueryEnum::GetTopAgents.get(self.db_pool.as_ref());
-        let query_tools = DatabaseQueryEnum::GetTopTools.get(self.db_pool.as_ref());
-
-        let top_users = self
-            .db_pool
-            .fetch_all(&query_users, &[&days, &limit])
-            .await
-            .context("Failed to fetch top users")?;
-
-        let top_agents = self
-            .db_pool
-            .fetch_all(&query_agents, &[&days, &limit])
-            .await
-            .context("Failed to fetch top agents")?;
-
-        let top_tools = self
-            .db_pool
-            .fetch_all(&query_tools, &[&days, &limit])
-            .await
-            .context("Failed to fetch top tools")?;
-
-        Ok(TopActivity {
-            users: top_users
-                .iter()
-                .map(TopActivityItem::from_json_row)
-                .collect::<Result<Vec<_>>>()?,
-            agents: top_agents
-                .iter()
-                .map(TopActivityItem::from_json_row)
-                .collect::<Result<Vec<_>>>()?,
-            tools: top_tools
-                .iter()
-                .map(TopActivityItem::from_json_row)
-                .collect::<Result<Vec<_>>>()?,
-        })
+    pub async fn get_top_agents(&self, limit: i64) -> Result<Vec<TopAgent>> {
+        sqlx::query_as!(
+            TopAgent,
+            r#"
+            SELECT
+                agent_name as "agent_name!",
+                COUNT(*) as "task_count!",
+                COALESCE(
+                    COUNT(*) FILTER (WHERE status = 'completed')::float / NULLIF(COUNT(*), 0),
+                    0.0
+                ) as "success_rate!",
+                COALESCE(AVG(EXTRACT(EPOCH FROM (updated_at - created_at)) * 1000)::bigint, 0) as "avg_duration_ms!"
+            FROM agent_tasks
+            WHERE agent_name IS NOT NULL
+            GROUP BY agent_name
+            ORDER BY "task_count!" DESC
+            LIMIT $1
+            "#,
+            limit
+        )
+        .fetch_all(&*self.pool)
+        .await
+        .map_err(Into::into)
     }
 
-    pub async fn get_activity_trend(&self, days: i32) -> Result<Vec<ActivityTrendPoint>> {
-        let query = DatabaseQueryEnum::GetActivityTrend.get(self.db_pool.as_ref());
-        let rows = self
-            .db_pool
-            .fetch_all(&query, &[&days])
-            .await
-            .context("Failed to fetch activity trend")?;
-        rows.iter()
-            .map(ActivityTrendPoint::from_json_row)
-            .collect()
-    }
-}
-
-#[derive(Debug, Clone, Copy, Serialize)]
-pub struct PlatformOverview {
-    pub total_users: i32,
-    pub active_users: i32,
-    pub active_sessions: i32,
-    pub ai_requests_24h: i32,
-    pub cost_cents_24h: i32,
-    pub cost_cents_7d: i32,
-    pub avg_response_time_ms: f64,
-    pub success_rate: f64,
-    pub total_errors: i32,
-}
-
-impl PlatformOverview {
-    pub fn from_json_row(row: &JsonRow) -> Result<Self> {
-        Ok(Self {
-            total_users: row
-                .get("total_users")
-                .and_then(serde_json::Value::as_i64)
-                .ok_or_else(|| anyhow!("Missing total_users"))? as i32,
-            active_users: row
-                .get("active_users")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            active_sessions: row
-                .get("active_sessions")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            ai_requests_24h: row
-                .get("ai_requests_24h")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            cost_cents_24h: row
-                .get("cost_cents_24h")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            cost_cents_7d: row
-                .get("cost_cents_7d")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            avg_response_time_ms: row
-                .get("avg_response_time_ms")
-                .and_then(serde_json::Value::as_f64)
-                .unwrap_or(0.0),
-            success_rate: row
-                .get("success_rate")
-                .and_then(serde_json::Value::as_f64)
-                .unwrap_or(1.0),
-            total_errors: row
-                .get("total_errors")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-        })
-    }
-}
-
-#[derive(Debug, Clone, Copy, Serialize)]
-pub struct UserMetrics {
-    pub dau: i32,
-    pub wau: i32,
-    pub mau: i32,
-    pub new_users_7d: i32,
-    pub new_users_30d: i32,
-    pub growth_rate: Option<f64>,
-}
-
-impl UserMetrics {
-    pub fn from_json_row(row: &JsonRow) -> Result<Self> {
-        Ok(Self {
-            dau: row.get("dau").and_then(serde_json::Value::as_i64).unwrap_or(0) as i32,
-            wau: row.get("wau").and_then(serde_json::Value::as_i64).unwrap_or(0) as i32,
-            mau: row.get("mau").and_then(serde_json::Value::as_i64).unwrap_or(0) as i32,
-            new_users_7d: row
-                .get("new_users_7d")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            new_users_30d: row
-                .get("new_users_30d")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            growth_rate: row.get("growth_rate").and_then(serde_json::Value::as_f64),
-        })
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub struct CostBreakdownRow {
-    pub provider: String,
-    pub model: String,
-    pub request_count: i32,
-    pub total_tokens: i32,
-    pub cost_cents: i32,
-    pub avg_latency_ms: f64,
-    pub unique_users: i32,
-    pub unique_sessions: i32,
-}
-
-impl CostBreakdownRow {
-    pub fn from_json_row(row: &JsonRow) -> Result<Self> {
-        Ok(Self {
-            provider: row
-                .get("provider")
-                .and_then(|v| v.as_str())
-                .unwrap_or("Unknown")
-                .to_string(),
-            model: row
-                .get("model")
-                .and_then(|v| v.as_str())
-                .unwrap_or("Unknown")
-                .to_string(),
-            request_count: row
-                .get("request_count")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            total_tokens: row
-                .get("total_tokens")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            cost_cents: row.get("cost_cents").and_then(serde_json::Value::as_i64).unwrap_or(0) as i32,
-            avg_latency_ms: row
-                .get("avg_latency_ms")
-                .and_then(serde_json::Value::as_f64)
-                .unwrap_or(0.0),
-            unique_users: row
-                .get("unique_users")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            unique_sessions: row
-                .get("unique_sessions")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-        })
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub struct SystemHealth {
-    pub active_services: i32,
-    pub total_services: i32,
-    pub db_size_mb: f64,
-    pub recent_errors: i32,
-    pub recent_critical: i32,
-    pub recent_warnings: i32,
-    pub services_json: String,
-}
-
-impl SystemHealth {
-    pub fn from_json_row(row: &JsonRow) -> Result<Self> {
-        Ok(Self {
-            active_services: row
-                .get("active_services")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            total_services: row
-                .get("total_services")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            db_size_mb: row
-                .get("db_size_mb")
-                .and_then(serde_json::Value::as_f64)
-                .unwrap_or(0.0),
-            recent_errors: row
-                .get("recent_errors")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            recent_critical: row
-                .get("recent_critical")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            recent_warnings: row
-                .get("recent_warnings")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            services_json: row
-                .get("services_json")
-                .and_then(|v| v.as_str())
-                .unwrap_or("[]")
-                .to_string(),
-        })
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub struct TopActivity {
-    pub users: Vec<TopActivityItem>,
-    pub agents: Vec<TopActivityItem>,
-    pub tools: Vec<TopActivityItem>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct TopActivityItem {
-    pub rank: i32,
-    pub label: String,
-    pub value: i32,
-    pub badge: String,
-}
-
-impl TopActivityItem {
-    pub fn from_json_row(row: &JsonRow) -> Result<Self> {
-        Ok(Self {
-            rank: row.get("rank").and_then(serde_json::Value::as_i64).unwrap_or(0) as i32,
-            label: row
-                .get("label")
-                .and_then(|v| v.as_str())
-                .unwrap_or("Unknown")
-                .to_string(),
-            value: row.get("value").and_then(serde_json::Value::as_i64).unwrap_or(0) as i32,
-            badge: row
-                .get("badge")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-        })
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub struct ActivityTrendPoint {
-    pub date: String,
-    pub daily_active_users: i32,
-    pub new_sessions: i32,
-    pub total_requests: i32,
-}
-
-impl ActivityTrendPoint {
-    pub fn from_json_row(row: &JsonRow) -> Result<Self> {
-        Ok(Self {
-            date: row
-                .get("date")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            daily_active_users: row
-                .get("daily_active_users")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            new_sessions: row
-                .get("new_sessions")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-            total_requests: row
-                .get("total_requests")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0) as i32,
-        })
+    pub async fn get_top_tools(&self, limit: i64) -> Result<Vec<TopTool>> {
+        sqlx::query_as!(
+            TopTool,
+            r#"
+            SELECT
+                tool_name,
+                COUNT(*) as "execution_count!",
+                COALESCE(
+                    COUNT(*) FILTER (WHERE status = 'success')::float / NULLIF(COUNT(*), 0),
+                    0.0
+                ) as "success_rate!",
+                COALESCE(AVG(execution_time_ms), 0)::bigint as "avg_duration_ms!"
+            FROM mcp_tool_executions
+            GROUP BY tool_name
+            ORDER BY "execution_count!" DESC
+            LIMIT $1
+            "#,
+            limit
+        )
+        .fetch_all(&*self.pool)
+        .await
+        .map_err(Into::into)
     }
 }

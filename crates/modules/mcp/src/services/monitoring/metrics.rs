@@ -2,7 +2,8 @@ use crate::McpServerConfig;
 use anyhow::Result;
 
 /// Metrics tracking service performance (CPU, memory, requests).
-/// For lifecycle metrics (restarts, uptime), see `ServiceLifecycleMetrics` in database/tracking.rs.
+/// For lifecycle metrics (restarts, uptime), see `ServiceLifecycleMetrics` in
+/// database/tracking.rs.
 #[derive(Debug, Clone, Copy)]
 pub struct ServicePerformanceMetrics {
     pub cpu_usage_percent: f32,

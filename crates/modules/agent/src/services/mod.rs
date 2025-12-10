@@ -13,12 +13,14 @@ pub mod a2a_server;
 pub mod agent_orchestration;
 pub mod artifact_publishing_service;
 pub mod context_service;
+pub mod execution_tracking_service;
 pub mod external_integrations;
 pub mod mcp;
 pub mod message_service;
 pub mod registry;
 pub mod shared;
 pub mod skills;
+pub mod slugify;
 
 // Re-export server types
 pub use a2a_server::{AgentHandlerState, Server as AgentServer};
@@ -36,7 +38,7 @@ pub use registry::AgentRegistry;
 
 // Re-export external integrations types
 pub use external_integrations::{
-    IntegrationError, IntegrationResult, McpServiceState, McpSkillLoader, RegisteredMcpServer,
+    IntegrationError, IntegrationResult, McpServiceState, McpToolLoader, RegisteredMcpServer,
     ServiceStateManager, ToolExecutionResult, WebhookEndpoint, WebhookService,
 };
 
@@ -51,3 +53,9 @@ pub use message_service::MessageService;
 
 // Re-export context service
 pub use context_service::ContextService;
+
+// Re-export execution tracking service
+pub use execution_tracking_service::ExecutionTrackingService;
+
+// Re-export slugify utilities
+pub use slugify::{generate_slug, generate_unique_slug};

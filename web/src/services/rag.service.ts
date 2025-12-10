@@ -8,14 +8,8 @@ export interface Category {
   description?: string;
 }
 
-export interface Tag {
-  id: string;
-  name: string;
-  slug: string;
-}
-
 /**
- * RAG Service for categories and tags
+ * RAG Service for categories
  *
  * Note: Blog posts are now loaded statically at build time.
  * See @/content/blog for static blog post loading.
@@ -49,9 +43,5 @@ export class RagService {
 
   static async listCategories(): Promise<Category[]> {
     return this.fetchJson<Category[]>('/api/v1/rag/categories');
-  }
-
-  static async listTags(): Promise<Tag[]> {
-    return this.fetchJson<Tag[]>('/api/v1/rag/tags');
   }
 }

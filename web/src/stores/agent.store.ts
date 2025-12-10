@@ -54,7 +54,6 @@ export const useAgentStore = create<AgentStore>()((set) => ({
    * @param agent - Agent card details
    */
   selectAgent: (agentUrl, agent) => {
-    console.log('[agentStore.selectAgent] Selecting agent:', { agentUrl, agentName: agent.name, agent })
     set({
       selectedAgentUrl: agentUrl,
       selectedAgent: agent,

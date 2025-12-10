@@ -1,3 +1,10 @@
+#![allow(clippy::pedantic)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::should_implement_trait)]
+#![allow(clippy::only_used_in_recursion)]
+#![allow(clippy::match_result_ok)]
+#![allow(clippy::result_unit_err)]
+
 pub mod api;
 pub mod auth;
 pub use auth::{AuthMode, AuthValidationService, TokenClaims};
@@ -23,17 +30,23 @@ pub use models::{
 };
 
 // Re-export domain modules for qualified access
-pub use systemprompt_models::ai;
-pub use systemprompt_models::oauth;
+pub use systemprompt_models::{ai, oauth};
 
 // Re-export database types
 pub use systemprompt_core_database::{Database, DbPool};
 
 // Re-export system services
-pub use services::{
-    bootstrap::initialize_database, broadcaster::CONTEXT_BROADCASTER, install::install_module,
-    shared::BinaryPaths, update::update_module, validation::validate_system, SessionAnalytics,
+pub use services::bootstrap::initialize_database;
+pub use services::broadcast_client::{
+    create_local_broadcaster, create_webhook_broadcaster, BroadcastClient, LocalBroadcaster,
+    WebhookBroadcaster,
 };
+pub use services::broadcaster::CONTEXT_BROADCASTER;
+pub use services::install::install_module;
+pub use services::shared::BinaryPaths;
+pub use services::update::update_module;
+pub use services::validation::validate_system;
+pub use services::SessionAnalytics;
 
 // Re-export BroadcastEvent from shared models
 pub use systemprompt_models::execution::BroadcastEvent;
@@ -42,7 +55,8 @@ pub use systemprompt_models::execution::BroadcastEvent;
 pub use middleware::{ContextMiddleware, HeaderContextExtractor};
 
 // Re-export repository types
-// Analytics repositories have been removed - use direct SQL queries for analytics
+// Analytics repositories have been removed - use direct SQL queries for
+// analytics
 
 #[macro_export]
 macro_rules! register_module_api {
@@ -101,5 +115,5 @@ macro_rules! register_wellknown_route {
     };
 }
 
-// ProxyRoute has been removed - proxy routes are now handled directly in the API module
-// This reduces complexity and removes unnecessary abstraction
+// ProxyRoute has been removed - proxy routes are now handled directly in the
+// API module This reduces complexity and removes unnecessary abstraction

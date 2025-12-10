@@ -1,20 +1,22 @@
 use anyhow::{anyhow, Result};
+use serde_json::json;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
-use crate::models::{
-    a2a::{Artifact, Message, Part, Task, TaskState, TaskStatus, TextPart},
-    AgentRuntimeInfo,
-};
-use crate::repository::{ArtifactRepository, ContextRepository, TaskRepository};
+use crate::models::a2a::{Artifact, Message, Part, Task, TaskState, TaskStatus, TextPart};
+use crate::models::AgentRuntimeInfo;
+use crate::repository::{ContextRepository, ExecutionStepRepository, TaskRepository};
 use crate::services::a2a_server::builders::task::build_completed_task;
 use crate::services::{ArtifactPublishingService, ContextService, SkillService};
 use systemprompt_core_ai::{AiMessage, AiService, CallToolResult, MessageRole, ToolCall};
 use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::LogService;
-use systemprompt_core_system::RequestContext;
+use systemprompt_core_system::{BroadcastClient, RequestContext};
 use systemprompt_identifiers::{AgentName, SessionId, TraceId, UserId};
+use systemprompt_models::execution::{
+    EventMessage, EventMessagePart, EventTask, EventTaskStatus, TaskCreatedPayload,
+};
 use systemprompt_models::TaskMetadata;
 
 use super::artifact::ArtifactBuilder;
@@ -33,6 +35,9 @@ pub enum StreamEvent {
         append: bool,
         last_chunk: bool,
     },
+    ExecutionStepUpdate {
+        step: crate::models::ExecutionStep,
+    },
     Complete {
         full_text: String,
         artifacts: Vec<Artifact>,
@@ -48,6 +53,7 @@ pub struct MessageProcessor {
     context_repo: ContextRepository,
     context_service: ContextService,
     skill_service: Arc<SkillService>,
+    execution_step_repo: Arc<ExecutionStepRepository>,
 }
 
 impl std::fmt::Debug for MessageProcessor {
@@ -60,16 +66,17 @@ impl std::fmt::Debug for MessageProcessor {
 }
 
 impl MessageProcessor {
-    pub fn new(db_pool: DbPool, ai_service: Arc<AiService>, log: LogService) -> Self {
+    pub fn new(
+        db_pool: DbPool,
+        ai_service: Arc<AiService>,
+        log: LogService,
+        broadcaster: Arc<dyn BroadcastClient>,
+    ) -> Self {
         let task_repo = TaskRepository::new(db_pool.clone());
-        let artifact_repo = Arc::new(ArtifactRepository::new(db_pool.clone()));
-        let context_repo = ContextRepository::new(
-            db_pool.clone(),
-            Arc::new(task_repo.clone()),
-            artifact_repo.clone(),
-        );
+        let context_repo = ContextRepository::new(db_pool.clone());
         let context_service = ContextService::new(db_pool.clone());
-        let skill_service = Arc::new(SkillService::new(db_pool.clone()));
+        let skill_service = Arc::new(SkillService::new(db_pool.clone(), broadcaster.clone()));
+        let execution_step_repo = Arc::new(ExecutionStepRepository::new(db_pool.clone()));
 
         Self {
             db_pool,
@@ -79,6 +86,7 @@ impl MessageProcessor {
             context_repo,
             context_service,
             skill_service,
+            execution_step_repo,
         }
     }
 
@@ -104,7 +112,7 @@ impl MessageProcessor {
             .log
             .info(
                 "message_processor",
-                &format!("Handling non-streaming message for agent: {}", agent_name),
+                &format!("Handling non-streaming message for agent: {agent_name}"),
             )
             .await;
 
@@ -127,7 +135,7 @@ impl MessageProcessor {
             .info(
                 "message_processor",
                 &format!(
-                    "✓ Context validated for context_id: {}, user_id: {}",
+                    "Context validated for context_id: {}, user_id: {}",
                     message.context_id,
                     context.user_id()
                 ),
@@ -135,13 +143,14 @@ impl MessageProcessor {
             .await
             .ok();
 
-        // A2A Spec: taskId is optional - when absent, this is a NEW task, when present, CONTINUING existing task
+        // A2A Spec: taskId is optional - when absent, this is a NEW task, when present,
+        // CONTINUING existing task
         let task_id = match message.task_id.clone() {
             Some(existing_task_id) => {
                 self.log
                     .info(
                         "message_processor",
-                        &format!("Continuing existing task: {}", existing_task_id),
+                        &format!("Continuing existing task: {existing_task_id}"),
                     )
                     .await
                     .ok();
@@ -152,7 +161,7 @@ impl MessageProcessor {
                 self.log
                     .info(
                         "message_processor",
-                        &format!("Starting NEW task with generated ID: {}", new_task_id),
+                        &format!("Starting NEW task with generated ID: {new_task_id}"),
                     )
                     .await
                     .ok();
@@ -194,10 +203,29 @@ impl MessageProcessor {
         self.log
             .info(
                 "message_processor",
-                &format!("✓ Task {} persisted to database", task_id),
+                &format!("Task {} persisted to database", task_id),
             )
             .await
             .ok();
+
+        self.broadcast_task_created(&task_id, &message.context_id, context, &message, agent_name)
+            .await;
+
+        // Mark task as working before processing starts (sets started_at timestamp)
+        let working_timestamp = chrono::Utc::now();
+        if let Err(e) = self
+            .task_repo
+            .update_task_state(task_id.as_str(), TaskState::Working, &working_timestamp)
+            .await
+        {
+            self.log
+                .error(
+                    "message_processor",
+                    &format!("Failed to mark task as working: {e}"),
+                )
+                .await
+                .ok();
+        }
 
         let mut chunk_rx = self
             .process_message_stream(
@@ -287,7 +315,7 @@ impl MessageProcessor {
             self.log
                 .error(
                     "message_processor",
-                    &format!("Failed to persist completed task: {}", e),
+                    &format!("Failed to persist completed task: {e}"),
                 )
                 .await
                 .ok();
@@ -301,7 +329,7 @@ impl MessageProcessor {
                 self.log
                     .error(
                         "message_processor",
-                        &format!("Failed to update task to failed state: {}", update_err),
+                        &format!("Failed to update task to failed state: {update_err}"),
                     )
                     .await
                     .ok();
@@ -320,6 +348,76 @@ impl MessageProcessor {
             }
         }
         Err(anyhow!("No text content found in message"))
+    }
+
+    async fn broadcast_task_created(
+        &self,
+        task_id: &systemprompt_identifiers::TaskId,
+        context_id: &systemprompt_identifiers::ContextId,
+        context: &RequestContext,
+        user_message: &Message,
+        agent_name: &str,
+    ) {
+        let event_task = Self::build_event_task(task_id, context_id, user_message, agent_name);
+        let task_created_payload = TaskCreatedPayload { task: event_task };
+
+        let api_url = std::env::var("API_INTERNAL_URL")
+            .or_else(|_| std::env::var("API_EXTERNAL_URL"))
+            .unwrap_or_else(|_| "http://localhost:8080".to_string());
+
+        let webhook_url = format!("{}/api/v1/webhook/broadcast", api_url);
+
+        let payload = json!({
+            "event_type": "task_created",
+            "entity_id": task_id.as_str(),
+            "context_id": context_id.as_str(),
+            "user_id": context.user_id().as_str(),
+            "task_data": serde_json::to_value(&task_created_payload).expect("TaskCreatedPayload serialization failed")
+        });
+
+        let token = context.auth.auth_token.as_str();
+        let client = reqwest::Client::new();
+        match client
+            .post(&webhook_url)
+            .header("Authorization", format!("Bearer {token}"))
+            .header("Content-Type", "application/json")
+            .json(&payload)
+            .send()
+            .await
+        {
+            Ok(response) => {
+                if response.status().is_success() {
+                    self.log
+                        .info(
+                            "message_processor",
+                            &format!("Broadcast task_created via webhook for task {task_id}"),
+                        )
+                        .await
+                        .ok();
+                } else {
+                    self.log
+                        .warn(
+                            "message_processor",
+                            &format!(
+                                "Webhook broadcast failed: status={}, task_id={}",
+                                response.status(),
+                                task_id
+                            ),
+                        )
+                        .await
+                        .ok();
+                }
+            },
+            Err(e) => {
+                self.log
+                    .warn(
+                        "message_processor",
+                        &format!("Webhook broadcast error: {e}, task_id={task_id}"),
+                    )
+                    .await
+                    .ok();
+            },
+        }
     }
 
     pub async fn persist_completed_task(
@@ -431,6 +529,7 @@ impl MessageProcessor {
         let db_pool = self.db_pool.clone();
         let _auth_token_for_artifacts = context.auth_token().clone();
         let skill_service = self.skill_service.clone();
+        let execution_step_repo = self.execution_step_repo.clone();
 
         tokio::spawn(async move {
             log.info(
@@ -445,6 +544,63 @@ impl MessageProcessor {
             .ok();
 
             let mut ai_messages = Vec::new();
+
+            if !agent_runtime.skills.is_empty() {
+                log.info(
+                    "message_processor",
+                    &format!(
+                        "Loading {} skills for agent: {:?}",
+                        agent_runtime.skills.len(),
+                        agent_runtime.skills
+                    ),
+                )
+                .await
+                .ok();
+
+                let mut skills_prompt = String::from(
+                    "# Your Skills\n\nYou have the following skills that define your capabilities \
+                     and writing style:\n\n",
+                );
+
+                for skill_id in &agent_runtime.skills {
+                    match skill_service.load_skill(skill_id, &request_ctx).await {
+                        Ok(skill_content) => {
+                            log.info(
+                                "message_processor",
+                                &format!(
+                                    "Loaded skill '{}' ({} chars)",
+                                    skill_id,
+                                    skill_content.len()
+                                ),
+                            )
+                            .await
+                            .ok();
+                            skills_prompt.push_str(&format!(
+                                "## {} Skill\n\n{}\n\n---\n\n",
+                                skill_id, skill_content
+                            ));
+                        },
+                        Err(e) => {
+                            log.warn(
+                                "message_processor",
+                                &format!("Failed to load skill '{skill_id}': {e}"),
+                            )
+                            .await
+                            .ok();
+                        },
+                    }
+                }
+
+                ai_messages.push(AiMessage {
+                    role: MessageRole::System,
+                    content: skills_prompt,
+                });
+
+                log.info("message_processor", "Skills injected into agent context")
+                    .await
+                    .ok();
+            }
+
             if let Some(system_prompt) = &agent_runtime.system_prompt {
                 ai_messages.push(AiMessage {
                     role: MessageRole::System,
@@ -476,7 +632,7 @@ impl MessageProcessor {
             let ai_service_for_builder = ai_service.clone();
 
             let selector = ExecutionStrategySelector::new();
-            let strategy = selector.select_strategy(has_tools, false);
+            let strategy = selector.select_strategy(has_tools);
 
             let execution_context = ExecutionContext {
                 ai_service: ai_service.clone(),
@@ -488,6 +644,7 @@ impl MessageProcessor {
                 tx: tx.clone(),
                 log: log.clone(),
                 request_ctx: request_ctx.clone(),
+                execution_step_repo: execution_step_repo.clone(),
             };
 
             let execution_result = match strategy
@@ -496,10 +653,25 @@ impl MessageProcessor {
             {
                 Ok(result) => result,
                 Err(e) => {
-                    log.error("message_processor", &format!("Execution failed: {}", e))
+                    log.error("message_processor", &format!("Execution failed: {e}"))
                         .await
                         .ok();
-                    tx.send(StreamEvent::Error(format!("Execution failed: {}", e)))
+
+                    let tracking =
+                        crate::services::ExecutionTrackingService::new(execution_step_repo.clone());
+                    if let Err(fail_err) = tracking
+                        .fail_in_progress_steps(&task_id.as_str(), &e.to_string())
+                        .await
+                    {
+                        log.error(
+                            "message_processor",
+                            &format!("Failed to mark steps as failed: {fail_err}"),
+                        )
+                        .await
+                        .ok();
+                    }
+
+                    tx.send(StreamEvent::Error(format!("Execution failed: {e}")))
                         .ok();
                     return;
                 },
@@ -511,7 +683,6 @@ impl MessageProcessor {
                 execution_result.tool_results,
                 execution_result.iterations,
             );
-            let _conversation_history = execution_result.conversation_history;
 
             log.info(
                 "message_processor",
@@ -543,7 +714,8 @@ impl MessageProcessor {
                 if has_structured_content {
                     log.info(
                         "message_processor",
-                        "Tool results contain structured_content - building A2A artifacts from agentic MCP calls",
+                        "Tool results contain structured_content - building A2A artifacts from \
+                         agentic MCP calls",
                     )
                     .await
                     .ok();
@@ -573,7 +745,8 @@ impl MessageProcessor {
                 } else {
                     log.info(
                         "message_processor",
-                        "No structured_content - ephemeral tool calls, skipping A2A artifact building",
+                        "No structured_content - ephemeral tool calls, skipping A2A artifact \
+                         building",
                     )
                     .await
                     .ok();
@@ -594,7 +767,7 @@ impl MessageProcessor {
                 Err(e) => {
                     log.error(
                         "message_processor",
-                        &format!("Failed to build artifacts: {}", e),
+                        &format!("Failed to build artifacts: {e}"),
                     )
                     .await
                     .ok();
@@ -603,63 +776,62 @@ impl MessageProcessor {
             };
 
             let final_text = if !tool_calls.is_empty() && !tool_results.is_empty() {
-                let executable_calls: Vec<_> = tool_calls
-                    .iter()
-                    .filter(|tc| tc.is_executable())
-                    .cloned()
-                    .collect();
+                log.info(
+                    "message_processor",
+                    &format!(
+                        "Synthesizing results from {} tool calls with {} artifacts",
+                        tool_calls.len(),
+                        artifacts.len()
+                    ),
+                )
+                .await
+                .ok();
 
-                if !executable_calls.is_empty() {
-                    log.info(
+                match super::ai_executor::synthesize_tool_results_with_artifacts(
+                    ai_service_for_builder.clone(),
+                    &agent_runtime,
+                    ai_messages_for_synthesis.clone(),
+                    &accumulated_text,
+                    &tool_calls,
+                    &tool_results,
+                    &artifacts,
+                    tx.clone(),
+                    &log,
+                    request_ctx.clone(),
+                    skill_service.clone(),
+                )
+                .await
+                {
+                    Ok(synthesized) => synthesized,
+                    Err(_) => {
+                        log.warn(
+                            "message_processor",
+                            "Synthesis failed, using initial response",
+                        )
+                        .await
+                        .ok();
+                        accumulated_text.clone()
+                    },
+                }
+            } else {
+                if tool_calls.is_empty() && !accumulated_text.is_empty() {
+                    log.warn(
                         "message_processor",
                         &format!(
-                            "Synthesizing results from {} tool calls with {} artifacts",
-                            executable_calls.len(),
-                            artifacts.len()
+                            "Synthesis skipped: Agent produced text without tool calls, response \
+                             length: {} chars",
+                            accumulated_text.len()
                         ),
                     )
                     .await
                     .ok();
-
-                    match super::ai_executor::synthesize_tool_results_with_artifacts(
-                        ai_service_for_builder.clone(),
-                        &agent_runtime,
-                        ai_messages_for_synthesis.clone(),
-                        &accumulated_text,
-                        &executable_calls,
-                        &tool_results,
-                        &artifacts,
-                        tx.clone(),
-                        &log,
-                        request_ctx.clone(),
-                        skill_service.clone(),
-                    )
-                    .await
-                    {
-                        Ok(synthesized) => synthesized,
-                        Err(_) => {
-                            log.warn(
-                                "message_processor",
-                                "Synthesis failed, using initial response",
-                            )
-                            .await
-                            .ok();
-                            accumulated_text.clone()
-                        },
-                    }
-                } else {
-                    accumulated_text.clone()
                 }
-            } else {
                 accumulated_text.clone()
             };
 
             log.info(
                 "message_processor",
-                &format!(
-                    "📨 ABOUT TO SEND Complete event with {} artifacts",
-                    artifacts.len()
-                ),
+                &format!("Sending Complete event with {} artifacts", artifacts.len()),
             )
             .await
             .ok();
@@ -668,7 +840,7 @@ impl MessageProcessor {
                 log.info(
                     "message_processor",
                     &format!(
-                        "  📦 Complete artifact {}/{}: id={}",
+                        "Complete artifact {}/{}: id={}",
                         idx + 1,
                         artifacts.len(),
                         artifact.artifact_id
@@ -686,17 +858,14 @@ impl MessageProcessor {
             if send_result.is_err() {
                 log.error(
                     "message_processor",
-                    "❌ FAILED to send Complete event - channel closed!",
+                    "Failed to send Complete event, channel closed",
                 )
                 .await
                 .ok();
             } else {
                 log.info(
                     "message_processor",
-                    &format!(
-                        "✅ Successfully sent Complete event with {} artifacts",
-                        artifacts.len()
-                    ),
+                    &format!("Sent Complete event with {} artifacts", artifacts.len()),
                 )
                 .await
                 .ok();
@@ -704,5 +873,46 @@ impl MessageProcessor {
         });
 
         Ok(rx)
+    }
+
+    fn build_event_task(
+        task_id: &systemprompt_identifiers::TaskId,
+        context_id: &systemprompt_identifiers::ContextId,
+        user_message: &Message,
+        agent_name: &str,
+    ) -> EventTask {
+        let event_message = EventMessage {
+            role: user_message.role.to_lowercase(),
+            parts: user_message
+                .parts
+                .iter()
+                .map(|part| match part {
+                    Part::Text(text_part) => EventMessagePart::Text {
+                        text: text_part.text.clone(),
+                    },
+                    Part::Data(data_part) => EventMessagePart::Data {
+                        data: serde_json::Value::Object(data_part.data.clone()),
+                    },
+                    Part::File(file_part) => EventMessagePart::File {
+                        file: serde_json::to_value(&file_part.file).unwrap_or_default(),
+                    },
+                })
+                .collect(),
+            message_id: user_message.message_id.clone(),
+        };
+
+        EventTask {
+            id: task_id.clone(),
+            context_id: context_id.clone(),
+            status: EventTaskStatus {
+                state: "submitted".to_string(),
+                message: None,
+                timestamp: Some(chrono::Utc::now()),
+            },
+            history: Some(vec![event_message]),
+            artifacts: None,
+            metadata: Some(TaskMetadata::new_agent_message(agent_name.to_string())),
+            kind: "task".to_string(),
+        }
     }
 }

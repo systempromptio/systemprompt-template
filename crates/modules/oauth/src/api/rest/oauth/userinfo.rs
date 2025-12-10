@@ -1,11 +1,9 @@
 use crate::services::validate_jwt_token;
 use anyhow::Result;
-use axum::{
-    extract::State,
-    http::{HeaderMap, StatusCode},
-    response::IntoResponse,
-    Json,
-};
+use axum::extract::State;
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::IntoResponse;
+use axum::Json;
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
@@ -37,12 +35,13 @@ pub async fn handle_userinfo(
         return (StatusCode::UNAUTHORIZED, Json(error)).into_response();
     };
 
-    if let Ok(userinfo) = get_userinfo(&token).await { (StatusCode::OK, Json(userinfo)).into_response() } else {
+    if let Ok(userinfo) = get_userinfo(&token).await {
+        (StatusCode::OK, Json(userinfo)).into_response()
+    } else {
         let error = UserinfoError {
             error: "invalid_token".to_string(),
             error_description: Some(
-                "The access token provided is expired, revoked, malformed, or invalid"
-                    .to_string(),
+                "The access token provided is expired, revoked, malformed, or invalid".to_string(),
             ),
         };
         (StatusCode::UNAUTHORIZED, Json(error)).into_response()

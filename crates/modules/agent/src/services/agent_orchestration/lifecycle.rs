@@ -27,7 +27,7 @@ impl AgentLifecycle {
     }
 
     pub async fn start_agent(&self, agent_name: &str) -> OrchestrationResult<String> {
-        CliService::info(&format!("🚀 Starting agent: {}", agent_name));
+        CliService::info(&format!("🚀 Starting agent: {agent_name}"));
 
         let result = async {
             let current_status = self.db_service.get_status(agent_name).await?;
@@ -82,7 +82,7 @@ impl AgentLifecycle {
             self.logger
                 .error(
                     "agent_lifecycle",
-                    &format!("Failed to start agent {}: {}", agent_name, e),
+                    &format!("Failed to start agent {agent_name}: {e}"),
                 )
                 .await
                 .ok();
@@ -92,15 +92,15 @@ impl AgentLifecycle {
     }
 
     pub async fn disable_agent(&self, agent_name: &str) -> OrchestrationResult<()> {
-        CliService::info(&format!("🛑 Disabling agent: {}", agent_name));
+        CliService::info(&format!("🛑 Disabling agent: {agent_name}"));
 
         let status = self.db_service.get_status(agent_name).await?;
 
         if let AgentStatus::Running { pid, .. } = status {
             if process::kill_process(pid) {
-                CliService::success(&format!("   Killed process {}", pid));
+                CliService::success(&format!("   Killed process {pid}"));
             } else {
-                CliService::warning(&format!("   Failed to kill process {}", pid));
+                CliService::warning(&format!("   Failed to kill process {pid}"));
             }
         }
 
@@ -112,21 +112,21 @@ impl AgentLifecycle {
     }
 
     pub async fn enable_agent(&self, agent_name: &str) -> OrchestrationResult<String> {
-        CliService::info(&format!("🚀 Enabling agent: {}", agent_name));
+        CliService::info(&format!("🚀 Enabling agent: {agent_name}"));
 
         // Agent enabled state is managed in config files, not database
         self.start_agent(agent_name).await
     }
 
     pub async fn restart_agent(&self, agent_name: &str) -> OrchestrationResult<String> {
-        CliService::info(&format!("🔄 Restarting agent: {}", agent_name));
+        CliService::info(&format!("🔄 Restarting agent: {agent_name}"));
 
         let status = self.db_service.get_status(agent_name).await?;
         if let AgentStatus::Running { pid, .. } = status {
             if process::kill_process(pid) {
-                CliService::success(&format!("   Killed process {}", pid));
+                CliService::success(&format!("   Killed process {pid}"));
             } else {
-                CliService::warning(&format!("   Failed to kill process {}", pid));
+                CliService::warning(&format!("   Failed to kill process {pid}"));
             }
             tokio::time::sleep(Duration::from_secs(1)).await;
         }
@@ -159,12 +159,12 @@ impl AgentLifecycle {
             match port_manager.cleanup_port_if_needed(port).await {
                 Ok(_) => {
                     self.logger
-                        .info("agent_lifecycle", &format!("Cleaned up port {}", port))
+                        .info("agent_lifecycle", &format!("Cleaned up port {port}"))
                         .await
                         .ok();
                 },
                 Err(e) => {
-                    let error_msg = format!("Port {} is in use and cleanup failed: {}", port, e);
+                    let error_msg = format!("Port {port} is in use and cleanup failed: {e}");
                     self.logger.error("agent_lifecycle", &error_msg).await.ok();
                     return Err(e);
                 },
@@ -212,7 +212,7 @@ impl AgentLifecycle {
         use tokio::net::TcpStream;
         use tokio::time::timeout;
 
-        let address = format!("127.0.0.1:{}", port);
+        let address = format!("127.0.0.1:{port}");
         match timeout(
             Duration::from_secs(timeout_secs),
             TcpStream::connect(&address),

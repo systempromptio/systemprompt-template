@@ -60,7 +60,8 @@ async fn test_comprehensive_a2a_agent_conversation_with_full_data_validation() {
     println!("   - Response: {} chars", registry_text.len());
 
     // Parse agent list from registry
-    // Registry response format: { "data": [ { "name": "...", "url": "...", ... } ] }
+    // Registry response format: { "data": [ { "name": "...", "url": "...", ... } ]
+    // }
     let registry_json: serde_json::Value =
         serde_json::from_str(&registry_text).expect("Failed to parse registry JSON");
 

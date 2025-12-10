@@ -1,12 +1,10 @@
 CREATE TABLE IF NOT EXISTS markdown_content (
     id TEXT PRIMARY KEY,
-    file_path TEXT NOT NULL UNIQUE,
     slug TEXT NOT NULL UNIQUE,
 
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     body TEXT NOT NULL,
-    excerpt TEXT NOT NULL,
 
     author TEXT NOT NULL,
     published_at TIMESTAMP NOT NULL,
@@ -18,8 +16,9 @@ CREATE TABLE IF NOT EXISTS markdown_content (
     source_id TEXT NOT NULL,
 
     version_hash TEXT NOT NULL,
+    public BOOLEAN NOT NULL DEFAULT true,
+    links JSONB DEFAULT '[]'::jsonb,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -29,3 +28,5 @@ CREATE INDEX IF NOT EXISTS idx_markdown_content_published ON markdown_content(pu
 CREATE INDEX IF NOT EXISTS idx_markdown_content_slug ON markdown_content(slug);
 CREATE INDEX IF NOT EXISTS idx_markdown_content_version_hash ON markdown_content(version_hash);
 CREATE INDEX IF NOT EXISTS idx_markdown_content_kind ON markdown_content(kind);
+CREATE INDEX IF NOT EXISTS idx_markdown_content_links ON markdown_content USING GIN (links);
+CREATE INDEX IF NOT EXISTS idx_markdown_content_public ON markdown_content(public) WHERE public = true;

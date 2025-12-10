@@ -1,12 +1,10 @@
 use crate::repository::OAuthRepository;
 use crate::services::validation::get_audit_user;
 use anyhow::Result;
-use axum::{
-    extract::{Extension, State},
-    http::StatusCode,
-    response::IntoResponse,
-    Form, Json,
-};
+use axum::extract::{Extension, State};
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::{Form, Json};
 use serde::{Deserialize, Serialize};
 use systemprompt_core_logging::{LogLevel, LogService};
 

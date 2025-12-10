@@ -1,4 +1,6 @@
-use axum::{body::Body, http::StatusCode, response::Response};
+use axum::body::Body;
+use axum::http::StatusCode;
+use axum::response::Response;
 use serde_json::json;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::AppContext;
@@ -17,8 +19,7 @@ impl OAuthChallengeBuilder {
             .warn(
                 "api_oauth_challenge",
                 &format!(
-                    "Building OAuth challenge for service: {} (status: {})",
-                    service_name, status_code
+                    "Building OAuth challenge for service: {service_name} (status: {status_code})"
                 ),
             )
             .await;
@@ -26,8 +27,8 @@ impl OAuthChallengeBuilder {
         let oauth_base_url = &ctx.config().api_server_url;
 
         let auth_header_value = format!(
-            "Bearer realm=\"{}\", as_uri=\"{}/.well-known/oauth-authorization-server\", error=\"invalid_token\"",
-            service_name, oauth_base_url
+            "Bearer realm=\"{service_name}\", as_uri=\"{oauth_base_url}/.well-known/oauth-authorization-server\", \
+             error=\"invalid_token\""
         );
 
         let error_body = json!({
@@ -38,7 +39,7 @@ impl OAuthChallengeBuilder {
                 "The access token does not have the required scope"
             },
             "server": service_name,
-            "authorization_url": format!("{}/.well-known/oauth-authorization-server", oauth_base_url)
+            "authorization_url": format!("{oauth_base_url}/.well-known/oauth-authorization-server")
         });
 
         // OAuth challenge response details logged above

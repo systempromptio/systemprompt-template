@@ -57,8 +57,14 @@ impl From<RepositoryError> for ApiError {
             RepositoryError::DatabaseError(e) => {
                 Self::internal_error(format!("Database error: {e}"))
             },
+            RepositoryError::Database(msg) => {
+                Self::internal_error(format!("Database error: {msg}"))
+            },
             RepositoryError::SerializationError(e) => {
                 Self::internal_error(format!("Serialization error: {e}"))
+            },
+            RepositoryError::Serialization(msg) => {
+                Self::internal_error(format!("Serialization error: {msg}"))
             },
             RepositoryError::GenericError(e) => Self::internal_error(format!("Error: {e}")),
         }

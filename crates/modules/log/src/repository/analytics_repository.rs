@@ -1,6 +1,7 @@
-use anyhow::Result;
+use anyhow::Context;
 use serde_json::Value;
-use systemprompt_core_database::{DatabaseProvider, DbPool};
+use sqlx::query;
+use systemprompt_core_database::DbPool;
 use systemprompt_identifiers::{AgentId, ContextId, SessionId, TaskId, UserId};
 use systemprompt_traits::{Repository as RepositoryTrait, RepositoryError};
 
@@ -23,46 +24,50 @@ impl AnalyticsRepository {
         Self { db_pool }
     }
 
-    pub async fn log_event(&self, event: &AnalyticsEvent) -> Result<i64> {
-        use systemprompt_core_database::DatabaseQueryEnum;
-
+    pub async fn log_event(&self, event: &AnalyticsEvent) -> anyhow::Result<i64> {
         let metadata_str = event.metadata.to_string();
 
-        // Convert typed IDs to strings at the DB boundary
         let user_id_str = event.user_id.as_str();
         let session_id_str = event.session_id.as_str();
         let context_id_str = event.context_id.as_str();
 
-        // Handle optional fields properly for NULL values
         let agent_id_opt: Option<&str> = event.agent_id.as_ref().map(AgentId::as_str);
         let task_id_opt: Option<&str> = event.task_id.as_ref().map(TaskId::as_str);
         let endpoint_opt: Option<&str> = event.endpoint.as_deref();
         let message_opt: Option<&str> = event.message.as_deref();
 
-        let query = DatabaseQueryEnum::LogAnalyticsEvent.get(self.db_pool.as_ref());
-        let rows_affected = self
+        let pool = self
             .db_pool
-            .execute(
-                &query,
-                &[
-                    &user_id_str,
-                    &session_id_str,
-                    &context_id_str,
-                    &event.event_type.as_str(),
-                    &event.event_category.as_str(),
-                    &event.severity.as_str(),
-                    &endpoint_opt,
-                    &event.error_code,
-                    &event.response_time_ms,
-                    &agent_id_opt,
-                    &task_id_opt,
-                    &message_opt,
-                    &metadata_str,
-                ],
-            )
-            .await?;
+            .pool_arc()
+            .context("Failed to get database pool")?;
 
-        Ok(i64::try_from(rows_affected).unwrap_or(i64::MAX))
+        let result = query(
+            r"
+            INSERT INTO analytics_events
+            (user_id, session_id, context_id, event_type, event_category, severity,
+             endpoint, error_code, response_time_ms, agent_id, task_id, message, metadata, timestamp)
+            VALUES
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP)
+            ",
+        )
+        .bind(user_id_str)
+        .bind(session_id_str)
+        .bind(context_id_str)
+        .bind(&event.event_type)
+        .bind(&event.event_category)
+        .bind(&event.severity)
+        .bind(endpoint_opt)
+        .bind(event.error_code)
+        .bind(event.response_time_ms)
+        .bind(agent_id_opt)
+        .bind(task_id_opt)
+        .bind(message_opt)
+        .bind(&metadata_str)
+        .execute(pool.as_ref())
+        .await
+        .context("Failed to log analytics event")?;
+
+        Ok(i64::try_from(result.rows_affected()).unwrap_or(i64::MAX))
     }
 }
 

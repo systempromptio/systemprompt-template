@@ -1,8 +1,11 @@
-use crate::artifacts::{metadata::ExecutionMetadata, traits::Artifact, types::ArtifactType};
+use crate::artifacts::metadata::ExecutionMetadata;
+use crate::artifacts::traits::Artifact;
+use crate::artifacts::types::ArtifactType;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct PresentationCardResponse {
     #[serde(rename = "x-artifact-type")]
     pub artifact_type: String,
@@ -10,7 +13,7 @@ pub struct PresentationCardResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subtitle: Option<String>,
     pub sections: Vec<CardSection>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub ctas: Vec<CardCta>,
     pub theme: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -21,7 +24,7 @@ pub struct PresentationCardResponse {
     pub skill_name: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CardSection {
     pub heading: String,
     pub content: String,
@@ -44,7 +47,7 @@ impl CardSection {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CardCta {
     pub id: String,
     pub label: String,
@@ -76,17 +79,27 @@ impl CardCta {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct PresentationCardArtifact {
+    #[serde(rename = "x-artifact-type")]
+    #[serde(default = "default_card_artifact_type")]
+    pub artifact_type: String,
     pub title: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subtitle: Option<String>,
     pub sections: Vec<CardSection>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ctas: Vec<CardCta>,
     #[serde(default = "default_theme")]
     pub theme: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub execution_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skill_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skill_name: Option<String>,
     #[serde(skip)]
+    #[schemars(skip)]
     metadata: ExecutionMetadata,
 }
 
@@ -94,14 +107,22 @@ fn default_theme() -> String {
     "gradient".to_string()
 }
 
+fn default_card_artifact_type() -> String {
+    "presentation_card".to_string()
+}
+
 impl PresentationCardArtifact {
     pub fn new(title: impl Into<String>) -> Self {
         Self {
+            artifact_type: "presentation_card".to_string(),
             title: title.into(),
             subtitle: None,
             sections: Vec::new(),
             ctas: Vec::new(),
             theme: default_theme(),
+            execution_id: None,
+            skill_id: None,
+            skill_name: None,
             metadata: ExecutionMetadata::default(),
         }
     }
@@ -137,6 +158,7 @@ impl PresentationCardArtifact {
     }
 
     pub fn with_execution_id(mut self, id: String) -> Self {
+        self.execution_id = Some(id.clone());
         self.metadata.execution_id = Some(id);
         self
     }
@@ -146,23 +168,9 @@ impl PresentationCardArtifact {
         skill_id: impl Into<String>,
         skill_name: impl Into<String>,
     ) -> Self {
-        self.metadata = self.metadata.with_skill(skill_id.into(), skill_name.into());
+        self.skill_id = Some(skill_id.into());
+        self.skill_name = Some(skill_name.into());
         self
-    }
-
-    pub fn to_response(&self) -> JsonValue {
-        let response = PresentationCardResponse {
-            artifact_type: "presentation_card".to_string(),
-            title: self.title.clone(),
-            subtitle: self.subtitle.clone(),
-            sections: self.sections.clone(),
-            ctas: self.ctas.clone(),
-            theme: self.theme.clone(),
-            execution_id: self.metadata.execution_id.clone(),
-            skill_id: self.metadata.skill_id.clone(),
-            skill_name: self.metadata.skill_name.clone(),
-        };
-        serde_json::to_value(response).unwrap_or(JsonValue::Null)
     }
 }
 

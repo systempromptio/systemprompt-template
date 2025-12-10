@@ -1,3 +1,8 @@
+//! AI Service
+//!
+//! Primary interface for AI generation, coordinating providers, tools, and
+//! storage.
+
 use anyhow::Result;
 use futures::Stream;
 use std::collections::HashMap;
@@ -6,16 +11,18 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::models::ai::{
-    AiMessage, GenerateRequest, GenerateResponse, MessageRole, SamplingMetadata, SamplingRequest,
-    SamplingResponse, SearchGroundedResponse, TooledRequest, TooledResponse,
+    AiMessage, AiRequest, AiResponse, SamplingMetadata, SearchGroundedResponse,
 };
 use crate::models::tools::{CallToolResult, McpTool, ToolCall};
-use crate::repository::AiRequestRepository;
+use crate::repository::AIRequestRepository;
 use crate::services::config::{ConfigLoader, ConfigValidator};
 use crate::services::mcp::{McpClientManager, ToolDiscovery};
-use crate::services::providers::{AiProvider, ProviderFactory};
+use crate::services::providers::{AiProvider, ModelPricing, ProviderFactory};
 use crate::services::sampling::SamplingRouter;
 use crate::services::tooled::{ResponseStrategy, ResponseSynthesizer, TooledExecutor};
+
+use super::request_logging;
+use super::request_storage::RequestStorage;
 
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::repository::AnalyticsSessionRepository;
@@ -30,10 +37,9 @@ pub struct AiService {
     tool_discovery: Arc<ToolDiscovery>,
     tooled_executor: TooledExecutor,
     synthesizer: ResponseSynthesizer,
+    storage: RequestStorage,
     db_pool: systemprompt_core_database::DbPool,
     default_provider: String,
-    ai_request_repo: AiRequestRepository,
-    session_repo: AnalyticsSessionRepository,
 }
 
 impl std::fmt::Debug for AiService {
@@ -48,15 +54,12 @@ impl AiService {
     pub async fn new(app_context: Arc<AppContext>) -> Result<Self> {
         let db_pool = app_context.db_pool().clone();
         let logger = LogService::system(db_pool.clone());
-        let ai_request_repo = AiRequestRepository::new(db_pool.clone());
-        let session_repo = AnalyticsSessionRepository::new(db_pool.clone());
 
         let mut config = ConfigLoader::load_default()?;
         ConfigLoader::expand_env_vars(&mut config)?;
         ConfigValidator::validate(&config, &logger).await?;
 
-        let providers =
-            ProviderFactory::create_all(config.providers.clone(), Some(&db_pool))?;
+        let providers = ProviderFactory::create_all(config.providers.clone(), Some(&db_pool))?;
         let default_provider = config.default_provider.clone();
 
         let sampling_router = Arc::new(SamplingRouter::new(
@@ -69,6 +72,11 @@ impl AiService {
         let tooled_executor = TooledExecutor::new(mcp_client_manager.clone());
         let synthesizer = ResponseSynthesizer::new();
 
+        let storage = RequestStorage::new(
+            AIRequestRepository::new(db_pool.clone()),
+            AnalyticsSessionRepository::new(db_pool.clone()),
+        );
+
         Ok(Self {
             providers,
             sampling_router,
@@ -76,68 +84,16 @@ impl AiService {
             tool_discovery,
             tooled_executor,
             synthesizer,
+            storage,
             db_pool,
             default_provider,
-            ai_request_repo,
-            session_repo,
         })
     }
 
-    pub async fn sample(
-        &self,
-        request: SamplingRequest,
-        ctx: RequestContext,
-    ) -> Result<SamplingResponse> {
-        self.process_sampling_request(request, &ctx).await
-    }
-
-    pub async fn generate(
-        &self,
-        request: GenerateRequest,
-        ctx: RequestContext,
-    ) -> Result<GenerateResponse> {
-        let mut hints = Vec::new();
-        // Add ModelId hint first so it takes precedence over Provider hint
-        if let Some(model) = &request.model {
-            hints.push(crate::models::ai::ModelHint::ModelId(model.clone()));
-        }
-        if let Some(provider) = &request.provider {
-            hints.push(crate::models::ai::ModelHint::Provider(provider.clone()));
-        }
-
-        let mut metadata = request.metadata.unwrap_or_default();
-
-        // Inject request context into metadata
-        metadata.user_id = Some(ctx.user_id().clone());
-        metadata.session_id = Some(ctx.session_id().clone());
-        metadata.trace_id = Some(ctx.trace_id().clone());
-
-        let sampling_request = SamplingRequest {
-            messages: request.messages,
-            model_preferences: crate::models::ai::ModelPreferences {
-                hints,
-                cost_priority: None,
-            },
-            metadata,
-            system_prompt: None,
-            include_context: None,
-            max_tokens: 4096,
-            response_format: request.response_format,
-            structured_output: request.structured_output,
-        };
-
-        let response = self
-            .process_sampling_request(sampling_request, &ctx)
-            .await?;
-
-        Ok(GenerateResponse {
-            request_id: response.request_id,
-            content: response.content,
-            provider: response.provider,
-            model: response.model,
-            tokens_used: response.tokens_used,
-            latency_ms: response.latency_ms,
-        })
+    pub async fn generate(&self, request: AiRequest, ctx: RequestContext) -> Result<AiResponse> {
+        let max_tokens = request.max_tokens.unwrap_or(4096);
+        let sampling_request = request.with_context(&ctx).with_max_tokens(max_tokens);
+        self.process_request(sampling_request, &ctx).await
     }
 
     pub async fn generate_direct(
@@ -147,15 +103,14 @@ impl AiService {
         messages: Vec<AiMessage>,
         metadata: Option<SamplingMetadata>,
         ctx: RequestContext,
-    ) -> Result<GenerateResponse> {
-        let request = GenerateRequest {
-            provider: Some(provider.to_string()),
-            model: Some(model.to_string()),
-            messages,
-            metadata,
-            response_format: None,
-            structured_output: None,
-        };
+    ) -> Result<AiResponse> {
+        let mut request = AiRequest::new(messages)
+            .with_provider(provider)
+            .with_model(model);
+
+        if let Some(meta) = metadata {
+            request = request.with_metadata(meta);
+        }
 
         self.generate(request, ctx).await
     }
@@ -172,52 +127,66 @@ impl AiService {
 
     pub async fn generate_with_tools(
         &self,
-        request: TooledRequest,
+        request: AiRequest,
         ctx: RequestContext,
-    ) -> Result<TooledResponse> {
-        self.process_tooled_request(request, &ctx).await
+    ) -> Result<AiResponse> {
+        let enriched_request = request.with_context(&ctx);
+        self.process_tooled_request(enriched_request, &ctx).await
     }
 
-    /// Makes an AI call with tools but does NOT execute the tool calls.
-    /// Returns the AI's response and requested tool calls for later execution.
-    /// Use this when you need to inspect tool calls before deciding whether to execute them.
-    pub async fn sample_without_execution(
+    pub async fn generate_single_turn(
         &self,
-        request: TooledRequest,
+        request: AiRequest,
         ctx: &RequestContext,
-    ) -> Result<(SamplingResponse, Vec<ToolCall>)> {
-        let logger = LogService::new(self.db_pool.clone(), ctx.log_context());
-        let (provider_name, provider, model) = self.select_provider_and_model(&request)?;
+    ) -> Result<(AiResponse, Vec<ToolCall>)> {
+        let start = std::time::Instant::now();
+        let request_id = Uuid::new_v4();
+        let enriched_request = request.with_context(ctx);
+        let (provider_name, provider, model) = self.select_provider_and_model(&enriched_request)?;
 
+        let logger = LogService::new(self.db_pool.clone(), ctx.log_context());
+        let tool_count = enriched_request
+            .tools
+            .as_ref()
+            .map(|t| t.len())
+            .unwrap_or(0);
         logger
             .info(
                 "ai",
                 &format!(
-                    "🔍 sample_without_execution: provider={}, model={}, tools={}",
-                    provider_name,
-                    model,
-                    request.tools.len()
+                    "AI request | request_id={}, provider={}, model={}, tools={}",
+                    request_id, provider_name, model, tool_count
                 ),
             )
             .await
             .ok();
 
-        let metadata = request.metadata.clone().unwrap_or_default();
-        self.call_ai_with_tools(provider.as_ref(), &request, &metadata, &model)
-            .await
+        let metadata = enriched_request.metadata.clone();
+        let result = self
+            .call_ai_with_tools(provider.as_ref(), &enriched_request, &metadata, &model)
+            .await;
+
+        let latency_ms = start.elapsed().as_millis() as u64;
+        self.finalize_single_turn(
+            result,
+            request_id,
+            latency_ms,
+            &enriched_request,
+            ctx,
+            &provider_name,
+            &model,
+        )
     }
 
-    /// Executes tool calls that were previously returned by `sample_without_execution`.
-    /// This separates the AI call from tool execution, allowing inspection of tool calls
-    /// before deciding whether/how to execute them.
     pub async fn execute_tools(
         &self,
         tool_calls: Vec<ToolCall>,
         tools: &[McpTool],
         ctx: &RequestContext,
+        agent_overrides: Option<&systemprompt_models::ai::ToolModelOverrides>,
     ) -> (Vec<ToolCall>, Vec<CallToolResult>) {
         self.tooled_executor
-            .execute_tool_calls(tool_calls, tools, ctx)
+            .execute_tool_calls(tool_calls, tools, ctx, agent_overrides)
             .await
     }
 
@@ -231,22 +200,20 @@ impl AiService {
         response_schema: Option<serde_json::Value>,
     ) -> Result<SearchGroundedResponse> {
         let mut metadata = metadata.unwrap_or_default();
-
         metadata.user_id = Some(ctx.user_id().clone());
         metadata.session_id = Some(ctx.session_id().clone());
         metadata.trace_id = Some(ctx.trace_id().clone());
 
         let provider = self
             .providers
-            .get("gemini")
-            .ok_or_else(|| anyhow::anyhow!("Gemini provider not available for Google Search"))?;
+            .values()
+            .find(|p| p.supports_google_search())
+            .ok_or_else(|| anyhow::anyhow!("No provider with Google Search support available"))?;
 
         let model = model.unwrap_or(provider.default_model());
-        let response = provider
-            .sample_with_google_search(&messages, &metadata, model, urls, response_schema)
-            .await?;
-
-        Ok(response)
+        provider
+            .generate_with_google_search(&messages, &metadata, model, urls, response_schema)
+            .await
     }
 
     pub async fn health_check(&self) -> Result<HashMap<String, bool>> {
@@ -270,45 +237,43 @@ impl AiService {
 
     pub async fn generate_stream(
         &self,
-        request: GenerateRequest,
+        request: AiRequest,
         ctx: RequestContext,
     ) -> Result<Pin<Box<dyn Stream<Item = Result<String>> + Send>>> {
-        let provider_name = request
-            .provider
-            .as_deref()
-            .unwrap_or(&self.default_provider);
-        let provider = self
-            .providers
-            .get(provider_name)
-            .ok_or_else(|| anyhow::anyhow!("Provider {provider_name} not found"))?;
-
-        if !provider.supports_streaming() {
-            return Err(anyhow::anyhow!(
-                "Provider {provider_name} does not support streaming"
-            ));
-        }
-
-        let model = request
-            .model
-            .as_deref()
-            .unwrap_or_else(|| provider.default_model());
-        let mut metadata = request.metadata.unwrap_or_default();
-
-        // Inject request context into metadata
-        metadata.user_id = Some(ctx.user_id().clone());
-        metadata.session_id = Some(ctx.session_id().clone());
-        metadata.trace_id = Some(ctx.trace_id().clone());
+        let (provider, model) = self.get_streaming_provider(&request)?;
+        let enriched_request = request.with_context(&ctx);
 
         provider
-            .sample_stream(&request.messages, &metadata, model)
+            .generate_stream(
+                &enriched_request.messages,
+                &enriched_request.metadata,
+                &model,
+            )
             .await
     }
 
     pub async fn generate_with_tools_stream(
         &self,
-        request: TooledRequest,
+        request: AiRequest,
         ctx: RequestContext,
     ) -> Result<Pin<Box<dyn Stream<Item = Result<String>> + Send>>> {
+        let (provider, model) = self.get_streaming_provider(&request)?;
+        let enriched_request = request.with_context(&ctx);
+        let tools = enriched_request.tools.clone().unwrap_or_default();
+
+        provider
+            .generate_with_tools_stream(
+                &enriched_request.messages,
+                tools,
+                &enriched_request.metadata,
+                &model,
+            )
+            .await
+    }
+}
+
+impl AiService {
+    fn get_streaming_provider(&self, request: &AiRequest) -> Result<(Arc<dyn AiProvider>, String)> {
         let provider_name = request
             .provider
             .as_deref()
@@ -327,390 +292,56 @@ impl AiService {
         let model = request
             .model
             .as_deref()
-            .unwrap_or_else(|| provider.default_model());
-        let mut metadata = request.metadata.unwrap_or_default();
+            .unwrap_or_else(|| provider.default_model())
+            .to_string();
 
-        // Inject request context into metadata
-        metadata.user_id = Some(ctx.user_id().clone());
-        metadata.session_id = Some(ctx.session_id().clone());
-        metadata.trace_id = Some(ctx.trace_id().clone());
-
-        provider
-            .sample_with_tools_stream(&request.messages, request.tools, &metadata, model)
-            .await
+        Ok((provider.clone(), model))
     }
 
-    pub async fn execute_agentic_loop(
+    fn finalize_single_turn(
         &self,
-        messages: Vec<AiMessage>,
-        tools: Vec<McpTool>,
-        context: &RequestContext,
-    ) -> Result<super::agentic_executor::AgenticExecutionResult> {
-        let logger = LogService::new(self.db_pool.clone(), context.log_context());
-
-        let executor = super::agentic_executor::AgenticExecutor::new(
-            self.mcp_client_manager.clone(),
-            self.ai_request_repo.clone(),
-            10,
-        );
-
-        let (provider_name, provider) = self.sampling_router.select_provider(
-            &crate::models::ai::ModelPreferences {
-                hints: vec![],
-                cost_priority: None,
-            },
-            &SamplingMetadata::default(),
-        )?;
-
-        let model = self.sampling_router.select_model(
-            &provider_name,
-            &crate::models::ai::ModelPreferences {
-                hints: vec![],
-                cost_priority: None,
-            },
-        )?;
-
-        let mut tools_with_control = tools.clone();
-        tools_with_control.insert(
-            0,
-            crate::services::execution_control::create_execution_control_tool(),
-        );
-
-        let mut messages_with_instructions = messages.clone();
-        Self::inject_backend_system_instructions(&mut messages_with_instructions);
-
-        executor
-            .execute_loop(
-                provider.as_ref(),
-                messages_with_instructions,
-                tools_with_control,
-                &SamplingMetadata::default(),
-                &model,
-                context,
-                &logger,
-            )
-            .await
-    }
-
-    async fn process_sampling_request(
-        &self,
-        request: SamplingRequest,
+        result: Result<(AiResponse, Vec<ToolCall>)>,
+        request_id: Uuid,
+        latency_ms: u64,
+        request: &AiRequest,
         ctx: &RequestContext,
-    ) -> Result<SamplingResponse> {
-        let request_id = Uuid::new_v4();
-        let start = std::time::Instant::now();
-
-        let logger = LogService::new(self.db_pool.clone(), ctx.log_context());
-
-        let (provider_name, provider) = self
-            .sampling_router
-            .select_provider(&request.model_preferences, &request.metadata)?;
-
-        let model = self
-            .sampling_router
-            .select_model(&provider_name, &request.model_preferences)?;
-
-        // Enhanced logging with request context
-        let log_message = format!(
-            "Request {}: {} messages to {}/{} (user: {}, session: {}, trace: {})",
-            request_id,
-            request.messages.len(),
-            provider_name,
-            model,
-            ctx.user_id().as_str(),
-            ctx.session_id(),
-            ctx.trace_id()
-        );
-
-        logger.info("ai", &log_message).await.ok();
-
-        let sample_result = if let Some(ref format) = request.response_format {
-            // Use structured sampling if provider supports it
-            if provider.supports_json_mode() || provider.supports_structured_output() {
-                provider
-                    .sample_structured(&request.messages, &request.metadata, &model, format)
-                    .await
-            } else {
-                // Fall back to regular sampling with prompt enhancement
-                use crate::services::structured_output::StructuredOutputProcessor;
-                let options = request
-                    .structured_output
-                    .clone()
-                    .unwrap_or_default();
-                let enhanced_messages = if let Some(last_msg) = request.messages.last() {
-                    let mut messages = request.messages[..request.messages.len() - 1].to_vec();
-                    let enhanced_content = StructuredOutputProcessor::enhance_prompt_for_json(
-                        &last_msg.content,
-                        format,
-                        &options,
-                    );
-                    messages.push(AiMessage {
-                        role: last_msg.role,
-                        content: enhanced_content,
-                    });
-                    messages
-                } else {
-                    request.messages.clone()
-                };
-                provider
-                    .sample(&enhanced_messages, &request.metadata, &model)
-                    .await
-            }
-        } else {
-            provider
-                .sample(&request.messages, &request.metadata, &model)
-                .await
-        };
-
-        match sample_result {
-            Ok(mut response) => {
-                // If we have a response format and structured output options, validate the response
-                if let (Some(ref format), Some(ref options)) =
-                    (&request.response_format, &request.structured_output)
-                {
-                    if format.is_json() {
-                        use crate::services::structured_output::StructuredOutputProcessor;
-                        match StructuredOutputProcessor::process_response(
-                            &response.content,
-                            format,
-                            options,
-                        ) {
-                            Ok(json_value) => {
-                                // Update response content with properly formatted JSON
-                                response.content = serde_json::to_string(&json_value)?;
-                            },
-                            Err(e) => {
-                                logger
-                                    .warn(
-                                        "ai",
-                                        &format!("Failed to validate structured output: {e}"),
-                                    )
-                                    .await
-                                    .ok();
-                                // Optionally, we could retry here or return an error
-                            },
-                        }
-                    }
-                }
-
+        provider_name: &str,
+        model: &str,
+    ) -> Result<(AiResponse, Vec<ToolCall>)> {
+        match result {
+            Ok((mut response, tool_calls)) => {
                 response.request_id = request_id;
-                let latency = start.elapsed().as_millis() as u64;
+                response.latency_ms = latency_ms;
+                response.tool_calls = tool_calls.clone();
 
-                // Store AI usage in ai_requests table
-                self.store_ai_usage(&request, &response, ctx, latency, &logger)
-                    .await
-                    .ok();
-
-                logger
-                    .info(
-                        "ai",
-                        &format!(
-                            "Response {}: {} chars, {} tokens in {}ms",
-                            request_id,
-                            response.content.len(),
-                            response.tokens_used.unwrap_or(0),
-                            latency
-                        ),
-                    )
-                    .await
-                    .ok();
-
-                Ok(response)
-            },
-            Err(e) => {
-                let latency = start.elapsed().as_millis() as u64;
-
-                // Store failed request in ai_requests table
-                self.store_failed_ai_request(
-                    &request,
-                    ctx,
-                    &provider_name,
-                    &model,
-                    request_id,
-                    latency as i32,
-                    &e.to_string(),
-                )
-                .await
-                .ok();
-
-                logger
-                    .error(
-                        "ai",
-                        &format!(
-                            "Error {request_id}: {provider_name} failed after {latency}ms: {e}"
-                        ),
-                    )
-                    .await
-                    .ok();
-
-                Err(e)
-            },
-        }
-    }
-
-    async fn process_tooled_request(
-        &self,
-        request: TooledRequest,
-        ctx: &RequestContext,
-    ) -> Result<TooledResponse> {
-        let request_id = Uuid::new_v4();
-        let start = std::time::Instant::now();
-        let logger = LogService::new(self.db_pool.clone(), ctx.log_context());
-
-        let (provider_name, provider, model) = self.select_provider_and_model(&request)?;
-        self.log_tooled_request_start(&logger, request_id, &request, &provider_name, &model, ctx)
-            .await;
-
-        let metadata = request.metadata.clone().unwrap_or_default();
-
-        match self
-            .call_ai_with_tools(provider.as_ref(), &request, &metadata, &model)
-            .await
-        {
-            Ok((response, tool_calls)) => {
-                self.log_ai_response(&logger, &response, tool_calls.len())
-                    .await;
-
-                let (tool_calls, tool_results) = self
-                    .tooled_executor
-                    .execute_tool_calls(tool_calls, &request.tools, ctx)
-                    .await;
-
-                let latency = start.elapsed().as_millis() as u64;
-
-                self.store_tooled_ai_usage(
-                    &request,
-                    &response,
-                    ctx,
-                    latency as i32,
-                    &tool_calls,
-                    &tool_results,
-                    &provider_name,
-                    &model,
-                    request_id,
-                    &logger,
-                )
-                .await
-                .ok();
-
-                let strategy = ResponseStrategy::from_response(
-                    response.content.clone(),
-                    tool_calls.clone(),
-                    tool_results.clone(),
+                let cost = self.estimate_cost(
+                    &response.provider,
+                    &response.model,
+                    response.input_tokens.map(|t| t as i32),
+                    response.output_tokens.map(|t| t as i32),
                 );
+                self.storage
+                    .store(request, &response, ctx, "completed", None, cost);
 
-                logger
-                    .info(
-                        "ai",
-                        &format!(
-                            "📋 STRATEGY: {} (content_len={}, tools={}, results={})",
-                            match &strategy {
-                                ResponseStrategy::ContentProvided { .. } =>
-                                    "ContentProvided - using AI's response",
-                                ResponseStrategy::ArtifactsProvided { .. } =>
-                                    "ArtifactsProvided - valid artifacts, skipping synthesis",
-                                ResponseStrategy::ToolsOnly { .. } =>
-                                    "ToolsOnly - synthesizing from tool results",
-                            },
-                            response.content.len(),
-                            tool_calls.len(),
-                            tool_results.len()
-                        ),
-                    )
-                    .await
-                    .ok();
-
-                let final_content = match strategy {
-                    ResponseStrategy::ContentProvided { content, .. } => {
-                        logger
-                            .info(
-                                "ai",
-                                &format!("✅ Using AI content: {} chars", content.len()),
-                            )
-                            .await
-                            .ok();
-                        content
-                    },
-                    ResponseStrategy::ArtifactsProvided {
-                        tool_calls: _,
-                        tool_results,
-                    } => {
-                        logger
-                            .info(
-                                "ai",
-                                &format!(
-                                    "📦 Valid artifacts provided - skipping synthesis ({} results)",
-                                    tool_results.len()
-                                ),
-                            )
-                            .await
-                            .ok();
-
-                        String::new()
-                    },
-                    ResponseStrategy::ToolsOnly {
-                        tool_calls,
-                        tool_results,
-                    } => {
-                        logger
-                            .info("ai", "🔄 Synthesizing response from tool results")
-                            .await
-                            .ok();
-
-                        self.synthesizer
-                            .synthesize_or_fallback(
-                                provider.as_ref(),
-                                &request.messages,
-                                &tool_calls,
-                                &tool_results,
-                                &metadata,
-                                &model,
-                                &logger,
-                            )
-                            .await
-                    },
-                };
-
-                let tooled_response = TooledResponse {
-                    request_id,
-                    content: final_content.clone(),
-                    provider: provider_name.to_string(),
-                    model: model.clone(),
-                    tool_calls: tool_calls.clone(),
-                    tool_results,
-                    tokens_used: response.tokens_used,
-                    latency_ms: latency,
-                };
-
-                self.log_tooled_response(&logger, &tooled_response).await;
-
-                Ok(tooled_response)
+                Ok((response, tool_calls))
             },
             Err(e) => {
-                let latency = start.elapsed().as_millis() as u64;
-
-                self.store_failed_tooled_request(
-                    &request,
-                    ctx,
-                    &provider_name,
-                    &model,
+                let error_response = AiResponse::new(
                     request_id,
-                    latency as i32,
-                    &e.to_string(),
+                    String::new(),
+                    provider_name.to_string(),
+                    model.to_string(),
                 )
-                .await
-                .ok();
+                .with_latency(latency_ms);
 
-                logger
-                    .error(
-                        "ai",
-                        &format!(
-                            "Tooled Error {request_id}: {provider_name} failed after {latency}ms: {e}"
-                        ),
-                    )
-                    .await
-                    .ok();
-
+                self.storage.store(
+                    request,
+                    &error_response,
+                    ctx,
+                    "failed",
+                    Some(&e.to_string()),
+                    0,
+                );
                 Err(e)
             },
         }
@@ -718,26 +349,13 @@ impl AiService {
 
     fn select_provider_and_model(
         &self,
-        request: &TooledRequest,
+        request: &AiRequest,
     ) -> Result<(String, Arc<dyn AiProvider>, String)> {
-        let mut hints = Vec::new();
-        if let Some(model) = &request.model {
-            hints.push(crate::models::ai::ModelHint::ModelId(model.clone()));
-        }
-        if let Some(provider) = &request.provider {
-            hints.push(crate::models::ai::ModelHint::Provider(provider.clone()));
-        }
-
-        let model_preferences = crate::models::ai::ModelPreferences {
-            hints,
-            cost_priority: None,
-        };
-
-        let metadata = request.metadata.clone().unwrap_or_default();
+        let model_preferences = Self::build_model_preferences(request);
 
         let (provider_name, provider) = self
             .sampling_router
-            .select_provider(&model_preferences, &metadata)?;
+            .select_provider(&model_preferences, &request.metadata)?;
 
         let model = self
             .sampling_router
@@ -746,623 +364,620 @@ impl AiService {
         Ok((provider_name, provider, model))
     }
 
-    async fn log_tooled_request_start(
-        &self,
-        logger: &LogService,
-        request_id: Uuid,
-        request: &TooledRequest,
-        provider_name: &str,
-        model: &str,
-        ctx: &RequestContext,
-    ) {
-        let tool_names = request
-            .tools
-            .iter()
-            .map(|t| t.name.as_str())
-            .collect::<Vec<_>>()
-            .join(", ");
-        let log_message = format!(
-            "Tooled Request {}: {} messages with {} tools to {}/{} (user: {}, session: {}, trace: {})",
-            request_id, request.messages.len(), request.tools.len(), provider_name, model,
-            ctx.user_id().as_str(), ctx.session_id(), ctx.trace_id()
-        );
-
-        logger.info("ai", &log_message).await.ok();
-        logger
-            .info("ai", &format!("🔧 TOOLS PASSED TO AI: [{tool_names}]"))
-            .await
-            .ok();
+    fn build_model_preferences(request: &AiRequest) -> crate::models::ai::ModelPreferences {
+        let mut hints = Vec::new();
+        if let Some(model) = &request.model {
+            hints.push(crate::models::ai::ModelHint::ModelId(model.clone()));
+        }
+        if let Some(provider) = &request.provider {
+            hints.push(crate::models::ai::ModelHint::Provider(provider.clone()));
+        }
+        crate::models::ai::ModelPreferences {
+            hints,
+            cost_priority: None,
+        }
     }
 
     async fn call_ai_with_tools(
         &self,
         provider: &dyn AiProvider,
-        request: &TooledRequest,
+        request: &AiRequest,
         metadata: &SamplingMetadata,
         model: &str,
-    ) -> Result<(SamplingResponse, Vec<ToolCall>)> {
-        let mut tools_with_control = request.tools.clone();
-        tools_with_control.insert(
-            0,
-            crate::services::execution_control::create_execution_control_tool(),
-        );
-
-        let mut messages_with_instructions = request.messages.clone();
-        Self::inject_backend_system_instructions(&mut messages_with_instructions);
-
+    ) -> Result<(AiResponse, Vec<ToolCall>)> {
+        let tools = request.tools.clone().unwrap_or_default();
         provider
-            .sample_with_tools(
-                &messages_with_instructions,
-                tools_with_control,
-                metadata,
-                model,
-            )
+            .generate_with_tools(&request.messages, tools, metadata, model)
             .await
     }
 
-    async fn log_ai_response(
+    fn estimate_cost(
         &self,
-        logger: &LogService,
-        response: &SamplingResponse,
-        tool_call_count: usize,
-    ) {
-        logger
-            .info(
-                "ai",
-                &format!(
-                    "🤖 AI RESPONSE: {} chars, {} tool calls",
-                    response.content.len(),
-                    tool_call_count
-                ),
-            )
-            .await
-            .ok();
-
-        if tool_call_count == 0 && !response.content.is_empty() {
-            logger
-                .warn(
-                    "ai",
-                    &format!(
-                        "⚠️  AI responded with TEXT instead of calling tools. Response preview: {}",
-                        &response.content.chars().take(200).collect::<String>()
-                    ),
-                )
-                .await
-                .ok();
-        }
-    }
-
-    async fn log_tooled_response(&self, logger: &LogService, response: &TooledResponse) {
-        logger
-            .info(
-                "ai",
-                &format!(
-                    "Tooled Response {}: {} chars, {} tokens, {} tools in {}ms",
-                    response.request_id,
-                    response.content.len(),
-                    response.tokens_used.unwrap_or(0),
-                    response.tool_calls.len(),
-                    response.latency_ms
-                ),
-            )
-            .await
-            .ok();
-    }
-
-    // AI Usage Storage Methods
-
-    async fn store_ai_usage(
-        &self,
-        request: &SamplingRequest,
-        response: &SamplingResponse,
-        ctx: &RequestContext,
-        latency_ms: u64,
-        logger: &LogService,
-    ) -> Result<()> {
-        use crate::repository::ai_requests::{AiRequestMessage, SamplingParams};
-
-        let cost_cents = self.estimate_cost(
-            &response.provider,
-            &response.model,
-            response.tokens_used.map(|t| t as i32),
-        );
-
-        let messages: Vec<AiRequestMessage> = request.messages.iter().map(Into::into).collect();
-
-        let sampling_params = SamplingParams::from(&request.metadata);
-
-        let repo = self.ai_request_repo.clone();
-        let request_id = response.request_id;
-        let user_id = ctx.user_id().clone();
-        let session_id = ctx.session_id().clone();
-        let task_id = ctx.task_id().cloned();
-        let context_id = ctx.context_id().clone();
-        let trace_id = ctx.trace_id().clone();
-        let provider = response.provider.clone();
-        let model = response.model.clone();
-        let messages_clone = messages.clone();
-        let sampling_params_clone = sampling_params.clone();
-        let content = response.content.clone();
-        let tokens_used = response.tokens_used.map(|t| t as i32);
-        let input_tokens = response.input_tokens.map(|t| t as i32);
-        let output_tokens = response.output_tokens.map(|t| t as i32);
-        let cache_hit = response.cache_hit;
-        let cache_read_tokens = response.cache_read_tokens.map(|t| t as i32);
-        let cache_creation_tokens = response.cache_creation_tokens.map(|t| t as i32);
-        let is_streaming = response.is_streaming;
-
-        tokio::spawn(async move {
-            if let Err(e) = repo
-                .store_ai_request(
-                    request_id,
-                    &user_id,
-                    &session_id,
-                    task_id.as_ref(),
-                    if context_id.as_str().is_empty() {
-                        None
-                    } else {
-                        Some(&context_id)
-                    },
-                    Some(&trace_id),
-                    &provider,
-                    &model,
-                    &messages_clone,
-                    &sampling_params_clone,
-                    None,
-                    tokens_used,
-                    input_tokens,
-                    output_tokens,
-                    cache_hit,
-                    cache_read_tokens,
-                    cache_creation_tokens,
-                    is_streaming,
-                    cost_cents,
-                    latency_ms as i32,
-                    "completed",
-                    None,
-                )
-                .await
-            {
-                tracing::error!("Failed to store AI request {}: {}", request_id, e);
-            }
-
-            if let Err(e) = repo.add_response_message(request_id, &content).await {
-                tracing::error!(
-                    "Failed to add response message for request {}: {}",
-                    request_id,
-                    e
-                );
-            }
-        });
-
-        let tokens = response.tokens_used.unwrap_or(0) as i32;
-
-        let is_system_user = ctx.user_id().as_str() == "system";
-
-        if !is_system_user
-            && !self
-                .session_repo
-                .session_exists(ctx.session_id().as_str())
-                .await
-                .unwrap_or(false)
-        {
-            logger
-                .info(
-                    "ai",
-                    &format!(
-                        "Creating session: {} with user_id: {:?}",
-                        ctx.session_id(),
-                        ctx.user_id()
-                    ),
-                )
-                .await
-                .ok();
-            let jwt_expiration_seconds =
-                systemprompt_core_system::Config::global().jwt_access_token_expiration;
-            let expires_at = chrono::Utc::now() + chrono::Duration::seconds(jwt_expiration_seconds);
-
-            if let Err(e) = self
-                .session_repo
-                .create_session(
-                    ctx.session_id().as_str(),
-                    Some(ctx.user_id().as_str()),
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    false,
-                    expires_at,
-                )
-                .await
-            {
-                logger
-                    .error("ai", &format!("Failed to create session: {e}"))
-                    .await
-                    .ok();
-            } else {
-                logger.info("ai", "Session created successfully").await.ok();
-            }
-        }
-
-        let session_repo = self.session_repo.clone();
-        let session_id_for_usage = ctx.session_id().clone();
-
-        tokio::spawn(async move {
-            if let Err(e) = session_repo
-                .increment_ai_usage(session_id_for_usage.as_str(), tokens, cost_cents)
-                .await
-            {
-                tracing::error!(
-                    "Failed to increment AI usage for session {}: {}",
-                    session_id_for_usage,
-                    e
-                );
-            }
-        });
-
-        Ok(())
-    }
-
-    async fn store_failed_ai_request(
-        &self,
-        request: &SamplingRequest,
-        ctx: &RequestContext,
-        provider: &str,
+        provider_name: &str,
         model: &str,
-        request_id: Uuid,
-        latency_ms: i32,
-        error_message: &str,
-    ) -> Result<()> {
-        use crate::repository::ai_requests::{AiRequestMessage, SamplingParams};
+        input_tokens: Option<i32>,
+        output_tokens: Option<i32>,
+    ) -> i32 {
+        let input = f64::from(input_tokens.unwrap_or(0));
+        let output = f64::from(output_tokens.unwrap_or(0));
 
-        let messages: Vec<AiRequestMessage> = request.messages.iter().map(Into::into).collect();
-
-        let sampling_params = SamplingParams::from(&request.metadata);
-
-        {
-            let repo = self.ai_request_repo.clone();
-            let user_id = ctx.user_id().clone();
-            let session_id = ctx.session_id().clone();
-            let task_id = ctx.task_id().cloned();
-            let context_id = ctx.context_id().clone();
-            let trace_id = ctx.trace_id().clone();
-            let provider = provider.to_string();
-            let model = model.to_string();
-            let messages_clone = messages;
-            let sampling_params_clone = sampling_params;
-            let error_msg = error_message.to_string();
-
-            tokio::spawn(async move {
-                if let Err(e) = repo
-                    .store_ai_request(
-                        request_id,
-                        &user_id,
-                        &session_id,
-                        task_id.as_ref(),
-                        if context_id.as_str().is_empty() {
-                            None
-                        } else {
-                            Some(&context_id)
-                        },
-                        Some(&trace_id),
-                        &provider,
-                        &model,
-                        &messages_clone,
-                        &sampling_params_clone,
-                        None,
-                        None,
-                        None,
-                        None,
-                        false,
-                        None,
-                        None,
-                        false,
-                        0,
-                        latency_ms,
-                        "failed",
-                        Some(&error_msg),
-                    )
-                    .await
-                {
-                    tracing::error!("Failed to store failed AI request {}: {}", request_id, e);
-                }
-            });
-        }
-
-        Ok(())
-    }
-
-    async fn store_tooled_ai_usage(
-        &self,
-        request: &TooledRequest,
-        response: &SamplingResponse,
-        ctx: &RequestContext,
-        latency_ms: i32,
-        tool_calls: &[ToolCall],
-        _tool_results: &[CallToolResult],
-        provider: &str,
-        model: &str,
-        request_id: Uuid,
-        _logger: &LogService,
-    ) -> Result<()> {
-        use crate::repository::ai_requests::{AiRequestMessage, AiRequestToolCall, SamplingParams};
-
-        let cost_cents =
-            self.estimate_cost(provider, model, response.tokens_used.map(|t| t as i32));
-
-        let messages: Vec<AiRequestMessage> = request.messages.iter().map(Into::into).collect();
-
-        let sampling_params = request
-            .metadata
-            .as_ref()
-            .map(SamplingParams::from)
-            .unwrap_or_default();
-
-        let tool_call_records: Vec<AiRequestToolCall> = tool_calls
-            .iter()
-            .map(|tc| AiRequestToolCall {
-                tool_name: tc.name.clone(),
-                tool_input: serde_json::to_string(&tc.arguments).unwrap_or_default(),
-                mcp_execution_id: None,
-                ai_tool_call_id: Some(tc.ai_tool_call_id.as_ref().to_string()),
-            })
-            .collect();
-
-        {
-            let repo = self.ai_request_repo.clone();
-            let user_id = ctx.user_id().clone();
-            let session_id = ctx.session_id().clone();
-            let task_id = request.task_id.clone();
-            let context_id = request.context_id.clone();
-            let trace_id = ctx.trace_id().clone();
-            let provider = provider.to_string();
-            let model = model.to_string();
-            let messages_clone = messages;
-            let sampling_params_clone = sampling_params;
-            let tool_calls_clone = tool_call_records;
-            let tokens = response.tokens_used.map(|t| t as i32);
-            let input_tokens = response.input_tokens.map(|t| t as i32);
-            let output_tokens = response.output_tokens.map(|t| t as i32);
-            let cache_hit = response.cache_hit;
-            let cache_read_tokens = response.cache_read_tokens.map(|t| t as i32);
-            let cache_creation_tokens = response.cache_creation_tokens.map(|t| t as i32);
-            let is_streaming = response.is_streaming;
-            let response_content = response.content.clone();
-
-            tokio::spawn(async move {
-                if let Err(e) = repo
-                    .store_ai_request(
-                        request_id,
-                        &user_id,
-                        &session_id,
-                        Some(&task_id),
-                        Some(&context_id),
-                        Some(&trace_id),
-                        &provider,
-                        &model,
-                        &messages_clone,
-                        &sampling_params_clone,
-                        Some(&tool_calls_clone),
-                        tokens,
-                        input_tokens,
-                        output_tokens,
-                        cache_hit,
-                        cache_read_tokens,
-                        cache_creation_tokens,
-                        is_streaming,
-                        cost_cents,
-                        latency_ms,
-                        "completed",
-                        None,
-                    )
-                    .await
-                {
-                    tracing::error!("Failed to store tooled AI request {}: {}", request_id, e);
-                }
-
-                if let Err(e) = repo
-                    .add_response_message(request_id, &response_content)
-                    .await
-                {
-                    tracing::error!(
-                        "Failed to add response message for tooled request {}: {}",
-                        request_id,
-                        e
-                    );
-                }
-            });
-        }
-
-        let tokens = response.tokens_used.unwrap_or(0) as i32;
-
-        {
-            let session_repo = self.session_repo.clone();
-            let session_id = ctx.session_id().clone();
-            let user_id = ctx.user_id().clone();
-            let is_system_user = user_id.as_str() == "system";
-
-            tokio::spawn(async move {
-                let jwt_expiration_seconds =
-                    systemprompt_core_system::Config::global().jwt_access_token_expiration;
-                let expires_at =
-                    chrono::Utc::now() + chrono::Duration::seconds(jwt_expiration_seconds);
-
-                if is_system_user {
-                    return;
-                }
-
-                match session_repo.session_exists(session_id.as_str()).await {
-                    Ok(exists) => {
-                        if !exists {
-                            if let Err(e) = session_repo
-                                .create_session(
-                                    session_id.as_str(),
-                                    Some(user_id.as_str()),
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    None,
-                                    false,
-                                    expires_at,
-                                )
-                                .await
-                            {
-                                tracing::error!(
-                                    "Failed to create session {} for tooled AI request: {}",
-                                    session_id,
-                                    e
-                                );
-                            }
-                        }
-                    },
-                    Err(e) => {
-                        tracing::error!("Failed to check if session {} exists: {}", session_id, e);
-                    },
-                }
-
-                if let Err(e) = session_repo
-                    .increment_ai_usage(session_id.as_str(), tokens, cost_cents)
-                    .await
-                {
-                    tracing::error!(
-                        "Failed to increment AI usage for session {}: {}",
-                        session_id,
-                        e
-                    );
-                }
-            });
-        }
-
-        Ok(())
-    }
-
-    async fn store_failed_tooled_request(
-        &self,
-        request: &TooledRequest,
-        ctx: &RequestContext,
-        provider: &str,
-        model: &str,
-        request_id: Uuid,
-        latency_ms: i32,
-        error_message: &str,
-    ) -> Result<()> {
-        use crate::repository::ai_requests::{AiRequestMessage, SamplingParams};
-
-        let messages: Vec<AiRequestMessage> = request.messages.iter().map(Into::into).collect();
-
-        let sampling_params = request
-            .metadata
-            .as_ref()
-            .map(SamplingParams::from)
-            .unwrap_or_default();
-
-        {
-            let repo = self.ai_request_repo.clone();
-            let user_id = ctx.user_id().clone();
-            let session_id = ctx.session_id().clone();
-            let task_id = request.task_id.clone();
-            let context_id = request.context_id.clone();
-            let trace_id = ctx.trace_id().clone();
-            let provider = provider.to_string();
-            let model = model.to_string();
-            let messages_clone = messages;
-            let sampling_params_clone = sampling_params;
-            let error_msg = error_message.to_string();
-
-            tokio::spawn(async move {
-                if let Err(e) = repo
-                    .store_ai_request(
-                        request_id,
-                        &user_id,
-                        &session_id,
-                        Some(&task_id),
-                        Some(&context_id),
-                        Some(&trace_id),
-                        &provider,
-                        &model,
-                        &messages_clone,
-                        &sampling_params_clone,
-                        None,
-                        None,
-                        None,
-                        None,
-                        false,
-                        None,
-                        None,
-                        false,
-                        0,
-                        latency_ms,
-                        "failed",
-                        Some(&error_msg),
-                    )
-                    .await
-                {
-                    tracing::error!(
-                        "Failed to store failed tooled AI request {}: {}",
-                        request_id,
-                        e
-                    );
-                }
-            });
-        }
-
-        Ok(())
-    }
-
-    fn inject_backend_system_instructions(messages: &mut Vec<AiMessage>) {
-        let backend_instructions =
-            crate::services::execution_control::EXECUTION_CONTROL_SYSTEM_INSTRUCTIONS;
-
-        if let Some(system_msg) = messages
-            .iter_mut()
-            .find(|m| matches!(m.role, MessageRole::System))
-        {
-            system_msg.content = format!("{}\n\n{}", backend_instructions, system_msg.content);
-        } else {
-            messages.insert(
-                0,
-                AiMessage {
-                    role: MessageRole::System,
-                    content: backend_instructions.to_string(),
-                },
-            );
-        }
-    }
-
-    fn estimate_cost(&self, provider_name: &str, model: &str, tokens_used: Option<i32>) -> i32 {
-        let tokens = f64::from(tokens_used.unwrap_or(0));
-
-        let cost_per_1k_tokens = self
+        let pricing = self
             .providers
             .get(provider_name)
-            .map_or(0.01, |provider| f64::from(provider.get_cost_per_1k_tokens(model)));
+            .map_or(ModelPricing::new(0.001, 0.001), |provider| {
+                provider.get_pricing(model)
+            });
 
-        ((tokens / 1000.0) * cost_per_1k_tokens * 1_000_000.0).round() as i32
+        let input_cost = (input / 1000.0) * f64::from(pricing.input_cost_per_1k);
+        let output_cost = (output / 1000.0) * f64::from(pricing.output_cost_per_1k);
+
+        ((input_cost + output_cost) * 1_000_000.0).round() as i32
+    }
+}
+
+impl AiService {
+    async fn process_request(
+        &self,
+        request: AiRequest,
+        ctx: &RequestContext,
+    ) -> Result<AiResponse> {
+        let request_id = Uuid::new_v4();
+        let start = std::time::Instant::now();
+        let logger = LogService::new(self.db_pool.clone(), ctx.log_context());
+
+        let (provider_name, provider, model) = self.select_provider_and_model(&request)?;
+        request_logging::log_request_start(
+            &logger,
+            request_id,
+            &request,
+            &provider_name,
+            &model,
+            ctx,
+        )
+        .await;
+
+        let sample_result = self
+            .execute_sampling(&request, provider.as_ref(), &model)
+            .await;
+        let latency_ms = start.elapsed().as_millis() as u64;
+
+        self.finalize_request(
+            sample_result,
+            request_id,
+            latency_ms,
+            &request,
+            ctx,
+            &provider_name,
+            &model,
+            &logger,
+        )
+        .await
+    }
+
+    async fn execute_sampling(
+        &self,
+        request: &AiRequest,
+        provider: &dyn AiProvider,
+        model: &str,
+    ) -> Result<AiResponse> {
+        if let Some(format) = request.response_format() {
+            self.execute_structured_sampling(request, provider, model, format)
+                .await
+        } else {
+            provider
+                .generate(&request.messages, &request.metadata, model)
+                .await
+        }
+    }
+
+    async fn execute_structured_sampling(
+        &self,
+        request: &AiRequest,
+        provider: &dyn AiProvider,
+        model: &str,
+        format: &crate::models::ai::ResponseFormat,
+    ) -> Result<AiResponse> {
+        if provider.supports_json_mode() || provider.supports_structured_output() {
+            return provider
+                .generate_structured(&request.messages, &request.metadata, model, format)
+                .await;
+        }
+
+        let options = request.structured_output.clone().unwrap_or_default();
+        let enhanced_messages =
+            Self::enhance_messages_for_json(&request.messages, format, &options);
+
+        provider
+            .generate(&enhanced_messages, &request.metadata, model)
+            .await
+    }
+
+    fn enhance_messages_for_json(
+        messages: &[AiMessage],
+        format: &crate::models::ai::ResponseFormat,
+        options: &crate::models::ai::StructuredOutputOptions,
+    ) -> Vec<AiMessage> {
+        use crate::services::structured_output::StructuredOutputProcessor;
+
+        let Some(last_msg) = messages.last() else {
+            return messages.to_vec();
+        };
+
+        let mut enhanced = messages[..messages.len() - 1].to_vec();
+        let enhanced_content =
+            StructuredOutputProcessor::enhance_prompt_for_json(&last_msg.content, format, options);
+        enhanced.push(AiMessage {
+            role: last_msg.role,
+            content: enhanced_content,
+        });
+        enhanced
+    }
+
+    async fn finalize_request(
+        &self,
+        result: Result<AiResponse>,
+        request_id: Uuid,
+        latency_ms: u64,
+        request: &AiRequest,
+        ctx: &RequestContext,
+        provider_name: &str,
+        model: &str,
+        logger: &LogService,
+    ) -> Result<AiResponse> {
+        match result {
+            Ok(mut response) => {
+                response = self
+                    .validate_structured_output(response, request, logger)
+                    .await;
+                response.request_id = request_id;
+                response.latency_ms = latency_ms;
+
+                let cost = self.estimate_cost(
+                    &response.provider,
+                    &response.model,
+                    response.input_tokens.map(|t| t as i32),
+                    response.output_tokens.map(|t| t as i32),
+                );
+                self.storage
+                    .store(request, &response, ctx, "completed", None, cost);
+                request_logging::log_request_success(logger, &response).await;
+
+                Ok(response)
+            },
+            Err(e) => {
+                let error_response = AiResponse::new(
+                    request_id,
+                    String::new(),
+                    provider_name.to_string(),
+                    model.to_string(),
+                )
+                .with_latency(latency_ms);
+
+                self.storage.store(
+                    request,
+                    &error_response,
+                    ctx,
+                    "failed",
+                    Some(&e.to_string()),
+                    0,
+                );
+                request_logging::log_request_error(
+                    logger,
+                    request_id,
+                    provider_name,
+                    latency_ms,
+                    &e,
+                )
+                .await;
+
+                Err(e)
+            },
+        }
+    }
+
+    async fn validate_structured_output(
+        &self,
+        mut response: AiResponse,
+        request: &AiRequest,
+        logger: &LogService,
+    ) -> AiResponse {
+        let (Some(format), Some(ref options)) =
+            (request.response_format(), &request.structured_output)
+        else {
+            return response;
+        };
+
+        if !format.is_json() {
+            return response;
+        }
+
+        use crate::services::structured_output::StructuredOutputProcessor;
+        match StructuredOutputProcessor::process_response(&response.content, format, options) {
+            Ok(json_value) => {
+                if let Ok(formatted) = serde_json::to_string(&json_value) {
+                    response.content = formatted;
+                }
+            },
+            Err(e) => {
+                logger
+                    .warn(
+                        "ai",
+                        &format!("Structured output validation failed | error={e}"),
+                    )
+                    .await
+                    .ok();
+            },
+        }
+
+        response
+    }
+}
+
+impl AiService {
+    pub async fn generate_plan(
+        &self,
+        request: AiRequest,
+        available_tools: &[McpTool],
+        ctx: &RequestContext,
+    ) -> Result<systemprompt_models::ai::PlanningResult> {
+        self.generate_plan_with_model(request, available_tools, ctx, None, None)
+            .await
+    }
+
+    /// Generate a plan using native function calling with AUTO mode.
+    /// The model decides whether to call tools or respond directly with text.
+    pub async fn generate_plan_with_model(
+        &self,
+        request: AiRequest,
+        available_tools: &[McpTool],
+        ctx: &RequestContext,
+        provider_override: Option<&str>,
+        model_override: Option<&str>,
+    ) -> Result<systemprompt_models::ai::PlanningResult> {
+        let mut request = request;
+        if let Some(p) = provider_override {
+            request = request.with_provider(p.to_string());
+        }
+        if let Some(m) = model_override {
+            request = request.with_model(m.to_string());
+        }
+
+        let start = std::time::Instant::now();
+        let request_id = Uuid::new_v4();
+        let logger = LogService::new(self.db_pool.clone(), ctx.log_context());
+
+        let (provider_name, provider, model) = self.select_provider_and_model(&request)?;
+
+        logger
+            .info(
+                "ai",
+                &format!(
+                    "Planning request (function calling) | request_id={}, provider={}, model={}, \
+                     available_tools={}",
+                    request_id,
+                    provider_name,
+                    model,
+                    available_tools.len()
+                ),
+            )
+            .await
+            .ok();
+
+        let result = provider
+            .generate_with_tools(
+                &request.messages,
+                available_tools.to_vec(),
+                &request.metadata,
+                &model,
+            )
+            .await;
+
+        let latency_ms = start.elapsed().as_millis() as u64;
+
+        match result {
+            Ok((mut response, tool_calls)) => {
+                response.request_id = request_id;
+                response.latency_ms = latency_ms;
+
+                let cost = self.estimate_cost(
+                    &provider_name,
+                    &model,
+                    response.input_tokens.map(|t| t as i32),
+                    response.output_tokens.map(|t| t as i32),
+                );
+                self.storage
+                    .store(&request, &response, ctx, "completed", None, cost);
+
+                let planning_result = if tool_calls.is_empty() {
+                    systemprompt_models::ai::PlanningResult::DirectResponse {
+                        content: response.content.clone(),
+                    }
+                } else {
+                    systemprompt_models::ai::PlanningResult::ToolCalls {
+                        reasoning: response.content.clone(),
+                        calls: tool_calls
+                            .into_iter()
+                            .map(|tc| systemprompt_models::ai::PlannedToolCall {
+                                tool_name: tc.name,
+                                arguments: tc.arguments,
+                            })
+                            .collect(),
+                    }
+                };
+
+                logger
+                    .info(
+                        "ai",
+                        &format!(
+                            "Planning complete (function calling) | request_id={}, latency={}ms, \
+                             type={}",
+                            request_id,
+                            latency_ms,
+                            if planning_result.is_direct() {
+                                "direct_response"
+                            } else {
+                                "tool_calls"
+                            }
+                        ),
+                    )
+                    .await
+                    .ok();
+
+                Ok(planning_result)
+            },
+            Err(e) => {
+                let error_response = AiResponse::new(
+                    request_id,
+                    String::new(),
+                    provider_name.to_string(),
+                    model.to_string(),
+                )
+                .with_latency(latency_ms);
+
+                self.storage.store(
+                    &request,
+                    &error_response,
+                    ctx,
+                    "failed",
+                    Some(&e.to_string()),
+                    0,
+                );
+
+                logger
+                    .error(
+                        "ai",
+                        &format!(
+                            "Planning failed (function calling) | request_id={}, latency={}ms, \
+                             error={}",
+                            request_id, latency_ms, e
+                        ),
+                    )
+                    .await
+                    .ok();
+                Err(e)
+            },
+        }
+    }
+
+    pub async fn generate_response(
+        &self,
+        messages: Vec<AiMessage>,
+        execution_summary: &str,
+        ctx: &RequestContext,
+    ) -> Result<String> {
+        self.generate_response_with_model(messages, execution_summary, ctx, None, None)
+            .await
+    }
+
+    pub async fn generate_response_with_model(
+        &self,
+        messages: Vec<AiMessage>,
+        execution_summary: &str,
+        ctx: &RequestContext,
+        provider: Option<&str>,
+        model: Option<&str>,
+    ) -> Result<String> {
+        let start = std::time::Instant::now();
+        let logger = LogService::new(self.db_pool.clone(), ctx.log_context());
+
+        let mut response_messages = messages;
+        response_messages.push(AiMessage::user(format!(
+            "## Tool Execution Complete\n\nThe following tools have been executed:\n\n{}\n\n## \
+             Response Phase Instructions\n\nThis is the RESPONSE PHASE - your task is to \
+             synthesize results and respond to the user.\n\n**CRITICAL: Do NOT attempt to call \
+             any tools.** Tools are not available in this phase.\nThe tool results above are now \
+             saved in conversation history and will be available for future planning phases if \
+             additional tool calls are needed.\n\nYour task now: Analyze the tool results and \
+             provide a helpful response to the user. If the results indicate more actions are \
+             needed, explain what was accomplished and what the next steps would be - the user \
+             can then request those actions in a follow-up message.",
+            execution_summary
+        )));
+
+        let mut request = AiRequest::new(response_messages).with_max_tokens(4096);
+        if let Some(p) = provider {
+            request = request.with_provider(p.to_string());
+        }
+        if let Some(m) = model {
+            request = request.with_model(m.to_string());
+        }
+        let response = self.generate(request, ctx.clone()).await?;
+
+        let latency_ms = start.elapsed().as_millis() as u64;
+        logger
+            .info(
+                "ai",
+                &format!("Response generated | latency={}ms", latency_ms),
+            )
+            .await
+            .ok();
+
+        Ok(response.content)
+    }
+}
+
+impl AiService {
+    async fn process_tooled_request(
+        &self,
+        request: AiRequest,
+        ctx: &RequestContext,
+    ) -> Result<AiResponse> {
+        let request_id = Uuid::new_v4();
+        let start = std::time::Instant::now();
+        let logger = LogService::new(self.db_pool.clone(), ctx.log_context());
+
+        let (provider_name, provider, model) = self.select_provider_and_model(&request)?;
+        request_logging::log_tooled_request_start(
+            &logger,
+            request_id,
+            &request,
+            &provider_name,
+            &model,
+            ctx,
+        )
+        .await;
+
+        let metadata = request.metadata.clone();
+        let tools = request.tools.as_deref().unwrap_or(&[]);
+
+        let ai_result = self
+            .call_ai_with_tools(provider.as_ref(), &request, &metadata, &model)
+            .await;
+        let latency_ms = start.elapsed().as_millis() as u64;
+
+        self.finalize_tooled_request(
+            ai_result,
+            request_id,
+            latency_ms,
+            &request,
+            ctx,
+            &provider_name,
+            &model,
+            provider.as_ref(),
+            &metadata,
+            tools,
+            &logger,
+        )
+        .await
+    }
+
+    async fn finalize_tooled_request(
+        &self,
+        ai_result: Result<(AiResponse, Vec<ToolCall>)>,
+        request_id: Uuid,
+        latency_ms: u64,
+        request: &AiRequest,
+        ctx: &RequestContext,
+        provider_name: &str,
+        model: &str,
+        provider: &dyn AiProvider,
+        metadata: &SamplingMetadata,
+        tools: &[McpTool],
+        logger: &LogService,
+    ) -> Result<AiResponse> {
+        let (response, tool_calls) = match ai_result {
+            Ok(result) => result,
+            Err(e) => {
+                let error_response = AiResponse::new(
+                    request_id,
+                    String::new(),
+                    provider_name.to_string(),
+                    model.to_string(),
+                )
+                .with_latency(latency_ms);
+                self.storage.store(
+                    request,
+                    &error_response,
+                    ctx,
+                    "failed",
+                    Some(&e.to_string()),
+                    0,
+                );
+                return Err(e);
+            },
+        };
+
+        request_logging::log_ai_response(logger, &response, tool_calls.len()).await;
+
+        let (tool_calls, tool_results) = self
+            .tooled_executor
+            .execute_tool_calls(tool_calls, tools, ctx, None)
+            .await;
+        let final_content = self
+            .determine_final_content(
+                &response,
+                &tool_calls,
+                &tool_results,
+                provider,
+                metadata,
+                model,
+                logger,
+            )
+            .await;
+
+        let cost = self.estimate_cost(
+            provider_name,
+            model,
+            response.input_tokens.map(|t| t as i32),
+            response.output_tokens.map(|t| t as i32),
+        );
+        let mut storage_response = response.clone();
+        storage_response.request_id = request_id;
+        storage_response.latency_ms = latency_ms;
+        storage_response.tool_calls = tool_calls.clone();
+        storage_response.tool_results = tool_results.clone();
+        self.storage
+            .store(request, &storage_response, ctx, "completed", None, cost);
+
+        let final_response = AiResponse::new(
+            request_id,
+            final_content,
+            provider_name.to_string(),
+            model.to_string(),
+        )
+        .with_latency(latency_ms)
+        .with_tool_calls(tool_calls)
+        .with_tool_results(tool_results);
+
+        request_logging::log_tooled_response(logger, &final_response).await;
+        Ok(final_response)
+    }
+
+    async fn determine_final_content(
+        &self,
+        response: &AiResponse,
+        tool_calls: &[ToolCall],
+        tool_results: &[CallToolResult],
+        provider: &dyn AiProvider,
+        metadata: &SamplingMetadata,
+        model: &str,
+        logger: &LogService,
+    ) -> String {
+        let strategy = ResponseStrategy::from_response(
+            response.content.clone(),
+            tool_calls.to_vec(),
+            tool_results.to_vec(),
+        );
+
+        match strategy {
+            ResponseStrategy::ContentProvided { content, .. } => content,
+            ResponseStrategy::ArtifactsProvided { .. } => String::new(),
+            ResponseStrategy::ToolsOnly {
+                tool_calls,
+                tool_results,
+            } => {
+                self.synthesizer
+                    .synthesize_or_fallback(
+                        provider,
+                        &[],
+                        &tool_calls,
+                        &tool_results,
+                        metadata,
+                        model,
+                        logger,
+                    )
+                    .await
+            },
+        }
     }
 }

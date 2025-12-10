@@ -5,7 +5,7 @@ use systemprompt_core_logging::LogService;
 use systemprompt_models::{Config, SystemPaths};
 
 pub async fn update_module(module: &Module) -> Result<()> {
-    let app_context = crate::AppContext::new().await.unwrap();
+    let app_context = crate::AppContext::new().await?;
     let db = app_context.db_pool().clone();
     let log = LogService::system(db.clone());
 
@@ -57,7 +57,11 @@ async fn run_migrations(
         let entry = entry?;
         let file_name = entry.file_name().to_string_lossy().to_string();
 
-        if entry.path().extension().is_some_and(|ext| ext.eq_ignore_ascii_case("sql")) {
+        if entry
+            .path()
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("sql"))
+        {
             if let Some(version) = extract_migration_version(&file_name) {
                 if version > from_version && version <= module.version.as_str() {
                     migrations.push((version.to_string(), entry.path()));

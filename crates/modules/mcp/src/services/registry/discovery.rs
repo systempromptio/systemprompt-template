@@ -24,7 +24,7 @@ pub async fn discover_server_capabilities(config: &RegistryConfig) -> Result<()>
                         .oauth
                         .scopes
                         .iter()
-                        .map(std::string::ToString::to_string)
+                        .map(ToString::to_string)
                         .collect::<Vec<_>>()
                         .join(", ")
                 ));

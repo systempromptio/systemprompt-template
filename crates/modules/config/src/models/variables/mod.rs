@@ -3,97 +3,23 @@ pub mod api;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use systemprompt_core_database::JsonRow;
 
 pub use api::{CreateVariableRequest, ListVariablesQuery, UpdateVariableRequest, VariableResponse};
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct Variable {
-    pub id: i32,
+pub struct ConfigVariable {
+    pub id: String,
     pub name: String,
     pub value: Option<String>,
-    pub r#type: String,
+    #[sqlx(rename = "type")]
+    pub variable_type: String,
     pub description: Option<String>,
-    pub category: Option<String>,
-    pub is_secret: bool,
+    pub category: String,
+    pub is_secret: Option<bool>,
     pub is_required: bool,
     pub default_value: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-}
-
-impl Variable {
-    pub fn from_json_row(row: &JsonRow) -> anyhow::Result<Self> {
-        use anyhow::anyhow;
-
-        let id = row
-            .get("id")
-            .and_then(serde_json::Value::as_i64)
-            .ok_or_else(|| anyhow!("Missing id"))? as i32;
-
-        let name = row
-            .get("name")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing name"))?
-            .to_string();
-
-        let value = row.get("value").and_then(|v| v.as_str()).map(String::from);
-
-        let r#type = row
-            .get("type")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing type"))?
-            .to_string();
-
-        let description = row
-            .get("description")
-            .and_then(|v| v.as_str())
-            .map(String::from);
-
-        let category = row
-            .get("category")
-            .and_then(|v| v.as_str())
-            .map(String::from);
-
-        let is_secret = row
-            .get("is_secret")
-            .and_then(|v| v.as_bool().or_else(|| v.as_i64().map(|i| i != 0)))
-            .ok_or_else(|| anyhow!("Missing is_secret"))?;
-
-        let is_required = row
-            .get("is_required")
-            .and_then(|v| v.as_bool().or_else(|| v.as_i64().map(|i| i != 0)))
-            .ok_or_else(|| anyhow!("Missing is_required"))?;
-
-        let default_value = row
-            .get("default_value")
-            .and_then(|v| v.as_str())
-            .map(String::from);
-
-        let created_at = row
-            .get("created_at")
-            .and_then(systemprompt_core_database::parse_database_datetime)
-            .ok_or_else(|| anyhow!("Invalid created_at"))?;
-
-        let updated_at = row
-            .get("updated_at")
-            .and_then(systemprompt_core_database::parse_database_datetime)
-            .ok_or_else(|| anyhow!("Invalid updated_at"))?;
-
-        Ok(Self {
-            id,
-            name,
-            value,
-            r#type,
-            description,
-            category,
-            is_secret,
-            is_required,
-            default_value,
-            created_at,
-            updated_at,
-        })
-    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]

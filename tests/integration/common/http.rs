@@ -10,7 +10,8 @@ pub async fn extract_session_from_cookie(response: &Response) -> Option<String> 
 }
 
 fn decode_jwt_session_id(token: &str) -> String {
-    use base64::{engine::general_purpose, Engine as _};
+    use base64::engine::general_purpose;
+    use base64::Engine as _;
 
     let parts: Vec<&str> = token.split('.').collect();
     if parts.len() != 3 {
@@ -81,7 +82,8 @@ mod tests {
 
     #[test]
     fn test_decode_jwt_session_id() {
-        let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uX2lkIjoic2Vzc18xMjM0NTY3OCJ9.signature";
+        let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.\
+                     eyJzZXNzaW9uX2lkIjoic2Vzc18xMjM0NTY3OCJ9.signature";
         let session_id = decode_jwt_session_id(token);
         assert_eq!(session_id, "sess_12345678");
     }

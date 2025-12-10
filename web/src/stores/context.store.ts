@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { contextsService } from '@/services/contexts.service'
-import { useChatStore } from './chat.store'
 import { useAuthStore } from './auth.store'
 import { useAgentStore } from './agent.store'
 import { logger } from '@/lib/logger'
@@ -46,12 +45,42 @@ export interface Conversation {
   messageCount: number
 }
 
-interface ContextStateEvent {
+interface ContextEventBase {
   type: string
   context_id?: string
   timestamp: string
-  [key: string]: any
 }
+
+interface ContextCreatedEvent extends ContextEventBase {
+  type: 'context_created'
+  context: {
+    context_id: string
+    name: string
+    created_at: string
+    updated_at: string
+  }
+}
+
+interface ContextUpdatedEvent extends ContextEventBase {
+  type: 'context_updated'
+  name: string
+}
+
+interface ContextDeletedEvent extends ContextEventBase {
+  type: 'context_deleted'
+}
+
+interface CurrentAgentEvent extends ContextEventBase {
+  type: 'current_agent'
+  agent_name: string | null
+}
+
+type ContextStateEvent =
+  | ContextCreatedEvent
+  | ContextUpdatedEvent
+  | ContextDeletedEvent
+  | CurrentAgentEvent
+  | (ContextEventBase & { type: string })
 
 interface ContextStore {
   conversations: Map<string, Conversation>
@@ -361,180 +390,91 @@ export const useContextStore = create<ContextStore>()((set, get) => ({
   },
 
   handleStateEvent: (event) => {
-    console.log('[contextStore.handleStateEvent] Received:', { type: event.type, contextId: event.context_id, fullEvent: event })
-    logger.debug('State event received', { type: event.type, contextId: event.context_id }, 'ContextStore')
-
     switch (event.type) {
-      case 'message_added':
-        break
+      case 'context_created': {
+        const createdEvent = event as ContextCreatedEvent
+        if (!createdEvent.context?.context_id) return
 
-      case 'tool_execution_completed':
-        break
-
-      case 'task_completed':
-        break
-
-      case 'task_created':
-        break
-
-      case 'task_status_changed':
-        if ('task_id' in event && event.context_id) {
-          useChatStore.getState().handleTaskStatusChanged?.({
-            context_id: event.context_id,
-            task_id: event.task_id,
-            status: event.status,
-            timestamp: event.timestamp
-          })
+        const newConversation: Conversation = {
+          id: createdEvent.context.context_id,
+          name: createdEvent.context.name,
+          createdAt: new Date(createdEvent.context.created_at),
+          updatedAt: new Date(createdEvent.context.updated_at),
+          messageCount: 0,
         }
-        break
-
-      case 'context_created':
-        if ('context' in event && event.context_id) {
-          const newConversation: Conversation = {
-            id: event.context.context_id,
-            name: event.context.name,
-            createdAt: new Date(event.context.created_at),
-            updatedAt: new Date(event.context.updated_at),
-            messageCount: 0,
+        set((state) => {
+          const updated = new Map(state.conversations)
+          updated.set(createdEvent.context.context_id, newConversation)
+          return {
+            conversations: updated,
+            currentContextId: state.currentContextId === CONTEXT_STATE.LOADING
+              ? createdEvent.context_id
+              : state.currentContextId,
           }
-          set((state) => {
-            const updated = new Map(state.conversations)
-            updated.set(event.context.context_id, newConversation)
-            return {
-              conversations: updated,
-              currentContextId: state.currentContextId === CONTEXT_STATE.LOADING
-                ? event.context_id
-                : state.currentContextId,
-            }
-          })
-        }
+        })
         break
+      }
 
-      case 'context_updated':
-        if ('name' in event && event.context_id) {
-          set((state) => {
-            const updated = new Map(state.conversations)
-            const conv = updated.get(event.context_id!)
-            if (conv) {
-              updated.set(event.context_id!, { ...conv, name: event.name, updatedAt: new Date(event.timestamp) })
-            }
-            return { conversations: updated }
-          })
-        }
+      case 'context_updated': {
+        const updatedEvent = event as ContextUpdatedEvent
+        if (!updatedEvent.context_id) return
+
+        const contextId = updatedEvent.context_id
+        set((state) => {
+          const updated = new Map(state.conversations)
+          const conv = updated.get(contextId)
+          if (conv) {
+            updated.set(contextId, { ...conv, name: updatedEvent.name, updatedAt: new Date(updatedEvent.timestamp) })
+          }
+          return { conversations: updated }
+        })
         break
+      }
 
-      case 'context_deleted':
-        if (event.context_id) {
-          set((state) => {
-            const updated = new Map(state.conversations)
-            updated.delete(event.context_id!)
+      case 'context_deleted': {
+        const deletedEvent = event as ContextDeletedEvent
+        if (!deletedEvent.context_id) return
 
-            const newCurrentId = state.currentContextId === event.context_id
-              ? Array.from(updated.keys())[0] || CONTEXT_STATE.LOADING
-              : state.currentContextId
-
-            return {
-              conversations: updated,
-              currentContextId: newCurrentId
-            }
-          })
-        }
+        const contextId = deletedEvent.context_id
+        set((state) => {
+          const updated = new Map(state.conversations)
+          updated.delete(contextId)
+          const newCurrentId = state.currentContextId === contextId
+            ? Array.from(updated.keys())[0] || CONTEXT_STATE.LOADING
+            : state.currentContextId
+          return { conversations: updated, currentContextId: newCurrentId }
+        })
         break
+      }
 
-      case 'heartbeat':
-        break
+      case 'current_agent': {
+        const agentEvent = event as CurrentAgentEvent
+        if (!agentEvent.context_id) return
 
-      case 'artifact_created':
-        break
+        const contextId = agentEvent.context_id
+        const agentName = agentEvent.agent_name
 
-      case 'current_agent':
-        console.log('[contextStore] Processing current_agent event:', event)
-        if ('context_id' in event && event.context_id) {
-          const contextId = event.context_id
-          const agentName = 'agent_name' in event ? event.agent_name : null
-
-          set((state) => {
-            const updated = new Map(state.contextAgents)
-            if (agentName) {
-              updated.set(contextId, agentName)
-            } else {
-              updated.delete(contextId)
-            }
-            return { contextAgents: updated }
-          })
-
+        set((state) => {
+          const updated = new Map(state.contextAgents)
           if (agentName) {
-            const agentStore = useAgentStore.getState()
-            console.log('[contextStore] Looking for agent:', agentName)
-            console.log('[contextStore] Available agents:', agentStore.agents.map(a => ({ name: a.name, url: a.url })))
+            updated.set(contextId, agentName)
+          } else {
+            updated.delete(contextId)
+          }
+          return { contextAgents: updated }
+        })
 
-            const matchingAgent = agentStore.agents.find(
-              agent => agent.name.toLowerCase() === agentName.toLowerCase()
-            )
-
-            console.log('[contextStore] Matching agent found:', matchingAgent)
-
-            if (matchingAgent) {
-              const currentContextId = get().currentContextId
-              console.log('[contextStore] Current context ID:', currentContextId, 'Event context ID:', contextId)
-              if (currentContextId === contextId) {
-                console.log('[contextStore] Calling selectAgent with:', matchingAgent.url, matchingAgent.name)
-                agentStore.selectAgent(matchingAgent.url, matchingAgent)
-                logger.debug('Auto-selected agent for current context', {
-                  contextId,
-                  agentName
-                }, 'ContextStore')
-              }
-            } else {
-              console.warn('[contextStore] No matching agent found for:', agentName, '(agents may not be loaded yet)')
-            }
+        if (agentName) {
+          const agentStore = useAgentStore.getState()
+          const matchingAgent = agentStore.agents.find(
+            agent => agent.name.toLowerCase() === agentName.toLowerCase()
+          )
+          if (matchingAgent && get().currentContextId === contextId) {
+            agentStore.selectAgent(matchingAgent.url, matchingAgent)
           }
         }
         break
-
-      default:
-        logger.warn('Unknown event type', { type: event.type }, 'ContextStore')
+      }
     }
   },
 }))
-
-export const contextSelectors = {
-  getCurrentContextId: (state: ContextStore): string =>
-    state.currentContextId,
-
-  isContextLoading: (state: ContextStore): boolean =>
-    state.currentContextId === CONTEXT_STATE.LOADING,
-
-  getCurrentConversation: (state: ContextStore): Conversation | null =>
-    state.getCurrentConversation() ?? null,
-
-  getConversationById: (state: ContextStore, id: string): Conversation | undefined =>
-    state.conversations.get(id),
-
-  getConversationList: (state: ContextStore): readonly Conversation[] =>
-    state.conversationList(),
-
-  getConversationCount: (state: ContextStore): number =>
-    state.conversations.size,
-
-  isLoading: (state: ContextStore): boolean => state.isLoading,
-
-  hasError: (state: ContextStore): boolean => state.error !== null,
-
-  getError: (state: ContextStore): string | null => state.error ?? null,
-
-  getSSEStatus: (state: ContextStore): 'connected' | 'connecting' | 'disconnected' | 'error' =>
-    state.sseStatus,
-
-  getSSEError: (state: ContextStore): string | null => state.sseError ?? null,
-
-  hasReceivedSnapshot: (state: ContextStore): boolean => state.hasReceivedSnapshot,
-
-  isSSEConnected: (state: ContextStore): boolean => state.sseStatus === 'connected',
-
-  isSSEConnecting: (state: ContextStore): boolean => state.sseStatus === 'connecting',
-
-  isSSEDisconnected: (state: ContextStore): boolean => state.sseStatus === 'disconnected',
-
-  hasSSEError: (state: ContextStore): boolean => state.sseStatus === 'error',
-}

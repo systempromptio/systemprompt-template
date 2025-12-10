@@ -16,6 +16,7 @@ impl RetentionScheduler {
         Self { config, db_pool }
     }
 
+    #[allow(clippy::cognitive_complexity)]
     pub async fn start(self) -> anyhow::Result<()> {
         if !self.config.enabled {
             tracing::info!("Log retention scheduler is disabled");
@@ -69,7 +70,8 @@ async fn execute_retention_cleanup(config: RetentionConfig, db_pool: DbPool) -> 
                 let policy_name = &policy.name;
                 let retention_days = policy.retention_days;
                 tracing::info!(
-                    "Policy '{policy_name}' applied: deleted {deleted} logs (retention: {retention_days} days)"
+                    "Policy '{policy_name}' applied: deleted {deleted} logs (retention: \
+                     {retention_days} days)"
                 );
             },
             Err(e) => {

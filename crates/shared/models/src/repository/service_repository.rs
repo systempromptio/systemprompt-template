@@ -87,6 +87,7 @@ pub struct ServiceConfig {
     pub status: String,
     pub pid: Option<i32>,
     pub port: i32,
+    pub binary_mtime: Option<i64>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -156,6 +157,8 @@ impl ServiceConfig {
             .ok_or_else(|| anyhow!("Missing port"))
             .and_then(|i| i32::try_from(i).map_err(|_| anyhow!("Port out of range")))?;
 
+        let binary_mtime = row.get("binary_mtime").and_then(serde_json::Value::as_i64);
+
         let created_at = row
             .get("created_at")
             .and_then(Self::extract_timestamp)
@@ -172,6 +175,7 @@ impl ServiceConfig {
             status,
             pid,
             port,
+            binary_mtime,
             created_at,
             updated_at,
         })
@@ -280,6 +284,7 @@ impl ServiceRepository {
         &self,
         mcp_server: &McpServer,
         port: u16,
+        binary_mtime: Option<i64>,
     ) -> Result<()> {
         let name = &mcp_server.name;
         let module_name = "mcp";
@@ -288,7 +293,10 @@ impl ServiceRepository {
 
         self.db_pool
             .as_ref()
-            .execute(&CREATE_SERVICE, &[&name, &module_name, &status, &port_i32])
+            .execute(
+                &CREATE_SERVICE,
+                &[&name, &module_name, &status, &port_i32, &binary_mtime],
+            )
             .await?;
         Ok(())
     }
@@ -299,11 +307,15 @@ impl ServiceRepository {
         module_name: &str,
         status: &str,
         port: u16,
+        binary_mtime: Option<i64>,
     ) -> Result<()> {
         let port_i32 = i32::from(port);
         self.db_pool
             .as_ref()
-            .execute(&CREATE_SERVICE, &[&name, &module_name, &status, &port_i32])
+            .execute(
+                &CREATE_SERVICE,
+                &[&name, &module_name, &status, &port_i32, &binary_mtime],
+            )
             .await?;
         Ok(())
     }

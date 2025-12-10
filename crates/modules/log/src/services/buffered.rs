@@ -1,6 +1,6 @@
 use anyhow::Result;
 use std::sync::Arc;
-use systemprompt_core_database::{DatabaseProvider, DatabaseQueryEnum, DbPool};
+use systemprompt_core_database::DbPool;
 use tokio::sync::Mutex;
 
 use crate::models::{LogEntry, LoggingError};
@@ -34,9 +34,7 @@ impl BufferedLogService {
 
             loop {
                 interval.tick().await;
-                if let Err(e) = Self::flush_buffer(&buffer_clone, &db_pool_clone).await {
-                    eprintln!("Failed to flush log buffer: {e}");
-                }
+                Self::flush_buffer(&buffer_clone, &db_pool_clone).await.ok();
             }
         });
 
@@ -79,6 +77,7 @@ impl BufferedLogService {
     }
 
     async fn batch_insert(db_pool: &DbPool, entries: &[LogEntry]) -> Result<()> {
+        let pool = db_pool.pool_arc()?;
         for entry in entries {
             let metadata_json: Option<String> = entry
                 .metadata
@@ -87,25 +86,40 @@ impl BufferedLogService {
                 .transpose()?;
 
             let level_str = entry.level.to_string();
-            let query = DatabaseQueryEnum::CreateLog.get(db_pool.as_ref());
+            let user_id = entry.user_id.as_str();
+            let session_id = entry.session_id.as_str();
+            let task_id = entry
+                .task_id
+                .as_ref()
+                .map(systemprompt_identifiers::TaskId::as_str);
+            let trace_id = entry.trace_id.as_str();
+            let context_id = entry
+                .context_id
+                .as_ref()
+                .map(systemprompt_identifiers::ContextId::as_str);
+            let client_id = entry
+                .client_id
+                .as_ref()
+                .map(systemprompt_identifiers::ClientId::as_str);
 
-            db_pool
-                .execute(
-                    &query,
-                    &[
-                        &level_str,
-                        &entry.module,
-                        &entry.message,
-                        &metadata_json,
-                        &entry.user_id,
-                        &entry.session_id,
-                        &entry.task_id,
-                        &entry.trace_id,
-                        &entry.context_id,
-                        &entry.client_id,
-                    ],
-                )
-                .await?;
+            sqlx::query!(
+                r"
+                INSERT INTO logs (level, module, message, metadata, user_id, session_id, task_id, trace_id, context_id, client_id)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                ",
+                level_str,
+                entry.module,
+                entry.message,
+                metadata_json,
+                user_id,
+                session_id,
+                task_id,
+                trace_id,
+                context_id,
+                client_id
+            )
+            .execute(pool.as_ref())
+            .await?;
         }
 
         Ok(())

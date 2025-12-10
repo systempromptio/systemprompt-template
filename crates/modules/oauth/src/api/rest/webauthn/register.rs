@@ -1,11 +1,9 @@
 use crate::repository::OAuthRepository;
 use crate::services::webauthn::WebAuthnManager;
-use axum::{
-    extract::{Query, State},
-    http::{HeaderMap, HeaderName, HeaderValue, StatusCode},
-    response::IntoResponse,
-    Json,
-};
+use axum::extract::{Query, State};
+use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
+use axum::response::IntoResponse;
+use axum::Json;
 use serde::{Deserialize, Serialize};
 use systemprompt_core_logging::LogService;
 use systemprompt_core_users::repository::UserRepository;
@@ -112,7 +110,9 @@ pub async fn start_register(
             if let Some(public_key) = challenge_json.get_mut("publicKey") {
                 if let Some(authenticator_selection) = public_key.get_mut("authenticatorSelection")
                 {
-                    if let Some(obj) = authenticator_selection.as_object_mut() { obj.remove("authenticatorAttachment"); }
+                    if let Some(obj) = authenticator_selection.as_object_mut() {
+                        obj.remove("authenticatorAttachment");
+                    }
                 }
             }
 
@@ -264,8 +264,12 @@ pub async fn finish_register(
                                     .info(
                                         "webauthn_register",
                                         &format!(
-                                            "Successfully migrated user data: session={}, old_user={}, new_user={}, records={}",
-                                            session_id, old_user_id, user_id, result.total_records_migrated()
+                                            "Successfully migrated user data: session={}, \
+                                             old_user={}, new_user={}, records={}",
+                                            session_id,
+                                            old_user_id,
+                                            user_id,
+                                            result.total_records_migrated()
                                         ),
                                     )
                                     .await
@@ -276,7 +280,8 @@ pub async fn finish_register(
                                     .error(
                                         "webauthn_register",
                                         &format!(
-                                            "Failed to migrate session {session_id} from {old_user_id} to {user_id}: {e}"
+                                            "Failed to migrate session {session_id} from \
+                                             {old_user_id} to {user_id}: {e}"
                                         ),
                                     )
                                     .await
@@ -335,7 +340,9 @@ pub async fn finish_register(
                 (
                     StatusCode::BAD_REQUEST,
                     "expired_challenge",
-                    "Registration challenge has expired. Please start the registration process again.".to_string(),
+                    "Registration challenge has expired. Please start the registration process \
+                     again."
+                        .to_string(),
                 )
             } else if error_msg.contains("finish_passkey_registration")
                 || error_msg.contains("verification")
@@ -344,7 +351,9 @@ pub async fn finish_register(
                 (
                     StatusCode::BAD_REQUEST,
                     "invalid_credential",
-                    "WebAuthn verification failed. Please ensure your authenticator and browser are compatible.".to_string(),
+                    "WebAuthn verification failed. Please ensure your authenticator and browser \
+                     are compatible."
+                        .to_string(),
                 )
             } else {
                 (

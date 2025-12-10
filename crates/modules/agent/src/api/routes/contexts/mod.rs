@@ -14,10 +14,8 @@ pub use notifications::handle_context_notification;
 pub use update_context::update_context;
 pub use webhook::broadcast_context_event;
 
-use axum::{
-    routing::{get, post, MethodRouter},
-    Router,
-};
+use axum::routing::{get, post, MethodRouter};
+use axum::Router;
 
 pub fn router() -> Router<systemprompt_core_system::AppContext> {
     let context_root_methods: MethodRouter<systemprompt_core_system::AppContext> =

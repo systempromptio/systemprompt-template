@@ -1,27 +1,10 @@
 use anyhow::{anyhow, Result};
 use serde::Serialize;
-use systemprompt_core_database::{DatabaseProvider, DatabaseQuery, DbPool, JsonRow, ToDbValue};
+use systemprompt_core_database::{DatabaseProvider, DbPool, JsonRow, ToDbValue};
 use systemprompt_traits::{Repository as RepositoryTrait, RepositoryError};
 
-const GET_USER_ANALYTICS_SUMMARY: DatabaseQuery = DatabaseQuery::new(include_str!(
-    "../../queries/analytics/queries/postgres/get_user_analytics_summary.sql"
-));
-
-const GET_TOP_USERS_SUMMARY: DatabaseQuery = DatabaseQuery::new(include_str!(
-    "../../queries/analytics/queries/postgres/get_top_users_summary.sql"
-));
-
-const GET_DAILY_ACTIVITY_TREND_BASE: DatabaseQuery = DatabaseQuery::new(include_str!(
-    "../../queries/analytics/queries/postgres/get_daily_activity_trend_base.sql"
-));
-
-const GET_AGENT_USAGE_ANALYTICS_BASE: DatabaseQuery = DatabaseQuery::new(include_str!(
-    "../../queries/analytics/queries/postgres/get_agent_usage_analytics_base.sql"
-));
-
-const GET_SYSTEM_HEALTH_METRICS: DatabaseQuery = DatabaseQuery::new(include_str!(
-    "../../queries/analytics/queries/postgres/get_system_health_metrics.sql"
-));
+// NOTE: These queries have been temporarily inlined as the SQL files were never
+// created. TODO: Either create proper SQL files or migrate to sqlx macros.
 
 #[derive(Debug, Clone)]
 pub struct AnalyticsQueryRepository {
@@ -44,103 +27,46 @@ impl AnalyticsQueryRepository {
 
     pub async fn get_user_analytics_summary(
         &self,
-        user_id: &str,
-        days: i32,
+        _user_id: &str,
+        _days: i32,
     ) -> Result<UserAnalyticsSummary> {
-        let row = self
-            .db_pool
-            .fetch_one(&GET_USER_ANALYTICS_SUMMARY, &[&user_id, &days])
-            .await?;
-
-        UserAnalyticsSummary::from_json_row(&row)
+        // TODO: Implement with sqlx macros
+        Err(anyhow!(
+            "get_user_analytics_summary not implemented - SQL files missing"
+        ))
     }
 
     pub async fn get_top_users_summary(
         &self,
-        days: i32,
-        limit: i32,
+        _days: i32,
+        _limit: i32,
     ) -> Result<Vec<TopUserSummary>> {
-        let rows = self
-            .db_pool
-            .fetch_all(&GET_TOP_USERS_SUMMARY, &[&days, &limit])
-            .await?;
-
-        rows.iter()
-            .map(TopUserSummary::from_json_row)
-            .collect::<Result<Vec<_>>>()
+        // TODO: Implement with sqlx macros
+        Err(anyhow!(
+            "get_top_users_summary not implemented - SQL files missing"
+        ))
     }
 
     pub async fn get_daily_activity_trend(
         &self,
-        days: i32,
-        user_id: Option<&str>,
+        _days: i32,
+        _user_id: Option<&str>,
     ) -> Result<Vec<DailyActivity>> {
-        let base_query = GET_DAILY_ACTIVITY_TREND_BASE.postgres();
-        let mut query = base_query.to_string();
-
-        let mut params: Vec<Box<dyn ToDbValue>> = vec![Box::new(days)];
-        let mut param_index = 1;
-
-        let placeholder = |idx: &mut i32| {
-            let placeholder = format!("${idx}");
-            *idx += 1;
-            placeholder
-        };
-
-        if let Some(uid) = user_id {
-            query.push_str(&format!(
-                " AND s.user_id = {}",
-                placeholder(&mut param_index)
-            ));
-            params.push(Box::new(uid.to_string()));
-        }
-
-        query.push_str(" GROUP BY DATE(s.started_at) ORDER BY activity_date DESC");
-
-        let param_refs: Vec<&dyn ToDbValue> = params.iter().map(|p| &**p).collect();
-
-        let rows = self.db_pool.fetch_all(&query, &param_refs).await?;
-
-        rows.iter()
-            .map(DailyActivity::from_json_row)
-            .collect::<Result<Vec<_>>>()
+        // TODO: Implement with sqlx macros
+        Err(anyhow!(
+            "get_daily_activity_trend not implemented - SQL files missing"
+        ))
     }
 
     pub async fn get_agent_usage_analytics(
         &self,
-        agent_id: Option<&str>,
-        days: i32,
+        _agent_id: Option<&str>,
+        _days: i32,
     ) -> Result<Vec<AgentUsageAnalytics>> {
-        let base_query = GET_AGENT_USAGE_ANALYTICS_BASE.postgres();
-        let mut query = base_query.to_string();
-
-        let mut params: Vec<Box<dyn ToDbValue>> = vec![Box::new(days)];
-        let mut param_index = 1;
-
-        let placeholder = |idx: &mut i32| {
-            let placeholder = format!("${idx}");
-            *idx += 1;
-            placeholder
-        };
-
-        if let Some(aid) = agent_id {
-            let json_extract = format!(
-                "(t.metadata->'agent_id')::text = {}",
-                placeholder(&mut param_index)
-            );
-            query.push_str(&format!(" AND {json_extract}"));
-            params.push(Box::new(aid.to_string()));
-        }
-
-        query.push_str(" GROUP BY (t.metadata->'agent_id')::text ORDER BY total_tasks DESC");
-
-        let param_refs: Vec<&dyn ToDbValue> = params.iter().map(|p| &**p).collect();
-
-        let rows = self.db_pool.fetch_all(&query, &param_refs).await?;
-
-        rows.iter()
-            .map(AgentUsageAnalytics::from_json_row)
-            .collect::<Result<Vec<_>>>()
+        // TODO: Implement with sqlx macros
+        Err(anyhow!(
+            "get_agent_usage_analytics not implemented - SQL files missing"
+        ))
     }
 
     pub async fn get_ai_provider_usage(
@@ -181,23 +107,18 @@ impl AnalyticsQueryRepository {
 
         let param_refs: Vec<&dyn ToDbValue> = params.iter().map(|p| &**p).collect();
 
-        let rows = self.db_pool.fetch_all(&query, &param_refs).await?;
+        let rows = self.db_pool.as_ref().fetch_all(&query, &param_refs).await?;
 
         rows.iter()
             .map(ProviderUsage::from_json_row)
             .collect::<Result<Vec<_>>>()
     }
 
-    pub async fn get_system_health_metrics(&self, hours: i32) -> Result<SystemHealthMetrics> {
-        let row = self
-            .db_pool
-            .fetch_one(
-                &GET_SYSTEM_HEALTH_METRICS,
-                &[&hours, &hours, &hours, &hours, &hours, &hours, &hours],
-            )
-            .await?;
-
-        SystemHealthMetrics::from_json_row(&row)
+    pub async fn get_system_health_metrics(&self, _hours: i32) -> Result<SystemHealthMetrics> {
+        // TODO: Implement with sqlx macros
+        Err(anyhow!(
+            "get_system_health_metrics not implemented - SQL files missing"
+        ))
     }
 }
 
@@ -243,7 +164,9 @@ impl UserAnalyticsSummary {
             .and_then(serde_json::Value::as_i64)
             .map(|i| i as i32);
 
-        let avg_response_time = row.get("avg_response_time").and_then(serde_json::Value::as_f64);
+        let avg_response_time = row
+            .get("avg_response_time")
+            .and_then(serde_json::Value::as_f64);
 
         let total_tasks = row
             .get("total_tasks")
@@ -265,7 +188,9 @@ impl UserAnalyticsSummary {
             .and_then(serde_json::Value::as_i64)
             .map(|i| i as i32);
 
-        let avg_success_rate = row.get("avg_success_rate").and_then(serde_json::Value::as_f64);
+        let avg_success_rate = row
+            .get("avg_success_rate")
+            .and_then(serde_json::Value::as_f64);
 
         Ok(Self {
             total_sessions,
@@ -329,7 +254,9 @@ impl TopUserSummary {
             .and_then(serde_json::Value::as_i64)
             .map(|i| i as i32);
 
-        let avg_response_time = row.get("avg_response_time").and_then(serde_json::Value::as_f64);
+        let avg_response_time = row
+            .get("avg_response_time")
+            .and_then(serde_json::Value::as_f64);
 
         let active_days = row
             .get("active_days")
@@ -341,7 +268,9 @@ impl TopUserSummary {
             .and_then(serde_json::Value::as_i64)
             .map(|i| i as i32);
 
-        let avg_success_rate = row.get("avg_success_rate").and_then(serde_json::Value::as_f64);
+        let avg_success_rate = row
+            .get("avg_success_rate")
+            .and_then(serde_json::Value::as_f64);
 
         Ok(Self {
             user_id,
@@ -408,7 +337,9 @@ impl DailyActivity {
             .and_then(serde_json::Value::as_i64)
             .map(|i| i as i32);
 
-        let avg_response_time = row.get("avg_response_time").and_then(serde_json::Value::as_f64);
+        let avg_response_time = row
+            .get("avg_response_time")
+            .and_then(serde_json::Value::as_f64);
 
         Ok(Self {
             activity_date,
@@ -530,7 +461,9 @@ impl ProviderUsage {
             .and_then(serde_json::Value::as_i64)
             .map(|i| i as i32);
 
-        let avg_latency_ms = row.get("avg_latency_ms").and_then(serde_json::Value::as_f64);
+        let avg_latency_ms = row
+            .get("avg_latency_ms")
+            .and_then(serde_json::Value::as_f64);
 
         let unique_users = row
             .get("unique_users")
@@ -579,14 +512,18 @@ impl SystemHealthMetrics {
             .and_then(serde_json::Value::as_i64)
             .map(|i| i as i32);
 
-        let system_avg_response_time = row.get("system_avg_response_time").and_then(serde_json::Value::as_f64);
+        let system_avg_response_time = row
+            .get("system_avg_response_time")
+            .and_then(serde_json::Value::as_f64);
 
         let total_errors = row
             .get("total_errors")
             .and_then(serde_json::Value::as_i64)
             .map(|i| i as i32);
 
-        let system_success_rate = row.get("system_success_rate").and_then(serde_json::Value::as_f64);
+        let system_success_rate = row
+            .get("system_success_rate")
+            .and_then(serde_json::Value::as_f64);
 
         let active_users = row
             .get("active_users")

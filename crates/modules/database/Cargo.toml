@@ -23,7 +23,7 @@ serde_json = { workspace = true }
 async-trait = { workspace = true }
 
 # Database
-sqlx = { workspace = true, features = ["postgres"] }
+sqlx = { workspace = true, features = ["postgres", "uuid"] }
 
 # SystemPrompt dependencies
 systemprompt-traits = { path = "../../shared/traits" }
@@ -40,4 +40,4 @@ inventory = { workspace = true, optional = true }
 
 [features]
 default = []
-api = ["axum", "inventory"]  # Enable if database needs REST API
+api = ["axum", "inventory"]

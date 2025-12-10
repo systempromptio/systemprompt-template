@@ -130,11 +130,9 @@ impl SessionCreationService {
         }
 
         let session_id = SessionId::new(format!("sess_{}", Uuid::new_v4()));
-        let user_id = UserId::new(Uuid::new_v4());
 
-        self.user_repo
-            .create_anonymous_user(user_id.as_str())
-            .await?;
+        let anonymous_user = self.user_repo.create_anonymous_user().await?;
+        let user_id = anonymous_user.id;
 
         let jwt_expiration_seconds =
             systemprompt_models::Config::global().jwt_access_token_expiration;

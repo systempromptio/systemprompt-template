@@ -1,4 +1,8 @@
-use axum::{extract::Request, http::HeaderMap, middleware, middleware::Next, response::Response};
+use axum::extract::Request;
+use axum::http::HeaderMap;
+use axum::middleware;
+use axum::middleware::Next;
+use axum::response::Response;
 
 #[derive(Debug, Clone)]
 pub struct ApiAuthMiddlewareConfig {
@@ -99,7 +103,7 @@ async fn extract_optional_user(
 
     Some(systemprompt_core_system::AuthenticatedUser::new(
         user_id,
-        claims.username.clone(),
+        claims.username,
         email,
         permissions,
     ))

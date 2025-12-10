@@ -1,4 +1,5 @@
-use axum::{routing::get, Router};
+use axum::routing::get;
+use axum::Router;
 
 pub mod routes;
 

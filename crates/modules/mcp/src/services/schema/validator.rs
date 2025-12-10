@@ -142,7 +142,7 @@ impl<'a> SchemaValidator<'a> {
             .filter_map(|row| {
                 row.get("name")
                     .and_then(|v| v.as_str())
-                    .map(std::string::ToString::to_string)
+                    .map(ToString::to_string)
             })
             .collect();
 

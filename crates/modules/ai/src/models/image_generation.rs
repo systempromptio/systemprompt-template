@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// Supported image resolutions
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ImageResolution {
     #[serde(rename = "1K")]
     OneK,
@@ -29,7 +29,7 @@ impl Default for ImageResolution {
 }
 
 /// Supported aspect ratios
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AspectRatio {
     #[serde(rename = "1:1")]
     Square,

@@ -1,12 +1,24 @@
 pub mod api;
+pub mod assets;
 pub mod cards;
+pub mod images;
 pub mod markdown;
 pub mod prerender;
 pub mod sitemap;
 pub mod templates;
+pub mod templates_data;
+pub mod templates_html;
+pub mod templates_navigation;
+pub mod templates_paper;
+pub mod web_build;
+pub mod web_build_steps;
+pub mod web_build_validation;
 
+pub use assets::{copy_implementation_assets, organize_css_files};
+pub use images::optimize_images;
 pub use markdown::{extract_frontmatter, render_markdown};
 pub use prerender::prerender_content;
 pub use sitemap::generate_sitemap;
 pub use systemprompt_models::{ContentConfig, ContentSourceConfig, SitemapConfig};
 pub use templates::{generate_footer_html, load_web_config, prepare_template_data, TemplateEngine};
+pub use web_build::{BuildError, BuildMode, BuildOrchestrator};

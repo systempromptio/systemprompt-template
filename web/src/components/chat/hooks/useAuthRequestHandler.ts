@@ -1,5 +1,5 @@
-import { useChatStore } from '@/stores/chat.store'
-import type { AuthRequest } from '@/stores/chat.store'
+import { useUIStateStore } from '@/stores/ui-state.store'
+import type { AuthRequest } from '@/stores/ui-state.store'
 
 interface UseAuthRequestHandlerReturn {
   currentAuthRequest: AuthRequest | undefined
@@ -8,15 +8,10 @@ interface UseAuthRequestHandlerReturn {
 }
 
 export function useAuthRequestHandler(): UseAuthRequestHandlerReturn {
-  const {
-    resolveAuthRequest,
-    pendingAuthRequestsById,
-    pendingAuthRequestIds,
-  } = useChatStore()
+  const resolveAuthRequest = useUIStateStore((s) => s.resolveAuthRequest)
+  const getFirstPendingAuthRequest = useUIStateStore((s) => s.getFirstPendingAuthRequest)
 
-  const currentAuthRequest: AuthRequest | undefined = pendingAuthRequestIds.length > 0
-    ? pendingAuthRequestsById[pendingAuthRequestIds[0]]
-    : undefined
+  const currentAuthRequest = getFirstPendingAuthRequest()
 
   const handleAuthResponse = () => {
     if (!currentAuthRequest) {

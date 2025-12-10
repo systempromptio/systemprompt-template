@@ -1,10 +1,8 @@
-use axum::{
-    extract::{Extension, State},
-    http::StatusCode,
-    response::{IntoResponse, Json},
-};
+use axum::extract::{Extension, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Json};
 
-use crate::repository::{ArtifactRepository, ContextRepository, TaskRepository};
+use crate::repository::ContextRepository;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::api::ApiError;
 
@@ -13,9 +11,7 @@ pub async fn list_contexts(
     State(ctx): State<systemprompt_core_system::AppContext>,
 ) -> impl IntoResponse {
     let db_pool = ctx.db_pool().clone();
-    let task_repo = std::sync::Arc::new(TaskRepository::new(db_pool.clone()));
-    let artifact_repo = std::sync::Arc::new(ArtifactRepository::new(db_pool.clone()));
-    let context_repo = ContextRepository::new(db_pool.clone(), task_repo, artifact_repo);
+    let context_repo = ContextRepository::new(db_pool.clone());
 
     let logger = LogService::new(ctx.db_pool().clone(), req_ctx.log_context());
 
@@ -27,9 +23,13 @@ pub async fn list_contexts(
     {
         Ok(contexts) => {
             logger
-                .info(
+                .debug(
                     "context_api",
-                    &format!("Listed {} contexts for user {}", contexts.len(), user_id),
+                    &format!(
+                        "Contexts listed | user_id={}, count={}",
+                        user_id,
+                        contexts.len()
+                    ),
                 )
                 .await
                 .ok();
@@ -37,10 +37,10 @@ pub async fn list_contexts(
         },
         Err(e) => {
             logger
-                .error("context_api", &format!("Failed to list contexts: {}", e))
+                .error("context_api", &format!("Failed to list contexts: {e}"))
                 .await
                 .ok();
-            ApiError::internal_error(format!("Failed to list contexts: {}", e)).into_response()
+            ApiError::internal_error(format!("Failed to list contexts: {e}")).into_response()
         },
     }
 }

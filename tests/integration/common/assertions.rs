@@ -1,8 +1,8 @@
 /// Fluent assertions for integration tests
 ///
 /// Note: These are simplified assertions that focus on HTTP response validation
-/// and basic data structure checks. For complex database queries, use raw queries
-/// with DatabaseQueryEnum pattern.
+/// and basic data structure checks. For complex database queries, use raw
+/// queries with DatabaseQueryEnum pattern.
 use anyhow::Result;
 
 pub struct SessionAssertion {

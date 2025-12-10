@@ -5,13 +5,13 @@ use serde_json::json;
 use std::time::Instant;
 use uuid::Uuid;
 
-use crate::models::ai::{AiMessage, MessageRole, SamplingMetadata, SamplingResponse};
+use crate::models::ai::{AiMessage, AiResponse, MessageRole, SamplingMetadata};
 use crate::models::providers::anthropic::{
     AnthropicContent, AnthropicContentBlock, AnthropicMessage, AnthropicRequest, AnthropicResponse,
     AnthropicTool,
 };
 use crate::models::tools::{McpTool, ToolCall};
-use crate::services::providers::AiProvider;
+use crate::services::providers::{AiProvider, ModelPricing};
 use crate::services::schema::ProviderCapabilities;
 use systemprompt_identifiers::AiToolCallId;
 
@@ -87,6 +87,10 @@ impl AiProvider for AnthropicProvider {
         "anthropic"
     }
 
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities::anthropic()
     }
@@ -110,20 +114,30 @@ impl AiProvider for AnthropicProvider {
         "claude-3-sonnet-20240229"
     }
 
-    fn get_cost_per_1k_tokens(&self, model: &str) -> f32 {
+    fn get_pricing(&self, model: &str) -> ModelPricing {
         match model {
-            "claude-3-opus-20240229" => 0.015,
-            "claude-3-haiku-20240307" | "claude-3-5-haiku-20241022" => 0.00025,
-            _ => 0.003,
+            // Claude 3 Opus: $15/1M input, $75/1M output
+            "claude-3-opus-20240229" => ModelPricing::new(0.015, 0.075),
+            // Claude 3.5 Sonnet: $3/1M input, $15/1M output
+            "claude-3-5-sonnet-20241022" | "claude-3-5-sonnet-20240620" => {
+                ModelPricing::new(0.003, 0.015)
+            },
+            // Claude 3 Sonnet: $3/1M input, $15/1M output
+            "claude-3-sonnet-20240229" => ModelPricing::new(0.003, 0.015),
+            // Claude 3.5 Haiku: $0.80/1M input, $4/1M output
+            "claude-3-5-haiku-20241022" => ModelPricing::new(0.0008, 0.004),
+            // Claude 3 Haiku: $0.25/1M input, $1.25/1M output
+            "claude-3-haiku-20240307" => ModelPricing::new(0.00025, 0.00125),
+            _ => ModelPricing::new(0.003, 0.015),
         }
     }
 
-    async fn sample(
+    async fn generate(
         &self,
         messages: &[AiMessage],
         metadata: &SamplingMetadata,
         model: &str,
-    ) -> Result<SamplingResponse> {
+    ) -> Result<AiResponse> {
         let start = Instant::now();
         let request_id = Uuid::new_v4();
 
@@ -139,6 +153,7 @@ impl AiProvider for AnthropicProvider {
             stop_sequences: metadata.stop_sequences.clone(),
             system: system_prompt,
             tools: None,
+            tool_choice: None,
         };
 
         let response = self
@@ -169,10 +184,9 @@ impl AiProvider for AnthropicProvider {
 
         let usage = anthropic_response.usage;
         let tokens_used = Some(usage.input_tokens + usage.output_tokens);
-        let cache_hit =
-            usage.cache_read_input_tokens.is_some_and(|t| t > 0);
+        let cache_hit = usage.cache_read_input_tokens.is_some_and(|t| t > 0);
 
-        Ok(SamplingResponse {
+        Ok(AiResponse {
             request_id,
             content,
             provider: self.name().to_string(),
@@ -186,16 +200,18 @@ impl AiProvider for AnthropicProvider {
             cache_creation_tokens: usage.cache_creation_input_tokens,
             is_streaming: false,
             latency_ms: start.elapsed().as_millis() as u64,
+            tool_calls: Vec::new(),
+            tool_results: Vec::new(),
         })
     }
 
-    async fn sample_with_tools(
+    async fn generate_with_tools(
         &self,
         messages: &[AiMessage],
         tools: Vec<McpTool>,
         metadata: &SamplingMetadata,
         model: &str,
-    ) -> Result<(SamplingResponse, Vec<ToolCall>)> {
+    ) -> Result<(AiResponse, Vec<ToolCall>)> {
         let start = Instant::now();
         let request_id = Uuid::new_v4();
 
@@ -212,6 +228,7 @@ impl AiProvider for AnthropicProvider {
             stop_sequences: metadata.stop_sequences.clone(),
             system: system_prompt,
             tools: Some(anthropic_tools),
+            tool_choice: None,
         };
 
         let response = self
@@ -252,10 +269,9 @@ impl AiProvider for AnthropicProvider {
 
         let usage = anthropic_response.usage;
         let tokens_used = Some(usage.input_tokens + usage.output_tokens);
-        let cache_hit =
-            usage.cache_read_input_tokens.is_some_and(|t| t > 0);
+        let cache_hit = usage.cache_read_input_tokens.is_some_and(|t| t > 0);
 
-        let response = SamplingResponse {
+        let response = AiResponse {
             request_id,
             content,
             provider: self.name().to_string(),
@@ -269,8 +285,98 @@ impl AiProvider for AnthropicProvider {
             cache_creation_tokens: usage.cache_creation_input_tokens,
             is_streaming: false,
             latency_ms: start.elapsed().as_millis() as u64,
+            tool_calls: Vec::new(),
+            tool_results: Vec::new(),
         };
 
         Ok((response, tool_calls))
+    }
+
+    async fn generate_with_schema(
+        &self,
+        messages: &[AiMessage],
+        response_schema: serde_json::Value,
+        metadata: &SamplingMetadata,
+        model: &str,
+    ) -> Result<AiResponse> {
+        use crate::models::providers::anthropic::AnthropicToolChoice;
+
+        let start = Instant::now();
+        let request_id = Uuid::new_v4();
+
+        let (system_prompt, anthropic_messages) = Self::convert_messages(messages);
+
+        // Anthropic's structured output uses a forced tool call with the schema
+        let structured_tool = AnthropicTool {
+            name: "structured_output".to_string(),
+            description: Some("Return structured JSON output matching the schema".to_string()),
+            input_schema: response_schema,
+        };
+
+        let request = AnthropicRequest {
+            model: model.to_string(),
+            messages: anthropic_messages,
+            max_tokens: 8192,
+            temperature: metadata.temperature,
+            top_p: metadata.top_p,
+            top_k: metadata.top_k,
+            stop_sequences: metadata.stop_sequences.clone(),
+            system: system_prompt,
+            tools: Some(vec![structured_tool]),
+            tool_choice: Some(AnthropicToolChoice::Tool {
+                name: "structured_output".to_string(),
+            }),
+        };
+
+        let response = self
+            .client
+            .post(format!("{}/messages", self.endpoint))
+            .header("x-api-key", &self.api_key)
+            .header("anthropic-version", "2023-06-01")
+            .header("content-type", "application/json")
+            .json(&request)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error_text = response.text().await?;
+            return Err(anyhow!("Anthropic API error: {error_text}"));
+        }
+
+        let anthropic_response: AnthropicResponse = response.json().await?;
+
+        // Extract the tool use input as the structured content
+        let content = anthropic_response
+            .content
+            .iter()
+            .find_map(|block| match block {
+                AnthropicContentBlock::ToolUse { input, .. } => {
+                    Some(serde_json::to_string(input).unwrap_or_default())
+                },
+                _ => None,
+            })
+            .unwrap_or_default();
+
+        let usage = anthropic_response.usage;
+        let tokens_used = Some(usage.input_tokens + usage.output_tokens);
+        let cache_hit = usage.cache_read_input_tokens.is_some_and(|t| t > 0);
+
+        Ok(AiResponse {
+            request_id,
+            content,
+            provider: self.name().to_string(),
+            model: model.to_string(),
+            finish_reason: anthropic_response.stop_reason,
+            tokens_used,
+            input_tokens: Some(usage.input_tokens),
+            output_tokens: Some(usage.output_tokens),
+            cache_hit,
+            cache_read_tokens: usage.cache_read_input_tokens,
+            cache_creation_tokens: usage.cache_creation_input_tokens,
+            is_streaming: false,
+            latency_ms: start.elapsed().as_millis() as u64,
+            tool_calls: Vec::new(),
+            tool_results: Vec::new(),
+        })
     }
 }

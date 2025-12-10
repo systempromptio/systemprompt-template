@@ -5,21 +5,25 @@
 ///
 /// ## REQUEST SCHEMAS (Input from client):
 /// - **Pattern**: `{Action}{Resource}Request`
-/// - **Examples**: `CreateUserRequest`, `UpdateVariableRequest`, `DeleteClientRequest`
+/// - **Examples**: `CreateUserRequest`, `UpdateVariableRequest`,
+///   `DeleteClientRequest`
 /// - **Use**: HTTP request bodies, form data
-/// - **Rule**: Always end with "Request" suffix for clarity about data flow direction
+/// - **Rule**: Always end with "Request" suffix for clarity about data flow
+///   direction
 ///
 /// ## RESPONSE SCHEMAS (Output to client):
 /// - **Pattern**: `{Resource}Response` or just `{Resource}` (for simple cases)
 /// - **Examples**: `UserResponse`, `VariableResponse`, `TokenResponse`
 /// - **Use**: HTTP response bodies, single resources
-/// - **Rule**: Prefer "Response" suffix for consistency, except for well-established patterns
+/// - **Rule**: Prefer "Response" suffix for consistency, except for
+///   well-established patterns
 ///
 /// ## QUERY SCHEMAS (URL parameters):
 /// - **Pattern**: `{Context}Query` or `{Action}Params`
 /// - **Examples**: `ListUsersQuery`, `SearchVariablesParams`
 /// - **Use**: Query string parameters, filters, pagination
-/// - **Rule**: Use "Query" for read operations, "Params" for parameterized actions
+/// - **Rule**: Use "Query" for read operations, "Params" for parameterized
+///   actions
 ///
 /// ## ERROR SCHEMAS:
 /// - **Pattern**: `{Context}Error` or `{Resource}Error`
@@ -35,7 +39,8 @@
 ///
 /// ## SERDE COMPATIBILITY:
 /// - Use `#[serde(rename_all = "snake_case")]` to maintain JSON compatibility
-/// - Struct names are for Rust code clarity, JSON field names follow `snake_case`
+/// - Struct names are for Rust code clarity, JSON field names follow
+///   `snake_case`
 /// - Schema renames should not affect API contract serialization
 ///
 /// ## EXAMPLES:
@@ -77,7 +82,8 @@
 /// - ❌ perPage, clientId, redirect-uri, createdAt, userId
 ///
 /// ### Rationale:
-/// - **REST API Standards**: `snake_case` is the widely accepted standard for REST APIs
+/// - **REST API Standards**: `snake_case` is the widely accepted standard for
+///   REST APIs
 /// - **Consistency**: Uniform naming reduces cognitive load for developers
 /// - **JSON Serialization**: Works naturally with serde's default behavior
 /// - **Database Mapping**: Aligns with SQL column naming conventions
@@ -85,18 +91,18 @@
 /// ### Implementation:
 /// ```rust
 /// #[derive(Serialize, Deserialize)]
-/// #[serde(rename_all = "snake_case")]  // Ensures JSON uses snake_case
+/// #[serde(rename_all = "snake_case")] // Ensures JSON uses snake_case
 /// pub struct CreateOAuthClientRequest {
-///     pub client_id: String,           // ✅ Correct - snake_case field
-///     pub redirect_uri: String,        // ✅ Correct - snake_case field
-///     pub created_at: DateTime<Utc>,   // ✅ Correct - snake_case field
+///     pub client_id: String,         // ✅ Correct - snake_case field
+///     pub redirect_uri: String,      // ✅ Correct - snake_case field
+///     pub created_at: DateTime<Utc>, // ✅ Correct - snake_case field
 /// }
 ///
 /// #[derive(Deserialize)]
 /// pub struct ListQuery {
-///     pub per_page: Option<u32>,       // ✅ Correct - snake_case query param
-///     pub page_number: Option<u32>,    // ✅ Correct - snake_case query param
-///     pub sort_by: Option<String>,     // ✅ Correct - snake_case query param
+///     pub per_page: Option<u32>,    // ✅ Correct - snake_case query param
+///     pub page_number: Option<u32>, // ✅ Correct - snake_case query param
+///     pub sort_by: Option<String>,  // ✅ Correct - snake_case query param
 /// }
 /// ```
 ///

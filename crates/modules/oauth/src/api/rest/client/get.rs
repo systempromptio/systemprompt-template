@@ -1,7 +1,5 @@
-use axum::{
-    extract::{Extension, Path, State},
-    response::IntoResponse,
-};
+use axum::extract::{Extension, Path, State};
+use axum::response::IntoResponse;
 
 use crate::models::clients::api::OAuthClientResponse;
 use crate::repository::OAuthRepository;
@@ -58,7 +56,7 @@ pub async fn get_client(
                     "OAuth client retrieval failed",
                     Some(serde_json::json!({
                         "client_id": &client_id,
-                        "reason": format!("Database error: {}", e),
+                        "reason": format!("Database error: {e}"),
                         "requested_by": req_ctx.auth.user_id.as_str()
                     })),
                 )

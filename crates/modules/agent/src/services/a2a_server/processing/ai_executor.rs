@@ -1,3 +1,7 @@
+//! AI Executor Functions
+//!
+//! Provides text generation and synthesis utilities for strategies.
+
 use anyhow::Result;
 use futures::StreamExt;
 use std::sync::Arc;
@@ -6,259 +10,13 @@ use tokio::sync::mpsc;
 use crate::models::a2a::Artifact;
 use crate::services::SkillService;
 use systemprompt_core_ai::{
-    AiMessage, AiService, CallToolResult, GenerateRequest, MessageRole, SamplingMetadata, ToolCall,
-    ToolResultFormatter, TooledRequest,
+    AiMessage, AiRequest, AiService, CallToolResult, MessageRole, ToolCall, ToolResultFormatter,
 };
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::RequestContext;
-use systemprompt_identifiers::AgentName;
 
 use super::message::StreamEvent;
 use crate::models::AgentRuntimeInfo;
-
-pub async fn process_with_agentic_tools(
-    ai_service: Arc<AiService>,
-    agent_name: &AgentName,
-    agent_runtime: &AgentRuntimeInfo,
-    ai_messages: Vec<AiMessage>,
-    tx: mpsc::UnboundedSender<StreamEvent>,
-    log: LogService,
-    request_context: RequestContext,
-    skill_service: Arc<SkillService>,
-) -> Result<(String, Vec<ToolCall>, Vec<CallToolResult>, usize), ()> {
-    let mut ai_messages = ai_messages;
-
-    if !agent_runtime.skills.is_empty() {
-        log.info(
-            "ai_executor",
-            &format!(
-                "Loading {} skills for agent: {:?}",
-                agent_runtime.skills.len(),
-                agent_runtime.skills
-            ),
-        )
-        .await
-        .ok();
-
-        let mut skills_prompt = String::from("# Your Skills\n\nYou have the following skills that define your capabilities and writing style:\n\n");
-
-        for skill_id in &agent_runtime.skills {
-            match skill_service.load_skill(skill_id, &request_context).await {
-                Ok(skill_content) => {
-                    log.info(
-                        "ai_executor",
-                        &format!(
-                            "✅ Loaded skill '{}' ({} chars)",
-                            skill_id,
-                            skill_content.len()
-                        ),
-                    )
-                    .await
-                    .ok();
-                    skills_prompt.push_str(&format!(
-                        "## {} Skill\n\n{}\n\n---\n\n",
-                        skill_id, skill_content
-                    ));
-                },
-                Err(e) => {
-                    log.warn(
-                        "ai_executor",
-                        &format!("⚠️  Failed to load skill '{}': {}", skill_id, e),
-                    )
-                    .await
-                    .ok();
-                },
-            }
-        }
-
-        ai_messages.insert(
-            0,
-            AiMessage {
-                role: MessageRole::System,
-                content: skills_prompt,
-            },
-        );
-
-        log.info("ai_executor", "Skills injected into agent system prompt")
-            .await
-            .ok();
-    }
-    match ai_service
-        .list_available_tools_for_agent(agent_name, &request_context)
-        .await
-    {
-        Ok(mut tools) if !tools.is_empty() => {
-            let original_count = tools.len();
-            tools.sort_by(|a, b| a.name.cmp(&b.name));
-            tools.dedup_by(|a, b| a.name == b.name);
-
-            if tools.len() < original_count {
-                log.info(
-                    "ai_executor",
-                    &format!(
-                        "Deduplicated {} tools to {} (removed {} duplicates)",
-                        original_count,
-                        tools.len(),
-                        original_count - tools.len()
-                    ),
-                )
-                .await
-                .ok();
-            }
-
-            log.info(
-                "ai_executor",
-                &format!(
-                    "Processing with agentic executor using {} tools",
-                    tools.len()
-                ),
-            )
-            .await
-            .ok();
-
-            match ai_service
-                .execute_agentic_loop(ai_messages, tools, &request_context)
-                .await
-            {
-                Ok(result) => {
-                    for call in &result.tool_calls {
-                        tx.send(StreamEvent::ToolCallStarted(call.clone())).ok();
-                    }
-                    for (idx, tool_result) in result.tool_results.iter().enumerate() {
-                        let call_id = result
-                            .tool_calls
-                            .get(idx)
-                            .map(|c| c.ai_tool_call_id.as_ref().to_string())
-                            .unwrap_or_else(|| format!("unknown_{}", idx));
-                        tx.send(StreamEvent::ToolResult {
-                            call_id,
-                            result: tool_result.clone(),
-                        })
-                        .ok();
-                    }
-
-                    stream_text_chunks(&result.final_response, &tx).await;
-
-                    Ok((
-                        result.final_response,
-                        result.tool_calls,
-                        result.tool_results,
-                        result.total_iterations,
-                    ))
-                },
-                Err(e) => {
-                    tx.send(StreamEvent::Error(e.to_string())).ok();
-                    Err(())
-                },
-            }
-        },
-        _ => {
-            log.warn("ai_executor", "No tools available for agentic execution")
-                .await
-                .ok();
-            let (text, calls, results) =
-                process_without_tools(ai_service, agent_runtime, ai_messages, tx, request_context)
-                    .await?;
-            Ok((text, calls, results, 1))
-        },
-    }
-}
-
-pub async fn process_with_tools(
-    ai_service: Arc<AiService>,
-    agent_name_str: &str,
-    agent_runtime: &AgentRuntimeInfo,
-    ai_messages: Vec<AiMessage>,
-    tx: mpsc::UnboundedSender<StreamEvent>,
-    log: LogService,
-    request_context: RequestContext,
-) -> Result<(String, Vec<ToolCall>, Vec<CallToolResult>, usize), ()> {
-    let agent_name = AgentName::new(agent_name_str);
-    match ai_service
-        .list_available_tools_for_agent(&agent_name, &request_context)
-        .await
-    {
-        Ok(tools) if !tools.is_empty() => {
-            log.info(
-                "ai_executor",
-                &format!(
-                    "Processing with {} tools for agent {}",
-                    tools.len(),
-                    agent_name_str
-                ),
-            )
-            .await
-            .ok();
-
-            let tooled_request = TooledRequest {
-                provider: agent_runtime.provider.clone(),
-                model: agent_runtime.model.clone(),
-                messages: ai_messages.clone(),
-                tools,
-                metadata: Some(SamplingMetadata::default()),
-                response_format: None,
-                structured_output: None,
-                context_id: request_context.execution.context_id.clone(),
-                task_id: request_context
-                    .task_id()
-                    .cloned()
-                    .expect("task_id required"),
-            };
-
-            match ai_service
-                .generate_with_tools(tooled_request, request_context.clone())
-                .await
-            {
-                Ok(response) => {
-                    let tool_calls = response.tool_calls.clone();
-                    let tool_results = response.tool_results.clone();
-
-                    for call in &tool_calls {
-                        tx.send(StreamEvent::ToolCallStarted(call.clone())).ok();
-                    }
-                    for (idx, result) in tool_results.iter().enumerate() {
-                        let call_id = tool_calls
-                            .get(idx)
-                            .map(|c| c.ai_tool_call_id.as_ref().to_string())
-                            .unwrap_or_else(|| format!("unknown_{}", idx));
-                        tx.send(StreamEvent::ToolResult {
-                            call_id,
-                            result: result.clone(),
-                        })
-                        .ok();
-                    }
-
-                    let executable_calls: Vec<_> = tool_calls
-                        .iter()
-                        .filter(|tc| tc.is_executable())
-                        .cloned()
-                        .collect();
-
-                    if executable_calls.is_empty() || tool_results.is_empty() {
-                        stream_text_chunks(&response.content, &tx).await;
-                    }
-
-                    Ok((response.content.clone(), tool_calls, tool_results, 1))
-                },
-                Err(e) => {
-                    tx.send(StreamEvent::Error(e.to_string())).ok();
-                    Err(())
-                },
-            }
-        },
-        _ => {
-            let (text, calls, results) = process_without_tools(
-                ai_service,
-                agent_runtime,
-                ai_messages,
-                tx,
-                request_context.clone(),
-            )
-            .await?;
-            Ok((text, calls, results, 1))
-        },
-    }
-}
 
 pub async fn synthesize_tool_results_with_artifacts(
     ai_service: Arc<AiService>,
@@ -276,35 +34,10 @@ pub async fn synthesize_tool_results_with_artifacts(
     let tool_results_context = ToolResultFormatter::format_for_synthesis(tool_calls, tool_results);
     let artifact_references = build_artifact_references(artifacts);
 
-    let synthesis_prompt = format!(
-        r#"# Tool Execution Complete
-
-You executed {} tool(s). Now synthesize the results into a clear, conversational response.
-
-## Tool Results
-
-{}
-
-## Artifacts Created
-
-{}
-
-## Your Task
-
-Synthesize these tool results into a natural response:
-
-1. **Maintain your voice and personality** - This should sound like YOU, not a generic assistant
-2. **Explain what was found/done** - Clear, concise summary of key findings
-3. **Reference artifacts naturally** - Use the artifact reference format provided above
-4. **Answer the user's question** - Connect results back to what they asked for
-5. **Be conversational** - Natural language, not mechanical reporting
-
----
-
-Provide your synthesized response now. Remember: maintain your personality, be clear and concise, reference artifacts naturally."#,
+    let synthesis_prompt = build_synthesis_prompt(
         tool_calls.len(),
-        tool_results_context,
-        artifact_references
+        &tool_results_context,
+        &artifact_references,
     );
 
     let mut synthesis_messages = original_messages;
@@ -327,35 +60,18 @@ Provide your synthesized response now. Remember: maintain your personality, be c
     .await
     .ok();
 
-    let synthesis_request = GenerateRequest {
-        provider: agent_runtime.provider.clone(),
-        model: agent_runtime.model.clone(),
-        messages: synthesis_messages,
-        metadata: Some(SamplingMetadata::default()),
-        response_format: None,
-        structured_output: None,
-    };
+    let mut synthesis_request = AiRequest::new(synthesis_messages);
 
-    match ai_service
-        .generate_stream(synthesis_request, request_context)
-        .await
-    {
-        Ok(mut stream) => {
-            let mut synthesized_text = String::new();
-            while let Some(chunk) = stream.next().await {
-                match chunk {
-                    Ok(text) => {
-                        synthesized_text.push_str(&text);
-                        tx.send(StreamEvent::Text(text)).ok();
-                    },
-                    Err(e) => {
-                        log.error("ai_executor", &format!("Synthesis stream error: {}", e))
-                            .await
-                            .ok();
-                        return Err(());
-                    },
-                }
-            }
+    if let Some(provider) = &agent_runtime.provider {
+        synthesis_request = synthesis_request.with_provider(provider.clone());
+    }
+    if let Some(model) = &agent_runtime.model {
+        synthesis_request = synthesis_request.with_model(model.clone());
+    }
+
+    match ai_service.generate(synthesis_request, request_context).await {
+        Ok(response) => {
+            let synthesized_text = response.content;
 
             log.info(
                 "ai_executor",
@@ -364,10 +80,12 @@ Provide your synthesized response now. Remember: maintain your personality, be c
             .await
             .ok();
 
+            tx.send(StreamEvent::Text(synthesized_text.clone())).ok();
+
             Ok(synthesized_text)
         },
         Err(e) => {
-            log.error("ai_executor", &format!("Synthesis failed: {}", e))
+            log.error("ai_executor", &format!("Synthesis failed: {e}"))
                 .await
                 .ok();
             Err(())
@@ -382,14 +100,14 @@ pub async fn process_without_tools(
     tx: mpsc::UnboundedSender<StreamEvent>,
     request_context: RequestContext,
 ) -> Result<(String, Vec<ToolCall>, Vec<CallToolResult>), ()> {
-    let generate_request = GenerateRequest {
-        provider: agent_runtime.provider.clone(),
-        model: agent_runtime.model.clone(),
-        messages: ai_messages,
-        metadata: Some(SamplingMetadata::default()),
-        response_format: None,
-        structured_output: None,
-    };
+    let mut generate_request = AiRequest::new(ai_messages);
+
+    if let Some(provider) = &agent_runtime.provider {
+        generate_request = generate_request.with_provider(provider.clone());
+    }
+    if let Some(model) = &agent_runtime.model {
+        generate_request = generate_request.with_model(model.clone());
+    }
 
     match ai_service
         .generate_stream(generate_request, request_context)
@@ -418,17 +136,47 @@ pub async fn process_without_tools(
     }
 }
 
-async fn stream_text_chunks(text: &str, tx: &mpsc::UnboundedSender<StreamEvent>) {
-    let mut char_iter = text.chars().peekable();
-    let mut chunk = String::new();
-    while let Some(c) = char_iter.next() {
-        chunk.push(c);
-        if chunk.len() >= 20 || char_iter.peek().is_none() {
-            tx.send(StreamEvent::Text(chunk.clone())).ok();
-            tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-            chunk.clear();
-        }
-    }
+fn build_synthesis_prompt(
+    tool_count: usize,
+    tool_results_context: &str,
+    artifact_references: &str,
+) -> String {
+    format!(
+        r#"# Tool Execution Complete
+
+You executed {} tool(s). Now provide a BRIEF conversational response.
+
+## Tool Results Summary
+
+{}
+
+## Artifacts Created
+
+{}
+
+## CRITICAL RULES - READ CAREFULLY
+
+1. **NEVER repeat artifact content** - The user sees artifacts separately. Your message should REFERENCE them, never duplicate their content.
+2. **Maximum 100 words** - Be extremely concise. 2-3 sentences is ideal.
+3. **Describe what was done, not what it contains** - Say "I've created a blog post about X" NOT "Here is the blog post: [full content]"
+4. **Be conversational** - Natural, friendly summary. Not a report or transcript.
+5. **Reference artifacts naturally** - Use format like "(see the artifact for the full content)"
+
+## BAD EXAMPLE (DO NOT DO THIS)
+"I've created your blog post. Here's the content:
+
+[2000 words of article text]
+
+Let me know if you'd like any changes."
+
+## GOOD EXAMPLE
+"Done! I've created a blog post exploring the Human-AI collaboration workflow. The article covers the key differences between automation and augmentation approaches, with practical steps for maintaining your authentic voice. Take a look at the artifact and let me know if you'd like any adjustments."
+
+---
+
+Provide your brief, conversational response now. Remember: the artifact has the content - your message is just the friendly summary."#,
+        tool_count, tool_results_context, artifact_references
+    )
 }
 
 fn build_artifact_references(artifacts: &[Artifact]) -> String {
@@ -440,7 +188,6 @@ fn build_artifact_references(artifacts: &[Artifact]) -> String {
         .iter()
         .map(|artifact| {
             let artifact_type = &artifact.metadata.artifact_type;
-
             let artifact_name = artifact
                 .name
                 .clone()

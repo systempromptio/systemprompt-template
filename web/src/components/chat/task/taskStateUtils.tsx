@@ -6,7 +6,12 @@
 
 import React from 'react'
 import { Loader2, CheckCircle2, XCircle, AlertCircle, Lock, MessageSquare, Ban, Circle } from 'lucide-react'
-import type { TaskState } from '@a2a-js/sdk'
+import type { TaskState, Message } from '@a2a-js/sdk'
+
+interface TextPart {
+  kind: 'text'
+  text: string
+}
 
 export interface StateInfo {
   icon: React.JSX.Element
@@ -103,10 +108,10 @@ export function getStateInfo(state: TaskState): StateInfo {
   }
 }
 
-export function extractMessageText(message: any): string {
+export function extractMessageText(message: Message | string | null | undefined): string {
   if (typeof message === 'string') return message
   if (!message || !message.parts) return ''
 
-  const textPart = message.parts.find((p: any) => p.kind === 'text')
+  const textPart = message.parts.find((p): p is TextPart => p.kind === 'text')
   return textPart?.text || ''
 }

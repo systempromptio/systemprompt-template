@@ -1,19 +1,5 @@
-use super::request::AiMessage;
-use super::response_format::{ResponseFormat, StructuredOutputOptions};
 use serde::{Deserialize, Serialize};
 use systemprompt_identifiers::{AgentId, SessionId, TaskId, TraceId, UserId};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SamplingRequest {
-    pub messages: Vec<AiMessage>,
-    pub model_preferences: ModelPreferences,
-    pub metadata: SamplingMetadata,
-    pub system_prompt: Option<String>,
-    pub include_context: Option<String>,
-    pub max_tokens: i32,
-    pub response_format: Option<ResponseFormat>,
-    pub structured_output: Option<StructuredOutputOptions>,
-}
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ModelPreferences {

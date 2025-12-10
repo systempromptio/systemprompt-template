@@ -1,6 +1,23 @@
 use anyhow::Result;
 use comrak::{markdown_to_html, ComrakOptions};
 
+fn strip_first_h1(content: &str) -> String {
+    let lines: Vec<&str> = content.lines().collect();
+    let mut result = Vec::new();
+    let mut found_h1 = false;
+
+    for line in lines {
+        let trimmed = line.trim();
+        if !found_h1 && trimmed.starts_with("# ") && !trimmed.starts_with("## ") {
+            found_h1 = true;
+            continue;
+        }
+        result.push(line);
+    }
+
+    result.join("\n")
+}
+
 pub fn render_markdown(content: &str) -> Result<String> {
     let mut options = ComrakOptions::default();
 
@@ -12,7 +29,8 @@ pub fn render_markdown(content: &str) -> Result<String> {
 
     options.render.unsafe_ = false;
 
-    let html = markdown_to_html(content, &options);
+    let content_without_h1 = strip_first_h1(content);
+    let html = markdown_to_html(&content_without_h1, &options);
     Ok(html)
 }
 
@@ -43,8 +61,24 @@ mod tests {
     fn test_render_markdown_basic() {
         let md = "# Hello\n\nThis is **bold**.";
         let html = render_markdown(md).unwrap();
-        assert!(html.contains("<h1>Hello</h1>"));
+        assert!(!html.contains("<h1>Hello</h1>"));
         assert!(html.contains("<strong>bold</strong>"));
+    }
+
+    #[test]
+    fn test_render_markdown_strips_first_h1() {
+        let md = "# Title\n\nContent here\n\n## Subtitle";
+        let html = render_markdown(md).unwrap();
+        assert!(!html.contains("<h1>"));
+        assert!(html.contains("<h2>Subtitle</h2>"));
+        assert!(html.contains("Content here"));
+    }
+
+    #[test]
+    fn test_render_markdown_preserves_h2() {
+        let md = "## Subtitle\n\nContent";
+        let html = render_markdown(md).unwrap();
+        assert!(html.contains("<h2>Subtitle</h2>"));
     }
 
     #[test]

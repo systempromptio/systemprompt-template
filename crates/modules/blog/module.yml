@@ -18,17 +18,9 @@ schemas:
     table: "markdown_categories"
     required_columns: ["id", "name"]
 
-  - file: "schema/markdown_tags.sql"
-    table: "markdown_tags"
-    required_columns: ["id", "name"]
-
   - file: "schema/markdown_content.sql"
     table: "markdown_content"
     required_columns: ["id", "slug", "title"]
-
-  - file: "schema/markdown_content_tags.sql"
-    table: "markdown_content_tags"
-    required_columns: ["content_id", "tag_id"]
 
   - file: "schema/markdown_fts.sql"
     table: "markdown_fts"
@@ -46,28 +38,25 @@ schemas:
     table: "link_clicks"
     required_columns: ["id", "link_id"]
 
-  - file: "schema/005_create_skills_table.sql"
-    table: "agent_skills"
-    required_columns: ["id", "name"]
-
-  - file: "schema/008_add_social_content_support.sql"
-    table: "markdown_content"
-    required_columns: ["id", "parent_content_id"]
-
   - file: "schema/009_add_links_column.sql"
     table: "markdown_content"
     required_columns: ["links"]
 
+  - file: "schema/011_remove_social_content_support.sql"
+    table: "markdown_content"
+    required_columns: ["id"]
+
+  - file: "schema/015_add_public_column.sql"
+    table: "markdown_content"
+    required_columns: ["public"]
+
 tables_created:
   - "markdown_categories"
-  - "markdown_tags"
   - "markdown_content"
-  - "markdown_content_tags"
   - "markdown_fts"
   - "content_performance_metrics"
   - "campaign_links"
   - "link_clicks"
-  - "agent_skills"
 
 api:
   enabled: true

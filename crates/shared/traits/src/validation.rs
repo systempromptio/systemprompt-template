@@ -43,12 +43,6 @@ pub type ValidationResult<T> = Result<T, ValidationError>;
 
 pub trait Validate: Debug {
     fn validate(&self) -> ValidationResult<()>;
-
-    fn validate_or_panic(&self) {
-        if let Err(e) = self.validate() {
-            panic!("{e}\nInvalid data: {self:?}");
-        }
-    }
 }
 
 pub trait MetadataValidation: Validate {

@@ -8,8 +8,7 @@ use systemprompt_core_logging::CliService;
 use systemprompt_core_oauth::services::generation::tokens::{
     generate_access_token_jti, generate_jwt, JwtConfig,
 };
-use systemprompt_core_system::AuthenticatedUser;
-use systemprompt_core_system::{AppContext, Config};
+use systemprompt_core_system::{AppContext, AuthenticatedUser, Config};
 use systemprompt_core_users::UserRepository;
 use systemprompt_identifiers::SessionId;
 use systemprompt_models::auth::{JwtAudience, Permission};
@@ -35,14 +34,15 @@ pub async fn execute(args: LoginArgs) -> Result<()> {
     let app_context = Arc::new(AppContext::new().await?);
     let user_repo = UserRepository::new(app_context.db_pool().clone());
 
-    let user = user_repo.find_by_role(&args.role).await?.ok_or_else(|| {
+    let users = user_repo.find_by_role(&args.role).await?;
+    let user = users.into_iter().next().ok_or_else(|| {
         anyhow::anyhow!(
             "No user found with role '{}'. Create a user with this role first.",
             args.role
         )
     })?;
 
-    let user_uuid = Uuid::parse_str(&user.uuid)?;
+    let user_uuid = Uuid::parse_str(user.id.as_ref())?;
     let permissions: Vec<Permission> = user
         .roles
         .iter()

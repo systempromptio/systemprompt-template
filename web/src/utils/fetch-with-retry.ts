@@ -15,6 +15,25 @@
 
 import { logger } from '@/lib/logger'
 
+interface ErrorWithResponse {
+  response?: {
+    status?: number
+    headers?: Record<string, string>
+  }
+}
+
+function hasResponseStatus(error: unknown): error is ErrorWithResponse {
+  if (typeof error !== 'object' || error === null) return false
+  const err = error as Record<string, unknown>
+  if (!err.response || typeof err.response !== 'object') return false
+  return true
+}
+
+function getResponseStatus(error: unknown): number | undefined {
+  if (!hasResponseStatus(error)) return undefined
+  return error.response?.status
+}
+
 /**
  * Configuration options for fetch retry behavior
  */
@@ -26,16 +45,17 @@ interface RetryOptions {
   /** Maximum delay in milliseconds (default: 10000) */
   maxDelay?: number
   /** Function to determine if error is retryable (default: retry on 429, 5xx) */
-  shouldRetry?: (error: any) => boolean
+  shouldRetry?: (error: unknown) => boolean
 }
 
 const defaultOptions: Required<RetryOptions> = {
   maxRetries: 3,
   baseDelay: 1000,
   maxDelay: 10000,
-  shouldRetry: (error: any) => {
-    if (error?.response?.status === 429) return true
-    if (error?.response?.status >= 500) return true
+  shouldRetry: (error: unknown) => {
+    const status = getResponseStatus(error)
+    if (status === 429) return true
+    if (status !== undefined && status >= 500) return true
     return false
   },
 }
@@ -68,18 +88,18 @@ export async function fetchWithRetry<T>(
   for (let attempt = 0; attempt < opts.maxRetries; attempt++) {
     try {
       return await fn()
-    } catch (error: any) {
+    } catch (error: unknown) {
       const isLastAttempt = attempt === opts.maxRetries - 1
 
       if (isLastAttempt || !opts.shouldRetry(error)) {
         throw error
       }
 
-      const retryAfterHeader = error?.response?.headers?.['retry-after']
+      const retryAfterMs = getRetryAfter(error)
       let delay: number
 
-      if (retryAfterHeader) {
-        delay = parseInt(retryAfterHeader, 10) * 1000
+      if (retryAfterMs !== null) {
+        delay = retryAfterMs
       } else {
         delay = Math.min(opts.baseDelay * Math.pow(2, attempt), opts.maxDelay)
       }
@@ -89,7 +109,7 @@ export async function fetchWithRetry<T>(
 
       logger.debug(
         `Retry attempt ${attempt + 1}/${opts.maxRetries}`,
-        { delayMs: Math.round(totalDelay), status: error?.response?.status },
+        { delayMs: Math.round(totalDelay), status: getResponseStatus(error) },
         'fetch-with-retry'
       )
 
@@ -121,8 +141,8 @@ export async function fetchWithRetry<T>(
  * }
  * ```
  */
-export function isRateLimitError(error: any): boolean {
-  return error?.response?.status === 429
+export function isRateLimitError(error: unknown): boolean {
+  return getResponseStatus(error) === 429
 }
 
 /**
@@ -151,8 +171,11 @@ export function isRateLimitError(error: any): boolean {
  * }
  * ```
  */
-export function getRetryAfter(error: any): number | null {
-  const retryAfter = error?.response?.headers?.['retry-after']
+export function getRetryAfter(error: unknown): number | null {
+  if (!hasResponseStatus(error)) return null
+  const headers = error.response?.headers
+  if (!headers) return null
+  const retryAfter = headers['retry-after']
   if (retryAfter) {
     const seconds = parseInt(retryAfter, 10)
     return isNaN(seconds) ? null : seconds * 1000

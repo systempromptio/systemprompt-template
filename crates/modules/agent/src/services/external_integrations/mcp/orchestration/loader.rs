@@ -3,16 +3,17 @@ use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::RequestContext;
 
-use super::super::{client::McpClientAdapter, service::ServiceStateManager};
+use super::super::client::McpClientAdapter;
+use super::super::service::ServiceStateManager;
 use crate::models::a2a::{AgentExtension, McpServerMetadata};
 
 #[derive(Debug, Clone)]
-pub struct McpSkillLoader {
+pub struct McpToolLoader {
     db_pool: DbPool,
     service_manager: ServiceStateManager,
 }
 
-impl McpSkillLoader {
+impl McpToolLoader {
     pub fn new(db_pool: DbPool) -> Self {
         Self {
             service_manager: ServiceStateManager::new(db_pool.clone()),
@@ -21,8 +22,9 @@ impl McpSkillLoader {
     }
 
     /// Load tools from a list of MCP server names (config-driven approach)
-    /// Logs errors with full context but continues to support degraded mode when servers are unavailable
-    /// Filters servers based on user's JWT permissions
+    /// Logs errors with full context but continues to support degraded mode
+    /// when servers are unavailable Filters servers based on user's JWT
+    /// permissions
     pub async fn load_tools_for_servers(
         &self,
         server_names: &[String],
@@ -53,7 +55,7 @@ impl McpSkillLoader {
                 if !context.auth_token().as_str().is_empty() {
                     logger
                         .error(
-                            "mcp_skill_loader",
+                            "mcp_tool_loader",
                             &format!("JWT validation failed: {}. Using empty permissions.", e),
                         )
                         .await
@@ -98,7 +100,7 @@ impl McpSkillLoader {
                         "Failed to load tools from MCP server '{}': {}",
                         server_name, e
                     );
-                    logger.error("mcp_skill_loader", &error_msg).await.ok();
+                    logger.error("mcp_tool_loader", &error_msg).await.ok();
                     load_errors.push(error_msg);
                 },
                 Err(_) => {
@@ -106,7 +108,7 @@ impl McpSkillLoader {
                         "Timeout loading tools from MCP server '{}' (exceeded 10s)",
                         server_name
                     );
-                    logger.error("mcp_skill_loader", &error_msg).await.ok();
+                    logger.error("mcp_tool_loader", &error_msg).await.ok();
                     load_errors.push(error_msg);
                 },
             }
@@ -120,14 +122,15 @@ impl McpSkillLoader {
                 server_names.len(),
                 load_errors.join("; ")
             );
-            logger.error("mcp_skill_loader", &message).await.ok();
+            logger.error("mcp_tool_loader", &message).await.ok();
         }
 
         Ok(tools_by_server)
     }
 
     /// Load tools from a specific MCP server (returns McpTool, not skills)
-    /// Retries up to 3 times with backoff to account for database replication lag
+    /// Retries up to 3 times with backoff to account for database replication
+    /// lag
     pub async fn load_server_tools(
         &self,
         server_name: &str,
@@ -157,7 +160,8 @@ impl McpSkillLoader {
                         continue;
                     }
                     return Err(anyhow::anyhow!(
-                        "MCP server '{}' not found in services database (after {} retries with {}ms DB lag tolerance)",
+                        "MCP server '{}' not found in services database (after {} retries with \
+                         {}ms DB lag tolerance)",
                         server_name,
                         max_retries,
                         100 * (2_u64.pow(max_retries as u32) - 1)
@@ -166,7 +170,8 @@ impl McpSkillLoader {
                 Err(e) => {
                     // Database query error - fail immediately, don't retry
                     return Err(anyhow::anyhow!(
-                        "Database error querying MCP server '{}': {} (this indicates a database connectivity issue, not replication lag)",
+                        "Database error querying MCP server '{}': {} (this indicates a database \
+                         connectivity issue, not replication lag)",
                         server_name,
                         e
                     ));

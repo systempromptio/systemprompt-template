@@ -28,14 +28,13 @@ impl ConfigLoader {
     }
 
     async fn load_from_path(config_path: &str) -> Result<ServicesConfig> {
-        let content = fs::read_to_string(config_path)
-            .with_context(|| {
-                format!(
-                    "Failed to read services config file: {config_path}\n\
-                    Ensure SYSTEM_PATH environment variable is correctly set to the core directory.\n\
-                    Services config should be at: $SYSTEM_PATH/crates/services/config/config.yml"
-                )
-            })?;
+        let content = fs::read_to_string(config_path).with_context(|| {
+            format!(
+                "Failed to read services config file: {config_path}\nEnsure SYSTEM_PATH \
+                 environment variable is correctly set to the core directory.\nServices config \
+                 should be at: $SYSTEM_PATH/crates/services/config/config.yml"
+            )
+        })?;
 
         let root_config: ConfigWithIncludes = serde_yaml::from_str(&content)
             .with_context(|| format!("Failed to parse services config YAML: {config_path}"))?;
@@ -56,6 +55,10 @@ impl ConfigLoader {
 
             for (name, mcp_server) in include_config.mcp_servers {
                 merged_config.mcp_servers.insert(name, mcp_server);
+            }
+
+            if include_config.scheduler.is_some() {
+                merged_config.scheduler = include_config.scheduler;
             }
         }
 

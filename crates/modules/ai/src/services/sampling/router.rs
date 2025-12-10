@@ -153,9 +153,10 @@ impl SamplingRouter {
             },
             ("gemini", "fast") => Ok("gemini-2.5-flash-lite".to_string()),
             ("gemini", "quality" | "vision") => Ok("gemini-2.5-flash".to_string()),
-            _ => Ok(self
-                .providers
-                .get(provider).map_or_else(|| "gpt-4-turbo".to_string(), |p| p.default_model().to_string())),
+            _ => Ok(self.providers.get(provider).map_or_else(
+                || "gpt-4-turbo".to_string(),
+                |p| p.default_model().to_string(),
+            )),
         }
     }
 

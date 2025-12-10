@@ -9,7 +9,7 @@ use serde_json::Value;
 pub const JSON_RPC_VERSION_2_0: &str = "2.0";
 
 /// JSON-RPC request ID (can be string or number)
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum RequestId {
     String(String),
@@ -40,7 +40,7 @@ pub struct JsonRpcResponse<T> {
 }
 
 /// JSON-RPC error
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct JsonRpcError {
     pub code: i32,
     pub message: String,

@@ -6,20 +6,6 @@ import { extractToolInputSchema } from '@/lib/schema/validation'
 import { useMcpToolCaller } from './useMcpToolCaller'
 import { logger } from '@/lib/logger'
 
-type RenderBehavior = 'modal' | 'inline' | 'silent' | 'both' | undefined
-
-function isRenderBehavior(value: unknown): value is RenderBehavior {
-  return value === undefined || ['modal', 'inline', 'silent', 'both'].includes(value as string)
-}
-
-function extractRenderBehavior(outputSchema: unknown): RenderBehavior {
-  if (typeof outputSchema === 'object' && outputSchema !== null && 'x-render-behavior' in outputSchema) {
-    const behavior = (outputSchema as Record<string, unknown>)['x-render-behavior']
-    return isRenderBehavior(behavior) ? behavior : undefined
-  }
-  return undefined
-}
-
 /**
  * Hook for managing tool parameter collection and execution.
  *
@@ -84,13 +70,11 @@ export function useToolParameters() {
       if (canAutoSubmit(schema)) {
         logger.debug('Auto-submitting with defaults', { tool: tool.name }, 'useToolParameters')
         const defaults = extractDefaults(schema)
-        const renderBehavior = extractRenderBehavior(tool.outputSchema)
         await callTool(
           tool.serverEndpoint,
           tool.name,
           defaults,
-          tool.serverName,
-          renderBehavior
+          tool.serverName
         )
         return
       }
@@ -108,13 +92,11 @@ export function useToolParameters() {
   const submitParameters = useCallback(
     async (tool: McpTool, parameters: FormValues) => {
       logger.debug('Submitting parameters', { tool: tool.name }, 'useToolParameters')
-      const renderBehavior = extractRenderBehavior(tool.outputSchema)
       await callTool(
         tool.serverEndpoint,
         tool.name,
         parameters,
-        tool.serverName,
-        renderBehavior
+        tool.serverName
       )
     },
     [callTool]

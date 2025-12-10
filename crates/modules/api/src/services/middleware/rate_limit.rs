@@ -1,4 +1,5 @@
 use axum::Router;
+use systemprompt_core_logging::CliService;
 use systemprompt_core_system::middleware::{ContextExtractor, ContextMiddleware};
 use systemprompt_models::config::RateLimitConfig;
 use tower_governor::key_extractor::SmartIpKeyExtractor;
@@ -19,17 +20,19 @@ where
             return self;
         }
 
-        // SmartIpKeyExtractor now works correctly because nginx's real_ip module
-        // has already cleaned the X-Forwarded-For header to contain only the real client IP
-        let rate_limit = tower_governor::governor::GovernorConfigBuilder::default()
+        let rate_limit_result = tower_governor::governor::GovernorConfigBuilder::default()
             .per_second(per_second)
             .burst_size((per_second * rate_config.burst_multiplier) as u32)
             .key_extractor(SmartIpKeyExtractor)
             .use_headers()
-            .finish()
-            .unwrap();
+            .finish();
 
-        self.layer(tower_governor::GovernorLayer::new(rate_limit))
+        if let Some(rate_limit) = rate_limit_result { self.layer(tower_governor::GovernorLayer::new(rate_limit)) } else {
+            CliService::warning(
+                "Failed to configure rate limiting. Rate limiting disabled for this route.",
+            );
+            self
+        }
     }
 
     fn with_auth_middleware<E>(self, middleware: ContextMiddleware<E>) -> Self

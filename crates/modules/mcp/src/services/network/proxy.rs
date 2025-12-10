@@ -1,5 +1,8 @@
 use anyhow::Result;
-use axum::{extract::Request, http::StatusCode, routing::any, Router};
+use axum::extract::Request;
+use axum::http::StatusCode;
+use axum::routing::any;
+use axum::Router;
 
 pub async fn create_proxy_router(target_host: &str, target_port: u16) -> Result<Router> {
     let target_url = format!("http://{target_host}:{target_port}");
@@ -23,23 +26,19 @@ async fn forward_request(
     };
     let full_url = format!("{target_url}{path}{query}");
 
-    // Create HTTP client
     let client = reqwest::Client::new();
 
-    // Build proxied request
     let method = reqwest::Method::from_bytes(req.method().as_str().as_bytes())
         .map_err(|_| StatusCode::BAD_REQUEST)?;
 
     let mut proxied = client.request(method, &full_url);
 
-    // Copy headers (except host)
     for (key, value) in req.headers() {
         if key != "host" {
             proxied = proxied.header(key.as_str(), value.as_bytes());
         }
     }
 
-    // Get body
     let body_bytes = axum::body::to_bytes(req.into_body(), usize::MAX)
         .await
         .map_err(|_| StatusCode::BAD_REQUEST)?;
@@ -48,7 +47,6 @@ async fn forward_request(
         proxied = proxied.body(body_bytes.to_vec());
     }
 
-    // Send request
     let response = proxied.send().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
 
     let status_code = response.status().as_u16();
@@ -66,7 +64,6 @@ async fn forward_request(
 }
 
 pub async fn create_load_balanced_proxy(targets: Vec<(String, u16)>) -> Result<Router> {
-    // Simple round-robin load balancing
     let target_urls: Vec<String> = targets
         .iter()
         .map(|(host, port)| format!("http://{host}:{port}"))

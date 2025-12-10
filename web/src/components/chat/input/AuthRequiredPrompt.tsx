@@ -20,14 +20,22 @@ export function AuthRequiredPrompt({
   const messageText = message?.parts?.find(p => p.kind === 'text')?.text || ''
   const dataContent = message?.parts?.find(p => p.kind === 'data')?.data
 
-  const extractAuthInfo = (data: any) => {
-    if (!data) return null
+  interface AuthInfoData {
+    schemes?: string[]
+    service?: string
+    permissions?: string[]
+    url?: string
+  }
 
+  const extractAuthInfo = (data: unknown): AuthInfoData | null => {
+    if (!data || typeof data !== 'object') return null
+
+    const record = data as Record<string, unknown>
     return {
-      schemes: data.schemes || [],
-      service: data.service || 'external service',
-      permissions: data.permissions || [],
-      url: data.url
+      schemes: Array.isArray(record.schemes) ? record.schemes as string[] : [],
+      service: typeof record.service === 'string' ? record.service : 'external service',
+      permissions: Array.isArray(record.permissions) ? record.permissions as string[] : [],
+      url: typeof record.url === 'string' ? record.url : undefined
     }
   }
 
@@ -62,14 +70,14 @@ export function AuthRequiredPrompt({
                 <span className="text-text-secondary">{authInfo.service}</span>
               </div>
 
-              {authInfo.schemes.length > 0 && (
+              {authInfo.schemes && authInfo.schemes.length > 0 && (
                 <div className="text-sm">
                   <span className="font-medium text-text-primary">Auth Methods:</span>{' '}
                   <span className="text-text-secondary">{authInfo.schemes.join(', ')}</span>
                 </div>
               )}
 
-              {authInfo.permissions.length > 0 && (
+              {authInfo.permissions && authInfo.permissions.length > 0 && (
                 <div>
                   <div className="text-sm font-medium text-text-primary mb-xs">
                     Permissions Requested:

@@ -7,8 +7,14 @@ use systemprompt_models::auth::AuthenticatedUser;
 #[derive(Debug, Clone, Copy)]
 pub struct AuthValidator {}
 
+impl Default for AuthValidator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AuthValidator {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {}
     }
 
@@ -29,15 +35,12 @@ impl AuthValidator {
             .unwrap_or(false);
 
         if debug_auth {
-            let trace_id = req_context
-                .map(|rc| rc.trace_id().to_string())
-                .unwrap_or_else(|| "unknown".to_string());
+            let trace_id = req_context.map_or_else(|| "unknown".to_string(), |rc| rc.trace_id().to_string());
             logger
                 .info(
                     "proxy_auth",
                     &format!(
-                        "🔍 auth validation starting for {} [trace: {}]",
-                        service_name, trace_id
+                        "🔍 auth validation starting for {service_name} [trace: {trace_id}]"
                     ),
                 )
                 .await
@@ -49,15 +52,13 @@ impl AuthValidator {
         match &result {
             Ok(user) => {
                 if debug_auth {
-                    let trace_id = req_context
-                        .map(|rc| rc.trace_id().to_string())
-                        .unwrap_or_else(|| "unknown".to_string());
+                    let trace_id = req_context.map_or_else(|| "unknown".to_string(), |rc| rc.trace_id().to_string());
                     logger
                         .info(
                             "proxy_auth",
                             &format!(
-                                "✅ {} auth success for {} [trace: {}]",
-                                service_name, user.username, trace_id
+                                "✅ {service_name} auth success for {} [trace: {trace_id}]",
+                                user.username
                             ),
                         )
                         .await
@@ -65,15 +66,12 @@ impl AuthValidator {
                 }
             },
             Err(status) => {
-                let trace_id = req_context
-                    .map(|rc| rc.trace_id().to_string())
-                    .unwrap_or_else(|| "unknown".to_string());
+                let trace_id = req_context.map_or_else(|| "unknown".to_string(), |rc| rc.trace_id().to_string());
                 logger
                     .warn(
                         "proxy_auth",
                         &format!(
-                            "❌ {} auth failed with status {} [trace: {}]",
-                            service_name, status, trace_id
+                            "❌ {service_name} auth failed with status {status} [trace: {trace_id}]"
                         ),
                     )
                     .await

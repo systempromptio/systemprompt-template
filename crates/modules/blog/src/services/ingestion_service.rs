@@ -1,22 +1,19 @@
 use crate::models::{Content, ContentMetadata, IngestionReport};
-use crate::repository::{ContentRepository, TagRepository};
+use crate::repository::ContentRepository;
 use anyhow::{anyhow, Result};
 use sha2::{Digest, Sha256};
 use std::path::Path;
-use std::sync::Arc;
-use systemprompt_core_database::DatabaseProvider;
+use systemprompt_core_database::DbPool;
 
 #[derive(Debug)]
 pub struct IngestionService {
     content_repo: ContentRepository,
-    tag_repo: TagRepository,
 }
 
 impl IngestionService {
-    pub fn new(db: Arc<dyn DatabaseProvider>) -> Self {
+    pub fn new(db: DbPool) -> Self {
         Self {
-            content_repo: ContentRepository::new(db.clone()),
-            tag_repo: TagRepository::new(db),
+            content_repo: ContentRepository::new(db),
         }
     }
 
@@ -134,7 +131,7 @@ impl IngestionService {
             .or(category_id)
             .unwrap_or_else(|| resolved_source_id.clone());
 
-        let mut new_content = Self::create_content_from_metadata(
+        let new_content = Self::create_content_from_metadata(
             path,
             &metadata,
             &content_text,
@@ -148,24 +145,30 @@ impl IngestionService {
             .await?
         {
             None => {
-                let new_hash = Self::compute_version_hash(&new_content);
-                new_content.version_hash = new_hash;
-                self.content_repo.create(&new_content).await?;
+                let version_hash = Self::compute_version_hash(&new_content);
+                let created = self
+                    .content_repo
+                    .create(
+                        &new_content.slug,
+                        &new_content.title,
+                        &new_content.description,
+                        &new_content.body,
+                        &new_content.author,
+                        new_content.published_at,
+                        &new_content.keywords,
+                        &new_content.kind,
+                        new_content.image.as_deref(),
+                        new_content.category_id.as_deref(),
+                        &new_content.source_id,
+                        &version_hash,
+                        &new_content.links,
+                    )
+                    .await?;
 
-                for tag_name in &metadata.tags {
-                    let tag = self.tag_repo.get_or_create(tag_name).await?;
-                    self.tag_repo
-                        .link_to_content(&tag.id, &new_content.id)
-                        .await?;
-                }
-
-                Self::update_fts_index(&new_content).await?;
+                Self::update_fts_index(&created).await?;
                 Ok((1, true))
             },
-            Some(_existing) => {
-                // Content exists - for now, skip (in Phase 2, we'll update it)
-                Ok((0, false))
-            },
+            Some(_existing) => Ok((0, false)),
         }
     }
 
@@ -199,7 +202,10 @@ impl IngestionService {
 
         let mut files = Vec::new();
 
-        for entry in WalkDir::new(dir).into_iter().filter_map(std::result::Result::ok) {
+        for entry in WalkDir::new(dir)
+            .into_iter()
+            .filter_map(std::result::Result::ok)
+        {
             if entry.file_type().is_file() {
                 if let Some(ext) = entry.path().extension() {
                     if ext == "md" {
@@ -270,14 +276,11 @@ impl IngestionService {
             keywords: metadata.keywords.clone(),
             kind: metadata.kind.clone(),
             image: metadata.image.clone(),
-            category_id,
+            category_id: Some(category_id),
             source_id,
             version_hash: String::new(),
-            public: metadata.public,
-            parent_content_id: None,
-            links: Vec::new(),
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
+            links: serde_json::Value::Array(vec![]),
+            updated_at: Some(chrono::Utc::now()),
         })
     }
 
@@ -287,7 +290,7 @@ impl IngestionService {
         hasher.update(content.body.as_bytes());
         hasher.update(content.description.as_bytes());
         hasher.update(content.author.as_bytes());
-        hasher.update(content.published_at.to_rfc3339().as_bytes());
+        hasher.update(content.published_at.to_string().as_bytes());
         format!("{:x}", hasher.finalize())
     }
 }

@@ -15,14 +15,11 @@ impl SynthesisPromptBuilder {
         AiMessage {
             role: MessageRole::User,
             content: format!(
-                "The following tools were just executed:\n\n{tool_summary}\n\n\
-                Based on these tool execution results, provide a clear, natural language \
-                response to the user. Focus on:\n\
-                - What the results mean for the user\n\
-                - How they answer the user's question\n\
-                - Any important insights from the data\n\n\
-                Be concise but informative. Do not repeat the raw tool data - \
-                synthesize it into a helpful response."
+                "The following tools were just executed:\n\n{tool_summary}\n\nBased on these tool \
+                 execution results, provide a clear, natural language response to the user. Focus \
+                 on:\n- What the results mean for the user\n- How they answer the user's \
+                 question\n- Any important insights from the data\n\nBe concise but informative. \
+                 Do not repeat the raw tool data - synthesize it into a helpful response."
             ),
         }
     }

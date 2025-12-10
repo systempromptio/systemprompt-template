@@ -12,5 +12,6 @@ workspace = true
 [dependencies]
 serde = { workspace = true }
 uuid = { workspace = true }
+schemars = { workspace = true }
 systemprompt-core-database = { path = "../../modules/database" }
 sqlx = { workspace = true }

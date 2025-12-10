@@ -1,9 +1,7 @@
-use axum::{
-    extract::{Path, Query, State},
-    http::StatusCode,
-    response::{IntoResponse, Json},
-    Extension,
-};
+use axum::extract::{Path, Query, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Json};
+use axum::Extension;
 use serde::Deserialize;
 
 use crate::models::a2a::TaskState;
@@ -25,9 +23,9 @@ pub async fn list_tasks_by_context(
     let logger = LogService::new(app_context.db_pool().clone(), req_ctx.log_context());
 
     logger
-        .info(
+        .debug(
             "tasks_api",
-            &format!("Listing tasks for context: {}", context_id),
+            &format!("Listing tasks | context_id={context_id}"),
         )
         .await
         .ok();
@@ -37,9 +35,13 @@ pub async fn list_tasks_by_context(
     match task_repo.list_tasks_by_context(&context_id).await {
         Ok(tasks) => {
             logger
-                .info(
+                .debug(
                     "tasks_api",
-                    &format!("Found {} tasks for context {}", tasks.len(), context_id),
+                    &format!(
+                        "Tasks listed | context_id={}, count={}",
+                        context_id,
+                        tasks.len()
+                    ),
                 )
                 .await
                 .ok();
@@ -47,7 +49,7 @@ pub async fn list_tasks_by_context(
         },
         Err(e) => {
             logger
-                .error("tasks_api", &format!("Failed to list tasks: {}", e))
+                .error("tasks_api", &format!("Failed to list tasks: {e}"))
                 .await
                 .ok();
             (
@@ -70,7 +72,10 @@ pub async fn get_task(
     let logger = LogService::new(app_context.db_pool().clone(), req_ctx.log_context());
 
     logger
-        .info("tasks_api", &format!("Retrieving task: {}", task_id))
+        .debug(
+            "tasks_api",
+            &format!("Retrieving task | task_id={task_id}"),
+        )
         .await
         .ok();
 
@@ -79,13 +84,13 @@ pub async fn get_task(
     match task_repo.get_task(&task_id).await {
         Ok(Some(task)) => {
             logger
-                .info("tasks_api", "Task retrieved successfully")
+                .debug("tasks_api", "Task retrieved successfully")
                 .await
                 .ok();
             (StatusCode::OK, Json(task)).into_response()
         },
         Ok(None) => {
-            logger.info("tasks_api", "Task not found").await.ok();
+            logger.debug("tasks_api", "Task not found").await.ok();
             (
                 StatusCode::NOT_FOUND,
                 Json(serde_json::json!({
@@ -97,7 +102,7 @@ pub async fn get_task(
         },
         Err(e) => {
             logger
-                .error("tasks_api", &format!("Failed to retrieve task: {}", e))
+                .error("tasks_api", &format!("Failed to retrieve task: {e}"))
                 .await
                 .ok();
             (
@@ -122,7 +127,7 @@ pub async fn list_tasks_by_user(
     let user_id = req_ctx.auth.user_id.as_str();
 
     logger
-        .info("tasks_api", &format!("Listing tasks for user: {}", user_id))
+        .debug("tasks_api", &format!("Listing tasks | user_id={user_id}"))
         .await
         .ok();
 
@@ -151,9 +156,9 @@ pub async fn list_tasks_by_user(
             }
 
             logger
-                .info(
+                .debug(
                     "tasks_api",
-                    &format!("Found {} tasks for user {}", tasks.len(), user_id),
+                    &format!("Tasks listed | user_id={}, count={}", user_id, tasks.len()),
                 )
                 .await
                 .ok();
@@ -161,7 +166,7 @@ pub async fn list_tasks_by_user(
         },
         Err(e) => {
             logger
-                .error("tasks_api", &format!("Failed to list tasks: {}", e))
+                .error("tasks_api", &format!("Failed to list tasks: {e}"))
                 .await
                 .ok();
             (
@@ -184,9 +189,9 @@ pub async fn get_messages_by_task(
     let logger = LogService::new(app_context.db_pool().clone(), req_ctx.log_context());
 
     logger
-        .info(
+        .debug(
             "tasks_api",
-            &format!("Retrieving messages for task: {}", task_id),
+            &format!("Retrieving messages | task_id={task_id}"),
         )
         .await
         .ok();
@@ -196,9 +201,13 @@ pub async fn get_messages_by_task(
     match task_repo.get_messages_by_task(&task_id).await {
         Ok(messages) => {
             logger
-                .info(
+                .debug(
                     "tasks_api",
-                    &format!("Found {} messages for task {}", messages.len(), task_id),
+                    &format!(
+                        "Messages retrieved | task_id={}, count={}",
+                        task_id,
+                        messages.len()
+                    ),
                 )
                 .await
                 .ok();
@@ -206,7 +215,7 @@ pub async fn get_messages_by_task(
         },
         Err(e) => {
             logger
-                .error("tasks_api", &format!("Failed to retrieve messages: {}", e))
+                .error("tasks_api", &format!("Failed to retrieve messages: {e}"))
                 .await
                 .ok();
             (

@@ -300,7 +300,7 @@ impl ServerHandler for TemplateServer {
                 Ok(artifact) => {
                     logger.info(
                         "mcp_server",
-                        &format!("✅ Artifact {} created and persisted for direct tool call", artifact.artifact_id)
+                        &format!("Artifact {} created and persisted for direct tool call", artifact.artifact_id)
                     ).await.ok();
 
                     // Broadcast artifact to frontend

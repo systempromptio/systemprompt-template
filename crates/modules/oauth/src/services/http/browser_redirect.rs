@@ -1,10 +1,8 @@
 use crate::models::oauth::dynamic_registration::DynamicRegistrationRequest;
 use crate::repository::OAuthRepository;
 use anyhow::{anyhow, Result};
-use axum::{
-    http::HeaderMap,
-    response::{IntoResponse, Redirect},
-};
+use axum::http::HeaderMap;
+use axum::response::{IntoResponse, Redirect};
 use systemprompt_core_system::DbPool;
 
 #[derive(Debug, Clone)]
@@ -23,7 +21,9 @@ impl BrowserRedirectService {
         headers
             .get("accept")
             .and_then(|v| v.to_str().ok())
-            .is_some_and(|accept| accept.contains("text/html") && !accept.starts_with("application/json"))
+            .is_some_and(|accept| {
+                accept.contains("text/html") && !accept.starts_with("application/json")
+            })
     }
 
     pub async fn create_oauth_redirect(
@@ -38,7 +38,8 @@ impl BrowserRedirectService {
         let encoded_state = urlencoding::encode(original_url);
 
         let oauth_url = format!(
-            "{}/api/v1/core/oauth/authorize?response_type=code&client_id={}&redirect_uri={}&scope={}&state={}",
+            "{}/api/v1/core/oauth/authorize?response_type=code&client_id={}&redirect_uri={}&\
+             scope={}&state={}",
             server_base_url,
             web_client.client_id,
             encoded_redirect_uri,
@@ -58,12 +59,12 @@ impl BrowserRedirectService {
             if client.redirect_uris.contains(&redirect_uri)
                 && (client.scopes.contains(&"admin".to_string())
                     || client.scopes.contains(&"user".to_string()))
-                {
-                    return Ok(WebClient {
-                        client_id: client.client_id,
-                        scopes: client.scopes,
-                    });
-                }
+            {
+                return Ok(WebClient {
+                    client_id: client.client_id,
+                    scopes: client.scopes,
+                });
+            }
         }
 
         // No suitable client found, dynamically register one

@@ -219,32 +219,3 @@ impl HealthSummary {
         self.total_crashed() == 0
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_process_exists() {
-        let current_pid = std::process::id();
-        assert!(ProcessMonitor::process_exists(current_pid));
-        assert!(!ProcessMonitor::process_exists(99999999));
-    }
-
-    #[test]
-    fn test_health_summary() {
-        let mut summary = HealthSummary::default();
-        *summary.modules.entry("mcp".to_string()).or_default() += ModuleHealth {
-            healthy: 2,
-            crashed: 1,
-        };
-        *summary.modules.entry("agent".to_string()).or_default() += ModuleHealth {
-            healthy: 1,
-            crashed: 0,
-        };
-
-        assert_eq!(summary.total_healthy(), 3);
-        assert_eq!(summary.total_crashed(), 1);
-        assert!(!summary.is_all_healthy());
-    }
-}

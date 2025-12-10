@@ -398,8 +398,8 @@ async fn generate_admin_token(_base_url: &str) -> anyhow::Result<String> {
     }
 
     Err(anyhow::anyhow!(
-        "Admin token not available. Set ADMIN_TOKEN environment variable. \
-         Generate token with: just admin-token"
+        "Admin token not available. Set ADMIN_TOKEN environment variable. Generate token with: \
+         just admin-token"
     ))
 }
 

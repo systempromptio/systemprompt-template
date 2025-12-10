@@ -1,14 +1,15 @@
-use anyhow::{anyhow, Result};
-use systemprompt_core_database::{DatabaseProvider, DatabaseQueryEnum, DbPool};
+use anyhow::Result;
+use sqlx::PgPool;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct SubjectAnalysisRepository {
-    db_pool: DbPool,
+    pool: Arc<PgPool>,
 }
 
 impl SubjectAnalysisRepository {
-    pub const fn new(db_pool: DbPool) -> Self {
-        Self { db_pool }
+    pub const fn new(pool: Arc<PgPool>) -> Self {
+        Self { pool }
     }
 
     pub async fn analyze_conversation(
@@ -19,45 +20,54 @@ impl SubjectAnalysisRepository {
         confidence: f64,
     ) -> Result<u64> {
         let keywords_json = serde_json::to_string(keywords)?;
-        let query = DatabaseQueryEnum::AnalyzeConversation.get(self.db_pool.as_ref());
-        self.db_pool
-            .execute(
-                &query,
-                &[&task_id, &keywords_json, &primary_topic, &confidence],
-            )
-            .await
-            .map_err(|e| anyhow!("Failed to analyze conversation: {e}"))
+
+        let result = sqlx::query!(
+            r#"
+            INSERT INTO conversation_subjects (task_id, extracted_keywords, primary_topic, topic_confidence, analyzed_at)
+            VALUES ($1, $2, $3, $4, NOW())
+            ON CONFLICT (task_id) DO UPDATE SET
+                extracted_keywords = $2,
+                primary_topic = $3,
+                topic_confidence = $4,
+                analyzed_at = NOW()
+            "#,
+            task_id,
+            keywords_json,
+            primary_topic,
+            confidence
+        )
+        .execute(self.pool.as_ref())
+        .await?;
+
+        Ok(result.rows_affected())
     }
 
     pub async fn get_top_subjects(&self, days: i32) -> Result<Vec<TopicStats>> {
-        let query = DatabaseQueryEnum::GetTopSubjects.get(self.db_pool.as_ref());
-        let rows = self
-            .db_pool
-            .fetch_all(&query, &[&days])
-            .await
-            .map_err(|e| anyhow!("Failed to fetch top subjects: {e}"))?;
+        let rows = sqlx::query_as!(
+            TopicStats,
+            r#"
+            SELECT
+                primary_topic,
+                COUNT(*)::int as topic_count,
+                AVG(topic_confidence) as avg_confidence
+            FROM conversation_subjects
+            WHERE analyzed_at >= NOW() - ($1 || ' days')::INTERVAL
+            GROUP BY primary_topic
+            ORDER BY topic_count DESC
+            LIMIT 20
+            "#,
+            days.to_string()
+        )
+        .fetch_all(self.pool.as_ref())
+        .await?;
 
-        Ok(rows
-            .iter()
-            .map(|r| TopicStats {
-                topic: r
-                    .get("primary_topic")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("unknown")
-                    .to_string(),
-                count: r.get("topic_count").and_then(serde_json::Value::as_i64).unwrap_or(0) as i32,
-                avg_confidence: r
-                    .get("avg_confidence")
-                    .and_then(serde_json::Value::as_f64)
-                    .unwrap_or(0.0),
-            })
-            .collect())
+        Ok(rows)
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, sqlx::FromRow)]
 pub struct TopicStats {
-    pub topic: String,
-    pub count: i32,
-    pub avg_confidence: f64,
+    pub primary_topic: Option<String>,
+    pub topic_count: Option<i32>,
+    pub avg_confidence: Option<f64>,
 }

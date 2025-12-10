@@ -5,6 +5,7 @@ use systemprompt_core_database::DbPool;
 use crate::models::a2a::{Artifact, Message, Part};
 use crate::repository::TaskRepository;
 
+#[derive(Debug)]
 pub struct ContextService {
     task_repo: TaskRepository,
 }
@@ -72,36 +73,25 @@ impl ContextService {
     }
 
     fn serialize_artifact_for_context(artifact: &Artifact) -> Result<String> {
-        let mut content = String::new();
-
         let artifact_name = artifact
             .name
             .as_ref()
-            .unwrap_or(&"unnamed".to_string())
-            .clone();
+            .map(String::as_str)
+            .unwrap_or("unnamed");
 
-        content.push_str(&format!(
-            "[Artifact: {} (type: {})]\n",
-            artifact_name, artifact.metadata.artifact_type
-        ));
+        let mut content = format!(
+            "[Artifact: {} (type: {}, artifact_id: {})]",
+            artifact_name, artifact.metadata.artifact_type, artifact.artifact_id
+        );
 
-        for part in &artifact.parts {
-            match part {
-                Part::Text(text_part) => {
-                    content.push_str(&text_part.text);
-                    content.push('\n');
-                }
-                Part::Data(data_part) => {
-                    let json_str = serde_json::to_string_pretty(&data_part.data)
-                        .unwrap_or_else(|_| "{}".to_string());
-                    content.push_str(&json_str);
-                    content.push('\n');
-                }
-                Part::File(file_part) => {
-                    if let Some(name) = &file_part.file.name {
-                        content.push_str(&format!("[File: {}]\n", name));
-                    }
-                }
+        if let Some(description) = &artifact.description {
+            if !description.is_empty() {
+                let truncated = if description.len() > 300 {
+                    format!("{}...", &description[..300])
+                } else {
+                    description.clone()
+                };
+                content.push_str(&format!("\n{truncated}"));
             }
         }
 

@@ -1,8 +1,6 @@
-use axum::{
-    extract::State,
-    http::{header, StatusCode, Uri},
-    response::IntoResponse,
-};
+use axum::extract::State;
+use axum::http::{header, StatusCode, Uri};
+use axum::response::IntoResponse;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -58,7 +56,7 @@ pub async fn serve_vite_app(
     if !dist_dir.exists() || !dist_dir.join("index.html").exists() {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
-            axum::response::Html(r#"
+            axum::response::Html(r"
 <!DOCTYPE html>
 <html>
 <head>
@@ -73,7 +71,7 @@ pub async fn serve_vite_app(
     <p>Build the web assets first.</p>
 </body>
 </html>
-            "#)
+            ")
         ).into_response();
     }
 
@@ -85,15 +83,12 @@ pub async fn serve_vite_app(
         state.route_classifier.classify(path, "GET"),
         RouteType::StaticAsset { .. }
     ) {
-        // For /generated/ paths, serve from storage directory
-        // Maps /generated/images/... to storage/generated_images/...
-        let asset_path = if path.starts_with("/generated/") {
+        // UNIFIED FILES: All files served from STORAGE_PATH (default /app/files)
+        // Maps /files/... to $STORAGE_PATH/...
+        let asset_path = if path.starts_with("/files/") {
             let storage_dir =
-                std::env::var("STORAGE_DIR").unwrap_or_else(|_| "storage".to_string());
-            let relative_path = path
-                .strip_prefix("/generated/")
-                .unwrap_or("")
-                .replace("images/", "generated_images/");
+                std::env::var("STORAGE_PATH").unwrap_or_else(|_| "/app/files".to_string());
+            let relative_path = path.strip_prefix("/files/").unwrap_or("");
             PathBuf::from(&storage_dir).join(relative_path)
         } else {
             dist_dir.join(&path[1..])
@@ -105,10 +100,10 @@ pub async fn serve_vite_app(
                     let mime_type = match asset_path.extension().and_then(|ext| ext.to_str()) {
                         Some("js") => "application/javascript",
                         Some("css") => "text/css",
-                        Some("woff") | Some("woff2") => "font/woff2",
+                        Some("woff" | "woff2") => "font/woff2",
                         Some("ttf") => "font/ttf",
                         Some("png") => "image/png",
-                        Some("jpg") | Some("jpeg") => "image/jpeg",
+                        Some("jpg" | "jpeg") => "image/jpeg",
                         Some("svg") => "image/svg+xml",
                         Some("ico") => "image/x-icon",
                         Some("json") => "application/json",
@@ -123,10 +118,9 @@ pub async fn serve_vite_app(
                         .into_response();
                 },
             }
-        } else {
-            // Asset not found - return 404, not HTML fallback
-            return (StatusCode::NOT_FOUND, "Asset not found").into_response();
         }
+        // Asset not found - return 404, not HTML fallback
+        return (StatusCode::NOT_FOUND, "Asset not found").into_response();
     }
 
     // Determine which HTML file to serve (static assets are handled above)
@@ -153,9 +147,8 @@ pub async fn serve_vite_app(
                         .into_response();
                 },
             }
-        } else {
-            return (StatusCode::INTERNAL_SERVER_ERROR, "index.html not found").into_response();
         }
+        return (StatusCode::INTERNAL_SERVER_ERROR, "index.html not found").into_response();
     }
 
     // Static text files
@@ -166,7 +159,6 @@ pub async fn serve_vite_app(
                 Ok(content) => {
                     let mime_type = match file_path.extension().and_then(|ext| ext.to_str()) {
                         Some("xml") => "application/xml",
-                        Some("txt") => "text/plain",
                         _ => "text/plain",
                     };
                     return (StatusCode::OK, [(header::CONTENT_TYPE, mime_type)], content)
@@ -177,9 +169,8 @@ pub async fn serve_vite_app(
                         .into_response();
                 },
             }
-        } else {
-            return (StatusCode::NOT_FOUND, "File not found").into_response();
         }
+        return (StatusCode::NOT_FOUND, "File not found").into_response();
     }
 
     // Parent route pages (e.g., /blog, /legal)
@@ -268,18 +259,17 @@ pub async fn serve_vite_app(
                 // Content doesn't exist - return 404
                 return (
                     StatusCode::NOT_FOUND,
-                    axum::response::Html(format!(
-                        r#"<!DOCTYPE html>
+                    axum::response::Html(r#"<!DOCTYPE html>
 <html>
 <head>
     <title>404 Not Found</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body {{ font-family: system-ui, sans-serif; max-width: 600px; margin: 100px auto; padding: 20px; }}
-        h1 {{ color: #333; }}
-        a {{ color: #1976d2; text-decoration: none; }}
-        a:hover {{ text-decoration: underline; }}
+        body { font-family: system-ui, sans-serif; max-width: 600px; margin: 100px auto; padding: 20px; }
+        h1 { color: #333; }
+        a { color: #1976d2; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -287,8 +277,7 @@ pub async fn serve_vite_app(
     <p>The page you're looking for doesn't exist.</p>
     <p><a href="/">← Back to home</a></p>
 </body>
-</html>"#
-                    ))
+</html>"#.to_string())
                 ).into_response();
             },
             Err(e) => {
@@ -331,11 +320,8 @@ async fn serve_html_with_analytics(
     source_id: String,
     req_ctx: Option<systemprompt_core_system::RequestContext>,
 ) -> impl IntoResponse {
-    let html_content = match std::fs::read(&html_path) {
-        Ok(content) => content,
-        Err(_) => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, "Error reading file").into_response();
-        },
+    let Ok(html_content) = std::fs::read(&html_path) else {
+        return (StatusCode::INTERNAL_SERVER_ERROR, "Error reading file").into_response();
     };
 
     // Session already created by analytics middleware - just log for debugging
@@ -351,9 +337,10 @@ async fn serve_html_with_analytics(
     }
 
     let mut response = (StatusCode::OK, html_content).into_response();
-    response
-        .headers_mut()
-        .insert(header::CONTENT_TYPE, "text/html".parse().unwrap());
+    response.headers_mut().insert(
+        header::CONTENT_TYPE,
+        http::HeaderValue::from_static("text/html"),
+    );
 
     response
 }

@@ -1,7 +1,8 @@
 //! MCP (Model Context Protocol) Integration Module
 //!
 //! This module handles dynamic tool loading from MCP servers for A2A agents.
-//! Tools are fetched on-demand from running MCP services and included in agent card extensions.
+//! Tools are fetched on-demand from running MCP services and included in agent
+//! card extensions.
 //!
 //! ## Architecture
 //!
@@ -15,11 +16,13 @@
 //! ## Usage
 //!
 //! ```rust
-//! use crate::services::external_integrations::mcp::McpSkillLoader;
+//! use crate::services::external_integrations::mcp::McpToolLoader;
 //!
-//! let loader = McpSkillLoader::new(db_pool);
+//! let loader = McpToolLoader::new(db_pool);
 //! let tools_by_server = loader.load_tools_for_servers(&server_names).await?;
-//! let extensions = loader.create_mcp_extensions(&server_names, base_url).await?;
+//! let extensions = loader
+//!     .create_mcp_extensions(&server_names, base_url)
+//!     .await?;
 //! ```
 
 pub mod client;
@@ -29,7 +32,7 @@ pub mod service;
 
 pub use client::McpClientAdapter;
 pub use models::*;
-pub use orchestration::McpSkillLoader;
+pub use orchestration::McpToolLoader;
 pub use service::{McpServiceState, ServiceStateManager};
 
 pub use systemprompt_core_mcp::services::client::McpClient;

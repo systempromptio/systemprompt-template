@@ -3,17 +3,44 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { useContextStore } from '@/stores/context.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { useToolExecutionStore } from '@/stores/toolExecution.store'
+import { useUIStateStore } from '@/stores/ui-state.store'
 import { logger } from '@/lib/logger'
-import type { EphemeralArtifact, RenderBehavior } from '@/types/artifact'
+import type { EphemeralArtifact } from '@/types/artifact'
+
+/**
+ * Type guard to check if data is a ToolResponse wrapper
+ */
+interface ToolResponseWrapper {
+  artifact_id: string
+  mcp_execution_id: string
+  artifact: Record<string, unknown>
+  _metadata?: Record<string, unknown>
+}
+
+function isToolResponseWrapper(data: unknown): data is ToolResponseWrapper {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'artifact' in data &&
+    'mcp_execution_id' in data &&
+    typeof (data as ToolResponseWrapper).artifact === 'object'
+  )
+}
 
 /**
  * Constructs an ephemeral artifact from tool execution structured content.
  *
- * Extracts artifact type and execution ID from structured content returned
- * by MCP tool execution. Returns null if content is invalid or missing required fields.
+ * The structured content is wrapped in a ToolResponse envelope:
+ * {
+ *   artifact_id: string,
+ *   mcp_execution_id: string,
+ *   artifact: { x-artifact-type: "table"|"dashboard"|etc, ...data },
+ *   _metadata: { ... }
+ * }
  *
- * @param structuredContent - Raw structured content from tool result
+ * This function unwraps the envelope and extracts the inner artifact.
+ *
+ * @param structuredContent - Raw structured content from tool result (ToolResponse wrapper)
  * @param toolName - Name of the tool that produced the artifact
  * @returns EphemeralArtifact object or null if construction fails
  */
@@ -25,15 +52,14 @@ function constructEphemeralArtifact(
     return null
   }
 
-  const data = structuredContent as Record<string, unknown>
-
-  const artifactType = data['x-artifact-type'] as string | undefined
-  const executionId = data.mcp_execution_id as string | undefined
-
-  if (!executionId) {
-    logger.error('No mcp_execution_id in structured_content', undefined, 'useMcpToolCaller')
+  if (!isToolResponseWrapper(structuredContent)) {
+    logger.error('structured_content is not a valid ToolResponse wrapper', undefined, 'useMcpToolCaller')
     return null
   }
+
+  const executionId = structuredContent.mcp_execution_id
+  const innerArtifact = structuredContent.artifact
+  const artifactType = innerArtifact['x-artifact-type'] as string | undefined
 
   return {
     artifactId: executionId,
@@ -42,7 +68,7 @@ function constructEphemeralArtifact(
     parts: [
       {
         kind: 'data',
-        data: structuredContent as Record<string, unknown>
+        data: innerArtifact
       }
     ],
     metadata: {
@@ -130,7 +156,6 @@ export function useMcpToolCaller() {
    * @param toolName - Name of the tool to call
    * @param toolArgs - Tool arguments (parameter keys and values)
    * @param serverName - Optional server display name
-   * @param renderBehavior - Optional artifact render mode
    * @throws Error if tool execution fails
    */
   const callTool = useCallback(
@@ -138,8 +163,7 @@ export function useMcpToolCaller() {
       serverEndpoint: string,
       toolName: string,
       toolArgs: Record<string, unknown>,
-      serverName?: string,
-      renderBehavior?: RenderBehavior
+      serverName?: string
     ): Promise<void> => {
       logger.debug('Calling tool', {
         tool: toolName,
@@ -151,17 +175,6 @@ export function useMcpToolCaller() {
       setLoading(true)
       setError(null)
 
-      const addExecution = useToolExecutionStore.getState().addExecution
-      addExecution({
-        id: executionId,
-        toolName,
-        serverName: serverName || 'Unknown',
-        status: 'pending',
-        timestamp: Date.now(),
-        renderBehavior: renderBehavior || 'both',
-        parameters: toolArgs
-      })
-
       let contextId = currentContextId
       if (!contextId) {
         try {
@@ -172,6 +185,16 @@ export function useMcpToolCaller() {
           logger.error('Failed to create conversation', err, 'useMcpToolCaller')
         }
       }
+
+      const uiState = useUIStateStore.getState()
+      uiState.addToolExecution(contextId || 'ephemeral', {
+        id: executionId,
+        toolName,
+        serverName: serverName || 'Unknown',
+        status: 'pending',
+        timestamp: Date.now(),
+        parameters: toolArgs
+      })
 
       try {
         const authHeader = getAuthHeader()
@@ -192,7 +215,7 @@ export function useMcpToolCaller() {
           headers['x-context-id'] = contextId
         }
 
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_HOST || window.location.origin
         const relativeEndpoint = serverEndpoint.replace(apiBaseUrl, '')
 
         const transport = new StreamableHTTPClientTransport(
@@ -246,8 +269,8 @@ export function useMcpToolCaller() {
           )
 
           if (ephemeralArtifact) {
-            const completeExecution = useToolExecutionStore.getState().completeExecution
-            completeExecution(executionId, ephemeralArtifact)
+            useUIStateStore.getState().setEphemeralArtifact(ephemeralArtifact)
+            useUIStateStore.getState().completeToolExecution(executionId, ephemeralArtifact.artifactId)
 
             logger.debug('Ephemeral artifact completed', { artifactId: ephemeralArtifact.artifactId }, 'useMcpToolCaller')
           } else {
@@ -268,8 +291,7 @@ export function useMcpToolCaller() {
         setError(errorMessage)
         setLoading(false)
 
-        const failExecution = useToolExecutionStore.getState().failExecution
-        failExecution(executionId, errorMessage)
+        useUIStateStore.getState().failToolExecution(executionId, errorMessage)
 
         throw err
       }

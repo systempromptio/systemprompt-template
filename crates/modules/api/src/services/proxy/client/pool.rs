@@ -3,6 +3,12 @@ pub struct ClientPool {
     default_client: reqwest::Client,
 }
 
+impl Default for ClientPool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ClientPool {
     pub fn new() -> Self {
         Self {

@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pages | tyingshoelaces</title>
+  <title>Pages | {{ORG_NAME}}</title>
+  <meta name="description" content="Browse all pages on {{ORG_NAME}}" />
+  <link rel="canonical" href="{{ORG_URL}}/pages" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <link rel="stylesheet" href="/blog.css" />
 </head>
@@ -14,8 +16,8 @@
   <header class="site-header">
     <nav class="site-nav">
       <a href="/" class="logo-link">
-        <img src="/favicon.ico" alt="tyingshoelaces logo" class="logo" />
-        <span class="site-name">tyingshoelaces</span>
+        <img src="/favicon.ico" alt="{{ORG_NAME}} logo" class="logo" />
+        {{#if DISPLAY_SITENAME}}<span class="site-name">{{ORG_NAME}}</span>{{/if}}
       </a>
       <a href="/" class="chat-cta">
         <svg class="chat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

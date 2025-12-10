@@ -8,8 +8,9 @@
  */
 
 import type { Task } from '@/types/task'
-import type { TaskStatus } from '@a2a-js/sdk'
+import type { Task as A2ATask, TaskStatus, Artifact as A2AArtifact, Message } from '@a2a-js/sdk'
 import type { Artifact, EphemeralArtifact } from '@/types/artifact'
+import { validateArtifact } from '@/types/artifact'
 
 /**
  * Check if an artifact is persisted (stored in database).
@@ -390,4 +391,105 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
  */
 export function isError(error: unknown): error is Error {
   return error instanceof Error
+}
+
+// =============================================================================
+// SSE/Streaming Type Guards - BroadcastEvent Data Validation
+// =============================================================================
+
+/**
+ * Guard for BroadcastEvent.data containing task field.
+ * Uses isTask internally for validation.
+ */
+export function hasTaskInData(data: unknown): data is { task: Task } {
+  if (!isPlainObject(data)) return false
+  if (!('task' in data)) return false
+  return isTask(data.task)
+}
+
+/**
+ * Guard for BroadcastEvent.data containing artifact field.
+ * Uses validateArtifact internally for validation.
+ */
+export function hasArtifactInData(data: unknown): data is { artifact: A2AArtifact } {
+  if (!isPlainObject(data)) return false
+  if (!('artifact' in data)) return false
+  return validateArtifact(data.artifact as A2AArtifact)
+}
+
+/**
+ * Guard for BroadcastEvent.data containing message field.
+ */
+export function hasMessageInData(data: unknown): data is { message: Message } {
+  if (!isPlainObject(data)) return false
+  if (!('message' in data)) return false
+  const msg = data.message
+  return isPlainObject(msg) && 'role' in msg && Array.isArray((msg as Record<string, unknown>).parts)
+}
+
+/**
+ * Guard for BroadcastEvent.data containing context_id.
+ */
+export function hasContextInData(data: unknown): data is { context_id: string } {
+  if (!isPlainObject(data)) return false
+  return 'context_id' in data && typeof data.context_id === 'string'
+}
+
+// =============================================================================
+// Task Status Message Guards
+// =============================================================================
+
+interface StatusMessage {
+  messageId: string
+  role?: string
+  content?: string
+}
+
+/**
+ * Guard for task.status.message structure.
+ */
+export function isStatusMessage(value: unknown): value is StatusMessage {
+  if (!isPlainObject(value)) return false
+  return 'messageId' in value && typeof value.messageId === 'string'
+}
+
+/**
+ * Extract messageId from task status safely.
+ *
+ * @example
+ * ```typescript
+ * // Before:
+ * const messageId = (task.status?.message as { messageId?: string })?.messageId || ''
+ *
+ * // After:
+ * const messageId = getStatusMessageId(task) ?? ''
+ * ```
+ */
+export function getStatusMessageId(task: Task): string | undefined {
+  if (!task.status?.message) return undefined
+  if (isStatusMessage(task.status.message)) {
+    return task.status.message.messageId
+  }
+  return undefined
+}
+
+// =============================================================================
+// Message Extraction Utilities
+// =============================================================================
+
+/**
+ * Extract first user message text from task history (for logging).
+ * Returns undefined with explicit checks at each level.
+ */
+export function extractFirstMessageText(task: A2ATask): string | undefined {
+  const history = task.history
+  if (!history || history.length === 0) return undefined
+
+  const firstMessage = history[0]
+  if (!firstMessage.parts || firstMessage.parts.length === 0) return undefined
+
+  const firstPart = firstMessage.parts[0]
+  if (!('text' in firstPart) || typeof firstPart.text !== 'string') return undefined
+
+  return firstPart.text.substring(0, 100)
 }

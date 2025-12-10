@@ -1,22 +1,27 @@
 use anyhow::Result;
-use axum::{extract::DefaultBodyLimit, routing::get, Json, Router};
+use axum::extract::DefaultBodyLimit;
+use axum::routing::get;
+use axum::{Json, Router};
 
 use std::sync::Arc;
 use std::time::Duration;
+use systemprompt_core_logging::CliService;
 use systemprompt_core_system::AppContext;
-use systemprompt_models::{api::SingleResponse, Config, SystemPaths};
+use systemprompt_models::api::SingleResponse;
+use systemprompt_models::{Config, SystemPaths};
 
 use crate::models::server::ServerConfig;
-use crate::services::{
-    middleware::{
-        remove_trailing_slash, AnalyticsMiddleware, ContextMiddleware, CorsMiddleware,
-        JwtContextExtractor, RouterExt, SessionMiddleware,
-    },
-    static_content::{
-        serve_vite_app, smart_fallback_handler, StaticContentMatcher, StaticContentState,
-    },
+use crate::services::middleware::{
+    remove_trailing_slash, AnalyticsMiddleware, ContextMiddleware, CorsMiddleware,
+    JwtContextExtractor, RouterExt, SessionMiddleware,
+};
+use crate::services::static_content::{
+    serve_vite_app, smart_fallback_handler, StaticContentMatcher, StaticContentState,
 };
 use serde_json::json;
+use systemprompt_core_database::DatabaseQuery;
+
+const HEALTH_CHECK_QUERY: DatabaseQuery = DatabaseQuery::new("SELECT 1");
 
 #[derive(Debug)]
 pub struct ApiServer {
@@ -29,7 +34,7 @@ impl ApiServer {
         Self::with_config(router, ServerConfig::default())
     }
 
-    pub fn with_config(router: Router, config: ServerConfig) -> Self {
+    pub const fn with_config(router: Router, config: ServerConfig) -> Self {
         Self {
             router,
             _config: config,
@@ -37,14 +42,14 @@ impl ApiServer {
     }
 
     pub async fn serve(self, addr: &str) -> Result<()> {
-        println!("🚀 Attempting to bind to: {}", addr);
+        CliService::info(&format!("Attempting to bind to: {addr}"));
         let listener = self.create_listener(addr).await?;
-        println!("✅ Successfully bound to {}", addr);
-        println!("🌐 Server is now listening on http://{}", addr);
-        println!(
-            "📊 Single instance running - process ID: {}",
+        CliService::success(&format!("Successfully bound to {addr}"));
+        CliService::info(&format!("Server is now listening on http://{addr}"));
+        CliService::info(&format!(
+            "Single instance running - process ID: {}",
             std::process::id()
-        );
+        ));
 
         axum::serve(
             listener,
@@ -70,9 +75,9 @@ impl ApiServer {
             .rsplit(':')
             .next()
             .and_then(|p| p.parse().ok())
-            .ok_or_else(|| anyhow::anyhow!("Failed to parse port from address: {}", addr))?;
+            .ok_or_else(|| anyhow::anyhow!("Failed to parse port from address: {addr}"))?;
 
-        let kill_cmd = format!("lsof -ti:{} | xargs -r kill -9 2>/dev/null || true", port);
+        let kill_cmd = format!("lsof -ti:{port} | xargs -r kill -9 2>/dev/null || true");
         std::process::Command::new("sh")
             .arg("-c")
             .arg(&kill_cmd)
@@ -94,30 +99,45 @@ pub async fn setup_api_server(ctx: &AppContext) -> Result<ApiServer> {
     let rate_config = &ctx.config().rate_limits;
 
     if rate_config.disabled {
-        eprintln!("⚠️  WARNING: RATE LIMITING DISABLED - Only use in development/testing!");
+        CliService::warning("RATE LIMITING DISABLED - Only use in development/testing!");
     } else {
-        println!("🚦 Rate Limiting Active:");
-        println!(
+        CliService::section("Rate Limiting Active");
+        CliService::info(&format!(
             "  OAuth Public: {}/sec",
             rate_config.oauth_public_per_second
-        );
-        println!("  OAuth Auth: {}/sec", rate_config.oauth_auth_per_second);
-        println!("  Contexts: {}/sec", rate_config.contexts_per_second);
-        println!("  Tasks: {}/sec", rate_config.tasks_per_second);
-        println!("  Artifacts: {}/sec", rate_config.artifacts_per_second);
-        println!(
+        ));
+        CliService::info(&format!(
+            "  OAuth Auth: {}/sec",
+            rate_config.oauth_auth_per_second
+        ));
+        CliService::info(&format!(
+            "  Contexts: {}/sec",
+            rate_config.contexts_per_second
+        ));
+        CliService::info(&format!("  Tasks: {}/sec", rate_config.tasks_per_second));
+        CliService::info(&format!(
+            "  Artifacts: {}/sec",
+            rate_config.artifacts_per_second
+        ));
+        CliService::info(&format!(
             "  Agent Registry: {}/sec",
             rate_config.agent_registry_per_second
-        );
-        println!("  Agents: {}/sec", rate_config.agents_per_second);
-        println!(
+        ));
+        CliService::info(&format!("  Agents: {}/sec", rate_config.agents_per_second));
+        CliService::info(&format!(
             "  MCP Registry: {}/sec",
             rate_config.mcp_registry_per_second
-        );
-        println!("  MCP: {}/sec", rate_config.mcp_per_second);
-        println!("  Stream: {}/sec", rate_config.stream_per_second);
-        println!("  Content: {}/sec", rate_config.content_per_second);
-        println!("  Burst Multiplier: {}x", rate_config.burst_multiplier);
+        ));
+        CliService::info(&format!("  MCP: {}/sec", rate_config.mcp_per_second));
+        CliService::info(&format!("  Stream: {}/sec", rate_config.stream_per_second));
+        CliService::info(&format!(
+            "  Content: {}/sec",
+            rate_config.content_per_second
+        ));
+        CliService::info(&format!(
+            "  Burst Multiplier: {}x",
+            rate_config.burst_multiplier
+        ));
     }
 
     let jwt_extractor =
@@ -129,7 +149,8 @@ pub async fn setup_api_server(ctx: &AppContext) -> Result<ApiServer> {
     let mcp_middleware = ContextMiddleware::mcp(jwt_extractor.clone());
 
     // OAuth endpoints - Split into public and authenticated routes
-    // Public routes (anon token generation): 2/sec per IP (120/min) - prevent flood attacks
+    // Public routes (anon token generation): 2/sec per IP (120/min) - prevent flood
+    // attacks
     router = router.nest(
         "/api/v1/core/oauth",
         systemprompt_core_oauth::api::public_router(ctx)
@@ -137,7 +158,8 @@ pub async fn setup_api_server(ctx: &AppContext) -> Result<ApiServer> {
             .with_auth_middleware(public_middleware.clone()),
     );
 
-    // Authenticated OAuth routes (WebAuthn, etc.): 2/sec per IP (120/min) - prevent abuse
+    // Authenticated OAuth routes (WebAuthn, etc.): 2/sec per IP (120/min) - prevent
+    // abuse
     router = router.nest(
         "/api/v1/core/oauth",
         systemprompt_core_oauth::api::authenticated_router(ctx)
@@ -146,7 +168,8 @@ pub async fn setup_api_server(ctx: &AppContext) -> Result<ApiServer> {
     );
 
     // Core API endpoints - MODERATE rate limiting (standard CRUD operations)
-    // Contexts: 50/sec per IP (3000/min) - conversation management, artifact streaming
+    // Contexts: 50/sec per IP (3000/min) - conversation management, artifact
+    // streaming
     router = router.nest(
         "/api/v1/core/contexts",
         systemprompt_core_agent::api::contexts_router()
@@ -209,7 +232,8 @@ pub async fn setup_api_server(ctx: &AppContext) -> Result<ApiServer> {
     );
 
     // MCP proxy - RELAXED (tool execution)
-    // MCP: 100/sec per IP (6000/min) - tool calls, SSE connections, protocol operations
+    // MCP: 100/sec per IP (6000/min) - tool calls, SSE connections, protocol
+    // operations
     router = router.nest(
         "/api/v1/mcp",
         crate::api::routes::proxy::mcp::router(ctx)
@@ -235,7 +259,8 @@ pub async fn setup_api_server(ctx: &AppContext) -> Result<ApiServer> {
             .with_auth_middleware(public_middleware.clone()),
     );
 
-    // Link redirect handler at root level - RELAXED (public, read-only with click tracking)
+    // Link redirect handler at root level - RELAXED (public, read-only with click
+    // tracking)
     router = router.merge(
         systemprompt_core_blog::api::redirect_router(ctx)
             .with_rate_limit(rate_config, rate_config.content_per_second)
@@ -251,8 +276,8 @@ pub async fn setup_api_server(ctx: &AppContext) -> Result<ApiServer> {
     ) {
         Ok(matcher) => Arc::new(matcher),
         Err(e) => {
-            eprintln!("⚠️  Failed to load content config: {}", e);
-            eprintln!("   Static content matching will be disabled");
+            CliService::warning(&format!("Failed to load content config: {e}"));
+            CliService::info("   Static content matching will be disabled");
             Arc::new(StaticContentMatcher::empty())
         },
     };
@@ -302,7 +327,7 @@ async fn apply_global_middleware(router: Router, ctx: &AppContext) -> Result<Rou
     // Apply analytics middleware (will run AFTER session and context middleware)
     let analytics_middleware = AnalyticsMiddleware::new(Arc::new(ctx.clone()));
     router = router.layer(axum::middleware::from_fn({
-        let middleware = analytics_middleware.clone();
+        let middleware = analytics_middleware;
         move |req, next| {
             let middleware = middleware.clone();
             async move { middleware.track_request(req, next).await }
@@ -315,7 +340,7 @@ async fn apply_global_middleware(router: Router, ctx: &AppContext) -> Result<Rou
         JwtContextExtractor::new(ctx.config().jwt_secret.clone(), ctx.db_pool().clone());
     let global_context_middleware = ContextMiddleware::public(jwt_extractor);
     router = router.layer(axum::middleware::from_fn({
-        let middleware = global_context_middleware.clone();
+        let middleware = global_context_middleware;
         move |req, next| {
             let middleware = middleware.clone();
             async move { middleware.handle(req, next).await }
@@ -326,14 +351,14 @@ async fn apply_global_middleware(router: Router, ctx: &AppContext) -> Result<Rou
     // This runs FIRST before all other middleware
     let session_middleware = SessionMiddleware::new(Arc::new(ctx.clone()));
     router = router.layer(axum::middleware::from_fn({
-        let middleware = session_middleware.clone();
+        let middleware = session_middleware;
         move |req, next| {
             let middleware = middleware.clone();
             async move { middleware.handle(req, next).await }
         }
     }));
 
-    let cors = CorsMiddleware::build_layer();
+    let cors = CorsMiddleware::build_layer()?;
     router = router.layer(cors);
 
     router = router.layer(axum::middleware::from_fn(remove_trailing_slash));
@@ -412,7 +437,7 @@ async fn handle_health(
     use systemprompt_core_database::DatabaseProvider;
     use systemprompt_models::repository::ServiceRepository;
 
-    let db_status = match ctx.db_pool().fetch_optional(&"SELECT 1", &[]).await {
+    let db_status = match ctx.db_pool().fetch_optional(&HEALTH_CHECK_QUERY, &[]).await {
         Ok(_) => "healthy",
         Err(_) => "unhealthy",
     };

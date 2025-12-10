@@ -6,25 +6,18 @@ impl UrlResolver {
         let clean_path = path.trim_start_matches('/');
 
         match protocol {
-            "a2a" => {
-                if clean_path.is_empty() {
-                    format!("http://{}:{}/", host, port)
-                } else {
-                    format!("http://{}:{}/{}", host, port, clean_path)
-                }
-            },
             "mcp" => {
                 if clean_path.is_empty() || clean_path == "mcp" {
-                    format!("http://{}:{}/mcp", host, port)
+                    format!("http://{host}:{port}/mcp")
                 } else {
-                    format!("http://{}:{}/{}", host, port, clean_path)
+                    format!("http://{host}:{port}/{clean_path}")
                 }
             },
             _ => {
                 if clean_path.is_empty() {
-                    format!("http://{}:{}/", host, port)
+                    format!("http://{host}:{port}/")
                 } else {
-                    format!("http://{}:{}/{}", host, port, clean_path)
+                    format!("http://{host}:{port}/{clean_path}")
                 }
             },
         }
@@ -32,7 +25,7 @@ impl UrlResolver {
 
     pub fn append_query_params(url: String, query: Option<&str>) -> String {
         match query {
-            Some(q) if !q.is_empty() => format!("{}?{}", url, q),
+            Some(q) if !q.is_empty() => format!("{url}?{q}"),
             _ => url,
         }
     }

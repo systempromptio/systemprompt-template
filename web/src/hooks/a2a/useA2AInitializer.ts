@@ -229,8 +229,8 @@ export function useA2AInitializer(): UseA2AInitializerReturn {
   }, [attemptInitialization])
 
   const disconnect = useCallback(() => {
-    if (state.client) {
-      ;(state.client as any).disconnect?.()
+    if (state.client && 'disconnect' in state.client && typeof state.client.disconnect === 'function') {
+      state.client.disconnect()
     }
     setState((prev) => ({
       ...prev,

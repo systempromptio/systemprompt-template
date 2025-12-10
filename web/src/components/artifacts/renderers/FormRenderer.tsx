@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { FormHints } from '@/types/artifacts'
+import type { FormHints } from '@/types/artifact'
 import { FormFieldInput } from './FormFieldInput'
 import { SubmissionState } from './SubmissionState'
 

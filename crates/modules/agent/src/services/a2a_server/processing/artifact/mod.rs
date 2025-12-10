@@ -13,7 +13,6 @@ use systemprompt_identifiers::{ContextId, TaskId};
 use systemprompt_models::a2a::ArtifactMetadata;
 use uuid::Uuid;
 
-pub mod mocks;
 pub mod providers;
 pub mod traits;
 
@@ -33,7 +32,7 @@ pub struct ArtifactBuilder {
 }
 
 impl ArtifactBuilder {
-    pub fn new(
+    pub const fn new(
         tool_calls: Vec<ToolCall>,
         tool_results: Vec<CallToolResult>,
         tool_provider: Arc<ServiceToolProvider>,
@@ -67,7 +66,6 @@ impl ArtifactBuilder {
                         .await
                         .unwrap_or(None);
 
-                    // Extract skill ID - repository will lookup full details from database
                     let skill_id = extract_skill_id(structured_content);
 
                     let mut metadata = ArtifactMetadata {
@@ -83,12 +81,10 @@ impl ArtifactBuilder {
                         fingerprint: None,
                         tool_name: Some(tool_call.name.clone()),
                         execution_index: Some(index),
-                        render_behavior: "both".to_string(),
                         skill_id: None,
                         skill_name: None,
                     };
 
-                    // Add skill ID - repository will join with agent_skills table
                     if let Some(sid) = skill_id {
                         metadata = metadata.with_skill_id(sid);
                     }

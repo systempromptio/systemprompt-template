@@ -28,7 +28,7 @@ import { logger } from '@/lib/logger'
 interface ApiError {
   code: string
   message: string
-  details?: any
+  details?: unknown
 }
 
 /**
@@ -37,7 +37,7 @@ interface ApiError {
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
   headers?: Record<string, string>
-  body?: any
+  body?: unknown
   authToken?: string | null
   _retryCount?: number
 }
@@ -52,13 +52,20 @@ interface ApiResponse<T> {
 }
 
 /**
+ * Token refresh state using discriminated union.
+ * Clearly distinguishes between idle, refreshing, and failed states.
+ */
+type RefreshState =
+  | { status: 'idle' }
+  | { status: 'refreshing'; promise: Promise<string | null> }
+
+/**
  * Centralized HTTP client for all API communication
  * @internal
  */
 class ApiClient {
   private baseUrl: string
-  private isRefreshingToken: boolean = false
-  private refreshPromise: Promise<string | null> | null = null
+  private refreshState: RefreshState = { status: 'idle' }
 
   /**
    * Initialize API client
@@ -94,18 +101,20 @@ class ApiClient {
    * @internal
    */
   private async refreshToken(): Promise<string | null> {
-    if (this.isRefreshingToken && this.refreshPromise) {
-      return this.refreshPromise
+    // Reuse existing refresh if one is in progress
+    if (this.refreshState.status === 'refreshing') {
+      return this.refreshState.promise
     }
 
-    this.isRefreshingToken = true
-    this.refreshPromise = this.performTokenRefresh()
+    // Start new refresh
+    const promise = this.performTokenRefresh()
+    this.refreshState = { status: 'refreshing', promise }
 
     try {
-      return await this.refreshPromise
+      const result = await promise
+      return result
     } finally {
-      this.isRefreshingToken = false
-      this.refreshPromise = null
+      this.refreshState = { status: 'idle' }
     }
   }
 
@@ -354,7 +363,7 @@ class ApiClient {
    * @param authToken - Optional JWT authorization token
    * @returns Response containing created data or error
    */
-  async post<T>(endpoint: string, body: any, authToken?: string | null): Promise<ApiResponse<T>> {
+  async post<T>(endpoint: string, body: unknown, authToken?: string | null): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { method: 'POST', body, authToken })
   }
 
@@ -365,7 +374,7 @@ class ApiClient {
    * @param authToken - Optional JWT authorization token
    * @returns Response containing updated data or error
    */
-  async put<T>(endpoint: string, body: any, authToken?: string | null): Promise<ApiResponse<T>> {
+  async put<T>(endpoint: string, body: unknown, authToken?: string | null): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { method: 'PUT', body, authToken })
   }
 
@@ -386,7 +395,7 @@ class ApiClient {
    * @param authToken - Optional JWT authorization token
    * @returns Response containing updated data or error
    */
-  async patch<T>(endpoint: string, body: any, authToken?: string | null): Promise<ApiResponse<T>> {
+  async patch<T>(endpoint: string, body: unknown, authToken?: string | null): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { method: 'PATCH', body, authToken })
   }
 }

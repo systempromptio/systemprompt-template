@@ -1,13 +1,14 @@
 /**
  * Server-Sent Events (SSE) Event Processor Hook
  *
- * Handles parsing and processing of SSE event stream data with proper
- * line-by-line parsing and event emission.
+ * Handles parsing and processing of SSE event stream data using
+ * the eventsource-parser library for proper cross-chunk handling.
  *
  * @module hooks/sse/useSSEEventHandler
  */
 
 import { useCallback } from 'react'
+import { EventSourceParserStream } from 'eventsource-parser/stream'
 
 /**
  * Event handler callback for SSE events.
@@ -19,94 +20,47 @@ export type SSEEventCallback = (eventType: string, data: string) => void
 /**
  * Hook for processing SSE stream events.
  *
- * Provides utilities for parsing SSE protocol events from a stream
- * and invoking callbacks for each event. Handles proper SSE format:
- * ```
- * event: eventType
- * data: eventData
- * ```
+ * Uses eventsource-parser library to properly handle SSE events that
+ * may be split across multiple network chunks.
  *
  * @returns Functions for processing SSE stream data
- *
- * @example
- * ```typescript
- * function SSEConsumer() {
- *   const { processSSELine, processSSEStream } = useSSEEventHandler(
- *     (eventType, data) => {
- *       console.log(`Received ${eventType}:`, data)
- *     }
- *   )
- *
- *   useEffect(() => {
- *     const reader = response.body.getReader()
- *     processSSEStream(reader)
- *   }, [processSSEStream])
- *
- *   return <div>Processing events...</div>
- * }
- * ```
  */
 export function useSSEEventHandler(onMessage?: SSEEventCallback) {
-  /**
-   * Parse and process a single SSE event line pair.
-   *
-   * Validates that the line follows SSE format (event: type) and
-   * that the next line contains the data payload. Emits event only
-   * if both lines are present and valid.
-   *
-   * @param line - Current line (should start with "event: ")
-   * @param nextLine - Following line (should start with "data: ")
-   * @internal
-   */
-  const processSSELine = useCallback((line: string, nextLine: string | undefined): void => {
-    if (!line.trim() || !line.startsWith('event: ')) return
-
-    const eventType = line.substring(7).trim()
-    if (nextLine?.startsWith('data: ')) {
-      const data = nextLine.substring(6).trim()
-      onMessage?.(eventType, data)
-    }
-  }, [onMessage])
-
-  /**
-   * Read and process complete SSE stream from a reader.
-   *
-   * Continuously reads from the provided stream until EOF, decoding
-   * chunks and processing each event line pair. Handles stream
-   * completion gracefully.
-   *
-   * @param reader - ReadableStreamDefaultReader from response.body
-   * @throws {Error} If stream reading fails
-   *
-   * @example
-   * ```typescript
-   * const response = await fetch(url, { ...options })
-   * await processSSEStream(response.body.getReader())
-   * ```
-   */
   const processSSEStream = useCallback(
     async (reader: ReadableStreamDefaultReader<Uint8Array>): Promise<void> => {
-      const decoder = new TextDecoder()
+      const stream = new ReadableStream({
+        async start(controller) {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) {
+              controller.close()
+              break
+            }
+            controller.enqueue(value)
+          }
+        }
+      })
+
+      const eventStream = stream
+        .pipeThrough(new TextDecoderStream())
+        .pipeThrough(new EventSourceParserStream())
+
+      const eventReader = eventStream.getReader()
 
       while (true) {
-        const { done, value } = await reader.read()
-        if (done) {
-          break
-        }
+        const { done, value } = await eventReader.read()
+        if (done) break
 
-        const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk.split('\n')
-
-        for (let i = 0; i < lines.length; i++) {
-          processSSELine(lines[i], lines[i + 1])
+        if (value.event && value.data) {
+          console.log(`[SSE] Event received: ${value.event}`, { timestamp: new Date().toISOString(), dataPreview: value.data.substring(0, 200) })
+          onMessage?.(value.event, value.data)
         }
       }
     },
-    [processSSELine]
+    [onMessage]
   )
 
   return {
-    processSSELine,
     processSSEStream,
   }
 }

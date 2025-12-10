@@ -1,4 +1,5 @@
-use crate::repository::SkillRepository;
+use crate::repository::{ExecutionStepRepository, SkillRepository};
+use crate::services::ExecutionTrackingService;
 use anyhow::{anyhow, Result};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -6,8 +7,8 @@ use serde_json::json;
 use std::sync::Arc;
 use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::{LogLevel, LogService};
-use systemprompt_core_system::CONTEXT_BROADCASTER;
-use systemprompt_identifiers::SkillId;
+use systemprompt_core_system::BroadcastClient;
+use systemprompt_identifiers::{SkillId, TaskId};
 use systemprompt_models::execution::context::RequestContext;
 use systemprompt_models::execution::events::BroadcastEvent;
 
@@ -39,17 +40,28 @@ struct SkillLoadedData {
     request_context: SkillRequestContext,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct SkillService {
     skill_repo: Arc<SkillRepository>,
     db_pool: DbPool,
+    broadcaster: Arc<dyn BroadcastClient>,
+}
+
+impl std::fmt::Debug for SkillService {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SkillService")
+            .field("skill_repo", &"<SkillRepository>")
+            .field("broadcaster", &"<BroadcastClient>")
+            .finish()
+    }
 }
 
 impl SkillService {
-    pub fn new(db_pool: DbPool) -> Self {
+    pub fn new(db_pool: DbPool, broadcaster: Arc<dyn BroadcastClient>) -> Self {
         Self {
             skill_repo: Arc::new(SkillRepository::new(db_pool.clone())),
             db_pool,
+            broadcaster,
         }
     }
 
@@ -57,12 +69,14 @@ impl SkillService {
         let logger = LogService::new(self.db_pool.clone(), ctx.log_context());
         let skill_id_typed = SkillId::new(skill_id);
 
-        let skill = self.skill_repo
+        let skill = self
+            .skill_repo
             .get_by_skill_id(&skill_id_typed)
             .await?
             .ok_or_else(|| {
                 anyhow!(
-                    "Skill not found in database: {} (ensure skill is synced via SkillIngestionService)",
+                    "Skill not found in database: {} (ensure skill is synced via \
+                     SkillIngestionService)",
                     skill_id
                 )
             })?;
@@ -123,11 +137,80 @@ impl SkillService {
             .await
             .ok();
 
-        CONTEXT_BROADCASTER
-            .broadcast_to_user(ctx.user_id().as_str(), event)
+        self.broadcaster
+            .broadcast(ctx.user_id().as_str(), event)
             .await;
 
+        // Track skill usage as an execution step if we have a task_id
+        if let Some(task_id) = ctx.task_id() {
+            logger
+                .info(
+                    "skill_service",
+                    &format!("Tracking skill usage for task: {}", task_id.as_str()),
+                )
+                .await
+                .ok();
+
+            let execution_step_repo = Arc::new(ExecutionStepRepository::new(self.db_pool.clone()));
+            let tracking = ExecutionTrackingService::new(execution_step_repo);
+            match tracking
+                .track_skill_usage(
+                    TaskId::new(task_id.as_str()),
+                    skill.skill_id.clone(),
+                    skill.name.clone(),
+                )
+                .await
+            {
+                Ok(step) => {
+                    logger
+                        .info(
+                            "skill_service",
+                            &format!("Skill usage tracked: step_id={}", step.step_id.as_str()),
+                        )
+                        .await
+                        .ok();
+
+                    // Broadcast the execution step to frontend (serialize the full step)
+                    let step_event = BroadcastEvent {
+                        event_type: "execution_step".to_string(),
+                        context_id: ctx.context_id().as_str().to_string(),
+                        user_id: ctx.user_id().as_str().to_string(),
+                        data: json!({ "step": step }),
+                        timestamp: Utc::now(),
+                    };
+                    self.broadcaster
+                        .broadcast(ctx.user_id().as_str(), step_event)
+                        .await;
+                },
+                Err(e) => {
+                    logger
+                        .error(
+                            "skill_service",
+                            &format!("Failed to track skill usage: {e}"),
+                        )
+                        .await
+                        .ok();
+                },
+            }
+        } else {
+            logger
+                .warn(
+                    "skill_service",
+                    "No task_id in context - skill usage not tracked",
+                )
+                .await
+                .ok();
+        }
+
         Ok(skill.instructions)
+    }
+
+    pub async fn list_skill_ids(&self) -> Result<Vec<String>> {
+        let skills = self.skill_repo.list_enabled().await?;
+        Ok(skills
+            .into_iter()
+            .map(|s| s.skill_id.as_str().to_string())
+            .collect())
     }
 
     pub async fn load_skill_metadata(
@@ -138,12 +221,14 @@ impl SkillService {
         let logger = LogService::new(self.db_pool.clone(), ctx.log_context());
         let skill_id_typed = SkillId::new(skill_id);
 
-        let skill = self.skill_repo
+        let skill = self
+            .skill_repo
             .get_by_skill_id(&skill_id_typed)
             .await?
             .ok_or_else(|| {
                 anyhow!(
-                    "Skill not found in database: {} (ensure skill is synced via SkillIngestionService)",
+                    "Skill not found in database: {} (ensure skill is synced via \
+                     SkillIngestionService)",
                     skill_id
                 )
             })?;

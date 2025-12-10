@@ -1,8 +1,9 @@
-import { ChevronUp, ChevronDown, Search, AlertTriangle } from 'lucide-react'
-import type { Artifact } from '@/types/artifact'
-import type { TableHints } from '@/types/artifacts'
+import React from 'react'
+import { ChevronUp, ChevronDown, Search, AlertTriangle, Copy, Check } from 'lucide-react'
+import type { Artifact, TableHints } from '@/types/artifact'
 import { extractTableData, formatCurrency, formatPercentage, formatDatetime, formatInteger, formatBadge } from '@/lib/artifacts'
 import { useTableData } from '@/hooks/useTableData'
+import { useMcpToolCaller } from '@/hooks/useMcpToolCaller'
 
 interface TableRendererProps {
   artifact: Artifact
@@ -35,11 +36,56 @@ export function TableRenderer({ artifact, hints }: TableRendererProps) {
   const rows = result.data
   const errors = result.errors
 
+  const { callTool } = useMcpToolCaller()
+  const [copiedId, setCopiedId] = React.useState<string | null>(null)
+
   const { columns, sortColumn, sortOrder, searchText, setSearchText, currentPage, setCurrentPage, filteredData, paginatedData, totalPages, pageSize, handleSort } = useTableData({ rows, hints })
+
+  const handleRowClick = async (row: Record<string, unknown>) => {
+    if (!hints.row_click_enabled) return
+
+    const contextId = row['context_id'] as string
+    if (contextId) {
+      await callTool('systemprompt-admin', 'conversation_details', {
+        context_id: contextId
+      })
+    }
+  }
+
+  const handleCopy = async (text: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    await navigator.clipboard.writeText(text)
+    setCopiedId(text)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
 
   const formatCell = (value: unknown, columnName: string) => {
     if (value === null || value === undefined) {
       return <span className="text-disabled italic">null</span>
+    }
+
+    // Special handling for context_id column
+    if (columnName === 'context_id') {
+      const id = String(value)
+      const isCopied = copiedId === id
+      return (
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs truncate max-w-[200px]" title={id}>
+            {id}
+          </span>
+          <button
+            onClick={(e) => handleCopy(id, e)}
+            className="p-1 rounded hover:bg-surface-variant transition-colors flex-shrink-0"
+            title="Copy ID"
+          >
+            {isCopied ? (
+              <Check className="w-3 h-3 text-success" />
+            ) : (
+              <Copy className="w-3 h-3 text-text-secondary" />
+            )}
+          </button>
+        </div>
+      )
     }
 
     const type = hints.column_types?.[columnName]
@@ -61,6 +107,19 @@ export function TableRenderer({ artifact, hints }: TableRendererProps) {
         return (
           <a href={String(value)} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
             View
+          </a>
+        )
+      case 'thumbnail':
+        return (
+          <a href={String(value)} target="_blank" rel="noopener noreferrer" className="block">
+            <img
+              src={String(value)}
+              alt=""
+              className="w-12 h-12 object-cover rounded border border-primary-10 hover:border-primary transition-colors"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none'
+              }}
+            />
           </a>
         )
       default:
@@ -146,7 +205,8 @@ export function TableRenderer({ artifact, hints }: TableRendererProps) {
             {paginatedData.map((row, idx) => (
               <tr
                 key={idx}
-                className={idx % 2 === 0 ? 'bg-surface' : 'bg-surface-variant'}
+                onClick={() => handleRowClick(row as Record<string, unknown>)}
+                className={`${idx % 2 === 0 ? 'bg-surface' : 'bg-surface-variant'} ${hints.row_click_enabled ? 'cursor-pointer hover:bg-surface-dark transition-colors' : ''}`}
               >
                 {columns.map(col => (
                   <td key={col} className="px-4 py-3 border-t border-primary-10">

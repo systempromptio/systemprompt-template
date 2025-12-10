@@ -1,6 +1,9 @@
-import { Copy, Check, AlertTriangle, Calendar, Tag, FolderOpen, ImageIcon, ExternalLink, User, FileText, Hash } from 'lucide-react'
+import { Copy, Check, AlertTriangle, Calendar, FolderOpen, ImageIcon, ExternalLink, User, FileText, Hash, Code, Eye } from 'lucide-react'
 import { useState } from 'react'
 import type { Artifact } from '@/types/artifact'
+import { MarkdownContent } from '@/components/markdown/MarkdownContent'
+
+type ContentView = 'markdown' | 'html'
 
 interface BlogRendererProps {
   artifact: Artifact
@@ -8,6 +11,7 @@ interface BlogRendererProps {
 
 export function BlogRenderer({ artifact }: BlogRendererProps) {
   const [copied, setCopied] = useState(false)
+  const [contentView, setContentView] = useState<ContentView>('markdown')
 
   const dataPart = artifact.parts.find(p => p.kind === 'data')
   if (!dataPart || dataPart.kind !== 'data') {
@@ -26,7 +30,6 @@ export function BlogRenderer({ artifact }: BlogRendererProps) {
   const excerpt = data.excerpt as string | undefined
   const featuredImageUrl = data.featured_image_url as string | undefined
   const publishedAt = data.published_at as string | undefined
-  const tags = data.tags as string[] | undefined
   const categories = data.categories as string[] | undefined
   const keywords = data.keywords as string | undefined
   const author = data.author as string | undefined
@@ -47,7 +50,6 @@ export function BlogRenderer({ artifact }: BlogRendererProps) {
       slug,
       excerpt,
       publishedAt,
-      tags,
       categories,
       featuredImageUrl,
       keywords,
@@ -74,7 +76,7 @@ export function BlogRenderer({ artifact }: BlogRendererProps) {
           <div className="flex items-center gap-2">
             <p className="text-sm text-secondary">/{slug}</p>
             <a
-              href={`/${slug}`}
+              href={`/blog/${slug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs text-accent hover:text-accent-dark transition-colors"
@@ -124,25 +126,6 @@ export function BlogRenderer({ artifact }: BlogRendererProps) {
                 <Hash className="w-3 h-3" /> Keywords
               </p>
               <p className="text-sm text-primary">{keywords}</p>
-            </div>
-          )}
-
-          {/* Tags */}
-          {tags && tags.length > 0 && (
-            <div className="col-span-2">
-              <p className="text-xs text-secondary mb-2 flex items-center gap-1">
-                <Tag className="w-3 h-3" /> Tags
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="inline-flex px-2 py-1 bg-primary/10 text-primary rounded text-xs"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
             </div>
           )}
 
@@ -215,17 +198,45 @@ export function BlogRenderer({ artifact }: BlogRendererProps) {
         </button>
       </div>
 
-      {/* Content Preview */}
+      {/* Content Preview with Tabs */}
       <div className="border border-primary-10 rounded-lg overflow-hidden bg-surface">
-        <div className="px-4 py-3 bg-surface-variant border-b border-primary-10">
+        <div className="px-4 py-3 bg-surface-variant border-b border-primary-10 flex items-center justify-between">
           <p className="text-sm font-medium text-primary">Content ({content.length} characters)</p>
+          <div className="flex items-center gap-1 bg-surface rounded-md p-1">
+            <button
+              onClick={() => setContentView('markdown')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                contentView === 'markdown'
+                  ? 'bg-primary text-white'
+                  : 'text-secondary hover:text-primary hover:bg-surface-variant'
+              }`}
+            >
+              <Code className="w-3.5 h-3.5" />
+              Markdown
+            </button>
+            <button
+              onClick={() => setContentView('html')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                contentView === 'html'
+                  ? 'bg-primary text-white'
+                  : 'text-secondary hover:text-primary hover:bg-surface-variant'
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Preview
+            </button>
+          </div>
         </div>
         <div className="p-4 overflow-x-auto max-h-[600px] overflow-y-auto">
-          <div className="prose prose-sm max-w-none text-primary">
-            <pre className="text-xs font-mono whitespace-pre-wrap break-words bg-surface-dark p-3 rounded">
+          {contentView === 'markdown' ? (
+            <pre className="text-xs font-mono whitespace-pre-wrap break-words bg-surface-dark p-3 rounded text-primary">
               {content}
             </pre>
-          </div>
+          ) : (
+            <div className="prose prose-sm max-w-none">
+              <MarkdownContent content={content} />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -237,7 +248,6 @@ function generateFrontmatter(data: {
   slug: string
   excerpt?: string
   publishedAt?: string
-  tags?: string[]
   categories?: string[]
   featuredImageUrl?: string
   keywords?: string
@@ -271,10 +281,6 @@ function generateFrontmatter(data: {
 
   if (data.featuredImageUrl) {
     lines.push(`featured_image_url: "${data.featuredImageUrl}"`)
-  }
-
-  if (data.tags && data.tags.length > 0) {
-    lines.push(`tags: [${data.tags.map(t => `"${t}"`).join(', ')}]`)
   }
 
   if (data.categories && data.categories.length > 0) {

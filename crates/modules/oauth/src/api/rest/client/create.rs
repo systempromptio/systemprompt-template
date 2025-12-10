@@ -1,7 +1,5 @@
-use axum::{
-    extract::{Extension, State},
-    response::{IntoResponse, Json},
-};
+use axum::extract::{Extension, State};
+use axum::response::{IntoResponse, Json};
 use bcrypt::{hash, DEFAULT_COST};
 use uuid::Uuid;
 
@@ -29,7 +27,7 @@ pub async fn create_client(
                     "OAuth client creation failed",
                     Some(serde_json::json!({
                         "client_id": request.client_id,
-                        "reason": format!("Failed to hash secret: {}", e),
+                        "reason": format!("Failed to hash secret: {e}"),
                         "created_by": req_ctx.auth.user_id.as_str()
                     })),
                 )

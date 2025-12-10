@@ -128,8 +128,7 @@ async fn test_session_expiration() -> Result<()> {
 
     wait_for_async_processing().await;
 
-    use systemprompt_core_database::DatabaseProvider;
-    use systemprompt_core_database::DatabaseQueryEnum;
+    use systemprompt_core_database::{DatabaseProvider, DatabaseQueryEnum};
 
     let find_query = DatabaseQueryEnum::FindSessionByFingerprintAny.get(ctx.db.as_ref());
     let sessions = ctx.db.fetch_all(&find_query, &[&fingerprint]).await?;

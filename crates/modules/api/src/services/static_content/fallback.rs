@@ -1,8 +1,6 @@
-use axum::{
-    extract::State,
-    http::{Method, StatusCode, Uri},
-    response::{IntoResponse, Json},
-};
+use axum::extract::State;
+use axum::http::{Method, StatusCode, Uri};
+use axum::response::{IntoResponse, Json};
 use serde_json::json;
 
 use super::vite::StaticContentState;
@@ -20,7 +18,7 @@ pub async fn smart_fallback_handler(
             StatusCode::NOT_FOUND,
             Json(json!({
                 "error": "Not Found",
-                "message": format!("No route matches {} {}", method, path),
+                "message": format!("No route matches {method} {path}"),
                 "path": path,
                 "suggestions": get_api_suggestions(path)
             })),

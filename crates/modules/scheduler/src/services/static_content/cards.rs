@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct CardData<'a> {
     pub title: &'a str,
     pub slug: &'a str,
@@ -14,28 +15,55 @@ pub fn normalize_image_url(image: Option<&str>) -> Option<String> {
     }
 
     if let Some(local_path) = convert_external_url_to_local(img) {
-        return Some(local_path);
+        return Some(convert_to_webp(&local_path));
     }
 
     if let Some(local_path) = convert_root_images_to_blog_path(img) {
-        return Some(local_path);
+        return Some(convert_to_webp(&local_path));
     }
 
-    Some(img.to_string())
+    Some(convert_to_webp(img))
+}
+
+fn convert_to_webp(path: &str) -> String {
+    if path.ends_with(".webp") {
+        return path.to_string();
+    }
+
+    for ext in [".png", ".jpg", ".jpeg", ".PNG", ".JPG", ".JPEG"] {
+        if path.ends_with(ext) {
+            return format!("{}.webp", &path[..path.len() - ext.len()]);
+        }
+    }
+
+    path.to_string()
 }
 
 fn convert_external_url_to_local(url: &str) -> Option<String> {
     if !url.contains("tyingshoelaces.com/") {
         return None;
     }
-    url.split('/').last().map(|filename| format!("/images/blog/{}", filename))
+    url.split('/')
+        .last()
+        .map(|filename| format!("/files/images/blog/{filename}"))
 }
 
 fn convert_root_images_to_blog_path(path: &str) -> Option<String> {
-    if !path.starts_with("/images/") || path.starts_with("/images/blog/") {
-        return None;
+    // Convert legacy /images/ paths to /files/images/
+    if path.starts_with("/images/blog/") {
+        return Some(path.replace("/images/blog/", "/files/images/blog/"));
     }
-    path.split('/').last().map(|filename| format!("/images/blog/{}", filename))
+    if path.starts_with("/images/generated_images/") {
+        return Some(path.replace("/images/generated_images/", "/files/images/generated/"));
+    }
+    // Loose images under /images/ -> /files/images/blog/
+    if path.starts_with("/images/") {
+        return path
+            .split('/')
+            .last()
+            .map(|filename| format!("/files/images/blog/{filename}"));
+    }
+    None
 }
 
 pub fn get_absolute_image_url(image: Option<&str>, base_url: &str) -> Option<String> {

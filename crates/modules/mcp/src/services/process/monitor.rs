@@ -127,7 +127,8 @@ pub async fn monitor_processes(
 
                     if failure.count == 1 {
                         CliService::warning(&format!(
-                            "⚠️  Health check failed for {}: port {} (PID {:?}), will monitor closely",
+                            "⚠️  Health check failed for {}: port {} (PID {:?}), will monitor \
+                             closely",
                             service.name, port, pid
                         ));
                     }
@@ -162,12 +163,15 @@ pub async fn monitor_processes(
 
                         if last_restart.elapsed() > backoff && attempts < 5 {
                             CliService::warning(&format!(
-                                "🔄 Auto-restart needed for crashed service: {} (attempt {}) - restart functionality removed with McpOrchestrator",
+                                "🔄 Auto-restart needed for crashed service: {} (attempt {}) - \
+                                 restart functionality removed with McpOrchestrator",
                                 service.name,
                                 attempts + 1
                             ));
-                            // orchestrator.start_services was removed with McpOrchestrator
-                            // This function is deprecated and should not be used
+                            // orchestrator.start_services was removed with
+                            // McpOrchestrator
+                            // This function is deprecated and should not be
+                            // used
                         } else if attempts >= 5 {
                             CliService::error(&format!(
                                 "🛑 Service {} exceeded restart limit (5 attempts)",

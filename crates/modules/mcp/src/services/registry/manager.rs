@@ -52,7 +52,7 @@ impl RegistryService {
                 entry.ok().and_then(|e| {
                     let path = e.path();
                     if path.extension()?.to_str()? == "json" {
-                        path.file_stem()?.to_str().map(std::string::ToString::to_string)
+                        path.file_stem()?.to_str().map(ToString::to_string)
                     } else {
                         None
                     }
@@ -115,6 +115,8 @@ impl RegistryService {
                 capabilities: vec![],
                 schemas: deployment.schemas.clone(),
                 oauth: deployment.oauth.clone(),
+                tools: deployment.tools.clone(),
+                model_config: deployment.model_config.clone(),
                 version: env!("CARGO_PKG_VERSION").to_string(),
                 host: "0.0.0.0".to_string(),
                 module_name: "mcp".to_string(),

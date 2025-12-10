@@ -5,9 +5,9 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::models::tools::{CallToolResult, McpTool, ToolCall};
-use crate::repository::AiRequestRepository;
+use crate::repository::AIRequestRepository;
 use systemprompt_core_logging::LogService;
-use systemprompt_core_mcp::services::client::McpClient;
+use systemprompt_core_mcp::services::client::{validate_connection, McpClient};
 use systemprompt_core_mcp::services::deployment::DeploymentService;
 use systemprompt_core_oauth::services::validation::jwt::validate_jwt_token;
 use systemprompt_core_system::AppContext;
@@ -44,7 +44,7 @@ impl McpClientManager {
         let logger = LogService::system(self.app_context.db_pool().clone());
 
         let connection_result =
-            McpClient::validate_connection(&service.name, "127.0.0.1", service.port).await?;
+            validate_connection(&service.name, "127.0.0.1", service.port).await?;
 
         if !connection_result.success {
             return Err(anyhow!(
@@ -105,7 +105,7 @@ impl McpClientManager {
             .info(
                 "ai_mcp_client",
                 &format!(
-                    "📋 Listing tools for agent '{}' from servers: {}",
+                    "Listing tools for agent '{}' from servers: {}",
                     agent_name.as_str(),
                     assigned_servers.join(", ")
                 ),
@@ -160,7 +160,7 @@ impl McpClientManager {
                         .info(
                             "ai_mcp_client",
                             &format!(
-                                "✓ Loaded {} tools from {} for agent {}",
+                                "Loaded {} tools from {} for agent {}",
                                 tools.len(),
                                 service_name,
                                 agent_name.as_str()
@@ -186,7 +186,7 @@ impl McpClientManager {
             .info(
                 "ai_mcp_client",
                 &format!(
-                    "📋 Total {} tools loaded for agent '{}'",
+                    "Total {} tools loaded for agent '{}'",
                     agent_tools.len(),
                     agent_name.as_str()
                 ),
@@ -217,7 +217,7 @@ impl McpClientManager {
         .await
         .map_err(|e| anyhow!("Failed to execute tool {}: {}", tool_call.name, e))?;
 
-        let ai_request_repo = AiRequestRepository::new(self.app_context.db_pool().clone());
+        let ai_request_repo = AIRequestRepository::new(self.app_context.db_pool().clone());
         let logger = LogService::system(self.app_context.db_pool().clone());
 
         let ai_tool_call_id_str = tool_call.ai_tool_call_id.as_ref();
@@ -229,9 +229,7 @@ impl McpClientManager {
                 logger
                     .info(
                         "ai_mcp_client",
-                        &format!(
-                            "Linked AI tool call {ai_tool_call_id_str} to MCP execution"
-                        ),
+                        &format!("Linked AI tool call {ai_tool_call_id_str} to MCP execution"),
                     )
                     .await
                     .ok();
@@ -240,9 +238,7 @@ impl McpClientManager {
                 logger
                     .info(
                         "ai_mcp_client",
-                        &format!(
-                            "No AI request found to link for tool call {ai_tool_call_id_str}"
-                        ),
+                        &format!("No AI request found to link for tool call {ai_tool_call_id_str}"),
                     )
                     .await
                     .ok();
@@ -270,9 +266,7 @@ impl McpClientManager {
         logger
             .info(
                 "ai_mcp_client",
-                &format!(
-                    "🔌 MCP CLIENT: Refreshing connections for agent: {agent_name}"
-                ),
+                &format!("🔌 MCP CLIENT: Refreshing connections for agent: {agent_name}"),
             )
             .await
             .ok();
@@ -416,7 +410,7 @@ impl McpClientManager {
         let mut health_status = HashMap::new();
 
         for (service_name, connection) in services.iter() {
-            let is_healthy = McpClient::validate_connection(
+            let is_healthy = validate_connection(
                 &connection.service.name,
                 "127.0.0.1",
                 connection.service.port,

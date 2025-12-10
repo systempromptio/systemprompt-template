@@ -17,7 +17,7 @@ pub struct ServiceStateManager {
 }
 
 impl ServiceStateManager {
-    pub fn new(db_pool: DbPool) -> Self {
+    pub const fn new(db_pool: DbPool) -> Self {
         Self {
             service_repo: ServiceRepository::new(db_pool),
         }

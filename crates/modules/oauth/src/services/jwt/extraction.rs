@@ -18,7 +18,9 @@ impl TokenExtractor {
         }
 
         for auth_value in &auth_headers {
-            let Ok(auth_header) = auth_value.to_str() else { continue };
+            let Ok(auth_header) = auth_value.to_str() else {
+                continue;
+            };
 
             if let Some(token) = auth_header.strip_prefix("Bearer ") {
                 if !token.trim().is_empty() {

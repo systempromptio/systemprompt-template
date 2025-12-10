@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import type { Artifact } from '@/types/artifact'
-import type { PresentationHints } from '@/types/artifacts'
+import type { Artifact, PresentationHints } from '@/types/artifact'
 import { useA2AClient } from '@/hooks/useA2AClient'
 import { extractPresentationCardData } from '@/lib/artifacts/extractors'
 import { cn } from '@/lib/utils/cn'
@@ -80,46 +79,47 @@ export function PresentationCardRenderer({ artifact, hints }: PresentationCardRe
       )}
     >
       {/* Skill and Metadata Header */}
-      <div className="px-lg py-sm border-b border-primary-10 bg-surface/30">
-        <div className="flex items-center justify-between gap-md">
-          <div className="flex items-center gap-xs text-xs">
-            <span className="text-text-tertiary">Skill used:</span>
-            {skillName ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium border border-primary/20">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-                {skillName}
-              </span>
-            ) : (
-              <span className="text-text-tertiary italic">none</span>
-            )}
-          </div>
-          <div className="flex items-center gap-xs text-xs text-text-tertiary font-mono">
-            <span title={`Artifact ID: ${artifactId}`} className="truncate max-w-[120px]">
-              {artifactId.slice(0, 8)}...
+      <div className="px-lg py-md border-b border-primary-10 bg-surface/30">
+        {/* Skill Badge Row */}
+        <div className="flex items-center gap-sm mb-sm">
+          <span className="text-sm text-text-tertiary font-medium">Skill used:</span>
+          {skillName ? (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm border border-primary/20">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              {skillName}
             </span>
-          </div>
+          ) : (
+            <span className="text-text-tertiary italic text-sm">none</span>
+          )}
         </div>
-        {(taskId || contextId || createdAt) && (
-          <div className="mt-1 flex flex-wrap gap-x-md gap-y-0.5 text-[10px] text-text-tertiary font-mono">
-            {taskId && (
-              <span title={`Task ID: ${taskId}`}>
-                task: {taskId.slice(0, 8)}...
-              </span>
-            )}
-            {contextId && (
-              <span title={`Context ID: ${contextId}`}>
-                context: {contextId.slice(0, 8)}...
-              </span>
-            )}
-            {createdAt && (
-              <span title={`Created: ${createdAt}`}>
-                {new Date(createdAt).toLocaleString()}
-              </span>
-            )}
+
+        {/* IDs Grid */}
+        <div className="grid grid-cols-1 gap-y-1 text-xs">
+          <div className="flex items-baseline gap-2">
+            <span className="text-text-tertiary font-medium min-w-[60px]">artifact:</span>
+            <span className="font-mono text-text-secondary break-all">{artifactId}</span>
           </div>
-        )}
+          {taskId && (
+            <div className="flex items-baseline gap-2">
+              <span className="text-text-tertiary font-medium min-w-[60px]">task:</span>
+              <span className="font-mono text-text-secondary break-all">{taskId}</span>
+            </div>
+          )}
+          {contextId && (
+            <div className="flex items-baseline gap-2">
+              <span className="text-text-tertiary font-medium min-w-[60px]">context:</span>
+              <span className="font-mono text-text-secondary break-all">{contextId}</span>
+            </div>
+          )}
+          {createdAt && (
+            <div className="flex items-baseline gap-2">
+              <span className="text-text-tertiary font-medium min-w-[60px]">created:</span>
+              <span className="text-text-secondary">{new Date(createdAt).toLocaleString()}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <CardHeader cardData={cardData} />

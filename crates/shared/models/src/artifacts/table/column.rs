@@ -1,7 +1,8 @@
 use crate::artifacts::types::{Alignment, ColumnType};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Column {
     pub name: String,
     #[serde(rename = "column_type")]

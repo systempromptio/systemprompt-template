@@ -1,8 +1,10 @@
 pub mod agents;
 pub mod ai;
+pub mod ai_trace;
 pub mod cleanup;
 pub mod config;
 pub mod db;
+pub mod deploy;
 pub mod login;
 pub mod logs;
 pub mod mcp;
@@ -12,5 +14,6 @@ pub mod serve;
 pub mod setup;
 pub mod skills;
 pub mod status;
+pub mod sync;
 pub mod trace;
 pub mod user;

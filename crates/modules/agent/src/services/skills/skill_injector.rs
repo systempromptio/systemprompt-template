@@ -1,16 +1,21 @@
 use crate::services::skills::{SkillMetadata, SkillService};
 use anyhow::Result;
 use std::sync::Arc;
+use systemprompt_core_logging::LogService;
 use systemprompt_models::execution::context::RequestContext;
 
 #[derive(Debug)]
 pub struct SkillInjector {
     skill_service: Arc<SkillService>,
+    logger: LogService,
 }
 
 impl SkillInjector {
-    pub fn new(skill_service: Arc<SkillService>) -> Self {
-        Self { skill_service }
+    pub const fn new(skill_service: Arc<SkillService>, logger: LogService) -> Self {
+        Self {
+            skill_service,
+            logger,
+        }
     }
 
     pub async fn inject_for_tool(
@@ -26,7 +31,13 @@ impl SkillInjector {
                     base_prompt, skill_content
                 )),
                 Err(e) => {
-                    eprintln!("Warning: Failed to load skill {}: {}", sid, e);
+                    self.logger
+                        .warn(
+                            "skill_injector",
+                            &format!("Failed to load skill {sid}: {e}"),
+                        )
+                        .await
+                        .ok();
                     Ok(base_prompt)
                 },
             }
@@ -49,16 +60,13 @@ impl SkillInjector {
         base_prompt: String,
         ctx: &RequestContext,
     ) -> Result<(String, SkillMetadata)> {
-        // Load skill content
         let skill_content = self.skill_service.load_skill(skill_id, ctx).await?;
 
-        // Load skill metadata
         let metadata = self
             .skill_service
             .load_skill_metadata(skill_id, ctx)
             .await?;
 
-        // Build enhanced prompt
         let enhanced_prompt = format!(
             "{}\n\n## Writing Guidance\n\nFollow this methodology and style:\n\n{}",
             base_prompt, skill_content
@@ -67,6 +75,3 @@ impl SkillInjector {
         Ok((enhanced_prompt, metadata))
     }
 }
-
-// Note: Tests would require mocking the SkillService
-// In production use, SkillInjector is tested through integration tests

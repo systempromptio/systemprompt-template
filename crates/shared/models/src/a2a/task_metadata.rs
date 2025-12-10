@@ -4,6 +4,8 @@ use systemprompt_traits::validation::{
     MetadataValidation, Validate, ValidationError, ValidationResult,
 };
 
+use crate::execution::ExecutionStep;
+
 /// Special agent name constants
 pub mod agent_names {
     /// System-initiated tasks (internal operations, summaries)
@@ -57,6 +59,23 @@ pub struct TaskMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mcp_server_name: Option<String>,
 
+    /// Total input tokens used for this task
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub input_tokens: Option<u32>,
+
+    /// Total output tokens generated for this task
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output_tokens: Option<u32>,
+
+    /// AI model used for this task
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+
+    /// Execution steps showing the agent's work (populated on API fetch for
+    /// completed tasks)
+    #[serde(rename = "executionSteps", skip_serializing_if = "Option::is_none")]
+    pub execution_steps: Option<Vec<ExecutionStep>>,
+
     /// Extensible field for future metadata
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<serde_json::Map<String, serde_json::Value>>,
@@ -79,6 +98,10 @@ impl TaskMetadata {
             started_at: None,
             completed_at: None,
             execution_time_ms: None,
+            input_tokens: None,
+            output_tokens: None,
+            model: None,
+            execution_steps: None,
             extensions: None,
         }
     }
@@ -95,8 +118,25 @@ impl TaskMetadata {
             started_at: None,
             completed_at: None,
             execution_time_ms: None,
+            input_tokens: None,
+            output_tokens: None,
+            model: None,
+            execution_steps: None,
             extensions: None,
         }
+    }
+
+    /// Set token usage for this task
+    pub const fn with_token_usage(mut self, input_tokens: u32, output_tokens: u32) -> Self {
+        self.input_tokens = Some(input_tokens);
+        self.output_tokens = Some(output_tokens);
+        self
+    }
+
+    /// Set the AI model used for this task
+    pub fn with_model(mut self, model: impl Into<String>) -> Self {
+        self.model = Some(model.into());
+        self
     }
 
     /// Mark task as updated (sets `updated_at` to current time)
@@ -108,6 +148,12 @@ impl TaskMetadata {
     /// Set tool name for MCP direct tool execution tracking
     pub fn with_tool_name(mut self, tool_name: impl Into<String>) -> Self {
         self.tool_name = Some(tool_name.into());
+        self
+    }
+
+    /// Set execution steps (populated when fetching completed tasks from API)
+    pub fn with_execution_steps(mut self, steps: Vec<ExecutionStep>) -> Self {
+        self.execution_steps = Some(steps);
         self
     }
 

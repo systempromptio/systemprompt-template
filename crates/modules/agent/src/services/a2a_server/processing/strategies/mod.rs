@@ -1,9 +1,8 @@
 //! Execution Strategy Pattern for Message Processing
 //!
-//! This module provides a clean strategy pattern for different execution paths:
-//! - StandardExecutionStrategy: No tools, pure text generation
-//! - ToolExecutionStrategy: Single-turn tool execution
-//! - AgenticExecutionStrategy: Multi-turn with Task.history and synthesis loop
+//! Two execution strategies:
+//! - StandardExecutionStrategy: No tools, pure streaming text generation
+//! - PlannedAgenticStrategy: Has tools, PLAN → EXECUTE → RESPOND flow
 
 use anyhow::Result;
 use async_trait::async_trait;
@@ -16,7 +15,8 @@ use systemprompt_models::{ContextId, TaskId};
 use tokio::sync::mpsc;
 
 use super::message::StreamEvent;
-use crate::models::{a2a::Message as A2aMessage, AgentRuntimeInfo};
+use crate::models::AgentRuntimeInfo;
+use crate::repository::ExecutionStepRepository;
 use crate::services::SkillService;
 
 #[derive(Clone)]
@@ -30,6 +30,7 @@ pub struct ExecutionContext {
     pub tx: mpsc::UnboundedSender<StreamEvent>,
     pub log: LogService,
     pub request_ctx: RequestContext,
+    pub execution_step_repo: Arc<ExecutionStepRepository>,
 }
 
 impl std::fmt::Debug for ExecutionContext {
@@ -48,7 +49,6 @@ pub struct ExecutionResult {
     pub tool_calls: Vec<ToolCall>,
     pub tool_results: Vec<CallToolResult>,
     pub iterations: usize,
-    pub conversation_history: Vec<A2aMessage>,
 }
 
 impl Default for ExecutionResult {
@@ -58,7 +58,6 @@ impl Default for ExecutionResult {
             tool_calls: Vec::new(),
             tool_results: Vec::new(),
             iterations: 1,
-            conversation_history: Vec::new(),
         }
     }
 }
@@ -74,12 +73,15 @@ pub trait ExecutionStrategy: Send + Sync {
     fn name(&self) -> &'static str;
 }
 
-pub mod agentic;
+pub mod plan_executor;
+pub mod planned;
 pub mod selector;
 pub mod standard;
-pub mod tool_based;
 
-pub use agentic::AgenticExecutionStrategy;
+pub use plan_executor::{
+    convert_to_call_tool_results, convert_to_tool_calls, execute_tools_sequentially,
+    execute_tools_with_templates, format_results_for_response, ToolExecutorTrait,
+};
+pub use planned::PlannedAgenticStrategy;
 pub use selector::ExecutionStrategySelector;
 pub use standard::StandardExecutionStrategy;
-pub use tool_based::ToolExecutionStrategy;

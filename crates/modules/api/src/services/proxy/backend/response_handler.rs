@@ -1,4 +1,6 @@
-use axum::{body::Body, http::StatusCode, response::Response};
+use axum::body::Body;
+use axum::http::StatusCode;
+use axum::response::Response;
 use futures_util::TryStreamExt;
 
 #[derive(Debug, Clone, Copy)]
@@ -12,16 +14,14 @@ impl ResponseHandler {
 
         let response_headers = response.headers().clone();
 
-        // Create streaming body with better error handling
-        let stream = response.bytes_stream().map_err(|e| {
-            eprintln!("ERROR: Stream error: {}", e);
-            std::io::Error::new(std::io::ErrorKind::Other, e)
-        });
+        let stream = response
+            .bytes_stream()
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e));
         let body = Body::from_stream(stream);
 
         let mut axum_response = Response::builder().status(axum_status);
 
-        for (key, value) in response_headers.iter() {
+        for (key, value) in &response_headers {
             let key_str = key.as_str();
             if let Ok(value_str) = value.to_str() {
                 if Self::should_preserve_header(key_str) {
@@ -42,25 +42,13 @@ impl ResponseHandler {
 
     fn should_preserve_header(key: &str) -> bool {
         match key.to_lowercase().as_str() {
-            "content-type" | "content-length" | "content-encoding" | "transfer-encoding" => true,
-            "connection" | "keep-alive" | "cache-control" => true,
-            "access-control-allow-origin"
-            | "access-control-allow-methods"
-            | "access-control-allow-headers" => true,
-            "set-cookie" | "cookie" => true,
-            "x-request-id" | "x-correlation-id" => true,
-            header if header.starts_with("x-mcp-") => true,
-            "x-accel-buffering" => true,
             "host" | "authorization" | "proxy-authorization" | "upgrade" | "te" => false,
+            header if header.starts_with("x-mcp-") => true,
             _ => true,
         }
     }
 
-    pub fn handle_request_error(e: reqwest::Error) -> StatusCode {
-        eprintln!(
-            "ERROR: Failed to connect to backend: {}. Is the MCP server running?",
-            e
-        );
+    pub fn handle_request_error(_error: reqwest::Error) -> StatusCode {
         StatusCode::BAD_GATEWAY
     }
 }

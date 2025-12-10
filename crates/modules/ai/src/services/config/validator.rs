@@ -17,16 +17,13 @@ impl ConfigValidator {
 
     async fn log_config_source(log: &LogService) {
         if let Ok(path) = std::env::var("AI_CONFIG_PATH") {
-            log.info("ai_config", &format!("✓ Config loaded from: {path}"))
+            log.info("ai_config", &format!("Config loaded from: {path}"))
                 .await
                 .ok();
         } else {
-            log.warn(
-                "ai_config",
-                "⚠️  AI_CONFIG_PATH not set, using search fallback",
-            )
-            .await
-            .ok();
+            log.warn("ai_config", "AI_CONFIG_PATH not set, using search fallback")
+                .await
+                .ok();
         }
     }
 
@@ -36,10 +33,9 @@ impl ConfigValidator {
 
         if enabled_providers.is_empty() {
             return Err(anyhow!(
-                "No AI providers are enabled. Check your config file:\n\
-                 - Ensure at least one provider has 'enabled: true'\n\
-                 - Verify API keys are set (GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY in .env)\n\
-                 - Current providers defined: {:?}",
+                "No AI providers are enabled. Check your config file:\n- Ensure at least one \
+                 provider has 'enabled: true'\n- Verify API keys are set (GEMINI_API_KEY, \
+                 ANTHROPIC_API_KEY, or OPENAI_API_KEY in .env)\n- Current providers defined: {:?}",
                 config.providers.keys().collect::<Vec<_>>()
             ));
         }
@@ -47,8 +43,8 @@ impl ConfigValidator {
         for (name, provider_config) in &enabled_providers {
             if provider_config.api_key.is_empty() {
                 return Err(anyhow!(
-                    "Provider '{}' is enabled but has no API key.\n\
-                     Fix: Set {}_API_KEY in your .env file",
+                    "Provider '{}' is enabled but has no API key.\nFix: Set {}_API_KEY in your \
+                     .env file",
                     name,
                     name.to_uppercase()
                 ));
@@ -61,9 +57,8 @@ impl ConfigValidator {
 
         if !config.providers.contains_key(&config.default_provider) {
             return Err(anyhow!(
-                "Default provider '{}' not found in providers.\n\
-                 Available providers: {:?}\n\
-                 Fix: Update 'default_provider' in your config file",
+                "Default provider '{}' not found in providers.\nAvailable providers: {:?}\nFix: \
+                 Update 'default_provider' in your config file",
                 config.default_provider,
                 config.providers.keys().collect::<Vec<_>>()
             ));
@@ -78,9 +73,9 @@ impl ConfigValidator {
                 .collect();
 
             return Err(anyhow!(
-                "Default provider '{}' is not enabled.\n\
-                 Enabled providers: {:?}\n\
-                 Fix: Either enable '{}' in your config OR change 'default_provider' to one of the enabled providers",
+                "Default provider '{}' is not enabled.\nEnabled providers: {:?}\nFix: Either \
+                 enable '{}' in your config OR change 'default_provider' to one of the enabled \
+                 providers",
                 config.default_provider,
                 available,
                 config.default_provider
@@ -131,7 +126,16 @@ impl ConfigValidator {
         }
 
         if config.history.retention_days > 365 {
-            let _ = log.warn("ai_config", &format!("History retention set to {} days, consider reducing for storage efficiency", config.history.retention_days)).await;
+            let _ = log
+                .warn(
+                    "ai_config",
+                    &format!(
+                        "History retention set to {} days, consider reducing for storage \
+                         efficiency",
+                        config.history.retention_days
+                    ),
+                )
+                .await;
         }
 
         Ok(())
