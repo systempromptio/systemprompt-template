@@ -73,18 +73,69 @@ echo -e "${GREEN}✓${NC} systemprompt-db API available"
 
 echo ""
 
-# Prompt for tenant name
-DEFAULT_TENANT=$(basename "$(pwd)" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
-echo "Database provisioning"
-echo "---------------------"
-echo "A tenant name is used to create an isolated database for this project."
+# Open browser helper function
+open_browser() {
+    local url="$1"
+    if command -v xdg-open &> /dev/null; then
+        xdg-open "$url" 2>/dev/null &
+    elif command -v open &> /dev/null; then
+        open "$url" &
+    elif command -v wslview &> /dev/null; then
+        wslview "$url" &
+    else
+        echo -e "${YELLOW}!${NC} Could not open browser automatically"
+        echo "Please open this URL manually: $url"
+        return 1
+    fi
+    return 0
+}
+
+# Authentication
+echo "Account Setup"
+echo "-------------"
 echo ""
-read -p "Tenant name [$DEFAULT_TENANT]: " TENANT_NAME
+
+# Check for existing credentials
+CREDENTIALS_FILE="$HOME/.systemprompt/credentials"
+if [ -f "$CREDENTIALS_FILE" ]; then
+    SAVED_EMAIL=$(grep "^email=" "$CREDENTIALS_FILE" 2>/dev/null | cut -d= -f2-)
+    SAVED_PASSWORD=$(grep "^password=" "$CREDENTIALS_FILE" 2>/dev/null | cut -d= -f2-)
+
+    if [ -n "$SAVED_EMAIL" ] && [ -n "$SAVED_PASSWORD" ]; then
+        echo "Found saved credentials for: $SAVED_EMAIL"
+        read -p "Use saved credentials? [Y/n]: " USE_SAVED
+        USE_SAVED="${USE_SAVED:-Y}"
+
+        if [[ "$USE_SAVED" =~ ^[Yy]$ ]]; then
+            EMAIL="$SAVED_EMAIL"
+            PASSWORD="$SAVED_PASSWORD"
+        fi
+    fi
+fi
+
+# If no saved credentials or user declined
+if [ -z "$EMAIL" ]; then
+    echo "Enter your SystemPrompt account credentials."
+    echo "If you don't have an account, one will be created."
+    echo ""
+    read -p "Email: " EMAIL
+    read -s -p "Password: " PASSWORD
+    echo ""
+
+    if [ -z "$EMAIL" ] || [ -z "$PASSWORD" ]; then
+        echo -e "${RED}✗${NC} Email and password are required"
+        exit 1
+    fi
+fi
+
+# Get tenant name
+DEFAULT_TENANT=$(basename "$(pwd)" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
+read -p "Project name [$DEFAULT_TENANT]: " TENANT_NAME
 TENANT_NAME="${TENANT_NAME:-$DEFAULT_TENANT}"
 
 # Validate: lowercase, alphanumeric, underscores only, 3-32 chars
 if ! [[ "$TENANT_NAME" =~ ^[a-z][a-z0-9_]{2,31}$ ]]; then
-    echo -e "${RED}✗${NC} Invalid tenant name."
+    echo -e "${RED}✗${NC} Invalid project name."
     echo "  - Must start with a lowercase letter"
     echo "  - Only lowercase letters, numbers, and underscores"
     echo "  - 3-32 characters"
@@ -93,40 +144,196 @@ fi
 
 echo ""
 
-# Provision database via API
-echo "Provisioning database '$TENANT_NAME'..."
-
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$DB_API_URL/api/v1/tenants" \
+# Try login first
+echo "Authenticating..."
+LOGIN_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$DB_API_URL/api/v1/auth/login" \
     -H "Content-Type: application/json" \
-    -d "{\"name\":\"$TENANT_NAME\",\"metadata\":{\"environment\":\"development\",\"source\":\"systemprompt-template\"}}")
+    -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
 
-HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-BODY=$(echo "$RESPONSE" | sed '$d')
+LOGIN_CODE=$(echo "$LOGIN_RESPONSE" | tail -n1)
+LOGIN_BODY=$(echo "$LOGIN_RESPONSE" | sed '$d')
 
-case "$HTTP_CODE" in
-    201)
-        # Get connection string and replace Docker hostname with localhost
-        CONNECTION_STRING=$(echo "$BODY" | jq -r '.data.connection_string' | sed 's/@postgres:/@localhost:/')
-        echo -e "${GREEN}✓${NC} Database provisioned successfully"
-        ;;
-    409)
-        echo -e "${YELLOW}!${NC} Tenant '$TENANT_NAME' already exists"
+if [ "$LOGIN_CODE" = "200" ]; then
+    # Check if database_url is available
+    DATABASE_URL=$(echo "$LOGIN_BODY" | jq -r '.database_url // empty')
+    if [ -n "$DATABASE_URL" ]; then
+        echo -e "${GREEN}✓${NC} Logged in successfully"
+        CONNECTION_STRING=$(echo "$DATABASE_URL" | sed 's/@postgres:/@localhost:/')
+
+        # Save credentials
+        mkdir -p "$(dirname "$CREDENTIALS_FILE")"
+        cat > "$CREDENTIALS_FILE" << EOF
+email=$EMAIL
+password=$PASSWORD
+EOF
+        chmod 600 "$CREDENTIALS_FILE"
+    else
+        echo -e "${YELLOW}!${NC} Account exists but payment not completed"
+        echo "Please complete payment in your browser to activate your account."
+        # Could add checkout URL retrieval here if needed
+        exit 1
+    fi
+elif [ "$LOGIN_CODE" = "403" ]; then
+    # Payment required - account exists but not activated
+    echo -e "${YELLOW}!${NC} Payment required to activate your account"
+    echo ""
+    echo "A browser window will open to complete payment."
+    echo "After payment, this script will automatically continue."
+    echo ""
+    read -p "Press Enter to open checkout page..."
+
+    # Get a fresh checkout URL via signup (will return existing checkout for same email)
+    SIGNUP_RESPONSE=$(curl -s -X POST "$DB_API_URL/api/v1/auth/signup" \
+        -H "Content-Type: application/json" \
+        -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\",\"tenant_name\":\"$TENANT_NAME\"}")
+
+    CHECKOUT_URL=$(echo "$SIGNUP_RESPONSE" | jq -r '.checkout_url // empty')
+    if [ -z "$CHECKOUT_URL" ]; then
+        echo -e "${RED}✗${NC} Could not get checkout URL"
+        echo "$SIGNUP_RESPONSE" | jq . 2>/dev/null || echo "$SIGNUP_RESPONSE"
+        exit 1
+    fi
+
+    open_browser "$CHECKOUT_URL"
+    echo ""
+    echo "Checkout URL: $CHECKOUT_URL"
+    echo ""
+    echo "Waiting for payment completion..."
+
+    # Poll for login success
+    MAX_ATTEMPTS=120  # 10 minutes
+    ATTEMPT=0
+    while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+        sleep 5
+        ATTEMPT=$((ATTEMPT + 1))
+
+        POLL_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$DB_API_URL/api/v1/auth/login" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
+
+        POLL_CODE=$(echo "$POLL_RESPONSE" | tail -n1)
+        POLL_BODY=$(echo "$POLL_RESPONSE" | sed '$d')
+
+        if [ "$POLL_CODE" = "200" ]; then
+            DATABASE_URL=$(echo "$POLL_BODY" | jq -r '.database_url // empty')
+            if [ -n "$DATABASE_URL" ]; then
+                echo ""
+                echo -e "${GREEN}✓${NC} Payment completed! Account activated."
+                CONNECTION_STRING=$(echo "$DATABASE_URL" | sed 's/@postgres:/@localhost:/')
+
+                # Save credentials
+                mkdir -p "$(dirname "$CREDENTIALS_FILE")"
+                cat > "$CREDENTIALS_FILE" << EOF
+email=$EMAIL
+password=$PASSWORD
+EOF
+                chmod 600 "$CREDENTIALS_FILE"
+                break
+            fi
+        fi
+
+        printf "."
+    done
+
+    if [ -z "$CONNECTION_STRING" ]; then
         echo ""
-        echo "Enter the DATABASE_URL for your existing tenant."
-        echo "Format: postgresql://USER:PASSWORD@localhost:6432/DATABASE"
-        echo ""
-        read -p "DATABASE_URL: " CONNECTION_STRING
-        if [ -z "$CONNECTION_STRING" ]; then
-            echo -e "${RED}✗${NC} DATABASE_URL is required"
+        echo -e "${RED}✗${NC} Timed out waiting for payment"
+        echo "Please complete payment and run this script again."
+        exit 1
+    fi
+elif [ "$LOGIN_CODE" = "401" ]; then
+    # Invalid credentials - could be wrong password OR new user
+    # Try signup first, handle "email_exists" as wrong password
+    echo "Creating new account..."
+
+    SIGNUP_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$DB_API_URL/api/v1/auth/signup" \
+        -H "Content-Type: application/json" \
+        -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\",\"tenant_name\":\"$TENANT_NAME\"}")
+
+    SIGNUP_CODE=$(echo "$SIGNUP_RESPONSE" | tail -n1)
+    SIGNUP_BODY=$(echo "$SIGNUP_RESPONSE" | sed '$d')
+
+    # Check if account exists (wrong password)
+    SIGNUP_ERROR=$(echo "$SIGNUP_BODY" | jq -r '.error // empty')
+    if [ "$SIGNUP_ERROR" = "email_exists" ] || [ "$SIGNUP_ERROR" = "tenant_exists" ]; then
+        echo -e "${RED}✗${NC} Invalid password for existing account"
+        echo "Please check your password and try again."
+        exit 1
+    fi
+
+    if [ "$SIGNUP_CODE" = "201" ] || [ "$SIGNUP_CODE" = "200" ]; then
+        CHECKOUT_URL=$(echo "$SIGNUP_BODY" | jq -r '.checkout_url // empty')
+
+        if [ -n "$CHECKOUT_URL" ]; then
+            echo -e "${GREEN}✓${NC} Account created"
+            echo ""
+            echo "A browser window will open to complete payment."
+            echo "After payment, your database will be provisioned automatically."
+            echo ""
+            read -p "Press Enter to open checkout page..."
+
+            open_browser "$CHECKOUT_URL"
+            echo ""
+            echo "Checkout URL: $CHECKOUT_URL"
+            echo ""
+            echo "Waiting for payment completion..."
+
+            # Poll for login success
+            MAX_ATTEMPTS=120  # 10 minutes
+            ATTEMPT=0
+            while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+                sleep 5
+                ATTEMPT=$((ATTEMPT + 1))
+
+                POLL_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$DB_API_URL/api/v1/auth/login" \
+                    -H "Content-Type: application/json" \
+                    -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
+
+                POLL_CODE=$(echo "$POLL_RESPONSE" | tail -n1)
+                POLL_BODY=$(echo "$POLL_RESPONSE" | sed '$d')
+
+                if [ "$POLL_CODE" = "200" ]; then
+                    DATABASE_URL=$(echo "$POLL_BODY" | jq -r '.database_url // empty')
+                    if [ -n "$DATABASE_URL" ]; then
+                        echo ""
+                        echo -e "${GREEN}✓${NC} Payment completed! Database provisioned."
+                        CONNECTION_STRING=$(echo "$DATABASE_URL" | sed 's/@postgres:/@localhost:/')
+
+                        # Save credentials
+                        mkdir -p "$(dirname "$CREDENTIALS_FILE")"
+                        cat > "$CREDENTIALS_FILE" << EOF
+email=$EMAIL
+password=$PASSWORD
+EOF
+                        chmod 600 "$CREDENTIALS_FILE"
+                        break
+                    fi
+                fi
+
+                printf "."
+            done
+
+            if [ -z "$CONNECTION_STRING" ]; then
+                echo ""
+                echo -e "${RED}✗${NC} Timed out waiting for payment"
+                echo "Please complete payment and run this script again."
+                exit 1
+            fi
+        else
+            echo -e "${RED}✗${NC} No checkout URL in response"
+            echo "$SIGNUP_BODY" | jq . 2>/dev/null || echo "$SIGNUP_BODY"
             exit 1
         fi
-        ;;
-    *)
-        echo -e "${RED}✗${NC} Failed to provision database (HTTP $HTTP_CODE)"
-        echo "$BODY" | jq . 2>/dev/null || echo "$BODY"
+    else
+        echo -e "${RED}✗${NC} Signup failed (HTTP $SIGNUP_CODE)"
+        echo "$SIGNUP_BODY" | jq . 2>/dev/null || echo "$SIGNUP_BODY"
         exit 1
-        ;;
-esac
+    fi
+else
+    echo -e "${RED}✗${NC} Authentication failed (HTTP $LOGIN_CODE)"
+    echo "$LOGIN_BODY" | jq . 2>/dev/null || echo "$LOGIN_BODY"
+    exit 1
+fi
 
 echo ""
 
@@ -137,9 +344,9 @@ if [ ! -f ".env.secrets" ]; then
     echo -e "${GREEN}✓${NC} Created .env.secrets from template"
 fi
 
-# Update DATABASE_URL in .env.secrets (using grep+cat to handle special chars in password)
+# Update DATABASE_URL in .env.secrets (using printf to handle special chars in password)
 grep -v "^DATABASE_URL=" .env.secrets > .env.secrets.tmp || true
-echo "DATABASE_URL=$CONNECTION_STRING" >> .env.secrets.tmp
+printf 'DATABASE_URL=%s\n' "$CONNECTION_STRING" >> .env.secrets.tmp
 mv .env.secrets.tmp .env.secrets
 echo -e "${GREEN}✓${NC} DATABASE_URL saved to .env.secrets"
 
@@ -190,6 +397,12 @@ fi
 
 echo ""
 
+# Source environment for build (sqlx requires DATABASE_URL at compile time)
+set -a
+source .env.local
+if [ -f .env.secrets ]; then source .env.secrets; fi
+set +a
+
 # Build
 echo "Building project (this may take a few minutes on first run)..."
 ./infrastructure/scripts/build.sh debug
@@ -199,10 +412,6 @@ echo ""
 
 # Run migrations
 echo "Running database migrations..."
-set -a
-source .env.local
-if [ -f .env.secrets ]; then source .env.secrets; fi
-set +a
 ./core/target/debug/systemprompt db migrate || {
     echo -e "${RED}✗${NC} Migration failed - check your DATABASE_URL"
     exit 1
