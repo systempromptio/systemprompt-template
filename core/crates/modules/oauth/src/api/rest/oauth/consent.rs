@@ -2,12 +2,10 @@
 
 use crate::repository::OAuthRepository;
 use anyhow::Result;
-use axum::{
-    extract::{Query, State},
-    http::StatusCode,
-    response::{Html, IntoResponse},
-    Json,
-};
+use axum::extract::{Query, State};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse};
+use axum::Json;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
@@ -180,9 +178,7 @@ const fn get_body_start() -> &'static str {
 }
 
 fn get_consent_header(client_name: &str) -> String {
-    format!(
-        "        <p><strong>{client_name}</strong> is requesting access to your account.</p>"
-    )
+    format!("        <p><strong>{client_name}</strong> is requesting access to your account.</p>")
 }
 
 fn get_scopes_section(scope_items: &str) -> String {

@@ -37,8 +37,12 @@ impl ToolResultFormatter {
     }
 
     /// Format tool results for synthesis prompts.
-    /// Full markdown format with arguments and structured data for comprehensive synthesis.
-    pub fn format_for_synthesis(tool_calls: &[ToolCall], tool_results: &[CallToolResult]) -> String {
+    /// Full markdown format with arguments and structured data for
+    /// comprehensive synthesis.
+    pub fn format_for_synthesis(
+        tool_calls: &[ToolCall],
+        tool_results: &[CallToolResult],
+    ) -> String {
         tool_calls
             .iter()
             .zip(tool_results.iter())
@@ -48,27 +52,38 @@ impl ToolResultFormatter {
     }
 
     /// Format a single tool result for synthesis.
-    /// Includes full arguments and structured content.
+    /// Only includes text content from MCP tool response, TRUNCATED to 1000
+    /// chars. Structured content (artifact data) is NOT included - it goes
+    /// directly to user via artifacts. The AI should summarize results, not
+    /// repeat them - truncation prevents verbatim copying.
+    ///
+    /// For successful tools, includes a clear completion signal to prevent
+    /// retry loops.
     pub fn format_single_for_synthesis(call: &ToolCall, result: &CallToolResult) -> String {
         let status = Self::status_string(result);
+        let is_success = !result.is_error.unwrap_or(false);
         let content_text = Self::extract_text_content(result);
 
-        let structured_info = if let Some(ref structured) = result.structured_content {
-            format!(
-                "\n\n**Structured Data**:\n```json\n{}\n```",
-                serde_json::to_string_pretty(structured).unwrap_or_default()
-            )
+        let summary = content_text
+            .lines()
+            .find(|l| !l.trim().is_empty())
+            .unwrap_or("No summary available")
+            .chars()
+            .take(200)
+            .collect::<String>();
+
+        let truncated = Self::truncate(&content_text, 1000);
+
+        let completion_note = if is_success {
+            "\n\n**IMPORTANT**: This tool completed successfully. The action has been performed. \
+             Do NOT call this tool again with the same parameters."
         } else {
-            String::new()
+            ""
         };
 
         format!(
-            "### Tool: {} [{}]\n\n**Arguments**:\n```json\n{}\n```\n\n**Results**:\n{}{}\n",
-            call.name,
-            status,
-            serde_json::to_string_pretty(&call.arguments).unwrap_or_default(),
-            content_text,
-            structured_info
+            "### Tool: {} [{}]\n\n**Summary**: {}\n**Details** (truncated):\n{}{}",
+            call.name, status, summary, truncated, completion_note
         )
     }
 

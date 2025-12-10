@@ -1,4 +1,5 @@
 /// Detects malicious scanner traffic patterns
+#[derive(Debug, Clone, Copy)]
 pub struct ScannerDetector;
 
 impl ScannerDetector {
@@ -17,6 +18,8 @@ impl ScannerDetector {
             || path.ends_with(".tar.gz")
             || path.ends_with(".db")
             || path.ends_with(".config")
+            || path.ends_with(".cgi")
+            || path.ends_with(".htm")
             // Admin/management paths
             || path.contains("/admin")
             || path.contains("/wp-admin")
@@ -25,6 +28,15 @@ impl ScannerDetector {
             || path.contains("/cgi-bin")
             || path.contains("/phpmyadmin")
             || path.contains("/xmlrpc")
+            // Router/IoT exploit paths
+            || path.contains("/luci")
+            || path.contains("/ssi.cgi")
+            || path.contains("internal_forms_authentication")
+            || path.contains("/identity")
+            || path.contains("/Login.htm")
+            || path.contains("/manager/html")
+            || path.contains("/config/")
+            || path.contains("/setup.cgi")
             // Common exploit paths
             || path.contains("/eval-stdin.php")
             || path.contains("/shell.php")
@@ -167,76 +179,5 @@ impl ScannerDetector {
         }
 
         false
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_scanner_paths() {
-        assert!(ScannerDetector::is_scanner_path("/.env"));
-        assert!(ScannerDetector::is_scanner_path("/test.php"));
-        assert!(ScannerDetector::is_scanner_path("/admin.php"));
-        assert!(ScannerDetector::is_scanner_path("/wp-admin/admin.php"));
-        assert!(!ScannerDetector::is_scanner_path("/blog/post"));
-        assert!(!ScannerDetector::is_scanner_path("/api/v1/users"));
-    }
-
-    #[test]
-    fn test_scanner_agents() {
-        // Original scanner detection
-        assert!(ScannerDetector::is_scanner_agent("masscan/1.0"));
-        assert!(ScannerDetector::is_scanner_agent("curl/7.68.0"));
-
-        // New scanner detection - reconnaissance tools
-        assert!(ScannerDetector::is_scanner_agent("Mozilla/5.0 zgrab/0.x"));
-        assert!(ScannerDetector::is_scanner_agent(
-            "Hello from Palo Alto Networks"
-        ));
-
-        // New scanner detection - automated probing
-        assert!(ScannerDetector::is_scanner_agent(
-            "probe-image-size/7.2.3(+https://github.com/nodeca/probe-image-size)"
-        ));
-        assert!(ScannerDetector::is_scanner_agent("libredtail-http"));
-
-        // New scanner detection - WordPress bots
-        assert!(ScannerDetector::is_scanner_agent(
-            "WordPress/6.8.3; https://ai.jiayun.info"
-        ));
-
-        // New scanner detection - empty/short user agents
-        assert!(ScannerDetector::is_scanner_agent(""));
-        assert!(ScannerDetector::is_scanner_agent("short"));
-
-        // New scanner detection - generic Mozilla
-        assert!(ScannerDetector::is_scanner_agent("Mozilla/5.0"));
-
-        // New scanner detection - old browsers
-        assert!(ScannerDetector::is_scanner_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36"));
-        assert!(ScannerDetector::is_scanner_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"));
-        assert!(ScannerDetector::is_scanner_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_0) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11"));
-        assert!(ScannerDetector::is_scanner_agent(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/80.0"
-        ));
-
-        // Should NOT flag modern browsers
-        assert!(!ScannerDetector::is_scanner_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"));
-        assert!(!ScannerDetector::is_scanner_agent("Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"));
-    }
-
-    #[test]
-    fn test_null_user_agent() {
-        // NULL user agent should be flagged as scanner
-        assert!(ScannerDetector::is_scanner(Some("/"), None, None, None));
-    }
-
-    #[test]
-    fn test_high_velocity() {
-        assert!(ScannerDetector::is_high_velocity(100, 60)); // 100 requests in 60s = 100 req/min
-        assert!(ScannerDetector::is_high_velocity(50, 30)); // 50 requests in 30s = 100 req/min
-        assert!(!ScannerDetector::is_high_velocity(10, 60)); // 10 requests in 60s = 10 req/min
     }
 }

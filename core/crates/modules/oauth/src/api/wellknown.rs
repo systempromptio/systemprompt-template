@@ -1,4 +1,6 @@
-use axum::{http::StatusCode, routing::get, Router};
+use axum::http::StatusCode;
+use axum::routing::get;
+use axum::Router;
 use systemprompt_core_system::AppContext;
 
 pub fn wellknown_routes(ctx: &AppContext) -> Router {

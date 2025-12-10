@@ -183,8 +183,53 @@ export const useTaskStore = create<TaskStore>()((set, get) => ({
     set((state) => {
       const existing = state.byId[task.id]
 
+      console.log('%c[TASK_STORE] updateTask called', 'background: #9966ff; color: white;', {
+        timestamp: new Date().toISOString(),
+        taskId: task.id,
+        isNew: !existing,
+        incomingStatus: task.status?.state,
+        existingStatus: existing?.status?.state,
+        incomingHistoryLength: task.history?.length || 0,
+        existingHistoryLength: existing?.history?.length || 0,
+        incomingHistoryRoles: task.history?.map(m => m.role),
+        existingHistoryRoles: existing?.history?.map(m => m.role),
+        incomingHistoryTexts: task.history?.map(m => ({
+          role: m.role,
+          textPreview: m.parts?.[0]?.kind === 'text' ? (m.parts[0] as { text?: string }).text?.substring(0, 50) : 'N/A'
+        }))
+      })
+
       if (!shouldReplaceItem(task.metadata, existing?.metadata)) {
+        console.log('%c[TASK_STORE] Skipping update - existing task is newer', 'background: #ff0000; color: white;', {
+          timestamp: new Date().toISOString(),
+          taskId: task.id,
+          existingMetadata: existing?.metadata,
+          newMetadata: task.metadata
+        })
         return state
+      }
+
+      const isNew = !existing
+      const userMessage = task.history?.[0]?.parts?.[0]
+      console.log(`[TASK_STORE] ${isNew ? 'Adding new' : 'Updating'} task`, {
+        timestamp: new Date().toISOString(),
+        taskId: task.id,
+        contextId: task.contextId,
+        status: task.status?.state,
+        historyLength: task.history?.length || 0,
+        userMessagePreview: userMessage?.kind === 'text' ? (userMessage as { text?: string }).text?.substring(0, 50) : 'N/A'
+      })
+
+      if (isNew && (!task.history || task.history.length === 0)) {
+        console.warn(
+          '%c[TASK_STORE] WARNING: Task created with EMPTY HISTORY! User message will not display until task completion.',
+          'background: #ff0000; color: #ffffff; font-size: 14px; font-weight: bold; padding: 4px 8px;',
+          {
+            taskId: task.id,
+            status: task.status?.state,
+            fullTask: task
+          }
+        )
       }
 
       const newByContext = { ...state.byContext }
@@ -193,8 +238,15 @@ export const useTaskStore = create<TaskStore>()((set, get) => ({
         newByContext[task.contextId] = [...existingTaskIds, task.id]
       }
 
+      const mergedTask = {
+        ...task,
+        history: (task.history?.length ?? 0) > 0
+          ? task.history
+          : existing?.history ?? []
+      }
+
       return {
-        byId: { ...state.byId, [task.id]: task },
+        byId: { ...state.byId, [task.id]: mergedTask },
         allIds: ensureTaskIdInArray(task.id, state.allIds),
         byContext: newByContext,
       }

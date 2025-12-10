@@ -2,11 +2,13 @@
 //!
 //! This service uses:
 //! - AgentRegistry (config) for agent definitions (name, port, card)
-//! - AgentServiceRepository (database) for runtime state (PID, status, running/stopped)
+//! - AgentServiceRepository (database) for runtime state (PID, status,
+//!   running/stopped)
 
 use crate::repository::AgentServiceRepository;
-use crate::services::agent_orchestration::process;
-use crate::services::agent_orchestration::{AgentStatus, OrchestrationError, OrchestrationResult};
+use crate::services::agent_orchestration::{
+    process, AgentStatus, OrchestrationError, OrchestrationResult,
+};
 use crate::services::registry::AgentRegistry;
 use systemprompt_models::services::AgentConfig;
 
@@ -19,7 +21,7 @@ pub struct AgentDatabaseService {
 impl AgentDatabaseService {
     pub async fn new(repository: AgentServiceRepository) -> OrchestrationResult<Self> {
         let registry = AgentRegistry::new().await.map_err(|e| {
-            OrchestrationError::Database(format!("Failed to load agent registry: {}", e))
+            OrchestrationError::Database(format!("Failed to load agent registry: {e}"))
         })?;
 
         Ok(Self {
@@ -154,7 +156,7 @@ impl AgentDatabaseService {
     pub async fn list_all_agents(&self) -> OrchestrationResult<Vec<(String, AgentStatus)>> {
         // Get all agent definitions from config
         let agent_configs = self.registry.list_agents().await.map_err(|e| {
-            OrchestrationError::Database(format!("Failed to list agents from config: {}", e))
+            OrchestrationError::Database(format!("Failed to list agents from config: {e}"))
         })?;
 
         let mut agents = Vec::new();

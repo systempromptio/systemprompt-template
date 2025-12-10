@@ -1,11 +1,32 @@
-import type { Artifact, ArtifactMetadata } from '@/types/artifact'
-import type { PresentationCardData, DashboardData } from '@/types/artifacts'
+import type { Artifact, ArtifactMetadata, PresentationCardData, DashboardData } from '@/types/artifact'
 import type { ChartData, TreeNode } from '@/lib/mcp/types'
 import { isArrayResponse, hasLabelsAndDatasets, hasNameProperty } from '@/lib/mcp/types'
 
 export interface ExtractionResult<T> {
   data: T
   errors?: string[]
+}
+
+interface ToolResponseWrapper {
+  artifact_id?: string
+  artifact?: unknown
+  _metadata?: unknown
+}
+
+function isToolResponseWrapper(data: unknown): data is ToolResponseWrapper {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'artifact' in data &&
+    (data as ToolResponseWrapper).artifact !== undefined
+  )
+}
+
+function unwrapToolResponse(data: unknown): unknown {
+  if (isToolResponseWrapper(data)) {
+    return data.artifact
+  }
+  return data
 }
 
 export function unwrapExtraction<T>(result: ExtractionResult<T>): T {
@@ -22,7 +43,8 @@ export const extractTableData = (artifact: Artifact): ExtractionResult<unknown[]
     return { data: [], errors: ['No data part found in artifact'] }
   }
 
-  const data = dataPart.data
+  const rawData = dataPart.data
+  const data = unwrapToolResponse(rawData)
   const validationErrors = artifact.metadata.validation_errors as string[] | undefined
 
   if (isArrayResponse(data)) {
@@ -41,7 +63,8 @@ export const extractChartData = (artifact: Artifact): ExtractionResult<ChartData
     return { data: null, errors: ['No data part found'] }
   }
 
-  const data = dataPart.data
+  const rawData = dataPart.data
+  const data = unwrapToolResponse(rawData)
   const validationErrors = artifact.metadata.validation_errors as string[] | undefined
 
   if (hasLabelsAndDatasets(data)) {
@@ -56,7 +79,8 @@ export const extractCodeData = (artifact: Artifact): ExtractionResult<string> =>
   const validationErrors = artifact.metadata.validation_errors as string[] | undefined
 
   if (dataPart && dataPart.kind === 'data') {
-    const data = dataPart.data
+    const rawData = dataPart.data
+    const data = unwrapToolResponse(rawData)
     if (typeof data === 'string') {
       return { data, errors: validationErrors }
     }
@@ -79,7 +103,8 @@ export const extractTreeData = (artifact: Artifact): ExtractionResult<TreeNode |
     return { data: null, errors: ['No data part found'] }
   }
 
-  const data = dataPart.data
+  const rawData = dataPart.data
+  const data = unwrapToolResponse(rawData)
   const validationErrors = artifact.metadata.validation_errors as string[] | undefined
 
   if (hasNameProperty(data)) {
@@ -98,7 +123,8 @@ export const extractPresentationCardData = (artifact: Artifact): ExtractionResul
     }
   }
 
-  const data = dataPart.data as PresentationCardData
+  const rawData = dataPart.data
+  const data = unwrapToolResponse(rawData) as PresentationCardData
   const validationErrors = artifact.metadata.validation_errors as string[] | undefined
 
   return {
@@ -116,7 +142,8 @@ export const extractDashboardData = (artifact: Artifact): ExtractionResult<Dashb
     }
   }
 
-  const data = dataPart.data as Record<string, unknown>
+  const rawData = dataPart.data
+  const data = unwrapToolResponse(rawData) as Record<string, unknown>
   const validationErrors = artifact.metadata.validation_errors as string[] | undefined
 
   if (!data.sections || !Array.isArray(data.sections)) {
@@ -156,14 +183,15 @@ export const extractListData = (artifact: Artifact): ExtractionResult<ListData> 
     }
   }
 
-  const data = dataPart.data
+  const rawData = dataPart.data
+  const data = unwrapToolResponse(rawData)
   const validationErrors = artifact.metadata.validation_errors as string[] | undefined
 
   if (isArrayResponse(data)) {
     return {
       data: {
         items: data.items as ListItem[],
-        count: (data as Record<string, unknown>).count as number | undefined
+        count: (data as unknown as Record<string, unknown>).count as number | undefined
       },
       errors: validationErrors
     }

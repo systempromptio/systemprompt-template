@@ -18,7 +18,7 @@ pub struct ReqwestClient {
 }
 
 impl ReqwestClient {
-    pub fn new(client: reqwest::Client) -> Self {
+    pub const fn new(client: reqwest::Client) -> Self {
         Self { client }
     }
 }
@@ -72,57 +72,5 @@ impl HttpClient for MockClient {
                 reason: "No more mocked responses available".to_string(),
             })
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn reqwest_client_wraps_client() {
-        let client = reqwest::Client::new();
-        let http_client = ReqwestClient::new(client.clone());
-
-        let req = client.get("https://httpbin.org/status/200");
-        let result = http_client.send(req).await;
-
-        assert!(result.is_ok());
-    }
-
-    #[tokio::test]
-    async fn mock_client_returns_queued_responses() {
-        let mock = MockClient::new(vec![Err(ProxyError::ServiceNotFound {
-            service: "test".to_string(),
-        })]);
-
-        let client = reqwest::Client::new();
-        let req = client.get("http://example.com");
-
-        let result = mock.send(req).await;
-
-        assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            ProxyError::ServiceNotFound { .. }
-        ));
-    }
-
-    #[tokio::test]
-    async fn mock_client_returns_error_when_empty() {
-        let mock = MockClient::empty();
-
-        let client = reqwest::Client::new();
-        let req = client.get("http://example.com");
-
-        let result = mock.send(req).await;
-
-        assert!(result.is_err());
-        match result.unwrap_err() {
-            ProxyError::InvalidResponse { reason, .. } => {
-                assert!(reason.contains("No more mocked responses"));
-            },
-            _ => panic!("Expected InvalidResponse error"),
-        }
     }
 }

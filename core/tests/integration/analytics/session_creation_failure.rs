@@ -1,8 +1,10 @@
 /// Tests for session creation failure scenarios
 ///
 /// Validates that:
-/// - When session creation fails, the middleware returns 503 (not 200 with FK violations)
-/// - No analytics events or endpoint requests are created with invalid session_ids
+/// - When session creation fails, the middleware returns 503 (not 200 with FK
+///   violations)
+/// - No analytics events or endpoint requests are created with invalid
+///   session_ids
 /// - The system maintains data integrity even under error conditions
 /// - No orphaned records are created when session creation fails
 use crate::common::*;

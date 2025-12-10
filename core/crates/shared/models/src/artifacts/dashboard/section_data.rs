@@ -1,7 +1,8 @@
 use super::super::chart::ChartDataset;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct MetricsCardsData {
     pub cards: Vec<MetricCard>,
 }
@@ -17,7 +18,7 @@ impl MetricsCardsData {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct MetricCard {
     pub title: String,
     pub value: String,
@@ -29,7 +30,7 @@ pub struct MetricCard {
     pub status: Option<MetricStatus>,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum MetricStatus {
     Success,
@@ -65,7 +66,7 @@ impl MetricCard {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ChartSectionData {
     pub chart_type: String,
     pub labels: Vec<String>,
@@ -86,7 +87,7 @@ impl ChartSectionData {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct TableSectionData {
     pub columns: Vec<String>,
     pub rows: Vec<serde_json::Value>,
@@ -96,7 +97,7 @@ pub struct TableSectionData {
     pub default_sort: Option<SortConfig>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SortConfig {
     pub column: String,
     pub order: String,
@@ -130,7 +131,7 @@ impl TableSectionData {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct StatusSectionData {
     pub services: Vec<ServiceStatus>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -139,7 +140,7 @@ pub struct StatusSectionData {
     pub recent_errors: Option<ErrorCounts>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ServiceStatus {
     pub name: String,
     pub status: String,
@@ -147,13 +148,13 @@ pub struct ServiceStatus {
     pub uptime: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct DatabaseStatus {
     pub size_mb: f64,
     pub status: String,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 pub struct ErrorCounts {
     pub critical: i32,
     pub error: i32,
@@ -214,18 +215,18 @@ impl ErrorCounts {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ListSectionData {
     pub lists: Vec<ItemList>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ItemList {
     pub title: String,
     pub items: Vec<ListItem>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ListItem {
     pub rank: i32,
     pub label: String,

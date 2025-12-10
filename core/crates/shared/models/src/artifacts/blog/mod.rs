@@ -1,10 +1,20 @@
-use crate::artifacts::{metadata::ExecutionMetadata, traits::Artifact, types::ArtifactType};
+use crate::artifacts::metadata::ExecutionMetadata;
+use crate::artifacts::traits::Artifact;
+use crate::artifacts::types::ArtifactType;
 use crate::content::ContentLink;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+fn default_artifact_type() -> String {
+    "blog".to_string()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct BlogArtifact {
+    #[serde(rename = "x-artifact-type")]
+    #[serde(default = "default_artifact_type")]
+    pub artifact_type: String,
     pub title: String,
     pub slug: String,
     pub content: String,
@@ -19,6 +29,7 @@ pub struct BlogArtifact {
     pub content_type: Option<String>,
     pub links: Option<Vec<ContentLink>>,
     #[serde(skip)]
+    #[schemars(skip)]
     metadata: ExecutionMetadata,
 }
 
@@ -29,6 +40,7 @@ impl BlogArtifact {
         content: impl Into<String>,
     ) -> Self {
         Self {
+            artifact_type: "blog".to_string(),
             title: title.into(),
             slug: slug.into(),
             content: content.into(),
@@ -108,61 +120,6 @@ impl BlogArtifact {
     ) -> Self {
         self.metadata = self.metadata.with_skill(skill_id.into(), skill_name.into());
         self
-    }
-
-    pub fn to_response(&self) -> JsonValue {
-        let mut response = json!({
-            "x-artifact-type": "blog",
-            "title": self.title,
-            "slug": self.slug,
-            "content": self.content
-        });
-
-        if let Some(ref id) = self.content_id {
-            response["content_id"] = json!(id);
-        }
-
-        if let Some(ref excerpt) = self.excerpt {
-            response["excerpt"] = json!(excerpt);
-        }
-
-        if let Some(ref url) = self.featured_image_url {
-            response["featured_image_url"] = json!(url);
-        }
-
-        if let Some(ref datetime) = self.published_at {
-            response["published_at"] = json!(datetime);
-        }
-
-        if let Some(ref tags) = self.tags {
-            response["tags"] = json!(tags);
-        }
-
-        if let Some(ref categories) = self.categories {
-            response["categories"] = json!(categories);
-        }
-
-        if let Some(ref keywords) = self.keywords {
-            response["keywords"] = json!(keywords);
-        }
-
-        if let Some(ref author) = self.author {
-            response["author"] = json!(author);
-        }
-
-        if let Some(ref content_type) = self.content_type {
-            response["content_type"] = json!(content_type);
-        }
-
-        if let Some(ref links) = self.links {
-            response["links"] = json!(links);
-        }
-
-        if let Some(ref id) = self.metadata.execution_id {
-            response["_execution_id"] = json!(id);
-        }
-
-        response
     }
 }
 

@@ -3,7 +3,7 @@ use clap::Parser;
 use std::path::PathBuf;
 use std::sync::Arc;
 use systemprompt_core_blog::{ContentSourceExport, ExportService};
-use systemprompt_core_database::{Database, DatabaseProvider};
+use systemprompt_core_database::Database;
 use systemprompt_core_logging::LogService;
 use systemprompt_models::{Config, ContentConfig};
 
@@ -12,7 +12,7 @@ use systemprompt_models::{Config, ContentConfig};
 #[command(about = "Export database content to markdown files")]
 #[command(
     long_about = "Exports content from the database to markdown files, syncing database as the \
-source of truth back to the filesystem for backup and git tracking."
+                  source of truth back to the filesystem for backup and git tracking."
 )]
 struct Args {
     #[arg(short, long, default_value = "crates/services/content/config.yml")]
@@ -43,8 +43,7 @@ async fn main() -> Result<()> {
         println!("{}", serde_yaml::to_string(&content_config)?);
     }
 
-    let db_provider: Arc<dyn DatabaseProvider> = db_arc.clone();
-    let export_service = ExportService::new(db_provider);
+    let export_service = ExportService::new(db_arc);
 
     let sources_to_export: Vec<_> = if let Some(ref source_name) = args.source {
         content_config
@@ -61,15 +60,11 @@ async fn main() -> Result<()> {
     };
 
     if sources_to_export.is_empty() {
-        let msg = if args.source.is_some() {
-            format!(
-                "Source '{}' not found or disabled",
-                args.source.as_ref().unwrap()
-            )
-        } else {
-            "No enabled sources found in configuration".to_string()
+        let message = match &args.source {
+            Some(source_name) => format!("Source '{source_name}' not found or disabled"),
+            None => "No enabled sources found in configuration".to_string(),
         };
-        return Err(anyhow!(msg));
+        return Err(anyhow!(message));
     }
 
     println!("\n📤 Exporting {} source(s):", sources_to_export.len());

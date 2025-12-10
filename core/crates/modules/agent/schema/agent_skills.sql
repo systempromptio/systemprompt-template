@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS agent_skills (
 
     enabled BOOLEAN NOT NULL DEFAULT true,
 
-    allowed_tools TEXT[],
     tags TEXT[],
 
     category_id TEXT,

@@ -8,24 +8,38 @@ pub use section::DashboardSection;
 pub use section_data::*;
 pub use section_types::{LayoutWidth, SectionLayout, SectionType};
 
-use crate::artifacts::{metadata::ExecutionMetadata, traits::Artifact, types::ArtifactType};
+use crate::artifacts::metadata::ExecutionMetadata;
+use crate::artifacts::traits::Artifact;
+use crate::artifacts::types::ArtifactType;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+fn default_artifact_type() -> String {
+    "dashboard".to_string()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct DashboardArtifact {
+    #[serde(rename = "x-artifact-type")]
+    #[serde(default = "default_artifact_type")]
+    pub artifact_type: String,
     pub title: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub sections: Vec<DashboardSection>,
     #[serde(skip)]
+    #[schemars(skip)]
     hints: DashboardHints,
     #[serde(skip)]
+    #[schemars(skip)]
     metadata: ExecutionMetadata,
 }
 
 impl DashboardArtifact {
     pub fn new(title: impl Into<String>) -> Self {
         Self {
+            artifact_type: "dashboard".to_string(),
             title: title.into(),
             description: None,
             sections: Vec::new(),
@@ -66,24 +80,6 @@ impl DashboardArtifact {
     ) -> Self {
         self.metadata = self.metadata.with_skill(skill_id.into(), skill_name.into());
         self
-    }
-
-    pub fn to_response(&self) -> JsonValue {
-        let mut response = json!({
-            "x-artifact-type": "dashboard",
-            "title": self.title,
-            "sections": self.sections
-        });
-
-        if let Some(ref desc) = self.description {
-            response["description"] = json!(desc);
-        }
-
-        if let Some(ref id) = self.metadata.execution_id {
-            response["_execution_id"] = json!(id);
-        }
-
-        response
     }
 }
 

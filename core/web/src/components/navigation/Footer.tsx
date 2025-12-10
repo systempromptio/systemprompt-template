@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Github, Twitter, Mail } from 'lucide-react';
+import { Github, Twitter, Mail, Linkedin } from 'lucide-react';
 import { theme } from '@/theme.config';
 
-// Map social type to icon component
 const socialIconMap = {
   github: Github,
   twitter: Twitter,
   email: Mail,
+  linkedin: Linkedin,
 };
 
 export const Footer: React.FC = () => {

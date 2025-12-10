@@ -397,24 +397,36 @@ logs *ARGS:
 log *ARGS:
     ./target/debug/systemprompt logs --stream {{ARGS}}
 
-# Trace a request flow by trace_id (shows logs, tool executions, artifacts)
+# Trace a request flow by trace_id (shows execution steps, logs, artifacts)
 trace TRACE_ID:
     #!/usr/bin/env bash
     echo "============================================================"
     echo "TRACE: {{TRACE_ID}}"
     echo "============================================================"
     echo ""
-    echo "📋 LOGS"
+
+    # Get task info first
+    echo "📋 TASK INFO"
     echo "------------------------------------------------------------"
-    ./target/debug/systemprompt db query "SELECT timestamp, level, module, message FROM logs WHERE trace_id = '{{TRACE_ID}}' ORDER BY timestamp" || echo "No logs found"
+    ./target/debug/systemprompt db query "SELECT task_id, context_id, agent_name, status, execution_time_ms, created_at FROM agent_tasks WHERE trace_id = '{{TRACE_ID}}'" || echo "No task found"
     echo ""
-    echo "🔧 TOOL EXECUTIONS"
+
+    # Execution steps with lifecycle transitions
+    echo "🔄 EXECUTION STEPS"
     echo "------------------------------------------------------------"
-    ./target/debug/systemprompt db query "SELECT tool_name, status, context_id, session_id, user_id, created_at FROM mcp_tool_executions WHERE trace_id = '{{TRACE_ID}}' ORDER BY created_at" || echo "No tool executions found"
+    ./target/debug/systemprompt db query "SELECT s.step_type, s.title, s.subtitle, s.status, s.duration_ms, s.tool_name, s.started_at FROM task_execution_steps s JOIN agent_tasks t ON s.task_id = t.task_id WHERE t.trace_id = '{{TRACE_ID}}' ORDER BY s.started_at" || echo "No execution steps found"
     echo ""
+
+    # Logs (INFO and above, skip DEBUG)
+    echo "📝 LOGS (INFO+)"
+    echo "------------------------------------------------------------"
+    ./target/debug/systemprompt db query "SELECT timestamp, level, module, message FROM logs WHERE trace_id = '{{TRACE_ID}}' AND level != 'DEBUG' ORDER BY timestamp" || echo "No logs found"
+    echo ""
+
+    # Artifacts
     echo "📦 ARTIFACTS"
     echo "------------------------------------------------------------"
-    ./target/debug/systemprompt db query "SELECT ta.artifact_id, ta.name, ta.artifact_type, ta.context_id FROM task_artifacts ta JOIN mcp_tool_executions te ON ta.tool_execution_id = te.id WHERE te.trace_id = '{{TRACE_ID}}' ORDER BY ta.created_at" || echo "No artifacts found"
+    ./target/debug/systemprompt db query "SELECT ta.artifact_id, ta.name, ta.artifact_type, ta.skill_name, ta.created_at FROM task_artifacts ta JOIN agent_tasks t ON ta.task_id = t.task_id WHERE t.trace_id = '{{TRACE_ID}}' ORDER BY ta.created_at" || echo "No artifacts found"
     echo ""
     echo "============================================================"
 

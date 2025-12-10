@@ -1,7 +1,5 @@
-use axum::{
-    extract::{Extension, Path, State},
-    response::{IntoResponse, Json},
-};
+use axum::extract::{Extension, Path, State};
+use axum::response::{IntoResponse, Json};
 
 use crate::models::clients::api::{OAuthClientResponse, UpdateOAuthClientRequest};
 use crate::repository::OAuthRepository;
@@ -50,7 +48,7 @@ pub async fn update_client(
                             "OAuth client update failed",
                             Some(serde_json::json!({
                                 "client_id": &client_id,
-                                "reason": format!("Database error: {}", e),
+                                "reason": format!("Database error: {e}"),
                                 "updated_by": req_ctx.auth.user_id.as_str()
                             })),
                         )
@@ -84,7 +82,7 @@ pub async fn update_client(
                     "OAuth client update failed",
                     Some(serde_json::json!({
                         "client_id": &client_id,
-                        "reason": format!("Database error: {}", e),
+                        "reason": format!("Database error: {e}"),
                         "updated_by": req_ctx.auth.user_id.as_str()
                     })),
                 )

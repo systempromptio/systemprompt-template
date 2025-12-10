@@ -152,8 +152,10 @@ export function useAgentDiscovery() {
 
         // Load skills from agent cards (skills were loaded from DB into agent cards by backend)
         const allSkills = apiAgents.flatMap(agent => {
-          const card = agent as any
-          return card.skills || []
+          if ('skills' in agent && Array.isArray(agent.skills)) {
+            return agent.skills
+          }
+          return []
         })
         if (allSkills.length > 0) {
           logger.debug('Loading skills from agent cards', { count: allSkills.length }, 'useAgentDiscovery')
@@ -167,22 +169,15 @@ export function useAgentDiscovery() {
           ? contextStore.contextAgents.get(currentContextId)
           : null
 
-        console.log('[useAgentDiscovery] After loading agents, checking for assignment:', {
-          currentContextId,
-          assignedAgentName,
-          selectedAgent: selectedAgent?.name
-        })
-
         if (assignedAgentName) {
           // There's a pending agent assignment from SSE - use it
           const matchingAgent = apiAgents.find((agent: AgentCard) =>
             agent.name.toLowerCase() === assignedAgentName.toLowerCase()
           )
           if (matchingAgent) {
-            console.log('[useAgentDiscovery] Applying pending agent assignment:', matchingAgent.name)
             selectAgent(matchingAgent.url, matchingAgent)
           } else {
-            console.warn('[useAgentDiscovery] Assigned agent not found:', assignedAgentName)
+            logger.warn('Assigned agent not found', { agentName: assignedAgentName }, 'useAgentDiscovery')
           }
         } else if (!selectedAgent && apiAgents.length > 0) {
           // No assignment - use default agent
@@ -193,7 +188,6 @@ export function useAgentDiscovery() {
             return serviceStatusExt?.params?.default === true
           })
           const agentToSelect = defaultAgent || apiAgents[0]
-          console.log('[useAgentDiscovery] No assignment, selecting default:', agentToSelect.name)
           selectAgent(agentToSelect.url, agentToSelect)
         }
       } else {

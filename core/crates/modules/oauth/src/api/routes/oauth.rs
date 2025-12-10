@@ -1,9 +1,7 @@
 use super::clients;
 use crate::api::rest;
-use axum::{
-    routing::{get, post},
-    Router,
-};
+use axum::routing::{get, post};
+use axum::Router;
 
 pub fn router() -> Router<systemprompt_core_system::AppContext> {
     Router::new()

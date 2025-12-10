@@ -1,217 +1,245 @@
 use crate::models::{
     CampaignLink, CampaignPerformance, ContentJourneyNode, LinkClick, LinkPerformance,
 };
-use anyhow::{Context, Result};
-use chrono::{DateTime, Utc};
+use chrono::Utc;
+use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt_core_database::DatabaseProvider;
-use systemprompt_core_database::DatabaseQueryEnum;
+use systemprompt_core_database::DbPool;
+use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct LinkRepository {
-    db: Arc<dyn DatabaseProvider>,
+    pool: Arc<PgPool>,
 }
 
 impl LinkRepository {
-    pub fn new(db: Arc<dyn DatabaseProvider>) -> Self {
-        Self { db }
+    pub fn new(db: DbPool) -> Self {
+        let pool = db.pool_arc().expect("Database must be PostgreSQL");
+        Self { pool }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn create_link(
         &self,
-        id: &str,
         short_code: &str,
         target_url: &str,
         link_type: &str,
-        campaign_id: Option<&str>,
-        campaign_name: Option<&str>,
         source_content_id: Option<&str>,
         source_page: Option<&str>,
+        campaign_id: Option<&str>,
+        campaign_name: Option<&str>,
         utm_params: Option<&str>,
         link_text: Option<&str>,
         link_position: Option<&str>,
-        destination_type: &str,
+        destination_type: Option<&str>,
         is_active: bool,
-        expires_at: Option<DateTime<Utc>>,
-        created_at: DateTime<Utc>,
-        updated_at: DateTime<Utc>,
-    ) -> Result<String> {
-        let query = DatabaseQueryEnum::CreateLink.get(self.db.as_ref());
-
-        let _row = self
-            .db
-            .fetch_one(
-                &query,
-                &[
-                    &id,
-                    &short_code,
-                    &target_url,
-                    &link_type,
-                    &campaign_id,
-                    &campaign_name,
-                    &source_content_id,
-                    &source_page,
-                    &utm_params,
-                    &link_text,
-                    &link_position,
-                    &destination_type,
-                    &is_active,
-                    &expires_at,
-                    &created_at,
-                    &updated_at,
-                ],
+        expires_at: Option<chrono::DateTime<Utc>>,
+    ) -> Result<CampaignLink, sqlx::Error> {
+        let id = Uuid::new_v4().to_string();
+        let now = Utc::now();
+        sqlx::query_as!(
+            CampaignLink,
+            r#"
+            INSERT INTO campaign_links (
+                id, short_code, target_url, link_type, source_content_id, source_page,
+                campaign_id, campaign_name, utm_params, link_text, link_position,
+                destination_type, is_active, expires_at, created_at, updated_at
             )
-            .await
-            .context(format!(
-                "Failed to create link with short_code: {short_code}"
-            ))?;
-
-        Ok(id.to_string())
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $15)
+            RETURNING id, short_code, target_url, link_type, campaign_id, campaign_name,
+                      source_content_id, source_page, utm_params, link_text, link_position,
+                      destination_type, click_count, unique_click_count, conversion_count,
+                      is_active, expires_at, created_at, updated_at
+            "#,
+            id,
+            short_code,
+            target_url,
+            link_type,
+            source_content_id,
+            source_page,
+            campaign_id,
+            campaign_name,
+            utm_params,
+            link_text,
+            link_position,
+            destination_type,
+            is_active,
+            expires_at,
+            now
+        )
+        .fetch_one(&*self.pool)
+        .await
     }
 
-    pub async fn get_link_by_id(&self, id: &str) -> Result<Option<CampaignLink>> {
-        let query = DatabaseQueryEnum::GetLinkById.get(self.db.as_ref());
-
-        let row = self
-            .db
-            .fetch_optional(&query, &[&id])
-            .await
-            .context(format!("Failed to get link by id: {id}"))?;
-
-        row.as_ref()
-            .map(CampaignLink::from_json_row)
-            .transpose()
-    }
-
-    pub async fn get_link_by_short_code(&self, short_code: &str) -> Result<Option<CampaignLink>> {
-        let query = DatabaseQueryEnum::GetLinkByShortCode.get(self.db.as_ref());
-
-        let row = self
-            .db
-            .fetch_optional(&query, &[&short_code])
-            .await
-            .context(format!("Failed to get link by short_code: {short_code}"))?;
-
-        row.as_ref()
-            .map(CampaignLink::from_json_row)
-            .transpose()
-    }
-
-    pub async fn list_links_by_campaign(&self, campaign_id: &str) -> Result<Vec<CampaignLink>> {
-        let query = DatabaseQueryEnum::ListLinksByCampaign.get(self.db.as_ref());
-
-        let rows = self
-            .db
-            .fetch_all(&query, &[&campaign_id])
-            .await
-            .context(format!(
-                "Failed to list links for campaign: {campaign_id}"
-            ))?;
-
-        rows.iter()
-            .map(CampaignLink::from_json_row)
-            .collect::<Result<Vec<_>>>()
-    }
-
-    pub async fn list_links_by_source_content(
+    pub async fn get_link_by_short_code(
         &self,
-        source_content_id: &str,
-    ) -> Result<Vec<CampaignLink>> {
-        let query = DatabaseQueryEnum::ListLinksBySourceContent.get(self.db.as_ref());
-
-        let rows = self
-            .db
-            .fetch_all(&query, &[&source_content_id])
-            .await
-            .context(format!(
-                "Failed to list links for source content: {source_content_id}"
-            ))?;
-
-        rows.iter()
-            .map(CampaignLink::from_json_row)
-            .collect::<Result<Vec<_>>>()
+        short_code: &str,
+    ) -> Result<Option<CampaignLink>, sqlx::Error> {
+        sqlx::query_as!(
+            CampaignLink,
+            r#"
+            SELECT id, short_code, target_url, link_type, campaign_id, campaign_name,
+                   source_content_id, source_page, utm_params, link_text, link_position,
+                   destination_type, click_count, unique_click_count, conversion_count,
+                   is_active, expires_at, created_at, updated_at
+            FROM campaign_links
+            WHERE short_code = $1 AND is_active = true
+            "#,
+            short_code
+        )
+        .fetch_optional(&*self.pool)
+        .await
     }
 
-    pub async fn increment_link_clicks(&self, link_id: &str, is_unique: bool) -> Result<()> {
-        let query = DatabaseQueryEnum::IncrementLinkClicks.get(self.db.as_ref());
-
-        self.db
-            .execute(&query, &[&link_id, &is_unique])
-            .await
-            .context(format!("Failed to increment clicks for link: {link_id}"))?;
-
-        Ok(())
-    }
-
-    pub async fn record_click(
+    pub async fn track_click(
         &self,
-        id: &str,
         link_id: &str,
         session_id: &str,
         user_id: Option<&str>,
-        context_id: Option<&str>,
-        task_id: Option<&str>,
+        ip_address: Option<&str>,
+        user_agent: Option<&str>,
         referrer_page: Option<&str>,
         referrer_url: Option<&str>,
-        clicked_at: DateTime<Utc>,
-        user_agent: Option<&str>,
-        ip_address: Option<&str>,
-        device_type: Option<&str>,
-        country: Option<&str>,
-        is_first_click: bool,
-        is_conversion: bool,
-    ) -> Result<String> {
-        let query = DatabaseQueryEnum::RecordClick.get(self.db.as_ref());
+    ) -> Result<(), sqlx::Error> {
+        let mut tx = self.pool.as_ref().begin().await?;
 
-        let _row = self
-            .db
-            .fetch_one(
-                &query,
-                &[
-                    &id,
-                    &link_id,
-                    &session_id,
-                    &user_id,
-                    &context_id,
-                    &task_id,
-                    &referrer_page,
-                    &referrer_url,
-                    &clicked_at,
-                    &user_agent,
-                    &ip_address,
-                    &device_type,
-                    &country,
-                    &is_first_click,
-                    &is_conversion,
-                ],
-            )
-            .await
-            .context(format!("Failed to record click for link: {link_id}"))?;
+        let id = Uuid::new_v4().to_string();
+        sqlx::query!(
+            r#"
+            INSERT INTO link_clicks (id, link_id, session_id, user_id, ip_address,
+                                     user_agent, referrer_page, referrer_url, clicked_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            "#,
+            id,
+            link_id,
+            session_id,
+            user_id,
+            ip_address,
+            user_agent,
+            referrer_page,
+            referrer_url,
+            Utc::now()
+        )
+        .execute(&mut *tx)
+        .await?;
 
-        Ok(id.to_string())
+        sqlx::query!(
+            "UPDATE campaign_links SET click_count = click_count + 1 WHERE id = $1",
+            link_id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn get_link_performance(
+        &self,
+        link_id: &str,
+    ) -> Result<Option<LinkPerformance>, sqlx::Error> {
+        sqlx::query_as!(
+            LinkPerformance,
+            r#"
+            SELECT
+                l.id as link_id,
+                COALESCE(l.click_count, 0)::bigint as "click_count!",
+                COALESCE(l.unique_click_count, 0)::bigint as "unique_click_count!",
+                COALESCE(l.conversion_count, 0)::bigint as "conversion_count!",
+                CASE
+                    WHEN COALESCE(l.click_count, 0) > 0 THEN
+                        COALESCE(l.conversion_count, 0)::float / l.click_count
+                    ELSE 0.0
+                END as conversion_rate
+            FROM campaign_links l
+            WHERE l.id = $1
+            "#,
+            link_id
+        )
+        .fetch_optional(&*self.pool)
+        .await
     }
 
     pub async fn check_session_clicked_link(
         &self,
         link_id: &str,
         session_id: &str,
-    ) -> Result<bool> {
-        let query = DatabaseQueryEnum::CheckSessionClickedLink.get(self.db.as_ref());
+    ) -> Result<bool, sqlx::Error> {
+        let result = sqlx::query!(
+            "SELECT COUNT(*) as count FROM link_clicks WHERE link_id = $1 AND session_id = $2",
+            link_id,
+            session_id
+        )
+        .fetch_one(&*self.pool)
+        .await?;
 
-        let row = self
-            .db
-            .fetch_optional(&query, &[&link_id, &session_id])
-            .await
-            .context(format!(
-                "Failed to check session click for link: {link_id}"
-            ))?;
+        Ok(result.count.unwrap_or(0) > 0)
+    }
 
-        if let Some(row) = row {
-            let count = row.get("click_count").and_then(serde_json::Value::as_i64).unwrap_or(0);
-            Ok(count > 0)
+    pub async fn increment_link_clicks(
+        &self,
+        link_id: &str,
+        is_first_click: bool,
+    ) -> Result<(), sqlx::Error> {
+        if is_first_click {
+            sqlx::query!(
+                "UPDATE campaign_links SET click_count = click_count + 1, unique_click_count = \
+                 unique_click_count + 1 WHERE id = $1",
+                link_id
+            )
+            .execute(&*self.pool)
+            .await?;
         } else {
-            Ok(false)
+            sqlx::query!(
+                "UPDATE campaign_links SET click_count = click_count + 1 WHERE id = $1",
+                link_id
+            )
+            .execute(&*self.pool)
+            .await?;
         }
+        Ok(())
+    }
+
+    pub async fn list_links_by_campaign(
+        &self,
+        campaign_id: &str,
+    ) -> Result<Vec<CampaignLink>, sqlx::Error> {
+        sqlx::query_as!(
+            CampaignLink,
+            r#"
+            SELECT id, short_code, target_url, link_type, campaign_id, campaign_name,
+                   source_content_id, source_page, utm_params, link_text, link_position,
+                   destination_type, click_count, unique_click_count, conversion_count,
+                   is_active, expires_at, created_at, updated_at
+            FROM campaign_links
+            WHERE campaign_id = $1
+            ORDER BY created_at DESC
+            "#,
+            campaign_id
+        )
+        .fetch_all(&*self.pool)
+        .await
+    }
+
+    pub async fn list_links_by_source_content(
+        &self,
+        content_id: &str,
+    ) -> Result<Vec<CampaignLink>, sqlx::Error> {
+        sqlx::query_as!(
+            CampaignLink,
+            r#"
+            SELECT id, short_code, target_url, link_type, campaign_id, campaign_name,
+                   source_content_id, source_page, utm_params, link_text, link_position,
+                   destination_type, click_count, unique_click_count, conversion_count,
+                   is_active, expires_at, created_at, updated_at
+            FROM campaign_links
+            WHERE source_content_id = $1
+            ORDER BY created_at DESC
+            "#,
+            content_id
+        )
+        .fetch_all(&*self.pool)
+        .await
     }
 
     pub async fn get_clicks_by_link(
@@ -219,68 +247,126 @@ impl LinkRepository {
         link_id: &str,
         limit: i64,
         offset: i64,
-    ) -> Result<Vec<LinkClick>> {
-        let query = DatabaseQueryEnum::GetClicksByLink.get(self.db.as_ref());
-
-        let rows = self
-            .db
-            .fetch_all(&query, &[&link_id, &limit, &offset])
-            .await
-            .context(format!("Failed to get clicks for link: {link_id}"))?;
-
-        rows.iter()
-            .map(LinkClick::from_json_row)
-            .collect::<Result<Vec<_>>>()
-    }
-
-    pub async fn get_link_performance(&self, link_id: &str) -> Result<Option<LinkPerformance>> {
-        let query = DatabaseQueryEnum::GetLinkPerformance.get(self.db.as_ref());
-
-        let row = self
-            .db
-            .fetch_optional(&query, &[&link_id])
-            .await
-            .context(format!("Failed to get performance for link: {link_id}"))?;
-
-        row.as_ref()
-            .map(LinkPerformance::from_json_row)
-            .transpose()
-    }
-
-    pub async fn get_campaign_performance(
-        &self,
-        campaign_id: &str,
-    ) -> Result<Option<CampaignPerformance>> {
-        let query = DatabaseQueryEnum::GetCampaignPerformance.get(self.db.as_ref());
-
-        let row = self
-            .db
-            .fetch_optional(&query, &[&campaign_id])
-            .await
-            .context(format!(
-                "Failed to get performance for campaign: {campaign_id}"
-            ))?;
-
-        row.as_ref()
-            .map(CampaignPerformance::from_json_row)
-            .transpose()
+    ) -> Result<Vec<LinkClick>, sqlx::Error> {
+        sqlx::query_as!(
+            LinkClick,
+            r#"
+            SELECT id, link_id, session_id, user_id, context_id, task_id,
+                   referrer_page, referrer_url, clicked_at, user_agent, ip_address,
+                   device_type, country, is_first_click, is_conversion, conversion_at,
+                   time_on_page_seconds, scroll_depth_percent
+            FROM link_clicks
+            WHERE link_id = $1
+            ORDER BY clicked_at DESC
+            LIMIT $2 OFFSET $3
+            "#,
+            link_id,
+            limit,
+            offset
+        )
+        .fetch_all(&*self.pool)
+        .await
     }
 
     pub async fn get_content_journey_map(
         &self,
         limit: i64,
         offset: i64,
-    ) -> Result<Vec<ContentJourneyNode>> {
-        let query = DatabaseQueryEnum::GetContentJourneyMap.get(self.db.as_ref());
+    ) -> Result<Vec<ContentJourneyNode>, sqlx::Error> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT source_content_id, target_url, COALESCE(click_count, 0) as click_count
+            FROM campaign_links
+            WHERE source_content_id IS NOT NULL AND click_count > 0
+            ORDER BY click_count DESC
+            LIMIT $1 OFFSET $2
+            "#,
+            limit,
+            offset
+        )
+        .fetch_all(&*self.pool)
+        .await?;
 
-        let rows = self
-            .db
-            .fetch_all(&query, &[&limit, &offset])
-            .await
-            .context("Failed to get content journey map")?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|r| {
+                Some(ContentJourneyNode {
+                    source_content_id: r.source_content_id?,
+                    target_url: r.target_url,
+                    click_count: r.click_count.unwrap_or(0),
+                })
+            })
+            .collect())
+    }
 
-        rows.iter()
-            .map(ContentJourneyNode::from_json_row)
-            .collect::<Result<Vec<_>>>()
+    pub async fn get_campaign_performance(
+        &self,
+        campaign_id: &str,
+    ) -> Result<Option<CampaignPerformance>, sqlx::Error> {
+        sqlx::query_as!(
+            CampaignPerformance,
+            r#"
+            SELECT
+                campaign_id as "campaign_id!",
+                COALESCE(SUM(click_count), 0)::bigint as "total_clicks!",
+                COUNT(*)::bigint as "link_count!",
+                COUNT(DISTINCT source_content_id) as unique_visitors,
+                COALESCE(SUM(conversion_count), 0)::bigint as conversion_count
+            FROM campaign_links
+            WHERE campaign_id = $1
+            GROUP BY campaign_id
+            "#,
+            campaign_id
+        )
+        .fetch_optional(&*self.pool)
+        .await
+    }
+
+    pub async fn record_click(
+        &self,
+        click_id: &str,
+        link_id: &str,
+        session_id: &str,
+        user_id: Option<&str>,
+        context_id: Option<&str>,
+        task_id: Option<&str>,
+        referrer_page: Option<&str>,
+        referrer_url: Option<&str>,
+        clicked_at: chrono::DateTime<Utc>,
+        user_agent: Option<&str>,
+        ip_address: Option<&str>,
+        device_type: Option<&str>,
+        country: Option<&str>,
+        is_first_click: bool,
+        is_conversion: bool,
+    ) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            r#"
+            INSERT INTO link_clicks (
+                id, link_id, session_id, user_id, context_id, task_id,
+                referrer_page, referrer_url, clicked_at, user_agent, ip_address,
+                device_type, country, is_first_click, is_conversion
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            "#,
+            click_id,
+            link_id,
+            session_id,
+            user_id,
+            context_id,
+            task_id,
+            referrer_page,
+            referrer_url,
+            clicked_at,
+            user_agent,
+            ip_address,
+            device_type,
+            country,
+            is_first_click,
+            is_conversion
+        )
+        .execute(&*self.pool)
+        .await?;
+        Ok(())
     }
 }

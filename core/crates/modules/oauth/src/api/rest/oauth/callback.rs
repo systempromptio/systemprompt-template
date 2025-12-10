@@ -1,8 +1,6 @@
-use axum::{
-    extract::{Query, State},
-    http::{header, HeaderMap, StatusCode},
-    response::{IntoResponse, Redirect},
-};
+use axum::extract::{Query, State};
+use axum::http::{header, HeaderMap, StatusCode};
+use axum::response::{IntoResponse, Redirect};
 use serde::Deserialize;
 use std::str::FromStr;
 use systemprompt_core_users::repository::UserRepository;
@@ -87,11 +85,11 @@ async fn find_browser_client(
         if client.redirect_uris.contains(&redirect_uri.to_string())
             && (client.scopes.contains(&"admin".to_string())
                 || client.scopes.contains(&"user".to_string()))
-            {
-                return Ok(BrowserClient {
-                    client_id: client.client_id,
-                });
-            }
+        {
+            return Ok(BrowserClient {
+                client_id: client.client_id,
+            });
+        }
     }
 
     Err(anyhow::anyhow!("No suitable browser client found"))
@@ -121,7 +119,7 @@ async fn exchange_code_for_token(
     let user_id_typed = systemprompt_identifiers::UserId::new(user_id.clone());
     let session_service = crate::services::SessionCreationService::new(
         ctx.analytics_service().clone(),
-        systemprompt_core_users::repository::UserRepository::new(ctx.db_pool().clone()),
+        UserRepository::new(ctx.db_pool().clone()),
     );
     let session_id = session_service
         .create_authenticated_session(&user_id_typed, headers)
@@ -167,8 +165,8 @@ async fn load_authenticated_user(
         .filter_map(|s| Permission::from_str(s).ok())
         .collect();
 
-    let user_uuid = uuid::Uuid::parse_str(&user.uuid)
-        .map_err(|_| anyhow::anyhow!("Invalid user UUID: {}", user.uuid))?;
+    let user_uuid = uuid::Uuid::parse_str(user.id.as_ref())
+        .map_err(|_| anyhow::anyhow!("Invalid user UUID: {}", user.id))?;
 
     let email = if user.email.is_empty() {
         None

@@ -6,9 +6,9 @@ use systemprompt_models::SessionId;
 
 /// Blog view event - tracks individual page views
 ///
-/// Note: Session-level attributes (`user_agent`, country, etc.) are NOT stored here
-///       to avoid duplication. Access them via JOIN with `user_sessions` table using
-///       the `session_id` foreign key.
+/// Note: Session-level attributes (`user_agent`, country, etc.) are NOT stored
+/// here       to avoid duplication. Access them via JOIN with `user_sessions`
+/// table using       the `session_id` foreign key.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ViewEvent {
     pub id: String,
@@ -41,7 +41,7 @@ impl ViewEvent {
         let user_id = row
             .get("user_id")
             .and_then(|v| v.as_str())
-            .map(std::string::ToString::to_string);
+            .map(ToString::to_string);
 
         let session_id = SessionId::new(
             row.get("session_id")
@@ -53,22 +53,24 @@ impl ViewEvent {
         let referrer_source = row
             .get("referrer_source")
             .and_then(|v| v.as_str())
-            .map(std::string::ToString::to_string);
+            .map(ToString::to_string);
 
         let referrer_url = row
             .get("referrer_url")
             .and_then(|v| v.as_str())
-            .map(std::string::ToString::to_string);
+            .map(ToString::to_string);
 
         let time_on_page_seconds = row
             .get("time_on_page_seconds")
             .and_then(serde_json::Value::as_i64)
-            .ok_or_else(|| anyhow!("Missing or invalid time_on_page_seconds"))? as i32;
+            .ok_or_else(|| anyhow!("Missing or invalid time_on_page_seconds"))?
+            as i32;
 
         let scroll_depth_percent = row
             .get("scroll_depth_percent")
             .and_then(serde_json::Value::as_i64)
-            .ok_or_else(|| anyhow!("Missing or invalid scroll_depth_percent"))? as i32;
+            .ok_or_else(|| anyhow!("Missing or invalid scroll_depth_percent"))?
+            as i32;
 
         let viewed_at = row
             .get("viewed_at")
@@ -90,7 +92,8 @@ impl ViewEvent {
 }
 
 /// Request payload for tracking a view
-/// Note: `session_id` comes from JWT via `RequestContext`, not from client payload
+/// Note: `session_id` comes from JWT via `RequestContext`, not from client
+/// payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ViewEventRequest {
     pub content_id: String,
@@ -100,7 +103,8 @@ pub struct ViewEventRequest {
 }
 
 /// Request payload for tracking engagement metrics
-/// Note: `session_id` comes from JWT via `RequestContext`, not from client payload
+/// Note: `session_id` comes from JWT via `RequestContext`, not from client
+/// payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EngagementEventRequest {
     pub content_id: String,
@@ -109,7 +113,8 @@ pub struct EngagementEventRequest {
 }
 
 /// Request payload for tracking social shares
-/// Note: `session_id` comes from JWT via `RequestContext`, not from client payload
+/// Note: `session_id` comes from JWT via `RequestContext`, not from client
+/// payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShareEventRequest {
     pub content_id: String,

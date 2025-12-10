@@ -3,33 +3,29 @@
  *
  * Routes SSE events to specialized handlers and coordinates state updates.
  * Handles JSON parsing, validation, and event type dispatch.
- *
- * @example
- * ```typescript
- * const { processEvent } = useStreamEventProcessor()
- * processEvent('artifact_created', jsonString)
- * ```
  */
 
 import { useCallback } from 'react'
 import { useContextStore } from '@/stores/context.store'
+import { useUIStateStore } from '@/stores/ui-state.store'
 import { EventType } from '@/constants'
 import { logger } from '@/lib/logger'
 import {
   handleSnapshotEvent,
   handleContextStatsEvent,
   handleTaskEvent,
+  handleTaskCreatedEvent,
   handleArtifactCreatedEvent,
   handleSkillLoadedEvent,
   handleMessageReceivedEvent,
   handleTaskCompletedEvent,
 } from './utils/streamEventHandlers'
 import type { BroadcastEvent } from '@/types/sse'
-import { isCurrentAgentEvent } from '@/types/sse'
+import { isCurrentAgentEvent, hasTaskInData, hasStepInData } from '@/types/sse'
+import type { ExecutionStep } from '@/types/execution'
+import { getStepTitle } from '@/types/execution'
+import { extractFirstMessageText } from '@/utils/type-guards'
 
-/**
- * Internal event structure for state updates
- */
 interface ContextStateEvent {
   type: EventType
   context_id?: string
@@ -37,10 +33,6 @@ interface ContextStateEvent {
   [key: string]: unknown
 }
 
-/**
- * Safely parse JSON event data
- * @internal
- */
 const parseEventData = (data: string): BroadcastEvent | null => {
   try {
     return JSON.parse(data)
@@ -50,10 +42,6 @@ const parseEventData = (data: string): BroadcastEvent | null => {
   }
 }
 
-/**
- * Create context state event from broadcast event
- * @internal
- */
 const createStateEvent = (type: EventType, event: BroadcastEvent): ContextStateEvent => ({
   type,
   context_id: event.context_id,
@@ -61,27 +49,8 @@ const createStateEvent = (type: EventType, event: BroadcastEvent): ContextStateE
   ...event.data
 })
 
-/**
- * Hook for processing and routing SSE events.
- *
- * Routes different event types to specialized handlers and coordinates
- * store updates. Handles JSON parsing and event validation.
- *
- * Note: Uses store.getState() to avoid circular dependencies.
- * Never add store methods to useCallback dependency arrays.
- *
- * @returns Object with processEvent callback
- */
 export function useStreamEventProcessor() {
-  /**
-   * Route and process incoming SSE event
-   * @internal
-   * @param eventType - The type of event received
-   * @param data - JSON string containing event data
-   */
   const processEvent = useCallback((eventType: string | undefined, data: string) => {
-    console.log('[useStreamEventProcessor] Received event:', { eventType, dataPreview: data.substring(0, 200) })
-
     try {
       switch (eventType) {
         case 'snapshot':
@@ -104,12 +73,6 @@ export function useStreamEventProcessor() {
         case EventType.SKILL_LOADED: {
           const event = parseEventData(data)
           if (event) {
-            console.log('[DEBUG] useStreamEventProcessor - SKILL_LOADED event received:', {
-              eventType,
-              event,
-              contextId: event?.context_id,
-              data: event?.data
-            })
             logger.debug('Skill loaded', { contextId: event.context_id }, 'useStreamEventProcessor')
             handleSkillLoadedEvent(event)
           }
@@ -131,18 +94,27 @@ export function useStreamEventProcessor() {
           if (event) {
             logger.debug('Task completed', { contextId: event.context_id }, 'useStreamEventProcessor')
             useContextStore.getState().handleStateEvent(createStateEvent(EventType.TASK_COMPLETED, event))
-            handleTaskEvent(event)
             handleTaskCompletedEvent(event)
           }
           break
         }
 
-        case EventType.TASK_CREATED: {
+        case EventType.TASK_CREATED:
+        case 'task_created': {
           const event = parseEventData(data)
           if (event) {
+            const taskInfo = hasTaskInData(event.data)
+              ? { taskId: event.data.task.id, userMessage: extractFirstMessageText(event.data.task) }
+              : { taskId: undefined, userMessage: undefined }
+
+            console.log('[TASK_CREATED] User message received via SSE', {
+              timestamp: new Date().toISOString(),
+              contextId: event.context_id,
+              ...taskInfo
+            })
             logger.debug('Task created', { contextId: event.context_id }, 'useStreamEventProcessor')
             useContextStore.getState().handleStateEvent(createStateEvent(EventType.TASK_CREATED, event))
-            handleTaskEvent(event)
+            handleTaskCreatedEvent(event)
           }
           break
         }
@@ -189,16 +161,7 @@ export function useStreamEventProcessor() {
 
           if (!isCurrentAgentEvent(event)) {
             logger.error('Invalid current_agent event structure', { data }, 'useStreamEventProcessor')
-            console.error('[useStreamEventProcessor] Invalid current_agent event:', event)
             break
-          }
-
-          console.log('[useStreamEventProcessor] Processing current_agent event:', event)
-
-          if (event.agent_name === null) {
-            console.warn('[useStreamEventProcessor] Clearing agent assignment', { contextId: event.context_id })
-          } else {
-            console.log('[useStreamEventProcessor] Setting agent:', { contextId: event.context_id, agentName: event.agent_name })
           }
 
           logger.debug('Current agent event', { contextId: event.context_id, agentName: event.agent_name }, 'useStreamEventProcessor')
@@ -211,6 +174,24 @@ export function useStreamEventProcessor() {
           break
         }
 
+        case EventType.EXECUTION_STEP: {
+          const event = parseEventData(data)
+          if (event && hasStepInData(event.data)) {
+            const stepData = event.data.step as ExecutionStep
+            console.log('[EXECUTION_STEP] Step received via SSE', {
+              timestamp: new Date().toISOString(),
+              stepId: stepData.stepId,
+              status: stepData.status,
+              title: getStepTitle(stepData),
+              contextId: event.context_id,
+              taskId: stepData.taskId
+            })
+            logger.debug('Execution step received', { stepId: stepData.stepId, status: stepData.status, contextId: event.context_id }, 'useStreamEventProcessor')
+            useUIStateStore.getState().addStep(stepData, event.context_id)
+          }
+          break
+        }
+
         case EventType.HEARTBEAT:
           break
 
@@ -219,7 +200,6 @@ export function useStreamEventProcessor() {
           break
 
         default:
-          console.warn('[useStreamEventProcessor] Unknown event type:', eventType, 'Full data:', data)
           logger.debug('Unknown event type', { eventType }, 'useStreamEventProcessor')
       }
     } catch (error) {

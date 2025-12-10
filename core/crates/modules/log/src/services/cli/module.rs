@@ -1,8 +1,6 @@
-use crate::services::cli::{
-    display::{CollectionDisplay, Display, DisplayUtils, ModuleItemDisplay},
-    prompts::Prompts,
-    theme::{ItemStatus, MessageLevel, ModuleType, Theme},
-};
+use crate::services::cli::display::{CollectionDisplay, Display, DisplayUtils, ModuleItemDisplay};
+use crate::services::cli::prompts::Prompts;
+use crate::services::cli::theme::{ItemStatus, MessageLevel, ModuleType, Theme};
 use anyhow::Result;
 #[derive(Debug, Copy, Clone)]
 pub struct ModuleDisplay;

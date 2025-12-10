@@ -46,7 +46,8 @@ async fn test_no_duplicates_on_parallel_requests() -> Result<()> {
     // Wait for async session creation to complete
     tokio::time::sleep(Duration::from_millis(3000)).await;
 
-    let count_query = "SELECT COUNT(DISTINCT session_id) as count FROM user_sessions WHERE user_agent = 'Mozilla/5.0 (Testing) ParallelTest/1.0' AND is_bot = false";
+    let count_query = "SELECT COUNT(DISTINCT session_id) as count FROM user_sessions WHERE \
+                       user_agent = 'Mozilla/5.0 (Testing) ParallelTest/1.0' AND is_bot = false";
     let result = db.fetch_one(&count_query, &[]).await?;
     let session_count: i64 = result.get("count").and_then(|v| v.as_i64()).unwrap_or(0);
 
@@ -83,7 +84,8 @@ async fn test_rapid_sequential_requests_single_session() -> Result<()> {
     // Wait for async processing
     tokio::time::sleep(Duration::from_millis(3000)).await;
 
-    let count_query = "SELECT COUNT(DISTINCT session_id) as count FROM user_sessions WHERE user_agent = 'Mozilla/5.0 (Testing) SequentialTest/1.0' AND is_bot = false";
+    let count_query = "SELECT COUNT(DISTINCT session_id) as count FROM user_sessions WHERE \
+                       user_agent = 'Mozilla/5.0 (Testing) SequentialTest/1.0' AND is_bot = false";
     let result = db.fetch_one(&count_query, &[]).await?;
     let session_count: i64 = result.get("count").and_then(|v| v.as_i64()).unwrap_or(0);
 
@@ -117,8 +119,10 @@ async fn test_bot_traffic_not_stored() -> Result<()> {
 
     tokio::time::sleep(Duration::from_millis(3000)).await;
 
-    // Bot traffic should either be marked as is_bot=true OR not create sessions at all
-    let non_bot_query = "SELECT COUNT(*) as count FROM user_sessions WHERE user_agent IN ('Go-http-client/2.0', 'Googlebot/2.1') AND is_bot = false";
+    // Bot traffic should either be marked as is_bot=true OR not create sessions at
+    // all
+    let non_bot_query = "SELECT COUNT(*) as count FROM user_sessions WHERE user_agent IN \
+                         ('Go-http-client/2.0', 'Googlebot/2.1') AND is_bot = false";
     let non_bot_result = db.fetch_one(&non_bot_query, &[]).await?;
     let non_bot_count: i64 = non_bot_result
         .get("count")
@@ -127,7 +131,8 @@ async fn test_bot_traffic_not_stored() -> Result<()> {
 
     assert_eq!(
         non_bot_count, 0,
-        "Bot traffic should NOT be marked as non-bot, but found {} non-bot sessions for bot user-agents",
+        "Bot traffic should NOT be marked as non-bot, but found {} non-bot sessions for bot \
+         user-agents",
         non_bot_count
     );
 
@@ -170,7 +175,8 @@ async fn test_fingerprint_lookup_timeout_adequate() -> Result<()> {
     // Wait for async processing
     tokio::time::sleep(Duration::from_millis(5000)).await;
 
-    let count_query = "SELECT COUNT(DISTINCT session_id) as count FROM user_sessions WHERE user_agent = 'Mozilla/5.0 (Testing) FingerprintTest/1.0'";
+    let count_query = "SELECT COUNT(DISTINCT session_id) as count FROM user_sessions WHERE \
+                       user_agent = 'Mozilla/5.0 (Testing) FingerprintTest/1.0'";
     let result = db.fetch_one(&count_query, &[]).await?;
     let session_count: i64 = result.get("count").and_then(|v| v.as_i64()).unwrap_or(0);
 
@@ -213,7 +219,8 @@ async fn test_cookie_enables_session_reuse() -> Result<()> {
     // Wait for all to process
     tokio::time::sleep(Duration::from_millis(3000)).await;
 
-    let count_query = "SELECT COUNT(DISTINCT session_id) as count FROM user_sessions WHERE user_agent = 'Mozilla/5.0 (Testing) CookieTest/1.0'";
+    let count_query = "SELECT COUNT(DISTINCT session_id) as count FROM user_sessions WHERE \
+                       user_agent = 'Mozilla/5.0 (Testing) CookieTest/1.0'";
     let result = db.fetch_one(&count_query, &[]).await?;
     let session_count: i64 = result.get("count").and_then(|v| v.as_i64()).unwrap_or(0);
 
@@ -281,7 +288,8 @@ async fn test_bot_traffic_properly_marked() -> Result<()> {
 
     tokio::time::sleep(Duration::from_millis(3000)).await;
 
-    let bot_check_query = "SELECT COUNT(*) as count FROM user_sessions WHERE user_agent IN ('Go-http-client/2.0', 'Googlebot/2.1') AND is_bot = false";
+    let bot_check_query = "SELECT COUNT(*) as count FROM user_sessions WHERE user_agent IN \
+                           ('Go-http-client/2.0', 'Googlebot/2.1') AND is_bot = false";
     let bot_result = db.fetch_one(&bot_check_query, &[]).await?;
     let non_bot_count: i64 = bot_result
         .get("count")

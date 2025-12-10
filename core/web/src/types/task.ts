@@ -1,4 +1,5 @@
 import type { Task as A2ATask } from '@a2a-js/sdk'
+import type { ExecutionStep } from './execution'
 
 export interface TaskMetadata {
   task_type: 'mcp_execution' | 'agent_message'
@@ -10,6 +11,10 @@ export interface TaskMetadata {
   started_at?: string
   completed_at?: string
   execution_time_ms?: number
+  input_tokens?: number
+  output_tokens?: number
+  model?: string
+  executionSteps?: ExecutionStep[]
   [k: string]: unknown
 }
 

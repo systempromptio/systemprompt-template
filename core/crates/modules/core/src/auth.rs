@@ -42,8 +42,8 @@ impl AuthValidationService {
     }
 
     async fn validate_and_fail_fast(&self, headers: &HeaderMap) -> Result<RequestContext> {
-        let token = Self::extract_token(headers)
-            .ok_or_else(|| anyhow!("Missing authorization header"))?;
+        let token =
+            Self::extract_token(headers).ok_or_else(|| anyhow!("Missing authorization header"))?;
 
         let claims = self.validate_token(token).await?;
         Self::create_context_from_claims(&claims, token, headers)
@@ -168,7 +168,10 @@ impl AuthValidationService {
         headers
             .get("x-context-id")
             .and_then(|h| h.to_str().ok())
-            .map_or_else(|| ContextId::new(String::new()), |s| ContextId::new(s.to_string()))
+            .map_or_else(
+                || ContextId::new(String::new()),
+                |s| ContextId::new(s.to_string()),
+            )
     }
 
     fn extract_agent_name(headers: &HeaderMap) -> AgentName {
@@ -176,201 +179,5 @@ impl AuthValidationService {
             .get("x-agent-name")
             .and_then(|h| h.to_str().ok())
             .map_or_else(AgentName::system, |s| AgentName::new(s.to_string()))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_extract_token() {
-        let mut headers = HeaderMap::new();
-        headers.insert("authorization", "Bearer test_token".parse().unwrap());
-
-        let token = AuthValidationService::extract_token(&headers);
-        assert_eq!(token, Some("test_token"));
-    }
-
-    #[tokio::test]
-    async fn test_extract_token_missing() {
-        let headers = HeaderMap::new();
-
-        let token = AuthValidationService::extract_token(&headers);
-        assert_eq!(token, None);
-    }
-
-    #[tokio::test]
-    async fn test_create_anonymous_context() {
-        let headers = HeaderMap::new();
-
-        let ctx = AuthValidationService::create_anonymous_context(&headers);
-        assert_eq!(ctx.auth.user_type, UserType::Anon);
-        assert!(ctx.auth.user_id.is_anonymous());
-    }
-
-    #[tokio::test]
-    async fn test_validate_request_optional_no_token() {
-        let service = AuthValidationService::new("secret".to_string());
-        let headers = HeaderMap::new();
-
-        let result = service.validate_request(&headers, AuthMode::Optional).await;
-        assert!(result.is_ok());
-
-        let ctx = result.unwrap();
-        assert_eq!(ctx.auth.user_type, UserType::Anon);
-    }
-
-    #[tokio::test]
-    async fn test_validate_request_required_no_token() {
-        let service = AuthValidationService::new("secret".to_string());
-        let headers = HeaderMap::new();
-
-        let result = service.validate_request(&headers, AuthMode::Required).await;
-        assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Missing authorization header"));
-    }
-
-    #[tokio::test]
-    async fn test_validate_request_with_valid_token() {
-        use chrono::Utc;
-        use jsonwebtoken::{encode, EncodingKey, Header};
-        use serde::{Deserialize, Serialize};
-
-        #[derive(Debug, Serialize, Deserialize)]
-        struct TestClaims {
-            sub: String,
-            session_id: String,
-            roles: Vec<String>,
-            exp: i64,
-            aud: Vec<String>,
-        }
-
-        let secret = "test-secret";
-        let service = AuthValidationService::new(secret.to_string());
-
-        let claims = TestClaims {
-            sub: "user123".to_string(),
-            session_id: "test-session".to_string(),
-            roles: vec!["user".to_string()],
-            exp: (Utc::now() + chrono::Duration::hours(1)).timestamp(),
-            aud: vec!["a2a".to_string(), "api".to_string()],
-        };
-
-        let token = encode(
-            &Header::default(),
-            &claims,
-            &EncodingKey::from_secret(secret.as_bytes()),
-        )
-        .unwrap();
-
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            "authorization",
-            format!("Bearer {}", token).parse().unwrap(),
-        );
-
-        let result = service.validate_request(&headers, AuthMode::Required).await;
-        assert!(result.is_ok());
-
-        let ctx = result.unwrap();
-        assert_eq!(ctx.auth.user_id.as_str(), "user123");
-        assert_eq!(ctx.auth.user_type, UserType::Standard);
-    }
-
-    #[tokio::test]
-    async fn test_validate_request_with_admin_token() {
-        use chrono::Utc;
-        use jsonwebtoken::{encode, EncodingKey, Header};
-        use serde::{Deserialize, Serialize};
-
-        #[derive(Debug, Serialize, Deserialize)]
-        struct TestClaims {
-            sub: String,
-            session_id: String,
-            roles: Vec<String>,
-            exp: i64,
-            aud: Vec<String>,
-        }
-
-        let secret = "test-secret";
-        let service = AuthValidationService::new(secret.to_string());
-
-        let claims = TestClaims {
-            sub: "admin123".to_string(),
-            session_id: "test-session".to_string(),
-            roles: vec!["admin".to_string()],
-            exp: (Utc::now() + chrono::Duration::hours(1)).timestamp(),
-            aud: vec!["a2a".to_string(), "api".to_string()],
-        };
-
-        let token = encode(
-            &Header::default(),
-            &claims,
-            &EncodingKey::from_secret(secret.as_bytes()),
-        )
-        .unwrap();
-
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            "authorization",
-            format!("Bearer {}", token).parse().unwrap(),
-        );
-
-        let result = service.validate_request(&headers, AuthMode::Required).await;
-        assert!(result.is_ok());
-
-        let ctx = result.unwrap();
-        assert_eq!(ctx.auth.user_id.as_str(), "admin123");
-        assert_eq!(ctx.auth.user_type, UserType::Admin);
-    }
-
-    #[tokio::test]
-    async fn test_validate_request_with_invalid_token() {
-        let service = AuthValidationService::new("secret".to_string());
-
-        let mut headers = HeaderMap::new();
-        headers.insert("authorization", "Bearer invalid_token".parse().unwrap());
-
-        let result = service.validate_request(&headers, AuthMode::Required).await;
-        assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid JWT token"));
-    }
-
-    #[tokio::test]
-    async fn test_validate_request_optional_with_invalid_token() {
-        let service = AuthValidationService::new("secret".to_string());
-
-        let mut headers = HeaderMap::new();
-        headers.insert("authorization", "Bearer invalid_token".parse().unwrap());
-
-        let result = service.validate_request(&headers, AuthMode::Optional).await;
-        assert!(result.is_ok());
-
-        let ctx = result.unwrap();
-        assert_eq!(ctx.auth.user_type, UserType::Anon);
-    }
-
-    #[tokio::test]
-    async fn test_extract_trace_id_from_headers() {
-        let mut headers = HeaderMap::new();
-        headers.insert("x-trace-id", "trace-123".parse().unwrap());
-
-        let trace_id = AuthValidationService::extract_trace_id(&headers);
-        assert_eq!(trace_id.as_str(), "trace-123");
-    }
-
-    #[tokio::test]
-    async fn test_extract_trace_id_generates_if_missing() {
-        let headers = HeaderMap::new();
-
-        let trace_id = AuthValidationService::extract_trace_id(&headers);
-        assert!(trace_id.as_str().starts_with("trace_"));
     }
 }

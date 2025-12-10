@@ -4,7 +4,7 @@ pub fn parse_service_endpoint(endpoint: &str) -> Result<ServiceEndpoint> {
     let url = url::Url::parse(endpoint).map_err(|e| {
         AgentServiceError::Configuration(
             "ServiceEndpoint".to_string(),
-            format!("Invalid endpoint URL: {}", e),
+            format!("Invalid endpoint URL: {e}"),
         )
     })?;
 

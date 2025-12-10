@@ -30,7 +30,8 @@ impl Environment {
     pub fn db_url(&self) -> String {
         match self {
             Environment::Local => std::env::var("DATABASE_URL").unwrap_or_else(|_| {
-                "postgresql://systemprompt:systemprompt_dev_password@localhost:5432/systemprompt_dev"
+                "postgresql://systemprompt:systemprompt_dev_password@localhost:5432/\
+                 systemprompt_dev"
                     .to_string()
             }),
             Environment::Docker => std::env::var("DATABASE_URL").unwrap_or_else(|_| {
@@ -38,9 +39,8 @@ impl Environment {
                     .to_string()
             }),
             Environment::Production => {
-                std::env::var("DATABASE_URL")
-                    .expect("DATABASE_URL required for production tests")
-            }
+                std::env::var("DATABASE_URL").expect("DATABASE_URL required for production tests")
+            },
         }
     }
 

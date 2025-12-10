@@ -1,8 +1,5 @@
-use axum::{
-    middleware,
-    routing::{get, post},
-    Router,
-};
+use axum::routing::{get, post};
+use axum::{middleware, Router};
 use std::sync::Arc;
 use systemprompt_core_ai::AiService;
 use systemprompt_core_database::DbPool;
@@ -72,7 +69,7 @@ impl Server {
             Err(e) => {
                 log.error(
                     "a2a_server",
-                    &format!("Failed to initialize AI service: {}", e),
+                    &format!("Failed to initialize AI service: {e}"),
                 )
                 .await
                 .ok();
@@ -107,7 +104,7 @@ impl Server {
         self.log
             .info(
                 "a2a_server",
-                &format!("Configuration reloaded for agent {}", agent_name),
+                &format!("Configuration reloaded for agent {agent_name}"),
             )
             .await
             .ok();

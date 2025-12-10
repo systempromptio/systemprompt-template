@@ -8,10 +8,8 @@
 export {
   EventType,
   ExecutionStatus,
-  RenderBehavior,
   type EventType as EventTypeValue,
   type ExecutionStatus as ExecutionStatusValue,
-  type RenderBehavior as RenderBehaviorValue,
 } from './events'
 
 export {
@@ -40,3 +38,10 @@ export {
   type DialogType as DialogTypeValue,
   type Animation as AnimationValue,
 } from './ui'
+
+export {
+  stepTypeIcons,
+  stepTypeLabels,
+  getStepTypeIcon,
+  getStepTypeLabel,
+} from './stepTypeIcons'

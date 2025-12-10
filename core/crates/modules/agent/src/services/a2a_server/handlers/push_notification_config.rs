@@ -1,4 +1,6 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
 use serde_json::json;
 use std::sync::Arc;
 
@@ -66,7 +68,7 @@ pub async fn handle_set_push_notification_config(
                     "error": {
                         "code": -32603,
                         "message": "Failed to add push notification config",
-                        "data": format!("{}", e)
+                        "data": format!("{e}")
                     }
                 })),
             ))
@@ -117,7 +119,7 @@ pub async fn handle_get_push_notification_config(
                     "error": {
                         "code": -32603,
                         "message": "Failed to get push notification configs",
-                        "data": format!("{}", e)
+                        "data": format!("{e}")
                     }
                 })),
             ))
@@ -132,7 +134,7 @@ pub async fn handle_list_push_notification_configs(
 ) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)> {
     log.info(
         "push_notification_config",
-        &format!("Listing push notification configs for task: {}", task_id),
+        &format!("Listing push notification configs for task: {task_id}"),
     )
     .await
     .ok();
@@ -157,7 +159,7 @@ pub async fn handle_list_push_notification_configs(
         Err(e) => {
             log.error(
                 "push_notification_config",
-                &format!("Failed to list configs for task {}: {}", task_id, e),
+                &format!("Failed to list configs for task {task_id}: {e}"),
             )
             .await
             .ok();
@@ -169,7 +171,7 @@ pub async fn handle_list_push_notification_configs(
                     "error": {
                         "code": -32603,
                         "message": "Failed to list push notification configs",
-                        "data": format!("{}", e)
+                        "data": format!("{e}")
                     }
                 })),
             ))
@@ -194,8 +196,9 @@ pub async fn handle_delete_push_notification_config(
 
     let repo = PushNotificationConfigRepository::new(state.db_pool.clone());
 
-    // A2A spec: if no config_id provided in request, we need to extract it from params
-    // For now, we'll delete all configs for the task as per simplified implementation
+    // A2A spec: if no config_id provided in request, we need to extract it from
+    // params For now, we'll delete all configs for the task as per simplified
+    // implementation
     match repo.delete_all_for_task(&request.task_id).await {
         Ok(count) => {
             log.info(
@@ -238,7 +241,7 @@ pub async fn handle_delete_push_notification_config(
                     "error": {
                         "code": -32603,
                         "message": "Failed to delete push notification configs",
-                        "data": format!("{}", e)
+                        "data": format!("{e}")
                     }
                 })),
             ))

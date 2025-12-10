@@ -11,7 +11,7 @@ pub async fn rebuild_static_site(
     _app_context: Arc<AppContext>,
 ) -> Result<()> {
     logger
-        .info("scheduler", "Starting scheduled static site rebuild")
+        .info("scheduler", "Job started | job=static_rebuild")
         .await
         .ok();
 
@@ -22,7 +22,10 @@ pub async fn rebuild_static_site(
 
     if !enabled {
         logger
-            .info("scheduler", "Static site rebuild is disabled")
+            .debug(
+                "scheduler",
+                "Job skipped | job=static_rebuild, enabled=false",
+            )
             .await
             .ok();
         return Ok(());
@@ -45,7 +48,10 @@ pub async fn rebuild_static_site(
                 logger
                     .info(
                         "scheduler",
-                        &format!("Static site rebuild completed in {}s", duration),
+                        &format!(
+                            "Job completed | job=static_rebuild, duration_secs={}",
+                            duration
+                        ),
                     )
                     .await
                     .ok();
@@ -54,7 +60,7 @@ pub async fn rebuild_static_site(
                 logger
                     .error(
                         "scheduler",
-                        &format!("Static site rebuild failed: {}", err_msg),
+                        &format!("Job failed | job=static_rebuild, error={err_msg}"),
                     )
                     .await
                     .ok();
@@ -64,7 +70,7 @@ pub async fn rebuild_static_site(
             logger
                 .error(
                     "scheduler",
-                    &format!("Static rebuild command failed: {}", e),
+                    &format!("Job failed | job=static_rebuild, error={e}"),
                 )
                 .await
                 .ok();

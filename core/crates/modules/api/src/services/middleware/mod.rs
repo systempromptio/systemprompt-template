@@ -9,9 +9,6 @@ pub mod redirect;
 pub mod session;
 pub mod trailing_slash;
 
-#[cfg(test)]
-mod tests;
-
 pub use analytics::*;
 pub use auth::*;
 pub use bot_detector::*;

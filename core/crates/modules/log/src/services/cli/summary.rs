@@ -1,7 +1,5 @@
-use crate::services::cli::{
-    display::{CollectionDisplay, Display, DisplayUtils, StatusDisplay},
-    theme::{EmphasisType, ItemStatus, MessageLevel, Theme},
-};
+use crate::services::cli::display::{CollectionDisplay, Display, DisplayUtils, StatusDisplay};
+use crate::services::cli::theme::{EmphasisType, ItemStatus, MessageLevel, Theme};
 #[derive(Debug)]
 pub struct ValidationSummary {
     pub valid: Vec<(String, String)>,

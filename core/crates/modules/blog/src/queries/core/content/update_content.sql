@@ -11,6 +11,7 @@ SET
     category_id = $9,
     source_id = $10,
     version_hash = $11,
-    links = $12,
+    public = $12,
+    links = $13::jsonb,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = $13;
+WHERE id = $14;

@@ -1,11 +1,9 @@
 use crate::repository::OAuthRepository;
 use crate::services::webauthn::WebAuthnManager;
-use axum::{
-    extract::{Query, State},
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use axum::extract::{Query, State};
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::Json;
 use serde::{Deserialize, Serialize};
 use systemprompt_core_logging::LogService;
 use systemprompt_core_users::repository::UserRepository;
@@ -59,16 +57,21 @@ pub async fn start_auth(
         .await
     {
         Ok((challenge, challenge_id)) => {
-            // Extract publicKey from RequestChallengeResponse to match W3C WebAuthn standard
+            // Extract publicKey from RequestChallengeResponse to match W3C WebAuthn
+            // standard
             let challenge_json = serde_json::to_value(&challenge)
                 .map_err(|e| anyhow::anyhow!("Failed to serialize challenge: {e}"))
                 .unwrap();
 
-            let public_key = challenge_json
+            let mut public_key = challenge_json
                 .get("publicKey")
                 .ok_or_else(|| anyhow::anyhow!("Missing publicKey in challenge"))
                 .unwrap()
                 .clone();
+
+            if let Some(obj) = public_key.as_object_mut() {
+                obj.remove("authenticatorAttachment");
+            }
 
             (
                 StatusCode::OK,
@@ -209,7 +212,7 @@ pub async fn dev_auth(
             (
                 StatusCode::OK,
                 Json(DevAuthResponse {
-                    user_id: user.uuid,
+                    user_id: user.id.to_string(),
                     oauth_state: params.oauth_state,
                     success: true,
                 }),

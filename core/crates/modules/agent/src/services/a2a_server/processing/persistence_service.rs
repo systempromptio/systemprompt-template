@@ -16,7 +16,7 @@ pub struct PersistenceService {
 }
 
 impl PersistenceService {
-    pub fn new(db_pool: DbPool, log: LogService) -> Self {
+    pub const fn new(db_pool: DbPool, log: LogService) -> Self {
         Self { db_pool, log }
     }
 
@@ -42,7 +42,7 @@ impl PersistenceService {
         self.log
             .info(
                 "persistence_service",
-                &format!("✓ Task {} persisted to database", task.id),
+                &format!("Task {} persisted to database", task.id),
             )
             .await
             .ok();

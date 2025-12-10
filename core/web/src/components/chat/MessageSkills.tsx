@@ -45,22 +45,16 @@ export const MessageSkills = React.memo(function MessageSkills({
   }
 
   return (
-    <div className={cn('flex flex-wrap gap-2 mt-2', className)}>
+    <div className={cn('flex flex-wrap gap-2 mt-xs', className)}>
       {skills.map((skill: AgentSkill) => (
         <button
           key={skill.id}
           onClick={() => openSkill(skill.id)}
-          className={cn(
-            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm',
-            'bg-purple-50 text-purple-700 hover:bg-purple-100',
-            'dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50',
-            'transition-colors duration-200',
-            'border border-purple-200 dark:border-purple-800'
-          )}
+          className="inline-flex items-center gap-xs px-md py-xs bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-lg text-sm text-primary transition-colors cursor-pointer"
           title={skill.description}
         >
-          <BookOpen className="w-3.5 h-3.5" />
-          <span className="font-medium">{skill.name}</span>
+          <BookOpen className="w-4 h-4" />
+          <span>{skill.name}</span>
         </button>
       ))}
     </div>

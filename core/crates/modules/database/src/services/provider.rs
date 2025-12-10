@@ -18,13 +18,17 @@ use std::sync::Arc;
 ///
 /// async fn example(db: &dyn DatabaseProvider) -> Result<()> {
 ///     // Fetch single row
-///     let row = db.fetch_one("SELECT * FROM users WHERE id = $1", &[&"123"]).await?;
+///     let row = db
+///         .fetch_one("SELECT * FROM users WHERE id = $1", &[&"123"])
+///         .await?;
 ///
 ///     // Execute write operation
-///     let rows_affected = db.execute(
-///         "UPDATE users SET email = $1 WHERE id = $2",
-///         &[&"new@email.com", &"123"]
-///     ).await?;
+///     let rows_affected = db
+///         .execute(
+///             "UPDATE users SET email = $1 WHERE id = $2",
+///             &[&"new@email.com", &"123"],
+///         )
+///         .await?;
 ///
 ///     Ok(())
 /// }
@@ -35,8 +39,16 @@ use std::sync::Arc;
 /// ```rust
 /// async fn transfer(db: &dyn DatabaseProvider) -> Result<()> {
 ///     let mut tx = db.begin_transaction().await?;
-///     tx.execute("UPDATE accounts SET balance = balance - $1 WHERE id = $2", &[&100, &"acc1"]).await?;
-///     tx.execute("UPDATE accounts SET balance = balance + $1 WHERE id = $2", &[&100, &"acc2"]).await?;
+///     tx.execute(
+///         "UPDATE accounts SET balance = balance - $1 WHERE id = $2",
+///         &[&100, &"acc1"],
+///     )
+///     .await?;
+///     tx.execute(
+///         "UPDATE accounts SET balance = balance + $1 WHERE id = $2",
+///         &[&100, &"acc2"],
+///     )
+///     .await?;
 ///     tx.commit().await?;
 ///     Ok(())
 /// }
@@ -48,7 +60,8 @@ pub trait DatabaseProvider: Send + Sync + std::fmt::Debug {
         None
     }
 
-    /// Check if this database provider is `PostgreSQL` (always true - `SQLite` is no longer supported)
+    /// Check if this database provider is `PostgreSQL` (always true - `SQLite`
+    /// is no longer supported)
     fn is_postgres(&self) -> bool {
         true
     }
@@ -59,30 +72,36 @@ pub trait DatabaseProvider: Send + Sync + std::fmt::Debug {
     ///
     /// # Arguments
     ///
-    /// * `query` - SQL query (string or `DatabaseQuery`) with `?` placeholders for parameters
+    /// * `query` - SQL query (string or `DatabaseQuery`) with `?` placeholders
+    ///   for parameters
     /// * `params` - Parameter values to bind to the query
     ///
     /// # Example
     ///
     /// ```rust
     /// // With plain string
-    /// let rows = db.execute(
-    ///     "UPDATE users SET email = ? WHERE id = ?",
-    ///     &[&"new@email.com", &"123"]
-    /// ).await?;
+    /// let rows = db
+    ///     .execute(
+    ///         "UPDATE users SET email = ? WHERE id = ?",
+    ///         &[&"new@email.com", &"123"],
+    ///     )
+    ///     .await?;
     ///
     /// // With DatabaseQuery
     /// const UPDATE_EMAIL: DatabaseQuery = database_query!("users/update_email");
-    /// let rows = db.execute(&UPDATE_EMAIL, &[&"new@email.com", &"123"]).await?;
+    /// let rows = db
+    ///     .execute(&UPDATE_EMAIL, &[&"new@email.com", &"123"])
+    ///     .await?;
     /// ```
     async fn execute(&self, query: &dyn QuerySelector, params: &[&dyn ToDbValue]) -> Result<u64>;
 
     /// Execute raw SQL using `PostgreSQL`'s simple query protocol.
     ///
-    /// This method is designed for DDL operations (CREATE, DROP, ALTER) that need to
-    /// bypass `PostgreSQL`'s extended query protocol. The extended protocol evaluates
-    /// conditions like `IF EXISTS` at bind-time, causing issues with idempotent
-    /// migrations. The simple protocol evaluates them at parse-time.
+    /// This method is designed for DDL operations (CREATE, DROP, ALTER) that
+    /// need to bypass `PostgreSQL`'s extended query protocol. The extended
+    /// protocol evaluates conditions like `IF EXISTS` at bind-time, causing
+    /// issues with idempotent migrations. The simple protocol evaluates
+    /// them at parse-time.
     ///
     /// # Arguments
     ///
@@ -91,8 +110,10 @@ pub trait DatabaseProvider: Send + Sync + std::fmt::Debug {
     /// # Example
     ///
     /// ```rust
-    /// db.execute_raw("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)").await?;
-    /// db.execute_raw("DROP VIEW IF EXISTS v_stats CASCADE").await?;
+    /// db.execute_raw("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+    ///     .await?;
+    /// db.execute_raw("DROP VIEW IF EXISTS v_stats CASCADE")
+    ///     .await?;
     /// ```
     async fn execute_raw(&self, sql: &str) -> Result<()>;
 
@@ -102,7 +123,8 @@ pub trait DatabaseProvider: Send + Sync + std::fmt::Debug {
     ///
     /// # Arguments
     ///
-    /// * `query` - SQL query (string or `DatabaseQuery`) with `?` placeholders for parameters
+    /// * `query` - SQL query (string or `DatabaseQuery`) with `?` placeholders
+    ///   for parameters
     /// * `params` - Parameter values to bind to the query
     ///
     /// # Example
@@ -125,13 +147,16 @@ pub trait DatabaseProvider: Send + Sync + std::fmt::Debug {
     ///
     /// # Arguments
     ///
-    /// * `query` - SQL query (string or `DatabaseQuery`) with `?` placeholders for parameters
+    /// * `query` - SQL query (string or `DatabaseQuery`) with `?` placeholders
+    ///   for parameters
     /// * `params` - Parameter values to bind to the query
     ///
     /// # Example
     ///
     /// ```rust
-    /// let row = db.fetch_one("SELECT * FROM users WHERE id = ?", &[&"123"]).await?;
+    /// let row = db
+    ///     .fetch_one("SELECT * FROM users WHERE id = ?", &[&"123"])
+    ///     .await?;
     /// ```
     async fn fetch_one(
         &self,
@@ -141,18 +166,24 @@ pub trait DatabaseProvider: Send + Sync + std::fmt::Debug {
 
     /// Fetch zero or one row.
     ///
-    /// Returns `Ok(None)` if no rows are found, `Ok(Some(row))` if exactly one row
-    /// is found, or an error if multiple rows are returned.
+    /// Returns `Ok(None)` if no rows are found, `Ok(Some(row))` if exactly one
+    /// row is found, or an error if multiple rows are returned.
     ///
     /// # Arguments
     ///
-    /// * `query` - SQL query (string or `DatabaseQuery`) with `?` placeholders for parameters
+    /// * `query` - SQL query (string or `DatabaseQuery`) with `?` placeholders
+    ///   for parameters
     /// * `params` - Parameter values to bind to the query
     ///
     /// # Example
     ///
     /// ```rust
-    /// let row = db.fetch_optional("SELECT * FROM users WHERE email = ?", &[&"test@example.com"]).await?;
+    /// let row = db
+    ///     .fetch_optional(
+    ///         "SELECT * FROM users WHERE email = ?",
+    ///         &[&"test@example.com"],
+    ///     )
+    ///     .await?;
     /// if let Some(user) = row {
     ///     println!("Found user: {:?}", user);
     /// }
@@ -169,13 +200,16 @@ pub trait DatabaseProvider: Send + Sync + std::fmt::Debug {
     ///
     /// # Arguments
     ///
-    /// * `query` - SQL query (string or `DatabaseQuery`) with `?` placeholders for parameters
+    /// * `query` - SQL query (string or `DatabaseQuery`) with `?` placeholders
+    ///   for parameters
     /// * `params` - Parameter values to bind to the query
     ///
     /// # Example
     ///
     /// ```rust
-    /// let count = db.fetch_scalar_value("SELECT COUNT(*) FROM users", &[]).await?;
+    /// let count = db
+    ///     .fetch_scalar_value("SELECT COUNT(*) FROM users", &[])
+    ///     .await?;
     /// if let DbValue::Integer(n) = count {
     ///     println!("Total users: {}", n);
     /// }
@@ -196,15 +230,24 @@ pub trait DatabaseProvider: Send + Sync + std::fmt::Debug {
     ///
     /// ```rust
     /// let mut tx = db.begin_transaction().await?;
-    /// tx.execute("INSERT INTO users (id, name) VALUES (?, ?)", &[&"1", &"Alice"]).await?;
-    /// tx.execute("INSERT INTO users (id, name) VALUES (?, ?)", &[&"2", &"Bob"]).await?;
+    /// tx.execute(
+    ///     "INSERT INTO users (id, name) VALUES (?, ?)",
+    ///     &[&"1", &"Alice"],
+    /// )
+    /// .await?;
+    /// tx.execute(
+    ///     "INSERT INTO users (id, name) VALUES (?, ?)",
+    ///     &[&"2", &"Bob"],
+    /// )
+    /// .await?;
     /// tx.commit().await?;
     /// ```
     async fn begin_transaction(&self) -> Result<Box<dyn DatabaseTransaction>>;
 
     /// Get information about the database connection.
     ///
-    /// Returns metadata including database type, version, and connection details.
+    /// Returns metadata including database type, version, and connection
+    /// details.
     async fn get_database_info(&self) -> Result<DatabaseInfo>;
 
     /// Test the database connection.
@@ -250,19 +293,20 @@ pub trait DatabaseProvider: Send + Sync + std::fmt::Debug {
 
 /// Extension trait for typed database queries.
 ///
-/// This trait provides generic methods for fetching strongly-typed rows from the database.
-/// It is implemented for all types that implement `DatabaseProvider`, enabling compile-time
-/// type safety without requiring manual JSON deserialization.
+/// This trait provides generic methods for fetching strongly-typed rows from
+/// the database. It is implemented for all types that implement
+/// `DatabaseProvider`, enabling compile-time type safety without requiring
+/// manual JSON deserialization.
 ///
 /// # Example
 ///
 /// ```rust
-/// use systemprompt_database::{DatabaseProvider, DatabaseProviderExt, FromDatabaseRow};
+/// use sqlx::PgPool;
 ///
-/// async fn get_user(db: &dyn DatabaseProvider, email: &str) -> Result<Option<User>> {
-///     let query = DatabaseQueryEnum::GetUserByEmail.get(db);
-///     db.as_typed()
-///         .fetch_typed_optional::<User>(&query, &[&email])
+/// async fn get_user(pool: &PgPool, email: &str) -> Result<Option<User>> {
+///     sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
+///         .bind(email)
+///         .fetch_optional(pool)
 ///         .await
 /// }
 /// ```
@@ -270,8 +314,9 @@ pub trait DatabaseProvider: Send + Sync + std::fmt::Debug {
 pub trait DatabaseProviderExt {
     /// Fetch zero or one typed row.
     ///
-    /// Returns `Ok(None)` if no rows are found, `Ok(Some(T))` if exactly one row is found,
-    /// or an error if multiple rows are returned or deserialization fails.
+    /// Returns `Ok(None)` if no rows are found, `Ok(Some(T))` if exactly one
+    /// row is found, or an error if multiple rows are returned or
+    /// deserialization fails.
     async fn fetch_typed_optional<T: FromDatabaseRow>(
         &self,
         query: &dyn QuerySelector,
@@ -290,7 +335,8 @@ pub trait DatabaseProviderExt {
 
     /// Fetch all typed rows.
     ///
-    /// Returns a vector of deserialized rows. Deserialization errors are propagated.
+    /// Returns a vector of deserialized rows. Deserialization errors are
+    /// propagated.
     async fn fetch_typed_all<T: FromDatabaseRow>(
         &self,
         query: &dyn QuerySelector,

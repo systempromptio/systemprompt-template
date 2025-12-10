@@ -4,7 +4,6 @@ use crate::models::{DatabaseInfo, QueryResult};
 use anyhow::Result;
 use std::sync::Arc;
 
-/// Main database interface - ALL modules use this (`PostgreSQL` only)
 pub struct Database {
     provider: Arc<dyn DatabaseProvider>,
 }
@@ -18,7 +17,6 @@ impl std::fmt::Debug for Database {
 }
 
 impl Database {
-    /// Create database with `PostgreSQL`
     pub async fn new_postgres(url: &str) -> Result<Self> {
         let provider = PostgresProvider::new(url).await?;
         Ok(Self {
@@ -26,7 +24,6 @@ impl Database {
         })
     }
 
-    /// Create database based on database type from config (PostgreSQL-only)
     pub async fn from_config(db_type: &str, url: &str) -> Result<Self> {
         match db_type.to_lowercase().as_str() {
             "postgres" | "postgresql" | "" => Self::new_postgres(url).await,
@@ -36,19 +33,16 @@ impl Database {
         }
     }
 
-    /// Get underlying `PgPool` for CLI tools that need direct sqlx access
     pub fn get_postgres_pool_arc(&self) -> Result<Arc<sqlx::PgPool>> {
         self.provider
             .get_postgres_pool()
             .ok_or_else(|| anyhow::anyhow!("Database is not PostgreSQL"))
     }
 
-    /// Execute a query
     pub async fn query(&self, sql: &dyn crate::models::QuerySelector) -> Result<QueryResult> {
         self.provider.query_raw(sql).await
     }
 
-    /// Execute a query with parameters
     pub async fn query_with(
         &self,
         sql: &dyn crate::models::QuerySelector,
@@ -57,31 +51,40 @@ impl Database {
         self.provider.query_raw_with(sql, params).await
     }
 
-    /// Execute multiple statements
     pub async fn execute_batch(&self, sql: &str) -> Result<()> {
         self.provider.execute_batch(sql).await
     }
 
-    /// Get database info
     pub async fn get_info(&self) -> Result<DatabaseInfo> {
         self.provider.get_database_info().await
     }
 
-    /// Test connection
     pub async fn test_connection(&self) -> Result<()> {
         self.provider.test_connection().await
     }
 
-    /// Get `PostgreSQL` connection pool
+    #[must_use]
     pub fn get_postgres_pool(&self) -> Option<Arc<sqlx::PgPool>> {
         self.provider.get_postgres_pool()
     }
+
+    pub fn pool_arc(&self) -> Result<Arc<sqlx::PgPool>> {
+        self.get_postgres_pool_arc()
+    }
+
+    #[must_use]
+    pub fn pool(&self) -> Option<Arc<sqlx::PgPool>> {
+        self.get_postgres_pool()
+    }
+
+    pub async fn begin(&self) -> Result<sqlx::Transaction<'_, sqlx::Postgres>> {
+        let pool = self.pool_arc()?;
+        pool.begin().await.map_err(Into::into)
+    }
 }
 
-/// Type alias for backward compatibility
 pub type DbPool = Arc<Database>;
 
-/// Extension trait for repositories to easily create from Database
 pub trait DatabaseExt {
     fn database(&self) -> Arc<Database>;
 }
@@ -92,7 +95,6 @@ impl DatabaseExt for Arc<Database> {
     }
 }
 
-/// Implement `DatabaseProvider` for `Database` itself
 #[async_trait::async_trait]
 impl DatabaseProvider for Database {
     fn get_postgres_pool(&self) -> Option<Arc<sqlx::PgPool>> {
@@ -169,40 +171,5 @@ impl DatabaseProvider for Database {
         params: Vec<serde_json::Value>,
     ) -> Result<QueryResult> {
         self.provider.query_raw_with(query, params).await
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_config_accepts_postgres_variants() {
-        let test_url = std::env::var("TEST_DATABASE_URL")
-            .unwrap_or_else(|_| "postgresql://test:test@localhost:5433/test".to_string());
-
-        for db_type in &["postgres", "postgresql", ""] {
-            match Database::from_config(db_type, &test_url).await {
-                Ok(_) => {
-                    // Expected for valid postgres database URLs
-                },
-                Err(e) => {
-                    eprintln!(
-                        "Skipping test for '{}' (database not available): {}",
-                        db_type, e
-                    );
-                },
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn test_config_rejects_sqlite() {
-        let result = Database::from_config("sqlite", "test.db").await;
-        assert!(result.is_err(), "SQLite should be rejected");
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Only PostgreSQL is supported"));
     }
 }

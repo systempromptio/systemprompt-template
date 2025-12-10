@@ -17,19 +17,19 @@ impl Default for AnthropicModels {
                 id: "claude-3-opus-20240229".to_string(),
                 max_tokens: 200_000,
                 supports_tools: true,
-                cost_per_1k_tokens: 0.015,
+                cost_per_1k_tokens: 0.075,
             },
             claude_3_sonnet: ModelConfig {
-                id: "claude-3-sonnet-20240229".to_string(),
+                id: "claude-3-5-sonnet-20241022".to_string(),
                 max_tokens: 200_000,
                 supports_tools: true,
-                cost_per_1k_tokens: 0.003,
+                cost_per_1k_tokens: 0.015,
             },
             claude_3_haiku: ModelConfig {
-                id: "claude-3-haiku-20240307".to_string(),
+                id: "claude-3-5-haiku-20241022".to_string(),
                 max_tokens: 200_000,
                 supports_tools: true,
-                cost_per_1k_tokens: 0.00025,
+                cost_per_1k_tokens: 0.004, // $4/1M output tokens
             },
         }
     }
@@ -45,7 +45,21 @@ pub struct AnthropicRequest {
     pub top_k: Option<i32>,
     pub stop_sequences: Option<Vec<String>>,
     pub system: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tools: Option<Vec<AnthropicTool>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_choice: Option<AnthropicToolChoice>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum AnthropicToolChoice {
+    #[serde(rename = "auto")]
+    Auto,
+    #[serde(rename = "any")]
+    Any,
+    #[serde(rename = "tool")]
+    Tool { name: String },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

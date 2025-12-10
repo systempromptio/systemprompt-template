@@ -8,6 +8,7 @@
 
 import React from 'react'
 import { HelpCircle, Info, List, Star, Clock, BookOpen, User, MessageSquare, Zap, MessageCircle, Library, Rocket } from 'lucide-react'
+import { MarkdownContent } from '@/components/markdown/MarkdownContent'
 
 interface Section {
   icon?: string
@@ -58,13 +59,13 @@ export const CardSections = React.memo(function CardSections({ sections }: CardS
           )}
           <div className="flex-1">
             {section.heading && (
-              <h3 className="font-heading text-[var(--font-size-lg)] font-normal text-primary mb-[var(--spacing-sm)] uppercase">
+              <h3 className="font-heading text-xl font-semibold text-primary mb-[var(--spacing-sm)]">
                 {section.heading}
               </h3>
             )}
-            <p className="font-body text-[var(--font-size-md)] text-text-secondary leading-relaxed">
-              {section.content}
-            </p>
+            <div className="font-body text-text-secondary leading-relaxed">
+              <MarkdownContent content={section.content} />
+            </div>
           </div>
         </div>
       ))}

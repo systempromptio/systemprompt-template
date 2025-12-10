@@ -7,8 +7,7 @@
  * @module artifacts/renderers/DashboardRenderer
  */
 
-import type { Artifact } from '@/types/artifact'
-import type { DashboardHints, DashboardSection } from '@/types/artifacts'
+import type { Artifact, DashboardHints, DashboardSection } from '@/types/artifact'
 import { extractDashboardData, unwrapExtraction } from '@/lib/artifacts'
 import { MetricsCardsSection } from './dashboard/MetricsCardsSection'
 import { ChartSection } from './dashboard/ChartSection'

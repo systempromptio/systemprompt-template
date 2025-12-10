@@ -27,7 +27,7 @@ impl JwtValidator {
     pub fn validate_token(&self, token: &str) -> Result<JwtClaims> {
         decode::<JwtClaims>(token, &self.decoding_key, &self.validation)
             .map(|data| data.claims)
-            .map_err(|e| AgentServiceError::Authentication(format!("invalid token: {}", e)))
+            .map_err(|e| AgentServiceError::Authentication(format!("invalid token: {e}")))
     }
 }
 

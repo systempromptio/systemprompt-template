@@ -14,7 +14,8 @@
 //! ## Critical Distinction
 //!
 //! **AI MCP** (this module): Execute tools during conversations → `ToolResult`
-//! **Agent MCP** (`agent/services/external_integrations/mcp`): Load skills for discovery → `AgentSkill`
+//! **Agent MCP** (`agent/services/external_integrations/mcp`): Load skills for
+//! discovery → `AgentSkill`
 //!
 //! ## Components
 //!

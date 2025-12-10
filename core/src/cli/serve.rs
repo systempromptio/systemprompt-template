@@ -6,7 +6,8 @@ use systemprompt_core_system::{validate_system, AppContext, ServiceCategory};
 
 #[derive(Subcommand)]
 pub enum ServeCommands {
-    /// Start API server (automatically starts all enabled agents and MCP servers)
+    /// Start API server (automatically starts all enabled agents and MCP
+    /// servers)
     #[command(long_about = "Start the API server in foreground or daemon mode.
 
 This command automatically:

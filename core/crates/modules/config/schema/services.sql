@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS services (
     status VARCHAR(255) NOT NULL CHECK (status IN ('starting', 'running', 'stopped', 'error')) DEFAULT 'stopped',
     pid INTEGER DEFAULT NULL,
     port INTEGER NOT NULL,
+    -- Binary version tracking for automatic restarts on rebuild
+    binary_mtime BIGINT DEFAULT NULL,
     -- Minimal timestamps
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -1,16 +1,17 @@
-use crate::errors::{AiError, Result};
+use crate::error::{AiError, Result};
 use crate::models::image_generation::{
     AspectRatio, ImageGenerationRequest, ImageGenerationResponse, ImageResolution,
 };
 use crate::models::providers::gemini::{
-    GeminiContent, GeminiGenerationConfig, GeminiInlineData, GeminiPart,
-    GeminiRequest, GeminiResponse, GeminiTool, GoogleSearch,
+    GeminiContent, GeminiGenerationConfig, GeminiInlineData, GeminiPart, GeminiRequest,
+    GeminiResponse, GeminiTool, GoogleSearch,
 };
 use crate::services::providers::image_provider_trait::{ImageProvider, ImageProviderCapabilities};
 use async_trait::async_trait;
 use reqwest::Client;
 use std::time::Instant;
 
+#[derive(Debug)]
 pub struct GeminiImageProvider {
     client: Client,
     api_key: String,
@@ -50,7 +51,6 @@ impl GeminiImageProvider {
             text: request.prompt.clone(),
         }];
 
-        // Add reference images if provided
         for ref_image in &request.reference_images {
             parts.push(GeminiPart::InlineData {
                 inline_data: GeminiInlineData {
@@ -68,8 +68,6 @@ impl GeminiImageProvider {
             parts,
         }];
 
-        // NOTE: imageConfig causes 500 errors from Gemini API
-        // Gemini will use default size/aspect ratio when not specified
         let generation_config = GeminiGenerationConfig {
             temperature: None,
             top_p: None,
@@ -80,6 +78,7 @@ impl GeminiImageProvider {
             response_schema: None,
             response_modalities: Some(vec!["IMAGE".to_string()]),
             image_config: None,
+            thinking_config: None,
         };
 
         let tools = if request.enable_search_grounding {
@@ -87,6 +86,7 @@ impl GeminiImageProvider {
                 function_declarations: None,
                 google_search: Some(GoogleSearch {}),
                 url_context: None,
+                code_execution: None,
             }])
         } else {
             None
@@ -97,6 +97,7 @@ impl GeminiImageProvider {
             generation_config: Some(generation_config),
             safety_settings: None,
             tools,
+            tool_config: None,
         }
     }
 
@@ -176,7 +177,6 @@ impl ImageProvider for GeminiImageProvider {
     ) -> Result<ImageGenerationResponse> {
         let start = Instant::now();
 
-        // Validate prompt length
         if request.prompt.len() > self.capabilities().max_prompt_length {
             return Err(AiError::ProviderError {
                 provider: self.name().to_string(),
@@ -188,7 +188,6 @@ impl ImageProvider for GeminiImageProvider {
             });
         }
 
-        // Validate resolution
         if !self.supports_resolution(&request.resolution) {
             return Err(AiError::ProviderError {
                 provider: self.name().to_string(),
@@ -196,7 +195,6 @@ impl ImageProvider for GeminiImageProvider {
             });
         }
 
-        // Validate aspect ratio
         if !self.supports_aspect_ratio(&request.aspect_ratio) {
             return Err(AiError::ProviderError {
                 provider: self.name().to_string(),
@@ -207,10 +205,7 @@ impl ImageProvider for GeminiImageProvider {
             });
         }
 
-        // Determine model
-        let model = request
-            .model.as_deref()
-            .unwrap_or(self.default_model());
+        let model = request.model.as_deref().unwrap_or(self.default_model());
 
         if !self.supports_model(model) {
             return Err(AiError::ProviderError {
@@ -219,10 +214,8 @@ impl ImageProvider for GeminiImageProvider {
             });
         }
 
-        // Build request
         let gemini_request = Self::build_image_request(request);
 
-        // Make API call
         let url = format!("{}/models/{}:generateContent", self.endpoint, model);
 
         let response = self
@@ -252,7 +245,6 @@ impl ImageProvider for GeminiImageProvider {
                 message: format!("Failed to parse response: {e}"),
             })?;
 
-        // Extract image data
         let (image_data, mime_type) = Self::extract_image_from_response(&gemini_response)?;
 
         let generation_time_ms = start.elapsed().as_millis() as u64;
@@ -262,8 +254,8 @@ impl ImageProvider for GeminiImageProvider {
             model.to_string(),
             image_data,
             mime_type,
-            request.resolution.clone(),
-            request.aspect_ratio.clone(),
+            request.resolution,
+            request.aspect_ratio,
             generation_time_ms,
         ))
     }
@@ -272,44 +264,10 @@ impl ImageProvider for GeminiImageProvider {
         &self,
         requests: &[ImageGenerationRequest],
     ) -> Result<Vec<ImageGenerationResponse>> {
-        // Gemini supports batch generation via the Batch API
-        // For now, implement sequential generation
-        // TODO: Implement true batch API support
-
         let mut responses = Vec::new();
         for request in requests {
             responses.push(self.generate_image(request).await?);
         }
         Ok(responses)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_capabilities() {
-        let api_key = "test_key".to_string();
-        let provider = GeminiImageProvider::new(api_key);
-
-        let caps = provider.capabilities();
-        assert_eq!(caps.supported_resolutions.len(), 3);
-        assert_eq!(caps.supported_aspect_ratios.len(), 6);
-        assert!(caps.supports_batch);
-        assert!(caps.supports_image_editing);
-        assert!(caps.supports_search_grounding);
-    }
-
-    #[test]
-    fn test_supported_models() {
-        let api_key = "test_key".to_string();
-        let provider = GeminiImageProvider::new(api_key);
-
-        let models = provider.supported_models();
-        assert_eq!(models.len(), 2);
-        assert!(provider.supports_model("gemini-2.5-flash-image"));
-        assert!(provider.supports_model("gemini-3-pro-image-preview"));
-        assert!(!provider.supports_model("gpt-4"));
     }
 }

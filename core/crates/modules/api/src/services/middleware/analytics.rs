@@ -1,12 +1,15 @@
-use axum::{extract::Request, http::StatusCode, middleware::Next, response::Response};
+use axum::extract::Request;
+use axum::http::StatusCode;
+use axum::middleware::Next;
+use axum::response::Response;
 use serde_json::json;
 use std::sync::Arc;
 
 use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::{AnalyticsEvent, AnalyticsRepository, LogLevel, LogService};
+use systemprompt_core_system::repository::AnalyticsSessionRepository;
 use systemprompt_core_system::services::ScannerDetector;
-use systemprompt_core_system::AppContext;
-use systemprompt_core_system::{repository::AnalyticsSessionRepository, RequestContext};
+use systemprompt_core_system::{AppContext, RequestContext};
 use systemprompt_identifiers::SessionId;
 use systemprompt_models::RouteClassifier;
 
@@ -19,6 +22,7 @@ pub struct AnalyticsMiddleware {
 }
 
 impl AnalyticsMiddleware {
+    #[allow(clippy::needless_pass_by_value)]
     pub fn new(app_context: Arc<AppContext>) -> Self {
         let db_pool = app_context.db_pool().clone();
         let session_repo = Arc::new(AnalyticsSessionRepository::new(db_pool.clone()));
@@ -40,7 +44,7 @@ impl AnalyticsMiddleware {
             let sanitized_params: Vec<String> = query
                 .split('&')
                 .map(|param| {
-                    if let Some((key, _value)) = param.split_once('=') {
+                    if let Some((key, value)) = param.split_once('=') {
                         let key_lower = key.to_lowercase();
                         if key_lower == "token"
                             || key_lower == "password"
@@ -50,9 +54,9 @@ impl AnalyticsMiddleware {
                             || key_lower == "authorization"
                             || key_lower == "auth"
                         {
-                            format!("{}=[REDACTED]", key)
+                            format!("{key}=[REDACTED]")
                         } else {
-                            format!("{}={}", key, _value)
+                            format!("{key}={value}")
                         }
                     } else {
                         param.to_string()
@@ -60,7 +64,7 @@ impl AnalyticsMiddleware {
                 })
                 .collect();
 
-            format!("{}?{}", path, sanitized_params.join("&"))
+            format!("{path}?{}", sanitized_params.join("&"))
         } else {
             path.to_string()
         }
@@ -74,13 +78,9 @@ impl AnalyticsMiddleware {
         let method = request.method().clone();
         let uri = request.uri().clone();
 
-        let request_context = request.extensions().get::<RequestContext>().cloned();
-
-        if request_context.is_none() {
+        let Some(req_ctx) = request.extensions().get::<RequestContext>().cloned() else {
             return Ok(next.run(request).await);
-        }
-
-        let req_ctx = request_context.unwrap();
+        };
 
         if !req_ctx.request.is_tracked {
             return Ok(next.run(request).await);
@@ -91,13 +91,13 @@ impl AnalyticsMiddleware {
             .headers()
             .get("user-agent")
             .and_then(|v| v.to_str().ok())
-            .map(|s| s.to_string());
+            .map(ToString::to_string);
 
         let referer = request
             .headers()
             .get("referer")
             .and_then(|v| v.to_str().ok())
-            .map(|s| s.to_string());
+            .map(ToString::to_string);
 
         let start_time = std::time::Instant::now();
         let response = next.run(request).await;
@@ -116,22 +116,13 @@ impl AnalyticsMiddleware {
             let endpoint = format!("{} {}", method, uri.path());
             let path = uri.path();
             let status_code_u16 = status_code.as_u16();
-            let is_success = !status_code.is_client_error() && !status_code.is_server_error();
 
             // If this is a scanner request, mark the session as scanner
             if is_scanner {
                 self.spawn_mark_scanner_task(req_ctx.request.session_id.clone());
             }
 
-            self.spawn_session_tracking_task(
-                req_ctx.request.session_id.clone(),
-                endpoint.clone(),
-                uri.clone(),
-                method.to_string(),
-                status_code_u16,
-                response_time_ms,
-                is_success,
-            );
+            self.spawn_session_tracking_task(req_ctx.request.session_id.clone());
 
             self.spawn_analytics_event_task(
                 req_ctx.clone(),
@@ -149,54 +140,31 @@ impl AnalyticsMiddleware {
         Ok(response)
     }
 
-    fn spawn_session_tracking_task(
-        &self,
-        session_id: SessionId,
-        endpoint: String,
-        uri: http::Uri,
-        method: String,
-        status_code: u16,
-        response_time_ms: u64,
-        is_success: bool,
-    ) {
+    fn spawn_session_tracking_task(&self, session_id: SessionId) {
         let session_repo = self.session_repo.clone();
         let db_pool = self.db_pool.clone();
 
         tokio::spawn(async move {
             let logger = LogService::system(db_pool.clone());
 
-            if let Err(e) = session_repo
-                .update_session_activity(
-                    session_id.as_str(),
-                    &endpoint,
-                    response_time_ms,
-                    is_success,
-                )
-                .await
-            {
+            if let Err(e) = session_repo.update_activity(session_id.as_str()).await {
                 logger
                     .error(
                         "analytics",
-                        &format!("Failed to update session activity: {}", e),
+                        &format!("Failed to update session activity: {e}"),
                     )
                     .await
                     .ok();
             }
 
             if let Err(e) = session_repo
-                .record_endpoint_request(
-                    session_id.as_str(),
-                    uri.path(),
-                    &method,
-                    status_code,
-                    response_time_ms,
-                )
+                .increment_request_count(session_id.as_str())
                 .await
             {
                 logger
                     .error(
                         "analytics",
-                        &format!("Failed to record endpoint request: {}", e),
+                        &format!("Failed to increment request count: {e}"),
                     )
                     .await
                     .ok();
@@ -208,12 +176,11 @@ impl AnalyticsMiddleware {
         let session_repo = self.session_repo.clone();
 
         tokio::spawn(async move {
-            if let Err(_) = session_repo.mark_as_scanner(session_id.as_str()).await {
-                // Silently ignore errors - scanner marking is non-critical
-            }
+            let _ = session_repo.mark_as_scanner(session_id.as_str()).await;
         });
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     fn spawn_analytics_event_task(
         &self,
         req_ctx: RequestContext,
@@ -234,7 +201,7 @@ impl AnalyticsMiddleware {
         tokio::spawn(async move {
             let logger = LogService::new(db_pool.clone(), req_ctx.log_context());
 
-            let message = format!("HTTP {} - {} {}", status_code, method, sanitized_uri);
+            let message = format!("HTTP {status_code} - {method} {sanitized_uri}");
             let metadata = json!({
                 "status_code": status_code,
                 "method": method,
@@ -264,7 +231,7 @@ impl AnalyticsMiddleware {
                 severity: severity.to_string(),
                 endpoint: Some(endpoint),
                 error_code: if status_code >= 400 {
-                    Some(status_code as i32)
+                    Some(i32::from(status_code))
                 } else {
                     None
                 },
@@ -279,13 +246,14 @@ impl AnalyticsMiddleware {
                 logger
                     .error(
                         "analytics",
-                        &format!("Failed to log analytics event: {}", e),
+                        &format!("Failed to log analytics event: {e}"),
                     )
                     .await
                     .ok();
             }
 
-            // Only log 5xx errors to console (4xx are tracked in analytics but don't need console spam)
+            // Only log 5xx errors to console (4xx are tracked in analytics but don't need
+            // console spam)
             if status_code >= 500 {
                 logger
                     .log(

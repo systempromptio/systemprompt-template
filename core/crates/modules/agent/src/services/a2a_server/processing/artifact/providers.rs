@@ -15,7 +15,7 @@ pub struct AiServiceToolProvider {
 }
 
 impl AiServiceToolProvider {
-    pub fn new(ai_service: Arc<AiService>) -> Self {
+    pub const fn new(ai_service: Arc<AiService>) -> Self {
         Self { ai_service }
     }
 }
@@ -39,7 +39,7 @@ pub struct DatabaseExecutionIdLookup {
 }
 
 impl DatabaseExecutionIdLookup {
-    pub fn new(db_pool: DbPool) -> Self {
+    pub const fn new(db_pool: DbPool) -> Self {
         Self { db_pool }
     }
 }
@@ -50,11 +50,8 @@ impl ExecutionIdLookup for DatabaseExecutionIdLookup {
         use systemprompt_core_mcp::repository::ToolUsageRepository;
 
         let tool_usage_repo = ToolUsageRepository::new(self.db_pool.clone());
-        match tool_usage_repo
-            .get_execution_id_by_ai_call_id(ai_tool_call_id)
-            .await
-        {
-            Ok(Some(exec_id)) => Ok(Some(exec_id.as_ref().to_string())),
+        match tool_usage_repo.get_by_ai_call_id(ai_tool_call_id).await {
+            Ok(Some(exec_id)) => Ok(Some(exec_id)),
             Ok(None) => Ok(None),
             Err(e) => Err(e),
         }

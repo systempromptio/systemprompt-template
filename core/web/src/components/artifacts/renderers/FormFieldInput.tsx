@@ -7,7 +7,7 @@
  */
 
 import React from 'react'
-import type { FormField } from '@/types/artifacts'
+import type { FormField } from '@/types/artifact'
 
 interface FormFieldInputProps {
   field: FormField

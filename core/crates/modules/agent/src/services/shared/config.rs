@@ -12,11 +12,11 @@ pub struct ServiceConfiguration {
 }
 
 impl ServiceConfiguration {
-    pub fn timeout(&self) -> Duration {
+    pub const fn timeout(&self) -> Duration {
         Duration::from_secs(self.timeout_seconds)
     }
 
-    pub fn retry_delay(&self) -> Duration {
+    pub const fn retry_delay(&self) -> Duration {
         Duration::from_millis(self.retry_delay_milliseconds)
     }
 
@@ -84,7 +84,7 @@ impl RuntimeConfigurationBuilder {
         }
     }
 
-    pub fn port(mut self, port: u16) -> Self {
+    pub const fn port(mut self, port: u16) -> Self {
         self.port = port;
         self
     }
@@ -94,12 +94,12 @@ impl RuntimeConfigurationBuilder {
         self
     }
 
-    pub fn enable_ssl(mut self) -> Self {
+    pub const fn enable_ssl(mut self) -> Self {
         self.ssl_enabled = true;
         self
     }
 
-    pub fn require_auth(mut self) -> Self {
+    pub const fn require_auth(mut self) -> Self {
         self.auth_required = true;
         self
     }
@@ -131,7 +131,7 @@ pub struct ConnectionConfiguration {
 }
 
 impl ConnectionConfiguration {
-    pub fn timeout(&self) -> Duration {
+    pub const fn timeout(&self) -> Duration {
         Duration::from_secs(self.timeout_seconds)
     }
 }

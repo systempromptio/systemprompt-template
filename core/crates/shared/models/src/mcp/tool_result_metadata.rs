@@ -69,8 +69,13 @@ impl McpToolResultMetadata {
     /// Fails fast if metadata is missing or invalid
     pub fn from_meta(meta: &rmcp::model::Meta) -> Result<Self> {
         let json_value = Value::Object(meta.0.clone());
-        let metadata: Self = serde_json::from_value(json_value)
-            .map_err(|e| anyhow!("Failed to parse McpToolResultMetadata from _meta: {e}. Expected fields: mcp_execution_id (required), execution_time_ms (optional), server_version (optional)"))?;
+        let metadata: Self = serde_json::from_value(json_value).map_err(|e| {
+            anyhow!(
+                "Failed to parse McpToolResultMetadata from _meta: {e}. Expected fields: \
+                 mcp_execution_id (required), execution_time_ms (optional), server_version \
+                 (optional)"
+            )
+        })?;
 
         metadata.validate()?;
         Ok(metadata)

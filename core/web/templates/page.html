@@ -5,16 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- SEO Meta Tags -->
-  <title>{{TITLE}} | tyingshoelaces</title>
+  <title>{{TITLE}} | {{ORG_NAME}}</title>
   <meta name="description" content="{{DESCRIPTION}}" />
   <meta name="author" content="{{AUTHOR}}" />
   <meta name="keywords" content="{{KEYWORDS}}" />
+  {{#if SLUG}}<link rel="canonical" href="{{ORG_URL}}/{{SLUG}}" />{{else}}<link rel="canonical" href="{{ORG_URL}}" />{{/if}}
 
   <!-- Open Graph -->
   <meta property="og:title" content="{{TITLE}}" />
   <meta property="og:description" content="{{DESCRIPTION}}" />
   <meta property="og:image" content="{{IMAGE}}" />
   <meta property="og:type" content="article" />
+  {{#if SLUG}}<meta property="og:url" content="{{ORG_URL}}/{{SLUG}}" />{{else}}<meta property="og:url" content="{{ORG_URL}}" />{{/if}}
+  <meta property="og:site_name" content="{{ORG_NAME}}" />
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -59,8 +62,8 @@
   <header class="site-header">
     <nav class="site-nav">
       <a href="/" class="logo-link">
-        <img src="/favicon.ico" alt="tyingshoelaces logo" class="logo" />
-        <span class="site-name">tyingshoelaces</span>
+        <img src="/favicon.ico" alt="{{ORG_NAME}} logo" class="logo" />
+        {{#if DISPLAY_SITENAME}}<span class="site-name">{{ORG_NAME}}</span>{{/if}}
       </a>
       <a href="/" class="chat-cta">
         <svg class="chat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

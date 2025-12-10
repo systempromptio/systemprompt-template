@@ -1,14 +1,12 @@
-use axum::{
-    extract::{Extension, Path, State},
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use axum::extract::{Extension, Path, State};
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::Json;
 use chrono::Utc;
 use serde_json::json;
 
 use crate::models::context::UpdateContextRequest;
-use crate::repository::{ArtifactRepository, ContextRepository, TaskRepository};
+use crate::repository::ContextRepository;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::api::ApiError;
 use systemprompt_core_system::BroadcastEvent;
@@ -20,9 +18,7 @@ pub async fn update_context(
     Json(request): Json<UpdateContextRequest>,
 ) -> impl IntoResponse {
     let db_pool = ctx.db_pool().clone();
-    let task_repo = std::sync::Arc::new(TaskRepository::new(db_pool.clone()));
-    let artifact_repo = std::sync::Arc::new(ArtifactRepository::new(db_pool.clone()));
-    let context_repo = ContextRepository::new(db_pool.clone(), task_repo, artifact_repo);
+    let context_repo = ContextRepository::new(db_pool.clone());
     let logger = LogService::new(ctx.db_pool().clone(), req_ctx.log_context());
     let user_id = &req_ctx.auth.user_id;
 
@@ -32,9 +28,9 @@ pub async fn update_context(
     {
         Ok(()) => {
             logger
-                .info(
+                .debug(
                     "context_api",
-                    &format!("Updated context {} for user {}", context_id, user_id),
+                    &format!("Updated context {context_id} for user {user_id}"),
                 )
                 .await
                 .ok();
@@ -64,7 +60,7 @@ pub async fn update_context(
                     logger
                         .error(
                             "context_api",
-                            &format!("Failed to retrieve updated context: {}", e),
+                            &format!("Failed to retrieve updated context: {e}"),
                         )
                         .await
                         .ok();
@@ -78,10 +74,10 @@ pub async fn update_context(
         },
         Err(e) => {
             logger
-                .error("context_api", &format!("Failed to update context: {}", e))
+                .error("context_api", &format!("Failed to update context: {e}"))
                 .await
                 .ok();
-            ApiError::not_found(format!("Failed to update context: {}", e)).into_response()
+            ApiError::not_found(format!("Failed to update context: {e}")).into_response()
         },
     }
 }

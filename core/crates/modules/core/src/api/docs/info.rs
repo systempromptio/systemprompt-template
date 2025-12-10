@@ -10,8 +10,8 @@ impl Default for ApiInfo {
         Self {
             title: "SystemPrompt OS API",
             version: "1.0.0",
-            description:
-                "SystemPrompt OS is a comprehensive system configuration and management platform.",
+            description: "SystemPrompt OS is a comprehensive system configuration and management \
+                          platform.",
         }
     }
 }

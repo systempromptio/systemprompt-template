@@ -1,6 +1,7 @@
 import type { Artifact } from '@/types/artifact'
 
 const MOCK_CONTEXT_ID = 'mock-context'
+const MOCK_TASK_ID = 'mock-task'
 const MOCK_CREATED_AT = new Date().toISOString()
 
 export const mockTableArtifact: Artifact = {
@@ -94,6 +95,7 @@ export const mockTableArtifact: Artifact = {
   metadata: {
     artifact_type: 'table',
     context_id: MOCK_CONTEXT_ID,
+    task_id: MOCK_TASK_ID,
     created_at: MOCK_CREATED_AT,
     rendering_hints: {
       columns: [
@@ -173,6 +175,7 @@ export const mockChartArtifact: Artifact = {
   metadata: {
     artifact_type: 'chart',
     context_id: MOCK_CONTEXT_ID,
+    task_id: MOCK_TASK_ID,
     created_at: MOCK_CREATED_AT,
     rendering_hints: {
       chart_type: 'line' as const,
@@ -223,6 +226,7 @@ export const mockCodeArtifact: Artifact = {
   metadata: {
     artifact_type: 'code',
     context_id: MOCK_CONTEXT_ID,
+    task_id: MOCK_TASK_ID,
     created_at: MOCK_CREATED_AT,
     rendering_hints: {
       language: 'rust',
@@ -255,6 +259,7 @@ export const mockFormArtifact: Artifact = {
   metadata: {
     artifact_type: 'form',
     context_id: MOCK_CONTEXT_ID,
+    task_id: MOCK_TASK_ID,
     created_at: MOCK_CREATED_AT,
     rendering_hints: {
       submit_action: '/api/v1/core/users',
@@ -398,6 +403,7 @@ export const mockTreeArtifact: Artifact = {
   metadata: {
     artifact_type: 'tree',
     context_id: MOCK_CONTEXT_ID,
+    task_id: MOCK_TASK_ID,
     created_at: MOCK_CREATED_AT,
     rendering_hints: {
       expandable: true,

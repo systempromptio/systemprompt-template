@@ -75,4 +75,5 @@ pub struct ServiceInfo {
     pub status: String,
     pub pid: Option<i32>,
     pub port: u16,
+    pub binary_mtime: Option<i64>,
 }

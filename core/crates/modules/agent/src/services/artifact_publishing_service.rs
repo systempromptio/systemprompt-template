@@ -30,7 +30,7 @@ impl ArtifactPublishingService {
         Self {
             artifact_repo: ArtifactRepository::new(db_pool.clone()),
             skill_repo: SkillRepository::new(db_pool.clone()),
-            message_service: MessageService::new(db_pool.clone(), logger.clone()),
+            message_service: MessageService::new(db_pool, logger.clone()),
             logger,
         }
     }

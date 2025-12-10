@@ -29,7 +29,8 @@ impl SqlExecutor {
     /// Check if a table exists in `PostgreSQL`
     pub async fn table_exists(db: &Database, table_name: &str) -> Result<bool> {
         let query = format!(
-            "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '{table_name}')"
+            "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = \
+             '{table_name}')"
         );
 
         let result = db.query(&query).await?;
@@ -39,7 +40,8 @@ impl SqlExecutor {
     /// Check if a column exists in a `PostgreSQL` table
     pub async fn column_exists(db: &Database, table_name: &str, column_name: &str) -> Result<bool> {
         let query = format!(
-            "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = '{table_name}' AND column_name = '{column_name}')"
+            "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = \
+             '{table_name}' AND column_name = '{column_name}')"
         );
         let result = db.query(&query).await?;
 

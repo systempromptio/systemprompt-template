@@ -1,3 +1,4 @@
+use super::super::ToolModelConfig;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
@@ -8,6 +9,10 @@ pub struct McpTool {
     pub input_schema: Option<JsonValue>,
     pub output_schema: Option<JsonValue>,
     pub service_id: String,
+    #[serde(default)]
+    pub terminal_on_success: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_config: Option<ToolModelConfig>,
 }
 
 impl McpTool {
@@ -18,6 +23,8 @@ impl McpTool {
             input_schema: None,
             output_schema: None,
             service_id: service_id.into(),
+            terminal_on_success: false,
+            model_config: None,
         }
     }
 
@@ -33,6 +40,16 @@ impl McpTool {
 
     pub fn with_output_schema(mut self, schema: JsonValue) -> Self {
         self.output_schema = Some(schema);
+        self
+    }
+
+    pub const fn with_terminal_on_success(mut self, terminal: bool) -> Self {
+        self.terminal_on_success = terminal;
+        self
+    }
+
+    pub fn with_model_config(mut self, config: ToolModelConfig) -> Self {
+        self.model_config = Some(config);
         self
     }
 }

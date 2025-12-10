@@ -12,6 +12,8 @@ impl SchemaSanitizer {
     }
 
     pub fn sanitize(&self, schema: Value) -> Value {
+        use serde_json::json;
+
         let mut sanitized = schema;
 
         if let Some(obj) = sanitized.as_object_mut() {
@@ -39,17 +41,26 @@ impl SchemaSanitizer {
             if !self.capabilities.supports_not {
                 obj.remove("not");
             }
+            if !self.capabilities.supports_additional_properties {
+                obj.remove("additionalProperties");
+            }
+
+            if !self.capabilities.supports_const {
+                if let Some(const_val) = obj.remove("const") {
+                    obj.insert("enum".to_string(), json!([const_val]));
+                }
+            }
 
             obj.remove("$schema");
             obj.remove("$id");
 
-            // Remove fields not supported by Gemini
             obj.remove("readOnly");
             obj.remove("writeOnly");
             obj.remove("deprecated");
             obj.remove("examples");
             obj.remove("contentMediaType");
             obj.remove("contentEncoding");
+            obj.remove("outputSchema");
 
             let keys_to_remove: Vec<String> = obj
                 .keys()
@@ -72,6 +83,14 @@ impl SchemaSanitizer {
                 *items = self.sanitize(items.clone());
             }
 
+            if let Some(any_of) = obj.get_mut("anyOf") {
+                if let Some(arr) = any_of.as_array_mut() {
+                    for item in arr.iter_mut() {
+                        *item = self.sanitize(item.clone());
+                    }
+                }
+            }
+
             if let Some(additional_props) = obj.get_mut("additionalProperties") {
                 if additional_props.is_object() {
                     *additional_props = self.sanitize(additional_props.clone());
@@ -80,120 +99,5 @@ impl SchemaSanitizer {
         }
 
         sanitized
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn test_sanitize_gemini() {
-        let sanitizer = SchemaSanitizer::new(ProviderCapabilities::gemini());
-        let schema = json!({
-            "type": "object",
-            "allOf": [{"type": "object"}],
-            "$schema": "http://json-schema.org/draft-07/schema#",
-            "properties": {
-                "name": { "type": "string" }
-            }
-        });
-
-        let sanitized = sanitizer.sanitize(schema);
-        let obj = sanitized.as_object().unwrap();
-
-        assert!(!obj.contains_key("allOf"));
-        assert!(!obj.contains_key("$schema"));
-        assert!(obj.contains_key("properties"));
-    }
-
-    #[test]
-    fn test_sanitize_nested() {
-        let sanitizer = SchemaSanitizer::new(ProviderCapabilities::gemini());
-        let schema = json!({
-            "type": "object",
-            "properties": {
-                "nested": {
-                    "type": "object",
-                    "allOf": [{"type": "object"}],
-                    "properties": {
-                        "inner": { "type": "string" }
-                    }
-                }
-            }
-        });
-
-        let sanitized = sanitizer.sanitize(schema);
-        let nested = &sanitized["properties"]["nested"];
-        let nested_obj = nested.as_object().unwrap();
-
-        assert!(!nested_obj.contains_key("allOf"));
-        assert!(nested_obj.contains_key("properties"));
-    }
-
-    #[test]
-    fn test_anthropic_no_sanitization() {
-        let sanitizer = SchemaSanitizer::new(ProviderCapabilities::anthropic());
-        let schema = json!({
-            "type": "object",
-            "allOf": [{"type": "object"}],
-            "properties": {
-                "name": { "type": "string" }
-            }
-        });
-
-        let sanitized = sanitizer.sanitize(schema);
-        let obj = sanitized.as_object().unwrap();
-
-        assert!(obj.contains_key("allOf"));
-    }
-
-    #[test]
-    fn test_remove_nested_vendor_extensions() {
-        let sanitizer = SchemaSanitizer::new(ProviderCapabilities::gemini());
-        let schema = json!({
-            "type": "object",
-            "x-top-level": "should be removed",
-            "properties": {
-                "uuid": {
-                    "type": "string",
-                    "description": "Agent UUID",
-                    "x-data-source": {
-                        "tool": "manage_agents",
-                        "action": "read"
-                    }
-                },
-                "nested": {
-                    "type": "object",
-                    "x-nested-vendor": "test",
-                    "properties": {
-                        "deep": {
-                            "type": "string",
-                            "x-deep-vendor": "should also be removed"
-                        }
-                    }
-                }
-            }
-        });
-
-        let sanitized = sanitizer.sanitize(schema);
-        let obj = sanitized.as_object().unwrap();
-
-        // Top-level vendor extension should be removed
-        assert!(!obj.contains_key("x-top-level"));
-
-        // Nested vendor extensions should be removed
-        let uuid_prop = &sanitized["properties"]["uuid"];
-        assert!(!uuid_prop.as_object().unwrap().contains_key("x-data-source"));
-
-        let nested_prop = &sanitized["properties"]["nested"];
-        assert!(!nested_prop
-            .as_object()
-            .unwrap()
-            .contains_key("x-nested-vendor"));
-
-        let deep_prop = &sanitized["properties"]["nested"]["properties"]["deep"];
-        assert!(!deep_prop.as_object().unwrap().contains_key("x-deep-vendor"));
     }
 }

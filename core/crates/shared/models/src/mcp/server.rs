@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use crate::ai::ToolModelConfig;
 use crate::auth::{AuthenticatedUser, Permission};
 
 pub const RUNNING: &str = "running";
@@ -33,6 +35,10 @@ pub struct McpServerConfig {
     #[serde(default)]
     pub schemas: Vec<super::deployment::SchemaDefinition>,
     pub oauth: super::deployment::OAuthRequirement,
+    #[serde(default)]
+    pub tools: HashMap<String, super::deployment::ToolMetadata>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_config: Option<ToolModelConfig>,
     pub version: String,
     pub host: String,
     pub module_name: String,
@@ -78,6 +84,8 @@ impl McpServerConfig {
             capabilities: vec!["tools".to_string(), "prompts".to_string()],
             schemas: deployment.schemas.clone(),
             oauth: deployment.oauth.clone(),
+            tools: deployment.tools.clone(),
+            model_config: deployment.model_config.clone(),
             version: manifest.version.clone(),
             host: "127.0.0.1".to_string(),
             module_name: "mcp".to_string(),
@@ -106,6 +114,8 @@ impl McpServerConfig {
             capabilities: vec!["tools".to_string(), "prompts".to_string()],
             schemas: deployment.schemas.clone(),
             oauth: deployment.oauth.clone(),
+            tools: deployment.tools.clone(),
+            model_config: deployment.model_config.clone(),
             version: manifest.version.clone(),
             host: "127.0.0.1".to_string(),
             module_name: "mcp".to_string(),

@@ -1,7 +1,9 @@
 pub mod agent_config;
+pub mod scheduler;
 pub mod settings;
 
 pub use agent_config::*;
+pub use scheduler::*;
 pub use settings::*;
 
 use crate::mcp::Deployment;
@@ -16,6 +18,8 @@ pub struct PartialServicesConfig {
     pub agents: HashMap<String, AgentConfig>,
     #[serde(default)]
     pub mcp_servers: HashMap<String, Deployment>,
+    #[serde(default)]
+    pub scheduler: Option<SchedulerConfig>,
 }
 
 /// Complete merged services configuration
@@ -27,6 +31,8 @@ pub struct ServicesConfig {
     pub mcp_servers: HashMap<String, Deployment>,
     #[serde(default)]
     pub settings: Settings,
+    #[serde(default)]
+    pub scheduler: Option<SchedulerConfig>,
 }
 
 impl ServicesConfig {
@@ -193,7 +199,7 @@ mod tests {
         AgentConfig {
             name: name.to_string(),
             port,
-            endpoint: format!("http://localhost:{}", port),
+            endpoint: format!("http://localhost:{port}"),
             enabled: true,
             is_primary: false,
             default,

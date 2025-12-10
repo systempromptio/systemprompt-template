@@ -1,11 +1,9 @@
 use crate::models::modules::ModuleApiRegistry;
-use crate::services::{AnalyticsService, JwtService};
+use crate::services::AnalyticsService;
 use anyhow::Result;
-use chrono::Duration;
 use std::sync::Arc;
 use systemprompt_core_database::{Database, DbPool};
-use systemprompt_core_logging::LogService;
-use systemprompt_identifiers::{JwtToken, UserId};
+use systemprompt_core_logging::{CliService, LogService};
 use systemprompt_models::{Config, ContentConfig, RouteClassifier, SystemPaths};
 use systemprompt_traits::{AppContext as AppContextTrait, ConfigProvider, DatabaseHandle};
 
@@ -22,8 +20,6 @@ pub struct AppContext {
     #[allow(dead_code)]
     route_classifier: Arc<RouteClassifier>,
     analytics_service: Arc<AnalyticsService>,
-    admin_auth_token: JwtToken,
-    admin_user_id: UserId,
 }
 
 impl std::fmt::Debug for AppContext {
@@ -37,8 +33,6 @@ impl std::fmt::Debug for AppContext {
             .field("content_config", &self.content_config.is_some())
             .field("route_classifier", &"RouteClassifier")
             .field("analytics_service", &"AnalyticsService")
-            .field("admin_auth_token", &"JwtToken")
-            .field("admin_user_id", &self.admin_user_id.as_str())
             .finish()
     }
 }
@@ -64,20 +58,6 @@ impl AppContext {
             content_config.clone(),
         ));
 
-        let admin_user_id = UserId::system();
-        let admin_auth_token = JwtService::generate_admin_token(
-            &admin_user_id,
-            &config.jwt_secret,
-            Duration::days(365),
-        )?;
-
-        log.info(
-            "security",
-            "Generated admin JWT token for system operations",
-        )
-        .await
-        .ok();
-
         Ok(Self {
             config,
             database,
@@ -87,24 +67,24 @@ impl AppContext {
             content_config,
             route_classifier,
             analytics_service,
-            admin_auth_token,
-            admin_user_id,
         })
     }
 
     fn load_geoip_database() -> Option<GeoIpReader> {
         let Ok(geoip_path) = std::env::var("GEOIP_DATABASE_PATH") else {
-            eprintln!("⚠ Warning: GEOIP_DATABASE_PATH not set - geographic data will not be available");
+            CliService::warning(
+                "GEOIP_DATABASE_PATH not set - geographic data will not be available",
+            );
             return None;
         };
 
         match maxminddb::Reader::open_readfile(&geoip_path) {
             Ok(reader) => Some(Arc::new(reader)),
             Err(e) => {
-                eprintln!(
-                    "⚠ Warning: Could not load GeoIP database from {geoip_path}: {e}"
-                );
-                eprintln!("  Geographic data (country/region/city) will not be available.");
+                CliService::warning(&format!(
+                    "Could not load GeoIP database from {geoip_path}: {e}"
+                ));
+                CliService::info("  Geographic data (country/region/city) will not be available.");
                 None
             },
         }
@@ -116,12 +96,12 @@ impl AppContext {
         match ContentConfig::load_from_file(&content_config_path) {
             Ok(content_cfg) => Some(Arc::new(content_cfg)),
             Err(e) => {
-                eprintln!(
-                    "⚠ Warning: Could not load content config from {}: {}",
+                CliService::warning(&format!(
+                    "Could not load content config from {}: {}",
                     content_config_path.display(),
                     e
-                );
-                eprintln!("  Landing page detection will not be available.");
+                ));
+                CliService::info("  Landing page detection will not be available.");
                 None
             },
         }
@@ -177,14 +157,6 @@ impl AppContext {
 
     pub const fn route_classifier(&self) -> &Arc<RouteClassifier> {
         &self.route_classifier
-    }
-
-    pub const fn admin_auth_token(&self) -> &JwtToken {
-        &self.admin_auth_token
-    }
-
-    pub const fn admin_user_id(&self) -> &UserId {
-        &self.admin_user_id
     }
 }
 

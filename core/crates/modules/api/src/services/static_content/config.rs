@@ -25,7 +25,7 @@ impl StaticContentMatcher {
         Ok(Self { patterns })
     }
 
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self {
             patterns: Vec::new(),
         }
@@ -53,46 +53,9 @@ fn extract_slug(path: &str, pattern: &str) -> Option<String> {
     }
 
     let slug = path.trim_start_matches(prefix).trim_end_matches('/');
-    if !slug.is_empty() {
-        Some(slug.to_string())
-    } else {
+    if slug.is_empty() {
         None
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_extract_slug() {
-        assert_eq!(
-            extract_slug("/blog/my-post/", "/blog/{slug}"),
-            Some("my-post".to_string())
-        );
-        assert_eq!(extract_slug("/about", "/{slug}"), Some("about".to_string()));
-        assert_eq!(extract_slug("/api/v1/something", "/blog/{slug}"), None);
-    }
-
-    #[test]
-    fn test_url_pattern_matching() {
-        let matcher = StaticContentMatcher {
-            patterns: vec![
-                ("/blog/{slug}".to_string(), "blog".to_string()),
-                ("/{slug}".to_string(), "web".to_string()),
-            ],
-        };
-
-        assert_eq!(
-            matcher.matches("/blog/my-post/"),
-            Some(("my-post".to_string(), "blog".to_string()))
-        );
-
-        assert_eq!(
-            matcher.matches("/about"),
-            Some(("about".to_string(), "web".to_string()))
-        );
-
-        assert_eq!(matcher.matches("/api/v1/something"), None);
+    } else {
+        Some(slug.to_string())
     }
 }

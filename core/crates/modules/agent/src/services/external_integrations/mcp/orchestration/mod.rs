@@ -1,3 +1,3 @@
 pub mod loader;
 
-pub use loader::McpSkillLoader;
+pub use loader::McpToolLoader;

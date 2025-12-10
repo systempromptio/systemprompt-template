@@ -13,8 +13,14 @@ impl ProtocolHandler for McpProtocol {
     }
 }
 
+impl Default for McpProtocol {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl McpProtocol {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }

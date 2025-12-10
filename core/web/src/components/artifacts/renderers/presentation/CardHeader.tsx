@@ -55,12 +55,12 @@ export const CardHeader = React.memo(function CardHeader({ cardData }: CardHeade
         )}
         <div className="flex-1">
           {cardData.title && (
-            <h2 className="font-heading text-[var(--font-size-xxl)] font-bold text-primary mb-[var(--spacing-sm)] uppercase">
+            <h2 className="font-heading text-3xl font-bold text-primary mb-[var(--spacing-sm)]">
               {cardData.title}
             </h2>
           )}
           {cardData.subtitle && (
-            <p className="font-body text-[var(--font-size-lg)] text-text-secondary leading-relaxed">
+            <p className="font-body text-lg text-text-secondary leading-relaxed">
               {cardData.subtitle}
             </p>
           )}

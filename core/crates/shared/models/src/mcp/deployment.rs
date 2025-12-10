@@ -1,6 +1,15 @@
+use crate::ai::ToolModelConfig;
 use crate::auth::{JwtAudience, Permission};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ToolMetadata {
+    #[serde(default)]
+    pub terminal_on_success: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_config: Option<ToolModelConfig>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentConfig {
@@ -20,6 +29,10 @@ pub struct Deployment {
     #[serde(default)]
     pub schemas: Vec<SchemaDefinition>,
     pub oauth: OAuthRequirement,
+    #[serde(default)]
+    pub tools: HashMap<String, ToolMetadata>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_config: Option<ToolModelConfig>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

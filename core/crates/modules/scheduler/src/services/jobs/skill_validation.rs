@@ -32,10 +32,7 @@ pub async fn validate_agent_skill_references(db_pool: &DbPool, logger: &LogServi
     logger
         .info(
             "scheduler",
-            &format!(
-                "Found {} ingested skills in database",
-                ingested_skill_ids.len()
-            ),
+            &format!("Skills found | count={}", ingested_skill_ids.len()),
         )
         .await
         .ok();
@@ -69,7 +66,7 @@ pub async fn validate_agent_skill_references(db_pool: &DbPool, logger: &LogServi
                     logger
                         .warn(
                             "scheduler",
-                            &format!("Failed to read agent config {}: {}", agent_name, e),
+                            &format!("Failed to read agent config {agent_name}: {e}"),
                         )
                         .await
                         .ok();
@@ -81,10 +78,7 @@ pub async fn validate_agent_skill_references(db_pool: &DbPool, logger: &LogServi
     logger
         .info(
             "scheduler",
-            &format!(
-                "Found {} skill references in agent configs",
-                referenced_skills.len()
-            ),
+            &format!("Skill refs found | count={}", referenced_skills.len()),
         )
         .await
         .ok();
@@ -127,7 +121,7 @@ async fn process_agent_config(
             logger
                 .warn(
                     "scheduler",
-                    &format!("Failed to parse agent config {}: {}", agent_name, e),
+                    &format!("Failed to parse agent config {agent_name}: {e}"),
                 )
                 .await
                 .ok();

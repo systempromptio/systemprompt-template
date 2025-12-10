@@ -1,7 +1,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct UserContext {
     pub context_id: String,
     pub user_id: String,
@@ -10,7 +11,7 @@ pub struct UserContext {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct UserContextWithStats {
     pub context_id: String,
     pub user_id: String,
@@ -121,7 +122,7 @@ impl ContextStateEvent {
         }
     }
 
-    pub fn timestamp(&self) -> DateTime<Utc> {
+    pub const fn timestamp(&self) -> DateTime<Utc> {
         match self {
             Self::ToolExecutionCompleted { timestamp, .. } => *timestamp,
             Self::TaskStatusChanged { timestamp, .. } => *timestamp,

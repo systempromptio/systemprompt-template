@@ -10,6 +10,10 @@ description = "SystemPrompt OS - Unified CLI for agent orchestration, AI operati
 name = "systemprompt"
 path = "src/main.rs"
 
+[[bin]]
+name = "systemprompt-build"
+path = "src/bin/systemprompt-build.rs"
+
 [dependencies]
 # Core runtime
 tokio = { workspace = true }
@@ -44,7 +48,11 @@ inventory = { workspace = true }
 dotenv = { workspace = true }
 dotenvy = { workspace = true }
 uuid = { workspace = true }
+reqwest = { workspace = true }
 atty = "0.2"
+dialoguer = { workspace = true }
+sha2 = { workspace = true }
+walkdir = { workspace = true }
 
 [[test]]
 name = "integration"
@@ -83,6 +91,7 @@ members = [
     "crates/modules/mcp",
     "crates/modules/ai",
     "crates/modules/blog",
+    "crates/modules/files",
     "crates/modules/scheduler",
 ]
 resolver = "2"
@@ -91,7 +100,7 @@ resolver = "2"
 edition = "2021"
 authors = ["SystemPrompt Team"]
 license = "Apache-2.0"
-version = "0.0.9"
+version = "0.1.1"
 repository = "https://github.com/systempromptio/systemprompt-core"
 homepage = "https://systemprompt.io"
 documentation = "https://docs.systemprompt.io"
@@ -111,6 +120,7 @@ cast_sign_loss = "allow"
 cast_precision_loss = "allow"
 cast_possible_wrap = "allow"
 format_push_string = "allow"
+uninlined_format_args = "allow"
 result_unit_err = "allow"
 perf = { level = "warn", priority = -1 }
 suspicious = { level = "deny", priority = -1 }

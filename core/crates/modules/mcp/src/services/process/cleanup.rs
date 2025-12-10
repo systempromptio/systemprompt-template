@@ -11,9 +11,7 @@ pub async fn terminate_gracefully(pid: u32) -> Result<()> {
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        CliService::warning(&format!(
-            "⚠️ Failed to send SIGTERM to PID {pid}: {stderr}"
-        ));
+        CliService::warning(&format!("⚠️ Failed to send SIGTERM to PID {pid}: {stderr}"));
     }
 
     Ok(())

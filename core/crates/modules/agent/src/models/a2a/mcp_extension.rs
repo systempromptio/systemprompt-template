@@ -10,7 +10,7 @@ use systemprompt_models::ai::tools::McpTool;
 ///
 /// Used in `systemprompt:mcp-integration` extension to communicate
 /// available MCP servers to API consumers.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct McpServerMetadata {
     /// MCP server name (e.g., "systemprompt-admin")

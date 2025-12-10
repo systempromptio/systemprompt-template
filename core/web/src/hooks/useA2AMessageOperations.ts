@@ -37,7 +37,7 @@ type A2AStreamEventData = Message | Task | TaskStatusUpdateEvent | TaskArtifactU
 export function useA2AMessageOperations(
   client: A2AService | null,
   ensureClientReady: () => Promise<boolean>,
-  onError: (error: Error) => void
+  onError: (error: Error | null) => void
 ) {
   const currentContextId = useContextStore((state) => state.currentContextId)
   const hasReceivedSnapshot = useContextStore((state) => state.hasReceivedSnapshot)
@@ -56,7 +56,7 @@ export function useA2AMessageOperations(
       }
 
       try {
-        onError(null as any)
+        onError(null)
         const contextId = currentContextId === CONTEXT_STATE.LOADING ? undefined : currentContextId
         const response = await client!.sendMessage(text, files, contextId || undefined)
         return response
@@ -83,7 +83,7 @@ export function useA2AMessageOperations(
       }
 
       try {
-        onError(null as any)
+        onError(null)
         const contextId = currentContextId === CONTEXT_STATE.LOADING ? undefined : currentContextId
         for await (const event of client!.streamMessage(text, contextId || undefined, clientMessageId)) {
           yield event
@@ -105,7 +105,7 @@ export function useA2AMessageOperations(
       }
 
       try {
-        onError(null as any)
+        onError(null)
         return await client!.getTask(taskId)
       } catch (err) {
         const errorToSet = err instanceof Error ? err : new Error(typeof err === 'string' ? err : 'Failed to get task')
@@ -124,7 +124,7 @@ export function useA2AMessageOperations(
       }
 
       try {
-        onError(null as any)
+        onError(null)
         return await client!.cancelTask(taskId)
       } catch (err) {
         const errorToSet = err instanceof Error ? err : new Error(typeof err === 'string' ? err : 'Failed to cancel task')

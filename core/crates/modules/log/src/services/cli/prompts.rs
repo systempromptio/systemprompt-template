@@ -1,10 +1,9 @@
 use anyhow::Result;
-use dialoguer::{theme::ColorfulTheme, Confirm};
+use dialoguer::theme::ColorfulTheme;
+use dialoguer::Confirm;
 
-use crate::services::cli::{
-    display::{CollectionDisplay, Display, DisplayUtils, StatusDisplay},
-    theme::MessageLevel,
-};
+use crate::services::cli::display::{CollectionDisplay, Display, DisplayUtils, StatusDisplay};
+use crate::services::cli::theme::MessageLevel;
 #[derive(Debug, Copy, Clone)]
 pub struct Prompts;
 

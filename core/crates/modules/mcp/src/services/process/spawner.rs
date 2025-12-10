@@ -38,10 +38,15 @@ pub async fn spawn_server(_manager: &ProcessManager, config: &McpServerConfig) -
         .open(&log_file_path)
         .with_context(|| format!("Failed to create log file: {}", log_file_path.display()))?;
 
+    let tools_config_json = serde_json::to_string(&config.tools).unwrap_or_default();
+    let server_model_config_json = serde_json::to_string(&config.model_config).unwrap_or_default();
+
     let child = Command::new(&binary_path)
         .env("DATABASE_URL", &config_global.database_url)
         .env("DATABASE_TYPE", &config_global.database_type)
         .env("API_SERVER_URL", &config_global.api_server_url)
+        .env("MCP_TOOLS_CONFIG", &tools_config_json)
+        .env("MCP_SERVER_MODEL_CONFIG", &server_model_config_json)
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::from(log_file))
         .stdin(std::process::Stdio::null())

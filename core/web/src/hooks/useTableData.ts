@@ -7,7 +7,7 @@
  */
 
 import { useState, useMemo } from 'react'
-import type { TableHints } from '@/types/artifacts'
+import type { TableHints } from '@/types/artifact'
 
 interface UseTableDataProps {
   rows: unknown[]

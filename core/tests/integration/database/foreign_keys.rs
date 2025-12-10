@@ -37,7 +37,8 @@ async fn test_foreign_keys_enforced() -> Result<()> {
 async fn test_foreign_keys_exist() -> Result<()> {
     let ctx = TestContext::new().await?;
 
-    let query = "SELECT COUNT(*) as fk_count FROM information_schema.table_constraints WHERE table_schema = 'public' AND constraint_type = 'FOREIGN KEY'";
+    let query = "SELECT COUNT(*) as fk_count FROM information_schema.table_constraints WHERE \
+                 table_schema = 'public' AND constraint_type = 'FOREIGN KEY'";
     let rows = ctx.db.fetch_all(&query, &[]).await?;
     let fk_count = rows[0]
         .get("fk_count")

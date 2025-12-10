@@ -4,25 +4,22 @@ use std::sync::Arc;
 use systemprompt_core_agent::SkillIngestionService;
 use systemprompt_core_blog::GenericIngestionService;
 use systemprompt_core_database::{DatabaseProvider, DbPool};
-use systemprompt_core_logging::LogService;
+use systemprompt_core_logging::{LogLevel, LogService};
 use systemprompt_core_system::AppContext;
 use systemprompt_models::ContentConfig;
 
+use super::file_ingestion::ingest_files;
 use super::skill_validation::validate_agent_skill_references;
-
-const DEFAULT_ALLOWED_CONTENT_TYPES: &[&str] =
-    &["article", "post", "page", "blog", "documentation"];
 
 pub async fn ingest_content(
     db_pool: DbPool,
     logger: LogService,
     _app_context: Arc<AppContext>,
 ) -> Result<()> {
+    let start_time = std::time::Instant::now();
+
     logger
-        .info(
-            "scheduler",
-            "Starting scheduled content and skills ingestion",
-        )
+        .info("scheduler", "Job started | job=content_ingestion")
         .await
         .ok();
 
@@ -30,10 +27,10 @@ pub async fn ingest_content(
         .unwrap_or_else(|_| "crates/services/content/config.yml".to_string());
 
     let config = ContentConfig::load_from_file(&config_path)
-        .with_context(|| format!("Failed to load config: {}", config_path))?;
+        .with_context(|| format!("Failed to load config: {config_path}"))?;
 
     let db_provider: Arc<dyn DatabaseProvider> = db_pool.clone();
-    let generic_ingestion_service = GenericIngestionService::new(db_provider.clone());
+    let generic_ingestion_service = GenericIngestionService::new(db_pool.clone());
     let skill_ingestion_service = SkillIngestionService::new(db_provider);
 
     let sources_to_ingest: Vec<_> = config
@@ -51,7 +48,7 @@ pub async fn ingest_content(
     }
 
     logger
-        .info(
+        .debug(
             "scheduler",
             &format!("Processing {} content source(s)", sources_to_ingest.len()),
         )
@@ -62,14 +59,11 @@ pub async fn ingest_content(
     let mut total_errors = 0;
 
     for (source_name, source_config) in sources_to_ingest {
-        let icon = if is_skill_source(source_name) {
-            "🎯"
-        } else {
-            "📂"
-        };
-        println!("{} Ingesting source: {}", icon, source_name);
         logger
-            .info("scheduler", &format!("Ingesting source: {}", source_name))
+            .debug(
+                "scheduler",
+                &format!("Ingesting source | source={source_name}"),
+            )
             .await
             .ok();
 
@@ -81,29 +75,40 @@ pub async fn ingest_content(
 
         if !content_path.exists() {
             let err = format!("Source path not found: {}", content_path.display());
-            println!("   ⚠️  {}", err);
             logger.warn("scheduler", &err).await.ok();
             total_errors += 1;
             continue;
         }
+
+        let override_existing = source_config
+            .indexing
+            .map(|i| i.override_existing)
+            .unwrap_or(false);
 
         let report = if is_skill_source(source_name) {
             skill_ingestion_service
                 .ingest_directory(
                     &content_path,
                     systemprompt_identifiers::SourceId::new(&source_config.source_id),
+                    override_existing,
                 )
                 .await
         } else {
-            let allowed_types: Vec<&str> = if source_config.allowed_content_types.is_empty() {
-                DEFAULT_ALLOWED_CONTENT_TYPES.to_vec()
-            } else {
-                source_config
-                    .allowed_content_types
-                    .iter()
-                    .map(|s| s.as_str())
-                    .collect()
-            };
+            if source_config.allowed_content_types.is_empty() {
+                let err = format!(
+                    "Content source '{}' has no allowed_content_types configured",
+                    source_name
+                );
+                logger.error("scheduler", &err).await.ok();
+                total_errors += 1;
+                continue;
+            }
+
+            let allowed_types: Vec<&str> = source_config
+                .allowed_content_types
+                .iter()
+                .map(|s| s.as_str())
+                .collect();
 
             generic_ingestion_service
                 .ingest_directory(
@@ -111,6 +116,7 @@ pub async fn ingest_content(
                     source_config.source_id.clone(),
                     source_config.category_id.clone(),
                     &allowed_types,
+                    override_existing,
                 )
                 .await
         };
@@ -120,37 +126,39 @@ pub async fn ingest_content(
                 total_processed += report.files_processed;
                 total_errors += report.errors.len();
 
-                let summary = format!(
-                    "✅ {} files found\n   ✅ {} files processed",
-                    report.files_found, report.files_processed
-                );
-                println!("   {}", summary);
-
                 if !report.errors.is_empty() {
-                    println!("   ⚠️  {} errors encountered:", report.errors.len());
                     for error in &report.errors {
-                        println!("      - {}", error);
                         logger.warn("scheduler", error).await.ok();
                     }
                 }
 
                 logger
-                    .info(
+                    .log(
+                        LogLevel::Debug,
                         "scheduler",
                         &format!(
-                            "Source '{}' complete: {} files found, {} files processed, {} errors",
+                            "Source ingested | source={}, files_found={}, files_processed={}, \
+                             errors={}",
                             source_name,
                             report.files_found,
                             report.files_processed,
                             report.errors.len()
                         ),
+                        Some(serde_json::json!({
+                            "source": source_name,
+                            "files_found": report.files_found,
+                            "files_processed": report.files_processed,
+                            "error_count": report.errors.len(),
+                        })),
                     )
                     .await
                     .ok();
             },
             Err(e) => {
-                let err_msg = format!("Source '{}' failed: {}", source_name, e);
-                println!("   ❌ {}", err_msg);
+                let err_msg = format!(
+                    "Source ingestion failed | source={}, error={}",
+                    source_name, e
+                );
                 logger.error("scheduler", &err_msg).await.ok();
                 total_errors += 1;
             },
@@ -158,33 +166,41 @@ pub async fn ingest_content(
     }
 
     logger
-        .info(
+        .log(
+            LogLevel::Info,
             "scheduler",
             &format!(
-                "Content and skills ingestion complete: {} files processed, {} errors",
+                "Job completed | job=content_ingestion, files_processed={}, errors={}",
                 total_processed, total_errors
             ),
+            Some(serde_json::json!({
+                "job_name": "content_ingestion",
+                "files_processed": total_processed,
+                "errors": total_errors,
+                "sources_count": total_processed + total_errors,
+                "duration_ms": start_time.elapsed().as_millis(),
+            })),
         )
         .await
         .ok();
 
-    logger
-        .info("scheduler", "Validating agent skill references...")
-        .await
-        .ok();
+    // Ingest files from the images directory
+    if let Err(e) = ingest_files(db_pool.clone(), logger.clone()).await {
+        logger
+            .error("scheduler", &format!("File ingestion failed: {e}"))
+            .await
+            .ok();
+    }
 
     match validate_agent_skill_references(&db_pool, &logger).await {
         Ok(()) => {
             logger
-                .info(
-                    "scheduler",
-                    "All agent skill references validated successfully",
-                )
+                .debug("scheduler", "Skill references validated | status=success")
                 .await
                 .ok();
         },
         Err(e) => {
-            let err_msg = format!("FATAL: Agent skill validation failed: {}", e);
+            let err_msg = format!("Skill validation failed | error={e}");
             logger.error("scheduler", &err_msg).await.ok();
             println!("{}", err_msg);
             return Err(e);

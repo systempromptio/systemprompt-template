@@ -1,10 +1,8 @@
 use anyhow::Result;
-use axum::{
-    extract::{Query, State},
-    http::{HeaderMap, StatusCode},
-    response::{IntoResponse, Redirect},
-    Json,
-};
+use axum::extract::{Query, State};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::{IntoResponse, Redirect};
+use axum::Json;
 use serde::{Deserialize, Serialize};
 
 use crate::repository::OAuthRepository;
@@ -61,43 +59,24 @@ pub async fn handle_webauthn_complete(
             .into_response();
     };
 
-    // Get user repository
-    eprintln!("DEBUG: Creating UserRepository");
     let user_repo = UserRepository::new(ctx.db_pool().clone());
 
-    // Validate user exists and get user details
-    eprintln!("DEBUG: Calling get_by_id for user_id: {}", params.user_id);
     match user_repo.get_by_id(&params.user_id).await {
         Ok(Some(_)) => {
-            eprintln!("DEBUG: User found successfully");
-            // Generate authorization code
             let authorization_code = generate_secure_token("auth_code");
-            eprintln!("DEBUG: Generated auth code, calling store_authorization_code");
 
-            // Store authorization code in database
             match store_authorization_code(&repo, &authorization_code, &params).await {
                 Ok(()) => {
-                    eprintln!("DEBUG: Auth code stored successfully");
-                    // Create response with proper response_mode support
-                    create_successful_response(
-                        &headers,
-                        redirect_uri,
-                        &authorization_code,
-                        &params,
-                    )
+                    create_successful_response(&headers, redirect_uri, &authorization_code, &params)
                 },
-                Err(error) => {
-                    eprintln!("DEBUG: Error storing auth code: {error:?}");
-                    eprintln!("DEBUG: Error chain: {error:#}");
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(WebAuthnCompleteError {
-                            error: "server_error".to_string(),
-                            error_description: error.to_string(),
-                        }),
-                    )
-                        .into_response()
-                },
+                Err(error) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(WebAuthnCompleteError {
+                        error: "server_error".to_string(),
+                        error_description: error.to_string(),
+                    }),
+                )
+                    .into_response(),
             }
         },
         Ok(None) => (
@@ -109,9 +88,6 @@ pub async fn handle_webauthn_complete(
         )
             .into_response(),
         Err(error) => {
-            eprintln!("DEBUG: Error from get_by_id: {error:?}");
-            eprintln!("DEBUG: Error chain: {error:#}");
-
             let status_code = if error.to_string().contains("User not found") {
                 StatusCode::UNAUTHORIZED
             } else {

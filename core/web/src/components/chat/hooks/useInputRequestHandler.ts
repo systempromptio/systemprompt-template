@@ -1,5 +1,5 @@
-import { useChatStore } from '@/stores/chat.store'
-import type { InputRequest } from '@/stores/chat.store'
+import { useUIStateStore } from '@/stores/ui-state.store'
+import type { InputRequest } from '@/stores/ui-state.store'
 
 interface UseInputRequestHandlerReturn {
   currentInputRequest: InputRequest | undefined
@@ -8,15 +8,10 @@ interface UseInputRequestHandlerReturn {
 }
 
 export function useInputRequestHandler(): UseInputRequestHandlerReturn {
-  const {
-    resolveInputRequest,
-    pendingInputRequestsById,
-    pendingInputRequestIds,
-  } = useChatStore()
+  const resolveInputRequest = useUIStateStore((s) => s.resolveInputRequest)
+  const getFirstPendingInputRequest = useUIStateStore((s) => s.getFirstPendingInputRequest)
 
-  const currentInputRequest: InputRequest | undefined = pendingInputRequestIds.length > 0
-    ? pendingInputRequestsById[pendingInputRequestIds[0]]
-    : undefined
+  const currentInputRequest = getFirstPendingInputRequest()
 
   const handleInputResponse = async (response: string, onSendMessage: (text: string, files?: File[]) => Promise<void>) => {
     if (!currentInputRequest) {

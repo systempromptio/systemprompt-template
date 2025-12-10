@@ -30,7 +30,8 @@ async fn test_primary_keys_enforced() -> Result<()> {
 async fn test_unique_constraints_enforced() -> Result<()> {
     let ctx = TestContext::new().await?;
 
-    let query = "SELECT COUNT(*) as unique_count FROM information_schema.table_constraints WHERE table_schema = 'public' AND constraint_type = 'UNIQUE'";
+    let query = "SELECT COUNT(*) as unique_count FROM information_schema.table_constraints WHERE \
+                 table_schema = 'public' AND constraint_type = 'UNIQUE'";
     let rows = ctx.db.fetch_all(&query, &[]).await?;
     let unique_count = rows[0]
         .get("unique_count")
@@ -47,7 +48,8 @@ async fn test_unique_constraints_enforced() -> Result<()> {
 async fn test_not_null_constraints_enforced() -> Result<()> {
     let ctx = TestContext::new().await?;
 
-    let query = "SELECT COUNT(*) as not_null_count FROM information_schema.columns WHERE table_schema = 'public' AND is_nullable = 'NO'";
+    let query = "SELECT COUNT(*) as not_null_count FROM information_schema.columns WHERE \
+                 table_schema = 'public' AND is_nullable = 'NO'";
     let rows = ctx.db.fetch_all(&query, &[]).await?;
     let not_null_count = rows[0]
         .get("not_null_count")
@@ -64,7 +66,8 @@ async fn test_not_null_constraints_enforced() -> Result<()> {
 async fn test_all_primary_keys_exist() -> Result<()> {
     let ctx = TestContext::new().await?;
 
-    let query = "SELECT COUNT(*) as pk_count FROM information_schema.table_constraints WHERE table_schema = 'public' AND constraint_type = 'PRIMARY KEY'";
+    let query = "SELECT COUNT(*) as pk_count FROM information_schema.table_constraints WHERE \
+                 table_schema = 'public' AND constraint_type = 'PRIMARY KEY'";
     let rows = ctx.db.fetch_all(&query, &[]).await?;
     let pk_count = rows[0]
         .get("pk_count")

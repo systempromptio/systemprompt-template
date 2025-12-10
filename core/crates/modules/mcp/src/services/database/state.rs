@@ -1,7 +1,24 @@
 use super::ServiceInfo;
 use crate::McpServerConfig;
 use anyhow::Result;
+use std::path::Path;
+use systemprompt_core_system::BinaryPaths;
 use systemprompt_models::repository::ServiceRepository;
+
+pub fn get_binary_mtime(binary_path: &Path) -> Option<i64> {
+    binary_path
+        .metadata()
+        .ok()
+        .and_then(|m| m.modified().ok())
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_secs() as i64)
+}
+
+pub fn get_binary_mtime_for_service(service_name: &str) -> Option<i64> {
+    BinaryPaths::resolve_binary(service_name)
+        .ok()
+        .and_then(|path| get_binary_mtime(path.as_path()))
+}
 
 pub async fn register_service(
     db_pool: &systemprompt_core_database::DbPool,
@@ -13,13 +30,14 @@ pub async fn register_service(
 
     let repo = ServiceRepository::new(db_pool.clone());
 
-    // Register service: create with status='running' and store PID
+    let binary_mtime = get_binary_mtime_for_service(&config.name);
+
     CliService::info(&format!(
-        "📝 Registering MCP service '{}' (PID: {}, port: {})",
-        config.name, pid, config.port
+        "📝 Registering MCP service '{}' (PID: {}, port: {}, binary_mtime: {:?})",
+        config.name, pid, config.port, binary_mtime
     ));
 
-    repo.create_service(&config.name, "mcp", "running", config.port)
+    repo.create_service(&config.name, "mcp", "running", config.port, binary_mtime)
         .await
         .map_err(|e| {
             CliService::error(&format!(
@@ -67,6 +85,7 @@ pub async fn get_service_by_name(
         status: r.status,
         pid: r.pid,
         port: r.port as u16,
+        binary_mtime: r.binary_mtime,
     }))
 }
 
@@ -109,7 +128,9 @@ pub async fn register_existing_process(
 ) -> Result<String> {
     let repo = ServiceRepository::new(db_pool.clone());
 
-    repo.create_service(&config.name, "mcp", "running", config.port)
+    let binary_mtime = get_binary_mtime_for_service(&config.name);
+
+    repo.create_service(&config.name, "mcp", "running", config.port, binary_mtime)
         .await?;
 
     repo.update_service_pid(&config.name, pid as i32).await?;

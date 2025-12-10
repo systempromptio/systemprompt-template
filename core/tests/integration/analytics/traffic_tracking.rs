@@ -51,13 +51,15 @@ async fn test_request_count_increments_with_multiple_requests() -> Result<()> {
 
     assert!(
         request_count > 0,
-        "CRITICAL BUG: request_count is 0 when {} requests were made. This causes 'Total Requests: 0' in production dashboard.",
+        "CRITICAL BUG: request_count is 0 when {} requests were made. This causes 'Total \
+         Requests: 0' in production dashboard.",
         5
     );
 
     assert_eq!(
         request_count, 5,
-        "CRITICAL BUG: request_count should be 5 (made 5 requests), but got {}. This causes incorrect 'Total Requests' in production.",
+        "CRITICAL BUG: request_count should be 5 (made 5 requests), but got {}. This causes \
+         incorrect 'Total Requests' in production.",
         request_count
     );
 
@@ -105,7 +107,8 @@ async fn test_duration_seconds_calculated_after_activity() -> Result<()> {
     if let Some(duration) = duration_seconds {
         assert!(
             duration > 0,
-            "CRITICAL BUG: duration_seconds is {} when session had activity spanning {} seconds. This causes 'Avg Session Duration: 0.0s' in production.",
+            "CRITICAL BUG: duration_seconds is {} when session had activity spanning {} seconds. \
+             This causes 'Avg Session Duration: 0.0s' in production.",
             duration,
             3
         );
@@ -117,7 +120,8 @@ async fn test_duration_seconds_calculated_after_activity() -> Result<()> {
         if let (Some(started), Some(last_activity)) = (started_at, last_activity_at) {
             assert_ne!(
                 started, last_activity,
-                "WARNING: started_at and last_activity_at are the same despite 3 second delay. Session tracking may not be updating properly."
+                "WARNING: started_at and last_activity_at are the same despite 3 second delay. \
+                 Session tracking may not be updating properly."
             );
 
             // Check that the traffic summary query can calculate duration
@@ -131,22 +135,26 @@ async fn test_duration_seconds_calculated_after_activity() -> Result<()> {
                     .unwrap_or(0.0);
 
                 println!(
-                    "INFO: duration_seconds is NULL but avg_session_duration_secs from traffic query is {}",
+                    "INFO: duration_seconds is NULL but avg_session_duration_secs from traffic \
+                     query is {}",
                     avg_duration_secs
                 );
 
-                // This is the critical check - if duration is NULL, the query should still compute it
-                // If this fails, it means the production dashboard will show "0.0s"
+                // This is the critical check - if duration is NULL, the query should still
+                // compute it If this fails, it means the production dashboard
+                // will show "0.0s"
                 if avg_duration_secs == 0.0 {
                     println!(
-                        "WARNING: Even though last_activity_at ({}) != started_at ({}), avg duration is still 0.0",
+                        "WARNING: Even though last_activity_at ({}) != started_at ({}), avg \
+                         duration is still 0.0",
                         last_activity, started
                     );
                 }
             }
         } else {
             panic!(
-                "CRITICAL BUG: duration_seconds is NULL and cannot verify timestamp difference. Production dashboard will show 'Avg Session Duration: 0.0s'"
+                "CRITICAL BUG: duration_seconds is NULL and cannot verify timestamp difference. \
+                 Production dashboard will show 'Avg Session Duration: 0.0s'"
             );
         }
     }
@@ -181,18 +189,21 @@ async fn test_landing_page_not_null() -> Result<()> {
 
     assert!(
         landing_page.is_some(),
-        "CRITICAL BUG: landing_page is NULL for HTML page request. This causes '(not set)' in production dashboard under 'Top Landing Pages'."
+        "CRITICAL BUG: landing_page is NULL for HTML page request. This causes '(not set)' in \
+         production dashboard under 'Top Landing Pages'."
     );
 
     let landing_page_value = landing_page.unwrap();
     assert!(
         !landing_page_value.is_empty(),
-        "CRITICAL BUG: landing_page is empty string. This causes '(not set)' in production dashboard."
+        "CRITICAL BUG: landing_page is empty string. This causes '(not set)' in production \
+         dashboard."
     );
 
     assert_eq!(
         landing_page_value, "/",
-        "CRITICAL BUG: landing_page should be '/' but got '{}'. Production dashboard will show incorrect landing pages.",
+        "CRITICAL BUG: landing_page should be '/' but got '{}'. Production dashboard will show \
+         incorrect landing pages.",
         landing_page_value
     );
 
@@ -236,7 +247,8 @@ async fn test_traffic_summary_query_returns_nonzero_metrics() -> Result<()> {
 
     assert!(
         total_sessions > 0,
-        "CRITICAL BUG: total_sessions is 0 when we created traffic. Production dashboard will show no sessions."
+        "CRITICAL BUG: total_sessions is 0 when we created traffic. Production dashboard will \
+         show no sessions."
     );
 
     // Check total_requests - THIS IS THE MAIN BUG REPORTED
@@ -247,7 +259,8 @@ async fn test_traffic_summary_query_returns_nonzero_metrics() -> Result<()> {
 
     assert!(
         total_requests > 0,
-        "CRITICAL BUG: total_requests is 0 when requests were made. This is the exact bug reported in production: 'Total Requests: 0'"
+        "CRITICAL BUG: total_requests is 0 when requests were made. This is the exact bug \
+         reported in production: 'Total Requests: 0'"
     );
 
     // NOTE: We can't assert exact count because this query aggregates ALL sessions
@@ -264,8 +277,8 @@ async fn test_traffic_summary_query_returns_nonzero_metrics() -> Result<()> {
         .and_then(|v| v.as_f64())
         .unwrap_or(0.0);
 
-    // Duration might be 0 if session hasn't ended or if duration calculation is broken
-    // We can't assert > 0 here reliably, but we should log it
+    // Duration might be 0 if session hasn't ended or if duration calculation is
+    // broken We can't assert > 0 here reliably, but we should log it
     println!(
         "INFO: avg_session_duration_secs = {} (reported bug was showing 0.0s in production)",
         avg_duration
@@ -273,7 +286,8 @@ async fn test_traffic_summary_query_returns_nonzero_metrics() -> Result<()> {
 
     if avg_duration == 0.0 {
         println!(
-            "WARNING: avg_session_duration_secs is still 0.0. This matches the production bug: 'Avg Session Duration: 0.0s'"
+            "WARNING: avg_session_duration_secs is still 0.0. This matches the production bug: \
+             'Avg Session Duration: 0.0s'"
         );
     }
 
@@ -326,13 +340,15 @@ async fn test_landing_pages_query_not_showing_not_set() -> Result<()> {
 
         assert!(
             landing_page.is_some(),
-            "CRITICAL BUG: landing_page is NULL in GetLandingPages query. This causes '(not set)' in production dashboard."
+            "CRITICAL BUG: landing_page is NULL in GetLandingPages query. This causes '(not set)' \
+             in production dashboard."
         );
 
         let landing_page_value = landing_page.unwrap();
         assert!(
             !landing_page_value.is_empty() && landing_page_value != "(not set)",
-            "CRITICAL BUG: landing_page is '{}'. Production dashboard should show actual URLs, not '(not set)'.",
+            "CRITICAL BUG: landing_page is '{}'. Production dashboard should show actual URLs, \
+             not '(not set)'.",
             landing_page_value
         );
     }

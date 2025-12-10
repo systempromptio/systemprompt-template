@@ -15,13 +15,13 @@ impl Default for OpenAiModels {
                 id: "gpt-4-turbo".to_string(),
                 max_tokens: 128_000,
                 supports_tools: true,
-                cost_per_1k_tokens: 0.01,
+                cost_per_1k_tokens: 0.03,
             },
             gpt35_turbo: ModelConfig {
                 id: "gpt-3.5-turbo".to_string(),
                 max_tokens: 16385,
                 supports_tools: true,
-                cost_per_1k_tokens: 0.0005,
+                cost_per_1k_tokens: 0.0015,
             },
         }
     }

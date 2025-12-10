@@ -27,13 +27,6 @@ export function extractAndStoreSkill(
   contextId: string,
   taskId: string
 ): void {
-  console.log('[SKILL EXTRACTION DEBUG] extractAndStoreSkill called:', {
-    artifactId: artifact.artifactId,
-    contextId,
-    taskId,
-    metadata: artifact.metadata
-  })
-
   if (!contextId || !taskId) {
     logger.debug(
       'Skipping skill extraction - missing contextId or taskId',
@@ -47,7 +40,6 @@ export function extractAndStoreSkill(
   const skillMetadata = extractSkillMetadata(metadata)
 
   if (!skillMetadata) {
-    console.log('[SKILL EXTRACTION DEBUG] No skill metadata found')
     return
   }
 
@@ -63,8 +55,6 @@ export function extractAndStoreSkill(
     return
   }
 
-  console.log('[SKILL EXTRACTION DEBUG] Found skill in store:', skill)
-
   logger.debug(
     'Linking artifact to skill',
     {
@@ -78,5 +68,4 @@ export function extractAndStoreSkill(
   )
 
   useSkillStore.getState().addSkillToTask(contextId, taskId, skill)
-  console.log('[SKILL EXTRACTION DEBUG] Linked skill to task')
 }

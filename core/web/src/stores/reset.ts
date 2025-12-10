@@ -1,7 +1,7 @@
 import { useContextStore, CONTEXT_STATE } from './context.store'
 import { useTaskStore } from './task.store'
 import { useArtifactStore } from './artifact.store'
-import { useChatStore } from './chat.store'
+import { useUIStateStore } from './ui-state.store'
 import { useToolsStore } from './tools.store'
 
 export function resetAllStores() {
@@ -15,7 +15,7 @@ export function resetAllStores() {
 
   useTaskStore.getState().reset()
   useArtifactStore.getState().reset()
-  useChatStore.getState().reset()
+  useUIStateStore.getState().reset()
   useToolsStore.getState().clearTools()
 }
 

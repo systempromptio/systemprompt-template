@@ -27,9 +27,7 @@ impl FallbackGenerator {
                 format!("Tool execution completed:\n\n{summary}")
             },
             FallbackReason::SynthesisFailed(error) => {
-                format!(
-                    "Tool execution completed:\n\n{summary}\n\n(Synthesis error: {error})"
-                )
+                format!("Tool execution completed:\n\n{summary}\n\n(Synthesis error: {error})")
             },
         }
     }

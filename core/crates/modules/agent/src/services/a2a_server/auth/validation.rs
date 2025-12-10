@@ -33,12 +33,13 @@ pub async fn validate_agent_token(
     verify_a2a_permissions(&claims, &user)?;
 
     let db_roles = user.roles.clone();
+    let status = user.status.as_deref().unwrap_or("unknown");
 
     log.debug(
         "a2a_auth",
         &format!(
             "Authenticated A2A user: {} ({}) - status: {}, db_roles: {:?}",
-            claims.username, claims.user_type, user.status, db_roles
+            claims.username, claims.user_type, status, db_roles
         ),
     )
     .await
@@ -95,7 +96,7 @@ async fn verify_user_exists_and_active(
     claims: &systemprompt_core_oauth::JwtClaims,
     user_repo: &UserRepository,
     log: &LogService,
-) -> Result<systemprompt_core_users::models::UserResponse> {
+) -> Result<systemprompt_core_users::models::User> {
     let user = user_repo
         .get_by_id(&claims.sub)
         .await
@@ -114,13 +115,11 @@ async fn verify_user_exists_and_active(
         },
     };
 
-    if user.status != "active" {
+    let status = user.status.as_deref().unwrap_or("unknown");
+    if status != "active" {
         log.warn(
             "a2a_auth",
-            &format!(
-                "User {} has non-active status: {}",
-                claims.username, user.status
-            ),
+            &format!("User {} has non-active status: {}", claims.username, status),
         )
         .await
         .ok();
@@ -132,7 +131,7 @@ async fn verify_user_exists_and_active(
 
 fn verify_a2a_permissions(
     claims: &systemprompt_core_oauth::JwtClaims,
-    user: &systemprompt_core_users::models::UserResponse,
+    user: &systemprompt_core_users::models::User,
 ) -> Result<()> {
     let token_has_a2a_permission = claims.has_permission(Permission::Admin);
 
@@ -143,10 +142,7 @@ fn verify_a2a_permissions(
         .collect();
 
     if db_permissions.is_empty() {
-        return Err(anyhow::anyhow!(
-            "User {} has no valid permissions",
-            user.uuid
-        ));
+        return Err(anyhow::anyhow!("User {} has no valid permissions", user.id));
     }
 
     let db_has_a2a_permission = db_permissions.contains(&Permission::Admin);
@@ -265,7 +261,7 @@ pub async fn validate_oauth_for_request(
         },
         Err(e) => {
             Err(
-                unauthorized_response(format!("Invalid or expired token: {}", e), request_id, log)
+                unauthorized_response(format!("Invalid or expired token: {e}"), request_id, log)
                     .await,
             )
         },

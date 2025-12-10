@@ -6,7 +6,8 @@ use systemprompt_core_database::DatabaseProvider;
 async fn test_migrations_run_sequentially() -> Result<()> {
     let ctx = TestContext::new().await?;
 
-    let query = "SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = 'public'";
+    let query = "SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema \
+                 = 'public'";
     let rows = ctx.db.fetch_all(&query, &[]).await?;
     let table_count = rows[0]
         .get("table_count")
@@ -56,7 +57,8 @@ async fn test_migrations_idempotent() -> Result<()> {
 async fn test_migration_rollback_not_supported() -> Result<()> {
     let ctx = TestContext::new().await?;
 
-    let query = "SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = 'public'";
+    let query = "SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema \
+                 = 'public'";
     let rows = ctx.db.fetch_all(&query, &[]).await?;
     let table_count = rows[0]
         .get("table_count")

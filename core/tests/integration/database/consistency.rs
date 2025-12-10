@@ -33,7 +33,8 @@ async fn test_json_fields_store_and_retrieve() -> Result<()> {
     let insert_query = "INSERT INTO user_sessions (session_id, started_at) VALUES ($1, NOW())";
     ctx.db.execute(&insert_query, &[&session_id]).await?;
 
-    let query = "SELECT COUNT(*) as json_column_count FROM information_schema.columns WHERE table_schema = 'public' AND data_type = 'jsonb'";
+    let query = "SELECT COUNT(*) as json_column_count FROM information_schema.columns WHERE \
+                 table_schema = 'public' AND data_type = 'jsonb'";
     let rows = ctx.db.fetch_all(&query, &[]).await?;
     let json_count = rows[0]
         .get("json_column_count")
@@ -54,7 +55,9 @@ async fn test_json_fields_store_and_retrieve() -> Result<()> {
 async fn test_numeric_fields_store_correctly() -> Result<()> {
     let ctx = TestContext::new().await?;
 
-    let query = "SELECT COUNT(*) as numeric_count FROM information_schema.columns WHERE table_schema = 'public' AND data_type IN ('integer', 'bigint', 'numeric', 'double precision')";
+    let query = "SELECT COUNT(*) as numeric_count FROM information_schema.columns WHERE \
+                 table_schema = 'public' AND data_type IN ('integer', 'bigint', 'numeric', \
+                 'double precision')";
     let rows = ctx.db.fetch_all(&query, &[]).await?;
     let numeric_count = rows[0]
         .get("numeric_count")

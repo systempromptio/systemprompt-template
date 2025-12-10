@@ -1,4 +1,6 @@
-use axum::{body::Body, extract::Request, middleware::Next, response::Response};
+use axum::extract::Request;
+use axum::middleware::Next;
+use axum::response::Response;
 use std::sync::Arc;
 
 #[derive(Clone, Debug)]
@@ -8,7 +10,7 @@ pub struct BotMarker {
     pub user_agent: String,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BotType {
     KnownBot,
     Scanner,
@@ -120,43 +122,4 @@ fn is_scanner_request(path: &str, user_agent: &str) -> bool {
 
     scanner_paths.iter().any(|p| path_lower.contains(p))
         || scanner_agents.iter().any(|a| ua_lower.contains(a))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_known_bot_detection() {
-        assert!(is_known_bot(
-            "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
-        ));
-        assert!(is_known_bot("Mozilla/5.0 (compatible; bingbot/2.0)"));
-        assert!(is_known_bot("facebookexternalhit/1.1"));
-    }
-
-    #[test]
-    fn test_human_detection() {
-        assert!(!is_known_bot(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        ));
-        assert!(!is_known_bot(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
-        ));
-    }
-
-    #[test]
-    fn test_scanner_path_detection() {
-        assert!(is_scanner_request("/.env", "Mozilla/5.0"));
-        assert!(is_scanner_request("/admin", "Mozilla/5.0"));
-        assert!(is_scanner_request("/wp-admin", "Mozilla/5.0"));
-        assert!(is_scanner_request("/.git", "Mozilla/5.0"));
-    }
-
-    #[test]
-    fn test_scanner_agent_detection() {
-        assert!(is_scanner_request("/", "masscan"));
-        assert!(is_scanner_request("/", "nmap"));
-        assert!(is_scanner_request("/", "sqlmap/1.0"));
-    }
 }

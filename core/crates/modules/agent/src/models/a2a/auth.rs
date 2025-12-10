@@ -37,7 +37,7 @@ pub enum SecurityScheme {
 }
 
 /// API key location options
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum ApiKeyLocation {
     Query,
@@ -48,9 +48,9 @@ pub enum ApiKeyLocation {
 impl std::fmt::Display for ApiKeyLocation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ApiKeyLocation::Query => write!(f, "query"),
-            ApiKeyLocation::Header => write!(f, "header"),
-            ApiKeyLocation::Cookie => write!(f, "cookie"),
+            Self::Query => write!(f, "query"),
+            Self::Header => write!(f, "header"),
+            Self::Cookie => write!(f, "cookie"),
         }
     }
 }
@@ -60,10 +60,10 @@ impl std::str::FromStr for ApiKeyLocation {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "query" => Ok(ApiKeyLocation::Query),
-            "header" => Ok(ApiKeyLocation::Header),
-            "cookie" => Ok(ApiKeyLocation::Cookie),
-            _ => Err(format!("Invalid API key location: {}", s)),
+            "query" => Ok(Self::Query),
+            "header" => Ok(Self::Header),
+            "cookie" => Ok(Self::Cookie),
+            _ => Err(format!("Invalid API key location: {s}")),
         }
     }
 }
@@ -83,7 +83,7 @@ pub struct OAuth2Flows {
 }
 
 /// OAuth2 flow configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct OAuth2Flow {
     pub authorization_url: Option<String>,

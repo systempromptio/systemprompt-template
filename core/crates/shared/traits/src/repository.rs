@@ -24,11 +24,17 @@ pub enum RepositoryError {
     #[error("database error: {0}")]
     DatabaseError(#[from] sqlx::Error),
 
+    #[error("database error: {0}")]
+    Database(String),
+
     #[error("entity not found: {0}")]
     NotFound(String),
 
     #[error("serialization error: {0}")]
     SerializationError(#[from] serde_json::Error),
+
+    #[error("serialization error: {0}")]
+    Serialization(String),
 
     #[error("invalid data: {0}")]
     InvalidData(String),

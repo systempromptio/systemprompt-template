@@ -4,8 +4,7 @@ use std::env;
 use std::sync::Arc;
 use systemprompt_core_logging::CliService;
 use systemprompt_core_mcp::services::McpManager;
-use systemprompt_core_system::validate_system;
-use systemprompt_core_system::AppContext;
+use systemprompt_core_system::{validate_system, AppContext};
 
 #[derive(Subcommand)]
 pub enum McpCommands {
@@ -13,17 +12,20 @@ pub enum McpCommands {
     List,
     /// Start MCP services (all or specific)
     Start {
-        /// Specific service name to start (if not provided, starts all enabled services)
+        /// Specific service name to start (if not provided, starts all enabled
+        /// services)
         service: Option<String>,
     },
     /// Stop MCP services (all or specific)
     Stop {
-        /// Specific service name to stop (if not provided, stops all running services)
+        /// Specific service name to stop (if not provided, stops all running
+        /// services)
         service: Option<String>,
     },
     /// Build MCP services (all or specific)
     Build {
-        /// Specific service name to build (if not provided, builds all services)
+        /// Specific service name to build (if not provided, builds all
+        /// services)
         service: Option<String>,
     },
     /// Restart MCP services (all or specific)

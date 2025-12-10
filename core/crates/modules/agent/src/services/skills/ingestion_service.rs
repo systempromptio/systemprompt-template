@@ -24,6 +24,7 @@ impl SkillIngestionService {
         &self,
         path: &Path,
         source_id: SourceId,
+        override_existing: bool,
     ) -> Result<IngestionReport> {
         let mut report = IngestionReport::new();
 
@@ -31,7 +32,10 @@ impl SkillIngestionService {
         report.files_found = skill_dirs.len();
 
         for skill_dir in skill_dirs {
-            match self.ingest_skill(&skill_dir, source_id.clone()).await {
+            match self
+                .ingest_skill(&skill_dir, source_id.clone(), override_existing)
+                .await
+            {
                 Ok(_) => {
                     report.files_processed += 1;
                 },
@@ -46,7 +50,12 @@ impl SkillIngestionService {
         Ok(report)
     }
 
-    async fn ingest_skill(&self, skill_dir: &Path, source_id: SourceId) -> Result<()> {
+    async fn ingest_skill(
+        &self,
+        skill_dir: &Path,
+        source_id: SourceId,
+        override_existing: bool,
+    ) -> Result<()> {
         let index_file = skill_dir.join("index.md");
 
         if !index_file.exists() {
@@ -61,7 +70,7 @@ impl SkillIngestionService {
             .and_then(|v| v.as_str())
             .ok_or_else(|| anyhow!("Skill must have 'slug' in frontmatter"))?
             .replace('-', "_")
-            .to_string();
+            ;
 
         let name = metadata
             .get("title")
@@ -81,16 +90,6 @@ impl SkillIngestionService {
             .and_then(|v| v.as_bool())
             .unwrap_or(true);
 
-        let allowed_tools = metadata
-            .get("allowed_tools")
-            .and_then(|v| v.as_sequence())
-            .map(|seq| {
-                seq.iter()
-                    .filter_map(|item| item.as_str().map(|s| s.to_string()))
-                    .collect()
-            })
-            .unwrap_or_default();
-
         let tags = metadata
             .get("keywords")
             .and_then(|v| v.as_sequence())
@@ -108,7 +107,6 @@ impl SkillIngestionService {
             description,
             instructions,
             enabled,
-            allowed_tools,
             tags,
             category_id: None,
             source_id,
@@ -116,8 +114,15 @@ impl SkillIngestionService {
             updated_at: chrono::Utc::now(),
         };
 
-        if let Some(existing_skill) = self.skill_repo.get_by_file_path(&file_path).await? {
-            self.skill_repo.update(&existing_skill.skill_id, &skill).await?;
+        if self
+            .skill_repo
+            .get_by_skill_id(&skill.skill_id)
+            .await?
+            .is_some()
+        {
+            if override_existing {
+                self.skill_repo.update(&skill.skill_id, &skill).await?;
+            }
         } else {
             self.skill_repo.create(&skill).await?;
         }

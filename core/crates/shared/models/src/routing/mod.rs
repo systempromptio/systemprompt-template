@@ -131,6 +131,7 @@ impl RouteClassifier {
         if path.starts_with("/assets/")
             || path.starts_with("/.well-known/")
             || path.starts_with("/generated/")
+            || path.starts_with("/files/")
         {
             return true;
         }

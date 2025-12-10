@@ -121,11 +121,66 @@ crates/modules/{module}/
 
 ## Repository & Database Patterns
 
-**CRITICAL**: All database operations use `DatabaseProvider` abstraction with `DatabaseQueryEnum`. NEVER use inline SQL in services or direct sqlx.
+**CRITICAL**: Services NEVER access database directly. All database operations go through repositories.
 
-### Repository Pattern (MANDATORY)
+### Repository Pattern with SQLX (MANDATORY for new code)
 
-**All repositories MUST use `DatabaseQueryEnum` for type-safe query references:**
+**Repositories accept `DbPool` (`Arc<Database>`) and use SQLX macros for compile-time verified queries:**
+
+```rust
+use sqlx::PgPool;
+use std::sync::Arc;
+use systemprompt_core_database::DbPool;  // DbPool = Arc<Database>
+
+pub struct UserRepository {
+    pool: Arc<PgPool>,
+}
+
+impl UserRepository {
+    pub fn new(db: DbPool) -> Self {
+        let pool = db.pool_arc().expect("Database must be PostgreSQL");
+        Self { pool }
+    }
+
+    pub async fn find_by_id(&self, id: &str) -> Result<Option<User>, sqlx::Error> {
+        sqlx::query_as!(
+            User,
+            "SELECT id, email, name, created_at FROM users WHERE id = $1",
+            id
+        )
+        .fetch_optional(&**self.pool)  // Deref Arc<PgPool> to &PgPool
+        .await
+    }
+
+    pub async fn create(&self, email: &str, name: &str) -> Result<User, sqlx::Error> {
+        sqlx::query_as!(
+            User,
+            "INSERT INTO users (id, email, name) VALUES ($1, $2, $3) RETURNING *",
+            Uuid::new_v4().to_string(),
+            email,
+            name
+        )
+        .fetch_one(&**self.pool)
+        .await
+    }
+}
+```
+
+**Key Pattern**:
+- Constructor accepts `DbPool` (which is `Arc<Database>`)
+- Extract pool via `db.pool_arc()` - extracts `Arc<PgPool>`
+- Store `Arc<PgPool>` internally
+- Use `&**self.pool` to get `&PgPool` for SQLX macros
+
+**Why This Pattern?**
+- Callers pass `DbPool` (consistent with rest of codebase)
+- Repositories handle pool extraction internally (encapsulation)
+- SQLX macros provide compile-time query verification
+- Only 5 repository constructors to change, not 80 call sites
+
+### Legacy Pattern with DatabaseQueryEnum
+
+**For modules still using DatabaseQueryEnum (migration in progress):**
 
 ```rust
 use systemprompt_database::{DatabaseProvider, DatabaseQueryEnum, DbPool};

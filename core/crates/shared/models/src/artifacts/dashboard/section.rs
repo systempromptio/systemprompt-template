@@ -1,8 +1,9 @@
 use super::section_types::{SectionLayout, SectionType};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct DashboardSection {
     pub section_id: String,
     pub title: String,
@@ -26,6 +27,7 @@ impl DashboardSection {
         }
     }
 
+    #[allow(clippy::expect_used)]
     pub fn with_data<T: Serialize>(mut self, data: T) -> Self {
         self.data = serde_json::to_value(data).expect("Failed to serialize section data");
         self

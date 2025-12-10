@@ -1,8 +1,15 @@
-use crate::artifacts::{metadata::ExecutionMetadata, traits::Artifact, types::ArtifactType};
+use crate::artifacts::metadata::ExecutionMetadata;
+use crate::artifacts::traits::Artifact;
+use crate::artifacts::types::ArtifactType;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+fn default_artifact_type() -> String {
+    "list".to_string()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ListItem {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -71,22 +78,30 @@ impl ListItem {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ListArtifact {
+    #[serde(rename = "x-artifact-type")]
+    #[serde(default = "default_artifact_type")]
+    pub artifact_type: String,
     pub items: Vec<ListItem>,
+    pub count: usize,
     #[serde(skip)]
+    #[schemars(skip)]
     metadata: ExecutionMetadata,
 }
 
 impl ListArtifact {
     pub fn new() -> Self {
         Self {
+            artifact_type: "list".to_string(),
             items: Vec::new(),
+            count: 0,
             metadata: ExecutionMetadata::default(),
         }
     }
 
     pub fn with_items(mut self, items: Vec<ListItem>) -> Self {
+        self.count = items.len();
         self.items = items;
         self
     }
@@ -103,20 +118,6 @@ impl ListArtifact {
     ) -> Self {
         self.metadata = self.metadata.with_skill(skill_id.into(), skill_name.into());
         self
-    }
-
-    pub fn to_response(&self) -> JsonValue {
-        let mut response = json!({
-            "x-artifact-type": "list",
-            "items": self.items,
-            "count": self.items.len()
-        });
-
-        if let Some(ref id) = self.metadata.execution_id {
-            response["_execution_id"] = json!(id);
-        }
-
-        response
     }
 }
 

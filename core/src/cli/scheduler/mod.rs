@@ -36,12 +36,15 @@ async fn run_job(job_name: &str, ctx: Arc<AppContext>) -> Result<()> {
 
     let result = match job_name {
         "evaluate_conversations" => jobs::evaluate_conversations(db_pool, logger, ctx).await,
+        "publish_content" => jobs::publish_content(db_pool, logger, ctx).await,
         "regenerate_static_content" => jobs::regenerate_static_content(db_pool, logger, ctx).await,
         "ingest_content" => jobs::ingest_content(db_pool, logger, ctx).await,
+        "ingest_files" => jobs::ingest_files(db_pool, logger).await,
         "cleanup_anonymous_users" => jobs::cleanup_anonymous_users(db_pool, logger, ctx).await,
         "cleanup_inactive_sessions" => jobs::cleanup_inactive_sessions(db_pool, logger, ctx).await,
         "database_cleanup" => jobs::database_cleanup(db_pool, logger, ctx).await,
         "rebuild_static_site" => jobs::rebuild_static_site(db_pool, logger, ctx).await,
+        "optimize_images" => jobs::optimize_images(db_pool, logger).await,
         _ => {
             eprintln!("❌ Unknown job: {job_name}");
             anyhow::bail!("Unknown job: {job_name}")
@@ -69,7 +72,7 @@ async fn cleanup_sessions(hours: i32, ctx: Arc<AppContext>) -> Result<()> {
     ));
 
     let session_repo = AnalyticsSessionRepository::new(ctx.db_pool().clone());
-    let closed_count = session_repo.cleanup_inactive_sessions(hours).await?;
+    let closed_count = session_repo.cleanup_inactive(hours).await?;
 
     CliService::success(&format!("✅ Closed {} inactive session(s)", closed_count));
 

@@ -4,50 +4,70 @@ pub mod hints;
 pub use column::Column;
 pub use hints::TableHints;
 
-use crate::artifacts::{metadata::ExecutionMetadata, traits::Artifact, types::ArtifactType};
+use crate::artifacts::metadata::ExecutionMetadata;
+use crate::artifacts::traits::Artifact;
+use crate::artifacts::types::ArtifactType;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TableResponse<T: Serialize + Clone> {
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct TableResponse {
     #[serde(rename = "x-artifact-type")]
     pub artifact_type: String,
     pub columns: Vec<Column>,
-    pub items: Vec<T>,
+    pub items: Vec<JsonValue>,
     pub count: usize,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub execution_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(with = "Option<JsonValue>")]
     pub hints: Option<JsonValue>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TableArtifact<T: Serialize + Clone> {
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct TableArtifact {
+    #[serde(rename = "x-artifact-type")]
+    #[serde(default = "default_artifact_type")]
+    pub artifact_type: String,
     pub columns: Vec<Column>,
-    pub items: Vec<T>,
+    pub items: Vec<JsonValue>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(with = "Option<JsonValue>")]
+    pub hints: Option<JsonValue>,
     #[serde(skip)]
-    hints: TableHints,
+    #[schemars(skip)]
+    hints_builder: TableHints,
     #[serde(skip)]
+    #[schemars(skip)]
     metadata: ExecutionMetadata,
 }
 
-impl<T: Serialize + Clone> TableArtifact<T> {
+fn default_artifact_type() -> String {
+    "table".to_string()
+}
+
+impl TableArtifact {
     pub fn new(columns: Vec<Column>) -> Self {
         Self {
+            artifact_type: "table".to_string(),
             columns,
             items: Vec::new(),
-            hints: TableHints::default(),
+            hints: None,
+            hints_builder: TableHints::default(),
             metadata: ExecutionMetadata::default(),
         }
     }
 
-    pub fn with_rows(mut self, items: Vec<T>) -> Self {
+    pub fn with_rows(mut self, items: Vec<JsonValue>) -> Self {
         self.items = items;
         self
     }
 
     pub fn with_hints(mut self, hints: TableHints) -> Self {
-        self.hints = hints;
+        use crate::artifacts::traits::ArtifactSchema;
+        self.hints = Some(hints.generate_schema());
+        self.hints_builder = hints;
         self
     }
 
@@ -79,13 +99,13 @@ impl<T: Serialize + Clone> TableArtifact<T> {
             items: self.items.clone(),
             count: self.items.len(),
             execution_id: self.metadata.execution_id.clone(),
-            hints: Some(self.hints.generate_schema()),
+            hints: Some(self.hints_builder.generate_schema()),
         };
         serde_json::to_value(response).unwrap_or(JsonValue::Null)
     }
 }
 
-impl<T: Serialize + Clone> Artifact for TableArtifact<T> {
+impl Artifact for TableArtifact {
     fn artifact_type(&self) -> ArtifactType {
         ArtifactType::Table
     }
@@ -93,7 +113,7 @@ impl<T: Serialize + Clone> Artifact for TableArtifact<T> {
     fn to_schema(&self) -> JsonValue {
         use crate::artifacts::traits::ArtifactSchema;
 
-        let schema = json!({
+        json!({
             "type": "object",
             "properties": {
                 "columns": {
@@ -115,9 +135,7 @@ impl<T: Serialize + Clone> Artifact for TableArtifact<T> {
             },
             "required": ["columns", "items"],
             "x-artifact-type": "table",
-            "x-table-hints": self.hints.generate_schema()
-        });
-
-        schema
+            "x-table-hints": self.hints_builder.generate_schema()
+        })
     }
 }

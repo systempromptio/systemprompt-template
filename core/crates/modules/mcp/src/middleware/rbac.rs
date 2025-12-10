@@ -1,4 +1,5 @@
-use rmcp::{service::RequestContext as McpContext, ErrorData as McpError, RoleServer};
+use rmcp::service::RequestContext as McpContext;
+use rmcp::{ErrorData as McpError, RoleServer};
 use systemprompt_core_config::services::ConfigLoader;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_oauth::services::validation::jwt::validate_jwt_token;
@@ -104,7 +105,8 @@ pub async fn enforce_rbac_from_registry(
         }
         McpError::invalid_request(
             format!(
-                "Authentication required. Server '{server_name}' requires OAuth but no Bearer token provided."
+                "Authentication required. Server '{server_name}' requires OAuth but no Bearer \
+                 token provided."
             ),
             None,
         )
@@ -153,7 +155,8 @@ pub async fn enforce_rbac_from_registry(
     if !has_required_scope {
         if let Some(log) = logger {
             let error_msg = format!(
-                "Insufficient permissions for server '{server_name}': Required one of {required_scopes:?}, but user has: {user_scopes:?}"
+                "Insufficient permissions for server '{server_name}': Required one of \
+                 {required_scopes:?}, but user has: {user_scopes:?}"
             );
             let _ = tokio::task::block_in_place(|| {
                 tokio::runtime::Handle::current()
@@ -162,7 +165,8 @@ pub async fn enforce_rbac_from_registry(
         }
         return Err(McpError::invalid_request(
             format!(
-                "Insufficient permissions. User must have one of: {required_scopes:?}, but has: {user_scopes:?}"
+                "Insufficient permissions. User must have one of: {required_scopes:?}, but has: \
+                 {user_scopes:?}"
             ),
             None,
         ));

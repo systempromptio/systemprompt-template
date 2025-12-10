@@ -61,6 +61,12 @@ maxminddb = { workspace = true }
 # MCP support
 rmcp = { workspace = true }
 
+# Deployment support
+regex = "1.10"
+ssh2 = "0.9"
+bollard = "0.17"
+tempfile = "3.0"
+
 # SystemPrompt dependencies
 systemprompt-models = { path = "../../shared/models" }
 systemprompt-identifiers = { path = "../../shared/identifiers" }

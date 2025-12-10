@@ -5,9 +5,9 @@ use std::path::Path;
 use std::sync::Arc;
 use systemprompt_core_database::Database;
 use systemprompt_core_logging::LogService;
-use systemprompt_core_system::{
-    models::modules::Modules, services::install::install_module, Config,
-};
+use systemprompt_core_system::models::modules::Modules;
+use systemprompt_core_system::services::install::install_module;
+use systemprompt_core_system::Config;
 
 #[derive(Args)]
 pub struct SetupArgs {

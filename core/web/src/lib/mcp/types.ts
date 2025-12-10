@@ -1,6 +1,13 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
-import type { ArtifactType, TableHints, ChartHints, CodeHints, FormHints, TreeHints, PresentationHints } from '@/types/artifacts'
-import type { RenderBehavior } from '@/types/artifact'
+import type {
+  ArtifactType,
+  TableHints,
+  ChartHints,
+  CodeHints,
+  FormHints,
+  TreeHints,
+  PresentationHints,
+} from '@/types/artifact'
 
 export interface McpArrayResponse<T = unknown> {
   items: T[]
@@ -31,9 +38,8 @@ export interface McpOutputSchema {
   properties?: Record<string, JsonSchemaProperty>
   required?: string[]
   items?: McpOutputSchema
-  oneOf?: McpOutputSchema[]  // For union types (like analytics tool)
+  oneOf?: McpOutputSchema[]
   'x-artifact-type'?: ArtifactType
-  'x-render-behavior'?: RenderBehavior
   'x-table-hints'?: TableHints
   'x-chart-hints'?: ChartHints
   'x-code-hints'?: CodeHints
@@ -139,3 +145,61 @@ export function isCodeResult(
 }
 
 export type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
+
+// =============================================================================
+// Row Data Guards - For table row data validation
+// =============================================================================
+
+/**
+ * Guard for table row with context_id field.
+ *
+ * @example
+ * ```typescript
+ * // Before:
+ * const contextId = row['context_id'] as string
+ *
+ * // After:
+ * if (!hasContextId(row)) {
+ *   throw new Error('Row missing context_id')
+ * }
+ * const contextId = row.context_id  // TypeScript knows it's string
+ * ```
+ */
+export function hasContextId(row: unknown): row is Record<string, unknown> & { context_id: string } {
+  return (
+    typeof row === 'object' &&
+    row !== null &&
+    'context_id' in row &&
+    typeof (row as Record<string, unknown>).context_id === 'string'
+  )
+}
+
+/**
+ * Guard for row with specific required fields.
+ *
+ * @example
+ * ```typescript
+ * if (hasRequiredFields(row, ['id', 'name', 'email'])) {
+ *   // row.id, row.name, row.email all exist (unknown type)
+ * }
+ * ```
+ */
+export function hasRequiredFields<K extends string>(
+  row: unknown,
+  fields: K[]
+): row is Record<string, unknown> & Record<K, unknown> {
+  if (typeof row !== 'object' || row === null) return false
+  return fields.every(field => field in row)
+}
+
+/**
+ * Guard for validation_errors in metadata.
+ */
+export function hasValidationErrors(
+  metadata: unknown
+): metadata is { validation_errors: string[] } {
+  if (typeof metadata !== 'object' || metadata === null) return false
+  if (!('validation_errors' in metadata)) return false
+  const errors = (metadata as Record<string, unknown>).validation_errors
+  return Array.isArray(errors) && errors.every(e => typeof e === 'string')
+}

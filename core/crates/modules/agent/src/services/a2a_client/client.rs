@@ -1,17 +1,16 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::models::a2a::{agent::AgentCard, message::Message, task::Task};
+use crate::models::a2a::agent::AgentCard;
+use crate::models::a2a::message::Message;
+use crate::models::a2a::task::Task;
 
-use super::{
-    error::{ClientError, ClientResult},
-    protocol::{
-        CancelTaskRequest, MessageConfiguration, MessageSendRequest, ProtocolHandler,
-        TaskQueryRequest,
-    },
-    streaming::SseStream,
-    transport::{HttpTransport, Transport},
+use super::error::{ClientError, ClientResult};
+use super::protocol::{
+    CancelTaskRequest, MessageConfiguration, MessageSendRequest, ProtocolHandler, TaskQueryRequest,
 };
+use super::streaming::SseStream;
+use super::transport::{HttpTransport, Transport};
 use systemprompt_core_logging::LogService;
 
 #[derive(Debug, Clone)]
@@ -54,7 +53,7 @@ impl A2aClient {
         let mut transport = HttpTransport::new(&config.base_url)?.with_timeout(config.timeout)?;
 
         if let Some(token) = &config.auth_token {
-            transport = transport.with_auth_token(token);
+            transport = transport.with_auth_token(token)?;
         }
 
         let transport: Arc<dyn Transport> = Arc::new(transport);
@@ -206,7 +205,7 @@ impl A2aClient {
         let mut request_builder = client.get(&url);
 
         if let Some(token) = &self.config.auth_token {
-            request_builder = request_builder.header("Authorization", format!("Bearer {}", token));
+            request_builder = request_builder.header("Authorization", format!("Bearer {token}"));
         }
 
         let response = request_builder.send().await?;

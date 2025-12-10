@@ -1,4 +1,4 @@
-use crate::services::client::{McpClient, McpConnectionResult};
+use crate::services::client::McpConnectionResult;
 use crate::McpServerConfig;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
@@ -115,9 +115,11 @@ pub async fn check_service_health(config: &McpServerConfig) -> Result<HealthStat
 }
 
 pub async fn perform_health_check(config: &McpServerConfig) -> Result<HealthCheckResult> {
+    use crate::services::client::validate_connection_with_auth;
+
     let connection_result = timeout(
         Duration::from_secs(30),
-        McpClient::validate_connection_with_auth(
+        validate_connection_with_auth(
             &config.name,
             &config.host,
             config.port,

@@ -1,17 +1,16 @@
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-use sqlx::{
-    postgres::{PgConnectOptions, PgPool},
-    Column, Executor, Row,
-};
-use std::collections::HashMap;
+use sqlx::postgres::{PgConnectOptions, PgPool};
+use sqlx::{Column, Executor, Row};
 use std::str::FromStr;
 use std::sync::Arc;
 
-use super::provider::{DatabaseProvider, DatabaseProviderExt};
+use super::postgres_helpers::{bind_params, row_to_json};
+use super::postgres_transaction::PostgresTransaction;
+use super::provider::DatabaseProvider;
 use crate::models::{
-    ColumnInfo, DatabaseInfo, DatabaseTransaction, DbValue, FromDatabaseRow, JsonRow, QueryResult,
-    QuerySelector, TableInfo, ToDbValue,
+    ColumnInfo, DatabaseInfo, DatabaseTransaction, DbValue, JsonRow, QueryResult, QuerySelector,
+    TableInfo, ToDbValue,
 };
 
 #[derive(Debug)]
@@ -54,121 +53,9 @@ impl PostgresProvider {
             .map(std::path::PathBuf::from)
     }
 
+    #[must_use]
     pub fn pool(&self) -> &PgPool {
         &self.pool
-    }
-
-    fn row_to_json(row: &sqlx::postgres::PgRow) -> HashMap<String, serde_json::Value> {
-        let mut map = HashMap::new();
-
-        for column in row.columns() {
-            let name = column.name().to_string();
-
-            if let Ok(val) = row.try_get::<Option<chrono::NaiveDateTime>, _>(column.ordinal()) {
-                map.insert(
-                    name,
-                    val.map_or(serde_json::Value::Null, |v| {
-                        serde_json::Value::String(v.and_utc().to_rfc3339())
-                    }),
-                );
-            } else if let Ok(val) =
-                row.try_get::<Option<chrono::DateTime<chrono::Utc>>, _>(column.ordinal())
-            {
-                map.insert(
-                    name,
-                    val.map_or(serde_json::Value::Null, |v| {
-                        serde_json::Value::String(v.to_rfc3339())
-                    }),
-                );
-            } else if let Ok(val) = row.try_get::<Option<String>, _>(column.ordinal()) {
-                map.insert(
-                    name,
-                    val.map_or(serde_json::Value::Null, serde_json::Value::String),
-                );
-            } else if let Ok(val) = row.try_get::<Option<i64>, _>(column.ordinal()) {
-                map.insert(
-                    name,
-                    val.map_or(serde_json::Value::Null, |v| {
-                        serde_json::Value::Number(v.into())
-                    }),
-                );
-            } else if let Ok(val) = row.try_get::<Option<i32>, _>(column.ordinal()) {
-                map.insert(
-                    name,
-                    val.map_or(serde_json::Value::Null, |v| {
-                        serde_json::Value::Number(i64::from(v).into())
-                    }),
-                );
-            } else if let Ok(val) = row.try_get::<Option<f64>, _>(column.ordinal()) {
-                map.insert(
-                    name,
-                    val.map_or(serde_json::Value::Null, |v| serde_json::json!(v)),
-                );
-            } else if let Ok(val) =
-                row.try_get::<Option<rust_decimal::Decimal>, _>(column.ordinal())
-            {
-                map.insert(
-                    name,
-                    val.map_or(serde_json::Value::Null, |v| {
-                        serde_json::json!(v.to_string().parse::<f64>().unwrap_or(0.0))
-                    }),
-                );
-            } else if let Ok(val) = row.try_get::<Option<bool>, _>(column.ordinal()) {
-                map.insert(
-                    name,
-                    val.map_or(serde_json::Value::Null, serde_json::Value::Bool),
-                );
-            } else if let Ok(val) = row.try_get::<Option<Vec<String>>, _>(column.ordinal()) {
-                map.insert(
-                    name,
-                    val.map_or(serde_json::Value::Null, |v| {
-                        serde_json::Value::Array(
-                            v.into_iter().map(serde_json::Value::String).collect(),
-                        )
-                    }),
-                );
-            } else if let Ok(val) = row.try_get::<Option<serde_json::Value>, _>(column.ordinal()) {
-                map.insert(name, val.unwrap_or(serde_json::Value::Null));
-            } else if let Ok(val) = row.try_get::<Option<Vec<u8>>, _>(column.ordinal()) {
-                map.insert(
-                    name,
-                    val.map_or(serde_json::Value::Null, |bytes| {
-                        use base64::{engine::general_purpose::STANDARD, Engine};
-                        serde_json::Value::String(STANDARD.encode(&bytes))
-                    }),
-                );
-            } else {
-                map.insert(name, serde_json::Value::Null);
-            }
-        }
-
-        map
-    }
-
-    fn bind_params<'q>(
-        mut query: sqlx::query::Query<'q, sqlx::Postgres, sqlx::postgres::PgArguments>,
-        params: &[&dyn ToDbValue],
-    ) -> sqlx::query::Query<'q, sqlx::Postgres, sqlx::postgres::PgArguments> {
-        for param in params {
-            let value = param.to_db_value();
-            query = match value {
-                DbValue::String(s) => query.bind(s),
-                DbValue::Int(i) => query.bind(i),
-                DbValue::Float(f) => query.bind(f),
-                DbValue::Bool(b) => query.bind(b),
-                DbValue::Bytes(b) => query.bind(b),
-                DbValue::Timestamp(dt) => query.bind(dt),
-                DbValue::StringArray(arr) => query.bind(arr),
-                DbValue::NullString => query.bind(None::<String>),
-                DbValue::NullInt => query.bind(None::<i64>),
-                DbValue::NullFloat => query.bind(None::<f64>),
-                DbValue::NullBool => query.bind(None::<bool>),
-                DbValue::NullBytes => query.bind(None::<Vec<u8>>),
-                DbValue::NullTimestamp => query.bind(None::<chrono::DateTime<chrono::Utc>>),
-                DbValue::NullStringArray => query.bind(None::<Vec<String>>),
-            };
-        }
-        query
     }
 }
 
@@ -181,7 +68,7 @@ impl DatabaseProvider for PostgresProvider {
     async fn execute(&self, query: &dyn QuerySelector, params: &[&dyn ToDbValue]) -> Result<u64> {
         let sql = query.select_query();
         let query_obj = sqlx::query(sql);
-        let query_obj = Self::bind_params(query_obj, params);
+        let query_obj = bind_params(query_obj, params);
 
         let result = query_obj
             .execute(&*self.pool)
@@ -192,16 +79,12 @@ impl DatabaseProvider for PostgresProvider {
     }
 
     async fn execute_raw(&self, sql: &str) -> Result<()> {
-        // Use PostgreSQL's simple query protocol (not extended protocol)
-        // This is critical for DDL operations with IF EXISTS/IF NOT EXISTS
         let mut conn = self
             .pool
             .acquire()
             .await
             .map_err(|e| anyhow!("Failed to acquire connection: {e}"))?;
 
-        // conn.execute() uses simple protocol: send SQL string directly
-        // No prepare/bind/execute cycle that causes metadata conflicts
         conn.execute(sql)
             .await
             .map_err(|e| anyhow!("Raw query execution failed: {e}"))?;
@@ -216,14 +99,14 @@ impl DatabaseProvider for PostgresProvider {
     ) -> Result<Vec<JsonRow>> {
         let sql = query.select_query();
         let query_obj = sqlx::query(sql);
-        let query_obj = Self::bind_params(query_obj, params);
+        let query_obj = bind_params(query_obj, params);
 
         let rows = query_obj
             .fetch_all(&*self.pool)
             .await
             .map_err(|e| anyhow!("Query execution failed: {e}"))?;
 
-        Ok(rows.iter().map(Self::row_to_json).collect())
+        Ok(rows.iter().map(row_to_json).collect())
     }
 
     async fn fetch_one(
@@ -233,14 +116,14 @@ impl DatabaseProvider for PostgresProvider {
     ) -> Result<JsonRow> {
         let sql = query.select_query();
         let query_obj = sqlx::query(sql);
-        let query_obj = Self::bind_params(query_obj, params);
+        let query_obj = bind_params(query_obj, params);
 
         let row = query_obj
             .fetch_one(&*self.pool)
             .await
             .map_err(|e| anyhow!("Query execution failed: {e}"))?;
 
-        Ok(Self::row_to_json(&row))
+        Ok(row_to_json(&row))
     }
 
     async fn fetch_optional(
@@ -250,14 +133,14 @@ impl DatabaseProvider for PostgresProvider {
     ) -> Result<Option<JsonRow>> {
         let sql = query.select_query();
         let query_obj = sqlx::query(sql);
-        let query_obj = Self::bind_params(query_obj, params);
+        let query_obj = bind_params(query_obj, params);
 
         let row = query_obj
             .fetch_optional(&*self.pool)
             .await
             .map_err(|e| anyhow!("Query execution failed: {e}"))?;
 
-        Ok(row.map(|r| Self::row_to_json(&r)))
+        Ok(row.map(|r| row_to_json(&r)))
     }
 
     async fn fetch_scalar_value(
@@ -274,15 +157,11 @@ impl DatabaseProvider for PostgresProvider {
 
         let db_value = match first_value {
             serde_json::Value::String(s) => DbValue::String(s.clone()),
-            serde_json::Value::Number(n) => {
-                if let Some(i) = n.as_i64() {
-                    DbValue::Int(i)
-                } else if let Some(f) = n.as_f64() {
-                    DbValue::Float(f)
-                } else {
-                    DbValue::NullFloat
-                }
-            },
+            serde_json::Value::Number(n) => n
+                .as_i64()
+                .map(DbValue::Int)
+                .or_else(|| n.as_f64().map(DbValue::Float))
+                .unwrap_or(DbValue::NullFloat),
             serde_json::Value::Bool(b) => DbValue::Bool(*b),
             serde_json::Value::Null => DbValue::NullString,
             _ => return Err(anyhow!("Unsupported value type")),
@@ -308,7 +187,8 @@ impl DatabaseProvider for PostgresProvider {
         let version: String = version_row.try_get("version")?;
 
         let table_rows = sqlx::query(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name"
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER \
+             BY table_name",
         )
         .fetch_all(&*self.pool)
         .await?;
@@ -322,7 +202,8 @@ impl DatabaseProvider for PostgresProvider {
             let row_count: i64 = count_row.try_get("count")?;
 
             let columns_query = format!(
-                "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = '{table_name}' ORDER BY ordinal_position"
+                "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE \
+                 table_name = '{table_name}' ORDER BY ordinal_position"
             );
             let column_rows = sqlx::query(&columns_query).fetch_all(&*self.pool).await?;
 
@@ -398,7 +279,7 @@ impl DatabaseProvider for PostgresProvider {
         }
 
         for row in rows {
-            result_rows.push(Self::row_to_json(&row));
+            result_rows.push(row_to_json(&row));
         }
 
         let row_count = result_rows.len();
@@ -420,298 +301,5 @@ impl DatabaseProvider for PostgresProvider {
         _params: Vec<serde_json::Value>,
     ) -> Result<QueryResult> {
         self.query_raw(query).await
-    }
-}
-
-pub struct PostgresTransaction {
-    tx: Option<sqlx::Transaction<'static, sqlx::Postgres>>,
-}
-
-impl std::fmt::Debug for PostgresTransaction {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("PostgresTransaction")
-            .field("tx", &self.tx.is_some())
-            .finish()
-    }
-}
-
-impl PostgresTransaction {
-    const fn new(tx: sqlx::Transaction<'static, sqlx::Postgres>) -> Self {
-        Self { tx: Some(tx) }
-    }
-}
-
-fn row_to_json_tx(row: &sqlx::postgres::PgRow) -> HashMap<String, serde_json::Value> {
-    let mut map = HashMap::new();
-
-    for column in row.columns() {
-        let name = column.name().to_string();
-
-        if let Ok(val) = row.try_get::<Option<chrono::NaiveDateTime>, _>(column.ordinal()) {
-            map.insert(
-                name,
-                val.map_or(serde_json::Value::Null, |v| {
-                    serde_json::Value::String(v.and_utc().to_rfc3339())
-                }),
-            );
-        } else if let Ok(val) =
-            row.try_get::<Option<chrono::DateTime<chrono::Utc>>, _>(column.ordinal())
-        {
-            map.insert(
-                name,
-                val.map_or(serde_json::Value::Null, |v| {
-                    serde_json::Value::String(v.to_rfc3339())
-                }),
-            );
-        } else if let Ok(val) = row.try_get::<Option<String>, _>(column.ordinal()) {
-            map.insert(
-                name,
-                val.map_or(serde_json::Value::Null, serde_json::Value::String),
-            );
-        } else if let Ok(val) = row.try_get::<Option<i64>, _>(column.ordinal()) {
-            map.insert(
-                name,
-                val.map_or(serde_json::Value::Null, |v| {
-                    serde_json::Value::Number(v.into())
-                }),
-            );
-        } else if let Ok(val) = row.try_get::<Option<i32>, _>(column.ordinal()) {
-            map.insert(
-                name,
-                val.map_or(serde_json::Value::Null, |v| {
-                    serde_json::Value::Number(i64::from(v).into())
-                }),
-            );
-        } else if let Ok(val) = row.try_get::<Option<f64>, _>(column.ordinal()) {
-            map.insert(
-                name,
-                val.map_or(serde_json::Value::Null, |v| serde_json::json!(v)),
-            );
-        } else if let Ok(val) = row.try_get::<Option<bool>, _>(column.ordinal()) {
-            map.insert(
-                name,
-                val.map_or(serde_json::Value::Null, serde_json::Value::Bool),
-            );
-        } else if let Ok(val) = row.try_get::<Option<Vec<String>>, _>(column.ordinal()) {
-            map.insert(
-                name,
-                val.map_or(serde_json::Value::Null, |v| {
-                    serde_json::Value::Array(v.into_iter().map(serde_json::Value::String).collect())
-                }),
-            );
-        } else if let Ok(val) = row.try_get::<Option<serde_json::Value>, _>(column.ordinal()) {
-            map.insert(name, val.unwrap_or(serde_json::Value::Null));
-        } else if let Ok(val) = row.try_get::<Option<Vec<u8>>, _>(column.ordinal()) {
-            map.insert(
-                name,
-                val.map_or(serde_json::Value::Null, |bytes| {
-                    use base64::{engine::general_purpose::STANDARD, Engine};
-                    serde_json::Value::String(STANDARD.encode(&bytes))
-                }),
-            );
-        } else {
-            map.insert(name, serde_json::Value::Null);
-        }
-    }
-
-    map
-}
-
-fn bind_params_tx<'q>(
-    mut query: sqlx::query::Query<'q, sqlx::Postgres, sqlx::postgres::PgArguments>,
-    params: &[&dyn ToDbValue],
-) -> sqlx::query::Query<'q, sqlx::Postgres, sqlx::postgres::PgArguments> {
-    for param in params {
-        let value = param.to_db_value();
-        query = match value {
-            DbValue::String(s) => query.bind(s),
-            DbValue::Int(i) => query.bind(i),
-            DbValue::Float(f) => query.bind(f),
-            DbValue::Bool(b) => query.bind(b),
-            DbValue::Bytes(b) => query.bind(b),
-            DbValue::Timestamp(dt) => query.bind(dt),
-            DbValue::StringArray(arr) => query.bind(arr),
-            DbValue::NullString => query.bind(None::<String>),
-            DbValue::NullInt => query.bind(None::<i64>),
-            DbValue::NullFloat => query.bind(None::<f64>),
-            DbValue::NullBool => query.bind(None::<bool>),
-            DbValue::NullBytes => query.bind(None::<Vec<u8>>),
-            DbValue::NullTimestamp => query.bind(None::<chrono::DateTime<chrono::Utc>>),
-            DbValue::NullStringArray => query.bind(None::<Vec<String>>),
-        };
-    }
-    query
-}
-
-#[async_trait]
-impl DatabaseTransaction for PostgresTransaction {
-    async fn execute(
-        &mut self,
-        query: &dyn QuerySelector,
-        params: &[&dyn ToDbValue],
-    ) -> Result<u64> {
-        let sql = query.select_query();
-        let tx = self
-            .tx
-            .as_mut()
-            .ok_or_else(|| anyhow!("Transaction already consumed"))?;
-
-        let query_obj = sqlx::query(sql);
-        let query_obj = bind_params_tx(query_obj, params);
-
-        let result = query_obj
-            .execute(&mut **tx)
-            .await
-            .map_err(|e| anyhow!("Query execution failed: {e}"))?;
-
-        Ok(result.rows_affected())
-    }
-
-    async fn fetch_all(
-        &mut self,
-        query: &dyn QuerySelector,
-        params: &[&dyn ToDbValue],
-    ) -> Result<Vec<JsonRow>> {
-        let sql = query.select_query();
-        let tx = self
-            .tx
-            .as_mut()
-            .ok_or_else(|| anyhow!("Transaction already consumed"))?;
-
-        let query_obj = sqlx::query(sql);
-        let query_obj = bind_params_tx(query_obj, params);
-
-        let rows = query_obj
-            .fetch_all(&mut **tx)
-            .await
-            .map_err(|e| anyhow!("Query execution failed: {e}"))?;
-
-        Ok(rows.iter().map(row_to_json_tx).collect())
-    }
-
-    async fn fetch_one(
-        &mut self,
-        query: &dyn QuerySelector,
-        params: &[&dyn ToDbValue],
-    ) -> Result<JsonRow> {
-        let sql = query.select_query();
-        let tx = self
-            .tx
-            .as_mut()
-            .ok_or_else(|| anyhow!("Transaction already consumed"))?;
-
-        let query_obj = sqlx::query(sql);
-        let query_obj = bind_params_tx(query_obj, params);
-
-        let row = query_obj
-            .fetch_one(&mut **tx)
-            .await
-            .map_err(|e| anyhow!("Query execution failed: {e}"))?;
-
-        Ok(row_to_json_tx(&row))
-    }
-
-    async fn fetch_optional(
-        &mut self,
-        query: &dyn QuerySelector,
-        params: &[&dyn ToDbValue],
-    ) -> Result<Option<JsonRow>> {
-        let sql = query.select_query();
-        let tx = self
-            .tx
-            .as_mut()
-            .ok_or_else(|| anyhow!("Transaction already consumed"))?;
-
-        let query_obj = sqlx::query(sql);
-        let query_obj = bind_params_tx(query_obj, params);
-
-        let row = query_obj
-            .fetch_optional(&mut **tx)
-            .await
-            .map_err(|e| anyhow!("Query execution failed: {e}"))?;
-
-        Ok(row.map(|r| row_to_json_tx(&r)))
-    }
-
-    async fn commit(mut self: Box<Self>) -> Result<()> {
-        let tx = self
-            .tx
-            .take()
-            .ok_or_else(|| anyhow!("Transaction already consumed"))?;
-
-        tx.commit()
-            .await
-            .map_err(|e| anyhow!("Transaction commit failed: {e}"))?;
-
-        Ok(())
-    }
-
-    async fn rollback(mut self: Box<Self>) -> Result<()> {
-        let tx = self
-            .tx
-            .take()
-            .ok_or_else(|| anyhow!("Transaction already consumed"))?;
-
-        tx.rollback()
-            .await
-            .map_err(|e| anyhow!("Transaction rollback failed: {e}"))?;
-
-        Ok(())
-    }
-}
-
-impl DatabaseProviderExt for PostgresProvider {
-    async fn fetch_typed_optional<T: FromDatabaseRow>(
-        &self,
-        query: &dyn QuerySelector,
-        params: &[&dyn ToDbValue],
-    ) -> Result<Option<T>> {
-        let sql = query.select_query();
-        let query_obj = sqlx::query(sql);
-        let query_obj = Self::bind_params(query_obj, params);
-
-        let row = query_obj
-            .fetch_optional(&*self.pool)
-            .await
-            .map_err(|e| anyhow!("Query execution failed: {e}"))?;
-
-        match row {
-            Some(r) => Ok(Some(T::from_postgres_row(&r)?)),
-            None => Ok(None),
-        }
-    }
-
-    async fn fetch_typed_one<T: FromDatabaseRow>(
-        &self,
-        query: &dyn QuerySelector,
-        params: &[&dyn ToDbValue],
-    ) -> Result<T> {
-        let sql = query.select_query();
-        let query_obj = sqlx::query(sql);
-        let query_obj = Self::bind_params(query_obj, params);
-
-        let row = query_obj
-            .fetch_one(&*self.pool)
-            .await
-            .map_err(|e| anyhow!("Query execution failed: {e}"))?;
-
-        T::from_postgres_row(&row)
-    }
-
-    async fn fetch_typed_all<T: FromDatabaseRow>(
-        &self,
-        query: &dyn QuerySelector,
-        params: &[&dyn ToDbValue],
-    ) -> Result<Vec<T>> {
-        let sql = query.select_query();
-        let query_obj = sqlx::query(sql);
-        let query_obj = Self::bind_params(query_obj, params);
-
-        let rows = query_obj
-            .fetch_all(&*self.pool)
-            .await
-            .map_err(|e| anyhow!("Query execution failed: {e}"))?;
-
-        rows.iter().map(|r| T::from_postgres_row(r)).collect()
     }
 }

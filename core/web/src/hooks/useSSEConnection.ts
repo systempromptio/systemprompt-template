@@ -23,6 +23,7 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { useAuthStore } from '@/stores/auth.store'
 import { useContextStore } from '@/stores/context.store'
+import { useTaskStore } from '@/stores/task.store'
 import { useSSEEventHandler } from './sse/useSSEEventHandler'
 import { useSSETokenManagement } from './sse/useSSETokenManagement'
 import { logger } from '@/lib/logger'
@@ -91,6 +92,7 @@ export function useSSEConnection(options: UseSSEConnectionOptions): UseSSEConnec
   const reconnectAttemptsRef = useRef(0)
   const isConnectedRef = useRef(false)
   const errorRef = useRef<Error | null>(null)
+  const hasConnectedBeforeRef = useRef(false)
 
   const { accessToken, isAuthenticated, userId } = useAuthStore()
   const { processSSEStream } = useSSEEventHandler(onMessage)
@@ -113,13 +115,15 @@ export function useSSEConnection(options: UseSSEConnectionOptions): UseSSEConnec
     }, delay)
   }, [onDisconnected])
 
-  const handleConnectionError = useCallback(async (error?: any, connect?: () => void) => {
+  const handleConnectionError = useCallback(async (error?: unknown, connect?: () => void) => {
     useContextStore.getState().setSSEStatus('error')
     useContextStore.getState().setSSEError('Connection failed')
-    errorRef.current = error
+    errorRef.current = error instanceof Error ? error : new Error(String(error))
     abortControllerRef.current = null
 
-    const is401Error = error?.message?.includes('401') || error?.status === 401
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStatus = (error as { status?: number } | undefined)?.status
+    const is401Error = errorMessage.includes('401') || errorStatus === 401
     const isAnonUser = useAuthStore.getState().userType === 'anon'
 
     if (is401Error && isAnonUser) {
@@ -145,6 +149,28 @@ export function useSSEConnection(options: UseSSEConnectionOptions): UseSSEConnec
     }
     return true
   }
+
+  /**
+   * Recover UI state after SSE reconnection.
+   * This ensures messages and task data are restored if they were lost during disconnection.
+   */
+  const recoverStateAfterReconnection = useCallback(async () => {
+    const contextId = useContextStore.getState().currentContextId
+    if (!contextId) {
+      logger.debug('No current context to recover', undefined, 'useSSEConnection')
+      return
+    }
+
+    logger.info('Recovering state after reconnection', { contextId }, 'useSSEConnection')
+
+    try {
+      const authHeader = useAuthStore.getState().getAuthHeader()
+      await useTaskStore.getState().fetchTasksByContext(contextId, authHeader)
+      logger.info('State recovery completed', { contextId }, 'useSSEConnection')
+    } catch (error) {
+      logger.error('Failed to recover state after reconnection', error, 'useSSEConnection')
+    }
+  }, [])
 
   const connect = useCallback(() => {
     if (!isAuthValid()) return
@@ -188,14 +214,22 @@ export function useSSEConnection(options: UseSSEConnectionOptions): UseSSEConnec
         logger.info('Connected to SSE', undefined, 'useSSEConnection')
         useContextStore.getState().setSSEStatus('connected')
         useContextStore.getState().setSSEError(null)
+
+        const isReconnection = hasConnectedBeforeRef.current
+        hasConnectedBeforeRef.current = true
         reconnectAttemptsRef.current = 0
         isConnectedRef.current = true
         errorRef.current = null
         onConnected?.()
 
+        // Recover state after reconnection to ensure UI is in sync with backend
+        if (isReconnection) {
+          recoverStateAfterReconnection()
+        }
+
         await processSSEStream(response.body.getReader())
-      } catch (error: any) {
-        if (error.name === 'AbortError') {
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') {
           logger.debug('Connection aborted', undefined, 'useSSEConnection')
           isConnectedRef.current = false
           onDisconnected?.()
@@ -211,7 +245,7 @@ export function useSSEConnection(options: UseSSEConnectionOptions): UseSSEConnec
     }
 
     runStream()
-  }, [isAuthenticated, userId, accessToken, url, onConnected, onDisconnected, handleConnectionError, processSSEStream])
+  }, [isAuthenticated, userId, accessToken, url, onConnected, onDisconnected, handleConnectionError, processSSEStream, recoverStateAfterReconnection])
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {

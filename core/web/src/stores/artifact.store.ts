@@ -1,18 +1,79 @@
 import { create } from 'zustand'
-import type { Artifact, EphemeralArtifact } from '@/types/artifact'
+import type { Artifact, ArtifactType } from '@/types/artifact'
 import { isPersistedArtifact } from '@/types/artifact'
 import { artifactsService } from '@/services/artifacts.service'
-import type { ArtifactType } from '@/types/artifacts'
 import { shouldReplaceItem } from '@/utils/store-helpers'
-import {
-  ensureInArray,
-  addToMapping,
-  cloneRecordArrays,
-  openPersisted,
-  openEphemeral,
-  closeModal,
-} from './store-utilities'
+import { ensureInArray, addToMapping } from './store-utilities'
 import { extractAndStoreSkill } from '@/lib/utils/extractArtifactSkills'
+
+type IndexKey = 'byTask' | 'byContext'
+
+interface NormalizeOptions {
+  indexKey?: IndexKey
+  indexValue?: string
+}
+
+interface ArtifactState {
+  byId: Record<string, Artifact>
+  allIds: readonly string[]
+  byContext: Record<string, readonly string[]>
+  byTask: Record<string, readonly string[]>
+  isLoading: boolean
+  error?: string | null
+}
+
+function normalizeArtifacts(
+  state: ArtifactState,
+  artifacts: Artifact[],
+  options: NormalizeOptions = {}
+): Partial<ArtifactState> {
+  const newById = { ...state.byId }
+  let newAllIds = [...state.allIds]
+  const newByContext = { ...state.byContext }
+  const newByTask = { ...state.byTask }
+  const artifactIds: string[] = []
+
+  artifacts.forEach((artifact) => {
+    newById[artifact.artifactId] = artifact
+    artifactIds.push(artifact.artifactId)
+    if (!newAllIds.includes(artifact.artifactId)) {
+      newAllIds.push(artifact.artifactId)
+    }
+
+    if (isPersistedArtifact(artifact)) {
+      const contextId = artifact.metadata.context_id
+      const taskId = artifact.metadata.task_id
+
+      if (contextId) {
+        addToMapping(newByContext, contextId, artifact.artifactId)
+      }
+      if (taskId) {
+        addToMapping(newByTask, taskId, artifact.artifactId)
+        if (contextId) {
+          extractAndStoreSkill(artifact, contextId, taskId)
+        }
+      }
+    }
+  })
+
+  const result: Partial<ArtifactState> = {
+    byId: newById,
+    allIds: newAllIds,
+    byContext: newByContext,
+    byTask: newByTask,
+    isLoading: false,
+  }
+
+  if (options.indexKey && options.indexValue) {
+    if (options.indexKey === 'byContext') {
+      result.byContext = { ...newByContext, [options.indexValue]: artifactIds }
+    } else if (options.indexKey === 'byTask') {
+      result.byTask = { ...newByTask, [options.indexValue]: artifactIds }
+    }
+  }
+
+  return result
+}
 
 /**
  * Zustand store interface for managing artifact state
@@ -27,7 +88,6 @@ interface ArtifactStore {
   selectedArtifactId: string | null
   selectedArtifactIds: readonly string[]
   currentArtifactIndex: number
-  ephemeralArtifact: EphemeralArtifact | null
 
   fetchAllArtifacts: (authToken: string | null, limit?: number) => Promise<void>
   fetchArtifactsByContext: (contextId: string, authToken: string | null) => Promise<void>
@@ -43,7 +103,6 @@ interface ArtifactStore {
   openArtifacts: (artifactIds: string[]) => void
   nextArtifact: () => void
   previousArtifact: () => void
-  openEphemeralArtifact: (artifact: EphemeralArtifact) => void
   closeArtifact: () => void
 }
 
@@ -58,11 +117,8 @@ interface ArtifactStore {
  * - isLoading: Loading state indicator
  * - error: Error message if any
  * - selectedArtifactId: Currently selected persisted artifact ID
- * - ephemeralArtifact: Currently displayed ephemeral artifact
  *
  * Modal state management:
- * - Only one artifact can be open at a time (persisted XOR ephemeral)
- * - Opening a new artifact closes any previously open artifact
  * - Multiple artifacts can be navigated via selectedArtifactIds array
  */
 export const useArtifactStore = create<ArtifactStore>()((set, get) => ({
@@ -75,61 +131,20 @@ export const useArtifactStore = create<ArtifactStore>()((set, get) => ({
   selectedArtifactId: null,
   selectedArtifactIds: [],
   currentArtifactIndex: 0,
-  ephemeralArtifact: null,
 
   /**
    * Fetches all artifacts from the API with optional limit
-   * Organizes artifacts by context and task for efficient lookups
-   *
-   * @param authToken - Authentication token (optional)
-   * @param limit - Maximum number of artifacts to fetch (optional)
-   * @returns Promise that resolves when fetch is complete
    */
   fetchAllArtifacts: async (authToken, limit?) => {
     set({ isLoading: true, error: null })
-
-    const { artifacts, error } = await artifactsService.listArtifacts(
-      authToken,
-      limit
-    )
+    const { artifacts, error } = await artifactsService.listArtifacts(authToken, limit)
 
     if (error) {
       set({ isLoading: false, error })
       return
     }
-
     if (artifacts) {
-      set((state) => {
-        const newById = { ...state.byId }
-        let newAllIds = [...state.allIds]
-        const newByContext = cloneRecordArrays(state.byContext)
-        const newByTask = cloneRecordArrays(state.byTask)
-
-        artifacts.forEach((artifact) => {
-          newById[artifact.artifactId] = artifact
-          newAllIds = [...ensureInArray(artifact.artifactId, newAllIds)]
-
-          if (isPersistedArtifact(artifact)) {
-            const contextId = artifact.metadata.context_id
-            addToMapping(newByContext, contextId, artifact.artifactId)
-
-            const taskId = artifact.metadata.task_id
-            if (taskId) {
-              addToMapping(newByTask, taskId, artifact.artifactId)
-              // Extract skill metadata when loading all artifacts
-              extractAndStoreSkill(artifact, contextId, taskId)
-            }
-          }
-        })
-
-        return {
-          byId: newById,
-          allIds: newAllIds,
-          byContext: newByContext,
-          byTask: newByTask,
-          isLoading: false,
-        }
-      })
+      set((state) => normalizeArtifacts(state, artifacts))
     } else {
       set({ isLoading: false })
     }
@@ -137,53 +152,17 @@ export const useArtifactStore = create<ArtifactStore>()((set, get) => ({
 
   /**
    * Fetches all artifacts for a specific context from the API
-   *
-   * @param contextId - The context ID to fetch artifacts for
-   * @param authToken - Authentication token (optional)
-   * @returns Promise that resolves when fetch is complete
    */
   fetchArtifactsByContext: async (contextId, authToken) => {
     set({ isLoading: true, error: null })
-
-    const { artifacts, error } = await artifactsService.listArtifactsByContext(
-      contextId,
-      authToken
-    )
+    const { artifacts, error } = await artifactsService.listArtifactsByContext(contextId, authToken)
 
     if (error) {
       set({ isLoading: false, error })
       return
     }
-
     if (artifacts) {
-      set((state) => {
-        const newById = { ...state.byId }
-        const newAllIds = [...state.allIds]
-        const artifactIds: string[] = []
-
-        artifacts.forEach((artifact) => {
-          newById[artifact.artifactId] = artifact
-          artifactIds.push(artifact.artifactId)
-          if (!newAllIds.includes(artifact.artifactId)) {
-            newAllIds.push(artifact.artifactId)
-          }
-
-          // Extract skill metadata from artifacts when loading context
-          if (isPersistedArtifact(artifact)) {
-            const taskId = artifact.metadata.task_id
-            if (taskId) {
-              extractAndStoreSkill(artifact, contextId, taskId)
-            }
-          }
-        })
-
-        return {
-          byId: newById,
-          allIds: newAllIds,
-          byContext: { ...state.byContext, [contextId]: artifactIds },
-          isLoading: false,
-        }
-      })
+      set((state) => normalizeArtifacts(state, artifacts, { indexKey: 'byContext', indexValue: contextId }))
     } else {
       set({ isLoading: false })
     }
@@ -191,50 +170,17 @@ export const useArtifactStore = create<ArtifactStore>()((set, get) => ({
 
   /**
    * Fetches all artifacts for a specific task from the API
-   *
-   * @param taskId - The task ID to fetch artifacts for
-   * @param authToken - Authentication token (optional)
-   * @returns Promise that resolves when fetch is complete
    */
   fetchArtifactsByTask: async (taskId, authToken) => {
     set({ isLoading: true, error: null })
-
     const { artifacts, error } = await artifactsService.listArtifactsByTask(taskId, authToken)
 
     if (error) {
       set({ isLoading: false, error })
       return
     }
-
     if (artifacts) {
-      set((state) => {
-        const newById = { ...state.byId }
-        const artifactIds: string[] = []
-        const newAllIds = [...state.allIds]
-
-        artifacts.forEach((artifact) => {
-          newById[artifact.artifactId] = artifact
-          artifactIds.push(artifact.artifactId)
-          if (!newAllIds.includes(artifact.artifactId)) {
-            newAllIds.push(artifact.artifactId)
-          }
-
-          // Extract skill metadata when loading task artifacts
-          if (isPersistedArtifact(artifact)) {
-            const contextId = artifact.metadata.context_id
-            if (contextId) {
-              extractAndStoreSkill(artifact, contextId, taskId)
-            }
-          }
-        })
-
-        return {
-          byId: newById,
-          allIds: newAllIds,
-          byTask: { ...state.byTask, [taskId]: artifactIds },
-          isLoading: false,
-        }
-      })
+      set((state) => normalizeArtifacts(state, artifacts, { indexKey: 'byTask', indexValue: taskId }))
     } else {
       set({ isLoading: false })
     }
@@ -242,27 +188,17 @@ export const useArtifactStore = create<ArtifactStore>()((set, get) => ({
 
   /**
    * Fetches a single artifact by ID from the API
-   *
-   * @param artifactId - The artifact ID to fetch
-   * @param authToken - Authentication token (optional)
-   * @returns Promise that resolves when fetch is complete
    */
   fetchArtifact: async (artifactId, authToken) => {
     set({ isLoading: true, error: null })
-
     const { artifact, error } = await artifactsService.getArtifact(artifactId, authToken)
 
     if (error) {
       set({ isLoading: false, error })
       return
     }
-
     if (artifact) {
-      set((state) => ({
-        byId: { ...state.byId, [artifact.artifactId]: artifact },
-        allIds: ensureInArray(artifact.artifactId, state.allIds),
-        isLoading: false,
-      }))
+      set((state) => normalizeArtifacts(state, [artifact]))
     } else {
       set({ isLoading: false })
     }
@@ -364,23 +300,19 @@ export const useArtifactStore = create<ArtifactStore>()((set, get) => ({
       selectedArtifactId: null,
       selectedArtifactIds: [],
       currentArtifactIndex: 0,
-      ephemeralArtifact: null,
     })
   },
 
   /**
    * Opens a persisted artifact in the modal
-   * Closes any ephemeral artifact that was open
    *
    * @param artifactId - The artifact ID to open
    */
   openArtifact: (artifactId: string) => {
-    const modal = openPersisted<EphemeralArtifact>(artifactId)
     set({
-      selectedArtifactId: modal.selectedId,
-      selectedArtifactIds: modal.selectedId ? [modal.selectedId] : [],
+      selectedArtifactId: artifactId,
+      selectedArtifactIds: [artifactId],
       currentArtifactIndex: 0,
-      ephemeralArtifact: modal.ephemeralItem,
     })
   },
 
@@ -392,12 +324,10 @@ export const useArtifactStore = create<ArtifactStore>()((set, get) => ({
    */
   openArtifacts: (artifactIds: string[]) => {
     if (artifactIds.length === 0) return
-    const modal = openPersisted<EphemeralArtifact>(artifactIds[0])
     set({
-      selectedArtifactId: modal.selectedId,
+      selectedArtifactId: artifactIds[0],
       selectedArtifactIds: artifactIds,
       currentArtifactIndex: 0,
-      ephemeralArtifact: modal.ephemeralItem,
     })
   },
 
@@ -409,11 +339,9 @@ export const useArtifactStore = create<ArtifactStore>()((set, get) => ({
     if (state.selectedArtifactIds.length === 0) return
     const nextIndex = (state.currentArtifactIndex + 1) % state.selectedArtifactIds.length
     const nextArtifactId = state.selectedArtifactIds[nextIndex]
-    const modal = openPersisted<EphemeralArtifact>(nextArtifactId)
     set({
-      selectedArtifactId: modal.selectedId,
+      selectedArtifactId: nextArtifactId,
       currentArtifactIndex: nextIndex,
-      ephemeralArtifact: modal.ephemeralItem,
     })
   },
 
@@ -425,40 +353,20 @@ export const useArtifactStore = create<ArtifactStore>()((set, get) => ({
     if (state.selectedArtifactIds.length === 0) return
     const prevIndex = (state.currentArtifactIndex - 1 + state.selectedArtifactIds.length) % state.selectedArtifactIds.length
     const prevArtifactId = state.selectedArtifactIds[prevIndex]
-    const modal = openPersisted<EphemeralArtifact>(prevArtifactId)
     set({
-      selectedArtifactId: modal.selectedId,
+      selectedArtifactId: prevArtifactId,
       currentArtifactIndex: prevIndex,
-      ephemeralArtifact: modal.ephemeralItem,
     })
   },
 
   /**
-   * Opens an ephemeral artifact in the modal
-   * Closes any persisted artifact that was open
-   *
-   * @param artifact - The ephemeral artifact to open
-   */
-  openEphemeralArtifact: (artifact: EphemeralArtifact) => {
-    const modal = openEphemeral(artifact)
-    set({
-      selectedArtifactId: modal.selectedId,
-      selectedArtifactIds: [],
-      currentArtifactIndex: 0,
-      ephemeralArtifact: modal.ephemeralItem,
-    })
-  },
-
-  /**
-   * Closes any open artifact (persisted or ephemeral)
+   * Closes any open artifact
    */
   closeArtifact: () => {
-    const modal = closeModal<EphemeralArtifact>()
     set({
-      selectedArtifactId: modal.selectedId,
+      selectedArtifactId: null,
       selectedArtifactIds: [],
       currentArtifactIndex: 0,
-      ephemeralArtifact: modal.ephemeralItem,
     })
   },
 }))
@@ -487,15 +395,6 @@ export const artifactSelectors = {
     const { selectedArtifactId, byId } = state
     return selectedArtifactId && byId[selectedArtifactId] ? byId[selectedArtifactId] : null
   },
-
-  /**
-   * Gets the currently open ephemeral artifact
-   *
-   * @param state - Artifact store state
-   * @returns Currently open ephemeral artifact or null
-   */
-  getEphemeralArtifact: (state: ArtifactStore): EphemeralArtifact | null =>
-    state.ephemeralArtifact ?? null,
 
   /**
    * Gets all artifact IDs for a specific context

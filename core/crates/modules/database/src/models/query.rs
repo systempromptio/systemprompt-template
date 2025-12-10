@@ -13,6 +13,7 @@ pub struct QueryResult {
 pub type QueryRow = HashMap<String, Value>;
 
 impl QueryResult {
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             columns: vec![],
@@ -22,10 +23,12 @@ impl QueryResult {
         }
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.rows.is_empty()
     }
 
+    #[must_use]
     pub fn first(&self) -> Option<&QueryRow> {
         self.rows.first()
     }

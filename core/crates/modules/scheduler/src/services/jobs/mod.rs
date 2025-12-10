@@ -1,16 +1,24 @@
 pub mod cleanup_anonymous_users;
+pub mod cleanup_empty_contexts;
 pub mod cleanup_inactive_sessions;
 pub mod content_ingestion;
 pub mod database_cleanup;
 pub mod evaluate_conversations;
+pub mod file_ingestion;
+pub mod optimize_images;
+pub mod publish_content;
 pub mod regenerate_static_content;
 mod skill_validation;
 pub mod static_rebuild;
 
 pub use cleanup_anonymous_users::cleanup_anonymous_users;
+pub use cleanup_empty_contexts::cleanup_empty_contexts;
 pub use cleanup_inactive_sessions::cleanup_inactive_sessions;
 pub use content_ingestion::ingest_content;
 pub use database_cleanup::database_cleanup;
 pub use evaluate_conversations::evaluate_conversations;
+pub use file_ingestion::ingest_files;
+pub use optimize_images::optimize_images;
+pub use publish_content::publish_content;
 pub use regenerate_static_content::regenerate_static_content;
 pub use static_rebuild::rebuild_static_site;

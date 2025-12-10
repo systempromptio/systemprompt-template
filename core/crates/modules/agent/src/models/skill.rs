@@ -12,7 +12,6 @@ pub struct Skill {
     pub description: String,
     pub instructions: String,
     pub enabled: bool,
-    pub allowed_tools: Vec<String>,
     pub tags: Vec<String>,
     pub category_id: Option<CategoryId>,
     pub source_id: SourceId,
@@ -57,16 +56,6 @@ impl Skill {
             .and_then(|v| v.as_bool())
             .ok_or_else(|| anyhow!("Missing enabled"))?;
 
-        let allowed_tools = row
-            .get("allowed_tools")
-            .and_then(|v| v.as_array())
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str().map(String::from))
-                    .collect()
-            })
-            .unwrap_or_default();
-
         let tags = row
             .get("tags")
             .and_then(|v| v.as_array())
@@ -105,7 +94,6 @@ impl Skill {
             description,
             instructions,
             enabled,
-            allowed_tools,
             tags,
             category_id,
             source_id,
@@ -123,6 +111,5 @@ pub struct SkillMetadata {
     pub enabled: bool,
     pub file: String,
     pub assigned_agents: Vec<String>,
-    pub allowed_tools: Vec<String>,
     pub tags: Vec<String>,
 }

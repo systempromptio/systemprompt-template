@@ -8,8 +8,15 @@
 
 import React from 'react'
 
+interface ToolExecution {
+  toolName: string
+  serverName: string
+  executionTime?: number
+  parameters?: Record<string, unknown>
+}
+
 interface ExecutionMetadataProps {
-  execution: any
+  execution: ToolExecution
 }
 
 export const ExecutionMetadata = React.memo(function ExecutionMetadata({

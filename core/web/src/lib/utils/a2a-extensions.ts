@@ -1,4 +1,5 @@
 import type { AgentCard } from '@a2a-js/sdk'
+import { logger } from '@/lib/logger'
 
 /**
  * SystemPrompt extension URIs
@@ -85,13 +86,14 @@ export interface ServiceStatusInfo {
   uptimeSeconds?: number
 }
 
+const VALID_STATUS_VALUES = ['running', 'stopped', 'starting', 'stopping', 'failed', 'notstarted'] as const
+
 /**
  * Normalize status string - capitalize first letter to match ServiceStatus enum
  */
-function normalizeStatus(status: string): ServiceStatus {
+function normalizeStatus(status: string, agentName?: string): ServiceStatus {
   const normalized = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
 
-  // Map common status values
   switch (normalized) {
     case 'Running':
       return ServiceStatus.Running
@@ -106,6 +108,11 @@ function normalizeStatus(status: string): ServiceStatus {
     case 'Notstarted':
       return ServiceStatus.NotStarted
     default:
+      logger.debug('Unexpected service status value', {
+        agentName,
+        receivedStatus: status,
+        validStatuses: VALID_STATUS_VALUES,
+      }, 'a2a-extensions')
       return ServiceStatus.Unknown
   }
 }
@@ -117,14 +124,22 @@ export function getServiceStatus(agent: AgentCard): ServiceStatusInfo {
     return { status: ServiceStatus.Unknown }
   }
 
-  const rawStatus = ext.params.status as string
-  const status = rawStatus ? normalizeStatus(rawStatus) : ServiceStatus.Unknown
+  const rawStatus = ext.params.status
+  if (typeof rawStatus !== 'string') {
+    logger.debug('Service status is not a string', {
+      agentName: agent.name,
+      receivedType: typeof rawStatus,
+    }, 'a2a-extensions')
+    return { status: ServiceStatus.Unknown }
+  }
+
+  const status = normalizeStatus(rawStatus, agent.name)
 
   return {
     status,
-    port: ext.params.port as number | undefined,
-    pid: ext.params.pid as number | undefined,
-    uptimeSeconds: ext.params.uptimeSeconds as number | undefined,
+    port: typeof ext.params.port === 'number' ? ext.params.port : undefined,
+    pid: typeof ext.params.pid === 'number' ? ext.params.pid : undefined,
+    uptimeSeconds: typeof ext.params.uptimeSeconds === 'number' ? ext.params.uptimeSeconds : undefined,
   }
 }
 
@@ -134,7 +149,7 @@ export function getServiceStatus(agent: AgentCard): ServiceStatusInfo {
 export interface McpServerInfo {
   name: string
   version: string
-  transport: string
+  transport: 'http' | 'stdio'
   enabled: boolean
 }
 
@@ -145,7 +160,13 @@ interface RawMcpServer {
   status?: string
 }
 
-function isRawMcpServer(value: unknown): value is RawMcpServer {
+function isValidMcpServer(value: unknown): value is RawMcpServer & { name: string; endpoint: string } {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+  return typeof v.name === 'string' && typeof v.endpoint === 'string'
+}
+
+function isPartialMcpServer(value: unknown): value is RawMcpServer {
   return typeof value === 'object' && value !== null
 }
 
@@ -154,16 +175,35 @@ export function getMcpServers(agent: AgentCard): McpServerInfo[] {
   if (!ext?.params?.servers) return []
 
   const servers = ext.params.servers
-  if (!Array.isArray(servers)) return []
+  if (!Array.isArray(servers)) {
+    logger.debug('MCP servers field is not an array', { agentName: agent.name }, 'a2a-extensions')
+    return []
+  }
 
   return servers
-    .filter(isRawMcpServer)
-    .map((server) => ({
-      name: server.name || 'Unknown',
-      version: server.version || '1.0.0',
-      transport: server.endpoint?.startsWith('http') ? 'http' : 'stdio',
-      enabled: server.status === 'running',
-    }))
+    .map((server, index): McpServerInfo | null => {
+      if (isValidMcpServer(server)) {
+        return {
+          name: server.name,
+          version: server.version || '1.0.0',
+          transport: server.endpoint.startsWith('http') ? 'http' : 'stdio',
+          enabled: server.status === 'running',
+        }
+      }
+
+      // Log partial servers that are missing required fields
+      if (isPartialMcpServer(server)) {
+        logger.debug('MCP server config missing required fields', {
+          agentName: agent.name,
+          index,
+          hasName: typeof server.name === 'string',
+          hasEndpoint: typeof server.endpoint === 'string',
+        }, 'a2a-extensions')
+      }
+
+      return null
+    })
+    .filter((server): server is McpServerInfo => server !== null)
 }
 
 /**

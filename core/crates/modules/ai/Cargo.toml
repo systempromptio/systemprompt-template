@@ -22,6 +22,7 @@ rmcp = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }
+rust_decimal = { workspace = true }
 tempfile = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
@@ -40,6 +41,7 @@ systemprompt-core-system = { path = "../core" }
 systemprompt-core-mcp = { path = "../mcp" }
 systemprompt-core-logging = { path = "../log" }
 systemprompt-core-oauth = { path = "../oauth" }
+systemprompt-core-files = { path = "../files" }
 systemprompt-traits = { path = "../../shared/traits" }
 systemprompt-identifiers = { path = "../../shared/identifiers" }
 

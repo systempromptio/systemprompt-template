@@ -106,7 +106,9 @@ impl JsonParser {
         cleaned = trailing_comma_re.replace_all(&cleaned, "$1").to_string();
 
         let single_quote_key_re = Regex::new(r"'([^']+)'\s*:")?;
-        cleaned = single_quote_key_re.replace_all(&cleaned, "\"$1\":").to_string();
+        cleaned = single_quote_key_re
+            .replace_all(&cleaned, "\"$1\":")
+            .to_string();
 
         let line_comment_re = Regex::new(r"//.*$")?;
         cleaned = line_comment_re.replace_all(&cleaned, "").to_string();

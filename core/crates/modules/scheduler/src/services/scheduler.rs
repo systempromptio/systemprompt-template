@@ -82,7 +82,8 @@ impl SchedulerService {
                 let log_context = LogContext::new()
                     .with_session_id("scheduler")
                     .with_trace_id(&format!("scheduler-{}", uuid::Uuid::new_v4()))
-                    .with_user_id("system");
+                    .with_user_id("system")
+                    .with_client_id("scheduler");
 
                 let logger = LogService::new(db_pool.clone(), log_context);
 
@@ -95,7 +96,7 @@ impl SchedulerService {
                     logger
                         .error(
                             "scheduler",
-                            &format!("Failed to increment run count for {}: {}", job_name, e),
+                            &format!("Failed to increment run count for {job_name}: {e}"),
                         )
                         .await
                         .ok();
@@ -104,6 +105,14 @@ impl SchedulerService {
                 let result = match job_name.as_str() {
                     "cleanup_anonymous_users" => {
                         jobs::cleanup_anonymous_users(
+                            db_pool.clone(),
+                            logger.clone(),
+                            app_context.clone(),
+                        )
+                        .await
+                    },
+                    "cleanup_empty_contexts" => {
+                        jobs::cleanup_empty_contexts(
                             db_pool.clone(),
                             logger.clone(),
                             app_context.clone(),
@@ -142,9 +151,13 @@ impl SchedulerService {
                         )
                         .await
                     },
+                    "publish_content" => {
+                        jobs::publish_content(db_pool.clone(), logger.clone(), app_context.clone())
+                            .await
+                    },
                     _ => {
                         logger
-                            .error("scheduler", &format!("Unknown job: {}", job_name))
+                            .error("scheduler", &format!("Unknown job: {job_name}"))
                             .await
                             .ok();
                         Err(anyhow::anyhow!("Unknown job: {}", job_name))
@@ -170,7 +183,7 @@ impl SchedulerService {
                         }
                     },
                     Err(e) => {
-                        let error_msg = format!("{}", e);
+                        let error_msg = format!("{e}");
                         logger.error("scheduler", &error_msg).await.ok();
                         if let Err(e) = repository
                             .update_job_execution(&job_name, "failed", Some(&error_msg), None)

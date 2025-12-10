@@ -30,6 +30,7 @@ export { useResolvedSchema } from './useResolvedSchema'
 // Utilities & State Management
 export { useRetry } from './useRetry'
 export { useAsyncState } from './useAsyncState'
+export { useExpandableList } from './useExpandableList'
 
 // Type exports for convenience
 export type { UseRetryOptions, UseRetryResult } from './useRetry'

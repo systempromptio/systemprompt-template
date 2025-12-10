@@ -1,9 +1,7 @@
-use axum::{
-    extract::State,
-    http::{Request, StatusCode},
-    middleware::Next,
-    response::Response,
-};
+use axum::extract::State;
+use axum::http::{Request, StatusCode};
+use axum::middleware::Next;
+use axum::response::Response;
 use std::sync::Arc;
 
 use super::types::AgentOAuthState;

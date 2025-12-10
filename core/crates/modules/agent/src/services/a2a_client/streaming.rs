@@ -52,7 +52,7 @@ impl SseStream {
             .json(&body);
 
         if let Some(token) = auth_token {
-            request = request.header("Authorization", format!("Bearer {}", token));
+            request = request.header("Authorization", format!("Bearer {token}"));
         }
 
         let response = request.send().await?;
@@ -66,7 +66,7 @@ impl SseStream {
         tokio::spawn(async move {
             if let Err(e) = Self::process_stream(response, sender).await {
                 if let Some(log) = log_service {
-                    log.error("a2a_streaming", &format!("Stream processing error: {}", e))
+                    log.error("a2a_streaming", &format!("Stream processing error: {e}"))
                         .await
                         .ok();
                 }

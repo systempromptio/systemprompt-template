@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 /// Database record for task persistence.
-/// This represents the database table structure, NOT the A2A protocol Task entity.
-/// For A2A protocol Task, see `crates/modules/agent/src/models/a2a/task.rs`.
+/// This represents the database table structure, NOT the A2A protocol Task
+/// entity. For A2A protocol Task, see
+/// `crates/modules/agent/src/models/a2a/task.rs`.
 #[derive(Debug, sqlx::FromRow, Serialize, Deserialize)]
 pub struct TaskRecord {
     pub uuid: String,

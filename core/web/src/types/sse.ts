@@ -1,27 +1,59 @@
+import type { Task as A2ATask, Artifact as A2AArtifact, Message } from '@a2a-js/sdk'
+
 export interface BroadcastEvent {
   event_type: string
   context_id: string
   user_id: string
-  data: any
+  data: BroadcastEventData
   timestamp: string
 }
 
-export interface ArtifactCreatedEventData {
-  artifact: any
-  task_id?: string
-  context_id: string
-  [key: string]: any
-}
-
-export interface MessageReceivedEventData {
-  context_id: string
-  [key: string]: any
-}
+export type BroadcastEventData =
+  | TaskEventData
+  | ArtifactEventData
+  | MessageEventData
+  | SkillEventData
+  | ExecutionStepEventData
+  | Record<string, unknown>
 
 export interface TaskEventData {
-  task: any
-  context_id: string
-  [key: string]: any
+  task: A2ATask
+  artifacts?: A2AArtifact[]
+  context_id?: string
+}
+
+export interface ArtifactEventData {
+  artifact: A2AArtifact
+  task_id?: string
+  context_id?: string
+}
+
+export interface MessageEventData {
+  message?: Message
+  context_id?: string
+}
+
+export interface SkillEventData {
+  skill_id: string
+  skill_name: string
+  description?: string
+  task_id?: string
+  request_context?: {
+    execution?: {
+      context_id?: string
+      task_id?: string
+    }
+  }
+}
+
+export interface ExecutionStepEventData {
+  step: {
+    stepId: string
+    status: string
+    title?: string
+    taskId?: string
+  }
+  context_id?: string
 }
 
 export interface CurrentAgentEvent {
@@ -30,6 +62,59 @@ export interface CurrentAgentEvent {
   /** Agent name, or null to clear/remove agent assignment */
   agent_name: string | null
   timestamp: string
+}
+
+/**
+ * Type guard to check if event data contains a task
+ */
+export function hasTaskInData(data: BroadcastEventData): data is TaskEventData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'task' in data &&
+    typeof data.task === 'object' &&
+    data.task !== null
+  )
+}
+
+/**
+ * Type guard to check if event data contains an artifact
+ */
+export function hasArtifactInData(data: BroadcastEventData): data is ArtifactEventData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'artifact' in data &&
+    typeof data.artifact === 'object' &&
+    data.artifact !== null
+  )
+}
+
+/**
+ * Type guard to check if event data contains skill info
+ */
+export function hasSkillInData(data: BroadcastEventData): data is SkillEventData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'skill_id' in data &&
+    typeof data.skill_id === 'string' &&
+    'skill_name' in data &&
+    typeof data.skill_name === 'string'
+  )
+}
+
+/**
+ * Type guard to check if event data contains an execution step
+ */
+export function hasStepInData(data: BroadcastEventData): data is ExecutionStepEventData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'step' in data &&
+    typeof data.step === 'object' &&
+    data.step !== null
+  )
 }
 
 /**

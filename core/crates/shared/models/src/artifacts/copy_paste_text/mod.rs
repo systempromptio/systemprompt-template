@@ -1,19 +1,33 @@
-use crate::artifacts::{metadata::ExecutionMetadata, traits::Artifact, types::ArtifactType};
+use crate::artifacts::metadata::ExecutionMetadata;
+use crate::artifacts::traits::Artifact;
+use crate::artifacts::types::ArtifactType;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+fn default_artifact_type() -> String {
+    "copy_paste_text".to_string()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CopyPasteTextArtifact {
+    #[serde(rename = "x-artifact-type")]
+    #[serde(default = "default_artifact_type")]
+    pub artifact_type: String,
     pub content: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub language: Option<String>,
     #[serde(skip)]
+    #[schemars(skip)]
     metadata: ExecutionMetadata,
 }
 
 impl CopyPasteTextArtifact {
     pub fn new(content: impl Into<String>) -> Self {
         Self {
+            artifact_type: "copy_paste_text".to_string(),
             content: content.into(),
             title: None,
             language: None,
@@ -43,27 +57,6 @@ impl CopyPasteTextArtifact {
     ) -> Self {
         self.metadata = self.metadata.with_skill(skill_id.into(), skill_name.into());
         self
-    }
-
-    pub fn to_response(&self) -> JsonValue {
-        let mut response = json!({
-            "x-artifact-type": "copy_paste_text",
-            "content": self.content
-        });
-
-        if let Some(ref title) = self.title {
-            response["title"] = json!(title);
-        }
-
-        if let Some(ref lang) = self.language {
-            response["language"] = json!(lang);
-        }
-
-        if let Some(ref id) = self.metadata.execution_id {
-            response["_execution_id"] = json!(id);
-        }
-
-        response
     }
 }
 

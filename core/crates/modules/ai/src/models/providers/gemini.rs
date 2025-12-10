@@ -15,13 +15,13 @@ impl Default for GeminiModels {
                 id: "gemini-2.5-flash-lite".to_string(),
                 max_tokens: 1_000_000,
                 supports_tools: true,
-                cost_per_1k_tokens: 0.00015,
+                cost_per_1k_tokens: 0.0004,
             },
             gemini_flash: ModelConfig {
                 id: "gemini-2.5-flash".to_string(),
                 max_tokens: 1_000_000,
                 supports_tools: true,
-                cost_per_1k_tokens: 0.00025,
+                cost_per_1k_tokens: 0.0025,
             },
         }
     }
@@ -34,6 +34,31 @@ pub struct GeminiRequest {
     pub generation_config: Option<GeminiGenerationConfig>,
     pub safety_settings: Option<Vec<GeminiSafetySetting>>,
     pub tools: Option<Vec<GeminiTool>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_config: Option<GeminiToolConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GeminiToolConfig {
+    pub function_calling_config: GeminiFunctionCallingConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GeminiFunctionCallingConfig {
+    pub mode: GeminiFunctionCallingMode,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allowed_function_names: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum GeminiFunctionCallingMode {
+    Auto,
+    Any,
+    None,
+    Validated,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -62,6 +87,14 @@ pub enum GeminiPart {
         #[serde(rename = "functionResponse")]
         function_response: GeminiFunctionResponse,
     },
+    ExecutableCode {
+        #[serde(rename = "executableCode")]
+        executable_code: GeminiExecutableCode,
+    },
+    CodeExecutionResult {
+        #[serde(rename = "codeExecutionResult")]
+        code_execution_result: GeminiCodeExecutionResult,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,9 +105,12 @@ pub struct GeminiInlineData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GeminiFunctionCall {
     pub name: String,
     pub args: serde_json::Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thought_signature: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -99,6 +135,17 @@ pub struct GeminiGenerationConfig {
     pub response_modalities: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub image_config: Option<GeminiImageConfig>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thinking_config: Option<GeminiThinkingConfig>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GeminiThinkingConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thinking_budget: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_thoughts: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -126,13 +173,33 @@ pub struct GeminiTool {
     pub google_search: Option<GoogleSearch>,
     #[serde(skip_serializing_if = "Option::is_none", rename = "urlContext")]
     pub url_context: Option<UrlContext>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "codeExecution")]
+    pub code_execution: Option<CodeExecution>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct GoogleSearch {}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct UrlContext {}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct CodeExecution {}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GeminiExecutableCode {
+    pub language: String,
+    pub code: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GoogleSearch {}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UrlContext {}
+#[serde(rename_all = "camelCase")]
+pub struct GeminiCodeExecutionResult {
+    pub outcome: String,
+    #[serde(default)]
+    pub output: Option<String>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -178,7 +245,6 @@ pub struct GeminiUsageMetadata {
     pub total_token_count: u32,
 }
 
-// Google Search grounding metadata (only present when googleSearch tool is used)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GeminiGroundingMetadata {
@@ -218,7 +284,6 @@ pub struct GeminiTextSegment {
     pub text: String,
 }
 
-// URL context metadata (only present when urlContext tool is used)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GeminiUrlContextMetadata {

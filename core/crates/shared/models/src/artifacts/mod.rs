@@ -5,6 +5,7 @@ pub mod copy_paste_text;
 pub mod dashboard;
 pub mod list;
 pub mod metadata;
+pub mod research;
 pub mod table;
 pub mod text;
 pub mod traits;
@@ -38,7 +39,8 @@ pub use dashboard::{
     TableSectionData,
 };
 pub use list::{ListArtifact, ListItem};
-pub use metadata::ExecutionMetadata;
+pub use metadata::{ExecutionMetadata, ToolResponse};
+pub use research::{ResearchArtifact, SourceCitation};
 pub use table::{Column, TableArtifact, TableHints, TableResponse};
 pub use text::TextArtifact;
 pub use traits::{Artifact, ArtifactSchema};

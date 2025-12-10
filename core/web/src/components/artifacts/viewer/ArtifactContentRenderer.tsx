@@ -7,8 +7,7 @@
  */
 
 import React, { lazy, Suspense } from 'react'
-import type { Artifact } from '@/types/artifact'
-import type { TableHints, ChartHints, FormHints, TreeHints, PresentationHints, DashboardHints } from '@/types/artifacts'
+import type { Artifact, TableHints, ChartHints, FormHints, TreeHints, PresentationHints, DashboardHints } from '@/types/artifact'
 import { TextArtifact } from '../TextArtifact'
 import { FileArtifact } from '../FileArtifact'
 import { DataArtifact } from '../DataArtifact'

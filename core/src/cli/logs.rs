@@ -3,10 +3,8 @@ use chrono::{DateTime, Utc};
 use clap::Args;
 use colored::Colorize;
 use std::time::Duration;
-use systemprompt_core_logging::{
-    models::{LogEntry, LogLevel},
-    repository::LoggingRepository,
-};
+use systemprompt_core_logging::models::{LogEntry, LogLevel};
+use systemprompt_core_logging::repository::LoggingRepository;
 use systemprompt_core_system::models::AppContext;
 use tokio::time;
 
@@ -56,14 +54,16 @@ pub struct LogsArgs {
     #[arg(long, action = clap::ArgAction::SetTrue)]
     vacuum: bool,
 
-    /// Show what would be deleted without actually deleting (use with --cleanup)
+    /// Show what would be deleted without actually deleting (use with
+    /// --cleanup)
     #[arg(long, action = clap::ArgAction::SetTrue)]
     dry_run: bool,
 }
 
 async fn get_initial_logs(repo: &LoggingRepository, args: &LogsArgs) -> Result<Vec<LogEntry>> {
     // TODO: Implement filtering by level/module using get_logs_paginated
-    // The get_logs_by_level and get_logs_by_module methods were removed in Log module refactoring
+    // The get_logs_by_level and get_logs_by_module methods were removed in Log
+    // module refactoring
     if args.level.is_some() || args.module.is_some() {
         eprintln!(
             "Warning: Filtering by level/module not yet implemented in refactored Log module"

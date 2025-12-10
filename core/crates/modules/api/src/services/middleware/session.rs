@@ -1,15 +1,15 @@
-use axum::{
-    extract::Request,
-    http::{header, StatusCode},
-    middleware::Next,
-    response::Response,
-};
+use axum::extract::Request;
+use axum::http::{header, StatusCode};
+use axum::middleware::Next;
+use axum::response::Response;
 use std::sync::Arc;
 use systemprompt_core_oauth::services::SessionCreationService;
-use systemprompt_core_system::{services::AnalyticsService, AppContext};
+use systemprompt_core_system::services::AnalyticsService;
+use systemprompt_core_system::AppContext;
 use systemprompt_core_users::repository::UserRepository;
 use systemprompt_identifiers::{AgentName, ClientId, ContextId, SessionId, TraceId, UserId};
-use systemprompt_models::{auth::UserType, execution::context::RequestContext};
+use systemprompt_models::auth::UserType;
+use systemprompt_models::execution::context::RequestContext;
 use uuid::Uuid;
 
 use super::jwt_extractor::JwtExtractor;
@@ -25,6 +25,7 @@ pub struct SessionMiddleware {
 }
 
 impl SessionMiddleware {
+    #[allow(clippy::needless_pass_by_value)]
     pub fn new(ctx: Arc<AppContext>) -> Self {
         let jwt_extractor = Arc::new(JwtExtractor::new(&ctx.config().jwt_secret));
         let session_creation_service = Arc::new(SessionCreationService::new(
@@ -49,9 +50,7 @@ impl SessionMiddleware {
 
         let trace_id = headers
             .get("x-trace-id")
-            .and_then(|h| h.to_str().ok())
-            .map(|s| TraceId::new(s.to_string()))
-            .unwrap_or_else(|| TraceId::new(format!("trace_{}", Uuid::new_v4())));
+            .and_then(|h| h.to_str().ok()).map_or_else(|| TraceId::new(format!("trace_{}", Uuid::new_v4())), |s| TraceId::new(s.to_string()));
 
         let (req_ctx, jwt_cookie) = if should_skip {
             let ctx = RequestContext::new(
@@ -84,22 +83,16 @@ impl SessionMiddleware {
             } else {
                 let token_result = Self::extract_token(headers);
 
-                let (session_id, user_id, jwt_token, jwt_cookie) = match token_result {
-                    Ok(token) => match self.jwt_extractor.extract_user_context(&token) {
-                        Ok(jwt_context) => {
-                            (jwt_context.session_id, jwt_context.user_id, token, None)
-                        },
-                        Err(_) => {
-                            let (sid, uid, new_token) =
-                                self.create_new_session(headers, &uri, &method).await?;
-                            (sid, uid, new_token.clone().unwrap_or_default(), new_token)
-                        },
-                    },
-                    Err(_) => {
-                        let (sid, uid, new_token) =
-                            self.create_new_session(headers, &uri, &method).await?;
-                        (sid, uid, new_token.clone().unwrap_or_default(), new_token)
-                    },
+                let (session_id, user_id, jwt_token, jwt_cookie) = if let Ok(token) = token_result { if let Ok(jwt_context) = self.jwt_extractor.extract_user_context(&token) {
+                    (jwt_context.session_id, jwt_context.user_id, token, None)
+                } else {
+                    let (sid, uid, new_token) =
+                        self.create_new_session(headers, &uri, &method).await?;
+                    (sid, uid, new_token.clone().unwrap_or_default(), new_token)
+                } } else {
+                    let (sid, uid, new_token) =
+                        self.create_new_session(headers, &uri, &method).await?;
+                    (sid, uid, new_token.clone().unwrap_or_default(), new_token)
                 };
 
                 let ctx = RequestContext::new(
@@ -122,8 +115,7 @@ impl SessionMiddleware {
 
         if let Some(token) = jwt_cookie {
             let cookie = format!(
-                "access_token={}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800",
-                token
+                "access_token={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800"
             );
             if let Ok(cookie_value) = cookie.parse() {
                 response

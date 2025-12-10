@@ -1,5 +1,7 @@
 use anyhow::{Context, Result};
-use systemprompt_core_database::{DatabaseProvider, DatabaseQueryEnum, DbPool, JsonRow};
+use sqlx::PgPool;
+use std::sync::Arc;
+use systemprompt_core_database::DbPool;
 use systemprompt_traits::{Repository as RepositoryTrait, RepositoryError};
 
 #[derive(Debug)]
@@ -10,80 +12,15 @@ pub struct AgentServiceRow {
     pub status: String,
 }
 
-impl AgentServiceRow {
-    pub fn from_json_row(row: &JsonRow) -> Result<Self> {
-        use anyhow::anyhow;
-
-        let name = row
-            .get("name")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing name"))?
-            .to_string();
-
-        let pid = row.get("pid").and_then(|v| v.as_i64()).map(|i| i as i32);
-
-        let port = row
-            .get("port")
-            .and_then(|v| v.as_i64())
-            .ok_or_else(|| anyhow!("Missing port"))? as i32;
-
-        let status = row
-            .get("status")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing status"))?
-            .to_string();
-
-        Ok(Self {
-            name,
-            pid,
-            port,
-            status,
-        })
-    }
-}
-
 #[derive(Debug)]
 pub struct AgentServerIdRow {
     pub name: String,
-}
-
-impl AgentServerIdRow {
-    pub fn from_json_row(row: &JsonRow) -> Result<Self> {
-        use anyhow::anyhow;
-
-        let name = row
-            .get("name")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing name"))?
-            .to_string();
-
-        Ok(Self { name })
-    }
 }
 
 #[derive(Debug)]
 pub struct AgentServerIdPidRow {
     pub name: String,
     pub pid: i32,
-}
-
-impl AgentServerIdPidRow {
-    pub fn from_json_row(row: &JsonRow) -> Result<Self> {
-        use anyhow::anyhow;
-
-        let name = row
-            .get("name")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow!("Missing name"))?
-            .to_string();
-
-        let pid = row
-            .get("pid")
-            .and_then(|v| v.as_i64())
-            .ok_or_else(|| anyhow!("Missing pid"))? as i32;
-
-        Ok(Self { name, pid })
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -101,8 +38,15 @@ impl RepositoryTrait for AgentServiceRepository {
 }
 
 impl AgentServiceRepository {
-    pub fn new(db_pool: DbPool) -> Self {
+    pub const fn new(db_pool: DbPool) -> Self {
         Self { db_pool }
+    }
+
+    fn get_pg_pool(&self) -> Result<Arc<PgPool>> {
+        self.db_pool
+            .as_ref()
+            .get_postgres_pool()
+            .context("PostgreSQL pool not available")
     }
 
     pub async fn register_agent(
@@ -112,18 +56,25 @@ impl AgentServiceRepository {
         port: u16,
         _auth: &str,
     ) -> Result<String, RepositoryError> {
-        // Clean up any existing service entries for this agent first
         self.remove_agent_service(name).await?;
 
+        let pool = self.get_pg_pool().map_err(RepositoryError::GenericError)?;
         let pid_i32 = pid as i32;
-        let port_i32 = port as i32;
+        let port_i32 = i32::from(port);
 
-        let query = DatabaseQueryEnum::RegisterAgent.get(self.db_pool.as_ref());
-        self.db_pool
-            .as_ref()
-            .execute(&query, &[&name, &pid_i32, &port_i32])
-            .await
-            .context("Failed to register agent")?;
+        sqlx::query!(
+            "INSERT INTO services (name, module_name, pid, port, status, updated_at)
+             VALUES ($1, 'agent', $2, $3, 'running', CURRENT_TIMESTAMP)
+             ON CONFLICT (name) DO UPDATE SET pid = $2, port = $3, status = 'running', updated_at \
+             = CURRENT_TIMESTAMP",
+            name,
+            pid_i32,
+            port_i32
+        )
+        .execute(pool.as_ref())
+        .await
+        .context("Failed to register agent")
+        .map_err(RepositoryError::GenericError)?;
 
         Ok(name.to_string())
     }
@@ -132,38 +83,53 @@ impl AgentServiceRepository {
         &self,
         agent_name: &str,
     ) -> Result<Option<AgentServiceRow>, RepositoryError> {
-        let query = DatabaseQueryEnum::GetAgentStatus.get(self.db_pool.as_ref());
-        let row = self
-            .db_pool
-            .as_ref()
-            .fetch_optional(&query, &[&agent_name])
-            .await
-            .context("Failed to get agent status")?;
+        let pool = self.get_pg_pool().map_err(RepositoryError::GenericError)?;
 
-        match row {
-            Some(r) => Ok(Some(AgentServiceRow::from_json_row(&r)?)),
-            None => Ok(None),
-        }
+        let row = sqlx::query!(
+            "SELECT name, pid, port, status FROM services WHERE name = $1",
+            agent_name
+        )
+        .fetch_optional(pool.as_ref())
+        .await
+        .context("Failed to get agent status")
+        .map_err(RepositoryError::GenericError)?;
+
+        Ok(row.map(|r| AgentServiceRow {
+            name: r.name,
+            pid: r.pid,
+            port: r.port,
+            status: r.status,
+        }))
     }
 
     pub async fn mark_crashed(&self, agent_name: &str) -> Result<(), RepositoryError> {
-        let query = DatabaseQueryEnum::MarkAgentCrashed.get(self.db_pool.as_ref());
-        self.db_pool
-            .as_ref()
-            .execute(&query, &[&agent_name])
-            .await
-            .context("Failed to mark agent as crashed")?;
+        let pool = self.get_pg_pool().map_err(RepositoryError::GenericError)?;
+
+        sqlx::query!(
+            "UPDATE services SET status = 'error', pid = NULL, updated_at = CURRENT_TIMESTAMP \
+             WHERE name = $1",
+            agent_name
+        )
+        .execute(pool.as_ref())
+        .await
+        .context("Failed to mark agent as crashed")
+        .map_err(RepositoryError::GenericError)?;
 
         Ok(())
     }
 
     pub async fn mark_stopped(&self, agent_name: &str) -> Result<(), RepositoryError> {
-        let query = DatabaseQueryEnum::MarkAgentStopped.get(self.db_pool.as_ref());
-        self.db_pool
-            .as_ref()
-            .execute(&query, &[&agent_name])
-            .await
-            .context("Failed to mark agent as stopped")?;
+        let pool = self.get_pg_pool().map_err(RepositoryError::GenericError)?;
+
+        sqlx::query!(
+            "UPDATE services SET status = 'stopped', pid = NULL, updated_at = CURRENT_TIMESTAMP \
+             WHERE name = $1",
+            agent_name
+        )
+        .execute(pool.as_ref())
+        .await
+        .context("Failed to mark agent as stopped")
+        .map_err(RepositoryError::GenericError)?;
 
         Ok(())
     }
@@ -173,55 +139,63 @@ impl AgentServiceRepository {
         agent_name: &str,
         _error_message: &str,
     ) -> Result<(), RepositoryError> {
-        let query = DatabaseQueryEnum::MarkAgentError.get(self.db_pool.as_ref());
-        self.db_pool
-            .as_ref()
-            .execute(&query, &[&agent_name])
-            .await
-            .context("Failed to mark agent with error")?;
+        let pool = self.get_pg_pool().map_err(RepositoryError::GenericError)?;
+
+        sqlx::query!(
+            "UPDATE services SET status = 'error', pid = NULL, updated_at = CURRENT_TIMESTAMP \
+             WHERE name = $1",
+            agent_name
+        )
+        .execute(pool.as_ref())
+        .await
+        .context("Failed to mark agent with error")
+        .map_err(RepositoryError::GenericError)?;
 
         Ok(())
     }
 
     pub async fn list_running_agents(&self) -> Result<Vec<AgentServerIdRow>, RepositoryError> {
-        let query = DatabaseQueryEnum::ListRunningAgents.get(self.db_pool.as_ref());
-        let rows = self
-            .db_pool
-            .as_ref()
-            .fetch_all(&query, &[])
-            .await
-            .context("Failed to list running agents")?;
+        let pool = self.get_pg_pool().map_err(RepositoryError::GenericError)?;
 
-        rows.iter()
-            .map(|r| AgentServerIdRow::from_json_row(r))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| RepositoryError::GenericError(e))
+        let rows = sqlx::query!("SELECT name FROM services WHERE status = 'running'")
+            .fetch_all(pool.as_ref())
+            .await
+            .context("Failed to list running agents")
+            .map_err(RepositoryError::GenericError)?;
+
+        Ok(rows
+            .into_iter()
+            .map(|r| AgentServerIdRow { name: r.name })
+            .collect())
     }
 
     pub async fn list_running_agent_pids(
         &self,
     ) -> Result<Vec<AgentServerIdPidRow>, RepositoryError> {
-        let query = DatabaseQueryEnum::ListRunningAgents.get(self.db_pool.as_ref());
-        let rows = self
-            .db_pool
-            .as_ref()
-            .fetch_all(&query, &[])
-            .await
-            .context("Failed to list running agent PIDs")?;
+        let pool = self.get_pg_pool().map_err(RepositoryError::GenericError)?;
 
-        rows.iter()
-            .map(|r| AgentServerIdPidRow::from_json_row(r))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| RepositoryError::GenericError(e))
+        let rows = sqlx::query!(
+            "SELECT name, pid FROM services WHERE status = 'running' AND pid IS NOT NULL"
+        )
+        .fetch_all(pool.as_ref())
+        .await
+        .context("Failed to list running agent PIDs")
+        .map_err(RepositoryError::GenericError)?;
+
+        Ok(rows
+            .into_iter()
+            .filter_map(|r| r.pid.map(|pid| AgentServerIdPidRow { name: r.name, pid }))
+            .collect())
     }
 
     pub async fn remove_agent_service(&self, agent_name: &str) -> Result<(), RepositoryError> {
-        let query = DatabaseQueryEnum::RemoveAgentService.get(self.db_pool.as_ref());
-        self.db_pool
-            .as_ref()
-            .execute(&query, &[&agent_name])
+        let pool = self.get_pg_pool().map_err(RepositoryError::GenericError)?;
+
+        sqlx::query!("DELETE FROM services WHERE name = $1", agent_name)
+            .execute(pool.as_ref())
             .await
-            .context("Failed to remove agent service")?;
+            .context("Failed to remove agent service")
+            .map_err(RepositoryError::GenericError)?;
 
         Ok(())
     }
@@ -231,12 +205,17 @@ impl AgentServiceRepository {
         agent_name: &str,
         health_status: &str,
     ) -> Result<(), RepositoryError> {
-        let query = DatabaseQueryEnum::UpdateAgentHealth.get(self.db_pool.as_ref());
-        self.db_pool
-            .as_ref()
-            .execute(&query, &[&health_status, &agent_name])
-            .await
-            .context("Failed to update agent health status")?;
+        let pool = self.get_pg_pool().map_err(RepositoryError::GenericError)?;
+
+        sqlx::query!(
+            "UPDATE services SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE name = $2",
+            health_status,
+            agent_name
+        )
+        .execute(pool.as_ref())
+        .await
+        .context("Failed to update agent health status")
+        .map_err(RepositoryError::GenericError)?;
 
         Ok(())
     }

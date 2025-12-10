@@ -51,28 +51,32 @@ impl DynamicRegistrationRequest {
         self.client_name
             .as_ref()
             .filter(|n| !n.is_empty())
-            .ok_or_else(|| "client_name is required for client registration".to_string()).cloned()
+            .ok_or_else(|| "client_name is required for client registration".to_string())
+            .cloned()
     }
 
     pub fn get_redirect_uris(&self) -> Result<Vec<String>, String> {
         self.redirect_uris
             .as_ref()
             .filter(|uris| !uris.is_empty())
-            .ok_or_else(|| "redirect_uris are required for client registration".to_string()).cloned()
+            .ok_or_else(|| "redirect_uris are required for client registration".to_string())
+            .cloned()
     }
 
     pub fn get_grant_types(&self) -> Result<Vec<String>, String> {
         self.grant_types
             .as_ref()
             .filter(|types| !types.is_empty())
-            .ok_or_else(|| "grant_types are required for client registration".to_string()).cloned()
+            .ok_or_else(|| "grant_types are required for client registration".to_string())
+            .cloned()
     }
 
     pub fn get_response_types(&self) -> Result<Vec<String>, String> {
         self.response_types
             .as_ref()
             .filter(|types| !types.is_empty())
-            .ok_or_else(|| "response_types are required for client registration".to_string()).cloned()
+            .ok_or_else(|| "response_types are required for client registration".to_string())
+            .cloned()
     }
 
     pub fn get_scopes(&self) -> Vec<String> {
@@ -88,6 +92,7 @@ impl DynamicRegistrationRequest {
             .filter(|m| !m.is_empty())
             .ok_or_else(|| {
                 "token_endpoint_auth_method is required for client registration".to_string()
-            }).cloned()
+            })
+            .cloned()
     }
 }

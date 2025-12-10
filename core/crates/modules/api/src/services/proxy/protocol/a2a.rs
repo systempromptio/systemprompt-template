@@ -13,8 +13,14 @@ impl ProtocolHandler for A2aProtocol {
     }
 }
 
+impl Default for A2aProtocol {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl A2aProtocol {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }

@@ -1,41 +1,48 @@
-use axum::{
-    extract::{Extension, State},
-    response::sse::{Event, Sse},
-    response::IntoResponse,
-};
+use axum::extract::{Extension, State};
+use axum::response::sse::{Event, Sse};
+use axum::response::IntoResponse;
 use serde_json::json;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
 use systemprompt_core_agent::models::context::ContextStateEvent;
-use systemprompt_core_agent::repository::{ArtifactRepository, ContextRepository, TaskRepository};
-use systemprompt_core_database::{DatabaseProvider, DatabaseQueryEnum};
+use systemprompt_core_agent::repository::ContextRepository;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::{RequestContext, CONTEXT_BROADCASTER};
+
+fn should_sample(id: &str, sample_rate: f32) -> bool {
+    let mut hasher = DefaultHasher::new();
+    id.hash(&mut hasher);
+    let hash = hasher.finish();
+    (hash as f32 / u64::MAX as f32) < sample_rate
+}
 
 pub async fn stream_context_state(
     Extension(request_context): Extension<RequestContext>,
     State(app_context): State<systemprompt_core_system::AppContext>,
 ) -> impl IntoResponse {
-    let task_repo = std::sync::Arc::new(TaskRepository::new(app_context.db_pool().clone()));
-    let artifact_repo = std::sync::Arc::new(ArtifactRepository::new(app_context.db_pool().clone()));
-    let repo = ContextRepository::new(app_context.db_pool().clone(), task_repo, artifact_repo);
+    let repo = ContextRepository::new(app_context.db_pool().clone());
 
     let user_id = request_context.user_id().as_str().to_string();
     let logger = LogService::new(app_context.db_pool().clone(), request_context.log_context());
     let conn_id = uuid::Uuid::new_v4().to_string();
 
-    logger
-        .info(
-            "context_stream",
-            &format!(
-                "Opening SSE stream for user {} (connection: {})",
-                user_id, conn_id
-            ),
-        )
-        .await
-        .ok();
+    let should_log = should_sample(&conn_id, 0.01);
+    if should_log {
+        logger
+            .debug(
+                "context_stream",
+                &format!(
+                    "SSE stream opened | user_id={}, conn_id={}",
+                    user_id, conn_id
+                ),
+            )
+            .await
+            .ok();
+    }
 
     let (tx, rx) = mpsc::unbounded_channel();
 
@@ -59,17 +66,19 @@ pub async fn stream_context_state(
                 "timestamp": chrono::Utc::now().to_rfc3339()
             });
 
-            logger
-                .info(
-                    "context_stream",
-                    &format!(
-                        "Sent complete snapshot with {} contexts and stats (connection: {})",
-                        contexts_with_stats.len(),
-                        conn_id
-                    ),
-                )
-                .await
-                .ok();
+            if should_log {
+                logger
+                    .debug(
+                        "context_stream",
+                        &format!(
+                            "SSE snapshot sent | context_count={}, conn_id={}",
+                            contexts_with_stats.len(),
+                            conn_id
+                        ),
+                    )
+                    .await
+                    .ok();
+            }
 
             if tx
                 .send(Ok(Event::default()
@@ -87,23 +96,29 @@ pub async fn stream_context_state(
             }
 
             // Send current_agent event for each context
+            let pool = app_context
+                .db_pool()
+                .pool_arc()
+                .expect("Database must be PostgreSQL");
             for context in &contexts_with_stats {
-                let query =
-                    DatabaseQueryEnum::GetLastAgentForContext.get(app_context.db_pool().as_ref());
-                match app_context
-                    .db_pool()
-                    .fetch_optional(&query, &[&context.context_id])
-                    .await
-                {
-                    Ok(row) => {
-                        let agent_name = row.and_then(|r| {
-                            r.get("agent_name")
-                                .and_then(|v| v.as_str().map(String::from))
-                        });
+                let agent_name_result = sqlx::query_scalar::<_, Option<String>>(
+                    r"
+                    SELECT agent_name
+                    FROM agent_tasks
+                    WHERE context_id = $1 AND agent_name IS NOT NULL
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                    ",
+                )
+                .bind(&context.context_id)
+                .fetch_optional(&*pool)
+                .await;
 
+                match agent_name_result {
+                    Ok(agent_name) => {
                         let event = ContextStateEvent::CurrentAgent {
                             context_id: context.context_id.clone(),
-                            agent_name,
+                            agent_name: agent_name.flatten(),
                             timestamp: chrono::Utc::now(),
                         };
 
@@ -117,7 +132,11 @@ pub async fn stream_context_state(
                             logger
                                 .error(
                                     "context_stream",
-                                    &format!("Failed to send current_agent event for context {} (connection: {})", context.context_id, conn_id),
+                                    &format!(
+                                        "Failed to send current_agent event for context {} \
+                                         (connection: {})",
+                                        context.context_id, conn_id
+                                    ),
                                 )
                                 .await
                                 .ok();

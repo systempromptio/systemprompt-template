@@ -35,7 +35,8 @@ async fn test_database_schema_initialized() -> Result<()> {
     ];
 
     for table in required_tables {
-        let query = "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = $1";
+        let query = "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND \
+                     table_name = $1";
         let rows = ctx.db.fetch_all(&query, &[&table]).await?;
 
         assert!(!rows.is_empty(), "Table '{}' does not exist", table);

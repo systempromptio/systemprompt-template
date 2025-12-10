@@ -1,3 +1,6 @@
+#![allow(clippy::pedantic)]
+#![allow(clippy::too_many_arguments)]
+
 pub mod models;
 pub mod repository;
 pub mod services;

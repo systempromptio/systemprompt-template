@@ -153,6 +153,18 @@ impl LogService {
         }
     }
 
+    #[must_use]
+    pub fn with_task_id(mut self, task_id: impl Into<String>) -> Self {
+        self.context.task_id = Some(systemprompt_identifiers::TaskId::new(task_id.into()));
+        self
+    }
+
+    #[must_use]
+    pub fn with_context_id(mut self, context_id: impl Into<String>) -> Self {
+        self.context.context_id = Some(systemprompt_identifiers::ContextId::new(context_id.into()));
+        self
+    }
+
     fn should_log_to_db(level: LogLevel, is_startup: bool) -> bool {
         if is_startup {
             return matches!(level, LogLevel::Error | LogLevel::Warn);

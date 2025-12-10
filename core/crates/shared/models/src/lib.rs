@@ -1,3 +1,5 @@
+#![allow(clippy::pedantic)]
+
 pub mod a2a;
 pub mod ai;
 pub mod api;
@@ -19,10 +21,9 @@ pub mod tasks;
 
 pub use a2a::{ArtifactMetadata, TaskMetadata};
 pub use ai::{
-    AiMessage, CallToolResult, GenerateRequest, GenerateResponse, McpTool, MessageRole,
-    ModelConfig, ModelHint, ModelPreferences, ResponseFormat, SamplingMetadata, SamplingRequest,
-    SamplingResponse, StructuredOutputOptions, ToolCall, ToolExecution, TooledRequest,
-    TooledResponse,
+    AiMessage, AiRequest, AiResponse, CallToolResult, McpTool, MessageRole, ModelConfig, ModelHint,
+    ModelPreferences, ResponseFormat, SamplingMetadata, SearchGroundedResponse,
+    StructuredOutputOptions, ToolCall, ToolExecution,
 };
 pub use api::{
     AcceptedResponse, ApiError, ApiQuery, ApiResponse, CollectionResponse, CreatedResponse,
@@ -46,7 +47,10 @@ pub use content_config::{
 };
 pub use database::{ColumnInfo, DatabaseInfo, QueryResult, TableInfo};
 pub use errors::{RepositoryError, ServiceError};
-pub use execution::RequestContext;
+pub use execution::{
+    ExecutionStep, PlannedTool, RequestContext, StepContent, StepId, StepStatus, StepType,
+    TrackedStep,
+};
 pub use mcp::{
     Deployment, DeploymentConfig, McpServerConfig, McpServerInfo, OAuthRequirement, RegistryConfig,
     ServerManifest, Settings, UserContext, ERROR as MCP_ERROR, RUNNING as MCP_RUNNING,

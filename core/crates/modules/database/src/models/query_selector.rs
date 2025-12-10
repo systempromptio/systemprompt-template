@@ -18,9 +18,7 @@ use super::types::DatabaseQuery;
 ///
 /// fn example() {
 ///     let plain_query = "SELECT 1";
-///     let pg_query = DatabaseQuery::new(
-///         "SELECT CURRENT_TIMESTAMP"
-///     );
+///     let pg_query = DatabaseQuery::new("SELECT CURRENT_TIMESTAMP");
 ///
 ///     let sql1: &dyn QuerySelector = &plain_query;
 ///     let sql2: &dyn QuerySelector = &pg_query;

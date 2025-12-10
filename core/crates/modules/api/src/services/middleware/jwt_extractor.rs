@@ -74,14 +74,13 @@ impl JwtExtractor {
             .session_id
             .ok_or_else(|| anyhow!("JWT must contain session_id claim"))?;
 
-        let role = token_data
+        let role = *token_data
             .claims
             .scope
             .first()
-            .ok_or_else(|| anyhow!("JWT must contain valid scope claim"))?
-            .clone();
+            .ok_or_else(|| anyhow!("JWT must contain valid scope claim"))?;
 
-        let client_id = token_data.claims.client_id.map(|cid| ClientId::new(cid));
+        let client_id = token_data.claims.client_id.map(ClientId::new);
 
         Ok(JwtUserContext {
             user_id: UserId::new(token_data.claims.sub),
@@ -100,6 +99,7 @@ pub struct JwtContextExtractor {
 }
 
 impl JwtContextExtractor {
+    #[allow(clippy::needless_pass_by_value)]
     pub fn new(jwt_secret: String, db_pool: DbPool) -> Self {
         let jwt_extractor = Arc::new(JwtExtractor::new(&jwt_secret));
 
@@ -202,8 +202,7 @@ impl JwtContextExtractor {
             .await
             .map_err(|e| {
                 ContextExtractionError::DatabaseError(format!(
-                    "Failed to check user existence: {}",
-                    e
+                    "Failed to check user existence: {e}"
                 ))
             })?;
 
@@ -236,9 +235,7 @@ impl JwtContextExtractor {
         let session_id = if has_session_header {
             headers
                 .get("x-session-id")
-                .and_then(|h| h.to_str().ok())
-                .map(|s| SessionId::new(s.to_string()))
-                .unwrap_or_else(|| jwt_context.session_id.clone())
+                .and_then(|h| h.to_str().ok()).map_or_else(|| jwt_context.session_id.clone(), |s| SessionId::new(s.to_string()))
         } else {
             jwt_context.session_id.clone()
         };
@@ -246,24 +243,18 @@ impl JwtContextExtractor {
         let user_id = if has_user_id_header {
             headers
                 .get("x-user-id")
-                .and_then(|h| h.to_str().ok())
-                .map(|s| UserId::new(s.to_string()))
-                .unwrap_or_else(|| jwt_context.user_id.clone())
+                .and_then(|h| h.to_str().ok()).map_or_else(|| jwt_context.user_id.clone(), |s| UserId::new(s.to_string()))
         } else {
             jwt_context.user_id.clone()
         };
 
         let trace_id = headers
             .get("x-trace-id")
-            .and_then(|h| h.to_str().ok())
-            .map(|s| TraceId::new(s.to_string()))
-            .unwrap_or_else(|| TraceId::new(format!("trace_{}", Uuid::new_v4())));
+            .and_then(|h| h.to_str().ok()).map_or_else(|| TraceId::new(format!("trace_{}", Uuid::new_v4())), |s| TraceId::new(s.to_string()));
 
         let context_id = headers
             .get("x-context-id")
-            .and_then(|h| h.to_str().ok())
-            .map(|s| ContextId::new(s.to_string()))
-            .unwrap_or_else(|| ContextId::new(String::new()));
+            .and_then(|h| h.to_str().ok()).map_or_else(|| ContextId::new(String::new()), |s| ContextId::new(s.to_string()));
 
         let task_id = headers
             .get("x-task-id")
@@ -274,13 +265,11 @@ impl JwtContextExtractor {
             .get("authorization")
             .and_then(|h| h.to_str().ok())
             .and_then(|s| s.strip_prefix("Bearer "))
-            .map(|s| s.to_string());
+            .map(ToString::to_string);
 
         let agent_name = headers
             .get("x-agent-name")
-            .and_then(|h| h.to_str().ok())
-            .map(|s| AgentName::new(s.to_string()))
-            .unwrap_or_else(|| AgentName::system());
+            .and_then(|h| h.to_str().ok()).map_or_else(AgentName::system, |s| AgentName::new(s.to_string()));
 
         let mut request_context = RequestContext::new(session_id, trace_id, context_id, agent_name);
 
@@ -340,9 +329,9 @@ impl ContextExtractor for JwtContextExtractor {
         if has_context_id_header && !has_auth {
             return Err(ContextExtractionError::ForbiddenHeader {
                 header: "X-Context-ID".to_string(),
-                reason:
-                    "Context ID must be in request body (A2A spec). Use contextId field in message."
-                        .to_string(),
+                reason: "Context ID must be in request body (A2A spec). Use contextId field in \
+                         message."
+                    .to_string(),
             });
         }
 
@@ -362,8 +351,7 @@ impl ContextExtractor for JwtContextExtractor {
             .await
             .map_err(|e| {
                 ContextExtractionError::DatabaseError(format!(
-                    "Failed to check user existence: {}",
-                    e
+                    "Failed to check user existence: {e}"
                 ))
             })?;
 
@@ -393,9 +381,7 @@ impl ContextExtractor for JwtContextExtractor {
 
         let trace_id = headers
             .get("x-trace-id")
-            .and_then(|h| h.to_str().ok())
-            .map(|s| TraceId::new(s.to_string()))
-            .unwrap_or_else(|| TraceId::new(format!("trace_{}", Uuid::new_v4())));
+            .and_then(|h| h.to_str().ok()).map_or_else(|| TraceId::new(format!("trace_{}", Uuid::new_v4())), |s| TraceId::new(s.to_string()));
 
         let (body_bytes, reconstructed_request) =
             PayloadSource::read_and_reconstruct(request).await?;
@@ -411,13 +397,11 @@ impl ContextExtractor for JwtContextExtractor {
             .get("authorization")
             .and_then(|h| h.to_str().ok())
             .and_then(|s| s.strip_prefix("Bearer "))
-            .map(|s| s.to_string());
+            .map(ToString::to_string);
 
         let agent_name = headers
             .get("x-agent-name")
-            .and_then(|h| h.to_str().ok())
-            .map(|s| AgentName::new(s.to_string()))
-            .unwrap_or_else(|| AgentName::system());
+            .and_then(|h| h.to_str().ok()).map_or_else(AgentName::system, |s| AgentName::new(s.to_string()));
 
         let mut request_context = RequestContext::new(
             jwt_context.session_id.clone(),

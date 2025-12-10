@@ -43,7 +43,7 @@ pub async fn generate_sitemap(
 
     println!("📍 Using base URL: {}\n", base_url);
     logger
-        .info("content", &format!("Using base URL: {}", base_url))
+        .debug("content", &format!("Using base URL: {base_url}"))
         .await
         .ok();
 
@@ -63,7 +63,7 @@ pub async fn generate_sitemap(
         }
 
         logger
-            .info("content", &format!("Processing source: {}", source_name))
+            .debug("content", &format!("Processing source: {source_name}"))
             .await
             .ok();
 
@@ -76,7 +76,7 @@ pub async fn generate_sitemap(
             &base_url,
         )
         .await
-        .context(format!("Failed to fetch URLs for {}", source_name))?;
+        .context(format!("Failed to fetch URLs for {source_name}"))?;
 
         all_urls.extend(urls);
 
@@ -106,7 +106,7 @@ pub async fn generate_sitemap(
         fs::write(&path, sitemap_xml).await?;
 
         logger
-            .info(
+            .debug(
                 "content",
                 &format!("Generated sitemap.xml: {} URLs", sitemap_chunks[0].len()),
             )
@@ -119,11 +119,11 @@ pub async fn generate_sitemap(
         for (idx, chunk) in sitemap_chunks.iter().enumerate() {
             let filename = format!("sitemap-{}.xml", idx + 1);
             let sitemap_xml = build_sitemap_xml(chunk)?;
-            let path = format!("{}/{}", sitemap_dir, filename);
+            let path = format!("{sitemap_dir}/{filename}");
             fs::write(&path, sitemap_xml).await?;
 
             logger
-                .info(
+                .debug(
                     "content",
                     &format!("Generated {}: {} URLs", filename, chunk.len()),
                 )
@@ -135,7 +135,7 @@ pub async fn generate_sitemap(
         let path = format!("{}/sitemap.xml", web_dir);
         fs::write(&path, index_xml).await?;
         logger
-            .info(
+            .debug(
                 "content",
                 &format!(
                     "Generated sitemap index with {} files",
@@ -182,7 +182,8 @@ async fn fetch_urls_from_database(
             .and_then(|v| v.as_str())
             .ok_or_else(|| anyhow!("Missing slug in database row"))?;
 
-        // Use published_at for lastmod (when content was published), fallback to updated_at
+        // Use published_at for lastmod (when content was published), fallback to
+        // updated_at
         let lastmod = row
             .get("published_at")
             .and_then(|v| v.as_str())
@@ -193,7 +194,7 @@ async fn fetch_urls_from_database(
         let lastmod_normalized = normalize_date(lastmod);
 
         let relative_url = url_pattern.replace("{slug}", slug);
-        let absolute_url = format!("{}{}", base_url, relative_url);
+        let absolute_url = format!("{base_url}{relative_url}");
         urls.push(SitemapUrl {
             loc: absolute_url,
             lastmod: lastmod_normalized,
@@ -210,7 +211,8 @@ fn normalize_date(date_str: &str) -> String {
     if date_str.len() == 10 && date_str.chars().nth(4) == Some('-') {
         return date_str.to_string();
     }
-    // Extract YYYY-MM-DD from ISO timestamp (e.g., "2025-11-21T16:49:27.092196+00:00")
+    // Extract YYYY-MM-DD from ISO timestamp (e.g.,
+    // "2025-11-21T16:49:27.092196+00:00")
     if date_str.len() >= 10 {
         return date_str[..10].to_string();
     }

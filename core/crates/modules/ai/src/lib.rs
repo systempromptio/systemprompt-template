@@ -1,46 +1,42 @@
-pub mod errors;
+#![allow(clippy::pedantic)]
+#![allow(clippy::too_many_arguments)]
+
+pub mod error;
 pub mod models;
 pub mod repository;
 pub mod services;
-pub mod storage;
 
-pub use errors::{AiError, Result};
+pub use error::{AiError, RepositoryError, Result};
 
-// Primary service exports
-pub use services::core::{AgenticExecutionResult, AgenticExecutor, AiService, ImageService};
+pub use services::core::{AiService, ImageService};
 
-// Storage exports
-pub use storage::{ImageStorage, StorageConfig};
+pub use services::storage::{ImageStorage, StorageConfig};
 
-// Re-export from shared models
 pub use systemprompt_models::ai::{
-    AiMessage, GenerateRequest, GenerateResponse, MessageRole, ModelConfig, ModelHint,
-    ModelPreferences, ResponseFormat, SamplingMetadata, SamplingRequest, SamplingResponse,
-    StructuredOutputOptions, TooledRequest, TooledResponse,
+    AiMessage, AiRequest, AiResponse, MessageRole, ModelConfig, ModelHint, ModelPreferences,
+    ResponseFormat, SamplingMetadata, SearchGroundedResponse, StructuredOutputOptions,
 };
 
-// Tool types from shared models
 pub use systemprompt_models::ai::tools::{CallToolResult, McpTool, ToolCall, ToolExecution};
 
-// Configuration types
 pub use services::config::loader::AiConfig;
 
-// Schema transformation types
 pub use services::schema::{
     ProviderCapabilities, SchemaTransformer, ToolNameMapper, TransformedTool,
 };
 
-// Image generation types
 pub use models::image_generation::{
     AspectRatio, GeneratedImageRecord, ImageGenerationRequest, ImageGenerationResponse,
     ImageResolution, ReferenceImage,
 };
 
-// Image provider types
 pub use services::providers::{GeminiImageProvider, ImageProvider, ImageProviderCapabilities};
 
-// Repository exports
-pub use repository::{AiRequestRepository, ImageRepository};
+pub use repository::{AIRequestRepository, ImageRepository};
 
-// Tooled execution utilities
+pub use models::{
+    AIRequest, AIRequestMessage, AIRequestToolCall, CostSummary, GeneratedImage,
+    LatencyPercentiles, ProviderUsage, UserAIUsage,
+};
+
 pub use services::tooled::ToolResultFormatter;

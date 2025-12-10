@@ -1,8 +1,6 @@
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::{IntoResponse, Json},
-};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Json};
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::Utc;
 use uuid::Uuid;
@@ -32,7 +30,7 @@ pub async fn register_client(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({
                     "error": "server_error",
-                    "error_description": format!("Failed to hash client secret: {}", e)
+                    "error_description": format!("Failed to hash client secret: {e}")
                 })),
             )
                 .into_response();
@@ -102,7 +100,7 @@ pub async fn register_client(
                 StatusCode::BAD_REQUEST,
                 Json(serde_json::json!({
                     "error": "invalid_client_metadata",
-                    "error_description": format!("Invalid scopes: {}", e)
+                    "error_description": format!("Invalid scopes: {e}")
                 })),
             )
                 .into_response();

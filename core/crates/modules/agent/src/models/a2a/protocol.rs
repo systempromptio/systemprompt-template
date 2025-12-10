@@ -10,6 +10,20 @@ use serde::{Deserialize, Serialize};
 // Import JSON-RPC types
 use super::jsonrpc::{JsonRpcResponse, RequestId};
 
+// Database row struct for push notification config
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct PushNotificationConfigRow {
+    pub config_id: String,
+    pub task_id: String,
+    pub url: String,
+    pub endpoint: String,
+    pub token: Option<String>,
+    pub headers: Option<String>,
+    pub authentication: Option<String>,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
 // ===== Request Parameter Types =====
 
 /// Parameters for message send operations
@@ -31,7 +45,7 @@ pub struct MessageSendConfiguration {
 }
 
 /// Push notification configuration
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct PushNotificationConfig {
     #[serde(default)]
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -43,14 +57,14 @@ pub struct PushNotificationConfig {
 }
 
 /// Parameters for task query operations
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct TaskQueryParams {
     pub id: String,
     pub history_length: Option<u32>,
 }
 
 /// Parameters for task ID operations
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct TaskIdParams {
     pub id: String,
 }
@@ -70,7 +84,7 @@ pub struct TaskIdParams {
 // }
 
 // Simplified placeholder for now
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct A2aRequest {
     pub method: String,
     pub params: serde_json::Value,
@@ -225,7 +239,7 @@ pub enum A2aRequestParams {
 }
 
 /// Parse errors for A2A requests
-#[derive(Debug, thiserror::Error, Clone, PartialEq)]
+#[derive(Debug, thiserror::Error, Clone, PartialEq, Eq)]
 pub enum A2aParseError {
     #[error("Unsupported method: {method}")]
     UnsupportedMethod { method: String },
@@ -239,7 +253,7 @@ pub enum A2aParseError {
 impl A2aResponse {
     /// Create a SendMessage response from a Task
     pub fn send_message(task: Task, id: RequestId) -> Self {
-        A2aResponse::SendMessage(JsonRpcResponse {
+        Self::SendMessage(JsonRpcResponse {
             jsonrpc: "2.0".to_string(),
             id,
             result: Some(task),
@@ -249,7 +263,7 @@ impl A2aResponse {
 
     /// Create a GetTask response from a Task
     pub fn get_task(task: Task, id: RequestId) -> Self {
-        A2aResponse::GetTask(JsonRpcResponse {
+        Self::GetTask(JsonRpcResponse {
             jsonrpc: "2.0".to_string(),
             id,
             result: Some(task),
@@ -259,7 +273,7 @@ impl A2aResponse {
 
     /// Create a CancelTask response from a Task
     pub fn cancel_task(task: Task, id: RequestId) -> Self {
-        A2aResponse::CancelTask(JsonRpcResponse {
+        Self::CancelTask(JsonRpcResponse {
             jsonrpc: "2.0".to_string(),
             id,
             result: Some(task),
@@ -289,7 +303,7 @@ pub struct TaskArtifactUpdateEvent {
 // ===== Error Types =====
 
 /// Task not found error
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct TaskNotFoundError {
     pub task_id: String,
     pub message: String,
@@ -298,7 +312,7 @@ pub struct TaskNotFoundError {
 }
 
 /// Task not cancelable error
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct TaskNotCancelableError {
     pub task_id: String,
     pub state: TaskState,
@@ -308,7 +322,7 @@ pub struct TaskNotCancelableError {
 }
 
 /// Unsupported operation error
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct UnsupportedOperationError {
     pub operation: String,
     pub message: String,
@@ -317,7 +331,7 @@ pub struct UnsupportedOperationError {
 }
 
 /// Push notification not supported error
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct PushNotificationNotSupportedError {
     pub message: String,
 }
@@ -339,14 +353,14 @@ pub struct SetTaskPushNotificationConfigRequest {
 }
 
 /// Set task push notification config response
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct SetTaskPushNotificationConfigResponse {
     pub success: bool,
     pub message: Option<String>,
 }
 
 /// Get task push notification config request
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct GetTaskPushNotificationConfigRequest {
     pub task_id: String,
 }
@@ -358,32 +372,32 @@ pub struct GetTaskPushNotificationConfigResponse {
 }
 
 /// Get task push notification config params
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct GetTaskPushNotificationConfigParams {
     pub id: String,
 }
 
 /// Delete task push notification config request
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct DeleteTaskPushNotificationConfigRequest {
     pub task_id: String,
 }
 
 /// Delete task push notification config response
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct DeleteTaskPushNotificationConfigResponse {
     pub success: bool,
     pub message: Option<String>,
 }
 
 /// Delete task push notification config params
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct DeleteTaskPushNotificationConfigParams {
     pub id: String,
 }
 
 /// List task push notification config request
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct ListTaskPushNotificationConfigRequest {
     pub task_id: String,
     pub limit: Option<u32>,
@@ -405,7 +419,7 @@ pub struct TaskResubscriptionRequest {
 }
 
 /// Task resubscription response
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct TaskResubscriptionResponse {
     pub success: bool,
     pub message: Option<String>,

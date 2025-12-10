@@ -1,8 +1,6 @@
-use axum::{
-    extract::{Extension, Path, State},
-    http::StatusCode,
-    response::IntoResponse,
-};
+use axum::extract::{Extension, Path, State};
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
 
 use crate::repository::OAuthRepository;
 use systemprompt_core_logging::{LogLevel, LogService};
@@ -42,7 +40,7 @@ pub async fn delete_client(
                         "OAuth client deletion failed",
                         Some(serde_json::json!({
                             "client_id": &client_id,
-                            "reason": format!("Database error: {}", e),
+                            "reason": format!("Database error: {e}"),
                             "deleted_by": req_ctx.auth.user_id.as_str()
                         })),
                     )
@@ -75,7 +73,7 @@ pub async fn delete_client(
                     "OAuth client deletion failed",
                     Some(serde_json::json!({
                         "client_id": &client_id,
-                        "reason": format!("Database error: {}", e),
+                        "reason": format!("Database error: {e}"),
                         "deleted_by": req_ctx.auth.user_id.as_str()
                     })),
                 )

@@ -1,8 +1,8 @@
 //! Web API models for Agent module
 //!
 //! REST API models for Agent management. These models handle JSON REST API
-//! requests and responses, separate from the core A2A protocol models to provide
-//! clean JSON interfaces for web applications.
+//! requests and responses, separate from the core A2A protocol models to
+//! provide clean JSON interfaces for web applications.
 
 use crate::models::a2a::{AgentCapabilities, AgentCard, SecurityScheme, TransportProtocol};
 use serde::{Deserialize, Serialize};
@@ -101,7 +101,7 @@ impl<'de> Deserialize<'de> for CreateAgentRequest {
             signatures: None,
         };
 
-        Ok(CreateAgentRequest {
+        Ok(Self {
             card,
             is_active: raw.is_active,
             system_prompt: raw.system_prompt,
@@ -154,7 +154,7 @@ impl<'de> Deserialize<'de> for UpdateAgentRequest {
             signatures: None,
         };
 
-        Ok(UpdateAgentRequest {
+        Ok(Self {
             card,
             is_active: raw.is_active,
             system_prompt: raw.system_prompt,
@@ -220,7 +220,7 @@ impl UpdateAgentRequest {
             signatures: None,
         };
 
-        UpdateAgentRequest {
+        Self {
             card,
             is_active: raw.is_active,
             system_prompt: raw.system_prompt,
@@ -268,7 +268,7 @@ impl CreateAgentRequest {
             signatures: None,
         };
 
-        CreateAgentRequest {
+        Self {
             card,
             is_active: raw.is_active,
             system_prompt: raw.system_prompt,
@@ -337,12 +337,12 @@ impl CreateAgentRequest {
     }
 
     /// Get capabilities from the card
-    pub fn get_capabilities(&self) -> &AgentCapabilities {
+    pub const fn get_capabilities(&self) -> &AgentCapabilities {
         &self.card.capabilities
     }
 
     /// Get transport protocols from the card
-    pub fn get_transport_protocols(&self) -> Option<&TransportProtocol> {
+    pub const fn get_transport_protocols(&self) -> Option<&TransportProtocol> {
         self.card.preferred_transport.as_ref()
     }
 }
@@ -507,5 +507,5 @@ pub async fn list_available_mcp_servers() -> Result<Vec<String>, String> {
 
     RegistryService::list_servers()
         .await
-        .map_err(|e| format!("Failed to load MCP registry: {}", e))
+        .map_err(|e| format!("Failed to load MCP registry: {e}"))
 }

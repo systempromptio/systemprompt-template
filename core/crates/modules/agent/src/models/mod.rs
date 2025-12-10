@@ -8,6 +8,8 @@
 pub mod a2a;
 pub mod agent_info;
 pub mod context;
+pub mod database_rows;
+pub mod execution_step;
 pub mod external_integrations;
 pub mod runtime;
 pub mod skill;
@@ -33,5 +35,16 @@ pub use context::{
 
 // Re-export skill types
 pub use skill::{Skill, SkillMetadata};
+
+// Re-export execution step types
+pub use execution_step::{
+    ExecutionStep, PlannedTool, StepContent, StepId, StepStatus, StepType, TrackedStep,
+};
+
+// Re-export database row types
+pub use database_rows::{
+    ArtifactPartRow, ArtifactRow, ExecutionStepBatchRow, MessagePart, PushNotificationConfigRow,
+    SkillRow, TaskMessage, TaskRow,
+};
 
 pub use web::*;

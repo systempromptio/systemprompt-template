@@ -87,11 +87,9 @@ function App() {
         agent.name.toLowerCase() === assignedAgentName.toLowerCase()
       )
       if (matchingAgent) {
-        console.log('[App] Retrying pending agent selection after agents loaded:', matchingAgent.name)
         useAgentStore.getState().selectAgent(matchingAgent.url, matchingAgent)
       } else {
         const errorMsg = `Agent "${assignedAgentName}" not found. Available: ${agents.map(a => a.name).join(', ')}`
-        console.error('[App]', errorMsg)
         useAgentStore.getState().setSelectionError(errorMsg)
       }
     }

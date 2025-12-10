@@ -96,6 +96,72 @@ if confirmed {
 - Creating interactive command-line experiences
 - Showing formatted data (tables, lists, etc.)
 
+## Context Propagation for Task Tracking
+
+**Purpose**: Correlate logs across async boundaries and distributed operations using context IDs.
+
+When working with tasks, webhooks, or distributed processes, propagate context through the request context and update the logger when new IDs become available.
+
+**Pattern 1: Updating logger with task_id after creation**:
+```rust
+// Create logger first
+let mut logger = LogService::new(db_pool.clone(), request_context.log_context());
+
+// Get task_id from operation
+let task_id = create_task(...).await?;
+
+// Update logger with task_id - all subsequent logs will have task_id
+logger = logger.with_task_id(task_id.as_str());
+
+// Now all logs include task_id correlation
+logger.info("module", "Task operation completed").await.ok();
+```
+
+**Pattern 2: Webhook handler with task correlation**:
+```rust
+let log_context = if matches!(event_type.as_str(), "task_completed" | "task_created") {
+    // Extract task_id from event for task events
+    request_context.log_context().with_task_id(&event.entity_id)
+} else {
+    request_context.log_context()
+};
+
+let logger = LogService::new(db.clone(), log_context);
+// All logs now have task_id correlation
+```
+
+**Pattern 3: Scheduler jobs with operation tracing**:
+```rust
+let log_context = LogContext::new()
+    .with_session_id("scheduler")
+    .with_trace_id(&format!("scheduler-{}", uuid::Uuid::new_v4()))
+    .with_user_id("system")
+    .with_client_id("scheduler");
+
+let logger = LogService::new(db_pool.clone(), log_context);
+// Each job run has unique trace_id for distributed tracing
+```
+
+**Key methods for context propagation**:
+- `log_context.with_task_id(id)` - Add task ID for task-related logs
+- `log_context.with_context_id(id)` - Add context ID for conversation tracking
+- `log_context.with_trace_id(id)` - Add trace ID for distributed tracing
+- `log_context.with_client_id(id)` - Identify the client/process origin
+- `logger.with_task_id(id)` - Update existing logger with task ID
+- `logger.with_context_id(id)` - Update existing logger with context ID
+
+**Why context propagation matters**:
+- **End-to-end tracing**: Follow a request/task across all modules and services
+- **Debugging**: Query all logs for a specific task/context to understand what happened
+- **Correlation**: Automatically group related log entries across async operations
+- **Metrics**: Extract duration, error rates, and performance from context-based log grouping
+
+**Coverage targets**:
+- `task_id`: 90%+ of task-related logs should have task_id
+- `context_id`: 95%+ of user-context operations should have context_id
+- `trace_id`: 100% - all logs must have trace_id
+- `metadata`: 40%+ of important operations should include rich metadata
+
 ## Examples in Practice
 
 ```rust

@@ -77,7 +77,8 @@ impl SchemaLoader {
         for table_name in &table_names {
             if !table_name.starts_with(&module_prefix) {
                 anyhow::bail!(
-                    "Table name '{table_name}' must start with module prefix '{module_prefix}' (from module '{module_name}')"
+                    "Table name '{table_name}' must start with module prefix '{module_prefix}' \
+                     (from module '{module_name}')"
                 );
             }
         }

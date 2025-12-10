@@ -63,10 +63,10 @@ export const ensureInArray = <T,>(item: T, array: readonly T[]): readonly T[] =>
  * Add a value to an array within a record (mapping)
  * Creates the array if it doesn't exist, ensures uniqueness
  */
-export const addToMapping = <K extends string | number | symbol>(
-  mapping: Record<K, readonly any[]>,
+export const addToMapping = <K extends string | number | symbol, V>(
+  mapping: Record<K, readonly V[]>,
   key: K,
-  value: any
+  value: V
 ): void => {
   if (!mapping[key]) {
     mapping[key] = [value]

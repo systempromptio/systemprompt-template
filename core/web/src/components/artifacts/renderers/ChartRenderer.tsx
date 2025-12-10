@@ -1,5 +1,4 @@
-import type { Artifact } from '@/types/artifact'
-import type { ChartHints } from '@/types/artifacts'
+import type { Artifact, ChartHints } from '@/types/artifact'
 import { extractChartData, unwrapExtraction } from '@/lib/artifacts'
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 

@@ -83,7 +83,7 @@ impl TestCleanup {
 
 impl Drop for TestCleanup {
     fn drop(&mut self) {
-        // Cleanup would run on drop, but we rely on explicit cleanup_all() calls
-        // to avoid issues with async in Drop trait
+        // Cleanup would run on drop, but we rely on explicit cleanup_all()
+        // calls to avoid issues with async in Drop trait
     }
 }

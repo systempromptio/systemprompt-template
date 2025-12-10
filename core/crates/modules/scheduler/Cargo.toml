@@ -28,6 +28,7 @@ uuid = { workspace = true }
 
 # URL parsing
 url = { workspace = true }
+urlencoding = "2.1"
 
 # Core libs
 systemprompt-core-system = { path = "../core" }
@@ -37,9 +38,13 @@ systemprompt-core-ai = { path = "../ai" }
 systemprompt-core-blog = { path = "../blog" }
 systemprompt-core-agent = { path = "../agent" }
 systemprompt-core-users = { path = "../users" }
+systemprompt-core-files = { path = "../files" }
 systemprompt-traits = { path = "../../shared/traits" }
 systemprompt-identifiers = { path = "../../shared/identifiers" }
 systemprompt-models = { path = "../../shared/models" }
+
+# File system traversal
+walkdir = "2"
 
 # Traits
 async-trait = { workspace = true }
@@ -51,7 +56,10 @@ validator = { workspace = true }
 # Static content generation (markdown, templates, sitemap)
 comrak = "0.17"              # Markdown → HTML conversion (GFM extensions)
 handlebars = "4.1"           # Template rendering with {{VARIABLE}} syntax
-quick-xml = "0.31"           # XML generation for sitemaps
+quick-xml = { version = "0.31", features = ["serialize"] }  # XML generation/parsing for sitemaps
+
+# Web build CLI progress
+indicatif = { workspace = true }  # Progress bars for build steps
 
 # HTTP client (already available via reqwest in workspace)
 reqwest = { workspace = true, features = ["json"] }

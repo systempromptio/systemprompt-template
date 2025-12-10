@@ -30,6 +30,9 @@ tower = { workspace = true }
 # Async
 tokio = { workspace = true }
 
+# Database
+sqlx = { workspace = true, features = ["postgres", "uuid"] }
+
 # Serialization
 serde = { workspace = true }
 serde_json = { workspace = true }

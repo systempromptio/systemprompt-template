@@ -114,20 +114,11 @@ impl ServiceCategory {
     }
 
     pub const fn all() -> &'static [Self] {
-        &[
-            Self::Core,
-            Self::Agent,
-            Self::Mcp,
-            Self::Meta,
-        ]
+        &[Self::Core, Self::Agent, Self::Mcp, Self::Meta]
     }
 
     pub fn from_path(path: &str) -> Option<Self> {
-        for category in &[
-            Self::Core,
-            Self::Agent,
-            Self::Mcp,
-        ] {
+        for category in &[Self::Core, Self::Agent, Self::Mcp] {
             if category.matches_path(path) {
                 return Some(*category);
             }
@@ -166,7 +157,8 @@ impl Modules {
     }
 
     fn scan_and_load(system_path: &str) -> Result<Vec<Module>> {
-        // Try core/crates first (systemprompt-blog layout), then fall back to crates/ (systemprompt-os layout)
+        // Try core/crates first (systemprompt-blog layout), then fall back to crates/
+        // (systemprompt-os layout)
         let crates_dir = {
             let core_crates = Path::new(system_path).join("core").join("crates");
             if core_crates.exists() {

@@ -9,13 +9,13 @@ pub fn classify_database_error(error: &RepositoryError) -> String {
             error
         )
     } else if error_str.contains("UNIQUE constraint failed") {
-        format!("Database constraint error: Duplicate entry - {}", error)
+        format!("Database constraint error: Duplicate entry - {error}")
     } else if error_str.contains("NOT NULL constraint failed") {
         format!(
             "Database constraint error: Required field missing - {}",
             error
         )
     } else {
-        format!("Database error: {}", error)
+        format!("Database error: {error}")
     }
 }

@@ -1,13 +1,22 @@
 import React from 'react';
 import { theme } from '@/theme.config';
 
+type LogoVariant = 'primary' | 'dark' | 'small'
+type LogoFormat = 'svg' | 'webp' | 'png'
+
+interface LogoConfig {
+  svg?: string
+  webp?: string
+  png: string
+}
+
 interface BrandLogoProps {
   className?: string;
   width?: number | string;
   height?: number | string;
   alt?: string;
-  variant?: 'primary' | 'dark' | 'small';
-  format?: 'svg' | 'webp' | 'png'; // Explicitly choose format
+  variant?: LogoVariant;
+  format?: LogoFormat;
 }
 
 /**
@@ -27,15 +36,16 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
   // Get logo source from config based on variant and format
   const getLogoSrc = (): string => {
-    const variantConfig = theme.branding.logo[variant] as any;
+    const variantConfig = theme.branding.logo[variant] as LogoConfig | undefined;
 
     // If variant has the requested format, use it
-    if (variantConfig && variantConfig[format]) {
-      return variantConfig[format];
+    if (variantConfig && format in variantConfig) {
+      const formatValue = variantConfig[format as keyof LogoConfig];
+      if (formatValue) return formatValue;
     }
 
     // Fallback: use png if format not available
-    if (variantConfig && variantConfig.png) {
+    if (variantConfig?.png) {
       return variantConfig.png;
     }
 

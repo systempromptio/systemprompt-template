@@ -22,7 +22,8 @@ pub struct PaginationInfo {
 impl PaginationInfo {
     pub fn new(total: i64, page: i32, per_page: i32) -> Self {
         let per_page_i64 = i64::from(per_page);
-        let total_pages = i32::try_from((total + per_page_i64 - 1) / per_page_i64).unwrap_or(i32::MAX);
+        let total_pages =
+            i32::try_from((total + per_page_i64 - 1) / per_page_i64).unwrap_or(i32::MAX);
         let has_next = page < total_pages;
         let has_prev = page > 1;
 

@@ -1,4 +1,7 @@
-use axum::{extract::State, response::IntoResponse, routing::get, Router};
+use axum::extract::State;
+use axum::response::IntoResponse;
+use axum::routing::get;
+use axum::Router;
 use serde::{Deserialize, Serialize};
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::api::ApiError;
@@ -50,7 +53,12 @@ pub async fn handle_mcp_registry(State(ctx): State<AppContext>) -> impl IntoResp
             enabled: config.enabled,
             display_in_web: config.display_in_web,
             oauth_required: config.oauth.required,
-            oauth_scopes: config.oauth.scopes.iter().map(std::string::ToString::to_string).collect(),
+            oauth_scopes: config
+                .oauth
+                .scopes
+                .iter()
+                .map(ToString::to_string)
+                .collect(),
             endpoint: format!("{}/api/v1/mcp/{}/mcp", api_external_url, config.name),
             status: if config.enabled {
                 "enabled".to_string()

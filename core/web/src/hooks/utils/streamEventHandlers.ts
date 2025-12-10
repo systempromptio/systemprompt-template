@@ -3,18 +3,45 @@
  *
  * Extracted handlers for different SSE event types.
  * Each handler is responsible for a single event type.
+ *
+ * Architecture: SSE Event -> Validate -> Store -> Components
+ * Validation happens at the boundary. After validation, types are trusted.
  */
 
 import { useTaskStore } from '@/stores/task.store'
 import { useArtifactStore } from '@/stores/artifact.store'
-import { useToolExecutionStore } from '@/stores/toolExecution.store'
 import { useContextStore } from '@/stores/context.store'
-import { toTask } from '@/types/task'
-import { toArtifact } from '@/types/artifact'
-import type { Task as A2ATask, Artifact as A2AArtifact } from '@a2a-js/sdk'
+import { useAuthStore } from '@/stores/auth.store'
+import { useUIStateStore } from '@/stores/ui-state.store'
+import type { Task as A2ATask } from '@a2a-js/sdk'
 import type { BroadcastEvent } from '@/types/sse'
+import { hasSkillInData } from '@/types/sse'
+import type { ExecutionStep } from '@/types/execution'
 import { logger } from '@/lib/logger'
 import { extractAndStoreSkill } from '@/lib/utils/extractArtifactSkills'
+import { hasTaskInData, getStatusMessageId, isPlainObject } from '@/utils/type-guards'
+import {
+  EventValidationError,
+  validateTaskEvent,
+  validateArtifactEvent,
+  validateArtifactsArray,
+  validateContextId,
+  hasArtifactsInData,
+  hasExecutionStepsInData,
+} from './eventValidators'
+
+interface ContextStatsItem {
+  context_id: string
+  message_count: number
+}
+
+function isContextStatsItem(value: unknown): value is ContextStatsItem {
+  if (!isPlainObject(value)) return false
+  return (
+    typeof value.context_id === 'string' &&
+    typeof value.message_count === 'number'
+  )
+}
 
 /**
  * Handle snapshot event - loads all contexts at once
@@ -44,8 +71,8 @@ export function handleContextStatsEvent(data: string): void {
 
     if (contexts && Array.isArray(contexts)) {
       const store = useContextStore.getState()
-      contexts.forEach((ctx: any) => {
-        if (ctx.context_id && ctx.message_count !== undefined) {
+      contexts.forEach((ctx: unknown) => {
+        if (isContextStatsItem(ctx)) {
           const existing = store.conversations.get(ctx.context_id)
           if (existing) {
             const updated = new Map(store.conversations)
@@ -64,58 +91,172 @@ export function handleContextStatsEvent(data: string): void {
 }
 
 /**
+ * Handle task_created event - new task with user message
+ * This is the authoritative source for user messages (no optimistic state needed)
+ */
+export function handleTaskCreatedEvent(event: BroadcastEvent): void {
+  console.log('%c[TASK_CREATED] Raw event received', 'background: #00ff00; color: black; font-weight: bold;', {
+    timestamp: new Date().toISOString(),
+    eventType: event.event_type,
+    contextId: event.context_id,
+    rawData: event.data
+  })
+
+  try {
+    const validatedTask = validateTaskEvent(event)
+
+    console.log('%c[TASK_CREATED] Validated task', 'background: #00ff00; color: black;', {
+      taskId: validatedTask.id,
+      status: validatedTask.status?.state,
+      historyLength: validatedTask.history?.length || 0,
+      historyRoles: validatedTask.history?.map(m => ({
+        messageId: m.messageId,
+        role: m.role,
+        partsCount: m.parts?.length,
+        textPreview: m.parts?.[0]?.kind === 'text' ? (m.parts[0] as { text?: string }).text?.substring(0, 50) : 'N/A'
+      }))
+    })
+
+    logger.debug('Task created', { taskId: validatedTask.id, contextId: validatedTask.contextId }, 'streamEventHandlers')
+    useTaskStore.getState().updateTask(validatedTask)
+
+    useUIStateStore.getState().setStreaming(validatedTask.id)
+
+    if (event.context_id) {
+      useContextStore.getState().updateMessageCount(event.context_id)
+    }
+  } catch (error) {
+    if (error instanceof EventValidationError) {
+      logger.error('Invalid task_created event', {
+        eventType: error.eventType,
+        message: error.message,
+        receivedKeys: Object.keys(error.rawEvent.data || {}),
+      }, 'streamEventHandlers')
+      return
+    }
+    throw error
+  }
+}
+
+/**
  * Handle task event - updates task store
  */
 export function handleTaskEvent(event: BroadcastEvent): void {
-  if ('task' in event.data) {
+  if (hasTaskInData(event.data)) {
     try {
-      const rawTask = event.data.task as A2ATask
-      const validatedTask = toTask(rawTask)
+      const validatedTask = validateTaskEvent(event)
       logger.debug('Updating task store', { taskId: validatedTask.id }, 'streamEventHandlers')
       useTaskStore.getState().updateTask(validatedTask)
-    } catch (e) {
-      logger.warn('Invalid task in event', e, 'streamEventHandlers')
+
+      const state = validatedTask.status?.state
+
+      if (state === 'input-required') {
+        useUIStateStore.getState().registerInputRequest({
+          taskId: validatedTask.id,
+          messageId: getStatusMessageId(validatedTask) ?? '',
+          message: validatedTask.status?.message,
+          timestamp: new Date(),
+        })
+      }
+
+      if (state === 'auth-required') {
+        useUIStateStore.getState().registerAuthRequest({
+          taskId: validatedTask.id,
+          messageId: getStatusMessageId(validatedTask) ?? '',
+          message: validatedTask.status?.message,
+          timestamp: new Date(),
+        })
+      }
+
+      if (state === 'working') {
+        useUIStateStore.getState().setStreaming(validatedTask.id)
+        useUIStateStore.getState().resolveInputRequest(validatedTask.id)
+        useUIStateStore.getState().resolveAuthRequest(validatedTask.id)
+      }
+
+      if (state === 'completed') {
+        console.log('%c[TASK_STATUS_CHANGED] Task completed - clearing streaming', 'background: #ff9900; color: black; font-weight: bold;', {
+          timestamp: new Date().toISOString(),
+          taskId: validatedTask.id,
+          currentStreamingTaskId: useUIStateStore.getState().activeStreamingTaskId,
+          stepsBeingCleared: useUIStateStore.getState().stepIdsByTask[validatedTask.id]?.length || 0
+        })
+
+        useUIStateStore.getState().clearStepsByTask(validatedTask.id)
+        useUIStateStore.getState().setStreaming(null)
+        useUIStateStore.getState().resolveInputRequest(validatedTask.id)
+        useUIStateStore.getState().resolveAuthRequest(validatedTask.id)
+      }
+
+      if (state === 'failed' || state === 'rejected' || state === 'canceled') {
+        console.log('%c[TASK_STATUS_CHANGED] Task failed/rejected/canceled - clearing streaming', 'background: #ff0000; color: white; font-weight: bold;', {
+          timestamp: new Date().toISOString(),
+          taskId: validatedTask.id,
+          state,
+          errorMessage: validatedTask.status?.message,
+          currentStreamingTaskId: useUIStateStore.getState().activeStreamingTaskId,
+          stepsBeingCleared: useUIStateStore.getState().stepIdsByTask[validatedTask.id]?.length || 0
+        })
+
+        useUIStateStore.getState().clearStepsByTask(validatedTask.id)
+        useUIStateStore.getState().setStreaming(null)
+        useUIStateStore.getState().resolveInputRequest(validatedTask.id)
+        useUIStateStore.getState().resolveAuthRequest(validatedTask.id)
+      }
+
+      const executionSteps = validatedTask.metadata?.executionSteps
+      if (executionSteps && Array.isArray(executionSteps) && executionSteps.length > 0) {
+        logger.debug('Adding execution steps from task metadata', {
+          taskId: validatedTask.id,
+          stepCount: executionSteps.length
+        }, 'streamEventHandlers')
+        useUIStateStore.getState().addSteps(executionSteps, event.context_id)
+      }
+    } catch (error) {
+      if (error instanceof EventValidationError) {
+        logger.error('Invalid task event', {
+          eventType: error.eventType,
+          message: error.message,
+        }, 'streamEventHandlers')
+        return
+      }
+      throw error
     }
   }
 
-  if ('artifacts' in event.data && Array.isArray(event.data.artifacts)) {
+  if (hasArtifactsInData(event.data)) {
     const task = event.data.task as A2ATask | undefined
 
     if (!task) {
       logger.error('A2A protocol violation: artifacts present but task is missing', event.data, 'streamEventHandlers')
-      throw new Error('A2A protocol violation: artifacts array present but task is missing')
+      return
     }
 
     if (!task.id || typeof task.id !== 'string') {
       logger.error('A2A protocol violation: Task.id is required', { task }, 'streamEventHandlers')
-      throw new Error('A2A protocol violation: Task.id is required but missing or invalid')
+      return
     }
 
-    if (!event.context_id || typeof event.context_id !== 'string') {
-      logger.error('A2A protocol violation: context_id is required', { event }, 'streamEventHandlers')
-      throw new Error('A2A protocol violation: context_id is required but missing or invalid')
-    }
-
+    let contextId: string
     try {
-      const artifacts = event.data.artifacts as A2AArtifact[]
-      const taskId: string = task.id
-      const contextId: string = event.context_id
-
-      logger.debug('Processing artifacts', { count: artifacts.length, taskId, contextId }, 'streamEventHandlers')
-
-      artifacts.forEach((rawArtifact) => {
-        try {
-          const validatedArtifact = toArtifact(rawArtifact)
-          useArtifactStore.getState().addArtifact(validatedArtifact, taskId, contextId)
-          extractAndStoreSkill(validatedArtifact, contextId, taskId)
-        } catch (e) {
-          logger.warn('Invalid artifact in event', e, 'streamEventHandlers')
-        }
-      })
-    } catch (e) {
-      logger.error('Failed to process artifacts', e, 'streamEventHandlers')
-      throw e
+      contextId = validateContextId(event)
+    } catch (error) {
+      if (error instanceof EventValidationError) {
+        logger.error(error.message, { event }, 'streamEventHandlers')
+        return
+      }
+      throw error
     }
+
+    const taskId: string = task.id
+
+    logger.debug('Processing artifacts', { count: event.data.artifacts.length, taskId, contextId }, 'streamEventHandlers')
+
+    const validatedArtifacts = validateArtifactsArray(event, logger)
+    validatedArtifacts.forEach((validatedArtifact) => {
+      useArtifactStore.getState().addArtifact(validatedArtifact, taskId, contextId)
+      extractAndStoreSkill(validatedArtifact, contextId, taskId)
+    })
   }
 }
 
@@ -127,50 +268,50 @@ export function handleArtifactCreatedEvent(event: BroadcastEvent): void {
 
   logger.debug('Artifact created', { contextId: event.context_id, isCurrent: event.context_id === currentContextId }, 'streamEventHandlers')
 
-  if ('artifact' in event.data) {
-    try {
-      const rawArtifact = event.data.artifact as A2AArtifact
-      const validatedArtifact = toArtifact(rawArtifact)
-      const taskId = event.data.task_id as string | undefined
-      const renderBehavior = validatedArtifact.metadata.render_behavior || 'both'
+  try {
+    const validatedArtifact = validateArtifactEvent(event)
+    const taskId = (event.data as Record<string, unknown>).task_id as string | undefined
 
-      const executions = useToolExecutionStore.getState().getQueue()
-      const toolName = validatedArtifact.metadata.tool_name as string | undefined
+    const uiState = useUIStateStore.getState()
+    const toolName = validatedArtifact.metadata.tool_name as string | undefined
 
-      let matchingExecution = useToolExecutionStore.getState().findByArtifactId(validatedArtifact.artifactId)
+    let matchingExecution = uiState.findToolExecutionByArtifactId(validatedArtifact.artifactId)
 
-      if (!matchingExecution && toolName) {
-        matchingExecution = executions.find(
-          (e) => (e.status === 'pending' || e.status === 'executing') && e.toolName === toolName
-        )
-      }
-
-      if (!matchingExecution) {
-        matchingExecution = executions.find(
-          (e) => e.status === 'pending' || e.status === 'executing'
-        )
-      }
-
-      if (matchingExecution) {
-        useToolExecutionStore.getState().completeExecution(matchingExecution.id, validatedArtifact)
-        logger.debug('Completed execution', { id: matchingExecution.id, toolName }, 'streamEventHandlers')
-      }
-
-      if (renderBehavior === 'inline' || renderBehavior === 'both') {
-        useArtifactStore.getState().addArtifact(
-          validatedArtifact,
-          taskId,
-          event.context_id
-        )
-      }
-
-      // Extract and store skill metadata from artifact
-      if (event.context_id && taskId) {
-        extractAndStoreSkill(validatedArtifact, event.context_id, taskId)
-      }
-    } catch (e) {
-      logger.warn('Invalid artifact in event', e, 'streamEventHandlers')
+    if (!matchingExecution && toolName) {
+      const activeExecutions = uiState.getActiveToolExecutions()
+      matchingExecution = activeExecutions.find(
+        (e) => e.toolName === toolName
+      )
     }
+
+    if (!matchingExecution) {
+      const activeExecutions = uiState.getActiveToolExecutions()
+      matchingExecution = activeExecutions[0]
+    }
+
+    if (matchingExecution) {
+      uiState.completeToolExecution(matchingExecution.id, validatedArtifact.artifactId)
+      logger.debug('Completed execution', { id: matchingExecution.id, toolName }, 'streamEventHandlers')
+    }
+
+    useArtifactStore.getState().addArtifact(
+      validatedArtifact,
+      taskId,
+      event.context_id
+    )
+
+    if (event.context_id && taskId) {
+      extractAndStoreSkill(validatedArtifact, event.context_id, taskId)
+    }
+  } catch (error) {
+    if (error instanceof EventValidationError) {
+      logger.warn('Invalid artifact_created event', {
+        eventType: error.eventType,
+        message: error.message,
+      }, 'streamEventHandlers')
+      return
+    }
+    throw error
   }
 }
 
@@ -178,67 +319,35 @@ export function handleArtifactCreatedEvent(event: BroadcastEvent): void {
  * Handle skill loaded event
  */
 export function handleSkillLoadedEvent(event: BroadcastEvent): void {
-  console.log('[DEBUG] handleSkillLoadedEvent - Processing skill event:', {
-    event,
-    contextId: event.context_id,
-    hasSkillId: 'skill_id' in event.data,
-    hasSkillName: 'skill_name' in event.data,
-    eventData: event.data
-  })
-
   logger.debug('Skill loaded', { contextId: event.context_id }, 'streamEventHandlers')
 
-  if ('skill_id' in event.data && 'skill_name' in event.data) {
-    try {
-      const data = event.data as any
-      const contextId = data.request_context?.execution?.context_id || event.context_id
-      const taskId = data.task_id || data.request_context?.execution?.task_id
+  if (!hasSkillInData(event.data)) {
+    logger.warn('skill_loaded event missing skill fields', { eventData: event.data }, 'streamEventHandlers')
+    return
+  }
 
-      console.log('[DEBUG] handleSkillLoadedEvent - Extracted skill data:', {
-        contextId,
-        taskId,
-        skillId: data.skill_id,
-        skillName: data.skill_name,
-        hasContextId: !!contextId,
-        hasTaskId: !!taskId,
-        requestContext: data.request_context
-      })
+  try {
+    const data = event.data
+    const contextId = data.request_context?.execution?.context_id || event.context_id
+    const taskId = data.task_id || data.request_context?.execution?.task_id
 
-      if (contextId && taskId) {
-        const skill = {
-          id: data.skill_id as string,
-          name: data.skill_name as string,
-          description: data.description as string || '',
-          tags: [],
-        }
-
-        console.log('[DEBUG] handleSkillLoadedEvent - Adding skill to store:', {
-          contextId,
-          taskId,
-          skill
-        })
-
-        import('@/stores/skill.store').then(({ useSkillStore }) => {
-          useSkillStore.getState().addSkillToTask(contextId, taskId, skill)
-          console.log('[DEBUG] handleSkillLoadedEvent - Skill added to store. Current state:', {
-            byContext: useSkillStore.getState().byContext,
-            byId: useSkillStore.getState().byId
-          })
-          logger.debug('Skill added to store', { skillId: skill.id, taskId }, 'streamEventHandlers')
-        })
-      } else {
-        console.warn('[DEBUG] handleSkillLoadedEvent - Missing contextId or taskId:', {
-          contextId,
-          taskId,
-          rawData: data,
-          event
-        })
-        logger.warn('Missing contextId or taskId in skill event', { contextId, taskId }, 'streamEventHandlers')
+    if (contextId && taskId) {
+      const skill = {
+        id: data.skill_id,
+        name: data.skill_name,
+        description: data.description || '',
+        tags: [],
       }
-    } catch (e) {
-      console.error('[DEBUG] handleSkillLoadedEvent - Error:', e)
-      logger.warn('Invalid skill in event', e, 'streamEventHandlers')
+
+      import('@/stores/skill.store').then(({ useSkillStore }) => {
+        useSkillStore.getState().addSkillToTask(contextId, taskId, skill)
+        logger.debug('Skill added to store', { skillId: skill.id, taskId }, 'streamEventHandlers')
+      })
+    } else {
+      logger.warn('Missing contextId or taskId in skill event', { contextId, taskId }, 'streamEventHandlers')
     }
+  } catch (e) {
+    logger.warn('Invalid skill in event', e, 'streamEventHandlers')
   }
 }
 
@@ -257,81 +366,166 @@ export function handleMessageReceivedEvent(event: BroadcastEvent): void {
  * Handle task completed event with artifacts
  */
 export function handleTaskCompletedEvent(event: BroadcastEvent): void {
+  console.log('%c[TASK_COMPLETED] Raw event received', 'background: #ff9900; color: black; font-weight: bold;', {
+    timestamp: new Date().toISOString(),
+    contextId: event.context_id,
+    rawData: event.data
+  })
+
   logger.debug('Task completed', { contextId: event.context_id }, 'streamEventHandlers')
 
-  if (!('task' in event.data) || !('artifacts' in event.data) || !Array.isArray(event.data.artifacts)) {
+  if (!hasTaskInData(event.data)) {
+    logger.error('A2A protocol violation: task_completed event missing task', event.data, 'streamEventHandlers')
     return
   }
 
-  const task = event.data.task as A2ATask | undefined
-  const artifacts = event.data.artifacts as A2AArtifact[]
-
-  if (!task) {
-    logger.error('A2A protocol violation: task_completed event missing task', event.data, 'streamEventHandlers')
-    throw new Error('A2A protocol violation: task_completed event requires task')
-  }
+  const task = event.data.task as A2ATask
 
   if (!task.id || typeof task.id !== 'string') {
     logger.error('A2A protocol violation: Task.id is required', { task }, 'streamEventHandlers')
-    throw new Error('A2A protocol violation: Task.id is required but missing or invalid')
+    return
   }
 
-  if (!event.context_id || typeof event.context_id !== 'string') {
-    logger.error('A2A protocol violation: context_id is required', { event }, 'streamEventHandlers')
-    throw new Error('A2A protocol violation: context_id is required but missing or invalid')
+  let contextId: string
+  try {
+    contextId = validateContextId(event)
+  } catch (error) {
+    if (error instanceof EventValidationError) {
+      logger.error(error.message, { event }, 'streamEventHandlers')
+      return
+    }
+    throw error
   }
 
   const taskId: string = task.id
-  const contextId: string = event.context_id
+
+  try {
+    const validatedTask = validateTaskEvent(event)
+
+    console.log('%c[TASK_COMPLETED] Validated task', 'background: #ff9900; color: black;', {
+      taskId: validatedTask.id,
+      status: validatedTask.status?.state,
+      historyLength: validatedTask.history?.length || 0,
+      historyRoles: validatedTask.history?.map(m => ({
+        messageId: m.messageId,
+        role: m.role,
+        textPreview: m.parts?.[0]?.kind === 'text' ? (m.parts[0] as { text?: string }).text?.substring(0, 50) : 'N/A'
+      })),
+      hasMetadata: !!validatedTask.metadata,
+      executionStepsCount: validatedTask.metadata?.executionSteps?.length || 0
+    })
+
+    useTaskStore.getState().updateTask(validatedTask)
+    logger.debug('Updated task store from task_completed', { taskId }, 'streamEventHandlers')
+
+    console.log('%c[TASK_COMPLETED] Clearing steps for task', 'background: #ff9900; color: black;', {
+      taskId,
+      stepsBeingCleared: useUIStateStore.getState().stepIdsByTask[taskId]?.length || 0
+    })
+    useUIStateStore.getState().clearStepsByTask(taskId)
+
+    console.log('%c[TASK_COMPLETED] Clearing streaming state', 'background: #ff9900; color: black;', {
+      currentStreamingTaskId: useUIStateStore.getState().activeStreamingTaskId,
+      settingTo: null
+    })
+
+    useUIStateStore.getState().setStreaming(null)
+
+    const steps = validatedTask.metadata?.executionSteps
+    if (steps?.length) {
+      useUIStateStore.getState().addSteps(steps, contextId)
+    }
+  } catch (error) {
+    if (error instanceof EventValidationError) {
+      logger.error('Invalid task in task_completed event', {
+        eventType: error.eventType,
+        message: error.message,
+        taskId,
+      }, 'streamEventHandlers')
+    } else {
+      throw error
+    }
+  }
+
+  const validatedArtifacts = validateArtifactsArray(event, logger)
 
   logger.debug('Task completed with artifacts', {
     contextId,
     taskId,
-    artifactCount: artifacts.length
+    artifactCount: validatedArtifacts.length
   }, 'streamEventHandlers')
 
-  // Extract skill metadata from artifacts
-  if (artifacts.length > 0) {
-    console.log('[TASK COMPLETED DEBUG] Processing artifacts for skill extraction:', {
-      artifactCount: artifacts.length,
+  if (validatedArtifacts.length > 0) {
+    logger.debug('Processing task_completed artifacts', {
+      artifactCount: validatedArtifacts.length,
       contextId,
       taskId
-    })
+    }, 'streamEventHandlers')
 
-    artifacts.forEach((rawArtifact, index) => {
-      console.log(`[TASK COMPLETED DEBUG] Processing artifact ${index}:`, rawArtifact)
-      try {
-        const validatedArtifact = toArtifact(rawArtifact)
-        console.log(`[TASK COMPLETED DEBUG] Validated artifact ${index}:`, validatedArtifact)
-        extractAndStoreSkill(validatedArtifact, contextId, taskId)
-      } catch (e) {
-        console.error(`[TASK COMPLETED DEBUG] Failed to extract skill from artifact ${index}:`, e)
-        logger.warn('Failed to extract skill from artifact', e, 'streamEventHandlers')
-      }
+    validatedArtifacts.forEach((validatedArtifact) => {
+      useArtifactStore.getState().addArtifact(
+        validatedArtifact,
+        taskId,
+        contextId
+      )
+      logger.debug('Added artifact from task_completed', {
+        artifactId: validatedArtifact.artifactId,
+        type: validatedArtifact.metadata.artifact_type
+      }, 'streamEventHandlers')
+
+      extractAndStoreSkill(validatedArtifact, contextId, taskId)
     })
   }
 
-  if (artifacts.length > 0) {
+  if (validatedArtifacts.length > 0) {
     const toolName = task.metadata?.tool_name as string | undefined
     if (toolName) {
-      const { completeExecution, failExecution, executions } = useToolExecutionStore.getState()
+      const uiState = useUIStateStore.getState()
+      const activeExecutions = uiState.getActiveToolExecutions()
 
-      const matchingExecution = executions.find((e) => {
-        if (e.toolName !== toolName) return false
-        if (e.status === 'completed' || e.status === 'error') return false
-        return true
-      })
+      const matchingExecution = activeExecutions.find((e) => e.toolName === toolName)
 
       if (matchingExecution) {
-        try {
-          const artifact = toArtifact(artifacts[0])
-          completeExecution(matchingExecution.id, artifact)
-        } catch (err) {
-          logger.error('Failed to complete execution', err, 'streamEventHandlers')
-          const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-          failExecution(matchingExecution.id, errorMessage)
-        }
+        uiState.completeToolExecution(matchingExecution.id, validatedArtifacts[0].artifactId)
       }
     }
+  }
+
+  if (hasExecutionStepsInData(event.data)) {
+    const steps = event.data.executionSteps as ExecutionStep[]
+    if (steps.length > 0) {
+      logger.debug('Adding execution steps from task_completed', {
+        taskId,
+        stepCount: steps.length
+      }, 'streamEventHandlers')
+
+      useUIStateStore.getState().addSteps(steps, contextId)
+    }
+  }
+
+  fetchTaskWithExecutionSteps(taskId)
+}
+
+/**
+ * Fetch task from API and merge execution steps into store
+ * Called after task_completed to ensure authoritative state is available
+ */
+async function fetchTaskWithExecutionSteps(taskId: string): Promise<void> {
+  try {
+    const authHeader = useAuthStore.getState().getAuthHeader()
+    await useTaskStore.getState().fetchTask(taskId, authHeader)
+
+    const task = useTaskStore.getState().byId[taskId]
+    if (task?.metadata?.executionSteps && task.metadata.executionSteps.length > 0) {
+      logger.debug('Merging execution steps from API fetch', {
+        taskId,
+        stepCount: task.metadata.executionSteps.length
+      }, 'streamEventHandlers')
+
+      const contextId = task.contextId
+      useUIStateStore.getState().addSteps(task.metadata.executionSteps, contextId)
+    }
+  } catch (error) {
+    logger.warn('Failed to fetch task after completion', { taskId, error }, 'streamEventHandlers')
   }
 }

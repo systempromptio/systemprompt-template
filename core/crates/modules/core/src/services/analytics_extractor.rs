@@ -126,8 +126,7 @@ impl SessionAnalytics {
             analytics.utm_medium = query_params.get("utm_medium").cloned();
             analytics.utm_campaign = query_params.get("utm_campaign").cloned();
 
-            let is_html_page = content_config
-                .is_some_and(|cfg| cfg.is_html_page(uri.path()));
+            let is_html_page = content_config.is_some_and(|cfg| cfg.is_html_page(uri.path()));
 
             if is_html_page {
                 analytics.entry_url = Some(uri.to_string());

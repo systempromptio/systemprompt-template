@@ -47,19 +47,19 @@ pub enum AgentServiceError {
 
 impl From<sqlx::Error> for AgentServiceError {
     fn from(err: sqlx::Error) -> Self {
-        AgentServiceError::Database(err.to_string())
+        Self::Database(err.to_string())
     }
 }
 
 impl From<crate::repository::RepositoryError> for AgentServiceError {
     fn from(err: crate::repository::RepositoryError) -> Self {
-        AgentServiceError::Repository(err.to_string())
+        Self::Repository(err.to_string())
     }
 }
 
 impl From<reqwest::Error> for AgentServiceError {
     fn from(err: reqwest::Error) -> Self {
-        AgentServiceError::Network(
+        Self::Network(
             err.url()
                 .map(|u| u.to_string())
                 .unwrap_or_else(|| "unknown".to_string()),
@@ -69,7 +69,7 @@ impl From<reqwest::Error> for AgentServiceError {
 
 impl From<anyhow::Error> for AgentServiceError {
     fn from(err: anyhow::Error) -> Self {
-        AgentServiceError::Configuration("unknown".to_string(), err.to_string())
+        Self::Configuration("unknown".to_string(), err.to_string())
     }
 }
 

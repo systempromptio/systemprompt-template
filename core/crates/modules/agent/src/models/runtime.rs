@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
+use systemprompt_models::ai::ToolModelOverrides;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentRuntimeInfo {
     pub name: String,
@@ -11,9 +12,10 @@ pub struct AgentRuntimeInfo {
     pub mcp_servers: Vec<String>,
     pub provider: Option<String>,
     pub model: Option<String>,
-    /// Skill IDs to load and inject into agent system prompt
     #[serde(default)]
     pub skills: Vec<String>,
+    #[serde(default)]
+    pub tool_model_overrides: ToolModelOverrides,
 }
 
 impl From<systemprompt_models::AgentConfig> for AgentRuntimeInfo {
@@ -28,6 +30,7 @@ impl From<systemprompt_models::AgentConfig> for AgentRuntimeInfo {
             provider: config.metadata.provider,
             model: config.metadata.model,
             skills: config.metadata.skills,
+            tool_model_overrides: config.metadata.tool_model_overrides,
         }
     }
 }

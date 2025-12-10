@@ -1,8 +1,6 @@
-use axum::{
-    extract::{Path, State},
-    http::{HeaderMap, StatusCode},
-    response::{IntoResponse, Json},
-};
+use axum::extract::{Path, State};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::{IntoResponse, Json};
 
 use crate::models::oauth::dynamic_registration::{
     DynamicRegistrationRequest, DynamicRegistrationResponse,
@@ -109,7 +107,7 @@ pub async fn get_client_configuration(
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({
                 "error": "server_error",
-                "error_description": format!("Database error: {}", e)
+                "error_description": format!("Database error: {e}")
             })),
         )
             .into_response(),
@@ -149,7 +147,7 @@ pub async fn update_client_configuration(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({
                     "error": "server_error",
-                    "error_description": format!("Database error: {}", e)
+                    "error_description": format!("Database error: {e}")
                 })),
             )
                 .into_response();
@@ -247,7 +245,7 @@ pub async fn update_client_configuration(
             StatusCode::BAD_REQUEST,
             Json(serde_json::json!({
                 "error": "invalid_client_metadata",
-                "error_description": format!("Failed to update client: {}", e)
+                "error_description": format!("Failed to update client: {e}")
             })),
         )
             .into_response(),
@@ -276,7 +274,7 @@ pub async fn delete_client_configuration(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(serde_json::json!({
                         "error": "server_error",
-                        "error_description": format!("Failed to delete client: {}", e)
+                        "error_description": format!("Failed to delete client: {e}")
                     })),
                 )
                     .into_response(),
@@ -294,7 +292,7 @@ pub async fn delete_client_configuration(
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({
                 "error": "server_error",
-                "error_description": format!("Database error: {}", e)
+                "error_description": format!("Database error: {e}")
             })),
         )
             .into_response(),

@@ -38,6 +38,12 @@ axum = { workspace = true }
 # Validation
 validator = { workspace = true }
 
+# JSON Schema generation
+schemars = { workspace = true }
+
+# Regex
+regex = { workspace = true }
+
 # Async runtime (for config loading)
 tokio = { workspace = true }
 

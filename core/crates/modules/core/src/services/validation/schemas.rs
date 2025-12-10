@@ -9,7 +9,7 @@ pub async fn validate_module_schemas(module: &Module) -> Result<Vec<ModuleSchema
         return Ok(Vec::new());
     };
 
-    let app_context = crate::AppContext::new().await.unwrap();
+    let app_context = crate::AppContext::new().await?;
     let db = app_context.db_pool();
     let mut missing_schemas = Vec::new();
 
@@ -70,7 +70,7 @@ pub async fn apply_schema(module: &Module, schema: &ModuleSchema) -> Result<()> 
     let schema_content = std::fs::read_to_string(&schema_path)
         .with_context(|| format!("Failed to read schema file: {}", schema_path.display()))?;
 
-    let app_context = crate::AppContext::new().await.unwrap();
+    let app_context = crate::AppContext::new().await?;
     let db = app_context.db_pool();
     SqlExecutor::execute_statements(db.as_ref(), &schema_content).await?;
 

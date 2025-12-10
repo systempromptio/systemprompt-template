@@ -21,7 +21,7 @@ pub struct AgentInfo {
 
 impl AgentInfo {
     /// Create AgentInfo from repository data
-    pub fn from_repository_data(agent_id: String, card: AgentCard, enabled: bool) -> Self {
+    pub const fn from_repository_data(agent_id: String, card: AgentCard, enabled: bool) -> Self {
         Self {
             agent_id,
             card,
@@ -32,7 +32,7 @@ impl AgentInfo {
     }
 
     /// Create AgentInfo from AgentCard (should be preferred method)
-    pub fn from_card(agent_id: String, card: AgentCard, enabled: bool) -> Self {
+    pub const fn from_card(agent_id: String, card: AgentCard, enabled: bool) -> Self {
         Self {
             agent_id,
             card,

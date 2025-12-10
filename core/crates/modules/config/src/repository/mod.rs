@@ -5,41 +5,61 @@ pub use modules::ModuleRepository;
 pub use systemprompt_models::repository::{McpServer, ServiceConfig, ServiceRepository};
 pub use variables::VariablesRepository;
 
-use anyhow::Context;
-use std::sync::Arc;
-use systemprompt_core_database::{DatabaseProvider, DatabaseQueryEnum};
+use anyhow::{Context, Result};
+use sqlx::PgPool;
 use systemprompt_traits::{Repository as RepositoryTrait, RepositoryError};
 
 #[derive(Debug)]
 pub struct ConfigRepository {
-    db_pool: systemprompt_core_database::DbPool,
-    db: Arc<dyn DatabaseProvider>,
+    pool: PgPool,
 }
 
 impl RepositoryTrait for ConfigRepository {
-    type Pool = systemprompt_core_database::DbPool;
+    type Pool = PgPool;
     type Error = RepositoryError;
 
     fn pool(&self) -> &Self::Pool {
-        &self.db_pool
+        &self.pool
     }
 }
 
 impl ConfigRepository {
-    pub fn new(db_pool: systemprompt_core_database::DbPool) -> Self {
-        let db = db_pool.clone();
-        Self { db_pool, db }
+    pub const fn new(pool: PgPool) -> Self {
+        Self { pool }
     }
 
-    pub async fn is_config_table_available(&self) -> anyhow::Result<bool> {
-        let query = DatabaseQueryEnum::CheckConfigTableExists.get(self.db.as_ref());
-        let row = self
-            .db
-            .fetch_optional(&query, &[])
-            .await
-            .context("Failed to check if config table exists")?;
+    pub async fn is_config_table_available(&self) -> Result<bool> {
+        let result = sqlx::query_scalar!(
+            r#"
+            SELECT EXISTS(
+                SELECT 1 FROM information_schema.tables
+                WHERE table_name = 'config_variables'
+            ) as "exists!"
+            "#
+        )
+        .fetch_one(&self.pool)
+        .await
+        .context("Failed to check if config table exists")?;
+        Ok(result)
+    }
 
-        Ok(row.is_some())
+    pub async fn seed_default_modules(&self) -> Result<()> {
+        sqlx::query!(
+            r#"
+            INSERT INTO modules (id, name, version, display_name, description, enabled, created_at, updated_at)
+            VALUES
+                (gen_random_uuid(), 'agent', '1.0.0', 'Agent', NULL, true, NOW(), NOW()),
+                (gen_random_uuid(), 'ai', '1.0.0', 'AI', NULL, true, NOW(), NOW()),
+                (gen_random_uuid(), 'blog', '1.0.0', 'Blog', NULL, true, NOW(), NOW()),
+                (gen_random_uuid(), 'oauth', '1.0.0', 'OAuth', NULL, true, NOW(), NOW()),
+                (gen_random_uuid(), 'mcp', '1.0.0', 'MCP', NULL, true, NOW(), NOW())
+            ON CONFLICT (name) DO NOTHING
+            "#
+        )
+        .execute(&self.pool)
+        .await
+        .context("Failed to seed default modules")?;
+        Ok(())
     }
 
     pub async fn list_configs(
@@ -47,7 +67,7 @@ impl ConfigRepository {
         _module_name: Option<&str>,
         _limit: Option<u32>,
         _offset: Option<u32>,
-    ) -> anyhow::Result<Vec<ConfigRow>> {
+    ) -> Result<Vec<ConfigRow>> {
         Ok(Vec::new())
     }
 }

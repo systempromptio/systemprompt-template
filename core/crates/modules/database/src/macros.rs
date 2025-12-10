@@ -1,7 +1,8 @@
 /// Create a [`DatabaseQuery`] from a query file path.
 ///
-/// This macro automatically loads `PostgreSQL` query using [`include_str!`] at compile time,
-/// ensuring missing query files result in compilation errors rather than runtime failures.
+/// This macro automatically loads `PostgreSQL` query using [`include_str!`] at
+/// compile time, ensuring missing query files result in compilation errors
+/// rather than runtime failures.
 ///
 /// # File Structure
 ///
@@ -11,7 +12,7 @@
 /// # Example
 ///
 /// ```rust
-/// use systemprompt_database::{DatabaseQuery, database_query};
+/// use systemprompt_database::{database_query, DatabaseQuery};
 ///
 /// const CREATE_USER: DatabaseQuery = database_query!("users/create");
 /// const GET_USER: DatabaseQuery = database_query!("users/get_by_id");

@@ -41,7 +41,7 @@ import { themeWatcher } from './plugins/theme-watcher'
 import { implementationOverlay } from './plugins/implementation-overlay'
 import { metadataInjector } from './plugins/metadata-injector'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     themeWatcher(),
@@ -64,15 +64,15 @@ export default defineConfig({
     sourcemap: true,
     chunkSizeWarningLimit: 1200,
     target: 'es2020',
-    minify: 'terser',
-    terserOptions: {
+    minify: mode === 'production' ? 'terser' : false,
+    terserOptions: mode === 'production' ? {
       compress: {
         drop_console: true,
         drop_debugger: true,
       },
       mangle: true,
-    } as any,
-    cssMinify: 'lightningcss',
+    } as any : undefined,
+    cssMinify: mode === 'production' ? 'lightningcss' : false,
     cssCodeSplit: true,
     rollupOptions: {
       output: {
@@ -104,7 +104,7 @@ export default defineConfig({
     },
   },
   esbuild: {
-    drop: ['debugger'],
+    drop: mode === 'production' ? ['debugger'] : [],
   },
   server: {
     fs: {
@@ -122,4 +122,4 @@ export default defineConfig({
     port: 4173,
     strictPort: true,
   },
-})
+}))

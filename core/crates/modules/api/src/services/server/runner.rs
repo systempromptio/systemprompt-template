@@ -1,7 +1,6 @@
 use anyhow::Result;
 use std::sync::Arc;
 use systemprompt_core_logging::CliService;
-use systemprompt_core_scheduler::models::SchedulerConfig;
 use systemprompt_core_scheduler::services::SchedulerService;
 use systemprompt_core_system::AppContext;
 use uuid::Uuid;
@@ -24,11 +23,11 @@ pub async fn run_server(ctx: AppContext) -> Result<()> {
         match reconcile_agents(&ctx_clone).await {
             Ok(started_count) => {
                 if started_count > 0 {
-                    CliService::success(&format!("✅ Started {} enabled agents", started_count));
+                    CliService::success(&format!("✅ Started {started_count} enabled agents"));
                 }
             },
             Err(e) => {
-                CliService::error(&format!("❌ FATAL: Agent reconciliation failed: {}", e));
+                CliService::error(&format!("❌ FATAL: Agent reconciliation failed: {e}"));
                 std::process::exit(1);
             },
         }
@@ -41,11 +40,11 @@ pub async fn run_server(ctx: AppContext) -> Result<()> {
         tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
 
         match initialize_scheduler(&ctx_clone).await {
-            Ok(_) => {
+            Ok(()) => {
                 CliService::success("✅ Scheduler initialized and started");
             },
             Err(e) => {
-                CliService::warning(&format!("⚠️  Scheduler initialization failed: {}", e));
+                CliService::warning(&format!("⚠️  Scheduler initialization failed: {e}"));
             },
         }
     });
@@ -72,7 +71,7 @@ async fn cleanup_stale_service_entries(ctx: &AppContext) -> Result<u64> {
     for service in mcp_services {
         let should_delete = if service.status == "running" {
             if let Some(pid) = service.pid {
-                let process_exists = std::path::Path::new(&format!("/proc/{}", pid)).exists();
+                let process_exists = std::path::Path::new(&format!("/proc/{pid}")).exists();
 
                 let port_responsive = {
                     use tokio::net::TcpStream;
@@ -95,7 +94,7 @@ async fn cleanup_stale_service_entries(ctx: &AppContext) -> Result<u64> {
 
         if should_delete {
             match repo.delete_service(&service.name).await {
-                Ok(_) => {
+                Ok(()) => {
                     deleted_count += 1;
                     CliService::info(&format!(
                         "   Deleted stale MCP service '{}' (status: {}, pid: {:?})",
@@ -117,7 +116,7 @@ async fn cleanup_stale_service_entries(ctx: &AppContext) -> Result<u64> {
         if let Ok(Some(service)) = repo.get_service_by_name(&service_name).await {
             let should_delete = if service.status == "running" {
                 if let Some(pid) = service.pid {
-                    let process_exists = std::path::Path::new(&format!("/proc/{}", pid)).exists();
+                    let process_exists = std::path::Path::new(&format!("/proc/{pid}")).exists();
 
                     let port_responsive = {
                         use tokio::net::TcpStream;
@@ -140,7 +139,7 @@ async fn cleanup_stale_service_entries(ctx: &AppContext) -> Result<u64> {
 
             if should_delete {
                 match repo.delete_service(&service_name).await {
-                    Ok(_) => {
+                    Ok(()) => {
                         deleted_count += 1;
                         CliService::info(&format!(
                             "   Deleted stale agent service '{}' (status: {}, pid: {:?})",
@@ -149,8 +148,7 @@ async fn cleanup_stale_service_entries(ctx: &AppContext) -> Result<u64> {
                     },
                     Err(e) => {
                         CliService::warning(&format!(
-                            "⚠️  Failed to delete agent service '{}': {}",
-                            service_name, e
+                            "⚠️  Failed to delete agent service '{service_name}': {e}"
                         ));
                     },
                 }
@@ -172,13 +170,13 @@ async fn reconcile_system_services(
     match cleanup_stale_service_entries(ctx).await {
         Ok(count) => {
             if count > 0 {
-                CliService::success(&format!("✅ Cleaned {} stale service entries", count));
+                CliService::success(&format!("✅ Cleaned {count} stale service entries"));
             } else {
                 CliService::info("   No stale entries found");
             }
         },
         Err(e) => {
-            CliService::warning(&format!("⚠️  Could not clean stale entries: {}", e));
+            CliService::warning(&format!("⚠️  Could not clean stale entries: {e}"));
         },
     }
 
@@ -191,8 +189,7 @@ async fn reconcile_system_services(
                 required_servers.iter().map(|s| s.name.clone()).collect();
 
             CliService::info(&format!(
-                "📊 MCP Server Status: {} required, {} running",
-                required_count, running_count
+                "📊 MCP Server Status: {required_count} required, {running_count} running"
             ));
             CliService::info(&format!("   Required: {}", required_names.join(", ")));
 
@@ -217,24 +214,21 @@ async fn reconcile_system_services(
                     missing.join(", ")
                 ));
 
-                panic!(
-                    "❌ FATAL: {} required MCP server(s) failed to start: {}\n\n\
-                    SystemPrompt OS cannot operate without MCP servers.\n\
-                    Agents need tools to function.\n\n\
-                    Build missing binaries with:\n  \
-                    cargo build --bin {}\n\n\
-                    Or build all MCP servers:\n  \
-                    just mcp build",
+                return Err(anyhow::anyhow!(
+                    "FATAL: {} required MCP server(s) failed to start: {}\n\nSystemPrompt OS \
+                     cannot operate without MCP servers.\nAgents need tools to function.\n\nBuild \
+                     missing binaries with:\n  cargo build --bin {}\n\nOr build all MCP \
+                     servers:\n  just mcp build",
                     missing.len(),
                     missing.join(", "),
                     missing.join(" --bin ")
-                );
-            } else {
-                let running_servers = mcp_orchestrator.get_running_servers().await?;
-                let running_list: Vec<String> =
-                    running_servers.iter().map(|s| s.name.clone()).collect();
-                CliService::info(&format!("   Running: {}", running_list.join(", ")));
+                ));
             }
+
+            let running_servers = mcp_orchestrator.get_running_servers().await?;
+            let running_list: Vec<String> =
+                running_servers.iter().map(|s| s.name.clone()).collect();
+            CliService::info(&format!("   Running: {}", running_list.join(", ")));
 
             if running_count > 0 {
                 use systemprompt_models::repository::ServiceRepository;
@@ -270,12 +264,12 @@ async fn reconcile_system_services(
                         verification_failed.len(),
                         verification_failed.join(", ")
                     ));
-                    panic!(
-                        "❌ FATAL: MCP services running but not properly registered in database\n\n\
-                        This indicates a race condition or database synchronization issue.\n\
-                        Failed services: {}",
+                    return Err(anyhow::anyhow!(
+                        "FATAL: MCP services running but not properly registered in \
+                         database\n\nThis indicates a race condition or database synchronization \
+                         issue.\nFailed services: {}",
                         verification_failed.join(", ")
-                    );
+                    ));
                 }
 
                 CliService::success(&format!(
@@ -285,16 +279,17 @@ async fn reconcile_system_services(
             }
         },
         Err(e) => {
-            CliService::error(&format!("   ❌ MCP reconciliation error: {:?}", e));
-            panic!(
-                "❌ FATAL: MCP reconciliation failed: {}\n\nCannot start API without MCP servers.",
+            CliService::error(&format!("   ❌ MCP reconciliation error: {e:?}"));
+            return Err(anyhow::anyhow!(
+                "FATAL: MCP reconciliation failed: {}\n\nCannot start API without MCP servers.",
                 e
-            );
+            ));
         },
     }
 
-    // Skip agent reconciliation during startup - agents will be started after API server is listening
-    // This avoids chicken-and-egg problem where agents need API server for health checks
+    // Skip agent reconciliation during startup - agents will be started after API
+    // server is listening This avoids chicken-and-egg problem where agents need
+    // API server for health checks
     CliService::info(
         "⏭️  Skipping agent reconciliation during startup (will start after API is ready)",
     );
@@ -314,7 +309,7 @@ async fn reconcile_agents(ctx: &AppContext) -> Result<usize> {
             orch
         },
         Err(e) => {
-            CliService::error(&format!("   ❌ Failed to initialize orchestrator: {}", e));
+            CliService::error(&format!("   ❌ Failed to initialize orchestrator: {e}"));
             return Err(e.into());
         },
     };
@@ -326,8 +321,8 @@ async fn reconcile_agents(ctx: &AppContext) -> Result<usize> {
             registry
         },
         Err(e) => {
-            CliService::error(&format!("   ❌ Failed to load registry: {}", e));
-            return Err(e.into());
+            CliService::error(&format!("   ❌ Failed to load registry: {e}"));
+            return Err(e);
         },
     };
 
@@ -338,7 +333,7 @@ async fn reconcile_agents(ctx: &AppContext) -> Result<usize> {
             agents
         },
         Err(e) => {
-            CliService::error(&format!("   ❌ Failed to list enabled agents: {}", e));
+            CliService::error(&format!("   ❌ Failed to list enabled agents: {e}"));
             return Err(e);
         },
     };
@@ -389,7 +384,7 @@ async fn reconcile_agents(ctx: &AppContext) -> Result<usize> {
         ));
 
         for (name, err) in &failed_agents {
-            CliService::warning(&format!("   • {}: {}", name, err));
+            CliService::warning(&format!("   • {name}: {err}"));
         }
 
         CliService::info("🔄 Attempting cleanup and retry...");
@@ -401,7 +396,7 @@ async fn reconcile_agents(ctx: &AppContext) -> Result<usize> {
                 "🔄 Retrying agent '{}' after initial failure...",
                 agent_name
             ));
-            CliService::debug(&format!("   Original error: {}", original_error));
+            CliService::debug(&format!("   Original error: {original_error}"));
 
             let agent_config = match agent_registry.get_agent(agent_name).await {
                 Ok(config) => {
@@ -417,18 +412,18 @@ async fn reconcile_agents(ctx: &AppContext) -> Result<usize> {
                         agent_name, e
                     ));
                     retry_failed
-                        .push((agent_name.clone(), format!("Agent config not found: {}", e)));
+                        .push((agent_name.clone(), format!("Agent config not found: {e}")));
                     continue;
                 },
             };
 
             match enforce_clean_agent_state(&orchestrator, agent_name, agent_config.port).await {
                 Ok(_) => {
-                    CliService::success(&format!("   ✅ Retry successful for {}", agent_name));
+                    CliService::success(&format!("   ✅ Retry successful for {agent_name}"));
                     started += 1;
                 },
                 Err(e) => {
-                    CliService::error(&format!("   ✗ Retry failed for '{}': {}", agent_name, e));
+                    CliService::error(&format!("   ✗ Retry failed for '{agent_name}': {e}"));
                     retry_failed.push((agent_name.clone(), e.to_string()));
                 },
             }
@@ -437,40 +432,37 @@ async fn reconcile_agents(ctx: &AppContext) -> Result<usize> {
         if !retry_failed.is_empty() {
             let agent_names: Vec<String> =
                 retry_failed.iter().map(|(name, _)| name.clone()).collect();
-            panic!(
-                "❌ FATAL: {} required agent(s) failed to start after retry: {}\n\n\
-                SystemPrompt OS cannot operate without all enabled agents.\n\
-                Agents are the core service layer.\n\n\
-                Failures:\n{}\n\n\
-                Possible causes:\n\
-                  • Agent binaries not built (run: cargo build)\n\
-                  • Ports occupied by non-agent processes (check with: lsof -i:PORT)\n\
-                  • Missing environment variables (check .env file)\n\
-                  • File permission issues\n\n\
-                Build agents with: cargo build",
+            return Err(anyhow::anyhow!(
+                "FATAL: {} required agent(s) failed to start after retry: {}\n\nSystemPrompt OS \
+                 cannot operate without all enabled agents.\nAgents are the core service \
+                 layer.\n\nFailures:\n{}\n\nPossible causes:\n  - Agent binaries not built (run: \
+                 cargo build)\n  - Ports occupied by non-agent processes (check with: lsof \
+                 -i:PORT)\n  - Missing environment variables (check .env file)\n  - File \
+                 permission issues\n\nBuild agents with: cargo build",
                 retry_failed.len(),
                 agent_names.join(", "),
                 retry_failed
                     .iter()
-                    .map(|(name, err)| format!("  • {}: {}", name, err))
+                    .map(|(name, err)| format!("  - {name}: {err}"))
                     .collect::<Vec<_>>()
                     .join("\n")
-            );
+            ));
         }
 
         CliService::success("✅ All agents started successfully after retry");
     }
 
     if started < required_count {
-        panic!(
-            "❌ FATAL: Only {}/{} required agents started successfully\n\n\
-            All enabled agents must be running for API to start.",
-            started, required_count
-        );
+        return Err(anyhow::anyhow!(
+            "FATAL: Only {}/{} required agents started successfully\n\nAll enabled agents must be \
+             running for API to start.",
+            started,
+            required_count
+        ));
     }
 
     if started > 0 {
-        CliService::success(&format!("✅ All {} required agents are running", started));
+        CliService::success(&format!("✅ All {started} required agents are running"));
     }
 
     Ok(started)
@@ -483,40 +475,36 @@ async fn enforce_clean_agent_state(
 ) -> Result<bool> {
     use systemprompt_core_agent::services::agent_orchestration::{AgentStatus, PortManager};
 
-    match orchestrator.get_status(agent_id).await {
-        Ok(status) => match status {
-            AgentStatus::Running { pid, port } => {
-                if port == desired_port {
-                    use systemprompt_core_agent::services::agent_orchestration::process;
-                    if process::process_exists(pid) {
-                        return Ok(false);
-                    } else {
-                        CliService::info(&format!(
-                            "   Agent {} process {} died, restarting...",
-                            agent_id, pid
-                        ));
-                    }
-                } else {
-                    use systemprompt_core_agent::services::agent_orchestration::process;
-                    CliService::info(&format!(
-                        "   Agent {} on wrong port {} (expected {}), killing and restarting...",
-                        agent_id, port, desired_port
-                    ));
-                    if process::kill_process(pid) {
-                        CliService::success(&format!("   Killed wrong-port process {}", pid));
-                    }
-                    orchestrator.delete_agent(agent_id).await.ok();
+    if let Ok(status) = orchestrator.get_status(agent_id).await { match status {
+        AgentStatus::Running { pid, port } => {
+            if port == desired_port {
+                use systemprompt_core_agent::services::agent_orchestration::process;
+                if process::process_exists(pid) {
+                    return Ok(false);
                 }
-            },
-            AgentStatus::Failed { .. } => {
                 CliService::info(&format!(
-                    "   Agent {} previously failed, restarting...",
-                    agent_id
+                    "   Agent {} process {} died, restarting...",
+                    agent_id, pid
                 ));
-            },
+            } else {
+                use systemprompt_core_agent::services::agent_orchestration::process;
+                CliService::info(&format!(
+                    "   Agent {} on wrong port {} (expected {}), killing and restarting...",
+                    agent_id, port, desired_port
+                ));
+                if process::kill_process(pid) {
+                    CliService::success(&format!("   Killed wrong-port process {pid}"));
+                }
+                orchestrator.delete_agent(agent_id).await.ok();
+            }
         },
-        Err(_) => {},
-    }
+        AgentStatus::Failed { .. } => {
+            CliService::info(&format!(
+                "   Agent {} previously failed, restarting...",
+                agent_id
+            ));
+        },
+    } }
 
     let port_manager = PortManager::new();
     if let Err(e) = port_manager.cleanup_port_if_needed(desired_port).await {
@@ -549,7 +537,7 @@ async fn spawn_mcp_monitor(
         if let Err(e) =
             systemprompt_core_mcp::services::process::monitor::monitor_processes(db_pool, ()).await
         {
-            CliService::error(&format!("❌ MCP monitor exited with error: {}", e));
+            CliService::error(&format!("❌ MCP monitor exited with error: {e}"));
         }
     });
 
@@ -558,14 +546,21 @@ async fn spawn_mcp_monitor(
 }
 
 async fn initialize_scheduler(ctx: &AppContext) -> Result<()> {
+    use systemprompt_core_config::services::ConfigLoader;
     use systemprompt_core_logging::LogContext;
     use systemprompt_core_scheduler::repository::SchedulerRepository;
     use systemprompt_core_scheduler::services::jobs;
 
     CliService::info("🕐 Initializing scheduler...");
 
+    let scheduler_config = ConfigLoader::load()
+        .await
+        .ok()
+        .and_then(|c| c.scheduler)
+        .unwrap_or_default();
+
     let scheduler = SchedulerService::new(
-        SchedulerConfig::default(),
+        scheduler_config,
         ctx.db_pool().clone(),
         Arc::new(ctx.clone()),
     );
@@ -579,7 +574,7 @@ async fn initialize_scheduler(ctx: &AppContext) -> Result<()> {
     let scheduler_repo = SchedulerRepository::new(db_pool.clone());
     let log_context = LogContext::new()
         .with_session_id("scheduler-bootstrap")
-        .with_trace_id(&format!("bootstrap-{}", Uuid::new_v4()))
+        .with_trace_id(format!("bootstrap-{}", Uuid::new_v4()))
         .with_user_id("system");
 
     let logger = systemprompt_core_logging::LogService::new(db_pool.clone(), log_context);
@@ -590,7 +585,7 @@ async fn initialize_scheduler(ctx: &AppContext) -> Result<()> {
         .await
         .ok();
     match jobs::database_cleanup(db_pool.clone(), logger.clone(), Arc::new(ctx.clone())).await {
-        Ok(_) => {
+        Ok(()) => {
             CliService::success("✅ Database cleanup job completed");
             scheduler_repo
                 .update_job_execution("database_cleanup", "success", None, None)
@@ -598,7 +593,7 @@ async fn initialize_scheduler(ctx: &AppContext) -> Result<()> {
                 .ok();
         },
         Err(e) => {
-            CliService::warning(&format!("⚠️  Database cleanup job failed: {}", e));
+            CliService::warning(&format!("⚠️  Database cleanup job failed: {e}"));
             scheduler_repo
                 .update_job_execution("database_cleanup", "failed", Some(&e.to_string()), None)
                 .await
@@ -614,7 +609,7 @@ async fn initialize_scheduler(ctx: &AppContext) -> Result<()> {
     match jobs::cleanup_inactive_sessions(db_pool.clone(), logger.clone(), Arc::new(ctx.clone()))
         .await
     {
-        Ok(_) => {
+        Ok(()) => {
             CliService::success("✅ Inactive sessions cleanup job completed");
             scheduler_repo
                 .update_job_execution("cleanup_inactive_sessions", "success", None, None)
@@ -622,7 +617,7 @@ async fn initialize_scheduler(ctx: &AppContext) -> Result<()> {
                 .ok();
         },
         Err(e) => {
-            CliService::warning(&format!("⚠️  Inactive sessions cleanup job failed: {}", e));
+            CliService::warning(&format!("⚠️  Inactive sessions cleanup job failed: {e}"));
             scheduler_repo
                 .update_job_execution(
                     "cleanup_inactive_sessions",
@@ -643,7 +638,7 @@ async fn initialize_scheduler(ctx: &AppContext) -> Result<()> {
     match jobs::cleanup_anonymous_users(db_pool.clone(), logger.clone(), Arc::new(ctx.clone()))
         .await
     {
-        Ok(_) => {
+        Ok(()) => {
             CliService::success("✅ Anonymous users cleanup job completed");
             scheduler_repo
                 .update_job_execution("cleanup_anonymous_users", "success", None, None)
@@ -651,7 +646,7 @@ async fn initialize_scheduler(ctx: &AppContext) -> Result<()> {
                 .ok();
         },
         Err(e) => {
-            CliService::warning(&format!("⚠️  Anonymous users cleanup job failed: {}", e));
+            CliService::warning(&format!("⚠️  Anonymous users cleanup job failed: {e}"));
             scheduler_repo
                 .update_job_execution(
                     "cleanup_anonymous_users",
@@ -664,58 +659,24 @@ async fn initialize_scheduler(ctx: &AppContext) -> Result<()> {
         },
     }
 
-    // Content ingestion
+    // Unified content publish pipeline (optimize images + ingest + prerender +
+    // sitemap)
     scheduler_repo
-        .increment_run_count("content_ingestion")
+        .increment_run_count("publish_content")
         .await
         .ok();
-    match jobs::ingest_content(db_pool.clone(), logger.clone(), Arc::new(ctx.clone())).await {
-        Ok(_) => {
-            CliService::success("✅ Content ingestion job completed");
+    match jobs::publish_content(db_pool.clone(), logger.clone(), Arc::new(ctx.clone())).await {
+        Ok(()) => {
+            CliService::success("✅ Content publish pipeline completed");
             scheduler_repo
-                .update_job_execution("content_ingestion", "success", None, None)
-                .await
-                .ok();
-
-            // Wait for database transaction to be fully visible (Docker race condition fix)
-            tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-        },
-        Err(e) => {
-            CliService::warning(&format!("⚠️  Content ingestion job failed: {}", e));
-            scheduler_repo
-                .update_job_execution("content_ingestion", "failed", Some(&e.to_string()), None)
-                .await
-                .ok();
-        },
-    }
-
-    // Regenerate static content (prerender + sitemap)
-    scheduler_repo
-        .increment_run_count("regenerate_static_content")
-        .await
-        .ok();
-    match jobs::regenerate_static_content(db_pool.clone(), logger.clone(), Arc::new(ctx.clone()))
-        .await
-    {
-        Ok(_) => {
-            CliService::success("✅ Static content regeneration job completed");
-            scheduler_repo
-                .update_job_execution("regenerate_static_content", "success", None, None)
+                .update_job_execution("publish_content", "success", None, None)
                 .await
                 .ok();
         },
         Err(e) => {
-            CliService::warning(&format!(
-                "⚠️  Static content regeneration job failed: {}",
-                e
-            ));
+            CliService::warning(&format!("⚠️  Content publish pipeline failed: {e}"));
             scheduler_repo
-                .update_job_execution(
-                    "regenerate_static_content",
-                    "failed",
-                    Some(&e.to_string()),
-                    None,
-                )
+                .update_job_execution("publish_content", "failed", Some(&e.to_string()), None)
                 .await
                 .ok();
         },

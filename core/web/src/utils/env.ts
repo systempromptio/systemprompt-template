@@ -5,6 +5,8 @@
 /**
  * Get the API base URL from environment variables
  * Falls back to current origin if not set
+ *
+ * Uses VITE_API_BASE_HOST for consistency across the codebase
  */
 export function getApiBaseUrl(): string {
   // In development, use the proxy (relative URLs)
@@ -12,8 +14,8 @@ export function getApiBaseUrl(): string {
     return '';
   }
 
-  // In production, use VITE_API_BASE_URL or current origin
-  return import.meta.env.VITE_API_BASE_URL || window.location.origin;
+  // In production, use VITE_API_BASE_HOST or current origin
+  return import.meta.env.VITE_API_BASE_HOST || window.location.origin;
 }
 
 /**

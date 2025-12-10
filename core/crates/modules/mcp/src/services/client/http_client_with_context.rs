@@ -2,14 +2,12 @@ use futures::stream::BoxStream;
 use futures::StreamExt;
 use http::header::WWW_AUTHENTICATE;
 use reqwest::header::ACCEPT;
-use rmcp::{
-    model::{ClientJsonRpcMessage, ServerJsonRpcMessage},
-    transport::{
-        common::http_header::{
-            EVENT_STREAM_MIME_TYPE, HEADER_LAST_EVENT_ID, HEADER_SESSION_ID, JSON_MIME_TYPE,
-        },
-        streamable_http_client::{StreamableHttpClient, StreamableHttpError, StreamableHttpPostResponse, AuthRequiredError},
-    },
+use rmcp::model::{ClientJsonRpcMessage, ServerJsonRpcMessage};
+use rmcp::transport::common::http_header::{
+    EVENT_STREAM_MIME_TYPE, HEADER_LAST_EVENT_ID, HEADER_SESSION_ID, JSON_MIME_TYPE,
+};
+use rmcp::transport::streamable_http_client::{
+    AuthRequiredError, StreamableHttpClient, StreamableHttpError, StreamableHttpPostResponse,
 };
 use sse_stream::{Error as SseError, Sse, SseStream};
 use std::sync::Arc;
@@ -171,7 +169,7 @@ impl StreamableHttpClient for HttpClientWithContext {
         let session_id = response.headers().get(HEADER_SESSION_ID);
         let session_id = session_id
             .and_then(|v| v.to_str().ok())
-            .map(std::string::ToString::to_string);
+            .map(ToString::to_string);
         match content_type {
             Some(ct) if ct.as_bytes().starts_with(EVENT_STREAM_MIME_TYPE.as_bytes()) => {
                 let event_stream = SseStream::from_byte_stream(response.bytes_stream()).boxed();

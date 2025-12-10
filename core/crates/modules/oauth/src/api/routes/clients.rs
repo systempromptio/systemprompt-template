@@ -1,8 +1,6 @@
 use crate::api::rest;
-use axum::{
-    routing::{delete, get, post, put},
-    Router,
-};
+use axum::routing::{delete, get, post, put};
+use axum::Router;
 
 pub fn router() -> Router<systemprompt_core_system::AppContext> {
     Router::new()

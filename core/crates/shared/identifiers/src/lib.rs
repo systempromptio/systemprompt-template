@@ -1,8 +1,12 @@
+#![allow(clippy::must_use_candidate)]
+
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
 /// Session identifier (always required for tracing and analytics)
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct SessionId(String);
 
@@ -45,7 +49,8 @@ impl AsRef<str> for SessionId {
 }
 
 /// Trace identifier (always required for distributed tracing)
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct TraceId(String);
 
@@ -92,7 +97,8 @@ impl AsRef<str> for TraceId {
 }
 
 /// User identifier (always has a value, even if "anonymous" or "system")
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct UserId(String);
 
@@ -147,7 +153,8 @@ impl AsRef<str> for UserId {
 }
 
 /// Context identifier (required for agent operations)
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct ContextId(String);
 
@@ -202,7 +209,8 @@ impl AsRef<str> for ContextId {
 }
 
 /// Task identifier
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct TaskId(String);
 
@@ -245,7 +253,8 @@ impl AsRef<str> for TaskId {
 }
 
 /// Agent identifier
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct AgentId(String);
 
@@ -283,7 +292,8 @@ impl AsRef<str> for AgentId {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct ClientId(String);
 
@@ -396,7 +406,8 @@ impl AsRef<str> for ClientId {
 /// let agent = AgentName::new("content-research");
 /// assert_eq!(agent.as_str(), "content-research");
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct AgentName(String);
 
@@ -585,7 +596,8 @@ impl ToDbValue for &ClientId {
 
 /// AI Provider's tool call identifier (from Anthropic/OpenAI API response)
 /// Example: `toolu_01D7XQ2V9K3J8N5M4P6R7T8W9Y`
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct AiToolCallId(String);
 
@@ -637,7 +649,8 @@ impl ToDbValue for &AiToolCallId {
 
 /// MCP execution identifier (internal tracking in `mcp_tool_executions` table)
 /// Example: `550e8400-e29b-41d4-a716-446655440000`
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct McpExecutionId(String);
 
@@ -693,7 +706,8 @@ impl ToDbValue for &McpExecutionId {
 
 /// JWT token (always required after `SessionMiddleware`)
 /// Can be user JWT or anonymous JWT
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct JwtToken(String);
 
@@ -731,7 +745,8 @@ impl AsRef<str> for JwtToken {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct SkillId(String);
 
@@ -785,7 +800,8 @@ impl ToDbValue for &SkillId {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct SourceId(String);
 
@@ -835,7 +851,8 @@ impl ToDbValue for &SourceId {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
 #[serde(transparent)]
 pub struct CategoryId(String);
 
@@ -880,6 +897,112 @@ impl ToDbValue for CategoryId {
 }
 
 impl ToDbValue for &CategoryId {
+    fn to_db_value(&self) -> DbValue {
+        DbValue::String(self.0.clone())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
+#[serde(transparent)]
+pub struct FileId(String);
+
+impl FileId {
+    pub fn new(id: impl Into<String>) -> Self {
+        Self(id.into())
+    }
+
+    pub fn generate() -> Self {
+        Self(uuid::Uuid::new_v4().to_string())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for FileId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<String> for FileId {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
+
+impl From<&str> for FileId {
+    fn from(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
+impl AsRef<str> for FileId {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl ToDbValue for FileId {
+    fn to_db_value(&self) -> DbValue {
+        DbValue::String(self.0.clone())
+    }
+}
+
+impl ToDbValue for &FileId {
+    fn to_db_value(&self) -> DbValue {
+        DbValue::String(self.0.clone())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(transparent)]
+#[serde(transparent)]
+pub struct ContentId(String);
+
+impl ContentId {
+    pub fn new(id: impl Into<String>) -> Self {
+        Self(id.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for ContentId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<String> for ContentId {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
+
+impl From<&str> for ContentId {
+    fn from(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
+impl AsRef<str> for ContentId {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl ToDbValue for ContentId {
+    fn to_db_value(&self) -> DbValue {
+        DbValue::String(self.0.clone())
+    }
+}
+
+impl ToDbValue for &ContentId {
     fn to_db_value(&self) -> DbValue {
         DbValue::String(self.0.clone())
     }

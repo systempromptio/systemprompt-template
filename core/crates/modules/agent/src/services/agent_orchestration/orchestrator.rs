@@ -9,11 +9,10 @@ use tokio::task::JoinHandle;
 
 use crate::services::agent_orchestration::database::AgentDatabaseService;
 use crate::services::agent_orchestration::lifecycle::AgentLifecycle;
-use crate::services::agent_orchestration::monitor;
 use crate::services::agent_orchestration::monitor::AgentMonitor;
 use crate::services::agent_orchestration::reconciler::AgentReconciler;
 use crate::services::agent_orchestration::{
-    AgentStatus, OrchestrationError, OrchestrationResult, ValidationReport,
+    monitor, AgentStatus, OrchestrationError, OrchestrationResult, ValidationReport,
 };
 
 #[derive(Debug)]
@@ -110,7 +109,7 @@ impl AgentOrchestrator {
             if matches!(status, AgentStatus::Failed { .. }) {
                 match self.start_agent(&agent_id).await {
                     Ok(service_id) => service_ids.push(service_id),
-                    Err(e) => CliService::error(&format!("Failed to start {}: {}", agent_id, e)),
+                    Err(e) => CliService::error(&format!("Failed to start {agent_id}: {e}")),
                 }
             }
         }
@@ -123,7 +122,7 @@ impl AgentOrchestrator {
 
         for (agent_id, _) in agents {
             if let Err(e) = self.disable_agent(&agent_id).await {
-                CliService::error(&format!("Failed to disable {}: {}", agent_id, e));
+                CliService::error(&format!("Failed to disable {agent_id}: {e}"));
             }
         }
 
@@ -186,7 +185,7 @@ impl AgentOrchestrator {
             ));
 
             if let Some(detail) = status_detail {
-                CliService::info(&format!("   └─ Reason: {}", detail));
+                CliService::info(&format!("   └─ Reason: {detail}"));
             }
         }
 
@@ -245,7 +244,7 @@ impl AgentOrchestrator {
         match self.db_service.get_agent_config(agent_id).await {
             Ok(_) => {}, // Config is valid
             Err(e) => {
-                report.add_issue(format!("Configuration error: {}", e));
+                report.add_issue(format!("Configuration error: {e}"));
                 return Ok(report);
             },
         }
@@ -262,12 +261,12 @@ impl AgentOrchestrator {
                         }
                     },
                     Err(e) => {
-                        report.add_issue(format!("Health check error: {}", e));
+                        report.add_issue(format!("Health check error: {e}"));
                     },
                 }
             },
             AgentStatus::Failed { reason, .. } => {
-                report.add_issue(format!("Agent is in failed state: {}", reason));
+                report.add_issue(format!("Agent is in failed state: {reason}"));
             },
         }
 
@@ -282,7 +281,7 @@ impl AgentOrchestrator {
             match self.health_check(&agent_id).await {
                 Ok(result) => results.push(result),
                 Err(e) => {
-                    CliService::warning(&format!("Health check failed for {}: {}", agent_id, e));
+                    CliService::warning(&format!("Health check failed for {agent_id}: {e}"));
                     // Continue with other agents even if one fails
                 },
             }
@@ -305,7 +304,7 @@ impl AgentOrchestrator {
                 }
                 _ = tokio::time::sleep(Duration::from_secs(60)) => {
                     if let Err(e) = self.cleanup_crashed_agents().await {
-                        CliService::error(&format!("Cleanup error: {}", e));
+                        CliService::error(&format!("Cleanup error: {e}"));
                     }
                 }
             }
@@ -347,7 +346,7 @@ impl AgentOrchestrator {
             let monitor = match AgentMonitor::new(pool).await {
                 Ok(m) => m,
                 Err(e) => {
-                    CliService::error(&format!("❌ Failed to initialize health monitor: {}", e));
+                    CliService::error(&format!("❌ Failed to initialize health monitor: {e}"));
                     return Ok(());
                 },
             };
@@ -372,12 +371,12 @@ impl AgentOrchestrator {
                         }
                     },
                     Err(e) => {
-                        CliService::error(&format!("❌ Health monitoring error: {}", e));
+                        CliService::error(&format!("❌ Health monitoring error: {e}"));
                     },
                 }
 
                 if let Err(e) = monitor.cleanup_unresponsive_agents(3).await {
-                    CliService::error(&format!("❌ Cleanup error: {}", e));
+                    CliService::error(&format!("❌ Cleanup error: {e}"));
                 }
             }
         });
@@ -397,7 +396,7 @@ impl AgentOrchestrator {
     }
 
     pub async fn delete_agent(&self, agent_id: &str) -> OrchestrationResult<()> {
-        CliService::info(&format!("🗑️ Deleting agent: {}", agent_id));
+        CliService::info(&format!("🗑️ Deleting agent: {agent_id}"));
 
         // Stop agent if it's running
         if let Ok(status) = self.get_status(agent_id).await {
@@ -443,7 +442,7 @@ impl AgentOrchestrator {
                     deleted_count += 1;
                 },
                 Err(e) => {
-                    CliService::error(&format!("❌ Failed to delete agent {}: {}", agent_id, e));
+                    CliService::error(&format!("❌ Failed to delete agent {agent_id}: {e}"));
                 },
             }
         }
@@ -464,7 +463,7 @@ impl AgentOrchestrator {
             .arg("agent-worker")
             .output()
             .map_err(|e| {
-                OrchestrationError::ProcessSpawnFailed(format!("Failed to run pgrep: {}", e))
+                OrchestrationError::ProcessSpawnFailed(format!("Failed to run pgrep: {e}"))
             })?;
 
         if !output.status.success() {
@@ -498,7 +497,8 @@ impl AgentOrchestrator {
                         .map(|config| config.name)
                         .unwrap_or_else(|_| "unknown".to_string());
 
-                    // Register the process in services table with default auth='none' for orphaned processes
+                    // Register the process in services table with default auth='none' for orphaned
+                    // processes
                     match self
                         .db_service
                         .register_agent(&name, pid, port, "none")
@@ -520,7 +520,7 @@ impl AgentOrchestrator {
                         },
                     }
                 } else {
-                    CliService::warning(&format!("⚠️ Could not identify agent for PID {}", pid));
+                    CliService::warning(&format!("⚠️ Could not identify agent for PID {pid}"));
                     failed += 1;
                 }
             }

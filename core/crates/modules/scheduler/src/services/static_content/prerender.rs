@@ -11,7 +11,8 @@ use tokio::fs;
 use super::cards::{generate_blog_card, CardData};
 use super::markdown::render_markdown;
 use super::templates::{
-    generate_footer_html, load_web_config, prepare_template_data, TemplateEngine,
+    generate_footer_html, get_templates_path, load_web_config, prepare_template_data,
+    TemplateEngine,
 };
 
 pub async fn prerender_content(
@@ -27,12 +28,6 @@ pub async fn prerender_content(
 
     let web_dir = std::env::var("WEB_DIR").unwrap_or_else(|_| "/app/core/web/dist".to_string());
 
-    let web_root = if web_dir.ends_with("/dist") {
-        web_dir.strip_suffix("/dist").unwrap().to_string()
-    } else {
-        web_dir.clone()
-    };
-
     let config_path = std::env::var("CONTENT_CONFIG_PATH")
         .unwrap_or_else(|_| "crates/services/content/config.yml".to_string());
 
@@ -45,11 +40,11 @@ pub async fn prerender_content(
         .context("Failed to load web config")?;
 
     logger
-        .info("content", &format!("Loaded config: {}", config_path))
+        .debug("content", &format!("Loaded config: {config_path}"))
         .await
         .ok();
 
-    let template_dir = format!("{}/templates", web_root);
+    let template_dir = get_templates_path(&web_config);
     let templates = TemplateEngine::new(&template_dir)
         .await
         .context("Failed to load templates")?;
@@ -79,7 +74,7 @@ pub async fn prerender_content(
 
         println!("\n📂 Processing source: {}", source_name);
         logger
-            .info("content", &format!("Processing source: {}", source_name))
+            .debug("content", &format!("Processing source: {source_name}"))
             .await
             .ok();
 
@@ -166,7 +161,7 @@ pub async fn prerender_content(
                     logger
                         .warn(
                             "content",
-                            &format!("Failed to fetch {}: {}", source_name, e),
+                            &format!("Failed to fetch {source_name}: {e}"),
                         )
                         .await
                         .ok();
@@ -191,8 +186,8 @@ pub async fn prerender_content(
                     "description": c.description,
                     "content": c.body,
                     "author": c.author,
-                    "published_at": c.published_at.to_rfc3339(),
-                    "updated_at": c.updated_at.to_rfc3339(),
+                    "published_at": c.published_at.format("%Y-%m-%dT%H:%M:%SZ").to_string(),
+                    "updated_at": c.updated_at.map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string()),
                     "keywords": c.keywords,
                     "content_type": c.kind,
                     "image": c.image,
@@ -209,14 +204,14 @@ pub async fn prerender_content(
             continue;
         }
 
-        // Debug: print first item's title
-        if let Some(first) = items.first() {
-            println!(
-                "   DEBUG: First item keys: {:?}",
-                first.as_object().map(|o| o.keys().collect::<Vec<_>>())
-            );
-            println!("   DEBUG: Title value: {:?}", first.get("title"));
-        }
+        let popular_ids = if source_name == "blog" {
+            content_repo
+                .get_popular_content_ids(&source.source_id, 30, 20)
+                .await
+                .unwrap_or_default()
+        } else {
+            Vec::new()
+        };
 
         for item in &items {
             let markdown_content = item.get("content").and_then(|v| v.as_str()).unwrap_or("");
@@ -228,6 +223,7 @@ pub async fn prerender_content(
             let template_data = prepare_template_data(
                 &item,
                 &items,
+                &popular_ids,
                 &config_value,
                 &web_config,
                 &content_html,
@@ -236,10 +232,10 @@ pub async fn prerender_content(
             .await
             .context("Failed to prepare template data")?;
 
-            let template_name = if source_name == "blog" {
-                "blog-post"
-            } else {
-                "page"
+            let template_name = match source_name.as_str() {
+                "blog" => "blog-post",
+                "papers" => "paper",
+                _ => "page",
             };
 
             let html = templates
@@ -267,10 +263,10 @@ pub async fn prerender_content(
         // Generate parent route index page if configured
         if let Some(parent_config) = &sitemap_config.parent_route {
             if parent_config.enabled {
-                let template_name = if source_name == "blog" {
-                    "blog-list"
-                } else {
-                    "page-list"
+                let template_name = match source_name.as_str() {
+                    "blog" => "blog-list",
+                    "papers" => "paper-list",
+                    _ => "page-list",
                 };
 
                 let posts_html: Vec<String> = items
@@ -332,7 +328,7 @@ pub async fn prerender_content(
                     .unwrap_or("");
                 let blog_image = source_branding
                     .and_then(|b| b.image.as_deref())
-                    .map(|img| format!("{}{}", org_url, img))
+                    .map(|img| format!("{org_url}{img}"))
                     .unwrap_or_default();
                 let blog_keywords = source_branding
                     .and_then(|b| b.keywords.as_deref())

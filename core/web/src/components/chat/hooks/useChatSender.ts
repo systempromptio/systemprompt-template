@@ -1,8 +1,13 @@
 /**
- * Hook for sending chat messages with streaming support.
+ * Hook for sending chat messages.
  *
- * Handles both regular text messages and streaming messages with
- * proper error handling, optimistic updates, and artifact finalization.
+ * Sends messages to the backend. State updates (user message appearing,
+ * assistant response, execution steps) all come via SSE events:
+ * - task_created: User message appears
+ * - execution_step: Progress tracking
+ * - task_status_changed: Assistant response
+ *
+ * No optimistic updates or streaming text accumulation - backend is single source of truth.
  *
  * @module chat/hooks/useChatSender
  */
@@ -11,85 +16,31 @@ import { useState, useCallback } from 'react'
 import { useA2AClient } from '@/hooks/useA2AClient'
 import { useTaskStore } from '@/stores/task.store'
 import { useArtifactStore } from '@/stores/artifact.store'
-import { useStreamProcessor } from './useStreamProcessor'
-import { isTaskEvent } from '../helpers/typeGuards'
+import { useUIStateStore } from '@/stores/ui-state.store'
+import { isTaskEvent, isStatusUpdateEvent } from '../helpers/typeGuards'
 import type { Task } from '@/types/task'
 import type { Artifact } from '@/types/artifact'
 import type { Task as A2ATask } from '@a2a-js/sdk'
 import { toTask } from '@/types/task'
 import { toArtifact } from '@/types/artifact'
-import type { ChatMessage } from '@/stores/chat.store'
 
-/**
- * Chat sender hook parameters.
- */
-interface UseChatSenderParams {
-  /**
-   * Function to update optimistic messages
-   */
-  setOptimisticMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
-}
-
-/**
- * Chat sender hook return value.
- */
 interface UseChatSenderReturn {
-  /**
-   * Sends a chat message (handles both text and streaming)
-   */
-  sendMessage: (text: string, files?: File[], optimisticMessageId?: string) => Promise<void>
-
-  /**
-   * Whether a message is currently being sent
-   */
+  sendMessage: (text: string, files?: File[]) => Promise<void>
   isSending: boolean
-
-  /**
-   * Error from the last send operation, if any
-   */
   error: string | null
-
-  /**
-   * Clears the error message
-   */
   clearError: () => void
 }
 
 /**
- * Handles sending chat messages in both regular and streaming modes.
+ * Handles sending chat messages.
  *
- * Features:
- * - Optimistic UI updates
- * - Streaming with real-time artifact accumulation
- * - Task handling from stream events
- * - Error handling and recovery
+ * The message sending triggers backend processing which broadcasts events via SSE.
+ * UI updates happen automatically as the frontend receives these events.
  *
  * @returns Message sending functions and state
- *
- * @example
- * ```typescript
- * function ChatInterface() {
- *   const [optimisticMessages, setOptimisticMessages] = useState<ChatMessage[]>([])
- *   const { sendMessage, isSending, error } = useChatSender({ setOptimisticMessages })
- *
- *   const handleSubmit = async (text: string) => {
- *     const messageId = crypto.randomUUID()
- *     await sendMessage(text, undefined, messageId)
- *   }
- *
- *   return (
- *     <div>
- *       {error && <div className="error">{error}</div>}
- *       <input disabled={isSending} />
- *       <button onClick={() => handleSubmit(text)} disabled={isSending}>Send</button>
- *     </div>
- *   )
- * }
- * ```
  */
-export function useChatSender({ setOptimisticMessages }: UseChatSenderParams): UseChatSenderReturn {
+export function useChatSender(): UseChatSenderReturn {
   const { streamMessage, sendMessage: sendMessageApi } = useA2AClient()
-  const { processEvent, reset, setStreaming, finalizeArtifacts: finalizeStreamState, getStreamState } = useStreamProcessor()
 
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -99,47 +50,46 @@ export function useChatSender({ setOptimisticMessages }: UseChatSenderParams): U
   }, [])
 
   const sendMessage = useCallback(
-    async (text: string, files?: File[], optimisticMessageId?: string) => {
+    async (text: string, files?: File[]) => {
       try {
         setIsSending(true)
         setError(null)
 
-        // Reset streaming state
-        reset()
-        setStreaming(true)
-
         if (!files?.length && streamMessage) {
-          let currentOptimisticId = optimisticMessageId
-
+          // Use streaming endpoint - consume stream to completion
+          // SSE events will update the UI (task_created, execution_step, task_status_changed)
           try {
-            for await (const event of streamMessage(text, optimisticMessageId)) {
-              // Process message events
-              processEvent(event)
+            for await (const event of streamMessage(text)) {
+              // Handle status-update events (for failed/canceled states)
+              if (isStatusUpdateEvent(event)) {
+                const state = event.status.state
+                if (state === 'failed' || state === 'rejected' || state === 'canceled') {
+                  useUIStateStore.getState().clearStepsByTask(event.taskId)
+                  useUIStateStore.getState().setStreaming(null)
 
-              // Note: We send the optimistic message ID to the backend via metadata.clientMessageId
-              // The backend stores it and returns it, allowing us to correlate optimistic messages
-              // with backend messages for seamless reconciliation.
-
-              // Update optimistic message with stream content
-              if (currentOptimisticId) {
-                const streamState = getStreamState()
-                setOptimisticMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === currentOptimisticId
-                      ? {
-                          ...m,
-                          content: streamState.text,
-                          parts: [{ kind: 'text', text: streamState.text }],
-                          artifacts: Array.from(streamState.artifacts.values()),
-                          streamingArtifacts: streamState.streamingArtifactsState,
-                          isStreaming: true,
-                        }
-                      : m
-                  )
-                )
+                  // Update task store with failed status
+                  const existingTask = useTaskStore.getState().byId[event.taskId]
+                  if (existingTask) {
+                    useTaskStore.getState().updateTask({
+                      ...existingTask,
+                      status: {
+                        state: state as 'failed' | 'rejected' | 'canceled',
+                        message: event.status.message ? {
+                          role: 'agent',
+                          parts: [{ kind: 'text' as const, text: event.status.message }],
+                          messageId: '',
+                          kind: 'message',
+                          contextId: event.contextId || existingTask.contextId || '',
+                        } : undefined,
+                        timestamp: new Date().toISOString(),
+                      },
+                    })
+                  }
+                }
+                continue
               }
 
-              // Handle task events
+              // Handle task events to update store (backup to SSE)
               if (isTaskEvent(event)) {
                 const rawTask = event as A2ATask
 
@@ -151,6 +101,13 @@ export function useChatSender({ setOptimisticMessages }: UseChatSenderParams): U
                 }
 
                 useTaskStore.getState().updateTask(validatedTask)
+
+                // Clear streaming state when task reaches terminal state (backup to SSE handler)
+                const state = validatedTask.status?.state
+                if (state === 'completed' || state === 'failed' || state === 'rejected' || state === 'canceled') {
+                  useUIStateStore.getState().clearStepsByTask(validatedTask.id)
+                  useUIStateStore.getState().setStreaming(null)
+                }
 
                 // Process task artifacts
                 if (validatedTask.artifacts && validatedTask.artifacts.length > 0) {
@@ -174,23 +131,11 @@ export function useChatSender({ setOptimisticMessages }: UseChatSenderParams): U
                 }
               }
             }
+          } catch (streamError: unknown) {
+            // Clear streaming state on any stream error
+            useUIStateStore.getState().setStreaming(null)
 
-            setStreaming(false)
-            finalizeStreamState()
-
-            // Clear streaming flag from assistant message now that streaming is complete
-            // (user message will be removed by deduplication when backend message arrives)
-            if (currentOptimisticId) {
-              setOptimisticMessages((prev) =>
-                prev.map((m) =>
-                  m.id === currentOptimisticId
-                    ? { ...m, isStreaming: false }
-                    : m
-                )
-              )
-            }
-          } catch (streamError: any) {
-            const errorMessage = streamError?.message || String(streamError)
+            const errorMessage = streamError instanceof Error ? streamError.message : String(streamError)
             const isPermissionError =
               errorMessage.includes('401') ||
               errorMessage.includes('403') ||
@@ -199,14 +144,6 @@ export function useChatSender({ setOptimisticMessages }: UseChatSenderParams): U
 
             if (isPermissionError) {
               setError('Permission denied. You may not have sufficient permissions to access this agent.')
-              // Remove the streaming flag from optimistic message on error
-              if (currentOptimisticId) {
-                setOptimisticMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === currentOptimisticId ? { ...m, isStreaming: false } : m
-                  )
-                )
-              }
               return
             }
 
@@ -216,8 +153,11 @@ export function useChatSender({ setOptimisticMessages }: UseChatSenderParams): U
           // Handle non-streaming message
           await sendMessageApi?.(text, files)
         }
-      } catch (err: any) {
-        const errorMessage = err?.message || String(err)
+      } catch (err: unknown) {
+        // Clear streaming state on any error
+        useUIStateStore.getState().setStreaming(null)
+
+        const errorMessage = err instanceof Error ? err.message : String(err)
         const isPermissionError =
           errorMessage.includes('401') ||
           errorMessage.includes('403') ||
@@ -229,21 +169,11 @@ export function useChatSender({ setOptimisticMessages }: UseChatSenderParams): U
         } else {
           setError(err instanceof Error ? err.message : 'Failed to send message')
         }
-
-        // Remove the streaming flag from optimistic message on error
-        if (optimisticMessageId) {
-          setOptimisticMessages((prev) =>
-            prev.map((m) =>
-              m.id === optimisticMessageId ? { ...m, isStreaming: false } : m
-            )
-          )
-        }
       } finally {
         setIsSending(false)
-        setStreaming(false)
       }
     },
-    [streamMessage, sendMessageApi, reset, setStreaming, processEvent, finalizeStreamState, getStreamState, setOptimisticMessages]
+    [streamMessage, sendMessageApi]
   )
 
   return { sendMessage, isSending, error, clearError }

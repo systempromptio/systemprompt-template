@@ -2,8 +2,7 @@ use crate::models::{CampaignPerformance, ContentJourneyNode, LinkClick, LinkPerf
 use crate::repository::LinkRepository;
 use anyhow::Result;
 use chrono::Utc;
-use std::sync::Arc;
-use systemprompt_core_database::DatabaseProvider;
+use systemprompt_core_database::DbPool;
 
 #[derive(Debug)]
 pub struct LinkAnalyticsService {
@@ -11,12 +10,13 @@ pub struct LinkAnalyticsService {
 }
 
 impl LinkAnalyticsService {
-    pub fn new(db: Arc<dyn DatabaseProvider>) -> Self {
+    pub fn new(db: DbPool) -> Self {
         Self {
             link_repo: LinkRepository::new(db),
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn track_click(
         &self,
         link_id: &str,
@@ -72,13 +72,13 @@ impl LinkAnalyticsService {
             task_id,
             referrer_page,
             referrer_url,
-            clicked_at,
+            clicked_at: Some(clicked_at),
             user_agent,
             ip_address,
             device_type,
             country,
-            is_first_click,
-            is_conversion: false,
+            is_first_click: Some(is_first_click),
+            is_conversion: Some(false),
             conversion_at: None,
             time_on_page_seconds: None,
             scroll_depth_percent: None,
@@ -86,14 +86,14 @@ impl LinkAnalyticsService {
     }
 
     pub async fn get_link_performance(&self, link_id: &str) -> Result<Option<LinkPerformance>> {
-        self.link_repo.get_link_performance(link_id).await
+        Ok(self.link_repo.get_link_performance(link_id).await?)
     }
 
     pub async fn get_campaign_performance(
         &self,
         campaign_id: &str,
     ) -> Result<Option<CampaignPerformance>> {
-        self.link_repo.get_campaign_performance(campaign_id).await
+        Ok(self.link_repo.get_campaign_performance(campaign_id).await?)
     }
 
     pub async fn get_content_journey_map(
@@ -103,7 +103,10 @@ impl LinkAnalyticsService {
     ) -> Result<Vec<ContentJourneyNode>> {
         let limit = limit.unwrap_or(50);
         let offset = offset.unwrap_or(0);
-        self.link_repo.get_content_journey_map(limit, offset).await
+        Ok(self
+            .link_repo
+            .get_content_journey_map(limit, offset)
+            .await?)
     }
 
     pub async fn get_link_clicks(
@@ -114,24 +117,26 @@ impl LinkAnalyticsService {
     ) -> Result<Vec<LinkClick>> {
         let limit = limit.unwrap_or(100);
         let offset = offset.unwrap_or(0);
-        self.link_repo
+        Ok(self
+            .link_repo
             .get_clicks_by_link(link_id, limit, offset)
-            .await
+            .await?)
     }
 
     pub async fn get_links_by_campaign(
         &self,
         campaign_id: &str,
     ) -> Result<Vec<crate::models::CampaignLink>> {
-        self.link_repo.list_links_by_campaign(campaign_id).await
+        Ok(self.link_repo.list_links_by_campaign(campaign_id).await?)
     }
 
     pub async fn get_links_by_source_content(
         &self,
         source_content_id: &str,
     ) -> Result<Vec<crate::models::CampaignLink>> {
-        self.link_repo
+        Ok(self
+            .link_repo
             .list_links_by_source_content(source_content_id)
-            .await
+            .await?)
     }
 }

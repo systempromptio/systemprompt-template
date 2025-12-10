@@ -38,6 +38,18 @@ export function isTaskEvent(event: unknown): event is Record<string, unknown> & 
 }
 
 /**
+ * Type guard for status-update events.
+ *
+ * @param event - The event to check
+ * @returns True if event is a status-update event with task state
+ */
+export function isStatusUpdateEvent(event: unknown): event is { kind: 'status-update'; taskId: string; contextId?: string; status: { state: string; message?: string } } {
+  if (typeof event !== 'object' || event === null) return false
+  const e = event as Record<string, unknown>
+  return e.kind === 'status-update' && typeof e.taskId === 'string' && typeof e.status === 'object' && e.status !== null
+}
+
+/**
  * Extracts text content from message parts.
  *
  * @param parts - Array of message parts

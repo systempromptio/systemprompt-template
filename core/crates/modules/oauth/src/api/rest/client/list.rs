@@ -1,9 +1,7 @@
 #![allow(unused_qualifications)]
 
-use axum::{
-    extract::{Extension, Query, State},
-    response::IntoResponse,
-};
+use axum::extract::{Extension, Query, State};
+use axum::response::IntoResponse;
 use serde::Deserialize;
 use validator::Validate;
 
@@ -89,7 +87,7 @@ pub async fn list_clients(
                     "oauth_api",
                     "OAuth clients list failed",
                     Some(serde_json::json!({
-                        "reason": format!("Database error: {}", e),
+                        "reason": format!("Database error: {e}"),
                         "requested_by": req_ctx.auth.user_id.as_str()
                     })),
                 )

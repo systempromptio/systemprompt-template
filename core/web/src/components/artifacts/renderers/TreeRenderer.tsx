@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { ChevronRight, ChevronDown, Circle, CheckCircle, AlertTriangle, XCircle, HelpCircle } from 'lucide-react'
-import type { Artifact } from '@/types/artifact'
-import type { TreeHints } from '@/types/artifacts'
+import type { Artifact, TreeHints } from '@/types/artifact'
 import type { TreeNode } from '@/lib/mcp/types'
 import { extractTreeData, unwrapExtraction } from '@/lib/artifacts'
 

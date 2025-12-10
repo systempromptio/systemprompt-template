@@ -13,7 +13,7 @@ pub struct ProtocolHandler {
 }
 
 impl ProtocolHandler {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             request_counter: AtomicI64::new(1),
         }

@@ -78,7 +78,7 @@ impl WebhookService {
         let endpoint = {
             let endpoints = self.endpoints.read().await;
             endpoints.get(endpoint_id).cloned().ok_or_else(|| {
-                IntegrationError::Webhook(format!("Endpoint not found: {}", endpoint_id))
+                IntegrationError::Webhook(format!("Endpoint not found: {endpoint_id}"))
             })?
         };
 
@@ -200,7 +200,7 @@ impl WebhookService {
         let endpoint = {
             let endpoints = self.endpoints.read().await;
             endpoints.get(endpoint_id).cloned().ok_or_else(|| {
-                IntegrationError::Webhook(format!("Endpoint not found: {}", endpoint_id))
+                IntegrationError::Webhook(format!("Endpoint not found: {endpoint_id}"))
             })?
         };
 
@@ -226,13 +226,13 @@ impl WebhookService {
         let payload_bytes = serde_json::to_vec(payload)?;
 
         let mut mac = HmacSha256::new_from_slice(secret.as_bytes())
-            .map_err(|e| IntegrationError::Webhook(format!("Invalid secret: {}", e)))?;
+            .map_err(|e| IntegrationError::Webhook(format!("Invalid secret: {e}")))?;
 
         mac.update(&payload_bytes);
         let result = mac.finalize();
         let hex_result = hex::encode(result.into_bytes());
 
-        Ok(format!("sha256={}", hex_result))
+        Ok(format!("sha256={hex_result}"))
     }
 
     fn secure_compare(&self, a: &str, b: &str) -> bool {
@@ -252,7 +252,7 @@ impl WebhookService {
         let endpoint = {
             let endpoints = self.endpoints.read().await;
             endpoints.get(endpoint_id).cloned().ok_or_else(|| {
-                IntegrationError::Webhook(format!("Endpoint not found: {}", endpoint_id))
+                IntegrationError::Webhook(format!("Endpoint not found: {endpoint_id}"))
             })?
         };
 
@@ -270,7 +270,7 @@ impl WebhookService {
         let endpoint = {
             let endpoints = self.endpoints.read().await;
             endpoints.get(endpoint_id).cloned().ok_or_else(|| {
-                IntegrationError::Webhook(format!("Endpoint not found: {}", endpoint_id))
+                IntegrationError::Webhook(format!("Endpoint not found: {endpoint_id}"))
             })?
         };
 

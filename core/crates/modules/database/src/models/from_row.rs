@@ -3,8 +3,9 @@ use sqlx::postgres::PgRow;
 
 /// Trait for converting `PostgreSQL` rows to typed models.
 ///
-/// This trait enables compile-time type safety when deserializing database results,
-/// eliminating the need for manual JSON conversion through [`JsonRow`].
+/// This trait enables compile-time type safety when deserializing database
+/// results, eliminating the need for manual JSON conversion through
+/// [`JsonRow`].
 ///
 /// Implementations should handle conversion from `PostgreSQL` row types
 /// and perform any necessary type conversions.
@@ -12,8 +13,8 @@ use sqlx::postgres::PgRow;
 /// # Example
 ///
 /// ```rust
-/// use systemprompt_database::FromDatabaseRow;
 /// use sqlx::Row;
+/// use systemprompt_database::FromDatabaseRow;
 ///
 /// struct User {
 ///     id: String,

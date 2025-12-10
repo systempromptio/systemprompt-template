@@ -1,33 +1,32 @@
-use super::{Variable, VariableCategory, VariableType};
+use super::{ConfigVariable, VariableCategory};
 use serde::{Deserialize, Serialize};
 use systemprompt_models::api::ApiQuery;
 use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VariableResponse {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     pub value: Option<String>,
-    pub r#type: String,
+    pub variable_type: String,
+    pub category: String,
     pub description: Option<String>,
-    pub category: Option<String>,
-    pub is_secret: bool,
+    pub is_secret: Option<bool>,
     pub is_required: bool,
     pub default_value: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }
 
-impl From<Variable> for VariableResponse {
-    fn from(v: Variable) -> Self {
+impl From<ConfigVariable> for VariableResponse {
+    fn from(v: ConfigVariable) -> Self {
         Self {
             id: v.id,
             name: v.name,
-            // Hide secret values in API responses
-            value: if v.is_secret { None } else { v.value },
-            r#type: v.r#type,
-            description: v.description,
+            value: v.value,
+            variable_type: v.variable_type,
             category: v.category,
+            description: v.description,
             is_secret: v.is_secret,
             is_required: v.is_required,
             default_value: v.default_value,
@@ -41,18 +40,13 @@ impl From<Variable> for VariableResponse {
 pub struct CreateVariableRequest {
     pub name: String,
     pub value: Option<String>,
-    pub r#type: String,
-    pub description: Option<String>,
+    #[serde(rename = "type")]
+    pub variable_type: String,
     pub category: Option<String>,
-    #[serde(default)]
-    pub is_secret: bool,
-    #[serde(default = "default_true")]
-    pub is_required: bool,
+    pub description: Option<String>,
+    pub is_secret: Option<bool>,
+    pub is_required: Option<bool>,
     pub default_value: Option<String>,
-}
-
-const fn default_true() -> bool {
-    true
 }
 
 impl CreateVariableRequest {
@@ -61,8 +55,15 @@ impl CreateVariableRequest {
             return Err("Variable name cannot be empty".to_string());
         }
 
-        if VariableType::try_from_str(&self.r#type).is_none() {
-            return Err(format!("Invalid variable type: {}", self.r#type));
+        if !self
+            .name
+            .chars()
+            .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
+        {
+            return Err(format!(
+                "Variable name '{}' contains invalid characters",
+                self.name
+            ));
         }
 
         if let Some(ref cat) = self.category {
@@ -78,8 +79,8 @@ impl CreateVariableRequest {
 #[derive(Debug, Deserialize)]
 pub struct UpdateVariableRequest {
     pub value: Option<String>,
-    pub description: Option<String>,
     pub category: Option<String>,
+    pub description: Option<String>,
     pub is_secret: Option<bool>,
     pub is_required: Option<bool>,
     pub default_value: Option<String>,

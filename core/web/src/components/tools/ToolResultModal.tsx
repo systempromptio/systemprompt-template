@@ -1,30 +1,39 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { ArtifactViewer } from '@/components/artifacts/ArtifactViewer'
-import { useToolExecutionStore } from '@/stores/toolExecution.store'
+import { useUIStateStore } from '@/stores/ui-state.store'
+import { useArtifactStore } from '@/stores/artifact.store'
 import { Copy, X, Info } from 'lucide-react'
 import { Tab } from './Tab'
 import { ExecutionMetadata } from './ExecutionMetadata'
 import { LoadingState } from './LoadingState'
 import { ErrorState } from './ErrorState'
+import type { Artifact } from '@/types/artifact'
 
 export function ToolResultModal() {
-  const executions = useToolExecutionStore((state) => state.executions)
-  const removeExecution = useToolExecutionStore((state) => state.removeExecution)
+  const toolExecutionsById = useUIStateStore((state) => state.toolExecutionsById)
+  const removeExecution = useUIStateStore((state) => state.removeToolExecution)
+  const ephemeralArtifact = useUIStateStore((state) => state.ephemeralArtifact)
+  const setEphemeralArtifact = useUIStateStore((state) => state.setEphemeralArtifact)
+  const artifactsById = useArtifactStore((state) => state.byId)
+
+  const executions = useMemo(() => Object.values(toolExecutionsById), [toolExecutionsById])
+
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showMetadata, setShowMetadata] = useState(false)
 
-  const shouldShow = executions.length > 0
-  const activeExecutions = executions.filter(
-    (e) => e.renderBehavior === 'modal' || e.renderBehavior === 'both'
-  )
+  const activeExecutions = useMemo(() => {
+    // All executions are shown in modal by default
+    return executions
+  }, [executions])
+
   const hasModalExecutions = activeExecutions.length > 0
 
   useEffect(() => {
     if (hasModalExecutions && !selectedId) {
       setSelectedId(activeExecutions[0].id)
     }
-  }, [activeExecutions, selectedId])
+  }, [activeExecutions, selectedId, hasModalExecutions])
 
   useEffect(() => {
     if (selectedId && !executions.find((e) => e.id === selectedId)) {
@@ -35,9 +44,30 @@ export function ToolResultModal() {
 
   const selectedExecution = executions.find((e) => e.id === selectedId)
 
+  const getArtifactForExecution = (artifactId?: string): Artifact | undefined => {
+    if (ephemeralArtifact && ephemeralArtifact.artifactId === artifactId) {
+      return ephemeralArtifact as Artifact
+    }
+
+    if (artifactId && artifactsById[artifactId]) {
+      return artifactsById[artifactId]
+    }
+
+    return undefined
+  }
+
+  const selectedArtifact = selectedExecution
+    ? getArtifactForExecution(selectedExecution.artifactId)
+    : undefined
+
   const handleClose = () => {
     if (selectedExecution) {
       removeExecution(selectedExecution.id)
+
+      if (ephemeralArtifact && ephemeralArtifact.artifactId === selectedExecution.artifactId) {
+        setEphemeralArtifact(null)
+      }
+
       if (activeExecutions.length > 1) {
         const nextExecution = activeExecutions.find((e) => e.id !== selectedId)
         setSelectedId(nextExecution?.id || null)
@@ -51,7 +81,7 @@ export function ToolResultModal() {
 
   return (
     <Modal
-      isOpen={shouldShow && hasModalExecutions}
+      isOpen={hasModalExecutions}
       onClose={handleClose}
       size="xl"
       variant="accent"
@@ -78,7 +108,7 @@ export function ToolResultModal() {
             <h2 className="text-lg font-semibold uppercase">{selectedExecution.toolName}</h2>
           )}
           <div className="flex items-center gap-2 ml-auto">
-            {selectedExecution.status === 'completed' && selectedExecution.artifact && (
+            {selectedExecution.status === 'completed' && selectedArtifact && (
               <>
                 <button
                   onClick={() => setShowMetadata(!showMetadata)}
@@ -89,7 +119,7 @@ export function ToolResultModal() {
                 </button>
                 <button
                   onClick={() => {
-                    const dataStr = JSON.stringify(selectedExecution.artifact, null, 2)
+                    const dataStr = JSON.stringify(selectedArtifact, null, 2)
                     navigator.clipboard.writeText(dataStr)
                   }}
                   className="p-2 hover:bg-secondary/50 rounded-lg transition-colors"
@@ -114,10 +144,10 @@ export function ToolResultModal() {
             <LoadingState toolName={selectedExecution.toolName} />
           ) : selectedExecution.status === 'error' ? (
             <ErrorState error={selectedExecution.error || 'Unknown error'} onRetry={handleClose} />
-          ) : selectedExecution.artifact ? (
+          ) : selectedArtifact ? (
             <>
               {showMetadata && <ExecutionMetadata execution={selectedExecution} />}
-              <ArtifactViewer artifact={selectedExecution.artifact} />
+              <ArtifactViewer artifact={selectedArtifact} />
             </>
           ) : null}
         </div>

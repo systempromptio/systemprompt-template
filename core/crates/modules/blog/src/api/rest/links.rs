@@ -80,7 +80,7 @@ pub async fn redirect_handler(
             req_ctx.request.session_id.as_str(),
             Some(req_ctx.auth.user_id.to_string()),
             Some(req_ctx.execution.context_id.to_string()),
-            req_ctx.execution.task_id.as_ref().map(std::string::ToString::to_string),
+            req_ctx.execution.task_id.as_ref().map(ToString::to_string),
             None,
             None,
             None,

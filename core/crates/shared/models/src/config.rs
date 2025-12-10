@@ -501,11 +501,17 @@ impl SystemPaths {
     }
 
     pub fn services(config: &Config) -> std::path::PathBuf {
-        std::env::var("SYSTEMPROMPT_SERVICES_PATH").map_or_else(|_| std::path::Path::new(&config.system_path).join(Self::SERVICES), std::path::PathBuf::from)
+        std::env::var("SYSTEMPROMPT_SERVICES_PATH").map_or_else(
+            |_| std::path::Path::new(&config.system_path).join(Self::SERVICES),
+            std::path::PathBuf::from,
+        )
     }
 
     pub fn skills(config: &Config) -> std::path::PathBuf {
-        std::env::var("SYSTEMPROMPT_SKILLS_PATH").map_or_else(|_| std::path::Path::new(&config.system_path).join(Self::SKILLS_DIR), std::path::PathBuf::from)
+        std::env::var("SYSTEMPROMPT_SKILLS_PATH").map_or_else(
+            |_| std::path::Path::new(&config.system_path).join(Self::SKILLS_DIR),
+            std::path::PathBuf::from,
+        )
     }
 
     pub fn config_dir(config: &Config) -> std::path::PathBuf {
@@ -557,7 +563,9 @@ impl SystemPaths {
     }
 
     pub fn content_config(_config: &Config) -> std::path::PathBuf {
-        if let Ok(path) = std::env::var("CONTENT_CONFIG_PATH") { std::path::PathBuf::from(path) } else {
+        if let Ok(path) = std::env::var("CONTENT_CONFIG_PATH") {
+            std::path::PathBuf::from(path)
+        } else {
             eprintln!("ERROR: CONTENT_CONFIG_PATH environment variable is required");
             panic!("Missing required environment variable: CONTENT_CONFIG_PATH");
         }
