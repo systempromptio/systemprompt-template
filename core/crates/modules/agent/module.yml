@@ -13,7 +13,9 @@ weight: 25
 category: core
 
 # Dependencies - requires core auth and user management
+# NOTE: database must come first for update_timestamp_trigger() function
 dependencies:
+  - database
   - users
   - oauth
   - config
