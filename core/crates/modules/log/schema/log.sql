@@ -1,7 +1,7 @@
 -- Log table for system-wide logging with analytics support
 CREATE TABLE IF NOT EXISTS logs (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
-    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     level VARCHAR(50) NOT NULL CHECK (level IN ('ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE')),
     module VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,

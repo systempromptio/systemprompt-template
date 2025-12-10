@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS analytics_events (
     task_id VARCHAR(255),
     message TEXT,
     metadata TEXT, -- Stored as a JSON string
-    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- Foreign key for session_id with SET NULL (sessions are ephemeral metadata)
     CONSTRAINT analytics_events_session_id_fkey
