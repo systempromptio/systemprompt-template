@@ -60,13 +60,13 @@ COPY core/web/templates /app/core/web/templates
 
 # Copy service configuration
 COPY config /app/config
-COPY crates/services/config /app/crates/services/config
-COPY crates/services/ai /app/crates/services/ai
-COPY crates/services/agents /app/crates/services/agents
-COPY crates/services/mcp /app/crates/services/mcp
-COPY crates/services/content /app/crates/services/content
-COPY crates/services/web /app/crates/services/web
-COPY crates/services/skills /app/crates/services/skills
+COPY services/config /app/services/config
+COPY services/ai /app/services/ai
+COPY services/agents /app/services/agents
+COPY services/mcp /app/services/mcp
+COPY services/content /app/services/content
+COPY services/web /app/services/web
+COPY services/skills /app/services/skills
 
 # Copy web dist
 COPY core/web/dist /app/core/web/dist
@@ -82,7 +82,7 @@ RUN chmod +x /app/target/release/* && \
     mkdir -p /app/core/web/dist/sitemaps && \
     chown -R app:app /app && \
     chmod 755 /app/logs /app/storage /app/storage/generated_images && \
-    chmod -R a+rX /app/crates/services/content
+    chmod -R a+rX /app/services/content
 
 USER app
 
@@ -98,7 +98,7 @@ ENV HOST=0.0.0.0 \
     CARGO_TARGET_DIR=/app/target \
     SYSTEM_PATH=/app \
     WEB_DIR=/app/core/web/dist \
-    SYSTEMPROMPT_CONFIG_PATH=/app/crates/services/config/config.yml \
+    SYSTEMPROMPT_CONFIG_PATH=/app/services/config/config.yml \
     AI_CONFIG_PATH=/app/config/ai.yaml
 
 # Startup script with fail-fast validation

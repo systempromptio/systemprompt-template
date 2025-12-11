@@ -11,7 +11,7 @@
 ```
 systemprompt-template/
 ├── core/                    # READ-ONLY - Do not modify
-├── crates/services/         # Implementation code - Edit here
+├── services/         # Implementation code - Edit here
 │   ├── agents/              # Agent YAML configs
 │   ├── ai/                  # AI provider config
 │   ├── config/              # Root services config
@@ -55,25 +55,25 @@ git submodule update --init --recursive
 
 ## Configuration Files
 
-- `crates/services/config/config.yml` - Services configuration
-- `crates/services/content/config.yml` - Content sources
-- `crates/services/web/config.yml` - Theme and branding
+- `services/config/config.yml` - Services configuration
+- `services/content/config.yml` - Content sources
+- `services/web/config.yml` - Theme and branding
 - `config/ai.yaml` - AI providers
 
 ## Adding Features
 
 ### New MCP Server
-1. Create crate in `crates/services/mcp/your-server/`
+1. Create crate in `services/mcp/your-server/`
 2. Add `module.yml` with server config
 3. Add to workspace in `Cargo.toml`
-4. Include in `crates/services/config/config.yml`
+4. Include in `services/config/config.yml`
 
 ### New Agent
-1. Create `crates/services/agents/your-agent.yml`
-2. Include in `crates/services/config/config.yml`
+1. Create `services/agents/your-agent.yml`
+2. Include in `services/config/config.yml`
 
 ### New Content
-Add markdown files to `crates/services/content/blog/your-post/index.md`
+Add markdown files to `services/content/blog/your-post/index.md`
 
 ## Environment Variables
 

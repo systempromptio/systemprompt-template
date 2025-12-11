@@ -35,7 +35,7 @@ just start
 ```
 systemprompt-template/
 ├── core/                    # READ-ONLY - SystemPrompt Core (git subtree)
-├── crates/services/         # YOUR CODE - Customize here
+├── services/         # YOUR CODE - Customize here
 │   ├── agents/              # Agent configurations (YAML)
 │   ├── ai/                  # AI provider settings
 │   ├── config/              # Root services config
@@ -71,10 +71,10 @@ systemprompt-template/
 
 | File | Purpose |
 |------|---------|
-| `crates/services/config/config.yml` | Root services config |
-| `crates/services/content/config.yml` | Content sources |
-| `crates/services/web/config.yml` | Theme and branding |
-| `crates/services/ai/config.yml` | AI providers |
+| `services/config/config.yml` | Root services config |
+| `services/content/config.yml` | Content sources |
+| `services/web/config.yml` | Theme and branding |
+| `services/ai/config.yml` | AI providers |
 | `config/ai.yaml` | Root AI config |
 
 ## Database Setup
@@ -122,24 +122,24 @@ git clone --recursive https://github.com/systempromptio/systemprompt-template my
 
 ### Add an MCP Server
 
-1. Create a new crate in `crates/services/mcp/your-server/`
+1. Create a new crate in `services/mcp/your-server/`
 2. Add a `module.yml` configuration
-3. Add to `crates/services/config/config.yml` includes
+3. Add to `services/config/config.yml` includes
 4. Add to `Cargo.toml` workspace members
 
 ### Add an Agent
 
-1. Create `crates/services/agents/your-agent.yml`
-2. Add to `crates/services/config/config.yml` includes
+1. Create `services/agents/your-agent.yml`
+2. Add to `services/config/config.yml` includes
 
 ### Add Content
 
-1. Add markdown files to `crates/services/content/blog/`
+1. Add markdown files to `services/content/blog/`
 2. Content is automatically indexed on startup
 
 ### Customize Theme
 
-Edit `crates/services/web/config.yml` to change:
+Edit `services/web/config.yml` to change:
 - Branding (name, logo, colors)
 - Typography
 - Layout

@@ -16,16 +16,16 @@ SYSTEM_PATH: /app
 CARGO_TARGET_DIR: /app/target
 WEB_DIR: /app/core/web/dist
 AI_CONFIG_PATH: /app/config/ai.yaml
-SYSTEMPROMPT_CONFIG_PATH: /app/crates/services/config/config.yml
-CONTENT_CONFIG_PATH: /app/crates/services/content/config.yml
+SYSTEMPROMPT_CONFIG_PATH: /app/services/config/config.yml
+CONTENT_CONFIG_PATH: /app/services/content/config.yml
 GEOIP_DATABASE_PATH: /app/data/GeoLite2-City.mmdb
 STORAGE_PATH: /app/files
 FILE_URL_PREFIX: /files
 
 # Static Content Generation (SCG) paths
-WEB_CONFIG_PATH: /app/crates/services/web/config.yml
-SCG_TEMPLATES_PATH: /app/crates/services/web/templates
-SCG_ASSETS_PATH: /app/crates/services/web/assets
+WEB_CONFIG_PATH: /app/services/web/config.yml
+SCG_TEMPLATES_PATH: /app/services/web/templates
+SCG_ASSETS_PATH: /app/services/web/assets
 
 # =============================================================================
 # DATABASE

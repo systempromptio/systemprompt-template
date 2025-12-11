@@ -3,7 +3,7 @@
 
 content_sources:
   blog:
-    path: "crates/services/content/blog"
+    path: "services/content/blog"
     source_id: "blog"
     category_id: "blog"
     enabled: true
@@ -33,7 +33,7 @@ content_sources:
         changefreq: "daily"
 
   legal:
-    path: "crates/services/content/legal"
+    path: "services/content/legal"
     source_id: "legal"
     category_id: "pages"
     enabled: true

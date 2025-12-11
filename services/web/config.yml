@@ -2,7 +2,7 @@
 # Theme and branding for your SystemPrompt implementation
 
 content:
-  config_file: "crates/services/content/config.yml"
+  config_file: "services/content/config.yml"
   sources:
     - blog
     - legal

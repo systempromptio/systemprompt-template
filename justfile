@@ -1,4 +1,5 @@
 # SystemPrompt Template - Development Commands
+# All commands use the core CLI (./core/target/debug/systemprompt)
 
 default:
     @just --list
@@ -7,36 +8,66 @@ default:
 # SETUP
 # ============================================================================
 
-# First-time setup (run this after cloning)
+# First-time setup (clone with --recursive, then run this)
 setup:
-    ./infrastructure/scripts/setup-dev.sh
+    #!/usr/bin/env bash
+    set -e
+    echo "🔧 Building core binary..."
+    cargo build --manifest-path=core/Cargo.toml --bin systemprompt
+    echo "🔧 Building workspace..."
+    cargo build --workspace
+    echo "📊 Running database migrations..."
+    ./core/target/debug/systemprompt db migrate
+    echo "🌐 Building web assets..."
+    ./core/target/debug/systemprompt web build
+    echo ""
+    echo "✅ Setup complete! Run 'just start' to start the server."
 
 # ============================================================================
 # BUILD & RUN
 # ============================================================================
 
-# Build debug binaries
+# Build debug binaries (Rust only)
 build:
-    ./infrastructure/scripts/build.sh debug
+    cargo build --manifest-path=core/Cargo.toml --bin systemprompt
+    cargo build --workspace
+
+# Build web assets
+build-web:
+    ./core/target/debug/systemprompt web build
 
 # Build release binaries
 build-release:
-    ./infrastructure/scripts/build.sh release
+    cargo build --manifest-path=core/Cargo.toml --bin systemprompt --release
+    cargo build --workspace --release
 
-# Start the API server
+# Build release web assets
+build-release-web:
+    ./core/target/debug/systemprompt web build --prod
+
+# Start all services (API, agents, MCP servers)
 start:
-    #!/usr/bin/env bash
-    if [ -f .env.local ]; then set -a; source .env.local; set +a; fi
-    if [ -f .env.secrets ]; then set -a; source .env.secrets; set +a; fi
-    ./core/target/debug/systemprompt serve api --foreground
+    ./core/target/debug/systemprompt start
 
 # Start with verbose logging
 start-debug:
-    #!/usr/bin/env bash
-    export RUST_LOG=debug
-    if [ -f .env.local ]; then set -a; source .env.local; set +a; fi
-    if [ -f .env.secrets ]; then set -a; source .env.secrets; set +a; fi
-    ./core/target/debug/systemprompt serve api --foreground
+    ./core/target/debug/systemprompt start --debug
+
+# Stop all services
+stop:
+    ./core/target/debug/systemprompt stop
+
+# Show status of all services
+status:
+    ./core/target/debug/systemprompt status
+
+# Restart services
+restart:
+    ./core/target/debug/systemprompt restart
+
+# Clean up orphaned processes
+cleanup:
+    ./core/target/debug/systemprompt cleanup-services
 
 # ============================================================================
 # DATABASE
@@ -44,10 +75,23 @@ start-debug:
 
 # Run database migrations
 db-migrate:
-    #!/usr/bin/env bash
-    if [ -f .env.local ]; then set -a; source .env.local; set +a; fi
-    if [ -f .env.secrets ]; then set -a; source .env.secrets; set +a; fi
     ./core/target/debug/systemprompt db migrate
+
+# Database operations
+db *ARGS:
+    ./core/target/debug/systemprompt db {{ARGS}}
+
+# ============================================================================
+# CONTENT & SYNC
+# ============================================================================
+
+# Sync content from disk to database
+sync-content:
+    ./core/target/debug/systemprompt sync content
+
+# Sync skills
+sync-skills:
+    ./core/target/debug/systemprompt sync skills
 
 # ============================================================================
 # CORE MANAGEMENT
@@ -56,26 +100,28 @@ db-migrate:
 # Update core submodule to latest
 core-update:
     cd core && git fetch origin && git checkout origin/main
-    @echo "Core updated. Run 'cargo update' to update Cargo dependencies too."
+    @echo "Core updated. Run 'cargo update' to update Cargo dependencies."
 
 # Update both submodule and Cargo deps
 core-sync:
-    ./infrastructure/scripts/core-sync.sh
+    #!/usr/bin/env bash
+    set -e
+    echo "Updating core submodule..."
+    cd core && git fetch origin && git checkout -- . && git clean -fd && git checkout origin/main
+    cd ..
+    echo "Updating Cargo dependencies..."
+    cargo update
+    echo ""
+    echo "✅ Core synced. Run 'just build' to rebuild."
 
 # Pin core to specific version (e.g., just core-pin v0.1.0)
 core-pin version:
     cd core && git fetch origin && git checkout {{version}}
-    @echo "Core pinned to {{version}}. Update Cargo.toml to match if using tags."
+    @echo "Core pinned to {{version}}. Run 'cargo update' to update dependencies."
 
 # Show current core version
 core-version:
     @cd core && git describe --tags --always
-
-# Show current core status (legacy alias)
-core-status:
-    @echo "Core submodule status:"
-    @cd core && git describe --tags --always
-    @cd core && git log --oneline -1
 
 # ============================================================================
 # UTILITIES
@@ -96,3 +142,11 @@ fmt:
 # Clean build artifacts
 clean:
     cargo clean
+
+# Show system configuration
+config:
+    ./core/target/debug/systemprompt config env
+
+# Stream logs
+logs:
+    ./core/target/debug/systemprompt logs

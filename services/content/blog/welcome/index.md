@@ -15,14 +15,14 @@ This is a placeholder blog post for your new SystemPrompt implementation.
 ## Getting Started
 
 1. Configure your environment in `.env.secrets`
-2. Set up your AI providers in `crates/services/ai/config.yml`
-3. Customize your theme in `crates/services/web/config.yml`
-4. Add your own content in `crates/services/content/blog/`
+2. Set up your AI providers in `services/ai/config.yml`
+3. Customize your theme in `services/web/config.yml`
+4. Add your own content in `services/content/blog/`
 
 ## Next Steps
 
-- Create your own agents in `crates/services/agents/`
-- Build custom MCP servers in `crates/services/mcp/`
-- Add skills in `crates/services/skills/`
+- Create your own agents in `services/agents/`
+- Build custom MCP servers in `services/mcp/`
+- Add skills in `services/skills/`
 
 Happy building!

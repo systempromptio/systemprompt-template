@@ -378,10 +378,10 @@ if [ ! -f ".env.local" ]; then
 # Paths
 SYSTEM_PATH=${PROJECT_ROOT}
 WEB_DIR=${PROJECT_ROOT}/core/web/dist
-SYSTEMPROMPT_CONFIG_PATH=${PROJECT_ROOT}/crates/services/config/config.yml
-SYSTEMPROMPT_SERVICES_PATH=${PROJECT_ROOT}/crates/services
+SYSTEMPROMPT_CONFIG_PATH=${PROJECT_ROOT}/services/config/config.yml
+SYSTEMPROMPT_SERVICES_PATH=${PROJECT_ROOT}/services
 AI_CONFIG_PATH=${PROJECT_ROOT}/config/ai.yaml
-CONTENT_CONFIG_PATH=${PROJECT_ROOT}/crates/services/content/config.yml
+CONTENT_CONFIG_PATH=${PROJECT_ROOT}/services/content/config.yml
 
 # Server
 HOST=127.0.0.1

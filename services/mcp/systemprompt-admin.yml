@@ -5,7 +5,7 @@ mcp_servers:
   systemprompt-admin:
     binary: "systemprompt-admin"
     package: "systemprompt-admin"
-    path: "crates/services/mcp/systemprompt-admin"
+    path: "services/mcp/systemprompt-admin"
     port: 5002
     endpoint: "http://localhost:8080/api/v1/mcp/systemprompt-admin/mcp"
     enabled: true

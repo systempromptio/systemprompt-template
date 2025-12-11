@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "crates/services/mcp/systemprompt-admin",
+    "services/mcp/systemprompt-admin",
 ]
 resolver = "2"
 
