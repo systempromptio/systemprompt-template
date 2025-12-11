@@ -49,6 +49,8 @@ echo ""
 # Initialize submodules
 echo "Initializing git submodules..."
 if [ -d ".git" ]; then
+    # Reset any dirty files in submodules (e.g., Cargo.lock from builds)
+    git submodule foreach --quiet 'git checkout -- . 2>/dev/null || true'
     git submodule update --init --recursive
     echo -e "${GREEN}✓${NC} Submodules initialized"
 else
