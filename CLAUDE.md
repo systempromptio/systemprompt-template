@@ -2,7 +2,7 @@
 
 ## Critical Rules
 
-1. **NEVER modify files in `core/`** - This is a READ-ONLY git subtree from systemprompt-core
+1. **NEVER modify files in `core/`** - This is a READ-ONLY git submodule from systemprompt-core
 2. **ALWAYS use just commands** - See `just --list` for available commands
 3. **NEVER commit secrets** - Keep `.env.secrets` out of version control
 
@@ -40,7 +40,17 @@ just db-migrate  # Run migrations
 
 ### Update Core
 ```bash
-just core-sync   # Pull latest from systemprompt-core
+just core-sync      # Update submodule + Cargo deps
+just core-update    # Update submodule only
+just core-version   # Show current version
+just core-pin v0.1.0  # Pin to specific version
+```
+
+### Clone with Core
+```bash
+git clone --recursive <repo-url>
+# or after clone:
+git submodule update --init --recursive
 ```
 
 ## Configuration Files

@@ -1,2 +1,0 @@
--- Removed: View metrics are calculated directly from analytics_events table
--- No need for a separate metrics table - queries join directly to analytics_events

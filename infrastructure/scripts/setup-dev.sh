@@ -46,6 +46,17 @@ fi
 
 echo ""
 
+# Initialize submodules
+echo "Initializing git submodules..."
+if [ -d ".git" ]; then
+    git submodule update --init --recursive
+    echo -e "${GREEN}✓${NC} Submodules initialized"
+else
+    echo -e "${YELLOW}!${NC} Not a git repository - skipping submodule init"
+fi
+
+echo ""
+
 # Install git hooks
 echo "Installing git hooks..."
 if [ -d ".git" ]; then

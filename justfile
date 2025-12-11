@@ -53,14 +53,29 @@ db-migrate:
 # CORE MANAGEMENT
 # ============================================================================
 
-# Sync core subtree from upstream (READ-ONLY updates only)
+# Update core submodule to latest
+core-update:
+    cd core && git fetch origin && git checkout origin/main
+    @echo "Core updated. Run 'cargo update' to update Cargo dependencies too."
+
+# Update both submodule and Cargo deps
 core-sync:
     ./infrastructure/scripts/core-sync.sh
 
+# Pin core to specific version (e.g., just core-pin v0.1.0)
+core-pin version:
+    cd core && git fetch origin && git checkout {{version}}
+    @echo "Core pinned to {{version}}. Update Cargo.toml to match if using tags."
+
 # Show current core version
+core-version:
+    @cd core && git describe --tags --always
+
+# Show current core status (legacy alias)
 core-status:
-    @echo "Core subtree status:"
-    @git log --oneline -1 -- core/
+    @echo "Core submodule status:"
+    @cd core && git describe --tags --always
+    @cd core && git log --oneline -1
 
 # ============================================================================
 # UTILITIES
