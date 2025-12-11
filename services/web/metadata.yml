@@ -1,0 +1,20 @@
+# Site Metadata
+# SEO, branding, and metadata configuration
+
+site:
+  name: "systemprompt-template"
+  title: "systemprompt-template"
+  description: "Your SystemPrompt implementation"
+  author: "Your Name"
+  baseUrl: "https://example.com"
+
+seo:
+  defaultImage: "/og-default.png"
+  twitterHandle: "@yourhandle"
+  keywords: "AI, agents, automation"
+
+copyright:
+  holder: "SystemPrompt"
+  year: 2025
+  link: "https://systemprompt.io"
+  notice: "Powered by SystemPrompt"

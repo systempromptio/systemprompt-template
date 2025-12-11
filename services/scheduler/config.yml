@@ -1,0 +1,25 @@
+# Scheduler Configuration
+# Background jobs and scheduled tasks
+
+scheduler:
+  enabled: true
+  jobs:
+    - name: cleanup_anonymous_users
+      enabled: true
+      schedule: "0 0 3 * * *"
+
+    - name: cleanup_empty_contexts
+      enabled: true
+      schedule: "0 0 * * * *"
+
+    - name: cleanup_inactive_sessions
+      enabled: true
+      schedule: "0 0 * * * *"
+
+    - name: database_cleanup
+      enabled: true
+      schedule: "0 0 4 * * *"
+
+    - name: publish_content
+      enabled: true
+      schedule: "0 */30 * * * *"

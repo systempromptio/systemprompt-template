@@ -1,0 +1,24 @@
+# Agent Configuration
+# Define your AI agents here
+
+agents:
+  assistant:
+    port: 9000
+    enabled: true
+    default: true
+    endpoint: "/api/v1/agents/assistant"
+    provider: "anthropic"
+    model: "claude-sonnet-4-20250514"
+    oauth:
+      required: true
+      scopes: ["user", "anonymous"]
+    card:
+      display_name: "Assistant"
+      description: "Your AI assistant for systemprompt-template"
+    metadata:
+      mcp_servers: []
+      skills: []
+    system_prompt: |
+      You are a helpful AI assistant for systemprompt-template.
+
+      Be concise, accurate, and helpful. If you don't know something, say so.
