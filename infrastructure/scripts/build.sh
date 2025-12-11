@@ -119,9 +119,33 @@ if [ -f "Cargo.toml" ]; then
     done < <(awk '/^\[workspace\]/,/^members[[:space:]]*=/{flag=1; next} /^\[/{flag=0} flag && /[a-zA-Z]/ {print}' Cargo.toml | grep -v "members" | grep -v "^\[" | grep -v "^#")
 fi
 
-# Add core workspace if exists
+# Build core workspace (submodule) - builds the systemprompt binary
 if [ -f "core/Cargo.toml" ]; then
-    WORKSPACE_MEMBERS+=("core/Cargo.toml")
+    echo -e "${YELLOW}→ Building: ${GREEN}core (systemprompt binary)${NC}"
+
+    BUILD_OUTPUT=$(cargo build $BUILD_FLAG --manifest-path="core/Cargo.toml" --bins 2>&1)
+    BUILD_EXIT_CODE=$?
+
+    echo "$BUILD_OUTPUT" | grep -E "^(Compiling|Finished)" || true
+
+    if [ $BUILD_EXIT_CODE -eq 0 ]; then
+        echo -e "  ${GREEN}✓ Success${NC}"
+    else
+        echo -e "  ${RED}✗ Failed${NC}"
+        echo ""
+        echo -e "${RED}═══════════════════════════════════════════════════${NC}"
+        echo -e "${RED}  Cargo build failed: core${NC}"
+        echo -e "${RED}═══════════════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "${YELLOW}Error summary:${NC}"
+        echo "$BUILD_OUTPUT" | grep -E "^error(\[|:)" | head -10 || echo "  (error details below)"
+        echo ""
+        echo -e "${YELLOW}Full build output:${NC}"
+        echo ""
+        echo "$BUILD_OUTPUT"
+        echo ""
+        exit 1
+    fi
 fi
 
 echo -e "${BLUE}Found ${#WORKSPACE_MEMBERS[@]} workspace member(s)${NC}"
