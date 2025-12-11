@@ -1,5 +1,6 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use serde_json::json;
+use systemprompt_core_system::models::analytics::PlatformOverview;
 use systemprompt_models::artifacts::{
     Column, ColumnType, DashboardSection, LayoutWidth, SectionLayout, SectionType, TableArtifact,
     TableHints,
@@ -10,27 +11,25 @@ use super::models::{
     TrafficSummary,
 };
 
-pub fn create_realtime_activity_section(
-    overview: &systemprompt_core_system::repository::analytics::PlatformOverview,
-) -> DashboardSection {
+pub fn create_realtime_activity_section(overview: &PlatformOverview) -> DashboardSection {
     let cards = vec![
         json!({
-            "title": "Active Users",
-            "value": overview.active_users.to_string(),
-            "subtitle": "last hour (incl. temporary)",
+            "title": "Active Users (24h)",
+            "value": overview.active_users_24h.to_string(),
+            "subtitle": "last 24 hours",
             "icon": "users",
             "status": "success"
         }),
         json!({
             "title": "Active Sessions",
             "value": overview.active_sessions.to_string(),
-            "subtitle": "last hour (all types)",
+            "subtitle": "current active",
             "icon": "activity"
         }),
         json!({
             "title": "Total Registered Users",
             "value": overview.total_users.to_string(),
-            "subtitle": "all time (excl. temporary)",
+            "subtitle": "all time",
             "icon": "user-check"
         }),
     ];
@@ -90,7 +89,7 @@ pub fn create_recent_conversations_section(
     let table = TableArtifact::new(vec![
         Column::new("context_id", ColumnType::String).with_header("Context ID"),
         Column::new("agent_name", ColumnType::String).with_header("Agent"),
-        Column::new("started_at", ColumnType::String).with_header("Started At"),
+        Column::new("started_at", ColumnType::String).with_header("Started"),
         Column::new("duration", ColumnType::String).with_header("Duration"),
         Column::new("status", ColumnType::String).with_header("Status"),
         Column::new("messages", ColumnType::Number).with_header("Messages"),
@@ -113,11 +112,20 @@ pub fn create_recent_conversations_section(
             })
             .collect(),
     )
-    .with_hints(TableHints::new().filterable());
+    .with_hints(
+        TableHints::new()
+            .with_sortable(vec![
+                "agent_name".to_string(),
+                "started_at".to_string(),
+                "duration".to_string(),
+                "messages".to_string(),
+            ])
+            .filterable(),
+    );
 
     DashboardSection::new(
         "recent_conversations",
-        "Recent Conversations (10 most recent)",
+        "Recent Conversations (newest first)",
         SectionType::Table,
     )
     .with_data(table.to_response())
@@ -272,8 +280,28 @@ fn calculate_trend(current: i64, previous: i64) -> String {
 }
 
 fn format_timestamp(timestamp_str: &str) -> String {
-    timestamp_str
-        .parse::<DateTime<Utc>>()
-        .map(|dt| dt.format("%Y-%m-%d %H:%M:%S UTC").to_string())
-        .unwrap_or_else(|_| timestamp_str.to_string())
+    match timestamp_str.parse::<DateTime<Utc>>() {
+        Ok(dt) => {
+            let now = Utc::now();
+            let diff = now.signed_duration_since(dt);
+
+            if diff < Duration::zero() {
+                dt.format("%b %d, %Y %H:%M UTC").to_string()
+            } else if diff.num_seconds() < 60 {
+                format!("{} seconds ago", diff.num_seconds())
+            } else if diff.num_minutes() < 60 {
+                let mins = diff.num_minutes();
+                format!("{} minute{} ago", mins, if mins == 1 { "" } else { "s" })
+            } else if diff.num_hours() < 24 {
+                let hours = diff.num_hours();
+                format!("{} hour{} ago", hours, if hours == 1 { "" } else { "s" })
+            } else if diff.num_days() < 7 {
+                let days = diff.num_days();
+                format!("{} day{} ago", days, if days == 1 { "" } else { "s" })
+            } else {
+                dt.format("%b %d, %Y %H:%M UTC").to_string()
+            }
+        }
+        Err(_) => timestamp_str.to_string(),
+    }
 }

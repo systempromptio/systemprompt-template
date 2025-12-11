@@ -30,6 +30,7 @@ systemprompt-core-users = { git = "https://github.com/systempromptio/systempromp
 systemprompt-core-logging = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
 systemprompt-core-ai = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
 systemprompt-core-blog = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
+systemprompt-core-files = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
 systemprompt-core-scheduler = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
 systemprompt-core-system = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
 

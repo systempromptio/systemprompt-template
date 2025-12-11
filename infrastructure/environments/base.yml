@@ -1,0 +1,119 @@
+# SystemPrompt Template - Base Configuration
+# This is the base configuration file that defines all SystemPrompt settings.
+# Environment-specific files (local/config.yml, production/config.yml) can override these values.
+#
+# Variable Syntax:
+#   ${VAR}          - Required environment variable (build fails if missing)
+#   ${VAR:-default} - Optional with default value
+#   plain text      - Static value
+#
+# NOTE: All keys are in flat UPPER_CASE format to match environment variable names directly.
+
+# =============================================================================
+# SERVICE METADATA
+# =============================================================================
+SERVICE_NAME: systemprompt
+SERVICE_VERSION: "0.1.0"
+SERVICE_DISPLAY_NAME: "SystemPrompt Template"
+
+# =============================================================================
+# BUILD SYSTEM
+# =============================================================================
+CARGO_TARGET_DIR: ${CARGO_TARGET_DIR:-target}
+
+# =============================================================================
+# SITE CONFIGURATION
+# =============================================================================
+SITENAME: ${SITENAME:-systemprompt}
+GITHUB_LINK: ${GITHUB_LINK:-https://github.com/your-org/your-repo}
+
+# Note: SYSTEM_PATH and paths using it must be defined in each environment config
+# (nested ${} references don't work in the config generator)
+
+# =============================================================================
+# DATABASE
+# =============================================================================
+# DATABASE_URL is set in .env.secrets (provisioned by systemprompt-db)
+DATABASE_URL: ${DATABASE_URL}
+DATABASE_TYPE: ${DATABASE_TYPE:-postgres}
+
+# =============================================================================
+# SERVER CONFIGURATION
+# =============================================================================
+# These MUST be set explicitly in each environment config (no defaults)
+HOST: ${HOST}
+PORT: ${PORT}
+API_SERVER_URL: ${API_SERVER_URL}
+USE_HTTPS: ${USE_HTTPS}
+CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+
+# =============================================================================
+# FRONTEND (VITE) API CONFIGURATION
+# =============================================================================
+# These are environment-specific and must be set explicitly
+VITE_API_BASE_HOST: ${VITE_API_BASE_HOST}
+VITE_API_BASE_PATH: ${VITE_API_BASE_PATH:-/api/v1/core}
+VITE_API_URL: ${VITE_API_BASE_HOST}
+
+# =============================================================================
+# SECURITY AND AUTHENTICATION
+# =============================================================================
+JWT_ISSUER: ${JWT_ISSUER:-systemprompt-template}
+JWT_SECRET: ${JWT_SECRET}
+JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION:-86400}
+JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION:-2592000}
+ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+
+# =============================================================================
+# EXTERNAL INTEGRATIONS (Optional)
+# =============================================================================
+# Set these in .env.secrets if you need them
+GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+
+# =============================================================================
+# LOGGING
+# =============================================================================
+RUST_LOG: ${RUST_LOG:-info}
+
+# =============================================================================
+# RATE LIMITING (tower-governor per-IP limits)
+# =============================================================================
+# Set RATE_LIMIT_DISABLED=true to disable all rate limiting
+RATE_LIMIT_DISABLED: ${RATE_LIMIT_DISABLED:-false}
+
+# OAuth endpoint limits
+RATE_LIMIT_OAUTH_PUBLIC_PER_SECOND: ${RATE_LIMIT_OAUTH_PUBLIC_PER_SECOND:-2}
+RATE_LIMIT_OAUTH_AUTH_PER_SECOND: ${RATE_LIMIT_OAUTH_AUTH_PER_SECOND:-2}
+
+# Context and conversation management
+RATE_LIMIT_CONTEXTS_PER_SECOND: ${RATE_LIMIT_CONTEXTS_PER_SECOND:-50}
+
+# Task operations
+RATE_LIMIT_TASKS_PER_SECOND: ${RATE_LIMIT_TASKS_PER_SECOND:-10}
+
+# Artifact retrieval
+RATE_LIMIT_ARTIFACTS_PER_SECOND: ${RATE_LIMIT_ARTIFACTS_PER_SECOND:-15}
+
+# Agent endpoints
+RATE_LIMIT_AGENT_REGISTRY_PER_SECOND: ${RATE_LIMIT_AGENT_REGISTRY_PER_SECOND:-20}
+RATE_LIMIT_AGENTS_PER_SECOND: ${RATE_LIMIT_AGENTS_PER_SECOND:-3}
+
+# MCP server endpoints
+RATE_LIMIT_MCP_REGISTRY_PER_SECOND: ${RATE_LIMIT_MCP_REGISTRY_PER_SECOND:-200}
+RATE_LIMIT_MCP_PER_SECOND: ${RATE_LIMIT_MCP_PER_SECOND:-1000}
+
+# SSE/streaming connections
+RATE_LIMIT_STREAM_PER_SECOND: ${RATE_LIMIT_STREAM_PER_SECOND:-1}
+
+# Burst multiplier (default: 2x the per_second limit)
+RATE_LIMIT_BURST_MULTIPLIER: ${RATE_LIMIT_BURST_MULTIPLIER:-2}
+
+# =============================================================================
+# SITEMAP AND SEO
+# =============================================================================
+# TODO: Replace example.com with your actual domain
+GSC_PROPERTY_URL: ${GSC_PROPERTY_URL:-sc-domain:example.com}
+SITEMAP_BASE_URL: ${SITEMAP_BASE_URL:-https://example.com}

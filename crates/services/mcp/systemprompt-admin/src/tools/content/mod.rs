@@ -9,12 +9,16 @@ use systemprompt_core_blog::models::{LinkType, UtmParams};
 use systemprompt_core_blog::services::LinkGenerationService;
 use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::LogService;
-use systemprompt_models::artifacts::{DashboardArtifact, DashboardHints, LayoutMode};
+use systemprompt_identifiers::McpExecutionId;
+use systemprompt_models::artifacts::{
+    DashboardArtifact, DashboardHints, ExecutionMetadata, LayoutMode, ToolResponse,
+};
 
 use models::ContentPerformance;
 use repository::ContentRepository;
 use sections::{
     create_daily_views_chart, create_top_content_section, create_top_referrers_section,
+    create_traffic_summary_cards,
 };
 
 const REDIRECT_BASE_URL: &str = "https://tyingshoelaces.com";
@@ -34,39 +38,7 @@ pub fn content_input_schema() -> JsonValue {
 }
 
 pub fn content_output_schema() -> JsonValue {
-    json!({
-        "type": "object",
-        "description": "Content performance analytics: top content, categories, trends",
-        "properties": {
-            "title": {"type": "string"},
-            "description": {"type": "string"},
-            "sections": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "section_id": {"type": "string"},
-                        "title": {"type": "string"},
-                        "section_type": {
-                            "type": "string",
-                            "enum": ["metrics_cards", "table", "chart", "list"]
-                        },
-                        "data": {"type": "object"},
-                        "layout": {
-                            "type": "object",
-                            "properties": {
-                                "width": {"type": "string"},
-                                "order": {"type": "integer"}
-                            }
-                        }
-                    }
-                }
-            },
-            "mcp_execution_id": {"type": "string"}
-        },
-        "required": ["title", "sections", "mcp_execution_id"],
-        "x-artifact-type": "dashboard"
-    })
+    ToolResponse::<DashboardArtifact>::schema()
 }
 
 pub async fn handle_content(
@@ -74,6 +46,7 @@ pub async fn handle_content(
     request: CallToolRequestParam,
     _ctx: RequestContext<RoleServer>,
     logger: LogService,
+    mcp_execution_id: &McpExecutionId,
 ) -> Result<CallToolResult, McpError> {
     let args = request.arguments.unwrap_or_default();
 
@@ -83,9 +56,9 @@ pub async fn handle_content(
         .unwrap_or("30d");
 
     logger
-        .info(
+        .debug(
             "content_tool",
-            &format!("Generating content analytics for: {}", time_range),
+            &format!("Generating analytics | type=content, period={}", time_range),
         )
         .await
         .ok();
@@ -108,6 +81,13 @@ pub async fn handle_content(
             .with_drill_down(true),
     );
 
+    let traffic_summary = repo
+        .get_traffic_summary()
+        .await
+        .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+
+    dashboard = dashboard.add_section(create_traffic_summary_cards(&traffic_summary));
+
     let daily_views = repo
         .get_daily_views_per_content(days)
         .await
@@ -118,7 +98,7 @@ pub async fn handle_content(
     }
 
     let mut top_content = repo
-        .get_top_content(days)
+        .get_top_content_by_7d(days)
         .await
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
@@ -129,7 +109,7 @@ pub async fn handle_content(
     }
 
     let top_referrers = repo
-        .get_top_referrers(days)
+        .get_normalized_referrers(days)
         .await
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
@@ -137,14 +117,21 @@ pub async fn handle_content(
         dashboard = dashboard.add_section(create_top_referrers_section(&top_referrers));
     }
 
-    let response = dashboard.to_response();
+    let metadata = ExecutionMetadata::new().tool("content");
+    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let tool_response = ToolResponse::new(
+        &artifact_id,
+        mcp_execution_id.clone(),
+        dashboard,
+        metadata.clone(),
+    );
     let text_summary = format_summary(&top_content, time_range);
 
     Ok(CallToolResult {
         content: vec![Content::text(text_summary)],
-        structured_content: Some(response),
+        structured_content: Some(tool_response.to_json()),
         is_error: Some(false),
-        meta: None,
+        meta: metadata.to_meta(),
     })
 }
 
@@ -162,11 +149,14 @@ fn format_summary(top_content: &[ContentPerformance], time_range: &str) -> Strin
 
     for (idx, item) in top_content.iter().take(5).enumerate() {
         summary.push_str(&format!(
-            "{}. {} ({} views, {} visitors)\n   Trackable: {}\n\n",
+            "{}. {} ({} views, {} visitors - 1d: {}, 7d: {}, 30d: {})\n   Trackable: {}\n\n",
             idx + 1,
             item.title,
             item.total_views,
-            item.unique_visitors,
+            item.visitors_all_time,
+            item.visitors_1d,
+            item.visitors_7d,
+            item.visitors_30d,
             item.trackable_url
         ));
     }
@@ -221,5 +211,8 @@ async fn generate_trackable_link(
         )
         .await?;
 
-    Ok(LinkGenerationService::build_trackable_url(&link, REDIRECT_BASE_URL))
+    Ok(LinkGenerationService::build_trackable_url(
+        &link,
+        REDIRECT_BASE_URL,
+    ))
 }

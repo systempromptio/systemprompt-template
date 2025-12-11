@@ -7,7 +7,10 @@ use serde_json::{json, Value as JsonValue};
 use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::repository::analytics::CoreStatsRepository;
-use systemprompt_models::artifacts::{DashboardArtifact, DashboardHints, LayoutMode};
+use systemprompt_identifiers::McpExecutionId;
+use systemprompt_models::artifacts::{
+    DashboardArtifact, DashboardHints, ExecutionMetadata, LayoutMode, ToolResponse,
+};
 
 use repository::DashboardRepository;
 use sections::{
@@ -31,19 +34,7 @@ pub fn dashboard_input_schema() -> JsonValue {
 }
 
 pub fn dashboard_output_schema() -> JsonValue {
-    json!({
-        "type": "object",
-        "description": "Unified dashboard with real-time activity, conversations, traffic, trends, and agent/tool usage",
-        "properties": {
-            "x-artifact-type": {
-                "type": "string",
-                "enum": ["dashboard"]
-            },
-            "title": {"type": "string"},
-            "sections": {"type": "array"}
-        },
-        "required": ["x-artifact-type", "sections"]
-    })
+    ToolResponse::<DashboardArtifact>::schema()
 }
 
 pub async fn handle_dashboard(
@@ -51,6 +42,7 @@ pub async fn handle_dashboard(
     request: CallToolRequestParam,
     _ctx: RequestContext<RoleServer>,
     logger: LogService,
+    mcp_execution_id: &McpExecutionId,
 ) -> Result<CallToolResult, McpError> {
     let args = request.arguments.unwrap_or_default();
     let time_range = args
@@ -59,7 +51,7 @@ pub async fn handle_dashboard(
         .unwrap_or("24h");
 
     logger
-        .info(
+        .debug(
             "dashboard",
             &format!("Generating dashboard for: {}", time_range),
         )
@@ -87,7 +79,7 @@ pub async fn handle_dashboard(
         );
 
     let overview = stats_repo
-        .get_platform_overview(1)
+        .get_platform_overview()
         .await
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
@@ -139,12 +131,19 @@ pub async fn handle_dashboard(
         dashboard = dashboard.add_section(create_tool_usage_section(&tool_usage.tool_data));
     }
 
-    let response = dashboard.to_response();
+    let metadata = ExecutionMetadata::new().tool("dashboard");
+    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let tool_response = ToolResponse::new(
+        &artifact_id,
+        mcp_execution_id.clone(),
+        dashboard,
+        metadata.clone(),
+    );
 
     Ok(CallToolResult {
         content: vec![Content::text(format!("System Dashboard ({})", time_range))],
-        structured_content: Some(response),
+        structured_content: Some(tool_response.to_json()),
         is_error: Some(false),
-        meta: None,
+        meta: metadata.to_meta(),
     })
 }

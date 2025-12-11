@@ -1,71 +1,79 @@
 use anyhow::Result;
-use systemprompt_core_database::{DatabaseProvider, DatabaseQueryEnum, DbPool, JsonRow};
+use chrono::Utc;
+use sqlx::PgPool;
+use std::sync::Arc;
+use systemprompt_core_database::DbPool;
 
 use super::models::{ConversationSummary, EvaluationStats, RecentConversation};
 
 pub struct ConversationsRepository {
-    pool: DbPool,
+    pool: Arc<PgPool>,
 }
 
 impl ConversationsRepository {
-    pub fn new(pool: DbPool) -> Self {
+    pub fn new(db: DbPool) -> Self {
+        let pool = db.pool_arc().expect("Database must be PostgreSQL");
         Self { pool }
     }
 
     pub async fn get_conversation_summary(&self, days: i32) -> Result<ConversationSummary> {
-        let query = DatabaseQueryEnum::GetConversationSummary.get(self.pool.as_ref());
-        let row = self.pool.fetch_one(&query, &[&days]).await?;
+        let row = sqlx::query!(
+            r#"
+            SELECT
+                COUNT(DISTINCT uc.context_id) as total_conversations,
+                COUNT(tm.id) as total_messages,
+                COALESCE(AVG(message_counts.msg_count)::float8, 0) as avg_messages_per_conversation,
+                COALESCE(AVG(EXTRACT(EPOCH FROM (at.completed_at - at.started_at)) * 1000)::float8, 0) as avg_execution_time_ms,
+                COUNT(DISTINCT CASE WHEN at.status = 'failed' THEN uc.context_id END) as failed_conversations
+            FROM user_contexts uc
+            LEFT JOIN agent_tasks at ON at.context_id = uc.context_id
+            LEFT JOIN task_messages tm ON tm.task_id = at.task_id
+            LEFT JOIN (
+                SELECT at2.context_id, COUNT(tm2.id) as msg_count
+                FROM agent_tasks at2
+                JOIN task_messages tm2 ON tm2.task_id = at2.task_id
+                GROUP BY at2.context_id
+            ) message_counts ON message_counts.context_id = uc.context_id
+            WHERE uc.created_at >= NOW() - ($1 || ' days')::INTERVAL
+            "#,
+            days.to_string()
+        )
+        .fetch_one(&*self.pool)
+        .await?;
 
         Ok(ConversationSummary {
-            total_conversations: row
-                .get("total_conversations")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0) as i32,
-            total_messages: row
-                .get("total_messages")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0) as i32,
-            avg_messages_per_conversation: row
-                .get("avg_messages_per_conversation")
-                .and_then(|v| v.as_f64())
-                .unwrap_or(0.0),
-            avg_execution_time_ms: row
-                .get("avg_execution_time_ms")
-                .and_then(|v| v.as_f64())
-                .unwrap_or(0.0),
-            failed_conversations: row
-                .get("failed_conversations")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0) as i32,
+            total_conversations: row.total_conversations.unwrap_or(0) as i32,
+            total_messages: row.total_messages.unwrap_or(0) as i32,
+            avg_messages_per_conversation: row.avg_messages_per_conversation.unwrap_or(0.0),
+            avg_execution_time_ms: row.avg_execution_time_ms.unwrap_or(0.0),
+            failed_conversations: row.failed_conversations.unwrap_or(0) as i32,
         })
     }
 
     pub async fn get_evaluation_stats(&self, days: i32) -> Result<EvaluationStats> {
-        let start_date = chrono::Utc::now() - chrono::Duration::days(days.into());
-        let end_date = chrono::Utc::now();
+        let start_date = Utc::now() - chrono::Duration::days(days.into());
+        let end_date = Utc::now();
 
-        let query = DatabaseQueryEnum::GetEvaluationMetrics.get(self.pool.as_ref());
-        let rows = self
-            .pool
-            .fetch_all(&query, &[&start_date, &end_date])
-            .await?;
+        let rows = sqlx::query!(
+            r#"
+            SELECT
+                conversation_quality,
+                goal_achieved,
+                user_satisfied
+            FROM conversation_evaluations
+            WHERE analyzed_at >= $1 AND analyzed_at <= $2
+            "#,
+            start_date,
+            end_date
+        )
+        .fetch_all(&*self.pool)
+        .await?;
 
         let evaluated = rows.len() as i32;
-        let avg_quality = rows
-            .iter()
-            .filter_map(|r| r.get("conversation_quality").and_then(|v| v.as_i64()))
-            .sum::<i64>() as f64
+        let avg_quality = rows.iter().map(|r| r.conversation_quality).sum::<i32>() as f64
             / if evaluated > 0 { evaluated as f64 } else { 1.0 };
 
-        let goal_achievements = rows
-            .iter()
-            .filter(|r| {
-                r.get("goal_achieved")
-                    .and_then(|v| v.as_str())
-                    .map(|s| s == "yes")
-                    .unwrap_or(false)
-            })
-            .count();
+        let goal_achievements = rows.iter().filter(|r| r.goal_achieved == "yes").count();
 
         let goal_achievement_rate = if evaluated > 0 {
             (goal_achievements as f64 / evaluated as f64) * 100.0
@@ -73,10 +81,7 @@ impl ConversationsRepository {
             0.0
         };
 
-        let avg_satisfaction = rows
-            .iter()
-            .filter_map(|r| r.get("user_satisfied").and_then(|v| v.as_i64()))
-            .sum::<i64>() as f64
+        let avg_satisfaction = rows.iter().map(|r| r.user_satisfied).sum::<i32>() as f64
             / if evaluated > 0 { evaluated as f64 } else { 1.0 };
 
         Ok(EvaluationStats {
@@ -93,100 +98,132 @@ impl ConversationsRepository {
         limit: i32,
         offset: i32,
     ) -> Result<Vec<RecentConversation>> {
-        let query = DatabaseQueryEnum::GetRecentConversationsPaginated.get(self.pool.as_ref());
-        let rows = self
-            .pool
-            .fetch_all(&query, &[&days, &limit, &offset])
-            .await?;
+        let rows = sqlx::query!(
+            r#"
+            SELECT
+                uc.context_id,
+                uc.name as conversation_name,
+                uc.user_id,
+                COALESCE(u.name, 'anonymous') as user_name,
+                COALESCE(at.agent_name, 'unknown') as agent_name,
+                uc.created_at::text as started_at,
+                TO_CHAR(uc.created_at, 'YYYY-MM-DD HH24:MI') as started_at_formatted,
+                uc.updated_at::text as last_updated,
+                TO_CHAR(uc.updated_at, 'YYYY-MM-DD HH24:MI') as last_updated_formatted,
+                EXTRACT(EPOCH FROM (uc.updated_at - uc.created_at))::float8 as duration_seconds,
+                CASE
+                    WHEN EXTRACT(EPOCH FROM (uc.updated_at - uc.created_at)) < 60 THEN 'quick'
+                    WHEN EXTRACT(EPOCH FROM (uc.updated_at - uc.created_at)) < 300 THEN 'normal'
+                    ELSE 'long'
+                END as duration_status,
+                COALESCE(at.status, 'unknown') as status,
+                COALESCE((
+                    SELECT COUNT(*)::integer
+                    FROM task_messages tm
+                    JOIN agent_tasks at2 ON tm.task_id = at2.task_id
+                    WHERE at2.context_id = uc.context_id
+                ), 0) as message_count,
+                ce.conversation_quality as "quality_score?",
+                ce.goal_achieved as "goal_achieved?",
+                ce.user_satisfied as "user_satisfaction?",
+                ce.primary_category as "primary_category?",
+                ce.topics_discussed as "topics?",
+                ce.evaluation_summary as "evaluation_summary?"
+            FROM user_contexts uc
+            LEFT JOIN users u ON u.id = uc.user_id
+            LEFT JOIN agent_tasks at ON at.context_id = uc.context_id
+            LEFT JOIN conversation_evaluations ce ON ce.context_id = uc.context_id
+            WHERE uc.created_at >= NOW() - ($1 || ' days')::INTERVAL
+            ORDER BY uc.created_at DESC
+            LIMIT $2 OFFSET $3
+            "#,
+            days.to_string(),
+            limit as i64,
+            offset as i64
+        )
+        .fetch_all(&*self.pool)
+        .await?;
 
-        Ok(rows.iter().map(parse_recent_conversation).collect())
+        Ok(rows
+            .into_iter()
+            .map(|r| RecentConversation {
+                context_id: r.context_id,
+                conversation_name: Some(r.conversation_name),
+                user_id: r.user_id,
+                user_name: r.user_name.unwrap_or_else(|| "anonymous".to_string()),
+                agent_name: r.agent_name.unwrap_or_else(|| "unknown".to_string()),
+                started_at: r.started_at.unwrap_or_default(),
+                started_at_formatted: r.started_at_formatted,
+                last_updated: r.last_updated.unwrap_or_default(),
+                last_updated_formatted: r.last_updated_formatted,
+                duration_seconds: r.duration_seconds.unwrap_or(0.0),
+                duration_status: r.duration_status,
+                status: r.status.unwrap_or_else(|| "unknown".to_string()),
+                message_count: r.message_count.unwrap_or(0),
+                quality_score: r.quality_score,
+                goal_achieved: r.goal_achieved,
+                user_satisfaction: r.user_satisfaction,
+                primary_category: r.primary_category,
+                topics: r.topics,
+                evaluation_summary: r.evaluation_summary,
+            })
+            .collect())
     }
 
-    pub async fn get_conversation_trends(&self) -> Result<Vec<JsonRow>> {
-        let query = DatabaseQueryEnum::GetConversationMetricsMultiPeriod.get(self.pool.as_ref());
-        let rows = self.pool.fetch_all(&query, &[]).await?;
-        Ok(rows)
+    pub async fn get_conversation_trends(&self) -> Result<Vec<ConversationTrendRow>> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT
+                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') as conversations_24h,
+                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as conversations_7d,
+                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days') as conversations_30d
+            FROM user_contexts
+            "#
+        )
+        .fetch_one(&*self.pool)
+        .await?;
+
+        Ok(vec![ConversationTrendRow {
+            conversations_24h: rows.conversations_24h.unwrap_or(0),
+            conversations_7d: rows.conversations_7d.unwrap_or(0),
+            conversations_30d: rows.conversations_30d.unwrap_or(0),
+        }])
     }
 
-    pub async fn get_conversations_by_agent(&self, days: i32) -> Result<Vec<JsonRow>> {
-        let query = DatabaseQueryEnum::GetConversationsByAgent.get(self.pool.as_ref());
-        let rows = self.pool.fetch_all(&query, &[&days]).await?;
-        Ok(rows)
+    pub async fn get_conversations_by_agent(&self, days: i32) -> Result<Vec<AgentConversationRow>> {
+        let rows = sqlx::query!(
+            r#"
+            SELECT
+                COALESCE(at.agent_name, 'unknown') as agent_name,
+                COUNT(DISTINCT uc.context_id) as conversation_count
+            FROM user_contexts uc
+            LEFT JOIN agent_tasks at ON at.context_id = uc.context_id
+            WHERE uc.created_at >= NOW() - ($1 || ' days')::INTERVAL
+            GROUP BY at.agent_name
+            ORDER BY conversation_count DESC
+            "#,
+            days.to_string()
+        )
+        .fetch_all(&*self.pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|r| AgentConversationRow {
+                agent_name: r.agent_name.unwrap_or_else(|| "unknown".to_string()),
+                conversation_count: r.conversation_count.unwrap_or(0),
+            })
+            .collect())
     }
 }
 
-fn parse_recent_conversation(r: &JsonRow) -> RecentConversation {
-    RecentConversation {
-        context_id: r
-            .get("context_id")
-            .and_then(|v| v.as_str())
-            .unwrap_or("unknown")
-            .to_string(),
-        conversation_name: r
-            .get("conversation_name")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string()),
-        user_id: r
-            .get("user_id")
-            .and_then(|v| v.as_str())
-            .unwrap_or("anonymous")
-            .to_string(),
-        user_name: r
-            .get("user_name")
-            .and_then(|v| v.as_str())
-            .unwrap_or("anonymous")
-            .to_string(),
-        agent_name: r
-            .get("agent_name")
-            .and_then(|v| v.as_str())
-            .unwrap_or("unknown")
-            .to_string(),
-        started_at: r
-            .get("started_at")
-            .and_then(|v| v.as_str())
-            .unwrap_or("unknown")
-            .to_string(),
-        started_at_formatted: r
-            .get("started_at_formatted")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string()),
-        duration_seconds: r
-            .get("duration_seconds")
-            .and_then(|v| v.as_f64())
-            .unwrap_or(0.0),
-        duration_status: r
-            .get("duration_status")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string()),
-        status: r
-            .get("status")
-            .and_then(|v| v.as_str())
-            .unwrap_or("unknown")
-            .to_string(),
-        message_count: r.get("message_count").and_then(|v| v.as_i64()).unwrap_or(0) as i32,
-        quality_score: r
-            .get("quality_score")
-            .and_then(|v| v.as_i64())
-            .map(|v| v as i32),
-        goal_achieved: r
-            .get("goal_achieved")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string()),
-        user_satisfaction: r
-            .get("user_satisfaction")
-            .and_then(|v| v.as_i64())
-            .map(|v| v as i32),
-        primary_category: r
-            .get("primary_category")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string()),
-        topics: r
-            .get("topics")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string()),
-        evaluation_summary: r
-            .get("evaluation_summary")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string()),
-    }
+pub struct ConversationTrendRow {
+    pub conversations_24h: i64,
+    pub conversations_7d: i64,
+    pub conversations_30d: i64,
+}
+
+pub struct AgentConversationRow {
+    pub agent_name: String,
+    pub conversation_count: i64,
 }

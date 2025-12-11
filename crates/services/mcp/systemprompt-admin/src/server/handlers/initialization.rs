@@ -13,7 +13,7 @@ impl AdminServer {
                 .enable_resources()
                 .build(),
             server_info: Implementation {
-                name: format!("SystemPrompt Admin MCP Server ({})", self.server_name),
+                name: format!("SystemPrompt Admin MCP Server ({})", self.service_id),
                 version: "2.0.0".to_string(),
                 icons: None,
                 title: Some("Admin Server".into()),
@@ -44,7 +44,7 @@ impl AdminServer {
                     "mcp_admin",
                     &format!(
                         "Admin MCP initialized - URI: {}, server: {}",
-                        parts.uri, self.server_name
+                        parts.uri, self.service_id
                     ),
                 )
                 .await

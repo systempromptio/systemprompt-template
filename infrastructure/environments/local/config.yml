@@ -1,0 +1,66 @@
+# Local Development Environment Configuration
+# Overrides for local development on host machine
+# Inherits from base.yml and overrides specific values
+#
+# Database is provisioned by systemprompt-db and set in .env.secrets
+
+# =============================================================================
+# SYSTEM PATHS (native development)
+# =============================================================================
+SYSTEM_PATH: ${PWD}
+CARGO_TARGET_DIR: core/target
+WEB_DIR: ${PWD}/core/web/dist
+AI_CONFIG_PATH: ${PWD}/config/ai.yaml
+SYSTEMPROMPT_CONFIG_PATH: ${PWD}/crates/services/config/config.yml
+CONTENT_CONFIG_PATH: ${PWD}/crates/services/content/config.yml
+GEOIP_DATABASE_PATH: ${PWD}/data/GeoLite2-City.mmdb
+STORAGE_PATH: ${PWD}/files
+FILE_URL_PREFIX: /files
+
+# Static Content Generation (SCG) paths
+WEB_CONFIG_PATH: ${PWD}/crates/services/web/config.yml
+SCG_TEMPLATES_PATH: ${PWD}/crates/services/web/templates
+SCG_ASSETS_PATH: ${PWD}/crates/services/web/assets
+
+# =============================================================================
+# DATABASE
+# =============================================================================
+# DATABASE_URL comes from .env.secrets (provisioned by systemprompt-db)
+DATABASE_URL: ${DATABASE_URL}
+
+# =============================================================================
+# SERVER CONFIGURATION
+# =============================================================================
+HOST: 127.0.0.1
+PORT: 8080
+API_SERVER_URL: http://localhost:8080
+API_EXTERNAL_URL: http://localhost:8080
+USE_HTTPS: false
+CORS_ALLOWED_ORIGINS: http://localhost:8080,http://localhost:5173
+
+# =============================================================================
+# FRONTEND (VITE) API CONFIGURATION
+# =============================================================================
+VITE_API_BASE_HOST: http://localhost:8080
+VITE_API_BASE_PATH: /api/v1/core
+
+# =============================================================================
+# AUTHENTICATION
+# =============================================================================
+# Use a default dev password for convenience (override in .env.secrets if needed)
+ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+
+# JWT secret for local development (override in .env.secrets for security)
+JWT_SECRET: ${JWT_SECRET:-XpeJ1CKsohjwagxufXxasYQtaS7JdpbHsWLchLaG28iHMBAw4VG1NQHCrKMZ29qZMP/yNOm/HjxhnYJquF3edw==}
+
+# =============================================================================
+# LOGGING
+# =============================================================================
+# Verbose logging for local development
+RUST_LOG: ${RUST_LOG:-sqlx=debug,info}
+
+# =============================================================================
+# RATE LIMITING
+# =============================================================================
+# Disable rate limiting for local development to allow rapid testing
+RATE_LIMIT_DISABLED: true

@@ -1,7 +1,9 @@
 use anyhow::Result;
 use chrono::{DateTime, Utc};
+use sqlx::PgPool;
 use std::collections::HashMap;
-use systemprompt_core_database::{DatabaseProvider, DatabaseQueryEnum, DbPool};
+use std::sync::Arc;
+use systemprompt_core_database::DbPool;
 
 use super::models::{
     AgentToolUsage, AgentUsageRow, ConversationMetrics, DailyTrend, RecentConversation,
@@ -9,73 +11,84 @@ use super::models::{
 };
 
 pub struct DashboardRepository {
-    pool: DbPool,
+    pool: Arc<PgPool>,
 }
 
 impl DashboardRepository {
-    pub fn new(pool: DbPool) -> Self {
+    pub fn new(db: DbPool) -> Self {
+        let pool = db.pool_arc().expect("Database must be PostgreSQL");
         Self { pool }
     }
 
     pub async fn get_conversation_metrics(&self) -> Result<ConversationMetrics> {
-        let query = DatabaseQueryEnum::GetConversationMetricsMultiPeriod.get(self.pool.as_ref());
-        let row = self.pool.fetch_one(&query, &[]).await?;
+        let row = sqlx::query!(
+            r#"
+            SELECT
+                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') as conversations_24h,
+                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as conversations_7d,
+                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days') as conversations_30d,
+                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '48 hours' AND created_at < NOW() - INTERVAL '24 hours') as conversations_prev_24h,
+                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '14 days' AND created_at < NOW() - INTERVAL '7 days') as conversations_prev_7d,
+                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '60 days' AND created_at < NOW() - INTERVAL '30 days') as conversations_prev_30d
+            FROM user_contexts
+            "#
+        )
+        .fetch_one(&*self.pool)
+        .await?;
 
         Ok(ConversationMetrics {
-            conversations_24h: row
-                .get("conversations_24h")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0),
-            conversations_7d: row
-                .get("conversations_7d")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0),
-            conversations_30d: row
-                .get("conversations_30d")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0),
-            conversations_prev_24h: row
-                .get("conversations_prev_24h")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0),
-            conversations_prev_7d: row
-                .get("conversations_prev_7d")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0),
-            conversations_prev_30d: row
-                .get("conversations_prev_30d")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0),
+            conversations_24h: row.conversations_24h.unwrap_or(0),
+            conversations_7d: row.conversations_7d.unwrap_or(0),
+            conversations_30d: row.conversations_30d.unwrap_or(0),
+            conversations_prev_24h: row.conversations_prev_24h.unwrap_or(0),
+            conversations_prev_7d: row.conversations_prev_7d.unwrap_or(0),
+            conversations_prev_30d: row.conversations_prev_30d.unwrap_or(0),
         })
     }
 
     pub async fn get_recent_conversations(&self, limit: i32) -> Result<Vec<RecentConversation>> {
-        let query = DatabaseQueryEnum::GetRecentConversations.get(self.pool.as_ref());
-        let rows = self.pool.fetch_all(&query, &[&limit]).await?;
+        let rows = sqlx::query!(
+            r#"
+            SELECT
+                uc.context_id,
+                COALESCE(at.agent_name, 'unknown') as agent_name,
+                uc.created_at::text as context_started_at,
+                at.started_at::text as task_started_at,
+                at.completed_at::text as task_completed_at,
+                COALESCE(at.status, 'unknown') as status,
+                COALESCE((
+                    SELECT COUNT(*)
+                    FROM task_messages tm
+                    JOIN agent_tasks at2 ON tm.task_id = at2.task_id
+                    WHERE at2.context_id = uc.context_id
+                ), 0) as message_count
+            FROM user_contexts uc
+            LEFT JOIN agent_tasks at ON at.context_id = uc.context_id
+            ORDER BY uc.created_at DESC
+            LIMIT $1
+            "#,
+            limit as i64
+        )
+        .fetch_all(&*self.pool)
+        .await?;
 
         let conversations: Vec<RecentConversation> = rows
-            .iter()
+            .into_iter()
             .filter_map(|r| {
-                let context_started_str = r.get("context_started_at").and_then(|v| v.as_str())?;
-                let task_started_str = r.get("task_started_at").and_then(|v| v.as_str())?;
-                let task_completed_str = r.get("task_completed_at").and_then(|v| v.as_str())?;
+                let task_started_str = r.task_started_at?;
+                let task_completed_str = r.task_completed_at?;
 
-                let task_started_at = parse_flexible_timestamp(task_started_str)?;
-                let task_completed_at = parse_flexible_timestamp(task_completed_str)?;
-
-                let context_id = r.get("context_id").and_then(|v| v.as_str())?.to_string();
-                let agent_name = r.get("agent_name").and_then(|v| v.as_str())?.to_string();
-                let status = r.get("status").and_then(|v| v.as_str())?.to_string();
-                let message_count = r.get("message_count").and_then(|v| v.as_i64())?;
+                let task_started_at = parse_flexible_timestamp(&task_started_str)?;
+                let task_completed_at = parse_flexible_timestamp(&task_completed_str)?;
 
                 Some(RecentConversation {
-                    context_id,
-                    agent_name,
-                    started_at: context_started_str.to_string(),
+                    context_id: r.context_id,
+                    agent_name: r.agent_name.unwrap_or_else(|| "unknown".to_string()),
+                    started_at: r.context_started_at.unwrap_or_default(),
                     task_started_at,
                     task_completed_at,
-                    status,
-                    message_count,
+                    status: r.status.unwrap_or_else(|| "unknown".to_string()),
+                    message_count: r.message_count.unwrap_or(0),
                 })
             })
             .collect();
@@ -84,43 +97,54 @@ impl DashboardRepository {
     }
 
     pub async fn get_traffic_summary(&self, days: i32) -> Result<TrafficSummary> {
-        let query = DatabaseQueryEnum::GetTrafficSummary.get(self.pool.as_ref());
-        let row = self.pool.fetch_one(&query, &[&days]).await?;
+        let row = sqlx::query!(
+            r#"
+            SELECT
+                COUNT(DISTINCT session_id) as total_sessions,
+                SUM(request_count)::bigint as total_requests,
+                COUNT(DISTINCT user_id) as unique_users
+            FROM user_sessions
+            WHERE started_at >= NOW() - ($1 || ' days')::INTERVAL
+            "#,
+            days.to_string()
+        )
+        .fetch_one(&*self.pool)
+        .await?;
 
         Ok(TrafficSummary {
-            total_sessions: row
-                .get("total_sessions")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0) as i32,
-            total_requests: row
-                .get("total_requests")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0) as i32,
-            unique_users: row
-                .get("unique_users")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0) as i32,
+            total_sessions: row.total_sessions.unwrap_or(0) as i32,
+            total_requests: row.total_requests.unwrap_or(0) as i32,
+            unique_users: row.unique_users.unwrap_or(0) as i32,
         })
     }
 
     pub async fn get_conversation_trends(&self, days: i32) -> Result<Vec<DailyTrend>> {
-        let query = DatabaseQueryEnum::GetConversationTrends.get(self.pool.as_ref());
-        let rows = self.pool.fetch_all(&query, &[&days]).await?;
+        let rows = sqlx::query!(
+            r#"
+            SELECT
+                DATE(uc.created_at)::text as date,
+                COUNT(DISTINCT uc.context_id) as conversations,
+                COUNT(DISTINCT mte.mcp_execution_id) as tool_executions,
+                COUNT(DISTINCT uc.user_id) as active_users
+            FROM user_contexts uc
+            LEFT JOIN agent_tasks at ON at.context_id = uc.context_id
+            LEFT JOIN mcp_tool_executions mte ON mte.task_id = at.task_id
+            WHERE uc.created_at >= NOW() - ($1 || ' days')::INTERVAL
+            GROUP BY DATE(uc.created_at)
+            ORDER BY DATE(uc.created_at) DESC
+            "#,
+            days.to_string()
+        )
+        .fetch_all(&*self.pool)
+        .await?;
 
         Ok(rows
-            .iter()
+            .into_iter()
             .map(|r| DailyTrend {
-                date: r
-                    .get("date")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string(),
-                conversations: r.get("conversations").and_then(|v| v.as_i64()).unwrap_or(0),
-                tool_executions: r
-                    .get("tool_executions")
-                    .and_then(|v| v.as_i64())
-                    .unwrap_or(0),
-                active_users: r.get("active_users").and_then(|v| v.as_i64()).unwrap_or(0),
+                date: r.date.unwrap_or_default(),
+                conversations: r.conversations.unwrap_or(0),
+                tool_executions: r.tool_executions.unwrap_or(0),
+                active_users: r.active_users.unwrap_or(0),
             })
             .collect())
     }
@@ -204,34 +228,31 @@ impl DashboardRepository {
     }
 
     async fn get_tool_usage_by_agent(&self, hours: i32, limit: i32) -> Result<Vec<AgentToolUsage>> {
-        let query = format!(
+        let rows = sqlx::query!(
             r#"
             SELECT
                 COALESCE(at.agent_name, 'Unknown') as agent_name,
                 COUNT(*) as count
             FROM mcp_tool_executions mte
             LEFT JOIN agent_tasks at ON mte.task_id = at.task_id
-            WHERE mte.started_at >= NOW() - INTERVAL '{} hours'
+            WHERE mte.started_at >= NOW() - ($1 || ' hours')::INTERVAL
             GROUP BY at.agent_name
             ORDER BY count DESC
-            LIMIT {}
-        "#,
-            hours, limit
-        );
+            LIMIT $2
+            "#,
+            hours.to_string(),
+            limit as i64
+        )
+        .fetch_all(&*self.pool)
+        .await?;
 
-        let rows = self.pool.fetch_all(&query, &[]).await?;
-        let results = rows
-            .iter()
-            .map(|row| AgentToolUsage {
-                agent_name: row
-                    .get("agent_name")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("Unknown")
-                    .to_string(),
-                count: row.get("count").and_then(|v| v.as_i64()).unwrap_or(0),
+        Ok(rows
+            .into_iter()
+            .map(|r| AgentToolUsage {
+                agent_name: r.agent_name.unwrap_or_else(|| "Unknown".to_string()),
+                count: r.count.unwrap_or(0),
             })
-            .collect();
-        Ok(results)
+            .collect())
     }
 
     async fn get_tool_usage_by_tool_name(
@@ -239,33 +260,30 @@ impl DashboardRepository {
         hours: i32,
         limit: i32,
     ) -> Result<Vec<ToolNameUsage>> {
-        let query = format!(
+        let rows = sqlx::query!(
             r#"
             SELECT
                 tool_name,
                 COUNT(*) as count
             FROM mcp_tool_executions
-            WHERE started_at >= NOW() - INTERVAL '{} hours'
+            WHERE started_at >= NOW() - ($1 || ' hours')::INTERVAL
             GROUP BY tool_name
             ORDER BY count DESC
-            LIMIT {}
-        "#,
-            hours, limit
-        );
+            LIMIT $2
+            "#,
+            hours.to_string(),
+            limit as i64
+        )
+        .fetch_all(&*self.pool)
+        .await?;
 
-        let rows = self.pool.fetch_all(&query, &[]).await?;
-        let results = rows
-            .iter()
-            .map(|row| ToolNameUsage {
-                tool_name: row
-                    .get("tool_name")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("Unknown")
-                    .to_string(),
-                count: row.get("count").and_then(|v| v.as_i64()).unwrap_or(0),
+        Ok(rows
+            .into_iter()
+            .map(|r| ToolNameUsage {
+                tool_name: r.tool_name,
+                count: r.count.unwrap_or(0),
             })
-            .collect();
-        Ok(results)
+            .collect())
     }
 }
 

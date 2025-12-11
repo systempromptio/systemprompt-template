@@ -6,7 +6,10 @@ use rmcp::{model::*, service::RequestContext, ErrorData as McpError, RoleServer}
 use serde_json::{json, Value as JsonValue};
 use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::LogService;
-use systemprompt_models::artifacts::{DashboardArtifact, DashboardHints, LayoutMode};
+use systemprompt_identifiers::McpExecutionId;
+use systemprompt_models::artifacts::{
+    DashboardArtifact, DashboardHints, ExecutionMetadata, LayoutMode, ToolResponse,
+};
 
 use repository::ConversationsRepository;
 use sections::{
@@ -32,9 +35,9 @@ pub fn conversations_input_schema() -> JsonValue {
             },
             "per_page": {
                 "type": "integer",
-                "default": 10,
+                "default": 500,
                 "minimum": 1,
-                "maximum": 100,
+                "maximum": 500,
                 "description": "Number of conversations per page"
             }
         }
@@ -42,39 +45,7 @@ pub fn conversations_input_schema() -> JsonValue {
 }
 
 pub fn conversations_output_schema() -> JsonValue {
-    json!({
-        "type": "object",
-        "description": "Conversation analytics with summary cards and paginated recent conversations table",
-        "properties": {
-            "title": {"type": "string"},
-            "description": {"type": "string"},
-            "sections": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "section_id": {"type": "string"},
-                        "title": {"type": "string"},
-                        "section_type": {
-                            "type": "string",
-                            "enum": ["metrics_cards", "table"]
-                        },
-                        "data": {"type": "object"},
-                        "layout": {
-                            "type": "object",
-                            "properties": {
-                                "width": {"type": "string"},
-                                "order": {"type": "integer"}
-                            }
-                        }
-                    }
-                }
-            },
-            "mcp_execution_id": {"type": "string"}
-        },
-        "required": ["title", "sections", "mcp_execution_id"],
-        "x-artifact-type": "dashboard"
-    })
+    ToolResponse::<DashboardArtifact>::schema()
 }
 
 pub async fn handle_conversations(
@@ -82,6 +53,7 @@ pub async fn handle_conversations(
     request: CallToolRequestParam,
     _ctx: RequestContext<RoleServer>,
     logger: LogService,
+    mcp_execution_id: &McpExecutionId,
 ) -> Result<CallToolResult, McpError> {
     let args = request.arguments.unwrap_or_default();
 
@@ -95,10 +67,10 @@ pub async fn handle_conversations(
     let per_page = args.get("per_page").and_then(|v| v.as_i64()).unwrap_or(10) as i32;
 
     logger
-        .info(
+        .debug(
             "conversations_tool",
             &format!(
-                "Generating conversation analytics for: {} (page: {}, per_page: {})",
+                "Generating analytics | type=conversations, period={}, page={}, per_page={}",
                 time_range, page, per_page
             ),
         )
@@ -144,11 +116,8 @@ pub async fn handle_conversations(
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
     if !recent_conversations.is_empty() {
-        dashboard = dashboard.add_section(create_conversations_table_section(
-            &recent_conversations,
-            page,
-            per_page,
-        ));
+        dashboard =
+            dashboard.add_section(create_conversations_table_section(&recent_conversations));
     }
 
     dashboard = dashboard.add_section(create_summary_cards_section(&summary, &evaluation_stats));
@@ -171,18 +140,22 @@ pub async fn handle_conversations(
         dashboard = dashboard.add_section(create_agent_breakdown_section(&agent_breakdown));
     }
 
-    let response = dashboard.to_response();
+    let metadata = ExecutionMetadata::new().tool("conversations");
+    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let tool_response = ToolResponse::new(
+        &artifact_id,
+        mcp_execution_id.clone(),
+        dashboard,
+        metadata.clone(),
+    );
 
     Ok(CallToolResult {
         content: vec![Content::text(format!(
-            "Conversation Analytics ({})\n\nPage {}, {} conversations per page\n\n{}",
-            time_range,
-            page,
-            per_page,
-            serde_json::to_string_pretty(&response).unwrap_or_default()
+            "Conversation Analytics ({}) - Page {}, {} per page",
+            time_range, page, per_page
         ))],
-        structured_content: Some(response),
+        structured_content: Some(tool_response.to_json()),
         is_error: Some(false),
-        meta: None,
+        meta: metadata.to_meta(),
     })
 }

@@ -6,10 +6,17 @@ use rmcp::{model::*, service::RequestContext, ErrorData as McpError, RoleServer}
 use serde_json::{json, Value as JsonValue};
 use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::LogService;
-use systemprompt_models::artifacts::{DashboardArtifact, DashboardHints, LayoutMode};
+use systemprompt_identifiers::McpExecutionId;
+use systemprompt_models::artifacts::{
+    DashboardArtifact, DashboardHints, ExecutionMetadata, LayoutMode, ToolResponse,
+};
 
 use repository::TrafficRepository;
-use sections::{create_traffic_summary_section, create_traffic_table_section};
+use sections::{
+    create_browser_breakdown_section, create_device_breakdown_section,
+    create_geographic_breakdown_section, create_os_breakdown_section, create_top_referrers_section,
+    create_traffic_summary_section,
+};
 
 pub fn traffic_input_schema() -> JsonValue {
     json!({
@@ -26,39 +33,7 @@ pub fn traffic_input_schema() -> JsonValue {
 }
 
 pub fn traffic_output_schema() -> JsonValue {
-    json!({
-        "type": "object",
-        "description": "Website traffic analytics: requests, visitors, devices, geolocation, and clients",
-        "properties": {
-            "title": {"type": "string"},
-            "description": {"type": "string"},
-            "sections": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "section_id": {"type": "string"},
-                        "title": {"type": "string"},
-                        "section_type": {
-                            "type": "string",
-                            "enum": ["metrics_cards", "table", "chart", "list"]
-                        },
-                        "data": {"type": "object"},
-                        "layout": {
-                            "type": "object",
-                            "properties": {
-                                "width": {"type": "string"},
-                                "order": {"type": "integer"}
-                            }
-                        }
-                    }
-                }
-            },
-            "mcp_execution_id": {"type": "string"}
-        },
-        "required": ["title", "sections", "mcp_execution_id"],
-        "x-artifact-type": "dashboard"
-    })
+    ToolResponse::<DashboardArtifact>::schema()
 }
 
 pub async fn handle_traffic(
@@ -66,6 +41,7 @@ pub async fn handle_traffic(
     request: CallToolRequestParam,
     _ctx: RequestContext<RoleServer>,
     logger: LogService,
+    mcp_execution_id: &McpExecutionId,
 ) -> Result<CallToolResult, McpError> {
     let args = request.arguments.unwrap_or_default();
 
@@ -75,9 +51,9 @@ pub async fn handle_traffic(
         .unwrap_or("30d");
 
     logger
-        .info(
+        .debug(
             "traffic_tool",
-            &format!("Generating traffic analytics for: {}", time_range),
+            &format!("Generating analytics | type=traffic, period={}", time_range),
         )
         .await
         .ok();
@@ -108,37 +84,56 @@ pub async fn handle_traffic(
 
     dashboard = dashboard.add_section(create_traffic_summary_section(&traffic_summary));
 
+    let top_referrers = repo
+        .get_normalized_referrers(days)
+        .await
+        .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+
+    if !top_referrers.is_empty() {
+        dashboard = dashboard.add_section(create_top_referrers_section(&top_referrers));
+    }
+
     let device_breakdown = repo
-        .get_device_breakdown(days)
+        .get_device_breakdown_with_trends(days)
         .await
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
-    let traffic_sources = repo
-        .get_traffic_sources(days)
+    let geographic_breakdown = repo
+        .get_geographic_breakdown(days)
         .await
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
-    let landing_pages = repo
-        .get_landing_pages(days)
+    let browser_breakdown = repo
+        .get_browser_breakdown(days)
         .await
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
-    dashboard = dashboard.add_section(create_traffic_table_section(
-        &traffic_sources,
-        &landing_pages,
-        &device_breakdown,
-    ));
+    let os_breakdown = repo
+        .get_os_breakdown(days)
+        .await
+        .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
-    let response = dashboard.to_response();
+    dashboard = dashboard.add_section(create_device_breakdown_section(&device_breakdown));
+    dashboard = dashboard.add_section(create_geographic_breakdown_section(&geographic_breakdown));
+    dashboard = dashboard.add_section(create_browser_breakdown_section(&browser_breakdown));
+    dashboard = dashboard.add_section(create_os_breakdown_section(&os_breakdown));
+
+    let metadata = ExecutionMetadata::new().tool("traffic");
+    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let tool_response = ToolResponse::new(
+        &artifact_id,
+        mcp_execution_id.clone(),
+        dashboard,
+        metadata.clone(),
+    );
 
     Ok(CallToolResult {
         content: vec![Content::text(format!(
-            "Website Traffic Analytics ({})\n\n{}",
-            time_range,
-            serde_json::to_string_pretty(&response).unwrap_or_default()
+            "Website Traffic Analytics ({})",
+            time_range
         ))],
-        structured_content: Some(response),
+        structured_content: Some(tool_response.to_json()),
         is_error: Some(false),
-        meta: None,
+        meta: metadata.to_meta(),
     })
 }

@@ -5,6 +5,8 @@ use systemprompt_core_agent::services::mcp::ToolResultHandler;
 use systemprompt_core_agent::services::ArtifactPublishingService;
 use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::LogService;
+use systemprompt_core_system::AppContext;
+use systemprompt_identifiers::McpServerId;
 
 use crate::prompts::AdminPrompts;
 use crate::resources::AdminResources;
@@ -12,19 +14,20 @@ use crate::resources::AdminResources;
 #[derive(Clone)]
 pub struct AdminServer {
     pub(super) db_pool: DbPool,
-    pub(super) server_name: String,
+    pub(super) service_id: McpServerId,
     pub(super) prompts: Arc<AdminPrompts>,
     pub(super) resources: Arc<AdminResources>,
     pub(super) system_log: LogService,
     pub(super) tool_result_handler: Arc<ToolResultHandler>,
     pub(super) publishing_service: Arc<ArtifactPublishingService>,
     pub(super) tool_schemas: Arc<HashMap<String, serde_json::Value>>,
+    pub(super) app_context: Arc<AppContext>,
 }
 
 impl AdminServer {
-    pub fn new(db_pool: DbPool, server_name: String) -> Self {
-        let prompts = Arc::new(AdminPrompts::new(db_pool.clone(), server_name.clone()));
-        let resources = Arc::new(AdminResources::new(db_pool.clone(), server_name.clone()));
+    pub fn new(db_pool: DbPool, service_id: McpServerId, app_context: Arc<AppContext>) -> Self {
+        let prompts = Arc::new(AdminPrompts::new(db_pool.clone(), service_id.to_string()));
+        let resources = Arc::new(AdminResources::new(db_pool.clone(), service_id.to_string()));
         let system_log = LogService::system(db_pool.clone());
         let tool_result_handler =
             Arc::new(ToolResultHandler::new(db_pool.clone(), system_log.clone()));
@@ -37,13 +40,14 @@ impl AdminServer {
 
         Self {
             db_pool,
-            server_name,
+            service_id,
             prompts,
             resources,
             system_log,
             tool_result_handler,
             publishing_service,
             tool_schemas: Arc::new(tool_schemas),
+            app_context,
         }
     }
 

@@ -24,6 +24,8 @@ pub struct RecentConversation {
     pub agent_name: String,
     pub started_at: String,
     pub started_at_formatted: Option<String>,
+    pub last_updated: String,
+    pub last_updated_formatted: Option<String>,
     pub duration_seconds: f64,
     pub duration_status: Option<String>,
     pub status: String,

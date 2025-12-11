@@ -82,7 +82,7 @@ pub fn create_logs_table_section(logs: &[LogEntry], page: i32) -> DashboardSecti
 
     DashboardSection::new(
         "recent_logs",
-        &format!("Recent Logs (Page {})", page + 1),
+        format!("Recent Logs (Page {})", page + 1),
         SectionType::Table,
     )
     .with_data(table.to_response())

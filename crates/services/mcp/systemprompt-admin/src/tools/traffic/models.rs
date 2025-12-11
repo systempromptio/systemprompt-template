@@ -9,27 +9,50 @@ pub struct TrafficSummary {
 }
 
 #[derive(serde::Serialize)]
-pub struct DeviceBreakdown {
+pub struct DeviceBreakdownWithTrends {
     pub device_type: String,
-    pub session_count: i32,
-    pub request_count: i32,
+    pub sessions: i32,
     pub percentage: f64,
+    pub traffic_1d: i32,
+    pub traffic_7d: i32,
+    pub traffic_30d: i32,
 }
 
 #[derive(serde::Serialize)]
-pub struct TrafficSource {
-    pub source_name: String,
-    pub session_count: i32,
-    pub unique_visitors: i32,
-    pub avg_engagement_seconds: f64,
-    pub bounce_rate: f64,
+pub struct GeographicBreakdown {
+    pub country: String,
+    pub sessions: i32,
+    pub percentage: f64,
+    pub traffic_1d: i32,
+    pub traffic_7d: i32,
+    pub traffic_30d: i32,
 }
 
 #[derive(serde::Serialize)]
-pub struct LandingPage {
-    pub landing_page: String,
+pub struct BrowserBreakdown {
+    pub browser: String,
+    pub sessions: i32,
+    pub percentage: f64,
+    pub traffic_1d: i32,
+    pub traffic_7d: i32,
+    pub traffic_30d: i32,
+}
+
+#[derive(serde::Serialize)]
+pub struct OsBreakdown {
+    pub os: String,
+    pub sessions: i32,
+    pub percentage: f64,
+    pub traffic_1d: i32,
+    pub traffic_7d: i32,
+    pub traffic_30d: i32,
+}
+
+#[derive(serde::Serialize)]
+pub struct Referrer {
+    pub referrer_url: String,
     pub sessions: i32,
     pub unique_visitors: i32,
-    pub bounce_rate: f64,
-    pub avg_session_duration: f64,
+    pub avg_pages_per_session: f64,
+    pub avg_duration_sec: f64,
 }

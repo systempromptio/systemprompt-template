@@ -6,7 +6,10 @@ use rmcp::{model::*, service::RequestContext, ErrorData as McpError, RoleServer}
 use serde_json::{json, Value as JsonValue};
 use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::LogService;
-use systemprompt_models::artifacts::{DashboardArtifact, DashboardHints, LayoutMode};
+use systemprompt_identifiers::McpExecutionId;
+use systemprompt_models::artifacts::{
+    DashboardArtifact, DashboardHints, ExecutionMetadata, LayoutMode, ToolResponse,
+};
 
 use repository::LogsRepository;
 use sections::{create_logs_table_section, create_stats_section};
@@ -22,47 +25,20 @@ pub fn logs_input_schema() -> JsonValue {
             },
             "limit": {
                 "type": "integer",
-                "default": 50,
-                "description": "Number of log entries per page (default 50)"
+                "default": 1000,
+                "description": "Number of log entries per page (default 1000)"
+            },
+            "level": {
+                "type": "string",
+                "description": "Filter logs by level (INFO, WARN, ERROR, DEBUG)",
+                "enum": ["INFO", "WARN", "ERROR", "DEBUG"]
             }
         }
     })
 }
 
 pub fn logs_output_schema() -> JsonValue {
-    json!({
-        "type": "object",
-        "description": "System logs with pagination",
-        "properties": {
-            "title": {"type": "string"},
-            "description": {"type": "string"},
-            "sections": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "section_id": {"type": "string"},
-                        "title": {"type": "string"},
-                        "section_type": {
-                            "type": "string",
-                            "enum": ["metrics_cards", "table", "chart", "list"]
-                        },
-                        "data": {"type": "object"},
-                        "layout": {
-                            "type": "object",
-                            "properties": {
-                                "width": {"type": "string"},
-                                "order": {"type": "integer"}
-                            }
-                        }
-                    }
-                }
-            },
-            "mcp_execution_id": {"type": "string"}
-        },
-        "required": ["title", "sections", "mcp_execution_id"],
-        "x-artifact-type": "dashboard"
-    })
+    ToolResponse::<DashboardArtifact>::schema()
 }
 
 pub async fn handle_logs(
@@ -70,16 +46,21 @@ pub async fn handle_logs(
     request: CallToolRequestParam,
     _ctx: RequestContext<RoleServer>,
     logger: LogService,
+    mcp_execution_id: &McpExecutionId,
 ) -> Result<CallToolResult, McpError> {
     let args = request.arguments.unwrap_or_default();
 
     let page = args.get("page").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
-    let limit = args.get("limit").and_then(|v| v.as_i64()).unwrap_or(50) as i32;
+    let limit = args.get("limit").and_then(|v| v.as_i64()).unwrap_or(1000) as i32;
+    let level = args.get("level").and_then(|v| v.as_str()).map(String::from);
 
     logger
-        .info(
+        .debug(
             "logs_tool",
-            &format!("Fetching logs - page: {}, limit: {}", page, limit),
+            &format!(
+                "Fetching logs - page: {}, limit: {}, level: {:?}",
+                page, limit, level
+            ),
         )
         .await
         .ok();
@@ -87,7 +68,7 @@ pub async fn handle_logs(
     let repo = LogsRepository::new(pool.clone());
 
     let mut dashboard = DashboardArtifact::new("System Logs")
-        .with_description("Latest system logs with pagination and client-side filtering")
+        .with_description("Latest system logs with pagination and server-side level filtering")
         .with_hints(
             DashboardHints::new()
                 .with_layout(LayoutMode::Vertical)
@@ -96,7 +77,7 @@ pub async fn handle_logs(
         );
 
     let logs = repo
-        .fetch_recent_logs(page, limit)
+        .fetch_recent_logs(page, limit, level.as_deref())
         .await
         .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
@@ -108,7 +89,14 @@ pub async fn handle_logs(
     dashboard = dashboard.add_section(create_stats_section(&stats));
     dashboard = dashboard.add_section(create_logs_table_section(&logs, page));
 
-    let response = dashboard.to_response();
+    let metadata = ExecutionMetadata::new().tool("logs");
+    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let tool_response = ToolResponse::new(
+        &artifact_id,
+        mcp_execution_id.clone(),
+        dashboard,
+        metadata.clone(),
+    );
 
     Ok(CallToolResult {
         content: vec![Content::text(format!(
@@ -117,8 +105,8 @@ pub async fn handle_logs(
             (stats.total_logs as f64 / limit as f64).ceil() as i32,
             limit
         ))],
-        structured_content: Some(response),
+        structured_content: Some(tool_response.to_json()),
         is_error: Some(false),
-        meta: None,
+        meta: metadata.to_meta(),
     })
 }

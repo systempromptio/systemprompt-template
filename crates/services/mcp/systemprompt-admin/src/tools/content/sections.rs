@@ -5,14 +5,58 @@ use systemprompt_models::artifacts::{
     SectionLayout, SectionType, TableArtifact, TableHints,
 };
 
-use super::models::{ContentPerformance, DailyViewData, Referrer};
+use super::models::{ContentPerformance, DailyViewData, Referrer, TrafficSummary};
+
+pub fn create_traffic_summary_cards(summary: &TrafficSummary) -> DashboardSection {
+    let format_trend = |diff: i32, percent: f64| -> String {
+        let sign = if diff >= 0 { "+" } else { "" };
+        format!("{}{} visitors ({:+.1}%)", sign, diff, percent)
+    };
+
+    let cards = vec![
+        json!({
+            "title": "Visitors Today",
+            "value": summary.traffic_1d.to_string(),
+            "icon": "activity",
+            "status": "success",
+            "trend": format_trend(summary.diff_1d(), summary.percent_change_1d())
+        }),
+        json!({
+            "title": "Visitors 7 Days",
+            "value": summary.traffic_7d.to_string(),
+            "icon": "trending-up",
+            "status": "success",
+            "trend": format_trend(summary.diff_7d(), summary.percent_change_7d())
+        }),
+        json!({
+            "title": "Visitors 30 Days",
+            "value": summary.traffic_30d.to_string(),
+            "icon": "bar-chart",
+            "status": "success",
+            "trend": format_trend(summary.diff_30d(), summary.percent_change_30d())
+        }),
+    ];
+
+    DashboardSection::new(
+        "traffic_summary_cards",
+        "Visitor Summary",
+        SectionType::MetricsCards,
+    )
+    .with_data(json!({ "cards": cards }))
+    .with_layout(SectionLayout {
+        width: LayoutWidth::Full,
+        order: 0,
+    })
+}
 
 pub fn create_top_content_section(content: &[ContentPerformance]) -> DashboardSection {
     let table = TableArtifact::new(vec![
         Column::new("title", ColumnType::String).with_header("TITLE"),
         Column::new("link", ColumnType::Link).with_header("URL"),
-        Column::new("views", ColumnType::Integer).with_header("VIEWS"),
-        Column::new("visitors", ColumnType::Integer).with_header("VISITORS"),
+        Column::new("visitors_1d", ColumnType::Integer).with_header("1D"),
+        Column::new("visitors_7d", ColumnType::Integer).with_header("7D"),
+        Column::new("visitors_30d", ColumnType::Integer).with_header("30D"),
+        Column::new("visitors_all_time", ColumnType::String).with_header("ALL TIME"),
         Column::new("age_days", ColumnType::Integer).with_header("AGE (DAYS)"),
     ])
     .with_rows(
@@ -22,8 +66,10 @@ pub fn create_top_content_section(content: &[ContentPerformance]) -> DashboardSe
                 json!({
                     "title": item.title.clone(),
                     "link": item.trackable_url.clone(),
-                    "views": item.total_views,
-                    "visitors": item.unique_visitors,
+                    "visitors_1d": item.visitors_1d,
+                    "visitors_7d": item.visitors_7d,
+                    "visitors_30d": item.visitors_30d,
+                    "visitors_all_time": format!("{} ({} views)", item.visitors_all_time, item.total_views),
                     "age_days": item.days_old,
                 })
             })
@@ -32,8 +78,9 @@ pub fn create_top_content_section(content: &[ContentPerformance]) -> DashboardSe
     .with_hints(
         TableHints::new()
             .with_sortable(vec![
-                "views".to_string(),
-                "visitors".to_string(),
+                "visitors_1d".to_string(),
+                "visitors_7d".to_string(),
+                "visitors_30d".to_string(),
                 "age_days".to_string(),
             ])
             .filterable(),
@@ -68,7 +115,7 @@ pub fn create_daily_views_chart(daily_views: &[DailyViewData]) -> DashboardSecti
             })
             .collect();
         totals.sort_by(|a, b| b.1.cmp(&a.1));
-        totals.into_iter().take(5).collect()
+        totals.into_iter().take(10).collect()
     };
 
     let dates: Vec<String> = all_dates.into_iter().collect();

@@ -1,0 +1,93 @@
+# Production Environment Configuration
+# =============================================================================
+# IMPORTANT: Before deploying to production:
+#   1. Replace all instances of YOUR_DOMAIN.com with your actual domain
+#   2. Ensure .env.secrets contains DATABASE_URL_PRODUCTION, JWT_SECRET, ADMIN_PASSWORD
+#   3. Generate a strong JWT_SECRET: openssl rand -base64 64 | tr -d '\n'
+# =============================================================================
+#
+# ALL VALUES ARE EXPLICIT - NO ${VAR:-default} for URLs
+# This prevents accidental localhost URLs in production builds.
+
+# =============================================================================
+# SYSTEM PATHS (container paths)
+# =============================================================================
+SYSTEM_PATH: /app
+CARGO_TARGET_DIR: /app/target
+WEB_DIR: /app/core/web/dist
+AI_CONFIG_PATH: /app/config/ai.yaml
+SYSTEMPROMPT_CONFIG_PATH: /app/crates/services/config/config.yml
+CONTENT_CONFIG_PATH: /app/crates/services/content/config.yml
+GEOIP_DATABASE_PATH: /app/data/GeoLite2-City.mmdb
+STORAGE_PATH: /app/files
+FILE_URL_PREFIX: /files
+
+# Static Content Generation (SCG) paths
+WEB_CONFIG_PATH: /app/crates/services/web/config.yml
+SCG_TEMPLATES_PATH: /app/crates/services/web/templates
+SCG_ASSETS_PATH: /app/crates/services/web/assets
+
+# =============================================================================
+# DATABASE
+# =============================================================================
+# DATABASE_URL_PRODUCTION MUST be set in .env.secrets
+DATABASE_URL: ${DATABASE_URL_PRODUCTION}
+
+# =============================================================================
+# SERVER CONFIGURATION
+# =============================================================================
+# TODO: Replace YOUR_DOMAIN.com with your actual domain
+HOST: 0.0.0.0
+PORT: 8080
+API_SERVER_URL: http://localhost:8080
+API_EXTERNAL_URL: https://YOUR_DOMAIN.com
+USE_HTTPS: true
+CORS_ALLOWED_ORIGINS: https://YOUR_DOMAIN.com
+
+# =============================================================================
+# FRONTEND (VITE) API CONFIGURATION
+# =============================================================================
+# IMPORTANT: These values are embedded at build time by Vite
+# They MUST be explicit values (no ${VAR} references)
+# TODO: Replace YOUR_DOMAIN.com with your actual domain
+VITE_API_BASE_HOST: https://YOUR_DOMAIN.com
+VITE_API_BASE_PATH: /api/v1/core
+VITE_API_URL: https://YOUR_DOMAIN.com
+
+# =============================================================================
+# AUTHENTICATION (from .env.secrets)
+# =============================================================================
+# These MUST be set in .env.secrets for production
+ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+JWT_SECRET: ${JWT_SECRET}
+JWT_ISSUER: ${JWT_ISSUER:-systemprompt-template}
+
+# =============================================================================
+# LOGGING
+# =============================================================================
+# Minimal logging in production
+RUST_LOG: ${RUST_LOG:-warn}
+
+# =============================================================================
+# RATE LIMITING (ENABLED in production)
+# =============================================================================
+# These are per-second limits per IP address
+RATE_LIMIT_DISABLED: false
+RATE_LIMIT_OAUTH_PUBLIC_PER_SECOND: 2
+RATE_LIMIT_OAUTH_AUTH_PER_SECOND: 2
+RATE_LIMIT_CONTEXTS_PER_SECOND: 50
+RATE_LIMIT_TASKS_PER_SECOND: 10
+RATE_LIMIT_ARTIFACTS_PER_SECOND: 15
+RATE_LIMIT_AGENTS_PER_SECOND: 3
+RATE_LIMIT_AGENT_REGISTRY_PER_SECOND: 20
+RATE_LIMIT_MCP_PER_SECOND: 1000
+RATE_LIMIT_MCP_REGISTRY_PER_SECOND: 200
+RATE_LIMIT_STREAM_PER_SECOND: 1
+RATE_LIMIT_BURST_MULTIPLIER: 2
+
+# =============================================================================
+# SITEMAP AND SEO
+# =============================================================================
+# TODO: Replace YOUR_DOMAIN.com with your actual domain
+SITEMAP_BASE_URL: https://YOUR_DOMAIN.com
+GSC_PROPERTY_URL: sc-domain:YOUR_DOMAIN.com

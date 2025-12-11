@@ -1,11 +1,11 @@
 use serde_json::{json, Value as JsonValue};
-use systemprompt_core_database::JsonRow;
 use systemprompt_models::artifacts::{
     Column, ColumnType, DashboardSection, LayoutWidth, SectionLayout, SectionType, TableArtifact,
     TableHints,
 };
 
 use super::models::{ConversationSummary, EvaluationStats, RecentConversation};
+use super::repository::{AgentConversationRow, ConversationTrendRow};
 
 pub fn create_summary_cards_section(
     summary: &ConversationSummary,
@@ -82,13 +82,13 @@ pub fn create_summary_cards_section(
 
 pub fn create_conversations_table_section(
     conversations: &[RecentConversation],
-    page: i32,
-    per_page: i32,
 ) -> DashboardSection {
     let table = TableArtifact::new(vec![
+        Column::new("context_id", ColumnType::String).with_header("ID"),
         Column::new("user", ColumnType::String).with_header("User"),
         Column::new("agent_name", ColumnType::String).with_header("Agent"),
         Column::new("started_at", ColumnType::String).with_header("Started"),
+        Column::new("last_updated", ColumnType::String).with_header("Last Updated"),
         Column::new("messages", ColumnType::Number).with_header("Messages"),
         Column::new("summary", ColumnType::String).with_header("Summary"),
     ])
@@ -99,20 +99,35 @@ pub fn create_conversations_table_section(
                 let summary_text = conv.evaluation_summary.as_deref().unwrap_or("-");
 
                 json!({
+                    "context_id": &conv.context_id,
                     "user": &conv.user_name,
                     "agent_name": &conv.agent_name,
                     "started_at": conv.started_at_formatted.as_deref().unwrap_or(&conv.started_at),
+                    "last_updated": conv.last_updated_formatted.as_deref().unwrap_or(&conv.last_updated),
                     "messages": conv.message_count,
                     "summary": summary_text,
                 })
             })
             .collect(),
     )
-    .with_hints(TableHints::new().filterable());
+    .with_hints(
+        TableHints::new()
+            .filterable()
+            .with_sortable(vec![
+                "user".to_string(),
+                "agent_name".to_string(),
+                "started_at".to_string(),
+                "last_updated".to_string(),
+                "messages".to_string(),
+            ])
+            .with_default_sort("last_updated".to_string(), systemprompt_models::artifacts::types::SortOrder::Desc)
+            .with_page_size(10)
+            .with_row_click_enabled(true)
+    );
 
     let title = format!(
-        "Recent Conversations (Page {} - {} per page)",
-        page, per_page
+        "Recent Conversations ({} loaded, 10 per page)",
+        conversations.len()
     );
 
     DashboardSection::new("recent_conversations", &title, SectionType::Table)
@@ -123,37 +138,28 @@ pub fn create_conversations_table_section(
         })
 }
 
-pub fn create_conversation_trends_section(trends: &[JsonRow]) -> DashboardSection {
+pub fn create_conversation_trends_section(trends: &[ConversationTrendRow]) -> DashboardSection {
     let row = trends.first();
 
     let cards: Vec<JsonValue> = if let Some(row) = row {
         vec![
             json!({
                 "title": "Conversations (24h)",
-                "value": row.get("conversations_24h")
-                    .and_then(|v| v.as_i64())
-                    .unwrap_or(0)
-                    .to_string(),
+                "value": row.conversations_24h.to_string(),
                 "subtitle": "Last 24 hours",
                 "icon": "trending-up",
                 "status": "info"
             }),
             json!({
                 "title": "Conversations (7d)",
-                "value": row.get("conversations_7d")
-                    .and_then(|v| v.as_i64())
-                    .unwrap_or(0)
-                    .to_string(),
+                "value": row.conversations_7d.to_string(),
                 "subtitle": "Last 7 days",
                 "icon": "trending-up",
                 "status": "info"
             }),
             json!({
                 "title": "Conversations (30d)",
-                "value": row.get("conversations_30d")
-                    .and_then(|v| v.as_i64())
-                    .unwrap_or(0)
-                    .to_string(),
+                "value": row.conversations_30d.to_string(),
                 "subtitle": "Last 30 days",
                 "icon": "trending-up",
                 "status": "info"
@@ -175,27 +181,21 @@ pub fn create_conversation_trends_section(trends: &[JsonRow]) -> DashboardSectio
     })
 }
 
-pub fn create_agent_breakdown_section(agent_data: &[JsonRow]) -> DashboardSection {
+pub fn create_agent_breakdown_section(agent_data: &[AgentConversationRow]) -> DashboardSection {
+    let total: i64 = agent_data.iter().map(|r| r.conversation_count).sum();
+
     let cards = agent_data
         .iter()
         .map(|row| {
-            let agent_name = row
-                .get("agent_name")
-                .and_then(|v| v.as_str())
-                .unwrap_or("Unknown");
-            let count = row
-                .get("conversation_count")
-                .and_then(|v| v.as_i64())
-                .unwrap_or(0) as i32;
-
-            let percentage = row
-                .get("percentage")
-                .and_then(|v| v.as_f64())
-                .unwrap_or(0.0);
+            let percentage = if total > 0 {
+                (row.conversation_count as f64 / total as f64) * 100.0
+            } else {
+                0.0
+            };
 
             json!({
-                "title": agent_name,
-                "value": count.to_string(),
+                "title": &row.agent_name,
+                "value": row.conversation_count.to_string(),
                 "subtitle": format!("{:.1}% of all conversations", percentage),
                 "icon": "cpu",
                 "status": "info"

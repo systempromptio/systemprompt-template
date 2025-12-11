@@ -4,6 +4,7 @@ use rmcp::{model::*, service::RequestContext, ErrorData as McpError, RoleServer}
 use systemprompt_core_agent::services::mcp::task_helper;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_mcp::middleware::enforce_rbac_from_registry;
+use systemprompt_core_mcp::models::{ToolExecutionRequest, ToolExecutionResult};
 use systemprompt_core_mcp::repository::ToolUsageRepository;
 use systemprompt_models::execution::CallSource;
 
@@ -23,35 +24,40 @@ impl AdminServer {
         request: CallToolRequestParam,
         ctx: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
+        let start_time = std::time::Instant::now();
         let tool_name = request.name.to_string();
 
         let auth_result =
-            enforce_rbac_from_registry(&ctx, &self.server_name, Some(&self.system_log)).await?;
+            enforce_rbac_from_registry(&ctx, self.service_id.as_str(), Some(&self.system_log)).await?;
         let authenticated_ctx = auth_result.expect_authenticated(
             "BUG: systemprompt-admin requires OAuth but auth was not enforced",
         );
 
         let mut request_context = authenticated_ctx.context.clone();
         let jwt_token = authenticated_ctx.token();
-        let logger = LogService::new(self.db_pool.clone(), request_context.log_context());
+        let mut logger = LogService::new(self.db_pool.clone(), request_context.log_context());
 
         let output_schema = self.get_output_schema_for_tool(&tool_name);
 
-        let task_id = task_helper::ensure_task_exists(
+        let task_result = task_helper::ensure_task_exists(
             &self.db_pool,
             &mut request_context,
             &tool_name,
-            &self.server_name,
+            self.service_id.as_str(),
             &logger,
         )
         .await?;
+        let task_id = task_result.task_id.clone();
+        let is_task_owner = task_result.is_owner;
+
+        logger = logger.with_task_id(task_id.as_str());
 
         let tool_repo = ToolUsageRepository::new(self.db_pool.clone());
         let arguments = request.arguments.as_ref().cloned().unwrap_or_default();
 
-        let exec_request = systemprompt_core_mcp::repository::ToolExecutionRequest {
+        let exec_request = ToolExecutionRequest {
             tool_name: tool_name.clone(),
-            mcp_server_name: self.server_name.clone(),
+            mcp_server_name: self.service_id.to_string(),
             input: serde_json::Value::Object(arguments.clone()),
             started_at: Utc::now(),
             context: request_context.clone(),
@@ -67,13 +73,18 @@ impl AdminServer {
                 McpError::internal_error(format!("Failed to start execution: {}", e), None)
             })?;
 
-        let mut result =
-            crate::tools::handle_tool_call(&tool_name, request, ctx, logger.clone(), &self.db_pool)
-                .await;
+        let mut result = crate::tools::handle_tool_call(
+            &tool_name,
+            request,
+            ctx,
+            logger.clone(),
+            &self.db_pool,
+            &self.app_context,
+            &execution_id,
+        )
+        .await;
 
-        inject_execution_id_into_result(&mut result, &execution_id);
-
-        let exec_result = systemprompt_core_mcp::repository::ToolExecutionResult {
+        let exec_result = ToolExecutionResult {
             output: result
                 .as_ref()
                 .ok()
@@ -89,40 +100,14 @@ impl AdminServer {
             .await
             .ok();
 
-        logger
-            .info(
-                "mcp_admin",
-                &format!(
-                    "✓ Tool execution completed: {}",
-                    if result.is_ok() { "success" } else { "error" }
-                ),
-            )
-            .await
-            .ok();
-
         if let Ok(ref mut tool_result) = result {
             let call_source = request_context.call_source().unwrap_or(CallSource::Agentic);
 
             match call_source {
                 CallSource::Ephemeral => {
-                    logger
-                        .info(
-                            "mcp_admin",
-                            "Ephemeral call - injecting artifact type from schema",
-                        )
-                        .await
-                        .ok();
                     inject_artifact_type_from_schema(tool_result, &output_schema, &logger).await;
                 }
                 CallSource::Agentic | CallSource::Direct => {
-                    logger
-                        .info(
-                            "mcp_admin",
-                            &format!("Processing artifact (call_source: {:?})...", call_source),
-                        )
-                        .await
-                        .ok();
-
                     let tool_arguments = serde_json::Value::Object(arguments.clone());
 
                     match self
@@ -139,17 +124,6 @@ impl AdminServer {
                         .await
                     {
                         Ok(artifact) => {
-                            logger
-                                .info(
-                                    "mcp_admin",
-                                    &format!(
-                                        "✅ Artifact {} transformed with fingerprint: {:?}",
-                                        artifact.artifact_id, artifact.metadata.fingerprint
-                                    ),
-                                )
-                                .await
-                                .ok();
-
                             match self
                                 .publishing_service
                                 .publish_from_mcp(
@@ -165,12 +139,21 @@ impl AdminServer {
                             {
                                 Ok(()) => {
                                     logger
-                                        .info(
+                                        .log(
+                                            systemprompt_core_logging::LogLevel::Info,
                                             "mcp_admin",
                                             &format!(
-                                                "✅ Artifact {} published (persisted + messages)",
-                                                artifact.artifact_id
+                                                "Artifact published | artifact_id={}, type={}, task_id={}",
+                                                artifact.artifact_id,
+                                                artifact.metadata.artifact_type,
+                                                task_id.as_str()
                                             ),
+                                            Some(serde_json::json!({
+                                                "artifact_id": artifact.artifact_id,
+                                                "artifact_type": artifact.metadata.artifact_type,
+                                                "task_id": task_id.as_str(),
+                                                "context_id": request_context.execution.context_id.as_str(),
+                                            })),
                                         )
                                         .await
                                         .ok();
@@ -200,71 +183,67 @@ impl AdminServer {
             }
         }
 
-        let server = self.clone();
-        let task_id_clone = task_id.clone();
-        let logger_clone = logger.clone();
-        let jwt_token_clone = jwt_token.to_string();
+        // Only complete task if we created it (not if reused from parent A2A task)
+        if is_task_owner {
+            let server = self.clone();
+            let task_id_clone = task_id.clone();
+            let logger_clone = logger.clone();
+            let jwt_token_clone = jwt_token.to_string();
 
-        tokio::spawn(async move {
-            logger_clone
-                .info("mcp_admin", "Completing task in background...")
+            tokio::spawn(async move {
+                if let Err(e) = task_helper::complete_task(
+                    &server.db_pool,
+                    &task_id_clone,
+                    &jwt_token_clone,
+                    &logger_clone,
+                )
                 .await
-                .ok();
+                {
+                    logger_clone
+                        .error("mcp_admin", &format!("Failed to complete task: {:?}", e))
+                        .await
+                        .ok();
+                }
+            });
+        }
 
-            if let Err(e) = task_helper::complete_task(
-                &server.db_pool,
-                &task_id_clone,
-                &jwt_token_clone,
-                &logger_clone,
+        let status_str = if result.is_ok() { "success" } else { "error" };
+        logger
+            .log(
+                systemprompt_core_logging::LogLevel::Info,
+                "mcp_admin",
+                &format!(
+                    "Tool executed | tool={}, status={}, task_id={}",
+                    tool_name,
+                    status_str,
+                    task_id.as_str(),
+                ),
+                Some(serde_json::json!({
+                    "tool_name": tool_name,
+                    "status": status_str,
+                    "task_id": task_id.as_str(),
+                    "context_id": request_context.execution.context_id.as_str(),
+                    "duration_ms": start_time.elapsed().as_millis(),
+                    "call_source": request_context.call_source().map(|cs| cs.as_str()),
+                })),
             )
             .await
-            {
-                logger_clone
-                    .error("mcp_admin", &format!("Failed to complete task: {:?}", e))
-                    .await
-                    .ok();
-            } else {
-                logger_clone.info("mcp_admin", "✓ Task complete").await.ok();
-            }
-        });
+            .ok();
 
         result
-    }
-}
-
-fn inject_execution_id_into_result(
-    result: &mut Result<CallToolResult, McpError>,
-    execution_id: &systemprompt_identifiers::McpExecutionId,
-) {
-    if let Ok(ref mut tool_result) = result {
-        if let Some(ref mut content) = tool_result.structured_content {
-            if let Some(obj) = content.as_object_mut() {
-                obj.insert(
-                    "mcp_execution_id".to_string(),
-                    serde_json::json!(execution_id.to_string()),
-                );
-            }
-        }
     }
 }
 
 async fn inject_artifact_type_from_schema(
     tool_result: &mut CallToolResult,
     output_schema: &Option<serde_json::Value>,
-    logger: &LogService,
+    _logger: &LogService,
 ) {
     if let Some(ref schema) = output_schema {
         if let Some(artifact_type) = schema.get("x-artifact-type") {
             if let Some(ref mut structured) = tool_result.structured_content {
                 if let Some(obj) = structured.as_object_mut() {
                     obj.insert("x-artifact-type".to_string(), artifact_type.clone());
-                    logger
-                        .info(
-                            "mcp_admin",
-                            &format!("Injected x-artifact-type: {:?}", artifact_type),
-                        )
-                        .await
-                        .ok();
                 }
             }
         }
