@@ -101,15 +101,21 @@ curl -X POST http://localhost:8085/api/v1/tenants \
 # Save the returned connection_string to .env.secrets
 ```
 
-## Core Subtree (READ-ONLY)
+## Core Submodule (READ-ONLY)
 
-The `core/` directory contains SystemPrompt Core as a git subtree.
+The `core/` directory contains SystemPrompt Core as a git submodule.
 
 **Do not modify files in `core/`** - a pre-commit hook will prevent this.
 
 To update core:
 ```bash
-just core-sync
+just core-sync    # Update submodule + Cargo deps
+just core-version # Show current version
+```
+
+When cloning, use `--recursive` to fetch the submodule:
+```bash
+git clone --recursive https://github.com/systempromptio/systemprompt-template my-project
 ```
 
 ## Adding Your Own Code
@@ -141,4 +147,6 @@ Edit `crates/services/web/config.yml` to change:
 
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE)
+
+This project depends on [systemprompt-core](https://github.com/systempromptio/systemprompt-core) which is licensed under Apache 2.0.
