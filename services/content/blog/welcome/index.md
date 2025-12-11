@@ -1,28 +1,32 @@
 ---
-title: "Welcome to SystemPrompt"
+title: "Welcome to systemprompt-template"
+description: "Get started with your new SystemPrompt implementation"
+author: "Author"
 slug: "welcome"
-description: "Getting started with your new SystemPrompt implementation"
-date: "2024-01-01"
-author: "template"
-tags: ["getting-started", "welcome"]
-published: true
+keywords: "welcome, getting started"
+image: ""
+kind: "article"
+public: true
+tags: ["welcome", "getting-started"]
+published_at: "2025-01-01"
+updated_at: "2025-01-01"
 ---
 
-# Welcome to SystemPrompt
+# Welcome to systemprompt-template
 
-This is a placeholder blog post for your new SystemPrompt implementation.
+This is your first blog post. Edit this file at `services/content/blog/welcome/index.md`.
 
 ## Getting Started
 
-1. Configure your environment in `.env.secrets`
+1. Configure your agents in `services/agents/`
 2. Set up your AI providers in `services/ai/config.yml`
-3. Customize your theme in `services/web/config.yml`
-4. Add your own content in `services/content/blog/`
+3. Customize the web theme in `services/web/config.yml`
+4. Add your content to `services/content/`
 
 ## Next Steps
 
-- Create your own agents in `services/agents/`
-- Build custom MCP servers in `services/mcp/`
-- Add skills in `services/skills/`
+- Check out the [SystemPrompt documentation](https://docs.systemprompt.io)
+- Join our community on [Discord](https://discord.gg/systemprompt)
+- Star us on [GitHub](https://github.com/systempromptio/systemprompt-core)
 
 Happy building!

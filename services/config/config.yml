@@ -1,10 +1,13 @@
-# SystemPrompt Template - Services Configuration
-# This root configuration imports agents and MCP servers from subdirectories
+# SystemPrompt Services Configuration
+# This file aggregates all service configurations
 
 includes:
+  - ../agents/assistant.yml
+  - ../agents/admin.yml
   - ../mcp/systemprompt-admin.yml
   - ../ai/config.yml
   - ../web/config.yml
+  - ../scheduler/config.yml
 
 agents: {}
 mcp_servers: {}

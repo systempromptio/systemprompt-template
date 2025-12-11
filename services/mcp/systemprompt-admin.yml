@@ -1,5 +1,4 @@
 # SystemPrompt Admin MCP Server Configuration
-# Provides admin dashboard and user management tools
 
 mcp_servers:
   systemprompt-admin:

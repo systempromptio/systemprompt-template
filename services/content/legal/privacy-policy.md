@@ -1,44 +1,44 @@
 ---
 title: "Privacy Policy"
+description: "Privacy policy for systemprompt-template"
+author: "Author"
 slug: "privacy-policy"
-description: "Privacy policy for this website"
-date: "2024-01-01"
-author: "template"
-published: true
+keywords: "privacy, policy, data"
+kind: "page"
+public: true
+tags: ["legal"]
+published_at: "2025-01-01"
+updated_at: "2025-01-01"
 ---
 
 # Privacy Policy
 
-Last updated: [DATE]
+Last updated: January 1, 2025
 
 ## Introduction
 
-This Privacy Policy describes how [YOUR ORGANIZATION] ("we", "our", or "us") collects, uses, and shares information about you when you use our website and services.
+This privacy policy explains how systemprompt-template collects, uses, and protects your information.
 
 ## Information We Collect
 
-### Information You Provide
-- Account information (name, email)
-- Content you create or submit
-- Communications with us
+We may collect the following types of information:
 
-### Information Collected Automatically
-- Usage data and analytics
-- Device and browser information
-- Cookies and similar technologies
+- **Usage Data**: Information about how you use our service
+- **Account Information**: If you create an account, we collect your email and name
+- **Conversation Data**: Messages exchanged with our AI agents
 
 ## How We Use Your Information
 
-We use the information we collect to:
+We use your information to:
+
 - Provide and improve our services
-- Communicate with you
-- Ensure security and prevent fraud
+- Respond to your requests
+- Send important updates
+
+## Data Security
+
+We implement appropriate security measures to protect your personal information.
 
 ## Contact Us
 
-If you have questions about this Privacy Policy, please contact us at:
-- Email: [YOUR EMAIL]
-
----
-
-*This is a template. Please customize for your specific use case and jurisdiction.*
+If you have questions about this privacy policy, please contact us.

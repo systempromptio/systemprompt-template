@@ -1,6 +1,8 @@
 # SystemPrompt Template - Development Commands
 # All commands use the core CLI (./core/target/debug/systemprompt)
 
+set dotenv-load
+
 default:
     @just --list
 
