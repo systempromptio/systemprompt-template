@@ -1,0 +1,70 @@
+# SystemPrompt Profile: Production
+# This profile is loaded when SYSTEMPROMPT_PROFILE=prod
+# All paths are relative to the Docker container structure
+
+name: prod
+display_name: Production
+
+site:
+  name: SystemPrompt
+  github_link: ""
+  service_display_name: SystemPrompt
+  service_version: "1.0.0"
+
+database:
+  type: postgres
+  # DATABASE_URL is set as a secret by the management API
+  url: "${DATABASE_URL}"
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  api_server_url: "${API_EXTERNAL_URL}"
+  api_external_url: "${API_EXTERNAL_URL}"
+  use_https: true
+  cors_allowed_origins:
+    - "${API_EXTERNAL_URL}"
+
+paths:
+  system: /app
+  services: /app/services
+  skills: /app/services/skills
+  config: /app/services/config/config.yml
+  storage: /services
+  cargo_target: /app/target
+  binary_dir: /app/target/release
+  ai_config: /app/config/ai.yaml
+  content_config: /app/services/content/config.yml
+  web_config: /app/services/web/config.yml
+  web_metadata: /app/services/web/metadata.yml
+  web_path: /app/core/web
+  scg_templates: /app/services/web/templates
+  scg_assets: /app/services/web/assets
+
+security:
+  jwt_issuer: systemprompt
+  # JWT_SECRET is set as a secret by the management API
+  jwt_secret: "${JWT_SECRET}"
+  jwt_access_token_expiration: 86400
+  jwt_refresh_token_expiration: 2592000
+
+api_keys:
+  # These are optional and set via the management API
+  gemini: "${GEMINI_API_KEY}"
+  anthropic: "${ANTHROPIC_API_KEY}"
+  openai: "${OPENAI_API_KEY}"
+
+rate_limits:
+  disabled: false
+  oauth_public_per_second: 2
+  oauth_auth_per_second: 2
+  contexts_per_second: 50
+  tasks_per_second: 10
+  artifacts_per_second: 15
+  agent_registry_per_second: 20
+  agents_per_second: 3
+  mcp_registry_per_second: 20
+  mcp_per_second: 100
+  stream_per_second: 1
+  content_per_second: 20
+  burst_multiplier: 2

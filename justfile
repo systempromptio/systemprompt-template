@@ -47,9 +47,13 @@ build-release:
 build-release-web:
     ./core/target/debug/systemprompt web build --prod
 
+# Open interactive TUI (starts services in background first)
+systemprompt:
+    ./core/target/debug/systemprompt interactive
+
 # Start all services (API, agents, MCP servers)
 start:
-    ./core/target/debug/systemprompt start
+    ./core/target/debug/systemprompt start --skip-web
 
 # Start with verbose logging
 start-debug:
@@ -82,6 +86,10 @@ db-migrate:
 # Database operations
 db *ARGS:
     ./core/target/debug/systemprompt db {{ARGS}}
+
+ai-trace TASK_ID *ARGS:
+    core/target/debug/systemprompt ai-trace {{TASK_ID}} {{ARGS}}
+
 
 # ============================================================================
 # CONTENT & SYNC
@@ -152,3 +160,34 @@ config:
 # Stream logs
 logs:
     ./core/target/debug/systemprompt logs
+
+# ============================================================================
+# CONTAINER REGISTRY
+# ============================================================================
+
+# Build and push template image to GitHub Container Registry
+ghcr-push:
+    #!/usr/bin/env bash
+    set -e
+    echo "🔧 Building release binary..."
+    cargo build --release --manifest-path=core/Cargo.toml --bin systemprompt
+    # Build workspace only if it has actual crate members (skip for empty template)
+    # Check if members array contains actual crate paths (not just comments)
+    if grep -Pzo 'members\s*=\s*\[\s*#[^\]]*\]' Cargo.toml >/dev/null 2>&1 || grep -q 'members = \[\s*\]' Cargo.toml 2>/dev/null; then
+        echo "ℹ️  Skipping empty workspace build (no crate members)"
+    else
+        echo "🔧 Building workspace crates..."
+        cargo build --workspace --release
+    fi
+    echo "🌐 Building web assets..."
+    SYSTEMPROMPT_WEB_CONFIG_PATH="$(pwd)/services/web/config.yml" \
+    SYSTEMPROMPT_WEB_METADATA_PATH="$(pwd)/services/web/metadata.yml" \
+    npm run build --prefix core/web
+    echo "📦 Staging artifacts..."
+    mkdir -p infrastructure/build-context/release
+    cp core/target/release/systemprompt infrastructure/build-context/release/
+    echo "🐳 Building Docker image..."
+    docker build -f infrastructure/docker/app.Dockerfile -t ghcr.io/systempromptio/systemprompt-template:latest .
+    echo "🚀 Pushing to GitHub Container Registry..."
+    docker push ghcr.io/systempromptio/systemprompt-template:latest
+    echo "✅ Done! Image pushed to ghcr.io/systempromptio/systemprompt-template:latest"
