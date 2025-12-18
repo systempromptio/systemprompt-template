@@ -1,7 +1,11 @@
 # SystemPrompt Template - Development Commands
-# All commands use the core CLI (./core/target/debug/systemprompt)
+# All commands use the core CLI via the configured CARGO_TARGET_DIR
 
 set dotenv-load
+
+# CLI binary paths - all binaries in CARGO_TARGET_DIR
+CLI := env_var_or_default("CARGO_TARGET_DIR", "target") + "/debug/systemprompt"
+CLI_RELEASE := env_var_or_default("CARGO_TARGET_DIR", "target") + "/release/systemprompt"
 
 default:
     @just --list
@@ -14,14 +18,16 @@ default:
 setup:
     #!/usr/bin/env bash
     set -e
+    export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:?CARGO_TARGET_DIR must be set}"
+    export SYSTEMPROMPT_CORE_PATH="${SYSTEMPROMPT_CORE_PATH:?SYSTEMPROMPT_CORE_PATH must be set}"
     echo "🔧 Building core binary..."
     cargo build --manifest-path=core/Cargo.toml --bin systemprompt
     echo "🔧 Building workspace..."
     cargo build --workspace
     echo "📊 Running database migrations..."
-    ./core/target/debug/systemprompt db migrate
+    {{CLI}} db migrate
     echo "🌐 Building web assets..."
-    ./core/target/debug/systemprompt web build
+    {{CLI}} web build
     echo ""
     echo "✅ Setup complete! Run 'just start' to start the server."
 
@@ -36,7 +42,7 @@ build:
 
 # Build web assets
 build-web:
-    ./core/target/debug/systemprompt web build
+    {{CLI}} web build
 
 # Build release binaries
 build-release:
@@ -45,35 +51,35 @@ build-release:
 
 # Build release web assets
 build-release-web:
-    ./core/target/debug/systemprompt web build --prod
+    {{CLI}} web build --prod
 
 # Open interactive TUI (starts services in background first)
 systemprompt:
-    ./core/target/debug/systemprompt interactive
+    {{CLI}} interactive
 
 # Start all services (API, agents, MCP servers)
 start:
-    ./core/target/debug/systemprompt start --skip-web
+    {{CLI}} start --skip-web
 
 # Start with verbose logging
 start-debug:
-    ./core/target/debug/systemprompt start --debug
+    {{CLI}} start --debug
 
 # Stop all services
 stop:
-    ./core/target/debug/systemprompt stop
+    {{CLI}} stop
 
 # Show status of all services
 status:
-    ./core/target/debug/systemprompt status
+    {{CLI}} status
 
 # Restart services
 restart:
-    ./core/target/debug/systemprompt restart
+    {{CLI}} restart
 
 # Clean up orphaned processes
 cleanup:
-    ./core/target/debug/systemprompt cleanup-services
+    {{CLI}} cleanup-services
 
 # ============================================================================
 # DATABASE
@@ -81,14 +87,14 @@ cleanup:
 
 # Run database migrations
 db-migrate:
-    ./core/target/debug/systemprompt db migrate
+    {{CLI}} db migrate
 
 # Database operations
 db *ARGS:
-    ./core/target/debug/systemprompt db {{ARGS}}
+    {{CLI}} db {{ARGS}}
 
 ai-trace TASK_ID *ARGS:
-    core/target/debug/systemprompt ai-trace {{TASK_ID}} {{ARGS}}
+    {{CLI}} ai-trace {{TASK_ID}} {{ARGS}}
 
 
 # ============================================================================
@@ -97,11 +103,11 @@ ai-trace TASK_ID *ARGS:
 
 # Sync content from disk to database
 sync-content:
-    ./core/target/debug/systemprompt sync content
+    {{CLI}} sync content
 
 # Sync skills
 sync-skills:
-    ./core/target/debug/systemprompt sync skills
+    {{CLI}} sync skills
 
 # ============================================================================
 # CORE MANAGEMENT
@@ -155,11 +161,11 @@ clean:
 
 # Show system configuration
 config:
-    ./core/target/debug/systemprompt config env
+    {{CLI}} config env
 
 # Stream logs
 logs:
-    ./core/target/debug/systemprompt logs
+    {{CLI}} logs
 
 # ============================================================================
 # CLOUD DEPLOYMENT
@@ -167,27 +173,27 @@ logs:
 
 # Login to SystemPrompt Cloud (environment: production or sandbox)
 login environment="production":
-    ./core/target/debug/systemprompt cloud login {{environment}}
+    {{CLI}} cloud login {{environment}}
 
 # Logout from SystemPrompt Cloud
 logout:
-    ./core/target/debug/systemprompt cloud logout
+    {{CLI}} cloud logout
 
 # Link this project to a cloud tenant
 cloud-setup:
-    ./core/target/debug/systemprompt cloud setup
+    {{CLI}} cloud setup
 
 # Deploy to SystemPrompt Cloud
 cloud-deploy:
-    ./core/target/debug/systemprompt cloud deploy
+    {{CLI}} cloud deploy
 
 # Check cloud deployment status
 cloud-status:
-    ./core/target/debug/systemprompt cloud status
+    {{CLI}} cloud status
 
 # Show cloud configuration
 cloud-config:
-    ./core/target/debug/systemprompt cloud config
+    {{CLI}} cloud config
 
 # ============================================================================
 # CONTAINER REGISTRY
@@ -213,7 +219,7 @@ ghcr-push:
     npm run build --prefix core/web
     echo "📦 Staging artifacts..."
     mkdir -p infrastructure/build-context/release
-    cp core/target/release/systemprompt infrastructure/build-context/release/
+    cp {{CLI_RELEASE}} infrastructure/build-context/release/
     echo "🐳 Building Docker image..."
     docker build -f infrastructure/docker/app.Dockerfile -t ghcr.io/systempromptio/systemprompt-template:latest .
     echo "🚀 Pushing to GitHub Container Registry..."

@@ -4,3 +4,6 @@
 [submodule "services/mcp/systemprompt-admin"]
 	path = services/mcp/systemprompt-admin
 	url = https://github.com/systempromptio/systemprompt-mcp-admin
+[submodule "services/mcp/systemprompt-infrastructure"]
+	path = services/mcp/systemprompt-infrastructure
+	url = https://github.com/systempromptio/systemprompt-mcp-infrastructure.git

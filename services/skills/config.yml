@@ -6,5 +6,7 @@ includes:
   - agent_editing/config.yml
   - skill_creation/config.yml
   - skill_editing/config.yml
+  - deployment/config.yml
+  - sync_management/config.yml
 
 skills: {}
