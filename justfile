@@ -162,6 +162,34 @@ logs:
     ./core/target/debug/systemprompt logs
 
 # ============================================================================
+# CLOUD DEPLOYMENT
+# ============================================================================
+
+# Login to SystemPrompt Cloud (environment: production or sandbox)
+login environment="production":
+    ./core/target/debug/systemprompt cloud login {{environment}}
+
+# Logout from SystemPrompt Cloud
+logout:
+    ./core/target/debug/systemprompt cloud logout
+
+# Link this project to a cloud tenant
+cloud-setup:
+    ./core/target/debug/systemprompt cloud setup
+
+# Deploy to SystemPrompt Cloud
+cloud-deploy:
+    ./core/target/debug/systemprompt cloud deploy
+
+# Check cloud deployment status
+cloud-status:
+    ./core/target/debug/systemprompt cloud status
+
+# Show cloud configuration
+cloud-config:
+    ./core/target/debug/systemprompt cloud config
+
+# ============================================================================
 # CONTAINER REGISTRY
 # ============================================================================
 

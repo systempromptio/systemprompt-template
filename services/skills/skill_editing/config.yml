@@ -1,0 +1,15 @@
+id: skill_editing
+name: "Skill Editing"
+description: "Guide for modifying existing skill configurations. Covers updating instructions, changing tags, modifying agent assignments, and versioning."
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - skill-editor
+tags:
+  - skill
+  - editing
+  - modification
+  - prompt
+  - update
+  - admin

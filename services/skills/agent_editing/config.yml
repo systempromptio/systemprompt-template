@@ -1,0 +1,15 @@
+id: agent_editing
+name: "Agent Editing"
+description: "Guide for modifying existing agent configurations. Covers updating system prompts, adding skills, changing security, and configuration validation."
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - agent-editor
+tags:
+  - agent
+  - editing
+  - modification
+  - yaml
+  - update
+  - admin

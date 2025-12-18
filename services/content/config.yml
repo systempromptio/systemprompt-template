@@ -39,6 +39,18 @@ content_sources:
       changefreq: "monthly"
       fetch_from: "database"
 
+  skills:
+    path: "services/skills"
+    source_id: "skills"
+    category_id: "skills"
+    enabled: true
+    description: "Agent skills for editors and automation"
+    allowed_content_types: ["skill"]
+    indexing:
+      clear_before: false
+      recursive: true
+      override_existing: true
+
 categories:
   blog:
     name: "Blog"
@@ -46,6 +58,10 @@ categories:
   pages:
     name: "Pages"
     slug: "pages"
+  skills:
+    name: "Skills"
+    slug: "skills"
+    description: "Agent skills for AI-powered automation"
 
 metadata:
   default_author: "Author"

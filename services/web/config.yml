@@ -31,34 +31,34 @@ branding:
 
 fonts:
   body:
-    family: "Inter"
+    family: "OpenSans"
     fallback: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
     files:
-      - path: "/src/assets/fonts/Inter/Inter-Regular.ttf"
+      - path: "/fonts/OpenSans/OpenSans-Regular.ttf"
         weight: 400
         style: "normal"
-      - path: "/src/assets/fonts/Inter/Inter-Medium.ttf"
+      - path: "/fonts/OpenSans/OpenSans-Medium.ttf"
         weight: 500
         style: "normal"
-      - path: "/src/assets/fonts/Inter/Inter-SemiBold.ttf"
+      - path: "/fonts/OpenSans/OpenSans-SemiBold.ttf"
         weight: 600
         style: "normal"
-      - path: "/src/assets/fonts/Inter/Inter-Bold.ttf"
+      - path: "/fonts/OpenSans/OpenSans-Bold.ttf"
         weight: 700
         style: "normal"
   heading:
-    family: "Inter"
+    family: "Zepto"
     fallback: "Georgia, serif"
     files:
-      - path: "/src/assets/fonts/Inter/Inter-Bold.ttf"
-        weight: 700
+      - path: "/fonts/Zepto/Zepto-Regular.ttf"
+        weight: 400
         style: "normal"
   brand:
-    family: "Inter"
+    family: "ArchivoBlack"
     fallback: "Impact, sans-serif"
     files:
-      - path: "/src/assets/fonts/Inter/Inter-Bold.ttf"
-        weight: 700
+      - path: "/fonts/ArchivoBlack/ArchivoBlack-Regular.ttf"
+        weight: 400
         style: "normal"
 
 colors:

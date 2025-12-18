@@ -4,7 +4,11 @@
 includes:
   - ../agents/assistant.yml
   - ../agents/admin.yml
+  - ../agents/agent-editor.yml
+  - ../agents/skill-editor.yml
   - ../mcp/systemprompt-admin.yml
+  - ../mcp/system-tools.yml
+  - ../skills/config.yml
   - ../ai/config.yml
   - ../web/config.yml
   - ../scheduler/config.yml

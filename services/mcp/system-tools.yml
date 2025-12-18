@@ -1,0 +1,18 @@
+# System Tools MCP Server Configuration
+
+mcp_servers:
+  system-tools:
+    binary: "system-tools"
+    package: "system-tools"
+    path: "services/mcp/system-tools"
+    port: 5003
+    endpoint: "http://localhost:8080/api/v1/mcp/system-tools/mcp"
+    enabled: true
+    display_in_web: true
+    schemas: []
+    oauth:
+      required: true
+      scopes: ["admin"]
+      audience: "mcp"
+      client_id: null
+    description: "System Tools MCP Server - Provides Claude Code-style file editing tools for reading, writing, and modifying files in the services directory."
