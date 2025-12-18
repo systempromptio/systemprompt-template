@@ -1,4 +1,5 @@
 mod edit_file;
+mod file_context;
 mod glob;
 mod grep;
 mod list_files;
@@ -15,6 +16,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use systemprompt_core_logging::LogService;
 use systemprompt_identifiers::McpExecutionId;
+use systemprompt_models::execution::context::RequestContext as SysRequestContext;
 
 use crate::error::ToolError;
 use crate::SystemToolsServer;
@@ -110,6 +112,12 @@ pub fn register_tools() -> Vec<Tool> {
             "List files and directories in a tree structure. Shows the directory hierarchy with configurable depth. Use this to understand the file structure before reading or editing files.",
             &list_files_input_schema(),
         ),
+        create_tool(
+            "file_context",
+            "File Context",
+            "Gather comprehensive context about a codebase using AI-powered reasoning. Iteratively explores directory structure, reads relevant files, and searches for patterns to answer questions about the code.",
+            &file_context::file_context_input_schema(),
+        ),
     ]
 }
 
@@ -120,6 +128,7 @@ pub async fn handle_tool_call(
     logger: LogService,
     server: &SystemToolsServer,
     mcp_execution_id: &McpExecutionId,
+    sys_context: SysRequestContext,
 ) -> Result<CallToolResult, McpError> {
     logger
         .debug("system_tools", &format!("Executing tool: {name}"))
@@ -133,6 +142,10 @@ pub async fn handle_tool_call(
         "glob" => glob::handle(request, server, mcp_execution_id),
         "grep" => grep::handle(request, server, mcp_execution_id),
         "list_files" => list_files::handle(request, server, mcp_execution_id),
+        "file_context" => {
+            return file_context::handle(request, server, &logger, mcp_execution_id, sys_context)
+                .await;
+        }
         _ => {
             logger
                 .warn("system_tools", &format!("Unknown tool: {name}"))

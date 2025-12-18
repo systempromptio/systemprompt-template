@@ -53,7 +53,9 @@ async fn main() -> Result<()> {
         application_context.db_pool().clone(),
         service_id.clone(),
         application_context.clone(),
-    );
+    )
+    .await
+    .context("Failed to initialize SystemToolsServer")?;
     let router = systemprompt_core_mcp::create_router(server, application_context.clone()).await?;
     let address = format!("0.0.0.0:{port}");
     let listener = TcpListener::bind(&address).await?;

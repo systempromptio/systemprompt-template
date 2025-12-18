@@ -3,10 +3,15 @@ use std::env;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use anyhow::{Context, Result};
+use systemprompt_core_agent::services::SkillService;
+use systemprompt_core_ai::services::config::ConfigLoader;
+use systemprompt_core_ai::{AiConfig, AiService};
 use systemprompt_core_database::DbPool;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::AppContext;
 use systemprompt_identifiers::McpServerId;
+use systemprompt_models::ai::ToolModelConfig;
 
 #[derive(Clone)]
 #[allow(dead_code)]
@@ -17,23 +22,68 @@ pub struct SystemToolsServer {
     pub(super) tool_schemas: Arc<HashMap<String, serde_json::Value>>,
     pub(super) app_context: Arc<AppContext>,
     pub(super) file_roots: Arc<Vec<PathBuf>>,
+    pub(crate) ai_service: Arc<AiService>,
+    pub(crate) ai_config: Arc<AiConfig>,
+    pub(crate) skill_service: Arc<SkillService>,
 }
 
 impl SystemToolsServer {
-    #[must_use]
-    pub fn new(db_pool: DbPool, service_id: McpServerId, app_context: Arc<AppContext>) -> Self {
+    pub async fn new(
+        db_pool: DbPool,
+        service_id: McpServerId,
+        app_context: Arc<AppContext>,
+    ) -> Result<Self> {
         let system_log = LogService::system(db_pool.clone());
         let tool_schemas = Self::build_tool_schema_cache();
         let file_roots = Self::init_file_roots();
 
-        Self {
+        let ai_config = Arc::new(Self::load_ai_config()?);
+        let ai_service = Arc::new(
+            AiService::new(app_context.clone(), &ai_config)
+                .await
+                .context("Failed to initialize AiService")?,
+        );
+
+        let skill_service = Arc::new(SkillService::new(db_pool.clone()));
+
+        Ok(Self {
             db_pool,
             service_id,
             system_log,
             tool_schemas: Arc::new(tool_schemas),
             app_context,
             file_roots: Arc::new(file_roots),
-        }
+            ai_service,
+            ai_config,
+            skill_service,
+        })
+    }
+
+    fn load_ai_config() -> Result<AiConfig> {
+        let config_path =
+            env::var("AI_CONFIG_PATH").context("AI_CONFIG_PATH environment variable must be set")?;
+        let path = std::path::Path::new(&config_path);
+        ConfigLoader::load_from_file(path).context("Failed to load AI config from AI_CONFIG_PATH")
+    }
+
+    /// Get model configuration for tool execution.
+    /// Uses the default provider and model from AI config.
+    pub fn get_default_model_config(&self) -> Result<ToolModelConfig> {
+        let default_provider = &self.ai_config.default_provider;
+        let provider_config = self
+            .ai_config
+            .providers
+            .get(default_provider)
+            .ok_or_else(|| anyhow::anyhow!("AI config missing provider '{}'", default_provider))?;
+
+        let default_max_tokens = self.ai_config.default_max_output_tokens.ok_or_else(|| {
+            anyhow::anyhow!("AI config missing default_max_output_tokens")
+        })?;
+
+        Ok(
+            ToolModelConfig::new(default_provider, &provider_config.default_model)
+                .with_max_output_tokens(default_max_tokens),
+        )
     }
 
     fn build_tool_schema_cache() -> HashMap<String, serde_json::Value> {

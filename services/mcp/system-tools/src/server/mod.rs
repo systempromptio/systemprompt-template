@@ -93,13 +93,18 @@ impl ServerHandler for SystemToolsServer {
         let logger = self.system_log.clone();
         let arguments = request.arguments.clone().unwrap_or_default();
 
-        // Create anonymous request context for execution tracking
+        // Create request context for execution tracking
+        let tool_model_config = self.get_default_model_config().map_err(|e| {
+            McpError::internal_error(format!("Failed to get model config: {e}"), None)
+        })?;
+
         let sys_request_context = SysRequestContext::new(
             SessionId::new(uuid::Uuid::new_v4().to_string()),
             TraceId::new(uuid::Uuid::new_v4().to_string()),
             ContextId::new(String::new()),
             AgentName::new("system-tools".to_string()),
-        );
+        )
+        .with_tool_model_config(tool_model_config);
 
         // Start execution tracking
         let tool_repo = ToolUsageRepository::new(self.db_pool.clone());
@@ -108,7 +113,7 @@ impl ServerHandler for SystemToolsServer {
             mcp_server_name: self.service_id.to_string(),
             input: serde_json::Value::Object(arguments),
             started_at: Utc::now(),
-            context: sys_request_context,
+            context: sys_request_context.clone(),
             request_method: Some("call_tool".to_string()),
             request_source: Some("mcp_server".to_string()),
             ai_tool_call_id: None,
@@ -129,6 +134,7 @@ impl ServerHandler for SystemToolsServer {
             logger,
             self,
             &execution_id,
+            sys_request_context,
         )
         .await;
 
