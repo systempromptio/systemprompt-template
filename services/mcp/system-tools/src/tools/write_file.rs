@@ -1,60 +1,78 @@
-use rmcp::{model::*, ErrorData as McpError};
+use rmcp::{
+    model::{CallToolRequestParam, CallToolResult, Content},
+    ErrorData as McpError,
+};
 use std::fs;
+use systemprompt_identifiers::McpExecutionId;
+use systemprompt_models::artifacts::{ExecutionMetadata, TextArtifact, ToolResponse};
 
+use crate::error::ToolError;
 use crate::SystemToolsServer;
 
-pub async fn handle(
+use super::ToolArguments;
+
+pub fn handle(
     request: CallToolRequestParam,
     server: &SystemToolsServer,
+    mcp_execution_id: &McpExecutionId,
 ) -> Result<CallToolResult, McpError> {
-    let args = request.arguments.unwrap_or_default();
+    let arguments = ToolArguments::new(request.arguments);
 
-    // Parse required parameters
-    let file_path = SystemToolsServer::parse_file_path(&args, "file_path")?;
+    let file_path = arguments.get_required_path("file_path")?;
+    let content = arguments.get_required_string("content")?;
 
-    let content = args
-        .get("content")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| McpError::invalid_params("Missing 'content' parameter", None))?;
-
-    // Validate path - for new files, check parent directory
     let validated_path = if file_path.exists() {
         server
             .validate_path(&file_path)
-            .await
-            .map_err(|e| McpError::invalid_params(e, None))?
+            .map_err(|error| McpError::invalid_params(error, None))?
     } else {
         server
-            .validate_parent_path(&file_path)
-            .await
-            .map_err(|e| McpError::invalid_params(e, None))?
+            .validate_new_path(&file_path)
+            .map_err(|error| McpError::invalid_params(error, None))?
     };
 
-    // Create parent directories if they don't exist
     if let Some(parent) = validated_path.parent() {
         if !parent.exists() {
-            fs::create_dir_all(parent).map_err(|e| {
-                McpError::internal_error(format!("Failed to create directories: {e}"), None)
+            fs::create_dir_all(parent).map_err(|error| ToolError::IoError {
+                details: format!("Failed to create directories: {error}"),
             })?;
         }
     }
 
-    // Write the file
     let bytes_written = content.len();
-    fs::write(&validated_path, content)
-        .map_err(|e| McpError::internal_error(format!("Failed to write file: {e}"), None))?;
+    fs::write(&validated_path, content).map_err(|error| ToolError::IoError {
+        details: format!("Failed to write file: {error}"),
+    })?;
 
     let line_count = content.lines().count();
 
+    let metadata = ExecutionMetadata::new().tool("write_file");
+    let artifact_id = uuid::Uuid::new_v4().to_string();
+
+    let artifact_content = format!(
+        "Successfully wrote {bytes_written} bytes ({line_count} lines) to {}",
+        validated_path.display()
+    );
+
+    let artifact = TextArtifact::new(&artifact_content)
+        .with_title(format!("Write: {}", validated_path.display()));
+
+    let tool_response = ToolResponse::new(
+        &artifact_id,
+        mcp_execution_id.clone(),
+        artifact,
+        metadata.clone(),
+    );
+
+    let summary = format!(
+        "Wrote {bytes_written} bytes to {}",
+        validated_path.display()
+    );
+
     Ok(CallToolResult {
-        content: vec![Content::text(format!(
-            "Successfully wrote {} bytes ({} lines) to {}",
-            bytes_written,
-            line_count,
-            validated_path.display()
-        ))],
+        content: vec![Content::text(summary)],
         is_error: Some(false),
-        meta: None,
-        structured_content: None,
+        meta: metadata.to_meta(),
+        structured_content: Some(tool_response.to_json()),
     })
 }

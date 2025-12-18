@@ -1,94 +1,128 @@
+use std::collections::HashMap;
+use std::env;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+
+use systemprompt_core_database::DbPool;
+use systemprompt_core_logging::LogService;
+use systemprompt_core_system::AppContext;
+use systemprompt_identifiers::McpServerId;
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct SystemToolsServer {
-    /// Allowed root directories for file operations
-    pub(super) roots: Arc<RwLock<Vec<PathBuf>>>,
+    pub(super) db_pool: DbPool,
+    pub(super) service_id: McpServerId,
+    pub(super) system_log: LogService,
+    pub(super) tool_schemas: Arc<HashMap<String, serde_json::Value>>,
+    pub(super) app_context: Arc<AppContext>,
+    pub(super) file_roots: Arc<Vec<PathBuf>>,
 }
 
 impl SystemToolsServer {
-    pub fn new(roots: Vec<PathBuf>) -> Self {
+    #[must_use]
+    pub fn new(db_pool: DbPool, service_id: McpServerId, app_context: Arc<AppContext>) -> Self {
+        let system_log = LogService::system(db_pool.clone());
+        let tool_schemas = Self::build_tool_schema_cache();
+        let file_roots = Self::init_file_roots();
+
         Self {
-            roots: Arc::new(RwLock::new(roots)),
+            db_pool,
+            service_id,
+            system_log,
+            tool_schemas: Arc::new(tool_schemas),
+            app_context,
+            file_roots: Arc::new(file_roots),
         }
     }
 
-    /// Check if a path is within the allowed roots
-    pub async fn validate_path(&self, path: &std::path::Path) -> Result<PathBuf, String> {
-        let canonical = path
-            .canonicalize()
-            .map_err(|e| format!("Failed to resolve path '{}': {}", path.display(), e))?;
+    fn build_tool_schema_cache() -> HashMap<String, serde_json::Value> {
+        let mut schemas = HashMap::new();
+        let tools = crate::tools::register_tools();
 
-        let roots = self.roots.read().await;
-
-        // SECURITY: Require at least one root to be configured
-        if roots.is_empty() {
-            return Err("No file roots configured. Set FILE_ROOT environment variable.".to_string());
+        for tool in tools {
+            if let Some(output_schema) = tool.output_schema {
+                let schema_value =
+                    serde_json::to_value(&*output_schema).unwrap_or_else(|_| serde_json::json!({}));
+                schemas.insert(tool.name.to_string(), schema_value);
+            }
         }
 
-        for root in roots.iter() {
-            if let Ok(root_canonical) = root.canonicalize() {
-                if canonical.starts_with(&root_canonical) {
-                    return Ok(canonical);
-                }
+        schemas
+    }
+
+    fn init_file_roots() -> Vec<PathBuf> {
+        let roots: Vec<PathBuf> = match env::var("FILE_ROOT") {
+            Ok(value) => value.split(',').map(PathBuf::from).collect(),
+            Err(_) => env::current_dir()
+                .map(|current_working_directory| vec![current_working_directory])
+                .unwrap_or_default(),
+        };
+
+        roots
+            .into_iter()
+            .filter_map(|root| match root.canonicalize() {
+                Ok(canonical) if canonical.is_dir() => Some(canonical),
+                _ => None,
+            })
+            .collect()
+    }
+
+    pub fn validate_path(&self, path: &std::path::Path) -> Result<PathBuf, String> {
+        let canonical = path
+            .canonicalize()
+            .map_err(|error| format!("Path does not exist: '{}' ({})", path.display(), error))?;
+
+        if self.file_roots.is_empty() {
+            return Ok(canonical);
+        }
+
+        for root in self.file_roots.iter() {
+            if canonical.starts_with(root) {
+                return Ok(canonical);
             }
         }
 
         Err(format!(
-            "Access denied: '{}' is outside allowed roots: {:?}",
-            path.display(),
-            roots.iter().map(|r| r.display().to_string()).collect::<Vec<_>>()
+            "Access denied: '{}' is outside allowed roots",
+            canonical.display()
         ))
     }
 
-    /// Check if a path would be valid (for paths that don't exist yet)
-    pub async fn validate_parent_path(&self, path: &std::path::Path) -> Result<PathBuf, String> {
-        let roots = self.roots.read().await;
+    pub fn validate_new_path(&self, path: &std::path::Path) -> Result<PathBuf, String> {
+        let parent = path
+            .parent()
+            .ok_or_else(|| format!("Invalid path: '{}'", path.display()))?;
 
-        // SECURITY: Require at least one root to be configured
-        if roots.is_empty() {
-            return Err("No file roots configured. Set FILE_ROOT environment variable.".to_string());
+        let canonical_parent = parent.canonicalize().map_err(|error| {
+            format!("Parent does not exist: '{}' ({})", parent.display(), error)
+        })?;
+
+        if self.file_roots.is_empty() {
+            let filename = path.file_name().ok_or("Invalid filename")?;
+            return Ok(canonical_parent.join(filename));
         }
 
-        // For new files, check the parent directory
-        if let Some(parent) = path.parent() {
-            if parent.exists() {
-                let parent_canonical = parent
-                    .canonicalize()
-                    .map_err(|e| format!("Failed to resolve parent path: {}", e))?;
-
-                for root in roots.iter() {
-                    if let Ok(root_canonical) = root.canonicalize() {
-                        if parent_canonical.starts_with(&root_canonical) {
-                            return Ok(path.to_path_buf());
-                        }
-                    }
-                }
-
-                return Err(format!(
-                    "Access denied: '{}' is outside allowed roots: {:?}",
-                    path.display(),
-                    roots.iter().map(|r| r.display().to_string()).collect::<Vec<_>>()
-                ));
+        for root in self.file_roots.iter() {
+            if canonical_parent.starts_with(root) {
+                let filename = path.file_name().ok_or("Invalid filename")?;
+                return Ok(canonical_parent.join(filename));
             }
         }
 
         Err(format!(
-            "Parent directory does not exist for '{}'",
+            "Access denied: '{}' is outside allowed roots",
             path.display()
         ))
     }
 
-    /// Update roots from MCP initialize request
-    pub async fn set_roots(&self, roots: Vec<PathBuf>) {
-        let mut current_roots = self.roots.write().await;
-        *current_roots = roots;
+    #[must_use]
+    pub fn get_roots(&self) -> &[PathBuf] {
+        &self.file_roots
     }
 
-    /// Get current roots
-    pub async fn get_roots(&self) -> Vec<PathBuf> {
-        self.roots.read().await.clone()
+    #[allow(dead_code)]
+    pub(super) fn get_output_schema_for_tool(&self, tool_name: &str) -> Option<serde_json::Value> {
+        self.tool_schemas.get(tool_name).cloned()
     }
 }

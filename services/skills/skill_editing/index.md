@@ -11,88 +11,140 @@ keywords: "skill, editing, modification, prompt, update"
 
 # Skill Editing
 
-You modify existing skill configurations. Output precise changes to config.yml and/or index.md files.
+You modify existing skill configurations. This guide shows you how to find, load, and edit skill files.
+
+## FIRST: Discover the File Structure
+
+**Before doing anything else**, use `list_files` to understand what exists:
+
+```
+list_files(path: "services/skills", depth: 3)
+```
+
+This will show you:
+- All skill directories
+- Which files exist in each skill
+- The master config.yml location
+
+## File Locations
+
+| What | Path | Purpose |
+|------|------|---------|
+| Master Config | `services/skills/config.yml` | Lists all skill includes |
+| Skill Config | `services/skills/{skill_name}/config.yml` | Metadata, tags, agents |
+| Skill Prompt | `services/skills/{skill_name}/index.md` | Instructions/prompt |
+
+## Step-by-Step Workflow
+
+### Step 1: List Available Skills
+```
+list_files(path: "services/skills", depth: 2)
+```
+
+**In your response, summarize:**
+- Number of skills found
+- Skill names/directories
+- Target skill location
+
+### Step 2: Read Current Configuration
+```
+read_file(file_path: "services/skills/{skill_name}/config.yml")
+read_file(file_path: "services/skills/{skill_name}/index.md")
+```
+
+**In your response, summarize:**
+- Current version
+- Current tags
+- Current agent assignments
+- Key sections of the prompt
+
+### Step 3: Make Changes
+```
+edit_file(
+  file_path: "services/skills/{skill_name}/config.yml",
+  old_string: "...",
+  new_string: "..."
+)
+```
+
+**In your response, summarize:**
+- What was changed
+- Before vs after
 
 ## Common Modifications
 
 ### 1. Update Instructions (index.md)
 Improve or refine the skill prompt without changing metadata.
 
+```
+edit_file(
+  file_path: "services/skills/{skill_name}/index.md",
+  old_string: "## Output Requirements\n\nOld content...",
+  new_string: "## Output Requirements\n\nNew improved content..."
+)
+```
+
 ### 2. Change Tags (config.yml)
 Add, remove, or modify tags for better discoverability.
+
+```
+edit_file(
+  file_path: "services/skills/{skill_name}/config.yml",
+  old_string: "tags:\n  - old_tag",
+  new_string: "tags:\n  - new_tag\n  - another_tag"
+)
+```
 
 ### 3. Update Agent Assignments (config.yml)
 Add or remove agents that can use this skill.
 
+```
+edit_file(
+  file_path: "services/skills/{skill_name}/config.yml",
+  old_string: "assigned_agents:\n  - old-agent",
+  new_string: "assigned_agents:\n  - old-agent\n  - new-agent"
+)
+```
+
 ### 4. Version Bump (config.yml)
 Increment version number for significant changes.
 
-### 5. Update Description (both files)
-Clarify or expand the skill description.
-
-## Workflow
-
-1. **Identify Target**
-   - Which skill to modify?
-   - Which file(s) need changes?
-
-2. **Understand Current State**
-   - Read existing config.yml
-   - Read existing index.md
-   - Note current agent assignments
-
-3. **Plan Changes**
-   - Determine minimal changes needed
-   - Consider version bump if significant
-
-4. **Generate Update**
-   - Output changed file(s) only
-   - Or output specific sections to replace
-
-## Output Formats
-
-### config.yml Update
-```yaml
-# Update to services/skills/{skill_name}/config.yml
-# Change: {description}
-
-id: {skill_name}
-name: "{Skill Name}"
-description: "{Updated description}"
-enabled: true
-version: "{new version}"
-file: "index.md"
-assigned_agents:
-  - {agent-name}
-tags:
-  - {updated tags}
+```
+edit_file(
+  file_path: "services/skills/{skill_name}/config.yml",
+  old_string: "version: \"1.0.0\"",
+  new_string: "version: \"1.1.0\""
+)
 ```
 
-### index.md Update
-```markdown
-# Update to services/skills/{skill_name}/index.md
-# Change: {description}
+## Response Format
 
-{Complete updated content OR specific section to replace}
+Always structure your response with:
+
 ```
+## Tool Results Summary
+- Found X skills in services/skills/
+- Target: services/skills/{name}/
+- Files: config.yml, index.md
 
-### Partial Section Update
-```markdown
-# Replace this section in services/skills/{skill_name}/index.md:
+## Current State
+[Summary of what you read from the files]
 
-## Output Requirements
+## Changes Made
+[Specific edits applied]
 
-{New content for this section}
+## Verification
+[Confirmation of what was changed]
 ```
 
 ## Versioning Guidelines
 
-| Change Type | Version Bump |
-|-------------|--------------|
-| Typo fix | No change |
-| Minor clarification | Patch (1.0.0 → 1.0.1) |
-| New section/capability | Minor (1.0.0 → 1.1.0) |
-| Major restructure | Major (1.0.0 → 2.0.0) |
+| Change Type | Version Bump | Example |
+|-------------|--------------|---------|
+| Typo fix | No change | Fixing "teh" → "the" |
+| Minor clarification | Patch (1.0.0 → 1.0.1) | Rewording a sentence |
+| New section/capability | Minor (1.0.0 → 1.1.0) | Adding new output format |
+| Major restructure | Major (1.0.0 → 2.0.0) | Complete rewrite |
 
 ## Validation Checklist
 
@@ -103,6 +155,7 @@ Before finalizing:
 - [ ] Tags still relevant
 - [ ] Markdown syntax valid
 - [ ] Frontmatter complete
+- [ ] Version bumped if significant change
 
 ## Don'ts
 
@@ -111,3 +164,4 @@ Before finalizing:
 - Don't make changes beyond what was requested
 - Don't remove required sections from index.md
 - Don't forget to bump version for significant changes
+- Don't skip the `list_files` step - always verify structure first

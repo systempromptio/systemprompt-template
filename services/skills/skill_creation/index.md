@@ -11,47 +11,95 @@ keywords: "skill, creation, configuration, prompt, setup"
 
 # Skill Creation
 
-You create new skill configurations. Output both files needed for a complete skill: `config.yml` and `index.md`.
+You create new skill configurations. This guide shows you how to find existing patterns, create new skill files, and register them properly.
+
+## FIRST: Discover the File Structure
+
+**Before doing anything else**, use `list_files` to understand what exists:
+
+```
+list_files(path: "services/skills", depth: 3)
+```
+
+This will show you:
+- Existing skill directories to use as templates
+- The master config.yml that needs updating
+- Standard file structure to follow
+
+## File Locations
+
+| What | Path | Purpose |
+|------|------|---------|
+| Master Config | `services/skills/config.yml` | Must add new skill include here |
+| Skill Config | `services/skills/{skill_name}/config.yml` | Metadata, tags, agents |
+| Skill Prompt | `services/skills/{skill_name}/index.md` | Instructions/prompt |
 
 ## Skill Structure
 
 Each skill lives in `services/skills/{skill_name}/` and contains:
 
 ```
-{skill_name}/
-├── config.yml    # Metadata and configuration
-└── index.md      # Skill instructions/prompt
+services/skills/
+├── config.yml                    # Master config - add include here!
+├── {skill_name}/
+│   ├── config.yml                # Skill metadata
+│   └── index.md                  # Skill instructions
 ```
 
-## Workflow
+## Step-by-Step Workflow
 
-1. **Define Purpose**
-   - What should this skill help accomplish?
-   - What inputs will it receive?
-   - What outputs should it produce?
+### Step 1: List Existing Skills (for patterns)
+```
+list_files(path: "services/skills", depth: 2)
+```
 
-2. **Design Instructions**
-   - Clear, actionable guidance
-   - Specific format requirements
-   - Examples of good output
+**In your response, summarize:**
+- Existing skills found
+- Pattern to follow
+- Confirm master config.yml location
 
-3. **Configure Metadata**
-   - Choose unique ID (snake_case)
-   - Write descriptive name and description
-   - Select appropriate tags
-   - Assign to relevant agents
+### Step 2: Read an Existing Skill (as template)
+```
+read_file(file_path: "services/skills/{existing_skill}/config.yml")
+read_file(file_path: "services/skills/{existing_skill}/index.md")
+```
 
-4. **Generate Files**
-   - Output both config.yml and index.md
+**In your response, summarize:**
+- Template structure observed
+- Fields to customize
 
-## Output Format
+### Step 3: Create Skill Directory and Files
+```
+write_file(
+  file_path: "services/skills/{new_skill_name}/config.yml",
+  content: "id: new_skill_name\nname: \"New Skill\"..."
+)
 
-### config.yml
+write_file(
+  file_path: "services/skills/{new_skill_name}/index.md",
+  content: "---\ntitle: \"New Skill\"..."
+)
+```
+
+### Step 4: Register in Master Config
+```
+read_file(file_path: "services/skills/config.yml")
+
+edit_file(
+  file_path: "services/skills/config.yml",
+  old_string: "includes:\n  - existing_skill/config.yml",
+  new_string: "includes:\n  - existing_skill/config.yml\n  - new_skill_name/config.yml"
+)
+```
+
+## File Templates
+
+### config.yml Template
 
 ```yaml
 id: {skill_name}
-name: "{Skill Name}"
-description: "{What this skill does - one sentence}"
+name: "{Skill Display Name}"
+description: "{One sentence describing what this skill does}"
 enabled: true
 version: "1.0.0"
 file: "index.md"
@@ -63,7 +111,7 @@ tags:
   - {tag3}
 ```
 
-### index.md
+### index.md Template
 
 ```markdown
 ---
@@ -109,6 +157,30 @@ keywords: "{keyword1}, {keyword2}"
 {Common mistakes to avoid}
 ```
 
+## Response Format
+
+Always structure your response with:
+
+```
+## Tool Results Summary
+- Found X existing skills in services/skills/
+- Template skill: {name}
+- New skill location: services/skills/{new_name}/
+
+## Files Created
+1. services/skills/{new_name}/config.yml
+2. services/skills/{new_name}/index.md
+
+## Master Config Updated
+- Added include for {new_name}/config.yml
+
+## Skill Summary
+- ID: {skill_id}
+- Name: {skill_name}
+- Assigned to: {agent}
+- Tags: {tag1}, {tag2}
+```
+
 ## Tag Guidelines
 
 Use 4-6 descriptive tags:
@@ -118,6 +190,18 @@ Use 4-6 descriptive tags:
 - **Style**: formal, casual, technical, narrative
 - **Domain**: marketing, engineering, support
 
+## Validation Checklist
+
+Before finalizing:
+- [ ] Skill ID is snake_case
+- [ ] Directory name matches skill ID
+- [ ] config.yml has all required fields
+- [ ] index.md has complete frontmatter
+- [ ] At least one agent assigned
+- [ ] 4-6 relevant tags added
+- [ ] Master config.yml updated with include
+- [ ] Don'ts section included in index.md
+
 ## Don'ts
 
 - Don't use spaces in skill IDs (use snake_case)
@@ -125,3 +209,5 @@ Use 4-6 descriptive tags:
 - Don't write vague instructions
 - Don't skip the Don'ts section in index.md
 - Don't forget to assign to at least one agent
+- Don't forget to add include to master config.yml
+- Don't skip the `list_files` step - always verify structure first

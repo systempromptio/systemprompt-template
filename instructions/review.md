@@ -1,0 +1,1 @@
+ Read the attached document, and the project standards here. /var/www/html/systemprompt-blog/instructions/rust.md, create a full implementation plan that will 1/ eliminate unsed code and tech debt 2/ Ensure full compliance with project standards 3/ Reduce and have no cognitive complexity. 

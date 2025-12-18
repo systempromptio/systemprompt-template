@@ -1,3 +1,6 @@
 [submodule "core"]
 	path = core
 	url = https://github.com/systempromptio/systemprompt-core.git
+[submodule "services/mcp/systemprompt-admin"]
+	path = services/mcp/systemprompt-admin
+	url = https://github.com/systempromptio/systemprompt-mcp-admin

@@ -1,44 +1,71 @@
 use anyhow::{Context, Result};
-use rmcp::ServiceExt;
-use std::env;
-use std::path::PathBuf;
+use std::{env, sync::Arc};
+use system_tools::constants::{DEFAULT_MCP_PORT, DEFAULT_SERVICE_ID};
 use system_tools::SystemToolsServer;
-
-const DEFAULT_SERVICE_ID: &str = "system-tools";
+use systemprompt_core_logging::LogService;
+use systemprompt_core_system::AppContext;
+use systemprompt_identifiers::McpServerId;
+use systemprompt_models::Config;
+use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
+    Config::init().context("Failed to initialize configuration")?;
 
-    let service_id = env::var("MCP_SERVICE_ID").unwrap_or_else(|_| {
-        eprintln!("[INFO] MCP_SERVICE_ID not set, using default: {DEFAULT_SERVICE_ID}");
-        DEFAULT_SERVICE_ID.to_string()
-    });
+    let application_context = Arc::new(
+        AppContext::new()
+            .await
+            .context("Failed to initialize application context")?,
+    );
+    let logger = LogService::system(application_context.db_pool().clone());
 
-    // Get file roots from environment (comma-separated) or use current directory
-    // SECURITY: All file operations are restricted to these directories
-    let roots: Vec<PathBuf> = env::var("FILE_ROOT")
-        .map(|v| v.split(',').map(PathBuf::from).collect())
-        .unwrap_or_else(|_| {
-            let cwd = env::current_dir().unwrap();
-            eprintln!("[WARN] FILE_ROOT not set, defaulting to current directory");
-            vec![cwd]
-        });
+    let service_id = if let Ok(id) = McpServerId::from_env() {
+        id
+    } else {
+        logger
+            .warn(
+                "system_tools",
+                &format!("MCP_SERVICE_ID not set, using default: {DEFAULT_SERVICE_ID}"),
+            )
+            .await
+            .ok();
+        McpServerId::new(DEFAULT_SERVICE_ID)
+    };
 
-    eprintln!("[INFO] Allowed file roots:");
-    for root in &roots {
-        eprintln!("[INFO]   - {}", root.display());
-    }
-    eprintln!("[INFO] Starting System Tools MCP server '{service_id}' on stdio");
+    let port = if let Some(port_value) = env::var("MCP_PORT")
+        .ok()
+        .and_then(|port_string| port_string.parse::<u16>().ok())
+    {
+        port_value
+    } else {
+        logger
+            .warn(
+                "system_tools",
+                &format!("MCP_PORT not set, using default: {DEFAULT_MCP_PORT}"),
+            )
+            .await
+            .ok();
+        DEFAULT_MCP_PORT
+    };
 
-    let server = SystemToolsServer::new(roots);
+    let server = SystemToolsServer::new(
+        application_context.db_pool().clone(),
+        service_id.clone(),
+        application_context.clone(),
+    );
+    let router = systemprompt_core_mcp::create_router(server, application_context.clone()).await?;
+    let address = format!("0.0.0.0:{port}");
+    let listener = TcpListener::bind(&address).await?;
 
-    // Run with stdio transport (standard MCP transport)
-    let service = server.serve(rmcp::transport::stdio()).await
-        .context("Failed to start MCP server")?;
+    logger
+        .info(
+            service_id.as_str(),
+            &format!("System Tools MCP server '{service_id}' listening on {address}"),
+        )
+        .await?;
 
-    // Wait for the service to complete
-    service.waiting().await?;
+    axum::serve(listener, router).await?;
 
     Ok(())
 }

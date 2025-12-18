@@ -3,31 +3,38 @@ pub mod constructor;
 pub use constructor::SystemToolsServer;
 
 use anyhow::Result;
+use chrono::Utc;
 use rmcp::{
-    model::*,
+    model::{
+        CallToolRequestParam, CallToolResult, GetPromptRequestParam, GetPromptResult,
+        Implementation, InitializeRequestParam, InitializeResult, ListPromptsResult,
+        ListResourceTemplatesResult, ListResourcesResult, ListToolsResult, PaginatedRequestParam,
+        ProtocolVersion, ReadResourceRequestParam, ReadResourceResult, ServerCapabilities,
+        ServerInfo,
+    },
     service::RequestContext,
     ErrorData as McpError, RoleServer, ServerHandler,
 };
-use std::path::PathBuf;
+use systemprompt_core_mcp::models::{ToolExecutionRequest, ToolExecutionResult};
+use systemprompt_core_mcp::repository::ToolUsageRepository;
+use systemprompt_identifiers::{AgentName, ContextId, SessionId, TraceId};
+use systemprompt_models::execution::context::RequestContext as SysRequestContext;
 
 impl ServerHandler for SystemToolsServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
             protocol_version: ProtocolVersion::V_2024_11_05,
-            capabilities: ServerCapabilities::builder()
-                .enable_tools()
-                .build(),
+            capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation {
-                name: "System Tools MCP Server".to_string(),
-                version: env!("CARGO_PKG_VERSION").to_string(),
+                name: format!("SystemPrompt System Tools MCP Server ({})", self.service_id),
+                version: "1.0.0".to_string(),
                 icons: None,
                 title: Some("System Tools".into()),
-                website_url: None,
+                website_url: Some("https://systemprompt.io".to_string()),
             },
             instructions: Some(
-                "File system tools for reading, writing, editing files, and searching with glob/grep patterns. \
-                All operations are restricted to configured root directories."
-                    .to_string()
+                "File system tools for reading, writing, editing files, and searching with glob/grep patterns."
+                    .to_string(),
             ),
         }
     }
@@ -35,17 +42,33 @@ impl ServerHandler for SystemToolsServer {
     async fn initialize(
         &self,
         request: InitializeRequestParam,
-        _context: RequestContext<RoleServer>,
+        context: RequestContext<RoleServer>,
     ) -> Result<InitializeResult, McpError> {
-        // Check client capabilities for roots support
-        if let Some(roots_cap) = &request.capabilities.roots {
-            if roots_cap.list_changed == Some(true) {
-                eprintln!("[INFO] Client supports root list changes");
-            }
+        self.system_log
+            .info("mcp_initialize", "=== SYSTEM TOOLS SERVER INITIALIZE ===")
+            .await
+            .ok();
+
+        if let Some(parts) = context.extensions.get::<axum::http::request::Parts>() {
+            self.system_log
+                .info(
+                    "mcp_system_tools",
+                    &format!(
+                        "System Tools MCP initialized - URI: {}, server: {}",
+                        parts.uri, self.service_id
+                    ),
+                )
+                .await
+                .ok();
         }
 
-        eprintln!("[INFO] System Tools initialized for client: {:?}",
-            request.client_info.name);
+        self.system_log
+            .info(
+                "mcp_system_tools",
+                &format!("Client: {:?}", request.client_info.name),
+            )
+            .await
+            .ok();
 
         Ok(self.get_info())
     }
@@ -53,7 +76,7 @@ impl ServerHandler for SystemToolsServer {
     async fn list_tools(
         &self,
         _request: Option<PaginatedRequestParam>,
-        _ctx: RequestContext<RoleServer>,
+        _context: RequestContext<RoleServer>,
     ) -> Result<ListToolsResult, McpError> {
         Ok(ListToolsResult {
             tools: crate::tools::register_tools(),
@@ -64,35 +87,117 @@ impl ServerHandler for SystemToolsServer {
     async fn call_tool(
         &self,
         request: CallToolRequestParam,
-        _ctx: RequestContext<RoleServer>,
+        context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let tool_name = request.name.to_string();
+        let logger = self.system_log.clone();
+        let arguments = request.arguments.clone().unwrap_or_default();
 
-        crate::tools::handle_tool_call(&tool_name, request, self).await
+        // Create anonymous request context for execution tracking
+        let sys_request_context = SysRequestContext::new(
+            SessionId::new(uuid::Uuid::new_v4().to_string()),
+            TraceId::new(uuid::Uuid::new_v4().to_string()),
+            ContextId::new(String::new()),
+            AgentName::new("system-tools".to_string()),
+        );
+
+        // Start execution tracking
+        let tool_repo = ToolUsageRepository::new(self.db_pool.clone());
+        let exec_request = ToolExecutionRequest {
+            tool_name: tool_name.clone(),
+            mcp_server_name: self.service_id.to_string(),
+            input: serde_json::Value::Object(arguments),
+            started_at: Utc::now(),
+            context: sys_request_context,
+            request_method: Some("call_tool".to_string()),
+            request_source: Some("mcp_server".to_string()),
+            ai_tool_call_id: None,
+        };
+
+        let execution_id = tool_repo
+            .start_execution(&exec_request)
+            .await
+            .map_err(|e| {
+                McpError::internal_error(format!("Failed to start execution: {e}"), None)
+            })?;
+
+        // Execute tool
+        let result = crate::tools::handle_tool_call(
+            &tool_name,
+            request,
+            context,
+            logger,
+            self,
+            &execution_id,
+        )
+        .await;
+
+        // Complete execution tracking
+        let exec_result = ToolExecutionResult {
+            output: result
+                .as_ref()
+                .ok()
+                .and_then(|r| r.structured_content.clone()),
+            output_schema: None,
+            status: if result.is_ok() { "success" } else { "failed" }.to_string(),
+            error_message: result.as_ref().err().map(|e| format!("{e:?}")),
+            completed_at: Utc::now(),
+        };
+
+        tool_repo
+            .complete_execution(&execution_id, &exec_result)
+            .await
+            .ok();
+
+        result
     }
-}
 
-impl SystemToolsServer {
-    /// Helper to parse file path from tool arguments
-    pub fn parse_file_path(args: &serde_json::Map<String, serde_json::Value>, key: &str) -> Result<PathBuf, McpError> {
-        args.get(key)
-            .and_then(|v| v.as_str())
-            .map(PathBuf::from)
-            .ok_or_else(|| McpError::invalid_params(format!("Missing or invalid '{key}' parameter"), None))
+    async fn list_prompts(
+        &self,
+        _request: Option<PaginatedRequestParam>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListPromptsResult, McpError> {
+        Ok(ListPromptsResult {
+            prompts: Vec::new(),
+            next_cursor: None,
+        })
     }
 
-    /// Helper to parse optional string parameter
-    pub fn parse_optional_string(args: &serde_json::Map<String, serde_json::Value>, key: &str) -> Option<String> {
-        args.get(key).and_then(|v| v.as_str()).map(String::from)
+    async fn get_prompt(
+        &self,
+        _request: GetPromptRequestParam,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<GetPromptResult, McpError> {
+        Err(McpError::invalid_params("No prompts available", None))
     }
 
-    /// Helper to parse optional integer parameter
-    pub fn parse_optional_i64(args: &serde_json::Map<String, serde_json::Value>, key: &str) -> Option<i64> {
-        args.get(key).and_then(|v| v.as_i64())
+    async fn list_resources(
+        &self,
+        _request: Option<PaginatedRequestParam>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListResourcesResult, McpError> {
+        Ok(ListResourcesResult {
+            resources: Vec::new(),
+            next_cursor: None,
+        })
     }
 
-    /// Helper to parse optional boolean parameter
-    pub fn parse_optional_bool(args: &serde_json::Map<String, serde_json::Value>, key: &str) -> Option<bool> {
-        args.get(key).and_then(|v| v.as_bool())
+    async fn read_resource(
+        &self,
+        _request: ReadResourceRequestParam,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ReadResourceResult, McpError> {
+        Err(McpError::invalid_params("No resources available", None))
+    }
+
+    async fn list_resource_templates(
+        &self,
+        _request: Option<PaginatedRequestParam>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListResourceTemplatesResult, McpError> {
+        Ok(ListResourceTemplatesResult {
+            next_cursor: None,
+            resource_templates: Vec::new(),
+        })
     }
 }

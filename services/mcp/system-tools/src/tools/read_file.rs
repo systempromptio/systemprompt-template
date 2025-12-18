@@ -1,92 +1,116 @@
-use rmcp::{model::*, ErrorData as McpError};
+use rmcp::{
+    model::{CallToolRequestParam, CallToolResult, Content},
+    ErrorData as McpError,
+};
+use std::fmt::Write;
 use std::fs;
+use systemprompt_identifiers::McpExecutionId;
+use systemprompt_models::artifacts::{ExecutionMetadata, TextArtifact, ToolResponse};
 
+use crate::constants::{DEFAULT_LINE_LIMIT, DEFAULT_LINE_OFFSET, MAX_LINE_DISPLAY_LENGTH};
+use crate::error::ToolError;
 use crate::SystemToolsServer;
 
-pub async fn handle(
+use super::ToolArguments;
+
+pub fn handle(
     request: CallToolRequestParam,
     server: &SystemToolsServer,
+    mcp_execution_id: &McpExecutionId,
 ) -> Result<CallToolResult, McpError> {
-    let args = request.arguments.unwrap_or_default();
+    let arguments = ToolArguments::new(request.arguments);
 
-    // Parse required file_path
-    let file_path = SystemToolsServer::parse_file_path(&args, "file_path")?;
+    let file_path = arguments.get_required_path("file_path")?;
 
-    // Parse optional parameters
-    let offset = SystemToolsServer::parse_optional_i64(&args, "offset")
-        .map(|v| v.max(1) as usize)
-        .unwrap_or(1);
-    let limit = SystemToolsServer::parse_optional_i64(&args, "limit")
-        .map(|v| v.max(1) as usize)
-        .unwrap_or(2000);
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+    let offset = arguments.get_i64_or("offset", DEFAULT_LINE_OFFSET).max(1) as usize;
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+    let limit = arguments.get_i64_or("limit", DEFAULT_LINE_LIMIT).max(1) as usize;
 
-    // Validate path is within allowed roots
     let canonical_path = server
         .validate_path(&file_path)
-        .await
-        .map_err(|e| McpError::invalid_params(e, None))?;
+        .map_err(|error| McpError::invalid_params(error, None))?;
 
-    // Check if file exists
     if !canonical_path.exists() {
-        return Err(McpError::invalid_params(
-            format!("File does not exist: {}", file_path.display()),
-            None,
-        ));
+        return Err(ToolError::FileNotFound {
+            path: file_path.display().to_string(),
+        }
+        .into());
     }
 
     if !canonical_path.is_file() {
-        return Err(McpError::invalid_params(
-            format!("Path is not a file: {}", file_path.display()),
-            None,
-        ));
+        return Err(ToolError::NotAFile {
+            path: file_path.display().to_string(),
+        }
+        .into());
     }
 
-    // Read the file
     let content = fs::read_to_string(&canonical_path)
-        .map_err(|e| McpError::internal_error(format!("Failed to read file: {e}"), None))?;
+        .map_err(|error| McpError::internal_error(format!("Failed to read file: {error}"), None))?;
 
-    // Apply line offset and limit (1-based indexing)
     let lines: Vec<&str> = content.lines().collect();
     let total_lines = lines.len();
 
-    let start_idx = (offset - 1).min(total_lines);
-    let end_idx = (start_idx + limit).min(total_lines);
+    let start_index = (offset - 1).min(total_lines);
+    let end_index = (start_index + limit).min(total_lines);
+    let lines_read = end_index - start_index;
 
-    // Format output with line numbers (like cat -n)
     let mut output = String::new();
 
-    for (idx, line) in lines[start_idx..end_idx].iter().enumerate() {
-        let line_num = start_idx + idx + 1;
-        // Truncate long lines
-        let display_line = if line.len() > 2000 {
-            format!("{}... [truncated]", &line[..2000])
+    for (index, line) in lines[start_index..end_index].iter().enumerate() {
+        let line_number = start_index + index + 1;
+        let display_line = if line.len() > MAX_LINE_DISPLAY_LENGTH {
+            format!("{}... [truncated]", &line[..MAX_LINE_DISPLAY_LENGTH])
         } else {
-            line.to_string()
+            (*line).to_string()
         };
-        output.push_str(&format!("{:6}\t{}\n", line_num, display_line));
+        let _ = writeln!(output, "{line_number:6}\t{display_line}");
     }
 
-    // Add metadata about the read
-    let header = if start_idx > 0 || end_idx < total_lines {
+    let header = if start_index > 0 || end_index < total_lines {
         format!(
-            "Showing lines {}-{} of {} total lines from {}\n\n",
-            start_idx + 1,
-            end_idx,
-            total_lines,
+            "Showing lines {}-{} of {total_lines} total lines from {}\n\n",
+            start_index + 1,
+            end_index,
             canonical_path.display()
         )
     } else {
         format!(
-            "File: {} ({} lines)\n\n",
+            "File: {} ({total_lines} lines)\n\n",
             canonical_path.display(),
-            total_lines
         )
     };
 
+    let artifact_content = format!("{header}{output}");
+
+    let metadata = ExecutionMetadata::new().tool("read_file");
+    let artifact_id = uuid::Uuid::new_v4().to_string();
+
+    let artifact = TextArtifact::new(&artifact_content)
+        .with_title(format!("File: {}", canonical_path.display()));
+
+    let tool_response = ToolResponse::new(
+        &artifact_id,
+        mcp_execution_id.clone(),
+        artifact,
+        metadata.clone(),
+    );
+
+    let summary = if start_index > 0 || end_index < total_lines {
+        format!(
+            "Read lines {}-{} of {total_lines} from {}",
+            start_index + 1,
+            end_index,
+            canonical_path.display()
+        )
+    } else {
+        format!("Read {lines_read} lines from {}", canonical_path.display())
+    };
+
     Ok(CallToolResult {
-        content: vec![Content::text(format!("{header}{output}"))],
+        content: vec![Content::text(summary)],
         is_error: Some(false),
-        meta: None,
-        structured_content: None,
+        meta: metadata.to_meta(),
+        structured_content: Some(tool_response.to_json()),
     })
 }
