@@ -102,3 +102,6 @@ docker-compose.override.yml
 /data/GeoLite2-*.mmdb
 /data/GeoLite2-*.tar.gz
 /data/news_cache/GeoLite2-*.tar.gz
+
+# Service profiles (contain sensitive config)
+services/profiles/*.profile.yml
