@@ -5,12 +5,12 @@ use system_tools::SystemToolsServer;
 use systemprompt_core_logging::LogService;
 use systemprompt_core_system::AppContext;
 use systemprompt_identifiers::McpServerId;
-use systemprompt_models::Config;
+use systemprompt_models::{Config, ProfileBootstrap};
 use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    dotenvy::dotenv().ok();
+    ProfileBootstrap::init(None).context("Failed to initialize profile")?;
     Config::init().context("Failed to initialize configuration")?;
 
     let application_context = Arc::new(

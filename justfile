@@ -39,6 +39,34 @@ setup:
 build:
     cargo build --manifest-path=core/Cargo.toml --bin systemprompt
     cargo build --workspace
+    just mcp-build-submodules
+
+# Build MCP server submodules (systemprompt-admin, systemprompt-infrastructure)
+mcp-build-submodules:
+    #!/usr/bin/env bash
+    set -e
+    export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:?CARGO_TARGET_DIR must be set}"
+    for dir in services/mcp/systemprompt-*/; do
+        if [ -f "$dir/Cargo.toml" ] && [ -e "$dir/.git" ]; then
+            name=$(basename "$dir")
+            echo "🔧 Building MCP submodule: $name"
+            cargo build --manifest-path="$dir/Cargo.toml" --bin "$name"
+        fi
+    done
+    echo "✅ MCP submodules built"
+
+# Update MCP server submodules to latest
+mcp-update:
+    #!/usr/bin/env bash
+    set -e
+    for dir in services/mcp/systemprompt-*/; do
+        if [ -e "$dir/.git" ]; then
+            name=$(basename "$dir")
+            echo "📥 Updating MCP submodule: $name"
+            (cd "$dir" && git fetch origin && git checkout origin/main)
+        fi
+    done
+    echo "✅ MCP submodules updated. Run 'just build' to rebuild."
 
 # Build web assets
 build-web:

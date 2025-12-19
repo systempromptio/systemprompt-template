@@ -6,6 +6,7 @@ includes:
   - ../agents/admin.yml
   - ../agents/agent-editor.yml
   - ../agents/skill-editor.yml
+  - ../agents/infrastructure.yml
   - ../mcp/systemprompt-admin.yml
   - ../mcp/system-tools.yml
   - ../skills/config.yml

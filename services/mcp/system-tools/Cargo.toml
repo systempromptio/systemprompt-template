@@ -1,48 +1,40 @@
 [package]
 name = "system-tools"
-version = "0.1.0"
-edition = "2021"
-authors = ["SystemPrompt"]
-license = "MIT"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 
 [[bin]]
 name = "system-tools"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "1.0"
-tokio = { version = "1.47", features = ["full"] }
-dotenvy = "0.15"
+anyhow.workspace = true
+tokio.workspace = true
 
-rmcp = { version = "0.8.1", features = ["server", "client", "transport-io", "transport-streamable-http-server", "transport-streamable-http-server-session", "transport-streamable-http-client", "transport-streamable-http-client-reqwest", "macros", "auth"] }
+rmcp.workspace = true
 
-axum = "0.8"
+axum.workspace = true
 
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0", features = ["preserve_order"] }
+serde.workspace = true
+serde_json.workspace = true
 
 glob = "0.3"
-regex = "1.11"
-walkdir = "2.0"
-thiserror = "2.0"
-uuid = { version = "1.11", features = ["v4"] }
-chrono = { version = "0.4", features = ["serde"] }
+regex.workspace = true
+walkdir.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+chrono.workspace = true
 
-systemprompt-core-system = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-core-mcp = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-core-logging = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-core-database = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-core-ai = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-core-agent = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-models = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-identifiers = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
+systemprompt-core-system.workspace = true
+systemprompt-core-mcp.workspace = true
+systemprompt-core-logging.workspace = true
+systemprompt-core-database.workspace = true
+systemprompt-core-ai.workspace = true
+systemprompt-core-agent.workspace = true
+systemprompt-models.workspace = true
+systemprompt-identifiers.workspace = true
 
-[lints.clippy]
-all = { level = "deny", priority = -1 }
-pedantic = { level = "deny", priority = -1 }
-missing_docs_in_private_items = "allow"
-module_name_repetitions = "allow"
-missing_errors_doc = "allow"
-
-[lints.rust]
-unsafe_code = "forbid"
+[lints]
+workspace = true

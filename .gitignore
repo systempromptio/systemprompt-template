@@ -105,3 +105,4 @@ docker-compose.override.yml
 
 # Service profiles (contain sensitive config)
 services/profiles/*.profile.yml
+.cargo/config.toml
