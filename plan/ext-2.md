@@ -1,12 +1,220 @@
-# Phase 2: Blog Extension Extraction
+# Phase 2: Blog Extension - REVISED (Static Content Generator)
 
-**Objective**: Extract the blog/content domain from systemprompt-core into a standalone extension that serves as THE reference implementation for how extensions work.
+**Status**: REQUIRES CORRECTION - Original implementation was incorrect
 
-**Prerequisites**: Phase 1 (Extension Framework Core) must be complete.
+**Problem**: The blog extension was built as a JSON REST API (`/api/v1/content`), but it should be a **Static Content Generator (SCG)** that produces HTML files served at `/blog/{slug}`.
+
+**Evidence**: Accessing `http://localhost:8080/blog` returns 404 because no such route exists - the API was mounted at `/api/v1/content`.
 
 ---
 
-## 1. Current State Analysis
+## CORRECTED ARCHITECTURE
+
+### How It Should Work (Reference: `../systemprompt-blog`)
+
+The blog should integrate with **`systemprompt-core/crates/app/generator`** which provides:
+
+1. **PublishContentJob** - Orchestrates the full pipeline:
+   - `optimize_images()` → Convert to WebP
+   - `prerender_content()` → Generate HTML from Handlebars templates
+   - `generate_sitemap()` → Create sitemap.xml
+
+2. **Template Engine** - Handlebars-based with templates:
+   - `blog-post.html` - Single blog post
+   - `blog-list.html` - Blog index page
+
+3. **Output Structure**:
+```
+dist/
+├── blog/
+│   ├── index.html           # List page
+│   ├── my-post/
+│   │   └── index.html       # Post page
+│   └── another-post/
+│       └── index.html
+└── sitemap.xml
+```
+
+### What Was Built (Wrong)
+
+| Aspect | Built (Wrong) | Should Be |
+|--------|---------------|-----------|
+| Output | JSON at `/api/v1/content` | HTML at `/blog/{slug}` |
+| Runtime | Always-on API server | Build-time generation |
+| Templates | None | Handlebars HTML |
+| SEO | None | Meta tags, structured data, sitemap |
+
+---
+
+## CORRECTION PLAN
+
+### Step 1: Remove API Layer
+
+Delete or disable the JSON API handlers:
+- `src/api/handlers/content.rs` - Returns JSON, not needed
+- `src/api/mod.rs` - Router mounts API endpoints
+
+**Keep**:
+- `src/models/` - Content models are reusable
+- `src/services/ingestion.rs` - Markdown parsing is good
+- `src/repository/content.rs` - DB operations needed for SCG
+- `schema/*.sql` - Database tables used by core SCG
+
+### Step 2: Add Templates
+
+Create `services/web/templates/`:
+
+**blog-post.html**:
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{TITLE}} | {{ORG_NAME}}</title>
+    <meta name="description" content="{{DESCRIPTION}}">
+    <meta property="og:title" content="{{TITLE}}">
+    <meta property="og:image" content="{{IMAGE}}">
+</head>
+<body>
+    <article>
+        <h1>{{TITLE}}</h1>
+        <p class="meta">By {{AUTHOR}} on {{DATE}}</p>
+        {{{CONTENT}}}
+    </article>
+</body>
+</html>
+```
+
+**blog-list.html**:
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{BLOG_NAME}} | {{ORG_NAME}}</title>
+</head>
+<body>
+    <h1>{{BLOG_NAME}}</h1>
+    {{{POSTS}}}
+</body>
+</html>
+```
+
+### Step 3: Update Content Config
+
+Update `services/content/config.yml`:
+
+```yaml
+content_sources:
+  blog:
+    path: "./services/content/blog"
+    source_id: "blog"
+    category_id: "blog"
+    enabled: true
+    allowed_content_types:
+      - article
+      - tutorial
+    sitemap:
+      enabled: true
+      url_pattern: "/blog/{slug}"
+      priority: 0.8
+      changefreq: "weekly"
+      parent_route:
+        enabled: true
+        url: "/blog"
+        priority: 0.9
+        changefreq: "daily"
+
+metadata:
+  default_author: "SystemPrompt"
+  language: "en"
+  structured_data:
+    organization:
+      name: "SystemPrompt"
+      url: "https://example.com"
+```
+
+### Step 4: Update Extension
+
+Simplify `extension.rs` - remove API router, keep schemas and ingestion job:
+
+```rust
+impl BlogExtension {
+    pub fn schemas() -> Vec<(&'static str, &'static str)> {
+        // Keep database schemas
+    }
+
+    pub fn ingestion_job() -> ContentIngestionJob {
+        // Keep ingestion
+    }
+
+    // REMOVE: router() - no API needed
+    // REMOVE: base_path() - not an API
+}
+```
+
+### Step 5: Update Main Application
+
+Modify `src/main.rs`:
+
+```rust
+// REMOVE:
+// app = app.nest("/api/v1/content", blog_router);
+
+// ADD static file serving:
+use tower_http::services::ServeDir;
+app = app.nest_service("/", ServeDir::new("dist"));
+
+// ADD: Run PublishContentJob on startup or via scheduler
+```
+
+### Step 6: Integrate with Core SCG
+
+The core's `PublishContentJob` already handles:
+- Reading content from database
+- Rendering markdown to HTML
+- Applying Handlebars templates
+- Writing to `dist/` directory
+- Generating sitemap
+
+The extension just needs to:
+1. Provide content via ingestion (already works)
+2. Provide templates in correct location
+3. Configure sitemap settings
+
+---
+
+## FILES TO MODIFY
+
+| File | Action |
+|------|--------|
+| `extensions/blog/src/api/` | Remove or keep only redirect router |
+| `extensions/blog/src/extension.rs` | Remove router methods |
+| `src/main.rs` | Remove API mounting, add static serving |
+| `services/web/templates/blog-post.html` | Create |
+| `services/web/templates/blog-list.html` | Create |
+| `services/content/config.yml` | Update with sitemap config |
+
+---
+
+## VERIFICATION
+
+After changes:
+1. Run content ingestion
+2. Run `PublishContentJob`
+3. Check `dist/blog/` for HTML files
+4. Start server with static file serving
+5. Access `http://localhost:8080/blog` → HTML list page
+6. Access `http://localhost:8080/blog/{slug}` → HTML post page
+
+---
+
+## ORIGINAL PLAN (FOR REFERENCE)
+
+The original plan below was executed but resulted in incorrect architecture.
+It built a JSON API when a static site generator was needed.
+
+---
+
+## 1. Current State Analysis (Original)
 
 ### 1.1 Location in Core
 
