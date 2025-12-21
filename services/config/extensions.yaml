@@ -1,0 +1,14 @@
+# Extension Configuration
+#
+# This file configures all extensions for the template project.
+
+extensions:
+  # Blog extension settings
+  blog:
+    enabled: true
+    config_file: "./services/config/blog.yaml"
+
+  # Future extensions can be added here:
+  # analytics:
+  #   enabled: true
+  #   config_file: "./services/config/analytics.yaml"

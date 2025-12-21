@@ -42,7 +42,16 @@ agents:
           description: "OAuth 2.0 authentication - admin role required"
       security:
         - oauth2: ["admin"]
-      skills: []
+      skills:
+        - id: "traffic_analytics"
+          name: "Traffic Analytics"
+          description: "Analyze website traffic patterns, visitor behavior, device breakdown, geographic distribution, and traffic sources"
+          tags: ["analytics", "traffic", "visitors", "demographics"]
+          examples:
+            - "Show traffic analytics for the last 30 days"
+            - "What are the top traffic sources?"
+            - "Display device and geo breakdown"
+            - "Analyze visitor journey and bounce rates"
       supportsAuthenticatedExtendedCard: false
     metadata:
       systemPrompt: |

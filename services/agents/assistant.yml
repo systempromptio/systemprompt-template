@@ -9,6 +9,8 @@ agents:
     is_primary: true
     default: true
     endpoint: "/api/v1/agents/assistant"
+    oauth:
+      required: false
     card:
       protocolVersion: "0.3.0"
       name: "Assistant"

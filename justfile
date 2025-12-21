@@ -25,9 +25,9 @@ setup:
     echo "🔧 Building workspace..."
     cargo build --workspace
     echo "📊 Running database migrations..."
-    {{CLI}} db migrate
+    {{CLI}} services db migrate
     echo "🌐 Building web assets..."
-    {{CLI}} web build
+    {{CLI}} build web build
     echo ""
     echo "✅ Setup complete! Run 'just start' to start the server."
 
@@ -35,11 +35,16 @@ setup:
 # BUILD & RUN
 # ============================================================================
 
-# Build debug binaries (Rust only)
-build:
+# Build debug binaries (add --web to also build web assets)
+build *FLAGS:
+    #!/usr/bin/env bash
+    set -e
     cargo build --manifest-path=core/Cargo.toml --bin systemprompt
     cargo build --workspace
     just mcp-build-submodules
+    if [[ "{{FLAGS}}" == *"--web"* ]]; then
+        just build-web
+    fi
 
 # Build MCP server submodules (systemprompt-admin, systemprompt-infrastructure)
 mcp-build-submodules:
@@ -70,7 +75,7 @@ mcp-update:
 
 # Build web assets
 build-web:
-    {{CLI}} web build
+    {{CLI}} build web build
 
 # Build release binaries
 build-release:
@@ -79,35 +84,35 @@ build-release:
 
 # Build release web assets
 build-release-web:
-    {{CLI}} web build --prod
+    {{CLI}} build web build --prod
 
-# Open interactive TUI (starts services in background first)
+# Open interactive TUI
 systemprompt:
-    {{CLI}} interactive
+    {{CLI}}
 
 # Start all services (API, agents, MCP servers)
 start:
-    {{CLI}} start --skip-web
+    {{CLI}} services start --skip-web --skip-migrate
 
 # Start with verbose logging
 start-debug:
-    {{CLI}} start --debug
+    {{CLI}} services start --debug --skip-migrate
 
 # Stop all services
 stop:
-    {{CLI}} stop
+    {{CLI}} services stop
 
 # Show status of all services
 status:
-    {{CLI}} status
+    {{CLI}} services status
 
 # Restart services
 restart:
-    {{CLI}} restart
+    {{CLI}} services restart
 
 # Clean up orphaned processes
 cleanup:
-    {{CLI}} cleanup-services
+    {{CLI}} services cleanup
 
 # ============================================================================
 # DATABASE
@@ -115,14 +120,23 @@ cleanup:
 
 # Run database migrations
 db-migrate:
-    {{CLI}} db migrate
+    {{CLI}} services db migrate
 
 # Database operations
 db *ARGS:
-    {{CLI}} db {{ARGS}}
+    {{CLI}} services db {{ARGS}}
 
+# ============================================================================
+# LOGS & TRACING
+# ============================================================================
+
+# Stream logs
+logs:
+    {{CLI}} logs stream
+
+# AI task trace
 ai-trace TASK_ID *ARGS:
-    {{CLI}} ai-trace {{TASK_ID}} {{ARGS}}
+    {{CLI}} logs trace ai {{TASK_ID}} {{ARGS}}
 
 
 # ============================================================================
@@ -131,11 +145,11 @@ ai-trace TASK_ID *ARGS:
 
 # Sync content from disk to database
 sync-content:
-    {{CLI}} sync content
+    {{CLI}} cloud sync content
 
 # Sync skills
 sync-skills:
-    {{CLI}} sync skills
+    {{CLI}} cloud sync skills
 
 # ============================================================================
 # CORE MANAGEMENT
@@ -187,13 +201,9 @@ fmt:
 clean:
     cargo clean
 
-# Show system configuration
+# Run SystemPrompt Cloud configuration wizard
 config:
-    {{CLI}} config env
-
-# Stream logs
-logs:
-    {{CLI}} logs
+    {{CLI}} cloud config
 
 # ============================================================================
 # CLOUD DEPLOYMENT

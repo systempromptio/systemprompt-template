@@ -1,0 +1,31 @@
+# Blog Extension Configuration
+#
+# This configures the blog extension for this template project.
+
+# Content sources to ingest
+content_sources:
+  - source_id: "blog"
+    category_id: "blog"
+    path: "./services/content/blog"
+    allowed_content_types:
+      - article
+      - tutorial
+      - announcement
+    enabled: true
+    override_existing: false
+
+  - source_id: "docs"
+    category_id: "documentation"
+    path: "./services/content/docs"
+    allowed_content_types:
+      - documentation
+      - guide
+      - reference
+    enabled: true
+    override_existing: true
+
+# Base URL for generated links
+base_url: "${BASE_URL:-http://localhost:3000}"
+
+# Enable link tracking for analytics
+enable_link_tracking: true

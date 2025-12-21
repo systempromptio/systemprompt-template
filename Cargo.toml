@@ -1,13 +1,15 @@
 [workspace]
 members = [
-    # Local MCP servers (in this repo)
-    "services/mcp/system-tools",
+    # Local extensions
+    "extensions/blog",
 ]
 exclude = [
     # Git submodules - have their own Cargo.toml with git dependencies
     # Built separately via `just mcp-build-submodules`
     "services/mcp/systemprompt-admin",
     "services/mcp/systemprompt-infrastructure",
+    # Excluded until systemprompt-core-system is available
+    "services/mcp/system-tools",
 ]
 resolver = "2"
 
@@ -39,7 +41,12 @@ systemprompt-core-ai = { git = "https://github.com/systempromptio/systemprompt-c
 systemprompt-core-blog = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
 systemprompt-core-files = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
 systemprompt-core-scheduler = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-core-system = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
+systemprompt-runtime = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
+
+# ============================================
+# LOCAL EXTENSIONS
+# ============================================
+systemprompt-blog-extension = { path = "extensions/blog" }
 
 # ============================================
 # VERSION PINNING OPTIONS (uncomment to use)
@@ -155,3 +162,40 @@ missing_errors_doc = "allow"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
+
+# ============================================
+# ROOT PACKAGE (Template Application)
+# ============================================
+[package]
+name = "systemprompt-template"
+version.workspace = true
+edition.workspace = true
+description = "SystemPrompt Template - Example project with blog extension"
+
+[[bin]]
+name = "systemprompt-server"
+path = "src/main.rs"
+
+[dependencies]
+# Core framework
+systemprompt-runtime = { workspace = true }
+systemprompt-core-database = { workspace = true }
+systemprompt-core-config = { workspace = true }
+systemprompt-core-logging = { workspace = true }
+
+# Local extensions
+systemprompt-blog-extension = { workspace = true }
+
+# Runtime
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+sqlx = { workspace = true }
+axum = { workspace = true }
+tower-http = { workspace = true }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+
+[lints]
+workspace = true
