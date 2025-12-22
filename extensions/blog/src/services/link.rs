@@ -2,7 +2,7 @@
 
 use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt_identifiers::{LinkId, SessionId};
+use systemprompt::identifiers::{LinkId, SessionId};
 
 use crate::error::BlogError;
 use crate::models::{CampaignLink, CreateLinkParams, LinkClick, LinkPerformance};

@@ -1,8 +1,21 @@
-//! BlogExtension - reference implementation of a full extension.
+//! BlogExtension - Static Content Generator for blog/content management.
+//!
+//! # Architecture
+//!
+//! This extension integrates with the core Static Content Generator (SCG) pipeline:
+//!
+//! 1. **Content Ingestion**: Markdown files are parsed and stored in the database
+//! 2. **Static Generation**: Core's `PublishContentJob` renders HTML via Handlebars templates
+//! 3. **Static Serving**: Generated HTML files are served from `dist/blog/`
+//!
+//! Content is NOT served via API - it's pre-rendered to static HTML files.
+//! The API only provides link tracking endpoints for analytics.
 
 use std::sync::Arc;
-use axum::Router;
-use sqlx::PgPool;
+
+use systemprompt::database::Database;
+use systemprompt::extension::prelude::*;
+use systemprompt::traits::Job;
 
 use crate::{api, jobs::ContentIngestionJob, BlogConfig};
 
@@ -15,21 +28,40 @@ pub const SCHEMA_LINK_ANALYTICS_VIEWS: &str = include_str!("../schema/005_link_a
 pub const SCHEMA_CONTENT_PERFORMANCE_METRICS: &str = include_str!("../schema/006_content_performance_metrics.sql");
 pub const SCHEMA_MARKDOWN_FTS: &str = include_str!("../schema/007_markdown_fts.sql");
 
-/// Blog extension providing content management, search, and analytics.
+/// Blog extension providing static content generation and link analytics.
 ///
-/// # Capabilities
+/// # Architecture
 ///
-/// - **Schema**: 7 database tables for content, links, and analytics
-/// - **API**: REST endpoints for content CRUD, search, and link tracking
-/// - **Jobs**: Hourly content ingestion from filesystem
+/// This is a **Static Content Generator (SCG)**, not an API-first service.
+/// Content is pre-rendered to HTML files and served statically.
+///
+/// ## Content Flow
+///
+/// 1. Markdown files in `services/content/blog/` are ingested to database
+/// 2. Core's `PublishContentJob` renders HTML using Handlebars templates
+/// 3. Static HTML files are written to `dist/blog/{slug}/index.html`
+/// 4. Files are served by a static file server (not this extension)
+///
+/// ## What This Extension Provides
+///
+/// - **Schema**: Database tables for content storage and analytics
+/// - **Ingestion**: Job to parse markdown and store in database
+/// - **Link Tracking**: API for generating and tracking links (analytics)
+/// - **Redirect Router**: Handles `/r/{short_code}` for tracked clicks
+///
+/// ## What Core SCG Provides
+///
+/// - Template rendering (Handlebars)
+/// - Static HTML generation
+/// - Sitemap generation
+/// - Image optimization
 ///
 /// # Dependencies
 ///
 /// This extension has no dependencies on other extensions.
-/// It only requires database and config capabilities from the context.
+/// It requires database access and integrates with core's generator.
 #[derive(Debug, Default, Clone)]
 pub struct BlogExtension {
-    #[allow(dead_code)]
     config: Option<BlogConfig>,
 }
 
@@ -46,61 +78,64 @@ impl BlogExtension {
         }
     }
 
-    /// Get the extension ID.
-    pub const fn id() -> &'static str {
-        "blog"
-    }
-
-    /// Get the extension name.
-    pub const fn name() -> &'static str {
-        "Blog & Content Management"
-    }
-
-    /// Get the extension version.
-    pub const fn version() -> &'static str {
-        "1.0.0"
-    }
-
-    /// Get the extension priority (higher runs first).
-    pub const fn priority() -> u32 {
-        100
-    }
-
-    /// Get all schema definitions in order.
-    pub fn schemas() -> Vec<(&'static str, &'static str)> {
-        vec![
-            ("markdown_content", SCHEMA_MARKDOWN_CONTENT),
-            ("markdown_categories", SCHEMA_MARKDOWN_CATEGORIES),
-            ("campaign_links", SCHEMA_CAMPAIGN_LINKS),
-            ("link_clicks", SCHEMA_LINK_CLICKS),
-            ("link_analytics_views", SCHEMA_LINK_ANALYTICS_VIEWS),
-            ("content_performance_metrics", SCHEMA_CONTENT_PERFORMANCE_METRICS),
-            ("markdown_fts", SCHEMA_MARKDOWN_FTS),
-        ]
-    }
-
-    /// Get the API router for this extension.
-    pub fn router(&self, pool: Arc<PgPool>, config: BlogConfig) -> Router {
-        api::router(pool, config)
-    }
-
-    /// Get the base path for API routes.
+    /// Get the base path for link tracking API routes.
+    ///
+    /// Note: Blog content is served at `/blog/` as static HTML files,
+    /// NOT via this API path.
     pub const fn base_path() -> &'static str {
-        "/api/v1/content"
-    }
-
-    /// Check if authentication is required for this extension's routes.
-    pub const fn requires_auth() -> bool {
-        false // Public content endpoints
+        "/api/v1/links"
     }
 
     /// Get the content ingestion job.
     pub fn ingestion_job() -> ContentIngestionJob {
         ContentIngestionJob
     }
+}
 
-    /// Get the redirect router (mounted separately at /r/).
-    pub fn redirect_router(pool: Arc<PgPool>) -> Router {
-        api::redirect_router(pool)
+impl Extension for BlogExtension {
+    fn metadata(&self) -> ExtensionMetadata {
+        ExtensionMetadata {
+            id: "blog",
+            name: "Blog & Content Management",
+            version: env!("CARGO_PKG_VERSION"),
+        }
+    }
+
+    fn schemas(&self) -> Vec<SchemaDefinition> {
+        vec![
+            SchemaDefinition::inline("markdown_content", SCHEMA_MARKDOWN_CONTENT),
+            SchemaDefinition::inline("markdown_categories", SCHEMA_MARKDOWN_CATEGORIES),
+            SchemaDefinition::inline("campaign_links", SCHEMA_CAMPAIGN_LINKS),
+            SchemaDefinition::inline("link_clicks", SCHEMA_LINK_CLICKS),
+            SchemaDefinition::inline("link_analytics_views", SCHEMA_LINK_ANALYTICS_VIEWS),
+            SchemaDefinition::inline("content_performance_metrics", SCHEMA_CONTENT_PERFORMANCE_METRICS),
+            SchemaDefinition::inline("markdown_fts", SCHEMA_MARKDOWN_FTS),
+        ]
+    }
+
+    fn router(&self, ctx: &dyn ExtensionContext) -> Option<ExtensionRouter> {
+        let db_handle = ctx.database();
+        let db = db_handle.as_any().downcast_ref::<Database>()?;
+        let pool = db.pool()?;
+
+        let config = self.config.clone().unwrap_or_default();
+
+        let router = api::router(pool, config);
+
+        Some(ExtensionRouter::new(router, Self::base_path()))
+    }
+
+    fn jobs(&self) -> Vec<Arc<dyn Job>> {
+        vec![Arc::new(ContentIngestionJob)]
+    }
+
+    fn priority(&self) -> u32 {
+        100
+    }
+
+    fn migration_weight(&self) -> u32 {
+        100
     }
 }
+
+register_extension!(BlogExtension);

@@ -10,12 +10,8 @@ repository = "https://github.com/systempromptio/systemprompt-template"
 workspace = true
 
 [dependencies]
-# Core shared types from systemprompt-core
-systemprompt-models = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-identifiers = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-traits = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-core-database = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
-systemprompt-runtime = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main" }
+# Core facade - provides all systemprompt types via unified API
+systemprompt = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main", features = ["full"] }
 
 # Database access
 sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono"] }

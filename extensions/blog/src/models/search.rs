@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use systemprompt_identifiers::{CategoryId, ContentId, SourceId};
+use systemprompt::identifiers::{CategoryId, ContentId, SourceId};
 
 /// A search request.
 #[derive(Debug, Clone, Serialize, Deserialize)]

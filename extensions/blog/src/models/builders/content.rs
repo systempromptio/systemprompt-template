@@ -2,7 +2,7 @@
 
 use crate::models::ContentKind;
 use chrono::{DateTime, Utc};
-use systemprompt_identifiers::{CategoryId, SourceId};
+use systemprompt::identifiers::{CategoryId, SourceId};
 
 /// Parameters for creating new content.
 #[derive(Debug, Clone)]

@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use sqlx::FromRow;
-use systemprompt_identifiers::{CategoryId, ContentId, SourceId, TagId};
+use systemprompt::identifiers::{CategoryId, ContentId, SourceId, TagId};
 
 /// The type of content.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -70,6 +70,28 @@ pub struct Content {
 }
 
 impl Content {
+    /// SQL column list for SELECT queries with type annotations.
+    ///
+    /// Use this constant to avoid repeating the column list in every query.
+    /// Includes proper type casts for typed IDs.
+    pub const COLUMNS: &'static str = r#"
+        id as "id: ContentId",
+        slug,
+        title,
+        description,
+        body,
+        author,
+        published_at,
+        keywords,
+        kind,
+        image,
+        category_id as "category_id: CategoryId",
+        source_id as "source_id: SourceId",
+        version_hash,
+        COALESCE(links, '[]'::jsonb) as "links!",
+        updated_at
+    "#;
+
     /// Parse the links metadata from the JSON value.
     pub fn links_metadata(&self) -> Result<Vec<ContentLinkMetadata>, serde_json::Error> {
         serde_json::from_value(self.links.clone())

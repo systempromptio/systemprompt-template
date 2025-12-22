@@ -7,7 +7,7 @@ use crate::models::{
 use chrono::Utc;
 use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt_identifiers::{
+use systemprompt::identifiers::{
     CampaignId, ContentId, ContextId, LinkClickId, LinkId, SessionId, TaskId, UserId,
 };
 

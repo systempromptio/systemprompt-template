@@ -7,8 +7,13 @@ content_sources:
     source_id: "blog"
     category_id: "blog"
     enabled: true
-    description: "Blog articles"
-    allowed_content_types: ["article"]
+    description: "Blog articles and technical content"
+    allowed_content_types: ["article", "tutorial", "announcement"]
+    branding:
+      name: "Blog"
+      description: "Technical articles and updates"
+      image: "/images/blog/og-default.png"
+      keywords: "blog, articles, tutorials, technology"
     indexing:
       clear_before: false
       recursive: true
@@ -66,3 +71,24 @@ categories:
 metadata:
   default_author: "Author"
   language: "en"
+
+  # Schema.org structured data for SEO
+  structured_data:
+    organization:
+      name: "SystemPrompt Template"
+      url: "http://localhost:8080"
+      logo: "http://localhost:8080/logo.png"
+      description: "Your organization description"
+
+    blog:
+      type: "Blog"
+      name: "Blog"
+      url: "http://localhost:8080/blog"
+      description: "Technical blog posts and articles"
+      article_section: "Technology"
+      language: "en-US"
+
+    article:
+      type: "BlogPosting"
+      language: "en-US"
+      article_section: "Technology"

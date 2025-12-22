@@ -46,31 +46,37 @@ build *FLAGS:
         just build-web
     fi
 
-# Build MCP server submodules (systemprompt-admin, systemprompt-infrastructure)
+# Build MCP server submodules (admin, infrastructure)
 mcp-build-submodules:
     #!/usr/bin/env bash
     set -e
     export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:?CARGO_TARGET_DIR must be set}"
-    for dir in services/mcp/systemprompt-*/; do
-        if [ -f "$dir/Cargo.toml" ] && [ -e "$dir/.git" ]; then
-            name=$(basename "$dir")
-            echo "🔧 Building MCP submodule: $name"
-            cargo build --manifest-path="$dir/Cargo.toml" --bin "$name"
-        fi
-    done
+    # Build admin submodule
+    if [ -f "extensions/mcp/admin/Cargo.toml" ] && [ -e "extensions/mcp/admin/.git" ]; then
+        echo "🔧 Building MCP submodule: systemprompt-admin"
+        cargo build --manifest-path="extensions/mcp/admin/Cargo.toml" --bin "systemprompt-admin"
+    fi
+    # Build infrastructure submodule
+    if [ -f "extensions/mcp/infrastructure/Cargo.toml" ] && [ -e "extensions/mcp/infrastructure/.git" ]; then
+        echo "🔧 Building MCP submodule: systemprompt-infrastructure"
+        cargo build --manifest-path="extensions/mcp/infrastructure/Cargo.toml" --bin "systemprompt-infrastructure"
+    fi
     echo "✅ MCP submodules built"
 
 # Update MCP server submodules to latest
 mcp-update:
     #!/usr/bin/env bash
     set -e
-    for dir in services/mcp/systemprompt-*/; do
-        if [ -e "$dir/.git" ]; then
-            name=$(basename "$dir")
-            echo "📥 Updating MCP submodule: $name"
-            (cd "$dir" && git fetch origin && git checkout origin/main)
-        fi
-    done
+    # Update admin submodule
+    if [ -e "extensions/mcp/admin/.git" ]; then
+        echo "📥 Updating MCP submodule: admin"
+        (cd "extensions/mcp/admin" && git fetch origin && git checkout origin/main)
+    fi
+    # Update infrastructure submodule
+    if [ -e "extensions/mcp/infrastructure/.git" ]; then
+        echo "📥 Updating MCP submodule: infrastructure"
+        (cd "extensions/mcp/infrastructure" && git fetch origin && git checkout origin/main)
+    fi
     echo "✅ MCP submodules updated. Run 'just build' to rebuild."
 
 # Build web assets

@@ -2,7 +2,7 @@
 
 use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt_identifiers::{ContentId, SourceId};
+use systemprompt::identifiers::{ContentId, SourceId};
 
 use crate::error::BlogError;
 use crate::models::{Content, CreateContentParams};

@@ -4,7 +4,7 @@ use crate::models::{Content, CreateContentParams};
 use chrono::Utc;
 use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt_identifiers::{CategoryId, ContentId, SourceId};
+use systemprompt::identifiers::{CategoryId, ContentId, SourceId};
 
 /// Repository for content operations.
 #[derive(Debug, Clone)]

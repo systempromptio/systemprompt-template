@@ -1,7 +1,7 @@
 //! Link creation and tracking parameters.
 
 use chrono::{DateTime, Utc};
-use systemprompt_identifiers::{
+use systemprompt::identifiers::{
     CampaignId, ContentId, ContextId, LinkClickId, LinkId, SessionId, TaskId, UserId,
 };
 

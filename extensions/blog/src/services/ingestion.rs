@@ -5,7 +5,7 @@ use sha2::{Digest, Sha256};
 use sqlx::PgPool;
 use std::path::Path;
 use std::sync::Arc;
-use systemprompt_identifiers::{CategoryId, SourceId};
+use systemprompt::identifiers::{CategoryId, SourceId};
 use walkdir::WalkDir;
 
 use crate::config::ContentSource;

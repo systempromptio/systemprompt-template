@@ -3,7 +3,7 @@
 use crate::models::SearchResult;
 use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt_identifiers::CategoryId;
+use systemprompt::identifiers::CategoryId;
 
 /// Repository for search operations.
 #[derive(Debug, Clone)]
