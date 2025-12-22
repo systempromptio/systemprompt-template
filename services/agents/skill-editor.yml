@@ -251,6 +251,4 @@ agents:
         ```
         operations(action: "validate_skills")
         ```
-      mcpServers:
-        - "system-tools"
-        - "systemprompt-admin"
+      mcpServers: []

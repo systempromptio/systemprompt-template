@@ -100,5 +100,4 @@ agents:
         - **Recommend actions** based on insights
         - **Surface issues proactively** before they become problems
         - **Treat all data as confidential** - admin tools require appropriate care
-      mcpServers:
-        - "systemprompt-admin"
+      mcpServers: []

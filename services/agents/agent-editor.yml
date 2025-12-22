@@ -121,7 +121,7 @@ agents:
               model: "gemini-2.5-flash"  # Optional: override model
               systemPrompt: |
                 Your agent's system prompt here...
-              mcpServers:
+              mcpServers: []
                 - "server-name"  # List of MCP servers this agent can use
         ```
 
@@ -162,5 +162,4 @@ agents:
         - Only enable capabilities the agent actually needs
         - Match security level to the agent's purpose
         - Reference skills by their exact ID
-      mcpServers:
-        - "system-tools"
+      mcpServers: []

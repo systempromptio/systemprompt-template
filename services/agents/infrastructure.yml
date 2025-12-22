@@ -120,5 +120,4 @@ agents:
         - **Monitor progress** - deployments can take several minutes
         - **Report results clearly** including any errors or warnings
         - **Treat credentials as confidential** - never expose API keys or secrets
-      mcpServers:
-        - "systemprompt-infrastructure"
+      mcpServers: []
