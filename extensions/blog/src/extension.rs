@@ -17,7 +17,8 @@ use systemprompt::database::Database;
 use systemprompt::extension::prelude::*;
 use systemprompt::traits::Job;
 
-use crate::{api, jobs::ContentIngestionJob, BlogConfig};
+use crate::{api, jobs::ContentIngestionJob};
+use crate::config::BlogConfigValidated;
 
 /// SQL schema definitions embedded at compile time.
 pub const SCHEMA_MARKDOWN_CONTENT: &str = include_str!("../schema/001_markdown_content.sql");
@@ -62,20 +63,30 @@ pub const SCHEMA_MARKDOWN_FTS: &str = include_str!("../schema/007_markdown_fts.s
 /// It requires database access and integrates with core's generator.
 #[derive(Debug, Default, Clone)]
 pub struct BlogExtension {
-    config: Option<BlogConfig>,
+    validated_config: Option<Arc<BlogConfigValidated>>,
 }
 
 impl BlogExtension {
+    /// Extension config prefix for profile lookup.
+    pub const PREFIX: &'static str = "blog";
+
     /// Create a new blog extension with default configuration.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Create a new blog extension with the given configuration.
-    pub fn with_config(config: BlogConfig) -> Self {
+    /// Create a new blog extension with validated configuration.
+    ///
+    /// The validated config is produced by `BlogExtension::validate()` at startup.
+    pub fn with_validated_config(config: Arc<BlogConfigValidated>) -> Self {
         Self {
-            config: Some(config),
+            validated_config: Some(config),
         }
+    }
+
+    /// Get the validated config if available.
+    pub fn validated_config(&self) -> Option<&Arc<BlogConfigValidated>> {
+        self.validated_config.as_ref()
     }
 
     /// Get the base path for link tracking API routes.
@@ -118,9 +129,7 @@ impl Extension for BlogExtension {
         let db = db_handle.as_any().downcast_ref::<Database>()?;
         let pool = db.pool()?;
 
-        let config = self.config.clone().unwrap_or_default();
-
-        let router = api::router(pool, config);
+        let router = api::router(pool, self.validated_config.clone());
 
         Some(ExtensionRouter::new(router, Self::base_path()))
     }
@@ -135,6 +144,10 @@ impl Extension for BlogExtension {
 
     fn migration_weight(&self) -> u32 {
         100
+    }
+
+    fn config_prefix(&self) -> Option<&str> {
+        Some(Self::PREFIX)
     }
 }
 

@@ -22,6 +22,7 @@ Extensions add functionality to SystemPrompt without modifying core. They provid
 | Component | Purpose |
 |-----------|---------|
 | **Extension trait** | Unified interface for discovery |
+| **ExtensionConfig trait** | Type-safe configuration with startup validation |
 | **Schemas** | Database tables owned by the extension |
 | **Models** | Domain types and DTOs |
 | **Repositories** | Data access layer (SQL via sqlx) |
@@ -199,7 +200,184 @@ register_extension!(MyExtension);
 
 ---
 
-## Step 3: Implement ExtensionError Trait
+## Step 3: Implement ExtensionConfig Trait (Type-State Pattern)
+
+Extensions that need configuration implement `ExtensionConfig` using the type-state pattern. This ensures:
+- Config is validated **at startup**, not runtime
+- Invalid configs cause startup failure
+- Validated config uses rich types (`PathBuf`, `Url`, typed IDs)
+- No re-parsing at runtime - validated config is stored and reused
+
+### src/config.rs
+
+```rust
+use serde::Deserialize;
+use std::path::{Path, PathBuf};
+use systemprompt::extension::typed::{ExtensionConfig, ExtensionConfigErrors};
+use url::Url;
+
+use crate::MyExtension;
+
+// ============================================================================
+// RAW CONFIG - Deserialized from profile YAML, unvalidated
+// ============================================================================
+
+/// Raw config - just deserialized, paths/URLs are strings.
+#[derive(Debug, Deserialize)]
+pub struct MyExtensionConfigRaw {
+    pub data_path: String,
+    pub api_url: String,
+    #[serde(default)]
+    pub enabled: bool,
+}
+
+// ============================================================================
+// VALIDATED CONFIG - Paths verified, URLs parsed
+// ============================================================================
+
+/// Validated config - paths are PathBuf, URLs are parsed.
+/// Can ONLY be constructed via `ExtensionConfig::validate()`.
+#[derive(Debug, Clone)]
+pub struct MyExtensionConfigValidated {
+    data_path: PathBuf,  // Canonicalized, verified to exist
+    api_url: Url,        // Parsed and validated
+    enabled: bool,
+}
+
+impl MyExtensionConfigValidated {
+    pub fn data_path(&self) -> &Path {
+        &self.data_path
+    }
+
+    pub fn api_url(&self) -> &Url {
+        &self.api_url
+    }
+
+    pub fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+}
+
+// ============================================================================
+// VALIDATION - Transform Raw → Validated (consumes Raw)
+// ============================================================================
+
+impl ExtensionConfig for MyExtension {
+    type Raw = MyExtensionConfigRaw;
+    type Validated = MyExtensionConfigValidated;
+
+    const PREFIX: &'static str = "my_extension";
+
+    fn validate(raw: Self::Raw, base_path: &Path) -> Result<Self::Validated, ExtensionConfigErrors> {
+        let mut errors = ExtensionConfigErrors::new(Self::PREFIX);
+
+        // Resolve and validate path
+        let resolved_path = if Path::new(&raw.data_path).is_absolute() {
+            PathBuf::from(&raw.data_path)
+        } else {
+            base_path.join(&raw.data_path)
+        };
+
+        if !resolved_path.exists() {
+            errors.push_with_path("data_path", "Path does not exist", &resolved_path);
+        }
+
+        // Parse and validate URL
+        let api_url = match Url::parse(&raw.api_url) {
+            Ok(url) => url,
+            Err(e) => {
+                errors.push("api_url", format!("Invalid URL: {}", e));
+                Url::parse("https://invalid.example.com").unwrap()
+            }
+        };
+
+        // Return validated config or errors
+        errors.into_result(MyExtensionConfigValidated {
+            data_path: resolved_path.canonicalize().unwrap_or(resolved_path),
+            api_url,
+            enabled: raw.enabled,
+        })
+    }
+}
+```
+
+### Register Config Extension
+
+In `src/extension.rs`, add the config registration:
+
+```rust
+register_extension!(MyExtension);
+register_config_extension!(MyExtension);  // Validates config at startup
+```
+
+### Profile Configuration
+
+Extension config is stored in the profile under `extensions.{PREFIX}`:
+
+```yaml
+# profiles/local.secrets.profile.yml
+
+name: local
+display_name: "Local Development"
+
+paths:
+  # ... standard paths ...
+
+extensions:
+  my_extension:
+    data_path: data/my-extension    # Relative to services path
+    api_url: https://api.example.com
+    enabled: true
+```
+
+### Using Validated Config in Jobs
+
+Jobs receive the **already validated** config - no parsing, guaranteed valid:
+
+```rust
+#[async_trait::async_trait]
+impl Job for MyJob {
+    async fn execute(&self, ctx: &JobContext) -> Result<JobResult> {
+        // Get validated config - paths guaranteed to exist
+        let config: Arc<MyExtensionConfigValidated> = ctx
+            .extension_config::<MyExtension>()
+            .ok_or_else(|| anyhow::anyhow!("Config not found"))?;
+
+        // Use validated paths directly - no existence check needed
+        let data = std::fs::read_to_string(config.data_path())?;
+
+        Ok(JobResult::success())
+    }
+}
+```
+
+### Type-State Summary
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  MyExtensionConfigRaw                                       │
+│  ├── data_path: String        ← Unvalidated                │
+│  ├── api_url: String          ← Unvalidated                │
+│  └── #[derive(Deserialize)]   ← Can parse from YAML        │
+│                                                             │
+│              │ ExtensionConfig::validate()                  │
+│              │ (consumes Raw, produces Validated)           │
+│              ▼                                              │
+│                                                             │
+│  MyExtensionConfigValidated                                 │
+│  ├── data_path: PathBuf       ← Canonicalized, exists      │
+│  ├── api_url: Url             ← Parsed, valid              │
+│  └── NO Deserialize           ← Only via validate()        │
+│                                                             │
+│  IMPOSSIBLE to have invalid config at runtime              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Step 4: Implement ExtensionError Trait
+
+> **Note:** Step 3 (ExtensionConfig) is optional - only implement if your extension needs configuration.
 
 ### src/error.rs
 
@@ -586,6 +764,11 @@ pub use jobs::MyJob;
 - [ ] Add `Cargo.toml` with core dependencies
 - [ ] Add to workspace in root `Cargo.toml`
 - [ ] Implement `Extension` trait in `src/extension.rs`
+- [ ] Implement `ExtensionConfig` trait in `src/config.rs` (if config needed)
+  - [ ] Define `ConfigRaw` type with `#[derive(Deserialize)]`
+  - [ ] Define `ConfigValidated` type with rich types (`PathBuf`, `Url`)
+  - [ ] Implement `validate()` to transform Raw → Validated
+  - [ ] Add `register_config_extension!` call
 - [ ] Implement `ExtensionError` trait in `src/error.rs`
 - [ ] Create `schema/` directory with migrations
 - [ ] Create `src/models/` with domain types (use `COLUMNS` constant)
@@ -594,7 +777,7 @@ pub use jobs::MyJob;
 - [ ] Create `src/api/` with HTTP routes
 - [ ] Create `src/jobs/` if background processing needed
 - [ ] Create `src/lib.rs` with public exports
-- [ ] Single `register_extension!` call
+- [ ] Single `register_extension!` call (+ `register_config_extension!` if config)
 
 ---
 
@@ -605,6 +788,7 @@ The blog extension (`extensions/blog/`) demonstrates all patterns:
 | Feature | Location |
 |---------|----------|
 | Extension trait impl | `src/extension.rs` |
+| ExtensionConfig impl | `src/config.rs` (Raw/Validated types) |
 | ExtensionError impl | `src/error.rs` |
 | Schemas (7 tables) | `schema/*.sql` |
 | Models with `COLUMNS` | `src/models/` |
@@ -612,4 +796,31 @@ The blog extension (`extensions/blog/`) demonstrates all patterns:
 | Services | `src/services/` |
 | API handlers | `src/api/` |
 | Background job | `src/jobs/ingestion.rs` |
-| Configuration | `src/config.rs` |
+| Content validation | `src/services/validation.rs` |
+
+### Blog Config Example
+
+The blog extension config in profile:
+
+```yaml
+extensions:
+  blog:
+    base_url: https://myblog.com
+    enable_link_tracking: true
+    content_sources:
+      - source_id: blog
+        category_id: blog
+        path: content/blog       # Relative to services path
+        enabled: true
+      - source_id: guides
+        category_id: guides
+        path: content/guides
+        enabled: true
+```
+
+At startup, Core validates:
+- All enabled `content_sources[].path` directories exist
+- `base_url` is a valid URL with http/https scheme
+- All `source_id` and `category_id` are non-empty
+
+If validation fails, the app refuses to start with actionable error messages.

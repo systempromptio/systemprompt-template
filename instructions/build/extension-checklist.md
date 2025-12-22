@@ -15,6 +15,7 @@ Extensions implement the unified `Extension` trait from `systemprompt-traits`. U
 - [ ] `Cargo.toml` exists with correct dependencies
 - [ ] `src/lib.rs` exports public API
 - [ ] `src/extension.rs` implements `Extension` trait
+- [ ] `src/config.rs` implements `ExtensionConfig` trait (if config needed)
 - [ ] `src/error.rs` implements `ExtensionError` trait
 - [ ] `schema/` directory with numbered SQL migrations (if using database)
 
@@ -82,6 +83,72 @@ register_extension!(MyExtension);
 - [ ] `router()` returns `Option<Router>` via `ExtensionContext`
 - [ ] `jobs()` returns list of `Arc<dyn Job>` (if background tasks)
 - [ ] Single `register_extension!` call
+
+---
+
+## ExtensionConfig Trait Implementation (If Config Needed)
+
+Extensions with configuration implement `ExtensionConfig` using the type-state pattern:
+
+```rust
+use serde::Deserialize;
+use std::path::{Path, PathBuf};
+use systemprompt::extension::typed::{ExtensionConfig, ExtensionConfigErrors};
+use url::Url;
+
+// RAW - Deserialized from profile YAML, unvalidated
+#[derive(Debug, Deserialize)]
+pub struct MyConfigRaw {
+    pub data_path: String,      // String, not PathBuf
+    pub api_url: String,        // String, not Url
+}
+
+// VALIDATED - Paths verified, URLs parsed, cannot be invalid
+#[derive(Debug, Clone)]
+pub struct MyConfigValidated {
+    data_path: PathBuf,         // Canonicalized, verified to exist
+    api_url: Url,               // Parsed and validated
+}
+
+impl ExtensionConfig for MyExtension {
+    type Raw = MyConfigRaw;
+    type Validated = MyConfigValidated;
+    const PREFIX: &'static str = "my_extension";
+
+    fn validate(raw: Self::Raw, base_path: &Path) -> Result<Self::Validated, ExtensionConfigErrors> {
+        let mut errors = ExtensionConfigErrors::new(Self::PREFIX);
+
+        // Validate path exists
+        let path = base_path.join(&raw.data_path);
+        if !path.exists() {
+            errors.push_with_path("data_path", "Path does not exist", &path);
+        }
+
+        // Parse URL
+        let url = Url::parse(&raw.api_url)
+            .map_err(|e| errors.push("api_url", e.to_string()))
+            .unwrap_or_else(|_| Url::parse("https://invalid").unwrap());
+
+        errors.into_result(MyConfigValidated {
+            data_path: path.canonicalize().unwrap_or(path),
+            api_url: url,
+        })
+    }
+}
+
+register_config_extension!(MyExtension);
+```
+
+### Checklist
+
+- [ ] `Raw` type has `#[derive(Deserialize)]` with `String` for paths/URLs
+- [ ] `Validated` type has `PathBuf`, `Url`, typed IDs (NO `Deserialize`)
+- [ ] `validate()` consumes `Raw` and produces `Validated`
+- [ ] All paths validated to exist (for enabled features)
+- [ ] All URLs parsed and scheme validated
+- [ ] All errors collected (not just first failure)
+- [ ] `register_config_extension!` call added
+- [ ] Config stored in profile under `extensions.{PREFIX}`
 
 ---
 

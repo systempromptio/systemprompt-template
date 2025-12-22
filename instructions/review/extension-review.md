@@ -18,6 +18,7 @@
    - `Cargo.toml`
    - `src/lib.rs`
    - `src/extension.rs`
+   - `src/config.rs` (if extension needs configuration)
    - `src/error.rs`
 
 2. Verify directory structure based on features:
@@ -49,6 +50,17 @@ test -f {extension_path}/src/lib.rs
 test -f {extension_path}/src/extension.rs
 test -f {extension_path}/src/error.rs
 
+# Config checks (if config.rs exists)
+test -f {extension_path}/src/config.rs && {
+    # Must have Raw and Validated types
+    grep -q "struct.*Raw" {extension_path}/src/config.rs
+    grep -q "struct.*Validated" {extension_path}/src/config.rs
+    # Must implement ExtensionConfig
+    grep -q "impl ExtensionConfig" {extension_path}/src/config.rs
+    # Must have register_config_extension!
+    grep -q "register_config_extension!" {extension_path}/src/
+}
+
 # Boundary checks (should be empty or only show allowed deps)
 grep -E "systemprompt-core-(api|scheduler)" {extension_path}/Cargo.toml
 
@@ -57,6 +69,10 @@ grep -rn "sqlx::query[^!]" {extension_path}/src/
 
 # SQL in services (forbidden)
 grep -rn "sqlx::" {extension_path}/src/services/
+
+# Config anti-patterns (should be empty)
+grep -rn "std::env::var.*CONFIG" {extension_path}/src/  # No env var config loading
+grep -rn "unwrap_or_else.*default" {extension_path}/src/config.rs  # No silent fallbacks
 
 # Code quality
 cargo clippy -p {extension_name} -- -D warnings

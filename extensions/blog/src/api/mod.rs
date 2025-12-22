@@ -16,7 +16,7 @@ use axum::{
 };
 use sqlx::PgPool;
 
-use crate::BlogConfig;
+use crate::config::BlogConfigValidated;
 
 pub use types::*;
 
@@ -24,11 +24,10 @@ pub use types::*;
 ///
 /// Content is served as static HTML via the SCG pipeline, not this API.
 /// This router provides link tracking endpoints for analytics.
-pub fn router(pool: Arc<PgPool>, config: BlogConfig) -> Router {
+pub fn router(pool: Arc<PgPool>, config: Option<Arc<BlogConfigValidated>>) -> Router {
     let state = BlogState { pool, config };
 
     Router::new()
-        // Link tracking endpoints (admin API)
         .route("/links/generate", post(handlers::generate_link_handler))
         .route("/links", get(handlers::list_links_handler))
         .route(
@@ -55,5 +54,5 @@ pub fn redirect_router(pool: Arc<PgPool>) -> Router {
 #[derive(Clone)]
 pub struct BlogState {
     pub pool: Arc<PgPool>,
-    pub config: BlogConfig,
+    pub config: Option<Arc<BlogConfigValidated>>,
 }

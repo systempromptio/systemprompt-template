@@ -1,29 +1,36 @@
 # Services & Extensions Relationship
 
-**Services declare. Extensions implement.**
+**Services declare content. Extensions implement logic. Profiles configure both.**
 
 | Layer | Location | Format | Purpose |
 |-------|----------|--------|---------|
-| Services | `/services/` | YAML, Markdown | Configuration, content, schedules |
+| Profiles | `/profiles/` | YAML | Extension config, paths, secrets |
+| Services | `/services/` | Markdown, YAML | Content, job schedules |
 | Extensions | `/extensions/` | Rust | Validation, processing, storage |
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      services/ (YAML)                        │
+│                   profiles/*.profile.yml                     │
 │                                                              │
-│   config.yml ─────► "what content exists, where it lives"   │
-│   blog.yaml ──────► "which sources to ingest"               │
-│   content/*.md ───► "the actual content"                    │
-│   scheduler/*.yml ► "when jobs run"                         │
+│   paths.services ──► where content lives                    │
+│   extensions.blog ─► extension-specific config              │
+│                      (validated at STARTUP)                 │
 └──────────────────────────┬──────────────────────────────────┘
-                           │ consumed by
+                           │ validated by StartupValidator
 ┌──────────────────────────▼──────────────────────────────────┐
 │                    extensions/ (Rust)                        │
 │                                                              │
-│   config.rs ──────► deserialize YAML into typed structs     │
-│   services/*.rs ──► validate, transform, business logic     │
+│   config.rs ──────► Raw → Validated type-state pattern      │
+│   services/*.rs ──► business logic with validated config    │
 │   repository/*.rs ► persist to database                     │
-│   jobs/*.rs ──────► scheduled processing                    │
+│   jobs/*.rs ──────► receive validated config directly       │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ processes
+┌──────────────────────────▼──────────────────────────────────┐
+│                      services/ (Content)                     │
+│                                                              │
+│   content/*.md ───► markdown with YAML frontmatter          │
+│   scheduler/*.yml ► job schedule overrides                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -31,35 +38,35 @@
 
 ## Complete Example: Blog Content System
 
-### 1. Service Configuration (`services/config/blog.yaml`)
+### 1. Profile Configuration (`profiles/local.secrets.profile.yml`)
 
 ```yaml
-# Declares WHAT content exists and WHERE to find it
-# Extension validates and processes this configuration
+# Extension config lives in PROFILE, not services/
+# Validated at STARTUP - missing paths = app won't start
 
-content_sources:
-  - source_id: "blog"
-    category_id: "blog"
-    path: "./services/content/blog"
-    allowed_content_types:
-      - article
-      - tutorial
-      - announcement
-    enabled: true
-    override_existing: false
+name: local
+display_name: "Local Development"
 
-  - source_id: "docs"
-    category_id: "documentation"
-    path: "./services/content/docs"
-    allowed_content_types:
-      - documentation
-      - guide
-      - reference
-    enabled: true
-    override_existing: true
+paths:
+  services: /var/www/services
+  # ... other paths ...
 
-base_url: "${BASE_URL:-http://localhost:3000}"
-enable_link_tracking: true
+extensions:
+  blog:
+    base_url: https://myblog.com
+    enable_link_tracking: true
+    content_sources:
+      - source_id: blog
+        category_id: blog
+        path: content/blog          # Relative to paths.services
+        enabled: true
+      - source_id: docs
+        category_id: documentation
+        path: content/docs
+        allowed_content_types:
+          - documentation
+          - guide
+        enabled: true
 ```
 
 ### 2. Content File (`services/content/blog/hello-world/index.md`)
@@ -89,55 +96,124 @@ Welcome to SystemPrompt. This is your first blog post.
 Follow these steps to build your first extension...
 ```
 
-### 3. Extension Config Struct (`extensions/blog/src/config.rs`)
+### 3. Extension Config (Type-State Pattern) (`extensions/blog/src/config.rs`)
 
 ```rust
-use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use serde::Deserialize;
+use std::path::{Path, PathBuf};
+use systemprompt::extension::typed::{ExtensionConfig, ExtensionConfigErrors};
+use systemprompt::identifiers::{CategoryId, SourceId};
+use url::Url;
 
-/// Typed representation of blog.yaml
-/// Deserialized from services/config/blog.yaml
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BlogConfig {
+use crate::BlogExtension;
+
+// ============================================================================
+// RAW - Deserialized from profile, unvalidated (String for paths/URLs)
+// ============================================================================
+
+#[derive(Debug, Deserialize)]
+pub struct BlogConfigRaw {
     #[serde(default)]
-    pub content_sources: Vec<ContentSource>,
-
+    pub content_sources: Vec<ContentSourceRaw>,
     #[serde(default = "default_base_url")]
     pub base_url: String,
-
     #[serde(default)]
     pub enable_link_tracking: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ContentSource {
+#[derive(Debug, Deserialize)]
+pub struct ContentSourceRaw {
     pub source_id: String,
     pub category_id: String,
-    pub path: PathBuf,
+    pub path: String,              // String, not PathBuf
     #[serde(default)]
     pub allowed_content_types: Vec<String>,
     #[serde(default = "default_true")]
     pub enabled: bool,
-    #[serde(default)]
-    pub override_existing: bool,
 }
 
-impl Default for BlogConfig {
-    fn default() -> Self {
-        Self {
-            content_sources: vec![],
-            base_url: default_base_url(),
-            enable_link_tracking: true,
-        }
+fn default_base_url() -> String { "https://example.com".into() }
+fn default_true() -> bool { true }
+
+// ============================================================================
+// VALIDATED - Paths verified, URLs parsed (cannot be invalid)
+// ============================================================================
+
+#[derive(Debug, Clone)]
+pub struct BlogConfigValidated {
+    content_sources: Vec<ContentSourceValidated>,
+    base_url: Url,                 // Parsed Url, not String
+    enable_link_tracking: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct ContentSourceValidated {
+    source_id: SourceId,           // Typed ID, not String
+    category_id: CategoryId,       // Typed ID, not String
+    path: PathBuf,                 // Canonicalized, verified to exist
+    allowed_content_types: Vec<String>,
+    enabled: bool,
+}
+
+impl BlogConfigValidated {
+    pub fn enabled_sources(&self) -> impl Iterator<Item = &ContentSourceValidated> {
+        self.content_sources.iter().filter(|s| s.enabled)
     }
+    pub fn base_url(&self) -> &Url { &self.base_url }
 }
 
-fn default_base_url() -> String {
-    "http://localhost:3000".to_string()
+impl ContentSourceValidated {
+    pub fn source_id(&self) -> &SourceId { &self.source_id }
+    pub fn category_id(&self) -> &CategoryId { &self.category_id }
+    pub fn path(&self) -> &Path { &self.path }
 }
 
-fn default_true() -> bool {
-    true
+// ============================================================================
+// VALIDATION - Transform Raw → Validated (consumes Raw)
+// ============================================================================
+
+impl ExtensionConfig for BlogExtension {
+    type Raw = BlogConfigRaw;
+    type Validated = BlogConfigValidated;
+    const PREFIX: &'static str = "blog";
+
+    fn validate(raw: Self::Raw, base_path: &Path) -> Result<Self::Validated, ExtensionConfigErrors> {
+        let mut errors = ExtensionConfigErrors::new(Self::PREFIX);
+
+        // Parse and validate URL
+        let base_url = Url::parse(&raw.base_url)
+            .map_err(|e| errors.push("base_url", e.to_string()))
+            .unwrap_or_else(|_| Url::parse("https://invalid").unwrap());
+
+        // Validate and transform each source
+        let mut sources = Vec::new();
+        for (i, src) in raw.content_sources.into_iter().enumerate() {
+            let path = base_path.join(&src.path);
+
+            if src.enabled && !path.exists() {
+                errors.push_with_path(
+                    format!("content_sources[{}].path", i),
+                    format!("Path does not exist for source '{}'", src.source_id),
+                    &path,
+                );
+                continue;
+            }
+
+            sources.push(ContentSourceValidated {
+                source_id: SourceId::new(src.source_id),
+                category_id: CategoryId::new(src.category_id),
+                path: path.canonicalize().unwrap_or(path),
+                allowed_content_types: src.allowed_content_types,
+                enabled: src.enabled,
+            });
+        }
+
+        errors.into_result(BlogConfigValidated {
+            content_sources: sources,
+            base_url,
+            enable_link_tracking: raw.enable_link_tracking,
+        })
+    }
 }
 ```
 
@@ -184,11 +260,10 @@ fn default_kind() -> String {
 use std::path::Path;
 use std::sync::Arc;
 use sqlx::PgPool;
-use sha2::{Digest, Sha256};
 use walkdir::WalkDir;
-use systemprompt_identifiers::{CategoryId, SourceId};
+use systemprompt::identifiers::{CategoryId, SourceId};
 
-use crate::config::ContentSource;
+use crate::config::ContentSourceValidated;
 use crate::error::BlogError;
 use crate::models::{ContentMetadata, CreateContentParams, IngestionReport};
 use crate::repository::ContentRepository;
@@ -202,23 +277,13 @@ impl IngestionService {
         Self { repo: ContentRepository::new(pool) }
     }
 
-    /// Process a content source from YAML config
-    pub async fn ingest_source(&self, source: &ContentSource) -> Result<IngestionReport, BlogError> {
+    /// Process a validated content source.
+    /// Path is GUARANTEED to exist (validated at startup).
+    pub async fn ingest_source(&self, source: &ContentSourceValidated) -> Result<IngestionReport, BlogError> {
         let mut report = IngestionReport::new();
 
-        // Skip disabled sources (configured in YAML)
-        if !source.enabled {
-            return Ok(report);
-        }
-
-        // Validate path exists
-        if !source.path.exists() {
-            report.errors.push(format!("Path not found: {}", source.path.display()));
-            return Ok(report);
-        }
-
-        // Walk directory for .md files
-        for entry in WalkDir::new(&source.path)
+        // No path existence check needed - validated at startup!
+        for entry in WalkDir::new(source.path())
             .follow_links(true)
             .into_iter()
             .filter_map(Result::ok)
@@ -226,7 +291,7 @@ impl IngestionService {
         {
             report.files_found += 1;
 
-            match self.ingest_file(entry.path(), &source.source_id, &source.category_id).await {
+            match self.ingest_file(entry.path(), source.source_id(), source.category_id()).await {
                 Ok(_) => report.files_processed += 1,
                 Err(e) => report.errors.push(format!("{}: {}", entry.path().display(), e)),
             }
@@ -235,18 +300,16 @@ impl IngestionService {
         Ok(report)
     }
 
-    async fn ingest_file(&self, path: &Path, source_id: &str, category_id: &str) -> Result<(), BlogError> {
+    async fn ingest_file(
+        &self,
+        path: &Path,
+        source_id: &SourceId,      // Typed ID, not String
+        category_id: &CategoryId,  // Typed ID, not String
+    ) -> Result<(), BlogError> {
         let content = std::fs::read_to_string(path)?;
-        let version_hash = compute_hash(&content);
-
-        // Parse YAML frontmatter from markdown
         let (metadata, body) = parse_markdown(&content)?;
-
-        // Validate and transform
         let published_at = parse_datetime(&metadata.published_at)?;
-        let links = serde_json::to_value(&metadata.links)?;
 
-        // Build typed params
         let params = CreateContentParams::new(
             metadata.slug,
             metadata.title,
@@ -254,35 +317,25 @@ impl IngestionService {
             body,
             metadata.author,
             published_at,
-            SourceId::new(source_id.to_string()),
+            source_id.clone(),
         )
-        .with_version_hash(version_hash)
-        .with_keywords(metadata.keywords)
-        .with_category_id(Some(CategoryId::new(category_id.to_string())))
-        .with_links(links);
+        .with_category_id(Some(category_id.clone()));
 
-        // Persist to database
         self.repo.create(&params).await?;
         Ok(())
     }
 }
 
 fn parse_markdown(content: &str) -> Result<(ContentMetadata, String), BlogError> {
-    // Validate frontmatter exists
     if !content.starts_with("---") {
         return Err(BlogError::Parse("Missing YAML frontmatter".into()));
     }
-
     let rest = &content[3..];
     let end = rest.find("---")
         .ok_or_else(|| BlogError::Parse("Unclosed frontmatter".into()))?;
-
     let frontmatter = rest[..end].trim();
     let body = rest[end + 3..].trim().to_string();
-
-    // Deserialize YAML to typed struct
     let metadata: ContentMetadata = serde_yaml::from_str(frontmatter)?;
-
     Ok((metadata, body))
 }
 
@@ -296,10 +349,6 @@ fn parse_datetime(s: &str) -> Result<chrono::DateTime<chrono::Utc>, BlogError> {
         })
         .map_err(|_| BlogError::Parse(format!("Invalid date: {s}")))
 }
-
-fn compute_hash(content: &str) -> String {
-    format!("{:x}", sha2::Sha256::digest(content.as_bytes()))
-}
 ```
 
 ### 6. Background Job (`extensions/blog/src/jobs/ingestion.rs`)
@@ -307,9 +356,10 @@ fn compute_hash(content: &str) -> String {
 ```rust
 use std::sync::Arc;
 use sqlx::PgPool;
-use systemprompt_traits::{Job, JobContext, JobResult};
+use systemprompt::traits::{Job, JobContext, JobResult};
 
-use crate::config::BlogConfig;
+use crate::BlogExtension;
+use crate::config::BlogConfigValidated;
 use crate::services::IngestionService;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -318,30 +368,39 @@ pub struct ContentIngestionJob;
 #[async_trait::async_trait]
 impl Job for ContentIngestionJob {
     fn name(&self) -> &'static str { "blog_content_ingestion" }
-    fn description(&self) -> &'static str { "Ingests markdown from services/content/" }
-    fn schedule(&self) -> &'static str { "0 0 * * * *" }  // Hourly default
+    fn description(&self) -> &'static str { "Ingests markdown from content sources" }
+    fn schedule(&self) -> &'static str { "0 0 * * * *" }
 
     async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
         let pool = ctx.db_pool::<PgPool>()
             .ok_or_else(|| anyhow::anyhow!("DB not available"))?;
 
-        // Load YAML config from services/
-        let config = load_config()?;
+        // Get ALREADY VALIDATED config - no parsing, no file loading!
+        // Paths are GUARANTEED to exist (validated at startup)
+        let config: Arc<BlogConfigValidated> = ctx
+            .extension_config::<BlogExtension>()
+            .ok_or_else(|| anyhow::anyhow!(
+                "Blog config not found. Add 'extensions.blog' to profile."
+            ))?;
 
         let service = IngestionService::new(Arc::new(pool.clone()));
 
         let mut total = 0u64;
         let mut errors = 0u64;
 
-        // Process each source defined in YAML
-        for source in &config.content_sources {
+        // Process only enabled sources (filtered by validated config)
+        for source in config.enabled_sources() {
             match service.ingest_source(source).await {
                 Ok(report) => {
                     total += report.files_processed as u64;
                     errors += report.errors.len() as u64;
                 }
                 Err(e) => {
-                    tracing::error!(source = %source.source_id, error = %e, "Ingestion failed");
+                    tracing::error!(
+                        source_id = %source.source_id(),
+                        error = %e,
+                        "Ingestion failed"
+                    );
                     errors += 1;
                 }
             }
@@ -351,12 +410,8 @@ impl Job for ContentIngestionJob {
     }
 }
 
-fn load_config() -> anyhow::Result<BlogConfig> {
-    let path = std::env::var("BLOG_CONFIG")
-        .unwrap_or_else(|_| "./services/config/blog.yaml".to_string());
-    let content = std::fs::read_to_string(&path)?;
-    Ok(serde_yaml::from_str(&content)?)
-}
+// NO load_config() function needed!
+// Config is validated at startup and retrieved from JobContext
 ```
 
 ### 7. Job Schedule Override (`services/scheduler/config.yml`)
@@ -381,46 +436,66 @@ scheduler:
 ## Data Flow Summary
 
 ```
-services/config/blog.yaml          services/content/blog/*.md
-        │                                    │
-        │ BlogConfig                         │ ContentMetadata
-        ▼                                    ▼
-┌───────────────────────────────────────────────────────────┐
-│                   IngestionService                         │
-│                                                            │
-│  1. Load BlogConfig from YAML                              │
-│  2. For each ContentSource:                                │
-│     a. Walk path for .md files                             │
-│     b. Parse frontmatter → ContentMetadata                 │
-│     c. Validate (dates, required fields)                   │
-│     d. Transform to CreateContentParams                    │
-│     e. Persist via ContentRepository                       │
-└────────────────────────┬──────────────────────────────────┘
-                         │
-                         ▼
-                    PostgreSQL
-                  (markdown_content)
+┌─────────────────────────────────────────────────────────────┐
+│                      STARTUP                                 │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  profiles/*.profile.yml                                      │
+│         │                                                    │
+│         │ extensions.blog                                    │
+│         ▼                                                    │
+│  BlogConfigRaw (deserialized)                                │
+│         │                                                    │
+│         │ ExtensionConfig::validate()                        │
+│         ▼                                                    │
+│  BlogConfigValidated (paths verified, URLs parsed)           │
+│         │                                                    │
+│         │ stored in ExtensionConfigRegistry                  │
+│         ▼                                                    │
+│  If errors → display report → exit(1)                       │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                      RUNTIME (Job)                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ctx.extension_config::<BlogExtension>()                    │
+│         │                                                    │
+│         │ Arc<BlogConfigValidated>                          │
+│         ▼                                                    │
+│  IngestionService.ingest_source()                           │
+│         │                                                    │
+│         │ paths GUARANTEED to exist                         │
+│         ▼                                                    │
+│  services/content/*.md → parse → ContentRepository          │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Key Patterns
 
-| Pattern | Service (YAML) | Extension (Rust) |
-|---------|----------------|------------------|
-| Configuration | Declares sources, paths, options | Deserializes to typed structs |
-| Content | Markdown with YAML frontmatter | Parses, validates, stores |
-| Scheduling | Overrides job schedules | Defines job logic + default schedule |
-| Validation | Schema implied by structure | Enforced at runtime with errors |
-| Defaults | Not specified = use extension default | `#[serde(default)]` on struct fields |
+| Pattern | Profile (YAML) | Extension (Rust) | Services (Content) |
+|---------|----------------|------------------|-------------------|
+| Configuration | `extensions.{name}` section | Type-state: Raw → Validated | N/A |
+| Path validation | String paths | `PathBuf` (canonicalized, verified) | N/A |
+| URL validation | String URLs | `Url` (parsed, scheme checked) | N/A |
+| ID types | String IDs | `SourceId`, `CategoryId` (typed) | N/A |
+| Content | N/A | Parses, validates, stores | Markdown + frontmatter |
+| Scheduling | N/A | Defines default schedule | Override schedules |
+| Validation timing | N/A | **Startup** (not runtime) | N/A |
 
 ---
 
 ## Rules
 
-1. **Services never execute** — They only declare intent
-2. **Extensions validate everything** — Don't trust YAML blindly
-3. **Type your config** — `serde` structs, not `serde_json::Value`
-4. **Defaults in Rust** — Use `#[serde(default)]`, not YAML anchors
-5. **Paths are relative to project root** — `./services/content/blog`
-6. **Jobs define defaults, YAML overrides** — Extension: `"0 0 * * * *"`, Service: `"0 */15 * * * *"`
+1. **Config lives in profiles** — Not `services/config/`, not env vars
+2. **Type-state for config** — `Raw` → `Validated` transformation
+3. **Validate at startup** — Missing paths = app won't start
+4. **Jobs receive validated config** — No file loading, no parsing
+5. **Paths are guaranteed** — Once validated, paths exist
+6. **No fallbacks** — Invalid config = error, not silent default
+7. **Rich types** — `PathBuf`, `Url`, typed IDs (not `String`)
+8. **Collect all errors** — Don't stop at first failure

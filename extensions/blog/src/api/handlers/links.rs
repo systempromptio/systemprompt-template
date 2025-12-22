@@ -25,11 +25,15 @@ pub async fn generate_link_handler(
         .await
     {
         Ok(link) => {
-            let base_url = &state.config.base_url;
+            let base_url = state
+                .config
+                .as_ref()
+                .map(|c| c.base_url().as_str())
+                .unwrap_or("https://example.com");
             let response = GenerateLinkResponse {
                 id: link.id.to_string(),
                 short_code: link.short_code.clone(),
-                short_url: format!("{}/r/{}", base_url, link.short_code),
+                short_url: format!("{}/r/{}", base_url.trim_end_matches('/'), link.short_code),
                 target_url: link.target_url,
             };
             Json(response).into_response()

@@ -43,6 +43,7 @@ walkdir = "2.0"
 anyhow = "1.0"
 rand = "0.8"
 inventory = "0.3"
+url = "2.5"
 
 [dev-dependencies]
 tokio = { version = "1.47", features = ["test-util", "macros"] }

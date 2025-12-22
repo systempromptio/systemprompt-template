@@ -30,7 +30,10 @@ pub mod models;
 pub mod repository;
 pub mod services;
 
-pub use config::BlogConfig;
+pub use config::{
+    BlogConfigRaw, BlogConfigValidated, ContentSourceRaw, ContentSourceValidated,
+    ExtensionConfigError, ExtensionConfigErrors,
+};
 pub use error::BlogError;
 pub use extension::BlogExtension;
 

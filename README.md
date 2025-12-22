@@ -50,6 +50,8 @@ systemprompt-template/
 
 ## Commands
 
+### Development
+
 | Command | Description |
 |---------|-------------|
 | `just setup` | First-time setup (provisions DB, builds, migrates) |
@@ -59,6 +61,17 @@ systemprompt-template/
 | `just core-sync` | Update core subtree |
 | `just test` | Run tests |
 | `just lint` | Run clippy |
+
+### Build & Deploy
+
+| Command | Description |
+|---------|-------------|
+| `systemprompt build release` | Build optimized binary + web assets |
+| `systemprompt build release --skip-web` | Build binary only (faster) |
+| `systemprompt cloud login` | Authenticate with SystemPrompt Cloud |
+| `systemprompt cloud setup` | Link project to cloud tenant |
+| `systemprompt cloud deploy` | Deploy pre-built artifacts |
+| `systemprompt cloud deploy --rebuild` | Rebuild and deploy |
 
 ## Configuration
 
@@ -144,6 +157,88 @@ Edit `services/web/config.yml` to change:
 - Typography
 - Layout
 - Navigation
+
+## Deploying to SystemPrompt Cloud
+
+### Quick Deploy
+
+```bash
+# 1. Login to SystemPrompt Cloud
+systemprompt cloud login
+
+# 2. Link your project to a cloud tenant (first time only)
+systemprompt cloud setup --name my-project
+
+# 3. Build release artifacts
+systemprompt build release
+
+# 4. Deploy
+systemprompt cloud deploy
+```
+
+### Build & Release Architecture
+
+The build system uses a **type-safe pipeline** that enforces correct build order at compile time:
+
+```
+Unbuilt → BinaryReady → Complete
+```
+
+#### Build Commands
+
+| Command | Description |
+|---------|-------------|
+| `systemprompt build release` | Build release binary + web assets, stage for deployment |
+| `systemprompt build release --skip-web` | Build only the binary (faster, no web assets) |
+| `systemprompt cloud deploy` | Deploy using pre-built artifacts |
+| `systemprompt cloud deploy --rebuild` | Rebuild everything before deploying |
+
+#### Workflow: Separate Build & Deploy (Recommended)
+
+```bash
+# Step 1: Build once
+systemprompt build release
+
+# Step 2: Deploy (fast - uses pre-built artifacts)
+systemprompt cloud deploy
+
+# Subsequent deploys reuse artifacts until you rebuild
+systemprompt cloud deploy --tag v1.0.0
+```
+
+#### Workflow: All-in-One (Convenience)
+
+```bash
+# Build + deploy in one command
+systemprompt cloud deploy --rebuild
+```
+
+### Artifacts
+
+After `systemprompt build release`, artifacts are staged to:
+
+```
+infrastructure/build-context/release/
+├── systemprompt    # Release binary (optimized, stripped)
+web/dist/           # Static web assets
+```
+
+### Deploy Options
+
+| Flag | Description |
+|------|-------------|
+| `--rebuild` | Rebuild all artifacts before deploying |
+| `--skip-push` | Build Docker image but don't push to registry |
+| `--tag <TAG>` | Custom image tag (default: `deploy-{timestamp}-{git_sha}`) |
+
+### Breaking Change Note
+
+The default behavior changed from "always rebuild" to "use pre-built artifacts":
+
+- **Before**: `cloud deploy` rebuilt everything by default
+- **After**: `cloud deploy` expects pre-built artifacts; use `--rebuild` to rebuild
+
+This separation enables faster iteration - build once, deploy many times.
 
 ## License
 
