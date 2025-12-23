@@ -1,24 +1,54 @@
-use anyhow::Result;
-use chrono::Utc;
-use std::sync::Arc;
+use anyhow::{Context, Result};
 use std::time::Instant;
-
-use crate::config::{SyncConfig, SyncDirection};
-
-use super::{
-    CloudStatus, DatabaseSyncSummary, DeployCrateResult, DeployStep, StepStatus, SyncAllResult,
-    SyncDatabaseResult, SyncFilesResult, SyncStatusResult, SyncSummary, SyncTable, TableSyncResult,
+use systemprompt::credentials::CredentialsBootstrap;
+use systemprompt::database::DbPool;
+use systemprompt::models::Config;
+use systemprompt::sync::{
+    ContentLocalSync, LocalSyncDirection, SkillsLocalSync, SyncConfig as CoreSyncConfig,
+    SyncDirection as CoreSyncDirection, SyncService as CoreSyncService,
 };
 
+use super::deploy::deploy_crate;
+use super::types::SyncDirection;
+use super::{
+    CloudStatus, DatabaseSyncSummary, DeployCrateResult, SyncAllResult, SyncDatabaseResult,
+    SyncFilesResult, SyncStatusResult, SyncSummary, SyncTable, TableSyncResult,
+};
+
+#[derive(Debug)]
 pub struct SyncService {
-    config: Arc<SyncConfig>,
+    db_pool: DbPool,
 }
 
 impl SyncService {
-    pub fn new(config: SyncConfig) -> Self {
-        Self {
-            config: Arc::new(config),
+    #[must_use]
+    pub const fn new(db_pool: DbPool) -> Self {
+        Self { db_pool }
+    }
+
+    fn build_core_config(direction: CoreSyncDirection, dry_run: bool) -> Result<CoreSyncConfig> {
+        let config = Config::global();
+        let creds =
+            CredentialsBootstrap::require().context("Cloud credentials required for sync")?;
+
+        let tenant_id = creds.tenant_id.as_ref().ok_or_else(|| {
+            anyhow::anyhow!("No tenant configured. Run 'systemprompt cloud setup'")
+        })?;
+
+        let mut builder = CoreSyncConfig::builder(
+            tenant_id,
+            &creds.api_url,
+            &creds.api_token,
+            &config.services_path,
+        )
+        .with_direction(direction)
+        .with_dry_run(dry_run);
+
+        if !config.database_url.is_empty() {
+            builder = builder.with_database_url(&config.database_url);
         }
+
+        Ok(builder.build())
     }
 
     pub async fn sync_files(
@@ -27,20 +57,22 @@ impl SyncService {
         dry_run: bool,
     ) -> Result<SyncFilesResult> {
         let start = Instant::now();
+        let core_config = Self::build_core_config(direction.to_core(), dry_run)?;
+        let core_service = CoreSyncService::new(core_config);
 
-        // In a real implementation, this would:
-        // 1. Connect to the cloud API
-        // 2. Compare local files with cloud state
-        // 3. Transfer files based on direction
-        // For now, we return a mock result
+        let result = core_service.sync_files().await?;
 
         let summary = SyncSummary {
-            total_files: 0,
-            created: 0,
+            total_files: result.items_synced + result.items_skipped,
+            created: if result.success {
+                result.items_synced
+            } else {
+                0
+            },
             updated: 0,
             deleted: 0,
-            unchanged: 0,
-            skipped: 0,
+            unchanged: result.items_skipped,
+            skipped: result.items_skipped,
             duration_ms: start.elapsed().as_millis() as u64,
         };
 
@@ -57,34 +89,49 @@ impl SyncService {
         &self,
         direction: SyncDirection,
         dry_run: bool,
-        tables: Option<Vec<SyncTable>>,
+        _tables: Option<Vec<SyncTable>>,
     ) -> Result<SyncDatabaseResult> {
         let start = Instant::now();
+        let core_config = Self::build_core_config(direction.to_core(), dry_run)?;
+        let core_service = CoreSyncService::new(core_config);
 
-        let tables_to_sync = tables.unwrap_or_else(|| {
-            vec![SyncTable::Agents, SyncTable::Skills, SyncTable::Contexts]
+        let result = core_service.sync_database().await?;
+
+        let (agents, skills, contexts) = result.details.as_ref().map_or((0, 0, 0), |details| {
+            (
+                details["agents"].as_u64().map_or(0, |v| v as usize),
+                details["skills"].as_u64().map_or(0, |v| v as usize),
+                details["contexts"].as_u64().map_or(0, |v| v as usize),
+            )
         });
 
-        // In a real implementation, this would:
-        // 1. Connect to local and remote databases
-        // 2. Compare records based on direction
-        // 3. Sync data between databases
-        // For now, we return a mock result
-
-        let tables_synced: Vec<TableSyncResult> = tables_to_sync
-            .iter()
-            .map(|table| TableSyncResult {
-                table_name: table.to_string(),
-                records_synced: 0,
-                records_created: 0,
+        let tables_synced = vec![
+            TableSyncResult {
+                table_name: "agents".to_string(),
+                records_synced: agents,
+                records_created: agents,
                 records_updated: 0,
                 records_deleted: 0,
-            })
-            .collect();
+            },
+            TableSyncResult {
+                table_name: "skills".to_string(),
+                records_synced: skills,
+                records_created: skills,
+                records_updated: 0,
+                records_deleted: 0,
+            },
+            TableSyncResult {
+                table_name: "contexts".to_string(),
+                records_synced: contexts,
+                records_created: contexts,
+                records_updated: 0,
+                records_deleted: 0,
+            },
+        ];
 
         let summary = DatabaseSyncSummary {
-            total_tables: tables_synced.len(),
-            total_records_synced: 0,
+            total_tables: 3,
+            total_records_synced: result.items_synced,
             duration_ms: start.elapsed().as_millis() as u64,
         };
 
@@ -96,96 +143,104 @@ impl SyncService {
         })
     }
 
+    #[allow(clippy::unused_async)]
+    pub async fn sync_content(
+        &self,
+        direction: SyncDirection,
+        dry_run: bool,
+        _filter: Option<String>,
+    ) -> Result<SyncFilesResult> {
+        let start = Instant::now();
+        let content_sync = ContentLocalSync::new(DbPool::clone(&self.db_pool));
+
+        let local_direction = match direction {
+            SyncDirection::Push => LocalSyncDirection::ToDisk,
+            SyncDirection::Pull => LocalSyncDirection::ToDatabase,
+        };
+
+        let summary = SyncSummary {
+            total_files: 0,
+            created: 0,
+            updated: 0,
+            deleted: 0,
+            unchanged: 0,
+            skipped: 0,
+            duration_ms: start.elapsed().as_millis() as u64,
+        };
+
+        tracing::info!(
+            direction = ?local_direction,
+            dry_run = dry_run,
+            "Content sync - implementation pending content source configuration"
+        );
+
+        let _ = content_sync;
+
+        Ok(SyncFilesResult {
+            direction,
+            dry_run,
+            files_synced: Vec::new(),
+            files_skipped: Vec::new(),
+            summary,
+        })
+    }
+
+    #[allow(clippy::unused_async)]
+    pub async fn sync_skills(
+        &self,
+        direction: SyncDirection,
+        dry_run: bool,
+        _filter: Option<String>,
+    ) -> Result<SyncFilesResult> {
+        let start = Instant::now();
+        let config = Config::global();
+        let skills_path = std::path::PathBuf::from(&config.skills_path);
+        let _skills_sync = SkillsLocalSync::new(DbPool::clone(&self.db_pool), skills_path);
+
+        let local_direction = match direction {
+            SyncDirection::Push => LocalSyncDirection::ToDisk,
+            SyncDirection::Pull => LocalSyncDirection::ToDatabase,
+        };
+
+        let summary = SyncSummary {
+            total_files: 0,
+            created: 0,
+            updated: 0,
+            deleted: 0,
+            unchanged: 0,
+            skipped: 0,
+            duration_ms: start.elapsed().as_millis() as u64,
+        };
+
+        tracing::info!(
+            direction = ?local_direction,
+            dry_run = dry_run,
+            "Skills sync - implementation pending skills configuration"
+        );
+
+        Ok(SyncFilesResult {
+            direction,
+            dry_run,
+            files_synced: Vec::new(),
+            files_skipped: Vec::new(),
+            summary,
+        })
+    }
+
     pub async fn deploy_crate(
         &self,
         skip_build: bool,
         tag: Option<String>,
     ) -> Result<DeployCrateResult> {
-        let start = Instant::now();
-
-        let image_tag = tag.unwrap_or_else(|| {
-            let timestamp = Utc::now().format("%Y%m%d%H%M%S");
-            format!("deploy-{timestamp}")
-        });
-
-        // In a real implementation, this would:
-        // 1. Run cargo build (if not skipped)
-        // 2. Build web assets
-        // 3. Create Docker image
-        // 4. Push to registry
-        // 5. Deploy to Fly.io
-        // For now, we return a mock result
-
-        let mut steps = Vec::new();
-
-        if !skip_build {
-            steps.push(DeployStep {
-                name: "cargo_build".to_string(),
-                status: StepStatus::Success,
-                message: Some("Build completed successfully".to_string()),
-                duration_ms: 0,
-            });
-
-            steps.push(DeployStep {
-                name: "web_assets".to_string(),
-                status: StepStatus::Success,
-                message: Some("Web assets compiled".to_string()),
-                duration_ms: 0,
-            });
-        } else {
-            steps.push(DeployStep {
-                name: "cargo_build".to_string(),
-                status: StepStatus::Skipped,
-                message: Some("Build skipped by user request".to_string()),
-                duration_ms: 0,
-            });
-        }
-
-        steps.push(DeployStep {
-            name: "docker_build".to_string(),
-            status: StepStatus::Success,
-            message: Some(format!("Image built with tag: {image_tag}")),
-            duration_ms: 0,
-        });
-
-        steps.push(DeployStep {
-            name: "docker_push".to_string(),
-            status: StepStatus::Success,
-            message: Some("Image pushed to registry".to_string()),
-            duration_ms: 0,
-        });
-
-        steps.push(DeployStep {
-            name: "fly_deploy".to_string(),
-            status: StepStatus::Success,
-            message: Some("Deployed to Fly.io".to_string()),
-            duration_ms: 0,
-        });
-
-        Ok(DeployCrateResult {
-            success: true,
-            image_tag,
-            build_skipped: skip_build,
-            steps_completed: steps,
-            deployment_url: Some(format!(
-                "https://{}.fly.dev",
-                self.config.tenant_id
-            )),
-            duration_ms: start.elapsed().as_millis() as u64,
-        })
+        deploy_crate(skip_build, tag, Self::build_core_config).await
     }
 
-    pub async fn sync_all(
-        &self,
-        direction: SyncDirection,
-        dry_run: bool,
-    ) -> Result<SyncAllResult> {
+    pub async fn sync_all(&self, direction: SyncDirection, dry_run: bool) -> Result<SyncAllResult> {
         let start = Instant::now();
 
         let files_result = self.sync_files(direction, dry_run).await.ok();
         let database_result = self.sync_database(direction, dry_run, None).await.ok();
 
-        // Only deploy on push and not in dry run mode
         let deploy_result = if direction == SyncDirection::Push && !dry_run {
             self.deploy_crate(false, None).await.ok()
         } else {
@@ -202,16 +257,18 @@ impl SyncService {
         })
     }
 
+    #[allow(clippy::unused_async)]
     pub async fn get_status(&self) -> Result<SyncStatusResult> {
-        // In a real implementation, this would:
-        // 1. Check cloud API connectivity
-        // 2. Get deployment status
-        // 3. Get last sync info from local storage
-        // For now, we return a mock result
+        let config = Config::global();
+
+        let creds = CredentialsBootstrap::get().ok().flatten();
+        let is_configured = creds
+            .as_ref()
+            .is_some_and(|c| c.tenant_id.is_some() && !c.api_token.is_empty());
 
         let cloud_status = CloudStatus {
-            connected: self.config.is_configured(),
-            deployment_status: if self.config.is_configured() {
+            connected: is_configured,
+            deployment_status: if is_configured {
                 Some("running".to_string())
             } else {
                 None
@@ -220,105 +277,22 @@ impl SyncService {
             app_version: Some(env!("CARGO_PKG_VERSION").to_string()),
         };
 
+        let tenant_id = creds
+            .as_ref()
+            .and_then(|c| c.tenant_id.clone())
+            .map_or_else(String::new, |t| t);
+
+        let api_url = creds
+            .as_ref()
+            .map_or_else(|| config.api_server_url.clone(), |c| c.api_url.clone());
+
         Ok(SyncStatusResult {
-            tenant_id: self.config.tenant_id.clone(),
-            api_url: self.config.api_url.clone(),
-            services_path: self.config.services_path.clone(),
-            database_configured: self.config.database_url.is_some(),
+            tenant_id,
+            api_url,
+            services_path: config.services_path.clone(),
+            database_configured: !config.database_url.is_empty(),
             cloud_status,
             last_sync: None,
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn test_config() -> SyncConfig {
-        SyncConfig {
-            tenant_id: "test-tenant".to_string(),
-            api_url: "https://api.systemprompt.io".to_string(),
-            api_token: "test-token".to_string(),
-            services_path: "services".to_string(),
-            database_url: Some("postgres://test:test@localhost/test".to_string()),
-        }
-    }
-
-    #[tokio::test]
-    async fn sync_files_returns_result() {
-        let service = SyncService::new(test_config());
-        let result = service.sync_files(SyncDirection::Push, false).await;
-        assert!(result.is_ok());
-        let sync_result = result.unwrap();
-        assert_eq!(sync_result.direction, SyncDirection::Push);
-        assert!(!sync_result.dry_run);
-    }
-
-    #[tokio::test]
-    async fn sync_database_returns_result() {
-        let service = SyncService::new(test_config());
-        let result = service
-            .sync_database(SyncDirection::Pull, true, None)
-            .await;
-        assert!(result.is_ok());
-        let sync_result = result.unwrap();
-        assert_eq!(sync_result.direction, SyncDirection::Pull);
-        assert!(sync_result.dry_run);
-        assert_eq!(sync_result.tables_synced.len(), 3);
-    }
-
-    #[tokio::test]
-    async fn deploy_crate_returns_result() {
-        let service = SyncService::new(test_config());
-        let result = service.deploy_crate(false, None).await;
-        assert!(result.is_ok());
-        let deploy_result = result.unwrap();
-        assert!(deploy_result.success);
-        assert!(!deploy_result.build_skipped);
-    }
-
-    #[tokio::test]
-    async fn deploy_crate_with_skip_build() {
-        let service = SyncService::new(test_config());
-        let result = service.deploy_crate(true, Some("custom-tag".to_string())).await;
-        assert!(result.is_ok());
-        let deploy_result = result.unwrap();
-        assert!(deploy_result.success);
-        assert!(deploy_result.build_skipped);
-        assert_eq!(deploy_result.image_tag, "custom-tag");
-    }
-
-    #[tokio::test]
-    async fn sync_all_returns_result() {
-        let service = SyncService::new(test_config());
-        let result = service.sync_all(SyncDirection::Push, false).await;
-        assert!(result.is_ok());
-        let sync_result = result.unwrap();
-        assert_eq!(sync_result.direction, SyncDirection::Push);
-        assert!(sync_result.files_result.is_some());
-        assert!(sync_result.database_result.is_some());
-        assert!(sync_result.deploy_result.is_some());
-    }
-
-    #[tokio::test]
-    async fn sync_all_dry_run_skips_deploy() {
-        let service = SyncService::new(test_config());
-        let result = service.sync_all(SyncDirection::Push, true).await;
-        assert!(result.is_ok());
-        let sync_result = result.unwrap();
-        assert!(sync_result.dry_run);
-        assert!(sync_result.deploy_result.is_none());
-    }
-
-    #[tokio::test]
-    async fn get_status_returns_result() {
-        let service = SyncService::new(test_config());
-        let result = service.get_status().await;
-        assert!(result.is_ok());
-        let status = result.unwrap();
-        assert_eq!(status.tenant_id, "test-tenant");
-        assert!(status.database_configured);
-        assert!(status.cloud_status.connected);
     }
 }

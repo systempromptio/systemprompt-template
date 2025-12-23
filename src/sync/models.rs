@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::config::SyncDirection;
+use super::types::SyncDirection;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SyncFilesResult {
@@ -36,7 +36,7 @@ pub enum SyncAction {
     Unchanged,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 pub struct SyncSummary {
     pub total_files: usize,
     pub created: usize,
@@ -64,7 +64,7 @@ pub struct TableSyncResult {
     pub records_deleted: usize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 pub struct DatabaseSyncSummary {
     pub total_tables: usize,
     pub total_records_synced: usize,
@@ -132,7 +132,7 @@ pub struct LastSyncInfo {
     pub status: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum SyncTable {
     Agents,
     Skills,

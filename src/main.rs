@@ -1,18 +1,22 @@
 use anyhow::{Context, Result};
-use std::{env, sync::Arc};
-use systemprompt_core_system::AppContext;
-use systemprompt_identifiers::McpServerId;
-use systemprompt_infrastructure::InfrastructureServer;
-use systemprompt_models::Config;
+use std::sync::Arc;
+use systemprompt::credentials::CredentialsBootstrap;
+use systemprompt::database::DbPool;
+use systemprompt::identifiers::McpServerId;
+use systemprompt::logging;
+use systemprompt::mcp;
+use systemprompt::models::Config;
+use systemprompt::profile::ProfileBootstrap;
+use systemprompt::system::AppContext;
+use systemprompt_mcp_infrastructure::InfrastructureServer;
 use tokio::net::TcpListener;
 
-/// Default service ID - MUST match the key in `mcp_servers` config
-const DEFAULT_SERVICE_ID: &str = "systemprompt-infrastructure";
-const DEFAULT_PORT: u16 = 5010;
+const SERVICE_NAME: &str = "systemprompt-infrastructure";
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    dotenvy::dotenv().ok();
+    ProfileBootstrap::init().context("Profile initialization failed")?;
+    CredentialsBootstrap::init().context("Cloud credentials initialization failed")?;
     Config::init().context("Failed to initialize configuration")?;
 
     let ctx = Arc::new(
@@ -21,24 +25,18 @@ async fn main() -> Result<()> {
             .context("Failed to initialize application context")?,
     );
 
-    // Initialize logging with database persistence
-    systemprompt_core_logging::init_logging(ctx.db_pool().clone());
+    logging::init_logging(DbPool::clone(ctx.db_pool()));
 
-    let service_id = McpServerId::from_env().unwrap_or_else(|_| {
-        tracing::warn!("MCP_SERVICE_ID not set, using default: {DEFAULT_SERVICE_ID}");
-        McpServerId::new(DEFAULT_SERVICE_ID)
-    });
+    let config = Config::global();
+    let port = config.port;
+    let service_id = McpServerId::new(SERVICE_NAME);
 
-    let port = env::var("MCP_PORT")
-        .ok()
-        .and_then(|p| p.parse::<u16>().ok())
-        .unwrap_or_else(|| {
-            tracing::warn!("MCP_PORT not set, using default: {DEFAULT_PORT}");
-            DEFAULT_PORT
-        });
-
-    let server = InfrastructureServer::new(ctx.db_pool().clone(), service_id.clone(), ctx.clone());
-    let router = systemprompt_core_mcp::create_router(server, ctx.clone()).await?;
+    let server = InfrastructureServer::new(
+        DbPool::clone(ctx.db_pool()),
+        service_id.clone(),
+        Arc::clone(&ctx),
+    );
+    let router = mcp::create_router(server, Arc::clone(&ctx)).await?;
     let addr = format!("0.0.0.0:{port}");
     let listener = TcpListener::bind(&addr).await?;
 

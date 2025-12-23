@@ -1,4 +1,4 @@
-use systemprompt_infrastructure::prompts::build_deployment_guide_prompt;
+use systemprompt_mcp_infrastructure::prompts::build_deployment_guide_prompt;
 
 #[test]
 fn deployment_guide_includes_environment_name() {

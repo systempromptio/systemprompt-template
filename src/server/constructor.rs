@@ -1,16 +1,15 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use systemprompt_core_database::DbPool;
-use systemprompt_core_system::AppContext;
-use systemprompt_identifiers::McpServerId;
+use systemprompt::database::DbPool;
+use systemprompt::identifiers::McpServerId;
+use systemprompt::system::AppContext;
 
-use crate::config::SyncConfig;
 use crate::prompts::InfrastructurePrompts;
 use crate::resources::InfrastructureResources;
 use crate::sync::SyncService;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct InfrastructureServer {
     pub(super) db_pool: DbPool,
     pub(super) service_id: McpServerId,
@@ -26,26 +25,15 @@ impl InfrastructureServer {
     #[must_use]
     pub fn new(db_pool: DbPool, service_id: McpServerId, app_context: Arc<AppContext>) -> Self {
         let prompts = Arc::new(InfrastructurePrompts::new(
-            db_pool.clone(),
+            DbPool::clone(&db_pool),
             service_id.to_string(),
         ));
         let resources = Arc::new(InfrastructureResources::new(
-            db_pool.clone(),
+            DbPool::clone(&db_pool),
             service_id.to_string(),
         ));
 
-        let sync_config = SyncConfig::load().unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to load sync config, using defaults");
-            SyncConfig {
-                tenant_id: String::new(),
-                api_url: "https://api.systemprompt.io".to_string(),
-                api_token: String::new(),
-                services_path: "services".to_string(),
-                database_url: None,
-            }
-        });
-        let sync_service = Arc::new(SyncService::new(sync_config));
-
+        let sync_service = Arc::new(SyncService::new(DbPool::clone(&db_pool)));
         let tool_schemas = Self::build_tool_schema_cache();
 
         Self {
@@ -65,9 +53,9 @@ impl InfrastructureServer {
 
         for tool in tools {
             if let Some(output_schema) = tool.output_schema {
-                let schema_value =
-                    serde_json::to_value(&*output_schema).unwrap_or_else(|_| serde_json::json!({}));
-                schemas.insert(tool.name.to_string(), schema_value);
+                if let Ok(schema_value) = serde_json::to_value(&*output_schema) {
+                    schemas.insert(tool.name.to_string(), schema_value);
+                }
             }
         }
 

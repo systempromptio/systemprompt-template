@@ -2,6 +2,11 @@ mod deployment_guide;
 mod sync_workflow;
 
 use anyhow::Result;
+
+const DEFAULT_ENVIRONMENT: &str = "production";
+const DEFAULT_INCLUDE_ROLLBACK: bool = true;
+const DEFAULT_DIRECTION: &str = "push";
+const DEFAULT_SCOPE: &str = "all";
 use rmcp::{
     model::{
         GetPromptRequestParam, GetPromptResult, ListPromptsResult, PaginatedRequestParam, Prompt,
@@ -10,7 +15,7 @@ use rmcp::{
     service::RequestContext,
     ErrorData as McpError, RoleServer,
 };
-use systemprompt_core_database::DbPool;
+use systemprompt::database::DbPool;
 
 pub use deployment_guide::build_deployment_guide_prompt;
 pub use sync_workflow::build_sync_workflow_prompt;
@@ -23,13 +28,14 @@ pub struct InfrastructurePrompts {
 
 impl InfrastructurePrompts {
     #[must_use]
-    pub fn new(db_pool: DbPool, server_name: String) -> Self {
+    pub const fn new(db_pool: DbPool, server_name: String) -> Self {
         Self {
             _db_pool: db_pool,
             _server_name: server_name,
         }
     }
 
+    #[allow(clippy::unused_async)]
     pub async fn list_prompts(
         &self,
         _request: Option<PaginatedRequestParam>,
@@ -53,9 +59,7 @@ impl InfrastructurePrompts {
                         },
                         PromptArgument {
                             name: "include_rollback".into(),
-                            description: Some(
-                                "Include rollback procedures in the guide".into(),
-                            ),
+                            description: Some("Include rollback procedures in the guide".into()),
                             required: Some(false),
                             title: None,
                         },
@@ -77,9 +81,7 @@ impl InfrastructurePrompts {
                         },
                         PromptArgument {
                             name: "scope".into(),
-                            description: Some(
-                                "Sync scope: files, database, all".into(),
-                            ),
+                            description: Some("Sync scope: files, database, all".into()),
                             required: Some(false),
                             title: None,
                         },
@@ -92,6 +94,7 @@ impl InfrastructurePrompts {
         })
     }
 
+    #[allow(clippy::unused_async)]
     pub async fn get_prompt(
         &self,
         request: GetPromptRequestParam,
@@ -104,23 +107,19 @@ impl InfrastructurePrompts {
                     .as_ref()
                     .and_then(|args| args.get("environment"))
                     .and_then(|v| v.as_str())
-                    .unwrap_or("production");
+                    .unwrap_or(DEFAULT_ENVIRONMENT);
 
                 let include_rollback = request
                     .arguments
                     .as_ref()
                     .and_then(|args| args.get("include_rollback"))
                     .and_then(serde_json::Value::as_bool)
-                    .unwrap_or(true);
+                    .unwrap_or(DEFAULT_INCLUDE_ROLLBACK);
 
-                let prompt_content =
-                    deployment_guide::build_deployment_guide_prompt(environment, include_rollback);
+                let prompt_content = build_deployment_guide_prompt(environment, include_rollback);
 
                 Ok(GetPromptResult {
-                    description: Some(format!(
-                        "Deployment guide for {} environment",
-                        environment
-                    )),
+                    description: Some(format!("Deployment guide for {} environment", environment)),
                     messages: vec![PromptMessage {
                         role: PromptMessageRole::User,
                         content: PromptMessageContent::text(prompt_content),
@@ -133,16 +132,16 @@ impl InfrastructurePrompts {
                     .as_ref()
                     .and_then(|args| args.get("direction"))
                     .and_then(|v| v.as_str())
-                    .unwrap_or("push");
+                    .unwrap_or(DEFAULT_DIRECTION);
 
                 let scope = request
                     .arguments
                     .as_ref()
                     .and_then(|args| args.get("scope"))
                     .and_then(|v| v.as_str())
-                    .unwrap_or("all");
+                    .unwrap_or(DEFAULT_SCOPE);
 
-                let prompt_content = sync_workflow::build_sync_workflow_prompt(direction, scope);
+                let prompt_content = build_sync_workflow_prompt(direction, scope);
 
                 Ok(GetPromptResult {
                     description: Some(format!(

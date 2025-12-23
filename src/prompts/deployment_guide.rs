@@ -1,7 +1,7 @@
 #[must_use]
 pub fn build_deployment_guide_prompt(environment: &str, include_rollback: bool) -> String {
     let mut prompt = format!(
-        r#"# SystemPrompt Deployment Guide - {environment} Environment
+        r"# SystemPrompt Deployment Guide - {environment} Environment
 
 ## Overview
 
@@ -34,7 +34,7 @@ Preview file changes before applying:
 
 ```
 Use sync_files with:
-- direction: "push"
+- direction: 'push'
 - dry_run: true
 
 Review the files that will be synced.
@@ -46,9 +46,9 @@ Preview database changes:
 
 ```
 Use sync_database with:
-- direction: "push"
+- direction: 'push'
 - dry_run: true
-- tables: ["agents", "skills", "contexts"] (or leave empty for all)
+- tables: ['agents', 'skills', 'contexts'] (or leave empty for all)
 
 Review the records that will be synced.
 ```
@@ -59,7 +59,7 @@ If the dry runs look good, execute the actual sync:
 
 ```
 Use sync_all with:
-- direction: "push"
+- direction: 'push'
 - dry_run: false
 
 This will:
@@ -75,25 +75,25 @@ After deployment completes:
 2. Verify the application is running
 3. Test critical functionality
 
-"#
+"
     );
 
     if include_rollback {
         prompt.push_str(
-            r#"
+            r"
 ## Rollback Procedures
 
 If issues are detected after deployment:
 
 ### Quick Rollback
 
-1. Use sync_files with direction: "pull" to restore previous file state
-2. Use sync_database with direction: "pull" to restore database state
+1. Use sync_files with direction: 'pull' to restore previous file state
+2. Use sync_database with direction: 'pull' to restore database state
 
 ### Full Rollback
 
 Use sync_all with:
-- direction: "pull"
+- direction: 'pull'
 - dry_run: false
 
 This will restore the entire application to the previous cloud state.
@@ -105,12 +105,12 @@ If the application is completely unresponsive:
 2. Review recent logs for errors
 3. Consider deploying a known-good version using a specific image tag
 
-"#,
+",
         );
     }
 
     prompt.push_str(
-        r#"
+        r"
 ## Best Practices
 
 1. **Always dry run first** - Use dry_run: true before any actual sync
@@ -125,31 +125,8 @@ If the application is completely unresponsive:
 - **Sync conflicts**: If files differ unexpectedly, investigate before overwriting
 - **Build failures**: Check cargo build output for compilation errors
 - **Deployment timeouts**: Fly.io may need health check adjustments
-"#,
+",
     );
 
     prompt
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn deployment_guide_includes_environment() {
-        let prompt = build_deployment_guide_prompt("production", true);
-        assert!(prompt.contains("production"));
-    }
-
-    #[test]
-    fn deployment_guide_includes_rollback_when_requested() {
-        let prompt = build_deployment_guide_prompt("staging", true);
-        assert!(prompt.contains("Rollback Procedures"));
-    }
-
-    #[test]
-    fn deployment_guide_excludes_rollback_when_not_requested() {
-        let prompt = build_deployment_guide_prompt("development", false);
-        assert!(!prompt.contains("Rollback Procedures"));
-    }
 }

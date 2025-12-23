@@ -20,7 +20,10 @@ impl InfrastructureServer {
                 .enable_resources()
                 .build(),
             server_info: Implementation {
-                name: format!("SystemPrompt Infrastructure MCP Server ({})", self.service_id),
+                name: format!(
+                    "SystemPrompt Infrastructure MCP Server ({})",
+                    self.service_id
+                ),
                 version: env!("CARGO_PKG_VERSION").to_string(),
                 icons: None,
                 title: Some("Infrastructure Server".into()),
@@ -35,6 +38,7 @@ impl InfrastructureServer {
         }
     }
 
+    #[allow(clippy::unused_async)]
     pub(in crate::server) async fn initialize(
         &self,
         _request: InitializeRequestParam,

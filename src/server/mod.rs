@@ -7,9 +7,9 @@ use anyhow::Result;
 use rmcp::{
     model::{
         CallToolRequestParam, CallToolResult, GetPromptRequestParam, GetPromptResult,
-        InitializeRequestParam, InitializeResult, ListPromptsResult,
-        ListResourceTemplatesResult, ListResourcesResult, ListToolsResult, PaginatedRequestParam,
-        ReadResourceRequestParam, ReadResourceResult, ServerInfo,
+        InitializeRequestParam, InitializeResult, ListPromptsResult, ListResourceTemplatesResult,
+        ListResourcesResult, ListToolsResult, PaginatedRequestParam, ReadResourceRequestParam,
+        ReadResourceResult, ServerInfo,
     },
     service::RequestContext,
     ErrorData as McpError, RoleServer, ServerHandler,
@@ -41,7 +41,7 @@ impl ServerHandler for InfrastructureServer {
         request: CallToolRequestParam,
         ctx: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        InfrastructureServer::call_tool(self, request, ctx).await
+        Self::call_tool(self, request, ctx).await
     }
 
     async fn list_prompts(

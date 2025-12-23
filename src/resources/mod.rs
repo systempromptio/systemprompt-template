@@ -6,9 +6,9 @@ use rmcp::{
     service::RequestContext,
     ErrorData as McpError, RoleServer,
 };
-use systemprompt_core_database::DbPool;
+use systemprompt::database::DbPool;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct InfrastructureResources {
     _db_pool: DbPool,
     _server_name: String,
@@ -16,26 +16,26 @@ pub struct InfrastructureResources {
 
 impl InfrastructureResources {
     #[must_use]
-    pub fn new(db_pool: DbPool, server_name: String) -> Self {
+    pub const fn new(db_pool: DbPool, server_name: String) -> Self {
         Self {
             _db_pool: db_pool,
             _server_name: server_name,
         }
     }
 
+    #[allow(clippy::unused_async)]
     pub async fn list_resources(
         &self,
         _request: Option<PaginatedRequestParam>,
         _ctx: RequestContext<RoleServer>,
     ) -> Result<ListResourcesResult, McpError> {
-        // Infrastructure server doesn't expose resources directly
-        // Resources are managed through the sync tools
         Ok(ListResourcesResult {
             next_cursor: None,
             resources: Vec::new(),
         })
     }
 
+    #[allow(clippy::unused_async)]
     pub async fn read_resource(
         &self,
         _request: ReadResourceRequestParam,

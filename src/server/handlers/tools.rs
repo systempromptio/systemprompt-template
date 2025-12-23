@@ -5,13 +5,15 @@ use rmcp::{
     service::RequestContext,
     ErrorData as McpError, RoleServer,
 };
-use systemprompt_core_mcp::middleware::enforce_rbac_from_registry;
-use systemprompt_core_mcp::models::{ToolExecutionRequest, ToolExecutionResult};
-use systemprompt_core_mcp::repository::ToolUsageRepository;
+use systemprompt::database::DbPool;
+use systemprompt::mcp::middleware::enforce_rbac_from_registry;
+use systemprompt::mcp::models::{ToolExecutionRequest, ToolExecutionResult};
+use systemprompt::mcp::repository::ToolUsageRepository;
 
 use crate::server::InfrastructureServer;
 
 impl InfrastructureServer {
+    #[allow(clippy::unused_async)]
     pub(in crate::server) async fn list_tools(
         &self,
         _request: Option<PaginatedRequestParam>,
@@ -28,18 +30,18 @@ impl InfrastructureServer {
         let start_time = std::time::Instant::now();
         let tool_name = request.name.to_string();
 
-        let auth_result =
-            enforce_rbac_from_registry(&ctx, self.service_id.as_str(), None)
-                .await?;
+        let auth_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str()).await?;
         let authenticated_ctx = auth_result.expect_authenticated(
             "BUG: systemprompt-infrastructure requires OAuth but auth was not enforced",
-        );
+        )?;
 
         let request_context = authenticated_ctx.context.clone();
 
         let output_schema = self.get_output_schema_for_tool(&tool_name);
 
-        let tool_repo = ToolUsageRepository::new(self.db_pool.clone());
+        let tool_repo = ToolUsageRepository::new(DbPool::clone(&self.db_pool)).map_err(|e| {
+            McpError::internal_error(format!("Failed to create tool repository: {e}"), None)
+        })?;
         let arguments = request.arguments.clone().unwrap_or_default();
 
         let exec_request = ToolExecutionRequest {
