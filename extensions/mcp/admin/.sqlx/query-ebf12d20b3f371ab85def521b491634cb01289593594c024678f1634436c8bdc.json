@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COUNT(*) as total_logs,\n                COUNT(*) FILTER (WHERE UPPER(level) = 'ERROR') as error_count,\n                COUNT(*) FILTER (WHERE UPPER(level) = 'WARN') as warn_count,\n                COUNT(*) FILTER (WHERE UPPER(level) = 'INFO') as info_count,\n                COUNT(DISTINCT module) as unique_modules,\n                COUNT(DISTINCT user_id) as unique_users,\n                MAX(timestamp)::text as last_log_time\n            FROM logs\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_logs",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "error_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "warn_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "info_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "unique_modules",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "unique_users",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_log_time",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "ebf12d20b3f371ab85def521b491634cb01289593594c024678f1634436c8bdc"
+}

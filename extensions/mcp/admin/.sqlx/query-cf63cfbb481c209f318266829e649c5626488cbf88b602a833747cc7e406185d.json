@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') as conversations_24h,\n                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as conversations_7d,\n                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days') as conversations_30d,\n                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '48 hours' AND created_at < NOW() - INTERVAL '24 hours') as conversations_prev_24h,\n                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '14 days' AND created_at < NOW() - INTERVAL '7 days') as conversations_prev_7d,\n                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '60 days' AND created_at < NOW() - INTERVAL '30 days') as conversations_prev_30d\n            FROM user_contexts\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "conversations_24h",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "conversations_7d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "conversations_30d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "conversations_prev_24h",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "conversations_prev_7d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "conversations_prev_30d",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "cf63cfbb481c209f318266829e649c5626488cbf88b602a833747cc7e406185d"
+}

@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COALESCE(browser, 'Unknown') as browser,\n                COUNT(*) as sessions,\n                (COUNT(*)::float / NULLIF(SUM(COUNT(*)) OVER(), 0) * 100)::float8 as percentage,\n                COUNT(*) FILTER (WHERE started_at >= NOW() - INTERVAL '1 day') as traffic_1d,\n                COUNT(*) FILTER (WHERE started_at >= NOW() - INTERVAL '7 days') as traffic_7d,\n                COUNT(*) FILTER (WHERE started_at >= NOW() - INTERVAL '30 days') as traffic_30d\n            FROM user_sessions\n            WHERE started_at >= NOW() - ($1 || ' days')::INTERVAL\n              AND is_bot = false\n              AND is_scanner = false\n              AND request_count > 0\n            GROUP BY browser\n            ORDER BY sessions DESC\n            LIMIT 10\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "browser",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "sessions",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "percentage",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "traffic_1d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "traffic_7d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "traffic_30d",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "848a2ecd8f50e8bd35ade6ce8abb8ea14e465e5363922539bd90380ee6509e07"
+}

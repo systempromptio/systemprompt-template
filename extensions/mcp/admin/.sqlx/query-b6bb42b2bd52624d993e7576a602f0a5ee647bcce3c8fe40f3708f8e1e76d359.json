@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                u.id,\n                u.name,\n                u.email,\n                u.display_name,\n                u.status,\n                u.roles as \"roles: Vec<String>\",\n                u.created_at::text as created_at,\n                COALESCE((SELECT COUNT(*) FROM user_sessions s WHERE s.user_id = u.id), 0) as total_sessions\n            FROM users u\n            WHERE ($1::text IS NULL OR u.id = $1)\n              AND u.status != 'deleted'\n            ORDER BY u.created_at DESC\n            LIMIT 100\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "roles: Vec<String>",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "total_sessions",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "b6bb42b2bd52624d993e7576a602f0a5ee647bcce3c8fe40f3708f8e1e76d359"
+}
