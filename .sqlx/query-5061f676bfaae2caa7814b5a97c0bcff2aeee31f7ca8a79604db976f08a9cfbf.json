@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                uc.context_id,\n                COALESCE(at.agent_name, 'unknown') as agent_name,\n                uc.created_at::text as context_started_at,\n                at.started_at::text as task_started_at,\n                at.completed_at::text as task_completed_at,\n                COALESCE(at.status, 'unknown') as status,\n                COALESCE((\n                    SELECT COUNT(*)\n                    FROM task_messages tm\n                    JOIN agent_tasks at2 ON tm.task_id = at2.task_id\n                    WHERE at2.context_id = uc.context_id\n                ), 0) as message_count\n            FROM user_contexts uc\n            LEFT JOIN agent_tasks at ON at.context_id = uc.context_id\n            ORDER BY uc.created_at DESC\n            LIMIT $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "agent_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "context_started_at",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "task_started_at",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "task_completed_at",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "message_count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "5061f676bfaae2caa7814b5a97c0bcff2aeee31f7ca8a79604db976f08a9cfbf"
+}

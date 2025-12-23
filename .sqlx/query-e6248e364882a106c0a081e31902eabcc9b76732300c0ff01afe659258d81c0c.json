@@ -1,0 +1,96 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                uc.context_id as \"context_id!\",\n                uc.name as conversation_name,\n                uc.user_id as \"user_id!\",\n                COALESCE(u.name, 'anonymous') as \"user_name!\",\n                COALESCE(at.agent_name, 'unknown') as \"agent_name!\",\n                uc.created_at::text as \"started_at!\",\n                TO_CHAR(uc.created_at, 'YYYY-MM-DD HH24:MI') as started_at_formatted,\n                uc.updated_at::text as \"last_updated!\",\n                TO_CHAR(uc.updated_at, 'YYYY-MM-DD HH24:MI') as last_updated_formatted,\n                COALESCE(EXTRACT(EPOCH FROM (uc.updated_at - uc.created_at))::float8, 0) as \"duration_seconds!\",\n                CASE\n                    WHEN EXTRACT(EPOCH FROM (uc.updated_at - uc.created_at)) < 60 THEN 'quick'\n                    WHEN EXTRACT(EPOCH FROM (uc.updated_at - uc.created_at)) < 300 THEN 'normal'\n                    ELSE 'long'\n                END as duration_status,\n                COALESCE(at.status, 'unknown') as \"status!\",\n                COALESCE((\n                    SELECT COUNT(*)::int4\n                    FROM task_messages tm\n                    JOIN agent_tasks at2 ON tm.task_id = at2.task_id\n                    WHERE at2.context_id = uc.context_id\n                ), 0) as \"message_count!\"\n            FROM user_contexts uc\n            LEFT JOIN users u ON u.id = uc.user_id\n            LEFT JOIN agent_tasks at ON at.context_id = uc.context_id\n            WHERE uc.updated_at >= NOW() - $1::TEXT::INTERVAL\n            ORDER BY uc.updated_at DESC\n            LIMIT $2 OFFSET $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "conversation_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_name!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "agent_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "started_at!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "started_at_formatted",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "last_updated!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "last_updated_formatted",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "duration_seconds!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 10,
+        "name": "duration_status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "status!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "message_count!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "e6248e364882a106c0a081e31902eabcc9b76732300c0ff01afe659258d81c0c"
+}

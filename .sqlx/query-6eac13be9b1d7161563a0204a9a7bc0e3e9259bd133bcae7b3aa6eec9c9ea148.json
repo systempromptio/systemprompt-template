@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COUNT(DISTINCT session_id) as total_sessions,\n                SUM(request_count)::bigint as total_requests,\n                COUNT(DISTINCT user_id) as unique_users,\n                AVG(EXTRACT(EPOCH FROM (last_activity_at - started_at)))::float8 as avg_session_duration_secs,\n                AVG(request_count)::float8 as avg_requests_per_session,\n                COALESCE(SUM(total_ai_cost_cents), 0)::bigint as total_cost_cents\n            FROM user_sessions\n            WHERE started_at >= NOW() - ($1 || ' days')::INTERVAL\n              AND is_bot = false\n              AND is_scanner = false\n              AND request_count > 0\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_sessions",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_requests",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "unique_users",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "avg_session_duration_secs",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "avg_requests_per_session",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "total_cost_cents",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "6eac13be9b1d7161563a0204a9a7bc0e3e9259bd133bcae7b3aa6eec9c9ea148"
+}

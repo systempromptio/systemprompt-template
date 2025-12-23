@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                mc.id as content_id,\n                mc.title,\n                DATE(ae.timestamp)::text as view_date,\n                COUNT(*) as daily_views\n            FROM analytics_events ae\n            JOIN markdown_content mc ON ae.endpoint = 'GET /blog/' || mc.slug\n            JOIN user_sessions us ON ae.session_id = us.session_id\n            WHERE ae.timestamp >= NOW() - ($1 || ' days')::INTERVAL\n              AND ae.event_type = 'page_view'\n              AND ae.endpoint LIKE 'GET /blog/%'\n              AND us.is_bot = false\n              AND us.is_scanner = false\n            GROUP BY mc.id, mc.title, DATE(ae.timestamp)\n            ORDER BY DATE(ae.timestamp) DESC, daily_views DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "content_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "view_date",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "daily_views",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "89a8f5befc9888fede4c1bc03cfb952a6afc29f89543e475ac3c95d07c360864"
+}
