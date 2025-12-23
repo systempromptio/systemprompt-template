@@ -1,0 +1,94 @@
+# Content Sources Configuration
+# Define where your content lives and how it's indexed
+
+content_sources:
+  blog:
+    path: "services/content/blog"
+    source_id: "blog"
+    category_id: "blog"
+    enabled: true
+    description: "Blog articles and technical content"
+    allowed_content_types: ["article", "tutorial", "announcement"]
+    branding:
+      name: "Blog"
+      description: "Technical articles and updates"
+      image: "/images/blog/og-default.png"
+      keywords: "blog, articles, tutorials, technology"
+    indexing:
+      clear_before: false
+      recursive: true
+    sitemap:
+      enabled: true
+      url_pattern: "/blog/{slug}"
+      priority: 0.8
+      changefreq: "weekly"
+      fetch_from: "database"
+      parent_route:
+        enabled: true
+        url: "/blog"
+        priority: 0.9
+        changefreq: "daily"
+
+  legal:
+    path: "services/content/legal"
+    source_id: "legal"
+    category_id: "pages"
+    enabled: true
+    allowed_content_types: ["page"]
+    indexing:
+      recursive: true
+    sitemap:
+      enabled: true
+      url_pattern: "/legal/{slug}"
+      priority: 0.3
+      changefreq: "monthly"
+      fetch_from: "database"
+
+  skills:
+    path: "services/skills"
+    source_id: "skills"
+    category_id: "skills"
+    enabled: true
+    description: "Agent skills for editors and automation"
+    allowed_content_types: ["skill"]
+    indexing:
+      clear_before: false
+      recursive: true
+      override_existing: true
+
+categories:
+  blog:
+    name: "Blog"
+    slug: "blog"
+  pages:
+    name: "Pages"
+    slug: "pages"
+  skills:
+    name: "Skills"
+    slug: "skills"
+    description: "Agent skills for AI-powered automation"
+
+metadata:
+  default_author: "Author"
+  language: "en"
+
+  # Schema.org structured data for SEO
+  structured_data:
+    organization:
+      name: "SystemPrompt Template"
+      url: "http://localhost:8080"
+      logo: "http://localhost:8080/logo.png"
+      description: "Your organization description"
+
+    blog:
+      type: "Blog"
+      name: "Blog"
+      url: "http://localhost:8080/blog"
+      description: "Technical blog posts and articles"
+      article_section: "Technology"
+      language: "en-US"
+
+    article:
+      type: "BlogPosting"
+      language: "en-US"
+      article_section: "Technology"

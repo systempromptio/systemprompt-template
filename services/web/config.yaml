@@ -1,0 +1,258 @@
+# Web Configuration
+# Theme, branding, and UI settings
+
+paths:
+  templates: "services/web/templates"
+  assets: "services/web/assets"
+
+content:
+  config_file: "services/content/config.yml"
+  sources:
+    - blog
+    - legal
+
+branding:
+  name: "systemprompt-template"
+  title: "systemprompt-template"
+  description: "Your SystemPrompt implementation"
+  themeColor: "#3b82f6"
+  display_sitename: true
+  twitter_handle: "@yourhandle"
+  logo:
+    primary:
+      svg: "/assets/logos/logo.svg"
+      webp: "/assets/logos/logo.webp"
+      png: "/assets/logos/logo.png"
+    dark:
+      png: "/assets/logos/logo-dark.png"
+    small:
+      png: "/assets/logos/logo-512.png"
+  favicon: "/favicon.ico"
+
+fonts:
+  body:
+    family: "OpenSans"
+    fallback: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    files:
+      - path: "/fonts/OpenSans/OpenSans-Regular.ttf"
+        weight: 400
+        style: "normal"
+      - path: "/fonts/OpenSans/OpenSans-Medium.ttf"
+        weight: 500
+        style: "normal"
+      - path: "/fonts/OpenSans/OpenSans-SemiBold.ttf"
+        weight: 600
+        style: "normal"
+      - path: "/fonts/OpenSans/OpenSans-Bold.ttf"
+        weight: 700
+        style: "normal"
+  heading:
+    family: "Zepto"
+    fallback: "Georgia, serif"
+    files:
+      - path: "/fonts/Zepto/Zepto-Regular.ttf"
+        weight: 400
+        style: "normal"
+  brand:
+    family: "ArchivoBlack"
+    fallback: "Impact, sans-serif"
+    files:
+      - path: "/fonts/ArchivoBlack/ArchivoBlack-Regular.ttf"
+        weight: 400
+        style: "normal"
+
+colors:
+  light:
+    primary:
+      hsl: "hsl(217, 91%, 60%)"
+      rgb: [59, 130, 246]
+    secondary:
+      hsl: "hsl(215, 16%, 47%)"
+      rgb: [100, 116, 139]
+    success: "#22c55e"
+    warning: "#f59e0b"
+    error: "#ef4444"
+    surface:
+      default: "#FFFFFF"
+      dark: "#F8FAFC"
+      variant: "#F1F5F9"
+      secondaryContainer: "#E2E8F0"
+      errorContainer: "#FEE2E2"
+    text:
+      primary: "#1E293B"
+      secondary: "#64748B"
+      inverted: "#FFFFFF"
+      disabled: "#94A3B8"
+    background:
+      default: "#FFFFFF"
+      dark: "#F8FAFC"
+    border:
+      default: "#E2E8F0"
+      dark: "#CBD5E1"
+      outline: "#94A3B8"
+  dark:
+    primary:
+      hsl: "hsl(217, 91%, 70%)"
+      rgb: [96, 165, 250]
+    secondary:
+      hsl: "hsl(215, 20%, 65%)"
+      rgb: [148, 163, 184]
+    success: "#4ade80"
+    warning: "#fbbf24"
+    error: "#f87171"
+    surface:
+      default: "#1E293B"
+      dark: "#0F172A"
+      variant: "#334155"
+      secondaryContainer: "rgba(148, 163, 184, 0.1)"
+      errorContainer: "rgba(248, 113, 113, 0.1)"
+    text:
+      primary: "#F1F5F9"
+      secondary: "#94A3B8"
+      inverted: "#1E293B"
+      disabled: "#64748B"
+    background:
+      default: "#0F172A"
+      dark: "#020617"
+    border:
+      default: "rgba(148, 163, 184, 0.2)"
+      dark: "#334155"
+      outline: "#475569"
+
+typography:
+  sizes:
+    xs: "12px"
+    sm: "14px"
+    md: "15px"
+    lg: "18px"
+    xl: "20px"
+    xxl: "28px"
+  weights:
+    regular: 400
+    medium: 500
+    semibold: 600
+    bold: 700
+
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "32px"
+  xxl: "48px"
+
+radius:
+  xs: "2px"
+  sm: "4px"
+  md: "8px"
+  lg: "12px"
+  xl: "16px"
+  xxl: "24px"
+  round: "9999px"
+
+shadows:
+  light:
+    sm: "0 1px 2px rgba(0, 0, 0, 0.05)"
+    md: "0 4px 6px rgba(0, 0, 0, 0.1)"
+    lg: "0 10px 15px rgba(0, 0, 0, 0.1)"
+    accent: "0 4px 12px rgba(59, 130, 246, 0.15)"
+  dark:
+    sm: "0 2px 4px rgba(0, 0, 0, 0.3)"
+    md: "0 4px 8px rgba(0, 0, 0, 0.4)"
+    lg: "0 10px 20px rgba(0, 0, 0, 0.5)"
+    accent: "0 4px 12px rgba(96, 165, 250, 0.2)"
+
+animation:
+  fast: "150ms"
+  normal: "300ms"
+  slow: "500ms"
+
+zIndex:
+  base: 1
+  content: 10
+  navigation: 100
+  modal: 1000
+  tooltip: 2000
+
+layout:
+  headerHeight: "48px"
+  sidebarLeft:
+    width: "20%"
+    minWidth: "240px"
+    maxWidth: "320px"
+  sidebarRight:
+    width: "15%"
+    minWidth: "200px"
+    maxWidth: "280px"
+  navHeight: "64px"
+  contentMaxWidth: "1600px"
+
+card:
+  radius:
+    default: "12px"
+    cut: "4px"
+  padding:
+    sm: "12px"
+    md: "16px"
+    lg: "20px"
+  gradient:
+    start: "rgba(59, 130, 246, 0.08)"
+    mid: "rgba(59, 130, 246, 0.04)"
+    end: "rgba(59, 130, 246, 0.02)"
+
+mobile:
+  spacing:
+    xs: "4px"
+    sm: "8px"
+    md: "12px"
+    lg: "16px"
+    xl: "24px"
+    xxl: "32px"
+  typography:
+    sizes:
+      xs: "11px"
+      sm: "13px"
+      md: "14px"
+      lg: "16px"
+      xl: "18px"
+      xxl: "24px"
+  layout:
+    headerHeight: "56px"
+    navHeight: "64px"
+  card:
+    padding:
+      sm: "10px"
+      md: "12px"
+      lg: "14px"
+
+touchTargets:
+  default: "44px"
+  sm: "40px"
+  lg: "48px"
+
+navigation:
+  footer:
+    legal:
+      - path: "/legal/privacy-policy"
+        label: "Privacy Policy"
+      - path: "/legal/cookie-policy"
+        label: "Cookie Policy"
+    resources:
+      - path: "/blog"
+        label: "Blog"
+      - path: "/"
+        label: "Chat"
+  social:
+    - href: "https://github.com/yourusername"
+      type: "github"
+      label: "GitHub"
+    - href: "https://twitter.com/yourhandle"
+      type: "twitter"
+      label: "Twitter"
+
+social_action_bar:
+  label: "Follow:"
+  platforms:
+    - type: "github"
+    - type: "twitter"
+  enable_share: true

@@ -1,0 +1,9 @@
+[submodule "core"]
+	path = core
+	url = https://github.com/systempromptio/systemprompt-core.git
+[submodule "extensions/mcp/admin"]
+	path = extensions/mcp/admin
+	url = https://github.com/systempromptio/systemprompt-mcp-admin
+[submodule "extensions/mcp/infrastructure"]
+	path = extensions/mcp/infrastructure
+	url = https://github.com/systempromptio/systemprompt-mcp-infrastructure.git

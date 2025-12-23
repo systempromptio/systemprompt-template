@@ -1,0 +1,15 @@
+id: skill_creation
+name: "Skill Creation"
+description: "Guide for creating new skill configurations from scratch. Covers directory structure, config.yml metadata, and writing effective skill prompts in index.md."
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - skill-editor
+tags:
+  - skill
+  - creation
+  - configuration
+  - prompt
+  - setup
+  - admin

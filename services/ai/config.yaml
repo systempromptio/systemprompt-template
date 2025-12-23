@@ -1,0 +1,31 @@
+# AI Provider Configuration
+# Configure your AI providers and models
+
+ai:
+  default_provider: gemini
+  default_max_output_tokens: 8192
+  sampling:
+    enable_smart_routing: false
+    fallback_enabled: true
+  providers:
+    anthropic:
+      enabled: false
+      api_key: ${ANTHROPIC_API_KEY}
+      default_model: claude-sonnet-4-20250514
+    openai:
+      enabled: false
+      api_key: ${OPENAI_API_KEY}
+      default_model: gpt-4-turbo
+    gemini:
+      enabled: true
+      api_key: ${GEMINI_API_KEY}
+      endpoint: https://generativelanguage.googleapis.com/v1beta
+      default_model: gemini-2.5-flash
+  mcp:
+    auto_discover: true
+    connect_timeout_ms: 5000
+    execution_timeout_ms: 30000
+    retry_attempts: 3
+  history:
+    retention_days: 30
+    log_tool_executions: true

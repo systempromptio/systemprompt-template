@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{BLOG_NAME}} | {{ORG_NAME}}</title>
+  <meta name="description" content="{{BLOG_DESCRIPTION}}" />
+  <meta name="keywords" content="{{BLOG_KEYWORDS}}" />
+  <link rel="canonical" href="{{BLOG_URL}}" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="/css/blog.css" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="{{BLOG_NAME}} | {{ORG_NAME}}" />
+  <meta property="og:description" content="{{BLOG_DESCRIPTION}}" />
+  <meta property="og:image" content="{{BLOG_IMAGE}}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{BLOG_URL}}" />
+  <meta property="og:site_name" content="{{ORG_NAME}}" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="{{TWITTER_HANDLE}}" />
+  <meta name="twitter:title" content="{{BLOG_NAME}} | {{ORG_NAME}}" />
+  <meta name="twitter:description" content="{{BLOG_DESCRIPTION}}" />
+  <meta name="twitter:image" content="{{BLOG_IMAGE}}" />
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "{{BLOG_NAME}}",
+    "description": "{{BLOG_DESCRIPTION}}",
+    "url": "{{BLOG_URL}}",
+    "image": "{{BLOG_IMAGE}}",
+    "publisher": {
+      "@type": "Organization",
+      "name": "{{ORG_NAME}}",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ORG_LOGO}}"
+      }
+    },
+    "inLanguage": "{{BLOG_LANGUAGE}}"
+  }
+  </script>
+</head>
+<body>
+  <div class="blog-background"></div>
+  <div class="blog-shape-left"></div>
+
+  <header class="site-header">
+    <nav class="site-nav">
+      <a href="/" class="logo-link">
+        <img src="/favicon.ico" alt="{{ORG_NAME}} logo" class="logo" />
+        {{#if DISPLAY_SITENAME}}<span class="site-name">{{ORG_NAME}}</span>{{/if}}
+      </a>
+      <a href="{{HEADER_CTA_URL}}" class="chat-cta">
+        <svg class="chat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Chat with us
+      </a>
+    </nav>
+  </header>
+
+  <main class="blog-list">
+    <header class="page-header">
+      <h1>{{BLOG_NAME}}</h1>
+      <p class="subtitle">{{BLOG_DESCRIPTION}}</p>
+    </header>
+
+    <div class="posts">
+      {{{POSTS}}}
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      {{{FOOTER_NAV}}}
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,15 @@
+id: deployment
+name: "Deployment"
+description: "Guide for deploying applications to cloud infrastructure using Fly.io. Covers build process, Docker image creation, and deployment workflows."
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - infrastructure
+tags:
+  - deploy
+  - cloud
+  - fly.io
+  - docker
+  - build
+  - infrastructure

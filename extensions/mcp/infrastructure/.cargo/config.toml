@@ -1,0 +1,9 @@
+# Cargo configuration for systemprompt-template
+# This ensures DATABASE_URL is available at compile time for sqlx macros
+
+[env]
+DATABASE_URL = "postgresql://systemprompt:systemprompt_dev_password@localhost:5432/systemprompt_dev"
+
+# Patch to use local systemprompt-core during development
+[patch."https://github.com/systempromptio/systemprompt-core"]
+systemprompt = { path = "/var/www/html/systemprompt-core/systemprompt" }

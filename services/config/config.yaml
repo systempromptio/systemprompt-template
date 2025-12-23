@@ -1,0 +1,23 @@
+# SystemPrompt Services Configuration
+# This file aggregates all service configurations
+
+includes:
+  - ../agents/assistant.yaml
+  - ../agents/admin.yaml
+  - ../agents/agent-editor.yaml
+  - ../agents/skill-editor.yaml
+  - ../agents/infrastructure.yaml
+  - ../skills/config.yaml
+  - ../ai/config.yaml
+  - ../web/config.yaml
+  - ../scheduler/config.yaml
+
+agents: {}
+mcp_servers: {}
+
+settings:
+  agentPortRange: [9000, 9999]
+  mcpPortRange: [5000, 5999]
+  autoStartEnabled: true
+  validationStrict: true
+  schemaValidationMode: "skip"

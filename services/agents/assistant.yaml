@@ -1,0 +1,55 @@
+# Agent Configuration
+# Define your AI agents here
+
+agents:
+  assistant:
+    name: "assistant"
+    port: 9000
+    enabled: true
+    is_primary: true
+    default: true
+    endpoint: "/api/v1/agents/assistant"
+    oauth:
+      required: false
+    card:
+      protocolVersion: "0.3.0"
+      name: "Assistant"
+      displayName: "Assistant"
+      description: "Your AI assistant for systemprompt-template"
+      version: "1.0.0"
+      preferredTransport: "JSONRPC"
+      provider:
+        organization: "systemprompt-template"
+        url: "https://example.com"
+      iconUrl: "https://ui-avatars.com/api/?name=A&background=3b82f6&color=fff&bold=true&size=256"
+      documentationUrl: "https://example.com/docs"
+      capabilities:
+        streaming: true
+        pushNotifications: false
+        stateTransitionHistory: false
+      defaultInputModes:
+        - "text/plain"
+      defaultOutputModes:
+        - "text/plain"
+        - "application/json"
+      securitySchemes:
+        oauth2:
+          type: oauth2
+          flows:
+            authorizationCode:
+              authorizationUrl: "/api/v1/core/oauth/authorize"
+              tokenUrl: "/api/v1/core/oauth/token"
+              scopes:
+                anonymous: "Public access"
+                user: "Authenticated user access"
+          description: "OAuth 2.0 authentication"
+      security:
+        - oauth2: ["anonymous"]
+      skills: []
+      supportsAuthenticatedExtendedCard: false
+    metadata:
+      systemPrompt: |
+        You are a helpful AI assistant for systemprompt-template.
+
+        Be concise, accurate, and helpful. If you don't know something, say so.
+      mcpServers: []

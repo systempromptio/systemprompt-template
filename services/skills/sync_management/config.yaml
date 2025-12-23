@@ -1,0 +1,16 @@
+id: sync_management
+name: "Sync Management"
+description: "Guide for synchronizing files and database between local and cloud environments. Covers push/pull operations and conflict resolution."
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - infrastructure
+tags:
+  - sync
+  - files
+  - database
+  - push
+  - pull
+  - cloud
+  - infrastructure

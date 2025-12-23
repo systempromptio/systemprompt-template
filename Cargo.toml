@@ -1,0 +1,183 @@
+[workspace]
+members = [
+    # Local extensions
+    "extensions/blog",
+    # MCP servers
+    "extensions/mcp/system-tools",
+]
+exclude = [
+    # Git submodules - have their own Cargo.toml with git dependencies
+    # Built separately via `just mcp-build-submodules`
+    "extensions/mcp/admin",
+    "extensions/mcp/infrastructure",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+version = "0.0.1"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+
+[workspace.dependencies]
+# ============================================
+# CORE FACADE (single dependency for all systemprompt-core)
+# ============================================
+systemprompt = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main", features = ["full"] }
+
+# ============================================
+# LOCAL EXTENSIONS
+# ============================================
+systemprompt-blog-extension = { path = "extensions/blog" }
+
+# ============================================
+# VERSION PINNING OPTIONS (uncomment to use)
+# ============================================
+# Option 1: Track main branch (default - shown above)
+# Option 2: Pin to tag (recommended for production)
+# systemprompt-models = { git = "https://github.com/systempromptio/systemprompt-core", tag = "v0.1.0" }
+# Option 3: Pin to specific commit
+# systemprompt-models = { git = "https://github.com/systempromptio/systemprompt-core", rev = "abc123def456" }
+
+# Core runtime dependencies
+tokio = { version = "1.47", features = ["full"] }
+tokio-test = "0.4"
+tokio-stream = "0.1"
+tokio-util = "0.7"
+anyhow = "1.0"
+thiserror = "2.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+async-trait = "0.1"
+
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "postgres", "migrate", "chrono", "rust_decimal"] }
+rust_decimal = "1.37"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+serde_json = { version = "1.0", features = ["preserve_order"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.18", features = ["v4", "serde"] }
+validator = { version = "0.16", features = ["derive"] }
+regex = "1.11"
+cargo_metadata = "0.18"
+indexmap = { version = "2.0", features = ["serde"] }
+
+# HTTP/API
+axum = "0.8"
+axum-test = "15.0"
+reqwest = { version = "0.12", features = ["json", "stream"] }
+http = "1.0"
+tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
+tower = { version = "0.5", features = ["util"] }
+
+# CLI
+clap = { version = "4.4", features = ["derive", "env"] }
+console = "0.15"
+dialoguer = "0.11"
+tabled = "0.17"
+colored = "2.2"
+
+# Process management
+nix = { version = "0.29", features = ["process", "signal"] }
+ctrlc = "3.0"
+
+# Utilities
+inventory = "0.3"
+dotenvy = "0.15"
+dotenv = "0.15"
+tempfile = "3.0"
+walkdir = "2.0"
+glob = "0.3"
+futures = "0.3"
+futures-util = "0.3"
+futures-channel = "0.3"
+bytes = "1.0"
+hex = "0.4"
+base64-url = "2.0"
+serde_urlencoded = "0.7"
+chacha20poly1305 = "0.10"
+schemars = { version = "0.8", features = ["derive"] }
+pin-project = "1.0"
+sse-stream = "0.2.1"
+
+# MCP Protocol
+rmcp = { version = "0.8.1", features = ["server", "client", "transport-io", "transport-streamable-http-server", "transport-streamable-http-server-session", "transport-streamable-http-client", "transport-streamable-http-client-reqwest", "macros", "auth"] }
+rmcp-macros = "0.8"
+tokio-tungstenite = "0.24"
+
+# JSON-RPC
+jsonrpc-core = "18.0"
+jsonrpc-derive = "18.0"
+
+# Security
+argon2 = "0.5"
+rand = "0.8"
+bcrypt = "0.15"
+urlencoding = "2.1"
+base64 = "0.22"
+jsonwebtoken = "9.3"
+sha2 = "0.10"
+oauth2 = "5.0"
+md5 = "0.7"
+hmac = "0.12"
+webauthn-rs = { version = "0.5", features = ["danger-allow-state-serialisation"] }
+bincode = "1.3"
+
+# Additional dependencies
+tower_governor = "0.8"
+indicatif = "0.17"
+config = { version = "0.14", features = ["yaml"] }
+tokio-cron-scheduler = "0.10"
+maxminddb = "0.24"
+once_cell = "1.21"
+url = "2.5"
+semver = { version = "1.0", features = ["serde"] }
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+missing_docs_in_private_items = "allow"
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+# ============================================
+# ROOT PACKAGE (Template Application)
+# ============================================
+[package]
+name = "systemprompt-template"
+version.workspace = true
+edition.workspace = true
+description = "SystemPrompt Template - Example project with blog extension"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+# Core framework (facade)
+systemprompt = { workspace = true }
+
+# Local extensions
+systemprompt-blog-extension = { workspace = true }
+
+# Runtime
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+sqlx = { workspace = true }
+axum = { workspace = true }
+tower-http = { workspace = true }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+
+[build-dependencies]
+serde_yaml = "0.9"
+
+[lints]
+workspace = true

@@ -1,0 +1,14 @@
+id: file_context_reasoning
+name: "File Context Reasoning"
+description: "AI reasoning skill for gathering and synthesizing context from codebases. Guides the AI through iterative exploration of directory structures, file contents, and search results."
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - system-tools
+tags:
+  - reasoning
+  - codebase
+  - exploration
+  - context
+  - file-analysis

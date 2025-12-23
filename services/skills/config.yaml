@@ -1,0 +1,13 @@
+# Skills configuration
+# Domain entry point that includes individual skill files
+
+includes:
+  - agent_creation/config.yml
+  - agent_editing/config.yml
+  - skill_creation/config.yml
+  - skill_editing/config.yml
+  - deployment/config.yml
+  - sync_management/config.yml
+  - file_context_reasoning/config.yml
+
+skills: {}

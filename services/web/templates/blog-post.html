@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO Meta Tags -->
+  <title>{{TITLE}} | {{ORG_NAME}}</title>
+  <meta name="description" content="{{DESCRIPTION}}" />
+  <meta name="author" content="{{AUTHOR}}" />
+  <meta name="keywords" content="{{KEYWORDS}}" />
+  <link rel="canonical" href="{{ORG_URL}}/blog/{{SLUG}}" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="{{TITLE}}" />
+  <meta property="og:description" content="{{DESCRIPTION}}" />
+  <meta property="og:image" content="{{IMAGE}}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="{{ORG_URL}}/blog/{{SLUG}}" />
+  <meta property="og:site_name" content="{{ORG_NAME}}" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="{{TWITTER_HANDLE}}" />
+  <meta name="twitter:creator" content="{{TWITTER_HANDLE}}" />
+  <meta name="twitter:title" content="{{TITLE}}" />
+  <meta name="twitter:description" content="{{DESCRIPTION}}" />
+  <meta name="twitter:image" content="{{IMAGE}}" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/blog.css" />
+  <link rel="stylesheet" href="/css/syntax-highlight.css" />
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "{{TITLE}}",
+    "description": "{{DESCRIPTION}}",
+    "image": "{{IMAGE}}",
+    "author": {
+      "@type": "Person",
+      "name": "{{AUTHOR}}"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "{{ORG_NAME}}",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ORG_LOGO}}"
+      }
+    },
+    "datePublished": "{{DATE_ISO}}",
+    "dateModified": "{{DATE_MODIFIED_ISO}}",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "{{ORG_URL}}/blog/{{SLUG}}"
+    },
+    "keywords": "{{KEYWORDS}}",
+    "articleSection": "{{ARTICLE_SECTION}}",
+    "inLanguage": "{{ARTICLE_LANGUAGE}}"
+  }
+  </script>
+</head>
+<body>
+  <div class="blog-background"></div>
+  <div class="blog-shape-left"></div>
+
+  <header class="site-header">
+    <nav class="site-nav">
+      <a href="/" class="logo-link">
+        <img src="/favicon.ico" alt="{{ORG_NAME}} logo" class="logo" />
+        {{#if DISPLAY_SITENAME}}<span class="site-name">{{ORG_NAME}}</span>{{/if}}
+      </a>
+      <a href="{{HEADER_CTA_URL}}" class="chat-cta">
+        <svg class="chat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Chat with us
+      </a>
+    </nav>
+  </header>
+
+  <main class="blog-post">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="breadcrumb__separator">/</span>
+      <a href="/blog">Blog</a>
+      <span class="breadcrumb__separator">/</span>
+      <span class="breadcrumb__current">{{TITLE}}</span>
+    </nav>
+
+    <article>
+      <header class="post-header">
+        <h1>{{TITLE}}</h1>
+        <div class="post-meta">
+          <div class="author-info">
+            <span class="author-name">{{AUTHOR}}</span>
+            <time datetime="{{DATE_PUBLISHED}}">{{DATE}}</time>
+            <span class="meta-separator">·</span>
+            <span class="read-time">{{READ_TIME}} min read</span>
+          </div>
+        </div>
+        {{{SOCIAL_ACTION_BAR}}}
+      </header>
+
+      {{#if FEATURED_IMAGE}}
+      <figure class="featured-image">
+        <img src="{{FEATURED_IMAGE}}" alt="{{TITLE}}" loading="eager" />
+      </figure>
+      {{/if}}
+
+      <div class="post-content">
+        {{{CONTENT}}}
+      </div>
+
+      {{{REFERENCES}}}
+
+      {{{SOCIAL_CONTENT}}}
+    </article>
+
+    <section class="agentic-banner">
+      <div class="banner-content">
+        <div class="banner-icon">🤖</div>
+        <div class="banner-text">
+          <h3>This blog is powered by an AI agent system</h3>
+          <p>Want to explore more content or ask questions? Chat with our AI agent to discover articles, get summaries, or dive deeper into topics.</p>
+        </div>
+        <a href="{{BANNER_CTA_URL}}" class="banner-cta">
+          Start Chatting
+          <svg class="arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div class="related-posts">
+        {{{RELATED_CONTENT}}}
+      </div>
+
+      {{{FOOTER_NAV}}}
+    </div>
+  </footer>
+
+  <!-- Link Tracking -->
+  <script src="/js/blog-tracking.js"></script>
+</body>
+</html>
