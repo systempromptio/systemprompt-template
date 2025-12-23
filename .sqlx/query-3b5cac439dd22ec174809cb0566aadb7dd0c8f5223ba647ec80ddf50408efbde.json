@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                mc.id as content_id,\n                mc.title,\n                mc.slug,\n                mc.source_id,\n                mc.published_at,\n                EXTRACT(DAY FROM NOW() - mc.published_at)::integer as days_old,\n                COUNT(ae.id) FILTER (WHERE us.session_id IS NOT NULL) as total_views,\n                COUNT(DISTINCT ae.session_id) FILTER (WHERE us.session_id IS NOT NULL) as visitors_all_time,\n                COUNT(DISTINCT ae.session_id) FILTER (WHERE ae.timestamp >= NOW() - INTERVAL '1 day' AND us.session_id IS NOT NULL) as visitors_1d,\n                COUNT(DISTINCT ae.session_id) FILTER (WHERE ae.timestamp >= NOW() - INTERVAL '7 days' AND us.session_id IS NOT NULL) as visitors_7d,\n                COUNT(DISTINCT ae.session_id) FILTER (WHERE ae.timestamp >= NOW() - INTERVAL '30 days' AND us.session_id IS NOT NULL) as visitors_30d\n            FROM markdown_content mc\n            LEFT JOIN analytics_events ae ON ae.endpoint = 'GET /blog/' || mc.slug\n                AND ae.event_type = 'page_view'\n            LEFT JOIN user_sessions us ON ae.session_id = us.session_id\n                AND us.is_bot = false\n                AND us.is_scanner = false\n            GROUP BY mc.id, mc.title, mc.slug, mc.source_id, mc.published_at\n            ORDER BY visitors_7d DESC NULLS LAST\n            LIMIT $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "content_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "source_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "published_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "days_old",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "total_views",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "visitors_all_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "visitors_1d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "visitors_7d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
+        "name": "visitors_30d",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "3b5cac439dd22ec174809cb0566aadb7dd0c8f5223ba647ec80ddf50408efbde"
+}

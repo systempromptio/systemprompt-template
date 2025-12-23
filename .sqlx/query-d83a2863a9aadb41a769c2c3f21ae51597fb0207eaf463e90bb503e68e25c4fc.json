@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COALESCE(at.agent_name, 'Unknown') as agent_name,\n                COUNT(*) as count\n            FROM mcp_tool_executions mte\n            LEFT JOIN agent_tasks at ON mte.task_id = at.task_id\n            WHERE mte.started_at >= NOW() - ($1 || ' hours')::INTERVAL\n            GROUP BY at.agent_name\n            ORDER BY count DESC\n            LIMIT $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "agent_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "d83a2863a9aadb41a769c2c3f21ae51597fb0207eaf463e90bb503e68e25c4fc"
+}

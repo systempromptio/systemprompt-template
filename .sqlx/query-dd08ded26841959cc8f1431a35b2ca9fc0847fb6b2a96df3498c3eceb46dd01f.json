@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COALESCE(referrer_url, 'Direct') as referrer_url,\n                COUNT(DISTINCT session_id) as sessions,\n                COUNT(DISTINCT fingerprint_hash) as unique_visitors,\n                AVG(request_count)::float8 as avg_pages_per_session,\n                AVG(EXTRACT(EPOCH FROM (last_activity_at - started_at)))::float8 as avg_duration_sec\n            FROM user_sessions\n            WHERE started_at >= NOW() - ($1 || ' days')::INTERVAL\n              AND is_bot = false\n              AND is_scanner = false\n              AND request_count > 0\n            GROUP BY referrer_url\n            ORDER BY sessions DESC\n            LIMIT 20\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "referrer_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "sessions",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "unique_visitors",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "avg_pages_per_session",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "avg_duration_sec",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "dd08ded26841959cc8f1431a35b2ca9fc0847fb6b2a96df3498c3eceb46dd01f"
+}
