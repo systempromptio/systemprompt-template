@@ -1,16 +1,10 @@
-use systemprompt_infrastructure::tools::{list_tools, register_tools};
+use systemprompt_mcp_infrastructure::tools::{list_tools, register_tools};
 
 #[test]
 fn register_tools_returns_all_expected_tools() {
     let tools = register_tools();
 
-    let expected_names = [
-        "sync_files",
-        "sync_database",
-        "deploy_crate",
-        "sync_all",
-        "sync_status",
-    ];
+    let expected_names = ["sync", "export", "deploy", "status", "config"];
 
     for name in &expected_names {
         assert!(
@@ -77,42 +71,27 @@ fn all_tools_have_descriptions() {
 }
 
 #[test]
-fn sync_files_tool_has_correct_schema() {
+fn sync_tool_has_correct_schema() {
     let tools = register_tools();
-    let sync_files = tools.iter().find(|t| t.name.as_ref() == "sync_files");
+    let sync = tools.iter().find(|t| t.name.as_ref() == "sync");
 
-    assert!(sync_files.is_some(), "sync_files tool not found");
-    let tool = sync_files.unwrap();
+    assert!(sync.is_some(), "sync tool not found");
+    let tool = sync.unwrap();
 
     assert!(tool.input_schema.contains_key("properties"));
     let properties = tool.input_schema.get("properties").unwrap();
 
+    assert!(properties.get("target").is_some());
     assert!(properties.get("direction").is_some());
     assert!(properties.get("dry_run").is_some());
 }
 
 #[test]
-fn sync_database_tool_has_correct_schema() {
+fn deploy_tool_has_correct_schema() {
     let tools = register_tools();
-    let sync_db = tools.iter().find(|t| t.name.as_ref() == "sync_database");
+    let deploy = tools.iter().find(|t| t.name.as_ref() == "deploy");
 
-    assert!(sync_db.is_some(), "sync_database tool not found");
-    let tool = sync_db.unwrap();
-
-    assert!(tool.input_schema.contains_key("properties"));
-    let properties = tool.input_schema.get("properties").unwrap();
-
-    assert!(properties.get("direction").is_some());
-    assert!(properties.get("dry_run").is_some());
-    assert!(properties.get("tables").is_some());
-}
-
-#[test]
-fn deploy_crate_tool_has_correct_schema() {
-    let tools = register_tools();
-    let deploy = tools.iter().find(|t| t.name.as_ref() == "deploy_crate");
-
-    assert!(deploy.is_some(), "deploy_crate tool not found");
+    assert!(deploy.is_some(), "deploy tool not found");
     let tool = deploy.unwrap();
 
     assert!(tool.input_schema.contains_key("properties"));
@@ -123,31 +102,49 @@ fn deploy_crate_tool_has_correct_schema() {
 }
 
 #[test]
-fn sync_all_tool_has_correct_schema() {
+fn export_tool_has_correct_schema() {
     let tools = register_tools();
-    let sync_all = tools.iter().find(|t| t.name.as_ref() == "sync_all");
+    let export = tools.iter().find(|t| t.name.as_ref() == "export");
 
-    assert!(sync_all.is_some(), "sync_all tool not found");
-    let tool = sync_all.unwrap();
+    assert!(export.is_some(), "export tool not found");
+    let tool = export.unwrap();
 
     assert!(tool.input_schema.contains_key("properties"));
     let properties = tool.input_schema.get("properties").unwrap();
 
-    assert!(properties.get("direction").is_some());
-    assert!(properties.get("dry_run").is_some());
+    assert!(properties.get("target").is_some());
 }
 
 #[test]
-fn sync_status_tool_has_empty_required_properties() {
+fn status_tool_has_no_required_properties() {
     let tools = register_tools();
-    let sync_status = tools.iter().find(|t| t.name.as_ref() == "sync_status");
+    let status = tools.iter().find(|t| t.name.as_ref() == "status");
 
-    assert!(sync_status.is_some(), "sync_status tool not found");
-    let tool = sync_status.unwrap();
+    assert!(status.is_some(), "status tool not found");
+    let tool = status.unwrap();
 
-    // sync_status has no required properties
     let required = tool.input_schema.get("required");
     assert!(
-        required.is_none() || required.unwrap().as_array().map(|a| a.is_empty()).unwrap_or(true)
+        required.is_none()
+            || required
+                .unwrap()
+                .as_array()
+                .map(|a| a.is_empty())
+                .unwrap_or(true)
     );
+}
+
+#[test]
+fn config_tool_has_correct_schema() {
+    let tools = register_tools();
+    let config = tools.iter().find(|t| t.name.as_ref() == "config");
+
+    assert!(config.is_some(), "config tool not found");
+    let tool = config.unwrap();
+
+    assert!(tool.input_schema.contains_key("properties"));
+    let properties = tool.input_schema.get("properties").unwrap();
+
+    assert!(properties.get("filter").is_some());
+    assert!(properties.get("format").is_some());
 }

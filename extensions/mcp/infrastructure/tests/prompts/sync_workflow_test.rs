@@ -1,4 +1,4 @@
-use systemprompt_infrastructure::prompts::build_sync_workflow_prompt;
+use systemprompt_mcp_infrastructure::prompts::build_sync_workflow_prompt;
 
 #[test]
 fn sync_workflow_includes_direction() {

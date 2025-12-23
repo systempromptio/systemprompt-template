@@ -14,7 +14,7 @@ pub fn build_sync_workflow_prompt(direction: &str, scope: &str) -> String {
     };
 
     format!(
-        r#"# SystemPrompt Sync Workflow
+        r"# SystemPrompt Sync Workflow
 
 ## Current Operation: {direction} - {scope}
 
@@ -99,7 +99,7 @@ If errors occur during sync:
 - **Regular syncs**: Smaller, frequent syncs are easier to manage
 - **Backup first**: For production data, ensure backups exist
 - **Monitor changes**: Keep track of what's being synced and why
-"#,
+",
         direction = direction,
         scope = scope,
         direction_desc = direction_desc,
@@ -111,7 +111,7 @@ If errors occur during sync:
 fn get_scope_guidelines(scope: &str) -> &'static str {
     match scope {
         "files" => {
-            r#"### File Sync Guidelines
+            r"### File Sync Guidelines
 
 Files included:
 - Agent configuration files (*.yml, *.yaml)
@@ -128,10 +128,10 @@ Files excluded:
 Tips:
 - Check file permissions after sync
 - Verify YAML syntax is valid
-- Watch for environment-specific values"#
+- Watch for environment-specific values"
         }
         "database" => {
-            r#"### Database Sync Guidelines
+            r"### Database Sync Guidelines
 
 Tables synced:
 - agents: Agent definitions and configurations
@@ -147,10 +147,10 @@ Considerations:
 Tips:
 - Consider syncing specific tables for targeted updates
 - Watch for foreign key dependencies
-- Verify data integrity after sync"#
+- Verify data integrity after sync"
         }
         "all" => {
-            r#"### Full Sync Guidelines
+            r"### Full Sync Guidelines
 
 This syncs everything:
 1. Configuration files
@@ -166,36 +166,8 @@ Tips:
 - Allow sufficient time for full sync
 - Monitor each phase for errors
 - Have rollback plan ready
-- Test thoroughly after completion"#
+- Test thoroughly after completion"
         }
         _ => "Follow standard sync procedures for your use case.",
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn sync_workflow_includes_direction() {
-        let prompt = build_sync_workflow_prompt("push", "all");
-        assert!(prompt.contains("push"));
-        assert!(prompt.contains("uploading local changes to cloud"));
-    }
-
-    #[test]
-    fn sync_workflow_includes_scope() {
-        let prompt = build_sync_workflow_prompt("pull", "database");
-        assert!(prompt.contains("database"));
-        assert!(prompt.contains("Database Sync Guidelines"));
-    }
-
-    #[test]
-    fn sync_workflow_includes_all_sections() {
-        let prompt = build_sync_workflow_prompt("push", "files");
-        assert!(prompt.contains("Pre-Sync Checks"));
-        assert!(prompt.contains("Dry Run Phase"));
-        assert!(prompt.contains("Execute Sync"));
-        assert!(prompt.contains("Post-Sync Verification"));
     }
 }
