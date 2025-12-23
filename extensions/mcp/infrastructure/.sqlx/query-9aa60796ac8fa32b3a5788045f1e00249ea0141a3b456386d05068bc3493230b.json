@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                id,\n                timestamp::text as timestamp,\n                level,\n                module,\n                message,\n                user_id,\n                session_id,\n                context_id\n            FROM logs\n            WHERE ($1::text IS NULL OR UPPER(level) = UPPER($1))\n            ORDER BY timestamp DESC\n            LIMIT $2 OFFSET $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "timestamp",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "level",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "module",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "message",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "user_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "session_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "context_id",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "9aa60796ac8fa32b3a5788045f1e00249ea0141a3b456386d05068bc3493230b"
+}

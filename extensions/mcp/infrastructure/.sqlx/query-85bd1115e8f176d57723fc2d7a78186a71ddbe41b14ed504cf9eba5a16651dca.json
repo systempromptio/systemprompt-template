@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COUNT(DISTINCT ae.session_id) FILTER (WHERE ae.timestamp >= NOW() - INTERVAL '1 day') as traffic_1d,\n                COUNT(DISTINCT ae.session_id) FILTER (WHERE ae.timestamp >= NOW() - INTERVAL '7 days') as traffic_7d,\n                COUNT(DISTINCT ae.session_id) FILTER (WHERE ae.timestamp >= NOW() - INTERVAL '30 days') as traffic_30d,\n                COUNT(DISTINCT ae.session_id) FILTER (WHERE ae.timestamp >= NOW() - INTERVAL '2 days' AND ae.timestamp < NOW() - INTERVAL '1 day') as prev_traffic_1d,\n                COUNT(DISTINCT ae.session_id) FILTER (WHERE ae.timestamp >= NOW() - INTERVAL '14 days' AND ae.timestamp < NOW() - INTERVAL '7 days') as prev_traffic_7d,\n                COUNT(DISTINCT ae.session_id) FILTER (WHERE ae.timestamp >= NOW() - INTERVAL '60 days' AND ae.timestamp < NOW() - INTERVAL '30 days') as prev_traffic_30d\n            FROM analytics_events ae\n            JOIN user_sessions us ON ae.session_id = us.session_id\n            WHERE ae.event_type = 'page_view'\n              AND ae.endpoint LIKE 'GET /blog/%'\n              AND us.is_bot = false\n              AND us.is_scanner = false\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "traffic_1d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "traffic_7d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "traffic_30d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "prev_traffic_1d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "prev_traffic_7d",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "prev_traffic_30d",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "85bd1115e8f176d57723fc2d7a78186a71ddbe41b14ed504cf9eba5a16651dca"
+}

@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                DATE(uc.created_at)::text as date,\n                COUNT(DISTINCT uc.context_id) as conversations,\n                COUNT(DISTINCT mte.mcp_execution_id) as tool_executions,\n                COUNT(DISTINCT uc.user_id) as active_users\n            FROM user_contexts uc\n            LEFT JOIN agent_tasks at ON at.context_id = uc.context_id\n            LEFT JOIN mcp_tool_executions mte ON mte.task_id = at.task_id\n            WHERE uc.created_at >= NOW() - ($1 || ' days')::INTERVAL\n            GROUP BY DATE(uc.created_at)\n            ORDER BY DATE(uc.created_at) DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "date",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "conversations",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "tool_executions",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "active_users",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "6582f6ff9eb69cc35f4bb0ca760fbaff9badf1fac57cd6a69b12a381725dfd3b"
+}
