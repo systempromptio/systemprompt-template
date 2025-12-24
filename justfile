@@ -11,9 +11,13 @@ default:
 # BUILD & RUN
 # ══════════════════════════════════════════════════════════════════════════════
 
+# Get DATABASE_URL from local tenant (for sqlx compile-time checks)
+_db-url:
+    @cat .systemprompt/tenants.json 2>/dev/null | jq -r '.tenants[] | select(.tenant_type == "local") | .database_url' | head -1 || echo "postgres://systemprompt:systemprompt@localhost:5432/systemprompt"
+
 # Build workspace (use --release for release build)
 build *FLAGS:
-    cargo build --manifest-path=core/Cargo.toml --target-dir=target {{FLAGS}}
+    DATABASE_URL="$(just _db-url)" cargo build --manifest-path=core/Cargo.toml --target-dir=target {{FLAGS}}
 
 # Start server
 start:
@@ -39,20 +43,16 @@ whoami:
 # ══════════════════════════════════════════════════════════════════════════════
 # TENANT — Where your app runs in cloud
 # Requires: login
-# Produces: .systemprompt/tenants.json
+# Produces: .systemprompt/tenants.json, .systemprompt/docker/<name>.yaml
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Create cloud tenant
-tenant-create *ARGS:
-    {{CLI}} cloud tenant create {{ARGS}}
+# Tenant operations (interactive menu)
+tenant:
+    {{CLI}} cloud tenant
 
 # List all tenants
-tenant-list:
+tenants:
     {{CLI}} cloud tenant list
-
-# Show tenant details
-tenant-show *ARGS:
-    {{CLI}} cloud tenant show {{ARGS}}
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PROJECT — Local setup
@@ -65,21 +65,17 @@ init *FLAGS:
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PROFILE — Configuration
-# Requires: init (local) or login+tenant (cloud)
-# Produces: .systemprompt/profiles/<env>/
+# Requires: tenant
+# Produces: .systemprompt/profiles/<name>/
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Create a new profile
-profile-create NAME *ARGS:
-    {{CLI}} cloud profile create {{NAME}} {{ARGS}}
+# Profile operations (interactive menu)
+profile:
+    {{CLI}} cloud profile
 
 # List all profiles
-profile-list:
+profiles:
     {{CLI}} cloud profile list
-
-# Show profile configuration
-profile-show *ARGS:
-    {{CLI}} cloud profile show {{ARGS}}
 
 # ══════════════════════════════════════════════════════════════════════════════
 # DATABASE — Local PostgreSQL (per tenant)
@@ -153,10 +149,6 @@ status:
 # QUICKSTART
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Local development setup (tenant-create starts PostgreSQL automatically)
-quickstart-local: init tenant-create (profile-create "local") migrate sync-local
+# Full local setup: tenant → profile → migrate → sync
+quickstart: tenant profile migrate sync-local
     @echo "Done! Run 'just start' to begin"
-
-# Cloud deployment setup (interactive)
-quickstart-cloud: login tenant-create (profile-create "local") migrate sync-local
-    @echo "Done! Run 'just deploy' to push to cloud"

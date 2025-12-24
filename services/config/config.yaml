@@ -2,15 +2,15 @@
 # This file aggregates all service configurations
 
 includes:
-  - ../agents/assistant.yml
-  - ../agents/admin.yml
-  - ../agents/agent-editor.yml
-  - ../agents/skill-editor.yml
-  - ../agents/infrastructure.yml
-  - ../skills/config.yml
-  - ../ai/config.yml
-  - ../web/config.yml
-  - ../scheduler/config.yml
+  - ../agents/assistant.yaml
+  - ../agents/admin.yaml
+  - ../agents/agent-editor.yaml
+  - ../agents/skill-editor.yaml
+  - ../agents/infrastructure.yaml
+  - ../skills/config.yaml
+  - ../ai/config.yaml
+  - ../web/config.yaml
+  - ../scheduler/config.yaml
 
 agents: {}
 mcp_servers: {}
