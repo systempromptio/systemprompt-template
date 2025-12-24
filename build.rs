@@ -7,9 +7,9 @@ use std::fs;
 use std::path::Path;
 
 fn main() {
-    validate_yaml_exists("services/scheduler/config.yml");
-    validate_yaml_exists("services/web/config.yml");
-    validate_yaml_exists("services/content/config.yml");
+    validate_yaml_exists("services/scheduler/config.yaml");
+    validate_yaml_exists("services/web/config.yaml");
+    validate_yaml_exists("services/content/config.yaml");
 
     validate_agent_configs();
     validate_mcp_configs();
