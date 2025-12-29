@@ -24,17 +24,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Build release binary
-        run: cargo build --release --manifest-path=core/Cargo.toml --target-dir=target
-        env:
-          DATABASE_URL: postgres://fake:fake@localhost/fake
-
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:

@@ -1,4 +1,30 @@
-# SystemPrompt Template - Fly.io Deployment
+# Stage 1: Build with Postgres for sqlx
+FROM rust:1.83-bookworm AS builder
+
+# Install postgres and build deps
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    postgresql \
+    postgresql-contrib \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# Copy source
+COPY core ./core
+COPY extensions ./extensions
+COPY Cargo.toml ./
+COPY src ./src
+COPY build.rs ./
+
+# Start postgres, create database, run migrations, then build
+RUN service postgresql start && \
+    su - postgres -c "psql -c \"CREATE USER systemprompt WITH PASSWORD 'systemprompt' SUPERUSER;\"" && \
+    su - postgres -c "createdb -O systemprompt systemprompt" && \
+    DATABASE_URL="postgres://systemprompt:systemprompt@localhost/systemprompt" \
+    cargo build --release --manifest-path=core/Cargo.toml --target-dir=target
+
+# Stage 2: Runtime
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y \
@@ -11,19 +37,15 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -m -u 1000 app
 WORKDIR /app
 
-# Create directory structure
 RUN mkdir -p /app/bin /app/data /app/logs /app/storage
 
-# Copy pre-built binaries (core CLI + any MCP servers)
-COPY target/release/systemprompt* /app/bin/
+# Copy binary from builder
+COPY --from=builder /build/target/release/systemprompt /app/bin/
 
-# Copy service configuration
+# Copy service configuration and web assets
 COPY services /app/services
-
-# Copy web assets
 COPY core/web/dist /app/web
 
-# Fix permissions
 RUN chmod +x /app/bin/* && \
     chown -R app:app /app
 
