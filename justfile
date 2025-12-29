@@ -151,11 +151,11 @@ status:
 
 # Build Docker image locally (for testing)
 docker-build TAG="local":
-    docker build -t systemprompt-template:{{TAG}} .
+    docker build -f .systemprompt/Dockerfile -t systemprompt-template:{{TAG}} .
 
 # Build Docker image with GHCR tag
 docker-build-ghcr TAG="latest":
-    docker build -t ghcr.io/systempromptio/systemprompt-template:{{TAG}} .
+    docker build -f .systemprompt/Dockerfile -t ghcr.io/systempromptio/systemprompt-template:{{TAG}} .
 
 # Push Docker image to GHCR (requires: docker login ghcr.io)
 docker-push TAG="latest":

@@ -3,7 +3,12 @@
 .gitmodules
 target/debug
 .cargo
-.systemprompt
+# .systemprompt - include profiles, exclude sensitive data
+.systemprompt/credentials.json
+.systemprompt/tenants.json
+.systemprompt/**/secrets.json
+.systemprompt/docker
+.systemprompt/storage
 .env*
 backup
 docs

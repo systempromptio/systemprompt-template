@@ -1,0 +1,9 @@
+# Sensitive tenant-specific data
+credentials.json
+tenants.json
+**/secrets.json
+docker/
+storage/
+
+# Local profile data (except defaults)
+profiles/local/

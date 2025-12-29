@@ -108,9 +108,11 @@ services/profiles/*.profile.yml
 .cargo/config.toml
 
 # Sensitive data directories
-.systemprompt/
 backup/
 
-# Template build files (not for repo users)
-Dockerfile
-.dockerignore
+# .systemprompt - track defaults, ignore tenant-specific data
+.systemprompt/credentials.json
+.systemprompt/tenants.json
+.systemprompt/**/secrets.json
+.systemprompt/docker/
+.systemprompt/storage/

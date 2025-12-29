@@ -16,6 +16,7 @@ RUN mkdir -p /app/bin /app/data /app/logs /app/storage
 
 COPY target/release/systemprompt /app/bin/
 COPY services /app/services
+COPY .systemprompt/profiles /app/services/profiles
 COPY core/web/dist /app/web
 
 RUN chmod +x /app/bin/* && chown -R app:app /app
