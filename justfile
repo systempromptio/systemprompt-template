@@ -146,26 +146,34 @@ status:
     {{CLI}} cloud status
 
 # ══════════════════════════════════════════════════════════════════════════════
-# DOCKER — Local image building and testing
+# DOCKER — Build and push base template image to GHCR
+# Workflow: just build --release && just docker-build-ghcr && just docker-push
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Build Docker image locally (for testing)
+# Build Docker image for local testing
 docker-build TAG="local":
     docker build -f .systemprompt/Dockerfile -t systemprompt-template:{{TAG}} .
 
-# Build Docker image with GHCR tag
+# Build Docker image tagged for GHCR
 docker-build-ghcr TAG="latest":
     docker build -f .systemprompt/Dockerfile -t ghcr.io/systempromptio/systemprompt-template:{{TAG}} .
 
-# Push Docker image to GHCR (requires: docker login ghcr.io)
+# Push image to GHCR (requires: docker login ghcr.io)
 docker-push TAG="latest":
     docker push ghcr.io/systempromptio/systemprompt-template:{{TAG}}
 
-# Run Docker image locally (requires built image)
+# Build and push in one command
+docker-release TAG="latest":
+    just build --release
+    just docker-build-ghcr {{TAG}}
+    just docker-push {{TAG}}
+    @echo "Released: ghcr.io/systempromptio/systemprompt-template:{{TAG}}"
+
+# Run image locally for testing
 docker-run TAG="local":
     docker run -p 8080:8080 --env-file .env systemprompt-template:{{TAG}}
 
-# Test Docker build without pushing
+# Test build without pushing
 docker-test:
     just build --release
     just docker-build test
