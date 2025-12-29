@@ -10,7 +10,7 @@ docs
 instructions
 *.md
 core/web/node_modules
-core/web/src
+core/web/dist
 .vscode
 .idea
 logs

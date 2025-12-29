@@ -1,5 +1,14 @@
-# Stage 1: Build with Postgres for sqlx
-FROM rust:1.83-bookworm AS builder
+# Stage 1: Build web assets
+FROM node:20-bookworm-slim AS web-builder
+
+WORKDIR /build/core/web
+COPY core/web/package*.json ./
+RUN npm ci
+COPY core/web ./
+RUN npm run build
+
+# Stage 2: Build Rust binary with Postgres for sqlx
+FROM rust:1.83-bookworm AS rust-builder
 
 # Install postgres and build deps
 RUN apt-get update && apt-get install -y \
@@ -17,14 +26,14 @@ COPY Cargo.toml ./
 COPY src ./src
 COPY build.rs ./
 
-# Start postgres, create database, run migrations, then build
+# Start postgres, create database, then build
 RUN service postgresql start && \
     su - postgres -c "psql -c \"CREATE USER systemprompt WITH PASSWORD 'systemprompt' SUPERUSER;\"" && \
     su - postgres -c "createdb -O systemprompt systemprompt" && \
     DATABASE_URL="postgres://systemprompt:systemprompt@localhost/systemprompt" \
     cargo build --release --manifest-path=core/Cargo.toml --target-dir=target
 
-# Stage 2: Runtime
+# Stage 3: Runtime
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y \
@@ -39,12 +48,14 @@ WORKDIR /app
 
 RUN mkdir -p /app/bin /app/data /app/logs /app/storage
 
-# Copy binary from builder
-COPY --from=builder /build/target/release/systemprompt /app/bin/
+# Copy binary from rust builder
+COPY --from=rust-builder /build/target/release/systemprompt /app/bin/
 
-# Copy service configuration and web assets
+# Copy web assets from web builder
+COPY --from=web-builder /build/core/web/dist /app/web
+
+# Copy service configuration
 COPY services /app/services
-COPY core/web/dist /app/web
 
 RUN chmod +x /app/bin/* && \
     chown -R app:app /app
