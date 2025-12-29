@@ -146,6 +146,32 @@ status:
     {{CLI}} cloud status
 
 # ══════════════════════════════════════════════════════════════════════════════
+# DOCKER — Local image building and testing
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Build Docker image locally (for testing)
+docker-build TAG="local":
+    docker build -t systemprompt-template:{{TAG}} .
+
+# Build Docker image with GHCR tag
+docker-build-ghcr TAG="latest":
+    docker build -t ghcr.io/systempromptio/systemprompt-template:{{TAG}} .
+
+# Push Docker image to GHCR (requires: docker login ghcr.io)
+docker-push TAG="latest":
+    docker push ghcr.io/systempromptio/systemprompt-template:{{TAG}}
+
+# Run Docker image locally (requires built image)
+docker-run TAG="local":
+    docker run -p 8080:8080 --env-file .env systemprompt-template:{{TAG}}
+
+# Test Docker build without pushing
+docker-test:
+    just build --release
+    just docker-build test
+    @echo "Docker build successful! Image: systemprompt-template:test"
+
+# ══════════════════════════════════════════════════════════════════════════════
 # QUICKSTART
 # ══════════════════════════════════════════════════════════════════════════════
 
