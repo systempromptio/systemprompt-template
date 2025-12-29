@@ -2,7 +2,7 @@
 FROM node:20-bookworm-slim AS web-builder
 
 WORKDIR /build/core/web
-COPY core/web/package*.json ./
+COPY core/web/package*.json core/web/.npmrc ./
 RUN npm ci
 COPY core/web ./
 RUN npm run build
