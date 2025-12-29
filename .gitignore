@@ -110,3 +110,7 @@ services/profiles/*.profile.yml
 # Sensitive data directories
 .systemprompt/
 backup/
+
+# Template build files (not for repo users)
+Dockerfile
+.dockerignore

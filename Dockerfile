@@ -1,46 +1,5 @@
-# Stage 1: Build web assets
-FROM node:20-bookworm-slim AS web-builder
-
-WORKDIR /build
-COPY services/web/config.yaml /build/services/web/config.yaml
-COPY services/web/metadata.yaml /build/services/web/metadata.yaml
-
-WORKDIR /build/core/web
-COPY core/web/package*.json core/web/.npmrc ./
-RUN npm ci
-COPY core/web ./
-
-ENV SYSTEMPROMPT_WEB_CONFIG_PATH=/build/services/web/config.yaml
-ENV SYSTEMPROMPT_WEB_METADATA_PATH=/build/services/web/metadata.yaml
-RUN npm run build
-
-# Stage 2: Build Rust binary with Postgres for sqlx
-FROM rust:bookworm AS rust-builder
-
-# Install postgres and build deps
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    postgresql \
-    postgresql-contrib \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /build
-
-# Copy source
-COPY core ./core
-COPY extensions ./extensions
-COPY Cargo.toml ./
-COPY src ./src
-COPY build.rs ./
-
-# Start postgres, create database, then build
-RUN service postgresql start && \
-    su - postgres -c "psql -c \"CREATE USER systemprompt WITH PASSWORD 'systemprompt' SUPERUSER;\"" && \
-    su - postgres -c "createdb -O systemprompt systemprompt" && \
-    DATABASE_URL="postgres://systemprompt:systemprompt@localhost/systemprompt" \
-    cargo build --release --manifest-path=core/Cargo.toml --target-dir=target
-
-# Stage 3: Runtime
+# SystemPrompt Template - Production Image
+# Build locally first: just build --release
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y \
@@ -55,20 +14,13 @@ WORKDIR /app
 
 RUN mkdir -p /app/bin /app/data /app/logs /app/storage
 
-# Copy binary from rust builder
-COPY --from=rust-builder /build/target/release/systemprompt /app/bin/
-
-# Copy web assets from web builder
-COPY --from=web-builder /build/core/web/dist /app/web
-
-# Copy service configuration
+COPY target/release/systemprompt /app/bin/
 COPY services /app/services
+COPY core/web/dist /app/web
 
-RUN chmod +x /app/bin/* && \
-    chown -R app:app /app
+RUN chmod +x /app/bin/* && chown -R app:app /app
 
 USER app
-
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
