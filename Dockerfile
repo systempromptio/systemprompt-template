@@ -15,7 +15,7 @@ ENV SYSTEMPROMPT_WEB_METADATA_PATH=/build/services/web/metadata.yaml
 RUN npm run build
 
 # Stage 2: Build Rust binary with Postgres for sqlx
-FROM rust:1.83-bookworm AS rust-builder
+FROM rust:bookworm AS rust-builder
 
 # Install postgres and build deps
 RUN apt-get update && apt-get install -y \
