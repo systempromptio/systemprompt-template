@@ -62,7 +62,7 @@ rate_limits:
   burst_multiplier: 2
 runtime:
   environment: production
-  log_level: info
+  log_level: normal
   output_format: json
   no_color: true
   non_interactive: true
