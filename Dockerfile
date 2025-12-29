@@ -1,10 +1,17 @@
 # Stage 1: Build web assets
 FROM node:20-bookworm-slim AS web-builder
 
+WORKDIR /build
+COPY services/web/config.yaml /build/services/web/config.yaml
+COPY services/web/metadata.yaml /build/services/web/metadata.yaml
+
 WORKDIR /build/core/web
 COPY core/web/package*.json core/web/.npmrc ./
 RUN npm ci
 COPY core/web ./
+
+ENV SYSTEMPROMPT_WEB_CONFIG_PATH=/build/services/web/config.yaml
+ENV SYSTEMPROMPT_WEB_METADATA_PATH=/build/services/web/metadata.yaml
 RUN npm run build
 
 # Stage 2: Build Rust binary with Postgres for sqlx
