@@ -1,0 +1,7 @@
+extension:
+  type: mcp
+  name: system-tools
+  binary: system-tools
+  description: System tools and utilities MCP server
+  port: 5003
+  enabled: true
