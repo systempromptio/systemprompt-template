@@ -2,7 +2,6 @@ pub mod constructor;
 
 pub use constructor::SystemToolsServer;
 
-use anyhow::Result;
 use chrono::Utc;
 use rmcp::{
     model::{
@@ -15,11 +14,10 @@ use rmcp::{
     service::RequestContext,
     ErrorData as McpError, RoleServer, ServerHandler,
 };
-use systemprompt::identifiers::{AgentName, ContextId, SessionId, TraceId};
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
 use systemprompt::mcp::models::{ToolExecutionRequest, ToolExecutionResult};
 use systemprompt::mcp::repository::ToolUsageRepository;
-use systemprompt::models::execution::context::RequestContext as SysRequestContext;
+use tracing::info;
 
 impl ServerHandler for SystemToolsServer {
     fn get_info(&self) -> ServerInfo {
@@ -45,31 +43,17 @@ impl ServerHandler for SystemToolsServer {
         request: InitializeRequestParam,
         context: RequestContext<RoleServer>,
     ) -> Result<InitializeResult, McpError> {
-        self.system_log
-            .info("mcp_initialize", "=== SYSTEM TOOLS SERVER INITIALIZE ===")
-            .await
-            .ok();
+        info!("=== SYSTEM TOOLS SERVER INITIALIZE ===");
 
         if let Some(parts) = context.extensions.get::<axum::http::request::Parts>() {
-            self.system_log
-                .info(
-                    "mcp_system_tools",
-                    &format!(
-                        "System Tools MCP initialized - URI: {}, server: {}",
-                        parts.uri, self.service_id
-                    ),
-                )
-                .await
-                .ok();
+            info!(
+                uri = %parts.uri,
+                server = %self.service_id,
+                "System Tools MCP initialized"
+            );
         }
 
-        self.system_log
-            .info(
-                "mcp_system_tools",
-                &format!("Client: {:?}", request.client_info.name),
-            )
-            .await
-            .ok();
+        info!(client = ?request.client_info.name, "Client connected");
 
         Ok(self.get_info())
     }
@@ -99,7 +83,6 @@ impl ServerHandler for SystemToolsServer {
         )?;
         let request_context = authenticated_ctx.context.clone();
 
-        let logger = self.system_log.clone();
         let arguments = request.arguments.clone().unwrap_or_default();
 
         // Create request context for execution tracking with tool model config
@@ -110,10 +93,11 @@ impl ServerHandler for SystemToolsServer {
         let sys_request_context = request_context.with_tool_model_config(tool_model_config);
 
         // Start execution tracking
-        let tool_repo = ToolUsageRepository::new(self.db_pool.clone());
+        let tool_repo = ToolUsageRepository::new(&self.db_pool)
+            .map_err(|e| McpError::internal_error(format!("Failed to create tool repo: {e}"), None))?;
         let exec_request = ToolExecutionRequest {
             tool_name: tool_name.clone(),
-            mcp_server_name: self.service_id.to_string(),
+            server_name: self.service_id.to_string(),
             input: serde_json::Value::Object(arguments),
             started_at: Utc::now(),
             context: sys_request_context.clone(),
@@ -134,7 +118,6 @@ impl ServerHandler for SystemToolsServer {
             &tool_name,
             request,
             context,
-            logger,
             self,
             &execution_id,
             sys_request_context,

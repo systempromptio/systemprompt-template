@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
 
     logging::init_logging(DbPool::clone(ctx.db_pool()));
 
-    let config = Config::global();
+    let config = Config::get()?;
     let port = config.port;
     let service_id = McpServerId::new(SERVICE_NAME);
 
@@ -36,7 +36,7 @@ async fn main() -> Result<()> {
         service_id.clone(),
         Arc::clone(&ctx),
     );
-    let router = mcp::create_router(server, Arc::clone(&ctx)).await?;
+    let router = mcp::create_router(server, &ctx);
     let addr = format!("0.0.0.0:{port}");
     let listener = TcpListener::bind(&addr).await?;
 

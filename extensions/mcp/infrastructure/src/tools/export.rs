@@ -6,7 +6,7 @@ use rmcp::{
 use serde::Deserialize;
 use serde_json::{json, Value as JsonValue};
 use std::sync::Arc;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{ArtifactId, McpExecutionId};
 use systemprompt::models::artifacts::{ExecutionMetadata, ToolResponse};
 
 use crate::sync::{ExportTarget, SyncDirection, SyncService};
@@ -114,12 +114,8 @@ pub async fn handle_export(
             let content_result = sync_service.sync_content(direction, false, None).await.ok();
             let skills_result = sync_service.sync_skills(direction, false, None).await.ok();
 
-            let content_count = content_result
-                .as_ref()
-                .map_or(0, |r| r.summary.total_files);
-            let skills_count = skills_result
-                .as_ref()
-                .map_or(0, |r| r.summary.total_files);
+            let content_count = content_result.as_ref().map_or(0, |r| r.summary.total_files);
+            let skills_count = skills_result.as_ref().map_or(0, |r| r.summary.total_files);
 
             let summary = format!(
                 "Full export complete: {} content items, {} skills exported",
@@ -137,9 +133,9 @@ pub async fn handle_export(
     };
 
     let metadata = ExecutionMetadata::new().tool("export");
-    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let artifact_id = ArtifactId::new(uuid::Uuid::new_v4().to_string());
     let tool_response = ToolResponse::new(
-        &artifact_id,
+        artifact_id.clone(),
         mcp_execution_id.clone(),
         result_json,
         metadata.clone(),

@@ -104,7 +104,7 @@ db-list:
 
 # Run migrations
 migrate:
-    {{CLI}} db migrate
+    {{CLI}} services db migrate
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SYNC — Populate database
@@ -146,8 +146,37 @@ status:
     {{CLI}} cloud status
 
 # ══════════════════════════════════════════════════════════════════════════════
+# MCP — Build MCP server binaries
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Build MCP servers that are part of workspace (system-tools)
+build-mcp-workspace:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export DATABASE_URL="${DATABASE_URL:-$(just _db-url)}"
+    cargo build --release -p system-tools
+
+# Build MCP servers that are git submodules (infrastructure, admin)
+build-mcp-submodules:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export DATABASE_URL="${DATABASE_URL:-$(just _db-url)}"
+    (cd extensions/mcp/infrastructure && cargo build --release --target-dir ../../../target)
+    (cd extensions/mcp/admin && cargo build --release --target-dir ../../../target)
+
+# Build all MCP servers
+build-mcp: build-mcp-workspace build-mcp-submodules
+    @echo "MCP servers built successfully"
+
+# Build everything for deployment (Rust binary + MCP servers)
+build-all:
+    just build --release
+    just build-mcp
+    @echo "All components built"
+
+# ══════════════════════════════════════════════════════════════════════════════
 # DOCKER — Build and push base template image to GHCR
-# Workflow: just build --release && just docker-build-ghcr && just docker-push
+# Workflow: just build-all && just docker-build-ghcr && just docker-push
 # ══════════════════════════════════════════════════════════════════════════════
 
 # Build Docker image for local testing
@@ -164,7 +193,7 @@ docker-push TAG="latest":
 
 # Build and push in one command
 docker-release TAG="latest":
-    just build --release
+    just build-all
     just docker-build-ghcr {{TAG}}
     just docker-push {{TAG}}
     @echo "Released: ghcr.io/systempromptio/systemprompt-template:{{TAG}}"
@@ -175,7 +204,7 @@ docker-run TAG="local":
 
 # Test build without pushing
 docker-test:
-    just build --release
+    just build-all
     just docker-build test
     @echo "Docker build successful! Image: systemprompt-template:test"
 

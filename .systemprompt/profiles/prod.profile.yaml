@@ -72,8 +72,8 @@ cloud:
   tenants_path: null
   tenant_id: null
   enabled: false
-  validation: error
+  validation: strict
 secrets:
   secrets_path: null
-  validation: error
+  validation: strict
   source: env

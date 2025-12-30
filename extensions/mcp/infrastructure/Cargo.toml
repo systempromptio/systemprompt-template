@@ -2,9 +2,15 @@
 name = "systemprompt-mcp-infrastructure"
 version = "0.0.1"
 edition = "2021"
-authors = ["SystemPrompt"]
-license = "MIT"
-description = "Cloud sync tools for SystemPrompt deployments"
+rust-version = "1.75"
+authors = ["SystemPrompt <hello@systemprompt.io>"]
+license = "Apache-2.0"
+description = "MCP server for SystemPrompt cloud infrastructure management - sync, deploy, and monitor"
+repository = "https://github.com/systempromptio/systemprompt-mcp-infrastructure"
+homepage = "https://systemprompt.io"
+keywords = ["mcp", "infrastructure", "cloud", "sync", "deploy"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
 
 [[bin]]
 name = "systemprompt-infrastructure"

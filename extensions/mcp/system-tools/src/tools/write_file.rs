@@ -3,7 +3,7 @@ use rmcp::{
     ErrorData as McpError,
 };
 use std::fs;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{ArtifactId, McpExecutionId};
 use systemprompt::models::artifacts::{ExecutionMetadata, TextArtifact, ToolResponse};
 
 use crate::error::ToolError;
@@ -47,7 +47,7 @@ pub fn handle(
     let line_count = content.lines().count();
 
     let metadata = ExecutionMetadata::new().tool("write_file");
-    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let artifact_id = ArtifactId::new(uuid::Uuid::new_v4().to_string());
 
     let artifact_content = format!(
         "Successfully wrote {bytes_written} bytes ({line_count} lines) to {}",
@@ -58,7 +58,7 @@ pub fn handle(
         .with_title(format!("Write: {}", validated_path.display()));
 
     let tool_response = ToolResponse::new(
-        &artifact_id,
+        artifact_id,
         mcp_execution_id.clone(),
         artifact,
         metadata.clone(),

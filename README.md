@@ -4,22 +4,43 @@ A working skeleton for building your own SystemPrompt implementation.
 
 ## Quick Start
 
+### 1. Create Your Project
+
+**Option A: CLI**
 ```bash
-# 1. Start systemprompt-db (multi-tenant database service)
-cd ../systemprompt-db
-docker-compose -f docker-compose.local.yml up -d
-
-# 2. Clone this template
-git clone https://github.com/systempromptio/systemprompt-template my-project
+gh repo create my-project --template systempromptio/systemprompt-template --clone
 cd my-project
+git submodule update --init --recursive
+```
 
-# 3. Run setup (provisions database, builds, runs migrations)
-just setup
+**Option B: Web UI**
 
-# 4. Start the server
-just start
+Click **"Use this template"** on [systemprompt-template](https://github.com/systempromptio/systemprompt-template), then:
+```bash
+git clone https://github.com/YOUR_USERNAME/my-project.git
+cd my-project
+git submodule update --init --recursive
+```
 
-# 5. Open http://localhost:8080
+### 2. Build & Configure
+
+```bash
+# Build (first time requires offline mode - no database yet)
+SQLX_OFFLINE=true just build
+
+# Authenticate with SystemPrompt Cloud
+just login
+
+# Create local tenant (provisions database)
+just tenant
+# → Select "Create new tenant" → Choose "local"
+
+# (Optional) Create cloud tenant for deployment
+just tenant
+# → Select "Create new tenant" → Choose "cloud"
+
+# Configure profile
+just profile
 ```
 
 ## Prerequisites

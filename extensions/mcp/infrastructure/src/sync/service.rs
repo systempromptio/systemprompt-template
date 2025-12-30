@@ -3,6 +3,7 @@ use std::time::Instant;
 use systemprompt::credentials::CredentialsBootstrap;
 use systemprompt::database::DbPool;
 use systemprompt::models::Config;
+use systemprompt::profile::ProfileBootstrap;
 use systemprompt::sync::{
     ContentLocalSync, LocalSyncDirection, SkillsLocalSync, SyncConfig as CoreSyncConfig,
     SyncDirection as CoreSyncDirection, SyncService as CoreSyncService,
@@ -27,13 +28,18 @@ impl SyncService {
     }
 
     fn build_core_config(direction: CoreSyncDirection, dry_run: bool) -> Result<CoreSyncConfig> {
-        let config = Config::global();
+        let config = Config::get()?;
         let creds =
             CredentialsBootstrap::require().context("Cloud credentials required for sync")?;
 
-        let tenant_id = creds.tenant_id.as_ref().ok_or_else(|| {
-            anyhow::anyhow!("No tenant configured. Run 'systemprompt cloud setup'")
-        })?;
+        let profile = ProfileBootstrap::get()?;
+        let tenant_id = profile
+            .cloud
+            .as_ref()
+            .and_then(|c| c.tenant_id.as_ref())
+            .ok_or_else(|| {
+                anyhow::anyhow!("No tenant configured in profile. Set cloud.tenant_id in your profile.")
+            })?;
 
         let mut builder = CoreSyncConfig::builder(
             tenant_id,
@@ -193,7 +199,7 @@ impl SyncService {
         _filter: Option<String>,
     ) -> Result<SyncFilesResult> {
         let start = Instant::now();
-        let config = Config::global();
+        let config = Config::get()?;
         let skills_path = std::path::PathBuf::from(&config.skills_path);
         let _skills_sync = SkillsLocalSync::new(DbPool::clone(&self.db_pool), skills_path);
 
@@ -259,12 +265,17 @@ impl SyncService {
 
     #[allow(clippy::unused_async)]
     pub async fn get_status(&self) -> Result<SyncStatusResult> {
-        let config = Config::global();
+        let config = Config::get()?;
+        let profile = ProfileBootstrap::get()?;
+
+        let tenant_id = profile
+            .cloud
+            .as_ref()
+            .and_then(|c| c.tenant_id.clone())
+            .ok_or_else(|| anyhow::anyhow!("No tenant_id configured in profile"))?;
 
         let creds = CredentialsBootstrap::get().ok().flatten();
-        let is_configured = creds
-            .as_ref()
-            .is_some_and(|c| c.tenant_id.is_some() && !c.api_token.is_empty());
+        let is_configured = creds.is_some();
 
         let cloud_status = CloudStatus {
             connected: is_configured,
@@ -276,11 +287,6 @@ impl SyncService {
             last_deployment: None,
             app_version: Some(env!("CARGO_PKG_VERSION").to_string()),
         };
-
-        let tenant_id = creds
-            .as_ref()
-            .and_then(|c| c.tenant_id.clone())
-            .map_or_else(String::new, |t| t);
 
         let api_url = creds
             .as_ref()

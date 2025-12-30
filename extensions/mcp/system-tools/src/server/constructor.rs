@@ -5,12 +5,11 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use systemprompt::agent::services::SkillService;
-use systemprompt::ai::services::config::ConfigLoader;
-use systemprompt::ai::{AiConfig, AiService};
+use systemprompt::ai::{AiService, NoopToolProvider};
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::McpServerId;
-use systemprompt::logging::LogService;
 use systemprompt::models::ai::ToolModelConfig;
+use systemprompt::models::services::AiConfig;
 use systemprompt::system::AppContext;
 
 #[derive(Clone)]
@@ -18,7 +17,6 @@ use systemprompt::system::AppContext;
 pub struct SystemToolsServer {
     pub(super) db_pool: DbPool,
     pub(super) service_id: McpServerId,
-    pub(super) system_log: LogService,
     pub(super) tool_schemas: Arc<HashMap<String, serde_json::Value>>,
     pub(super) app_context: Arc<AppContext>,
     pub(super) file_roots: Arc<Vec<PathBuf>>,
@@ -28,19 +26,18 @@ pub struct SystemToolsServer {
 }
 
 impl SystemToolsServer {
-    pub async fn new(
+    pub fn new(
         db_pool: DbPool,
         service_id: McpServerId,
         app_context: Arc<AppContext>,
     ) -> Result<Self> {
-        let system_log = LogService::system(db_pool.clone());
         let tool_schemas = Self::build_tool_schema_cache();
         let file_roots = Self::init_file_roots();
 
         let ai_config = Arc::new(Self::load_ai_config()?);
+        let tool_provider = Arc::new(NoopToolProvider::new());
         let ai_service = Arc::new(
-            AiService::new(app_context.clone(), &ai_config)
-                .await
+            AiService::new(&app_context, &ai_config, tool_provider)
                 .context("Failed to initialize AiService")?,
         );
 
@@ -49,7 +46,6 @@ impl SystemToolsServer {
         Ok(Self {
             db_pool,
             service_id,
-            system_log,
             tool_schemas: Arc::new(tool_schemas),
             app_context,
             file_roots: Arc::new(file_roots),
@@ -63,7 +59,10 @@ impl SystemToolsServer {
         let config_path =
             env::var("AI_CONFIG_PATH").context("AI_CONFIG_PATH environment variable must be set")?;
         let path = std::path::Path::new(&config_path);
-        ConfigLoader::load_from_file(path).context("Failed to load AI config from AI_CONFIG_PATH")
+        let content = std::fs::read_to_string(path)
+            .context("Failed to read AI config file")?;
+        serde_yaml::from_str(&content)
+            .context("Failed to parse AI config YAML")
     }
 
     /// Get model configuration for tool execution.

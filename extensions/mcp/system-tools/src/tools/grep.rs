@@ -6,7 +6,7 @@ use rmcp::{
 use std::fmt::Write;
 use std::fs;
 use std::path::{Path, PathBuf};
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{ArtifactId, McpExecutionId};
 use systemprompt::models::artifacts::{ExecutionMetadata, TextArtifact, ToolResponse};
 use walkdir::WalkDir;
 
@@ -169,7 +169,7 @@ fn build_result(
 ) -> CallToolResult {
     let pattern = config.pattern_text;
     let metadata = ExecutionMetadata::new().tool("grep");
-    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let artifact_id = ArtifactId::new(uuid::Uuid::new_v4().to_string());
 
     if matches.is_empty() {
         let artifact_content = format!(
@@ -180,7 +180,7 @@ fn build_result(
         let artifact = TextArtifact::new(&artifact_content).with_title("Grep Search Results");
 
         let tool_response = ToolResponse::new(
-            &artifact_id,
+            artifact_id.clone(),
             mcp_execution_id.clone(),
             artifact,
             metadata.clone(),
@@ -217,7 +217,7 @@ fn build_result(
     let artifact = TextArtifact::new(&artifact_content).with_title("Grep Search Results");
 
     let tool_response = ToolResponse::new(
-        &artifact_id,
+        artifact_id.clone(),
         mcp_execution_id.clone(),
         artifact,
         metadata.clone(),

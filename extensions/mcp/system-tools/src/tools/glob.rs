@@ -5,7 +5,7 @@ use rmcp::{
 };
 use std::fmt::Write;
 use std::path::PathBuf;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{ArtifactId, McpExecutionId};
 use systemprompt::models::artifacts::{ExecutionMetadata, TextArtifact, ToolResponse};
 
 use crate::constants::MAX_GLOB_RESULTS;
@@ -72,7 +72,7 @@ pub fn handle(
     let count = sorted_entries.len();
 
     let metadata = ExecutionMetadata::new().tool("glob");
-    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let artifact_id = ArtifactId::new(uuid::Uuid::new_v4().to_string());
 
     if count == 0 {
         let artifact_content = format!(
@@ -83,7 +83,7 @@ pub fn handle(
         let artifact = TextArtifact::new(&artifact_content).with_title("Glob Search Results");
 
         let tool_response = ToolResponse::new(
-            &artifact_id,
+            artifact_id.clone(),
             mcp_execution_id.clone(),
             artifact,
             metadata.clone(),
@@ -117,7 +117,7 @@ pub fn handle(
     let artifact = TextArtifact::new(&artifact_content).with_title("Glob Search Results");
 
     let tool_response = ToolResponse::new(
-        &artifact_id,
+        artifact_id.clone(),
         mcp_execution_id.clone(),
         artifact,
         metadata.clone(),

@@ -39,14 +39,14 @@ impl InfrastructureServer {
 
         let output_schema = self.get_output_schema_for_tool(&tool_name);
 
-        let tool_repo = ToolUsageRepository::new(DbPool::clone(&self.db_pool)).map_err(|e| {
+        let tool_repo = ToolUsageRepository::new(&self.db_pool).map_err(|e| {
             McpError::internal_error(format!("Failed to create tool repository: {e}"), None)
         })?;
         let arguments = request.arguments.clone().unwrap_or_default();
 
         let exec_request = ToolExecutionRequest {
             tool_name: tool_name.clone(),
-            mcp_server_name: self.service_id.to_string(),
+            server_name: self.service_id.to_string(),
             input: serde_json::Value::Object(arguments.clone()),
             started_at: Utc::now(),
             context: request_context.clone(),

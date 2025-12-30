@@ -4,7 +4,7 @@ use rmcp::{
 };
 use std::fmt::Write;
 use std::fs;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{ArtifactId, McpExecutionId};
 use systemprompt::models::artifacts::{ExecutionMetadata, TextArtifact, ToolResponse};
 
 use crate::constants::{DEFAULT_LINE_LIMIT, DEFAULT_LINE_OFFSET, MAX_LINE_DISPLAY_LENGTH};
@@ -84,13 +84,13 @@ pub fn handle(
     let artifact_content = format!("{header}{output}");
 
     let metadata = ExecutionMetadata::new().tool("read_file");
-    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let artifact_id = ArtifactId::new(uuid::Uuid::new_v4().to_string());
 
     let artifact = TextArtifact::new(&artifact_content)
         .with_title(format!("File: {}", canonical_path.display()));
 
     let tool_response = ToolResponse::new(
-        &artifact_id,
+        artifact_id,
         mcp_execution_id.clone(),
         artifact,
         metadata.clone(),

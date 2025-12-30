@@ -1,6 +1,6 @@
 use anyhow::Result;
 use std::time::Instant;
-use systemprompt::credentials::CredentialsBootstrap;
+use systemprompt::profile::ProfileBootstrap;
 use systemprompt::sync::{
     SyncConfig as CoreSyncConfig, SyncDirection as CoreSyncDirection,
     SyncService as CoreSyncService,
@@ -80,9 +80,10 @@ pub async fn deploy_crate(
         duration_ms: 0,
     });
 
-    let deployment_url = CredentialsBootstrap::get().ok().flatten().and_then(|c| {
-        c.tenant_id
+    let deployment_url = ProfileBootstrap::get().ok().and_then(|p| {
+        p.cloud
             .as_ref()
+            .and_then(|c| c.tenant_id.as_ref())
             .map(|tid| format!("https://{tid}.fly.dev"))
     });
 

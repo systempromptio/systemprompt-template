@@ -3,7 +3,7 @@ use rmcp::{
     ErrorData as McpError,
 };
 use std::fs;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{ArtifactId, McpExecutionId};
 use systemprompt::models::artifacts::{ExecutionMetadata, TextArtifact, ToolResponse};
 
 use crate::constants::MAX_DISPLAY_TRUNCATE;
@@ -75,7 +75,7 @@ pub fn handle(
     let replacements = if replace_all { occurrence_count } else { 1 };
 
     let metadata = ExecutionMetadata::new().tool("edit_file");
-    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let artifact_id = ArtifactId::new(uuid::Uuid::new_v4().to_string());
 
     let artifact_content = format!(
         "Successfully edited {}: {replacements} replacement(s) made",
@@ -86,7 +86,7 @@ pub fn handle(
         .with_title(format!("Edit: {}", canonical_path.display()));
 
     let tool_response = ToolResponse::new(
-        &artifact_id,
+        artifact_id,
         mcp_execution_id.clone(),
         artifact,
         metadata.clone(),

@@ -48,8 +48,22 @@ cargo test -p systemprompt-mcp-infrastructure
 | `#[cfg(test)]` in src | Never | `grep -r "#\[cfg(test)\]" src/` |
 | `env::var()` direct | Never | `grep -r "env::var" src/` |
 | `dotenvy::dotenv()` | Never | `grep -r "dotenvy" src/` |
-| `unwrap_or_default()` | Never | `grep -r "unwrap_or_default" src/` |
-| Hardcoded fallbacks | Never | `grep -r "unwrap_or_else" src/` |
+
+**Permitted patterns** (see [tools.md](../implementation/tools.md)):
+
+| Pattern | Context | Example |
+|---------|---------|---------|
+| `unwrap_or_default()` | Optional tool arguments | `request.arguments.unwrap_or_default()` |
+| `unwrap_or_else()` | Computed defaults | `tag.unwrap_or_else(\|\| generate_tag())` |
+| `unwrap_or(CONSTANT)` | Named constants only | `value.unwrap_or(DEFAULT_ENV)` |
+
+**Still forbidden** (fuzzy defaults):
+
+| Pattern | Why |
+|---------|-----|
+| `unwrap_or("hardcoded")` | Magic strings hide problems |
+| `unwrap_or(0)` / `unwrap_or(false)` | Silent failure masking |
+| `unwrap_or_default()` for non-collection types | Use explicit error handling |
 
 ### 3.1 Configuration Rules
 
@@ -59,7 +73,7 @@ cargo test -p systemprompt-mcp-infrastructure
 | No env vars | Never use `std::env::var()` directly |
 | No .env files | Never use `dotenvy::dotenv()` |
 | Fail explicitly | Missing config must error, never use defaults |
-| No fuzzy fallbacks | No `unwrap_or_default()`, no hardcoded strings |
+| Named constants | Use `const` for default values, never inline literals |
 
 See [profiles.md](../config/profiles.md) for correct bootstrap pattern.
 
@@ -158,8 +172,6 @@ echo "=== Forbidden Constructs ==="
 ! grep -rn "#\[cfg(test)\]" src/ && echo "✅ No inline tests"
 ! grep -rn "env::var" src/ && echo "✅ No direct env vars"
 ! grep -rn "dotenvy" src/ && echo "✅ No .env loading"
-! grep -rn "unwrap_or_default" src/ && echo "✅ No fuzzy defaults"
-! grep -rn "unwrap_or_else" src/ && echo "✅ No hardcoded fallbacks"
 
 echo "=== File Lengths ==="
 find src -name "*.rs" -exec wc -l {} \; | awk '$1 > 300 { print "❌ " $2 ": " $1 " lines" }'

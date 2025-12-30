@@ -15,8 +15,8 @@ use serde_json::json;
 use std::path::PathBuf;
 use std::sync::Arc;
 use systemprompt::identifiers::McpExecutionId;
-use systemprompt::logging::LogService;
 use systemprompt::models::execution::context::RequestContext as SysRequestContext;
+use tracing::{debug, error, warn};
 
 use crate::error::ToolError;
 use crate::SystemToolsServer;
@@ -125,15 +125,11 @@ pub async fn handle_tool_call(
     name: &str,
     request: CallToolRequestParam,
     _context: RequestContext<RoleServer>,
-    logger: LogService,
     server: &SystemToolsServer,
     mcp_execution_id: &McpExecutionId,
     sys_context: SysRequestContext,
 ) -> Result<CallToolResult, McpError> {
-    logger
-        .debug("system_tools", &format!("Executing tool: {name}"))
-        .await
-        .ok();
+    debug!(tool = name, "Executing tool");
 
     let result = match name {
         "read_file" => read_file::handle(request, server, mcp_execution_id),
@@ -143,33 +139,21 @@ pub async fn handle_tool_call(
         "grep" => grep::handle(request, server, mcp_execution_id),
         "list_files" => list_files::handle(request, server, mcp_execution_id),
         "file_context" => {
-            return file_context::handle(request, server, &logger, mcp_execution_id, sys_context)
+            return file_context::handle(request, server, mcp_execution_id, sys_context)
                 .await;
         }
         _ => {
-            logger
-                .warn("system_tools", &format!("Unknown tool: {name}"))
-                .await
-                .ok();
+            warn!(tool = name, "Unknown tool");
             return Err(McpError::method_not_found::<CallToolRequestMethod>());
         }
     };
 
     match &result {
         Ok(_) => {
-            logger
-                .debug(
-                    "system_tools",
-                    &format!("Tool {name} completed successfully"),
-                )
-                .await
-                .ok();
+            debug!(tool = name, "Tool completed successfully");
         }
-        Err(error) => {
-            logger
-                .error("system_tools", &format!("Tool {name} failed: {error:?}"))
-                .await
-                .ok();
+        Err(err) => {
+            error!(tool = name, error = ?err, "Tool failed");
         }
     }
 

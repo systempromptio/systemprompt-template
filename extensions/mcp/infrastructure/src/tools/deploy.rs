@@ -6,7 +6,7 @@ use rmcp::{
 use serde::Deserialize;
 use serde_json::{json, Value as JsonValue};
 use std::sync::Arc;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{ArtifactId, McpExecutionId};
 use systemprompt::models::artifacts::{ExecutionMetadata, ToolResponse};
 
 use super::map_credential_error;
@@ -79,9 +79,9 @@ pub async fn handle_deploy(
 
     let is_error = !result.success;
     let metadata = ExecutionMetadata::new().tool("deploy");
-    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let artifact_id = ArtifactId::new(uuid::Uuid::new_v4().to_string());
     let tool_response = ToolResponse::new(
-        &artifact_id,
+        artifact_id.clone(),
         mcp_execution_id.clone(),
         result,
         metadata.clone(),

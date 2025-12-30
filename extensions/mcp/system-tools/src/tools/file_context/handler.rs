@@ -5,10 +5,10 @@ use rmcp::{
 };
 use serde_json::json;
 use std::path::PathBuf;
-use systemprompt::identifiers::McpExecutionId;
-use systemprompt::logging::LogService;
+use systemprompt::identifiers::{ArtifactId, McpExecutionId};
 use systemprompt::models::artifacts::{ExecutionMetadata, TextArtifact, ToolResponse};
 use systemprompt::models::execution::context::RequestContext;
+use tracing::{debug, info, warn};
 
 use super::ai_caller::generate_structured;
 use super::models::{AccumulatedContext, FileContent, NextAction, ReasoningDecision, SearchResult};
@@ -25,7 +25,6 @@ const MAX_CONTEXT_TOKENS: usize = 100000;
 pub async fn handle(
     request: CallToolRequestParam,
     server: &SystemToolsServer,
-    logger: &LogService,
     mcp_execution_id: &McpExecutionId,
     ctx: RequestContext,
 ) -> Result<CallToolResult, McpError> {
@@ -51,13 +50,7 @@ pub async fn handle(
             .ok_or_else(|| McpError::invalid_params("No file roots configured", None))?,
     };
 
-    logger
-        .info(
-            "file_context",
-            &format!("Starting context gathering for: {}", query),
-        )
-        .await
-        .ok();
+    info!(query = query, "Starting context gathering");
 
     let skill_content = server
         .skill_service
@@ -88,19 +81,10 @@ pub async fn handle(
     let mut final_result = String::new();
 
     while iteration <= max_iterations {
-        logger
-            .debug(
-                "file_context",
-                &format!("Reasoning iteration {}/{}", iteration, max_iterations),
-            )
-            .await
-            .ok();
+        debug!(iteration, max_iterations, "Reasoning iteration");
 
         if context.estimated_tokens() > MAX_CONTEXT_TOKENS {
-            logger
-                .warn("file_context", "Context too large, forcing completion")
-                .await
-                .ok();
+            warn!("Context too large, forcing completion");
             final_result = format!(
                 "Context limit reached after {} iterations. Current understanding:\n\n{}",
                 iteration,
@@ -121,10 +105,7 @@ pub async fn handle(
         .await
         .map_err(|e| McpError::internal_error(format!("AI reasoning failed: {}", e), None))?;
 
-        logger
-            .debug("file_context", &format!("AI analysis: {}", decision.analysis))
-            .await
-            .ok();
+        debug!(analysis = %decision.analysis, "AI analysis");
 
         if decision.is_complete {
             final_result = decision.final_result.unwrap_or(decision.analysis);
@@ -132,7 +113,7 @@ pub async fn handle(
         }
 
         for action in decision.next_actions {
-            execute_action(&action, server, &root_path, &mut context, logger).await?;
+            execute_action(&action, server, &root_path, &mut context).await?;
         }
 
         iteration += 1;
@@ -150,7 +131,7 @@ pub async fn handle(
         .tool("file_context")
         .skill(SKILL_ID, SKILL_NAME);
 
-    let artifact_id = uuid::Uuid::new_v4().to_string();
+    let artifact_id = ArtifactId::new(uuid::Uuid::new_v4().to_string());
 
     let artifact_content = format!(
         "# File Context Analysis\n\n## Query\n{}\n\n## Result\n{}\n\n## Context Gathered\n{}",
@@ -163,23 +144,17 @@ pub async fn handle(
         TextArtifact::new(&artifact_content).with_title(format!("Context: {}", truncate(query, 50)));
 
     let tool_response = ToolResponse::new(
-        &artifact_id,
+        artifact_id,
         mcp_execution_id.clone(),
         artifact,
         metadata.clone(),
     );
 
-    logger
-        .info(
-            "file_context",
-            &format!(
-                "Completed context gathering in {} iterations using skill '{}'",
-                iteration.min(max_iterations),
-                SKILL_ID
-            ),
-        )
-        .await
-        .ok();
+    info!(
+        iterations = iteration.min(max_iterations),
+        skill = SKILL_ID,
+        "Completed context gathering"
+    );
 
     Ok(CallToolResult {
         content: vec![Content::text(final_result)],
@@ -258,7 +233,6 @@ async fn execute_action(
     server: &SystemToolsServer,
     root_path: &PathBuf,
     context: &mut AccumulatedContext,
-    logger: &LogService,
 ) -> Result<(), McpError> {
     match action {
         NextAction::ReadFiles { paths } => {
@@ -281,10 +255,7 @@ async fn execute_action(
                             .push(format!("Read file: {}", path_str));
                     }
                     Err(e) => {
-                        logger
-                            .warn("file_context", &format!("Failed to read {}: {}", path_str, e))
-                            .await
-                            .ok();
+                        warn!(path = %path_str, error = %e, "Failed to read file");
                         context
                             .actions_taken
                             .push(format!("Failed to read {}: {}", path_str, e));
@@ -314,10 +285,7 @@ async fn execute_action(
                     context.actions_taken.push(format!("Searched for: {}", pattern));
                 }
                 Err(e) => {
-                    logger
-                        .warn("file_context", &format!("Grep failed for {}: {}", pattern, e))
-                        .await
-                        .ok();
+                    warn!(pattern = %pattern, error = %e, "Grep failed");
                     context
                         .actions_taken
                         .push(format!("Grep failed for {}: {}", pattern, e));
@@ -339,10 +307,7 @@ async fn execute_action(
                     context.actions_taken.push(format!("Listed directory: {}", path));
                 }
                 Err(e) => {
-                    logger
-                        .warn("file_context", &format!("Cannot list {}: {}", path, e))
-                        .await
-                        .ok();
+                    warn!(path = %path, error = %e, "Cannot list directory");
                     context
                         .actions_taken
                         .push(format!("Cannot list {}: {}", path, e));
@@ -373,10 +338,7 @@ async fn execute_action(
                         .push(format!("Glob search: {}", pattern));
                 }
                 Err(e) => {
-                    logger
-                        .warn("file_context", &format!("Glob failed for {}: {}", pattern, e))
-                        .await
-                        .ok();
+                    warn!(pattern = %pattern, error = %e, "Glob failed");
                     context
                         .actions_taken
                         .push(format!("Glob failed for {}: {}", pattern, e));
