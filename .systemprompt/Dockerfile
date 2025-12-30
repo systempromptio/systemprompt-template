@@ -34,6 +34,9 @@ COPY .systemprompt/entrypoint.sh /app/entrypoint.sh
 # Copy pre-built React frontend
 COPY core/web/dist /app/web
 
+# Copy core crates (needed for migrations)
+COPY core/crates /app/core/crates
+
 RUN chmod +x /app/bin/* /app/bin/mcp/* /app/entrypoint.sh && chown -R app:app /app
 
 USER app
@@ -46,8 +49,9 @@ ENV HOST=0.0.0.0 \
     PORT=8080 \
     RUST_LOG=info \
     PATH="/app/bin:/app/bin/mcp:$PATH" \
+    SYSTEMPROMPT_CORE_PATH=/app/core \
     SYSTEMPROMPT_SERVICES_PATH=/app/services \
     SYSTEMPROMPT_MCP_PATH=/app/bin/mcp \
     WEB_DIR=/app/web
 
-CMD ["/app/bin/systemprompt", "services", "serve", "--foreground"]
+CMD ["/app/entrypoint.sh"]

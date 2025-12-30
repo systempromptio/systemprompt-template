@@ -3,7 +3,6 @@ credentials.json
 tenants.json
 **/secrets.json
 docker/
-storage/
 
-# Local profile data (except defaults)
+# Local profile (prod.profile.yaml is tracked as template)
 profiles/local/

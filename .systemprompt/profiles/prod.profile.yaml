@@ -20,7 +20,7 @@ server:
   cors_allowed_origins: []
 paths:
   system: /app
-  core: /app
+  core: /app/core
   services: /app/services
   skills: /app/services/skills
   config: /app/services/config/config.yaml
