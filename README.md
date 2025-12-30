@@ -8,7 +8,7 @@ A working skeleton for building your own SystemPrompt implementation.
 
 **Option A: CLI**
 ```bash
-gh repo create my-project --template systempromptio/systemprompt-template --clone
+gh repo create my-project --template systempromptio/systemprompt-template --clone --private
 cd my-project
 git submodule update --init --recursive
 ```
