@@ -35,12 +35,15 @@ just login
 just tenant
 # → Select "Create new tenant" → Choose "local"
 
+# Configure profile
+just profile
+
+# Set default profile in .env
+echo "SYSTEMPROMPT_PROFILE=$(pwd)/.systemprompt/profiles/local/profile.yaml" >> .env
+
 # (Optional) Create cloud tenant for deployment
 just tenant
 # → Select "Create new tenant" → Choose "cloud"
-
-# Configure profile
-just profile
 ```
 
 ## Prerequisites
