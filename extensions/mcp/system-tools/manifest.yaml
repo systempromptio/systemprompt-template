@@ -4,4 +4,5 @@ extension:
   binary: system-tools
   description: System tools and utilities MCP server
   port: 5003
+  build_type: workspace
   enabled: true

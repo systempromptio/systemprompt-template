@@ -15,9 +15,10 @@ default:
 _db-url:
     @cat .systemprompt/tenants.json 2>/dev/null | jq -r '.tenants[] | select(.tenant_type == "local") | .database_url' | head -1 || echo "postgres://systemprompt:systemprompt@localhost:5432/systemprompt"
 
-# Build workspace (use --release for release build)
+# Build workspace (use --release for release build, includes MCP servers)
 build *FLAGS:
     DATABASE_URL="$(just _db-url)" cargo build --manifest-path=core/Cargo.toml --target-dir=target {{FLAGS}}
+    @if echo "{{FLAGS}}" | grep -q -- "--release"; then just build-mcp; fi
 
 # Start server
 start:
@@ -137,8 +138,9 @@ sync-pull *ARGS:
 # Requires: login + tenant + profile with cloud.enabled
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Deploy to cloud
+# Deploy to cloud (builds everything first)
 deploy *FLAGS:
+    just build-all
     {{CLI}} cloud deploy {{FLAGS}}
 
 # Check deployment status
@@ -149,24 +151,9 @@ status:
 # MCP — Build MCP server binaries
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Build MCP servers that are part of workspace (system-tools)
-build-mcp-workspace:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    export DATABASE_URL="${DATABASE_URL:-$(just _db-url)}"
-    cargo build --release -p system-tools
-
-# Build MCP servers that are git submodules (infrastructure, admin)
-build-mcp-submodules:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    export DATABASE_URL="${DATABASE_URL:-$(just _db-url)}"
-    (cd extensions/mcp/infrastructure && cargo build --release --target-dir ../../../target)
-    (cd extensions/mcp/admin && cargo build --release --target-dir ../../../target)
-
-# Build all MCP servers
-build-mcp: build-mcp-workspace build-mcp-submodules
-    @echo "MCP servers built successfully"
+# Build all MCP servers (reads from manifest.yaml files)
+build-mcp:
+    DATABASE_URL="$(just _db-url)" {{CLI}} build mcp --release
 
 # Build everything for deployment (Rust binary + MCP servers)
 build-all:
@@ -175,28 +162,12 @@ build-all:
     @echo "All components built"
 
 # ══════════════════════════════════════════════════════════════════════════════
-# DOCKER — Build and push base template image to GHCR
-# Workflow: just build-all && just docker-build-ghcr && just docker-push
+# DOCKER — Local testing only (deploy pushes directly to Fly registry)
 # ══════════════════════════════════════════════════════════════════════════════
 
 # Build Docker image for local testing
 docker-build TAG="local":
     docker build -f .systemprompt/Dockerfile -t systemprompt-template:{{TAG}} .
-
-# Build Docker image tagged for GHCR
-docker-build-ghcr TAG="latest":
-    docker build -f .systemprompt/Dockerfile -t ghcr.io/systempromptio/systemprompt-template:{{TAG}} .
-
-# Push image to GHCR (requires: docker login ghcr.io)
-docker-push TAG="latest":
-    docker push ghcr.io/systempromptio/systemprompt-template:{{TAG}}
-
-# Build and push in one command
-docker-release TAG="latest":
-    just build-all
-    just docker-build-ghcr {{TAG}}
-    just docker-push {{TAG}}
-    @echo "Released: ghcr.io/systempromptio/systemprompt-template:{{TAG}}"
 
 # Run image locally for testing
 docker-run TAG="local":
