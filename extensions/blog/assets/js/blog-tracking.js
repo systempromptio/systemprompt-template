@@ -145,14 +145,17 @@
       data: data || {}
     };
 
+    var jsonPayload = JSON.stringify(payload);
+
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(ENDPOINT, JSON.stringify(payload));
+      var blob = new Blob([jsonPayload], { type: 'application/json' });
+      navigator.sendBeacon(ENDPOINT, blob);
     } else {
       var xhr = new XMLHttpRequest();
       xhr.open('POST', ENDPOINT, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.withCredentials = true;
-      xhr.send(JSON.stringify(payload));
+      xhr.send(jsonPayload);
     }
   }
 
