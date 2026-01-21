@@ -1,9 +1,9 @@
 ---
-title: "Introduction to SystemPrompt"
-description: "Learn how to build AI-powered applications with SystemPrompt"
-author: "SystemPrompt Team"
+title: "Documentation"
+description: "Learn how to build and customize your SystemPrompt application"
+author: "Author"
 slug: "introduction"
-keywords: "systemprompt, ai, agents, introduction"
+keywords: "documentation, systemprompt, getting-started, guide"
 image: ""
 kind: "guide"
 public: true
@@ -11,61 +11,124 @@ tags: ["documentation", "getting-started"]
 published_at: "2025-01-01"
 ---
 
-# Introduction to SystemPrompt
+# Documentation
 
-SystemPrompt is an extensible framework for building AI-powered applications.
+Welcome to your project documentation. This guide covers everything you need to know to build, customize, and deploy your application.
 
 ## Overview
 
-SystemPrompt provides:
+Your project is built on SystemPrompt, an extensible framework for AI-powered applications. It includes:
 
-- **Agent Framework**: Build intelligent agents with custom skills
-- **Extension System**: Add functionality through modular extensions
+- **Agent Framework**: Build intelligent agents with custom capabilities
+- **Extension System**: Add functionality through modular Rust extensions
 - **Content Management**: Built-in blog and documentation support
-- **Link Analytics**: Track engagement with your content
+- **MCP Integration**: Model Context Protocol servers for AI tool access
+
+## Project Structure
+
+```
+your-project/
+├── core/                    # SystemPrompt core (git submodule)
+├── extensions/              # Your Rust extensions
+│   ├── blog/               # Blog extension
+│   └── mcp/                # MCP servers
+│       ├── admin/          # Admin analytics server
+│       ├── infrastructure/ # Deployment server
+│       └── system-tools/   # File system tools
+├── services/               # Configuration (YAML/Markdown only)
+│   ├── agents/             # Agent definitions
+│   ├── config/             # Service configuration
+│   ├── content/            # Blog and docs
+│   ├── skills/             # Agent skills
+│   └── web/                # Theme and branding
+└── src/                    # Application entry point
+```
 
 ## Quick Start
 
-### Installation
+### Prerequisites
+
+- Rust 1.75+
+- Docker (for PostgreSQL)
+- Just command runner
+
+### Setup
 
 ```bash
-# Clone the template
-git clone --recursive https://github.com/systempromptio/systemprompt-template
+# Clone with submodules
+git clone --recursive your-repo-url
+cd your-project
 
-# Enter the directory
-cd systemprompt-template
+# Start database
+just db-up
 
-# Run setup
-just setup
-```
+# Run migrations and sync content
+just quickstart
 
-### Starting the Server
-
-```bash
-# Start all services
+# Start the server
 just start
-
-# Or run the server directly
-cargo run
 ```
 
-## Architecture
+### Development Commands
 
-The template uses a modular architecture:
-
-```
-systemprompt-template/
-├── extensions/          # Custom extensions
-│   └── blog/           # Blog extension
-├── services/           # Configuration and content
-│   ├── agents/         # Agent definitions
-│   ├── config/         # Service configuration
-│   └── content/        # Blog and documentation
-└── src/                # Application entry point
+```bash
+just build              # Build all crates
+just start              # Start the server
+just migrate            # Run database migrations
+just sync-local         # Sync content to database
+just build-mcp          # Build MCP servers
 ```
 
-## Next Steps
+## Configuration
 
-- Configure your agents in `services/agents/`
-- Add your content to `services/content/`
-- Create custom extensions in `extensions/`
+### Agents
+
+Define your AI agents in `services/agents/`. Each agent has:
+
+- **System Prompt**: Instructions for the AI
+- **Skills**: Capabilities the agent can use
+- **MCP Servers**: Tool access for the agent
+
+### Theme
+
+Customize your theme in `services/web/config.yaml`:
+
+- Colors (light and dark mode)
+- Typography
+- Spacing and layout
+- Branding (logos, favicon)
+
+### Content
+
+Add content in `services/content/`:
+
+- **blog/**: Blog posts in Markdown
+- **docs/**: Documentation pages
+- **legal/**: Legal pages (privacy, terms)
+
+## Building Extensions
+
+Extensions live in `extensions/` and must implement the `Extension` trait:
+
+```rust
+impl Extension for MyExtension {
+    fn metadata(&self) -> ExtensionMetadata { ... }
+    fn schemas(&self) -> Vec<SchemaDefinition> { ... }
+    fn router(&self, ctx: &ExtensionContext) -> Option<Router> { ... }
+    fn jobs(&self) -> Vec<Arc<dyn Job>> { ... }
+}
+
+register_extension!(MyExtension);
+```
+
+See `CLAUDE.md` for detailed Rust coding standards.
+
+## Deployment
+
+Deploy to cloud using the Infrastructure MCP server or the CLI:
+
+```bash
+just deploy
+```
+
+This builds a release binary, creates a Docker image, and deploys to your configured cloud provider.

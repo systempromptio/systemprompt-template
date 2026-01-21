@@ -1,0 +1,25 @@
+# General Assistance Skill
+# Basic skill for general-purpose AI assistance
+
+skill:
+  id: general_assistance
+  name: "General Assistance"
+  description: "Helps users with questions, explanations, and general tasks"
+  version: "1.0.0"
+  enabled: true
+
+  tags:
+    - assistance
+    - general
+    - help
+    - questions
+
+  examples:
+    - "Help me understand this concept"
+    - "What are the best practices for..."
+    - "Can you explain how this works?"
+    - "I need help with..."
+
+  metadata:
+    category: "general"
+    difficulty: "beginner"

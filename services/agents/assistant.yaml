@@ -1,28 +1,23 @@
-# Agent Configuration
-# Define your AI agents here
-
 agents:
   assistant:
     name: "assistant"
     port: 9000
+    endpoint: "http://localhost:8080/api/v1/agents/assistant"
     enabled: true
     is_primary: true
     default: true
-    endpoint: "/api/v1/agents/assistant"
-    oauth:
-      required: false
     card:
       protocolVersion: "0.3.0"
       name: "Assistant"
       displayName: "Assistant"
-      description: "Your AI assistant for systemprompt-template"
+      description: "A helpful AI assistant for your project"
       version: "1.0.0"
       preferredTransport: "JSONRPC"
       provider:
-        organization: "systemprompt-template"
-        url: "https://example.com"
-      iconUrl: "https://ui-avatars.com/api/?name=A&background=3b82f6&color=fff&bold=true&size=256"
-      documentationUrl: "https://example.com/docs"
+        organization: "Your Organization"
+        url: "https://yourproject.com"
+      iconUrl: "https://ui-avatars.com/api/?name=A&background=0d9488&color=fff&bold=true&size=256"
+      documentationUrl: "https://yourproject.com/docs"
       capabilities:
         streaming: true
         pushNotifications: false
@@ -37,19 +32,53 @@ agents:
           type: oauth2
           flows:
             authorizationCode:
-              authorizationUrl: "/api/v1/core/oauth/authorize"
-              tokenUrl: "/api/v1/core/oauth/token"
+              authorizationUrl: "http://localhost:8080/api/v1/core/oauth/authorize"
+              tokenUrl: "http://localhost:8080/api/v1/core/oauth/token"
               scopes:
                 anonymous: "Public access"
                 user: "Authenticated user access"
           description: "OAuth 2.0 authentication"
       security:
         - oauth2: ["anonymous"]
-      skills: []
+      skills:
+        - id: "general_assistance"
+          name: "General Assistance"
+          description: "Help with questions, explanations, and general tasks"
+          tags: ["assistance", "general", "help"]
+          examples:
+            - "Help me understand this concept"
+            - "What are the best practices for..."
+        - id: "content_writing"
+          name: "Content Writing"
+          description: "Help with writing, editing, and improving text content"
+          tags: ["writing", "editing", "content"]
+          examples:
+            - "Help me write a blog post"
+            - "Edit this text for clarity"
       supportsAuthenticatedExtendedCard: false
     metadata:
       systemPrompt: |
-        You are a helpful AI assistant for systemprompt-template.
+        You are a helpful AI assistant. Your role is to assist users with their questions and tasks in a clear, accurate, and friendly manner.
 
-        Be concise, accurate, and helpful. If you don't know something, say so.
-      mcpServers: []
+        ## Core Principles
+
+        1. **Be Helpful**: Provide accurate, actionable information
+        2. **Be Clear**: Communicate in plain language, avoiding jargon when possible
+        3. **Be Honest**: Acknowledge limitations and uncertainties
+        4. **Be Concise**: Respect the user's time with focused responses
+
+        ## Capabilities
+
+        You can help with:
+        - Answering questions on a wide range of topics
+        - Writing and editing text
+        - Explaining concepts and ideas
+        - Problem-solving and brainstorming
+        - General assistance with various tasks
+
+        ## Guidelines
+
+        - Always prioritize user safety and well-being
+        - Provide balanced perspectives on complex topics
+        - Ask clarifying questions when the request is ambiguous
+        - Format responses appropriately using markdown when helpful

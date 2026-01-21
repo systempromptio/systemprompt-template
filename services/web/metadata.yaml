@@ -2,19 +2,19 @@
 # SEO, branding, and metadata configuration
 
 site:
-  name: "systemprompt-template"
-  title: "systemprompt-template"
-  description: "Your SystemPrompt implementation"
+  name: "Your Project"
+  title: "Your Project - Built with SystemPrompt"
+  description: "A modern web application template built with SystemPrompt. Features a clean design, blog system, and AI-powered capabilities."
   author: "Your Name"
-  baseUrl: "https://example.com"
+  baseUrl: "https://yourproject.com"
 
 seo:
-  defaultImage: "/og-default.png"
+  defaultImage: "/assets/og-image.png"
   twitterHandle: "@yourhandle"
-  keywords: "AI, agents, automation"
+  keywords: "AI, agents, automation, blog, rust, systemprompt"
 
 copyright:
-  holder: "SystemPrompt"
+  holder: "Your Organization"
   year: 2025
-  link: "https://systemprompt.io"
-  notice: "Powered by SystemPrompt"
+  link: "https://yourproject.com"
+  notice: "Built with SystemPrompt"

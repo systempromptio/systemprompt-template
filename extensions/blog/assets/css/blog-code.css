@@ -1,0 +1,181 @@
+/**
+ * blog-code.css
+ * Code blocks and syntax highlighting
+ */
+
+/* ============================================
+   Inline Code
+   ============================================ */
+
+.blog-content code {
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  padding: 0.2em 0.4em;
+  background: var(--color-surface-variant);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.blog-content a code {
+  color: var(--color-primary);
+}
+
+/* ============================================
+   Code Blocks
+   ============================================ */
+
+.blog-content pre {
+  margin: 2em 0;
+  border-radius: var(--radius-md);
+  background: #282c34;
+  overflow-x: auto;
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+
+.blog-content pre code {
+  display: block;
+  padding: var(--spacing-lg);
+  font-size: 14px;
+  line-height: 1.6;
+  background: none;
+  border: none;
+  color: #abb2bf;
+  font-weight: var(--font-weight-regular);
+  overflow-x: auto;
+
+  /* Better scrolling on mobile */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
+   Syntax Highlighting (Atom One Dark Theme)
+   ============================================ */
+
+.blog-content pre code {
+  color: #abb2bf;
+}
+
+.blog-content pre code .keyword {
+  color: #c678dd;
+  font-weight: var(--font-weight-semibold);
+}
+
+.blog-content pre code .string {
+  color: #98c379;
+}
+
+.blog-content pre code .function {
+  color: #61afef;
+}
+
+.blog-content pre code .comment {
+  color: #5c6370;
+  font-style: italic;
+}
+
+.blog-content pre code .number {
+  color: #d19a66;
+}
+
+.blog-content pre code .operator {
+  color: #56b6c2;
+}
+
+.blog-content pre code .variable {
+  color: #e06c75;
+}
+
+.blog-content pre code .class-name {
+  color: #e5c07b;
+}
+
+.blog-content pre code .punctuation {
+  color: #abb2bf;
+}
+
+/* ============================================
+   Language Badge
+   ============================================ */
+
+.blog-content pre[data-language]::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.25em 0.75em;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  border-bottom-left-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ============================================
+   Copy Button
+   ============================================ */
+
+.blog-content pre {
+  position: relative;
+}
+
+.blog-content .code-copy-button {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  padding: 0.5em 1em;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--animation-fast) ease;
+  font-family: var(--font-body);
+}
+
+.blog-content pre:hover .code-copy-button {
+  opacity: 1;
+}
+
+.blog-content .code-copy-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.blog-content .code-copy-button:active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.blog-content .code-copy-button.copied {
+  background: #98c379;
+  border-color: #98c379;
+  color: #282c34;
+}
+
+/* ============================================
+   Responsive Code Blocks
+   ============================================ */
+
+@media (max-width: 768px) {
+  .blog-content pre {
+    margin-left: calc(var(--spacing-md) * -1);
+    margin-right: calc(var(--spacing-md) * -1);
+    border-radius: 0;
+  }
+
+  .blog-content pre code {
+    font-size: 13px;
+  }
+
+  .blog-content .code-copy-button {
+    opacity: 1; /* Always visible on mobile */
+  }
+}

@@ -1,9 +1,14 @@
 # Rust build artifacts
 /target/
+**/target/
 **/*.rs.bk
 Cargo.lock
 
+# Generated files and assets
+/files/
+
 keys
+plan/*
 
 # Node.js
 node_modules/
@@ -110,9 +115,23 @@ services/profiles/*.profile.yml
 # Sensitive data directories
 backup/
 
-# .systemprompt - track defaults, ignore tenant-specific data
+# .systemprompt - ignore all sensitive/generated data
 .systemprompt/credentials.json
 .systemprompt/tenants.json
 .systemprompt/**/secrets.json
+.systemprompt/profiles/
 .systemprompt/docker/
 .systemprompt/storage/
+.systemprompt/session.json
+.systemprompt/sessions/
+extensions/mcp/*/.env
+Screenshot*.png
+
+# Storage - generated/uploaded files
+storage/files/uploads/
+storage/files/images/generated/
+storage/files/css/
+storage/files/js/
+
+# SQLx offline cache (regenerated from database)
+.sqlx/

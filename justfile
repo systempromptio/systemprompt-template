@@ -1,28 +1,90 @@
 # SystemPrompt Template
 set dotenv-load
 
-CLI := "target/debug/systemprompt"
-RELEASE_DIR := "target/release"
+CLI_RELEASE := "target/release/systemprompt"
 
-default:
-    @just --list
+# Use newest binary (release vs debug, whichever is most recent)
+CLI := if path_exists("target/release/systemprompt") == "true" { \
+    if path_exists("target/debug/systemprompt") == "true" { \
+        `[ target/release/systemprompt -nt target/debug/systemprompt ] && echo target/release/systemprompt || echo target/debug/systemprompt` \
+    } else { \
+        "target/release/systemprompt" \
+    } \
+} else if path_exists("target/debug/systemprompt") == "true" { \
+    "target/debug/systemprompt" \
+} else { \
+    "echo 'ERROR: No CLI binary found. Run: just build' && exit 1" \
+}
+
+# Default: run CLI with any arguments
+default *ARGS:
+    {{CLI}} {{ARGS}}
+
+# Run CLI with full session context (profile + auth token)
+cli *ARGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    SESSION_FILE="{{justfile_directory()}}/.systemprompt/sessions/index.json"
+    if [ -f "$SESSION_FILE" ]; then
+        ACTIVE_KEY=$(jq -r '.active_key // "local"' "$SESSION_FILE")
+        export SYSTEMPROMPT_PROFILE=$(jq -r ".sessions[\"$ACTIVE_KEY\"].profile_path // empty" "$SESSION_FILE")
+        export SYSTEMPROMPT_AUTH_TOKEN=$(jq -r ".sessions[\"$ACTIVE_KEY\"].session_token // empty" "$SESSION_FILE")
+    fi
+    if [ -z "${SYSTEMPROMPT_PROFILE:-}" ]; then
+        export SYSTEMPROMPT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/local/profile.yaml"
+    fi
+    exec {{CLI}} {{ARGS}}
+
+# Get DATABASE_URL from profile secrets (for sqlx compile-time checks)
+_db-url:
+    @if [ -n "$SYSTEMPROMPT_PROFILE" ] && [ -f "$SYSTEMPROMPT_PROFILE" ]; then \
+        PROFILE_DIR="$(dirname "$SYSTEMPROMPT_PROFILE")"; \
+        SECRETS_PATH="$(yq -r '.secrets.secrets_path // "./secrets.json"' "$SYSTEMPROMPT_PROFILE")"; \
+        if [ "${SECRETS_PATH#/}" = "$SECRETS_PATH" ]; then \
+            SECRETS_FILE="$PROFILE_DIR/$SECRETS_PATH"; \
+        else \
+            SECRETS_FILE="$SECRETS_PATH"; \
+        fi; \
+        if [ -f "$SECRETS_FILE" ]; then \
+            jq -r '.database_url' "$SECRETS_FILE"; \
+        else \
+            echo "postgres://systemprompt:systemprompt@localhost:5432/systemprompt"; \
+        fi; \
+    else \
+        cat .systemprompt/tenants.json 2>/dev/null | jq -r '.tenants[] | select(.tenant_type == "local") | .database_url' | head -1 || echo "postgres://systemprompt:systemprompt@localhost:5432/systemprompt"; \
+    fi
 
 # ══════════════════════════════════════════════════════════════════════════════
 # BUILD & RUN
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Get DATABASE_URL from local tenant (for sqlx compile-time checks)
-_db-url:
-    @cat .systemprompt/tenants.json 2>/dev/null | jq -r '.tenants[] | select(.tenant_type == "local") | .database_url' | head -1 || echo "postgres://systemprompt:systemprompt@localhost:5432/systemprompt"
-
-# Build workspace (use --release for release build, includes MCP servers)
+# Build workspace (use --release for release build)
 build *FLAGS:
-    DATABASE_URL="$(just _db-url)" cargo build --manifest-path=core/Cargo.toml --target-dir=target {{FLAGS}}
-    @if echo "{{FLAGS}}" | grep -q -- "--release"; then just build-mcp; fi
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export SYSTEMPROMPT_PROFILE="{{env_var_or_default('SYSTEMPROMPT_PROFILE', '')}}"
+    export DATABASE_URL="$(just _db-url)"
+    # Sync DATABASE_URL to MCP extension directories for sqlx compile-time checks
+    for dir in extensions/mcp/*/; do
+        if [ -f "$dir/Cargo.toml" ]; then
+            echo "DATABASE_URL=$DATABASE_URL" > "$dir/.env"
+        fi
+    done
+    cargo build --manifest-path core/Cargo.toml {{FLAGS}}
 
 # Start server
 start:
-    {{CLI}} services start
+    {{CLI}} infra services start --skip-web
+
+# Build web assets
+web-build:
+    SYSTEMPROMPT_WEB_CONFIG_PATH="{{justfile_directory()}}/services/web/config.yaml" SYSTEMPROMPT_WEB_METADATA_PATH="{{justfile_directory()}}/services/web/metadata.yaml" SYSTEMPROMPT_EXTENSIONS_PATH="{{justfile_directory()}}/extensions" npm run --prefix core/web build
+    mkdir -p core/web/dist/css
+    @if [ -d "extensions/blog/assets/css" ]; then cp extensions/blog/assets/css/*.css core/web/dist/css/ 2>/dev/null || true; fi
+
+# Run migrations
+migrate:
+    {{CLI}} infra db migrate
 
 # ══════════════════════════════════════════════════════════════════════════════
 # AUTH — Who you are
@@ -48,21 +110,15 @@ whoami:
 # ══════════════════════════════════════════════════════════════════════════════
 
 # Tenant operations (interactive menu)
+# Builds everything first since cloud tenant creation deploys immediately
 tenant:
-    {{CLI}} cloud tenant
+    just build --release
+    just web-build
+    {{CLI_RELEASE}} cloud tenant
 
 # List all tenants
 tenants:
     {{CLI}} cloud tenant list
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PROJECT — Local setup
-# Produces: services/ boilerplate
-# ══════════════════════════════════════════════════════════════════════════════
-
-# Initialize new project
-init *FLAGS:
-    {{CLI}} cloud init {{FLAGS}}
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PROFILE — Configuration
@@ -103,10 +159,6 @@ db-reset TENANT="local":
 db-list:
     @ls -1 .systemprompt/docker/*.yaml 2>/dev/null | xargs -I {} basename {} .yaml || echo "No tenant databases found"
 
-# Run migrations
-migrate:
-    {{CLI}} services db migrate
-
 # ══════════════════════════════════════════════════════════════════════════════
 # SYNC — Populate database
 # Requires: migrate
@@ -140,8 +192,9 @@ sync-pull *ARGS:
 
 # Deploy to cloud (builds everything first)
 deploy *FLAGS:
-    just build-all
-    {{CLI}} cloud deploy {{FLAGS}}
+    just build --release
+    just web-build
+    {{CLI_RELEASE}} cloud deploy {{FLAGS}}
 
 # Check deployment status
 status:
@@ -159,6 +212,7 @@ build-mcp:
 build-all:
     just build --release
     just build-mcp
+    just web-build
     @echo "All components built"
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -179,10 +233,3 @@ docker-test:
     just docker-build test
     @echo "Docker build successful! Image: systemprompt-template:test"
 
-# ══════════════════════════════════════════════════════════════════════════════
-# QUICKSTART
-# ══════════════════════════════════════════════════════════════════════════════
-
-# Full local setup: tenant → profile → migrate → sync
-quickstart: tenant profile migrate sync-local
-    @echo "Done! Run 'just start' to begin"

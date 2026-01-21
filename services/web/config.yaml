@@ -1,5 +1,6 @@
 # Web Configuration
-# Theme, branding, and UI settings
+# Theme, branding, and UI settings for systemprompt-template
+# A clean, neutral starter theme with teal accent
 
 paths:
   templates: "services/web/templates"
@@ -10,12 +11,13 @@ content:
   sources:
     - blog
     - legal
+    - docs
 
 branding:
-  name: "systemprompt-template"
-  title: "systemprompt-template"
-  description: "Your SystemPrompt implementation"
-  themeColor: "#3b82f6"
+  name: "Your Project"
+  title: "Your Project"
+  description: "A modern web application built with SystemPrompt"
+  themeColor: "#0d9488"
   display_sitename: true
   twitter_handle: "@yourhandle"
   logo:
@@ -31,45 +33,48 @@ branding:
 
 fonts:
   body:
-    family: "OpenSans"
-    fallback: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    family: "Inter"
+    fallback: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
     files:
-      - path: "/fonts/OpenSans/OpenSans-Regular.ttf"
+      - path: "/fonts/Inter/Inter-Regular.ttf"
         weight: 400
         style: "normal"
-      - path: "/fonts/OpenSans/OpenSans-Medium.ttf"
+      - path: "/fonts/Inter/Inter-Medium.ttf"
         weight: 500
         style: "normal"
-      - path: "/fonts/OpenSans/OpenSans-SemiBold.ttf"
+      - path: "/fonts/Inter/Inter-SemiBold.ttf"
         weight: 600
         style: "normal"
-      - path: "/fonts/OpenSans/OpenSans-Bold.ttf"
+      - path: "/fonts/Inter/Inter-Bold.ttf"
         weight: 700
         style: "normal"
   heading:
-    family: "Zepto"
-    fallback: "Georgia, serif"
+    family: "Inter"
+    fallback: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
     files:
-      - path: "/fonts/Zepto/Zepto-Regular.ttf"
-        weight: 400
+      - path: "/fonts/Inter/Inter-SemiBold.ttf"
+        weight: 600
+        style: "normal"
+      - path: "/fonts/Inter/Inter-Bold.ttf"
+        weight: 700
         style: "normal"
   brand:
-    family: "ArchivoBlack"
-    fallback: "Impact, sans-serif"
+    family: "Inter"
+    fallback: "system-ui, sans-serif"
     files:
-      - path: "/fonts/ArchivoBlack/ArchivoBlack-Regular.ttf"
-        weight: 400
+      - path: "/fonts/Inter/Inter-Bold.ttf"
+        weight: 700
         style: "normal"
 
 colors:
   light:
     primary:
-      hsl: "hsl(217, 91%, 60%)"
-      rgb: [59, 130, 246]
+      hsl: "hsl(172, 82%, 29%)"
+      rgb: [13, 148, 136]
     secondary:
       hsl: "hsl(215, 16%, 47%)"
       rgb: [100, 116, 139]
-    success: "#22c55e"
+    success: "#10b981"
     warning: "#f59e0b"
     error: "#ef4444"
     surface:
@@ -79,8 +84,8 @@ colors:
       secondaryContainer: "#E2E8F0"
       errorContainer: "#FEE2E2"
     text:
-      primary: "#1E293B"
-      secondary: "#64748B"
+      primary: "#0F172A"
+      secondary: "#475569"
       inverted: "#FFFFFF"
       disabled: "#94A3B8"
     background:
@@ -92,12 +97,12 @@ colors:
       outline: "#94A3B8"
   dark:
     primary:
-      hsl: "hsl(217, 91%, 70%)"
-      rgb: [96, 165, 250]
+      hsl: "hsl(172, 66%, 50%)"
+      rgb: [45, 212, 191]
     secondary:
       hsl: "hsl(215, 20%, 65%)"
       rgb: [148, 163, 184]
-    success: "#4ade80"
+    success: "#34d399"
     warning: "#fbbf24"
     error: "#f87171"
     surface:
@@ -109,7 +114,7 @@ colors:
     text:
       primary: "#F1F5F9"
       secondary: "#94A3B8"
-      inverted: "#1E293B"
+      inverted: "#0F172A"
       disabled: "#64748B"
     background:
       default: "#0F172A"
@@ -123,10 +128,10 @@ typography:
   sizes:
     xs: "12px"
     sm: "14px"
-    md: "15px"
+    md: "16px"
     lg: "18px"
     xl: "20px"
-    xxl: "28px"
+    xxl: "30px"
   weights:
     regular: 400
     medium: 500
@@ -152,20 +157,20 @@ radius:
 
 shadows:
   light:
-    sm: "0 1px 2px rgba(0, 0, 0, 0.05)"
-    md: "0 4px 6px rgba(0, 0, 0, 0.1)"
+    sm: "0 1px 2px rgba(0, 0, 0, 0.04)"
+    md: "0 4px 6px rgba(0, 0, 0, 0.07)"
     lg: "0 10px 15px rgba(0, 0, 0, 0.1)"
-    accent: "0 4px 12px rgba(59, 130, 246, 0.15)"
+    accent: "0 4px 14px rgba(13, 148, 136, 0.15)"
   dark:
     sm: "0 2px 4px rgba(0, 0, 0, 0.3)"
     md: "0 4px 8px rgba(0, 0, 0, 0.4)"
     lg: "0 10px 20px rgba(0, 0, 0, 0.5)"
-    accent: "0 4px 12px rgba(96, 165, 250, 0.2)"
+    accent: "0 4px 14px rgba(45, 212, 191, 0.2)"
 
 animation:
   fast: "150ms"
-  normal: "300ms"
-  slow: "500ms"
+  normal: "250ms"
+  slow: "400ms"
 
 zIndex:
   base: 1
@@ -175,7 +180,7 @@ zIndex:
   tooltip: 2000
 
 layout:
-  headerHeight: "48px"
+  headerHeight: "56px"
   sidebarLeft:
     width: "20%"
     minWidth: "240px"
@@ -185,7 +190,7 @@ layout:
     minWidth: "200px"
     maxWidth: "280px"
   navHeight: "64px"
-  contentMaxWidth: "1600px"
+  contentMaxWidth: "1280px"
 
 card:
   radius:
@@ -194,11 +199,11 @@ card:
   padding:
     sm: "12px"
     md: "16px"
-    lg: "20px"
+    lg: "24px"
   gradient:
-    start: "rgba(59, 130, 246, 0.08)"
-    mid: "rgba(59, 130, 246, 0.04)"
-    end: "rgba(59, 130, 246, 0.02)"
+    start: "rgba(13, 148, 136, 0.06)"
+    mid: "rgba(13, 148, 136, 0.03)"
+    end: "rgba(13, 148, 136, 0.01)"
 
 mobile:
   spacing:
@@ -212,10 +217,10 @@ mobile:
     sizes:
       xs: "11px"
       sm: "13px"
-      md: "14px"
-      lg: "16px"
-      xl: "18px"
-      xxl: "24px"
+      md: "15px"
+      lg: "17px"
+      xl: "19px"
+      xxl: "26px"
   layout:
     headerHeight: "56px"
     navHeight: "64px"
@@ -223,7 +228,7 @@ mobile:
     padding:
       sm: "10px"
       md: "12px"
-      lg: "14px"
+      lg: "16px"
 
 touchTargets:
   default: "44px"
@@ -237,13 +242,15 @@ navigation:
         label: "Privacy Policy"
       - path: "/legal/cookie-policy"
         label: "Cookie Policy"
+      - path: "/legal/terms-of-service"
+        label: "Terms of Service"
     resources:
       - path: "/blog"
         label: "Blog"
-      - path: "/"
-        label: "Chat"
+      - path: "/docs"
+        label: "Documentation"
   social:
-    - href: "https://github.com/yourusername"
+    - href: "https://github.com/your-org"
       type: "github"
       label: "GitHub"
     - href: "https://twitter.com/yourhandle"

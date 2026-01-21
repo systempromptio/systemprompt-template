@@ -1,0 +1,27 @@
+# Content Writing Skill
+# Skill for writing and editing various types of content
+
+skill:
+  id: content_writing
+  name: "Content Writing"
+  description: "Helps with writing, editing, and improving text content"
+  version: "1.0.0"
+  enabled: true
+
+  tags:
+    - writing
+    - editing
+    - content
+    - copywriting
+    - documentation
+
+  examples:
+    - "Help me write a blog post about..."
+    - "Edit this text for clarity"
+    - "Improve this documentation"
+    - "Write a summary of..."
+    - "Help me draft an email"
+
+  metadata:
+    category: "content"
+    difficulty: "intermediate"

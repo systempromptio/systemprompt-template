@@ -17,7 +17,7 @@ server:
   api_internal_url: null
   api_external_url: null
   use_https: true
-  cors_allowed_origins: []
+  cors_allowed_origins: null
 paths:
   system: /app
   core: /app/core

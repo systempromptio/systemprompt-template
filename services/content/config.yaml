@@ -3,17 +3,17 @@
 
 content_sources:
   blog:
-    path: "services/content/blog"
+    path: "content/blog"
     source_id: "blog"
     category_id: "blog"
     enabled: true
-    description: "Blog articles and technical content"
+    description: "Blog articles and announcements"
     allowed_content_types: ["article", "tutorial", "announcement"]
     branding:
       name: "Blog"
-      description: "Technical articles and updates"
+      description: "Articles and updates"
       image: "/images/blog/og-default.png"
-      keywords: "blog, articles, tutorials, technology"
+      keywords: "blog, articles, tutorials"
     indexing:
       clear_before: false
       recursive: true
@@ -29,8 +29,29 @@ content_sources:
         priority: 0.9
         changefreq: "daily"
 
+  docs:
+    path: "content/docs"
+    source_id: "docs"
+    category_id: "docs"
+    enabled: true
+    description: "Documentation and guides"
+    allowed_content_types: ["guide", "reference", "tutorial"]
+    branding:
+      name: "Documentation"
+      description: "Guides and reference documentation"
+      keywords: "docs, documentation, guides"
+    indexing:
+      clear_before: false
+      recursive: true
+    sitemap:
+      enabled: true
+      url_pattern: "/docs/{slug}"
+      priority: 0.7
+      changefreq: "weekly"
+      fetch_from: "database"
+
   legal:
-    path: "services/content/legal"
+    path: "content/legal"
     source_id: "legal"
     category_id: "pages"
     enabled: true
@@ -45,11 +66,11 @@ content_sources:
       fetch_from: "database"
 
   skills:
-    path: "services/skills"
+    path: "skills"
     source_id: "skills"
     category_id: "skills"
     enabled: true
-    description: "Agent skills for editors and automation"
+    description: "Agent skills for automation"
     allowed_content_types: ["skill"]
     indexing:
       clear_before: false
@@ -60,6 +81,9 @@ categories:
   blog:
     name: "Blog"
     slug: "blog"
+  docs:
+    name: "Documentation"
+    slug: "docs"
   pages:
     name: "Pages"
     slug: "pages"
@@ -72,19 +96,18 @@ metadata:
   default_author: "Author"
   language: "en"
 
-  # Schema.org structured data for SEO
   structured_data:
     organization:
-      name: "SystemPrompt Template"
-      url: "http://localhost:8080"
-      logo: "http://localhost:8080/logo.png"
-      description: "Your organization description"
+      name: "Your Project"
+      url: "https://yourproject.com"
+      logo: "https://yourproject.com/assets/logos/logo.png"
+      description: "A modern web application built with SystemPrompt"
 
     blog:
       type: "Blog"
       name: "Blog"
-      url: "http://localhost:8080/blog"
-      description: "Technical blog posts and articles"
+      url: "https://yourproject.com/blog"
+      description: "Articles and updates"
       article_section: "Technology"
       language: "en-US"
 

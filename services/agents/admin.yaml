@@ -1,11 +1,8 @@
-# Admin Agent Configuration
-# System administration and analytics expert with MCP tools access
-
 agents:
   admin:
     name: "admin"
     port: 9002
-    endpoint: "/api/v1/agents/admin"
+    endpoint: "http://localhost:8080/api/v1/agents/admin"
     enabled: true
     is_primary: false
     default: false
@@ -17,10 +14,10 @@ agents:
       version: "1.0.0"
       preferredTransport: "JSONRPC"
       provider:
-        organization: "SystemPrompt"
-        url: "https://systemprompt.io"
-      iconUrl: "https://ui-avatars.com/api/?name=Admin&background=DC2626&color=fff&bold=true&size=256"
-      documentationUrl: "https://systemprompt.io/docs/agents/admin"
+        organization: "Your Organization"
+        url: "https://yourproject.com"
+      iconUrl: "https://ui-avatars.com/api/?name=Admin&background=dc2626&color=fff&bold=true&size=256"
+      documentationUrl: "https://yourproject.com/docs/agents/admin"
       capabilities:
         streaming: true
         pushNotifications: true
@@ -35,8 +32,8 @@ agents:
           type: oauth2
           flows:
             authorizationCode:
-              authorizationUrl: "/api/v1/core/oauth/authorize"
-              tokenUrl: "/api/v1/core/oauth/token"
+              authorizationUrl: "http://localhost:8080/api/v1/core/oauth/authorize"
+              tokenUrl: "http://localhost:8080/api/v1/core/oauth/token"
               scopes:
                 admin: "Admin access required"
           description: "OAuth 2.0 authentication - admin role required"

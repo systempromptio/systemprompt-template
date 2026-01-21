@@ -1,11 +1,8 @@
-# Infrastructure Agent Configuration
-# Cloud deployment and synchronization expert with infrastructure MCP tools access
-
 agents:
   infrastructure:
     name: "infrastructure"
     port: 9005
-    endpoint: "/api/v1/agents/infrastructure"
+    endpoint: "http://localhost:8080/api/v1/agents/infrastructure"
     enabled: true
     is_primary: false
     default: false
@@ -17,10 +14,10 @@ agents:
       version: "1.0.0"
       preferredTransport: "JSONRPC"
       provider:
-        organization: "SystemPrompt"
-        url: "https://systemprompt.io"
-      iconUrl: "https://ui-avatars.com/api/?name=IF&background=7C3AED&color=fff&bold=true&size=256"
-      documentationUrl: "https://systemprompt.io/docs/agents/infrastructure"
+        organization: "Your Organization"
+        url: "https://yourproject.com"
+      iconUrl: "https://ui-avatars.com/api/?name=IF&background=7c3aed&color=fff&bold=true&size=256"
+      documentationUrl: "https://yourproject.com/docs/agents/infrastructure"
       capabilities:
         streaming: true
         pushNotifications: true
@@ -35,8 +32,8 @@ agents:
           type: oauth2
           flows:
             authorizationCode:
-              authorizationUrl: "/api/v1/core/oauth/authorize"
-              tokenUrl: "/api/v1/core/oauth/token"
+              authorizationUrl: "http://localhost:8080/api/v1/core/oauth/authorize"
+              tokenUrl: "http://localhost:8080/api/v1/core/oauth/token"
               scopes:
                 admin: "Admin access required"
           description: "OAuth 2.0 authentication - admin role required"

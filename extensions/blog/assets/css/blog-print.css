@@ -1,0 +1,66 @@
+/**
+ * blog-print.css
+ * Optimized styles for printing blog posts
+ */
+
+@media print {
+  /* Remove navigation, footer, etc */
+  .blog-header,
+  .blog-footer,
+  .code-copy-button {
+    display: none !important;
+  }
+
+  /* Reset layout */
+  .blog-main,
+  .blog-article__body,
+  .blog-content {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Typography for print */
+  body {
+    font-size: 12pt;
+    line-height: 1.6;
+    color: #000;
+  }
+
+  h1 { font-size: 24pt; }
+  h2 { font-size: 18pt; }
+  h3 { font-size: 14pt; }
+
+  /* Links */
+  a {
+    color: #000;
+    text-decoration: underline;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  /* Code blocks */
+  pre {
+    border: 1px solid #ccc;
+    page-break-inside: avoid;
+  }
+
+  /* Images */
+  img {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+
+  /* Avoid breaks */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  p, ul, ol, blockquote {
+    page-break-inside: avoid;
+  }
+}

@@ -2,14 +2,14 @@
 members = [
     # Local extensions
     "extensions/blog",
-    # MCP servers
-    "extensions/mcp/system-tools",
 ]
 exclude = [
     # Git submodules - have their own Cargo.toml with git dependencies
     # Built separately via `just mcp-build-submodules`
     "extensions/mcp/admin",
     "extensions/mcp/infrastructure",
+    # Needs API updates for current core version
+    "extensions/mcp/system-tools",
 ]
 resolver = "2"
 
