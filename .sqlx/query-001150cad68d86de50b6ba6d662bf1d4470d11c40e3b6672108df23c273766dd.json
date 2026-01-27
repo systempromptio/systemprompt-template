@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_sessions SET ended_at = CURRENT_TIMESTAMP WHERE session_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "001150cad68d86de50b6ba6d662bf1d4470d11c40e3b6672108df23c273766dd"
+}

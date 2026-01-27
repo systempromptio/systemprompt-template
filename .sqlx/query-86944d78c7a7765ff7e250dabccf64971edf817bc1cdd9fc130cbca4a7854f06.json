@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT level as \"level!\", COUNT(*) as \"count\"\n            FROM logs\n            WHERE timestamp >= $1\n            GROUP BY level\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "level!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "86944d78c7a7765ff7e250dabccf64971edf817bc1cdd9fc130cbca4a7854f06"
+}

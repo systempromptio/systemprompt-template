@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_sessions SET ai_request_count = ai_request_count + 1, last_activity_at = CURRENT_TIMESTAMP WHERE session_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e2e0f7204803a32f3d4d465e7c775c3e8d5998ed85013fffb8f1db8a99ac9fff"
+}

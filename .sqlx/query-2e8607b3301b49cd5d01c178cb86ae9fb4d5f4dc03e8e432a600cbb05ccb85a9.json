@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM message_parts WHERE message_id IN (SELECT message_id FROM task_messages WHERE task_id = $1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2e8607b3301b49cd5d01c178cb86ae9fb4d5f4dc03e8e432a600cbb05ccb85a9"
+}

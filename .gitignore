@@ -133,5 +133,5 @@ storage/files/images/generated/
 storage/files/css/
 storage/files/js/
 
-# SQLx offline cache (regenerated from database)
-.sqlx/
+# SQLx offline cache - MUST be committed for offline builds
+# .sqlx/

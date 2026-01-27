@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE fingerprint_reputation\n            SET reputation_score = GREATEST(0, LEAST(100, reputation_score + $2)),\n                updated_at = CURRENT_TIMESTAMP\n            WHERE fingerprint_hash = $1\n            RETURNING reputation_score as \"reputation_score!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "reputation_score!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a5be8d1b8fdba87b7843d637bd32f3825612b28352839081ab7a07d7ac498c2d"
+}

@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n                playbook_id as \"playbook_id!: PlaybookId\",\n                file_path as \"file_path!\",\n                name as \"name!\",\n                description as \"description!\",\n                instructions as \"instructions!\",\n                enabled as \"enabled!\",\n                tags,\n                category as \"category!\",\n                domain as \"domain!\",\n                source_id as \"source_id!: SourceId\",\n                created_at as \"created_at!\",\n                updated_at as \"updated_at!\"\n            FROM agent_playbooks WHERE category = $1 ORDER BY domain ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "playbook_id!: PlaybookId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "file_path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "instructions!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "enabled!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "tags",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 7,
+        "name": "category!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "domain!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "source_id!: SourceId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "8b1c3c6bd965dda9c695489d5f4e9b287a5b797967a4be1820df408defb05960"
+}

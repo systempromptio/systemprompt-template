@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO oauth_client_response_types (client_id, response_type)\n             SELECT $1, unnest($2::text[])",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "df8ae875f6090c22380e6a9306af8fa149252fedbd0d99f910a24ddca9e3e6f8"
+}

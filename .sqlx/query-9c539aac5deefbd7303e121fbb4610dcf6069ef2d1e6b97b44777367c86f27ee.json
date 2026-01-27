@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                tool_name,\n                COUNT(*) as \"execution_count!\",\n                COALESCE(\n                    COUNT(*) FILTER (WHERE status = 'success')::float / NULLIF(COUNT(*), 0),\n                    0.0\n                ) as \"success_rate!\",\n                COALESCE(AVG(execution_time_ms), 0)::bigint as \"avg_duration_ms!\"\n            FROM mcp_tool_executions\n            GROUP BY tool_name\n            ORDER BY \"execution_count!\" DESC\n            LIMIT $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tool_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "execution_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "success_rate!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "avg_duration_ms!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "9c539aac5deefbd7303e121fbb4610dcf6069ef2d1e6b97b44777367c86f27ee"
+}

@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COALESCE(\n                    CASE\n                        WHEN user_agent ILIKE '%googlebot%' THEN 'Googlebot'\n                        WHEN user_agent ILIKE '%bingbot%' THEN 'Bingbot'\n                        WHEN user_agent ILIKE '%chatgpt%' THEN 'ChatGPT'\n                        WHEN user_agent ILIKE '%claude%' THEN 'Claude'\n                        WHEN user_agent ILIKE '%perplexity%' THEN 'Perplexity'\n                        ELSE 'Other'\n                    END,\n                    'Unknown'\n                ) as \"bot_type\",\n                COUNT(*)::bigint as \"count!\"\n            FROM user_sessions\n            WHERE started_at >= $1 AND started_at < $2\n              AND (is_bot = true OR is_behavioral_bot = true OR is_scanner = true)\n            GROUP BY 1\n            ORDER BY COUNT(*) DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "bot_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "db4ca327346580fcebc336cb627f5aa2f82cd10ad8f880120b9c630510c90e0a"
+}

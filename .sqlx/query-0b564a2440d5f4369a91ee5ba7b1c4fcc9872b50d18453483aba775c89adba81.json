@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE oauth_clients SET is_active = false, updated_at = $1\n             WHERE client_id LIKE $2 AND created_at < $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0b564a2440d5f4369a91ee5ba7b1c4fcc9872b50d18453483aba775c89adba81"
+}

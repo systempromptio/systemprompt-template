@@ -113,7 +113,6 @@ whoami:
 # Tenant operations (interactive menu)
 # Builds everything first since cloud tenant creation deploys immediately
 tenant:
-    just build --release
     {{CLI_RELEASE}} cloud tenant
 
 # List all tenants
