@@ -58,7 +58,7 @@ _db-url:
 # BUILD & RUN
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Build workspace (use --release for release build)
+# Build the project
 build *FLAGS:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -70,11 +70,12 @@ build *FLAGS:
             echo "DATABASE_URL=$DATABASE_URL" > "$dir/.env"
         fi
     done
-    cargo build --manifest-path core/Cargo.toml {{FLAGS}}
+    cargo update systemprompt --quiet 2>/dev/null || true
+    cargo build --workspace {{FLAGS}}
 
-# Start server
+# Start server (always uses local profile)
 start:
-    {{CLI}} infra services start --skip-web
+    {{CLI}} infra services start --profile local
 
 # Build web assets
 web-build:
@@ -113,7 +114,6 @@ whoami:
 # Builds everything first since cloud tenant creation deploys immediately
 tenant:
     just build --release
-    just web-build
     {{CLI_RELEASE}} cloud tenant
 
 # List all tenants
@@ -190,10 +190,9 @@ sync-pull *ARGS:
 # Requires: login + tenant + profile with cloud.enabled
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Deploy to cloud (builds everything first)
+# Deploy to cloud
 deploy *FLAGS:
     just build --release
-    just web-build
     {{CLI_RELEASE}} cloud deploy {{FLAGS}}
 
 # Check deployment status

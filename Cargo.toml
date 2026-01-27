@@ -4,12 +4,8 @@ members = [
     "extensions/blog",
 ]
 exclude = [
-    # Git submodules - have their own Cargo.toml with git dependencies
-    # Built separately via `just mcp-build-submodules`
-    "extensions/mcp/admin",
-    "extensions/mcp/infrastructure",
-    # Needs API updates for current core version
-    "extensions/mcp/system-tools",
+    # MCP servers - built separately via `just build-mcp`
+    "extensions/mcp/systemprompt",
 ]
 resolver = "2"
 
@@ -23,7 +19,7 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main", features = ["full"] }
+systemprompt = { version = "0.0.12", features = ["full"] }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -158,6 +154,10 @@ description = "SystemPrompt Template - Example project with blog extension"
 [lib]
 path = "src/lib.rs"
 
+[[bin]]
+name = "systemprompt"
+path = "src/main.rs"
+
 [dependencies]
 # Core framework (facade)
 systemprompt = { workspace = true }
@@ -181,3 +181,10 @@ serde_yaml = "0.9"
 
 [lints]
 workspace = true
+
+# ============================================
+# LOCAL DEVELOPMENT PATCHES
+# Comment out to use crates.io versions
+# ============================================
+[patch.crates-io]
+systemprompt = { path = "../systemprompt-core/systemprompt" }

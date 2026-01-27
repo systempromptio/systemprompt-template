@@ -6,7 +6,7 @@ A working skeleton for building your own SystemPrompt implementation.
 
 ### 1. Create Your Project
 
-**Option A: CLI**
+**Option A: GitHub CLI**
 ```bash
 gh repo create my-project --template systempromptio/systemprompt-template --clone --private
 cd my-project
@@ -17,58 +17,91 @@ git submodule update --init --recursive
 
 Click **"Use this template"** on [systemprompt-template](https://github.com/systempromptio/systemprompt-template), then:
 ```bash
-git clone https://github.com/YOUR_USERNAME/my-project.git
+git clone --recursive https://github.com/YOUR_USERNAME/my-project.git
 cd my-project
-git submodule update --init --recursive
 ```
 
-### 2. Build & Configure
+### 2. Build the CLI
 
 ```bash
 # Build (first time requires offline mode - no database yet)
-SQLX_OFFLINE=true just build
-
-# Authenticate with SystemPrompt Cloud
-just login
-
-# Create local tenant (provisions database)
-just tenant
-# → Select "Create new tenant" → Choose "local"
-
-# Configure profile
-just profile
-
-# Set default profile in .env
-echo "SYSTEMPROMPT_PROFILE=$(pwd)/.systemprompt/profiles/local/profile.yaml" >> .env
-
-# (Optional) Create cloud tenant for deployment
-just tenant
-# → Select "Create new tenant" → Choose "cloud"
+SQLX_OFFLINE=true cargo build --release -p systemprompt-cli
 ```
+
+### 3. Setup Your Environment
+
+All configuration is done through the CLI. Choose your database option:
+
+#### Option A: Local PostgreSQL (Free)
+
+```bash
+# Start PostgreSQL in Docker
+docker run -d --name systemprompt-db \
+  -e POSTGRES_DB=systemprompt \
+  -e POSTGRES_USER=systemprompt \
+  -e POSTGRES_PASSWORD=systemprompt \
+  -p 5432:5432 \
+  postgres:16
+
+# Login to systemprompt.io Cloud
+systemprompt cloud auth login
+
+# Create a local tenant (will prompt for database URL)
+systemprompt cloud tenant create --type local
+
+# Create your profile
+systemprompt cloud profile create local
+
+# Run database migrations
+systemprompt infra db migrate
+
+# Start the server
+systemprompt infra services start --all
+```
+
+#### Option B: Cloud PostgreSQL (Paid)
+
+```bash
+# Login to systemprompt.io Cloud
+systemprompt cloud auth login
+
+# Create a cloud tenant (provisions managed PostgreSQL)
+systemprompt cloud tenant create --region iad
+
+# Create your profile
+systemprompt cloud profile create production
+
+# Run database migrations
+systemprompt infra db migrate
+
+# Start the server
+systemprompt infra services start --all
+```
+
+The API server will be available at `http://127.0.0.1:8080`.
 
 ## Prerequisites
 
 - **Rust** (1.75+) - https://rustup.rs/
-- **Docker** - For running systemprompt-db
-- **just** - Command runner: `cargo install just`
-- **jq** - JSON processor: `sudo apt install jq`
-- **systemprompt-db** - Multi-tenant PostgreSQL service (must be running)
+- **Docker** - For local PostgreSQL **OR** systemprompt.io Cloud account
 
 ## Project Structure
 
 ```
 systemprompt-template/
-├── core/                    # READ-ONLY - SystemPrompt Core (git subtree)
-├── services/         # YOUR CODE - Customize here
+├── core/                    # READ-ONLY - SystemPrompt Core (git submodule)
+├── extensions/              # ALL Rust code
+│   ├── blog/                # Reference blog extension
+│   └── mcp/                 # MCP servers
+│       └── systemprompt/  # MCP server
+├── services/                # YOUR CONFIG - Customize here
 │   ├── agents/              # Agent configurations (YAML)
 │   ├── ai/                  # AI provider settings
 │   ├── config/              # Root services config
 │   ├── content/             # Markdown content (blog, legal pages)
-│   ├── mcp/                 # MCP servers (Rust crates)
+│   ├── mcp/                 # MCP server configurations (YAML)
 │   ├── skills/              # Agent skills
 │   └── web/                 # Theme and branding
-├── infrastructure/          # Docker, scripts
-├── config/                  # Root configuration
 └── justfile                 # Development commands
 ```
 
@@ -78,24 +111,22 @@ systemprompt-template/
 
 | Command | Description |
 |---------|-------------|
-| `just setup` | First-time setup (provisions DB, builds, migrates) |
-| `just build` | Build debug binaries |
-| `just start` | Start API server |
-| `just db-migrate` | Run migrations |
-| `just core-sync` | Update core subtree |
-| `just test` | Run tests |
-| `just lint` | Run clippy |
+| `systemprompt infra services start --all` | Start all services (API, agents, MCP) |
+| `systemprompt infra services status` | Check service status |
+| `systemprompt infra db migrate` | Run database migrations |
+| `systemprompt infra db status` | Check database connection |
+| `systemprompt admin agents list` | List configured agents |
+| `systemprompt admin agents status <name>` | Check agent status |
 
 ### Build & Deploy
 
 | Command | Description |
 |---------|-------------|
-| `systemprompt build release` | Build optimized binary + web assets |
-| `systemprompt build release --skip-web` | Build binary only (faster) |
-| `systemprompt cloud login` | Authenticate with SystemPrompt Cloud |
-| `systemprompt cloud setup` | Link project to cloud tenant |
-| `systemprompt cloud deploy` | Deploy pre-built artifacts |
-| `systemprompt cloud deploy --rebuild` | Rebuild and deploy |
+| `cargo build --release -p systemprompt-cli` | Build release binary |
+| `systemprompt cloud auth login` | Authenticate with SystemPrompt Cloud |
+| `systemprompt cloud tenant create` | Create a tenant (local or cloud) |
+| `systemprompt cloud profile create <name>` | Create a profile |
+| `systemprompt cloud deploy` | Deploy to cloud |
 
 ## Configuration
 
@@ -108,34 +139,44 @@ systemprompt-template/
 
 | File | Purpose |
 |------|---------|
-| `services/config/config.yml` | Root services config |
-| `services/content/config.yml` | Content sources |
-| `services/web/config.yml` | Theme and branding |
-| `services/ai/config.yml` | AI providers |
-| `config/ai.yaml` | Root AI config |
+| `services/config/config.yaml` | Root services config |
+| `services/content/config.yaml` | Content sources |
+| `services/web/config.yaml` | Theme and branding |
+| `services/ai/config.yaml` | AI providers |
 
 ## Database Setup
 
-This template uses **systemprompt-db** for multi-tenant database management.
+Database configuration is managed through the CLI using tenants and profiles.
 
-The `just setup` command will:
-1. Prompt for a tenant name (default: directory name)
-2. Call the systemprompt-db API to provision an isolated database
-3. Save the connection string to `.env.secrets`
-
-If your tenant already exists, you'll be prompted to enter your existing DATABASE_URL.
-
-### Manual Database Setup
-
-If you need to provision manually:
+### Local PostgreSQL (Free)
 
 ```bash
-# Create tenant via API
-curl -X POST http://localhost:8085/api/v1/tenants \
-  -H "Content-Type: application/json" \
-  -d '{"name": "mytenant"}'
+# Start PostgreSQL in Docker
+docker run -d --name systemprompt-db \
+  -e POSTGRES_DB=systemprompt \
+  -e POSTGRES_USER=systemprompt \
+  -e POSTGRES_PASSWORD=systemprompt \
+  -p 5432:5432 \
+  postgres:16
 
-# Save the returned connection_string to .env.secrets
+# Create a local tenant (will prompt for database URL)
+systemprompt cloud tenant create --type local
+
+# Connection URL: postgresql://systemprompt:systemprompt@localhost:5432/systemprompt
+```
+
+### Cloud PostgreSQL (Paid)
+
+```bash
+# Create a cloud tenant (auto-provisions managed PostgreSQL)
+systemprompt cloud tenant create --region iad
+```
+
+### Checking Database Status
+
+```bash
+systemprompt infra db status
+systemprompt infra db tables
 ```
 
 ## Core Submodule (READ-ONLY)
@@ -146,11 +187,11 @@ The `core/` directory contains SystemPrompt Core as a git submodule.
 
 To update core:
 ```bash
-just core-sync    # Update submodule + Cargo deps
-just core-version # Show current version
+git submodule update --remote core
+cargo update
 ```
 
-When cloning, use `--recursive` to fetch the submodule:
+When cloning, always use `--recursive` to fetch the submodule:
 ```bash
 git clone --recursive https://github.com/systempromptio/systemprompt-template my-project
 ```
@@ -159,15 +200,16 @@ git clone --recursive https://github.com/systempromptio/systemprompt-template my
 
 ### Add an MCP Server
 
-1. Create a new crate in `services/mcp/your-server/`
-2. Add a `module.yml` configuration
-3. Add to `services/config/config.yml` includes
-4. Add to `Cargo.toml` workspace members
+1. Create a new crate in `extensions/mcp/your-server/`
+2. Add a `manifest.yaml` configuration
+3. Add a YAML config in `services/mcp/your-server.yaml`
+4. Add to `services/config/config.yaml` includes
+5. Add to `Cargo.toml` workspace excludes (built separately)
 
 ### Add an Agent
 
-1. Create `services/agents/your-agent.yml`
-2. Add to `services/config/config.yml` includes
+1. Create `services/agents/your-agent.yaml`
+2. Add to `services/config/config.yaml` includes
 
 ### Add Content
 
@@ -176,7 +218,7 @@ git clone --recursive https://github.com/systempromptio/systemprompt-template my
 
 ### Customize Theme
 
-Edit `services/web/config.yml` to change:
+Edit `services/web/config.yaml` to change:
 - Branding (name, logo, colors)
 - Typography
 - Layout
@@ -188,84 +230,38 @@ Edit `services/web/config.yml` to change:
 
 ```bash
 # 1. Login to SystemPrompt Cloud
-systemprompt cloud login
+systemprompt cloud auth login
 
-# 2. Link your project to a cloud tenant (first time only)
-systemprompt cloud setup --name my-project
+# 2. Create a cloud tenant (first time only)
+systemprompt cloud tenant create --region iad
 
-# 3. Build release artifacts
-systemprompt build release
+# 3. Create a production profile
+systemprompt cloud profile create production
 
-# 4. Deploy
-systemprompt cloud deploy
-```
+# 4. Build release binary
+cargo build --release -p systemprompt-cli
 
-### Build & Release Architecture
-
-The build system uses a **type-safe pipeline** that enforces correct build order at compile time:
-
-```
-Unbuilt → BinaryReady → Complete
-```
-
-#### Build Commands
-
-| Command | Description |
-|---------|-------------|
-| `systemprompt build release` | Build release binary + web assets, stage for deployment |
-| `systemprompt build release --skip-web` | Build only the binary (faster, no web assets) |
-| `systemprompt cloud deploy` | Deploy using pre-built artifacts |
-| `systemprompt cloud deploy --rebuild` | Rebuild everything before deploying |
-
-#### Workflow: Separate Build & Deploy (Recommended)
-
-```bash
-# Step 1: Build once
-systemprompt build release
-
-# Step 2: Deploy (fast - uses pre-built artifacts)
-systemprompt cloud deploy
-
-# Subsequent deploys reuse artifacts until you rebuild
-systemprompt cloud deploy --tag v1.0.0
-```
-
-#### Workflow: All-in-One (Convenience)
-
-```bash
-# Build + deploy in one command
-systemprompt cloud deploy --rebuild
-```
-
-### Artifacts
-
-After `systemprompt build release`, artifacts are staged to:
-
-```
-infrastructure/build-context/release/
-├── systemprompt    # Release binary (optimized, stripped)
-web/dist/           # Static web assets
+# 5. Deploy
+systemprompt cloud deploy --profile production
 ```
 
 ### Deploy Options
 
 | Flag | Description |
 |------|-------------|
-| `--rebuild` | Rebuild all artifacts before deploying |
+| `--profile <NAME>` | Profile to deploy |
 | `--skip-push` | Build Docker image but don't push to registry |
-| `--tag <TAG>` | Custom image tag (default: `deploy-{timestamp}-{git_sha}`) |
 
-### Breaking Change Note
+### Checking Deployment Status
 
-The default behavior changed from "always rebuild" to "use pre-built artifacts":
-
-- **Before**: `cloud deploy` rebuilt everything by default
-- **After**: `cloud deploy` expects pre-built artifacts; use `--rebuild` to rebuild
-
-This separation enables faster iteration - build once, deploy many times.
+```bash
+systemprompt cloud auth whoami
+systemprompt cloud tenant list
+systemprompt cloud tenant show
+```
 
 ## License
 
 MIT License - see [LICENSE](LICENSE)
 
-This project depends on [systemprompt-core](https://github.com/systempromptio/systemprompt-core) which is licensed under Apache 2.0.
+This project depends on [systemprompt-core](https://github.com/systempromptio/systemprompt-core) which is licensed under FSL-1.1-ALv2.

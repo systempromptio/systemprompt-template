@@ -2,15 +2,12 @@
 # This file aggregates all service configurations
 
 includes:
-  - ../agents/assistant.yaml
-  - ../agents/admin.yaml
-  - ../agents/infrastructure.yaml
+  - ../agents/welcome.yaml
   - ../skills/config.yaml
   - ../ai/config.yaml
   - ../web/config.yaml
   - ../scheduler/config.yaml
-  - ../mcp/systemprompt-admin.yaml
-  - ../mcp/systemprompt-infrastructure.yaml
+  - ../mcp/systemprompt.yaml
 
 agents: {}
 mcp_servers: {}

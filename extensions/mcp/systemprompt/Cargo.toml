@@ -1,0 +1,30 @@
+[package]
+name = "systemprompt-mcp-agent"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "systemprompt-mcp-agent"
+path = "src/main.rs"
+
+[dependencies]
+systemprompt = { workspace = true, features = ["full"] }
+
+anyhow.workspace = true
+tokio.workspace = true
+
+rmcp.workspace = true
+
+axum.workspace = true
+
+serde.workspace = true
+serde_json.workspace = true
+
+tracing.workspace = true
+
+shell-words = "1.1"
+
+[lints]
+workspace = true

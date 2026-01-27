@@ -4,8 +4,5 @@
 includes:
   - general_assistance/config.yaml
   - content_writing/config.yaml
-  - deployment/config.yaml
-  - sync_management/config.yaml
-  - file_context_reasoning/config.yaml
 
 skills: {}
