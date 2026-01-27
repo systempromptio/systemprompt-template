@@ -63,15 +63,47 @@ build *FLAGS:
     #!/usr/bin/env bash
     set -euo pipefail
     export SYSTEMPROMPT_PROFILE="{{env_var_or_default('SYSTEMPROMPT_PROFILE', '')}}"
-    export DATABASE_URL="$(just _db-url)"
-    # Sync DATABASE_URL to MCP extension directories for sqlx compile-time checks
-    for dir in extensions/mcp/*/; do
-        if [ -f "$dir/Cargo.toml" ]; then
-            echo "DATABASE_URL=$DATABASE_URL" > "$dir/.env"
+
+    # Check if local profile has database access
+    SECRETS_FILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
+    USE_OFFLINE=false
+
+    if [ -f "$SECRETS_FILE" ]; then
+        DB_URL=$(jq -r '.database_url // empty' "$SECRETS_FILE" 2>/dev/null)
+        if [ -n "$DB_URL" ] && [ "$DB_URL" != "null" ]; then
+            # Try to connect to the database (timeout after 2 seconds)
+            if pg_isready -d "$DB_URL" -t 2 >/dev/null 2>&1; then
+                export DATABASE_URL="$DB_URL"
+                echo "Using database: $DB_URL"
+            else
+                echo "Database not reachable, using offline mode"
+                USE_OFFLINE=true
+            fi
+        else
+            echo "No database_url in secrets, using offline mode"
+            USE_OFFLINE=true
         fi
-    done
+    else
+        echo "No local profile secrets found, using offline mode"
+        USE_OFFLINE=true
+    fi
+
+    # Sync DATABASE_URL to MCP extension directories for sqlx compile-time checks
+    if [ "$USE_OFFLINE" = "false" ]; then
+        for dir in extensions/mcp/*/; do
+            if [ -f "$dir/Cargo.toml" ]; then
+                echo "DATABASE_URL=$DATABASE_URL" > "$dir/.env"
+            fi
+        done
+    fi
+
     cargo update systemprompt --quiet 2>/dev/null || true
-    cargo build --workspace {{FLAGS}}
+
+    if [ "$USE_OFFLINE" = "true" ]; then
+        SQLX_OFFLINE=true cargo build --workspace {{FLAGS}}
+    else
+        cargo build --workspace {{FLAGS}}
+    fi
 
 # Start server (always uses local profile)
 start:

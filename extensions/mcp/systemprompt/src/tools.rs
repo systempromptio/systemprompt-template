@@ -1,6 +1,8 @@
-use rmcp::model::Tool;
+use rmcp::model::{Meta, Tool};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+
+pub const SERVER_NAME: &str = "systemprompt";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CliInput {
@@ -13,6 +15,84 @@ pub struct CliOutput {
     pub stderr: String,
     pub exit_code: i32,
     pub success: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ArtifactType {
+    Table,
+    List,
+    PresentationCard,
+    Text,
+    CopyPasteText,
+    Chart,
+    Form,
+    Dashboard,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RenderingHints {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub columns: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chart_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<String>,
+    #[serde(flatten)]
+    pub extra: std::collections::HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CommandResult {
+    pub data: serde_json::Value,
+    pub artifact_type: ArtifactType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hints: Option<RenderingHints>,
+}
+
+impl CommandResult {
+    pub fn from_stdout(stdout: &str) -> Option<Self> {
+        serde_json::from_str(stdout).ok()
+    }
+
+    pub fn artifact_type_str(&self) -> &'static str {
+        match self.artifact_type {
+            ArtifactType::Table => "table",
+            ArtifactType::List => "list",
+            ArtifactType::PresentationCard => "presentation_card",
+            ArtifactType::Text => "text",
+            ArtifactType::CopyPasteText => "copy_paste_text",
+            ArtifactType::Chart => "chart",
+            ArtifactType::Form => "form",
+            ArtifactType::Dashboard => "dashboard",
+        }
+    }
+}
+
+pub fn create_result_meta(artifact_id: &str) -> Meta {
+    let mut meta_map = serde_json::Map::new();
+    meta_map.insert(
+        "ui".to_string(),
+        serde_json::json!({
+            "resourceUri": format!("ui://{}/{}", SERVER_NAME, artifact_id),
+            "visibility": ["model"]
+        }),
+    );
+    Meta(meta_map)
+}
+
+fn create_ui_meta() -> Meta {
+    let mut meta_map = serde_json::Map::new();
+    meta_map.insert(
+        "ui".to_string(),
+        serde_json::json!({
+            "resourceUri": format!("ui://{}/{{artifact_id}}", SERVER_NAME),
+            "visibility": ["model"]
+        }),
+    );
+    Meta(meta_map)
 }
 
 #[must_use]
@@ -96,6 +176,6 @@ fn create_cli_tool() -> Tool {
         output_schema: Some(Arc::new(output_obj)),
         annotations: None,
         icons: None,
-        meta: None,
+        meta: Some(create_ui_meta()),
     }
 }

@@ -1,17 +1,19 @@
-use crate::tools::{self, CliInput, CliOutput};
+use crate::tools::{self, create_result_meta, CliInput, CliOutput, CommandResult, SERVER_NAME};
 use anyhow::Result;
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Content, Implementation, InitializeRequestParams,
-    InitializeResult, ListToolsResult, PaginatedRequestParams, ProtocolVersion, ServerCapabilities,
-    ServerInfo,
+    InitializeResult, ListResourceTemplatesResult, ListResourcesResult, ListToolsResult,
+    PaginatedRequestParams, ProtocolVersion, RawResourceTemplate, ReadResourceRequestParams,
+    ReadResourceResult, ResourceContents, ResourceTemplate, ServerCapabilities, ServerInfo,
 };
 use rmcp::service::{RequestContext, RoleServer};
 use rmcp::{ErrorData as McpError, ServerHandler};
 use std::path::PathBuf;
 use std::process::Command;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpServerId;
+use systemprompt::identifiers::{ArtifactId, McpServerId};
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
+use systemprompt::mcp::services::ui_renderer::{registry::create_default_registry, MCP_APP_MIME_TYPE, UiRendererRegistry};
 use systemprompt::models::ProfileBootstrap;
 
 #[derive(Clone)]
@@ -19,6 +21,7 @@ pub struct SystempromptServer {
     #[allow(dead_code)]
     db_pool: DbPool,
     service_id: McpServerId,
+    ui_registry: std::sync::Arc<UiRendererRegistry>,
 }
 
 impl SystempromptServer {
@@ -27,6 +30,28 @@ impl SystempromptServer {
         Self {
             db_pool,
             service_id,
+            ui_registry: std::sync::Arc::new(create_default_registry()),
+        }
+    }
+
+    pub fn with_custom_registry(db_pool: DbPool, service_id: McpServerId, registry: UiRendererRegistry) -> Self {
+        Self {
+            db_pool,
+            service_id,
+            ui_registry: std::sync::Arc::new(registry),
+        }
+    }
+
+    pub fn with_extended_registry<F>(db_pool: DbPool, service_id: McpServerId, extend_fn: F) -> Self
+    where
+        F: FnOnce(&mut UiRendererRegistry),
+    {
+        let mut registry = create_default_registry();
+        extend_fn(&mut registry);
+        Self {
+            db_pool,
+            service_id,
+            ui_registry: std::sync::Arc::new(registry),
         }
     }
 
@@ -104,7 +129,10 @@ impl ServerHandler for SystempromptServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
             protocol_version: ProtocolVersion::V_2024_11_05,
-            capabilities: ServerCapabilities::builder().enable_tools().build(),
+            capabilities: ServerCapabilities::builder()
+                .enable_tools()
+                .enable_resources()
+                .build(),
             server_info: Implementation {
                 name: format!("SystemPrompt ({})", self.service_id),
                 version: env!("CARGO_PKG_VERSION").to_string(),
@@ -166,25 +194,50 @@ impl ServerHandler for SystempromptServer {
 
                 let output = Self::execute_cli(&input.command, auth_result.token())?;
 
-                let structured_content = serde_json::to_value(&output).map_err(|e| {
-                    McpError::internal_error(format!("Failed to serialize output: {e}"), None)
-                })?;
-
-                let text_content = if output.success {
-                    output.stdout.clone()
-                } else {
-                    format!(
+                if !output.success {
+                    let text_content = format!(
                         "Command failed (exit code {}):\n{}",
                         output.exit_code, output.stderr
-                    )
-                };
+                    );
+                    return Ok(CallToolResult {
+                        content: vec![Content::text(text_content)],
+                        is_error: Some(true),
+                        meta: None,
+                        structured_content: None,
+                    });
+                }
 
-                Ok(CallToolResult {
-                    content: vec![Content::text(text_content)],
-                    is_error: Some(!output.success),
-                    meta: None,
-                    structured_content: Some(structured_content),
-                })
+                if let Some(cmd_result) = CommandResult::from_stdout(&output.stdout) {
+                    let artifact_id = self
+                        .create_artifact_from_result(&cmd_result, &input.command)
+                        .await
+                        .map_err(|e| {
+                            McpError::internal_error(format!("Failed to create artifact: {e}"), None)
+                        })?;
+
+                    let text_content = if let Some(title) = &cmd_result.title {
+                        format!("{}\n\n{}", title, serde_json::to_string_pretty(&cmd_result.data).unwrap_or_default())
+                    } else {
+                        serde_json::to_string_pretty(&cmd_result.data).unwrap_or_default()
+                    };
+
+                    let structured_content = serde_json::to_value(&cmd_result).ok();
+                    let meta = Some(create_result_meta(artifact_id.as_str()));
+
+                    Ok(CallToolResult {
+                        content: vec![Content::text(text_content)],
+                        is_error: Some(false),
+                        meta,
+                        structured_content,
+                    })
+                } else {
+                    Ok(CallToolResult {
+                        content: vec![Content::text(output.stdout.clone())],
+                        is_error: Some(false),
+                        meta: None,
+                        structured_content: None,
+                    })
+                }
             }
             _ => Err(McpError::invalid_params(
                 format!(
@@ -196,5 +249,144 @@ impl ServerHandler for SystempromptServer {
                 None,
             )),
         }
+    }
+
+    async fn list_resource_templates(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _ctx: RequestContext<RoleServer>,
+    ) -> Result<ListResourceTemplatesResult, McpError> {
+        let raw_template = RawResourceTemplate {
+            uri_template: format!("ui://{}/{{artifact_id}}", SERVER_NAME),
+            name: "artifact-ui".to_string(),
+            title: Some("Artifact UI".to_string()),
+            description: Some("Interactive UI for SystemPrompt artifacts. Use with artifact IDs returned from tool calls.".to_string()),
+            mime_type: Some(MCP_APP_MIME_TYPE.to_string()),
+            icons: None,
+        };
+        let template = ResourceTemplate {
+            raw: raw_template,
+            annotations: None,
+        };
+
+        Ok(ListResourceTemplatesResult {
+            resource_templates: vec![template],
+            next_cursor: None,
+            meta: None,
+        })
+    }
+
+    async fn list_resources(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _ctx: RequestContext<RoleServer>,
+    ) -> Result<ListResourcesResult, McpError> {
+        Ok(ListResourcesResult {
+            resources: vec![],
+            next_cursor: None,
+            meta: None,
+        })
+    }
+
+    async fn read_resource(
+        &self,
+        request: ReadResourceRequestParams,
+        _ctx: RequestContext<RoleServer>,
+    ) -> Result<ReadResourceResult, McpError> {
+        let uri = &request.uri;
+
+        let artifact_id = Self::parse_ui_uri(uri).ok_or_else(|| {
+            McpError::invalid_params(
+                format!("Invalid UI resource URI: {}. Expected format: ui://{}/{{artifact_id}}", uri, SERVER_NAME),
+                None,
+            )
+        })?;
+
+        let artifact = self.fetch_artifact(&artifact_id).await.map_err(|e| {
+            McpError::internal_error(format!("Failed to fetch artifact: {e}"), None)
+        })?;
+
+        let html = self.ui_registry.render(&artifact).await.map_err(|e| {
+            McpError::internal_error(format!("Failed to render artifact UI: {e}"), None)
+        })?;
+
+        let contents = ResourceContents::TextResourceContents {
+            uri: uri.clone(),
+            mime_type: Some(MCP_APP_MIME_TYPE.to_string()),
+            text: html.html,
+            meta: None,
+        };
+
+        Ok(ReadResourceResult {
+            contents: vec![contents],
+        })
+    }
+}
+
+impl SystempromptServer {
+    fn parse_ui_uri(uri: &str) -> Option<String> {
+        let prefix = format!("ui://{}/", SERVER_NAME);
+        if uri.starts_with(&prefix) {
+            Some(uri[prefix.len()..].to_string())
+        } else {
+            None
+        }
+    }
+
+    async fn fetch_artifact(&self, artifact_id: &str) -> anyhow::Result<systemprompt::models::a2a::Artifact> {
+        use systemprompt::agent::repository::content::ArtifactRepository;
+
+        let repo = ArtifactRepository::new(self.db_pool.clone());
+        let id = ArtifactId::new(artifact_id);
+
+        repo.get_artifact_by_id(&id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Artifact not found: {}", artifact_id))
+    }
+
+    async fn create_artifact_from_result(
+        &self,
+        result: &CommandResult,
+        command: &str,
+    ) -> anyhow::Result<ArtifactId> {
+        use systemprompt::identifiers::{ContextId, TaskId};
+        use systemprompt::models::a2a::{Artifact, ArtifactMetadata, DataPart, Part};
+
+        let artifact_id = ArtifactId::generate();
+        let context_id = ContextId::generate();
+        let task_id = TaskId::generate();
+
+        let rendering_hints = result.hints.as_ref().and_then(|h| serde_json::to_value(h).ok());
+
+        let data_map = match &result.data {
+            serde_json::Value::Object(map) => map.clone(),
+            other => {
+                let mut map = serde_json::Map::new();
+                map.insert("value".to_string(), other.clone());
+                map
+            }
+        };
+
+        let mut metadata = ArtifactMetadata::new(
+            result.artifact_type_str().to_string(),
+            context_id.clone(),
+            task_id.clone(),
+        );
+        metadata.rendering_hints = rendering_hints;
+        metadata.source = Some("mcp-cli".to_string());
+
+        let artifact = Artifact {
+            id: artifact_id.clone(),
+            name: result.title.clone(),
+            description: Some(format!("Result of command: {}", command)),
+            parts: vec![Part::Data(DataPart { data: data_map })],
+            extensions: vec![],
+            metadata,
+        };
+
+        let repo = systemprompt::agent::repository::content::ArtifactRepository::new(self.db_pool.clone());
+        repo.create_artifact(&task_id, &context_id, &artifact).await?;
+
+        Ok(artifact_id)
     }
 }

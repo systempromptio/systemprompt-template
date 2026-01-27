@@ -2,9 +2,7 @@
 members = [
     # Local extensions
     "extensions/blog",
-]
-exclude = [
-    # MCP servers - built separately via `just build-mcp`
+    # MCP servers
     "extensions/mcp/systemprompt",
 ]
 resolver = "2"
@@ -19,7 +17,7 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.0.13", features = ["full"] }
+systemprompt = { version = "0.0.14", features = ["full"] }
 
 # ============================================
 # LOCAL EXTENSIONS
