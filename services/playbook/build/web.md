@@ -85,6 +85,28 @@ Your markdown content here...
 | `guide` | Step-by-step tutorial | How-to guides |
 | `tutorial` | Educational content | Learning materials |
 | `page` | Static page | Legal, about, contact |
+| `legal` | Legal document | Use for legal content source |
+
+> **Important**: The `kind` value must match what's configured in `templates.yaml`. Use `legal` for content in the `legal/` source.
+
+### Required Frontmatter Fields
+
+All fields below are **required** for content to publish successfully:
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `title` | Yes | Page/article title |
+| `description` | Yes | SEO description (150-160 chars) |
+| `author` | Yes | Author name |
+| `slug` | Yes | URL-friendly identifier |
+| `keywords` | Yes | Can be empty string |
+| `image` | **Yes** | Must be set, use placeholder if no image |
+| `kind` | Yes | Must match templates.yaml mapping |
+| `public` | Yes | Set to `true` to publish |
+| `published_at` | Yes | ISO date format |
+| `updated_at` | Yes | ISO date format |
+
+> **Common Issue**: Empty `image: ""` will cause publish to fail. Always use a placeholder: `image: "/files/images/blog/placeholder.svg"`
 
 ### Creating a New Blog Post
 
@@ -187,6 +209,33 @@ services/web/templates/
 ├── homepage.html       # Homepage
 └── legal-post.html     # Legal pages
 ```
+
+### templates.yaml Configuration
+
+The `templates.yaml` file maps content `kind` values to templates:
+
+```yaml
+templates:
+  homepage:
+    content_types:
+      - homepage
+  blog-post:
+    content_types:
+      - blog
+      - article
+      - paper
+      - guide
+      - tutorial
+  legal-post:
+    content_types:
+      - legal
+      - page
+  blog-list:
+    content_types:
+      - blog-list
+```
+
+> **Important**: If a content `kind` isn't mapped here, prerender will fail silently.
 
 ### Handlebars Syntax
 

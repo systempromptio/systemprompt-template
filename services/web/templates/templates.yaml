@@ -1,0 +1,18 @@
+templates:
+  homepage:
+    content_types:
+      - homepage
+  blog-post:
+    content_types:
+      - blog
+      - article
+      - paper
+      - guide
+      - tutorial
+  legal-post:
+    content_types:
+      - legal
+      - page
+  blog-list:
+    content_types:
+      - blog-list

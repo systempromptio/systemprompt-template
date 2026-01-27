@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{#if site.branding.title}}{{site.branding.title}}{{else}}systemprompt.io{{/if}}</title>
+    <meta name="description" content="{{#if site.branding.description}}{{site.branding.description}}{{else}}Build and deploy AI agents with ease{{/if}}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{#if site.branding.title}}{{site.branding.title}}{{else}}systemprompt.io{{/if}}">
+    <meta property="og:description" content="{{#if site.branding.description}}{{site.branding.description}}{{else}}Build and deploy AI agents with ease{{/if}}">
+    <meta property="og:type" content="website">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #666;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #1a1a1a;
+        }
+
+        .cta-button {
+            background: #1a1a1a;
+            color: #fff !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .cta-button:hover {
+            background: #333;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 100px 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .primary-cta {
+            display: inline-block;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .primary-cta:hover {
+            background: #333;
+        }
+
+        /* Features */
+        .features {
+            padding: 80px 0;
+            background: #f9f9f9;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .feature {
+            background: #fff;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .feature h3 {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
+
+        .feature p {
+            color: #666;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid #e5e5e5;
+            text-align: center;
+            color: #666;
+        }
+
+        footer a {
+            color: #666;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: #1a1a1a;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="/" class="logo">{{#if site.branding.name}}{{site.branding.name}}{{else}}systemprompt.io{{/if}}</a>
+                <div class="nav-links">
+                    <a href="{{#if nav.blog_url}}{{nav.blog_url}}{{else}}/blog{{/if}}">Blog</a>
+                    <a href="{{#if nav.app_url}}{{nav.app_url}}{{else}}/app{{/if}}" class="cta-button">Launch App</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>{{#if homepage.hero.title}}{{homepage.hero.title}}{{else}}Build AI Agents That Work{{/if}}</h1>
+                <p>{{#if homepage.hero.subtitle}}{{homepage.hero.subtitle}}{{else}}Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.{{/if}}</p>
+                <a href="{{#if nav.app_url}}{{nav.app_url}}{{else}}/app{{/if}}" class="primary-cta">{{#if homepage.hero.cta}}{{homepage.hero.cta}}{{else}}Get Started{{/if}}</a>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="container">
+                <div class="features-grid">
+                    {{#if homepage.features}}
+                    {{#each homepage.features}}
+                    <div class="feature">
+                        <h3>{{this.title}}</h3>
+                        <p>{{this.description}}</p>
+                    </div>
+                    {{/each}}
+                    {{else}}
+                    <div class="feature">
+                        <h3>Feature One</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim ad minim veniam, quis nostrud exercitation.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>Feature Two</h3>
+                        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>Feature Three</h3>
+                        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; {{#if site.branding.name}}{{site.branding.name}}{{else}}systemprompt.io{{/if}}. All rights reserved.</p>
+        </div>
+    </footer>
+    <script src="{{JS_BASE_PATH}}/analytics.js" defer></script>
+</body>
+</html>
