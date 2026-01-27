@@ -11,7 +11,7 @@ workspace = true
 
 [dependencies]
 # Core facade - provides all systemprompt types via unified API
-systemprompt = { git = "https://github.com/systempromptio/systemprompt-core", branch = "main", features = ["full"] }
+systemprompt = { workspace = true, features = ["full"] }
 
 # Database access
 sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono"] }
