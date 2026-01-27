@@ -98,8 +98,8 @@ pin-project = "1.0"
 sse-stream = "0.2.1"
 
 # MCP Protocol
-rmcp = { version = "0.8.1", features = ["server", "client", "transport-io", "transport-streamable-http-server", "transport-streamable-http-server-session", "transport-streamable-http-client", "transport-streamable-http-client-reqwest", "macros", "auth"] }
-rmcp-macros = "0.8"
+rmcp = { version = "0.14", features = ["server", "client", "transport-io", "transport-streamable-http-server", "transport-streamable-http-server-session", "transport-streamable-http-client", "transport-streamable-http-client-reqwest", "macros", "auth"] }
+rmcp-macros = "0.14"
 tokio-tungstenite = "0.24"
 
 # JSON-RPC

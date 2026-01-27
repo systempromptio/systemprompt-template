@@ -91,8 +91,7 @@ Your markdown content here...
 1. Create file: `services/content/blog/my-article.md`
 2. Add frontmatter with required fields
 3. Write markdown content
-4. Run ingestion: `systemprompt content ingest services/content/blog --source blog`
-5. Trigger prerender: `systemprompt jobs run prerender`
+4. Publish: `systemprompt core content publish`
 
 ### URL Structure
 
@@ -233,41 +232,34 @@ services/web/templates/
 
 ## CLI Content Workflow
 
-### Content Ingestion
-
-```bash
-# Ingest from directory
-systemprompt content ingest services/content/blog --source blog --recursive
-
-# Dry run to preview changes
-systemprompt content ingest services/content/blog --source blog --dry-run
-```
-
 ### Content Management
 
 ```bash
 # List content
-systemprompt content list --source blog --limit 20
+systemprompt core content list --source blog --limit 20
 
 # Show content details
-systemprompt content show my-article-slug --source blog
+systemprompt core content show my-article-slug --source blog
 
 # Search content
-systemprompt content search "MCP server"
+systemprompt core content search "MCP server"
 
 # Delete content
-systemprompt content delete <id> --yes
+systemprompt core content delete <id> --yes
 ```
 
 ### Publishing Pipeline
 
 ```bash
-# Run full publishing pipeline
-systemprompt jobs run publish_content
+# Run full publishing pipeline (all steps)
+systemprompt core content publish
 
 # Or run individual steps
-systemprompt jobs run blog_image_optimization
-systemprompt jobs run content_ingestion
+systemprompt core content publish --step ingest     # Parse markdown to DB
+systemprompt core content publish --step assets     # Copy CSS/JS to web/dist
+systemprompt core content publish --step prerender  # Generate HTML pages
+systemprompt core content publish --step homepage   # Generate index.html
+systemprompt core content publish --step sitemap    # Generate sitemap.xml
 ```
 
 ---
@@ -302,22 +294,22 @@ EOF
 systemprompt files upload ./my-image.png
 ```
 
-### 3. Ingest Content
+### 3. Publish
 
 ```bash
-systemprompt content ingest services/content/blog --source blog
+systemprompt core content publish
 ```
 
-### 4. Publish
+### 4. Verify
 
 ```bash
-systemprompt jobs run publish_content
-```
+# Check generated files
+ls -la web/dist/
+ls -la web/dist/blog/my-new-post/
 
-### 5. Verify
-
-```bash
-systemprompt content verify my-new-post --source blog
+# Start server and browse
+just start
+# Visit http://localhost:8080/blog/my-new-post
 ```
 
 ---
@@ -326,9 +318,28 @@ systemprompt content verify my-new-post --source blog
 
 | Task | Command |
 |------|---------|
-| Ingest content | `systemprompt content ingest <path> --source <source>` |
-| List content | `systemprompt content list --source <source>` |
-| Publish | `systemprompt jobs run publish_content` |
-| Upload image | `systemprompt files upload <path>` |
-| Search | `systemprompt content search "<query>"` |
-| Verify | `systemprompt content verify <slug> --source <source>` |
+| **Full publish** | `systemprompt core content publish` |
+| Homepage only | `systemprompt core content publish --step homepage` |
+| Ingest only | `systemprompt core content publish --step ingest` |
+| Prerender only | `systemprompt core content publish --step prerender` |
+| List content | `systemprompt core content list --source <source>` |
+| Search | `systemprompt core content search "<query>"` |
+| Upload image | `systemprompt core files upload <path>` |
+
+## Output Structure
+
+After publishing, files are generated in `web/dist/`:
+
+```
+web/dist/
+├── index.html              # Homepage
+├── sitemap.xml             # Sitemap
+├── feed.xml                # RSS feed
+├── css/                    # Stylesheets
+├── js/                     # Scripts
+├── blog/
+│   ├── index.html          # Blog list
+│   └── {slug}/index.html   # Individual posts
+└── legal/
+    └── {slug}/index.html   # Legal pages
+```

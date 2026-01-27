@@ -109,12 +109,6 @@ build *FLAGS:
 start:
     {{CLI}} infra services start --profile local
 
-# Build web assets
-web-build:
-    SYSTEMPROMPT_WEB_CONFIG_PATH="{{justfile_directory()}}/services/web/config.yaml" SYSTEMPROMPT_WEB_METADATA_PATH="{{justfile_directory()}}/services/web/metadata.yaml" SYSTEMPROMPT_EXTENSIONS_PATH="{{justfile_directory()}}/extensions" npm run --prefix core/web build
-    mkdir -p core/web/dist/css
-    @if [ -d "extensions/blog/assets/css" ]; then cp extensions/blog/assets/css/*.css core/web/dist/css/ 2>/dev/null || true; fi
-
 # Run migrations
 migrate:
     {{CLI}} infra db migrate
