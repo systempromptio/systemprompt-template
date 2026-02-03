@@ -41,13 +41,12 @@ PostgreSQL is the only external dependency. Any PostgreSQL 15+ works.
 ```bash
 gh repo create my-ai --template systempromptio/systemprompt-template --clone --private
 cd my-ai
-git submodule update --init --recursive
 ```
 
 **Option B: Manual Clone**
 
 ```bash
-git clone --recursive https://github.com/systempromptio/systemprompt-template.git my-ai
+git clone https://github.com/systempromptio/systemprompt-template.git my-ai
 cd my-ai
 ```
 

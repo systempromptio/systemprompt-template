@@ -39,13 +39,12 @@ This template extends [systemprompt-core](https://github.com/systempromptio/syst
 ```bash
 gh repo create my-project --template systempromptio/systemprompt-template --clone --private
 cd my-project
-git submodule update --init --recursive
 ```
 
 **Option B: Manual Clone**
 
 ```bash
-git clone --recursive https://github.com/systempromptio/systemprompt-template.git my-project
+git clone https://github.com/systempromptio/systemprompt-template.git my-project
 cd my-project
 ```
 
@@ -132,7 +131,6 @@ systemprompt core playbooks show <playbook_id>
 
 ```
 systemprompt-template/
-├── core/                    # READ-ONLY - systemprompt-core (git submodule)
 ├── extensions/              # YOUR RUST CODE
 │   ├── web/                 # Web publishing extension
 │   ├── soul/                # Memory system extension
@@ -147,13 +145,14 @@ systemprompt-template/
 │   ├── playbook/            # Operational playbooks
 │   ├── content/             # Markdown content
 │   └── web/                 # Theme and branding
+├── Cargo.toml               # Workspace - depends on systemprompt crate
 └── justfile                 # Development commands
 ```
 
 **Key rules:**
-- `core/` is **READ-ONLY** - it's a git submodule
 - All Rust code goes in `extensions/`
 - All config (YAML/Markdown) goes in `services/`
+- Core functionality comes from `systemprompt` crate (Cargo dependency)
 
 ## Adding Your Own
 
@@ -220,11 +219,10 @@ See playbook: `systemprompt core playbooks show cli_deploy`
 
 ## Updating Core
 
-The `core/` directory is a git submodule. To update:
+Update the systemprompt crate:
 
 ```bash
-git submodule update --remote core
-cargo update
+cargo update systemprompt
 just build
 ```
 
