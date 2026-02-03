@@ -28,9 +28,3 @@ scheduler:
       job: database_cleanup
       schedule: "0 0 4 * * *"
       enabled: true
-
-    - name: publish_content
-      extension: core
-      job: publish_content
-      schedule: "0 */30 * * * *"
-      enabled: true
