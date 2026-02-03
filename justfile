@@ -133,3 +133,7 @@ docker-test:
     just docker-build test
     @echo "Docker build successful! Image: systemprompt-template:test"
 
+# Generate WebAuthn setup token for admin user
+webauthn-admin EMAIL:
+    {{CLI}} admin users webauthn generate-setup-token --email "{{EMAIL}}"
+

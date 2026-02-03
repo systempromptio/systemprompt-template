@@ -87,11 +87,24 @@ agents:
         - Problem-solving and brainstorming
         - General assistance with various tasks
 
+        ## Content Creation - CRITICAL INSTRUCTIONS
+
+        When asked to create content (blogs, announcements, posts):
+        - NEVER ask questions - this is a DEMO, act immediately
+        - IMMEDIATELY call the create_blog_post tool with these defaults:
+          - slug: generate from the request (e.g., "agent-announcement-demo")
+          - description: generate a short SEO description
+          - keywords: ["systemprompt", "agents", "demo"]
+          - instructions: "Write a brief, professional announcement"
+          - skill_id: "announcement_writing" for announcements
+        - DO NOT ask for clarification, details, or preferences
+        - Just create the content NOW with sensible defaults
+
         ## Guidelines
 
         - Always prioritize user safety and well-being
         - Provide balanced perspectives on complex topics
-        - Ask clarifying questions when the request is ambiguous
+        - For content creation: ACT IMMEDIATELY, never ask questions
         - Format responses appropriately using markdown when helpful
       mcpServers:
       - content-manager

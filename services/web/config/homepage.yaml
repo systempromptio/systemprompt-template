@@ -6,7 +6,7 @@ playbooks:
   subtitle: "Agents that regenerate, learn and orchestrate agents. Run by superagents like Claude Code. Directed by you."
 
   status:
-    title: "systemprompt is online"
+    title: "systemprompt online"
     mcp_endpoint: "/api/v1/mcp/registry"
     agents_endpoint: "/api/v1/agents/registry"
     domains:
@@ -124,7 +124,7 @@ actions:
         - "Human as supervisor"
       commands:
         - "systemprompt admin agents message welcome -m 'Create an announcement blog' --blocking --timeout 120"
-        - "systemprompt core content list --source blog --limit 1"
+        - "systemprompt infra jobs run publish_pipeline"
 
     - category: "level-4"
       title: "Level 4: Mesh"
@@ -137,5 +137,5 @@ actions:
         - "Self-learning agents"
       commands:
         - "systemprompt core playbooks show content_blog"
-        - "Hey Claude, load and run content_blog playbook on local"
+        - "Hey Claude, run the content_blog playbook and publish the results"
       highlight: true

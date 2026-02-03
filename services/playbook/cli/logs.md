@@ -106,8 +106,14 @@ View detailed traces for debugging request flows:
 ## Inspect AI Requests
 
 ```json
-{ "command": "infra logs request" }
+{ "command": "infra logs request list" }
+{ "command": "infra logs request list --limit 1" }
 { "command": "infra logs request show <request-id>" }
+```
+
+**Tip**: When using `--limit 1`, the command shows a trace hint for quick access to the full trace:
+```
+ℹ For full trace: systemprompt infra logs trace show <trace-id> --all
 ```
 
 ---
@@ -274,6 +280,8 @@ When debugging production issues, always use CLI commands which fetch from the r
 | Search logs | `infra logs search "pattern"` |
 | Log summary | `infra logs summary --since 1h` |
 | View trace | `infra logs trace show <id>` |
+| View trace (full) | `infra logs trace show <id> --all` |
+| Latest AI request | `infra logs request list --limit 1` |
 | Audit request | `infra logs audit <id> --full` |
 | Tool executions | `infra logs tools` |
 | MCP server logs | `plugins mcp logs <server>` |
