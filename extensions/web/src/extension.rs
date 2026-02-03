@@ -49,6 +49,7 @@ pub const SCHEMA_CONTENT_RELATED_METADATA: &str =
     include_str!("../schema/009_content_related_metadata.sql");
 pub const SCHEMA_CONTENT_RELATED_DOCS: &str =
     include_str!("../schema/010_content_related_docs.sql");
+pub const SCHEMA_CONTENT_CATEGORY: &str = include_str!("../schema/011_content_category.sql");
 
 #[derive(Debug, Default, Clone)]
 pub struct WebExtension {
@@ -191,6 +192,7 @@ impl Extension for WebExtension {
             SchemaDefinition::inline("engagement_events", SCHEMA_ENGAGEMENT_EVENTS),
             SchemaDefinition::inline("content_related_metadata", SCHEMA_CONTENT_RELATED_METADATA),
             SchemaDefinition::inline("content_related_docs", SCHEMA_CONTENT_RELATED_DOCS),
+            SchemaDefinition::inline("content_category", SCHEMA_CONTENT_CATEGORY),
         ]
     }
 
