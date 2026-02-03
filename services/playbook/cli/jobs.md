@@ -81,6 +81,8 @@ Shows name, schedule (cron), enabled status, and last run time.
 
 **Job not running** -- check if enabled with `infra jobs show <job-name>`, then `infra jobs enable <job-name>`.
 
+**Startup job not running** -- Job needs BOTH `run_on_startup() = true` in code AND entry in `services/scheduler/config.yaml`. See [Scheduler Jobs](../domain/scheduler/jobs.md).
+
 **Job failing** -- check logs:
 ```json
 { "command": "infra logs view --level error --since 1h" }

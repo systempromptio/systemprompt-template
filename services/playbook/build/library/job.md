@@ -84,6 +84,7 @@ impl Job for CleanupJob {
 | `description()` | Human-readable description |
 | `schedule()` | Cron expression (6-field, seconds included) |
 | `execute()` | Async function that performs the work |
+| `run_on_startup()` | Whether to execute when scheduler starts (default: false) |
 
 ## Step 3: Configure the Cron Schedule
 
@@ -104,6 +105,26 @@ fn schedule(&self) -> &'static str {
     "0 0 3 * * *"  // Runs at 3:00:00 AM every day
 }
 ```
+
+## Step 3b: Configure Startup Behavior
+
+Jobs can run immediately when the scheduler starts using `run_on_startup()`:
+
+```rust
+fn run_on_startup(&self) -> bool {
+    true  // Runs once at startup, then follows schedule
+}
+```
+
+**Important**: Jobs only run on startup if BOTH conditions are met:
+1. `run_on_startup()` returns `true` in code
+2. Job is listed in `services/scheduler/config.yaml` with `enabled: true`
+
+This two-layer design allows:
+- Developers to set sensible defaults in code
+- Ops teams to enable/disable jobs per environment without code changes
+
+-> See [Scheduler Jobs](../../domain/scheduler/jobs.md) for config format.
 
 ## Step 4: Access Database from JobContext
 

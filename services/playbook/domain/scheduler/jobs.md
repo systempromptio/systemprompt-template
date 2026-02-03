@@ -205,6 +205,34 @@ jobs:
 
 ---
 
+## Startup Jobs
+
+Jobs can run immediately when the scheduler starts. This requires:
+
+1. **Code**: Job implements `run_on_startup() -> true`
+2. **Config**: Job is listed here with `enabled: true`
+
+Both conditions must be met. The config acts as an "allow list" - even if code says run on startup, the job won't run unless configured.
+
+Example startup job:
+
+```yaml
+jobs:
+  - name: publish_pipeline
+    extension: web
+    job: publish_pipeline
+    schedule: "0 */15 * * * *"
+    enabled: true  # Required for startup
+```
+
+The `publish_pipeline` job has `run_on_startup: true` in code, so it runs:
+1. Once immediately when scheduler starts
+2. Every 15 minutes thereafter
+
+-> See [Creating Jobs](../../build/library/job.md) for implementing `run_on_startup()`.
+
+---
+
 ## Troubleshooting
 
 - Job not running: `{ "command": "infra jobs list" }`, check `enabled: true`
