@@ -53,10 +53,12 @@ pub struct CommandResult {
 }
 
 impl CommandResult {
+    #[must_use]
     pub fn from_stdout(stdout: &str) -> Option<Self> {
         serde_json::from_str(stdout).ok()
     }
 
+    #[must_use]
     pub fn artifact_type_str(&self) -> &'static str {
         match self.artifact_type {
             ArtifactType::Table => "table",
@@ -71,6 +73,7 @@ impl CommandResult {
     }
 }
 
+#[must_use]
 pub fn create_result_meta(artifact_id: &str) -> Meta {
     let mut meta_map = serde_json::Map::new();
     meta_map.insert(

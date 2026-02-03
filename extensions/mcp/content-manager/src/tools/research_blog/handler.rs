@@ -124,6 +124,7 @@ pub async fn handle(
         skill_name: Some("Blog Research".to_string()),
     };
 
+    #[allow(clippy::cast_possible_truncation)]
     let research_artifact =
         ResearchArtifact::new(topic, card, sources.clone()).with_query_count(query_count as u32);
 

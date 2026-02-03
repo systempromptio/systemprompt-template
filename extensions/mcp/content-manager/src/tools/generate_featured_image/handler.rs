@@ -15,7 +15,7 @@ use crate::server::ProgressCallback;
 
 const MAX_RETRIES: u32 = 2;
 
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::too_many_lines)]
 pub async fn handle(
     _db_pool: &DbPool,
     request: CallToolRequestParams,
@@ -78,12 +78,11 @@ pub async fn handle(
     let aspect_ratio = args
         .get("aspect_ratio")
         .and_then(|v| v.as_str())
-        .map(|s| match s {
+        .map_or(AspectRatio::Landscape169, |s| match s {
             "1:1" => AspectRatio::Square,
             "4:3" => AspectRatio::Landscape43,
             _ => AspectRatio::Landscape169,
-        })
-        .unwrap_or(AspectRatio::Landscape169);
+        });
 
     if let Some(ref notify) = progress {
         notify(

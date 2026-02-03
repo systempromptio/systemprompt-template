@@ -10,6 +10,7 @@ use crate::server::SoulMcpServer;
 use crate::tools::StoreMemoryInput;
 
 impl SoulMcpServer {
+    #[allow(clippy::missing_panics_doc)]
     pub async fn handle_store(
         &self,
         arguments: serde_json::Map<String, serde_json::Value>,

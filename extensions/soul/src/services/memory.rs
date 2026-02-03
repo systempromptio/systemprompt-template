@@ -79,6 +79,7 @@ impl MemoryService {
             .map_err(SoulError::from)
     }
 
+    #[allow(clippy::missing_panics_doc)]
     pub async fn build_context_string(
         &self,
         memory_types: Option<&[MemoryType]>,
@@ -96,7 +97,7 @@ impl MemoryService {
         let mut current_type = String::new();
         for memory in &memories {
             if memory.memory_type != current_type {
-                current_type = memory.memory_type.clone();
+                current_type.clone_from(&memory.memory_type);
                 let type_label = match current_type.as_str() {
                     "core" => "Core",
                     "long_term" => "Long-term",

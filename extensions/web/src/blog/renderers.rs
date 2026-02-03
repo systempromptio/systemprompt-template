@@ -47,16 +47,14 @@ pub fn render_social_action_bar(_slug: &str, _title: &str, _org_url: &str) -> St
                 _ => platform,
             };
             links_html.push(format!(
-                r#"<a href="{}" target="_blank" rel="noopener noreferrer" class="social-action-bar__link social-action-bar__link--{}" aria-label="Follow on {}">{}</a>"#,
-                href, platform, label, icon
+                r#"<a href="{href}" target="_blank" rel="noopener noreferrer" class="social-action-bar__link social-action-bar__link--{platform}" aria-label="Follow on {label}">{icon}</a>"#
             ));
         }
     }
 
     let share_icon = get_social_icon("share");
     links_html.push(format!(
-        r#"<button type="button" class="social-action-bar__link social-action-bar__link--share" aria-label="Share this page" onclick="if(navigator.share){{navigator.share({{title:document.title,url:window.location.href}})}}else{{navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'))}}">{}</button>"#,
-        share_icon
+        r#"<button type="button" class="social-action-bar__link social-action-bar__link--share" aria-label="Share this page" onclick="if(navigator.share){{navigator.share({{title:document.title,url:window.location.href}})}}else{{navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'))}}">{share_icon}</button>"#
     ));
 
     if links_html.is_empty() {

@@ -30,31 +30,31 @@ impl DocsLearningContent {
                 .and_then(|v| {
                     serde_json::from_value(v.clone())
                         .inspect_err(|e| {
-                            tracing::warn!(field = "after_reading_this", error = %e, "Parse failed")
+                            tracing::warn!(field = "after_reading_this", error = %e, "Parse failed");
                         })
                         .ok()
                 })
-                .unwrap_or_else(Vec::new),
+                .unwrap_or_default(),
             related_playbooks: item
                 .get("related_playbooks")
                 .and_then(|v| {
                     serde_json::from_value(v.clone())
                         .inspect_err(|e| {
-                            tracing::warn!(field = "related_playbooks", error = %e, "Parse failed")
+                            tracing::warn!(field = "related_playbooks", error = %e, "Parse failed");
                         })
                         .ok()
                 })
-                .unwrap_or_else(Vec::new),
+                .unwrap_or_default(),
             related_code: item
                 .get("related_code")
                 .and_then(|v| {
                     serde_json::from_value(v.clone())
-                        .inspect_err(
-                            |e| tracing::warn!(field = "related_code", error = %e, "Parse failed"),
-                        )
+                        .inspect_err(|e| {
+                            tracing::warn!(field = "related_code", error = %e, "Parse failed");
+                        })
                         .ok()
                 })
-                .unwrap_or_else(Vec::new),
+                .unwrap_or_default(),
         }
     }
 

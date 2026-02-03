@@ -65,9 +65,7 @@ pub fn build_image_prompt(
     summary: &str,
     style_hints: Option<&str>,
 ) -> String {
-    let style_section = style_hints
-        .map(|s| format!("\nStyle guidance: {s}"))
-        .unwrap_or_else(String::new);
+    let style_section = style_hints.map_or_else(String::new, |s| format!("\nStyle guidance: {s}"));
 
     format!(
         "{skill_content}\n\n\

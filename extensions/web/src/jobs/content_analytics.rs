@@ -101,6 +101,7 @@ impl ContentAnalyticsAggregationJob {
         Ok(rows)
     }
 
+    #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
     async fn upsert_metrics(pool: &PgPool, stats: &ContentAnalyticsRow) -> Result<()> {
         let id = format!("cpm_{}", uuid::Uuid::new_v4());
 

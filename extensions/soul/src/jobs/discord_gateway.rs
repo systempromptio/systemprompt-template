@@ -16,6 +16,7 @@ impl DiscordGatewayJob {
 
         if !config.is_enabled() {
             tracing::info!("Discord is disabled in config, skipping gateway");
+            #[allow(clippy::cast_possible_truncation)]
             return Ok(JobResult::success()
                 .with_stats(0, 0)
                 .with_duration(start.elapsed().as_millis() as u64));
@@ -24,6 +25,7 @@ impl DiscordGatewayJob {
         let gateway_config = config.gateway();
         if !gateway_config.enabled {
             tracing::info!("Discord gateway is disabled in config");
+            #[allow(clippy::cast_possible_truncation)]
             return Ok(JobResult::success()
                 .with_stats(0, 0)
                 .with_duration(start.elapsed().as_millis() as u64));

@@ -111,6 +111,7 @@ impl PageDataProvider for PlaybookPageDataProvider {
         vec!["playbook".to_string()]
     }
 
+    #[allow(clippy::too_many_lines)]
     async fn provide_page_data(&self, ctx: &PageContext<'_>) -> Result<Value> {
         let item = ctx
             .content_item()

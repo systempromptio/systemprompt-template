@@ -115,15 +115,8 @@ services/profiles/*.profile.yml
 # Sensitive data directories
 backup/
 
-# .systemprompt - ignore all sensitive/generated data
-.systemprompt/credentials.json
-.systemprompt/tenants.json
-.systemprompt/**/secrets.json
-.systemprompt/profiles/
-.systemprompt/docker/
-.systemprompt/storage/
-.systemprompt/session.json
-.systemprompt/sessions/
+# .systemprompt - ignore entire directory (sensitive/generated data)
+.systemprompt/
 extensions/mcp/*/.env
 Screenshot*.png
 
@@ -134,6 +127,5 @@ storage/files/images/generated/
 # SQLx offline cache - MUST be committed for offline builds
 # .sqlx/
 
-# Generated web output
-web/dist/*
-!web/dist/README.md
+# Generated web output - entire directory ignored
+web/dist/

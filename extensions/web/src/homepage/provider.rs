@@ -29,6 +29,7 @@ impl PageDataProvider for HomepagePageDataProvider {
         vec!["homepage".to_string()]
     }
 
+    #[allow(clippy::cast_possible_truncation)]
     async fn provide_page_data(&self, ctx: &PageContext<'_>) -> Result<Value> {
         let mut config = (*self.config).clone();
 

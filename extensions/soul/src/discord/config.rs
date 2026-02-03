@@ -100,7 +100,7 @@ impl std::fmt::Debug for DiscordConfigValidated {
 impl DiscordConfigValidated {
     fn get_bot_token_from_secrets() -> anyhow::Result<String> {
         let secrets =
-            SecretsBootstrap::get().map_err(|e| anyhow::anyhow!("Failed to get secrets: {}", e))?;
+            SecretsBootstrap::get().map_err(|e| anyhow::anyhow!("Failed to get secrets: {e}"))?;
 
         secrets.get("discord_bot_token").cloned().ok_or_else(|| {
             anyhow::anyhow!(
@@ -124,13 +124,13 @@ impl DiscordConfigValidated {
 
         if let Some(ref id) = raw.default_channel_id {
             if !Self::is_valid_snowflake(id) {
-                anyhow::bail!("Invalid Discord channel ID format: {}", id);
+                anyhow::bail!("Invalid Discord channel ID format: {id}");
             }
         }
 
         if let Some(ref id) = raw.default_user_id {
             if !Self::is_valid_snowflake(id) {
-                anyhow::bail!("Invalid Discord user ID format: {}", id);
+                anyhow::bail!("Invalid Discord user ID format: {id}");
             }
         }
 
@@ -164,7 +164,7 @@ impl DiscordConfigValidated {
             .map_err(|e| anyhow::anyhow!("Failed to read config file {}: {}", path.display(), e))?;
 
         let raw: DiscordConfig = serde_yaml::from_str(&content)
-            .map_err(|e| anyhow::anyhow!("Failed to parse config YAML: {}", e))?;
+            .map_err(|e| anyhow::anyhow!("Failed to parse config YAML: {e}"))?;
 
         Self::from_raw(raw)
     }
@@ -195,22 +195,27 @@ impl DiscordConfigValidated {
         )
     }
 
+    #[must_use]
     pub fn bot_token(&self) -> &str {
         self.bot_token.expose_secret()
     }
 
+    #[must_use]
     pub fn default_channel_id(&self) -> Option<&str> {
         self.default_channel_id.as_deref()
     }
 
+    #[must_use]
     pub fn default_user_id(&self) -> Option<&str> {
         self.default_user_id.as_deref()
     }
 
+    #[must_use]
     pub fn is_enabled(&self) -> bool {
         self.enabled
     }
 
+    #[must_use]
     pub fn gateway(&self) -> &GatewayConfig {
         &self.gateway
     }

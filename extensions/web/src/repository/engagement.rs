@@ -15,6 +15,7 @@ impl EngagementRepository {
         Self { pool }
     }
 
+    #[allow(clippy::cast_precision_loss)]
     pub async fn create_event(
         &self,
         session_id: &SessionId,

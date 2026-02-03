@@ -80,10 +80,7 @@ impl ServerHandler for SoulMcpServer {
         ctx: RmcpRequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let tool_name = request.name.to_string();
-        let arguments = request
-            .arguments
-            .clone()
-            .unwrap_or_else(serde_json::Map::new);
+        let arguments = request.arguments.clone().unwrap_or_default();
 
         let auth_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str()).await?;
         let authenticated_ctx = auth_result

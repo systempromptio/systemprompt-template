@@ -41,6 +41,7 @@ impl DiscordHandler {
         })
     }
 
+    #[must_use]
     pub fn required_intents() -> GatewayIntents {
         GatewayIntents::GUILD_MESSAGES
             | GatewayIntents::DIRECT_MESSAGES
@@ -65,10 +66,10 @@ impl DiscordHandler {
                         "Discord message forwarded to agent successfully"
                     );
                     let response = stdout.trim().to_string();
-                    if !response.is_empty() {
-                        Some(response)
-                    } else {
+                    if response.is_empty() {
                         None
+                    } else {
+                        Some(response)
                     }
                 } else {
                     let stderr = String::from_utf8_lossy(&output.stderr);

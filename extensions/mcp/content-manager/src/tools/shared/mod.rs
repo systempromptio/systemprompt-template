@@ -10,5 +10,5 @@ pub fn extract_string_array(
                 .filter_map(|v| v.as_str().map(String::from))
                 .collect()
         })
-        .unwrap_or_else(Vec::new)
+        .unwrap_or_default()
 }

@@ -94,6 +94,33 @@ build *FLAGS:
         cargo build --workspace {{FLAGS}}
     fi
 
+clippy *FLAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    SECRETS_FILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
+    USE_OFFLINE=false
+
+    if [ -f "$SECRETS_FILE" ]; then
+        DB_URL=$(jq -r '.database_url // empty' "$SECRETS_FILE" 2>/dev/null)
+        if [ -n "$DB_URL" ] && [ "$DB_URL" != "null" ]; then
+            if pg_isready -d "$DB_URL" -t 2 >/dev/null 2>&1; then
+                export DATABASE_URL="$DB_URL"
+            else
+                USE_OFFLINE=true
+            fi
+        else
+            USE_OFFLINE=true
+        fi
+    else
+        USE_OFFLINE=true
+    fi
+
+    if [ "$USE_OFFLINE" = "true" ]; then
+        SQLX_OFFLINE=true cargo clippy --workspace {{FLAGS}} -- -D warnings
+    else
+        cargo clippy --workspace {{FLAGS}} -- -D warnings
+    fi
+
 start:
     {{CLI}} infra services start --profile local
 migrate:

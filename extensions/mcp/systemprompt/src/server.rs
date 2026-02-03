@@ -97,8 +97,7 @@ impl SystempromptServer {
         }
 
         ProfileBootstrap::get()
-            .map(|p| PathBuf::from(&p.paths.system))
-            .unwrap_or_else(|_| PathBuf::from("."))
+            .map_or_else(|_| PathBuf::from("."), |p| PathBuf::from(&p.paths.system))
     }
 
     fn execute_cli(command: &str, auth_token: &str) -> Result<CliOutput, McpError> {
@@ -194,6 +193,7 @@ impl ServerHandler for SystempromptServer {
         })
     }
 
+    #[allow(clippy::too_many_lines)]
     async fn call_tool(
         &self,
         request: CallToolRequestParams,
@@ -228,10 +228,7 @@ impl ServerHandler for SystempromptServer {
                 McpError::internal_error(format!("Failed to start execution tracking: {e}"), None)
             })?;
 
-        let arguments = request
-            .arguments
-            .clone()
-            .unwrap_or_else(serde_json::Map::new);
+        let arguments = request.arguments.clone().unwrap_or_default();
 
         let result = match tool_name.as_str() {
             "systemprompt" => {
@@ -285,10 +282,9 @@ impl ServerHandler for SystempromptServer {
             }
             _ => Err(McpError::invalid_params(
                 format!(
-                    "Unknown tool: '{}'\n\n\
+                    "Unknown tool: '{tool_name}'\n\n\
                     MANDATORY FIRST STEP: Run 'core playbooks show guide_start' before any task.\n\n\
-                    Use 'systemprompt' tool with command 'core playbooks show guide_start' to get started.",
-                    tool_name
+                    Use 'systemprompt' tool with command 'core playbooks show guide_start' to get started."
                 ),
                 None,
             )),
@@ -333,7 +329,7 @@ impl ServerHandler for SystempromptServer {
         _ctx: RequestContext<RoleServer>,
     ) -> Result<ListResourceTemplatesResult, McpError> {
         let raw_template = RawResourceTemplate {
-            uri_template: format!("ui://{}/{{artifact_id}}", SERVER_NAME),
+            uri_template: format!("ui://{SERVER_NAME}/{{artifact_id}}"),
             name: "artifact-ui".to_string(),
             title: Some("Artifact UI".to_string()),
             description: Some("Interactive UI for SystemPrompt artifacts. Use with artifact IDs returned from tool calls.".to_string()),
@@ -373,10 +369,7 @@ impl ServerHandler for SystempromptServer {
 
         let artifact_id = Self::parse_ui_uri(uri).ok_or_else(|| {
             McpError::invalid_params(
-                format!(
-                    "Invalid UI resource URI: {}. Expected format: ui://{}/{{artifact_id}}",
-                    uri, SERVER_NAME
-                ),
+                format!("Invalid UI resource URI: {uri}. Expected format: ui://{SERVER_NAME}/{{artifact_id}}"),
                 None,
             )
         })?;
@@ -404,7 +397,7 @@ impl ServerHandler for SystempromptServer {
 
 impl SystempromptServer {
     fn parse_ui_uri(uri: &str) -> Option<String> {
-        let prefix = format!("ui://{}/", SERVER_NAME);
+        let prefix = format!("ui://{SERVER_NAME}/");
         if uri.starts_with(&prefix) {
             Some(uri[prefix.len()..].to_string())
         } else {
@@ -423,6 +416,6 @@ impl SystempromptServer {
 
         repo.get_artifact_by_id(&id)
             .await?
-            .ok_or_else(|| anyhow::anyhow!("Artifact not found: {}", artifact_id))
+            .ok_or_else(|| anyhow::anyhow!("Artifact not found: {artifact_id}"))
     }
 }

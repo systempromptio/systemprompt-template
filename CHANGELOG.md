@@ -1,25 +1,28 @@
 # Changelog
 
-## [0.1.1] - 2026-02-03
+All notable changes to systemprompt-template will be documented in this file.
 
-### Changed
-- Remove unused content sources (legal, playbooks, skills) from config
-- Clean up empty content directories
-- Update metadata to use placeholder values instead of systemprompt.io specifics
+## [0.1.0] - 2026-02-03
+
+### Added
+- Initial public release of systemprompt-template
+- Web extension with blog, documentation, homepage, and playbook providers
+- Soul extension with memory service and Discord integration
+- MCP servers: systemprompt CLI, soul memory, content-manager
+- Discord CLI binary for gateway management
+- Comprehensive playbook system for operational guidance
+- Agent configurations (welcome, assistant)
+- Scheduler jobs for content analytics, llms.txt generation, and publishing
 
 ### Fixed
-- Remove stale `prod.profile.yaml` from repository
+- All clippy warnings resolved across all extensions
+- Fixed `unwrap_or_else` to `unwrap_or_default` patterns
+- Fixed uninlined format args in blog renderers
+- Added missing semicolons in closure expressions
+- Added appropriate `#[allow]` attributes for intentional casts and long functions
 
-### Added
-- Add `publish_pipeline` scheduler job for web content publishing
-
-## [0.1.0] - 2026-02-02
-
-### Added
-- Initial template release
-- Blog and documentation content sources with examples
-- Agent configurations (assistant, admin)
-- MCP server configurations
-- AI provider setup
-- Scheduler configuration
-- Web templates and assets
+### Technical
+- Workspace-level clippy lints (deny all + pedantic)
+- SQLx compile-time query validation support
+- Full async/await patterns with tokio runtime
+- Modular extension architecture with inventory-based discovery

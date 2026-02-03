@@ -60,7 +60,7 @@ impl DiscordService {
             Ok(format!("{}#{}", bot.username, bot.discriminator))
         } else {
             let error_body = response.text().await.unwrap_or_else(|_| String::new());
-            anyhow::bail!("Discord API error ({}): {}", status, error_body)
+            anyhow::bail!("Discord API error ({status}): {error_body}")
         }
     }
 
@@ -136,19 +136,16 @@ impl DiscordService {
                 .and_then(|v| v.to_str().ok())
                 .and_then(|v| v.parse::<u64>().ok())
                 .unwrap_or(DEFAULT_RATE_LIMIT_SECONDS);
-            anyhow::bail!(
-                "Rate limited by Discord. Retry after {} seconds",
-                retry_after
-            )
+            anyhow::bail!("Rate limited by Discord. Retry after {retry_after} seconds")
         } else if status == reqwest::StatusCode::NOT_FOUND {
             let error_body = response.text().await.unwrap_or_else(|_| String::new());
             if error_body.contains("Unknown Channel") {
-                anyhow::bail!("Channel not found: {}", error_body)
+                anyhow::bail!("Channel not found: {error_body}")
             }
             if error_body.contains("Unknown User") {
-                anyhow::bail!("User not found: {}", error_body)
+                anyhow::bail!("User not found: {error_body}")
             }
-            anyhow::bail!("Discord API error ({}): {}", status, error_body)
+            anyhow::bail!("Discord API error ({status}): {error_body}")
         } else if status == reqwest::StatusCode::FORBIDDEN {
             let error_body = response.text().await.unwrap_or_else(|_| String::new());
             if error_body.contains("Cannot send messages to this user") {
@@ -156,10 +153,10 @@ impl DiscordService {
                     "Cannot send DM to this user. Make sure they share a server with the bot."
                 )
             }
-            anyhow::bail!("Discord API forbidden ({}): {}", status, error_body)
+            anyhow::bail!("Discord API forbidden ({status}): {error_body}")
         } else {
             let error_body = response.text().await.unwrap_or_else(|_| String::new());
-            anyhow::bail!("Discord API error ({}): {}", status, error_body)
+            anyhow::bail!("Discord API error ({status}): {error_body}")
         }
     }
 }

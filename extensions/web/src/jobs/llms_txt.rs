@@ -76,6 +76,7 @@ pub async fn generate_llms_txt(db_pool: DbPool) -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 async fn build_llms_txt_content(
     db_pool: DbPool,
     config: &ContentConfigRaw,

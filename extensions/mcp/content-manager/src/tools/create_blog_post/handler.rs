@@ -37,7 +37,7 @@ pub struct BlogPostArtifact {
     pub research_artifact_id: Option<String>,
 }
 
-#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_lines, clippy::too_many_arguments, clippy::missing_panics_doc)]
 pub async fn handle(
     db_pool: &DbPool,
     request: CallToolRequestParams,
@@ -364,7 +364,7 @@ fn extract_research_data(artifact: &Artifact) -> Result<ResearchData, McpError> 
                         })
                         .collect()
                 })
-                .unwrap_or_else(Vec::new);
+                .unwrap_or_default();
 
             return Ok(ResearchData { summary, sources });
         }

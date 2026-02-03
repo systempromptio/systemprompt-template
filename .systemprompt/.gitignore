@@ -1,8 +1,0 @@
-# Sensitive tenant-specific data
-credentials.json
-tenants.json
-**/secrets.json
-docker/
-
-# Local profile (prod.profile.yaml is tracked as template)
-profiles/local/
