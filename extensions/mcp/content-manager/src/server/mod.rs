@@ -92,24 +92,21 @@ impl ServerHandler for ContentManagerServer {
         let tool_name = request.name.to_string();
         let started_at = Utc::now();
 
-        // Enforce RBAC
         let auth_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str()).await?;
         let authenticated_ctx = auth_result
             .expect_authenticated("content-manager requires OAuth but auth was not enforced")?;
 
         let request_context = authenticated_ctx.context.clone();
 
-        // Create progress callback if token provided
         let progress_callback = ctx
             .meta
             .get_progress_token()
             .map(|token| create_progress_callback(token.clone(), ctx.peer.clone()));
 
-        // Record execution start in mcp_tool_executions table
         let execution_request = ToolExecutionRequest {
             tool_name: tool_name.clone(),
             server_name: self.service_id.to_string(),
-            input: serde_json::to_value(&request.arguments).unwrap_or_default(),
+            input: serde_json::to_value(&request.arguments).unwrap_or(serde_json::Value::Null),
             started_at,
             context: request_context.clone(),
             request_method: Some("mcp".to_string()),
@@ -126,7 +123,6 @@ impl ServerHandler for ContentManagerServer {
                 McpError::internal_error(format!("Failed to start execution tracking: {e}"), None)
             })?;
 
-        // Handle tool call
         let result = tools::handle_tool_call(
             &tool_name,
             request,
@@ -141,7 +137,6 @@ impl ServerHandler for ContentManagerServer {
         )
         .await;
 
-        // Record execution completion
         let completed_at = Utc::now();
         let execution_result = ToolExecutionResult {
             output: result

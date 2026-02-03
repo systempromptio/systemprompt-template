@@ -32,7 +32,6 @@ impl PageDataProvider for HomepagePageDataProvider {
     async fn provide_page_data(&self, ctx: &PageContext<'_>) -> Result<Value> {
         let mut config = (*self.config).clone();
 
-        // Enrich playbook category counts from database
         if let Some(ref mut playbooks) = config.playbooks {
             if let Some(db) = ctx.db_pool::<Arc<Database>>() {
                 if let Some(pool) = db.pool() {

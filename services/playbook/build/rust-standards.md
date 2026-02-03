@@ -84,11 +84,14 @@ let valid_items: Vec<_> = items
 |-----------|------------|
 | `unsafe` | Remove - forbidden in this codebase |
 | `unwrap()` | Use `?`, `ok_or_else()`, or `expect()` with descriptive message |
+| `unwrap_or_default()` | Fail explicitly - never use fuzzy defaults |
 | `panic!()` / `todo!()` / `unimplemented!()` | Return `Result` or implement |
 | Inline comments (`//`) | ZERO TOLERANCE - delete all. Code documents itself through naming and structure |
-| Doc comments (`///`, `//!`) | ZERO TOLERANCE - no API docs, no rustdoc. Only exception: rare `//!` module docs at file top when absolutely necessary |
+| Doc comments (`///`, `//!`) | ZERO TOLERANCE - no API docs, no rustdoc, no module docs. All doc comments forbidden |
 | TODO/FIXME/HACK comments | Fix immediately or don't write |
-| Tests in source files (`#[cfg(test)]`) | Move to separate test crate |
+| Raw `env::var()` | Use `Config::init()` / `AppContext` |
+| Magic numbers/strings | Use constants or enums |
+| Commented-out code | Delete - git has history |
 
 ---
 
@@ -113,16 +116,26 @@ Available: `SessionId`, `UserId`, `AgentId`, `TaskId`, `ContextId`, `TraceId`, `
 
 All logging via `tracing`. No `println!` in library code.
 
+**Request-scoped (handlers, services):**
 ```rust
-use tracing::{info, error, debug, warn};
-
-// Structured fields (preferred over format strings)
+let _guard = req_ctx.span().enter();
 tracing::info!(user_id = %user.id, "Created user");
-tracing::error!(error = %e, "Operation failed");
-
-// In handlers/services
-tracing::info!(item_id = %id, "Item created successfully");
 ```
+
+**System/background (schedulers, startup):**
+```rust
+let _guard = SystemSpan::new("scheduler").enter();
+tracing::info!("Running cleanup job");
+```
+
+**Adding context mid-request:**
+```rust
+let span = req_ctx.span();
+span.record_task_id(&task_id);
+let _guard = span.enter();
+```
+
+Use structured fields: `tracing::info!(user_id = %id, "msg")` not `tracing::info!("msg {}", id)`.
 
 | Forbidden | Resolution |
 |-----------|------------|
@@ -155,19 +168,30 @@ let user = self.user_repository.find_by_email(email).await?;
 
 The `!` suffix enables compile-time verification. Zero tolerance for runtime query strings.
 
-### Repository Constructor
+### Repository Constructors
 
+**Reference Pattern (repositories):**
 ```rust
-pub struct ContentRepository {
-    pool: Arc<PgPool>,
-}
-
-impl ContentRepository {
-    pub fn new(pool: Arc<PgPool>) -> Self {
-        Self { pool }
+impl UserRepository {
+    pub fn new(db: &DbPool) -> Result<Self> {
+        Ok(Self { pool: db.pool_arc()? })
     }
 }
 ```
+
+**Owned Pattern (services/composites):**
+```rust
+impl TaskService {
+    pub const fn new(db_pool: DbPool) -> Self {
+        Self { db_pool }
+    }
+}
+```
+
+| Pattern | Parameter Name |
+|---------|---------------|
+| Reference | `db: &DbPool` |
+| Owned | `db_pool: DbPool` |
 
 ### Error Handling
 
@@ -297,9 +321,9 @@ impl CreateContentParams {
 
 | Type | Name |
 |------|------|
-| Database pool | `pool` |
-| Repository | `repo` or `{noun}_repo` |
-| Service | `service` or `{noun}_service` |
+| Database pool | `db_pool` |
+| Repository | `{noun}_repository` |
+| Service | `{noun}_service` |
 
 ### Abbreviations
 
@@ -322,7 +346,46 @@ Allowed: `id`, `uuid`, `url`, `jwt`, `mcp`, `a2a`, `api`, `http`, `json`, `sql`,
 
 ---
 
-## 6. Derive Ordering
+## 6. Silent Error Anti-Patterns
+
+These patterns silently swallow errors, making debugging impossible:
+
+| Pattern | Resolution |
+|---------|------------|
+| `.ok()` on Result | Use `?` or `map_err()` to propagate with context |
+| `let _ = result` | Handle error explicitly or use `?` |
+| `match { Err(_) => default }` | Propagate error or log with `tracing::error!` |
+| `filter_map(\|e\| e.ok())` | Log failures before filtering |
+| Error log then `Ok()` | Propagate the error after logging |
+
+**Acceptable `.ok()` usage:**
+
+1. **Cleanup in error paths** - when already returning an error:
+```rust
+if let Err(e) = operation().await {
+    cleanup().await.ok();
+    return Err(e);
+}
+```
+
+2. **Parse with logged warning:**
+```rust
+serde_json::from_str(s).map_err(|e| {
+    tracing::warn!(error = %e, "Parse failed");
+    e
+}).ok()
+```
+
+**Detection commands:**
+```bash
+rg '\.ok\(\)' --type rust
+rg 'let _ =' --type rust
+rg 'unwrap_or_default\(\)' --type rust
+```
+
+---
+
+## 7. Derive Ordering
 
 When deriving traits, use this order:
 
@@ -335,7 +398,7 @@ Order: `Debug`, `Clone`, `Copy` (if applicable), `PartialEq`, `Eq`, `PartialOrd`
 
 ---
 
-## 7. Extension-Specific Patterns
+## 8. Extension-Specific Patterns
 
 ### Schema Embedding
 
@@ -388,6 +451,20 @@ impl MyExtension {
 
 ---
 
+## 9. Multi-Process Broadcasting
+
+Events from agent/worker processes must go through HTTP webhook to API process:
+
+```
+Agent Process → HTTP POST /webhook → API Process → CONTEXT_BROADCASTER → SSE clients
+```
+
+Use `BroadcastClient` trait:
+- `create_webhook_broadcaster(token)` - for agent services
+- `create_local_broadcaster()` - for API routes (same process)
+
+---
+
 ## Quick Reference
 
 | Task | Command |
@@ -396,4 +473,3 @@ impl MyExtension {
 | Format all | `cargo fmt --all` |
 | Check format | `cargo fmt --all -- --check` |
 | Build all | `cargo build --workspace` |
-| Test all | `cargo test --workspace` |

@@ -84,7 +84,6 @@ pub async fn handle(
         ));
     }
 
-    // Extract category (default to "article")
     let category = args
         .get("category")
         .and_then(|v| v.as_str())
@@ -98,20 +97,21 @@ pub async fn handle(
     let voice_skill = skill_loader
         .load_skill("edwards_voice", &ctx)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to load edwards_voice skill, using empty");
+            String::new()
+        });
 
     if let Some(ref notify) = progress {
         notify(10.0, Some(100.0), Some("Skills loaded...".to_string())).await;
     }
 
-    // artifact_id is optional for announcements (can be empty string or omitted)
     let artifact_id_str = args
         .get("artifact_id")
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
     let research_data = if artifact_id_str.is_empty() {
-        // No research artifact - create empty research data (for announcements)
         if let Some(ref notify) = progress {
             notify(
                 15.0,
@@ -125,7 +125,6 @@ pub async fn handle(
             sources: Vec::new(),
         }
     } else {
-        // Load research artifact
         let artifact_id = ArtifactId::new(artifact_id_str);
 
         if let Some(ref notify) = progress {
@@ -201,8 +200,6 @@ pub async fn handle(
         .await;
     }
 
-    // Use configured default provider and model from ai/config.yaml
-    // Use 4096 max tokens for cross-provider compatibility (OpenAI limit)
     let request = AiRequest::builder(
         messages,
         ai_service.default_provider(),
@@ -236,12 +233,10 @@ pub async fn handle(
         .await;
     }
 
-    // Generate content hash for deduplication
     let mut hasher = Sha256::new();
     hasher.update(generated_content.as_bytes());
     let version_hash = format!("{:x}", hasher.finalize());
 
-    // Convert research sources to links for the references section
     let links: serde_json::Value = serde_json::to_value(
         research_data
             .sources
@@ -254,9 +249,8 @@ pub async fn handle(
             })
             .collect::<Vec<_>>(),
     )
-    .unwrap_or_default();
+    .expect("links serialization cannot fail");
 
-    // Create content params for database
     let content_params = CreateContentParams::new(
         slug.clone(),
         title.clone(),
@@ -272,7 +266,6 @@ pub async fn handle(
     .with_version_hash(version_hash)
     .with_links(links);
 
-    // Save to database
     let content = content_repo.create(&content_params).await.map_err(|e| {
         tracing::error!(error = %e, slug = %slug, "Failed to save blog post to database");
         McpError::internal_error(format!("Failed to save blog post to database: {e}"), None)
@@ -356,7 +349,7 @@ fn extract_research_data(artifact: &Artifact) -> Result<ResearchData, McpError> 
             let summary = data
                 .get("summary")
                 .and_then(|v| v.as_str())
-                .unwrap_or_default()
+                .unwrap_or("")
                 .to_string();
 
             let sources: Vec<(String, String)> = data
@@ -371,7 +364,7 @@ fn extract_research_data(artifact: &Artifact) -> Result<ResearchData, McpError> 
                         })
                         .collect()
                 })
-                .unwrap_or_default();
+                .unwrap_or_else(Vec::new);
 
             return Ok(ResearchData { summary, sources });
         }

@@ -27,7 +27,6 @@ struct Cli {
     #[command(subcommand)]
     command: Commands,
 
-    /// Output format (accepted for compatibility, ignored)
     #[arg(long, global = true, hide = true)]
     json: bool,
 }
@@ -43,7 +42,6 @@ enum Commands {
         #[arg(long, short)]
         user: Option<String>,
 
-        /// Reply to a specific message ID (creates a threaded reply)
         #[arg(long, short)]
         reply_to: Option<String>,
     },
@@ -57,7 +55,6 @@ async fn main() -> anyhow::Result<()> {
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
-    // Initialize profile and secrets bootstrapping
     ProfileBootstrap::init().context("Failed to initialize profile")?;
     SecretsBootstrap::init().context("Failed to initialize secrets")?;
 

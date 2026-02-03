@@ -94,7 +94,9 @@ impl WebExtension {
         NAVIGATION_CONFIG
             .get_or_init(config_loader::load_navigation_config)
             .clone()
-            .unwrap_or_else(|e| panic!("Navigation config error: {e}"))
+            .inspect_err(|e| tracing::error!(error = %e, "Navigation config error"))
+            .ok()
+            .flatten()
     }
 
     #[must_use]
@@ -102,7 +104,9 @@ impl WebExtension {
         HOMEPAGE_CONFIG
             .get_or_init(config_loader::load_homepage_config)
             .clone()
-            .unwrap_or_else(|e| panic!("Homepage config error: {e}"))
+            .inspect_err(|e| tracing::error!(error = %e, "Homepage config error"))
+            .ok()
+            .flatten()
     }
 
     #[must_use]
@@ -110,7 +114,9 @@ impl WebExtension {
         FEATURES_CONFIG
             .get_or_init(config_loader::load_features_config)
             .clone()
-            .unwrap_or_else(|e| panic!("Features config error: {e}"))
+            .inspect_err(|e| tracing::error!(error = %e, "Features config error"))
+            .ok()
+            .flatten()
     }
 }
 
@@ -128,7 +134,9 @@ impl Extension for WebExtension {
 
         if let Some(nav_config) = Self::navigation_config() {
             let branding = config_loader::load_branding_config()
-                .unwrap_or_else(|e| panic!("Branding config error: {e}"));
+                .inspect_err(|e| tracing::error!(error = %e, "Branding config error"))
+                .ok()
+                .flatten();
             providers.push(Arc::new(
                 NavigationPageDataProvider::new(nav_config).with_branding(branding),
             ));

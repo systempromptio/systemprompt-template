@@ -96,7 +96,6 @@ pub async fn handle(
 
     let prompt = build_image_prompt(&skill_content, topic, title, summary, style_hints);
 
-    // Query provider capabilities to select best supported resolution
     let resolution = select_best_resolution(image_service);
 
     let image_request = ImageGenerationRequest {
@@ -112,8 +111,6 @@ pub async fn handle(
         mcp_execution_id: Some(mcp_execution_id.to_string()),
     };
 
-    // Note: Image generation uses the configured default image provider (Gemini or OpenAI)
-    // Anthropic does not support image generation
     if let Some(ref notify) = progress {
         notify(
             30.0,
@@ -137,8 +134,8 @@ pub async fn handle(
     let image_artifact = FeaturedImageArtifact {
         artifact_type: "featured_image".to_string(),
         image_id: response.id.clone(),
-        public_url: response.public_url.clone().unwrap_or_default(),
-        file_path: response.file_path.clone().unwrap_or_default(),
+        public_url: response.public_url.clone().unwrap_or_else(String::new),
+        file_path: response.file_path.clone().unwrap_or_else(String::new),
         mime_type: response.mime_type.clone(),
         resolution: response.resolution.as_str().to_string(),
         aspect_ratio: response.aspect_ratio.as_str().to_string(),
@@ -183,7 +180,7 @@ pub async fn handle(
             Generation Time: {}ms\n\n\
             Use this image_id or public_url in your blog post frontmatter.",
             response.id,
-            response.public_url.unwrap_or_default(),
+            response.public_url.unwrap_or_else(String::new),
             response.resolution.as_str(),
             response.aspect_ratio.as_str(),
             response.generation_time_ms
@@ -235,13 +232,10 @@ async fn generate_with_retry(
     ))
 }
 
-/// Select the best resolution supported by the default image provider.
-/// Prefers higher resolutions (4K > 2K > 1K) when available.
 fn select_best_resolution(image_service: &Arc<ImageService>) -> ImageResolution {
     image_service
         .default_provider_capabilities()
         .and_then(|caps| {
-            // Prefer highest resolution available
             [
                 ImageResolution::FourK,
                 ImageResolution::TwoK,
@@ -250,5 +244,10 @@ fn select_best_resolution(image_service: &Arc<ImageService>) -> ImageResolution 
             .into_iter()
             .find(|r| caps.supported_resolutions.contains(r))
         })
-        .unwrap_or_default()
+        .unwrap_or_else(|| {
+            tracing::warn!(
+                "No supported resolution found in provider capabilities, using 1K default"
+            );
+            ImageResolution::OneK
+        })
 }

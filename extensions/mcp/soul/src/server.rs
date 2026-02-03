@@ -80,7 +80,10 @@ impl ServerHandler for SoulMcpServer {
         ctx: RmcpRequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let tool_name = request.name.to_string();
-        let arguments = request.arguments.clone().unwrap_or_default();
+        let arguments = request
+            .arguments
+            .clone()
+            .unwrap_or_else(serde_json::Map::new);
 
         let auth_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str()).await?;
         let authenticated_ctx = auth_result
@@ -89,36 +92,26 @@ impl ServerHandler for SoulMcpServer {
         let request_context = authenticated_ctx.context.clone();
         let mcp_execution_id = McpExecutionId::generate();
 
-        match tool_name.as_str() {
-            "memory_get_context" | "memory_store" | "memory_search" | "memory_forget" => {
-                let service = self
-                    .memory_service()
-                    .ok_or_else(|| McpError::internal_error("Database not available", None))?;
+        let service = self
+            .memory_service()
+            .ok_or_else(|| McpError::internal_error("Database not available", None))?;
 
-                match tool_name.as_str() {
-                    "memory_get_context" => {
-                        self.handle_get_context(
-                            arguments,
-                            &service,
-                            &request_context,
-                            &mcp_execution_id,
-                        )
-                        .await
-                    }
-                    "memory_store" => {
-                        self.handle_store(arguments, &service, &request_context, &mcp_execution_id)
-                            .await
-                    }
-                    "memory_search" => {
-                        self.handle_search(arguments, &service, &request_context, &mcp_execution_id)
-                            .await
-                    }
-                    "memory_forget" => {
-                        self.handle_forget(arguments, &service, &request_context, &mcp_execution_id)
-                            .await
-                    }
-                    _ => unreachable!(),
-                }
+        match tool_name.as_str() {
+            "memory_get_context" => {
+                self.handle_get_context(arguments, &service, &request_context, &mcp_execution_id)
+                    .await
+            }
+            "memory_store" => {
+                self.handle_store(arguments, &service, &request_context, &mcp_execution_id)
+                    .await
+            }
+            "memory_search" => {
+                self.handle_search(arguments, &service, &request_context, &mcp_execution_id)
+                    .await
+            }
+            "memory_forget" => {
+                self.handle_forget(arguments, &service, &request_context, &mcp_execution_id)
+                    .await
             }
             _ => Err(McpError::invalid_params(
                 format!("Unknown tool: '{tool_name}'"),

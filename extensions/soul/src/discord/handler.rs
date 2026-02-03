@@ -11,13 +11,11 @@ use tokio::process::Command;
 use crate::discord::GatewayConfig;
 use crate::SoulError;
 
-/// Maximum number of message IDs to track before clearing the set
 const MAX_TRACKED_MESSAGES: usize = 1000;
 
 pub struct DiscordHandler {
     config: GatewayConfig,
     cli_path: PathBuf,
-    /// Track processed message IDs to prevent duplicate forwarding
     processed_ids: Mutex<HashSet<String>>,
 }
 
@@ -66,7 +64,6 @@ impl DiscordHandler {
                         response_preview = %stdout.chars().take(200).collect::<String>(),
                         "Discord message forwarded to agent successfully"
                     );
-                    // Return the agent's response for replying to Discord
                     let response = stdout.trim().to_string();
                     if !response.is_empty() {
                         Some(response)
@@ -97,25 +94,24 @@ impl DiscordHandler {
 
 #[serenity::async_trait]
 impl EventHandler for DiscordHandler {
-    async fn message(&self, _ctx: Context, msg: Message) {
+    async fn message(&self, ctx: Context, msg: Message) {
         let message_id = msg.id.to_string();
 
         {
-            let Ok(mut processed) = self.processed_ids.lock() else {
-                tracing::error!("processed_ids mutex poisoned, skipping message");
-                return;
+            let mut processed = match self.processed_ids.lock() {
+                Ok(guard) => guard,
+                Err(poisoned) => {
+                    tracing::error!("processed_ids mutex poisoned, recovering with poisoned guard");
+                    poisoned.into_inner()
+                }
             };
 
             if processed.len() >= MAX_TRACKED_MESSAGES {
-                tracing::debug!("Clearing processed message ID cache");
                 processed.clear();
             }
 
             if !processed.insert(message_id.clone()) {
-                tracing::debug!(
-                    message_id = %message_id,
-                    "Skipping duplicate message"
-                );
+                tracing::debug!(message_id = %message_id, "Skipping duplicate message");
                 return;
             }
         }
@@ -137,14 +133,12 @@ impl EventHandler for DiscordHandler {
             return;
         }
 
-        // Get channel name if available (for guild channels)
         let channel_name = msg
             .channel_id
-            .name(&_ctx)
+            .name(&ctx)
             .await
             .unwrap_or_else(|_| "DM".to_string());
 
-        // Format message as structured JSON for the agent
         let formatted = serde_json::json!({
             "type": self.config.message_prefix,
             "message_id": msg.id.to_string(),
@@ -162,30 +156,27 @@ impl EventHandler for DiscordHandler {
             "Received Discord message, forwarding to agent"
         );
 
-        // Forward to agent and get response
         if let Some(response) = self.forward_to_agent(&formatted).await {
-            // Send the agent's response back to Discord
-            // Discord has a 2000 character limit per message
             const MAX_MESSAGE_LENGTH: usize = 2000;
 
             if response.len() <= MAX_MESSAGE_LENGTH {
-                if let Err(e) = msg.channel_id.say(&_ctx, &response).await {
-                    tracing::error!(
-                        error = %e,
-                        "Failed to send reply to Discord"
-                    );
+                if let Err(e) = msg.channel_id.say(&ctx, &response).await {
+                    tracing::error!(error = %e, "Failed to send reply to Discord");
                 }
             } else {
-                // Split long responses into multiple messages
-                for chunk in response.as_bytes().chunks(MAX_MESSAGE_LENGTH) {
-                    let chunk_str = String::from_utf8_lossy(chunk);
-                    if let Err(e) = msg.channel_id.say(&_ctx, chunk_str.as_ref()).await {
-                        tracing::error!(
-                            error = %e,
-                            "Failed to send reply chunk to Discord"
-                        );
+                let mut remaining = response.as_str();
+                while !remaining.is_empty() {
+                    let split_at = remaining
+                        .char_indices()
+                        .take_while(|(i, _)| *i < MAX_MESSAGE_LENGTH)
+                        .last()
+                        .map_or(remaining.len(), |(i, c)| i + c.len_utf8());
+                    let (chunk, rest) = remaining.split_at(split_at.min(remaining.len()));
+                    if let Err(e) = msg.channel_id.say(&ctx, chunk).await {
+                        tracing::error!(error = %e, "Failed to send reply chunk to Discord");
                         break;
                     }
+                    remaining = rest;
                 }
             }
         }

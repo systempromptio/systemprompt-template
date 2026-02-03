@@ -44,13 +44,17 @@ impl DiscordService {
         Ok(Self { client, config })
     }
 
+    fn auth_header(&self) -> String {
+        format!("Bot {}", self.config.bot_token())
+    }
+
     pub async fn test_connection(&self) -> anyhow::Result<String> {
         let url = format!("{DISCORD_API_BASE}/users/@me");
 
         let response = self
             .client
             .get(&url)
-            .header("Authorization", format!("Bot {}", self.config.bot_token()))
+            .header("Authorization", self.auth_header())
             .send()
             .await?;
 
@@ -59,7 +63,10 @@ impl DiscordService {
             let bot: BotUser = response.json().await?;
             Ok(format!("{}#{}", bot.username, bot.discriminator))
         } else {
-            let error_body = response.text().await.unwrap_or_default();
+            let error_body = response
+                .text()
+                .await
+                .unwrap_or_else(|_| String::from("<failed to read response>"));
             anyhow::bail!("Discord API error ({}): {}", status, error_body)
         }
     }
@@ -73,7 +80,6 @@ impl DiscordService {
         self.send_message_internal(&url, content, None).await
     }
 
-    /// Reply to a specific message (creates a threaded reply)
     pub async fn reply_to_message(
         &self,
         channel_id: &str,
@@ -109,7 +115,7 @@ impl DiscordService {
         let response = self
             .client
             .post(&url)
-            .header("Authorization", format!("Bot {}", self.config.bot_token()))
+            .header("Authorization", self.auth_header())
             .json(&serde_json::json!({ "recipient_id": user_id }))
             .send()
             .await?;
@@ -125,7 +131,6 @@ impl DiscordService {
     ) -> anyhow::Result<MessageResponse> {
         let mut payload = serde_json::json!({ "content": content });
 
-        // Add message_reference for replies (creates a threaded reply in Discord)
         if let Some(message_id) = reply_to {
             payload["message_reference"] = serde_json::json!({
                 "message_id": message_id
@@ -135,7 +140,7 @@ impl DiscordService {
         let response = self
             .client
             .post(url)
-            .header("Authorization", format!("Bot {}", self.config.bot_token()))
+            .header("Authorization", self.auth_header())
             .json(&payload)
             .send()
             .await?;
@@ -150,8 +155,10 @@ impl DiscordService {
         let status = response.status();
 
         if status.is_success() {
-            Ok(response.json().await?)
-        } else if status == reqwest::StatusCode::TOO_MANY_REQUESTS {
+            return Ok(response.json().await?);
+        }
+
+        if status == reqwest::StatusCode::TOO_MANY_REQUESTS {
             let retry_after = response
                 .headers()
                 .get("Retry-After")
@@ -161,28 +168,32 @@ impl DiscordService {
             anyhow::bail!(
                 "Rate limited by Discord. Retry after {} seconds",
                 retry_after
-            )
-        } else if status == reqwest::StatusCode::NOT_FOUND {
-            let error_body = response.text().await.unwrap_or_default();
-            if error_body.contains("Unknown Channel") {
+            );
+        }
+
+        let error_body = response
+            .text()
+            .await
+            .unwrap_or_else(|_| String::from("<failed to read response>"));
+
+        match status {
+            reqwest::StatusCode::NOT_FOUND if error_body.contains("Unknown Channel") => {
                 anyhow::bail!("Channel not found: {}", error_body)
-            } else if error_body.contains("Unknown User") {
-                anyhow::bail!("User not found: {}", error_body)
-            } else {
-                anyhow::bail!("Discord API error ({}): {}", status, error_body)
             }
-        } else if status == reqwest::StatusCode::FORBIDDEN {
-            let error_body = response.text().await.unwrap_or_default();
-            if error_body.contains("Cannot send messages to this user") {
+            reqwest::StatusCode::NOT_FOUND if error_body.contains("Unknown User") => {
+                anyhow::bail!("User not found: {}", error_body)
+            }
+            reqwest::StatusCode::FORBIDDEN
+                if error_body.contains("Cannot send messages to this user") =>
+            {
                 anyhow::bail!(
                     "Cannot send DM to this user. Make sure they share a server with the bot."
                 )
-            } else {
+            }
+            reqwest::StatusCode::FORBIDDEN => {
                 anyhow::bail!("Discord API forbidden ({}): {}", status, error_body)
             }
-        } else {
-            let error_body = response.text().await.unwrap_or_default();
-            anyhow::bail!("Discord API error ({}): {}", status, error_body)
+            _ => anyhow::bail!("Discord API error ({}): {}", status, error_body),
         }
     }
 }

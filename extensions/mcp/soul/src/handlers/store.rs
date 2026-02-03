@@ -74,7 +74,8 @@ impl SoulMcpServer {
         Ok(CallToolResult {
             content: vec![Content::text(format!(
                 "Memory stored successfully.\n\n{}",
-                serde_json::to_string_pretty(&memory_data).unwrap_or_default()
+                serde_json::to_string_pretty(&memory_data)
+                    .expect("memory_data serialization cannot fail")
             ))],
             is_error: Some(false),
             meta: metadata.to_meta(),

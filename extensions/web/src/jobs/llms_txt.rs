@@ -104,7 +104,6 @@ async fn build_llms_txt_content(
 
     let repo = ContentRepository::new(&db_pool).map_err(|e| anyhow!("{e}"))?;
 
-    // Playbooks Section - Organized by Category
     writeln!(content, "## Playbooks")?;
     writeln!(content)?;
     writeln!(content, "Operational guides and procedures.")?;
@@ -114,7 +113,6 @@ async fn build_llms_txt_content(
         if source.enabled {
             let source_id = SourceId::new(&source.source_id);
             if let Ok(playbooks) = repo.list_by_source(&source_id).await {
-                // Categorize playbooks
                 let mut guides: Vec<_> = playbooks
                     .iter()
                     .filter(|p| p.slug.starts_with("guide"))
@@ -140,7 +138,6 @@ async fn build_llms_txt_content(
                     .filter(|p| p.slug.starts_with("content"))
                     .collect();
 
-                // Sort each category alphabetically
                 guides.sort_by(|a, b| a.title.cmp(&b.title));
                 cli.sort_by(|a, b| a.title.cmp(&b.title));
                 build.sort_by(|a, b| a.title.cmp(&b.title));
@@ -148,7 +145,6 @@ async fn build_llms_txt_content(
                 domain.sort_by(|a, b| a.title.cmp(&b.title));
                 content_pb.sort_by(|a, b| a.title.cmp(&b.title));
 
-                // Guides (Start Here)
                 if !guides.is_empty() {
                     writeln!(content, "### Getting Started (Start Here)")?;
                     writeln!(content)?;
@@ -163,7 +159,6 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                 }
 
-                // CLI Operations
                 if !cli.is_empty() {
                     writeln!(content, "### CLI Operations")?;
                     writeln!(content)?;
@@ -178,7 +173,6 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                 }
 
-                // Build & Development
                 if !build.is_empty() {
                     writeln!(content, "### Build & Development")?;
                     writeln!(content)?;
@@ -193,7 +187,6 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                 }
 
-                // Configuration
                 if !config_pb.is_empty() {
                     writeln!(content, "### Configuration")?;
                     writeln!(content)?;
@@ -208,7 +201,6 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                 }
 
-                // Domain Operations
                 if !domain.is_empty() {
                     writeln!(content, "### Domain Operations")?;
                     writeln!(content)?;
@@ -223,7 +215,6 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                 }
 
-                // Content Creation
                 if !content_pb.is_empty() {
                     writeln!(content, "### Content Creation")?;
                     writeln!(content)?;
@@ -241,7 +232,6 @@ async fn build_llms_txt_content(
         }
     }
 
-    // Documentation Section - Organized by Category
     writeln!(content, "## Documentation")?;
     writeln!(content)?;
     writeln!(content, "Technical documentation and guides.")?;
@@ -251,7 +241,6 @@ async fn build_llms_txt_content(
         if source.enabled {
             let source_id = SourceId::new(&source.source_id);
             if let Ok(docs) = repo.list_by_source(&source_id).await {
-                // Categorize documentation by slug prefix
                 let mut services: Vec<_> = docs
                     .iter()
                     .filter(|d| d.slug.starts_with("services"))
@@ -273,13 +262,11 @@ async fn build_llms_txt_content(
                     })
                     .collect();
 
-                // Sort each category
                 services.sort_by(|a, b| a.title.cmp(&b.title));
                 extensions.sort_by(|a, b| a.title.cmp(&b.title));
                 config_docs.sort_by(|a, b| a.title.cmp(&b.title));
                 other.sort_by(|a, b| a.title.cmp(&b.title));
 
-                // Services Documentation
                 if !services.is_empty() {
                     writeln!(content, "### Services")?;
                     writeln!(content)?;
@@ -290,7 +277,6 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                 }
 
-                // Extensions Documentation
                 if !extensions.is_empty() {
                     writeln!(content, "### Extensions")?;
                     writeln!(content)?;
@@ -301,7 +287,6 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                 }
 
-                // Configuration Documentation
                 if !config_docs.is_empty() {
                     writeln!(content, "### Configuration Reference")?;
                     writeln!(content)?;
@@ -312,7 +297,6 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                 }
 
-                // Other Documentation
                 if !other.is_empty() {
                     writeln!(content, "### General")?;
                     writeln!(content)?;
@@ -326,7 +310,6 @@ async fn build_llms_txt_content(
         }
     }
 
-    // Blog Section
     writeln!(content, "## Blog")?;
     writeln!(content)?;
     writeln!(content, "Articles and updates.")?;
@@ -345,7 +328,6 @@ async fn build_llms_txt_content(
     }
     writeln!(content)?;
 
-    // Resources Section
     writeln!(content, "## Resources")?;
     writeln!(content)?;
     writeln!(

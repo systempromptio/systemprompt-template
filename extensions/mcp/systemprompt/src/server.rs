@@ -24,7 +24,6 @@ use systemprompt::models::ProfileBootstrap;
 
 #[derive(Clone)]
 pub struct SystempromptServer {
-    #[allow(dead_code)]
     db_pool: DbPool,
     service_id: McpServerId,
     ui_registry: Arc<UiRendererRegistry>,
@@ -33,10 +32,9 @@ pub struct SystempromptServer {
 
 impl SystempromptServer {
     pub fn new(db_pool: DbPool, service_id: McpServerId) -> Result<Self, McpError> {
-        let tool_usage_repo = Arc::new(
-            ToolUsageRepository::new(&db_pool)
-                .map_err(|e| McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None))?,
-        );
+        let tool_usage_repo = Arc::new(ToolUsageRepository::new(&db_pool).map_err(|e| {
+            McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None)
+        })?);
         Ok(Self {
             db_pool,
             service_id,
@@ -50,10 +48,9 @@ impl SystempromptServer {
         service_id: McpServerId,
         registry: UiRendererRegistry,
     ) -> Result<Self, McpError> {
-        let tool_usage_repo = Arc::new(
-            ToolUsageRepository::new(&db_pool)
-                .map_err(|e| McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None))?,
-        );
+        let tool_usage_repo = Arc::new(ToolUsageRepository::new(&db_pool).map_err(|e| {
+            McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None)
+        })?);
         Ok(Self {
             db_pool,
             service_id,
@@ -62,16 +59,19 @@ impl SystempromptServer {
         })
     }
 
-    pub fn with_extended_registry<F>(db_pool: DbPool, service_id: McpServerId, extend_fn: F) -> Result<Self, McpError>
+    pub fn with_extended_registry<F>(
+        db_pool: DbPool,
+        service_id: McpServerId,
+        extend_fn: F,
+    ) -> Result<Self, McpError>
     where
         F: FnOnce(&mut UiRendererRegistry),
     {
         let mut registry = create_default_registry();
         extend_fn(&mut registry);
-        let tool_usage_repo = Arc::new(
-            ToolUsageRepository::new(&db_pool)
-                .map_err(|e| McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None))?,
-        );
+        let tool_usage_repo = Arc::new(ToolUsageRepository::new(&db_pool).map_err(|e| {
+            McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None)
+        })?);
         Ok(Self {
             db_pool,
             service_id,
@@ -211,7 +211,7 @@ impl ServerHandler for SystempromptServer {
         let execution_request = ToolExecutionRequest {
             tool_name: tool_name.clone(),
             server_name: self.service_id.to_string(),
-            input: serde_json::to_value(&request.arguments).unwrap_or_default(),
+            input: serde_json::to_value(&request.arguments).unwrap_or(serde_json::Value::Null),
             started_at,
             context: request_context.clone(),
             request_method: Some("mcp".to_string()),
@@ -228,7 +228,10 @@ impl ServerHandler for SystempromptServer {
                 McpError::internal_error(format!("Failed to start execution tracking: {e}"), None)
             })?;
 
-        let arguments = request.arguments.clone().unwrap_or_default();
+        let arguments = request
+            .arguments
+            .clone()
+            .unwrap_or_else(serde_json::Map::new);
 
         let result = match tool_name.as_str() {
             "systemprompt" => {
@@ -255,10 +258,12 @@ impl ServerHandler for SystempromptServer {
                         format!(
                             "{}\n\n{}",
                             title,
-                            serde_json::to_string_pretty(&cmd_result.data).unwrap_or_default()
+                            serde_json::to_string_pretty(&cmd_result.data)
+                                .expect("cmd_result.data serialization cannot fail")
                         )
                     } else {
-                        serde_json::to_string_pretty(&cmd_result.data).unwrap_or_default()
+                        serde_json::to_string_pretty(&cmd_result.data)
+                            .expect("cmd_result.data serialization cannot fail")
                     };
 
                     let structured_content = serde_json::to_value(&cmd_result).ok();

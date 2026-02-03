@@ -170,6 +170,10 @@ impl DiscordConfigValidated {
     }
 
     pub fn load_from_default_paths() -> anyhow::Result<Self> {
+        if let Ok(custom_path) = std::env::var("SOUL_DISCORD_CONFIG") {
+            return Self::load_from_file(Path::new(&custom_path));
+        }
+
         let paths = [
             "./services/config/discord.yaml",
             "./services/config/extensions/discord.yaml",
@@ -186,7 +190,8 @@ impl DiscordConfigValidated {
             "Discord config not found. Create services/config/discord.yaml with:\n\
             default_user_id: \"YOUR_USER_ID\"\n\
             enabled: true\n\n\
-            And add discord_bot_token to your profile's secrets.json"
+            And add discord_bot_token to your profile's secrets.json\n\
+            Or set SOUL_DISCORD_CONFIG environment variable to custom config path."
         )
     }
 

@@ -4,6 +4,7 @@ use serde_json::Value;
 use systemprompt::template_provider::{PageContext, PageDataProvider};
 
 use super::types::DocsLearningContent;
+use crate::utils::html_escape;
 
 pub struct DocsPageDataProvider;
 
@@ -50,13 +51,6 @@ impl Default for DocsPageDataProvider {
     fn default() -> Self {
         Self::new()
     }
-}
-
-fn html_escape(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
 }
 
 #[async_trait]

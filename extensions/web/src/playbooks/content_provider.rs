@@ -85,7 +85,6 @@ impl ContentDataProvider for PlaybooksContentDataProvider {
             obj.insert("related_code".to_string(), row.related_code);
         }
 
-        // Add same-category playbooks as suggested navigation
         let current_slug = row.slug.as_str();
         let category_prefix = Self::get_category_prefix(current_slug);
 

@@ -1,12 +1,14 @@
 use thiserror::Error;
 
+use crate::identifiers::MemoryId;
+
 #[derive(Error, Debug)]
 pub enum SoulError {
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),
 
     #[error("Memory not found: {0}")]
-    MemoryNotFound(String),
+    MemoryNotFound(MemoryId),
 
     #[error("Invalid request: {0}")]
     InvalidRequest(String),

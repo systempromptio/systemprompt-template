@@ -19,20 +19,17 @@ struct ContentAnalyticsRow {
 pub struct ContentAnalyticsAggregationJob;
 
 impl ContentAnalyticsAggregationJob {
-    /// Execute aggregation with a provided pool (for direct invocation)
     pub async fn execute_with_pool(pool: Arc<PgPool>) -> Result<JobResult> {
         let start = std::time::Instant::now();
 
         tracing::info!("Content analytics aggregation started");
 
-        // Fetch aggregated stats from engagement_events
         let stats = Self::aggregate_engagement_stats(&pool).await?;
 
         let total_count = stats.len();
         let mut success_count = 0u64;
         let mut error_count = 0u64;
 
-        // Upsert each content's metrics
         for stat in stats {
             match Self::upsert_metrics(&pool, &stat).await {
                 Ok(()) => {
@@ -107,7 +104,6 @@ impl ContentAnalyticsAggregationJob {
     async fn upsert_metrics(pool: &PgPool, stats: &ContentAnalyticsRow) -> Result<()> {
         let id = format!("cpm_{}", uuid::Uuid::new_v4());
 
-        // Calculate trend direction based on recent vs older views
         let previous_23d = stats.views_30d - stats.views_7d;
         let avg_previous_week = previous_23d as f64 / 3.0; // ~3 weeks
         let trend_direction = if stats.views_7d as f64 > avg_previous_week * 1.2 {
@@ -167,7 +163,6 @@ impl Job for ContentAnalyticsAggregationJob {
     }
 
     fn schedule(&self) -> &'static str {
-        // Run every 15 minutes to keep metrics reasonably fresh
         "0 */15 * * * *"
     }
 

@@ -118,7 +118,6 @@ impl PageDataProvider for PlaybookPageDataProvider {
 
         let mut data = serde_json::Map::new();
 
-        // Core metadata
         if let Some(title) = item.get("title").and_then(|v| v.as_str()) {
             data.insert("TITLE".to_string(), Value::String(title.to_string()));
         }
@@ -128,7 +127,6 @@ impl PageDataProvider for PlaybookPageDataProvider {
         if let Some(slug) = item.get("slug").and_then(|v| v.as_str()) {
             data.insert("SLUG".to_string(), Value::String(slug.to_string()));
 
-            // Derive category from slug
             let category = Self::derive_category(slug);
             if !category.is_empty() {
                 data.insert("CATEGORY".to_string(), Value::String(category.to_string()));
@@ -138,11 +136,9 @@ impl PageDataProvider for PlaybookPageDataProvider {
             data.insert("AUTHOR".to_string(), Value::String(author.to_string()));
         }
 
-        // Keywords - handle both string and array formats
         if let Some(keywords) = item.get("keywords") {
             if let Some(kw_str) = keywords.as_str() {
                 data.insert("KEYWORDS".to_string(), Value::String(kw_str.to_string()));
-                // Also create array for iteration
                 let keywords_array: Vec<Value> = kw_str
                     .split(',')
                     .map(|s| Value::String(s.trim().to_string()))
@@ -159,7 +155,6 @@ impl PageDataProvider for PlaybookPageDataProvider {
             }
         }
 
-        // Dates
         if let Some(published) = item
             .get("published_at")
             .or_else(|| item.get("date"))
@@ -180,7 +175,6 @@ impl PageDataProvider for PlaybookPageDataProvider {
             }
         }
 
-        // Priority (if present in frontmatter)
         if let Some(priority) = item.get("priority") {
             if let Some(p_str) = priority.as_str() {
                 data.insert("PRIORITY".to_string(), Value::String(p_str.to_string()));
@@ -189,7 +183,6 @@ impl PageDataProvider for PlaybookPageDataProvider {
             }
         }
 
-        // Related playbooks (populated by ContentDataProvider)
         if let Some(related) = item.get("related_playbooks").and_then(|v| v.as_array()) {
             if !related.is_empty() {
                 data.insert(
@@ -202,7 +195,6 @@ impl PageDataProvider for PlaybookPageDataProvider {
             }
         }
 
-        // Same-category playbooks (populated by ContentDataProvider)
         if let Some(same_cat) = item
             .get("same_category_playbooks")
             .and_then(|v| v.as_array())
@@ -221,7 +213,6 @@ impl PageDataProvider for PlaybookPageDataProvider {
             }
         }
 
-        // Related code
         if let Some(related_code) = item.get("related_code").and_then(|v| v.as_array()) {
             if !related_code.is_empty() {
                 data.insert(

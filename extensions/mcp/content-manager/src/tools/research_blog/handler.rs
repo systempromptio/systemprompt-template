@@ -60,8 +60,6 @@ pub async fn handle(
 
     let focus_areas = extract_string_array(args, "focus_areas");
 
-    // NOTE: Google Search grounding is a Gemini-only feature.
-    // This tool requires Gemini regardless of the configured default_provider.
     if let Some(ref notify) = progress {
         notify(
             10.0,
@@ -81,8 +79,6 @@ pub async fn handle(
         AiMessage::user(&research_prompt),
     ];
 
-    // Use default Gemini model (configured in ai/config.yaml under providers.gemini.default_model)
-    // model: None lets the provider use its configured default
     let search_params = GoogleSearchParams {
         messages,
         sampling: None,
@@ -103,7 +99,6 @@ pub async fn handle(
         .await;
     }
 
-    // Build typed SourceCitation list
     let sources: Vec<SourceCitation> = search_response
         .sources
         .iter()
@@ -113,7 +108,6 @@ pub async fn handle(
     let source_count = sources.len();
     let query_count = search_response.web_search_queries.len();
 
-    // Build PresentationCardResponse for the research artifact
     let card = PresentationCardResponse {
         artifact_type: "presentation_card".to_string(),
         title: format!("Research: {topic}"),

@@ -59,7 +59,7 @@ impl DiscordService {
             let bot: BotUser = response.json().await?;
             Ok(format!("{}#{}", bot.username, bot.discriminator))
         } else {
-            let error_body = response.text().await.unwrap_or_default();
+            let error_body = response.text().await.unwrap_or_else(|_| String::new());
             anyhow::bail!("Discord API error ({}): {}", status, error_body)
         }
     }
@@ -141,25 +141,24 @@ impl DiscordService {
                 retry_after
             )
         } else if status == reqwest::StatusCode::NOT_FOUND {
-            let error_body = response.text().await.unwrap_or_default();
+            let error_body = response.text().await.unwrap_or_else(|_| String::new());
             if error_body.contains("Unknown Channel") {
                 anyhow::bail!("Channel not found: {}", error_body)
-            } else if error_body.contains("Unknown User") {
-                anyhow::bail!("User not found: {}", error_body)
-            } else {
-                anyhow::bail!("Discord API error ({}): {}", status, error_body)
             }
+            if error_body.contains("Unknown User") {
+                anyhow::bail!("User not found: {}", error_body)
+            }
+            anyhow::bail!("Discord API error ({}): {}", status, error_body)
         } else if status == reqwest::StatusCode::FORBIDDEN {
-            let error_body = response.text().await.unwrap_or_default();
+            let error_body = response.text().await.unwrap_or_else(|_| String::new());
             if error_body.contains("Cannot send messages to this user") {
                 anyhow::bail!(
                     "Cannot send DM to this user. Make sure they share a server with the bot."
                 )
-            } else {
-                anyhow::bail!("Discord API forbidden ({}): {}", status, error_body)
             }
+            anyhow::bail!("Discord API forbidden ({}): {}", status, error_body)
         } else {
-            let error_body = response.text().await.unwrap_or_default();
+            let error_body = response.text().await.unwrap_or_else(|_| String::new());
             anyhow::bail!("Discord API error ({}): {}", status, error_body)
         }
     }

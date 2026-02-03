@@ -28,14 +28,14 @@ impl MemoryService {
         self.repo
             .get_by_id(id)
             .await?
-            .ok_or_else(|| SoulError::MemoryNotFound(id.to_string()))
+            .ok_or_else(|| SoulError::MemoryNotFound(id.into()))
     }
 
     pub async fn recall(&self, id: &str) -> Result<SoulMemory, SoulError> {
         self.repo
             .recall(id)
             .await?
-            .ok_or_else(|| SoulError::MemoryNotFound(id.to_string()))
+            .ok_or_else(|| SoulError::MemoryNotFound(id.into()))
     }
 
     pub async fn search(
@@ -96,7 +96,7 @@ impl MemoryService {
         let mut current_type = String::new();
         for memory in &memories {
             if memory.memory_type != current_type {
-                current_type.clone_from(&memory.memory_type);
+                current_type = memory.memory_type.clone();
                 let type_label = match current_type.as_str() {
                     "core" => "Core",
                     "long_term" => "Long-term",
@@ -104,14 +104,14 @@ impl MemoryService {
                     "working" => "Working",
                     _ => &current_type,
                 };
-                let _ = writeln!(output, "### {type_label}");
+                writeln!(output, "### {type_label}").expect("write to String");
             }
 
-            if let Some(ref ctx) = memory.context_text {
-                let _ = writeln!(output, "- {ctx}");
-            } else {
-                let _ = writeln!(output, "- [{}] {}", memory.subject, memory.content);
+            match &memory.context_text {
+                Some(ctx) => writeln!(output, "- {ctx}"),
+                None => writeln!(output, "- [{}] {}", memory.subject, memory.content),
             }
+            .expect("write to String");
         }
 
         Ok(output)

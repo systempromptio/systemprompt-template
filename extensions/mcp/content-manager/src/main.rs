@@ -39,7 +39,6 @@ async fn main() -> Result<()> {
     };
 
     let server = ContentManagerServer::new(ctx.db_pool().clone(), service_id.clone(), ctx.clone())
-        .await
         .context("Failed to initialize ContentManagerServer")?;
 
     let router = systemprompt::mcp::create_router(server, ctx.db_pool());
