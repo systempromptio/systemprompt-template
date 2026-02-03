@@ -141,13 +141,56 @@ systemprompt core playbooks show content_blog
 
 ## What's Included
 
-| Component | Count | Description |
-|-----------|-------|-------------|
-| **Extensions** | 4 | Web publishing, Soul memory, MCP servers, CLI tools |
-| **MCP Servers** | 3 | `systemprompt` (CLI), `soul` (memory), `content-manager` |
-| **Playbooks** | 96 | Machine-readable operational guides |
-| **Agent** | 1 | Pre-configured welcome assistant |
-| **Skills** | 5+ | General assistance, content writing, technical writing |
+See the full documentation at **[systemprompt.io/documentation](https://systemprompt.io/documentation)** for:
+- [Extensions](https://systemprompt.io/documentation/extensions/) — Web publishing, memory systems, MCP servers
+- [Services](https://systemprompt.io/documentation/services/) — Agents, AI providers, authentication, analytics
+- [Configuration](https://systemprompt.io/documentation/config/) — Profiles, secrets, tenants, deployment
+- [CLI Reference](https://systemprompt.io/documentation/reference/cli/) — Complete command reference
+
+---
+
+## Playbooks
+
+Playbooks are **machine-readable instruction guides** that eliminate AI hallucination. Instead of letting agents guess CLI syntax (and waste tokens on invented flags), playbooks provide pre-tested, deterministic commands for every operation.
+
+**The problem they solve:** LLMs frequently invent non-existent CLI commands. Playbooks encode verified commands in JSON format, ensuring agents execute what actually works.
+
+```bash
+# List all playbooks
+systemprompt core playbooks list
+
+# Start here — the master index
+systemprompt core playbooks show guide_start
+
+# Show any playbook
+systemprompt core playbooks show <playbook_id>
+```
+
+### Playbook Categories
+
+| Category | Prefix | Purpose |
+|----------|--------|---------|
+| **Guide** | `guide_*` | Onboarding, meta-documentation, entry points |
+| **CLI** | `cli_*` | All command-line operations |
+| **Build** | `build_*` | Development standards and checklists |
+| **Content** | `content_*` | Content creation workflows |
+
+### Essential Playbooks
+
+| Playbook | Description |
+|----------|-------------|
+| `guide_start` | Master index — read this first |
+| `guide_coding-standards` | Rust patterns and code standards |
+| `cli_agents` | Agent management commands |
+| `cli_deploy` | Deployment procedures |
+| `build_extension-checklist` | Building Rust extensions |
+| `content_blog` | Blog publishing workflow |
+
+### Self-Repair Protocol
+
+When a command fails, agents fix the playbook rather than retry with guesses. This creates a feedback loop where instructions improve over time.
+
+Learn more: **[systemprompt.io/playbooks](https://systemprompt.io/playbooks)**
 
 ---
 
@@ -228,32 +271,6 @@ systemprompt-template/
 | `just start` | Start all services |
 | `just deploy` | Build and deploy to cloud |
 | `just migrate` | Run database migrations |
-
----
-
-## Playbooks
-
-Every operation has a playbook. Don't guess — read the playbook first.
-
-```bash
-# List all playbooks
-systemprompt core playbooks list
-
-# Start here
-systemprompt core playbooks show guide_start
-
-# Read any playbook
-systemprompt core playbooks show <playbook_id>
-```
-
-| Prefix | Purpose |
-|--------|---------|
-| `guide_*` | Entry points and onboarding |
-| `cli_*` | CLI command references |
-| `build_*` | Development standards |
-| `content_*` | Content creation workflows |
-| `config_*` | Configuration references |
-| `domain_*` | Domain-specific operations |
 
 ---
 
