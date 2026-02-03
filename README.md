@@ -2,8 +2,6 @@
 
 <img src="https://systemprompt.io/files/images/logo-dark.svg" alt="systemprompt.io" width="400">
 
-# systemprompt-template
-
 **Production AI agent mesh in 3 commands.**
 
 [![Built on systemprompt-core](https://img.shields.io/badge/built%20on-systemprompt--core-blue)](https://github.com/systempromptio/systemprompt-core)
