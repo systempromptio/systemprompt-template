@@ -177,7 +177,9 @@ fn parse_datetime(s: &str) -> Result<DateTime<Utc>, BlogError> {
     }
 
     if let Ok(date) = chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d") {
-        let dt = date.and_hms_opt(0, 0, 0).expect("valid time");
+        let dt = date
+            .and_hms_opt(0, 0, 0)
+            .ok_or_else(|| BlogError::Parse(format!("Invalid time for date: {s}")))?;
         return Ok(DateTime::from_naive_utc_and_offset(dt, Utc));
     }
 

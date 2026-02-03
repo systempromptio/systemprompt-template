@@ -101,10 +101,10 @@ impl EventHandler for DiscordHandler {
         let message_id = msg.id.to_string();
 
         {
-            let mut processed = self
-                .processed_ids
-                .lock()
-                .expect("processed_ids mutex poisoned");
+            let Ok(mut processed) = self.processed_ids.lock() else {
+                tracing::error!("processed_ids mutex poisoned, skipping message");
+                return;
+            };
 
             if processed.len() >= MAX_TRACKED_MESSAGES {
                 tracing::debug!("Clearing processed message ID cache");

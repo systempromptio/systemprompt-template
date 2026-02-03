@@ -38,9 +38,7 @@ impl DiscordGatewayJob {
         let handler = DiscordHandler::try_new(gateway_config.clone())
             .context("Failed to create Discord handler")?;
 
-        tracing::info!(
-            "Discord handler created, CLI binary validated"
-        );
+        tracing::info!("Discord handler created, CLI binary validated");
 
         let intents = DiscordHandler::required_intents();
 

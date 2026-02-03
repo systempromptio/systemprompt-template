@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 use serde::Deserialize;
 use systemprompt::identifiers::{CategoryId, SourceId};
@@ -7,6 +7,11 @@ use systemprompt::models::AppPaths;
 use url::Url;
 
 pub use crate::config_errors::{ExtensionConfigError, ExtensionConfigErrors};
+
+static FALLBACK_URL: LazyLock<Url> = LazyLock::new(|| {
+    Url::parse("https://invalid.example.com")
+        .unwrap_or_else(|_| Url::parse("https://localhost").unwrap_or_else(|_| unreachable!()))
+});
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct BlogConfigRaw {
@@ -91,7 +96,7 @@ impl BlogConfigValidated {
                     format!("Invalid URL: {e}"),
                     "Use a valid URL like https://example.com",
                 );
-                Url::parse("https://invalid.example.com").expect("static URL is valid")
+                FALLBACK_URL.clone()
             }
         };
 

@@ -25,7 +25,7 @@ impl PagePrerenderer for HomepagePrerenderer {
     }
 
     fn priority(&self) -> u32 {
-        10 // High priority - render early
+        150 // Must be higher than core's default (100)
     }
 
     async fn prepare(&self, _ctx: &PagePrepareContext<'_>) -> Result<Option<PageRenderSpec>> {

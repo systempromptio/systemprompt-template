@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use chrono::Utc;
-use sqlx::{FromRow, PgPool, Row};
+use sqlx::PgPool;
 
 use crate::models::{CreateMemoryParams, MemoryType, SoulMemory};
 
@@ -19,8 +19,13 @@ impl MemoryRepository {
     pub async fn create(&self, params: &CreateMemoryParams) -> Result<SoulMemory, sqlx::Error> {
         let id = uuid::Uuid::new_v4().to_string();
         let now = Utc::now();
+        let memory_type = params.memory_type.as_str();
+        let category = params.category.as_str();
+        let priority = params.priority.unwrap_or(50);
+        let confidence = params.confidence.unwrap_or(1.0_f32);
 
-        let row = sqlx::query(
+        sqlx::query_as!(
+            SoulMemory,
             r#"
             INSERT INTO soul_memories (
                 id, memory_type, category, subject, content, context_text,
@@ -28,44 +33,76 @@ impl MemoryRepository {
                 tags, metadata, created_at, updated_at, expires_at, is_active
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, TRUE)
-            RETURNING *
+            RETURNING
+                id,
+                memory_type,
+                category,
+                subject,
+                content,
+                context_text,
+                priority,
+                confidence as "confidence: f32",
+                source_task_id,
+                source_context_id,
+                tags,
+                metadata,
+                created_at,
+                updated_at,
+                last_accessed_at,
+                access_count,
+                expires_at,
+                is_active
             "#,
+            id,
+            memory_type,
+            category,
+            params.subject,
+            params.content,
+            params.context_text,
+            priority,
+            confidence,
+            params.source_task_id,
+            params.source_context_id,
+            params.tags.as_deref(),
+            params.metadata,
+            now,
+            now,
+            params.expires_at
         )
-        .bind(&id)
-        .bind(params.memory_type.as_str())
-        .bind(params.category.as_str())
-        .bind(&params.subject)
-        .bind(&params.content)
-        .bind(&params.context_text)
-        .bind(params.priority.unwrap_or(50))
-        .bind(params.confidence.unwrap_or(1.0))
-        .bind(&params.source_task_id)
-        .bind(&params.source_context_id)
-        .bind(&params.tags)
-        .bind(&params.metadata)
-        .bind(now)
-        .bind(now)
-        .bind(params.expires_at)
         .fetch_one(&*self.pool)
-        .await?;
-
-        SoulMemory::from_row(&row)
+        .await
     }
 
     pub async fn get_by_id(&self, id: &str) -> Result<Option<SoulMemory>, sqlx::Error> {
-        let row = sqlx::query(
+        sqlx::query_as!(
+            SoulMemory,
             r#"
-            SELECT * FROM soul_memories WHERE id = $1
+            SELECT
+                id,
+                memory_type,
+                category,
+                subject,
+                content,
+                context_text,
+                priority,
+                confidence as "confidence: f32",
+                source_task_id,
+                source_context_id,
+                tags,
+                metadata,
+                created_at,
+                updated_at,
+                last_accessed_at,
+                access_count,
+                expires_at,
+                is_active
+            FROM soul_memories
+            WHERE id = $1
             "#,
+            id
         )
-        .bind(id)
         .fetch_optional(&*self.pool)
-        .await?;
-
-        match row {
-            Some(r) => Ok(Some(SoulMemory::from_row(&r)?)),
-            None => Ok(None),
-        }
+        .await
     }
 
     pub async fn get_context(
@@ -74,12 +111,32 @@ impl MemoryRepository {
         subject: Option<&str>,
         limit: i64,
     ) -> Result<Vec<SoulMemory>, sqlx::Error> {
-        let type_filter: Option<Vec<&str>> =
-            memory_types.map(|types| types.iter().map(MemoryType::as_str).collect());
+        let type_filter: Option<Vec<String>> =
+            memory_types.map(|types| types.iter().map(|t| t.as_str().to_string()).collect());
 
-        let rows = sqlx::query(
+        sqlx::query_as!(
+            SoulMemory,
             r#"
-            SELECT * FROM soul_memories
+            SELECT
+                id,
+                memory_type,
+                category,
+                subject,
+                content,
+                context_text,
+                priority,
+                confidence as "confidence: f32",
+                source_task_id,
+                source_context_id,
+                tags,
+                metadata,
+                created_at,
+                updated_at,
+                last_accessed_at,
+                access_count,
+                expires_at,
+                is_active
+            FROM soul_memories
             WHERE is_active = TRUE
               AND context_text IS NOT NULL
               AND (expires_at IS NULL OR expires_at > NOW())
@@ -95,14 +152,12 @@ impl MemoryRepository {
                 priority DESC
             LIMIT $3
             "#,
+            type_filter.as_deref(),
+            subject,
+            limit
         )
-        .bind(type_filter.as_deref())
-        .bind(subject)
-        .bind(limit)
         .fetch_all(&*self.pool)
-        .await?;
-
-        rows.iter().map(SoulMemory::from_row).collect()
+        .await
     }
 
     pub async fn search(
@@ -112,9 +167,29 @@ impl MemoryRepository {
         category: Option<&str>,
         limit: i64,
     ) -> Result<Vec<SoulMemory>, sqlx::Error> {
-        let rows = sqlx::query(
+        sqlx::query_as!(
+            SoulMemory,
             r#"
-            SELECT * FROM soul_memories
+            SELECT
+                id,
+                memory_type,
+                category,
+                subject,
+                content,
+                context_text,
+                priority,
+                confidence as "confidence: f32",
+                source_task_id,
+                source_context_id,
+                tags,
+                metadata,
+                created_at,
+                updated_at,
+                last_accessed_at,
+                access_count,
+                expires_at,
+                is_active
+            FROM soul_memories
             WHERE is_active = TRUE
               AND (expires_at IS NULL OR expires_at > NOW())
               AND (
@@ -127,34 +202,46 @@ impl MemoryRepository {
             ORDER BY priority DESC, created_at DESC
             LIMIT $4
             "#,
+            query,
+            memory_type,
+            category,
+            limit
         )
-        .bind(query)
-        .bind(memory_type)
-        .bind(category)
-        .bind(limit)
         .fetch_all(&*self.pool)
-        .await?;
-
-        rows.iter().map(SoulMemory::from_row).collect()
+        .await
     }
 
     pub async fn recall(&self, id: &str) -> Result<Option<SoulMemory>, sqlx::Error> {
-        let row = sqlx::query(
+        sqlx::query_as!(
+            SoulMemory,
             r#"
             UPDATE soul_memories
             SET last_accessed_at = NOW(), access_count = access_count + 1
             WHERE id = $1 AND is_active = TRUE
-            RETURNING *
+            RETURNING
+                id,
+                memory_type,
+                category,
+                subject,
+                content,
+                context_text,
+                priority,
+                confidence as "confidence: f32",
+                source_task_id,
+                source_context_id,
+                tags,
+                metadata,
+                created_at,
+                updated_at,
+                last_accessed_at,
+                access_count,
+                expires_at,
+                is_active
             "#,
+            id
         )
-        .bind(id)
         .fetch_optional(&*self.pool)
-        .await?;
-
-        match row {
-            Some(r) => Ok(Some(SoulMemory::from_row(&r)?)),
-            None => Ok(None),
-        }
+        .await
     }
 
     pub async fn update_content(
@@ -163,16 +250,16 @@ impl MemoryRepository {
         content: &str,
         context_text: Option<&str>,
     ) -> Result<bool, sqlx::Error> {
-        let result = sqlx::query(
+        let result = sqlx::query!(
             r#"
             UPDATE soul_memories
             SET content = $2, context_text = $3, updated_at = NOW()
             WHERE id = $1 AND is_active = TRUE
             "#,
+            id,
+            content,
+            context_text
         )
-        .bind(id)
-        .bind(content)
-        .bind(context_text)
         .execute(&*self.pool)
         .await?;
 
@@ -180,14 +267,14 @@ impl MemoryRepository {
     }
 
     pub async fn forget(&self, id: &str) -> Result<bool, sqlx::Error> {
-        let result = sqlx::query(
+        let result = sqlx::query!(
             r#"
             UPDATE soul_memories
             SET is_active = FALSE, updated_at = NOW()
             WHERE id = $1
             "#,
+            id
         )
-        .bind(id)
         .execute(&*self.pool)
         .await?;
 
@@ -195,12 +282,12 @@ impl MemoryRepository {
     }
 
     pub async fn cleanup_expired(&self) -> Result<u64, sqlx::Error> {
-        let result = sqlx::query(
+        let result = sqlx::query!(
             r#"
             UPDATE soul_memories
             SET is_active = FALSE, updated_at = NOW()
             WHERE expires_at IS NOT NULL AND expires_at <= NOW() AND is_active = TRUE
-            "#,
+            "#
         )
         .execute(&*self.pool)
         .await?;
@@ -209,31 +296,49 @@ impl MemoryRepository {
     }
 
     pub async fn count_active(&self) -> Result<i64, sqlx::Error> {
-        let row = sqlx::query(
+        let result = sqlx::query_scalar!(
             r#"
-            SELECT COUNT(*) as count FROM soul_memories
+            SELECT COUNT(*) as "count!" FROM soul_memories
             WHERE is_active = TRUE AND (expires_at IS NULL OR expires_at > NOW())
-            "#,
+            "#
         )
         .fetch_one(&*self.pool)
         .await?;
 
-        Ok(row.get("count"))
+        Ok(result)
     }
 
     pub async fn get_by_type(&self, memory_type: &str) -> Result<Vec<SoulMemory>, sqlx::Error> {
-        let rows = sqlx::query(
+        sqlx::query_as!(
+            SoulMemory,
             r#"
-            SELECT * FROM soul_memories
+            SELECT
+                id,
+                memory_type,
+                category,
+                subject,
+                content,
+                context_text,
+                priority,
+                confidence as "confidence: f32",
+                source_task_id,
+                source_context_id,
+                tags,
+                metadata,
+                created_at,
+                updated_at,
+                last_accessed_at,
+                access_count,
+                expires_at,
+                is_active
+            FROM soul_memories
             WHERE memory_type = $1 AND is_active = TRUE
               AND (expires_at IS NULL OR expires_at > NOW())
             ORDER BY priority DESC, created_at DESC
             "#,
+            memory_type
         )
-        .bind(memory_type)
         .fetch_all(&*self.pool)
-        .await?;
-
-        rows.iter().map(SoulMemory::from_row).collect()
+        .await
     }
 }

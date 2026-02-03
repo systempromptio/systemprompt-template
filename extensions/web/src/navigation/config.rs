@@ -50,7 +50,8 @@ pub struct DocsSidebarSection {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HeaderNavConfig {
     pub items: Vec<NavItem>,
-    pub cta: NavCta,
+    #[serde(default)]
+    pub cta: Option<NavCta>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use systemprompt::database::DbPool;
+use systemprompt::generator::{generate_feed, organize_dist_assets, prerender_pages};
 use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
-use systemprompt::generator::{generate_feed, organize_dist_assets, prerender_pages};
 
 use super::{
     ContentIngestionJob, ContentPrerenderJob, CopyExtensionAssetsJob, LlmsTxtGenerationJob,

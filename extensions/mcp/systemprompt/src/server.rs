@@ -13,7 +13,9 @@ use std::process::Command;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::{ArtifactId, McpServerId};
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
-use systemprompt::mcp::services::ui_renderer::{registry::create_default_registry, MCP_APP_MIME_TYPE, UiRendererRegistry};
+use systemprompt::mcp::services::ui_renderer::{
+    registry::create_default_registry, UiRendererRegistry, MCP_APP_MIME_TYPE,
+};
 use systemprompt::models::ProfileBootstrap;
 
 #[derive(Clone)]
@@ -34,7 +36,11 @@ impl SystempromptServer {
         }
     }
 
-    pub fn with_custom_registry(db_pool: DbPool, service_id: McpServerId, registry: UiRendererRegistry) -> Self {
+    pub fn with_custom_registry(
+        db_pool: DbPool,
+        service_id: McpServerId,
+        registry: UiRendererRegistry,
+    ) -> Self {
         Self {
             db_pool,
             service_id,
@@ -60,9 +66,8 @@ impl SystempromptServer {
             return Ok(PathBuf::from(path));
         }
 
-        let profile = ProfileBootstrap::get().map_err(|e| {
-            McpError::internal_error(format!("Failed to get profile: {e}"), None)
-        })?;
+        let profile = ProfileBootstrap::get()
+            .map_err(|e| McpError::internal_error(format!("Failed to get profile: {e}"), None))?;
 
         Ok(PathBuf::from(&profile.paths.bin).join("systemprompt"))
     }
@@ -179,9 +184,7 @@ impl ServerHandler for SystempromptServer {
 
         let auth_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str())
             .await?
-            .expect_authenticated(
-                "BUG: systemprompt requires OAuth but auth was not enforced",
-            )?;
+            .expect_authenticated("BUG: systemprompt requires OAuth but auth was not enforced")?;
 
         let arguments = request.arguments.clone().unwrap_or_default();
 
@@ -297,7 +300,10 @@ impl ServerHandler for SystempromptServer {
 
         let artifact_id = Self::parse_ui_uri(uri).ok_or_else(|| {
             McpError::invalid_params(
-                format!("Invalid UI resource URI: {}. Expected format: ui://{}/{{artifact_id}}", uri, SERVER_NAME),
+                format!(
+                    "Invalid UI resource URI: {}. Expected format: ui://{}/{{artifact_id}}",
+                    uri, SERVER_NAME
+                ),
                 None,
             )
         })?;
@@ -333,7 +339,10 @@ impl SystempromptServer {
         }
     }
 
-    async fn fetch_artifact(&self, artifact_id: &str) -> anyhow::Result<systemprompt::models::a2a::Artifact> {
+    async fn fetch_artifact(
+        &self,
+        artifact_id: &str,
+    ) -> anyhow::Result<systemprompt::models::a2a::Artifact> {
         use systemprompt::agent::repository::content::ArtifactRepository;
 
         let repo = ArtifactRepository::new(self.db_pool.clone());
@@ -356,7 +365,10 @@ impl SystempromptServer {
         let context_id = ContextId::generate();
         let task_id = TaskId::generate();
 
-        let rendering_hints = result.hints.as_ref().and_then(|h| serde_json::to_value(h).ok());
+        let rendering_hints = result
+            .hints
+            .as_ref()
+            .and_then(|h| serde_json::to_value(h).ok());
 
         let data_map = match &result.data {
             serde_json::Value::Object(map) => map.clone(),
@@ -384,8 +396,10 @@ impl SystempromptServer {
             metadata,
         };
 
-        let repo = systemprompt::agent::repository::content::ArtifactRepository::new(self.db_pool.clone());
-        repo.create_artifact(&task_id, &context_id, &artifact).await?;
+        let repo =
+            systemprompt::agent::repository::content::ArtifactRepository::new(self.db_pool.clone());
+        repo.create_artifact(&task_id, &context_id, &artifact)
+            .await?;
 
         Ok(artifact_id)
     }

@@ -66,7 +66,10 @@ pub async fn handle(
         notify(
             10.0,
             Some(100.0),
-            Some("Querying Gemini with Google Search (Gemini required for search grounding)...".to_string()),
+            Some(
+                "Querying Gemini with Google Search (Gemini required for search grounding)..."
+                    .to_string(),
+            ),
         )
         .await;
     }
@@ -127,8 +130,8 @@ pub async fn handle(
         skill_name: Some("Blog Research".to_string()),
     };
 
-    let research_artifact = ResearchArtifact::new(topic, card, sources.clone())
-        .with_query_count(query_count as u32);
+    let research_artifact =
+        ResearchArtifact::new(topic, card, sources.clone()).with_query_count(query_count as u32);
 
     if let Some(ref notify) = progress {
         notify(100.0, Some(100.0), Some("Research complete".to_string())).await;

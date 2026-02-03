@@ -96,24 +96,26 @@ fn create_ui_meta() -> Meta {
 }
 
 #[must_use]
-pub fn input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "type": "object",
-        "properties": {
-            "command": {
-                "type": "string",
-                "description": "FIRST COMMAND: 'core playbooks show guide_start' - MANDATORY before any task. Then use playbook commands. Do not include 'systemprompt' prefix."
-            }
-        },
-        "required": ["command"]
-    })
+pub fn input_schema() -> serde_json::Map<String, serde_json::Value> {
+    let mut map = serde_json::Map::new();
+    map.insert("type".to_string(), serde_json::json!("object"));
+    map.insert("properties".to_string(), serde_json::json!({
+        "command": {
+            "type": "string",
+            "description": "FIRST COMMAND: 'core playbooks show guide_start' - MANDATORY before any task. Then use playbook commands. Do not include 'systemprompt' prefix."
+        }
+    }));
+    map.insert("required".to_string(), serde_json::json!(["command"]));
+    map
 }
 
 #[must_use]
-pub fn output_schema() -> serde_json::Value {
-    serde_json::json!({
-        "type": "object",
-        "properties": {
+pub fn output_schema() -> serde_json::Map<String, serde_json::Value> {
+    let mut map = serde_json::Map::new();
+    map.insert("type".to_string(), serde_json::json!("object"));
+    map.insert(
+        "properties".to_string(),
+        serde_json::json!({
             "stdout": {
                 "type": "string",
                 "description": "Standard output from the command"
@@ -130,9 +132,13 @@ pub fn output_schema() -> serde_json::Value {
                 "type": "boolean",
                 "description": "Whether the command succeeded"
             }
-        },
-        "required": ["stdout", "stderr", "exit_code", "success"]
-    })
+        }),
+    );
+    map.insert(
+        "required".to_string(),
+        serde_json::json!(["stdout", "stderr", "exit_code", "success"]),
+    );
+    map
 }
 
 #[must_use]
@@ -141,18 +147,6 @@ pub fn list_tools() -> Vec<Tool> {
 }
 
 fn create_cli_tool() -> Tool {
-    let input = input_schema();
-    let output = output_schema();
-
-    let input_obj = input
-        .as_object()
-        .cloned()
-        .expect("input_schema must be a JSON object");
-    let output_obj = output
-        .as_object()
-        .cloned()
-        .expect("output_schema must be a JSON object");
-
     Tool {
         name: "systemprompt".to_string().into(),
         title: Some("SystemPrompt CLI".to_string()),
@@ -172,8 +166,8 @@ fn create_cli_tool() -> Tool {
                 .to_string()
                 .into(),
         ),
-        input_schema: Arc::new(input_obj),
-        output_schema: Some(Arc::new(output_obj)),
+        input_schema: Arc::new(input_schema()),
+        output_schema: Some(Arc::new(output_schema())),
         annotations: None,
         icons: None,
         meta: Some(create_ui_meta()),

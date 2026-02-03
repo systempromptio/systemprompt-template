@@ -49,7 +49,10 @@ fn validate_agent_configs() {
 
     for entry in entries.flatten() {
         let path = entry.path();
-        if path.extension().is_some_and(|ext| ext == "yml" || ext == "yaml") {
+        if path
+            .extension()
+            .is_some_and(|ext| ext == "yml" || ext == "yaml")
+        {
             let path_str = path.display().to_string();
             println!("cargo:rerun-if-changed={path_str}");
 
@@ -81,7 +84,10 @@ fn validate_mcp_configs() {
 
     for entry in entries.flatten() {
         let path = entry.path();
-        if path.extension().is_some_and(|ext| ext == "yml" || ext == "yaml") {
+        if path
+            .extension()
+            .is_some_and(|ext| ext == "yml" || ext == "yaml")
+        {
             let path_str = path.display().to_string();
             println!("cargo:rerun-if-changed={path_str}");
 

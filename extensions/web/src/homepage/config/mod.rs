@@ -8,22 +8,32 @@ pub use sections::{
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HomepageConfig {
-    pub hero: HeroConfig,
+    #[serde(default)]
+    pub hero: Option<HeroConfig>,
     #[serde(default)]
     pub value_props: Vec<ValueProp>,
-    pub integrations: IntegrationsConfig,
-    pub features: FeaturesConfig,
-    pub how_it_works: HowItWorksConfig,
+    #[serde(default)]
+    pub integrations: Option<IntegrationsConfig>,
+    #[serde(default)]
+    pub features: Option<FeaturesConfig>,
+    #[serde(default)]
+    pub how_it_works: Option<HowItWorksConfig>,
     #[serde(default)]
     pub playbooks: Option<PlaybooksConfig>,
-    pub use_cases: UseCasesConfig,
-    pub technical: TechnicalConfig,
-    pub comparison: ComparisonConfig,
-    pub pricing: PricingConfig,
-    pub faq: FaqConfig,
-    pub final_cta: FinalCtaConfig,
+    #[serde(default)]
+    pub use_cases: Option<UseCasesConfig>,
+    #[serde(default)]
+    pub technical: Option<TechnicalConfig>,
+    #[serde(default)]
+    pub comparison: Option<ComparisonConfig>,
+    #[serde(default)]
+    pub pricing: Option<PricingConfig>,
+    #[serde(default)]
+    pub faq: Option<FaqConfig>,
+    #[serde(default)]
+    pub final_cta: Option<FinalCtaConfig>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -155,6 +165,8 @@ pub struct PlaybooksFeaturedConfig {
     pub code: Option<String>,
     #[serde(default)]
     pub url: Option<String>,
+    #[serde(default)]
+    pub cta_text: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

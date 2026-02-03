@@ -8,7 +8,9 @@ pub mod models;
 pub mod repository;
 pub mod services;
 
-pub use discord::{DiscordConfig, DiscordConfigValidated, DiscordHandler, DiscordService, GatewayConfig};
+pub use discord::{
+    DiscordConfig, DiscordConfigValidated, DiscordHandler, DiscordService, GatewayConfig,
+};
 pub use error::SoulError;
 pub use extension::SoulExtension;
 pub use jobs::{DiscordGatewayJob, HeartbeatJob, MemorySynthesisJob};

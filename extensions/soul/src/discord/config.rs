@@ -99,17 +99,14 @@ impl std::fmt::Debug for DiscordConfigValidated {
 
 impl DiscordConfigValidated {
     fn get_bot_token_from_secrets() -> anyhow::Result<String> {
-        let secrets = SecretsBootstrap::get()
-            .map_err(|e| anyhow::anyhow!("Failed to get secrets: {}", e))?;
+        let secrets =
+            SecretsBootstrap::get().map_err(|e| anyhow::anyhow!("Failed to get secrets: {}", e))?;
 
-        secrets
-            .get("discord_bot_token")
-            .cloned()
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "discord_bot_token not found in secrets. Add it to your profile's secrets.json"
-                )
-            })
+        secrets.get("discord_bot_token").cloned().ok_or_else(|| {
+            anyhow::anyhow!(
+                "discord_bot_token not found in secrets. Add it to your profile's secrets.json"
+            )
+        })
     }
 
     pub fn from_raw(raw: DiscordConfig) -> anyhow::Result<Self> {
@@ -137,13 +134,15 @@ impl DiscordConfigValidated {
             }
         }
 
-        let gateway = raw.gateway.map_or_else(GatewayConfig::default, |g| GatewayConfig {
-            enabled: g.enabled,
-            target_agent: g.target_agent,
-            message_prefix: g.message_prefix,
-            ignore_channels: g.ignore_channels,
-            ignore_bots: g.ignore_bots,
-        });
+        let gateway = raw
+            .gateway
+            .map_or_else(GatewayConfig::default, |g| GatewayConfig {
+                enabled: g.enabled,
+                target_agent: g.target_agent,
+                message_prefix: g.message_prefix,
+                ignore_channels: g.ignore_channels,
+                ignore_bots: g.ignore_bots,
+            });
 
         Ok(Self {
             bot_token: SecretString::from(bot_token),

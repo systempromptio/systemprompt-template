@@ -242,9 +242,13 @@ fn select_best_resolution(image_service: &Arc<ImageService>) -> ImageResolution 
         .default_provider_capabilities()
         .and_then(|caps| {
             // Prefer highest resolution available
-            [ImageResolution::FourK, ImageResolution::TwoK, ImageResolution::OneK]
-                .into_iter()
-                .find(|r| caps.supported_resolutions.contains(r))
+            [
+                ImageResolution::FourK,
+                ImageResolution::TwoK,
+                ImageResolution::OneK,
+            ]
+            .into_iter()
+            .find(|r| caps.supported_resolutions.contains(r))
         })
         .unwrap_or_default()
 }

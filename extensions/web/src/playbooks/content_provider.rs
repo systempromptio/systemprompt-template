@@ -91,7 +91,7 @@ impl ContentDataProvider for PlaybooksContentDataProvider {
 
         if !category_prefix.is_empty() {
             let same_category =
-                get_same_category_playbooks(&pool, category_prefix, current_slug).await;
+                get_same_category_playbooks(&pool, category_prefix, current_slug).await?;
 
             if let Some(obj) = item.as_object_mut() {
                 obj.insert("same_category_playbooks".to_string(), json!(same_category));
@@ -114,10 +114,10 @@ async fn get_same_category_playbooks(
     pool: &sqlx::PgPool,
     category_prefix: &str,
     current_slug: &str,
-) -> Vec<SameCategoryPlaybook> {
+) -> Result<Vec<SameCategoryPlaybook>> {
     let pattern = format!("{category_prefix}%");
 
-    match sqlx::query!(
+    let rows = sqlx::query!(
         r#"
         SELECT slug, title, description
         FROM markdown_content
@@ -131,20 +131,15 @@ async fn get_same_category_playbooks(
         current_slug
     )
     .fetch_all(pool)
-    .await
-    {
-        Ok(rows) => rows
-            .into_iter()
-            .map(|row| SameCategoryPlaybook {
-                url: format!("/playbooks/{}", row.slug),
-                slug: row.slug,
-                title: row.title,
-                description: row.description,
-            })
-            .collect(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to fetch same-category playbooks");
-            Vec::new()
-        }
-    }
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| SameCategoryPlaybook {
+            url: format!("/playbooks/{}", row.slug),
+            slug: row.slug,
+            title: row.title,
+            description: row.description,
+        })
+        .collect())
 }

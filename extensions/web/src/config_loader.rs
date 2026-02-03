@@ -1,76 +1,77 @@
 use std::sync::Arc;
 
 use systemprompt::models::AppPaths;
+use thiserror::Error;
 
 use crate::features::{FeaturePage, FeaturesConfig};
 use crate::homepage::HomepageConfig;
 use crate::navigation::{BrandingConfig, NavigationConfig};
 
-pub fn load_navigation_config() -> Option<Arc<NavigationConfig>> {
-    let nav_value = load_config_section("navigation.yaml")?;
+#[derive(Debug, Clone, Error)]
+pub enum ConfigError {
+    #[error("Failed to parse {config_name}: {message}")]
+    Parse { config_name: String, message: String },
+}
 
-    let nav_config: NavigationConfig = match serde_yaml::from_value(nav_value) {
-        Ok(c) => c,
-        Err(e) => {
-            tracing::warn!(
-                error = %e,
-                "Failed to deserialize navigation config"
-            );
-            return None;
-        }
+pub fn load_navigation_config() -> Result<Option<Arc<NavigationConfig>>, ConfigError> {
+    let Some(nav_value) = load_config_section("navigation.yaml")? else {
+        return Ok(None);
     };
+
+    let nav_config: NavigationConfig = serde_yaml::from_value(nav_value).map_err(|e| {
+        ConfigError::Parse {
+            config_name: "navigation.yaml".to_string(),
+            message: e.to_string(),
+        }
+    })?;
 
     tracing::info!("Loaded navigation config from config/navigation.yaml");
 
-    Some(Arc::new(nav_config))
+    Ok(Some(Arc::new(nav_config)))
 }
 
-pub fn load_homepage_config() -> Option<Arc<HomepageConfig>> {
-    let homepage_value = load_config_section("homepage.yaml")?;
-
-    let homepage_config: HomepageConfig = match serde_yaml::from_value(homepage_value) {
-        Ok(c) => c,
-        Err(e) => {
-            tracing::warn!(
-                error = %e,
-                "Failed to deserialize homepage config"
-            );
-            return None;
-        }
+pub fn load_homepage_config() -> Result<Option<Arc<HomepageConfig>>, ConfigError> {
+    let Some(homepage_value) = load_config_section("homepage.yaml")? else {
+        return Ok(None);
     };
+
+    let homepage_config: HomepageConfig =
+        serde_yaml::from_value(homepage_value).map_err(|e| ConfigError::Parse {
+            config_name: "homepage.yaml".to_string(),
+            message: e.to_string(),
+        })?;
 
     tracing::info!("Loaded homepage config from config/homepage.yaml");
 
-    Some(Arc::new(homepage_config))
+    Ok(Some(Arc::new(homepage_config)))
 }
 
-pub fn load_branding_config() -> Option<BrandingConfig> {
-    let theme_value = load_config_section("theme.yaml")?;
-
-    let branding_value = theme_value.get("branding")?;
-
-    let branding_config: BrandingConfig = match serde_yaml::from_value(branding_value.clone()) {
-        Ok(c) => c,
-        Err(e) => {
-            tracing::warn!(
-                error = %e,
-                "Failed to deserialize branding config from theme.yaml"
-            );
-            return None;
-        }
+pub fn load_branding_config() -> Result<Option<BrandingConfig>, ConfigError> {
+    let Some(theme_value) = load_config_section("theme.yaml")? else {
+        return Ok(None);
     };
+
+    let Some(branding_value) = theme_value.get("branding") else {
+        return Ok(None);
+    };
+
+    let branding_config: BrandingConfig =
+        serde_yaml::from_value(branding_value.clone()).map_err(|e| ConfigError::Parse {
+            config_name: "theme.yaml (branding section)".to_string(),
+            message: e.to_string(),
+        })?;
 
     tracing::info!("Loaded branding config from config/theme.yaml");
 
-    Some(branding_config)
+    Ok(Some(branding_config))
 }
 
-pub fn load_features_config() -> Option<Arc<FeaturesConfig>> {
+pub fn load_features_config() -> Result<Option<Arc<FeaturesConfig>>, ConfigError> {
     let paths = match AppPaths::get() {
         Ok(p) => p,
         Err(e) => {
             tracing::debug!("AppPaths not available for features config: {e}");
-            return None;
+            return Ok(None);
         }
     };
 
@@ -78,17 +79,23 @@ pub fn load_features_config() -> Option<Arc<FeaturesConfig>> {
 
     let entries = match std::fs::read_dir(&features_dir) {
         Ok(entries) => entries,
-        Err(e) => {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             tracing::debug!(
                 path = %features_dir.display(),
-                error = %e,
-                "Failed to read features config directory"
+                "Features config directory does not exist"
             );
-            return None;
+            return Ok(None);
+        }
+        Err(e) => {
+            return Err(ConfigError::Parse {
+                config_name: features_dir.display().to_string(),
+                message: format!("Failed to read directory: {e}"),
+            });
         }
     };
 
     let mut pages: Vec<FeaturePage> = Vec::new();
+    let mut errors: Vec<String> = Vec::new();
 
     for entry in entries.flatten() {
         let path = entry.path();
@@ -100,11 +107,7 @@ pub fn load_features_config() -> Option<Arc<FeaturesConfig>> {
         let content = match std::fs::read_to_string(&path) {
             Ok(c) => c,
             Err(e) => {
-                tracing::warn!(
-                    path = %path.display(),
-                    error = %e,
-                    "Failed to read feature config file"
-                );
+                errors.push(format!("{}: failed to read: {e}", path.display()));
                 continue;
             }
         };
@@ -112,11 +115,7 @@ pub fn load_features_config() -> Option<Arc<FeaturesConfig>> {
         let page: FeaturePage = match serde_yaml::from_str(&content) {
             Ok(p) => p,
             Err(e) => {
-                tracing::warn!(
-                    path = %path.display(),
-                    error = %e,
-                    "Failed to deserialize feature config"
-                );
+                errors.push(format!("{}: failed to parse: {e}", path.display()));
                 continue;
             }
         };
@@ -124,9 +123,16 @@ pub fn load_features_config() -> Option<Arc<FeaturesConfig>> {
         pages.push(page);
     }
 
+    if !errors.is_empty() {
+        return Err(ConfigError::Parse {
+            config_name: "features".to_string(),
+            message: errors.join("; "),
+        });
+    }
+
     if pages.is_empty() {
         tracing::debug!("No feature pages loaded");
-        return None;
+        return Ok(None);
     }
 
     pages.sort_by(|a, b| a.slug.cmp(&b.slug));
@@ -136,15 +142,15 @@ pub fn load_features_config() -> Option<Arc<FeaturesConfig>> {
         "Loaded features config from config/features/"
     );
 
-    Some(Arc::new(FeaturesConfig { pages }))
+    Ok(Some(Arc::new(FeaturesConfig { pages })))
 }
 
-fn load_config_section(filename: &str) -> Option<serde_yaml::Value> {
+fn load_config_section(filename: &str) -> Result<Option<serde_yaml::Value>, ConfigError> {
     let paths = match AppPaths::get() {
         Ok(p) => p,
         Err(e) => {
             tracing::debug!("AppPaths not available for config section: {e}");
-            return None;
+            return Ok(None);
         }
     };
 
@@ -155,25 +161,25 @@ fn load_config_section(filename: &str) -> Option<serde_yaml::Value> {
 
     let yaml_content = match std::fs::read_to_string(&config_path) {
         Ok(c) => c,
-        Err(e) => {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             tracing::debug!(
                 path = %config_path.display(),
-                error = %e,
-                "Failed to read config section"
+                "Config file does not exist"
             );
-            return None;
+            return Ok(None);
+        }
+        Err(e) => {
+            return Err(ConfigError::Parse {
+                config_name: filename.to_string(),
+                message: format!("Failed to read file: {e}"),
+            });
         }
     };
 
-    match serde_yaml::from_str(&yaml_content) {
-        Ok(v) => Some(v),
-        Err(e) => {
-            tracing::warn!(
-                path = %config_path.display(),
-                error = %e,
-                "Failed to parse config section"
-            );
-            None
-        }
-    }
+    serde_yaml::from_str(&yaml_content)
+        .map(Some)
+        .map_err(|e| ConfigError::Parse {
+            config_name: filename.to_string(),
+            message: e.to_string(),
+        })
 }

@@ -110,31 +110,16 @@ impl ServerHandler for SoulMcpServer {
                         .await
                     }
                     "memory_store" => {
-                        self.handle_store(
-                            arguments,
-                            &service,
-                            &request_context,
-                            &mcp_execution_id,
-                        )
-                        .await
+                        self.handle_store(arguments, &service, &request_context, &mcp_execution_id)
+                            .await
                     }
                     "memory_search" => {
-                        self.handle_search(
-                            arguments,
-                            &service,
-                            &request_context,
-                            &mcp_execution_id,
-                        )
-                        .await
+                        self.handle_search(arguments, &service, &request_context, &mcp_execution_id)
+                            .await
                     }
                     "memory_forget" => {
-                        self.handle_forget(
-                            arguments,
-                            &service,
-                            &request_context,
-                            &mcp_execution_id,
-                        )
-                        .await
+                        self.handle_forget(arguments, &service, &request_context, &mcp_execution_id)
+                            .await
                     }
                     _ => unreachable!(),
                 }

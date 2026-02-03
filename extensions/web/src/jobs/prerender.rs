@@ -1,7 +1,7 @@
 use anyhow::Result;
 use systemprompt::database::DbPool;
-use systemprompt::traits::{Job, JobContext, JobResult};
 use systemprompt::generator::prerender_content;
+use systemprompt::traits::{Job, JobContext, JobResult};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ContentPrerenderJob;

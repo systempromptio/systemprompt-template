@@ -5,8 +5,7 @@ use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-/// Aggregated analytics data for a single content item
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Debug)]
 struct ContentAnalyticsRow {
     content_id: String,
     total_views: i64,
@@ -72,27 +71,24 @@ impl ContentAnalyticsAggregationJob {
     }
 
     async fn aggregate_engagement_stats(pool: &PgPool) -> Result<Vec<ContentAnalyticsRow>> {
-        // Aggregate engagement events, joining to markdown_content via:
-        // 1. Direct content_id match (if populated)
-        // 2. URL pattern matching (page_url -> slug)
-        let rows = sqlx::query_as::<_, ContentAnalyticsRow>(
+        let rows = sqlx::query_as!(
+            ContentAnalyticsRow,
             r#"
             SELECT
-                mc.id as content_id,
-                COUNT(*) FILTER (WHERE ee.time_on_page_ms > 0)::BIGINT as total_views,
-                COUNT(DISTINCT ee.session_id)::BIGINT as unique_visitors,
-                COALESCE(AVG(ee.time_on_page_ms)::DOUBLE PRECISION / 1000.0, 0) as avg_time_seconds,
+                mc.id as "content_id!",
+                COUNT(*) FILTER (WHERE ee.time_on_page_ms > 0)::BIGINT as "total_views!",
+                COUNT(DISTINCT ee.session_id)::BIGINT as "unique_visitors!",
+                COALESCE(AVG(ee.time_on_page_ms)::DOUBLE PRECISION / 1000.0, 0) as "avg_time_seconds!",
                 COUNT(*) FILTER (
                     WHERE ee.time_on_page_ms > 0
                     AND ee.created_at >= NOW() - INTERVAL '7 days'
-                )::BIGINT as views_7d,
+                )::BIGINT as "views_7d!",
                 COUNT(*) FILTER (
                     WHERE ee.time_on_page_ms > 0
                     AND ee.created_at >= NOW() - INTERVAL '30 days'
-                )::BIGINT as views_30d
+                )::BIGINT as "views_30d!"
             FROM engagement_events ee
             JOIN markdown_content mc ON (
-                -- Match by URL pattern, extracting slug from page_url
                 (ee.page_url LIKE '/blog/%' AND mc.slug = SUBSTRING(ee.page_url FROM 7) AND mc.source_id = 'blog')
                 OR (ee.page_url LIKE '/documentation/%' AND mc.slug = SUBSTRING(ee.page_url FROM 16) AND mc.source_id = 'documentation')
                 OR (ee.page_url LIKE '/playbooks/%' AND mc.slug = SUBSTRING(ee.page_url FROM 12) AND mc.source_id = 'playbooks')
@@ -100,7 +96,7 @@ impl ContentAnalyticsAggregationJob {
             )
             GROUP BY mc.id
             HAVING COUNT(*) > 0
-            "#,
+            "#
         )
         .fetch_all(pool)
         .await?;
@@ -122,7 +118,12 @@ impl ContentAnalyticsAggregationJob {
             "stable"
         };
 
-        sqlx::query(
+        let total_views = stats.total_views as i32;
+        let unique_visitors = stats.unique_visitors as i32;
+        let views_7d = stats.views_7d as i32;
+        let views_30d = stats.views_30d as i32;
+
+        sqlx::query!(
             r#"
             INSERT INTO content_performance_metrics (
                 id, content_id, total_views, unique_visitors,
@@ -139,15 +140,15 @@ impl ContentAnalyticsAggregationJob {
                 trend_direction = EXCLUDED.trend_direction,
                 updated_at = NOW()
             "#,
+            id,
+            stats.content_id,
+            total_views,
+            unique_visitors,
+            stats.avg_time_seconds,
+            views_7d,
+            views_30d,
+            trend_direction
         )
-        .bind(&id)
-        .bind(&stats.content_id)
-        .bind(stats.total_views as i32)
-        .bind(stats.unique_visitors as i32)
-        .bind(stats.avg_time_seconds)
-        .bind(stats.views_7d as i32)
-        .bind(stats.views_30d as i32)
-        .bind(trend_direction)
         .execute(pool)
         .await?;
 

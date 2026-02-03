@@ -18,89 +18,6 @@
 
     <main>
         <!-- Hero Section -->
-        <section class="hero">
-            <div class="container">
-                <div class="hero-content" style="max-width: 700px; margin: 0 auto; text-align: center;">
-                    <h1 class="hero-title" style="text-align: center;">
-                        {{site.homepage.hero.title}}<br>
-                        <span class="highlight">{{site.homepage.hero.title_highlight}}</span>
-                    </h1>
-                    <p class="hero-subtitle" style="text-align: center; max-width: 600px; margin: 0 auto var(--space-xl);">{{site.homepage.hero.subtitle}}</p>
-                    <div class="hero-ctas" style="justify-content: center;">
-                        <a href="{{site.homepage.hero.cta_url}}" class="primary-cta">{{site.homepage.hero.cta}}</a>
-                        <a href="{{site.homepage.hero.cta_secondary_url}}" class="secondary-cta">{{site.homepage.hero.cta_secondary}}</a>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Value Props - Diagonal Layout -->
-        {{#if site.homepage.value_props}}
-        <section class="diagonal-hero">
-            {{#each site.homepage.value_props}}
-            <div class="diagonal-pane diagonal-pane--{{this.id}}">
-                <div class="diagonal-content">
-                    <h2 class="diagonal-title">{{this.title}} <span class="highlight">{{this.title_highlight}}</span></h2>
-                    <p class="diagonal-subtitle">{{this.subtitle}}</p>
-                    <ul class="diagonal-features">
-                        {{#each this.features}}
-                        <li>{{this}}</li>
-                        {{/each}}
-                    </ul>
-                    {{#if this.url}}
-                    <a href="{{this.url}}" class="diagonal-cta">Learn more →</a>
-                    {{/if}}
-                </div>
-            </div>
-            {{/each}}
-        </section>
-        {{/if}}
-
-        <!-- Features Grid -->
-        {{#if site.homepage.features.title}}
-        <section class="features">
-            <div class="container">
-                <h2 class="section-title">{{site.homepage.features.title}}</h2>
-                {{#if site.homepage.features.subtitle}}
-                <p class="section-subtitle">{{site.homepage.features.subtitle}}</p>
-                {{/if}}
-                <div class="features-grid">
-                    {{#each site.homepage.features.categories}}
-                    {{#each this.features}}
-                    <a href="{{this.url}}" class="feature-card">
-                        <span class="category-badge">{{../name}}</span>
-                        <h4>{{this.title}}</h4>
-                        <p>{{this.description}}</p>
-                        <span class="feature-link-arrow">→</span>
-                    </a>
-                    {{/each}}
-                    {{/each}}
-                </div>
-            </div>
-        </section>
-        {{/if}}
-
-        <!-- How It Works -->
-        {{#if site.homepage.how_it_works.title}}
-        <section class="how-it-works">
-            <div class="container">
-                <h2 class="section-title">{{site.homepage.how_it_works.title}}</h2>
-                <div class="steps">
-                    {{#each site.homepage.how_it_works.steps}}
-                    <div class="step">
-                        <div class="step-number">{{this.number}}</div>
-                        <h3>{{this.title}}</h3>
-                        <p>{{this.description}}</p>
-                        <code class="step-code">{{this.code}}</code>
-                    </div>
-                    {{/each}}
-                </div>
-            </div>
-        </section>
-        {{/if}}
-
-        <!-- Playbooks Section -->
-        {{#if site.homepage.playbooks.title}}
         <section class="playbooks-section">
             <div class="container">
                 <h2 class="section-title">{{site.homepage.playbooks.title}} <span class="highlight">{{site.homepage.playbooks.title_highlight}}</span></h2>
@@ -114,37 +31,11 @@
                     <div class="playbooks-featured__code">
                         <code>$ {{site.homepage.playbooks.featured.code}}</code>
                     </div>
-                    <a href="{{site.homepage.playbooks.featured.url}}" class="playbooks-featured__cta">Read playbook <span class="arrow">→</span></a>
+                    <a href="{{site.homepage.playbooks.featured.url}}" class="playbooks-featured__cta">{{site.homepage.playbooks.featured.cta_text}} <span class="arrow">→</span></a>
                 </div>
                 {{/if}}
-
-                <div class="playbooks-categories playbooks-categories--simple">
-                    {{#each site.homepage.playbooks.categories}}
-                    <a href="{{this.url}}" class="playbooks-category-link" data-category="{{this.id}}">
-                        <span class="playbooks-category-link__name">{{this.name}}</span>
-                        <span class="playbooks-category-link__count">{{this.count}} playbooks</span>
-                        <span class="playbooks-category-link__desc">{{this.description}}</span>
-                    </a>
-                    {{/each}}
-                </div>
-
-                <div style="text-align: center; margin-top: var(--space-2xl);">
-                    <a href="{{site.homepage.playbooks.cta_primary_url}}" class="primary-cta">{{site.homepage.playbooks.cta_primary}}</a>
-                </div>
             </div>
         </section>
-        {{/if}}
-
-        <!-- Final CTA -->
-        {{#if site.homepage.final_cta.title}}
-        <section class="final-cta">
-            <div class="container">
-                <h2>{{site.homepage.final_cta.title}}</h2>
-                <p>{{site.homepage.final_cta.subtitle}}</p>
-                <a href="{{site.homepage.hero.cta_url}}" class="primary-cta">{{site.homepage.final_cta.button}}</a>
-            </div>
-        </section>
-        {{/if}}
     </main>
 
     {{{FOOTER}}}

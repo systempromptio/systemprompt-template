@@ -9,7 +9,7 @@ use systemprompt::traits::Job;
 
 use crate::blog::{BlogListPageDataProvider, BlogPostPageDataProvider};
 use crate::config::BlogConfigValidated;
-use crate::config_loader;
+use crate::config_loader::{self, ConfigError};
 use crate::docs::{DocsContentDataProvider, DocsPageDataProvider};
 use crate::features::{FeaturePagePrerenderer, FeaturesConfig};
 use crate::homepage::{HomepageConfig, HomepagePageDataProvider, HomepagePrerenderer};
@@ -31,9 +31,12 @@ use crate::{
     },
 };
 
-static NAVIGATION_CONFIG: OnceLock<Option<Arc<NavigationConfig>>> = OnceLock::new();
-static HOMEPAGE_CONFIG: OnceLock<Option<Arc<HomepageConfig>>> = OnceLock::new();
-static FEATURES_CONFIG: OnceLock<Option<Arc<FeaturesConfig>>> = OnceLock::new();
+static NAVIGATION_CONFIG: OnceLock<Result<Option<Arc<NavigationConfig>>, ConfigError>> =
+    OnceLock::new();
+static HOMEPAGE_CONFIG: OnceLock<Result<Option<Arc<HomepageConfig>>, ConfigError>> =
+    OnceLock::new();
+static FEATURES_CONFIG: OnceLock<Result<Option<Arc<FeaturesConfig>>, ConfigError>> =
+    OnceLock::new();
 
 pub const SCHEMA_MARKDOWN_CONTENT: &str = include_str!("../schema/001_markdown_content.sql");
 pub const SCHEMA_MARKDOWN_CATEGORIES: &str = include_str!("../schema/002_markdown_categories.sql");
@@ -91,6 +94,7 @@ impl WebExtension {
         NAVIGATION_CONFIG
             .get_or_init(config_loader::load_navigation_config)
             .clone()
+            .unwrap_or_else(|e| panic!("Navigation config error: {e}"))
     }
 
     #[must_use]
@@ -98,6 +102,7 @@ impl WebExtension {
         HOMEPAGE_CONFIG
             .get_or_init(config_loader::load_homepage_config)
             .clone()
+            .unwrap_or_else(|e| panic!("Homepage config error: {e}"))
     }
 
     #[must_use]
@@ -105,6 +110,7 @@ impl WebExtension {
         FEATURES_CONFIG
             .get_or_init(config_loader::load_features_config)
             .clone()
+            .unwrap_or_else(|e| panic!("Features config error: {e}"))
     }
 }
 
@@ -121,7 +127,8 @@ impl Extension for WebExtension {
         let mut providers: Vec<Arc<dyn PageDataProvider>> = vec![];
 
         if let Some(nav_config) = Self::navigation_config() {
-            let branding = config_loader::load_branding_config();
+            let branding = config_loader::load_branding_config()
+                .unwrap_or_else(|e| panic!("Branding config error: {e}"));
             providers.push(Arc::new(
                 NavigationPageDataProvider::new(nav_config).with_branding(branding),
             ));

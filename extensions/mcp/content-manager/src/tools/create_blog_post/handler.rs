@@ -48,9 +48,9 @@ pub async fn handle(
     progress: Option<ProgressCallback>,
     mcp_execution_id: &McpExecutionId,
 ) -> Result<CallToolResult, McpError> {
-    let pg_pool = db_pool.pool().ok_or_else(|| {
-        McpError::internal_error("Database pool not available", None)
-    })?;
+    let pg_pool = db_pool
+        .pool()
+        .ok_or_else(|| McpError::internal_error("Database pool not available", None))?;
     let content_repo = ContentRepository::new(pg_pool);
 
     if let Some(ref notify) = progress {
@@ -281,7 +281,12 @@ pub async fn handle(
     let blog_content_id = content.id.to_string();
 
     if let Some(ref notify) = progress {
-        notify(100.0, Some(100.0), Some("Blog post saved to database!".to_string())).await;
+        notify(
+            100.0,
+            Some(100.0),
+            Some("Blog post saved to database!".to_string()),
+        )
+        .await;
     }
 
     tracing::info!(

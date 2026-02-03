@@ -40,17 +40,14 @@ impl std::fmt::Debug for DiscordConfigValidated {
 
 impl DiscordConfigValidated {
     fn get_bot_token_from_secrets() -> anyhow::Result<String> {
-        let secrets = SecretsBootstrap::get()
-            .map_err(|e| anyhow::anyhow!("Failed to get secrets: {}", e))?;
+        let secrets =
+            SecretsBootstrap::get().map_err(|e| anyhow::anyhow!("Failed to get secrets: {}", e))?;
 
-        secrets
-            .get("discord_bot_token")
-            .cloned()
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "discord_bot_token not found in secrets. Add it to your profile's secrets.json"
-                )
-            })
+        secrets.get("discord_bot_token").cloned().ok_or_else(|| {
+            anyhow::anyhow!(
+                "discord_bot_token not found in secrets. Add it to your profile's secrets.json"
+            )
+        })
     }
 
     pub fn from_raw(raw: DiscordConfig) -> anyhow::Result<Self> {

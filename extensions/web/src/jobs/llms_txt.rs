@@ -1,8 +1,8 @@
 use anyhow::{anyhow, Context, Result};
 use std::fmt::Write as FmtWrite;
 use systemprompt::database::DbPool;
-use systemprompt::traits::{Job, JobContext, JobResult};
 use systemprompt::generator::ContentConfigRaw;
+use systemprompt::traits::{Job, JobContext, JobResult};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct LlmsTxtGenerationJob;
@@ -48,8 +48,8 @@ impl Job for LlmsTxtGenerationJob {
 systemprompt::traits::submit_job!(&LlmsTxtGenerationJob);
 
 pub async fn generate_llms_txt(db_pool: DbPool) -> Result<()> {
-    use systemprompt::models::{AppPaths, Config};
     use systemprompt::generator::ContentConfigRaw;
+    use systemprompt::models::{AppPaths, Config};
     use tokio::fs;
 
     let global_config = Config::get()?;
@@ -86,18 +86,12 @@ async fn build_llms_txt_content(
 
     let mut content = String::new();
 
-    writeln!(content, "# systemprompt.io")?;
+    writeln!(content, "# Your Project Name")?;
     writeln!(content)?;
 
     writeln!(
         content,
-        "> Production infrastructure for AI agents powered by Anthropic Claude, OpenAI ChatGPT, and Google Gemini. Self-hosted Rust platform with MCP server hosting, OAuth security, multi-provider orchestration, and enterprise observability."
-    )?;
-    writeln!(content)?;
-
-    writeln!(
-        content,
-        "systemprompt.io enables teams to deploy production AI applications using Anthropic's Claude, OpenAI's ChatGPT, and Google's Gemini through a unified infrastructure layer. Native SDK integration with all three providers supports automatic failover, cost optimization, and smart model routing. Built on the Model Context Protocol (MCP) standard—pioneered by Anthropic for Claude Desktop—systemprompt.io delivers production-grade tool serving compatible with the leading AI assistants."
+        "> Add your project description here. This file helps AI assistants understand your project."
     )?;
     writeln!(content)?;
 
@@ -105,30 +99,7 @@ async fn build_llms_txt_content(
     writeln!(content)?;
     writeln!(content, "- Homepage: {base_url}")?;
     writeln!(content, "- Documentation: {base_url}/documentation")?;
-    writeln!(content, "- Playbooks: {base_url}/playbooks")?;
     writeln!(content, "- Blog: {base_url}/blog")?;
-    writeln!(content, "- GitHub: https://github.com/systempromptio/systemprompt-template")?;
-    writeln!(content)?;
-
-    writeln!(content, "## Key Features")?;
-    writeln!(content)?;
-    writeln!(content, "- **MCP Server Hosting**: Production OAuth-secured Model Context Protocol servers compatible with Claude Desktop and AI coding assistants")?;
-    writeln!(content, "- **Multi-Provider AI**: Native integration with Anthropic Claude, OpenAI ChatGPT, and Google Gemini with automatic failover")?;
-    writeln!(content, "- **Agent Orchestration**: A2A protocol for agent-to-agent communication across AI providers")?;
-    writeln!(content, "- **Enterprise Security**: OAuth2/OIDC + WebAuthn passwordless authentication")?;
-    writeln!(content, "- **Full Observability**: Request tracing, cost tracking per provider, audit logs")?;
-    writeln!(content, "- **Rust Extension System**: Type-safe traits for API routes, jobs, schemas, and providers")?;
-    writeln!(content)?;
-
-    writeln!(content, "## AI Provider Integrations")?;
-    writeln!(content)?;
-    writeln!(content, "systemprompt.io supports multiple AI providers with native SDK integration:")?;
-    writeln!(content)?;
-    writeln!(content, "- **Anthropic Claude**: Native Claude API integration with Claude Sonnet 4, Claude Opus 4, and Claude Haiku support. Full MCP protocol compatibility for tool serving.")?;
-    writeln!(content, "- **OpenAI ChatGPT**: GPT-4o and GPT-4 Turbo integration with function calling and structured outputs.")?;
-    writeln!(content, "- **Google Gemini**: Gemini Pro and Gemini Flash support with search grounding capabilities.")?;
-    writeln!(content)?;
-    writeln!(content, "Smart routing automatically selects the optimal model based on task complexity, cost constraints, and availability.")?;
     writeln!(content)?;
 
     let repo = ContentRepository::new(&db_pool).map_err(|e| anyhow!("{e}"))?;
@@ -136,7 +107,7 @@ async fn build_llms_txt_content(
     // Playbooks Section - Organized by Category
     writeln!(content, "## Playbooks")?;
     writeln!(content)?;
-    writeln!(content, "Machine-readable guides for AI agents. Point your super agent to a playbook.")?;
+    writeln!(content, "Operational guides and procedures.")?;
     writeln!(content)?;
 
     if let Some(source) = config.content_sources.get("playbooks") {
@@ -144,12 +115,30 @@ async fn build_llms_txt_content(
             let source_id = SourceId::new(&source.source_id);
             if let Ok(playbooks) = repo.list_by_source(&source_id).await {
                 // Categorize playbooks
-                let mut guides: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("guide")).collect();
-                let mut cli: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("cli")).collect();
-                let mut build: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("build")).collect();
-                let mut config_pb: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("config")).collect();
-                let mut domain: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("domain")).collect();
-                let mut content_pb: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("content")).collect();
+                let mut guides: Vec<_> = playbooks
+                    .iter()
+                    .filter(|p| p.slug.starts_with("guide"))
+                    .collect();
+                let mut cli: Vec<_> = playbooks
+                    .iter()
+                    .filter(|p| p.slug.starts_with("cli"))
+                    .collect();
+                let mut build: Vec<_> = playbooks
+                    .iter()
+                    .filter(|p| p.slug.starts_with("build"))
+                    .collect();
+                let mut config_pb: Vec<_> = playbooks
+                    .iter()
+                    .filter(|p| p.slug.starts_with("config"))
+                    .collect();
+                let mut domain: Vec<_> = playbooks
+                    .iter()
+                    .filter(|p| p.slug.starts_with("domain"))
+                    .collect();
+                let mut content_pb: Vec<_> = playbooks
+                    .iter()
+                    .filter(|p| p.slug.starts_with("content"))
+                    .collect();
 
                 // Sort each category alphabetically
                 guides.sort_by(|a, b| a.title.cmp(&b.title));
@@ -165,7 +154,11 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                     for playbook in &guides {
                         let url = format!("{}/playbooks/{}", base_url, playbook.slug);
-                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                        writeln!(
+                            content,
+                            "- [{}]({}): {}",
+                            playbook.title, url, playbook.description
+                        )?;
                     }
                     writeln!(content)?;
                 }
@@ -176,7 +169,11 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                     for playbook in &cli {
                         let url = format!("{}/playbooks/{}", base_url, playbook.slug);
-                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                        writeln!(
+                            content,
+                            "- [{}]({}): {}",
+                            playbook.title, url, playbook.description
+                        )?;
                     }
                     writeln!(content)?;
                 }
@@ -187,7 +184,11 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                     for playbook in &build {
                         let url = format!("{}/playbooks/{}", base_url, playbook.slug);
-                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                        writeln!(
+                            content,
+                            "- [{}]({}): {}",
+                            playbook.title, url, playbook.description
+                        )?;
                     }
                     writeln!(content)?;
                 }
@@ -198,7 +199,11 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                     for playbook in &config_pb {
                         let url = format!("{}/playbooks/{}", base_url, playbook.slug);
-                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                        writeln!(
+                            content,
+                            "- [{}]({}): {}",
+                            playbook.title, url, playbook.description
+                        )?;
                     }
                     writeln!(content)?;
                 }
@@ -209,7 +214,11 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                     for playbook in &domain {
                         let url = format!("{}/playbooks/{}", base_url, playbook.slug);
-                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                        writeln!(
+                            content,
+                            "- [{}]({}): {}",
+                            playbook.title, url, playbook.description
+                        )?;
                     }
                     writeln!(content)?;
                 }
@@ -220,7 +229,11 @@ async fn build_llms_txt_content(
                     writeln!(content)?;
                     for playbook in &content_pb {
                         let url = format!("{}/playbooks/{}", base_url, playbook.slug);
-                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                        writeln!(
+                            content,
+                            "- [{}]({}): {}",
+                            playbook.title, url, playbook.description
+                        )?;
                     }
                     writeln!(content)?;
                 }
@@ -231,7 +244,7 @@ async fn build_llms_txt_content(
     // Documentation Section - Organized by Category
     writeln!(content, "## Documentation")?;
     writeln!(content)?;
-    writeln!(content, "Technical reference for SystemPrompt architecture and APIs.")?;
+    writeln!(content, "Technical documentation and guides.")?;
     writeln!(content)?;
 
     if let Some(source) = config.content_sources.get("documentation") {
@@ -239,14 +252,26 @@ async fn build_llms_txt_content(
             let source_id = SourceId::new(&source.source_id);
             if let Ok(docs) = repo.list_by_source(&source_id).await {
                 // Categorize documentation by slug prefix
-                let mut services: Vec<_> = docs.iter().filter(|d| d.slug.starts_with("services")).collect();
-                let mut extensions: Vec<_> = docs.iter().filter(|d| d.slug.starts_with("extensions")).collect();
-                let mut config_docs: Vec<_> = docs.iter().filter(|d| d.slug.starts_with("config")).collect();
-                let mut other: Vec<_> = docs.iter().filter(|d| {
-                    !d.slug.starts_with("services") &&
-                    !d.slug.starts_with("extensions") &&
-                    !d.slug.starts_with("config")
-                }).collect();
+                let mut services: Vec<_> = docs
+                    .iter()
+                    .filter(|d| d.slug.starts_with("services"))
+                    .collect();
+                let mut extensions: Vec<_> = docs
+                    .iter()
+                    .filter(|d| d.slug.starts_with("extensions"))
+                    .collect();
+                let mut config_docs: Vec<_> = docs
+                    .iter()
+                    .filter(|d| d.slug.starts_with("config"))
+                    .collect();
+                let mut other: Vec<_> = docs
+                    .iter()
+                    .filter(|d| {
+                        !d.slug.starts_with("services")
+                            && !d.slug.starts_with("extensions")
+                            && !d.slug.starts_with("config")
+                    })
+                    .collect();
 
                 // Sort each category
                 services.sort_by(|a, b| a.title.cmp(&b.title));
@@ -304,7 +329,7 @@ async fn build_llms_txt_content(
     // Blog Section
     writeln!(content, "## Blog")?;
     writeln!(content)?;
-    writeln!(content, "Articles on AI agent development and SystemPrompt features.")?;
+    writeln!(content, "Articles and updates.")?;
     writeln!(content)?;
 
     if let Some(source) = config.content_sources.get("blog") {
@@ -325,19 +350,11 @@ async fn build_llms_txt_content(
     writeln!(content)?;
     writeln!(
         content,
-        "- [GitHub Repository](https://github.com/systempromptio/systemprompt-template): Clone to start building"
+        "- [Sitemap]({base_url}/sitemap.xml): Complete URL index"
     )?;
     writeln!(
         content,
-        "- [Sitemap]({base_url}/sitemap.xml): Complete URL index for crawling"
-    )?;
-    writeln!(
-        content,
-        "- [All Playbooks]({base_url}/playbooks): Browse all playbooks with filtering"
-    )?;
-    writeln!(
-        content,
-        "- [All Documentation]({base_url}/documentation): Browse all documentation"
+        "- [Documentation]({base_url}/documentation): All documentation"
     )?;
 
     Ok(content)
