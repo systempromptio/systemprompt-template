@@ -2,7 +2,7 @@
 
 # systemprompt-template
 
-**From chat to autonomous agent mesh in 3 commands.**
+**Production AI agent mesh in 3 commands.**
 
 [![Built on systemprompt-core](https://img.shields.io/badge/built%20on-systemprompt--core-blue)](https://github.com/systempromptio/systemprompt-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
