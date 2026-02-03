@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="https://systemprompt.io/files/images/logo-dark.svg" alt="systemprompt.io" width="400">
+
 # systemprompt-template
 
 **Production AI agent mesh in 3 commands.**
@@ -215,9 +217,9 @@ Learn more: **[systemprompt.io/playbooks](https://systemprompt.io/playbooks)**
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  core/ (git submodule - READ ONLY)                               │
+│  systemprompt-core (Cargo dependency)                            │
 │                                                                  │
-│  systemprompt-core provides:                                     │
+│  Provides:                                                       │
 │  ├── API server + CLI                                            │
 │  ├── Agent runtime + A2A protocol                                │
 │  ├── MCP server hosting                                          │
@@ -230,7 +232,7 @@ Learn more: **[systemprompt.io/playbooks](https://systemprompt.io/playbooks)**
 **Key rules:**
 - Rust code → `extensions/`
 - Configuration → `services/`
-- Core is **read-only** (git submodule)
+- Core is a **Cargo dependency** (from crates.io)
 
 ---
 
@@ -254,8 +256,7 @@ systemprompt-template/
 │   ├── playbook/            # 96 operational playbooks
 │   └── web/                 # Theme, templates, homepage config
 │
-├── core/                    # READ-ONLY - systemprompt-core submodule
-├── Cargo.toml               # Workspace manifest
+├── Cargo.toml               # Workspace manifest (systemprompt-core via Cargo)
 └── justfile                 # Development commands
 ```
 
