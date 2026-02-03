@@ -55,7 +55,7 @@ cd my-ai
 ## Build Binary
 
 ```bash
-SQLX_OFFLINE=true cargo build --release -p systemprompt-cli
+SQLX_OFFLINE=true cargo build --release
 ```
 
 The `SQLX_OFFLINE=true` flag is required for first build (no database yet).
@@ -177,7 +177,7 @@ Visit `http://localhost:8080` to see the homepage.
 
 | Task | Command |
 |------|---------|
-| Build | `SQLX_OFFLINE=true cargo build --release -p systemprompt-cli` |
+| Build | `SQLX_OFFLINE=true cargo build --release` |
 | Login | `systemprompt cloud auth login` (manual only) |
 | Create local tenant | `systemprompt cloud tenant create --database-url postgres://...` |
 | Create cloud tenant | `systemprompt cloud tenant create --region iad` |

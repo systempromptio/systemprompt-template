@@ -51,7 +51,7 @@ cd my-project
 ### 2. Build
 
 ```bash
-SQLX_OFFLINE=true cargo build --release -p systemprompt-cli
+SQLX_OFFLINE=true cargo build --release
 ```
 
 The `SQLX_OFFLINE=true` flag is required for first build (no database yet).
