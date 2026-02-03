@@ -106,7 +106,7 @@ content_sources:
       fetch_from: "database"
       parent_route:
         enabled: true
-        url: "/playbooks"
+        url: "https://systemprompt.io/playbooks"
         priority: 0.8
         changefreq: "daily"
 

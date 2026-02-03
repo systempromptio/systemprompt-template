@@ -261,6 +261,6 @@ nav:
   app_url: ""  # Your app URL if applicable
   docs_url: "/documentation"
   blog_url: "/blog"
-  playbooks_url: "/playbooks"
+  playbooks_url: "https://systemprompt.io/playbooks"
   github_url: "https://github.com/your-org/your-repo"
   getting_started_url: "/documentation/installation"
