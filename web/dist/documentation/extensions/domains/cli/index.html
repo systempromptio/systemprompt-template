@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Resource Hints -->
+<link rel="preconnect" href="/files/fonts/" crossorigin>
+<link rel="dns-prefetch" href="/files/fonts/">
+
+<!-- Font Preloading - Critical fonts loaded early -->
+<link rel="preload" as="font" href="/files/fonts/Zepto/Zepto.woff" type="font/woff" crossorigin>
+<link rel="preload" as="font" href="/files/fonts/OpenSans/OpenSans-Regular.ttf" type="font/truetype" crossorigin>
+
+<!-- Critical CSS - Inlined to prevent FOUC -->
+<style>
+/* Prevent flash of unstyled content */
+:root {
+  --color-bg: #0a0a0f;
+  --color-surface: #12121a;
+  --color-text: #e8e8ed;
+  --color-text-secondary: #9898a6;
+  --orange-500: #f97316;
+  --orange-600: #ea580c;
+}
+html {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+body {
+  margin: 0;
+  font-family: "OpenSans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+/* Hide content until styles load to prevent layout shift */
+.header, .site-header {
+  min-height: 64px;
+}
+/* Font-face for immediate availability */
+@font-face {
+  font-family: "Zepto";
+  src: url("/files/fonts/Zepto/Zepto.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "OpenSans";
+  src: url("/files/fonts/OpenSans/OpenSans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+</style>
+
+<!-- Core Styles -->
+<link rel="stylesheet" href="/css/core/variables.css">
+<link rel="stylesheet" href="/css/core/fonts.css">
+<link rel="stylesheet" href="/css/core/reset.css">
+<link rel="stylesheet" href="/css/components/header.css">
+<link rel="stylesheet" href="/css/components/footer.css">
+<link rel="stylesheet" href="/css/components/mobile-menu.css">
+
+
+  <!-- SEO Meta Tags -->
+  <title>CLI Extensions | systemprompt.io Documentation</title>
+  <meta name="description" content="Build standalone CLI extensions for custom commands, external integrations, and utility tools that agents can execute via subprocess." />
+  <meta name="author" content="SystemPrompt Team" />
+  <meta name="keywords" content="cli, extensions, commands, integrations, standalone" />
+  <link rel="canonical" href="https://systemprompt.io/documentation/extensions/domains/cli" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="CLI Extensions" />
+  <meta property="og:description" content="Build standalone CLI extensions for custom commands, external integrations, and utility tools that agents can execute via subprocess." />
+  <meta property="og:image" content="/files/images/docs/extensions-cli.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://systemprompt.io/documentation/extensions/domains/cli" />
+  <meta property="og:site_name" content="systemprompt.io" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@systemprompt" />
+  <meta name="twitter:creator" content="@systemprompt" />
+  <meta name="twitter:title" content="CLI Extensions" />
+  <meta name="twitter:description" content="Build standalone CLI extensions for custom commands, external integrations, and utility tools that agents can execute via subprocess." />
+  <meta name="twitter:image" content="/files/images/docs/extensions-cli.svg" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/docs.css" />
+  <link rel="stylesheet" href="/css/syntax-highlight.css" />
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "CLI Extensions",
+    "description": "Build standalone CLI extensions for custom commands, external integrations, and utility tools that agents can execute via subprocess.",
+    "image": "/files/images/docs/extensions-cli.svg",
+    "author": {
+      "@type": "Organization",
+      "name": "systemprompt.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "systemprompt.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://systemprompt.io/files/images/logo.png"
+      }
+    },
+    "datePublished": "",
+    "dateModified": "",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://systemprompt.io/documentation/extensions/domains/cli"
+    },
+    "keywords": "cli, extensions, commands, integrations, standalone",
+    "inLanguage": ""
+  }
+  </script>
+
+  <!-- BreadcrumbList Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://systemprompt.io"},
+      {"@type": "ListItem", "position": 2, "name": "Documentation", "item": "https://systemprompt.io/documentation"},
+      {"@type": "ListItem", "position": 3, "name": "CLI Extensions", "item": "https://systemprompt.io/documentation/extensions/domains/cli"}
+    ]
+  }
+  </script>
+</head>
+<body class="docs-body">
+  <div class="docs-background"></div>
+
+  <header class="site-header">
+  <nav class="site-nav">
+    <a href="/" class="logo-link">
+      <img src="/files/images/logo.svg" alt="systemprompt.io" class="logo-svg" />
+    </a>
+    <button class="mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    <div class="nav-links">
+      <div class="nav-dropdown">
+        <span class="nav-dropdown-trigger">
+          Features
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Core Features</h4>
+            <a href="/features/agentic-mesh">Agentic Mesh</a>
+            <a href="/features/self-hosted-ai-platform">Embedded AI library</a>
+            <a href="/features/unified-control-plane">Unified Control Plane</a>
+            <a href="/features/closed-loop-agents">The Closed Loop</a>
+          </div>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/documentation" class="nav-dropdown-trigger">
+          Documentation
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Getting Started</h4>
+            <a href="/documentation/installation">Installation</a>
+            <a href="/documentation/licensing">Licensing</a>
+            <a href="/documentation/early-access">Early Access</a>
+            <a href="/documentation/playbooks">Playbooks</a>
+          </div>
+          <div class="dropdown-section">
+            <h4>Configuration</h4>
+            <a href="/documentation/config">Config</a>
+            <a href="/documentation/services">Services</a>
+            <a href="/documentation/extensions">Extensions</a>
+          </div>
+          <a href="/documentation" class="dropdown-view-all">View all documentation &rarr;</a>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/blog" class="nav-dropdown-trigger">
+          Blog
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Categories</h4>
+            <a href="/blog">All Posts</a>
+            <a href="/blog?category&#x3D;announcement">Announcements</a>
+            <a href="/blog?category&#x3D;article">Articles</a>
+            <a href="/blog?category&#x3D;guide">Guides</a>
+          </div>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/playbooks" class="nav-dropdown-trigger">
+          Playbooks
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Categories</h4>
+            <a href="/playbooks">All Playbooks</a>
+            <a href="/playbooks?category&#x3D;guide">Guides</a>
+            <a href="/playbooks?category&#x3D;cli">CLI</a>
+            <a href="/playbooks?category&#x3D;build">Build</a>
+            <a href="/playbooks?category&#x3D;content">Content</a>
+            <a href="/playbooks?category&#x3D;validation">Validation</a>
+          </div>
+        </div>
+      </div>
+      <a href="https://github.com/systempromptio/systemprompt-template" class="cta-button" target="_blank" rel="noopener">Get Started</a>
+    </div>
+  </nav>
+</header>
+
+
+  <div class="docs-layout">
+    <!-- Left Sidebar - Navigation (dynamically rendered from config.yaml) -->
+    <aside class="docs-sidebar">
+      <nav class="docs-nav" aria-label="Documentation navigation">
+        <div class="docs-nav-section">
+          <h3 class="docs-nav-title">Getting Started</h3>
+          <ul class="docs-nav-list">
+            <li><a href="/documentation" class="docs-nav-link">Overview</a></li>
+            <li><a href="/documentation/installation" class="docs-nav-link">Installation</a></li>
+            <li><a href="/documentation/licensing" class="docs-nav-link">Licensing</a></li>
+            <li><a href="/documentation/early-access" class="docs-nav-link">Early Access</a></li>
+            <li><a href="/documentation/playbooks" class="docs-nav-link">Playbooks</a></li>
+          </ul>
+        </div>
+        <div class="docs-nav-section">
+          <h3 class="docs-nav-title">Config</h3>
+          <ul class="docs-nav-list">
+            <li><a href="/documentation/config" class="docs-nav-link">Overview</a></li>
+            <li><a href="/documentation/config/database" class="docs-nav-link">Database</a></li>
+            <li><a href="/documentation/config/deployment" class="docs-nav-link">Deployment</a></li>
+            <li><a href="/documentation/config/docker" class="docs-nav-link">Docker</a></li>
+            <li><a href="/documentation/config/domains" class="docs-nav-link">Domains</a></li>
+            <li><a href="/documentation/config/profiles" class="docs-nav-link">Profiles</a></li>
+            <li><a href="/documentation/config/secrets" class="docs-nav-link">Secrets</a></li>
+            <li><a href="/documentation/config/sessions" class="docs-nav-link">Sessions</a></li>
+            <li><a href="/documentation/config/sync" class="docs-nav-link">Sync</a></li>
+            <li><a href="/documentation/config/tenants" class="docs-nav-link">Tenants</a></li>
+          </ul>
+        </div>
+        <div class="docs-nav-section">
+          <h3 class="docs-nav-title">Services</h3>
+          <ul class="docs-nav-list">
+            <li><a href="/documentation/services" class="docs-nav-link">Overview</a></li>
+            <li><a href="/documentation/services/agents" class="docs-nav-link">Agents</a></li>
+            <li><a href="/documentation/services/ai" class="docs-nav-link">AI</a></li>
+            <li><a href="/documentation/services/analytics" class="docs-nav-link">Analytics</a></li>
+            <li><a href="/documentation/services/auth" class="docs-nav-link">Auth</a></li>
+            <li><a href="/documentation/services/config" class="docs-nav-link">Config</a></li>
+            <li><a href="/documentation/services/content" class="docs-nav-link">Content</a></li>
+            <li><a href="/documentation/services/files" class="docs-nav-link">Files</a></li>
+            <li><a href="/documentation/services/mcp" class="docs-nav-link">MCP</a></li>
+            <li><a href="/documentation/services/playbooks" class="docs-nav-link">Playbooks</a></li>
+            <li><a href="/documentation/services/scheduler" class="docs-nav-link">Scheduler</a></li>
+            <li><a href="/documentation/services/skills" class="docs-nav-link">Skills</a></li>
+            <li><a href="/documentation/services/users" class="docs-nav-link">Users</a></li>
+            <li><a href="/documentation/services/web" class="docs-nav-link">Web</a></li>
+            <li><a href="/documentation/services/workflows" class="docs-nav-link">Workflows</a></li>
+          </ul>
+        </div>
+        <div class="docs-nav-section">
+          <h3 class="docs-nav-title">Extensions</h3>
+          <ul class="docs-nav-list">
+            <li><a href="/documentation/extensions" class="docs-nav-link">Overview</a></li>
+            <li><a href="/documentation/extensions/template" class="docs-nav-link">Template Architecture</a></li>
+            <li><a href="/documentation/extensions/hooks" class="docs-nav-link">Lifecycle Hooks</a></li>
+            <li><a href="/documentation/extensions/rust" class="docs-nav-link">Library Extensions</a></li>
+            <li><a href="/documentation/extensions/web" class="docs-nav-link">Web Extensions</a></li>
+            <li><a href="/documentation/extensions/page-data-providers" class="docs-nav-link">Page Data Providers</a></li>
+            <li><a href="/documentation/extensions/component-renderers" class="docs-nav-link">Component Renderers</a></li>
+            <li><a href="/documentation/extensions/jobs" class="docs-nav-link">Background Jobs</a></li>
+            <li><a href="/documentation/extensions/mcp" class="docs-nav-link">MCP Extensions</a></li>
+            <li><a href="/documentation/extensions/cli" class="docs-nav-link">CLI Extensions</a></li>
+          </ul>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-main">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span class="breadcrumb__separator">/</span>
+        <a href="/documentation">Documentation</a>
+        <span class="breadcrumb__separator">/</span>
+        <span class="breadcrumb__current">CLI Extensions</span>
+      </nav>
+
+      <article class="docs-article">
+        <header class="docs-header">
+          <div class="docs-title-row">
+            <h1>CLI Extensions</h1>
+            <button class="docs-export-btn" data-slug="extensions/domains/cli" aria-label="Copy as Markdown" title="Copy as Markdown">
+              <svg class="copy-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/>
+                <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/>
+              </svg>
+              <svg class="check-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 1 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/>
+              </svg>
+            </button>
+          </div>
+          <p class="docs-description">Build standalone CLI extensions for custom commands, external integrations, and utility tools that agents can execute via subprocess.</p>
+          <div class="docs-meta">
+            <time datetime="">Last updated: </time>
+          </div>
+        </header>
+
+        <!-- Learning Objectives - Top Callout -->
+
+        <!-- Mobile Table of Contents (shown ≤1200px) -->
+        <div class="docs-toc-mobile">
+          <details class="toc-mobile-details">
+            <summary class="toc-mobile-summary">
+              <span class="toc-mobile-label">On this page</span>
+              <svg class="toc-mobile-chevron" viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor">
+                <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <nav class="toc-mobile-nav" aria-label="Table of contents">
+              <div class="toc-content toc-content--mobile">
+                <ul class="toc-list">
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#cli-vs-mcp-when-to-use-which">CLI vs MCP: When to Use Which</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#project-structure">Project Structure</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#entry-point">Entry Point</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#command-implementation">Command Implementation</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#configuration">Configuration</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#service-implementation">Service Implementation</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#cargo-configuration">Cargo Configuration</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#building">Building</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#agent-integration">Agent Integration</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#integration-patterns">Integration Patterns</a>
+</li>
+</ul>
+
+              </div>
+
+
+            </nav>
+          </details>
+        </div>
+
+        <div class="docs-content">
+          <p>CLI extensions are standalone binaries that provide custom command-line tools. Like MCP servers, they run as separate processes, not compiled into the main binary. Unlike MCP servers, CLI extensions are invoked directly via shell execution rather than through the MCP protocol.</p>
+<h2 id="cli-vs-mcp-when-to-use-which">CLI vs MCP: When to Use Which</h2>
+<p>Both CLI and MCP extensions are standalone binaries, but they serve different purposes:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>CLI Extension</th>
+<th>MCP Extension</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Invocation</strong></td>
+<td>Shell execution (<code>./binary args</code>)</td>
+<td>MCP protocol over HTTP</td>
+</tr>
+<tr>
+<td><strong>Communication</strong></td>
+<td>stdout/stderr, exit codes</td>
+<td>JSON-RPC, structured responses</td>
+</tr>
+<tr>
+<td><strong>Use case</strong></td>
+<td>One-off commands, scripts</td>
+<td>Persistent tools for AI agents</td>
+</tr>
+<tr>
+<td><strong>State</strong></td>
+<td>Stateless per invocation</td>
+<td>Can maintain session state</td>
+</tr>
+<tr>
+<td><strong>Discovery</strong></td>
+<td>Known binary path</td>
+<td>Tool listing via protocol</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Choose CLI extensions when:</strong></p>
+<ul>
+<li>Agents execute commands via subprocess</li>
+<li>You need shell-compatible tools for scripts</li>
+<li>The operation is a one-shot command with text output</li>
+<li>Integration with existing shell workflows</li>
+</ul>
+<p><strong>Choose MCP extensions when:</strong></p>
+<ul>
+<li>AI agents need structured tool access</li>
+<li>Tools require persistent state or sessions</li>
+<li>You want protocol-level discovery and schemas</li>
+<li>Claude Desktop or similar clients are the primary consumers</li>
+</ul>
+<p>For detailed MCP server implementation, see <a href="/documentation/extensions/domains/mcp">MCP Extensions</a>.</p>
+<h2 id="project-structure">Project Structure</h2>
+<pre><code>extensions/cli/discord/
+├── Cargo.toml
+└── src/
+    ├── main.rs         # Entry point with clap
+    ├── config.rs       # Configuration loading
+    └── discord.rs      # Discord API service
+</code></pre>
+<h2 id="entry-point">Entry Point</h2>
+<p>CLI extensions use clap for argument parsing:</p>
+<pre><code class="language-rust">mod config;
+mod discord;
+
+use clap::{Parser, Subcommand};
+use colored::Colorize;
+
+use crate::config::DiscordConfigValidated;
+use crate::discord::DiscordService;
+
+#[derive(Parser)]
+#[command(name = &quot;systemprompt-discord&quot;)]
+#[command(about = &quot;Send messages via Discord&quot;)]
+#[command(version)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Send {
+        message: String,
+
+        #[arg(long, short)]
+        channel: Option&lt;String&gt;,
+
+        #[arg(long, short)]
+        user: Option&lt;String&gt;,
+    },
+
+    Test,
+}
+
+#[tokio::main]
+async fn main() -&gt; anyhow::Result&lt;()&gt; {
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Send { message, channel, user } =&gt; {
+            send_message(&amp;message, channel, user).await?;
+        }
+        Commands::Test =&gt; {
+            test_connection().await?;
+        }
+    }
+
+    Ok(())
+}
+</code></pre>
+<h2 id="command-implementation">Command Implementation</h2>
+<p>Implement each subcommand with clear output:</p>
+<pre><code class="language-rust">async fn send_message(
+    message: &amp;str,
+    channel: Option&lt;String&gt;,
+    user: Option&lt;String&gt;,
+) -&gt; anyhow::Result&lt;()&gt; {
+    let config = DiscordConfigValidated::load_from_default_paths()?;
+    let service = DiscordService::new(config)?;
+
+    let result = if let Some(channel_id) = channel {
+        print_info(&amp;format!(&quot;Sending to channel {}...&quot;, channel_id));
+        service.send_channel_message(&amp;channel_id, message).await?
+    } else if let Some(user_id) = user {
+        print_info(&amp;format!(&quot;Sending DM to user {}...&quot;, user_id));
+        service.send_dm(&amp;user_id, message).await?
+    } else {
+        print_info(&quot;Sending to default target...&quot;);
+        service.send_to_default(message).await?
+    };
+
+    print_success(&amp;format!(
+        &quot;Message sent! (ID: {}, Channel: {})&quot;,
+        result.id, result.channel_id
+    ));
+
+    Ok(())
+}
+
+async fn test_connection() -&gt; anyhow::Result&lt;()&gt; {
+    print_info(&quot;Loading Discord configuration...&quot;);
+    let config = DiscordConfigValidated::load_from_default_paths()?;
+    print_success(&quot;Configuration loaded&quot;);
+
+    print_info(&quot;Testing Discord API connection...&quot;);
+    let service = DiscordService::new(config)?;
+
+    match service.test_connection().await {
+        Ok(bot_name) =&gt; {
+            print_success(&amp;format!(&quot;Connected as: {}&quot;, bot_name));
+            Ok(())
+        }
+        Err(e) =&gt; {
+            print_error(&amp;format!(&quot;Connection failed: {}&quot;, e));
+            Err(e)
+        }
+    }
+}
+
+fn print_success(message: &amp;str) {
+    println!(&quot;{} {}&quot;, &quot;OK&quot;.green(), message);
+}
+
+fn print_error(message: &amp;str) {
+    eprintln!(&quot;{} {}&quot;, &quot;ERR&quot;.red(), message);
+}
+
+fn print_info(message: &amp;str) {
+    println!(&quot;{} {}&quot;, &quot;-&gt;&quot;.blue(), message);
+}
+</code></pre>
+<h2 id="configuration">Configuration</h2>
+<p>Load configuration from files or environment variables:</p>
+<pre><code class="language-rust">use serde::Deserialize;
+use std::path::PathBuf;
+
+#[derive(Debug, Deserialize)]
+pub struct DiscordConfig {
+    pub bot_token: String,
+    pub default_channel: Option&lt;String&gt;,
+    pub default_user: Option&lt;String&gt;,
+}
+
+pub struct DiscordConfigValidated {
+    pub bot_token: String,
+    pub default_channel: Option&lt;String&gt;,
+    pub default_user: Option&lt;String&gt;,
+}
+
+impl DiscordConfigValidated {
+    pub fn load_from_default_paths() -&gt; anyhow::Result&lt;Self&gt; {
+        // Try environment variables first
+        if let Ok(token) = std::env::var(&quot;DISCORD_BOT_TOKEN&quot;) {
+            return Ok(Self {
+                bot_token: token,
+                default_channel: std::env::var(&quot;DISCORD_CHANNEL&quot;).ok(),
+                default_user: std::env::var(&quot;DISCORD_USER&quot;).ok(),
+            });
+        }
+
+        // Fall back to config file
+        let config_path = Self::config_path()?;
+        let content = std::fs::read_to_string(&amp;config_path)?;
+        let config: DiscordConfig = serde_yaml::from_str(&amp;content)?;
+
+        Ok(Self {
+            bot_token: config.bot_token,
+            default_channel: config.default_channel,
+            default_user: config.default_user,
+        })
+    }
+
+    fn config_path() -&gt; anyhow::Result&lt;PathBuf&gt; {
+        let home = dirs::home_dir()
+            .ok_or_else(|| anyhow::anyhow!(&quot;Could not find home directory&quot;))?;
+        Ok(home.join(&quot;.config/systemprompt/discord.yaml&quot;))
+    }
+}
+</code></pre>
+<h2 id="service-implementation">Service Implementation</h2>
+<p>Implement the external service integration:</p>
+<pre><code class="language-rust">use reqwest::Client;
+use serde::{Deserialize, Serialize};
+
+pub struct DiscordService {
+    client: Client,
+    config: DiscordConfigValidated,
+}
+
+#[derive(Serialize)]
+struct CreateMessage {
+    content: String,
+}
+
+#[derive(Deserialize)]
+pub struct MessageResponse {
+    pub id: String,
+    pub channel_id: String,
+}
+
+impl DiscordService {
+    pub fn new(config: DiscordConfigValidated) -&gt; anyhow::Result&lt;Self&gt; {
+        let client = Client::builder()
+            .default_headers({
+                let mut headers = reqwest::header::HeaderMap::new();
+                headers.insert(
+                    &quot;Authorization&quot;,
+                    format!(&quot;Bot {}&quot;, config.bot_token).parse()?,
+                );
+                headers
+            })
+            .build()?;
+
+        Ok(Self { client, config })
+    }
+
+    pub async fn send_channel_message(
+        &amp;self,
+        channel_id: &amp;str,
+        content: &amp;str,
+    ) -&gt; anyhow::Result&lt;MessageResponse&gt; {
+        let url = format!(
+            &quot;https://discord.com/api/v10/channels/{}/messages&quot;,
+            channel_id
+        );
+
+        let response = self.client
+            .post(&amp;url)
+            .json(&amp;CreateMessage { content: content.to_string() })
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        Ok(response)
+    }
+
+    pub async fn test_connection(&amp;self) -&gt; anyhow::Result&lt;String&gt; {
+        let response: serde_json::Value = self.client
+            .get(&quot;https://discord.com/api/v10/users/@me&quot;)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        Ok(response[&quot;username&quot;].as_str().unwrap_or(&quot;Unknown&quot;).to_string())
+    }
+}
+</code></pre>
+<h2 id="cargo-configuration">Cargo Configuration</h2>
+<pre><code class="language-toml">[package]
+name = &quot;systemprompt-discord&quot;
+version = &quot;0.1.0&quot;
+edition = &quot;2021&quot;
+
+[[bin]]
+name = &quot;systemprompt-discord&quot;
+path = &quot;src/main.rs&quot;
+
+[dependencies]
+clap = { version = &quot;4&quot;, features = [&quot;derive&quot;] }
+tokio = { version = &quot;1&quot;, features = [&quot;full&quot;] }
+reqwest = { version = &quot;0.12&quot;, features = [&quot;json&quot;] }
+serde = { version = &quot;1&quot;, features = [&quot;derive&quot;] }
+serde_json = &quot;1&quot;
+serde_yaml = &quot;0.9&quot;
+anyhow = &quot;1&quot;
+colored = &quot;2&quot;
+dirs = &quot;5&quot;
+tracing = &quot;0.1&quot;
+tracing-subscriber = { version = &quot;0.3&quot;, features = [&quot;env-filter&quot;] }
+</code></pre>
+<h2 id="building">Building</h2>
+<pre><code class="language-bash"># Build CLI extension
+cargo build --release -p systemprompt-discord
+
+# Run directly
+./target/release/systemprompt-discord test
+
+# Run with arguments
+./target/release/systemprompt-discord send &quot;Hello from CLI&quot; --channel 123456789
+</code></pre>
+<h2 id="agent-integration">Agent Integration</h2>
+<p>Agents can invoke CLI extensions via subprocess:</p>
+<pre><code class="language-bash"># From an agent or script
+systemprompt-discord send &quot;Deployment complete&quot; --channel &quot;$NOTIFY_CHANNEL&quot;
+</code></pre>
+<p>Exit codes indicate success (0) or failure (non-zero), and stdout/stderr provide human-readable output.</p>
+<h2 id="integration-patterns">Integration Patterns</h2>
+<p>CLI extensions are useful for:</p>
+<ul>
+<li><strong>Notifications</strong> - Send alerts to Slack, Discord, email</li>
+<li><strong>Data sync</strong> - Import/export between systems</li>
+<li><strong>External APIs</strong> - Call third-party services</li>
+<li><strong>Automation</strong> - CI/CD integration, scheduled tasks</li>
+<li><strong>Admin tools</strong> - Database utilities, debugging commands</li>
+</ul>
+
+        </div>
+
+      </article>
+    </main>
+
+    <!-- Right Sidebar - Table of Contents & Related Links -->
+    <aside class="docs-toc">
+      <nav class="toc-nav" aria-label="Table of contents">
+        <h3 class="toc-title">On this page</h3>
+        <div class="toc-content">
+          <ul class="toc-list">
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#cli-vs-mcp-when-to-use-which">CLI vs MCP: When to Use Which</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#project-structure">Project Structure</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#entry-point">Entry Point</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#command-implementation">Command Implementation</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#configuration">Configuration</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#service-implementation">Service Implementation</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#cargo-configuration">Cargo Configuration</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#building">Building</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#agent-integration">Agent Integration</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#integration-patterns">Integration Patterns</a>
+</li>
+</ul>
+
+        </div>
+      </nav>
+
+
+    </aside>
+  </div>
+
+  <footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="/files/images/logo.svg" alt="systemprompt.io" class="logo-svg" />
+        </div>
+        <p></p>
+      </div>
+      <div class="footer-links">
+        <h4>Product</h4>
+        <a href="/documentation">Documentation</a>
+        <a href="/blog">Blog</a>
+        <a href="/playbooks">Playbooks</a>
+        <a href="https://github.com/systempromptio/systemprompt-template">Get Started</a>
+        <a href="/sitemap.xml">Sitemap</a>
+        <a href="/llms.txt">llms.txt</a>
+      </div>
+      <div class="footer-links">
+        <h4>Features</h4>
+        <a href="/features/agentic-mesh">Agentic Mesh</a>
+        <a href="/features/self-hosted-ai-platform">Embedded AI Library</a>
+        <a href="/features/unified-control-plane">Unified Control Plane</a>
+        <a href="/features/closed-loop-agents">The Closed Loop</a>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <a href="/legal/privacy-policy">Privacy Policy</a>
+        <a href="/legal/cookie-policy">Cookie Policy</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 SystemPrompt. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+
+  <!-- Scripts -->
+  <script src="/js/docs.js"></script>
+  <!-- Analytics -->
+<script src="/files/js/analytics.js" defer></script>
+<!-- Mobile Menu Toggle -->
+<script src="/js/mobile-menu.js" defer></script>
+
+</body>
+</html>

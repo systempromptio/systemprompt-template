@@ -8,6 +8,15 @@ includes:
   - ../web/config.yaml
   - ../scheduler/config.yaml
   - ../mcp/systemprompt.yaml
+  - ../mcp/moltbook.yaml
+  - ../mcp/soul.yaml
+  - ../mcp/content-manager.yaml
+  - ../agents/moltbook_builder.yaml
+  - ../agents/systemprompt_hub.yaml
+  - ../agents/blog_orchestrator.yaml
+  - ../agents/blog_technical.yaml
+  - ../agents/blog_narrative.yaml
+  - ../agents/blog_announcement.yaml
 
 agents: {}
 mcp_servers: {}
@@ -18,3 +27,6 @@ settings:
   autoStartEnabled: true
   validationStrict: true
   schemaValidationMode: "skip"
+
+# AI configuration is defined in services/ai/config.yaml (included above)
+# Do NOT duplicate here - the include has google_search_enabled: true

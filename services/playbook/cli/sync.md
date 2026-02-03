@@ -7,6 +7,7 @@ keywords:
   - content
   - upload
   - download
+category: cli
 ---
 
 # Sync Playbook
@@ -21,7 +22,6 @@ Sync content and data between local and cloud environments.
 ## Check Cloud Status
 
 ```json
-// MCP: systemprompt
 { "command": "cloud status" }
 ```
 
@@ -37,7 +37,6 @@ Check authentication:
 ### Dry Run First
 
 ```json
-// MCP: systemprompt
 { "command": "cloud sync push --dry-run --verbose" }
 ```
 
@@ -54,8 +53,8 @@ This syncs files from `storage/`, not database content.
 ## Sync Down from Cloud
 
 ```json
-// MCP: systemprompt
-{ "command": "cloud sync down" }
+{ "command": "cloud sync pull" }
+{ "command": "cloud sync pull --dry-run" }
 ```
 
 ---
@@ -63,38 +62,75 @@ This syncs files from `storage/`, not database content.
 ## Sync Up to Cloud
 
 ```json
-// MCP: systemprompt
-{ "command": "cloud sync up" }
+{ "command": "cloud sync push" }
+{ "command": "cloud sync push --dry-run" }
 ```
 
 ---
 
-## Local Content Sync (DB <-> Disk)
+## Local Content Sync
 
-### View Diff
+Content can sync in BOTH directions using different commands.
 
-```json
-// MCP: systemprompt
-{ "command": "cloud sync local content --dry-run" }
+### How Content Sync Works
+
+```
+Disk (services/content/)
+    │                    ▲
+    │ publish_pipeline   │ content_sync (to-disk)
+    ▼                    │
+Database (markdown_content)
+    │
+    ▼ publish_pipeline prerenders
+Static HTML (web/dist/)
 ```
 
-### Export DB to Disk
+### Sync Disk → Database (Publish)
+
+Run the publish pipeline to ingest content from disk:
 
 ```json
-{ "command": "cloud sync local content --direction to-disk" }
+{ "command": "infra jobs run publish_pipeline" }
 ```
 
-### Import Disk to DB
+This:
+1. Reads markdown files from `services/content/`
+2. Upserts to `markdown_content` table in database
+3. Prerenders to static HTML
 
-```json
-{ "command": "cloud sync local content --direction to-db" }
+### Sync Database → Disk (Export)
+
+Export content from database to disk files (e.g., AI-generated blog posts):
+
+```bash
+systemprompt infra jobs run content_sync -p direction=to-disk
 ```
 
-### Sync Specific Source
-
-```json
-{ "command": "cloud sync local content --source blog --direction to-disk" }
+Or for a specific source:
+```bash
+systemprompt infra jobs run content_sync -p direction=to-disk -p source=blog
 ```
+
+This:
+1. Reads content from database
+2. Creates/updates markdown files in `services/content/`
+3. Preserves frontmatter format
+
+**Use this when:** AI agents create content in the database and you want to save it to disk for version control.
+
+### Edit Content
+
+To edit content, modify the markdown files on disk, then run `publish_pipeline`:
+
+```bash
+# Edit the file
+vim services/content/blog/my-post/index.md
+
+# Re-ingest to database
+systemprompt infra jobs run publish_pipeline
+```
+
+**CLI `edit` commands only update the database temporarily.** Changes will be overwritten on next `publish_pipeline` run.
 
 ---
 
@@ -103,7 +139,6 @@ This syncs files from `storage/`, not database content.
 ### View Diff
 
 ```json
-// MCP: systemprompt
 { "command": "cloud sync local skills --dry-run" }
 ```
 
@@ -120,7 +155,6 @@ This syncs files from `storage/`, not database content.
 ### Count Local Content
 
 ```json
-// MCP: systemprompt
 { "command": "infra db query \"SELECT COUNT(*) FROM markdown_content\"" }
 ```
 
@@ -143,9 +177,11 @@ This syncs files from `storage/`, not database content.
 
 **UUID parsing error**: Local profile has non-UUID tenant ID. Switch to a cloud profile first with `admin session switch <profile-name>`.
 
-**No content synced (0 items)**: `cloud sync push` only syncs files, not database content. Export content to disk first, then sync files.
+**No content synced (0 items)**: `cloud sync push` only syncs files from `storage/`, not database content. Content lives on disk in `services/content/` and is ingested via `publish_pipeline`.
 
 **Cloud DB connection failed**: Check profile with `cloud profile show <profile-name>` and ensure `external_db_access: true` in tenant config.
+
+**CLI edit changes disappeared**: CLI `edit` commands only update the database. The next `publish_pipeline` run overwrites DB with disk content. Edit the markdown files on disk instead.
 
 -> See [Cloud Playbook](cloud.md) for cloud authentication and profiles.
 -> See [Deploy Playbook](deploy.md) for deployment workflows.
@@ -161,10 +197,9 @@ This syncs files from `storage/`, not database content.
 | Cloud status | `cloud status` |
 | Auth check | `cloud auth whoami` |
 | Push files | `cloud sync push` |
-| Sync down | `cloud sync down` |
-| Sync up | `cloud sync up` |
-| Export to disk | `cloud sync local content --direction to-disk` |
-| Import to DB | `cloud sync local content --direction to-db` |
+| Pull files | `cloud sync pull` |
+| **Content: Disk → DB** | `infra jobs run publish_pipeline` |
+| **Content: DB → Disk** | `infra jobs run content_sync -p direction=to-disk` |
 | Sync skills | `cloud sync local skills` |
 | Cloud DB query | `cloud db query --profile <name> "<SQL>"` |
 | Local DB query | `infra db query "<SQL>"` |

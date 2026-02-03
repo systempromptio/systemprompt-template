@@ -1,0 +1,214 @@
+# Navigation Configuration
+# Header, footer, and documentation sidebar
+
+header:
+  items:
+    - id: features
+      label: "Features"
+      href: "#"
+      dropdown: true
+      sections:
+        - title: "Core Features"
+          links:
+            - label: "Agentic Mesh"
+              href: "/features/agentic-mesh"
+            - label: "Embedded AI library"
+              href: "/features/self-hosted-ai-platform"
+            - label: "Unified Control Plane"
+              href: "/features/unified-control-plane"
+            - label: "The Closed Loop"
+              href: "/features/closed-loop-agents"
+
+    - id: documentation
+      label: "Documentation"
+      href: "/documentation"
+      dropdown: true
+      sections:
+        - title: "Getting Started"
+          links:
+            - label: "Installation"
+              href: "/documentation/installation"
+            - label: "Licensing"
+              href: "/documentation/licensing"
+            - label: "Early Access"
+              href: "/documentation/early-access"
+            - label: "Playbooks"
+              href: "/documentation/playbooks"
+        - title: "Configuration"
+          links:
+            - label: "Config"
+              href: "/documentation/config"
+            - label: "Services"
+              href: "/documentation/services"
+            - label: "Extensions"
+              href: "/documentation/extensions"
+      view_all:
+        label: "View all documentation"
+        href: "/documentation"
+
+    - id: blog
+      label: "Blog"
+      href: "/blog"
+      dropdown: true
+      sections:
+        - title: "Categories"
+          links:
+            - label: "All Posts"
+              href: "/blog"
+            - label: "Announcements"
+              href: "/blog?category=announcement"
+            - label: "Articles"
+              href: "/blog?category=article"
+            - label: "Guides"
+              href: "/blog?category=guide"
+
+    - id: playbooks
+      label: "Playbooks"
+      href: "/playbooks"
+      dropdown: true
+      sections:
+        - title: "Categories"
+          links:
+            - label: "All Playbooks"
+              href: "/playbooks"
+            - label: "Guides"
+              href: "/playbooks?category=guide"
+            - label: "CLI"
+              href: "/playbooks?category=cli"
+            - label: "Build"
+              href: "/playbooks?category=build"
+            - label: "Content"
+              href: "/playbooks?category=content"
+            - label: "Validation"
+              href: "/playbooks?category=validation"
+
+  cta:
+    label: "Get Started"
+    href: "https://github.com/systempromptio/systemprompt-template"
+    external: true
+
+footer:
+  legal:
+    - path: "/legal/privacy-policy"
+      label: "Privacy Policy"
+    - path: "/legal/cookie-policy"
+      label: "Cookie Policy"
+  features:
+    - path: "/features/agentic-mesh"
+      label: "Agentic Mesh"
+    - path: "/features/self-hosted-ai-platform"
+      label: "Embedded AI"
+    - path: "/features/unified-control-plane"
+      label: "Control Plane"
+    - path: "/features/closed-loop-agents"
+      label: "Closed Loop"
+  resources:
+    - path: "/blog"
+      label: "Blog"
+    - path: "/playbooks"
+      label: "Playbooks"
+    - path: "/documentation"
+      label: "Documentation"
+
+social:
+  - href: "https://github.com/systempromptio"
+    type: "github"
+    label: "GitHub"
+  - href: "https://twitter.com/systemprompt"
+    type: "twitter"
+    label: "Twitter"
+
+# Docs sidebar - rendered dynamically via site.docs_sidebar in templates
+docs_sidebar:
+  - title: "Getting Started"
+    links:
+      - label: "Overview"
+        href: "/documentation"
+      - label: "Installation"
+        href: "/documentation/installation"
+      - label: "Licensing"
+        href: "/documentation/licensing"
+      - label: "Early Access"
+        href: "/documentation/early-access"
+      - label: "Playbooks"
+        href: "/documentation/playbooks"
+
+  - title: "Config"
+    links:
+      - label: "Overview"
+        href: "/documentation/config"
+      - label: "Database"
+        href: "/documentation/config/database"
+      - label: "Deployment"
+        href: "/documentation/config/deployment"
+      - label: "Docker"
+        href: "/documentation/config/docker"
+      - label: "Domains"
+        href: "/documentation/config/domains"
+      - label: "Profiles"
+        href: "/documentation/config/profiles"
+      - label: "Secrets"
+        href: "/documentation/config/secrets"
+      - label: "Sessions"
+        href: "/documentation/config/sessions"
+      - label: "Sync"
+        href: "/documentation/config/sync"
+      - label: "Tenants"
+        href: "/documentation/config/tenants"
+
+  - title: "Services"
+    links:
+      - label: "Overview"
+        href: "/documentation/services"
+      - label: "Agents"
+        href: "/documentation/services/agents"
+      - label: "AI"
+        href: "/documentation/services/ai"
+      - label: "Analytics"
+        href: "/documentation/services/analytics"
+      - label: "Auth"
+        href: "/documentation/services/auth"
+      - label: "Config"
+        href: "/documentation/services/config"
+      - label: "Content"
+        href: "/documentation/services/content"
+      - label: "Files"
+        href: "/documentation/services/files"
+      - label: "MCP"
+        href: "/documentation/services/mcp"
+      - label: "Playbooks"
+        href: "/documentation/services/playbooks"
+      - label: "Scheduler"
+        href: "/documentation/services/scheduler"
+      - label: "Skills"
+        href: "/documentation/services/skills"
+      - label: "Users"
+        href: "/documentation/services/users"
+      - label: "Web"
+        href: "/documentation/services/web"
+      - label: "Workflows"
+        href: "/documentation/services/workflows"
+
+  - title: "Extensions"
+    links:
+      - label: "Overview"
+        href: "/documentation/extensions"
+      - label: "Template Architecture"
+        href: "/documentation/extensions/template"
+      - label: "Lifecycle Hooks"
+        href: "/documentation/extensions/hooks"
+      - label: "Library Extensions"
+        href: "/documentation/extensions/rust"
+      - label: "Web Extensions"
+        href: "/documentation/extensions/web"
+      - label: "Page Data Providers"
+        href: "/documentation/extensions/page-data-providers"
+      - label: "Component Renderers"
+        href: "/documentation/extensions/component-renderers"
+      - label: "Background Jobs"
+        href: "/documentation/extensions/jobs"
+      - label: "MCP Extensions"
+        href: "/documentation/extensions/mcp"
+      - label: "CLI Extensions"
+        href: "/documentation/extensions/cli"
+

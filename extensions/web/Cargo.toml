@@ -1,0 +1,51 @@
+[package]
+name = "systemprompt-web-extension"
+version = "1.0.0"
+edition = "2021"
+description = "Web extension for SystemPrompt - content, navigation, and templates"
+license = "MIT"
+repository = "https://github.com/systempromptio/systemprompt-template"
+
+[lints]
+workspace = true
+
+[dependencies]
+# Core facade - provides all systemprompt types via unified API
+systemprompt = { workspace = true, features = ["full"] }
+
+# Database access
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono"] }
+
+# Web framework
+axum = "0.8"
+tower = { version = "0.5", features = ["util"] }
+
+# Async
+tokio = { version = "1.47", features = ["full"] }
+async-trait = "0.1"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Markdown processing
+pulldown-cmark = "0.12"
+comrak = "0.17"
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.18", features = ["v4", "serde"] }
+thiserror = "2.0"
+tracing = "0.1"
+sha2 = "0.10"
+walkdir = "2.0"
+anyhow = "1.0"
+rand = "0.8"
+inventory = "0.3"
+url = "2.5"
+urlencoding = "2.1"
+
+[dev-dependencies]
+tokio = { version = "1.47", features = ["test-util", "macros"] }
+tempfile = "3.0"

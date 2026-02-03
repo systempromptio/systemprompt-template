@@ -34,10 +34,3 @@ scheduler:
       job: publish_content
       schedule: "0 */30 * * * *"
       enabled: true
-
-    # Blog extension jobs
-    - name: content_ingestion
-      extension: blog
-      job: content_ingestion
-      schedule: "0 0 * * * *"
-      enabled: true

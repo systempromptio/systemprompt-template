@@ -1,89 +1,132 @@
 ---
 title: "Plugins & MCP Server Playbook"
 description: "Manage extensions and MCP servers."
-keywords:
-  - plugins
-  - mcp
-  - extensions
-  - tools
+author: "SystemPrompt"
+slug: "cli-plugins"
+keywords: "plugins, extensions, mcp, tools"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # Plugins & MCP Server Playbook
 
 Manage extensions and MCP servers.
 
-> **Help**: `{ "command": "plugins" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
-
 ---
 
 ## Extensions
 
+### List Extensions
+
 ```json
-// MCP: systemprompt
 { "command": "plugins list" }
+```
+
+### Show Extension
+
+```json
+{ "command": "plugins show <name>" }
 { "command": "plugins show blog" }
 { "command": "plugins show content-manager" }
-{ "command": "plugins validate" }
 ```
 
-Extension config (`<extension-id>` is required):
+### Extension Config
+
 ```json
+{ "command": "plugins config <extension-id>" }
 { "command": "plugins config blog" }
-{ "command": "plugins config content-manager" }
 ```
 
-Capabilities (subcommand required -- schemas, jobs, templates, tools, roles, llm-providers):
+### Validate Extensions
+
 ```json
-{ "command": "plugins capabilities schemas" }
-{ "command": "plugins capabilities jobs" }
-{ "command": "plugins capabilities templates" }
+{ "command": "plugins validate" }
 ```
 
 ---
 
 ## MCP Servers
 
+### List Servers
+
 ```json
-// MCP: systemprompt
 { "command": "plugins mcp list" }
-{ "command": "plugins mcp status" }
-{ "command": "plugins mcp validate systemprompt" }
-{ "command": "plugins mcp validate content-manager" }
-{ "command": "plugins mcp logs systemprompt" }
-{ "command": "plugins mcp logs content-manager" }
 { "command": "plugins mcp list-packages" }
+```
+
+### Server Status
+
+```json
+{ "command": "plugins mcp status" }
+```
+
+### Validate Server
+
+```json
+{ "command": "plugins mcp validate <server-name>" }
+{ "command": "plugins mcp validate systemprompt" }
+```
+
+### Server Logs
+
+```json
+{ "command": "plugins mcp logs <server-name>" }
+{ "command": "plugins mcp logs systemprompt" }
 ```
 
 ---
 
 ## MCP Tools
 
+### List Tools
+
 ```json
-// MCP: systemprompt
 { "command": "plugins mcp tools" }
-{ "command": "plugins mcp tools --server systemprompt" }
-{ "command": "plugins mcp tools --server content-manager" }
+{ "command": "plugins mcp tools --server <server-name>" }
+```
+
+### Call Tool
+
+```json
+{ "command": "plugins mcp call <server> <tool> --args '{...}'" }
 { "command": "plugins mcp call systemprompt systemprompt --args '{\"command\":\"admin session show\"}'" }
+```
+
+---
+
+## Capabilities
+
+View extension-provided schemas, jobs, templates, and tools.
+
+```json
+{ "command": "plugins capabilities schemas" }
+{ "command": "plugins capabilities jobs" }
+{ "command": "plugins capabilities templates" }
+{ "command": "plugins capabilities tools" }
+{ "command": "plugins capabilities roles" }
+{ "command": "plugins capabilities llm-providers" }
 ```
 
 ---
 
 ## Troubleshooting
 
-**MCP server not responding:**
+**Extension not found** -- Check name with `plugins list`.
+
+**MCP server not responding** -- Check status and logs:
+
 ```json
-// MCP: systemprompt
 { "command": "plugins mcp status" }
 { "command": "plugins mcp logs <server-name>" }
-{ "command": "infra services restart mcp <server-name>" }
 ```
 
-**Tool not found** -- list available tools with `plugins mcp tools` or `plugins mcp tools --server <server-name>`.
+Then restart via `infra services restart mcp <server-name>`.
 
-**Extension validation failed** -- run `plugins validate`.
-
--> See [Services Playbook](services.md) for restarting MCP servers
+**Tool not found** -- List available tools with `plugins mcp tools --server <server-name>`.
 
 ---
 
@@ -93,10 +136,8 @@ Capabilities (subcommand required -- schemas, jobs, templates, tools, roles, llm
 |------|---------|
 | List extensions | `plugins list` |
 | Show extension | `plugins show <name>` |
-| Validate extensions | `plugins validate` |
 | Extension config | `plugins config <id>` |
-| List schemas | `plugins capabilities schemas` |
-| List jobs | `plugins capabilities jobs` |
+| Validate extensions | `plugins validate` |
 | List MCP servers | `plugins mcp list` |
 | MCP status | `plugins mcp status` |
 | Validate MCP | `plugins mcp validate <server>` |
@@ -105,3 +146,5 @@ Capabilities (subcommand required -- schemas, jobs, templates, tools, roles, llm
 | List tools | `plugins mcp tools` |
 | List server tools | `plugins mcp tools --server <name>` |
 | Call tool | `plugins mcp call <server> <tool> --args '{...}'` |
+| List schemas | `plugins capabilities schemas` |
+| List jobs | `plugins capabilities jobs` |

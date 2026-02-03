@@ -1,26 +1,26 @@
 ---
 title: "Agents Management Playbook"
 description: "Create, configure, and communicate with AI agents via A2A protocol."
-keywords:
-  - agents
-  - a2a
-  - messaging
-  - admin
+author: "SystemPrompt"
+slug: "cli-agents"
+keywords: "agents, a2a, messaging, admin"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # Agents Management Playbook
 
 Create, configure, and communicate with AI agents via A2A protocol.
 
-> **Help**: `{ "command": "admin agents" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
-
 ---
 
 ## List Agents
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents list" }
 { "command": "admin agents list --enabled" }
 ```
@@ -30,7 +30,6 @@ Create, configure, and communicate with AI agents via A2A protocol.
 ## Show Agent Configuration
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents show <name>" }
 ```
 
@@ -39,7 +38,6 @@ Create, configure, and communicate with AI agents via A2A protocol.
 ## Check Agent Status
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents status <name>" }
 ```
 
@@ -48,7 +46,6 @@ Create, configure, and communicate with AI agents via A2A protocol.
 ## View Agent Logs
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents logs <name>" }
 { "command": "admin agents logs <name> -n 50" }
 ```
@@ -58,7 +55,6 @@ Create, configure, and communicate with AI agents via A2A protocol.
 ## Registry (Running Agents)
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents registry" }
 ```
 
@@ -67,7 +63,6 @@ Create, configure, and communicate with AI agents via A2A protocol.
 ## Send Message to Agent (A2A)
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents message <name> -m \"What tools do you have?\"" }
 { "command": "admin agents message <name> -m \"Create content\" --blocking" }
 { "command": "admin agents message <name> -m \"Long task\" --blocking --timeout 120" }
@@ -76,14 +71,11 @@ Create, configure, and communicate with AI agents via A2A protocol.
 { "command": "admin agents message <name> -m \"Continue\" --task-id <task-id> --blocking" }
 ```
 
--> See [Contexts Playbook](contexts.md) for managing conversation contexts across agents.
-
 ---
 
 ## Get Task Response
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents task <name> --task-id <task-id>" }
 { "command": "admin agents task <name> --task-id <task-id> --history-length 10" }
 ```
@@ -93,7 +85,6 @@ Create, configure, and communicate with AI agents via A2A protocol.
 ## List Agent MCP Tools
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents tools <name>" }
 ```
 
@@ -102,7 +93,6 @@ Create, configure, and communicate with AI agents via A2A protocol.
 ## Validate Agent Configurations
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents validate" }
 { "command": "admin agents validate <name>" }
 ```
@@ -114,7 +104,6 @@ Create, configure, and communicate with AI agents via A2A protocol.
 Agent names must be lowercase alphanumeric with underscores only (no hyphens). Using `--enabled` will automatically start the agent process.
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents create --name <name> --port <port>" }
 { "command": "admin agents create --name <name> --port <port> --display-name \"My Agent\" --description \"Agent description\"" }
 { "command": "admin agents create --name <name> --port <port> --provider anthropic --model claude-3-5-sonnet-20241022" }
@@ -126,7 +115,6 @@ Agent names must be lowercase alphanumeric with underscores only (no hyphens). U
 ## Edit Agent Configuration
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents edit <name> --enable" }
 { "command": "admin agents edit <name> --disable" }
 { "command": "admin agents edit <name> --display-name \"Updated Name\"" }
@@ -144,7 +132,6 @@ Agent names must be lowercase alphanumeric with underscores only (no hyphens). U
 ## Delete Agent
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents delete <name> -y" }
 { "command": "admin agents delete --all -y" }
 ```
@@ -154,18 +141,15 @@ Agent names must be lowercase alphanumeric with underscores only (no hyphens). U
 ## Restart Agents
 
 ```json
-// MCP: systemprompt
 { "command": "infra services restart agent <name>" }
 { "command": "infra services restart --agents" }
 ```
-
--> See [Services Playbook](services.md) for more service management options.
 
 ---
 
 ## Troubleshooting
 
-**Agent not responding** -- Check status with `admin agents status <name>`, check logs with `admin agents logs <name> --tail 100`, restart with `infra services restart agent <name>`.
+**Agent not responding** -- Check status with `admin agents status <name>`, check logs with `admin agents logs <name> -n 100`, restart with `infra services restart agent <name>`.
 
 **Agent not in registry** -- Verify agent is enabled with `admin agents show <name>`. Restart services if needed.
 

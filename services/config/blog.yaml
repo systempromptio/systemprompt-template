@@ -6,17 +6,18 @@
 content_sources:
   - source_id: "blog"
     category_id: "blog"
-    path: "./services/content/blog"
+    path: "../content/blog"
     allowed_content_types:
       - article
       - tutorial
       - announcement
+      - guide
     enabled: true
     override_existing: false
 
-  - source_id: "docs"
+  - source_id: "documentation"
     category_id: "documentation"
-    path: "./services/content/docs"
+    path: "../content/documentation"
     allowed_content_types:
       - documentation
       - guide
@@ -24,8 +25,24 @@ content_sources:
     enabled: true
     override_existing: true
 
+  - source_id: "playbooks"
+    category_id: "playbooks"
+    path: "../content/playbooks"
+    allowed_content_types:
+      - playbook
+    enabled: true
+    override_existing: true
+
+  - source_id: "legal"
+    category_id: "legal"
+    path: "../content/legal"
+    allowed_content_types:
+      - page
+    enabled: true
+    override_existing: true
+
 # Base URL for generated links
-base_url: "${BASE_URL:-http://localhost:3000}"
+base_url: "http://localhost:8080"
 
 # Enable link tracking for analytics
 enable_link_tracking: true

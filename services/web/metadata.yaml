@@ -1,20 +1,20 @@
 # Site Metadata
-# SEO, branding, and metadata configuration
+# SEO, branding, and metadata configuration for SystemPrompt
 
 site:
-  name: "Your Project"
-  title: "Your Project - Built with SystemPrompt"
-  description: "A modern web application template built with SystemPrompt. Features a clean design, blog system, and AI-powered capabilities."
-  author: "Your Name"
-  baseUrl: "https://yourproject.com"
+  name: "systemprompt.io"
+  title: "AI Agent Infrastructure | Deploy Production AI Apps - systemprompt.io"
+  description: "Production-ready AI infrastructure with built-in auth, MCP hosting, agent orchestration, and user isolation. One Rust binary, deploy anywhere."
+  author: "systemprompt.io"
+  baseUrl: "https://systemprompt.io"
 
 seo:
-  defaultImage: "/assets/og-image.png"
-  twitterHandle: "@yourhandle"
-  keywords: "AI, agents, automation, blog, rust, systemprompt"
+  defaultImage: "/files/images/logo.png"
+  twitterHandle: "@systemprompt"
+  keywords: "AI agents, MCP servers, Claude Code, ChatGPT, secure execution, agent infrastructure, Anthropic, OpenAI, production deployment, agent orchestration"
 
 copyright:
-  holder: "Your Organization"
+  holder: "SystemPrompt"
   year: 2025
-  link: "https://yourproject.com"
-  notice: "Built with SystemPrompt"
+  link: "https://systemprompt.io"
+  notice: "Production infrastructure for AI agents"

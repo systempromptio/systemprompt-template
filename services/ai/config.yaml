@@ -1,6 +1,3 @@
-# AI Provider Configuration
-# Configure your AI providers and models
-
 ai:
   default_provider: gemini
   default_max_output_tokens: 8192
@@ -9,18 +6,21 @@ ai:
     fallback_enabled: true
   providers:
     anthropic:
-      enabled: false
+      enabled: true
+      google_search_enabled: true
       api_key: ${ANTHROPIC_API_KEY}
       default_model: claude-sonnet-4-20250514
     openai:
-      enabled: false
+      enabled: true
       api_key: ${OPENAI_API_KEY}
       default_model: gpt-4-turbo
+      google_search_enabled: true
     gemini:
       enabled: true
       api_key: ${GEMINI_API_KEY}
       endpoint: https://generativelanguage.googleapis.com/v1beta
       default_model: gemini-2.5-flash
+      google_search_enabled: true
   mcp:
     auto_discover: true
     connect_timeout_ms: 5000

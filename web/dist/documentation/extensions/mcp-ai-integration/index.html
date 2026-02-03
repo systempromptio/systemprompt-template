@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Resource Hints -->
+<link rel="preconnect" href="/files/fonts/" crossorigin>
+<link rel="dns-prefetch" href="/files/fonts/">
+
+<!-- Font Preloading - Critical fonts loaded early -->
+<link rel="preload" as="font" href="/files/fonts/Zepto/Zepto.woff" type="font/woff" crossorigin>
+<link rel="preload" as="font" href="/files/fonts/OpenSans/OpenSans-Regular.ttf" type="font/truetype" crossorigin>
+
+<!-- Critical CSS - Inlined to prevent FOUC -->
+<style>
+/* Prevent flash of unstyled content */
+:root {
+  --color-bg: #0a0a0f;
+  --color-surface: #12121a;
+  --color-text: #e8e8ed;
+  --color-text-secondary: #9898a6;
+  --orange-500: #f97316;
+  --orange-600: #ea580c;
+}
+html {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+body {
+  margin: 0;
+  font-family: "OpenSans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+/* Hide content until styles load to prevent layout shift */
+.header, .site-header {
+  min-height: 64px;
+}
+/* Font-face for immediate availability */
+@font-face {
+  font-family: "Zepto";
+  src: url("/files/fonts/Zepto/Zepto.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "OpenSans";
+  src: url("/files/fonts/OpenSans/OpenSans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+</style>
+
+<!-- Core Styles -->
+<link rel="stylesheet" href="/css/core/variables.css">
+<link rel="stylesheet" href="/css/core/fonts.css">
+<link rel="stylesheet" href="/css/core/reset.css">
+<link rel="stylesheet" href="/css/components/header.css">
+<link rel="stylesheet" href="/css/components/footer.css">
+<link rel="stylesheet" href="/css/components/mobile-menu.css">
+
+
+  <!-- SEO Meta Tags -->
+  <title>MCP Server AI Integration | systemprompt.io Documentation</title>
+  <meta name="description" content="Complete guide to integrating AI services (Gemini, Anthropic, OpenAI) into MCP servers with search grounding and artifact persistence." />
+  <meta name="author" content="SystemPrompt Team" />
+  <meta name="keywords" content="mcp, ai, gemini, search, grounding, artifacts, integration" />
+  <link rel="canonical" href="https://systemprompt.io/documentation/extensions/mcp-ai-integration" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="MCP Server AI Integration" />
+  <meta property="og:description" content="Complete guide to integrating AI services (Gemini, Anthropic, OpenAI) into MCP servers with search grounding and artifact persistence." />
+  <meta property="og:image" content="/files/images/docs/extensions-mcp-ai.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://systemprompt.io/documentation/extensions/mcp-ai-integration" />
+  <meta property="og:site_name" content="systemprompt.io" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@systemprompt" />
+  <meta name="twitter:creator" content="@systemprompt" />
+  <meta name="twitter:title" content="MCP Server AI Integration" />
+  <meta name="twitter:description" content="Complete guide to integrating AI services (Gemini, Anthropic, OpenAI) into MCP servers with search grounding and artifact persistence." />
+  <meta name="twitter:image" content="/files/images/docs/extensions-mcp-ai.svg" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/docs.css" />
+  <link rel="stylesheet" href="/css/syntax-highlight.css" />
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "MCP Server AI Integration",
+    "description": "Complete guide to integrating AI services (Gemini, Anthropic, OpenAI) into MCP servers with search grounding and artifact persistence.",
+    "image": "/files/images/docs/extensions-mcp-ai.svg",
+    "author": {
+      "@type": "Organization",
+      "name": "systemprompt.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "systemprompt.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://systemprompt.io/files/images/logo.png"
+      }
+    },
+    "datePublished": "",
+    "dateModified": "",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://systemprompt.io/documentation/extensions/mcp-ai-integration"
+    },
+    "keywords": "mcp, ai, gemini, search, grounding, artifacts, integration",
+    "inLanguage": ""
+  }
+  </script>
+
+  <!-- BreadcrumbList Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://systemprompt.io"},
+      {"@type": "ListItem", "position": 2, "name": "Documentation", "item": "https://systemprompt.io/documentation"},
+      {"@type": "ListItem", "position": 3, "name": "MCP Server AI Integration", "item": "https://systemprompt.io/documentation/extensions/mcp-ai-integration"}
+    ]
+  }
+  </script>
+</head>
+<body class="docs-body">
+  <div class="docs-background"></div>
+
+  <header class="site-header">
+  <nav class="site-nav">
+    <a href="/" class="logo-link">
+      <img src="/files/images/logo.svg" alt="systemprompt.io" class="logo-svg" />
+    </a>
+    <button class="mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    <div class="nav-links">
+      <div class="nav-dropdown">
+        <span class="nav-dropdown-trigger">
+          Features
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Core Features</h4>
+            <a href="/features/agentic-mesh">Agentic Mesh</a>
+            <a href="/features/self-hosted-ai-platform">Embedded AI library</a>
+            <a href="/features/unified-control-plane">Unified Control Plane</a>
+            <a href="/features/closed-loop-agents">The Closed Loop</a>
+          </div>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/documentation" class="nav-dropdown-trigger">
+          Documentation
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Getting Started</h4>
+            <a href="/documentation/installation">Installation</a>
+            <a href="/documentation/licensing">Licensing</a>
+            <a href="/documentation/early-access">Early Access</a>
+            <a href="/documentation/playbooks">Playbooks</a>
+          </div>
+          <div class="dropdown-section">
+            <h4>Configuration</h4>
+            <a href="/documentation/config">Config</a>
+            <a href="/documentation/services">Services</a>
+            <a href="/documentation/extensions">Extensions</a>
+          </div>
+          <a href="/documentation" class="dropdown-view-all">View all documentation &rarr;</a>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/blog" class="nav-dropdown-trigger">
+          Blog
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Categories</h4>
+            <a href="/blog">All Posts</a>
+            <a href="/blog?category&#x3D;announcement">Announcements</a>
+            <a href="/blog?category&#x3D;article">Articles</a>
+            <a href="/blog?category&#x3D;guide">Guides</a>
+          </div>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/playbooks" class="nav-dropdown-trigger">
+          Playbooks
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Categories</h4>
+            <a href="/playbooks">All Playbooks</a>
+            <a href="/playbooks?category&#x3D;guide">Guides</a>
+            <a href="/playbooks?category&#x3D;cli">CLI</a>
+            <a href="/playbooks?category&#x3D;build">Build</a>
+            <a href="/playbooks?category&#x3D;content">Content</a>
+            <a href="/playbooks?category&#x3D;validation">Validation</a>
+          </div>
+        </div>
+      </div>
+      <a href="https://github.com/systempromptio/systemprompt-template" class="cta-button" target="_blank" rel="noopener">Get Started</a>
+    </div>
+  </nav>
+</header>
+
+
+  <div class="docs-layout">
+    <!-- Left Sidebar - Navigation (dynamically rendered from config.yaml) -->
+    <aside class="docs-sidebar">
+      <nav class="docs-nav" aria-label="Documentation navigation">
+        <div class="docs-nav-section">
+          <h3 class="docs-nav-title">Getting Started</h3>
+          <ul class="docs-nav-list">
+            <li><a href="/documentation" class="docs-nav-link">Overview</a></li>
+            <li><a href="/documentation/installation" class="docs-nav-link">Installation</a></li>
+            <li><a href="/documentation/licensing" class="docs-nav-link">Licensing</a></li>
+            <li><a href="/documentation/early-access" class="docs-nav-link">Early Access</a></li>
+            <li><a href="/documentation/playbooks" class="docs-nav-link">Playbooks</a></li>
+          </ul>
+        </div>
+        <div class="docs-nav-section">
+          <h3 class="docs-nav-title">Config</h3>
+          <ul class="docs-nav-list">
+            <li><a href="/documentation/config" class="docs-nav-link">Overview</a></li>
+            <li><a href="/documentation/config/database" class="docs-nav-link">Database</a></li>
+            <li><a href="/documentation/config/deployment" class="docs-nav-link">Deployment</a></li>
+            <li><a href="/documentation/config/docker" class="docs-nav-link">Docker</a></li>
+            <li><a href="/documentation/config/domains" class="docs-nav-link">Domains</a></li>
+            <li><a href="/documentation/config/profiles" class="docs-nav-link">Profiles</a></li>
+            <li><a href="/documentation/config/secrets" class="docs-nav-link">Secrets</a></li>
+            <li><a href="/documentation/config/sessions" class="docs-nav-link">Sessions</a></li>
+            <li><a href="/documentation/config/sync" class="docs-nav-link">Sync</a></li>
+            <li><a href="/documentation/config/tenants" class="docs-nav-link">Tenants</a></li>
+          </ul>
+        </div>
+        <div class="docs-nav-section">
+          <h3 class="docs-nav-title">Services</h3>
+          <ul class="docs-nav-list">
+            <li><a href="/documentation/services" class="docs-nav-link">Overview</a></li>
+            <li><a href="/documentation/services/agents" class="docs-nav-link">Agents</a></li>
+            <li><a href="/documentation/services/ai" class="docs-nav-link">AI</a></li>
+            <li><a href="/documentation/services/analytics" class="docs-nav-link">Analytics</a></li>
+            <li><a href="/documentation/services/auth" class="docs-nav-link">Auth</a></li>
+            <li><a href="/documentation/services/config" class="docs-nav-link">Config</a></li>
+            <li><a href="/documentation/services/content" class="docs-nav-link">Content</a></li>
+            <li><a href="/documentation/services/files" class="docs-nav-link">Files</a></li>
+            <li><a href="/documentation/services/mcp" class="docs-nav-link">MCP</a></li>
+            <li><a href="/documentation/services/playbooks" class="docs-nav-link">Playbooks</a></li>
+            <li><a href="/documentation/services/scheduler" class="docs-nav-link">Scheduler</a></li>
+            <li><a href="/documentation/services/skills" class="docs-nav-link">Skills</a></li>
+            <li><a href="/documentation/services/users" class="docs-nav-link">Users</a></li>
+            <li><a href="/documentation/services/web" class="docs-nav-link">Web</a></li>
+            <li><a href="/documentation/services/workflows" class="docs-nav-link">Workflows</a></li>
+          </ul>
+        </div>
+        <div class="docs-nav-section">
+          <h3 class="docs-nav-title">Extensions</h3>
+          <ul class="docs-nav-list">
+            <li><a href="/documentation/extensions" class="docs-nav-link">Overview</a></li>
+            <li><a href="/documentation/extensions/template" class="docs-nav-link">Template Architecture</a></li>
+            <li><a href="/documentation/extensions/hooks" class="docs-nav-link">Lifecycle Hooks</a></li>
+            <li><a href="/documentation/extensions/rust" class="docs-nav-link">Library Extensions</a></li>
+            <li><a href="/documentation/extensions/web" class="docs-nav-link">Web Extensions</a></li>
+            <li><a href="/documentation/extensions/page-data-providers" class="docs-nav-link">Page Data Providers</a></li>
+            <li><a href="/documentation/extensions/component-renderers" class="docs-nav-link">Component Renderers</a></li>
+            <li><a href="/documentation/extensions/jobs" class="docs-nav-link">Background Jobs</a></li>
+            <li><a href="/documentation/extensions/mcp" class="docs-nav-link">MCP Extensions</a></li>
+            <li><a href="/documentation/extensions/cli" class="docs-nav-link">CLI Extensions</a></li>
+          </ul>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-main">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span class="breadcrumb__separator">/</span>
+        <a href="/documentation">Documentation</a>
+        <span class="breadcrumb__separator">/</span>
+        <span class="breadcrumb__current">MCP Server AI Integration</span>
+      </nav>
+
+      <article class="docs-article">
+        <header class="docs-header">
+          <div class="docs-title-row">
+            <h1>MCP Server AI Integration</h1>
+            <button class="docs-export-btn" data-slug="extensions/mcp-ai-integration" aria-label="Copy as Markdown" title="Copy as Markdown">
+              <svg class="copy-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/>
+                <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/>
+              </svg>
+              <svg class="check-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 1 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/>
+              </svg>
+            </button>
+          </div>
+          <p class="docs-description">Complete guide to integrating AI services (Gemini, Anthropic, OpenAI) into MCP servers with search grounding and artifact persistence.</p>
+          <div class="docs-meta">
+            <time datetime="">Last updated: </time>
+          </div>
+        </header>
+
+        <!-- Learning Objectives - Top Callout -->
+
+        <!-- Mobile Table of Contents (shown ≤1200px) -->
+        <div class="docs-toc-mobile">
+          <details class="toc-mobile-details">
+            <summary class="toc-mobile-summary">
+              <span class="toc-mobile-label">On this page</span>
+              <svg class="toc-mobile-chevron" viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor">
+                <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <nav class="toc-mobile-nav" aria-label="Table of contents">
+              <div class="toc-content toc-content--mobile">
+                <ul class="toc-list">
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#prerequisites">Prerequisites</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#dependencies">Dependencies</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#import-reference">Import Reference</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#server-constructor-with-ai-service">Server Constructor with AI Service</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#building-aimessage">Building AiMessage</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#gemini-with-google-search-grounding">Gemini with Google Search Grounding</a>
+<ul class="toc-list toc-nested">
+<li class="toc-item toc-level-3">
+<a class="toc-link" href="#searchgroundedresponse-fields">SearchGroundedResponse Fields</a>
+</li>
+</ul>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#standard-ai-generation">Standard AI Generation</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#artifact-storage">Artifact Storage</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#loading-artifacts">Loading Artifacts</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#error-handling">Error Handling</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#logging">Logging</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#loading-skills">Loading Skills</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#rbac-enforcement">RBAC Enforcement</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#complete-tool-handler-example">Complete Tool Handler Example</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#ai-configuration">AI Configuration</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#environment-variables">Environment Variables</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#troubleshooting">Troubleshooting</a>
+<ul class="toc-list toc-nested">
+<li class="toc-item toc-level-3">
+<a class="toc-link" href="#no-provider-with-google-search-support">&quot;No provider with Google Search support&quot;</a>
+</li>
+<li class="toc-item toc-level-3">
+<a class="toc-link" href="#missing-tool-provider">&quot;Missing tool_provider&quot;</a>
+</li>
+<li class="toc-item toc-level-3">
+<a class="toc-link" href="#empty-search-results">Empty Search Results</a>
+</li>
+<li class="toc-item toc-level-3">
+<a class="toc-link" href="#artifact-not-found">Artifact Not Found</a>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+
+
+            </nav>
+          </details>
+        </div>
+
+        <div class="docs-content">
+          <p>This guide covers integrating AI services into MCP servers, including Gemini with Google Search grounding, content generation, and artifact persistence.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Working MCP server (see <a href="/documentation/extensions/domains/mcp">MCP Extensions</a>)</li>
+<li><code>systemprompt</code> facade crate with <code>features = [&quot;full&quot;]</code></li>
+<li>Configured AI providers in <code>services/ai/config.yaml</code></li>
+</ul>
+<h2 id="dependencies">Dependencies</h2>
+<pre><code class="language-toml">[dependencies]
+systemprompt = { workspace = true, features = [&quot;full&quot;] }
+rmcp = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+</code></pre>
+<h2 id="import-reference">Import Reference</h2>
+<p>The <code>systemprompt</code> facade crate re-exports modules from systemprompt-core:</p>
+<pre><code class="language-rust">// AI Services
+use systemprompt::ai::{
+    AiService,           // Main AI service
+    AiConfig,            // Provider configuration
+    AiMessage,           // Message for conversations
+    AiRequest,           // Request builder
+    AiResponse,          // Standard response
+    MessageRole,         // User, System, Assistant
+    GoogleSearchParams,  // Search grounding params
+    SearchGroundedResponse, // Response with sources
+    NoopToolProvider,    // Dummy tool provider
+};
+
+// Agent Services
+use systemprompt::agent::services::SkillService;
+use systemprompt::agent::repository::content::ArtifactRepository;
+use systemprompt::agent::{Artifact, ArtifactMetadata, DataPart, Part};
+
+// Identifiers
+use systemprompt::identifiers::{
+    ArtifactId,
+    ContextId,
+    TaskId,
+    McpServerId,
+};
+
+// Config Loading
+use systemprompt::loader::EnhancedConfigLoader;
+
+// Database
+use systemprompt::database::DbPool;
+</code></pre>
+<h2 id="server-constructor-with-ai-service">Server Constructor with AI Service</h2>
+<pre><code class="language-rust">use std::sync::Arc;
+use anyhow::{Context, Result};
+use systemprompt::ai::{AiService, NoopToolProvider};
+use systemprompt::agent::services::SkillService;
+use systemprompt::agent::repository::content::ArtifactRepository;
+use systemprompt::database::DbPool;
+use systemprompt::identifiers::McpServerId;
+use systemprompt::loader::EnhancedConfigLoader;
+use systemprompt::system::AppContext;
+
+#[derive(Clone)]
+pub struct MyAiServer {
+    pub db_pool: DbPool,
+    pub service_id: McpServerId,
+    pub ai_service: Arc&lt;AiService&gt;,
+    pub skill_loader: Arc&lt;SkillService&gt;,
+    pub artifact_repo: ArtifactRepository,
+}
+
+impl MyAiServer {
+    pub fn new(
+        db_pool: DbPool,
+        service_id: McpServerId,
+        _ctx: Arc&lt;AppContext&gt;,
+    ) -&gt; Result&lt;Self&gt; {
+        // Load services configuration
+        let config_loader = EnhancedConfigLoader::from_env()
+            .context(&quot;Failed to create config loader&quot;)?;
+        let services_config = config_loader.load()
+            .context(&quot;Failed to load services config&quot;)?;
+
+        // Create AI service with NoopToolProvider
+        // NoopToolProvider is required even if not using tool execution
+        let tool_provider = Arc::new(NoopToolProvider::new());
+        let ai_service = Arc::new(
+            AiService::new(
+                db_pool.clone(),
+                &amp;services_config.ai,
+                tool_provider,
+                None,  // No session provider
+            ).context(&quot;Failed to initialize AiService&quot;)?
+        );
+
+        // Initialize other services
+        let skill_loader = Arc::new(SkillService::new(db_pool.clone()));
+        let artifact_repo = ArtifactRepository::new(db_pool.clone());
+
+        Ok(Self {
+            db_pool,
+            service_id,
+            ai_service,
+            skill_loader,
+            artifact_repo,
+        })
+    }
+}
+</code></pre>
+<h2 id="building-aimessage">Building AiMessage</h2>
+<p>AiMessage requires three fields: <code>role</code>, <code>content</code>, and <code>parts</code>.</p>
+<pre><code class="language-rust">use systemprompt::ai::{AiMessage, MessageRole};
+
+// Method 1: Full struct construction
+let message = AiMessage {
+    role: MessageRole::System,
+    content: &quot;You are a helpful assistant.&quot;.to_string(),
+    parts: vec![],  // Required, even if empty
+};
+
+// Method 2: Helper methods (recommended)
+let system_msg = AiMessage::system(&quot;You are a helpful assistant.&quot;);
+let user_msg = AiMessage::user(&quot;What is MCP?&quot;);
+</code></pre>
+<h2 id="gemini-with-google-search-grounding">Gemini with Google Search Grounding</h2>
+<p>Use <code>generate_with_google_search()</code> to leverage Google Search for real-time information:</p>
+<pre><code class="language-rust">use systemprompt::ai::{GoogleSearchParams, SearchGroundedResponse, AiMessage};
+
+pub async fn research_topic(
+    ai_service: &amp;AiService,
+    skill_content: &amp;str,
+    topic: &amp;str,
+) -&gt; Result&lt;SearchGroundedResponse&gt; {
+    // Build messages
+    let messages = vec![
+        AiMessage::system(skill_content),
+        AiMessage::user(&amp;format!(
+            &quot;Research the following topic thoroughly using web search:\n\n{}&quot;,
+            topic
+        )),
+    ];
+
+    // Configure search params
+    let params = GoogleSearchParams {
+        messages,
+        sampling: None,
+        max_output_tokens: 8192,
+        model: Some(&quot;gemini-2.5-flash&quot;),
+        urls: None,  // Optional: specific URLs to analyze
+        response_schema: None,  // Optional: structured output schema
+    };
+
+    // Execute search-grounded generation
+    let response = ai_service
+        .generate_with_google_search(params)
+        .await
+        .context(&quot;Gemini search failed&quot;)?;
+
+    Ok(response)
+}
+</code></pre>
+<h3 id="searchgroundedresponse-fields">SearchGroundedResponse Fields</h3>
+<pre><code class="language-rust">pub struct SearchGroundedResponse {
+    pub content: String,                    // Generated text
+    pub sources: Vec&lt;WebSource&gt;,            // Search result sources
+    pub confidence_scores: Vec&lt;f32&gt;,        // Confidence per source
+    pub web_search_queries: Vec&lt;String&gt;,    // Queries used
+    pub url_context_metadata: Option&lt;Vec&lt;UrlMetadata&gt;&gt;,
+    pub tokens_used: Option&lt;u32&gt;,
+    pub latency_ms: u64,
+    pub finish_reason: Option&lt;String&gt;,
+    pub safety_ratings: Option&lt;Vec&lt;serde_json::Value&gt;&gt;,
+}
+
+pub struct WebSource {
+    pub title: String,
+    pub uri: String,
+    pub relevance: f32,
+}
+</code></pre>
+<h2 id="standard-ai-generation">Standard AI Generation</h2>
+<p>For content generation without search:</p>
+<pre><code class="language-rust">use systemprompt::ai::{AiRequest, AiRequestBuilder, AiResponse};
+
+pub async fn generate_content(
+    ai_service: &amp;AiService,
+    system_prompt: &amp;str,
+    user_prompt: &amp;str,
+    ctx: &amp;RequestContext,
+) -&gt; Result&lt;String&gt; {
+    let request = AiRequestBuilder::new(
+        vec![
+            AiMessage::system(system_prompt),
+            AiMessage::user(user_prompt),
+        ],
+        &quot;gemini&quot;,           // provider
+        &quot;gemini-2.5-pro&quot;,   // model
+        32768,              // max_output_tokens
+        ctx.clone(),
+    ).build();
+
+    let response = ai_service
+        .generate(&amp;request)
+        .await
+        .context(&quot;Content generation failed&quot;)?;
+
+    Ok(response.content)
+}
+</code></pre>
+<h2 id="artifact-storage">Artifact Storage</h2>
+<p>Store results as artifacts for later retrieval:</p>
+<pre><code class="language-rust">use systemprompt::agent::{Artifact, ArtifactMetadata, DataPart, Part};
+use systemprompt::identifiers::{ArtifactId, ContextId, TaskId};
+
+pub async fn store_research_artifact(
+    artifact_repo: &amp;ArtifactRepository,
+    topic: &amp;str,
+    response: &amp;SearchGroundedResponse,
+    context_id: &amp;str,
+    skill_id: &amp;str,
+) -&gt; Result&lt;String&gt; {
+    let artifact_id = ArtifactId::generate();
+    let task_id = TaskId::generate();
+    let context_id = ContextId::new(context_id);
+
+    // Build artifact data
+    let research_data = serde_json::json!({
+        &quot;topic&quot;: topic,
+        &quot;summary&quot;: response.content,
+        &quot;sources&quot;: response.sources.iter().map(|s| {
+            serde_json::json!({
+                &quot;title&quot;: s.title,
+                &quot;uri&quot;: s.uri,
+                &quot;relevance&quot;: s.relevance
+            })
+        }).collect::&lt;Vec&lt;_&gt;&gt;(),
+        &quot;queries&quot;: response.web_search_queries,
+        &quot;tokens_used&quot;: response.tokens_used,
+    });
+
+    let artifact = Artifact {
+        id: artifact_id.clone(),
+        name: Some(format!(&quot;Research: {}&quot;, topic)),
+        description: Some(&quot;Blog research with sources&quot;.to_string()),
+        parts: vec![Part::Data(DataPart {
+            data: research_data.as_object().unwrap().clone(),
+        })],
+        extensions: vec![],
+        metadata: ArtifactMetadata {
+            artifact_type: &quot;research&quot;.to_string(),
+            context_id: context_id.clone(),
+            task_id: task_id.clone(),
+            created_at: chrono::Utc::now().to_rfc3339(),
+            tool_name: Some(&quot;research_topic&quot;.to_string()),
+            skill_id: Some(skill_id.to_string()),
+            skill_name: Some(&quot;Research&quot;.to_string()),
+            ..Default::default()
+        },
+    };
+
+    artifact_repo
+        .create_artifact(&amp;task_id, &amp;context_id, &amp;artifact)
+        .await
+        .context(&quot;Failed to store artifact&quot;)?;
+
+    Ok(artifact_id.to_string())
+}
+</code></pre>
+<h2 id="loading-artifacts">Loading Artifacts</h2>
+<p>Retrieve previously stored artifacts:</p>
+<pre><code class="language-rust">pub async fn load_artifact(
+    artifact_repo: &amp;ArtifactRepository,
+    artifact_id: &amp;str,
+) -&gt; Result&lt;serde_json::Map&lt;String, serde_json::Value&gt;&gt; {
+    let artifact = artifact_repo
+        .get_artifact_by_id(&amp;ArtifactId::new(artifact_id))
+        .await?
+        .ok_or_else(|| anyhow::anyhow!(
+            &quot;Artifact not found: {}. Use artifact_id from previous tool call.&quot;,
+            artifact_id
+        ))?;
+
+    // Extract data from artifact parts
+    let data = artifact.parts.iter()
+        .find_map(|p| match p {
+            Part::Data(DataPart { data }) =&gt; Some(data.clone()),
+            _ =&gt; None,
+        })
+        .ok_or_else(|| anyhow::anyhow!(&quot;Invalid artifact format&quot;))?;
+
+    Ok(data)
+}
+</code></pre>
+<h2 id="error-handling">Error Handling</h2>
+<p>Convert between AI errors and MCP errors:</p>
+<pre><code class="language-rust">use rmcp::ErrorData as McpError;
+
+// Helper function for error conversion
+fn ai_error_to_mcp(e: anyhow::Error, context: &amp;str) -&gt; McpError {
+    McpError::internal_error(
+        format!(&quot;{}: {}&quot;, context, e),
+        None
+    )
+}
+
+// Usage in tool handler
+pub async fn handle_my_tool(
+    server: &amp;MyAiServer,
+    request: CallToolRequestParams,
+) -&gt; Result&lt;CallToolResult, McpError&gt; {
+    let response = server.ai_service
+        .generate_with_google_search(params)
+        .await
+        .map_err(|e| ai_error_to_mcp(e, &quot;Research failed&quot;))?;
+
+    // ... rest of handler
+}
+</code></pre>
+<h2 id="logging">Logging</h2>
+<p>Use <code>tracing</code> for logging (LogService is not exported via facade):</p>
+<pre><code class="language-rust">use tracing::{info, warn, error, debug};
+
+// In tool handlers
+info!(topic = %topic, &quot;Starting research&quot;);
+debug!(model = &quot;gemini-2.5-flash&quot;, &quot;Calling AI service&quot;);
+
+if response.sources.is_empty() {
+    warn!(&quot;No sources returned from search&quot;);
+}
+
+if let Err(e) = result {
+    error!(error = %e, &quot;Tool execution failed&quot;);
+}
+</code></pre>
+<h2 id="loading-skills">Loading Skills</h2>
+<p>Load skill content for prompts:</p>
+<pre><code class="language-rust">use systemprompt::models::execution::context::RequestContext;
+
+pub async fn load_skill_content(
+    skill_loader: &amp;SkillService,
+    skill_id: &amp;str,
+    ctx: &amp;RequestContext,
+) -&gt; Result&lt;String, McpError&gt; {
+    skill_loader
+        .load_skill(skill_id, ctx)
+        .await
+        .map_err(|e| McpError::internal_error(
+            format!(&quot;Failed to load skill '{}': {}&quot;, skill_id, e),
+            None
+        ))
+}
+</code></pre>
+<h2 id="rbac-enforcement">RBAC Enforcement</h2>
+<p>Enforce authentication before tool execution:</p>
+<pre><code class="language-rust">use systemprompt::mcp::middleware::enforce_rbac_from_registry;
+
+pub async fn call_tool(
+    &amp;self,
+    request: CallToolRequestParams,
+    ctx: RequestContext&lt;RoleServer&gt;,
+) -&gt; Result&lt;CallToolResult, McpError&gt; {
+    // Enforce RBAC - takes 2 arguments
+    let auth_result = enforce_rbac_from_registry(
+        &amp;ctx,
+        self.service_id.as_str()
+    ).await?;
+
+    // Get authenticated context
+    let authenticated_ctx = auth_result
+        .expect_authenticated(&quot;This MCP server requires authentication&quot;)?;
+
+    let request_context = authenticated_ctx.context.clone();
+
+    // ... execute tool with request_context
+}
+</code></pre>
+<h2 id="complete-tool-handler-example">Complete Tool Handler Example</h2>
+<pre><code class="language-rust">pub async fn handle_research_blog(
+    server: &amp;MyAiServer,
+    request: CallToolRequestParams,
+    ctx: RequestContext,
+) -&gt; Result&lt;CallToolResult, McpError&gt; {
+    let args = request.arguments
+        .ok_or_else(|| McpError::invalid_params(&quot;Missing arguments&quot;, None))?;
+
+    let topic = args.get(&quot;topic&quot;)
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::invalid_params(&quot;Missing: topic&quot;, None))?;
+
+    let skill_id = args.get(&quot;skill_id&quot;)
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| McpError::invalid_params(&quot;Missing: skill_id&quot;, None))?;
+
+    // Load skill content
+    let skill_content = server.skill_loader
+        .load_skill(skill_id, &amp;ctx)
+        .await
+        .map_err(|e| McpError::internal_error(
+            format!(&quot;Failed to load skill: {}&quot;, e), None
+        ))?;
+
+    // Call Gemini with search
+    let params = GoogleSearchParams {
+        messages: vec![
+            AiMessage::system(&amp;skill_content),
+            AiMessage::user(&amp;format!(&quot;Research: {}&quot;, topic)),
+        ],
+        sampling: None,
+        max_output_tokens: 8192,
+        model: Some(&quot;gemini-2.5-flash&quot;),
+        urls: None,
+        response_schema: None,
+    };
+
+    let response = server.ai_service
+        .generate_with_google_search(params)
+        .await
+        .map_err(|e| McpError::internal_error(
+            format!(&quot;Research failed: {}&quot;, e), None
+        ))?;
+
+    // Store artifact
+    let artifact_id = store_research_artifact(
+        &amp;server.artifact_repo,
+        topic,
+        &amp;response,
+        ctx.context_id().as_str(),
+        skill_id,
+    ).await.map_err(|e| McpError::internal_error(
+        format!(&quot;Failed to store artifact: {}&quot;, e), None
+    ))?;
+
+    // Return result
+    Ok(CallToolResult {
+        content: vec![McpContent::text(format!(
+            &quot;Research complete for '{}'. Found {} sources.\n\n**Artifact ID: {}**&quot;,
+            topic,
+            response.sources.len(),
+            artifact_id
+        ))],
+        structured_content: Some(serde_json::json!({
+            &quot;artifact_id&quot;: artifact_id,
+            &quot;topic&quot;: topic,
+            &quot;source_count&quot;: response.sources.len(),
+        })),
+        is_error: Some(false),
+        meta: None,
+    })
+}
+</code></pre>
+<h2 id="ai-configuration">AI Configuration</h2>
+<p>Ensure <code>services/ai/config.yaml</code> has Gemini configured:</p>
+<pre><code class="language-yaml">ai:
+  default_provider: gemini
+  default_max_output_tokens: 8192
+
+  providers:
+    gemini:
+      enabled: true
+      api_key: ${GEMINI_API_KEY}
+      endpoint: https://generativelanguage.googleapis.com/v1beta
+      default_model: gemini-2.5-flash
+</code></pre>
+<h2 id="environment-variables">Environment Variables</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GEMINI_API_KEY</code></td>
+<td>Google AI API key</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>DATABASE_URL</code></td>
+<td>PostgreSQL connection</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>MCP_PORT</code></td>
+<td>Server port</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>MCP_SERVICE_ID</code></td>
+<td>Service identifier</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>SYSTEM_PATH</code></td>
+<td>SystemPrompt root</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3>&quot;No provider with Google Search support&quot;</h3>
+<p>Ensure Gemini is enabled in <code>services/ai/config.yaml</code> and <code>GEMINI_API_KEY</code> is set.</p>
+<h3>&quot;Missing tool_provider&quot;</h3>
+<p>AiService requires a ToolProvider even for non-tool operations. Use <code>NoopToolProvider::new()</code>.</p>
+<h3 id="empty-search-results">Empty Search Results</h3>
+<p>Check <code>response.finish_reason</code> for &quot;SAFETY&quot; or &quot;RECITATION&quot; which indicate blocked content.</p>
+<h3 id="artifact-not-found">Artifact Not Found</h3>
+<p>Artifacts require both <code>task_id</code> and <code>context_id</code>. Ensure both are provided when creating.</p>
+
+        </div>
+
+      </article>
+    </main>
+
+    <!-- Right Sidebar - Table of Contents & Related Links -->
+    <aside class="docs-toc">
+      <nav class="toc-nav" aria-label="Table of contents">
+        <h3 class="toc-title">On this page</h3>
+        <div class="toc-content">
+          <ul class="toc-list">
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#prerequisites">Prerequisites</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#dependencies">Dependencies</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#import-reference">Import Reference</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#server-constructor-with-ai-service">Server Constructor with AI Service</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#building-aimessage">Building AiMessage</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#gemini-with-google-search-grounding">Gemini with Google Search Grounding</a>
+<ul class="toc-list toc-nested">
+<li class="toc-item toc-level-3">
+<a class="toc-link" href="#searchgroundedresponse-fields">SearchGroundedResponse Fields</a>
+</li>
+</ul>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#standard-ai-generation">Standard AI Generation</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#artifact-storage">Artifact Storage</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#loading-artifacts">Loading Artifacts</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#error-handling">Error Handling</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#logging">Logging</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#loading-skills">Loading Skills</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#rbac-enforcement">RBAC Enforcement</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#complete-tool-handler-example">Complete Tool Handler Example</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#ai-configuration">AI Configuration</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#environment-variables">Environment Variables</a>
+</li>
+<li class="toc-item toc-level-2">
+<a class="toc-link" href="#troubleshooting">Troubleshooting</a>
+<ul class="toc-list toc-nested">
+<li class="toc-item toc-level-3">
+<a class="toc-link" href="#no-provider-with-google-search-support">&quot;No provider with Google Search support&quot;</a>
+</li>
+<li class="toc-item toc-level-3">
+<a class="toc-link" href="#missing-tool-provider">&quot;Missing tool_provider&quot;</a>
+</li>
+<li class="toc-item toc-level-3">
+<a class="toc-link" href="#empty-search-results">Empty Search Results</a>
+</li>
+<li class="toc-item toc-level-3">
+<a class="toc-link" href="#artifact-not-found">Artifact Not Found</a>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </nav>
+
+
+    </aside>
+  </div>
+
+  <footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="/files/images/logo.svg" alt="systemprompt.io" class="logo-svg" />
+        </div>
+        <p></p>
+      </div>
+      <div class="footer-links">
+        <h4>Product</h4>
+        <a href="/documentation">Documentation</a>
+        <a href="/blog">Blog</a>
+        <a href="/playbooks">Playbooks</a>
+        <a href="https://github.com/systempromptio/systemprompt-template">Get Started</a>
+        <a href="/sitemap.xml">Sitemap</a>
+        <a href="/llms.txt">llms.txt</a>
+      </div>
+      <div class="footer-links">
+        <h4>Features</h4>
+        <a href="/features/agentic-mesh">Agentic Mesh</a>
+        <a href="/features/self-hosted-ai-platform">Embedded AI Library</a>
+        <a href="/features/unified-control-plane">Unified Control Plane</a>
+        <a href="/features/closed-loop-agents">The Closed Loop</a>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <a href="/legal/privacy-policy">Privacy Policy</a>
+        <a href="/legal/cookie-policy">Cookie Policy</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 SystemPrompt. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+
+  <!-- Scripts -->
+  <script src="/js/docs.js"></script>
+  <!-- Analytics -->
+<script src="/files/js/analytics.js" defer></script>
+<!-- Mobile Menu Toggle -->
+<script src="/js/mobile-menu.js" defer></script>
+
+</body>
+</html>

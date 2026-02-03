@@ -4,5 +4,6 @@
 includes:
   - general_assistance/config.yaml
   - content_writing/config.yaml
+  - moltbook/config.yaml
 
 skills: {}

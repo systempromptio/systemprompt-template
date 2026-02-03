@@ -1,0 +1,37 @@
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="/files/images/logo.svg" alt="{{ORG_NAME}}" class="logo-svg" />
+        </div>
+        <p>{{site.branding.tagline}}</p>
+      </div>
+      <div class="footer-links">
+        <h4>Product</h4>
+        <a href="/documentation">Documentation</a>
+        <a href="/blog">Blog</a>
+        <a href="/playbooks">Playbooks</a>
+        <a href="https://github.com/systempromptio/systemprompt-template">Get Started</a>
+        <a href="/sitemap.xml">Sitemap</a>
+        <a href="/llms.txt">llms.txt</a>
+      </div>
+      <div class="footer-links">
+        <h4>Features</h4>
+        <a href="/features/agentic-mesh">Agentic Mesh</a>
+        <a href="/features/self-hosted-ai-platform">Embedded AI Library</a>
+        <a href="/features/unified-control-plane">Unified Control Plane</a>
+        <a href="/features/closed-loop-agents">The Closed Loop</a>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        {{#each site.navigation.footer.legal}}
+        <a href="{{this.path}}">{{this.label}}</a>
+        {{/each}}
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; {{site.branding.copyright}}</p>
+    </div>
+  </div>
+</footer>

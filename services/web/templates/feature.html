@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{{HEAD_ASSETS}}}
+    <title>{{feature.title}} - {{site.branding.name}}</title>
+    <meta name="description" content="{{#if feature.description}}{{feature.description}}{{else}}{{feature.subtitle}}{{/if}}">
+    <meta name="keywords" content="{{feature.title}}, SystemPrompt, AI platform, {{#if feature.keywords}}{{feature.keywords}}{{else}}AI agents, MCP hosting{{/if}}">
+    <link rel="canonical" href="https://systemprompt.io/features/{{feature.slug}}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{site.branding.favicon}}">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{feature.title}} - {{site.branding.name}}">
+    <meta property="og:description" content="{{#if feature.description}}{{feature.description}}{{else}}{{feature.subtitle}}{{/if}}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://systemprompt.io/features/{{feature.slug}}">
+    <meta property="og:site_name" content="{{site.branding.name}}">
+    <meta property="og:image" content="{{#if feature.image}}{{feature.image}}{{else}}https://systemprompt.io/files/images/logo.png{{/if}}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="{{site.branding.twitter_handle}}">
+    <meta name="twitter:title" content="{{feature.title}}">
+    <meta name="twitter:description" content="{{#if feature.description}}{{feature.description}}{{else}}{{feature.subtitle}}{{/if}}">
+    <meta name="twitter:image" content="{{#if feature.image}}{{feature.image}}{{else}}https://systemprompt.io/files/images/logo.png{{/if}}">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "{{feature.title}}",
+        "description": "{{#if feature.description}}{{feature.description}}{{else}}{{feature.subtitle}}{{/if}}",
+        "url": "https://systemprompt.io/features/{{feature.slug}}",
+        "publisher": {
+            "@type": "Organization",
+            "name": "SystemPrompt",
+            "url": "https://systemprompt.io"
+        },
+        "isPartOf": {
+            "@type": "WebSite",
+            "@id": "https://systemprompt.io/#website"
+        }
+    }
+    </script>
+
+    <!-- BreadcrumbList Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://systemprompt.io"},
+            {"@type": "ListItem", "position": 2, "name": "Features", "item": "https://systemprompt.io/features"},
+            {"@type": "ListItem", "position": 3, "name": "{{feature.title}}", "item": "https://systemprompt.io/features/{{feature.slug}}"}
+        ]
+    }
+    </script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/feature-page.css">
+</head>
+<body>
+    {{{HEADER}}}
+
+    <main>
+        <!-- Hero Section -->
+        <section class="feature-hero">
+            <div class="container">
+                <h1 class="feature-headline">
+                    {{feature.headline}}
+                    {{#if feature.headline_highlight}}
+                    <span class="highlight">{{feature.headline_highlight}}</span>
+                    {{/if}}
+                </h1>
+                <p class="feature-subtitle">{{feature.subtitle}}</p>
+
+                {{#if feature.highlights}}
+                <ul class="feature-highlights">
+                    {{#each feature.highlights}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+                {{/if}}
+
+                {{#if feature.cta}}
+                <div class="feature-ctas">
+                    <a href="{{feature.cta.url}}" class="primary-cta">{{feature.cta.text}}</a>
+                    {{#if feature.cta.secondary_url}}
+                    <a href="{{feature.cta.secondary_url}}" class="secondary-cta">{{feature.cta.secondary_text}}</a>
+                    {{/if}}
+                </div>
+                {{/if}}
+            </div>
+        </section>
+
+        {{#if feature.sections}}
+        {{#each feature.sections}}
+        <section class="feature-section">
+            <div class="container">
+                <h2>{{this.title}}</h2>
+                {{#if this.content}}
+                <p class="section-content">{{{this.content}}}</p>
+                {{/if}}
+
+                {{#if this.items}}
+                <div class="section-items">
+                    {{#each this.items}}
+                    <div class="section-item">
+                        {{#if this.icon}}
+                        <div class="item-icon">{{this.icon}}</div>
+                        {{/if}}
+                        <h3>{{this.title}}</h3>
+                        <p>{{this.description}}</p>
+                    </div>
+                    {{/each}}
+                </div>
+                {{/if}}
+            </div>
+        </section>
+        {{/each}}
+        {{/if}}
+    </main>
+
+    {{{FOOTER}}}
+
+    {{{SCRIPTS}}}
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!-- Agentic Mesh Animation -->
+<!-- Agent Registry + MCP Registry = next-generation API -->
+<!-- Central registry hub with agents in mesh topology, A2A connections -->
+<div class="agentic-mesh-animation" aria-hidden="true">
+    <svg
+        viewBox="165 105 470 290"
+        class="agentic-mesh-svg"
+        preserveAspectRatio="xMidYMid meet"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <defs>
+            <!-- Glow for central registry -->
+            <filter id="registry-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+            <!-- Glow for agent nodes -->
+            <filter id="agent-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+            <!-- Glow for flowing particles -->
+            <filter id="particle-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+
+            <!-- A2A connection paths for particle animation (match visible paths) -->
+            <path id="a2a-path-1" d="M295,130 Q400,100 505,130" fill="none"/>
+            <path id="a2a-path-2" d="M295,370 Q400,400 505,370" fill="none"/>
+            <path id="a2a-path-3" d="M195,165 Q170,250 195,335" fill="none"/>
+            <path id="a2a-path-4" d="M605,165 Q630,250 605,335" fill="none"/>
+            <path id="a2a-path-5" d="M295,200 Q400,250 505,300" fill="none"/>
+            <path id="a2a-path-6" d="M505,200 Q400,250 295,300" fill="none"/>
+        </defs>
+
+        <!-- CENTRAL REGISTRY HUB -->
+        <g class="registry-hub" transform="translate(400, 250)">
+            <!-- Outer awareness ring (pulsing) -->
+            <circle r="70" fill="none" stroke="var(--orange-500)" stroke-width="1" opacity="0.15">
+                <animate attributeName="r" values="70;85;70" dur="4s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.15;0.05;0.15" dur="4s" repeatCount="indefinite"/>
+            </circle>
+            <!-- Secondary pulse ring -->
+            <circle r="60" fill="none" stroke="var(--orange-500)" stroke-width="0.5" opacity="0.1">
+                <animate attributeName="r" values="60;72;60" dur="4s" repeatCount="indefinite" begin="0.5s"/>
+            </circle>
+
+            <!-- Hub glow background -->
+            <circle r="50" fill="var(--orange-600)" opacity="0.06" filter="url(#registry-glow)"/>
+
+            <!-- Hexagon shape -->
+            <polygon points="0,-45 39,-22.5 39,22.5 0,45 -39,22.5 -39,-22.5"
+                     fill="var(--color-surface, #0a0a0a)"
+                     stroke="var(--orange-500)"
+                     stroke-width="2"/>
+
+            <!-- Inner hexagon accent -->
+            <polygon points="0,-32 28,-16 28,16 0,32 -28,16 -28,-16"
+                     fill="none"
+                     stroke="var(--orange-600)"
+                     stroke-width="0.5"
+                     stroke-dasharray="4,4"
+                     opacity="0.5"/>
+
+            <!-- Network mesh icon -->
+            <svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24"
+                 fill="none" stroke="var(--orange-500)" stroke-width="1.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="2.5"/>
+                <circle cx="5" cy="6" r="1.5"/>
+                <circle cx="19" cy="6" r="1.5"/>
+                <circle cx="5" cy="18" r="1.5"/>
+                <circle cx="19" cy="18" r="1.5"/>
+                <line x1="10" y1="10.5" x2="6.2" y2="7.2"/>
+                <line x1="14" y1="10.5" x2="17.8" y2="7.2"/>
+                <line x1="10" y1="13.5" x2="6.2" y2="16.8"/>
+                <line x1="14" y1="13.5" x2="17.8" y2="16.8"/>
+            </svg>
+
+            <!-- Labels -->
+            <text text-anchor="middle" y="62" fill="var(--orange-400)"
+                  font-family="var(--font-brand), system-ui, sans-serif" font-size="9" font-weight="600" letter-spacing="0.12em">
+                REGISTRY
+            </text>
+            <text text-anchor="middle" y="74" fill="var(--orange-300)"
+                  font-family="var(--font-body), system-ui, sans-serif" font-size="7" letter-spacing="0.08em">
+                AGENTS + MCP
+            </text>
+        </g>
+
+        <!-- AGENT NODES -->
+        <g class="agent-nodes">
+            <!-- Agent A (top-left) -->
+            <g class="agent-node" transform="translate(245, 165)" filter="url(#agent-glow)">
+                <rect x="-50" y="-35" width="100" height="70" rx="8"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1.5"/>
+                <!-- Robot/agent icon -->
+                <svg x="-10" y="-28" width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="var(--orange-400)" stroke-width="1.5">
+                    <rect x="3" y="11" width="18" height="10" rx="2"/>
+                    <circle cx="12" cy="5" r="2"/>
+                    <path d="M12 7v4"/>
+                    <circle cx="8" cy="16" r="1"/>
+                    <circle cx="16" cy="16" r="1"/>
+                </svg>
+                <text text-anchor="middle" y="-38" fill="var(--orange-300)"
+                      font-family="var(--font-brand), system-ui, sans-serif" font-size="8" letter-spacing="0.1em">AGENT A</text>
+                <!-- Status indicator -->
+                <circle cx="40" cy="-25" r="3" fill="#22c55e" opacity="0.9"/>
+                <!-- SystemPrompt badge -->
+                <rect x="-38" y="8" width="76" height="18" rx="4"
+                      fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="0.5"/>
+                <image href="/files/images/logo.svg" x="-30" y="10" width="60" height="14"/>
+            </g>
+
+            <!-- Agent B (top-right) -->
+            <g class="agent-node" transform="translate(555, 165)" filter="url(#agent-glow)">
+                <rect x="-50" y="-35" width="100" height="70" rx="8"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1.5"/>
+                <svg x="-10" y="-28" width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="var(--orange-400)" stroke-width="1.5">
+                    <rect x="3" y="11" width="18" height="10" rx="2"/>
+                    <circle cx="12" cy="5" r="2"/>
+                    <path d="M12 7v4"/>
+                    <circle cx="8" cy="16" r="1"/>
+                    <circle cx="16" cy="16" r="1"/>
+                </svg>
+                <text text-anchor="middle" y="-38" fill="var(--orange-300)"
+                      font-family="var(--font-brand), system-ui, sans-serif" font-size="8" letter-spacing="0.1em">AGENT B</text>
+                <circle cx="40" cy="-25" r="3" fill="#22c55e" opacity="0.9"/>
+                <rect x="-38" y="8" width="76" height="18" rx="4"
+                      fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="0.5"/>
+                <image href="/files/images/logo.svg" x="-30" y="10" width="60" height="14"/>
+            </g>
+
+            <!-- Agent C (bottom-left) -->
+            <g class="agent-node" transform="translate(245, 335)" filter="url(#agent-glow)">
+                <rect x="-50" y="-35" width="100" height="70" rx="8"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1.5"/>
+                <svg x="-10" y="-28" width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="var(--orange-400)" stroke-width="1.5">
+                    <rect x="3" y="11" width="18" height="10" rx="2"/>
+                    <circle cx="12" cy="5" r="2"/>
+                    <path d="M12 7v4"/>
+                    <circle cx="8" cy="16" r="1"/>
+                    <circle cx="16" cy="16" r="1"/>
+                </svg>
+                <text text-anchor="middle" y="-38" fill="var(--orange-300)"
+                      font-family="var(--font-brand), system-ui, sans-serif" font-size="8" letter-spacing="0.1em">AGENT C</text>
+                <circle cx="40" cy="-25" r="3" fill="#22c55e" opacity="0.9"/>
+                <rect x="-38" y="8" width="76" height="18" rx="4"
+                      fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="0.5"/>
+                <image href="/files/images/logo.svg" x="-30" y="10" width="60" height="14"/>
+            </g>
+
+            <!-- Agent D (bottom-right) -->
+            <g class="agent-node" transform="translate(555, 335)" filter="url(#agent-glow)">
+                <rect x="-50" y="-35" width="100" height="70" rx="8"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1.5"/>
+                <svg x="-10" y="-28" width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="var(--orange-400)" stroke-width="1.5">
+                    <rect x="3" y="11" width="18" height="10" rx="2"/>
+                    <circle cx="12" cy="5" r="2"/>
+                    <path d="M12 7v4"/>
+                    <circle cx="8" cy="16" r="1"/>
+                    <circle cx="16" cy="16" r="1"/>
+                </svg>
+                <text text-anchor="middle" y="-38" fill="var(--orange-300)"
+                      font-family="var(--font-brand), system-ui, sans-serif" font-size="8" letter-spacing="0.1em">AGENT D</text>
+                <circle cx="40" cy="-25" r="3" fill="#22c55e" opacity="0.9"/>
+                <rect x="-38" y="8" width="76" height="18" rx="4"
+                      fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="0.5"/>
+                <image href="/files/images/logo.svg" x="-30" y="10" width="60" height="14"/>
+            </g>
+        </g>
+
+        <!-- A2A MESH CONNECTIONS - rendered after nodes so lines appear on top -->
+        <g class="mesh-links">
+            <!-- Top connection: Agent A ↔ Agent B (connects to top edges) -->
+            <path d="M295,130 Q400,100 505,130" fill="none" stroke="var(--orange-600)" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.35"/>
+            <!-- Bottom connection: Agent C ↔ Agent D (connects to bottom edges) -->
+            <path d="M295,370 Q400,400 505,370" fill="none" stroke="var(--orange-600)" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.35"/>
+            <!-- Left vertical: Agent A ↔ Agent C (connects to left edges) -->
+            <path d="M195,165 Q170,250 195,335" fill="none" stroke="var(--orange-600)" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.35"/>
+            <!-- Right vertical: Agent B ↔ Agent D (connects to right edges) -->
+            <path d="M605,165 Q630,250 605,335" fill="none" stroke="var(--orange-600)" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.35"/>
+            <!-- Cross: Agent A ↔ Agent D -->
+            <path d="M295,200 Q400,250 505,300" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="6,4" opacity="0.2"/>
+            <!-- Cross: Agent B ↔ Agent C -->
+            <path d="M505,200 Q400,250 295,300" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="6,4" opacity="0.2"/>
+        </g>
+
+        <!-- REGISTRY TO AGENT CONNECTIONS - rendered on top -->
+        <g class="registry-connections">
+            <path d="M400,205 L295,130" fill="none" stroke="var(--orange-500)" stroke-width="2" opacity="0.4"/>
+            <path d="M400,205 L505,130" fill="none" stroke="var(--orange-500)" stroke-width="2" opacity="0.4"/>
+            <path d="M400,295 L295,370" fill="none" stroke="var(--orange-500)" stroke-width="2" opacity="0.4"/>
+            <path d="M400,295 L505,370" fill="none" stroke="var(--orange-500)" stroke-width="2" opacity="0.4"/>
+        </g>
+
+        <!-- A2A FLOWING PARTICLES -->
+        <g class="a2a-particles">
+            <!-- Path 1: Top horizontal -->
+            <circle r="5" fill="var(--orange-400)" filter="url(#particle-glow)">
+                <animateMotion dur="3s" repeatCount="indefinite">
+                    <mpath href="#a2a-path-1"/>
+                </animateMotion>
+            </circle>
+            <circle r="4" fill="var(--orange-300)" filter="url(#particle-glow)" opacity="0.7">
+                <animateMotion dur="3s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear">
+                    <mpath href="#a2a-path-1"/>
+                </animateMotion>
+            </circle>
+
+            <!-- Path 2: Bottom horizontal -->
+            <circle r="5" fill="var(--orange-400)" filter="url(#particle-glow)">
+                <animateMotion dur="3.5s" repeatCount="indefinite" begin="0.5s">
+                    <mpath href="#a2a-path-2"/>
+                </animateMotion>
+            </circle>
+
+            <!-- Path 3: Left vertical -->
+            <circle r="4" fill="var(--orange-300)" filter="url(#particle-glow)">
+                <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.3s">
+                    <mpath href="#a2a-path-3"/>
+                </animateMotion>
+            </circle>
+
+            <!-- Path 4: Right vertical -->
+            <circle r="4" fill="var(--orange-300)" filter="url(#particle-glow)">
+                <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.8s">
+                    <mpath href="#a2a-path-4"/>
+                </animateMotion>
+            </circle>
+        </g>
+    </svg>
+</div>
+
+<!-- Mobile version -->
+<div class="agentic-mesh-animation agentic-mesh-animation--mobile" aria-hidden="true">
+    <svg
+        viewBox="55 80 210 250"
+        class="agentic-mesh-svg agentic-mesh-svg--mobile"
+        preserveAspectRatio="xMidYMid meet"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <defs>
+            <filter id="registry-glow-m" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+            <filter id="agent-glow-m" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+            <filter id="particle-glow-m" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+
+            <!-- Mobile A2A paths (match visible connections) -->
+            <path id="a2a-path-m1" d="M100,198 Q160,170 220,198" fill="none"/>
+            <path id="a2a-path-m2" d="M100,242 L125,268" fill="none"/>
+            <path id="a2a-path-m3" d="M220,242 L195,268" fill="none"/>
+        </defs>
+
+        <!-- Central Registry Hub -->
+        <g class="registry-hub-mobile" transform="translate(160, 130)">
+            <!-- Pulse ring -->
+            <circle r="40" fill="none" stroke="var(--orange-500)" stroke-width="0.5" opacity="0.1">
+                <animate attributeName="r" values="40;48;40" dur="4s" repeatCount="indefinite"/>
+            </circle>
+            <!-- Hub -->
+            <polygon points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15"
+                     fill="var(--color-surface, #0a0a0a)"
+                     stroke="var(--orange-500)"
+                     stroke-width="1.5"/>
+            <!-- Icon -->
+            <svg x="-10" y="-10" width="20" height="20" viewBox="0 0 24 24"
+                 fill="none" stroke="var(--orange-500)" stroke-width="1.5">
+                <circle cx="12" cy="12" r="2"/>
+                <circle cx="5" cy="6" r="1.5"/>
+                <circle cx="19" cy="6" r="1.5"/>
+                <circle cx="5" cy="18" r="1.5"/>
+                <circle cx="19" cy="18" r="1.5"/>
+                <line x1="10" y1="10.5" x2="6.2" y2="7.2"/>
+                <line x1="14" y1="10.5" x2="17.8" y2="7.2"/>
+                <line x1="10" y1="13.5" x2="6.2" y2="16.8"/>
+                <line x1="14" y1="13.5" x2="17.8" y2="16.8"/>
+            </svg>
+            <text text-anchor="middle" y="46" fill="var(--orange-400)"
+                  font-family="var(--font-brand), system-ui, sans-serif" font-size="7" letter-spacing="0.1em">REGISTRY</text>
+        </g>
+
+        <!-- Agent nodes (triangle layout) -->
+        <g class="agent-nodes-mobile">
+            <!-- Agent A (left) -->
+            <g transform="translate(100, 220)" filter="url(#agent-glow-m)">
+                <rect x="-35" y="-22" width="70" height="44" rx="5"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1"/>
+                <text text-anchor="middle" y="-8" fill="var(--orange-300)"
+                      font-family="var(--font-brand), system-ui, sans-serif" font-size="7" letter-spacing="0.08em">AGENT A</text>
+                <image href="/files/images/logo.svg" x="-28" y="2" width="56" height="12"/>
+            </g>
+
+            <!-- Agent B (right) -->
+            <g transform="translate(220, 220)" filter="url(#agent-glow-m)">
+                <rect x="-35" y="-22" width="70" height="44" rx="5"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1"/>
+                <text text-anchor="middle" y="-8" fill="var(--orange-300)"
+                      font-family="var(--font-brand), system-ui, sans-serif" font-size="7" letter-spacing="0.08em">AGENT B</text>
+                <image href="/files/images/logo.svg" x="-28" y="2" width="56" height="12"/>
+            </g>
+
+            <!-- Agent C (bottom center) -->
+            <g transform="translate(160, 290)" filter="url(#agent-glow-m)">
+                <rect x="-35" y="-22" width="70" height="44" rx="5"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1"/>
+                <text text-anchor="middle" y="-8" fill="var(--orange-300)"
+                      font-family="var(--font-brand), system-ui, sans-serif" font-size="7" letter-spacing="0.08em">AGENT C</text>
+                <image href="/files/images/logo.svg" x="-28" y="2" width="56" height="12"/>
+            </g>
+        </g>
+
+        <!-- A2A connections - rendered AFTER nodes so lines appear on top -->
+        <g class="mesh-links-mobile">
+            <!-- Top connection: Agent A ↔ Agent B (along top edge of boxes) -->
+            <path d="M100,198 Q160,170 220,198" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="6,3" opacity="0.35"/>
+        </g>
+
+        <!-- Registry to agent connections - on top of boxes -->
+        <path d="M160,160 L100,198" fill="none" stroke="var(--orange-500)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.4"/>
+        <path d="M160,160 L220,198" fill="none" stroke="var(--orange-500)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.4"/>
+
+        <!-- Connections to Agent C -->
+        <path d="M100,242 L125,268" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="6,3" opacity="0.35"/>
+        <path d="M220,242 L195,268" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="6,3" opacity="0.35"/>
+
+        <!-- Particles -->
+        <g class="a2a-particles-mobile">
+            <circle r="3" fill="var(--orange-400)" filter="url(#particle-glow-m)">
+                <animateMotion dur="2.5s" repeatCount="indefinite">
+                    <mpath href="#a2a-path-m1"/>
+                </animateMotion>
+            </circle>
+            <circle r="2.5" fill="var(--orange-300)" filter="url(#particle-glow-m)">
+                <animateMotion dur="2s" repeatCount="indefinite">
+                    <mpath href="#a2a-path-m2"/>
+                </animateMotion>
+            </circle>
+        </g>
+    </svg>
+</div>

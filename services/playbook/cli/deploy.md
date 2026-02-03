@@ -1,26 +1,26 @@
 ---
 title: "Deploy Playbook"
 description: "Deploy changes to cloud tenants."
-keywords:
-  - deploy
-  - cloud
-  - production
-  - release
+author: "SystemPrompt"
+slug: "cli-deploy"
+keywords: "deploy, cloud, production, release"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # Deploy Playbook
 
 Deploy changes to cloud tenants.
 
-> **Help**: `{ "command": "cloud deploy" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
-
 ---
 
 ## Pre-Deploy Checklist
 
 ```json
-// MCP: systemprompt
 { "command": "cloud auth whoami" }
 { "command": "admin session show" }
 { "command": "cloud tenant list" }
@@ -44,12 +44,31 @@ Full deploy (build + push + deploy) is a long-running operation -- use the termi
 just deploy
 ```
 
-Or via MCP:
+### Non-Interactive Mode (CI/CD or Agents)
+
+In non-interactive mode (scripts, CI/CD, AI agents), you must provide explicit flags:
+
+```bash
+# Required flags for non-interactive deploy
+systemprompt cloud deploy --profile <profile-name> --yes
+
+# Skip pre-deploy sync (use when only deploying code changes, not runtime files)
+systemprompt cloud deploy --profile <profile-name> --yes --no-sync
+```
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--profile <name>` | Yes | Target profile (e.g., `systemprompt-prod`) |
+| `--yes` | Yes | Confirm destructive operation |
+| `--no-sync` | No | Skip syncing runtime files from cloud before deploy |
+| `--skip-push` | No | Skip Docker build/push (redeploy existing image) |
+
+### Via MCP
+
 ```json
-// MCP: systemprompt
 { "command": "cloud deploy" }
-{ "command": "cloud deploy --profile <profile-name>" }
-{ "command": "cloud deploy --skip-push" }
+{ "command": "cloud deploy --profile <profile-name> --yes" }
+{ "command": "cloud deploy --profile <profile-name> --yes --no-sync" }
 ```
 
 ---
@@ -57,7 +76,6 @@ Or via MCP:
 ## Post-Deploy Verification
 
 ```json
-// MCP: systemprompt
 { "command": "cloud status" }
 { "command": "cloud db status --profile <profile-name>" }
 { "command": "cloud db query --profile <profile-name> \"SELECT COUNT(*) FROM users\"" }
@@ -68,7 +86,6 @@ Or via MCP:
 ## Restart Cloud Tenant
 
 ```json
-// MCP: systemprompt
 { "command": "cloud restart --yes" }
 ```
 
@@ -79,17 +96,31 @@ Or via MCP:
 **Not authenticated** (`Error: Cloud authentication required`) -- run `just login` in the terminal.
 
 **No tenant** (`Error: No tenant configured`):
+
 ```json
-// MCP: systemprompt
 { "command": "cloud tenant list" }
 { "command": "cloud profile show" }
 ```
 
-**Cloud not responding after deploy** -- check `cloud status`, then `cloud restart --yes`. Check platform logs if still failing.
+**Cloud not responding after deploy** -- check `cloud status`, then `cloud restart --yes`.
 
-**Wrong profile active** -- check with `admin session show`, switch with `admin session switch <profile-name>`.
+**Site unreachable after deploy (SSL error)**:
 
--> See [Cloud Playbook](cloud.md) for tenant and profile management | [Build Playbook](build.md) | [Session Playbook](session.md)
+This usually indicates a certificate routing conflict. See the [Cloud Infrastructure Playbook](/playbooks/build-cloud) for details.
+
+Quick diagnosis:
+```bash
+# Test direct tenant access (bypasses proxy)
+curl -sI https://sp-{tenant-id}.fly.dev/
+
+# Test via custom domain
+curl -sI https://{tenant-id}.systemprompt.io/
+
+# Check certificate status
+systemprompt cloud certs list
+```
+
+If direct access works but custom domain fails, there's likely a certificate on the tenant app that conflicts with the Management API's wildcard certificate. See the Cloud Infrastructure Playbook for resolution steps.
 
 ---
 
@@ -98,9 +129,10 @@ Or via MCP:
 | Task | Command |
 |------|---------|
 | Login | `just login` (terminal) |
-| Full deploy | `just deploy` (terminal) |
-| Deploy profile | `cloud deploy --profile <name>` |
-| Skip rebuild | `cloud deploy --skip-push` |
+| Full deploy (interactive) | `just deploy` (terminal) |
+| Full deploy (non-interactive) | `cloud deploy --profile <name> --yes` |
+| Deploy without sync | `cloud deploy --profile <name> --yes --no-sync` |
+| Skip rebuild | `cloud deploy --profile <name> --yes --skip-push` |
 | Cloud status | `cloud status` |
 | Restart cloud | `cloud restart --yes` |
 | Cloud DB query | `cloud db query --profile <name> "SQL"` |

@@ -1,27 +1,26 @@
 ---
 title: "Logs & Debugging Playbook"
 description: "View, search, and analyze logs for debugging and monitoring."
-keywords:
-  - logs
-  - debugging
-  - tracing
-  - monitoring
-  - errors
+author: "SystemPrompt"
+slug: "cli-logs"
+keywords: "logs, debugging, tracing, monitoring, errors"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # Logs & Debugging Playbook
 
 View, search, and analyze logs for debugging and monitoring.
 
-> **Help**: `{ "command": "infra logs" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
-
 ---
 
 ## View Recent Logs
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs view" }
 { "command": "infra logs view --tail 50" }
 { "command": "infra logs view --tail 100" }
@@ -32,7 +31,6 @@ View, search, and analyze logs for debugging and monitoring.
 ## Filter by Log Level
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs view --level error" }
 { "command": "infra logs view --level warn" }
 { "command": "infra logs view --level info" }
@@ -44,7 +42,6 @@ View, search, and analyze logs for debugging and monitoring.
 ## Filter by Time Range
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs view --since 1h" }
 { "command": "infra logs view --since 24h" }
 { "command": "infra logs view --since 7d" }
@@ -68,7 +65,6 @@ systemprompt infra logs stream --level error --module agent
 ## Search Logs
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs search \"connection refused\"" }
 { "command": "infra logs search \"timeout\" --since 1h" }
 { "command": "infra logs search \"job failed\"" }
@@ -80,7 +76,6 @@ systemprompt infra logs stream --level error --module agent
 ## View Log Summary
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs summary" }
 { "command": "infra logs summary --since 1h" }
 { "command": "infra logs summary --since 24h" }
@@ -91,7 +86,6 @@ systemprompt infra logs stream --level error --module agent
 ## Show Specific Log Entry
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs show <log-id>" }
 ```
 
@@ -102,7 +96,6 @@ systemprompt infra logs stream --level error --module agent
 View detailed traces for debugging request flows:
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs trace" }
 { "command": "infra logs trace show <trace-id>" }
 { "command": "infra logs trace show <trace-id> --all" }
@@ -113,7 +106,6 @@ View detailed traces for debugging request flows:
 ## Inspect AI Requests
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs request" }
 { "command": "infra logs request show <request-id>" }
 ```
@@ -125,7 +117,6 @@ View detailed traces for debugging request flows:
 Full audit trail for an AI request:
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs audit <request-id>" }
 { "command": "infra logs audit <request-id> --full" }
 ```
@@ -135,7 +126,6 @@ Full audit trail for an AI request:
 ## View MCP Tool Executions
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs tools" }
 { "command": "infra logs tools --since 1h" }
 ```
@@ -145,7 +135,6 @@ Full audit trail for an AI request:
 ## Export Logs
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs export --format json --since 24h -o logs.json" }
 { "command": "infra logs export --format csv --since 7d -o logs.csv" }
 ```
@@ -155,7 +144,6 @@ Full audit trail for an AI request:
 ## Cleanup Old Logs
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs cleanup --days 30" }
 { "command": "infra logs cleanup --days 7 --dry-run" }
 { "command": "infra logs delete" }
@@ -168,7 +156,6 @@ Full audit trail for an AI request:
 ### Find Recent Errors
 
 ```json
-// MCP: systemprompt
 { "command": "infra logs view --level error --since 1h" }
 { "command": "infra logs summary --since 1h" }
 ```
@@ -177,26 +164,22 @@ Full audit trail for an AI request:
 
 1. Find the error:
 ```json
-// MCP: systemprompt
 { "command": "infra logs view --level error --since 1h" }
 ```
 
 2. Get the request ID from the error, then audit:
 ```json
-// MCP: systemprompt
 { "command": "infra logs audit <request-id> --full" }
 ```
 
 3. View the full trace:
 ```json
-// MCP: systemprompt
 { "command": "infra logs trace show <trace-id> --all" }
 ```
 
 ### Debug Agent Issues
 
 ```json
-// MCP: systemprompt
 { "command": "admin agents logs <agent-name>" }
 { "command": "infra logs search \"agent\" --level error --since 1h" }
 ```
@@ -204,7 +187,6 @@ Full audit trail for an AI request:
 ### Debug MCP Server Issues
 
 ```json
-// MCP: systemprompt
 { "command": "plugins mcp logs <server-name>" }
 { "command": "infra logs tools --since 1h" }
 ```
@@ -241,7 +223,6 @@ grep "research_content\|gemini" logs/mcp-content-manager.log | tail -20
 Query the `mcp_tool_executions` table for detailed tool execution history:
 
 ```json
-// MCP: systemprompt
 { "command": "infra db query \"SELECT created_at, tool_name, status, error_message FROM mcp_tool_executions WHERE tool_name = 'research_content' ORDER BY created_at DESC LIMIT 5\"" }
 { "command": "infra db query \"SELECT created_at, server_name, tool_name, status, error_message FROM mcp_tool_executions WHERE status != 'success' ORDER BY created_at DESC LIMIT 10\"" }
 ```
@@ -299,7 +280,3 @@ When debugging production issues, always use CLI commands which fetch from the r
 | Export logs | `infra logs export --format json -o logs.json` |
 | Clean old logs | `infra logs cleanup --days 30` |
 | Stream live | `infra logs stream` (terminal only) |
-| Local MCP logs | `tail logs/mcp-<server>.log` (terminal) |
-| Check profile | `admin session show` |
-
--> See [Jobs Playbook](jobs.md) for log cleanup job configuration.

@@ -1,27 +1,26 @@
 ---
 title: "Database Operations Playbook"
 description: "Database queries, schema exploration, and administration."
-keywords:
-  - database
-  - sql
-  - queries
-  - migrations
-  - schema
+author: "SystemPrompt"
+slug: "cli-database"
+keywords: "database, sql, queries, migrations, schema"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # Database Operations Playbook
 
 Database queries, schema exploration, and administration.
 
-> **Help**: `{ "command": "infra db" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
-
 ---
 
 ## Check Database Status
 
 ```json
-// MCP: systemprompt
 { "command": "infra db status" }
 ```
 
@@ -30,7 +29,6 @@ Database queries, schema exploration, and administration.
 ## Explore Schema
 
 ```json
-// MCP: systemprompt
 { "command": "infra db tables" }
 { "command": "infra db describe <table>" }
 { "command": "infra db indexes" }
@@ -43,7 +41,6 @@ Database queries, schema exploration, and administration.
 ## Query Data (Read-Only)
 
 ```json
-// MCP: systemprompt
 { "command": "infra db query \"SELECT COUNT(*) FROM users\"" }
 { "command": "infra db query \"SELECT * FROM users LIMIT 10\"" }
 { "command": "infra db count <table>" }
@@ -54,7 +51,6 @@ Database queries, schema exploration, and administration.
 ## Run Migrations
 
 ```json
-// MCP: systemprompt
 { "command": "infra db migrate" }
 { "command": "infra db validate" }
 ```
@@ -64,7 +60,6 @@ Database queries, schema exploration, and administration.
 ## Assign Admin Role
 
 ```json
-// MCP: systemprompt
 { "command": "infra db assign-admin user@example.com" }
 ```
 
@@ -72,10 +67,7 @@ Database queries, schema exploration, and administration.
 
 ## Cloud Database Operations
 
--> See [Cloud Playbook](cloud.md) for cloud profile setup.
-
 ```json
-// MCP: systemprompt
 { "command": "cloud db status --profile <profile-name>" }
 { "command": "cloud db query --profile <profile-name> \"SELECT COUNT(*) FROM users\"" }
 { "command": "cloud db migrate --profile <profile-name>" }
@@ -90,7 +82,6 @@ The `infra db execute` command runs DDL statements (ALTER TABLE, CREATE TABLE, e
 ### Add a Column
 
 ```json
-// MCP: systemprompt
 { "command": "infra db execute \"ALTER TABLE <table> ADD COLUMN IF NOT EXISTS <column> TEXT\"" }
 { "command": "infra db execute \"ALTER TABLE <table> ADD COLUMN IF NOT EXISTS <column> INTEGER NOT NULL DEFAULT 0\"" }
 ```
@@ -98,7 +89,6 @@ The `infra db execute` command runs DDL statements (ALTER TABLE, CREATE TABLE, e
 ### Modify a Column
 
 ```json
-// MCP: systemprompt
 { "command": "infra db execute \"ALTER TABLE <table> ALTER COLUMN <column> TYPE JSONB USING <column>::jsonb\"" }
 { "command": "infra db execute \"ALTER TABLE <table> ALTER COLUMN <column> DROP NOT NULL\"" }
 { "command": "infra db execute \"ALTER TABLE <table> ALTER COLUMN <column> SET DEFAULT 'pending'\"" }
@@ -107,21 +97,18 @@ The `infra db execute` command runs DDL statements (ALTER TABLE, CREATE TABLE, e
 ### Drop a Column
 
 ```json
-// MCP: systemprompt
 { "command": "infra db execute \"ALTER TABLE <table> DROP COLUMN IF EXISTS <column>\"" }
 ```
 
 ### Create a Table
 
 ```json
-// MCP: systemprompt
 { "command": "infra db execute \"CREATE TABLE IF NOT EXISTS <table> (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())\"" }
 ```
 
 ### Add Indexes
 
 ```json
-// MCP: systemprompt
 { "command": "infra db execute \"CREATE INDEX IF NOT EXISTS idx_<table>_<column> ON <table>(<column>)\"" }
 { "command": "infra db execute \"CREATE UNIQUE INDEX IF NOT EXISTS idx_<table>_<column> ON <table>(<column>)\"" }
 ```
@@ -129,21 +116,18 @@ The `infra db execute` command runs DDL statements (ALTER TABLE, CREATE TABLE, e
 ### Add Foreign Key
 
 ```json
-// MCP: systemprompt
 { "command": "infra db execute \"ALTER TABLE <table> ADD CONSTRAINT fk_<name> FOREIGN KEY (<column>) REFERENCES <other_table>(id) ON DELETE CASCADE\"" }
 ```
 
 ### Drop a Table
 
 ```json
-// MCP: systemprompt
 { "command": "infra db execute \"DROP TABLE IF EXISTS <table>\"" }
 ```
 
 ### Cloud Schema Modifications
 
 ```json
-// MCP: systemprompt
 { "command": "cloud db execute --profile <profile-name> \"ALTER TABLE <table> ADD COLUMN IF NOT EXISTS <column> TEXT\"" }
 ```
 

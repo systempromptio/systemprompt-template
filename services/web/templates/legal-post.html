@@ -3,20 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  {{{HEAD_ASSETS}}}
 
   <!-- SEO Meta Tags -->
   <title>{{TITLE}} | {{ORG_NAME}}</title>
   <meta name="description" content="{{DESCRIPTION}}" />
   <meta name="author" content="{{AUTHOR}}" />
   <meta name="keywords" content="{{KEYWORDS}}" />
-  <link rel="canonical" href="{{ORG_URL}}/blog/{{SLUG}}" />
+  <link rel="canonical" href="{{ORG_URL}}/legal/{{SLUG}}" />
 
   <!-- Open Graph -->
   <meta property="og:title" content="{{TITLE}}" />
   <meta property="og:description" content="{{DESCRIPTION}}" />
   <meta property="og:image" content="{{IMAGE}}" />
   <meta property="og:type" content="article" />
-  <meta property="og:url" content="{{ORG_URL}}/blog/{{SLUG}}" />
+  <meta property="og:url" content="{{ORG_URL}}/legal/{{SLUG}}" />
   <meta property="og:site_name" content="{{ORG_NAME}}" />
 
   <!-- Twitter Card -->
@@ -38,7 +39,7 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "BlogPosting",
+    "@type": "WebPage",
     "headline": "{{TITLE}}",
     "description": "{{DESCRIPTION}}",
     "image": "{{IMAGE}}",
@@ -58,11 +59,24 @@
     "dateModified": "{{DATE_MODIFIED_ISO}}",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "{{ORG_URL}}/blog/{{SLUG}}"
+      "@id": "{{ORG_URL}}/legal/{{SLUG}}"
     },
     "keywords": "{{KEYWORDS}}",
     "articleSection": "{{ARTICLE_SECTION}}",
     "inLanguage": "{{ARTICLE_LANGUAGE}}"
+  }
+  </script>
+
+  <!-- BreadcrumbList Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "{{ORG_URL}}"},
+      {"@type": "ListItem", "position": 2, "name": "Legal", "item": "{{ORG_URL}}/legal"},
+      {"@type": "ListItem", "position": 3, "name": "{{TITLE}}", "item": "{{ORG_URL}}/legal/{{SLUG}}"}
+    ]
   }
   </script>
 </head>
@@ -76,7 +90,7 @@
     <nav class="breadcrumb" aria-label="Breadcrumb">
       <a href="/">Home</a>
       <span class="breadcrumb__separator">/</span>
-      <a href="/blog">Blog</a>
+      <a href="/legal">Legal</a>
       <span class="breadcrumb__separator">/</span>
       <span class="breadcrumb__current">{{TITLE}}</span>
     </nav>
@@ -95,9 +109,9 @@
         {{{SOCIAL_ACTION_BAR}}}
       </header>
 
-      {{#if FEATURED_IMAGE}}
+      {{#if IMAGE}}
       <figure class="featured-image">
-        <img src="{{FEATURED_IMAGE}}" alt="{{TITLE}}" loading="eager" />
+        <img src="{{IMAGE}}" alt="{{TITLE}}" loading="eager" />
       </figure>
       {{/if}}
 
@@ -110,22 +124,6 @@
       {{{SOCIAL_CONTENT}}}
     </article>
 
-    <section class="agentic-banner">
-      <div class="banner-content">
-        <div class="banner-icon">🤖</div>
-        <div class="banner-text">
-          <h3>This blog is powered by an AI agent system</h3>
-          <p>Want to explore more content or ask questions? Chat with our AI agent to discover articles, get summaries, or dive deeper into topics.</p>
-        </div>
-        <a href="{{BANNER_CTA_URL}}" class="banner-cta">
-          Start Chatting
-          <svg class="arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
-        </a>
-      </div>
-    </section>
   </main>
 
   {{{FOOTER}}}

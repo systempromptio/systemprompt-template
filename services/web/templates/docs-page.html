@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  {{{HEAD_ASSETS}}}
+
+  <!-- SEO Meta Tags -->
+  <title>{{TITLE}} | {{ORG_NAME}} Documentation</title>
+  <meta name="description" content="{{DESCRIPTION}}" />
+  <meta name="author" content="{{AUTHOR}}" />
+  <meta name="keywords" content="{{KEYWORDS}}" />
+  <link rel="canonical" href="{{ORG_URL}}/documentation/{{SLUG}}" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="{{TITLE}}" />
+  <meta property="og:description" content="{{DESCRIPTION}}" />
+  <meta property="og:image" content="{{IMAGE}}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="{{ORG_URL}}/documentation/{{SLUG}}" />
+  <meta property="og:site_name" content="{{ORG_NAME}}" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="{{TWITTER_HANDLE}}" />
+  <meta name="twitter:creator" content="{{TWITTER_HANDLE}}" />
+  <meta name="twitter:title" content="{{TITLE}}" />
+  <meta name="twitter:description" content="{{DESCRIPTION}}" />
+  <meta name="twitter:image" content="{{IMAGE}}" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/docs.css" />
+  <link rel="stylesheet" href="/css/syntax-highlight.css" />
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "{{TITLE}}",
+    "description": "{{DESCRIPTION}}",
+    "image": "{{IMAGE}}",
+    "author": {
+      "@type": "Organization",
+      "name": "{{ORG_NAME}}"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "{{ORG_NAME}}",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ORG_LOGO}}"
+      }
+    },
+    "datePublished": "{{DATE_ISO}}",
+    "dateModified": "{{DATE_MODIFIED_ISO}}",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "{{ORG_URL}}/documentation/{{SLUG}}"
+    },
+    "keywords": "{{KEYWORDS}}",
+    "inLanguage": "{{ARTICLE_LANGUAGE}}"
+  }
+  </script>
+
+  <!-- BreadcrumbList Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "{{ORG_URL}}"},
+      {"@type": "ListItem", "position": 2, "name": "Documentation", "item": "{{ORG_URL}}/documentation"}{{#if SECTION}},
+      {"@type": "ListItem", "position": 3, "name": "{{SECTION}}", "item": "{{ORG_URL}}/documentation/{{SECTION_SLUG}}"},
+      {"@type": "ListItem", "position": 4, "name": "{{TITLE}}", "item": "{{ORG_URL}}/documentation/{{SLUG}}"}{{else}},
+      {"@type": "ListItem", "position": 3, "name": "{{TITLE}}", "item": "{{ORG_URL}}/documentation/{{SLUG}}"}{{/if}}
+    ]
+  }
+  </script>
+</head>
+<body class="docs-body">
+  <div class="docs-background"></div>
+
+  {{{HEADER}}}
+
+  <div class="docs-layout">
+    <!-- Left Sidebar - Navigation (dynamically rendered from config.yaml) -->
+    <aside class="docs-sidebar">
+      <nav class="docs-nav" aria-label="Documentation navigation">
+        {{#each site.docs_sidebar}}
+        <div class="docs-nav-section">
+          <h3 class="docs-nav-title">{{this.title}}</h3>
+          <ul class="docs-nav-list">
+            {{#each this.links}}
+            <li><a href="{{this.href}}" class="docs-nav-link">{{this.label}}</a></li>
+            {{/each}}
+          </ul>
+        </div>
+        {{/each}}
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="docs-main">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span class="breadcrumb__separator">/</span>
+        <a href="/documentation">Documentation</a>
+        {{#if SECTION}}
+        <span class="breadcrumb__separator">/</span>
+        <a href="/documentation/{{SECTION_SLUG}}">{{SECTION}}</a>
+        {{/if}}
+        <span class="breadcrumb__separator">/</span>
+        <span class="breadcrumb__current">{{TITLE}}</span>
+      </nav>
+
+      <article class="docs-article">
+        <header class="docs-header">
+          <div class="docs-title-row">
+            <h1>{{TITLE}}</h1>
+            <button class="docs-export-btn" data-slug="{{SLUG}}" aria-label="Copy as Markdown" title="Copy as Markdown">
+              <svg class="copy-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/>
+                <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/>
+              </svg>
+              <svg class="check-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 1 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/>
+              </svg>
+            </button>
+          </div>
+          {{#if DESCRIPTION}}
+          <p class="docs-description">{{DESCRIPTION}}</p>
+          {{/if}}
+          <div class="docs-meta">
+            <time datetime="{{DATE_MODIFIED_ISO}}">Last updated: {{DATE_MODIFIED}}</time>
+          </div>
+        </header>
+
+        <!-- Learning Objectives - Top Callout -->
+        {{#if HAS_LEARNING_CONTENT}}
+        <aside class="docs-learning-objectives">
+          {{#if AFTER_READING_THIS}}
+          <h2>After Reading This</h2>
+          <p class="docs-section-intro">You will be able to:</p>
+          <ul>
+            {{#each AFTER_READING_THIS}}
+            <li>{{this}}</li>
+            {{/each}}
+          </ul>
+          {{/if}}
+
+          {{#if RELATED_PLAYBOOKS}}
+          <div class="docs-related-cta">
+            <h3 class="docs-related-title">Related Playbooks</h3>
+            <div class="docs-related-links">
+              {{#each RELATED_PLAYBOOKS}}
+              <a href="{{this.url}}" class="docs-cta-link docs-cta-link--playbook">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+                {{this.title}}
+              </a>
+              {{/each}}
+            </div>
+          </div>
+          {{/if}}
+
+          {{#if RELATED_CODE}}
+          <div class="docs-related-cta">
+            <h3 class="docs-related-title">Related Code</h3>
+            <div class="docs-related-links">
+              {{#each RELATED_CODE}}
+              <a href="{{this.url}}" target="_blank" rel="noopener" class="docs-cta-link docs-cta-link--code">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <polyline points="16 18 22 12 16 6"/>
+                  <polyline points="8 6 2 12 8 18"/>
+                </svg>
+                {{this.title}}
+                <span class="external-indicator">↗</span>
+              </a>
+              {{/each}}
+            </div>
+          </div>
+          {{/if}}
+        </aside>
+        {{/if}}
+
+        <!-- Mobile Table of Contents (shown ≤1200px) -->
+        <div class="docs-toc-mobile">
+          <details class="toc-mobile-details">
+            <summary class="toc-mobile-summary">
+              <span class="toc-mobile-label">On this page</span>
+              <svg class="toc-mobile-chevron" viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor">
+                <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <nav class="toc-mobile-nav" aria-label="Table of contents">
+              <div class="toc-content toc-content--mobile">
+                {{{TOC_HTML}}}
+              </div>
+
+              {{#if RELATED_PLAYBOOKS}}
+              <div class="toc-mobile-section">
+                <h4 class="toc-mobile-section-title">Related Playbooks</h4>
+                <ul class="toc-links">
+                  {{#each RELATED_PLAYBOOKS}}
+                  <li><a href="{{this.url}}">{{this.title}}</a></li>
+                  {{/each}}
+                </ul>
+              </div>
+              {{/if}}
+
+              {{#if RELATED_CODE}}
+              <div class="toc-mobile-section">
+                <h4 class="toc-mobile-section-title">Related Code</h4>
+                <ul class="toc-links toc-links--code">
+                  {{#each RELATED_CODE}}
+                  <li><a href="{{this.url}}" target="_blank" rel="noopener">{{this.title}}</a></li>
+                  {{/each}}
+                </ul>
+              </div>
+              {{/if}}
+            </nav>
+          </details>
+        </div>
+
+        <div class="docs-content">
+          {{{CONTENT}}}
+        </div>
+
+        {{#if PREV_PAGE}}
+        <nav class="docs-pagination" aria-label="Pagination">
+          {{#if PREV_PAGE}}
+          <a href="{{PREV_PAGE_URL}}" class="docs-pagination-link docs-pagination-prev">
+            <span class="docs-pagination-label">Previous</span>
+            <span class="docs-pagination-title">{{PREV_PAGE_TITLE}}</span>
+          </a>
+          {{/if}}
+          {{#if NEXT_PAGE}}
+          <a href="{{NEXT_PAGE_URL}}" class="docs-pagination-link docs-pagination-next">
+            <span class="docs-pagination-label">Next</span>
+            <span class="docs-pagination-title">{{NEXT_PAGE_TITLE}}</span>
+          </a>
+          {{/if}}
+        </nav>
+        {{/if}}
+      </article>
+    </main>
+
+    <!-- Right Sidebar - Table of Contents & Related Links -->
+    <aside class="docs-toc">
+      <nav class="toc-nav" aria-label="Table of contents">
+        <h3 class="toc-title">On this page</h3>
+        <div class="toc-content">
+          {{{TOC_HTML}}}
+        </div>
+      </nav>
+
+      {{#if RELATED_PLAYBOOKS}}
+      <div class="toc-section toc-related-playbooks">
+        <h3 class="toc-title">Related Playbooks</h3>
+        <ul class="toc-links">
+          {{#each RELATED_PLAYBOOKS}}
+          <li><a href="{{this.url}}">{{this.title}}</a></li>
+          {{/each}}
+        </ul>
+      </div>
+      {{/if}}
+
+      {{#if RELATED_CODE}}
+      <div class="toc-section toc-related-code">
+        <h3 class="toc-title">Related Code</h3>
+        <ul class="toc-links toc-links--code">
+          {{#each RELATED_CODE}}
+          <li><a href="{{this.url}}" target="_blank" rel="noopener">{{this.title}}</a></li>
+          {{/each}}
+        </ul>
+      </div>
+      {{/if}}
+    </aside>
+  </div>
+
+  {{{FOOTER}}}
+
+  <!-- Scripts -->
+  <script src="/js/docs.js"></script>
+  {{{SCRIPTS}}}
+</body>
+</html>

@@ -1,0 +1,69 @@
+# Moltbook Engagement Skill
+# Skill for engaging with content on Moltbook
+
+skill:
+  id: moltbook_engage
+  name: "Moltbook Engagement"
+  description: "Engages with content on Moltbook through comments, replies, and votes"
+  version: "1.0.0"
+  enabled: true
+
+  tags:
+    - moltbook
+    - social
+    - commenting
+    - engagement
+    - community
+
+  examples:
+    - "Reply to this post with helpful information"
+    - "Comment on the thread about rate limiting"
+    - "Upvote quality content in m/rust"
+    - "Welcome a new agent to the community"
+    - "Respond to questions in my feed"
+
+  metadata:
+    category: "social"
+    difficulty: "beginner"
+    requires_mcp: "moltbook"
+
+  actions:
+    - name: comment
+      description: "Create a comment on a post"
+      parameters:
+        - name: agent_id
+          type: string
+          required: true
+        - name: post_id
+          type: string
+          required: true
+        - name: content
+          type: string
+          required: true
+        - name: parent_id
+          type: string
+          required: false
+          description: "For threaded replies"
+
+    - name: vote
+      description: "Vote on a post or comment"
+      parameters:
+        - name: agent_id
+          type: string
+          required: true
+        - name: post_id
+          type: string
+          required: true
+        - name: direction
+          type: string
+          required: true
+          enum: ["up", "down", "none"]
+
+  validation:
+    - content must not be empty
+    - content passes prompt injection detection
+    - agent must be registered with Moltbook
+
+  rate_limits:
+    - 50 comments per hour per agent
+    - 60 votes per minute per agent

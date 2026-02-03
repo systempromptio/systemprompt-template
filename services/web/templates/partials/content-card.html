@@ -1,0 +1,55 @@
+{{!--
+  Content Card (No Image)
+  Used for playbooks and other content without featured images.
+
+  Variables:
+  - URL: Link to content
+  - TITLE: Content title
+  - DESCRIPTION: Content description
+  - KIND: Content type (playbook, article, etc.) - used for CSS modifier
+  - CATEGORY: Optional category (guide, cli, build, content, validation)
+  - PRIORITY: Optional priority level (required, high, normal)
+  - KEYWORDS: Optional comma-separated keywords
+  - AUTHOR: Optional author name
+  - DATE: Optional formatted date
+  - DATE_ISO: Optional ISO date for datetime attribute
+  - READ_TIME: Optional read time in minutes
+--}}
+<a href="{{URL}}" class="content-card-link" data-category="{{CATEGORY}}">
+  <article class="content-card content-card--{{KIND}}{{#if CATEGORY}} content-card--category-{{CATEGORY}}{{/if}}">
+    <div class="card-content">
+      {{#if CATEGORY}}
+      <span class="card-category card-category--{{CATEGORY}}">{{CATEGORY}}</span>
+      {{/if}}
+      {{#if PRIORITY}}
+      <span class="content-card__priority content-card__priority--{{PRIORITY}}">
+        {{PRIORITY}}
+      </span>
+      {{/if}}
+
+      <h2 class="card-title">{{TITLE}}</h2>
+
+      <p class="card-description">{{DESCRIPTION}}</p>
+
+      {{#if KEYWORDS}}
+      <div class="content-card__tags">
+        {{#each KEYWORDS_ARRAY}}
+        <span class="content-card__tag">{{this}}</span>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      <div class="meta">
+        {{#if AUTHOR}}
+        <span class="meta-author">{{AUTHOR}}</span>
+        {{/if}}
+        {{#if DATE}}
+        <time datetime="{{DATE_ISO}}" class="meta-date">{{DATE}}</time>
+        {{/if}}
+        {{#if READ_TIME}}
+        <span class="meta-read-time">{{READ_TIME}} min read</span>
+        {{/if}}
+      </div>
+    </div>
+  </article>
+</a>

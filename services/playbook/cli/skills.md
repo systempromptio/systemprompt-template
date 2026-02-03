@@ -1,19 +1,35 @@
 ---
 title: "Skills Playbook"
 description: "Configure and sync skills between disk and database."
-keywords:
-  - skills
-  - agents
-  - yaml
-  - sync
+author: "SystemPrompt"
+slug: "cli-skills"
+keywords: "skills, agents, yaml, sync"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # Skills Playbook
 
 Configure and sync skills between disk and database.
 
-> **Help**: `{ "command": "core skills" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
+---
+
+## Understanding Skills
+
+Skills are reusable capabilities that agents can use. Each skill defines:
+
+| Field | Purpose |
+|-------|---------|
+| `name` | Unique identifier |
+| `description` | What the skill does |
+| `instructions` | Detailed guidance for the agent |
+| `tools` | MCP tools the skill can access |
+
+Skills are stored in YAML files on disk and synced to the database.
 
 ---
 
@@ -32,7 +48,6 @@ services/skills/
 ## List Skills
 
 ```json
-// MCP: systemprompt
 { "command": "core skills list" }
 ```
 
@@ -42,7 +57,6 @@ services/skills/
 
 Compare disk files with database:
 ```json
-// MCP: systemprompt
 { "command": "core skills status" }
 ```
 
@@ -55,7 +69,6 @@ Shows skills on disk only, in DB only, or in sync.
 ### Dry Run (Preview)
 
 ```json
-// MCP: systemprompt
 { "command": "core skills sync --dry-run" }
 ```
 
@@ -70,7 +83,6 @@ Shows skills on disk only, in DB only, or in sync.
 ## Create New Skill
 
 ```json
-// MCP: systemprompt
 { "command": "core skills create my_skill" }
 { "command": "core skills create my_skill --description \"Does something useful\"" }
 ```
@@ -82,7 +94,6 @@ Creates a new skill YAML file in `services/skills/`.
 ## Edit Skill
 
 ```json
-// MCP: systemprompt
 { "command": "core skills edit my_skill" }
 ```
 
@@ -91,7 +102,6 @@ Creates a new skill YAML file in `services/skills/`.
 ## Delete Skill
 
 ```json
-// MCP: systemprompt
 { "command": "core skills delete my_skill" }
 { "command": "core skills delete my_skill -y" }
 ```
@@ -103,9 +113,6 @@ Creates a new skill YAML file in `services/skills/`.
 **Skill not showing in agent**: Check `core skills status`, run `core skills sync`, then verify with `admin agents show <agent-name>`.
 
 **Sync conflicts**: Preview changes with `core skills sync --dry-run` before syncing.
-
--> See [Sync Playbook](sync.md) for deploying skills to cloud.
--> See [Agents Playbook](agents.md) for assigning skills to agents.
 
 ---
 

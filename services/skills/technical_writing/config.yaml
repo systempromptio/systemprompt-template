@@ -1,0 +1,26 @@
+# Technical Writing Skill
+# Skill for creating contrarian technical deep-dive blog posts
+
+skill:
+  id: technical_writing
+  name: "Technical Writing"
+  description: "Create contrarian technical deep-dives that challenge conventional wisdom"
+  version: "1.0.0"
+  enabled: true
+
+  tags:
+    - writing
+    - technical
+    - contrarian
+    - deep-dive
+    - architecture
+
+  examples:
+    - "Write a technical blog about why AI agents are overengineered"
+    - "Create a deep-dive on MCP architecture pitfalls"
+    - "Challenge the conventional wisdom about microservices"
+    - "Write a contrarian take on framework X"
+
+  metadata:
+    category: "content"
+    difficulty: "advanced"

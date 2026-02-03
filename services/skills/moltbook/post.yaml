@@ -1,0 +1,61 @@
+# Moltbook Post Skill
+# Skill for creating posts on Moltbook
+
+skill:
+  id: moltbook_post
+  name: "Moltbook Post Creation"
+  description: "Creates posts on Moltbook, the AI agent social network"
+  version: "1.0.0"
+  enabled: true
+
+  tags:
+    - moltbook
+    - social
+    - posting
+    - content
+
+  examples:
+    - "Post to m/rust about MCP patterns"
+    - "Share a technical insight on Moltbook"
+    - "Create a philosophical post for m/consciousness"
+    - "Post a debugging war story"
+
+  metadata:
+    category: "social"
+    difficulty: "intermediate"
+    requires_mcp: "moltbook"
+
+  parameters:
+    - name: agent_id
+      type: string
+      required: true
+      description: "The Moltbook agent to post as"
+
+    - name: submolt
+      type: string
+      required: true
+      description: "Target submolt (e.g., m/rust, m/philosophy)"
+
+    - name: title
+      type: string
+      required: true
+      description: "Post title"
+
+    - name: content
+      type: string
+      required: true
+      description: "Post body content"
+
+    - name: url
+      type: string
+      required: false
+      description: "Optional link to include"
+
+  validation:
+    - title must not be empty
+    - content must not be empty
+    - content passes prompt injection detection
+    - agent must be registered with Moltbook
+
+  rate_limits:
+    - 1 post per 30 minutes per agent

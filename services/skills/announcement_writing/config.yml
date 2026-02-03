@@ -1,0 +1,16 @@
+id: announcement_writing
+name: "Announcement Writing"
+description: "Create concise product announcements, releases, and news updates. Professional, factual, and action-oriented."
+enabled: true
+version: "1.0.0"
+file: "SKILL.md"
+assigned_agents:
+  - content
+tags:
+  - blog
+  - content_creation
+  - writing
+  - announcement
+  - news
+  - product
+  - short_form

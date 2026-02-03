@@ -1,27 +1,26 @@
 ---
 title: "Web Configuration Playbook"
-description: "Manage content types, templates, assets, and sitemap."
-keywords:
-  - web
-  - templates
-  - content-types
-  - sitemap
-  - assets
+description: "Configure templates, content types, and web settings."
+author: "SystemPrompt"
+slug: "cli-web"
+keywords: "web, templates, config, content-types"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
-# Web Configuration Playbook
+# Web Configuration
 
-Manage content types, templates, assets, and sitemap.
-
-> **Help**: `{ "command": "web" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
+Configure templates, content types, and web settings.
 
 ---
 
 ## Validate Configuration
 
 ```json
-// MCP: systemprompt
 { "command": "web validate" }
 ```
 
@@ -30,12 +29,11 @@ Manage content types, templates, assets, and sitemap.
 ## Content Types
 
 ```json
-// MCP: systemprompt
 { "command": "web content-types list" }
-{ "command": "web content-types show blog" }
-{ "command": "web content-types create my-type" }
-{ "command": "web content-types edit blog" }
-{ "command": "web content-types delete my-type -y" }
+{ "command": "web content-types show <name>" }
+{ "command": "web content-types create <name>" }
+{ "command": "web content-types edit <name>" }
+{ "command": "web content-types delete <name> -y" }
 ```
 
 ---
@@ -43,12 +41,11 @@ Manage content types, templates, assets, and sitemap.
 ## Templates
 
 ```json
-// MCP: systemprompt
 { "command": "web templates list" }
-{ "command": "web templates show base" }
-{ "command": "web templates create my-template" }
-{ "command": "web templates edit blog-post" }
-{ "command": "web templates delete my-template -y" }
+{ "command": "web templates show <name>" }
+{ "command": "web templates create <name>" }
+{ "command": "web templates edit <name>" }
+{ "command": "web templates delete <name> -y" }
 ```
 
 ---
@@ -56,7 +53,6 @@ Manage content types, templates, assets, and sitemap.
 ## Assets
 
 ```json
-// MCP: systemprompt
 { "command": "web assets list" }
 { "command": "web assets show <asset-id>" }
 ```
@@ -66,7 +62,6 @@ Manage content types, templates, assets, and sitemap.
 ## Sitemap
 
 ```json
-// MCP: systemprompt
 { "command": "web sitemap show" }
 { "command": "web sitemap generate" }
 { "command": "web sitemap generate --output sitemap.xml" }
@@ -76,9 +71,11 @@ Manage content types, templates, assets, and sitemap.
 
 ## Troubleshooting
 
-**Configuration errors**: Run `web validate` to check all web configuration files.
+**Template not found** -- Check template name with `web templates list`.
 
-**Missing template**: Run `web templates list` to verify available templates.
+**Invalid config** -- Run `web validate` to check configuration.
+
+**Asset not loading** -- Verify asset exists with `web assets list`, then run `core content publish --step assets`.
 
 ---
 
@@ -89,14 +86,19 @@ Manage content types, templates, assets, and sitemap.
 | Validate config | `web validate` |
 | List content types | `web content-types list` |
 | Show content type | `web content-types show <name>` |
-| Create content type | `web content-types create <name>` |
 | Edit content type | `web content-types edit <name>` |
-| Delete content type | `web content-types delete <name> -y` |
 | List templates | `web templates list` |
 | Show template | `web templates show <name>` |
-| Create template | `web templates create <name>` |
 | Edit template | `web templates edit <name>` |
-| Delete template | `web templates delete <name> -y` |
 | List assets | `web assets list` |
-| Show sitemap | `web sitemap show` |
 | Generate sitemap | `web sitemap generate` |
+
+---
+
+## Related Playbooks
+
+- [Content Publish](content-publish.md) - Publish and manage content
+- [Recipes](../guide/recipes.md) - Complete workflow examples
+- [Web Content](../build/web-content.md) - Markdown content structure
+- [Web Templates](../build/web-templates.md) - Handlebars templates
+- [Web Assets](../build/web-assets.md) - CSS, JS, fonts

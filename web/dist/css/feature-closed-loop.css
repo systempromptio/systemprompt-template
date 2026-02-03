@@ -1,0 +1,52 @@
+
+.agentic-loop-animation {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.agentic-loop-animation svg {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+}
+
+.agentic-loop-desktop {
+  display: block;
+}
+
+.agentic-loop-mobile {
+  display: none;
+}
+
+
+.data-particles,
+.mobile-particles,
+.continuous-badge {
+  display: none;
+}
+
+.flow-labels g:nth-child(2) {
+  display: none;
+}
+
+
+.detail-visual svg {
+  max-width: 280px;
+  height: auto;
+}
+
+
+@media (max-width: 768px) {
+  .agentic-loop-animation {
+    max-width: 400px;
+  }
+
+  .agentic-loop-desktop {
+    display: none;
+  }
+
+  .agentic-loop-mobile {
+    display: block;
+  }
+}

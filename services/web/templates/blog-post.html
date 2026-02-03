@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  {{{HEAD_ASSETS}}}
 
   <!-- SEO Meta Tags -->
   <title>{{TITLE}} | {{ORG_NAME}}</title>
@@ -14,10 +15,14 @@
   <!-- Open Graph -->
   <meta property="og:title" content="{{TITLE}}" />
   <meta property="og:description" content="{{DESCRIPTION}}" />
-  <meta property="og:image" content="{{IMAGE}}" />
+  <meta property="og:image" content="{{FEATURED_IMAGE}}" />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="{{ORG_URL}}/blog/{{SLUG}}" />
   <meta property="og:site_name" content="{{ORG_NAME}}" />
+  <meta property="article:published_time" content="{{DATE_ISO}}" />
+  <meta property="article:modified_time" content="{{DATE_MODIFIED_ISO}}" />
+  <meta property="article:author" content="{{AUTHOR}}" />
+  <meta property="article:section" content="{{ARTICLE_SECTION}}" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
@@ -25,7 +30,7 @@
   <meta name="twitter:creator" content="{{TWITTER_HANDLE}}" />
   <meta name="twitter:title" content="{{TITLE}}" />
   <meta name="twitter:description" content="{{DESCRIPTION}}" />
-  <meta name="twitter:image" content="{{IMAGE}}" />
+  <meta name="twitter:image" content="{{FEATURED_IMAGE}}" />
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -41,7 +46,7 @@
     "@type": "BlogPosting",
     "headline": "{{TITLE}}",
     "description": "{{DESCRIPTION}}",
-    "image": "{{IMAGE}}",
+    "image": "{{FEATURED_IMAGE}}",
     "author": {
       "@type": "Person",
       "name": "{{AUTHOR}}"
@@ -65,25 +70,25 @@
     "inLanguage": "{{ARTICLE_LANGUAGE}}"
   }
   </script>
+
+  <!-- BreadcrumbList Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "{{ORG_URL}}"},
+      {"@type": "ListItem", "position": 2, "name": "Blog", "item": "{{ORG_URL}}/blog"},
+      {"@type": "ListItem", "position": 3, "name": "{{TITLE}}", "item": "{{ORG_URL}}/blog/{{SLUG}}"}
+    ]
+  }
+  </script>
 </head>
 <body>
   <div class="blog-background"></div>
   <div class="blog-shape-left"></div>
 
-  <header class="site-header">
-    <nav class="site-nav">
-      <a href="/" class="logo-link">
-        <img src="/favicon.ico" alt="{{ORG_NAME}} logo" class="logo" />
-        {{#if DISPLAY_SITENAME}}<span class="site-name">{{ORG_NAME}}</span>{{/if}}
-      </a>
-      <a href="{{HEADER_CTA_URL}}" class="chat-cta">
-        <svg class="chat-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-        Chat with us
-      </a>
-    </nav>
-  </header>
+  {{{HEADER}}}
 
   <main class="blog-post">
     <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -109,8 +114,15 @@
       </header>
 
       {{#if FEATURED_IMAGE}}
-      <figure class="featured-image">
+      <figure class="featured-image" data-component="featured-image">
         <img src="{{FEATURED_IMAGE}}" alt="{{TITLE}}" loading="eager" />
+        <div class="image-placeholder is-hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </div>
       </figure>
       {{/if}}
 
@@ -122,36 +134,10 @@
 
       {{{SOCIAL_CONTENT}}}
     </article>
-
-    <section class="agentic-banner">
-      <div class="banner-content">
-        <div class="banner-icon">🤖</div>
-        <div class="banner-text">
-          <h3>This blog is powered by an AI agent system</h3>
-          <p>Want to explore more content or ask questions? Chat with our AI agent to discover articles, get summaries, or dive deeper into topics.</p>
-        </div>
-        <a href="{{BANNER_CTA_URL}}" class="banner-cta">
-          Start Chatting
-          <svg class="arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
-        </a>
-      </div>
-    </section>
   </main>
 
-  <footer>
-    <div class="footer-content">
-      <div class="related-posts">
-        {{{RELATED_CONTENT}}}
-      </div>
+  {{{FOOTER}}}
 
-      {{{FOOTER_NAV}}}
-    </div>
-  </footer>
-
-  <!-- Link Tracking -->
-  <script src="/js/blog-tracking.js"></script>
+  {{{SCRIPTS}}}
 </body>
 </html>

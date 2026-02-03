@@ -1,0 +1,295 @@
+<!-- SystemPrompt Mesh Animation -->
+<!-- AI providers connect to a mesh of endpoints where SystemPrompt is embedded -->
+<!-- The mesh is the center; AI providers are clients around the perimeter -->
+<div class="rust-mesh-animation" aria-hidden="true">
+    <svg
+        viewBox="0 0 800 500"
+        class="rust-mesh-svg"
+        preserveAspectRatio="xMidYMid meet"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <defs>
+            <!-- Glow for mesh nodes -->
+            <filter id="mesh-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+            <!-- Subtle glow for connections -->
+            <filter id="line-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+            <!-- Arrow marker for AI provider connections -->
+            <marker id="arrow-in" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M0,1 L6,4 L0,7 Z" fill="var(--orange-500)" opacity="0.6"/>
+            </marker>
+        </defs>
+
+        <!-- MESH CONNECTIONS (between nodes) - subtle dashed lines showing coordination -->
+        <g class="mesh-links">
+            <!-- AWS ↔ Hardware -->
+            <path d="M280,190 L520,190" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="6,4" opacity="0.3"/>
+            <!-- AWS ↔ Edge -->
+            <path d="M280,240 L280,310" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="6,4" opacity="0.3"/>
+            <!-- Hardware ↔ Local -->
+            <path d="M520,240 L520,310" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="6,4" opacity="0.3"/>
+            <!-- Edge ↔ Local -->
+            <path d="M330,360 L470,360" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="6,4" opacity="0.3"/>
+            <!-- Cross connections -->
+            <path d="M310,220 L490,330" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="6,4" opacity="0.2"/>
+            <path d="M490,220 L310,330" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="6,4" opacity="0.2"/>
+        </g>
+
+        <!-- AI PROVIDER CONNECTIONS (inbound arrows pointing to mesh node edges) -->
+        <g class="ai-connections">
+            <!-- Claude → AWS (top-left corner) -->
+            <path d="M104,104 L215,142" fill="none" stroke="var(--orange-500)" stroke-width="1.5" opacity="0.5" marker-end="url(#arrow-in)"/>
+            <!-- ChatGPT → Hardware (top-right corner) -->
+            <path d="M696,104 L585,142" fill="none" stroke="var(--orange-500)" stroke-width="1.5" opacity="0.5" marker-end="url(#arrow-in)"/>
+            <!-- OpenAI → Local (right edge) -->
+            <path d="M736,300 L590,345" fill="none" stroke="var(--orange-500)" stroke-width="1.5" opacity="0.5" marker-end="url(#arrow-in)"/>
+            <!-- Gemini → Edge (left edge) -->
+            <path d="M64,300 L210,345" fill="none" stroke="var(--orange-500)" stroke-width="1.5" opacity="0.5" marker-end="url(#arrow-in)"/>
+            <!-- Ollama → Edge (bottom edge) -->
+            <path d="M175,436 L265,410" fill="none" stroke="var(--orange-500)" stroke-width="1.5" opacity="0.5" marker-end="url(#arrow-in)"/>
+            <!-- Groq → Local (bottom edge) -->
+            <path d="M625,436 L535,410" fill="none" stroke="var(--orange-500)" stroke-width="1.5" opacity="0.5" marker-end="url(#arrow-in)"/>
+        </g>
+
+        <!-- MESH NODES (destinations with SystemPrompt embedded) -->
+        <g class="mesh-nodes">
+
+            <!-- Node: AWS (top-left of mesh) -->
+            <g class="mesh-node" transform="translate(280,190)" filter="url(#mesh-glow)">
+                <!-- Node container -->
+                <rect x="-70" y="-50" width="140" height="100" rx="8" ry="8"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1.5"/>
+                <!-- Destination icon -->
+                <svg x="-12" y="-30" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                </svg>
+                <!-- Destination label -->
+                <text text-anchor="middle" y="-38" fill="var(--orange-300)"
+                      font-family="Zepto, system-ui, sans-serif" font-size="10" letter-spacing="0.12em">AWS</text>
+                <!-- SystemPrompt embedded badge -->
+                <rect x="-50" y="8" width="100" height="24" rx="4" ry="4"
+                      fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="1"/>
+                <image href="/files/images/logo.svg" x="-40" y="13" width="80" height="14"/>
+            </g>
+
+            <!-- Node: Hardware (top-right of mesh) -->
+            <g class="mesh-node" transform="translate(520,190)" filter="url(#mesh-glow)">
+                <rect x="-70" y="-50" width="140" height="100" rx="8" ry="8"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1.5"/>
+                <!-- Chip/CPU icon -->
+                <svg x="-12" y="-30" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
+                    <rect x="9" y="9" width="6" height="6"/>
+                    <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
+                    <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+                    <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
+                    <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+                </svg>
+                <text text-anchor="middle" y="-38" fill="var(--orange-300)"
+                      font-family="Zepto, system-ui, sans-serif" font-size="10" letter-spacing="0.12em">HARDWARE</text>
+                <rect x="-50" y="8" width="100" height="24" rx="4" ry="4"
+                      fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="1"/>
+                <image href="/files/images/logo.svg" x="-40" y="13" width="80" height="14"/>
+            </g>
+
+            <!-- Node: Edge (bottom-left of mesh) -->
+            <g class="mesh-node" transform="translate(280,360)" filter="url(#mesh-glow)">
+                <rect x="-70" y="-50" width="140" height="100" rx="8" ry="8"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1.5"/>
+                <svg x="-12" y="-30" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                    <line x1="6" y1="6" x2="6.01" y2="6"/>
+                    <line x1="6" y1="18" x2="6.01" y2="18"/>
+                </svg>
+                <text text-anchor="middle" y="-38" fill="var(--orange-300)"
+                      font-family="Zepto, system-ui, sans-serif" font-size="10" letter-spacing="0.12em">EDGE</text>
+                <rect x="-50" y="8" width="100" height="24" rx="4" ry="4"
+                      fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="1"/>
+                <image href="/files/images/logo.svg" x="-40" y="13" width="80" height="14"/>
+            </g>
+
+            <!-- Node: Local (bottom-right of mesh) -->
+            <g class="mesh-node" transform="translate(520,360)" filter="url(#mesh-glow)">
+                <rect x="-70" y="-50" width="140" height="100" rx="8" ry="8"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1.5"/>
+                <svg x="-12" y="-30" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/>
+                </svg>
+                <text text-anchor="middle" y="-38" fill="var(--orange-300)"
+                      font-family="Zepto, system-ui, sans-serif" font-size="10" letter-spacing="0.12em">LOCAL</text>
+                <rect x="-50" y="8" width="100" height="24" rx="4" ry="4"
+                      fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="1"/>
+                <image href="/files/images/logo.svg" x="-40" y="13" width="80" height="14"/>
+            </g>
+        </g>
+
+        <!-- AI PROVIDERS (clients around the perimeter) -->
+        <g class="ai-providers">
+            <!-- Claude (top-left) -->
+            <g transform="translate(80,80)">
+                <circle r="24" fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8"/>
+                <text text-anchor="middle" y="5" fill="var(--orange-400)"
+                      font-family="var(--font-body), system-ui, sans-serif" font-size="10">Claude</text>
+            </g>
+
+            <!-- ChatGPT (top-right) -->
+            <g transform="translate(720,80)">
+                <circle r="24" fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8"/>
+                <text text-anchor="middle" y="5" fill="var(--orange-400)"
+                      font-family="var(--font-body), system-ui, sans-serif" font-size="10">ChatGPT</text>
+            </g>
+
+            <!-- OpenAI (right) -->
+            <g transform="translate(760,300)">
+                <circle r="24" fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8"/>
+                <text text-anchor="middle" y="5" fill="var(--orange-400)"
+                      font-family="var(--font-body), system-ui, sans-serif" font-size="10">OpenAI</text>
+            </g>
+
+            <!-- Gemini (left) -->
+            <g transform="translate(40,300)">
+                <circle r="24" fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8"/>
+                <text text-anchor="middle" y="5" fill="var(--orange-400)"
+                      font-family="var(--font-body), system-ui, sans-serif" font-size="10">Gemini</text>
+            </g>
+
+            <!-- Ollama (bottom-left) -->
+            <g transform="translate(160,460)">
+                <circle r="24" fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8"/>
+                <text text-anchor="middle" y="5" fill="var(--orange-400)"
+                      font-family="var(--font-body), system-ui, sans-serif" font-size="10">Ollama</text>
+            </g>
+
+            <!-- Groq (bottom-right) -->
+            <g transform="translate(640,460)">
+                <circle r="24" fill="var(--color-surface, #0a0a0a)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8"/>
+                <text text-anchor="middle" y="5" fill="var(--orange-400)"
+                      font-family="var(--font-body), system-ui, sans-serif" font-size="10">Groq</text>
+            </g>
+        </g>
+
+        <!-- Subtle animation: mesh connection pulse -->
+        <g class="mesh-pulse" opacity="0">
+            <animate attributeName="opacity" values="0;0.4;0" dur="4s" repeatCount="indefinite"/>
+            <circle cx="400" cy="275" r="120" fill="none" stroke="var(--orange-500)" stroke-width="1"/>
+        </g>
+    </svg>
+</div>
+
+<!-- Mobile version (compact) -->
+<div class="rust-mesh-animation rust-mesh-animation--mobile" aria-hidden="true">
+    <svg
+        viewBox="0 0 320 200"
+        class="rust-mesh-svg rust-mesh-svg--mobile"
+        preserveAspectRatio="xMidYMid meet"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <defs>
+            <filter id="mesh-glow-m" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+            <marker id="arrow-in-m" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0.5 L5,3 L0,5.5 Z" fill="var(--orange-500)" opacity="0.6"/>
+            </marker>
+        </defs>
+
+        <!-- Mesh links (between nodes) -->
+        <g class="mesh-links">
+            <path d="M110,95 L210,95" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="4,3" opacity="0.3"/>
+            <path d="M110,125 L210,125" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="4,3" opacity="0.3"/>
+            <path d="M130,75 L130,145" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="4,3" opacity="0.2"/>
+            <path d="M190,75 L190,145" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="4,3" opacity="0.2"/>
+        </g>
+
+        <!-- AI connections (inbound) -->
+        <g class="ai-connections">
+            <path d="M40,35 L95,70" fill="none" stroke="var(--orange-500)" stroke-width="1" opacity="0.4" marker-end="url(#arrow-in-m)"/>
+            <path d="M280,35 L225,70" fill="none" stroke="var(--orange-500)" stroke-width="1" opacity="0.4" marker-end="url(#arrow-in-m)"/>
+            <path d="M40,170 L95,140" fill="none" stroke="var(--orange-500)" stroke-width="1" opacity="0.4" marker-end="url(#arrow-in-m)"/>
+            <path d="M280,170 L225,140" fill="none" stroke="var(--orange-500)" stroke-width="1" opacity="0.4" marker-end="url(#arrow-in-m)"/>
+        </g>
+
+        <!-- Mesh nodes (2x2 grid) -->
+        <g class="mesh-nodes">
+            <!-- AWS -->
+            <g transform="translate(110,80)" filter="url(#mesh-glow-m)">
+                <rect x="-35" y="-22" width="70" height="44" rx="4"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1"/>
+                <text text-anchor="middle" y="-8" fill="var(--orange-300)"
+                      font-family="Zepto, system-ui, sans-serif" font-size="7" letter-spacing="0.08em">AWS</text>
+                <image href="/files/images/logo.svg" x="-28" y="5" width="56" height="10"/>
+            </g>
+
+            <!-- Hardware -->
+            <g transform="translate(210,80)" filter="url(#mesh-glow-m)">
+                <rect x="-35" y="-22" width="70" height="44" rx="4"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1"/>
+                <text text-anchor="middle" y="-8" fill="var(--orange-300)"
+                      font-family="Zepto, system-ui, sans-serif" font-size="7" letter-spacing="0.08em">HARDWARE</text>
+                <image href="/files/images/logo.svg" x="-28" y="5" width="56" height="10"/>
+            </g>
+
+            <!-- Edge -->
+            <g transform="translate(110,140)" filter="url(#mesh-glow-m)">
+                <rect x="-35" y="-22" width="70" height="44" rx="4"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1"/>
+                <text text-anchor="middle" y="-8" fill="var(--orange-300)"
+                      font-family="Zepto, system-ui, sans-serif" font-size="7" letter-spacing="0.08em">EDGE</text>
+                <image href="/files/images/logo.svg" x="-28" y="5" width="56" height="10"/>
+            </g>
+
+            <!-- Local -->
+            <g transform="translate(210,140)" filter="url(#mesh-glow-m)">
+                <rect x="-35" y="-22" width="70" height="44" rx="4"
+                      fill="var(--orange-600)" fill-opacity="0.08"
+                      stroke="var(--orange-500)" stroke-width="1"/>
+                <text text-anchor="middle" y="-8" fill="var(--orange-300)"
+                      font-family="Zepto, system-ui, sans-serif" font-size="7" letter-spacing="0.08em">LOCAL</text>
+                <image href="/files/images/logo.svg" x="-28" y="5" width="56" height="10"/>
+            </g>
+        </g>
+
+        <!-- AI providers (corners) -->
+        <g class="ai-providers">
+            <g transform="translate(30,25)">
+                <text text-anchor="middle" y="0" fill="var(--orange-400)"
+                      font-family="var(--font-body), system-ui, sans-serif" font-size="8">Claude</text>
+            </g>
+            <g transform="translate(290,25)">
+                <text text-anchor="middle" y="0" fill="var(--orange-400)"
+                      font-family="var(--font-body), system-ui, sans-serif" font-size="8">ChatGPT</text>
+            </g>
+            <g transform="translate(30,180)">
+                <text text-anchor="middle" y="0" fill="var(--orange-400)"
+                      font-family="var(--font-body), system-ui, sans-serif" font-size="8">Gemini</text>
+            </g>
+            <g transform="translate(290,180)">
+                <text text-anchor="middle" y="0" fill="var(--orange-400)"
+                      font-family="var(--font-body), system-ui, sans-serif" font-size="8">OpenAI</text>
+            </g>
+        </g>
+    </svg>
+</div>

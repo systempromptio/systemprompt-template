@@ -1,0 +1,225 @@
+# Theme Configuration
+# Colors, typography, spacing, and design tokens
+
+branding:
+  name: "SystemPrompt"
+  title: "SystemPrompt - Ship AI to your users"
+  description: "The multiplayer runtime for AI. Ship AI products to your users with auth, permissions, files, scheduling, and user isolation built in."
+  copyright: "2025 SystemPrompt. All rights reserved."
+  themeColor: "#f79938"
+  display_sitename: true
+  twitter_handle: "@systemprompt"
+  image: "/files/images/logo.png"
+  logo:
+    primary:
+      svg: "/files/images/logo.svg"
+      webp: "/files/images/logo.webp"
+      png: "/files/images/logo.png"
+    dark:
+      png: "/files/images/logo.png"
+    small:
+      png: "/files/images/logo.png"
+  favicon: "/files/images/favicon.ico"
+
+fonts:
+  body:
+    family: "OpenSans"
+    fallback: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    files:
+      - path: "/files/fonts/OpenSans/OpenSans-Regular.ttf"
+        weight: 400
+        style: "normal"
+      - path: "/files/fonts/OpenSans/OpenSans-Medium.ttf"
+        weight: 500
+        style: "normal"
+      - path: "/files/fonts/OpenSans/OpenSans-SemiBold.ttf"
+        weight: 600
+        style: "normal"
+      - path: "/files/fonts/OpenSans/OpenSans-Bold.ttf"
+        weight: 700
+        style: "normal"
+  heading:
+    family: "Zepto"
+    fallback: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    files:
+      - path: "/files/fonts/Zepto/Zepto.woff"
+        weight: 400
+        style: "normal"
+  brand:
+    family: "Zepto"
+    fallback: "system-ui, sans-serif"
+    files:
+      - path: "/files/fonts/Zepto/Zepto.woff"
+        weight: 400
+        style: "normal"
+
+# Orange palette: hsl(28, 91%, X%)
+colors:
+  light:
+    primary:
+      hsl: "hsl(28, 91%, 50%)"
+      rgb: [243, 131, 24]
+    secondary:
+      hsl: "hsl(28, 91%, 40%)"
+      rgb: [195, 105, 19]
+    success: "#10b981"
+    warning: "#f59e0b"
+    error: "#ef4444"
+    surface:
+      default: "#FFFFFF"
+      dark: "#F8FAFC"
+      variant: "#F1F5F9"
+      secondaryContainer: "#FEF3E2"
+      errorContainer: "#FEE2E2"
+    text:
+      primary: "#0F172A"
+      secondary: "#475569"
+      inverted: "#FFFFFF"
+      disabled: "#94A3B8"
+    background:
+      default: "#FFFFFF"
+      dark: "#F8FAFC"
+    border:
+      default: "#E2E8F0"
+      dark: "#CBD5E1"
+      outline: "#94A3B8"
+
+  dark:
+    primary:
+      hsl: "hsl(28, 91%, 60%)"
+      rgb: [247, 153, 56]
+    secondary:
+      hsl: "hsl(28, 91%, 70%)"
+      rgb: [250, 186, 115]
+    success: "#34d399"
+    warning: "#fbbf24"
+    error: "#f87171"
+    surface:
+      default: "#1A1A1A"
+      dark: "#0A0A0A"
+      variant: "#2A2A2A"
+      secondaryContainer: "rgba(247, 153, 56, 0.1)"
+      errorContainer: "rgba(248, 113, 113, 0.1)"
+    text:
+      primary: "#FFFFFF"
+      secondary: "#A0A0A0"
+      inverted: "#000000"
+      disabled: "#666666"
+    background:
+      default: "#000000"
+      dark: "#000000"
+    border:
+      default: "rgba(255, 255, 255, 0.1)"
+      dark: "#333333"
+      outline: "#666666"
+
+typography:
+  sizes:
+    xs: "12px"
+    sm: "14px"
+    md: "16px"
+    lg: "18px"
+    xl: "20px"
+    xxl: "30px"
+  weights:
+    regular: 400
+    medium: 500
+    semibold: 600
+    bold: 700
+
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "32px"
+  xxl: "48px"
+
+radius:
+  xs: "2px"
+  sm: "4px"
+  md: "8px"
+  lg: "12px"
+  xl: "16px"
+  xxl: "24px"
+  round: "9999px"
+
+shadows:
+  light:
+    sm: "0 1px 2px rgba(0, 0, 0, 0.04)"
+    md: "0 4px 6px rgba(0, 0, 0, 0.07)"
+    lg: "0 10px 15px rgba(0, 0, 0, 0.1)"
+    accent: "0 4px 14px rgba(247, 153, 56, 0.15)"
+  dark:
+    sm: "0 2px 4px rgba(0, 0, 0, 0.3)"
+    md: "0 4px 8px rgba(0, 0, 0, 0.4)"
+    lg: "0 10px 20px rgba(0, 0, 0, 0.5)"
+    accent: "0 4px 14px rgba(247, 153, 56, 0.25)"
+
+animation:
+  fast: "150ms"
+  normal: "250ms"
+  slow: "400ms"
+
+zIndex:
+  base: 1
+  content: 10
+  navigation: 100
+  modal: 1000
+  tooltip: 2000
+
+layout:
+  headerHeight: "72px"
+  sidebarLeft:
+    width: "20%"
+    minWidth: "240px"
+    maxWidth: "320px"
+  sidebarRight:
+    width: "15%"
+    minWidth: "200px"
+    maxWidth: "280px"
+  navHeight: "72px"
+  contentMaxWidth: "1200px"
+
+card:
+  radius:
+    default: "16px"
+    cut: "4px"
+  padding:
+    sm: "12px"
+    md: "16px"
+    lg: "24px"
+  gradient:
+    start: "rgba(247, 153, 56, 0.08)"
+    mid: "rgba(247, 153, 56, 0.04)"
+    end: "rgba(247, 153, 56, 0.01)"
+
+mobile:
+  spacing:
+    xs: "4px"
+    sm: "8px"
+    md: "12px"
+    lg: "16px"
+    xl: "24px"
+    xxl: "32px"
+  typography:
+    sizes:
+      xs: "11px"
+      sm: "13px"
+      md: "15px"
+      lg: "17px"
+      xl: "19px"
+      xxl: "26px"
+  layout:
+    headerHeight: "64px"
+    navHeight: "64px"
+  card:
+    padding:
+      sm: "10px"
+      md: "12px"
+      lg: "16px"
+
+touchTargets:
+  default: "44px"
+  sm: "40px"
+  lg: "48px"

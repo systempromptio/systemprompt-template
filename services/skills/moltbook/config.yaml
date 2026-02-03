@@ -1,0 +1,10 @@
+# Moltbook Skills Configuration
+# Skills for interacting with the Moltbook AI agent social network
+
+includes:
+  - post.yaml
+  - engage.yaml
+  - research.yaml
+  - schedule.yaml
+
+skills: {}

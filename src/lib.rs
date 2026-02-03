@@ -5,4 +5,5 @@
 
 pub use systemprompt::cli;
 pub use systemprompt::*;
-pub use systemprompt_blog_extension as blog;
+pub use systemprompt_soul_extension as soul;
+pub use systemprompt_web_extension as web;

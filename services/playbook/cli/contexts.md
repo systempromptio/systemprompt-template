@@ -1,26 +1,26 @@
 ---
 title: "Contexts Management Playbook"
 description: "Manage conversation contexts for agent interactions."
-keywords:
-  - contexts
-  - conversations
-  - agents
-  - state
+author: "SystemPrompt"
+slug: "cli-contexts"
+keywords: "contexts, conversations, agents, state"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # Contexts Management Playbook
 
 Manage conversation contexts for agent interactions.
 
-> **Help**: `{ "command": "core contexts" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
-
 ---
 
 ## List Contexts
 
 ```json
-// MCP: systemprompt
 { "command": "core contexts list" }
 ```
 
@@ -33,7 +33,6 @@ Shows all contexts with ID, name, task count, message count, last updated, and a
 Short IDs (first 8 chars) work for most commands.
 
 ```json
-// MCP: systemprompt
 { "command": "core contexts show <id>" }
 ```
 
@@ -42,7 +41,6 @@ Short IDs (first 8 chars) work for most commands.
 ## Create New Context
 
 ```json
-// MCP: systemprompt
 { "command": "core contexts create --name \"my-context\"" }
 { "command": "core contexts new --name \"my-context\"" }
 ```
@@ -54,7 +52,6 @@ Use `new` to create and set as active in one step (recommended).
 ## Switch Active Context
 
 ```json
-// MCP: systemprompt
 { "command": "core contexts use <id>" }
 ```
 
@@ -63,7 +60,6 @@ Use `new` to create and set as active in one step (recommended).
 ## Rename Context
 
 ```json
-// MCP: systemprompt
 { "command": "core contexts edit <id> --name \"renamed-context\"" }
 ```
 
@@ -72,7 +68,6 @@ Use `new` to create and set as active in one step (recommended).
 ## Delete Context
 
 ```json
-// MCP: systemprompt
 { "command": "core contexts delete <id> -y" }
 ```
 
@@ -104,8 +99,6 @@ All agents share the active context and can reference each other's work:
 { "command": "core contexts use <context-id>" }
 { "command": "admin agents message <name> -m \"Continue from where we left off\" --blocking" }
 ```
-
--> See [Agents Playbook](agents.md) for full messaging options.
 
 ---
 

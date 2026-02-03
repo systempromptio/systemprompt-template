@@ -1,0 +1,14 @@
+id: edwards_voice
+name: "Edward's Voice"
+description: "Core voice, tone, and persona guidelines for all content written as Edward Burton"
+enabled: true
+version: "1.0.0"
+file: "SKILL.md"
+assigned_agents:
+  - content
+tags:
+  - voice
+  - persona
+  - tone
+  - edward_style
+  - base_skill

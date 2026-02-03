@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Resource Hints -->
+<link rel="preconnect" href="/files/fonts/" crossorigin>
+<link rel="dns-prefetch" href="/files/fonts/">
+
+<!-- Font Preloading - Critical fonts loaded early -->
+<link rel="preload" as="font" href="/files/fonts/Zepto/Zepto.woff" type="font/woff" crossorigin>
+<link rel="preload" as="font" href="/files/fonts/OpenSans/OpenSans-Regular.ttf" type="font/truetype" crossorigin>
+
+<!-- Critical CSS - Inlined to prevent FOUC -->
+<style>
+/* Prevent flash of unstyled content */
+:root {
+  --color-bg: #0a0a0f;
+  --color-surface: #12121a;
+  --color-text: #e8e8ed;
+  --color-text-secondary: #9898a6;
+  --orange-500: #f97316;
+  --orange-600: #ea580c;
+}
+html {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+body {
+  margin: 0;
+  font-family: "OpenSans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+/* Hide content until styles load to prevent layout shift */
+.header, .site-header {
+  min-height: 64px;
+}
+/* Font-face for immediate availability */
+@font-face {
+  font-family: "Zepto";
+  src: url("/files/fonts/Zepto/Zepto.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "OpenSans";
+  src: url("/files/fonts/OpenSans/OpenSans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+</style>
+
+<!-- Core Styles -->
+<link rel="stylesheet" href="/css/core/variables.css">
+<link rel="stylesheet" href="/css/core/fonts.css">
+<link rel="stylesheet" href="/css/core/reset.css">
+<link rel="stylesheet" href="/css/components/header.css">
+<link rel="stylesheet" href="/css/components/footer.css">
+<link rel="stylesheet" href="/css/components/mobile-menu.css">
+
+
+  <!-- SEO Meta Tags -->
+  <title>The AI Productivity Mirage | systemprompt.io</title>
+  <meta name="description" content="# The AI Productivity Mirage
+
+## Prelude
+There’s a narrative being pushed, loud and relentless, that AI is here to simplify our lives. To make us more productive. To free up engineers from the drudger" />
+  <meta name="author" content="ed@tyingshoelaces.com" />
+  <meta name="keywords" content="AI complexity, engineering productivity, AI tools, technical debt, cognitive load, prompt engineering" />
+  <link rel="canonical" href="https://systemprompt.io/blog/ai-moved-the-goalposts" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="The AI Productivity Mirage" />
+  <meta property="og:description" content="# The AI Productivity Mirage
+
+## Prelude
+There’s a narrative being pushed, loud and relentless, that AI is here to simplify our lives. To make us more productive. To free up engineers from the drudger" />
+  <meta property="og:image" content="/files/images/generated/2026/01/26/d0d7437a-09ab-4a5f-b5bd-266d5eaed6d9_1769435176.png" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://systemprompt.io/blog/ai-moved-the-goalposts" />
+  <meta property="og:site_name" content="systemprompt.io" />
+  <meta property="article:published_time" content="2026-01-26T13:46:16Z" />
+  <meta property="article:modified_time" content="2026-01-26T13:46:16Z" />
+  <meta property="article:author" content="ed@tyingshoelaces.com" />
+  <meta property="article:section" content="" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@systemprompt" />
+  <meta name="twitter:creator" content="@systemprompt" />
+  <meta name="twitter:title" content="The AI Productivity Mirage" />
+  <meta name="twitter:description" content="# The AI Productivity Mirage
+
+## Prelude
+There’s a narrative being pushed, loud and relentless, that AI is here to simplify our lives. To make us more productive. To free up engineers from the drudger" />
+  <meta name="twitter:image" content="/files/images/generated/2026/01/26/d0d7437a-09ab-4a5f-b5bd-266d5eaed6d9_1769435176.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/blog.css" />
+  <link rel="stylesheet" href="/css/syntax-highlight.css" />
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "The AI Productivity Mirage",
+    "description": "# The AI Productivity Mirage
+
+## Prelude
+There’s a narrative being pushed, loud and relentless, that AI is here to simplify our lives. To make us more productive. To free up engineers from the drudger",
+    "image": "/files/images/generated/2026/01/26/d0d7437a-09ab-4a5f-b5bd-266d5eaed6d9_1769435176.png",
+    "author": {
+      "@type": "Person",
+      "name": "ed@tyingshoelaces.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "systemprompt.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://systemprompt.io/files/images/logo.png"
+      }
+    },
+    "datePublished": "2026-01-26T13:46:16Z",
+    "dateModified": "2026-01-26T13:46:16Z",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://systemprompt.io/blog/ai-moved-the-goalposts"
+    },
+    "keywords": "AI complexity, engineering productivity, AI tools, technical debt, cognitive load, prompt engineering",
+    "articleSection": "",
+    "inLanguage": ""
+  }
+  </script>
+
+  <!-- BreadcrumbList Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://systemprompt.io"},
+      {"@type": "ListItem", "position": 2, "name": "Blog", "item": "https://systemprompt.io/blog"},
+      {"@type": "ListItem", "position": 3, "name": "The AI Productivity Mirage", "item": "https://systemprompt.io/blog/ai-moved-the-goalposts"}
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="blog-background"></div>
+  <div class="blog-shape-left"></div>
+
+  <header class="site-header">
+  <nav class="site-nav">
+    <a href="/" class="logo-link">
+      <img src="/files/images/logo.svg" alt="systemprompt.io" class="logo-svg" />
+    </a>
+    <button class="mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    <div class="nav-links">
+      <div class="nav-dropdown">
+        <span class="nav-dropdown-trigger">
+          Features
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Core Features</h4>
+            <a href="/features/agentic-mesh">Agentic Mesh</a>
+            <a href="/features/self-hosted-ai-platform">Embedded AI library</a>
+            <a href="/features/unified-control-plane">Unified Control Plane</a>
+            <a href="/features/closed-loop-agents">The Closed Loop</a>
+          </div>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/documentation" class="nav-dropdown-trigger">
+          Documentation
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Getting Started</h4>
+            <a href="/documentation/installation">Installation</a>
+            <a href="/documentation/licensing">Licensing</a>
+            <a href="/documentation/early-access">Early Access</a>
+            <a href="/documentation/playbooks">Playbooks</a>
+          </div>
+          <div class="dropdown-section">
+            <h4>Configuration</h4>
+            <a href="/documentation/config">Config</a>
+            <a href="/documentation/services">Services</a>
+            <a href="/documentation/extensions">Extensions</a>
+          </div>
+          <a href="/documentation" class="dropdown-view-all">View all documentation &rarr;</a>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/blog" class="nav-dropdown-trigger">
+          Blog
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Categories</h4>
+            <a href="/blog">All Posts</a>
+            <a href="/blog?category&#x3D;announcement">Announcements</a>
+            <a href="/blog?category&#x3D;article">Articles</a>
+            <a href="/blog?category&#x3D;guide">Guides</a>
+          </div>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/playbooks" class="nav-dropdown-trigger">
+          Playbooks
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Categories</h4>
+            <a href="/playbooks">All Playbooks</a>
+            <a href="/playbooks?category&#x3D;guide">Guides</a>
+            <a href="/playbooks?category&#x3D;cli">CLI</a>
+            <a href="/playbooks?category&#x3D;build">Build</a>
+            <a href="/playbooks?category&#x3D;content">Content</a>
+            <a href="/playbooks?category&#x3D;validation">Validation</a>
+          </div>
+        </div>
+      </div>
+      <a href="https://github.com/systempromptio/systemprompt-template" class="cta-button" target="_blank" rel="noopener">Get Started</a>
+    </div>
+  </nav>
+</header>
+
+
+  <main class="blog-post">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="breadcrumb__separator">/</span>
+      <a href="/blog">Blog</a>
+      <span class="breadcrumb__separator">/</span>
+      <span class="breadcrumb__current">The AI Productivity Mirage</span>
+    </nav>
+
+    <article>
+      <header class="post-header">
+        <h1>The AI Productivity Mirage</h1>
+        <div class="post-meta">
+          <div class="author-info">
+            <span class="author-name">ed@tyingshoelaces.com</span>
+            <time datetime="2026-01-26T13:46:16Z">January 26, 2026</time>
+            <span class="meta-separator">·</span>
+            <span class="read-time">14 min read</span>
+          </div>
+        </div>
+        <div class="social-action-bar">
+  <span class="social-action-bar__label">Follow:</span>
+  <a href="https://github.com/systempromptio" target="_blank" rel="noopener noreferrer" class="social-action-bar__link social-action-bar__link--github" aria-label="Follow on GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+  <a href="https://twitter.com/systemprompt" target="_blank" rel="noopener noreferrer" class="social-action-bar__link social-action-bar__link--twitter" aria-label="Follow on Twitter"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+  <a href="https://www.linkedin.com/company/systempromptio" target="_blank" rel="noopener noreferrer" class="social-action-bar__link social-action-bar__link--linkedin" aria-label="Follow on LinkedIn"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></a>
+  <button type="button" class="social-action-bar__link social-action-bar__link--share" aria-label="Share this page" onclick="if(navigator.share){navigator.share({title:document.title,url:window.location.href})}else{navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'))}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg></button>
+</div>
+      </header>
+
+      <figure class="featured-image" data-component="featured-image">
+        <img src="/files/images/generated/2026/01/26/d0d7437a-09ab-4a5f-b5bd-266d5eaed6d9_1769435176.png" alt="The AI Productivity Mirage" loading="eager" />
+        <div class="image-placeholder is-hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </div>
+      </figure>
+
+      <div class="post-content">
+        <h2 id="prelude">Prelude</h2>
+<p>There’s a narrative being pushed, loud and relentless, that AI is here to simplify our lives. To make us more productive. To free up engineers from the drudgery of writing boilerplate code so they can focus on the <em>real</em> architectural challenges. It’s a slick story, wrapped in colourful marketing and backed by impressive demos. I’ve bought into parts of it. I’ve seen the magic. But I’ve also spent months wrestling with the fallout when that magic hits the cold, hard reality of production. And let me tell you, the magic is a mirage. AI hasn't eliminated complexity; it’s just rearranged the deck chairs on the Titanic. And sometimes, those chairs are just really, really heavy.</p>
+<p>I built an AI content generation system. On paper, it was meant to be the ultimate productivity hack. Feed it a topic, and it spits out SEO-optimised articles. Sounds simple, right? My initial thought was, &quot;Great, I can delegate all the grunt work.&quot; I imagined churning out hundreds of articles a week. The reality was… different. The code I was handed back, or the output I was given, often looked functional. It passed the initial checks. Then it would break. Or worse, it would work, but subtly wrong.</p>
+<p>This isn't about blaming the tools. The tools are incredible. This is about understanding what happens when we <em>use</em> them, especially in production. It’s about the hidden costs, the reallocated cognitive load, and the metrics that lie to us.</p>
+<h2 id="the-problem">The Problem</h2>
+<p>The industry is drowning in a narrative of effortless AI-driven acceleration. We’re told that AI coding assistants will make every developer a 10x engineer overnight. That the days of wrestling with complex codebases are over. That we can finally focus on high-level architecture and strategic vision. This story is seductive. It’s what vendors want us to believe. It’s what many of us <em>want</em> to believe.</p>
+<p>But here’s the thing. Production isn't a demo. It's a brutal, unforgiving environment where subtle errors have catastrophic consequences. And what I’ve discovered, through late nights and plenty of frustration, is that AI hasn't made engineering simpler. It’s made it different. It's shifted the complexity, not eradicated it.</p>
+<p>Think about it. When I ask an AI to generate a piece of code, it’s not some all-knowing entity. It’s a sophisticated pattern-matching machine, trained on vast datasets. That code might <em>look</em> right. It might even <em>run</em> right, for a while. But understanding <em>why</em> it works, or why it fails, becomes a new, often more opaque, challenge. This isn't about writing code anymore; it's about <em>managing</em> AI-generated code. And that management comes with a significant, often underestimated, cognitive tax.</p>
+<p>The vendors push the &quot;10x developer&quot; narrative hard. They show you how quickly you can generate a functional component. &quot;See?&quot; they exclaim, &quot;You just saved yourself two hours!&quot; But what they don't show you is the next three hours you spend debugging that component because it has a subtle logic flaw, or a security vulnerability baked in from the training data, or it relies on a pattern that’s just about to be deprecated.</p>
+<p>This illusion of velocity is dangerous. It leads to inflated expectations and, more importantly, a misunderstanding of where the real engineering effort lies. We're told AI handles the &quot;boring&quot; stuff, the boilerplate. But often, that &quot;boring&quot; stuff is the bedrock of robust systems. And when AI touches it, we need a new set of skills to ensure it’s not built on sand.</p>
+<p>My own AI content system was a prime example. It was a beast of an application, meant to churn out articles. We fed it topics. It generated text. Initially, it felt like we were printing money. Then the feedback started rolling in. &quot;This article is factually incorrect.&quot; &quot;This paragraph sounds like it was written by a robot.&quot; &quot;The tone is completely off.&quot;</p>
+<p>These weren't small issues. These were fundamental failures in the AI's output. Fixing them wasn't a matter of tweaking a parameter. It involved deep dives into prompt engineering, understanding how the model was interpreting requests, and painstakingly crafting more specific instructions. It meant developing sophisticated validation layers to catch hallucinations before they hit production. The initial speed was a lie. The <em>real</em> work was in taming the beast.</p>
+<p>This entire narrative, this overwhelming emphasis on raw generation speed, is blinding us to the new complexities we're introducing. We're trading one set of problems for another, and in the process, we're often increasing the overall burden on our engineering teams.</p>
+<h2 id="the-journey">The Journey</h2>
+<p>My personal foray into the AI content generation system was supposed to be a triumph of modern engineering. It was a production system, built using a Python backend orchestrating calls to a sophisticated LLM API. The initial goal was simple: take user-provided topics, generate SEO-optimised articles, and push them live. This was meant to be the poster child for AI-driven productivity.</p>
+<p>We built an orchestration layer. This layer was responsible for taking a high-level request, breaking it down into sub-prompts, querying the LLM, and then reassembling the output into a coherent article. Sounds straightforward.</p>
+<p>Here’s a simplified pseudo-code representation of the initial generation flow:</p>
+<pre><code class="language-python">def generate_article(topic):
+    prompt = f&quot;Write a comprehensive, SEO-optimised article about: {topic}. Include an introduction, three main sections with subheadings, and a conclusion. Aim for a neutral, informative tone.&quot;
+
+    # Call the LLM API
+    try:
+        response = call_llm_api(prompt)
+        article_text = response['choices'][0]['text']
+        return article_text
+    except Exception as e:
+        print(f&quot;Error generating article: {e}&quot;)
+        return None
+</code></pre>
+<p>This looked good. It <em>worked</em>. The first few articles we generated were… passable. They had decent keyword density. They followed a structure. The speed was phenomenal. We were pumping out drafts in minutes.</p>
+<p>Then came the real work. The &quot;boring&quot; part that the AI was supposed to handle for us.</p>
+<h3 id="debugging-the-unseen">Debugging the Unseen</h3>
+<p>The first major hurdle was debugging. Unlike human-written code, where you can often follow the developer's logic, AI-generated code can be an enigma. I remember a bug where a generated Python script for data sanitisation would sometimes crash. The error message was cryptic, buried deep within a library call. My team and I spent nearly three days tracing it. It turned out the LLM had hallucinated a function call that, while syntactically correct, didn't exist in the version of the library we were using. It wasn’t a logical error in the traditional sense; it was a factual error from the AI's perspective. We couldn't just step through it with a debugger in the normal way; we had to interrogate the AI's &quot;thought process&quot; through its output and training data assumptions.</p>
+<p>This experience forced us to rethink our debugging strategies. We needed tools that could not only trace execution but also analyse the <em>intent</em> behind the generated code, or highlight potential API mismatches. The complexity wasn't in writing the code; it was in diagnosing failures in code we didn't fully understand the genesis of. As one study noted, &quot;Debugging AI-generated code presents unique challenges due to its opaque nature and potential reliance on patterns learned from vast, sometimes flawed, datasets.&quot; <a href="https://www.ishir.com/blog/138176/ai-in-software-development-is-debugging-the-ai-generated-code-a-new-developer-headache.htm">Debugging AI-generated code is a new frontier</a>.</p>
+<h3 id="prompt-drift-and-hallucinations-the-core-problems">Prompt Drift and Hallucinations: The Core Problems</h3>
+<p>The real killer was &quot;prompt drift&quot; and &quot;hallucinations.&quot; We’d feed the system the same prompt, slightly rephrased, and get wildly different outputs. This wasn't just variation; it was often a descent into nonsense. The AI would confidently assert facts that were demonstrably false. It would invent statistics, misattribute quotes, and even make up entire historical events.</p>
+<p>One article, supposed to be about the history of British tea culture, included a paragraph about &quot;the renowned King George IV's decree mandating afternoon tea ceremonies across the colonies in 1788.&quot; A quick check revealed no such decree, and King George IV wasn't even on the throne in 1788. The AI had simply made it up. A hallucination.</p>
+<p>Fixing this required a monumental effort in prompt engineering. We moved from simple instructions to elaborate, multi-part prompts that included:</p>
+<ol>
+<li><strong>Context Setting:</strong> Explicitly stating the desired output format and persona.</li>
+<li><strong>Constraints:</strong> Defining what <em>not</em> to do (e.g., &quot;Do not invent facts or statistics&quot;).</li>
+<li><strong>Example Few-Shot Learning:</strong> Providing correct examples of desired output and incorrect examples of hallucinations to avoid.</li>
+<li><strong>Chain-of-Thought Prompting:</strong> Asking the AI to &quot;think step-by-step&quot; before providing the final answer.</li>
+</ol>
+<p>A more robust prompt for our content system started looking like this:</p>
+<pre><code class="language-python">def generate_article_with_validation(topic):
+    # Base prompt for content generation
+    content_prompt = f&quot;&quot;&quot;
+    Write a comprehensive, SEO-optimised article about: &quot;{topic}&quot;.
+    The article should have an introduction, three main sections with clear subheadings, and a concluding summary.
+    Maintain a neutral, informative, and engaging tone suitable for a general audience.
+    Ensure factual accuracy and cite any statistical claims implicitly by stating them as commonly accepted knowledge or avoid specific figures if unsure.
+    &quot;&quot;&quot;
+
+    # Validation prompt to check for hallucinations
+    validation_prompt = f&quot;&quot;&quot;
+    Review the following generated text for factual inaccuracies, made-up statistics, or unsubstantiated claims. If any are found, list them explicitly and explain why they are problematic.
+    Text to review: [INSERT GENERATED ARTICLE TEXT HERE]
+    &quot;&quot;&quot;
+
+    try:
+        # First pass: Generate content
+        response = call_llm_api(content_prompt)
+        initial_article_text = response['choices'][0]['text']
+
+        # Second pass: Validate content
+        validation_response = call_llm_api(validation_prompt.replace(&quot;[INSERT GENERATED ARTICLE TEXT HERE]&quot;, initial_article_text))
+        validation_result = validation_response['choices'][0]['text']
+
+        # Simple logic to decide if article is good enough
+        if &quot;no inaccuracies found&quot; in validation_result.lower() or validation_result.strip() == &quot;&quot;:
+            return initial_article_text
+        else:
+            print(f&quot;Article validation failed: {validation_result}&quot;)
+            # Here, you'd ideally refine the prompt or generate a new version,
+            # but for simplicity, we'll just return None.
+            return None
+
+    except Exception as e:
+        print(f&quot;Error generating or validating article: {e}&quot;)
+        return None
+</code></pre>
+<p>This was a significant step up from the initial simple prompt. We were spending more time crafting prompts and validation loops than we ever spent writing the original, simpler Python scripts. The complexity had moved from writing code to <em>managing the AI's behaviour</em>. As noted by Anthropic, effective context engineering is crucial for AI agents, requiring careful management of information to ensure accuracy and relevance <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Effective context engineering for AI agents</a>.</p>
+<h3 id="the-context-window-conundrum">The Context Window Conundrum</h3>
+<p>As our content generation system grew more ambitious, we ran into the &quot;context window&quot; limitation. LLMs have a finite capacity for processing information at any given time. If you feed them too much text (articles, documents, conversation history), they start to forget earlier parts. For long-form content, this meant that the AI would sometimes lose track of the overall narrative, repeat itself, or contradict earlier points.</p>
+<p>Managing this required sophisticated strategies. We couldn't just feed it an entire book chapter and expect it to summarise it perfectly. We had to chunk the content, process each chunk, and then try to stitch the summaries together coherently, often requiring <em>another</em> LLM call to ensure continuity. This added layers of orchestration, increased latency, and, crucially, increased cost.</p>
+<p>The idea that AI simplifies things by just &quot;handling it all&quot; evaporates when you confront the hard limits of these models. The engineering challenge becomes about how to intelligently feed information into a limited memory, rather than just dumping it all in. <a href="https://www.getmaxim.ai/articles/context-window-management-strategies-for-long-context-ai-agents-and-chatbots/">Context window management strategies for long-context AI agents</a> is a whole field of study now, and it’s anything but simple.</p>
+<p>The &quot;miracle&quot; of AI generation was starting to feel more like a complex puzzle. The time saved in initial drafting was being devoured by the time spent on prompt engineering, hallucination mitigation, and context management. The cognitive load hadn't decreased; it had simply relocated. I wasn't just an engineer; I was an AI’s babysitter.</p>
+<h2 id="the-lesson">The Lesson</h2>
+<p>The narrative is wrong. Plain and simple. AI tools haven't made engineering less complex; they've fundamentally changed the nature of that complexity. The old problems haven't vanished. They've just evolved. And we, the engineers, are left grappling with a new, often more opaque, set of challenges.</p>
+<p>My experience with the AI content system was a brutal education. We were so enamoured with the speed of generation, we failed to adequately account for the subsequent validation, debugging, and refinement required. The initial code felt like a gift. But it was a gift that kept on giving… problems.</p>
+<p>What we’ve seen is a relocation of cognitive load. Instead of wrestling with intricate algorithms or tricky API integrations directly, we’re now wrestling with:</p>
+<ol>
+<li><strong>Debugging AI-Generated Code:</strong> As I discovered, AI code can contain subtle, emergent errors that are hard to trace because the original author (the AI) doesn't have a coherent &quot;thought process&quot; we can interrogate. It’s pattern matching, not reasoning.</li>
+<li><strong>Prompt Engineering:</strong> Crafting prompts that consistently elicit accurate, useful, and specific output is a dark art. Minor tweaks can have massive impacts, and the “best” prompt often depends on the LLM version, the model’s mood (if you can even call it that), and the phase of the moon. It's an iterative nightmare of trial and error.</li>
+<li><strong>Hallucination Handling:</strong> This is perhaps the most insidious. AI models can confidently generate false information. It’s not just factual errors; it's fabricated statistics, invented concepts, and spurious citations. Catching these requires rigorous validation, often involving <em>another</em> AI pass or extensive human review. This is the opposite of simplifying things.</li>
+<li><strong>Context Window Management:</strong> For any task that requires remembering more than a few recent interactions, managing the LLM’s context window becomes a significant engineering challenge. We're spending a lot of time engineering how to feed information <em>into</em> the AI efficiently, rather than the AI just magically knowing it.</li>
+</ol>
+<p>The industry is still largely caught in the marketing hype. We’re being sold a bill of goods that AI will make us all 10x developers. But what does “10x” even mean in this context? If you can generate code ten times faster, but it takes you twenty times longer to debug, validate, and maintain it, you're not 10x. You're negative 2x.</p>
+<p>The truth is, the &quot;boring&quot; parts of engineering – the careful validation, the deep understanding of system behaviour, the robust error handling – these haven't gone away. They’ve just become more complex because the source of the code is now opaque.</p>
+<p>This is why current productivity metrics are fundamentally broken. Metrics like lines of code, commit frequency, or even time-to-first-pull-request are laughably inadequate when you’re dealing with AI-generated code. These metrics measure speed of creation, not quality of outcome or long-term maintainability.</p>
+<h3 id="what-we-should-be-measuring">What We Should Be Measuring</h3>
+<p>If we’re serious about understanding the real impact of AI on engineering productivity, we need to shift our focus. For CTOs and engineering leaders, the conversation needs to move beyond raw generation speed. We need to be measuring:</p>
+<ol>
+<li><strong>Time-to-Production-Stable:</strong> How long does it <em>actually</em> take for a feature, whether AI-assisted or not, to be deployed to production and remain stable without critical bugs? This is the ultimate productivity metric.</li>
+<li><strong>Post-Deployment Maintenance Hours:</strong> How much time is spent fixing bugs, refactoring, or dealing with issues related to code that was initially AI-generated? This is the hidden cost of AI speed.</li>
+<li><strong>Validation and Debugging Cycle Time:</strong> How long does it take to validate an AI output and resolve any issues it introduces? This directly quantifies the complexity shift.</li>
+<li><strong>Technical Debt Accumulation Rate:</strong> Are we building systems that are becoming increasingly difficult and expensive to maintain due to AI-generated code or architectural patterns? <a href="https://www.reddit.com/r/programming/comments/1it1usc/how_ai_generated_code_accelerates_technical_debt/">AI-generated code can accelerate technical debt</a> is a conversation that needs to be louder.</li>
+<li><strong>Cognitive Load Metrics (qualitative and quantitative):</strong> While harder to measure, we need to assess the actual mental effort required. Are engineers spending more time thinking about <em>how to get the AI to work</em> than on the core problem? This has been noted as a significant concern in computing education <a href="https://www.mdpi.com/2075-4698/15/1/6">The Impact of Artificial Intelligence on Cognitive Load in Computing Education</a>.</li>
+</ol>
+<p>The idea that AI will simply free us up to do more architecture is a fantasy if we’re not careful. Without a conscious effort to manage the new complexities, we risk trading speed for a maintenance nightmare and a bloated technical debt. The role of the engineer isn't disappearing; it's evolving. We're becoming less coders and more AI wranglers, prompt engineers, and validation specialists. We need to embrace this shift with open eyes, not with the blind faith of the hype cycle.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>The AI revolution is here, no doubt about it. It’s powerful, it’s transformative, and for builders like me, it’s genuinely exciting. But the narrative that it’s simply about making engineering easier is a dangerous oversimplification. My journey with the AI content system, and countless other production systems I've seen and worked on, has taught me that complexity doesn't disappear; it just morphs.</p>
+<p>We're not offloading the hard work. We're redirecting it. We're trading the complexity of traditional coding for the complexity of prompt engineering, hallucination wrangling, and debugging opaque AI outputs. The illusion of infinite velocity offered by AI tools needs to be met with a healthy dose of skepticism and a rigorous focus on the entire lifecycle of development, not just the initial generation phase.</p>
+<p>For CTOs and engineering leaders, this means questioning the vanity metrics that promise AI-driven 10x productivity. We need to start tracking what truly matters: stability in production, the actual cost of maintenance, and the time it takes to validate and debug. The cognitive load hasn't vanished; it's merely been relocated. And if we're not smart about it, it can easily overwhelm the initial gains.</p>
+<p>The future isn't about AI doing the work <em>for</em> us. It's about us learning to work <em>with</em> AI, understanding its limitations, and building robust systems that account for its inherent complexities. It’s about building smart, not just fast. Now, if you'll excuse me, I have some prompts to refine.</p>
+
+      </div>
+
+      <section class="references">
+  <h2>References &amp; Sources</h2>
+  <div class="references-grid"><article class="reference-card">
+  <span class="reference-card__number">[1]</span>
+  <a href="https://www.ibm.com/think/topics/ai-hallucinations" class="reference-card__title" target="_blank" rel="noopener noreferrer">ibm.com</a>
+  <span class="reference-card__domain">www.ibm.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[2]</span>
+  <a href="https://medium.com/@aysan.nazarmohamady/reducing-ai-hallucinations-6-prompt-engineering-techniques-that-actually-work-16b583797bd0" class="reference-card__title" target="_blank" rel="noopener noreferrer">medium.com</a>
+  <span class="reference-card__domain">medium.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[3]</span>
+  <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" class="reference-card__title" target="_blank" rel="noopener noreferrer">anthropic.com</a>
+  <span class="reference-card__domain">www.anthropic.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[4]</span>
+  <a href="https://www.ibm.com/think/topics/context-window" class="reference-card__title" target="_blank" rel="noopener noreferrer">ibm.com</a>
+  <span class="reference-card__domain">www.ibm.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[5]</span>
+  <a href="https://www.getmaxim.ai/articles/context-window-management-strategies-for-long-context-ai-agents-and-chatbots/" class="reference-card__title" target="_blank" rel="noopener noreferrer">getmaxim.ai</a>
+  <span class="reference-card__domain">www.getmaxim.ai</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[6]</span>
+  <a href="https://medium.com/@adnanmasood/rethinking-developer-productivity-in-the-age-of-ai-metrics-that-actually-matter-61834691c76e" class="reference-card__title" target="_blank" rel="noopener noreferrer">medium.com</a>
+  <span class="reference-card__domain">medium.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[7]</span>
+  <a href="https://medium.com/predict/the-3-ai-shifts-that-will-reshape-engineering-roles-by-2026-5fc53e127af9" class="reference-card__title" target="_blank" rel="noopener noreferrer">medium.com</a>
+  <span class="reference-card__domain">medium.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[8]</span>
+  <a href="https://qualizeal.com/hidden-challenges-of-testing-ai-generated-code/" class="reference-card__title" target="_blank" rel="noopener noreferrer">qualizeal.com</a>
+  <span class="reference-card__domain">qualizeal.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[9]</span>
+  <a href="https://jimmysong.io/blog/software-engineering-shift-runtime-cost-2025/" class="reference-card__title" target="_blank" rel="noopener noreferrer">jimmysong.io</a>
+  <span class="reference-card__domain">jimmysong.io</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[10]</span>
+  <a href="https://www.itprotoday.com/software-development/cognitive-load-in-the-age-of-ai-rethinking-developer-workflows" class="reference-card__title" target="_blank" rel="noopener noreferrer">itprotoday.com</a>
+  <span class="reference-card__domain">www.itprotoday.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[11]</span>
+  <a href="https://www.turintech.ai/blog/2024-in-review-how-ais-evolution-will-transform-software-development-in-2025" class="reference-card__title" target="_blank" rel="noopener noreferrer">turintech.ai</a>
+  <span class="reference-card__domain">www.turintech.ai</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[12]</span>
+  <a href="https://www.reddit.com/r/programming/comments/1m25iw2/metr_study_finds_ai_doesnt_make_devs_as/" class="reference-card__title" target="_blank" rel="noopener noreferrer">reddit.com</a>
+  <span class="reference-card__domain">www.reddit.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[13]</span>
+  <a href="https://stackoverflow.blog/2026/01/23/ai-can-10x-developers-in-creating-tech-debt/" class="reference-card__title" target="_blank" rel="noopener noreferrer">stackoverflow.blog</a>
+  <span class="reference-card__domain">stackoverflow.blog</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[14]</span>
+  <a href="https://conspicuous.com/conspicuous-blog/ai-vs-human-coders-comparative-analysis/" class="reference-card__title" target="_blank" rel="noopener noreferrer">conspicuous.com</a>
+  <span class="reference-card__domain">conspicuous.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[15]</span>
+  <a href="https://www.reddit.com/r/programming/comments/1it1usc/how_ai_generated_code_accelerates_technical_debt/" class="reference-card__title" target="_blank" rel="noopener noreferrer">reddit.com</a>
+  <span class="reference-card__domain">www.reddit.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[16]</span>
+  <a href="https://www.ishir.com/blog/138176/ai-in-software-development-is-debugging-the-ai-generated-code-a-new-developer-headache.htm" class="reference-card__title" target="_blank" rel="noopener noreferrer">ishir.com</a>
+  <span class="reference-card__domain">www.ishir.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[17]</span>
+  <a href="https://www.thepromptindex.com/unplugged-and-unscripted-the-striking-differences-between-human-and-ai-code.html" class="reference-card__title" target="_blank" rel="noopener noreferrer">thepromptindex.com</a>
+  <span class="reference-card__domain">www.thepromptindex.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[18]</span>
+  <a href="https://kodus.io/en/the-biggest-dangers-of-ai-generated-code/" class="reference-card__title" target="_blank" rel="noopener noreferrer">kodus.io</a>
+  <span class="reference-card__domain">kodus.io</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[19]</span>
+  <a href="https://www.researchgate.net/publication/388091783_A_Comparative_Analysis_between_AI_Generated_Code_and_Human_Written_Code_A_Preliminary_Study" class="reference-card__title" target="_blank" rel="noopener noreferrer">researchgate.net</a>
+  <span class="reference-card__domain">www.researchgate.net</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[20]</span>
+  <a href="https://www.cognativ.com/blogs/post/debugging-with-ai-microsoft-research-study-reveals-persistent-challenges/181" class="reference-card__title" target="_blank" rel="noopener noreferrer">cognativ.com</a>
+  <span class="reference-card__domain">www.cognativ.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[21]</span>
+  <a href="https://speedscale.com/blog/the-developers-guide-to-debugging-ai-generated-code/" class="reference-card__title" target="_blank" rel="noopener noreferrer">speedscale.com</a>
+  <span class="reference-card__domain">speedscale.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[22]</span>
+  <a href="https://arrpitk.medium.com/the-principles-of-prompt-engineering-unraveling-complexity-with-real-world-examples-5375ca39accb" class="reference-card__title" target="_blank" rel="noopener noreferrer">medium.com</a>
+  <span class="reference-card__domain">arrpitk.medium.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[23]</span>
+  <a href="https://www.infoq.com/articles/prompt-engineering/" class="reference-card__title" target="_blank" rel="noopener noreferrer">infoq.com</a>
+  <span class="reference-card__domain">www.infoq.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[24]</span>
+  <a href="https://alfapeople.com/importance-of-prompt-engineering-preventing-ai-hallucinations/" class="reference-card__title" target="_blank" rel="noopener noreferrer">alfapeople.com</a>
+  <span class="reference-card__domain">alfapeople.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[25]</span>
+  <a href="https://tech-stack.com/blog/what-is-prompt-engineering/" class="reference-card__title" target="_blank" rel="noopener noreferrer">tech-stack.com</a>
+  <span class="reference-card__domain">tech-stack.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[26]</span>
+  <a href="https://cloud.google.com/discover/what-is-prompt-engineering" class="reference-card__title" target="_blank" rel="noopener noreferrer">google.com</a>
+  <span class="reference-card__domain">cloud.google.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[27]</span>
+  <a href="https://en.wikipedia.org/wiki/Hallucination_(artificial_intelligence)" class="reference-card__title" target="_blank" rel="noopener noreferrer">wikipedia.org</a>
+  <span class="reference-card__domain">en.wikipedia.org</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[28]</span>
+  <a href="https://medium.com/@madhurajayashanka/mastering-context-management-in-ai-development-complete-guide-in-plain-english-5b5cadc2adb4" class="reference-card__title" target="_blank" rel="noopener noreferrer">medium.com</a>
+  <span class="reference-card__domain">medium.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[29]</span>
+  <a href="https://www.infoq.com/news/2025/11/ai-code-technical-debt/" class="reference-card__title" target="_blank" rel="noopener noreferrer">infoq.com</a>
+  <span class="reference-card__domain">www.infoq.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[30]</span>
+  <a href="https://leaddev.com/technical-direction/how-ai-generated-code-accelerates-technical-debt" class="reference-card__title" target="_blank" rel="noopener noreferrer">leaddev.com</a>
+  <span class="reference-card__domain">leaddev.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[31]</span>
+  <a href="https://medium.com/@anna.bildea/your-gen-ai-stack-is-accumulating-technical-debt-faster-than-you-think-2609db7ce4d8" class="reference-card__title" target="_blank" rel="noopener noreferrer">medium.com</a>
+  <span class="reference-card__domain">medium.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[32]</span>
+  <a href="https://www.reddit.com/r/programming/comments/1nf85j7/everything_wrong_with_developer_productivity/" class="reference-card__title" target="_blank" rel="noopener noreferrer">reddit.com</a>
+  <span class="reference-card__domain">www.reddit.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[33]</span>
+  <a href="https://getdx.com/blog/measuring-engineering-productivity-in-the-ai-era/" class="reference-card__title" target="_blank" rel="noopener noreferrer">getdx.com</a>
+  <span class="reference-card__domain">getdx.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[34]</span>
+  <a href="https://www.mdpi.com/2075-4698/15/1/6" class="reference-card__title" target="_blank" rel="noopener noreferrer">mdpi.com</a>
+  <span class="reference-card__domain">www.mdpi.com</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[35]</span>
+  <a href="https://www.researchgate.net/publication/384808790_The_Impact_of_Artificial_Intelligence_on_Cognitive_Load_in_Computing_Education" class="reference-card__title" target="_blank" rel="noopener noreferrer">researchgate.net</a>
+  <span class="reference-card__domain">www.researchgate.net</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[36]</span>
+  <a href="https://arxiv.org/html/2501.02684v1" class="reference-card__title" target="_blank" rel="noopener noreferrer">arxiv.org</a>
+  <span class="reference-card__domain">arxiv.org</span>
+</article>
+<article class="reference-card">
+  <span class="reference-card__number">[37]</span>
+  <a href="https://dev.to/dvddpl/no-time-to-code-ai-as-leverage-for-engineering-leadership-274i" class="reference-card__title" target="_blank" rel="noopener noreferrer">dev.to</a>
+  <span class="reference-card__domain">dev.to</span>
+</article></div>
+</section>
+
+      <section class="related-posts">
+  <h3>Related Articles</h3>
+  <div class="related-posts-list">
+    <div class="related-post"><a href="/blog/welcome-to-systemprompt">Welcome to systemprompt.io</a></div>
+    <div class="related-post"><a href="/blog/are-you-a-luddite">Are You a Luddite?</a></div>
+    <div class="related-post"><a href="/blog/respect-the-craft-ai-expertise">Your Ego Is The Real AI Bottleneck</a></div>
+  </div>
+</section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="/files/images/logo.svg" alt="systemprompt.io" class="logo-svg" />
+        </div>
+        <p></p>
+      </div>
+      <div class="footer-links">
+        <h4>Product</h4>
+        <a href="/documentation">Documentation</a>
+        <a href="/blog">Blog</a>
+        <a href="/playbooks">Playbooks</a>
+        <a href="https://github.com/systempromptio/systemprompt-template">Get Started</a>
+        <a href="/sitemap.xml">Sitemap</a>
+        <a href="/llms.txt">llms.txt</a>
+      </div>
+      <div class="footer-links">
+        <h4>Features</h4>
+        <a href="/features/agentic-mesh">Agentic Mesh</a>
+        <a href="/features/self-hosted-ai-platform">Embedded AI Library</a>
+        <a href="/features/unified-control-plane">Unified Control Plane</a>
+        <a href="/features/closed-loop-agents">The Closed Loop</a>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <a href="/legal/privacy-policy">Privacy Policy</a>
+        <a href="/legal/cookie-policy">Cookie Policy</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 SystemPrompt. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+
+  <!-- Analytics -->
+<script src="/files/js/analytics.js" defer></script>
+<!-- Mobile Menu Toggle -->
+<script src="/js/mobile-menu.js" defer></script>
+
+</body>
+</html>

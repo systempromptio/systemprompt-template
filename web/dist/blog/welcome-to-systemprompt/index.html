@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Resource Hints -->
+<link rel="preconnect" href="/files/fonts/" crossorigin>
+<link rel="dns-prefetch" href="/files/fonts/">
+
+<!-- Font Preloading - Critical fonts loaded early -->
+<link rel="preload" as="font" href="/files/fonts/Zepto/Zepto.woff" type="font/woff" crossorigin>
+<link rel="preload" as="font" href="/files/fonts/OpenSans/OpenSans-Regular.ttf" type="font/truetype" crossorigin>
+
+<!-- Critical CSS - Inlined to prevent FOUC -->
+<style>
+/* Prevent flash of unstyled content */
+:root {
+  --color-bg: #0a0a0f;
+  --color-surface: #12121a;
+  --color-text: #e8e8ed;
+  --color-text-secondary: #9898a6;
+  --orange-500: #f97316;
+  --orange-600: #ea580c;
+}
+html {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+body {
+  margin: 0;
+  font-family: "OpenSans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+/* Hide content until styles load to prevent layout shift */
+.header, .site-header {
+  min-height: 64px;
+}
+/* Font-face for immediate availability */
+@font-face {
+  font-family: "Zepto";
+  src: url("/files/fonts/Zepto/Zepto.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "OpenSans";
+  src: url("/files/fonts/OpenSans/OpenSans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+</style>
+
+<!-- Core Styles -->
+<link rel="stylesheet" href="/css/core/variables.css">
+<link rel="stylesheet" href="/css/core/fonts.css">
+<link rel="stylesheet" href="/css/core/reset.css">
+<link rel="stylesheet" href="/css/components/header.css">
+<link rel="stylesheet" href="/css/components/footer.css">
+<link rel="stylesheet" href="/css/components/mobile-menu.css">
+
+
+  <!-- SEO Meta Tags -->
+  <title>Welcome to systemprompt.io | systemprompt.io</title>
+  <meta name="description" content="Production infrastructure for AI agents. Self-hosted or cloud. The missing layer between AI frameworks and production deployment." />
+  <meta name="author" content="systemprompt.io" />
+  <meta name="keywords" content="systemprompt, AI agents, production infrastructure, MCP, A2A, OAuth2" />
+  <link rel="canonical" href="https://systemprompt.io/blog/welcome-to-systemprompt" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Welcome to systemprompt.io" />
+  <meta property="og:description" content="Production infrastructure for AI agents. Self-hosted or cloud. The missing layer between AI frameworks and production deployment." />
+  <meta property="og:image" content="" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://systemprompt.io/blog/welcome-to-systemprompt" />
+  <meta property="og:site_name" content="systemprompt.io" />
+  <meta property="article:published_time" content="2026-02-03T00:00:00Z" />
+  <meta property="article:modified_time" content="2026-02-03T08:17:54Z" />
+  <meta property="article:author" content="systemprompt.io" />
+  <meta property="article:section" content="" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@systemprompt" />
+  <meta name="twitter:creator" content="@systemprompt" />
+  <meta name="twitter:title" content="Welcome to systemprompt.io" />
+  <meta name="twitter:description" content="Production infrastructure for AI agents. Self-hosted or cloud. The missing layer between AI frameworks and production deployment." />
+  <meta name="twitter:image" content="" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/blog.css" />
+  <link rel="stylesheet" href="/css/syntax-highlight.css" />
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Welcome to systemprompt.io",
+    "description": "Production infrastructure for AI agents. Self-hosted or cloud. The missing layer between AI frameworks and production deployment.",
+    "image": "",
+    "author": {
+      "@type": "Person",
+      "name": "systemprompt.io"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "systemprompt.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://systemprompt.io/files/images/logo.png"
+      }
+    },
+    "datePublished": "2026-02-03T00:00:00Z",
+    "dateModified": "2026-02-03T08:17:54Z",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://systemprompt.io/blog/welcome-to-systemprompt"
+    },
+    "keywords": "systemprompt, AI agents, production infrastructure, MCP, A2A, OAuth2",
+    "articleSection": "",
+    "inLanguage": ""
+  }
+  </script>
+
+  <!-- BreadcrumbList Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://systemprompt.io"},
+      {"@type": "ListItem", "position": 2, "name": "Blog", "item": "https://systemprompt.io/blog"},
+      {"@type": "ListItem", "position": 3, "name": "Welcome to systemprompt.io", "item": "https://systemprompt.io/blog/welcome-to-systemprompt"}
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="blog-background"></div>
+  <div class="blog-shape-left"></div>
+
+  <header class="site-header">
+  <nav class="site-nav">
+    <a href="/" class="logo-link">
+      <img src="/files/images/logo.svg" alt="systemprompt.io" class="logo-svg" />
+    </a>
+    <button class="mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    <div class="nav-links">
+      <div class="nav-dropdown">
+        <span class="nav-dropdown-trigger">
+          Features
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Core Features</h4>
+            <a href="/features/agentic-mesh">Agentic Mesh</a>
+            <a href="/features/self-hosted-ai-platform">Embedded AI library</a>
+            <a href="/features/unified-control-plane">Unified Control Plane</a>
+            <a href="/features/closed-loop-agents">The Closed Loop</a>
+          </div>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/documentation" class="nav-dropdown-trigger">
+          Documentation
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Getting Started</h4>
+            <a href="/documentation/installation">Installation</a>
+            <a href="/documentation/licensing">Licensing</a>
+            <a href="/documentation/early-access">Early Access</a>
+            <a href="/documentation/playbooks">Playbooks</a>
+          </div>
+          <div class="dropdown-section">
+            <h4>Configuration</h4>
+            <a href="/documentation/config">Config</a>
+            <a href="/documentation/services">Services</a>
+            <a href="/documentation/extensions">Extensions</a>
+          </div>
+          <a href="/documentation" class="dropdown-view-all">View all documentation &rarr;</a>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/blog" class="nav-dropdown-trigger">
+          Blog
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Categories</h4>
+            <a href="/blog">All Posts</a>
+            <a href="/blog?category&#x3D;announcement">Announcements</a>
+            <a href="/blog?category&#x3D;article">Articles</a>
+            <a href="/blog?category&#x3D;guide">Guides</a>
+          </div>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/playbooks" class="nav-dropdown-trigger">
+          Playbooks
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="nav-dropdown-menu">
+          <div class="dropdown-section">
+            <h4>Categories</h4>
+            <a href="/playbooks">All Playbooks</a>
+            <a href="/playbooks?category&#x3D;guide">Guides</a>
+            <a href="/playbooks?category&#x3D;cli">CLI</a>
+            <a href="/playbooks?category&#x3D;build">Build</a>
+            <a href="/playbooks?category&#x3D;content">Content</a>
+            <a href="/playbooks?category&#x3D;validation">Validation</a>
+          </div>
+        </div>
+      </div>
+      <a href="https://github.com/systempromptio/systemprompt-template" class="cta-button" target="_blank" rel="noopener">Get Started</a>
+    </div>
+  </nav>
+</header>
+
+
+  <main class="blog-post">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="breadcrumb__separator">/</span>
+      <a href="/blog">Blog</a>
+      <span class="breadcrumb__separator">/</span>
+      <span class="breadcrumb__current">Welcome to systemprompt.io</span>
+    </nav>
+
+    <article>
+      <header class="post-header">
+        <h1>Welcome to systemprompt.io</h1>
+        <div class="post-meta">
+          <div class="author-info">
+            <span class="author-name">systemprompt.io</span>
+            <time datetime="2026-02-03T00:00:00Z">February 03, 2026</time>
+            <span class="meta-separator">·</span>
+            <span class="read-time">2 min read</span>
+          </div>
+        </div>
+        <div class="social-action-bar">
+  <span class="social-action-bar__label">Follow:</span>
+  <a href="https://github.com/systempromptio" target="_blank" rel="noopener noreferrer" class="social-action-bar__link social-action-bar__link--github" aria-label="Follow on GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+  <a href="https://twitter.com/systemprompt" target="_blank" rel="noopener noreferrer" class="social-action-bar__link social-action-bar__link--twitter" aria-label="Follow on Twitter"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+  <a href="https://www.linkedin.com/company/systempromptio" target="_blank" rel="noopener noreferrer" class="social-action-bar__link social-action-bar__link--linkedin" aria-label="Follow on LinkedIn"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></a>
+  <button type="button" class="social-action-bar__link social-action-bar__link--share" aria-label="Share this page" onclick="if(navigator.share){navigator.share({title:document.title,url:window.location.href})}else{navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'))}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg></button>
+</div>
+      </header>
+
+
+      <div class="post-content">
+        <p><strong>Production infrastructure for AI agents. Self-hosted or cloud.</strong></p>
+<p>The missing layer between AI frameworks and production deployment. Not another SDK - complete infrastructure with authentication, permissions, and multi-agent orchestration built on open standards (MCP, A2A, OAuth2).</p>
+<h2 id="your-ai-assistant-shouldn-t-live-under-your-desk">Your AI assistant shouldn't live under your desk</h2>
+<p>Personal AI assistants are finally real. But there's a gap between a demo and a product your users can actually use.</p>
+<p>systemprompt.io bridges that gap:</p>
+<ul>
+<li><strong>Auth that works</strong>: OAuth2/OIDC + WebAuthn</li>
+<li><strong>Permissions that scale</strong>: Per-user, per-agent, per-tool scopes</li>
+<li><strong>Deployment that's real</strong>: One command to cloud or self-host</li>
+<li><strong>Multi-agent that coordinates</strong>: A2A protocol with shared state</li>
+</ul>
+<p>The Jarvis dream is here. We handle the infrastructure.</p>
+<h2 id="core-capabilities">Core Capabilities</h2>
+<ul>
+<li><strong>Complete Runtime</strong>: Web API + agent processes + MCP servers with shared auth and database</li>
+<li><strong>Open Standards</strong>: MCP, A2A, OAuth2, WebAuthn - no vendor lock-in</li>
+<li><strong>Agent-Executable CLI</strong>: Your AI manages infrastructure directly via the same CLI you use</li>
+<li><strong>Native Rust</strong>: Async-first on Tokio, zero-cost abstractions</li>
+<li><strong>Self-Hosted or Cloud</strong>: Docker locally, or deploy to isolated VM with managed database</li>
+<li><strong>100% Extensible</strong>: Build proprietary Rust extensions on the open core</li>
+</ul>
+<h2 id="what-you-get">What You Get</h2>
+<p>A complete platform with built-in:</p>
+<ul>
+<li><strong>User Authentication</strong>: OAuth2/OIDC, sessions, roles, and permissions</li>
+<li><strong>File Storage</strong>: Upload, serve, and manage files with metadata</li>
+<li><strong>Content Management</strong>: Markdown ingestion, search, and publishing</li>
+<li><strong>AI Integration</strong>: Multi-provider LLM support with request logging</li>
+<li><strong>Analytics</strong>: Session tracking, metrics, and usage reporting</li>
+<li><strong>Agent Orchestration</strong>: A2A protocol for agent-to-agent communication</li>
+<li><strong>MCP Servers</strong>: Tool and resource providers for AI clients</li>
+</ul>
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Rust 1.75+</li>
+<li>Docker (for local PostgreSQL) <strong>OR</strong> systemprompt.io Cloud account</li>
+</ul>
+<h3 id="local-setup">Local Setup</h3>
+<pre><code class="language-bash"># Start PostgreSQL in Docker
+docker run -d --name systemprompt-db \
+  -e POSTGRES_DB=systemprompt \
+  -e POSTGRES_USER=systemprompt \
+  -e POSTGRES_PASSWORD=systemprompt \
+  -p 5432:5432 \
+  postgres:16
+
+# Login to systemprompt.io Cloud (free account)
+systemprompt cloud auth login
+
+# Create a local tenant
+systemprompt cloud tenant create --type local
+
+# Create and configure your profile
+systemprompt cloud profile create local
+
+# Run database migrations
+systemprompt infra db migrate
+
+# Start services
+systemprompt infra services start --all
+</code></pre>
+<h2 id="native-mcp-client-support">Native MCP Client Support</h2>
+<p>Works out of the box with any MCP client - Claude Code, Claude Desktop, ChatGPT, and more.</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;my-server&quot;: {
+      &quot;url&quot;: &quot;https://my-tenant.systemprompt.io/api/v1/mcp/my-server/mcp&quot;,
+      &quot;transport&quot;: &quot;streamable-http&quot;
+    }
+  }
+}
+</code></pre>
+<p>Your AI can now manage your entire infrastructure: deploy updates, query analytics, manage users, and orchestrate agents - all through natural conversation.</p>
+<h2 id="get-started">Get Started</h2>
+<p>Check out the <a href="/documentation">documentation</a> to learn more, or dive into the <a href="/documentation/getting-started">getting started guide</a> to begin building.</p>
+<p>Welcome to the future of AI infrastructure.</p>
+
+      </div>
+
+      
+
+      <section class="related-posts">
+  <h3>Related Articles</h3>
+  <div class="related-posts-list">
+    <div class="related-post"><a href="/blog/ai-moved-the-goalposts">The AI Productivity Mirage</a></div>
+    <div class="related-post"><a href="/blog/are-you-a-luddite">Are You a Luddite?</a></div>
+    <div class="related-post"><a href="/blog/respect-the-craft-ai-expertise">Your Ego Is The Real AI Bottleneck</a></div>
+  </div>
+</section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="/files/images/logo.svg" alt="systemprompt.io" class="logo-svg" />
+        </div>
+        <p></p>
+      </div>
+      <div class="footer-links">
+        <h4>Product</h4>
+        <a href="/documentation">Documentation</a>
+        <a href="/blog">Blog</a>
+        <a href="/playbooks">Playbooks</a>
+        <a href="https://github.com/systempromptio/systemprompt-template">Get Started</a>
+        <a href="/sitemap.xml">Sitemap</a>
+        <a href="/llms.txt">llms.txt</a>
+      </div>
+      <div class="footer-links">
+        <h4>Features</h4>
+        <a href="/features/agentic-mesh">Agentic Mesh</a>
+        <a href="/features/self-hosted-ai-platform">Embedded AI Library</a>
+        <a href="/features/unified-control-plane">Unified Control Plane</a>
+        <a href="/features/closed-loop-agents">The Closed Loop</a>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <a href="/legal/privacy-policy">Privacy Policy</a>
+        <a href="/legal/cookie-policy">Cookie Policy</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 SystemPrompt. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+
+  <!-- Analytics -->
+<script src="/files/js/analytics.js" defer></script>
+<!-- Mobile Menu Toggle -->
+<script src="/js/mobile-menu.js" defer></script>
+
+</body>
+</html>

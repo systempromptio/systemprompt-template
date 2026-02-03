@@ -1,39 +1,34 @@
 ---
 title: "Build Playbook"
-description: "Build core, web, and MCP extensions."
-keywords:
-  - build
-  - compile
-  - cargo
-  - rust
+description: "Build core and MCP extensions."
+author: "SystemPrompt"
+slug: "cli-build"
+keywords: "build, compile, cargo, rust"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # Build Playbook
 
-Build core, web, and MCP extensions.
-
-> **Help**: `{ "command": "build" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
+Build core and MCP extensions.
 
 ---
 
 ## Build Core
 
-```bash
-// MCP: systemprompt
-systemprompt build core
-systemprompt build core --release
-just build
+```json
+{ "command": "build core" }
+{ "command": "build core --release" }
 ```
 
----
-
-## Build Web
+Terminal-only (requires shell):
 
 ```bash
-// MCP: systemprompt
-systemprompt build web
-systemprompt build web --release
+just build
 ```
 
 ---
@@ -42,13 +37,12 @@ systemprompt build web --release
 
 ### Build All MCP Servers
 
-```bash
-// MCP: systemprompt
-systemprompt build mcp
-systemprompt build mcp --release
+```json
+{ "command": "build mcp" }
+{ "command": "build mcp --release" }
 ```
 
-### Build Specific MCP Server
+### Build Specific MCP Server (Terminal Only)
 
 ```bash
 cargo build -p <crate-name>
@@ -63,10 +57,6 @@ cargo build -p <crate-name> --release
 
 **Compilation error**: Run `cargo clippy -p <crate-name> -- -D warnings` for detailed errors, and `cargo fmt -p <crate-name> -- --check` for formatting issues.
 
-**Web build failed**: Check `node --version` and run `npm install` to reinstall dependencies.
-
--> See [Services Playbook](services.md) for restarting services after rebuilding.
-
 ---
 
 ## Quick Reference
@@ -75,7 +65,6 @@ cargo build -p <crate-name> --release
 |------|---------|
 | Build all | `just build` |
 | Build core | `systemprompt build core` |
-| Build web | `systemprompt build web` |
 | Build MCP | `systemprompt build mcp` |
 | Release build | `just build --release` |
 | Build single crate | `cargo build -p <crate-name>` |

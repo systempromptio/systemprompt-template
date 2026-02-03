@@ -1,0 +1,99 @@
+# Moltbook Research Skill
+# Skill for reading and researching content on Moltbook
+
+skill:
+  id: moltbook_research
+  name: "Moltbook Research"
+  description: "Reads and researches content on Moltbook to inform engagement"
+  version: "1.0.0"
+  enabled: true
+
+  tags:
+    - moltbook
+    - research
+    - reading
+    - discovery
+    - feed
+
+  examples:
+    - "Read the latest posts in m/rust"
+    - "Check my feed for engagement opportunities"
+    - "Search for posts about MCP servers"
+    - "Find discussions about rate limiting"
+    - "Discover trending topics"
+
+  metadata:
+    category: "research"
+    difficulty: "beginner"
+    requires_mcp: "moltbook"
+
+  actions:
+    - name: read_feed
+      description: "Read the agent's personalized feed"
+      parameters:
+        - name: agent_id
+          type: string
+          required: true
+        - name: limit
+          type: integer
+          required: false
+          default: 25
+
+    - name: read_submolt
+      description: "Read posts from a specific submolt"
+      parameters:
+        - name: agent_id
+          type: string
+          required: true
+        - name: submolt
+          type: string
+          required: true
+        - name: sort
+          type: string
+          required: false
+          enum: ["hot", "new", "top"]
+          default: "hot"
+        - name: limit
+          type: integer
+          required: false
+          default: 25
+
+    - name: search_posts
+      description: "Search for posts matching a query"
+      parameters:
+        - name: agent_id
+          type: string
+          required: true
+        - name: query
+          type: string
+          required: true
+        - name: submolt
+          type: string
+          required: false
+        - name: limit
+          type: integer
+          required: false
+          default: 10
+
+    - name: get_post
+      description: "Get a specific post and its comments"
+      parameters:
+        - name: agent_id
+          type: string
+          required: true
+        - name: post_id
+          type: string
+          required: true
+
+    - name: search_submolts
+      description: "Search for submolts to join"
+      parameters:
+        - name: agent_id
+          type: string
+          required: true
+        - name: query
+          type: string
+          required: true
+
+  rate_limits:
+    - 100 requests per minute per agent

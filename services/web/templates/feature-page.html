@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{{HEAD_ASSETS}}}
+    <title>{{TITLE}}</title>
+    <meta name="description" content="{{DESCRIPTION}}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{site.branding.favicon}}">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{TITLE}}">
+    <meta property="og:description" content="{{DESCRIPTION}}">
+    <meta property="og:image" content="{{#if IMAGE}}{{IMAGE}}{{else}}https://systemprompt.io/files/images/logo.png{{/if}}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{CANONICAL_URL}}">
+    <meta property="og:site_name" content="{{ORG_NAME}}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="{{site.branding.twitter_handle}}">
+    <meta name="twitter:title" content="{{TITLE}}">
+    <meta name="twitter:description" content="{{DESCRIPTION}}">
+    <meta name="twitter:image" content="{{#if IMAGE}}{{IMAGE}}{{else}}https://systemprompt.io/files/images/logo.png{{/if}}">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="{{site.branding.themeColor}}">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="{{CANONICAL_URL}}">
+
+    <!-- Styles - Base feature styles always loaded -->
+    <link rel="stylesheet" href="/css/feature-page.css">
+    <link rel="stylesheet" href="/css/feature-base.css">
+    {{#if (eq feature.slug "50mb-of-rust")}}
+    <link rel="stylesheet" href="/css/feature-rust.css">
+    {{/if}}
+    {{#if (eq feature.slug "self-hosted-ai-platform")}}
+    <link rel="stylesheet" href="/css/feature-rust.css">
+    {{/if}}
+    {{#if (eq feature.slug "cli-is-the-new-ui")}}
+    <link rel="stylesheet" href="/css/feature-cli.css">
+    {{/if}}
+    {{#if (eq feature.slug "unified-control-plane")}}
+    <link rel="stylesheet" href="/css/feature-cli.css">
+    {{/if}}
+    {{#if (eq feature.slug "memory-self-learning")}}
+    <link rel="stylesheet" href="/css/feature-memory.css">
+    {{/if}}
+    {{#if (eq feature.slug "closed-loop-agents")}}
+    <link rel="stylesheet" href="/css/feature-closed-loop.css">
+    {{/if}}
+    {{#if (eq feature.slug "agentic-mesh")}}
+    <link rel="stylesheet" href="/css/feature-agentic-mesh.css">
+    {{/if}}
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "{{TITLE}}",
+        "description": "{{DESCRIPTION}}",
+        "url": "{{CANONICAL_URL}}",
+        "publisher": {
+            "@type": "Organization",
+            "name": "{{ORG_NAME}}",
+            "url": "{{ORG_URL}}"
+        }
+    }
+    </script>
+
+    <!-- BreadcrumbList Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Home", "item": "{{ORG_URL}}"},
+            {"@type": "ListItem", "position": 2, "name": "Features", "item": "{{ORG_URL}}/features"},
+            {"@type": "ListItem", "position": 3, "name": "{{TITLE}}", "item": "{{CANONICAL_URL}}"}
+        ]
+    }
+    </script>
+</head>
+<body>
+    <!-- Background -->
+    <div class="feature-background"></div>
+
+    {{{HEADER}}}
+
+    <main class="feature-page">
+        <!-- Hero Section -->
+        <section class="feature-hero">
+            <div class="feature-hero-content">
+                <div class="feature-icon">
+                    {{#if (eq feature.icon "rust")}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor">
+                        <ellipse cx="32" cy="38" rx="26" ry="18"/>
+                        <circle cx="20" cy="28" r="6"/><circle cx="44" cy="28" r="6"/>
+                        <circle cx="20" cy="27" r="2.5" fill="#000"/><circle cx="44" cy="27" r="2.5" fill="#000"/>
+                        <path d="M6 36c-4-6 0-14 4-16" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/>
+                        <path d="M58 36c4-6 0-14-4-16" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/>
+                        <ellipse cx="32" cy="44" rx="8" ry="4" fill="#000" opacity="0.3"/>
+                    </svg>
+                    {{/if}}
+                    {{#if (eq feature.icon "terminal")}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="2" y="3" width="20" height="18" rx="2"/>
+                        <path d="m7 9 3 3-3 3"/><path d="M13 15h4"/>
+                    </svg>
+                    {{/if}}
+                    {{#if (eq feature.icon "brain")}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2"/>
+                        <circle cx="7.5" cy="13" r="1.5"/><circle cx="16.5" cy="13" r="1.5"/>
+                        <path d="M12 17v-3"/>
+                    </svg>
+                    {{/if}}
+                    {{#if (eq feature.icon "refresh-cw")}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 2v6h-6"/>
+                        <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                        <path d="M3 22v-6h6"/>
+                        <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                    </svg>
+                    {{/if}}
+                    {{#if (eq feature.icon "server")}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="2" y="2" width="20" height="8" rx="2"/>
+                        <rect x="2" y="14" width="20" height="8" rx="2"/>
+                        <circle cx="6" cy="6" r="1"/><circle cx="6" cy="18" r="1"/>
+                    </svg>
+                    {{/if}}
+                    {{#if (eq feature.icon "network")}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="2.5"/>
+                        <circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/>
+                        <circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/>
+                        <line x1="10" y1="10.5" x2="6.5" y2="7.5"/>
+                        <line x1="14" y1="10.5" x2="17.5" y2="7.5"/>
+                        <line x1="10" y1="13.5" x2="6.5" y2="16.5"/>
+                        <line x1="14" y1="13.5" x2="17.5" y2="16.5"/>
+                    </svg>
+                    {{/if}}
+                </div>
+                <h1 class="feature-headline">{{feature.headline}} <span class="highlight">{{feature.headline_highlight}}</span></h1>
+                <p class="feature-subtitle">{{feature.subtitle}}</p>
+            </div>
+            <div class="feature-hero-animation" aria-hidden="true">
+                {{#if (eq feature.slug "50mb-of-rust")}}
+                {{> rust-mesh-animation}}
+                {{/if}}
+                {{#if (eq feature.slug "self-hosted-ai-platform")}}
+                {{> rust-mesh-animation}}
+                {{/if}}
+                {{#if (eq feature.slug "cli-is-the-new-ui")}}
+                {{> animation-cli-remote}}
+                {{/if}}
+                {{#if (eq feature.slug "unified-control-plane")}}
+                {{> animation-cli-remote}}
+                {{/if}}
+                {{#if (eq feature.slug "memory-self-learning")}}
+                {{> animation-memory-loop}}
+                {{/if}}
+                {{#if (eq feature.slug "closed-loop-agents")}}
+                {{> animation-memory-loop}}
+                {{/if}}
+                {{#if (eq feature.slug "agentic-mesh")}}
+                {{> animation-agentic-mesh}}
+                {{/if}}
+            </div>
+        </section>
+
+        <!-- Full-width Hero Divider -->
+        <div class="hero-divider"></div>
+
+        <!-- Highlights Grid -->
+        <section class="feature-highlights">
+            <div class="container">
+                <ul class="highlights-grid">
+                    {{#each feature.highlights}}
+                    <li class="highlight-item">
+                        <a href="#{{this.id}}" class="highlight-link">
+                            <span class="highlight-bullet">&#9656;</span>
+                            <span class="highlight-text">{{this.text}}</span>
+                        </a>
+                    </li>
+                    {{/each}}
+                </ul>
+            </div>
+        </section>
+
+        <!-- Detail Sections -->
+        {{#if feature.sections}}
+        {{#each feature.sections}}
+        <section id="{{this.id}}" class="detail-section detail-section--with-visual {{#if (eq this.visual_position "left")}}detail-section--visual-left{{/if}}">
+            <div class="container">
+                <div class="detail-content">
+                    <h2 class="detail-title">{{this.title}}</h2>
+                    <div class="detail-text">
+                        {{{this.content}}}
+                    </div>
+                    {{#if this.items}}
+                    <ul class="detail-bullets">
+                        {{#each this.items}}
+                        <li><strong>{{this.title}}</strong> — {{this.description}}</li>
+                        {{/each}}
+                    </ul>
+                    {{/if}}
+                </div>
+                <div class="detail-visual">
+                    <img src="{{this.visual_desktop}}" alt="" class="visual-desktop" loading="lazy" />
+                    <img src="{{this.visual_mobile}}" alt="" class="visual-mobile" loading="lazy" />
+                </div>
+            </div>
+        </section>
+        {{/each}}
+        {{/if}}
+
+        <!-- Related Features -->
+        {{#if feature.related}}
+        <section class="related-features">
+            <div class="container">
+                <h2>Explore More Features</h2>
+                <div class="related-grid">
+                    {{#each feature.related}}
+                    <a href="{{this.url}}" class="related-card">
+                        <h3>{{this.title}}</h3>
+                        <p>{{this.description}}</p>
+                        <span class="related-arrow">&rarr;</span>
+                    </a>
+                    {{/each}}
+                </div>
+            </div>
+        </section>
+        {{/if}}
+
+        <!-- Final CTA -->
+        <section class="feature-final-cta">
+            <div class="container">
+                <h2>Ready to build?</h2>
+                <p>Get started with SystemPrompt in minutes.</p>
+                <div class="cta-group">
+                    <a href="https://github.com/systempromptio/systemprompt-template" class="primary-cta" target="_blank" rel="noopener">Get Started</a>
+                    <a href="/documentation" class="secondary-cta">Read the Docs</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    {{{FOOTER}}}
+
+    {{{SCRIPTS}}}
+</body>
+</html>

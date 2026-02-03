@@ -1,0 +1,8 @@
+extension:
+  type: mcp
+  name: soul
+  binary: systemprompt-soul-mcp
+  description: Memory system access for agents - store, recall, and manage persistent memories
+  port: 5020
+  build_type: workspace
+  enabled: true

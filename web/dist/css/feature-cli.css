@@ -1,0 +1,276 @@
+
+.feature-hero {
+  overflow: visible;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  gap: var(--space-xl);
+  padding-left: var(--space-2xl);
+  padding-right: var(--space-2xl);
+}
+
+.feature-hero-animation {
+  max-width: 720px;
+  width: 100%;
+}
+
+
+.cli-remote-animation {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+
+.cli-remote-desktop {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.cli-remote-mobile {
+  display: none;
+}
+
+
+.cli-terminal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.cli-terminal .terminal-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 8px 12px;
+  background: var(--color-surface-elevated);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cli-terminal .terminal-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.cli-terminal .terminal-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.cli-terminal .terminal-dots span:nth-child(1) { background: var(--terminal-dot-close); }
+.cli-terminal .terminal-dots span:nth-child(2) { background: var(--terminal-dot-minimize); }
+.cli-terminal .terminal-dots span:nth-child(3) { background: var(--terminal-dot-maximize); }
+
+.cli-terminal .terminal-title {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.65rem;
+  color: var(--color-text-secondary);
+  flex: 1;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+
+.cli-terminal .terminal-branding {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-xs);
+}
+
+.cli-terminal .terminal-logo {
+  width: 48px;
+  height: 48px;
+  opacity: 0.9;
+}
+
+.cli-terminal .terminal-body {
+  padding: 10px 12px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.65rem;
+  line-height: 1.6;
+  min-height: 220px;
+  background: linear-gradient(180deg, var(--color-surface) 0%, rgba(10, 10, 10, 0.95) 100%);
+}
+
+.cli-terminal .terminal-body--logs {
+  font-size: 0.68rem;
+}
+
+.cli-terminal .terminal-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.cli-terminal .prompt {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.cli-terminal .command {
+  color: var(--color-text);
+}
+
+.cli-terminal .output-bullet {
+  color: var(--color-primary);
+}
+
+.cli-terminal .output {
+  color: var(--color-text-secondary);
+}
+
+.cli-terminal .output-dim {
+  color: var(--color-text-muted);
+}
+
+.cli-terminal .output-agent {
+  color: var(--orange-400);
+  font-weight: 600;
+}
+
+.cli-terminal .success-check {
+  color: var(--color-success);
+}
+
+.cli-terminal .success {
+  color: var(--color-success);
+}
+
+
+.log-time {
+  color: var(--color-text-muted);
+  font-size: 0.6rem;
+  min-width: 52px;
+}
+
+.log-info {
+  color: var(--color-info);
+  font-size: 0.55rem;
+  font-weight: 600;
+  min-width: 28px;
+}
+
+.log-success {
+  color: var(--color-success);
+  font-size: 0.55rem;
+  font-weight: 600;
+  min-width: 28px;
+}
+
+
+.cli-fade-in {
+  opacity: 0;
+  transform: translateY(4px);
+  animation: cli-line-appear 0.35s ease forwards;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes cli-line-appear {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+@media (max-width: 1200px) {
+  .feature-hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .feature-hero-content {
+    text-align: center;
+  }
+
+  .feature-icon {
+    margin: 0 auto var(--space-lg);
+  }
+
+  .cli-remote-desktop {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .cli-terminal .terminal-body {
+    min-height: 220px;
+    font-size: 0.68rem;
+  }
+
+  .cli-terminal .terminal-logo {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+
+@media (max-width: 900px) {
+  .cli-remote-desktop {
+    display: none;
+  }
+
+  .cli-remote-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .cli-terminal .terminal-body {
+    padding: 10px 12px;
+    font-size: 0.65rem;
+    min-height: auto;
+  }
+
+  .cli-terminal .terminal-title {
+    font-size: 0.55rem;
+  }
+
+  .cli-terminal .terminal-logo {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+
+@media (min-width: 1400px) {
+  .feature-hero {
+    grid-template-columns: minmax(280px, 320px) 1fr;
+    max-width: none;
+    padding-left: var(--space-xl);
+    padding-right: var(--space-xl);
+  }
+
+  .feature-hero-animation {
+    max-width: 66vw;
+    width: 66vw;
+  }
+
+  .cli-remote-animation {
+    max-width: none;
+    width: 100%;
+  }
+
+  .cli-terminal .terminal-body {
+    min-height: 320px;
+    font-size: 0.75rem;
+  }
+
+  .cli-terminal .terminal-title {
+    font-size: 0.7rem;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .cli-fade-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -1,0 +1,51 @@
+<header class="site-header">
+  <nav class="site-nav">
+    <a href="/" class="logo-link">
+      <img src="/files/images/logo.svg" alt="{{ORG_NAME}}" class="logo-svg" />
+    </a>
+    <button class="mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    <div class="nav-links">
+      {{#each site.header_nav.items}}
+      {{#if this.dropdown}}
+      <div class="nav-dropdown">
+        {{#if (eq this.href "#")}}
+        <span class="nav-dropdown-trigger">
+          {{this.label}}
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        {{else}}
+        <a href="{{this.href}}" class="nav-dropdown-trigger">
+          {{this.label}}
+          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+            <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        {{/if}}
+        <div class="nav-dropdown-menu{{#unless this.sections.[0].title}} nav-dropdown-menu--narrow{{/unless}}">
+          {{#each this.sections}}
+          <div class="dropdown-section">
+            {{#if this.title}}<h4>{{this.title}}</h4>{{/if}}
+            {{#each this.links}}
+            <a href="{{this.href}}">{{this.label}}</a>
+            {{/each}}
+          </div>
+          {{/each}}
+          {{#if this.view_all}}
+          <a href="{{this.view_all.href}}" class="dropdown-view-all">{{this.view_all.label}} &rarr;</a>
+          {{/if}}
+        </div>
+      </div>
+      {{else}}
+      <a href="{{this.href}}"{{#if this.external}} target="_blank" rel="noopener"{{/if}}>{{this.label}}</a>
+      {{/if}}
+      {{/each}}
+      <a href="{{site.header_nav.cta.href}}" class="cta-button"{{#if site.header_nav.cta.external}} target="_blank" rel="noopener"{{/if}}>{{site.header_nav.cta.label}}</a>
+    </div>
+  </nav>
+</header>

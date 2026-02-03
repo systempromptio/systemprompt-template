@@ -1,0 +1,8 @@
+extension:
+  type: mcp
+  name: content-manager
+  binary: systemprompt-mcp-content-manager
+  description: Content Manager MCP Server - Create and manage blog content with AI
+  port: 5040
+  build_type: workspace
+  enabled: true

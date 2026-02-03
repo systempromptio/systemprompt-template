@@ -1,0 +1,47 @@
+[package]
+name = "systemprompt-mcp-content-manager"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "systemprompt-mcp-content-manager"
+path = "src/main.rs"
+
+[lib]
+name = "systemprompt_mcp_content_manager"
+path = "src/lib.rs"
+
+[dependencies]
+# Core framework (facade)
+systemprompt = { workspace = true, features = ["full"] }
+
+# Web extension for content repository
+systemprompt-web-extension = { path = "../../web" }
+
+# MCP Protocol
+rmcp = { workspace = true }
+
+# Web framework
+axum = { workspace = true }
+
+# Runtime
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# JSON Schema (must match rmcp's version)
+schemars = "1.2"
+
+# Utilities
+futures = { workspace = true }
+sha2 = { workspace = true }
+url = { workspace = true }
+
+[lints]
+workspace = true

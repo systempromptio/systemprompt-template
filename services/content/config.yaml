@@ -8,12 +8,12 @@ content_sources:
     category_id: "blog"
     enabled: true
     description: "Blog articles and announcements"
-    allowed_content_types: ["article", "tutorial", "announcement"]
+    allowed_content_types: ["blog"]
     branding:
       name: "Blog"
       description: "Articles and updates"
       image: "/images/blog/og-default.png"
-      keywords: "blog, articles, tutorials"
+      keywords: "blog, articles, announcements, guides"
     indexing:
       clear_before: false
       recursive: true
@@ -29,33 +29,39 @@ content_sources:
         priority: 0.9
         changefreq: "daily"
 
-  docs:
-    path: "content/docs"
-    source_id: "docs"
-    category_id: "docs"
+  documentation:
+    path: "content/documentation"
+    source_id: "documentation"
+    category_id: "documentation"
     enabled: true
     description: "Documentation and guides"
-    allowed_content_types: ["guide", "reference", "tutorial"]
+    allowed_content_types: ["guide", "reference", "tutorial", "docs", "feature"]
     branding:
       name: "Documentation"
       description: "Guides and reference documentation"
-      keywords: "docs, documentation, guides"
+      image: "/files/images/logo.png"
+      keywords: "docs, documentation, guides, systemprompt, mcp, agents"
     indexing:
       clear_before: false
       recursive: true
     sitemap:
       enabled: true
-      url_pattern: "/docs/{slug}"
+      url_pattern: "/documentation/{slug}"
       priority: 0.7
       changefreq: "weekly"
       fetch_from: "database"
+      parent_route:
+        enabled: false
+        url: "/documentation"
+        priority: 0.9
+        changefreq: "daily"
 
   legal:
     path: "content/legal"
     source_id: "legal"
     category_id: "pages"
     enabled: true
-    allowed_content_types: ["page"]
+    allowed_content_types: ["legal"]
     indexing:
       recursive: true
     sitemap:
@@ -77,13 +83,40 @@ content_sources:
       recursive: true
       override_existing: true
 
+  playbooks:
+    path: "content/playbooks"
+    source_id: "playbooks"
+    category_id: "playbooks"
+    enabled: true
+    description: "Step-by-step guides for common tasks"
+    allowed_content_types: ["playbook"]
+    branding:
+      name: "Playbooks"
+      description: "Step-by-step guides for CLI operations, development, and content creation"
+      image: "/files/images/logo.png"
+      keywords: "playbooks, guides, cli, systemprompt"
+    indexing:
+      clear_before: false
+      recursive: true
+    sitemap:
+      enabled: true
+      url_pattern: "/playbooks/{slug}"
+      priority: 0.7
+      changefreq: "weekly"
+      fetch_from: "database"
+      parent_route:
+        enabled: true
+        url: "/playbooks"
+        priority: 0.8
+        changefreq: "daily"
+
 categories:
   blog:
     name: "Blog"
     slug: "blog"
-  docs:
+  documentation:
     name: "Documentation"
-    slug: "docs"
+    slug: "documentation"
   pages:
     name: "Pages"
     slug: "pages"
@@ -91,6 +124,10 @@ categories:
     name: "Skills"
     slug: "skills"
     description: "Agent skills for AI-powered automation"
+  playbooks:
+    name: "Playbooks"
+    slug: "playbooks"
+    description: "Step-by-step guides for common tasks"
 
 metadata:
   default_author: "Author"
@@ -98,15 +135,15 @@ metadata:
 
   structured_data:
     organization:
-      name: "Your Project"
-      url: "https://yourproject.com"
-      logo: "https://yourproject.com/assets/logos/logo.png"
-      description: "A modern web application built with SystemPrompt"
+      name: "systemprompt.io"
+      url: "https://systemprompt.io"
+      logo: "https://systemprompt.io/files/images/logo.png"
+      description: "The production harness for AI superagents"
 
     blog:
       type: "Blog"
       name: "Blog"
-      url: "https://yourproject.com/blog"
+      url: "https://systemprompt.io/blog"
       description: "Articles and updates"
       article_section: "Technology"
       language: "en-US"

@@ -1,79 +1,73 @@
 # Web Configuration
-# Theme, branding, and UI settings for systemprompt-template
-# A clean, neutral starter theme with teal accent
+# Main entry point - loads additional config from config/ directory
+#
+# Split config structure:
+#   config/features/*.yaml  - Feature landing pages
+#   config/navigation.yaml  - Header, footer, sidebar navigation
+#   config/homepage.yaml    - Homepage content sections
+#   config/theme.yaml       - Colors, typography, spacing
 
-paths:
-  templates: "services/web/templates"
-  assets: "services/web/assets"
-
-content:
-  config_file: "services/content/config.yml"
-  sources:
-    - blog
-    - legal
-    - docs
-
+# Branding (required for validation, also in config/theme.yaml for runtime)
 branding:
-  name: "Your Project"
-  title: "Your Project"
-  description: "A modern web application built with SystemPrompt"
-  themeColor: "#0d9488"
+  name: "systemprompt.io"
+  title: "AI Agent Infrastructure | Deploy Production AI Apps - systemprompt.io"
+  description: "Production-ready AI infrastructure with built-in auth, MCP hosting, agent orchestration, and user isolation. One Rust binary, deploy anywhere."
+  copyright: "2025 systemprompt.io. All rights reserved."
+  themeColor: "#f79938"
   display_sitename: true
-  twitter_handle: "@yourhandle"
+  twitter_handle: "@systemprompt"
+  image: "/files/images/logo.png"
   logo:
     primary:
-      svg: "/assets/logos/logo.svg"
-      webp: "/assets/logos/logo.webp"
-      png: "/assets/logos/logo.png"
+      svg: "/files/images/logo.svg"
+      webp: "/files/images/logo.webp"
+      png: "/files/images/logo.png"
     dark:
-      png: "/assets/logos/logo-dark.png"
+      png: "/files/images/logo.png"
     small:
-      png: "/assets/logos/logo-512.png"
-  favicon: "/favicon.ico"
+      png: "/files/images/logo.png"
+  favicon: "/files/images/favicon.ico"
 
 fonts:
   body:
-    family: "Inter"
+    family: "OpenSans"
     fallback: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
     files:
-      - path: "/fonts/Inter/Inter-Regular.ttf"
+      - path: "/files/fonts/OpenSans/OpenSans-Regular.ttf"
         weight: 400
         style: "normal"
-      - path: "/fonts/Inter/Inter-Medium.ttf"
+      - path: "/files/fonts/OpenSans/OpenSans-Medium.ttf"
         weight: 500
         style: "normal"
-      - path: "/fonts/Inter/Inter-SemiBold.ttf"
+      - path: "/files/fonts/OpenSans/OpenSans-SemiBold.ttf"
         weight: 600
         style: "normal"
-      - path: "/fonts/Inter/Inter-Bold.ttf"
+      - path: "/files/fonts/OpenSans/OpenSans-Bold.ttf"
         weight: 700
         style: "normal"
   heading:
-    family: "Inter"
+    family: "Zepto"
     fallback: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
     files:
-      - path: "/fonts/Inter/Inter-SemiBold.ttf"
-        weight: 600
-        style: "normal"
-      - path: "/fonts/Inter/Inter-Bold.ttf"
-        weight: 700
+      - path: "/files/fonts/Zepto/Zepto.woff"
+        weight: 400
         style: "normal"
   brand:
-    family: "Inter"
+    family: "Zepto"
     fallback: "system-ui, sans-serif"
     files:
-      - path: "/fonts/Inter/Inter-Bold.ttf"
-        weight: 700
+      - path: "/files/fonts/Zepto/Zepto.woff"
+        weight: 400
         style: "normal"
 
 colors:
   light:
     primary:
-      hsl: "hsl(172, 82%, 29%)"
-      rgb: [13, 148, 136]
+      hsl: "hsl(28, 91%, 50%)"
+      rgb: [243, 131, 24]
     secondary:
-      hsl: "hsl(215, 16%, 47%)"
-      rgb: [100, 116, 139]
+      hsl: "hsl(28, 91%, 40%)"
+      rgb: [195, 105, 19]
     success: "#10b981"
     warning: "#f59e0b"
     error: "#ef4444"
@@ -81,7 +75,7 @@ colors:
       default: "#FFFFFF"
       dark: "#F8FAFC"
       variant: "#F1F5F9"
-      secondaryContainer: "#E2E8F0"
+      secondaryContainer: "#FEF3E2"
       errorContainer: "#FEE2E2"
     text:
       primary: "#0F172A"
@@ -97,32 +91,32 @@ colors:
       outline: "#94A3B8"
   dark:
     primary:
-      hsl: "hsl(172, 66%, 50%)"
-      rgb: [45, 212, 191]
+      hsl: "hsl(28, 91%, 60%)"
+      rgb: [247, 153, 56]
     secondary:
-      hsl: "hsl(215, 20%, 65%)"
-      rgb: [148, 163, 184]
+      hsl: "hsl(28, 91%, 70%)"
+      rgb: [250, 186, 115]
     success: "#34d399"
     warning: "#fbbf24"
     error: "#f87171"
     surface:
-      default: "#1E293B"
-      dark: "#0F172A"
-      variant: "#334155"
-      secondaryContainer: "rgba(148, 163, 184, 0.1)"
+      default: "#1A1A1A"
+      dark: "#0A0A0A"
+      variant: "#2A2A2A"
+      secondaryContainer: "rgba(247, 153, 56, 0.1)"
       errorContainer: "rgba(248, 113, 113, 0.1)"
     text:
-      primary: "#F1F5F9"
-      secondary: "#94A3B8"
-      inverted: "#0F172A"
-      disabled: "#64748B"
+      primary: "#FFFFFF"
+      secondary: "#A0A0A0"
+      inverted: "#000000"
+      disabled: "#666666"
     background:
-      default: "#0F172A"
-      dark: "#020617"
+      default: "#000000"
+      dark: "#000000"
     border:
-      default: "rgba(148, 163, 184, 0.2)"
-      dark: "#334155"
-      outline: "#475569"
+      default: "rgba(255, 255, 255, 0.1)"
+      dark: "#333333"
+      outline: "#666666"
 
 typography:
   sizes:
@@ -160,12 +154,12 @@ shadows:
     sm: "0 1px 2px rgba(0, 0, 0, 0.04)"
     md: "0 4px 6px rgba(0, 0, 0, 0.07)"
     lg: "0 10px 15px rgba(0, 0, 0, 0.1)"
-    accent: "0 4px 14px rgba(13, 148, 136, 0.15)"
+    accent: "0 4px 14px rgba(247, 153, 56, 0.15)"
   dark:
     sm: "0 2px 4px rgba(0, 0, 0, 0.3)"
     md: "0 4px 8px rgba(0, 0, 0, 0.4)"
     lg: "0 10px 20px rgba(0, 0, 0, 0.5)"
-    accent: "0 4px 14px rgba(45, 212, 191, 0.2)"
+    accent: "0 4px 14px rgba(247, 153, 56, 0.25)"
 
 animation:
   fast: "150ms"
@@ -180,7 +174,7 @@ zIndex:
   tooltip: 2000
 
 layout:
-  headerHeight: "56px"
+  headerHeight: "72px"
   sidebarLeft:
     width: "20%"
     minWidth: "240px"
@@ -189,21 +183,21 @@ layout:
     width: "15%"
     minWidth: "200px"
     maxWidth: "280px"
-  navHeight: "64px"
-  contentMaxWidth: "1280px"
+  navHeight: "72px"
+  contentMaxWidth: "1200px"
 
 card:
   radius:
-    default: "12px"
+    default: "16px"
     cut: "4px"
   padding:
     sm: "12px"
     md: "16px"
     lg: "24px"
   gradient:
-    start: "rgba(13, 148, 136, 0.06)"
-    mid: "rgba(13, 148, 136, 0.03)"
-    end: "rgba(13, 148, 136, 0.01)"
+    start: "rgba(247, 153, 56, 0.08)"
+    mid: "rgba(247, 153, 56, 0.04)"
+    end: "rgba(247, 153, 56, 0.01)"
 
 mobile:
   spacing:
@@ -222,7 +216,7 @@ mobile:
       xl: "19px"
       xxl: "26px"
   layout:
-    headerHeight: "56px"
+    headerHeight: "64px"
     navHeight: "64px"
   card:
     padding:
@@ -235,27 +229,25 @@ touchTargets:
   sm: "40px"
   lg: "48px"
 
-navigation:
-  footer:
-    legal:
-      - path: "/legal/privacy-policy"
-        label: "Privacy Policy"
-      - path: "/legal/cookie-policy"
-        label: "Cookie Policy"
-      - path: "/legal/terms-of-service"
-        label: "Terms of Service"
-    resources:
-      - path: "/blog"
-        label: "Blog"
-      - path: "/docs"
-        label: "Documentation"
-  social:
-    - href: "https://github.com/your-org"
-      type: "github"
-      label: "GitHub"
-    - href: "https://twitter.com/yourhandle"
-      type: "twitter"
-      label: "Twitter"
+# Navigation configuration is in config/navigation.yaml
+
+paths:
+  templates: "services/web/templates"
+  assets: "services/web/assets"
+  css_url_prefix: "/css"
+
+scripts:
+  - src: "/files/js/analytics.js"
+    defer: true
+    async: false
+
+content:
+  config_file: "services/content/config.yaml"
+  sources:
+    - blog
+    - legal
+    - docs
+    - playbooks
 
 social_action_bar:
   label: "Follow:"
@@ -263,3 +255,11 @@ social_action_bar:
     - type: "github"
     - type: "twitter"
   enable_share: true
+
+nav:
+  app_url: "https://app.systemprompt.io"
+  docs_url: "/documentation"
+  blog_url: "/blog"
+  playbooks_url: "/playbooks"
+  github_url: "https://github.com/systempromptio/systemprompt-core"
+  getting_started_url: "https://github.com/systempromptio/systemprompt-template"

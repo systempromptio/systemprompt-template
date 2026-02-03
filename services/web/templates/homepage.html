@@ -1,235 +1,1332 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{#if site.branding.title}}{{site.branding.title}}{{else}}systemprompt.io{{/if}}</title>
-    <meta name="description" content="{{#if site.branding.description}}{{site.branding.description}}{{else}}Build and deploy AI agents with ease{{/if}}">
+    {{{HEAD_ASSETS}}}
+    <title>{{site.branding.title}}</title>
+    <meta name="description" content="{{site.branding.description}}">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="{{site.branding.favicon}}">
 
     <!-- Open Graph -->
-    <meta property="og:title" content="{{#if site.branding.title}}{{site.branding.title}}{{else}}systemprompt.io{{/if}}">
-    <meta property="og:description" content="{{#if site.branding.description}}{{site.branding.description}}{{else}}Build and deploy AI agents with ease{{/if}}">
+    <meta property="og:title" content="{{site.branding.title}}">
+    <meta property="og:description" content="{{site.branding.description}}">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="https://systemprompt.io">
+    <meta property="og:image" content="https://systemprompt.io{{site.branding.logo.primary.png}}">
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="{{site.branding.twitter_handle}}">
+    <meta name="twitter:title" content="{{site.branding.title}}">
+    <meta name="twitter:description" content="{{site.branding.description}}">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="{{site.branding.themeColor}}">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://systemprompt.io">
+
+    <!-- Twitter Image (required for complete card) -->
+    <meta name="twitter:image" content="https://systemprompt.io{{site.branding.logo.primary.png}}">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://systemprompt.io/#organization",
+          "name": "SystemPrompt",
+          "url": "https://systemprompt.io",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://systemprompt.io/files/images/logo.png",
+            "width": 512,
+            "height": 512
+          },
+          "description": "The multiplayer runtime for AI. Ship AI products with auth, permissions, and user isolation built in.",
+          "sameAs": [
+            "https://github.com/systempromptio",
+            "https://twitter.com/systemprompt"
+          ],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer support",
+            "email": "info@systemprompt.io"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://systemprompt.io/#website",
+          "url": "https://systemprompt.io",
+          "name": "SystemPrompt",
+          "description": "Ship AI to your users - The multiplayer runtime for AI",
+          "publisher": { "@id": "https://systemprompt.io/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://systemprompt.io/search?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://systemprompt.io/#software",
+          "name": "SystemPrompt",
+          "applicationCategory": "DeveloperApplication",
+          "applicationSubCategory": "AI Development Platform",
+          "operatingSystem": "Linux, macOS, Windows",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "description": "50MB Rust binary with production-ready AI infrastructure including auth, MCP hosting, agent orchestration, and observability.",
+          "featureList": [
+            "OAuth2/OIDC + WebAuthn authentication",
+            "MCP server hosting with OAuth",
+            "Multi-agent orchestration via A2A protocol",
+            "Built-in observability and audit trails",
+            "Multi-tenant user isolation"
+          ],
+          "downloadUrl": "https://github.com/systempromptio/systemprompt-template",
+          "author": { "@id": "https://systemprompt.io/#organization" }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {{#each site.homepage.faq.items}}
+            {
+              "@type": "Question",
+              "name": "{{this.question}}",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "{{this.answer}}"
+              }
+            }{{#unless @last}},{{/unless}}
+            {{/each}}
+          ]
+        },
+        {
+          "@type": "HowTo",
+          "name": "Get Started with SystemPrompt",
+          "description": "Deploy AI agents to production in minutes",
+          "step": [
+            {{#each site.homepage.how_it_works.steps}}
+            {
+              "@type": "HowToStep",
+              "position": {{this.number}},
+              "name": "{{this.title}}",
+              "text": "{{this.description}}"
+            }{{#unless @last}},{{/unless}}
+            {{/each}}
+          ]
         }
+      ]
+    }
+    </script>
 
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #1a1a1a;
-            background: #ffffff;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        /* Header */
-        header {
-            padding: 20px 0;
-            border-bottom: 1px solid #e5e5e5;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1a1a1a;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 32px;
-            align-items: center;
-        }
-
-        .nav-links a {
-            color: #666;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover {
-            color: #1a1a1a;
-        }
-
-        .cta-button {
-            background: #1a1a1a;
-            color: #fff !important;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-
-        .cta-button:hover {
-            background: #333;
-        }
-
-        /* Hero */
-        .hero {
-            padding: 100px 0;
-            text-align: center;
-        }
-
-        .hero h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 24px;
-            letter-spacing: -0.02em;
-        }
-
-        .hero p {
-            font-size: 1.25rem;
-            color: #666;
-            max-width: 600px;
-            margin: 0 auto 40px;
-        }
-
-        .primary-cta {
-            display: inline-block;
-            background: #1a1a1a;
-            color: #fff;
-            padding: 16px 32px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            text-decoration: none;
-            transition: background 0.2s;
-        }
-
-        .primary-cta:hover {
-            background: #333;
-        }
-
-        /* Features */
-        .features {
-            padding: 80px 0;
-            background: #f9f9f9;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-        }
-
-        .feature {
-            background: #fff;
-            padding: 32px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .feature h3 {
-            font-size: 1.25rem;
-            margin-bottom: 12px;
-        }
-
-        .feature p {
-            color: #666;
-        }
-
-        /* Footer */
-        footer {
-            padding: 40px 0;
-            border-top: 1px solid #e5e5e5;
-            text-align: center;
-            color: #666;
-        }
-
-        footer a {
-            color: #666;
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            color: #1a1a1a;
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-
-            .nav-links {
-                gap: 16px;
-            }
-        }
-    </style>
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/homepage.css">
 </head>
 <body>
-    <header>
-        <div class="container">
-            <nav>
-                <a href="/" class="logo">{{#if site.branding.name}}{{site.branding.name}}{{else}}systemprompt.io{{/if}}</a>
-                <div class="nav-links">
-                    <a href="{{#if nav.blog_url}}{{nav.blog_url}}{{else}}/blog{{/if}}">Blog</a>
-                    <a href="{{#if nav.app_url}}{{nav.app_url}}{{else}}/app{{/if}}" class="cta-button">Launch App</a>
-                </div>
-            </nav>
-        </div>
-    </header>
+    {{{HEADER}}}
 
     <main>
+        <!-- Hero Section -->
         <section class="hero">
+            <!-- Simplified mobile diagram (full-width Z-pattern with orbits) -->
+            <div class="hero-diagram-mobile">
+                <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <filter id="glow-mobile" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+
+                    <!-- Static connection lines (no animation on mobile) -->
+                    <path d="M75,55 Q130,50 140,100" fill="none" stroke="var(--orange-600)" stroke-width="2" opacity="0.4"/>
+                    <path d="M260,200 Q290,230 325,245" fill="none" stroke="var(--orange-600)" stroke-width="2" opacity="0.4"/>
+
+                    <!-- Claude node (top-left) -->
+                    <g transform="translate(45,55)">
+                        <circle r="30" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" opacity="0.9"/>
+                        <image href="/files/images/brands/claude.svg" x="-20" y="-20" width="40" height="40"/>
+                    </g>
+
+                    <!-- SystemPrompt hub (center) with orbital features -->
+                    <g transform="translate(200,150)">
+                        <!-- Orbital ring -->
+                        <circle r="70" fill="none" stroke="var(--orange-600)" stroke-width="1" opacity="0.2" stroke-dasharray="4,4"/>
+
+                        <!-- Mini orbital icons -->
+                        <g class="orbit-icon" transform="translate(-55,-40)">
+                            <circle r="14" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+                            <text text-anchor="middle" y="3" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="6">AUTH</text>
+                        </g>
+                        <g class="orbit-icon" transform="translate(55,-40)">
+                            <circle r="14" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+                            <text text-anchor="middle" y="3" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="6">USERS</text>
+                        </g>
+                        <g class="orbit-icon" transform="translate(-65,15)">
+                            <circle r="14" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+                            <text text-anchor="middle" y="3" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="6">AI</text>
+                        </g>
+                        <g class="orbit-icon" transform="translate(65,15)">
+                            <circle r="14" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+                            <text text-anchor="middle" y="3" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="6">JOBS</text>
+                        </g>
+                        <g class="orbit-icon" transform="translate(0,60)">
+                            <circle r="14" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+                            <text text-anchor="middle" y="3" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="6">LOGS</text>
+                        </g>
+
+                        <!-- Core hub - refined layered effect -->
+                        <circle r="42" fill="var(--orange-600)" opacity="0.08" filter="url(#glow-mobile)"/>
+                        <circle r="40" fill="none" stroke="var(--orange-600)" stroke-width="0.5" opacity="0.3"/>
+                        <circle r="38" fill="none" stroke="var(--orange-500)" stroke-width="0.5" opacity="0.5" stroke-dasharray="2,3"/>
+                        <circle r="36" fill="none" stroke="var(--orange-500)" stroke-width="1" opacity="0.7"/>
+                        <circle r="34" fill="var(--color-surface)" stroke="var(--orange-500)" stroke-width="0.5"/>
+                        <!-- SystemPrompt logo -->
+                        <image href="/files/images/logo.svg" x="-28" y="-5" width="56" height="10"/>
+                    </g>
+
+                    <!-- Web/Deploy node (bottom-right) -->
+                    <g transform="translate(355,245)">
+                        <circle r="30" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" opacity="0.9"/>
+                        <svg x="-16" y="-16" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- Background architecture diagram -->
+            <div class="hero-diagram">
+                <svg viewBox="0 0 800 600" class="arch-hero" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <!-- Glow filter -->
+                        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                        <!-- Subtle hub glow -->
+                        <filter id="hub-glow" x="-100%" y="-100%" width="300%" height="300%">
+                            <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+
+                    <!-- Connection lines - stop at circle edges -->
+                    <g class="connections">
+                        <!-- Upper connections (incoming from AI clients) - stop at edges -->
+                        <path id="conn-in-1" class="connection conn-incoming" d="M268,104 L367,236" />
+                        <path id="conn-in-2" class="connection conn-incoming" d="M357,89 L388,226" />
+                        <path id="conn-in-3" class="connection conn-incoming" d="M443,89 L412,226" />
+                        <path id="conn-in-4" class="connection conn-incoming" d="M532,104 L433,236" />
+                        <!-- Lower connections (outgoing to deployments) - stop at edges -->
+                        <path id="conn-out-1" class="connection conn-outgoing" d="M360,318 L205,466" />
+                        <path id="conn-out-2" class="connection conn-outgoing" d="M400,335 L400,475" />
+                        <path id="conn-out-3" class="connection conn-outgoing" d="M440,318 L595,466" />
+                    </g>
+
+                    <!-- Animated particles - incoming (from clients TO hub) -->
+                    <g class="particles particles-incoming">
+                        <circle class="particle" r="3" fill="var(--orange-400)" filter="url(#glow)">
+                            <animateMotion dur="2.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
+                                <mpath href="#conn-in-1"/>
+                            </animateMotion>
+                        </circle>
+                        <circle class="particle" r="3" fill="var(--orange-400)" filter="url(#glow)">
+                            <animateMotion dur="2.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
+                                <mpath href="#conn-in-2"/>
+                            </animateMotion>
+                        </circle>
+                        <circle class="particle" r="3" fill="var(--orange-400)" filter="url(#glow)">
+                            <animateMotion dur="2.8s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
+                                <mpath href="#conn-in-3"/>
+                            </animateMotion>
+                        </circle>
+                        <circle class="particle" r="3" fill="var(--orange-400)" filter="url(#glow)">
+                            <animateMotion dur="3s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
+                                <mpath href="#conn-in-4"/>
+                            </animateMotion>
+                        </circle>
+                    </g>
+
+                    <!-- Animated particles - outgoing (from hub TO deployments) -->
+                    <g class="particles particles-outgoing">
+                        <circle class="particle" r="3" fill="var(--orange-400)" filter="url(#glow)">
+                            <animateMotion dur="2.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
+                                <mpath href="#conn-out-1"/>
+                            </animateMotion>
+                        </circle>
+                        <circle class="particle" r="3" fill="var(--orange-400)" filter="url(#glow)">
+                            <animateMotion dur="2.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
+                                <mpath href="#conn-out-2"/>
+                            </animateMotion>
+                        </circle>
+                        <circle class="particle" r="3" fill="var(--orange-400)" filter="url(#glow)">
+                            <animateMotion dur="2.8s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
+                                <mpath href="#conn-out-3"/>
+                            </animateMotion>
+                        </circle>
+                    </g>
+
+                    <!-- Central Hub - SystemPrompt (refined layered effect) -->
+                    <g class="hub" transform="translate(400,280)">
+                        <circle class="hub-glow" r="52" fill="var(--orange-600)" filter="url(#hub-glow)" />
+                        <circle class="hub-ring-outer" r="48" fill="none" stroke="var(--orange-600)" stroke-width="0.5" opacity="0.25"/>
+                        <circle class="hub-ring-mid" r="44" fill="none" stroke="var(--orange-600)" stroke-width="0.5" opacity="0.4" stroke-dasharray="2,4"/>
+                        <circle class="hub-ring" r="40" fill="none" stroke="var(--orange-500)" stroke-width="1" opacity="0.7"/>
+                        <circle class="hub-core" r="38" fill="none" stroke="var(--orange-500)" stroke-width="0.5" />
+                        <!-- SystemPrompt logo -->
+                        <image href="/files/images/logo.svg" x="-30" y="-6" width="60" height="12"/>
+                    </g>
+
+                    <!-- Subtle lines connecting capability icons to hub -->
+                    <g class="capability-connections" opacity="0.3">
+                        <line x1="296" y1="210" x2="355" y2="255" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="2,2"/>
+                        <line x1="504" y1="210" x2="445" y2="255" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="2,2"/>
+                        <line x1="524" y1="280" x2="455" y2="280" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="2,2"/>
+                        <line x1="504" y1="350" x2="445" y2="305" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="2,2"/>
+                        <line x1="296" y1="350" x2="355" y2="305" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="2,2"/>
+                        <line x1="276" y1="280" x2="345" y2="280" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="2,2"/>
+                    </g>
+
+                    <!-- Orbital capability icons - what SystemPrompt handles -->
+                    <g class="hub-capabilities">
+                        <!-- AUTH - top left -->
+                        <g class="capability-icon" transform="translate(280,210)">
+                            <circle r="16" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" />
+                            <svg x="-7" y="-7" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="2">
+                                <circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>
+                            </svg>
+                            <text class="capability-label" text-anchor="end" x="-20" y="4" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="7" letter-spacing="0.05em">AUTH</text>
+                        </g>
+                        <!-- USERS - top right -->
+                        <g class="capability-icon" transform="translate(520,210)">
+                            <circle r="16" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" />
+                            <svg x="-7" y="-7" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            <text class="capability-label" text-anchor="start" x="20" y="4" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="7" letter-spacing="0.05em">USERS</text>
+                        </g>
+                        <!-- PERMISSIONS - right -->
+                        <g class="capability-icon" transform="translate(540,280)">
+                            <circle r="16" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" />
+                            <svg x="-7" y="-7" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/>
+                            </svg>
+                            <text class="capability-label" text-anchor="start" x="20" y="4" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="7" letter-spacing="0.05em">PERMISSIONS</text>
+                        </g>
+                        <!-- LOGS - bottom right -->
+                        <g class="capability-icon" transform="translate(520,350)">
+                            <circle r="16" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" />
+                            <svg x="-7" y="-7" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>
+                            </svg>
+                            <text class="capability-label" text-anchor="start" x="20" y="4" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="7" letter-spacing="0.05em">LOGS</text>
+                        </g>
+                        <!-- AI - bottom left -->
+                        <g class="capability-icon" transform="translate(280,350)">
+                            <circle r="16" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" />
+                            <svg x="-7" y="-7" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="2">
+                                <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m9 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
+                            </svg>
+                            <text class="capability-label" text-anchor="end" x="-20" y="4" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="7" letter-spacing="0.05em">AI</text>
+                        </g>
+                        <!-- JOBS - left -->
+                        <g class="capability-icon" transform="translate(260,280)">
+                            <circle r="16" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" />
+                            <svg x="-7" y="-7" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <text class="capability-label" text-anchor="end" x="-20" y="4" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="7" letter-spacing="0.05em">JOBS</text>
+                        </g>
+                    </g>
+
+                    <!-- Vertical timeline on right side - no animation -->
+                    <g class="timeline" transform="translate(720,80)">
+                        <!-- Timeline axis -->
+                        <line x1="0" y1="0" x2="0" y2="400" stroke="var(--orange-600)" stroke-width="1" opacity="0.4" stroke-dasharray="4,4"/>
+
+                        <!-- Timeline labels -->
+                        <text x="0" y="-10" text-anchor="middle" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="8" letter-spacing="0.1em">INSTRUCTION</text>
+                        <text x="0" y="420" text-anchor="middle" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="8" letter-spacing="0.1em">ACTION</text>
+
+                        <!-- Timeline nodes -->
+                        <circle cx="0" cy="0" r="6" fill="var(--color-surface)" stroke="var(--orange-500)" stroke-width="2"/>
+                        <!-- Center node: SystemPrompt icon -->
+                        <g transform="translate(0,200)">
+                            <circle r="14" fill="var(--orange-500)" fill-opacity="0.3" stroke="var(--orange-500)" stroke-width="1.5"/>
+                            <!-- < symbol (smaller) -->
+                            <path d="M-2 -4 L-6 0 L-2 4" stroke="var(--orange-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            <!-- / symbol -->
+                            <path d="M6 -5 L2 5" stroke="var(--orange-400)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        </g>
+                        <circle cx="0" cy="400" r="6" fill="var(--color-surface)" stroke="var(--orange-500)" stroke-width="2"/>
+                    </g>
+
+                    <!-- AI Client Nodes (Upper Arc) - evenly spaced -->
+                    <g class="clients">
+                        <g class="node client-node" transform="translate(250,80)">
+                            <circle r="30" class="node-bg" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8" />
+                            <image class="client-logo" href="/files/images/brands/claude.svg" x="-20" y="-20" width="40" height="40"/>
+                        </g>
+                        <g class="node client-node" transform="translate(350,60)">
+                            <circle r="30" class="node-bg" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8" />
+                            <image class="client-logo" href="/files/images/brands/gemini.svg" x="-20" y="-20" width="40" height="40"/>
+                        </g>
+                        <g class="node client-node" transform="translate(450,60)">
+                            <circle r="30" class="node-bg" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8" />
+                            <image class="client-logo" href="/files/images/brands/moltbot.svg" x="-14" y="-14" width="28" height="28"/>
+                        </g>
+                        <g class="node client-node" transform="translate(550,80)">
+                            <circle r="30" class="node-bg" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8" />
+                            <image class="client-logo" href="/files/images/brands/chatgpt.svg" x="-20" y="-20" width="40" height="40"/>
+                        </g>
+                    </g>
+
+                    <!-- Deployment Nodes (Lower Arc) - consistent orange icons -->
+                    <g class="deployments">
+                        <g class="node deploy-node" transform="translate(180,490)">
+                            <circle r="35" class="node-bg" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8" />
+                            <svg x="-12" y="-12" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5">
+                                <rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h.01M10 12h.01"/><path d="M14 12h4"/>
+                            </svg>
+                            <text class="deploy-label" text-anchor="middle" y="52" fill="var(--color-text-secondary)" font-family="Zepto, system-ui" font-size="8" letter-spacing="0.1em">LOCAL NETWORK</text>
+                        </g>
+                        <g class="node deploy-node" transform="translate(400,510)">
+                            <circle r="35" class="node-bg" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8" />
+                            <svg x="-12" y="-12" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5">
+                                <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>
+                            </svg>
+                            <text class="deploy-label" text-anchor="middle" y="52" fill="var(--color-text-secondary)" font-family="Zepto, system-ui" font-size="8" letter-spacing="0.1em">HARDWARE</text>
+                        </g>
+                        <g class="node deploy-node" transform="translate(620,490)">
+                            <circle r="35" class="node-bg" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" opacity="0.8" />
+                            <svg x="-12" y="-12" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            </svg>
+                            <text class="deploy-label" text-anchor="middle" y="52" fill="var(--color-text-secondary)" font-family="Zepto, system-ui" font-size="8" letter-spacing="0.1em">WEB APP</text>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+
             <div class="container">
-                <h1>{{#if homepage.hero.title}}{{homepage.hero.title}}{{else}}Build AI Agents That Work{{/if}}</h1>
-                <p>{{#if homepage.hero.subtitle}}{{homepage.hero.subtitle}}{{else}}Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.{{/if}}</p>
-                <a href="{{#if nav.app_url}}{{nav.app_url}}{{else}}/app{{/if}}" class="primary-cta">{{#if homepage.hero.cta}}{{homepage.hero.cta}}{{else}}Get Started{{/if}}</a>
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        {{site.homepage.hero.title}}<br>
+                        <span class="highlight">{{site.homepage.hero.title_highlight}}</span>
+                    </h1>
+                    <p class="hero-subtitle">{{site.homepage.hero.subtitle}}</p>
+                    <div class="hero-ctas">
+                        <a href="https://github.com/systempromptio/systemprompt-template" class="primary-cta" target="_blank" rel="noopener">Get Started</a>
+                        <a href="{{site.homepage.hero.cta_secondary_url}}" class="secondary-cta">{{site.homepage.hero.cta_secondary}}</a>
+                    </div>
+                    <div class="integrations-inline">
+                        <p class="integrations-label">{{site.homepage.integrations.label}}</p>
+                        <div class="brand-logos">
+                            {{#each site.homepage.integrations.brands}}
+                            <a href="{{this.url}}" target="_blank" rel="nofollow noopener" title="{{this.name}}">
+                                <img src="{{this.logo}}" alt="{{this.name}}" class="brand-logo">
+                            </a>
+                            {{/each}}
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <section class="features">
+        <!-- Demo Section -->
+        <section class="demo" id="demo">
             <div class="container">
-                <div class="features-grid">
-                    {{#if homepage.features}}
-                    {{#each homepage.features}}
-                    <div class="feature">
-                        <h3>{{this.title}}</h3>
-                        <p>{{this.description}}</p>
+                <h2 class="section-title">Agents with memory. Infrastructure you own.</h2>
+                <p class="demo-subtitle">Build agents that remember users across sessions, learn from their own performance metrics, and communicate with each other via A2A protocol. systemprompt.io is a Rust library, not a platform. You write extensions, compile them in, and own the resulting binary. Ship to your cloud, your servers, your domain. No vendor lock-in. No runtime dependencies on us.</p>
+
+                <div class="terminal-stack" id="terminal-stack">
+                    <!-- Terminal 1: Create -->
+                    <div class="terminal" data-terminal="1">
+                        <div class="terminal-header">
+                            <div class="terminal-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="terminal-title">1. Create: Give your agent a soul</span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-branding">
+                                <img src="/files/images/brands/claude.svg" alt="Claude Code" class="terminal-logo">
+                            </div>
+                            <div class="terminal-line terminal-info">
+                                <span class="output-dim">Authenticating and connecting with https://yourdomain.com</span>
+                            </div>
+                            <div class="terminal-line" data-delay="0">
+                                <span class="prompt">&gt;</span>
+                                <span class="command" data-text="Create a personal assistant that remembers my preferences and learns over time"></span>
+                                <span class="cursor">|</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="1800">
+                                <span class="output-bullet">●</span>
+                                <span class="output">systemprompt admin agents create --name assistant --port 9020</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="2200">
+                                <span class="output-dim">  Agent created: assistant</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="2600">
+                                <span class="output-bullet">●</span>
+                                <span class="output">systemprompt admin agents edit assistant --mcp-server soul</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="3000">
+                                <span class="output-dim">  + Soul enabled: core, long_term, short_term, working memory</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="3400">
+                                <span class="output-bullet">●</span>
+                                <span class="output">systemprompt admin agents edit assistant --instructions</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="3800">
+                                <span class="output-dim">  + "You are a helpful personal assistant. Remember user preferences</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="4000">
+                                <span class="output-dim">    and adapt your responses based on past interactions."</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="4400">
+                                <span class="output-bullet">●</span>
+                                <span class="output">systemprompt admin agents validate assistant</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="4800">
+                                <span class="success-check">✓</span>
+                                <span class="success">Agent ready → assistant has soul and instructions</span>
+                            </div>
+                        </div>
                     </div>
-                    {{/each}}
-                    {{else}}
-                    <div class="feature">
-                        <h3>Feature One</h3>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim ad minim veniam, quis nostrud exercitation.</p>
+
+                    <!-- Terminal 2: Deploy -->
+                    <div class="terminal" data-terminal="2">
+                        <div class="terminal-header">
+                            <div class="terminal-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="terminal-title">2. Deploy: Ship to production</span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-branding">
+                                <img src="/files/images/brands/claude.svg" alt="Claude Code" class="terminal-logo">
+                            </div>
+                            <div class="terminal-line terminal-info">
+                                <span class="output-dim">Authenticating and connecting with https://yourdomain.com</span>
+                            </div>
+                            <div class="terminal-line" data-delay="0">
+                                <span class="prompt">&gt;</span>
+                                <span class="command" data-text="Deploy my assistant to production so I can access it from anywhere"></span>
+                                <span class="cursor">|</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="1600">
+                                <span class="output-bullet">●</span>
+                                <span class="output">systemprompt admin agents edit assistant --enable</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="2000">
+                                <span class="output-dim">  Agent process started: assistant</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="2400">
+                                <span class="output-bullet">●</span>
+                                <span class="output">systemprompt cloud deploy --profile production --yes</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="2800">
+                                <span class="output-dim">  Building image... done</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="3200">
+                                <span class="output-dim">  Pushing to registry... done</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="3600">
+                                <span class="output-dim">  Deploying services... done</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="4000">
+                                <span class="output-bullet">●</span>
+                                <span class="output">systemprompt admin agents registry</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="4400">
+                                <span class="output-dim">  assistant: https://yourdomain.com/api/v1/agents/assistant</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="4800">
+                                <span class="success-check">✓</span>
+                                <span class="success">Live → assistant is now on the World Wide Web</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="feature">
-                        <h3>Feature Two</h3>
-                        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+
+                    <!-- Terminal 3: Connect -->
+                    <div class="terminal" data-terminal="3">
+                        <div class="terminal-header">
+                            <div class="terminal-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="terminal-title">3. Connect: Access external tools and data</span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-branding">
+                                <img src="/files/images/brands/claude.svg" alt="Claude Code" class="terminal-logo">
+                            </div>
+                            <div class="terminal-line terminal-info">
+                                <span class="output-dim">Authenticating and connecting with https://yourdomain.com</span>
+                            </div>
+                            <div class="terminal-line" data-delay="0">
+                                <span class="prompt">&gt;</span>
+                                <span class="command" data-text="Connect my assistant to Moltbook so it can search and save research"></span>
+                                <span class="cursor">|</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="1600">
+                                <span class="output-bullet">●</span>
+                                <span class="output">systemprompt admin config edit</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="2000">
+                                <span class="output-dim">  + integrations.moltbook.enabled: true</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="2300">
+                                <span class="output-dim">  + integrations.moltbook.endpoint: api.moltbook.io</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="2700">
+                                <span class="output-bullet">●</span>
+                                <span class="output">systemprompt plugins test moltbook</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="3100">
+                                <span class="output-dim">  Endpoint: https://api.moltbook.io/v1</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="3400">
+                                <span class="output-dim">  Status: Connected | Latency: 42ms</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="3800">
+                                <span class="output-bullet">●</span>
+                                <span class="output">systemprompt admin agents edit assistant --tool moltbook_search</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="4200">
+                                <span class="output-bullet">●</span>
+                                <span class="output">systemprompt admin agents edit assistant --tool moltbook_create</span>
+                            </div>
+                            <div class="terminal-line terminal-output" data-delay="4600">
+                                <span class="success-check">✓</span>
+                                <span class="success">Connected → assistant can search Moltbook and remember what it learns</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="feature">
-                        <h3>Feature Three</h3>
-                        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                </div>
+
+                <div class="terminal-controls" id="terminal-controls">
+                    <button class="terminal-btn" id="terminal-prev" aria-label="Previous">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m15 18-6-6 6-6"/>
+                        </svg>
+                    </button>
+                    <span class="terminal-indicator" id="terminal-indicator">1 / 3</span>
+                    <button class="terminal-btn" id="terminal-next" aria-label="Next">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m9 18 6-6-6-6"/>
+                        </svg>
+                    </button>
+                    <button class="terminal-btn terminal-btn-replay" id="terminal-replay" aria-label="Replay">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                            <path d="M3 3v5h5"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Diagonal Hero Section - Value Props -->
+        <section class="diagonal-hero">
+            {{#each site.homepage.value_props}}
+            <div class="diagonal-pane diagonal-pane--{{this.id}}">
+                <div class="diagonal-content">
+                    <div class="diagonal-icon">
+                        {{#eq this.icon "rust"}}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor">
+                            <ellipse cx="32" cy="38" rx="26" ry="18"/>
+                            <circle cx="20" cy="28" r="6"/><circle cx="44" cy="28" r="6"/>
+                            <circle cx="20" cy="27" r="2.5" fill="#000"/><circle cx="44" cy="27" r="2.5" fill="#000"/>
+                            <path d="M6 36c-4-6 0-14 4-16" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/>
+                            <path d="M58 36c4-6 0-14-4-16" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/>
+                            <ellipse cx="32" cy="44" rx="8" ry="4" fill="#000" opacity="0.3"/>
+                        </svg>
+                        {{/eq}}
+                        {{#eq this.icon "server"}}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="2" y="2" width="20" height="8" rx="2"/>
+                            <rect x="2" y="14" width="20" height="8" rx="2"/>
+                            <circle cx="6" cy="6" r="1"/><circle cx="6" cy="18" r="1"/>
+                        </svg>
+                        {{/eq}}
+                        {{#eq this.icon "terminal"}}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="2" y="3" width="20" height="18" rx="2"/>
+                            <path d="m7 9 3 3-3 3"/><path d="M13 15h4"/>
+                        </svg>
+                        {{/eq}}
+                        {{#eq this.icon "refresh-cw"}}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                            <path d="M3 21v-5h5"/>
+                        </svg>
+                        {{/eq}}
+                        {{#eq this.icon "brain"}}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2"/>
+                            <circle cx="7.5" cy="13" r="1.5"/><circle cx="16.5" cy="13" r="1.5"/>
+                            <path d="M12 17v-3"/>
+                        </svg>
+                        {{/eq}}
                     </div>
+                    <h2 class="diagonal-title">{{this.title}} <span class="highlight">{{this.title_highlight}}</span></h2>
+                    <p class="diagonal-subtitle">{{this.subtitle}}</p>
+                    <ul class="diagonal-features">
+                        {{#each this.features}}
+                        <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
+                    {{#if this.url}}
+                    <a href="{{this.url}}" class="diagonal-cta">Learn more →</a>
                     {{/if}}
                 </div>
+            </div>
+            {{/each}}
+        </section>
+
+        <!-- Features Section - Bento Grid -->
+        <section class="features">
+            <div class="container">
+                <h2 class="section-title">{{site.homepage.features.title}}</h2>
+                {{#if site.homepage.features.subtitle}}
+                <p class="section-subtitle">{{site.homepage.features.subtitle}}</p>
+                {{/if}}
+                <div class="features-grid">
+                    {{#each site.homepage.features.categories}}
+                    {{#each this.features}}
+                    <a href="{{this.url}}" class="feature-card{{#if @first}}{{#if @../first}} feature-card--lg{{/if}}{{/if}}">
+                        <span class="category-badge">{{../name}}</span>
+                        <div class="feature-icon">
+                            {{#eq this.icon "key"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="7.5" cy="15.5" r="5.5"/>
+                                <path d="m21 2-9.6 9.6"/>
+                                <path d="m15.5 7.5 3 3L22 7l-3-3"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "users"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "folder"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "file-text"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <line x1="10" y1="9" x2="8" y2="9"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "clock"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "server"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect width="20" height="8" x="2" y="2" rx="2" ry="2"/>
+                                <rect width="20" height="8" x="2" y="14" rx="2" ry="2"/>
+                                <line x1="6" x2="6.01" y1="6" y2="6"/>
+                                <line x1="6" x2="6.01" y1="18" y2="18"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "shield"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+                                <path d="m9 12 2 2 4-4"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "eye"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "code"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="16 18 22 12 16 6"/>
+                                <polyline points="8 6 2 12 8 18"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "plug"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22v-5"/>
+                                <path d="M9 8V2"/>
+                                <path d="M15 8V2"/>
+                                <path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "cpu"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                                <rect x="9" y="9" width="6" height="6"/>
+                                <path d="M9 1v3"/>
+                                <path d="M15 1v3"/>
+                                <path d="M9 20v3"/>
+                                <path d="M15 20v3"/>
+                                <path d="M20 9h3"/>
+                                <path d="M20 14h3"/>
+                                <path d="M1 9h3"/>
+                                <path d="M1 14h3"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "git-branch"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="6" x2="6" y1="3" y2="15"/>
+                                <circle cx="18" cy="6" r="3"/>
+                                <circle cx="6" cy="18" r="3"/>
+                                <path d="M18 9a9 9 0 0 1-9 9"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "play"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="6 3 20 12 6 21 6 3"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "bar-chart"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" x2="12" y1="20" y2="10"/>
+                                <line x1="18" x2="18" y1="20" y2="4"/>
+                                <line x1="6" x2="6" y1="20" y2="16"/>
+                            </svg>
+                            {{/eq}}
+                            {{#eq this.icon "layout"}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                                <line x1="3" x2="21" y1="9" y2="9"/>
+                                <line x1="9" x2="9" y1="21" y2="9"/>
+                            </svg>
+                            {{/eq}}
+                        </div>
+                        <h4>{{this.title}}</h4>
+                        <p>{{this.description}}</p>
+                        <span class="feature-link-arrow">→</span>
+                    </a>
+                    {{/each}}
+                    {{/each}}
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section class="how-it-works">
+            <div class="container">
+                <h2 class="section-title">{{site.homepage.how_it_works.title}}</h2>
+                <div class="steps">
+                    {{#each site.homepage.how_it_works.steps}}
+                    <div class="step">
+                        <div class="step-number">{{this.number}}</div>
+                        <h3>{{this.title}}</h3>
+                        <p>{{this.description}}</p>
+                        <code class="step-code">{{this.code}}</code>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+        </section>
+
+        <!-- Playbooks Section -->
+        {{#if site.homepage.playbooks}}
+        <section class="playbooks-section">
+            <div class="container">
+                <h2 class="section-title">{{site.homepage.playbooks.title}} <span class="highlight">{{site.homepage.playbooks.title_highlight}}</span></h2>
+                <p class="section-subtitle">{{site.homepage.playbooks.subtitle}}</p>
+
+                <!-- Featured Playbook -->
+                {{#if site.homepage.playbooks.featured}}
+                <div class="playbooks-featured">
+                    <span class="playbooks-featured__badge">{{site.homepage.playbooks.featured.badge}}</span>
+                    <h3 class="playbooks-featured__title">{{site.homepage.playbooks.featured.title}}</h3>
+                    <p class="playbooks-featured__description">{{site.homepage.playbooks.featured.description}}</p>
+                    <div class="playbooks-featured__code">
+                        <code>$ {{site.homepage.playbooks.featured.code}}</code>
+                    </div>
+                    <a href="{{site.homepage.playbooks.featured.url}}" class="playbooks-featured__cta">Read playbook <span class="arrow">→</span></a>
+                </div>
+                {{/if}}
+
+                <!-- Category Links -->
+                <div class="playbooks-categories playbooks-categories--simple">
+                    {{#each site.homepage.playbooks.categories}}
+                    <a href="{{this.url}}" class="playbooks-category-link" data-category="{{this.id}}">
+                        <span class="playbooks-category-link__name">{{this.name}}</span>
+                        <span class="playbooks-category-link__count">{{this.count}} playbooks</span>
+                        <span class="playbooks-category-link__desc">{{this.description}}</span>
+                    </a>
+                    {{/each}}
+                </div>
+            </div>
+        </section>
+        {{/if}}
+
+        <!-- Use Cases Section -->
+        <section class="use-cases">
+            <div class="container">
+                <h2 class="section-title">{{site.homepage.use_cases.title}}</h2>
+                <div class="use-cases-grid">
+                    {{#each site.homepage.use_cases.cases}}
+                    {{#if this.url}}
+                    <a href="{{this.url}}" class="use-case-card use-case-card--linked">
+                    {{else}}
+                    <div class="use-case-card">
+                    {{/if}}
+                        <div class="use-case-header">
+                            <div class="use-case-icon">
+                                {{#eq this.icon "server"}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="20" height="8" x="2" y="2" rx="2" ry="2"/>
+                                    <rect width="20" height="8" x="2" y="14" rx="2" ry="2"/>
+                                    <line x1="6" x2="6.01" y1="6" y2="6"/>
+                                    <line x1="6" x2="6.01" y1="18" y2="18"/>
+                                </svg>
+                                {{/eq}}
+                                {{#eq this.icon "users"}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                                {{/eq}}
+                                {{#eq this.icon "building"}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="16" height="20" x="4" y="2" rx="2" ry="2"/>
+                                    <path d="M9 22v-4h6v4"/>
+                                    <path d="M8 6h.01"/>
+                                    <path d="M16 6h.01"/>
+                                    <path d="M12 6h.01"/>
+                                    <path d="M12 10h.01"/>
+                                    <path d="M12 14h.01"/>
+                                    <path d="M16 10h.01"/>
+                                    <path d="M16 14h.01"/>
+                                    <path d="M8 10h.01"/>
+                                    <path d="M8 14h.01"/>
+                                </svg>
+                                {{/eq}}
+                                {{#eq this.icon "network"}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="5" r="3"/>
+                                    <circle cx="5" cy="19" r="3"/>
+                                    <circle cx="19" cy="19" r="3"/>
+                                    <line x1="12" y1="8" x2="5" y2="16"/>
+                                    <line x1="12" y1="8" x2="19" y2="16"/>
+                                </svg>
+                                {{/eq}}
+                                {{#eq this.icon "grid"}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="7" height="7" x="3" y="3" rx="1"/>
+                                    <rect width="7" height="7" x="14" y="3" rx="1"/>
+                                    <rect width="7" height="7" x="14" y="14" rx="1"/>
+                                    <rect width="7" height="7" x="3" y="14" rx="1"/>
+                                </svg>
+                                {{/eq}}
+                            </div>
+                            <h3>{{this.title}}</h3>
+                        </div>
+                        <p>{{this.description}}</p>
+                        <pre class="use-case-code"><code>{{this.code}}</code></pre>
+                        {{#if this.url}}
+                        <span class="use-case-link-hint">Learn more &rarr;</span>
+                        {{/if}}
+                    {{#if this.url}}
+                    </a>
+                    {{else}}
+                    </div>
+                    {{/if}}
+                    {{/each}}
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Section -->
+        <section class="comparison">
+            <div class="container">
+                <h2 class="section-title">{{site.homepage.comparison.title}}</h2>
+                <div class="comparison-grid">
+                    <div class="comparison-col">
+                        <h3>{{site.homepage.comparison.superagent.title}}</h3>
+                        <ul>
+                            {{#each site.homepage.comparison.superagent.items}}
+                            <li class="comparison-row">
+                                <span class="comparison-icon">
+                                    {{#eq this.icon "puzzle"}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.802-.97a2.5 2.5 0 1 0-5 0c0 .49-.332.9-.802.97a.98.98 0 0 1-.837-.276L9.796 13.7"/>
+                                    </svg>
+                                    {{/eq}}
+                                    {{#eq this.icon "key"}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="7.5" cy="15.5" r="5.5"/>
+                                        <path d="m21 2-9.6 9.6"/>
+                                        <path d="m15.5 7.5 3 3L22 7l-3-3"/>
+                                    </svg>
+                                    {{/eq}}
+                                    {{#eq this.icon "user"}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    {{/eq}}
+                                    {{#eq this.icon "wrench"}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                                    </svg>
+                                    {{/eq}}
+                                    {{#eq this.icon "layers"}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                                        <polyline points="2 17 12 22 22 17"/>
+                                        <polyline points="2 12 12 17 22 12"/>
+                                    </svg>
+                                    {{/eq}}
+                                    {{#eq this.icon "calendar"}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                                        <line x1="16" y1="2" x2="16" y2="6"/>
+                                        <line x1="8" y1="2" x2="8" y2="6"/>
+                                        <line x1="3" y1="10" x2="21" y2="10"/>
+                                    </svg>
+                                    {{/eq}}
+                                </span>
+                                <span class="comparison-text">{{this.text}}</span>
+                            </li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                    <div class="comparison-col highlight">
+                        <h3>{{site.homepage.comparison.harness.title}}</h3>
+                        <ul>
+                            {{#each site.homepage.comparison.harness.items}}
+                            <li class="comparison-row">
+                                {{#if this.url}}
+                                <a href="{{this.url}}" class="comparison-link">
+                                    <span class="comparison-icon">
+                                        {{#eq this.icon "users"}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="9" cy="7" r="4"/>
+                                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                        </svg>
+                                        {{/eq}}
+                                        {{#eq this.icon "key"}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="7.5" cy="15.5" r="5.5"/>
+                                            <path d="m21 2-9.6 9.6"/>
+                                            <path d="m15.5 7.5 3 3L22 7l-3-3"/>
+                                        </svg>
+                                        {{/eq}}
+                                        {{#eq this.icon "layers"}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                                            <polyline points="2 17 12 22 22 17"/>
+                                            <polyline points="2 12 12 17 22 12"/>
+                                        </svg>
+                                        {{/eq}}
+                                        {{#eq this.icon "shield"}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+                                            <path d="m9 12 2 2 4-4"/>
+                                        </svg>
+                                        {{/eq}}
+                                        {{#eq this.icon "check"}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                            <polyline points="22 4 12 14.01 9 11.01"/>
+                                        </svg>
+                                        {{/eq}}
+                                        {{#eq this.icon "zap"}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                        </svg>
+                                        {{/eq}}
+                                    </span>
+                                    <span class="comparison-text">{{this.text}}</span>
+                                    <span class="comparison-arrow">→</span>
+                                </a>
+                                {{else}}
+                                <span class="comparison-icon">
+                                    {{#eq this.icon "users"}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                    </svg>
+                                    {{/eq}}
+                                </span>
+                                <span class="comparison-text">{{this.text}}</span>
+                                {{/if}}
+                            </li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Section - Open Standards & Extensions -->
+        <section class="technical-section">
+            <div class="container">
+                <!-- Section Header -->
+                <div class="technical-header">
+                    <h2 class="section-title">{{site.homepage.technical.title}}</h2>
+                    <p class="technical-tagline">{{site.homepage.technical.subtitle}}</p>
+                    <p class="section-subtitle">{{site.homepage.technical.tagline}}</p>
+                </div>
+
+                <!-- Standards Showcase -->
+                <div class="standards-grid">
+                    {{#each site.homepage.technical.standards}}
+                    <a href="{{this.link}}" class="standard-card">
+                        <div class="standard-logo">
+                            <img src="{{this.logo}}" alt="{{this.name}}" />
+                        </div>
+                        <div class="standard-content">
+                            <h3 class="standard-name">{{this.short_name}}</h3>
+                            <p class="standard-tagline">{{this.tagline}}</p>
+                            <p class="standard-description">{{this.description}}</p>
+                            <ul class="standard-benefits">
+                                {{#each this.benefits}}
+                                <li>{{this}}</li>
+                                {{/each}}
+                            </ul>
+                        </div>
+                    </a>
+                    {{/each}}
+                </div>
+
+                <!-- Extensions Showcase -->
+                <div class="extensions-showcase">
+                    <div class="extensions-header">
+                        <h3 class="extensions-title">{{site.homepage.technical.extensions.title}}</h3>
+                        <p class="extensions-subtitle">{{site.homepage.technical.extensions.subtitle}}</p>
+                    </div>
+
+                    <div class="ownership-callout">
+                        <div class="ownership-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M20 7h-3a2 2 0 0 1-2-2V2"/>
+                                <path d="M9 18a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h7l4 4v10a2 2 0 0 1-2 2H9Z"/>
+                                <path d="M3 7.6v12.8A1.6 1.6 0 0 0 4.6 22h9.8"/>
+                            </svg>
+                        </div>
+                        <p class="ownership-message">{{site.homepage.technical.extensions.ownership_message}}</p>
+                    </div>
+
+                    <!-- Extension Traits Tabs -->
+                    <div class="extension-traits">
+                        <div class="trait-tabs">
+                            {{#each site.homepage.technical.extensions.traits}}
+                            <button class="trait-tab" data-trait="{{this.name}}">
+                                <span>{{this.name}}</span>
+                            </button>
+                            {{/each}}
+                        </div>
+
+                        <div class="trait-panels">
+                            {{#each site.homepage.technical.extensions.traits}}
+                            <div class="trait-panel" data-trait="{{this.name}}">
+                                <div class="trait-info">
+                                    <h4>{{this.name}}</h4>
+                                    <p>{{this.description}}</p>
+                                    {{#if this.url}}
+                                    <a href="{{this.url}}" class="trait-learn-more">View documentation →</a>
+                                    {{/if}}
+                                </div>
+                                <div class="trait-code">
+                                    <pre><code>{{this.code}}</code></pre>
+                                </div>
+                            </div>
+                            {{/each}}
+                        </div>
+                    </div>
+
+                    <!-- Architecture Note -->
+                    <div class="architecture-note">
+                        <h4>Compile-time discovery</h4>
+                        <p>{{site.homepage.technical.extensions.architecture_note}}</p>
+                    </div>
+                </div>
+
+                <!-- Differentiator Grid -->
+                <div class="differentiator-section">
+                    <h3 class="differentiator-title">{{site.homepage.technical.differentiator.title}}</h3>
+                    <div class="differentiator-grid">
+                        {{#each site.homepage.technical.differentiator.items}}
+                        <div class="differentiator-card">
+                            <div class="differentiator-icon">
+                                {{#eq this.icon "package"}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                                    <path d="m3.3 7 8.7 5 8.7-5"/>
+                                    <path d="M12 22V12"/>
+                                </svg>
+                                {{/eq}}
+                                {{#eq this.icon "git-branch"}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="6" y1="3" x2="6" y2="15"/>
+                                    <circle cx="18" cy="6" r="3"/>
+                                    <circle cx="6" cy="18" r="3"/>
+                                    <path d="M18 9a9 9 0 0 1-9 9"/>
+                                </svg>
+                                {{/eq}}
+                                {{#eq this.icon "lock"}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                                {{/eq}}
+                                {{#eq this.icon "check-circle"}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                                {{/eq}}
+                                {{#eq this.icon "rocket"}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+                                    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+                                    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+                                    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+                                </svg>
+                                {{/eq}}
+                            </div>
+                            <h4>{{this.title}}</h4>
+                            <p>{{this.description}}</p>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+
+                <!-- CTAs -->
+                <div class="technical-ctas">
+                    <a href="{{site.homepage.technical.cta_primary_url}}" class="primary-cta">{{site.homepage.technical.cta_primary}}</a>
+                    <a href="{{site.homepage.technical.cta_secondary_url}}" class="secondary-cta">{{site.homepage.technical.cta_secondary}}</a>
+                </div>
+            </div>
+        </section>
+
+        <script>
+        // Extension trait tabs - initialize first tab as active
+        (function() {
+            const tabs = document.querySelectorAll('.trait-tab');
+            const panels = document.querySelectorAll('.trait-panel');
+
+            // Initialize: set first tab and panel as active
+            if (tabs.length > 0) {
+                tabs[0].classList.add('active');
+                panels[0].classList.add('active');
+            }
+
+            // Handle tab clicks
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const traitName = tab.dataset.trait;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    panels.forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelector('.trait-panel[data-trait="' + traitName + '"]').classList.add('active');
+                });
+            });
+        })();
+        </script>
+
+        <!-- Pricing Section -->
+        <section class="pricing">
+            <div class="container">
+                <h2 class="section-title">{{site.homepage.pricing.title}}</h2>
+                {{#if site.homepage.pricing.subtitle}}
+                <p class="section-subtitle">{{site.homepage.pricing.subtitle}}</p>
+                {{/if}}
+                <div class="pricing-grid">
+                    {{#each site.homepage.pricing.tiers}}
+                    <div class="pricing-card{{#if this.highlight}} highlight{{/if}}">
+                        <h3>{{this.name}}</h3>
+                        <div class="pricing-price">{{this.price}}</div>
+                        <p class="pricing-description">{{this.description}}</p>
+                        <ul class="pricing-features">
+                            {{#each this.features}}
+                            <li>{{this}}</li>
+                            {{/each}}
+                        </ul>
+                        <a href="{{this.cta_url}}" class="{{#if this.highlight}}primary-cta{{else}}secondary-cta{{/if}}">{{this.cta}}</a>
+                    </div>
+                    {{/each}}
+                </div>
+                {{#if site.homepage.pricing.docs_url}}
+                <div class="pricing-cta-bottom">
+                    <a href="{{site.homepage.pricing.docs_url}}" class="secondary-cta">Learn more about pricing</a>
+                </div>
+                {{/if}}
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="faq">
+            <div class="container">
+                <h2 class="section-title">{{site.homepage.faq.title}}</h2>
+                <div class="faq-list">
+                    {{#each site.homepage.faq.items}}
+                    <details class="faq-item">
+                        <summary>{{this.question}}</summary>
+                        <p>{{this.answer}}</p>
+                    </details>
+                    {{/each}}
+                </div>
+            </div>
+        </section>
+
+        <!-- Final CTA Section -->
+        <section class="final-cta">
+            <div class="container">
+                <h2>{{site.homepage.final_cta.title}}</h2>
+                <p>{{site.homepage.final_cta.subtitle}}</p>
+                <a href="https://github.com/systempromptio/systemprompt-template" class="primary-cta">{{site.homepage.final_cta.button}}</a>
             </div>
         </section>
     </main>
 
-    <footer>
-        <div class="container">
-            <p>&copy; {{#if site.branding.name}}{{site.branding.name}}{{else}}systemprompt.io{{/if}}. All rights reserved.</p>
-        </div>
-    </footer>
-    <script src="{{JS_BASE_PATH}}/analytics.js" defer></script>
+    {{{FOOTER}}}
+
+    {{{SCRIPTS}}}
+    <!-- Homepage-specific: Terminal Demo -->
+    <script src="/js/terminal-demo.js" defer></script>
 </body>
 </html>

@@ -1,26 +1,26 @@
 ---
 title: "Jobs & Scheduling Playbook"
 description: "Run and manage background jobs."
-keywords:
-  - jobs
-  - scheduler
-  - cron
-  - background
+author: "SystemPrompt"
+slug: "cli-jobs"
+keywords: "jobs, scheduler, cron, background"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # Jobs & Scheduling Playbook
 
 Run and manage background jobs.
 
-> **Help**: `{ "command": "infra jobs" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
-
 ---
 
 ## List Jobs
 
 ```json
-// MCP: systemprompt
 { "command": "infra jobs list" }
 ```
 
@@ -31,7 +31,6 @@ Shows name, schedule (cron), enabled status, and last run time.
 ## Show Job Details
 
 ```json
-// MCP: systemprompt
 { "command": "infra jobs show cleanup-sessions" }
 { "command": "infra jobs show log-cleanup" }
 ```
@@ -41,7 +40,6 @@ Shows name, schedule (cron), enabled status, and last run time.
 ## Run Job Manually
 
 ```json
-// MCP: systemprompt
 { "command": "infra jobs run cleanup-sessions" }
 { "command": "infra jobs run log-cleanup" }
 ```
@@ -51,7 +49,6 @@ Shows name, schedule (cron), enabled status, and last run time.
 ## View Job History
 
 ```json
-// MCP: systemprompt
 { "command": "infra jobs history" }
 { "command": "infra jobs history --limit 20" }
 { "command": "infra jobs history --job cleanup-sessions" }
@@ -62,7 +59,6 @@ Shows name, schedule (cron), enabled status, and last run time.
 ## Enable/Disable Jobs
 
 ```json
-// MCP: systemprompt
 { "command": "infra jobs enable cleanup-sessions" }
 { "command": "infra jobs disable cleanup-sessions" }
 ```
@@ -72,7 +68,6 @@ Shows name, schedule (cron), enabled status, and last run time.
 ## Built-in Jobs
 
 ```json
-// MCP: systemprompt
 { "command": "infra jobs cleanup-sessions" }
 { "command": "infra jobs cleanup-sessions --hours 24" }
 { "command": "infra jobs cleanup-sessions --hours 48" }
@@ -88,7 +83,6 @@ Shows name, schedule (cron), enabled status, and last run time.
 
 **Job failing** -- check logs:
 ```json
-// MCP: systemprompt
 { "command": "infra logs view --level error --since 1h" }
 { "command": "infra logs search \"job failed\"" }
 ```

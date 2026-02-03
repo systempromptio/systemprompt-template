@@ -1,0 +1,11 @@
+extension:
+  type: cli
+  name: discord
+  binary: systemprompt-discord
+  description: "Send messages via Discord (DMs or channels)"
+  enabled: true
+  commands:
+    - name: send
+      description: "Send a message to Discord"
+    - name: test
+      description: "Test Discord bot connection"

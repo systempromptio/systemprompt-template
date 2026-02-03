@@ -1,0 +1,344 @@
+use anyhow::{anyhow, Context, Result};
+use std::fmt::Write as FmtWrite;
+use systemprompt::database::DbPool;
+use systemprompt::traits::{Job, JobContext, JobResult};
+use systemprompt::generator::ContentConfigRaw;
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct LlmsTxtGenerationJob;
+
+#[async_trait::async_trait]
+impl Job for LlmsTxtGenerationJob {
+    fn name(&self) -> &'static str {
+        "llms_txt_generation"
+    }
+
+    fn description(&self) -> &'static str {
+        "Generates llms.txt for AI/LLM crawlers"
+    }
+
+    fn schedule(&self) -> &'static str {
+        "0 0 * * * *"
+    }
+
+    fn run_on_startup(&self) -> bool {
+        false
+    }
+
+    async fn execute(&self, ctx: &JobContext) -> Result<JobResult> {
+        let start = std::time::Instant::now();
+
+        tracing::info!("llms.txt generation started");
+
+        let db_pool = ctx
+            .db_pool::<DbPool>()
+            .ok_or_else(|| anyhow::anyhow!("Database not available in job context"))?;
+
+        generate_llms_txt(db_pool.clone()).await?;
+
+        #[allow(clippy::cast_possible_truncation)]
+        let duration_ms = start.elapsed().as_millis() as u64;
+
+        tracing::info!(duration_ms, "llms.txt generation completed");
+
+        Ok(JobResult::success().with_duration(duration_ms))
+    }
+}
+
+systemprompt::traits::submit_job!(&LlmsTxtGenerationJob);
+
+pub async fn generate_llms_txt(db_pool: DbPool) -> Result<()> {
+    use systemprompt::models::{AppPaths, Config};
+    use systemprompt::generator::ContentConfigRaw;
+    use tokio::fs;
+
+    let global_config = Config::get()?;
+    let paths = AppPaths::get().map_err(|e| anyhow!("{e}"))?;
+
+    let config_path = paths.system().content_config();
+    let yaml_content = fs::read_to_string(&config_path)
+        .await
+        .context("Failed to read content config")?;
+
+    let content_config: ContentConfigRaw =
+        serde_yaml::from_str(&yaml_content).context("Failed to parse content config")?;
+
+    let web_dir = paths.web().dist().to_path_buf();
+    let base_url = &global_config.api_external_url;
+
+    let llms_content = build_llms_txt_content(db_pool, &content_config, base_url).await?;
+
+    let llms_path = web_dir.join("llms.txt");
+    fs::write(&llms_path, &llms_content).await?;
+
+    tracing::info!(path = %llms_path.display(), "Generated llms.txt");
+
+    Ok(())
+}
+
+async fn build_llms_txt_content(
+    db_pool: DbPool,
+    config: &ContentConfigRaw,
+    base_url: &str,
+) -> Result<String> {
+    use systemprompt::content::ContentRepository;
+    use systemprompt::identifiers::SourceId;
+
+    let mut content = String::new();
+
+    writeln!(content, "# systemprompt.io")?;
+    writeln!(content)?;
+
+    writeln!(
+        content,
+        "> Production infrastructure for AI agents powered by Anthropic Claude, OpenAI ChatGPT, and Google Gemini. Self-hosted Rust platform with MCP server hosting, OAuth security, multi-provider orchestration, and enterprise observability."
+    )?;
+    writeln!(content)?;
+
+    writeln!(
+        content,
+        "systemprompt.io enables teams to deploy production AI applications using Anthropic's Claude, OpenAI's ChatGPT, and Google's Gemini through a unified infrastructure layer. Native SDK integration with all three providers supports automatic failover, cost optimization, and smart model routing. Built on the Model Context Protocol (MCP) standard—pioneered by Anthropic for Claude Desktop—systemprompt.io delivers production-grade tool serving compatible with the leading AI assistants."
+    )?;
+    writeln!(content)?;
+
+    writeln!(content, "## Quick Links")?;
+    writeln!(content)?;
+    writeln!(content, "- Homepage: {base_url}")?;
+    writeln!(content, "- Documentation: {base_url}/documentation")?;
+    writeln!(content, "- Playbooks: {base_url}/playbooks")?;
+    writeln!(content, "- Blog: {base_url}/blog")?;
+    writeln!(content, "- GitHub: https://github.com/systempromptio/systemprompt-template")?;
+    writeln!(content)?;
+
+    writeln!(content, "## Key Features")?;
+    writeln!(content)?;
+    writeln!(content, "- **MCP Server Hosting**: Production OAuth-secured Model Context Protocol servers compatible with Claude Desktop and AI coding assistants")?;
+    writeln!(content, "- **Multi-Provider AI**: Native integration with Anthropic Claude, OpenAI ChatGPT, and Google Gemini with automatic failover")?;
+    writeln!(content, "- **Agent Orchestration**: A2A protocol for agent-to-agent communication across AI providers")?;
+    writeln!(content, "- **Enterprise Security**: OAuth2/OIDC + WebAuthn passwordless authentication")?;
+    writeln!(content, "- **Full Observability**: Request tracing, cost tracking per provider, audit logs")?;
+    writeln!(content, "- **Rust Extension System**: Type-safe traits for API routes, jobs, schemas, and providers")?;
+    writeln!(content)?;
+
+    writeln!(content, "## AI Provider Integrations")?;
+    writeln!(content)?;
+    writeln!(content, "systemprompt.io supports multiple AI providers with native SDK integration:")?;
+    writeln!(content)?;
+    writeln!(content, "- **Anthropic Claude**: Native Claude API integration with Claude Sonnet 4, Claude Opus 4, and Claude Haiku support. Full MCP protocol compatibility for tool serving.")?;
+    writeln!(content, "- **OpenAI ChatGPT**: GPT-4o and GPT-4 Turbo integration with function calling and structured outputs.")?;
+    writeln!(content, "- **Google Gemini**: Gemini Pro and Gemini Flash support with search grounding capabilities.")?;
+    writeln!(content)?;
+    writeln!(content, "Smart routing automatically selects the optimal model based on task complexity, cost constraints, and availability.")?;
+    writeln!(content)?;
+
+    let repo = ContentRepository::new(&db_pool).map_err(|e| anyhow!("{e}"))?;
+
+    // Playbooks Section - Organized by Category
+    writeln!(content, "## Playbooks")?;
+    writeln!(content)?;
+    writeln!(content, "Machine-readable guides for AI agents. Point your super agent to a playbook.")?;
+    writeln!(content)?;
+
+    if let Some(source) = config.content_sources.get("playbooks") {
+        if source.enabled {
+            let source_id = SourceId::new(&source.source_id);
+            if let Ok(playbooks) = repo.list_by_source(&source_id).await {
+                // Categorize playbooks
+                let mut guides: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("guide")).collect();
+                let mut cli: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("cli")).collect();
+                let mut build: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("build")).collect();
+                let mut config_pb: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("config")).collect();
+                let mut domain: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("domain")).collect();
+                let mut content_pb: Vec<_> = playbooks.iter().filter(|p| p.slug.starts_with("content")).collect();
+
+                // Sort each category alphabetically
+                guides.sort_by(|a, b| a.title.cmp(&b.title));
+                cli.sort_by(|a, b| a.title.cmp(&b.title));
+                build.sort_by(|a, b| a.title.cmp(&b.title));
+                config_pb.sort_by(|a, b| a.title.cmp(&b.title));
+                domain.sort_by(|a, b| a.title.cmp(&b.title));
+                content_pb.sort_by(|a, b| a.title.cmp(&b.title));
+
+                // Guides (Start Here)
+                if !guides.is_empty() {
+                    writeln!(content, "### Getting Started (Start Here)")?;
+                    writeln!(content)?;
+                    for playbook in &guides {
+                        let url = format!("{}/playbooks/{}", base_url, playbook.slug);
+                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                    }
+                    writeln!(content)?;
+                }
+
+                // CLI Operations
+                if !cli.is_empty() {
+                    writeln!(content, "### CLI Operations")?;
+                    writeln!(content)?;
+                    for playbook in &cli {
+                        let url = format!("{}/playbooks/{}", base_url, playbook.slug);
+                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                    }
+                    writeln!(content)?;
+                }
+
+                // Build & Development
+                if !build.is_empty() {
+                    writeln!(content, "### Build & Development")?;
+                    writeln!(content)?;
+                    for playbook in &build {
+                        let url = format!("{}/playbooks/{}", base_url, playbook.slug);
+                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                    }
+                    writeln!(content)?;
+                }
+
+                // Configuration
+                if !config_pb.is_empty() {
+                    writeln!(content, "### Configuration")?;
+                    writeln!(content)?;
+                    for playbook in &config_pb {
+                        let url = format!("{}/playbooks/{}", base_url, playbook.slug);
+                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                    }
+                    writeln!(content)?;
+                }
+
+                // Domain Operations
+                if !domain.is_empty() {
+                    writeln!(content, "### Domain Operations")?;
+                    writeln!(content)?;
+                    for playbook in &domain {
+                        let url = format!("{}/playbooks/{}", base_url, playbook.slug);
+                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                    }
+                    writeln!(content)?;
+                }
+
+                // Content Creation
+                if !content_pb.is_empty() {
+                    writeln!(content, "### Content Creation")?;
+                    writeln!(content)?;
+                    for playbook in &content_pb {
+                        let url = format!("{}/playbooks/{}", base_url, playbook.slug);
+                        writeln!(content, "- [{}]({}): {}", playbook.title, url, playbook.description)?;
+                    }
+                    writeln!(content)?;
+                }
+            }
+        }
+    }
+
+    // Documentation Section - Organized by Category
+    writeln!(content, "## Documentation")?;
+    writeln!(content)?;
+    writeln!(content, "Technical reference for SystemPrompt architecture and APIs.")?;
+    writeln!(content)?;
+
+    if let Some(source) = config.content_sources.get("documentation") {
+        if source.enabled {
+            let source_id = SourceId::new(&source.source_id);
+            if let Ok(docs) = repo.list_by_source(&source_id).await {
+                // Categorize documentation by slug prefix
+                let mut services: Vec<_> = docs.iter().filter(|d| d.slug.starts_with("services")).collect();
+                let mut extensions: Vec<_> = docs.iter().filter(|d| d.slug.starts_with("extensions")).collect();
+                let mut config_docs: Vec<_> = docs.iter().filter(|d| d.slug.starts_with("config")).collect();
+                let mut other: Vec<_> = docs.iter().filter(|d| {
+                    !d.slug.starts_with("services") &&
+                    !d.slug.starts_with("extensions") &&
+                    !d.slug.starts_with("config")
+                }).collect();
+
+                // Sort each category
+                services.sort_by(|a, b| a.title.cmp(&b.title));
+                extensions.sort_by(|a, b| a.title.cmp(&b.title));
+                config_docs.sort_by(|a, b| a.title.cmp(&b.title));
+                other.sort_by(|a, b| a.title.cmp(&b.title));
+
+                // Services Documentation
+                if !services.is_empty() {
+                    writeln!(content, "### Services")?;
+                    writeln!(content)?;
+                    for doc in &services {
+                        let url = format!("{}/documentation/{}", base_url, doc.slug);
+                        writeln!(content, "- [{}]({}): {}", doc.title, url, doc.description)?;
+                    }
+                    writeln!(content)?;
+                }
+
+                // Extensions Documentation
+                if !extensions.is_empty() {
+                    writeln!(content, "### Extensions")?;
+                    writeln!(content)?;
+                    for doc in &extensions {
+                        let url = format!("{}/documentation/{}", base_url, doc.slug);
+                        writeln!(content, "- [{}]({}): {}", doc.title, url, doc.description)?;
+                    }
+                    writeln!(content)?;
+                }
+
+                // Configuration Documentation
+                if !config_docs.is_empty() {
+                    writeln!(content, "### Configuration Reference")?;
+                    writeln!(content)?;
+                    for doc in &config_docs {
+                        let url = format!("{}/documentation/{}", base_url, doc.slug);
+                        writeln!(content, "- [{}]({}): {}", doc.title, url, doc.description)?;
+                    }
+                    writeln!(content)?;
+                }
+
+                // Other Documentation
+                if !other.is_empty() {
+                    writeln!(content, "### General")?;
+                    writeln!(content)?;
+                    for doc in &other {
+                        let url = format!("{}/documentation/{}", base_url, doc.slug);
+                        writeln!(content, "- [{}]({}): {}", doc.title, url, doc.description)?;
+                    }
+                    writeln!(content)?;
+                }
+            }
+        }
+    }
+
+    // Blog Section
+    writeln!(content, "## Blog")?;
+    writeln!(content)?;
+    writeln!(content, "Articles on AI agent development and SystemPrompt features.")?;
+    writeln!(content)?;
+
+    if let Some(source) = config.content_sources.get("blog") {
+        if source.enabled {
+            let source_id = SourceId::new(&source.source_id);
+            if let Ok(posts) = repo.list_by_source(&source_id).await {
+                for post in posts.iter().take(15) {
+                    let url = format!("{}/blog/{}", base_url, post.slug);
+                    writeln!(content, "- [{}]({}): {}", post.title, url, post.description)?;
+                }
+            }
+        }
+    }
+    writeln!(content)?;
+
+    // Resources Section
+    writeln!(content, "## Resources")?;
+    writeln!(content)?;
+    writeln!(
+        content,
+        "- [GitHub Repository](https://github.com/systempromptio/systemprompt-template): Clone to start building"
+    )?;
+    writeln!(
+        content,
+        "- [Sitemap]({base_url}/sitemap.xml): Complete URL index for crawling"
+    )?;
+    writeln!(
+        content,
+        "- [All Playbooks]({base_url}/playbooks): Browse all playbooks with filtering"
+    )?;
+    writeln!(
+        content,
+        "- [All Documentation]({base_url}/documentation): Browse all documentation"
+    )?;
+
+    Ok(content)
+}

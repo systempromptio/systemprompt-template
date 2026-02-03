@@ -1,18 +1,20 @@
 ---
 title: "Rust Standards Playbook"
 description: "SystemPrompt Rust programming standards and idiomatic patterns."
-keywords:
-  - rust
-  - standards
-  - idiomatic
-  - patterns
+author: "SystemPrompt"
+slug: "build-rust-standards"
+keywords: "rust, standards, idiomatic, patterns"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # SystemPrompt Rust Standards
 
 **SystemPrompt is a world-class Rust programming brand.** Every Rust file in extensions and MCP servers must be instantly recognizable as on-brand, world-class idiomatic Rust as Steve Klabnik would write it. No exceptions. No shortcuts. No compromise.
-
-> **Help**: `{ "command": "playbook build" }` via `systemprompt_help`
 
 Checkable, actionable patterns. Run `cargo clippy --workspace -- -D warnings` and `cargo fmt --all` after changes.
 

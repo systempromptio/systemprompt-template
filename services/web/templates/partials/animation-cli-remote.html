@@ -1,0 +1,221 @@
+<!-- CLI Remote Animation: Full workflow with Claude + CLI + Production -->
+<!-- 1. Claude conversation with agent → 2. CLI publishes → 3. Production logs (synced) -->
+
+<div class="cli-remote-animation">
+    <!-- Desktop Layout: 3 Terminals -->
+    <div class="cli-remote-desktop">
+        <!-- Terminal 1: Claude Code conversation with Production Agent -->
+        <div class="cli-terminal cli-terminal--claude">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="terminal-title">Claude Code</span>
+            </div>
+            <div class="terminal-body">
+                <div class="terminal-branding">
+                    <img src="/files/images/brands/claude.svg" alt="Claude Code" class="terminal-logo">
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 0.2s">
+                    <span class="prompt">&gt;</span>
+                    <span class="command">Write a blog post about MCP auth</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 0.6s">
+                    <span class="output-agent">Claude:</span>
+                    <span class="output-dim">Connecting to blog agent...</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 1.0s">
+                    <span class="output-bullet">●</span>
+                    <span class="output">systemprompt agents message blog</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 1.6s">
+                    <span class="output-agent">Agent:</span>
+                    <span class="output-dim">What's your angle?</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 2.0s">
+                    <span class="prompt">&gt;</span>
+                    <span class="command">Keep it simple, practical examples</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 2.4s">
+                    <span class="output-agent">Agent:</span>
+                    <span class="output-dim">Researching...</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 3.0s">
+                    <span class="output-dim">  → 5 sources found</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 3.4s">
+                    <span class="output-dim">  → Drafting 2,400 words...</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 4.0s">
+                    <span class="success-check">✓</span>
+                    <span class="success">Draft ready</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal 2: CLI Publishing -->
+        <div class="cli-terminal cli-terminal--cli">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="terminal-title">CLI — Production</span>
+            </div>
+            <div class="terminal-body">
+                <div class="terminal-line cli-fade-in" style="--delay: 4.4s">
+                    <span class="output-dim">$ systemprompt content publish</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 4.8s">
+                    <span class="output-bullet">●</span>
+                    <span class="output">Authenticating...</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 5.2s">
+                    <span class="output-bullet">●</span>
+                    <span class="output">Uploading content...</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 5.6s">
+                    <span class="output-bullet">●</span>
+                    <span class="output">Building pages...</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 6.0s">
+                    <span class="output-bullet">●</span>
+                    <span class="output">Invalidating CDN...</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 6.6s">
+                    <span class="success-check">✓</span>
+                    <span class="success">Published</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 7.0s">
+                    <span class="output-dim">  → /blog/mcp-authentication</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal 3: Production Server Logs (synced with actions) -->
+        <div class="cli-terminal cli-terminal--production">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="terminal-title">Production Logs</span>
+            </div>
+            <div class="terminal-body terminal-body--logs">
+                <!-- Logs for Claude conversation -->
+                <div class="terminal-line cli-fade-in" style="--delay: 0.8s">
+                    <span class="log-time">11:42:01</span>
+                    <span class="log-info">INFO</span>
+                    <span class="output-dim">Session started</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 1.2s">
+                    <span class="log-time">11:42:02</span>
+                    <span class="log-info">INFO</span>
+                    <span class="output-dim">Agent: blog invoked</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 2.6s">
+                    <span class="log-time">11:42:05</span>
+                    <span class="log-info">INFO</span>
+                    <span class="output-dim">Skill: research_content</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 3.6s">
+                    <span class="log-time">11:42:08</span>
+                    <span class="log-info">INFO</span>
+                    <span class="output-dim">Skill: content_create</span>
+                </div>
+                <!-- Logs for CLI publish -->
+                <div class="terminal-line cli-fade-in" style="--delay: 5.0s">
+                    <span class="log-time">11:42:15</span>
+                    <span class="log-info">INFO</span>
+                    <span class="output-dim">Publish: auth OK</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 5.4s">
+                    <span class="log-time">11:42:16</span>
+                    <span class="log-info">INFO</span>
+                    <span class="output-dim">Publish: content synced</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 5.8s">
+                    <span class="log-time">11:42:17</span>
+                    <span class="log-info">INFO</span>
+                    <span class="output-dim">Publish: HTML built</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 6.2s">
+                    <span class="log-time">11:42:18</span>
+                    <span class="log-info">INFO</span>
+                    <span class="output-dim">CDN: cache purged</span>
+                </div>
+                <div class="terminal-line cli-fade-in" style="--delay: 6.6s">
+                    <span class="log-time">11:42:18</span>
+                    <span class="log-success">OK</span>
+                    <span class="success">Page live</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Layout -->
+    <div class="cli-remote-mobile">
+        <div class="cli-terminal cli-terminal--claude">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="terminal-title">Claude Code</span>
+            </div>
+            <div class="terminal-body">
+                <div class="terminal-branding">
+                    <img src="/files/images/brands/claude.svg" alt="Claude" class="terminal-logo">
+                </div>
+                <div class="terminal-line">
+                    <span class="prompt">&gt;</span>
+                    <span class="command">Write a blog post</span>
+                </div>
+                <div class="terminal-line">
+                    <span class="output-agent">Agent:</span>
+                    <span class="output-dim">Researching...</span>
+                </div>
+                <div class="terminal-line">
+                    <span class="success-check">✓</span>
+                    <span class="success">Draft ready</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cli-terminal cli-terminal--cli">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="terminal-title">CLI</span>
+            </div>
+            <div class="terminal-body">
+                <div class="terminal-line">
+                    <span class="output-dim">$ systemprompt publish</span>
+                </div>
+                <div class="terminal-line">
+                    <span class="success-check">✓</span>
+                    <span class="success">Published</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cli-terminal cli-terminal--production">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="terminal-title">Production</span>
+            </div>
+            <div class="terminal-body terminal-body--logs">
+                <div class="terminal-line">
+                    <span class="log-time">11:42</span>
+                    <span class="log-info">INFO</span>
+                    <span class="output-dim">Agent invoked</span>
+                </div>
+                <div class="terminal-line">
+                    <span class="log-time">11:42</span>
+                    <span class="log-success">OK</span>
+                    <span class="success">Published</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

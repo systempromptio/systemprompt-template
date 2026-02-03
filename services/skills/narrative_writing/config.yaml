@@ -1,0 +1,26 @@
+# Narrative Writing Skill
+# Skill for creating personal narrative blog posts that blend story with technical depth
+
+skill:
+  id: narrative_writing
+  name: "Narrative Writing"
+  description: "Create personal narrative blog posts that blend story with technical depth"
+  version: "1.0.0"
+  enabled: true
+
+  tags:
+    - writing
+    - narrative
+    - personal
+    - storytelling
+    - tutorial
+
+  examples:
+    - "Write about the lessons learned building the agent mesh"
+    - "Create a tutorial on setting up MCP servers"
+    - "Tell the story of how I solved the authentication problem"
+    - "Write about the journey from monolith to microservices"
+
+  metadata:
+    category: "content"
+    difficulty: "advanced"

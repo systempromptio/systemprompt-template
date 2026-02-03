@@ -1,0 +1,15 @@
+id: blog_writing
+name: "Blog Writing"
+description: "Create long-form blog posts in Edward's full voice - narrative-driven, deeply personal, technically precise"
+enabled: true
+version: "1.0.0"
+file: "SKILL.md"
+assigned_agents:
+  - content
+tags:
+  - blog
+  - content_creation
+  - writing
+  - edward_style
+  - long_form
+  - technical

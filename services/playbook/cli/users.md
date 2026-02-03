@@ -1,27 +1,26 @@
 ---
 title: "User Management Playbook"
 description: "Manage users, roles, sessions, and IP bans."
-keywords:
-  - users
-  - roles
-  - sessions
-  - admin
-  - bans
+author: "SystemPrompt"
+slug: "cli-users"
+keywords: "users, roles, sessions, admin, bans"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # User Management Playbook
 
 Manage users, roles, sessions, and IP bans.
 
-> **Help**: `{ "command": "admin users" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
-
 ---
 
 ## List Users
 
 ```json
-// MCP: systemprompt
 { "command": "admin users list" }
 { "command": "admin users list --limit 50" }
 { "command": "admin users list --limit 20 --offset 40" }
@@ -32,7 +31,6 @@ Manage users, roles, sessions, and IP bans.
 ## Search Users
 
 ```json
-// MCP: systemprompt
 { "command": "admin users search \"user@example.com\"" }
 { "command": "admin users search \"john\"" }
 ```
@@ -42,7 +40,6 @@ Manage users, roles, sessions, and IP bans.
 ## Show User Details
 
 ```json
-// MCP: systemprompt
 { "command": "admin users show user_abc123" }
 ```
 
@@ -51,7 +48,6 @@ Manage users, roles, sessions, and IP bans.
 ## Create User
 
 ```json
-// MCP: systemprompt
 { "command": "admin users create --email user@example.com --name \"New User\"" }
 ```
 
@@ -60,7 +56,6 @@ Manage users, roles, sessions, and IP bans.
 ## Update User
 
 ```json
-// MCP: systemprompt
 { "command": "admin users update user_abc123 --name \"Updated Name\"" }
 { "command": "admin users update user_abc123 --email user@example.com" }
 ```
@@ -70,7 +65,6 @@ Manage users, roles, sessions, and IP bans.
 ## Delete User
 
 ```json
-// MCP: systemprompt
 { "command": "admin users delete user_abc123" }
 ```
 
@@ -79,7 +73,6 @@ Manage users, roles, sessions, and IP bans.
 ## User Count and Statistics
 
 ```json
-// MCP: systemprompt
 { "command": "admin users count" }
 { "command": "admin users stats" }
 ```
@@ -89,7 +82,6 @@ Manage users, roles, sessions, and IP bans.
 ## Export Users
 
 ```json
-// MCP: systemprompt
 { "command": "admin users export" }
 { "command": "admin users export --format json" }
 ```
@@ -101,7 +93,6 @@ Manage users, roles, sessions, and IP bans.
 ### Assign Roles
 
 ```json
-// MCP: systemprompt
 { "command": "admin users role assign user_abc123 admin" }
 { "command": "admin users role assign user_abc123 admin,editor" }
 ```
@@ -118,7 +109,6 @@ Manage users, roles, sessions, and IP bans.
 ## Session Management
 
 ```json
-// MCP: systemprompt
 { "command": "admin users session list user_abc123" }
 { "command": "admin users session end session_xyz789" }
 { "command": "admin users session cleanup --hours 24" }
@@ -131,7 +121,6 @@ Manage users, roles, sessions, and IP bans.
 ### List Bans
 
 ```json
-// MCP: systemprompt
 { "command": "admin users ban list" }
 ```
 
@@ -157,7 +146,6 @@ Duration is in minutes (1440 = 24 hours).
 
 Merge source user into target (combine accounts):
 ```json
-// MCP: systemprompt
 { "command": "admin users merge source_user_id target_user_id" }
 ```
 
@@ -166,13 +154,9 @@ Merge source user into target (combine accounts):
 ## Bulk Operations
 
 ```json
-// MCP: systemprompt
 { "command": "admin users bulk delete --inactive-days 365" }
 { "command": "admin users bulk update --role user --new-role member" }
 ```
-
--> See [Analytics Playbook](analytics.md) for user activity and session statistics.
--> See [Session Playbook](session.md) for managing your own session.
 
 ---
 

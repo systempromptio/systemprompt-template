@@ -1,40 +1,48 @@
 ---
 title: "Blog Content Creation Playbook"
-description: "Create long-form technical blog content for tyingshoelaces.com. Narrative-driven, deeply personal, and technically precise."
+description: "Create blog content for tyingshoelaces.com. Announcements, articles, and guides - each with tailored workflows."
 keywords:
   - blog
   - content
   - writing
-  - technical
-  - longform
+  - announcement
+  - article
+  - guide
+category: content
 ---
 
 # Blog Content Creation Playbook
 
-Create long-form technical blog content for tyingshoelaces.com. Narrative-driven, deeply personal, and technically precise.
+Create blog content for tyingshoelaces.com. Choose your content type and follow the appropriate workflow.
 
 ## Prerequisites
 
 **Load the [Session Playbook](../cli/session.md) first.** Verify your session and profile before starting.
 
 ```json
-// MCP: systemprompt_help
-{ "command": "playbook session" }
+{ "command": "core playbooks show cli_session" }
 ```
 
 **IMPORTANT: NEVER start, stop, or restart services. The API is already running.**
 
 ```json
-// MCP: systemprompt_cli
 { "command": "admin session show" }
 ```
 
 ```json
-// MCP: systemprompt_cli
 { "command": "admin agents list --enabled" }
 ```
 
-If services are not running, ask the user to start them. Do not attempt to start them yourself.
+---
+
+## Quick Reference: Which Content Type?
+
+| Type | Agent | Skill | Word Count | Category | Use For |
+|------|-------|-------|------------|----------|---------|
+| Announcement | blog_announcement | announcement_writing | 500-1000 | announcement | Product launches, releases, updates |
+| Article (Technical) | blog_technical | technical_content_writing | 4000-6000 | article | Contrarian deep-dives, architecture analysis |
+| Article (Narrative) | blog_narrative | blog_writing | 3500-5000 | article | Personal stories, lessons learned |
+| Guide | blog_narrative | guide_writing | 2500-4000 | guide | Step-by-step tutorials, walkthroughs |
 
 ---
 
@@ -52,7 +60,7 @@ If services are not running, ask the user to start them. Do not attempt to start
 **New content = New context. ALWAYS.** See the [Contexts Playbook](../cli/contexts.md) for full context management commands.
 
 **WRONG:** Reusing `blog-general` context for multiple posts
-**RIGHT:** `blog-mcp-deep-dive`, `blog-ai-production-gap`, `blog-rag-architecture` (one context per post)
+**RIGHT:** `blog-mcp-deep-dive`, `blog-v2-release`, `blog-setup-guide` (one context per post)
 
 ---
 
@@ -60,519 +68,313 @@ If services are not running, ask the user to start them. Do not attempt to start
 
 **CRITICAL: Each step is a SEPARATE message. NEVER combine steps.**
 
-1. **Socratic Dialogue** (no tools) - Agent interrogates your content goal
-2. **Goal Confirmation** - Agent confirms the plan
-3. **Research** - Agent calls research_content, waits for response
-4. **Create** - Agent calls content_create in next message
-5. **Response** - Agent summarises result
-
 | Step | Action | Separate Message? |
 |------|--------|-------------------|
-| Plan | Socratic Dialogue | YES - refine goals with agent |
-| Research | Call research_content | YES - send message, wait for response |
-| Create | Call content_create | YES - send message, wait for response |
-| Image | Generate featured image | YES - send message, wait for response |
-
-**RIGHT:** "Research X" -> wait for response -> "Now create the post using research_id ABC"
-**WRONG:** Combining research and creation in one message or tool plan
+| Plan | Socratic Dialogue (articles only) | YES |
+| Research | Call research_blog | YES |
+| Create | Call create_blog_post | YES |
+| Publish | Run publish_pipeline | YES |
 
 ---
 
-## Step 1: Create a FRESH Context (REQUIRED FIRST STEP)
+# Section 1: Announcements
 
-**Every new blog post MUST start with a fresh context.** Name it descriptively for what you're creating.
+**Use for:** Product launches, feature releases, updates, news
+
+**Fast turnaround - no Socratic dialogue required.**
+
+## Step 1.1: Create Context
 
 ```json
-// MCP: systemprompt_cli
-{ "command": "core contexts list" }
-```
-
-```json
-// MCP: systemprompt_cli
 { "command": "core contexts new --name \"blog-[topic-slug]\"" }
 ```
 
-**Examples of good context names:**
+Example:
 ```json
-{ "command": "core contexts new --name \"blog-mcp-deep-dive\"" }
-{ "command": "core contexts new --name \"blog-ai-production-gap\"" }
-{ "command": "core contexts new --name \"blog-rag-architecture-lessons\"" }
+{ "command": "core contexts new --name \"blog-agent-mesh-2-release\"" }
 ```
 
-**ONLY continue an existing context if:**
-- You're resuming work on the SAME blog post
-- You haven't created any other content since
-- The context was created specifically for this post
+## Step 1.2: Create Announcement (Direct)
+
+Announcements don't require research or Socratic dialogue. Provide the details directly:
 
 ```json
-// MCP: systemprompt_cli - ONLY if continuing the SAME blog post
-{ "command": "core contexts use blog-mcp-deep-dive" }
+{ "command": "admin agents message blog_announcement -m \"Create an announcement for:\n\nTOPIC: Agent Mesh 2.0 Release\n\nKEY FEATURES:\n- 50% faster context switching\n- New MCP tool integration\n- Improved routing algorithms\n\nSLUG: agent-mesh-2-release\nKEYWORDS: ['agent mesh', 'release', 'MCP', 'AI agents']\n\nKeep it 500-1000 words, professional and factual.\" --blocking --timeout 120" }
 ```
 
-Once a context is active, all `agents message` commands automatically use it.
+The agent will:
+- Create 500-1000 words of professional content
+- Use British English
+- Include clear call-to-action
+- Save to database with category="announcement"
 
-**IMPORTANT:** Due to a known issue, context may not persist automatically between messages. Always pass `--context-id` explicitly.
-
-## Step 2: Review Performance and Choose a Topic
-
-Before creating new content, review what's performing well.
-
-### 2.1 Review Content Performance
+## Step 1.3: Publish
 
 ```json
-// MCP: systemprompt_cli
-{ "command": "analytics content --days 30" }
+{ "command": "infra jobs run publish_pipeline" }
 ```
 
 ```json
-// MCP: systemprompt_cli
-{ "command": "analytics category" }
+{ "command": "core content show <slug> --source blog" }
 ```
-
-### 2.2 Choose a Topic
-
-Select a topic that:
-1. Aligns with your expertise (AI, production systems, Rust, DevOps)
-2. Is timely or provides a unique perspective
-3. You have a contrarian or unique angle on
 
 ---
 
-## Step 3: SOCRATIC DIALOGUE - Convince the Gatekeeper (MANDATORY)
+# Section 2: Articles
 
-**CRITICAL: The blog agent is a GATEKEEPER. It will NOT research or create content until you have convinced it with deep, articulated reasoning about the content goal.**
+**Use for:** Technical deep-dives, personal narratives, contrarian takes, lessons learned
 
-The agent uses the Socratic method to interrogate your content idea. Your job is to provide clear, specific, well-reasoned answers that demonstrate you've thought deeply about the value this content will provide.
+**Requires Socratic dialogue to refine thesis and angle.**
 
-### 3.1 Initiate the Dialogue
+## Step 2.1: Create Context
 
 ```json
-// MCP: systemprompt_cli
-{ "command": "admin agents message blog -m \"I want to write a blog post about [topic]. Let's define the goal before researching.\" --blocking" }
+{ "command": "core contexts new --name \"blog-[topic-slug]\"" }
 ```
 
-The agent will ask probing questions. **DO NOT skip this step or give vague answers.**
+## Step 2.2: Choose Article Type
 
-### 3.2 Be Prepared to Answer These Questions
+| Type | Agent | When to Use |
+|------|-------|-------------|
+| Technical | blog_technical | Architecture analysis, contrarian takes, "why X is wrong" |
+| Narrative | blog_narrative | Personal stories, lessons learned, "how I built X" |
 
-**On Thesis:**
-- What specific claim are you making that others would disagree with?
-- If you summarised this in one sentence, what would it be?
-- What's the 'so what' - why should anyone care?
+## Step 2.3: Socratic Dialogue (MANDATORY)
 
-**On Evidence:**
-- What production experience do you have that backs this?
-- What data, metrics, or concrete examples support this?
-- What failures taught you this lesson?
+**The blog agent is a GATEKEEPER.** It will NOT research or create until you've articulated a clear thesis.
 
-**On Contrarian Angle:**
-- What does the conventional wisdom say, and why is it wrong?
-- Who will this post make uncomfortable, and why?
-- What's the uncomfortable truth you're revealing?
+### For Technical Articles:
 
-**On Reader Value:**
-- What will a senior engineer do differently after reading this?
-- What decision will a CTO reconsider?
-- What misconception are you correcting?
-
-### 3.3 Example Dialogue
-
-**WRONG (Vague - Agent Will Reject):**
 ```json
-// MCP: systemprompt_cli
-{ "command": "admin agents message blog -m \"Write about AI agents\" --blocking" }
-// Agent will push back: "What specific claim? What evidence? What's the contrarian angle?"
+{ "command": "admin agents message blog_technical -m \"I want to write about:\n\nTOPIC: MCP Architecture\nTHESIS: Complex multi-agent systems are overengineered; well-designed context curation beats agent proliferation.\nCONTRARIAN ANGLE: Everyone builds more agents. I'll argue for fewer, smarter ones.\nEVIDENCE: Built a 5-agent system that outperformed a 20-agent competitor.\nREADER OUTCOME: CTOs will reconsider their agent architecture strategy.\n\nLet's refine before researching.\" --blocking" }
 ```
 
-**RIGHT (Trend-Informed + Specific - Agent Will Accept):**
+### For Narrative Articles:
+
 ```json
-// MCP: systemprompt_cli
-{ "command": "admin agents message blog -m \"I found a trending topic I want to write about:\n\nTREND: 'Microsoft pauses Claude Code rollout' is trending on Reddit (84 upvotes, 44 comments)\nSOURCE: https://reddit.com/r/ClaudeAI/comments/...\n\nTHESIS: The Claude Code vs Copilot battle reveals a fundamental truth - terminal-native AI tools beat IDE plugins because they work WITH developer workflows, not against them.\n\nCONTRARIAN ANGLE: Everyone thinks AI coding assistants are about autocomplete. Wrong. The real battle is agentic (Claude Code) vs autocomplete (Copilot). Microsoft pausing Claude Code isn't about competition - it's about realising their paradigm is losing.\n\nEVIDENCE: I've used both extensively in production. Claude Code's agentic approach reduced my context-switching by 70%. Copilot's autocomplete interrupts flow. The terminal is where real work happens.\n\nREADER OUTCOME: Senior engineers will reconsider their IDE-centric workflow. CTOs will understand why terminal-native tools are winning. Teams will evaluate AI tools based on workflow integration, not feature lists.\n\nLet's refine this before researching.\" --blocking" }
+{ "command": "admin agents message blog_narrative -m \"I want to write about:\n\nTOPIC: Why I Quit LangChain\nSTORY: Started with LangChain, hit production walls, rebuilt from scratch.\nLESSON: Framework abstractions cost more than they save at scale.\nEVIDENCE: 3 months of debugging, 2 weeks to rebuild without it.\nREADER OUTCOME: Developers will evaluate frameworks more critically.\n\nLet's refine before researching.\" --blocking" }
 ```
 
-### 3.4 Gate Check - Agent Must Confirm
+**Wait for the agent to confirm the goal before proceeding.**
 
-The agent will NOT proceed to research until it can articulate:
-- The thesis in one sentence
-- The contrarian angle
-- The production evidence
-- The reader takeaway
-- The hook direction
+## Step 2.4: Research (Separate Message)
 
-**Wait for the agent to confirm the goal:**
-```
-CONFIRMED CONTENT GOAL:
-- Thesis: [one sentence]
-- Contrarian angle: [what conventional wisdom we're challenging]
-- Evidence base: [production experience/data we'll draw from]
-- Reader outcome: [what they'll think/do differently]
-- Hook direction: [opening that grabs]
+```json
+{ "command": "admin agents message blog_technical -m \"Proceed with research.\" --blocking --timeout 120" }
 ```
 
-**Only then will the agent proceed to research.**
+The agent returns an `artifact_id`. Save it for the next step.
+
+## Step 2.5: Create Content (Separate Message)
+
+```json
+{ "command": "admin agents message blog_technical -m \"Create the blog post using research. Use these specifics:\n- slug: 'mcp-architecture-simplicity'\n- keywords: ['MCP', 'architecture', 'AI agents', 'context curation']\n- category: 'article'\n- Include code examples comparing approaches\n- British English, 4000+ words minimum\" --blocking --timeout 300" }
+```
+
+## Step 2.6: Publish
+
+```json
+{ "command": "infra jobs run publish_pipeline" }
+```
+
+```json
+{ "command": "core content show <slug> --source blog" }
+```
 
 ---
 
-## Step 4: Research (Separate Message)
+# Section 3: Guides
 
-Once the agent confirms the goal, tell it to proceed with research. The agent will call `research_content` and return a `research_id`.
+**Use for:** Step-by-step tutorials, walkthroughs, setup instructions, how-to content
+
+**Educational and practical - no personal narrative required.**
+
+## Step 3.1: Create Context
 
 ```json
-// MCP: systemprompt_cli
-{ "command": "admin agents message blog -m \"Proceed with research.\" --blocking --timeout 120" }
+{ "command": "core contexts new --name \"blog-[topic-slug]\"" }
 ```
 
-**The agent will:**
-- Research the topic (minimum 5 grounding reference links)
-- Return a `research_id` artifact
-- Wait for next instruction
-
-**Save the research_id from the response for Step 5.**
-
-## Step 5: Create Content (Separate Message)
-
-After research completes, tell the agent to create the content using the research_id.
-
+Example:
 ```json
-// MCP: systemprompt_cli
-{ "command": "admin agents message blog -m \"Create the blog post using research. Use these specifics:\n- slug: 'agent-mesh-architecture-production'\n- keywords: ['AI agents', 'agent mesh', 'production AI', 'microservices', 'orchestration']\n- Include the 3 specific failure cases we discussed\n- Add code examples showing the God Agent vs Mesh Agent patterns\n- Reference the 90% error reduction metric\n- British English, 3500+ words minimum\" --blocking --timeout 300" }
+{ "command": "core contexts new --name \"blog-mcp-setup-guide\"" }
 ```
 
-**The agent will:**
-- Create 3500-5000 words of technical content
-- Use British English (realise, optimise, colour)
-- Include clear structure with scannable headers
-- Back claims with production evidence
-- Include code examples and technical details
-- Honour the thesis and angle agreed in the dialogue
+## Step 3.2: Define Scope
 
-## Step 6: Generate Featured Image
-
-Ask the agent to generate a featured image for the post.
+Guides skip Socratic dialogue but need clear scope:
 
 ```json
-// MCP: systemprompt_cli
-{ "command": "admin agents message blog -m \"Generate a featured image for this blog post. It should represent [the core technical concept] visually.\" --blocking --timeout 60" }
+{ "command": "admin agents message blog_narrative -m \"Create a guide for:\n\nTOPIC: Setting Up MCP Servers from Scratch\nCATEGORY: guide\nAUDIENCE: Developers new to SystemPrompt\nPREREQUISITES: Node.js 18+, basic CLI knowledge\nOUTCOME: Reader has a working MCP server running locally\n\nProceed with research.\" --blocking --timeout 120" }
 ```
 
-## Step 7: Publish and Verify
-
-Publish the content to make it live on the site.
-
-**IMPORTANT:** Image optimization MUST run before publish. The blog detail template expects `.webp` images, but content is created with `.png`. Without optimization, featured images will 404.
-
-See the [Jobs Playbook](../cli/jobs.md) for job management commands.
+## Step 3.3: Create Guide (Separate Message)
 
 ```json
-// MCP: systemprompt_cli - Run image optimization FIRST (converts PNG to WebP)
-{ "command": "infra jobs run blog_image_optimization" }
+{ "command": "admin agents message blog_narrative -m \"Create the guide using research. Use these specifics:\n- slug: 'mcp-setup-guide'\n- keywords: ['MCP', 'setup', 'tutorial', 'getting started']\n- category: 'guide'\n- Include all prerequisites\n- Include troubleshooting section\n- Test all code examples\n- British English, 2500-4000 words\" --blocking --timeout 300" }
+```
+
+## Step 3.4: Publish
+
+```json
+{ "command": "infra jobs run publish_pipeline" }
 ```
 
 ```json
-// MCP: systemprompt_cli - Then run the publish job (prerenders, updates sitemap)
-{ "command": "infra jobs run publish_content" }
+{ "command": "core content show <slug> --source blog" }
 ```
 
-```json
-// MCP: systemprompt_cli - Sync content from database to filesystem (REQUIRED for new content)
-{ "command": "cloud sync local content --direction to-disk --source blog -y" }
-```
+---
 
-```json
-// MCP: systemprompt_cli - Verify the content is accessible and published
-{ "command": "core content verify --slug mcp-architecture-deep-dive" }
-```
+## Content Requirements by Type
 
-```json
-// MCP: systemprompt_cli - Show the content details
-{ "command": "core content show --slug mcp-architecture-deep-dive" }
-```
-
-## MCP Tools Used by Agent
-
-The Blog agent has access to these MCP tools (you don't call these directly):
-
-| Tool | Purpose |
-|------|---------|
-| `research_content` | Research topic using web search, returns `research_id` |
-| `content_create` | Create content from research, saves to database |
-| `generate_image` | Generate AI image for featured image |
-| `analytics_query` | Query performance data |
-| `content_store` | Store ideas and suggestions |
-
-## Content Requirements
-
-Blog posts have strict requirements:
-
+### Announcements
 | Requirement | Value |
 |-------------|-------|
-| Length | 2000-4000 words |
+| Length | 500-1000 words |
+| Structure | Lead, What's New, Why This Matters, Get Started |
+| Tone | Professional, factual, direct |
+| Research | Optional (internal info often sufficient) |
+
+### Articles
+| Requirement | Value |
+|-------------|-------|
+| Length | 3500-6000 words |
 | Grounding links | Minimum 5 reference links |
-| Keywords | Required for SEO |
-| Featured image | Required (placeholder used if not generated) |
-| Language | British English |
+| Structure | Prelude, Problem/Orthodoxy, Journey/Cracks, Lesson/Truth, Conclusion |
+| Tone | Personal, contrarian, evidence-based |
+| Research | Required |
 
-## Voice and Style
+### Guides
+| Requirement | Value |
+|-------------|-------|
+| Length | 2500-4000 words |
+| Code examples | Required for every major step |
+| Structure | Prerequisites, Steps, Troubleshooting, Summary |
+| Tone | Educational, clear, practical |
+| Research | Required |
 
-- Lead with a compelling hook that challenges conventional wisdom
-- Use personal experience and production data to back claims
-- Technical depth with accessible explanations
-- Contrarian takes that provoke thought
-- Clear structure with scannable headers
-- Sardonic humour about industry hype
+---
 
-## Example Session
+## Voice and Style (All Types)
 
-```json
-// Step 1: Create context
-{ "command": "core contexts new --name \"blog-claude-code-vs-copilot\"" }
+- British English (realise, optimise, colour)
+- No colons or em-dashes in titles
+- Maximum 8 words in titles
+- No fabricated experiences or metrics
+- Inline citations with full URLs
 
-// Step 2: Socratic dialogue with topic
-{ "command": "admin agents message blog -m \"I want to write about:\n\nTOPIC: 'Terminal-native AI tools vs IDE plugins'\nTHESIS: Terminal-native AI tools beat IDE plugins because they work WITH developer workflows.\nCONTRARIAN ANGLE: The real battle is agentic vs autocomplete, not Claude vs Copilot.\nEVIDENCE: I've used both - Claude Code reduced context-switching 70%.\nREADER OUTCOME: Engineers reconsider IDE-centric workflows.\n\nLet's refine before creating.\" --blocking" }
-// Agent responds with questions or confirms goal
+---
 
-// Step 4: Research (after goal confirmed - SEPARATE MESSAGE)
-{ "command": "admin agents message blog -m \"Proceed with research.\" --blocking --timeout 120" }
-// Agent calls research_content, returns research_id
+## MCP Tools Used by Agents
 
-// Step 5: Create (SEPARATE MESSAGE using research_id)
-{ "command": "admin agents message blog -m \"Create the blog post using research. Use these specifics:\n- slug: 'terminal-native-ai-tools-winning'\n- keywords: ['Claude Code', 'Copilot', 'AI coding', 'terminal', 'agentic AI']\n- Include code examples comparing workflows\n- Reference the Reddit trend\n- British English, 3500+ words minimum\" --blocking --timeout 300" }
-// Agent calls content_create with research_id
+| Tool | MCP Server | Purpose |
+|------|------------|---------|
+| `research_blog` | content-manager | Research topic using Google Search |
+| `create_blog_post` | content-manager | Create blog post with category |
+| `memory_search` | soul-mcp | Search past content |
+| `memory_store` | soul-mcp | Store completed posts |
 
-// Step 6: Image
-{ "command": "admin agents message blog -m \"Generate a featured image showing terminal vs IDE, simple vs complex\" --blocking --timeout 60" }
+---
 
-// Step 7: Optimize images, Publish, and Sync to filesystem
-{ "command": "infra jobs run blog_image_optimization" }
-{ "command": "infra jobs run publish_content" }
-{ "command": "cloud sync local content --direction to-disk --source blog -y" }
-{ "command": "core content show --slug terminal-native-ai-tools-winning" }
+## CRITICAL: Agent Capabilities
+
+**Agents can ONLY research and create. They CANNOT edit or revise existing content.**
+
+| Action | Method |
+|--------|--------|
+| Research a topic | Agent (via `research_blog` tool) |
+| Create NEW content | Agent (via `create_blog_post` tool) |
+| Edit existing content | **Edit file on disk** (see below) |
+| Revise/expand content | **Edit file on disk** (see below) |
+
+If content needs revision after creation, you MUST edit the markdown file directly on disk. Do NOT ask the agent to revise - it will fail or create duplicate content.
+
+---
+
+## CRITICAL: Content Source of Truth
+
+**Disk files are the source of truth.** The `publish_pipeline` job ingests content from disk to database.
+
+```
+Content Architecture
+┌─────────────────────────────────────────────────────────────┐
+│  services/content/blog/<slug>/index.md  ◄── SOURCE OF TRUTH │
+│                    │                                         │
+│                    ▼ publish_pipeline ingests                │
+│              Database (markdown_content)                     │
+│                    │                                         │
+│                    ▼ publish_pipeline prerenders             │
+│              web/dist/blog/<slug>/index.html                 │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Blog Post Structure
+**CLI `edit` commands update the database only.** These changes are TEMPORARY - the next `publish_pipeline` run will overwrite them with disk content.
 
-Typical structure for technical blog posts:
+---
 
-```markdown
-# [Title - Hook that challenges]
+## Updating Content (Edit Disk Files)
 
-[Opening paragraph - personal stake, why this matters]
+**All revisions and edits MUST modify the markdown file on disk.**
 
-## The Conventional Wisdom
+### File Location
 
-[What everyone believes/says]
-
-## What Actually Happens
-
-[The reality from production experience]
-
-## Why This Matters
-
-[Technical deep-dive with code examples]
-
-## The Data
-
-[Production metrics, statistics, evidence]
-
-## What To Do About It
-
-[Actionable insights]
-
-## Conclusion
-
-[Provocative closing thought]
+```
+services/content/blog/<slug>/index.md
 ```
 
-## Step 8: Validate Filesystem and Refine Content (FINAL QUALITY GATE)
+Example: `services/content/blog/open-source-ai-era/index.md`
 
-After publishing, validate the content has been synced to the filesystem and perform a final quality review.
+### Revision Workflow
 
-### 8.1 Validate Filesystem Sync
+1. **Locate the file**:
+   ```bash
+   ls services/content/blog/<slug>/
+   ```
 
-**IMPORTANT:** Content created by agents lives in the database. You MUST sync to filesystem before validating:
+2. **Edit the markdown file directly** (using your editor or Claude):
+   - Update frontmatter (title, description, keywords, etc.)
+   - Update body content
 
-```json
-// MCP: systemprompt_cli - Sync database content to filesystem
-{ "command": "cloud sync local content --direction to-disk --source blog -y" }
-```
+3. **Re-run publish pipeline**:
+   ```json
+   { "command": "infra jobs run publish_pipeline" }
+   ```
 
-```json
-// MCP: systemprompt_cli - Verify sync status
-{ "command": "core content status --source blog" }
-```
+4. **Verify changes**:
+   ```json
+   { "command": "core content show <slug> --source blog" }
+   ```
 
-**Expected frontmatter fields:**
+### Frontmatter Fields
+
 ```yaml
 ---
-title: "Blog Post Title"
-description: "Brief description"
-author: "Edward"
-slug: "ai-demo-production-gap"
-keywords: "keyword1, keyword2, keyword3, keyword4"
-image: "/files/images/blog/..."
+title: "Your Title Here"
+description: "SEO description"
+author: "systemprompt.io"
+slug: "url-slug"
+keywords: "comma, separated, keywords"
+image: "/files/images/blog/placeholder.svg"
 kind: "blog"
+category: "article"  # article | announcement | guide
 public: true
-tags: []
-published_at: "2026-01-17"
+tags: ["tag1", "tag2"]
+published_at: "2026-01-31"
 ---
 ```
 
-### 8.2 Review Against Original Aim
+### Quick Metadata Updates (Temporary)
 
-```json
-// MCP: systemprompt_cli
-{ "command": "core content show --slug ai-demo-production-gap --source blog" }
+For quick, temporary changes (e.g., testing), you can use CLI edit commands. **These will be overwritten on next publish.**
+
+```bash
+# Temporary DB-only edits
+systemprompt core content edit <slug> --source blog --set title="New Title"
+systemprompt core content edit <slug> --source blog --public
 ```
 
-**Evaluation checklist:**
-- [ ] Title is max 8 words, no colons or em-dashes
-- [ ] Title is personal and specific (not generic "Best Practices" style)
-- [ ] Length is 3,500-5,000 words
-- [ ] Minimum 5 inline citations with full URLs and descriptive anchor text
-- [ ] No domain-only citations like `[medium.com]` or `[reddit.com]`
-- [ ] British English throughout (realise, optimise, colour)
-- [ ] Structure follows: Prelude -> Problem -> Journey -> Lesson -> Conclusion
-- [ ] 2-3 code examples included (if technical topic)
-- [ ] No AI anti-patterns ("I discovered that...", "Fascinatingly...")
-- [ ] No fake engagement questions
-- [ ] Contrarian hook that challenges conventional wisdom
-
-**CRITICAL: No Fabrication Check**
-- [ ] All "I built", "we implemented", "my team" claims are backed by cited sources
-- [ ] Metrics and statistics have citations (not invented)
-- [ ] Personal anecdotes reference research, not fabricated experiences
-- [ ] Code examples are from research sources or generic illustrations (not fake "production" code)
-
-**If fabrication is detected:** Content must be regenerated with proper research citations. The agent MUST NOT invent experiences.
-
-### 8.3 Edit to World-Class Quality
-
-If the content needs refinement, edit directly in the filesystem, then re-ingest:
-
-```json
-// MCP: systemprompt_cli
-{ "command": "core content ingest services/content/blog --source blog --override" }
-```
-
-```json
-// MCP: systemprompt_cli
-{ "command": "core content show --slug ai-demo-production-gap --source blog" }
-```
-
-**Refinement focus areas:**
-- Strengthen the prelude - must hook within first 2-3 sentences
-- Ensure personal story feels authentic, with specific details (dates, numbers, names)
-- Check each section earns its place - remove any padding
-- Verify code examples are real, not contrived
-- Ensure citations use descriptive anchor text with full URLs
-- Remove any hollow conclusions or generic takeaways
-- Tighten prose - every paragraph must advance the narrative
-- Check the lesson connects to bigger themes beyond the immediate topic
-- Ensure the return to the opening in the conclusion lands
-
-### 8.4 Final Verification
-
-```json
-// MCP: systemprompt_cli
-{ "command": "core content verify --slug ai-demo-production-gap --source blog --base-url https://tyingshoelaces.com" }
-```
-
-**Content is ONLY complete when:**
-1. Exists in database (`core content show` succeeds)
-2. Exists on filesystem (`services/content/blog/[slug]/index.md` exists)
-3. Frontmatter is valid YAML with all required fields
-4. Word count is 3,500-5,000 words
-5. Contains minimum 5 inline citations with full URLs
-6. Title follows rules (max 8 words, no colons/em-dashes, personal)
-7. Matches the contrarian hook and narrative arc agreed in planning
-8. **NO FABRICATION** - All experiences/metrics backed by research citations
-9. Published and accessible on site
-
----
-
-## Step 9: AI Provenance (Automatic)
-
-AI Provenance is **automatically created** when content is generated via the MCP `content_create` tool. It records who created the content and why.
-
-### 9.1 What AI Provenance Displays
-
-The template renders an "AI Provenance" section on each blog post showing:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  AI Provenance                                                   │
-├─────────────────────────────────────────────────────────────────┤
-│  Blog Agent                                                      │
-│  @blog                                                           │
-│                                                                  │
-│  Why This Was Created                                            │
-│  "[Agent's summary of why this content was created]"             │
-│                                                                  │
-│  Content Strategy                                                │
-│  Category        Platform                                        │
-│  Personal Story  blog                                            │
-│                                                                  │
-│  Creation Context                                                │
-│  Platform        Created                                         │
-│  blog            Jan 26, 2026                                    │
-│                                                                  │
-│  This content was generated by an AI agent as part of an open    │
-│  experiment in agentic content creation. We believe in full      │
-│  transparency about how content is created and why.              │
-│                                                                  │
-│  Learn about our AI transparency practices                       │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 9.2 How Provenance is Created
-
-Provenance is stored in two database tables (NOT in frontmatter):
-
-**`content_agent_attribution`** - Agent identity and reason:
-- `agent_name` - Agent that created content (e.g., "blog")
-- `agent_display_name` - Display name (e.g., "Blog Agent")
-- `creation_reason` - "Why This Was Created" (set by agent during creation)
-- `creation_intent` - JSON with platform, skill_id, content_style, content_category
-
-**`content_categorization`** - Content classification:
-- `primary_category` - Category like "personal_story", "technical_deep_dive"
-- `platform` - Target platform
-- `content_style` - Style like "storytelling", "authoritative"
-
-### 9.3 When Provenance is Set
-
-| Operation | What Happens |
-|-----------|--------------|
-| **Create** | `content_create` MCP tool automatically records agent identity and creation reason |
-| **Update** | New attribution record added with action_type="updated" |
-| **Delete** | No provenance action |
-
-### 9.4 Good Creation Reasons
-
-The `creation_reason` (displayed as "Why This Was Created") is set by the agent during `content_create`. It should:
-- Be concise (1-2 sentences)
-- Explain the PURPOSE
-- Include the content title
-
-**GOOD:** `"Created blog post: ClawdBot - The AI That Acts, But Will Its Chat Break?"`
-**BAD:** `"Created content"` (too vague)
-
-### 9.5 Verify Provenance
-
-Check provenance data via database query:
-
-```json
-// MCP: systemprompt_cli
-{ "command": "infra db query \"SELECT agent_name, creation_reason, created_at FROM content_agent_attribution WHERE content_id = '[content-id]'\"" }
-```
-
-### 9.6 Transparency Statement
-
-The template automatically appends:
-
-> "This content was generated by an AI agent as part of an open experiment in agentic content creation. We believe in full transparency about how content is created and why."
-
-**Provenance is automatic. The MCP content creation tools handle it.**
+To make these permanent, also update the disk file.
 
 ---
 
@@ -581,24 +383,127 @@ The template automatically appends:
 | Issue | Solution |
 |-------|----------|
 | Agent not responding | Check with `{ "command": "infra services status" }` |
-| Content not created | Verify with `{ "command": "core content search \"[slug]\"" }`. Agent may claim success falsely. |
-| Agent says "created" but content doesn't exist | **Create a NEW context** and try again. Context contamination is the most common cause. |
-| Research artifact not found | **Create a NEW context**. The old context has conflicting artifacts. |
-| Agent uses wrong research_id | **Create a NEW context**. Multiple research artifacts are confusing the agent. |
-| Agent hallucinates Content ID | **Create a NEW context**. Agent is referencing artifacts from previous sessions. |
-| "Minimum 5 grounding links" error | Research phase incomplete; ask agent to research more |
-| "Keywords cannot be empty" error | Include keywords array in content_create message |
-| "Expected presentation_card artifact" error | **Create a NEW context**. Research artifact type mismatch from old session. |
-| Content not created with requested slug | **Create a NEW context**. Agent reused prior context artifacts. |
-| Content not publishing | Run `{ "command": "infra jobs run publish_content" }` |
-| Featured image 404 on blog page | Run `{ "command": "infra jobs run blog_image_optimization" }` BEFORE `publish_content`. Blog template expects `.webp` but images are created as `.png`. |
-| Image works on homepage but 404 on blog detail | Same as above - homepage uses `.png`, blog detail expects `.webp`. Run image optimization. |
-| Missing featured image | Generate with `generate_image` or use default placeholder |
-| Content too short | Explicitly state "MUST be 3000+ words minimum" |
-| Agent auto-researches instead of planning | Add "Do NOT call research_content yet" to message |
-| American English instead of British | Remind agent: "Use British English (realise, optimise)" |
-| No code examples included | Explicitly request: "Include 2-3 code examples showing..." |
+| Content not created | Verify with `{ "command": "core content search \"[slug]\"" }` |
+| Agent says "created" but content doesn't exist | **Create a NEW context** and try again |
+| Research artifact not found | **Create a NEW context** |
+| Wrong category in database | Edit with `core content edit <slug> --source blog --set category="guide"` |
+| Content not publishing | Run `{ "command": "infra jobs run publish_pipeline" }` |
+| Content too short | Explicitly state word count minimum in instructions |
 
-### Context-Related Failures
+---
 
-See the [Session Playbook](../cli/session.md) and [Contexts Playbook](../cli/contexts.md) for context contamination symptoms and solutions. The fix is always: **create a NEW context and start fresh.**
+## Architecture Notes
+
+### Content Flow
+
+```
+1. research_blog (MCP tool) - optional for announcements
+   └── Returns artifact_id
+        ↓
+2. create_blog_post (MCP tool)
+   ├── skill_id: blog_writing | technical_content_writing | announcement_writing | guide_writing
+   ├── category: announcement | article | guide
+   └── Saves to database
+        ↓
+3. publish_pipeline (Job)
+   └── Prerenders to static HTML, updates sitemap
+```
+
+### Key Architecture Rules
+
+| Rule | Reason |
+|------|--------|
+| MCP tools save to content tables | Content has no FK to task_id |
+| Category enables filtering | Blog listing page filters by category |
+| `publish_pipeline` must run | Content is in DB but not live until published |
+
+---
+
+---
+
+# Section 4: Featured Images
+
+**Every blog post needs a featured image.** Use AI-generated images for consistent quality.
+
+**CRITICAL:** Images require TWO operations to display:
+1. Link file to content (for file management)
+2. Set image field on content (for display)
+
+See [Images Playbook](./images.md) for full documentation.
+
+## Step 4.1: Generate Image with MCP
+
+```bash
+systemprompt plugins mcp call content-manager generate_featured_image -a '{
+  "skill_id": "blog_image_generation",
+  "topic": "Your Topic",
+  "title": "Your Blog Title",
+  "summary": "Brief description for image generation"
+}' --timeout 120
+```
+
+**Save from response:**
+- `Image ID` (file UUID)
+- `Public URL` (e.g., `/files/images/generated/2026/02/02/abc123.png`)
+
+## Step 4.2: Find Content ID
+
+```bash
+systemprompt core content list --source blog
+```
+
+## Step 4.3: Link Image to Content
+
+```bash
+systemprompt core content files link <file_id> --content <content_id> --role featured
+```
+
+## Step 4.4: Set Image Field (REQUIRED FOR DISPLAY)
+
+**For database-only content (AI-generated):**
+
+```bash
+systemprompt core content edit <content_id> --set image="<public_url>"
+```
+
+Example:
+```bash
+systemprompt core content edit 7ed8c2cc-e4c5-41df-9ec5-334e3bbe8c6c \
+  --set image="/files/images/generated/2026/02/02/fece2027-b1d7.png"
+```
+
+**For file-based content (on disk):**
+
+Edit `services/content/blog/<slug>/index.md` frontmatter:
+
+```yaml
+---
+image: "/files/images/generated/2026/02/02/your-image.png"
+---
+```
+
+Then re-run publish pipeline:
+```bash
+systemprompt infra jobs run publish_pipeline
+```
+
+---
+
+## Image Requirements
+
+| Attribute | Value |
+|-----------|-------|
+| Resolution | 2K (2048x1152) |
+| Aspect Ratio | 16:9 |
+| Format | PNG |
+| Provider | Gemini or OpenAI |
+
+---
+
+## Related Playbooks
+
+- [Session Playbook](../cli/session.md) - Authentication and session management
+- [Contexts Playbook](../cli/contexts.md) - Context management
+- [Jobs Playbook](../cli/jobs.md) - Job management
+- [Images Playbook](./images.md) - Full image management guide
+- [Database Access Patterns](../build/database-access.md) - DB access in MCP handlers

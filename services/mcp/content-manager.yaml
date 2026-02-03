@@ -1,0 +1,28 @@
+mcp_servers:
+  content-manager:
+    binary: "systemprompt-mcp-content-manager"
+    package: "systemprompt-mcp-content-manager"
+    path: "extensions/mcp/content-manager"
+    port: 5040
+    endpoint: "http://localhost:8080/api/v1/mcp/content-manager/mcp"
+    enabled: true
+    display_in_web: true
+    schemas: []
+    oauth:
+      required: true
+      scopes: ["admin"]
+      audience: "mcp"
+      client_id: null
+    description: "Content Manager MCP Server - Create and manage blog content with AI. Research topics using Google Search and generate blog posts with skills."
+    model_config:
+      provider: gemini
+      model: gemini-2.5-flash
+      max_output_tokens: 16384
+    tools:
+      research_blog: {}
+      create_blog_post:
+        model_config:
+          provider: gemini
+          model: gemini-2.5-pro
+          max_output_tokens: 32768
+          thinking_level: low

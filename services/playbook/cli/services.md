@@ -1,20 +1,34 @@
 ---
 title: "Services Management Playbook"
 description: "Manage API server, agents, and MCP servers lifecycle."
-keywords:
-  - services
-  - restart
-  - start
-  - stop
-  - infrastructure
+author: "SystemPrompt"
+slug: "cli-services"
+keywords: "services, restart, start, stop, infrastructure"
+image: ""
+kind: "playbook"
+public: true
+tags: []
+published_at: "2025-01-29"
+updated_at: "2026-02-02"
 ---
 
 # Services Management Playbook
 
 Manage API server, agents, and MCP servers lifecycle.
 
-> **Help**: `{ "command": "infra services" }` via `systemprompt_help`
-> **Requires**: Active session -> See [Session Playbook](session.md)
+---
+
+## Understanding Services
+
+SystemPrompt runs three types of services:
+
+| Service Type | Flag | Description |
+|--------------|------|-------------|
+| API | `--api` | HTTP API server for CLI and web requests |
+| Agents | `--agents` | AI agent processes (blog, linkedin, twitter, etc.) |
+| MCP | `--mcp` | Model Context Protocol servers (systemprompt, content-manager) |
+
+Use `infra services status` to see running services.
 
 ---
 
@@ -33,7 +47,6 @@ This runs `systemprompt infra services start --skip-web`.
 ## Check Service Status
 
 ```json
-// MCP: systemprompt
 { "command": "infra services status" }
 { "command": "infra services status --health" }
 { "command": "infra services status --detailed" }
@@ -44,7 +57,6 @@ This runs `systemprompt infra services start --skip-web`.
 ## Stop Services
 
 ```json
-// MCP: systemprompt
 { "command": "infra services stop --all" }
 { "command": "infra services stop --agents" }
 { "command": "infra services stop --mcp" }
@@ -57,7 +69,6 @@ This runs `systemprompt infra services start --skip-web`.
 ## Restart Services
 
 ```json
-// MCP: systemprompt
 { "command": "infra services restart api" }
 { "command": "infra services restart agent blog" }
 { "command": "infra services restart agent linkedin" }
@@ -73,7 +84,6 @@ This runs `systemprompt infra services start --skip-web`.
 ## Cleanup Orphaned Processes
 
 ```json
-// MCP: systemprompt
 { "command": "infra services cleanup --dry-run" }
 { "command": "infra services cleanup -y" }
 ```
@@ -84,7 +94,6 @@ This runs `systemprompt infra services start --skip-web`.
 
 **Services won't start** -- run `just start` from terminal. If still failing, clean up port conflicts:
 ```json
-// MCP: systemprompt
 { "command": "infra services cleanup --dry-run" }
 { "command": "infra services cleanup -y" }
 ```
@@ -92,7 +101,6 @@ Then run `just start` again.
 
 **Agent health check timeout:**
 ```json
-// MCP: systemprompt
 { "command": "admin agents status blog" }
 { "command": "admin agents logs blog" }
 { "command": "infra services restart agent blog" }
@@ -100,12 +108,9 @@ Then run `just start` again.
 
 **MCP server not responding:**
 ```json
-// MCP: systemprompt
 { "command": "plugins mcp status" }
 { "command": "infra services restart mcp content-manager --build" }
 ```
-
--> See [Agents Playbook](agents.md) | [Plugins Playbook](plugins.md) | [Build Playbook](build.md)
 
 ---
 

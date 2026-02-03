@@ -1,0 +1,330 @@
+<!-- The Agentic Loop - Memory/Self-Learning Animation -->
+<div class="agentic-loop-animation" aria-hidden="true">
+    <!-- Desktop Version -->
+    <svg class="agentic-loop-desktop" viewBox="120 100 580 440" preserveAspectRatio="xMidYMid meet">
+        <defs>
+            <!-- Glow filter for particles -->
+            <filter id="loop-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+
+            <!-- Stronger glow for hub awareness pulse -->
+            <filter id="awareness-glow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+
+            <!-- Subtle shadow for nodes -->
+            <filter id="node-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="var(--orange-600)" flood-opacity="0.3"/>
+            </filter>
+
+            <!-- Main orbital path for particle animation -->
+            <path id="orbital-path"
+                  d="M540,200
+                     C620,200 620,330 620,330
+                     C620,460 540,460 540,460
+                     C460,460 400,520 340,520
+                     C280,520 200,460 200,330
+                     C200,200 280,140 400,140
+                     C460,140 520,160 540,200"
+                  fill="none"/>
+        </defs>
+
+        <!-- Background decorative ring -->
+        <ellipse cx="400" cy="330" rx="220" ry="200"
+                 fill="none" stroke="var(--orange-800)" stroke-width="1"
+                 stroke-dasharray="4,8" opacity="0.2"/>
+
+        <!-- Main orbital ring (visible path) -->
+        <path d="M540,200
+                 C620,200 620,330 620,330
+                 C620,460 540,460 540,460
+                 C460,460 400,520 340,520
+                 C280,520 200,460 200,330
+                 C200,200 280,140 400,140
+                 C460,140 520,160 540,200"
+              fill="none" stroke="var(--orange-700)" stroke-width="2"
+              stroke-dasharray="12,6" opacity="0.5"/>
+
+
+        <!-- Inner connection lines (agent to stages) -->
+        <g class="inner-connections" opacity="0.25">
+            <path d="M430,300 Q490,250 510,215" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="4,4"/>
+            <path d="M430,360 Q490,410 510,445" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="4,4"/>
+            <path d="M355,330 Q300,330 245,330" fill="none" stroke="var(--orange-600)" stroke-width="1" stroke-dasharray="4,4"/>
+        </g>
+
+        <!-- Data flow particles - all start at path origin (540,200) -->
+        <g class="data-particles">
+            <!-- Primary particle -->
+            <circle cx="540" cy="200" r="6" fill="var(--orange-400)" filter="url(#loop-glow)">
+                <animateMotion dur="8s" repeatCount="indefinite" begin="0s">
+                    <mpath href="#orbital-path"/>
+                </animateMotion>
+            </circle>
+
+            <!-- Secondary particle (1/3 around the loop) -->
+            <circle cx="540" cy="200" r="5" fill="var(--orange-400)" filter="url(#loop-glow)">
+                <animateMotion dur="8s" repeatCount="indefinite" begin="-2.67s">
+                    <mpath href="#orbital-path"/>
+                </animateMotion>
+            </circle>
+
+            <!-- Tertiary particle (2/3 around the loop) -->
+            <circle cx="540" cy="200" r="5" fill="var(--orange-300)" filter="url(#loop-glow)" opacity="0.8">
+                <animateMotion dur="8s" repeatCount="indefinite" begin="-5.34s">
+                    <mpath href="#orbital-path"/>
+                </animateMotion>
+            </circle>
+
+            <!-- Trail particle (slightly behind primary) -->
+            <circle cx="540" cy="200" r="3" fill="var(--orange-300)" filter="url(#loop-glow)" opacity="0.5">
+                <animateMotion dur="8s" repeatCount="indefinite" begin="-0.4s">
+                    <mpath href="#orbital-path"/>
+                </animateMotion>
+            </circle>
+        </g>
+
+        <!-- Central Agent Hub -->
+        <g class="agent-hub" transform="translate(400, 330)">
+            <!-- Outer awareness ring (pulsing) -->
+            <circle class="awareness-ring" r="75" fill="none" stroke="var(--orange-500)" stroke-width="1.5" opacity="0.2">
+                <animate attributeName="r" values="75;85;75" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"/>
+                <animate attributeName="opacity" values="0.2;0.08;0.2" dur="4s" repeatCount="indefinite"/>
+            </circle>
+
+            <!-- Secondary awareness ring -->
+            <circle r="65" fill="none" stroke="var(--orange-500)" stroke-width="0.5" opacity="0.15">
+                <animate attributeName="r" values="65;72;65" dur="4s" repeatCount="indefinite" begin="0.5s" calcMode="spline" keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"/>
+                <animate attributeName="opacity" values="0.15;0.05;0.15" dur="4s" repeatCount="indefinite" begin="0.5s"/>
+            </circle>
+
+            <!-- Hub glow background -->
+            <circle r="52" fill="var(--orange-600)" opacity="0.06" filter="url(#awareness-glow)"/>
+
+            <!-- Hub rings (layered effect) -->
+            <circle r="48" fill="none" stroke="var(--orange-600)" stroke-width="0.5" opacity="0.2"/>
+            <circle r="44" fill="none" stroke="var(--orange-600)" stroke-width="0.5" opacity="0.35" stroke-dasharray="3,5"/>
+            <circle r="40" fill="none" stroke="var(--orange-500)" stroke-width="1" opacity="0.6"/>
+            <circle r="38" fill="var(--color-surface)" stroke="var(--orange-500)" stroke-width="0.5"/>
+
+            <!-- Brain icon (self-aware agent) -->
+            <svg x="-16" y="-18" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2"/>
+                <circle cx="7.5" cy="13" r="1.5"/>
+                <circle cx="16.5" cy="13" r="1.5"/>
+                <path d="M12 17v-3"/>
+            </svg>
+
+            <!-- Hub labels -->
+            <text text-anchor="middle" y="62" fill="var(--orange-400)" font-family="var(--font-brand), system-ui, sans-serif" font-size="11" letter-spacing="0.12em" font-weight="600">SELF-AWARE</text>
+            <text text-anchor="middle" y="76" fill="var(--orange-300)" font-family="var(--font-brand), system-ui, sans-serif" font-size="9" letter-spacing="0.08em">AGENT</text>
+        </g>
+
+        <!-- EXECUTE Stage Node (Top Right) -->
+        <g class="stage-node execute-node" transform="translate(570, 200)" filter="url(#node-shadow)">
+            <!-- Node background -->
+            <rect x="-55" y="-40" width="110" height="80" rx="6" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+
+            <!-- Subtle glow on hover (CSS handles this) -->
+            <rect class="node-glow" x="-55" y="-40" width="110" height="80" rx="6" fill="var(--orange-600)" opacity="0.03"/>
+
+            <!-- Document/logs icon -->
+            <svg x="-12" y="-26" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <path d="M14 2v6h6"/>
+                <path d="M16 13H8"/>
+                <path d="M16 17H8"/>
+                <path d="M10 9H8"/>
+            </svg>
+
+            <!-- Labels -->
+            <text text-anchor="middle" y="12" fill="var(--orange-400)" font-family="var(--font-brand), system-ui, sans-serif" font-size="12" letter-spacing="0.1em" font-weight="600">EXECUTE</text>
+            <text text-anchor="middle" y="28" fill="var(--orange-300)" font-family="var(--font-body), system-ui, sans-serif" font-size="9">Logs &amp; Actions</text>
+        </g>
+
+        <!-- ANALYZE Stage Node (Bottom Right) -->
+        <g class="stage-node analyze-node" transform="translate(570, 460)" filter="url(#node-shadow)">
+            <rect x="-55" y="-40" width="110" height="80" rx="6" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+            <rect class="node-glow" x="-55" y="-40" width="110" height="80" rx="6" fill="var(--orange-600)" opacity="0.03"/>
+
+            <!-- Bar chart icon -->
+            <svg x="-12" y="-26" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="20" x2="12" y2="10"/>
+                <line x1="18" y1="20" x2="18" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="16"/>
+            </svg>
+
+            <text text-anchor="middle" y="12" fill="var(--orange-400)" font-family="var(--font-brand), system-ui, sans-serif" font-size="12" letter-spacing="0.1em" font-weight="600">ANALYZE</text>
+            <text text-anchor="middle" y="28" fill="var(--orange-300)" font-family="var(--font-body), system-ui, sans-serif" font-size="9">Metrics &amp; Insights</text>
+        </g>
+
+        <!-- LEARN Stage Node (Left) -->
+        <g class="stage-node learn-node" transform="translate(200, 330)" filter="url(#node-shadow)">
+            <rect x="-55" y="-40" width="110" height="80" rx="6" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+            <rect class="node-glow" x="-55" y="-40" width="110" height="80" rx="6" fill="var(--orange-600)" opacity="0.03"/>
+
+            <!-- Book/learning icon -->
+            <svg x="-12" y="-26" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+
+            <text text-anchor="middle" y="12" fill="var(--orange-400)" font-family="var(--font-brand), system-ui, sans-serif" font-size="12" letter-spacing="0.1em" font-weight="600">LEARN</text>
+            <text text-anchor="middle" y="28" fill="var(--orange-300)" font-family="var(--font-body), system-ui, sans-serif" font-size="9">Context Update</text>
+        </g>
+
+        <!-- Flow Labels -->
+        <g class="flow-labels">
+            <!-- Between EXECUTE and ANALYZE -->
+            <g transform="translate(660, 330)">
+                <text text-anchor="middle" y="-4" fill="var(--orange-400)" font-family="var(--font-brand), system-ui, sans-serif" font-size="10" letter-spacing="0.08em" font-weight="500">DATA</text>
+                <text text-anchor="middle" y="10" fill="var(--orange-400)" font-family="var(--font-brand), system-ui, sans-serif" font-size="10" letter-spacing="0.08em" font-weight="500">FLOWS</text>
+            </g>
+
+            <!-- Between ANALYZE and LEARN -->
+            <g transform="translate(400, 520)">
+                <text text-anchor="middle" y="-4" fill="var(--orange-400)" font-family="var(--font-brand), system-ui, sans-serif" font-size="10" letter-spacing="0.08em" font-weight="500">INSIGHTS</text>
+                <text text-anchor="middle" y="10" fill="var(--orange-400)" font-family="var(--font-brand), system-ui, sans-serif" font-size="10" letter-spacing="0.08em" font-weight="500">EXTRACTED</text>
+            </g>
+
+            <!-- Between LEARN and EXECUTE -->
+            <g transform="translate(300, 140)">
+                <text text-anchor="middle" y="-4" fill="var(--orange-400)" font-family="var(--font-brand), system-ui, sans-serif" font-size="10" letter-spacing="0.08em" font-weight="500">CONTEXT</text>
+                <text text-anchor="middle" y="10" fill="var(--orange-400)" font-family="var(--font-brand), system-ui, sans-serif" font-size="10" letter-spacing="0.08em" font-weight="500">IMPROVED</text>
+            </g>
+        </g>
+
+        <!-- Bottom Badge: CONTINUOUS IMPROVEMENT -->
+        <g class="continuous-badge" transform="translate(400, 555)">
+            <rect x="-110" y="-18" width="220" height="36" rx="4" fill="var(--orange-950)" stroke="var(--orange-600)" stroke-width="1.5"/>
+
+            <!-- Infinity symbols on sides -->
+            <svg x="-100" y="-9" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--orange-400)" stroke-width="1.5">
+                <path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z"/>
+            </svg>
+            <svg x="82" y="-9" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--orange-400)" stroke-width="1.5">
+                <path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z"/>
+            </svg>
+
+            <text text-anchor="middle" y="6" fill="var(--orange-300)" font-family="var(--font-brand), system-ui, sans-serif" font-size="12" letter-spacing="0.12em" font-weight="600">CONTINUOUS IMPROVEMENT</text>
+        </g>
+    </svg>
+
+    <!-- Mobile Version (Vertical Layout) -->
+    <svg class="agentic-loop-mobile" viewBox="0 0 360 520" preserveAspectRatio="xMidYMid meet">
+        <defs>
+            <filter id="loop-glow-mobile" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+
+            <filter id="awareness-glow-mobile" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+
+            <!-- Vertical flow path -->
+            <path id="mobile-flow-path"
+                  d="M180,80
+                     L180,140
+                     C180,180 240,200 270,220
+                     C300,240 300,280 270,300
+                     C240,320 180,340 180,380
+                     L180,440
+                     C180,460 140,470 100,450
+                     C60,430 60,390 100,370
+                     C140,350 180,320 180,280
+                     L180,80"
+                  fill="none"/>
+        </defs>
+
+        <!-- Simplified vertical flow lines -->
+        <path d="M180,80 L180,440" fill="none" stroke="var(--orange-700)" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.4"/>
+        <path d="M100,260 L260,260" fill="none" stroke="var(--orange-700)" stroke-width="1" stroke-dasharray="4,4" opacity="0.3"/>
+
+        <!-- Mobile particles (simplified - 2 particles) -->
+        <g class="mobile-particles">
+            <circle r="4" fill="var(--orange-400)" filter="url(#loop-glow-mobile)">
+                <animate attributeName="cy" values="80;140;260;380;440;380;260;140;80" dur="6s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+                <animate attributeName="cx" values="180;180;260;180;180;180;100;180;180" dur="6s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+            </circle>
+            <circle r="3" fill="var(--orange-300)" filter="url(#loop-glow-mobile)" opacity="0.7">
+                <animate attributeName="cy" values="260;380;440;380;260;140;80;140;260" dur="6s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+                <animate attributeName="cx" values="260;180;180;180;100;180;180;180;260" dur="6s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+            </circle>
+        </g>
+
+        <!-- EXECUTE Node (Top) -->
+        <g class="stage-node" transform="translate(180, 80)">
+            <rect x="-45" y="-28" width="90" height="56" rx="4" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+            <svg x="-10" y="-20" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
+            </svg>
+            <text text-anchor="middle" y="16" fill="var(--orange-500)" font-family="var(--font-brand), system-ui, sans-serif" font-size="8" letter-spacing="0.08em" font-weight="500">EXECUTE</text>
+        </g>
+
+        <!-- Central Agent Hub -->
+        <g class="agent-hub" transform="translate(180, 260)">
+            <circle class="awareness-ring" r="50" fill="none" stroke="var(--orange-500)" stroke-width="1" opacity="0.2">
+                <animate attributeName="r" values="50;58;50" dur="4s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.2;0.08;0.2" dur="4s" repeatCount="indefinite"/>
+            </circle>
+            <circle r="38" fill="var(--orange-600)" opacity="0.05" filter="url(#awareness-glow-mobile)"/>
+            <circle r="34" fill="none" stroke="var(--orange-600)" stroke-width="0.5" opacity="0.3" stroke-dasharray="2,4"/>
+            <circle r="30" fill="var(--color-surface)" stroke="var(--orange-500)" stroke-width="0.5"/>
+            <svg x="-12" y="-12" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5">
+                <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2"/>
+                <circle cx="7.5" cy="13" r="1.5"/><circle cx="16.5" cy="13" r="1.5"/>
+            </svg>
+            <text text-anchor="middle" y="48" fill="var(--orange-500)" font-family="var(--font-brand), system-ui, sans-serif" font-size="7" letter-spacing="0.1em">AGENT</text>
+        </g>
+
+        <!-- ANALYZE Node (Right) -->
+        <g class="stage-node" transform="translate(290, 260)">
+            <rect x="-35" y="-24" width="70" height="48" rx="4" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+            <svg x="-8" y="-16" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5">
+                <line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>
+            </svg>
+            <text text-anchor="middle" y="12" fill="var(--orange-500)" font-family="var(--font-brand), system-ui, sans-serif" font-size="7" letter-spacing="0.06em" font-weight="500">ANALYZE</text>
+        </g>
+
+        <!-- LEARN Node (Left) -->
+        <g class="stage-node" transform="translate(70, 260)">
+            <rect x="-35" y="-24" width="70" height="48" rx="4" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+            <svg x="-8" y="-16" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+            <text text-anchor="middle" y="12" fill="var(--orange-500)" font-family="var(--font-brand), system-ui, sans-serif" font-size="7" letter-spacing="0.06em" font-weight="500">LEARN</text>
+        </g>
+
+        <!-- Bottom output indicator -->
+        <g transform="translate(180, 440)">
+            <rect x="-45" y="-28" width="90" height="56" rx="4" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
+            <svg x="-10" y="-18" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5">
+                <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            <text text-anchor="middle" y="14" fill="var(--orange-500)" font-family="var(--font-brand), system-ui, sans-serif" font-size="7" letter-spacing="0.06em" font-weight="500">IMPROVED</text>
+        </g>
+
+        <!-- Mobile Badge -->
+        <g transform="translate(180, 500)">
+            <text text-anchor="middle" y="0" fill="var(--orange-400)" font-family="var(--font-brand), system-ui, sans-serif" font-size="8" letter-spacing="0.08em" opacity="0.7">CONTINUOUS LOOP</text>
+        </g>
+    </svg>
+</div>

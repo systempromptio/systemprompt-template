@@ -1,0 +1,38 @@
+[package]
+name = "systemprompt-soul-mcp"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "systemprompt-soul-mcp"
+path = "src/main.rs"
+
+[dependencies]
+systemprompt = { workspace = true, features = ["full"] }
+systemprompt-soul-extension = { path = "../../soul" }
+
+anyhow.workspace = true
+tokio.workspace = true
+
+rmcp.workspace = true
+
+axum.workspace = true
+
+serde.workspace = true
+serde_json.workspace = true
+
+tracing.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+sha2.workspace = true
+reqwest.workspace = true
+url.workspace = true
+schemars.workspace = true
+futures.workspace = true
+async-trait.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

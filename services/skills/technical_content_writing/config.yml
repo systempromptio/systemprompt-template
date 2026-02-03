@@ -1,0 +1,18 @@
+id: technical_content_writing
+name: "Technical Content Writing"
+description: "Create deep, contrarian technical blog posts that challenge AI hype with evidence-based arguments, academic grounding, and Edward's signature narrative style"
+enabled: true
+version: "1.0.0"
+file: "SKILL.md"
+assigned_agents:
+  - content
+tags:
+  - blog
+  - content_creation
+  - writing
+  - edward_style
+  - long_form
+  - technical
+  - contrarian
+  - deep_dive
+  - academic

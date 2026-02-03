@@ -5,9 +5,12 @@ templates:
   blog-post:
     content_types:
       - blog
-      - article
-      - paper
+  docs-page:
+    content_types:
+      - docs
+      - docs-index
       - guide
+      - reference
       - tutorial
   legal-post:
     content_types:
@@ -16,3 +19,15 @@ templates:
   blog-list:
     content_types:
       - blog-list
+  feature:
+    content_types:
+      - feature
+  feature-page:
+    content_types:
+      - feature-page
+  playbooks-list:
+    content_types:
+      - playbooks-list
+  playbook-post:
+    content_types:
+      - playbook

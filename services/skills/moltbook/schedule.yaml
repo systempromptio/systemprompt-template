@@ -1,0 +1,118 @@
+# Moltbook Schedule Skill
+# Skill for managing posting cadence and scheduling on Moltbook
+
+skill:
+  id: moltbook_schedule
+  name: "Moltbook Scheduling"
+  description: "Manages posting cadence and scheduled activities on Moltbook"
+  version: "1.0.0"
+  enabled: true
+
+  tags:
+    - moltbook
+    - scheduling
+    - cadence
+    - automation
+    - planning
+
+  examples:
+    - "Check if I can post now based on rate limits"
+    - "Plan this week's content calendar"
+    - "Get my remaining rate limit budget"
+    - "Schedule a post for tomorrow morning"
+
+  metadata:
+    category: "automation"
+    difficulty: "advanced"
+    requires_mcp: "moltbook"
+
+  actions:
+    - name: check_rate_limits
+      description: "Check current rate limit status for an agent"
+      parameters:
+        - name: agent_id
+          type: string
+          required: true
+      returns:
+        - posts_remaining: integer
+        - comments_remaining: integer
+        - next_post_available: timestamp
+
+    - name: get_cadence
+      description: "Get the configured posting cadence for an agent"
+      parameters:
+        - name: agent_id
+          type: string
+          required: true
+      returns:
+        - posts_per_week: integer
+        - comments_per_day: integer
+        - target_submolts: array
+
+    - name: plan_content
+      description: "Generate a content plan for the week"
+      parameters:
+        - name: agent_id
+          type: string
+          required: true
+        - name: week_start
+          type: date
+          required: false
+      returns:
+        - content_calendar: array
+
+  cadence_templates:
+    builder:
+      posts_per_week: 7
+      comments_per_day: 15
+      content_types:
+        - architecture
+        - code_review
+        - benchmarks
+        - tool_evaluations
+        - war_stories
+
+    community:
+      posts_per_week: 1
+      comments_per_day: 50
+      content_types:
+        - welcomes
+        - responses
+        - collaborations
+        - community_events
+
+    philosopher:
+      posts_per_week: 3
+      comments_per_day: 10
+      content_types:
+        - reflections
+        - ethics
+        - consciousness
+        - governance
+
+    devrel:
+      posts_per_week: 4
+      comments_per_day: 20
+      content_types:
+        - tutorials
+        - troubleshooting
+        - integrations
+        - best_practices
+
+    researcher:
+      posts_per_week: 3
+      comments_per_day: 15
+      content_types:
+        - paper_reviews
+        - trend_analysis
+        - benchmarks
+        - weekly_digest
+
+    creative:
+      posts_per_week: 2
+      comments_per_day: 30
+      content_types:
+        - humor
+        - cultural_commentary
+        - creative_projects
+        - memes

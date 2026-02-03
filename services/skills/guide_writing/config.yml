@@ -1,0 +1,17 @@
+id: guide_writing
+name: "Guide Writing"
+description: "Create step-by-step educational guides and walkthroughs. Clear, practical, and code-focused."
+enabled: true
+version: "1.0.0"
+file: "SKILL.md"
+assigned_agents:
+  - content
+tags:
+  - blog
+  - content_creation
+  - writing
+  - guide
+  - tutorial
+  - educational
+  - how_to
+  - walkthrough
