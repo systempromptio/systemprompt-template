@@ -22,7 +22,7 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.1.0", features = ["full"] }
+systemprompt = { version = "0.1.1", features = ["full"] }
 
 # ============================================
 # LOCAL EXTENSIONS

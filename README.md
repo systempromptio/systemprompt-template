@@ -35,15 +35,41 @@ cd my-project
 ### 2. Build
 
 ```bash
-just build 
+just build
 ```
 
-### 3. Setup
+### 3. Setup CLI Access
+
+The `systemprompt` binary is built to `target/debug/` (or `target/release/`). Choose one:
+
+**Option A: Use `just` wrapper (Recommended)**
+```bash
+# All commands work via just:
+just cli infra services status
+just cli core playbooks list
+```
+
+**Option B: Add to PATH**
+```bash
+# Add to your shell config (~/.bashrc or ~/.zshrc):
+export PATH="$PATH:/var/www/html/systemprompt-template/target/debug"
+
+# Then reload:
+source ~/.bashrc  # or source ~/.zshrc
+
+# Now use directly:
+systemprompt infra services status
+```
+
+**Option C: Create alias**
+```bash
+alias systemprompt='/var/www/html/systemprompt-template/target/debug/systemprompt'
+```
+
+### 4. Setup Database
 
 ```bash
-# Registers/Login to systemprompt.io (free, enables profile management) [](https://systemprompt.io/blog/open-source-ai-era) 
-just login
-
+# Start local PostgreSQL
 docker run -d --name systemprompt-db \
   -e POSTGRES_DB=systemprompt \
   -e POSTGRES_USER=systemprompt \
@@ -51,8 +77,11 @@ docker run -d --name systemprompt-db \
   -p 5432:5432 \
   postgres:18-alpine
 
-[Follow interactive cli]
-just tenant 
+# Login to systemprompt.io (free, enables profile management)
+just login
+
+# Setup local tenant and profile (follow interactive prompts)
+just tenant
 just profile
 just start
 ```
@@ -60,13 +89,14 @@ just start
 **Or for Cloud (managed PostgreSQL):**
 
 ```bash
+just login
 just tenant create --region iad
 just profile create production
 just migrate
 just start
 ```
 
-### 4. Verify
+### 5. Verify
 
 Visit http://localhost:8080
 

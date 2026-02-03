@@ -66,5 +66,6 @@ pub fn web_assets(paths: &dyn systemprompt::extension::AssetPaths) -> Vec<AssetD
         AssetDefinition::js(storage_js.join("mobile-menu.js"), "js/mobile-menu.js"),
         AssetDefinition::js(storage_js.join("terminal-demo.js"), "js/terminal-demo.js"),
         AssetDefinition::js(storage_js.join("blog-images.js"), "js/blog-images.js"),
+        AssetDefinition::js(storage_js.join("homepage.js"), "js/homepage.js"),
     ]
 }

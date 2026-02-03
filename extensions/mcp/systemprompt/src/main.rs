@@ -38,7 +38,8 @@ async fn main() -> Result<()> {
         DEFAULT_PORT
     };
 
-    let server = SystempromptServer::new(ctx.db_pool().clone(), service_id.clone());
+    let server = SystempromptServer::new(ctx.db_pool().clone(), service_id.clone())
+        .map_err(|e| anyhow::anyhow!("Failed to create SystempromptServer: {}", e.message))?;
     let router = systemprompt::mcp::create_router(server, ctx.db_pool());
     let addr = format!("0.0.0.0:{port}");
     let listener = TcpListener::bind(&addr).await?;

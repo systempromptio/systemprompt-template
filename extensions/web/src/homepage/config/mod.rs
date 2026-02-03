@@ -23,6 +23,10 @@ pub struct HomepageConfig {
     #[serde(default)]
     pub playbooks: Option<PlaybooksConfig>,
     #[serde(default)]
+    pub whats_next: Option<WhatsNextConfig>,
+    #[serde(default)]
+    pub actions: Option<ActionsConfig>,
+    #[serde(default)]
     pub use_cases: Option<UseCasesConfig>,
     #[serde(default)]
     pub technical: Option<TechnicalConfig>,
@@ -34,6 +38,55 @@ pub struct HomepageConfig {
     pub faq: Option<FaqConfig>,
     #[serde(default)]
     pub final_cta: Option<FinalCtaConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WhatsNextConfig {
+    #[serde(default)]
+    pub title: Option<String>,
+    pub cards: Vec<WhatsNextCard>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WhatsNextCard {
+    pub id: String,
+    pub title: String,
+    #[serde(default)]
+    pub title_highlight: Option<String>,
+    pub subtitle: String,
+    #[serde(default)]
+    pub icon_svg: Option<String>,
+    #[serde(default)]
+    pub url: Option<String>,
+    #[serde(default)]
+    pub features: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ActionsConfig {
+    #[serde(default)]
+    pub section_title: Option<String>,
+    #[serde(default)]
+    pub section_subtitle: Option<String>,
+    pub cards: Vec<ActionCard>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ActionCard {
+    pub category: String,
+    pub title: String,
+    #[serde(default)]
+    pub subtitle: Option<String>,
+    pub commands: Vec<String>,
+    pub description: String,
+    #[serde(default)]
+    pub narrative: Option<String>,
+    #[serde(default)]
+    pub flow_steps: Vec<String>,
+    #[serde(default)]
+    pub characteristics: Vec<String>,
+    #[serde(default)]
+    pub highlight: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -128,6 +181,8 @@ pub struct PlaybooksConfig {
     #[serde(default)]
     pub featured: Option<PlaybooksFeaturedConfig>,
     #[serde(default)]
+    pub status: Option<PlaybooksStatusConfig>,
+    #[serde(default)]
     pub categories: Vec<PlaybooksCategoryConfig>,
     #[serde(default)]
     pub differentiators: Vec<PlaybooksDifferentiatorConfig>,
@@ -139,6 +194,27 @@ pub struct PlaybooksConfig {
     pub cta_secondary: Option<String>,
     #[serde(default)]
     pub cta_secondary_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlaybooksStatusConfig {
+    pub title: String,
+    #[serde(default)]
+    pub mcp_endpoint: Option<String>,
+    #[serde(default)]
+    pub agents_endpoint: Option<String>,
+    #[serde(default)]
+    pub domains: Vec<PlaybooksStatusDomain>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlaybooksStatusDomain {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub url: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -6,7 +6,7 @@ enabled: true
 # Gateway configuration for receiving Discord messages
 gateway:
   enabled: true
-  target_agent: "systemprompt_hub"
+  target_agent: "welcome"
   message_prefix: "DISCORD_MESSAGE"
   ignore_channels: []
   ignore_bots: true

@@ -1,60 +1,71 @@
+# Welcome Configuration
+# A helpful AI assistant for your project
+
 agents:
   welcome:
-    name: "welcome"
+    name: welcome
     port: 9000
-    endpoint: "http://localhost:8080/api/v1/agents/welcome"
+    endpoint: http://localhost:8080/api/v1/agents/welcome
     enabled: true
+    dev_only: false
     is_primary: true
     default: true
     card:
-      protocolVersion: "0.3.0"
-      name: "Welcome"
-      displayName: "Welcome"
-      description: "A helpful AI assistant for your project"
-      version: "1.0.0"
-      preferredTransport: "JSONRPC"
+      protocolVersion: 0.3.0
+      name: Welcome
+      displayName: Welcome
+      description: A helpful AI assistant for your project
+      version: 1.0.0
+      preferredTransport: JSONRPC
+      iconUrl: https://ui-avatars.com/api/?name=W&background=0d9488&color=fff&bold=true&size=256
+      documentationUrl: https://yourproject.com/docs
       provider:
-        organization: "Your Organization"
-        url: "https://yourproject.com"
-      iconUrl: "https://ui-avatars.com/api/?name=W&background=0d9488&color=fff&bold=true&size=256"
-      documentationUrl: "https://yourproject.com/docs"
+        organization: Your Organization
+        url: https://yourproject.com
       capabilities:
         streaming: true
         pushNotifications: false
         stateTransitionHistory: false
       defaultInputModes:
-        - "text/plain"
+      - text/plain
       defaultOutputModes:
-        - "text/plain"
-        - "application/json"
+      - text/plain
+      - application/json
       securitySchemes:
         oauth2:
           type: oauth2
           flows:
             authorizationCode:
-              authorizationUrl: "http://localhost:8080/api/v1/core/oauth/authorize"
-              tokenUrl: "http://localhost:8080/api/v1/core/oauth/token"
+              authorizationUrl: http://localhost:8080/api/v1/core/oauth/authorize
+              tokenUrl: http://localhost:8080/api/v1/core/oauth/token
               scopes:
-                anonymous: "Public access"
-                user: "Authenticated user access"
-          description: "OAuth 2.0 authentication"
+                anonymous: Public access
+                user: Authenticated user access
+          description: OAuth 2.0 authentication
       security:
-        - oauth2: ["anonymous"]
+      - oauth2:
+        - anonymous
       skills:
-        - id: "general_assistance"
-          name: "General Assistance"
-          description: "Help with questions, explanations, and general tasks"
-          tags: ["assistance", "general", "help"]
-          examples:
-            - "Help me understand this concept"
-            - "What are the best practices for..."
-        - id: "content_writing"
-          name: "Content Writing"
-          description: "Help with writing, editing, and improving text content"
-          tags: ["writing", "editing", "content"]
-          examples:
-            - "Help me write a blog post"
-            - "Edit this text for clarity"
+      - id: general_assistance
+        name: General Assistance
+        description: Help with questions, explanations, and general tasks
+        tags:
+        - assistance
+        - general
+        - help
+        examples:
+        - Help me understand this concept
+        - What are the best practices for...
+      - id: content_writing
+        name: Content Writing
+        description: Help with writing, editing, and improving text content
+        tags:
+        - writing
+        - editing
+        - content
+        examples:
+        - Help me write a blog post
+        - Edit this text for clarity
       supportsAuthenticatedExtendedCard: false
     metadata:
       systemPrompt: |
@@ -82,3 +93,11 @@ agents:
         - Provide balanced perspectives on complex topics
         - Ask clarifying questions when the request is ambiguous
         - Format responses appropriately using markdown when helpful
+      mcpServers:
+      - content-manager
+      skills: []
+      toolModelOverrides: {}
+    oauth:
+      required: false
+      scopes: []
+      audience: a2a

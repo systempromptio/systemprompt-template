@@ -1,7 +1,6 @@
 
 .playbooks-section {
   padding: var(--space-4xl) 0;
-  border-top: 1px solid var(--color-border);
   background: linear-gradient(180deg, transparent 0%, rgba(247, 153, 56, 0.02) 50%, transparent 100%);
 }
 
@@ -12,9 +11,9 @@
 
 .playbooks-section .section-title .highlight {
   color: var(--color-primary);
-  display: block;
-  font-size: 0.6em;
-  margin-top: var(--space-xs);
+  display: inline;
+  font-size: 1em;
+  margin-top: 0;
   letter-spacing: 0.1em;
 }
 
@@ -134,8 +133,8 @@
 
 
 .playbooks-featured {
-  max-width: 600px;
-  margin: 0 auto var(--space-3xl);
+  max-width: 700px;
+  margin: 0 auto var(--space-2xl);
   background: linear-gradient(135deg, rgba(247, 153, 56, 0.1) 0%, rgba(247, 153, 56, 0.02) 100%);
   border: 2px solid var(--color-primary);
   border-radius: var(--sp-card-radius);
@@ -185,6 +184,7 @@
   border-radius: var(--radius-md);
   padding: var(--space-md) var(--space-lg);
   margin-bottom: var(--space-lg);
+  position: relative;
   overflow-x: auto;
 }
 
@@ -193,6 +193,239 @@
   font-size: 0.875rem;
   color: var(--color-primary);
   white-space: nowrap;
+  display: block;
+  padding-right: 60px;
+}
+
+/* Copy Button */
+.copy-btn {
+  position: absolute;
+  right: var(--space-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.copy-btn .check-icon {
+  display: none;
+}
+
+.copy-btn.copied .copy-icon {
+  display: none;
+}
+
+.copy-btn.copied .check-icon {
+  display: block;
+  color: var(--color-success);
+}
+
+.copy-btn.copied {
+  border-color: var(--color-success);
+}
+
+/* Quick Actions - break out of container */
+.quick-actions {
+  display: flex;
+  gap: var(--space-lg);
+  margin-top: var(--space-2xl);
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  padding: 0 5%;
+  box-sizing: border-box;
+}
+
+.quick-action-card {
+  flex: 1;
+  min-width: 0;
+  background: var(--sp-card-bg-glass);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--sp-card-radius);
+  padding: var(--space-lg);
+  transition: all var(--transition-normal);
+}
+
+.quick-action-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+/* Level-based demo flow colors */
+.quick-action-card[data-category="level-1"] {
+  border-left-color: var(--color-success);  /* Green - entry level */
+}
+.quick-action-card[data-category="level-1"] .quick-action-card__name {
+  color: var(--color-success);
+}
+
+.quick-action-card[data-category="level-2"] {
+  border-left-color: #06b6d4;  /* Cyan - tools */
+}
+.quick-action-card[data-category="level-2"] .quick-action-card__name {
+  color: #06b6d4;
+}
+
+.quick-action-card[data-category="level-3"] {
+  border-left-color: var(--color-primary);  /* Orange - power */
+}
+.quick-action-card[data-category="level-3"] .quick-action-card__name {
+  color: var(--color-primary);
+}
+
+.quick-action-card[data-category="level-4"] {
+  border-left-color: #a855f7;  /* Purple - orchestration */
+}
+.quick-action-card[data-category="level-4"] .quick-action-card__name {
+  color: #a855f7;
+}
+
+.quick-action-card__name {
+  font-family: var(--font-brand);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+  margin-bottom: var(--space-sm);
+  display: block;
+}
+
+.quick-action-card__code {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  padding-right: 48px;
+  margin-bottom: var(--space-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-action-card__code code {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.8rem;
+  color: var(--color-primary);
+  white-space: nowrap;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-action-card__code .copy-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px 8px;
+}
+
+.quick-action-card__desc {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* Evolution Section Title */
+.evolution-section-title {
+  text-align: center;
+  font-family: var(--font-brand);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: var(--space-xs);
+  color: var(--color-text);
+}
+
+.evolution-section-subtitle {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+  margin-bottom: var(--space-xl);
+}
+
+/* Card Header with Subtitle */
+.quick-action-card__header {
+  margin-bottom: var(--space-md);
+}
+
+.quick-action-card__subtitle {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin-top: var(--space-xs);
+}
+
+/* Narrative Text */
+.quick-action-card__narrative {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  line-height: 1.4;
+  margin-bottom: var(--space-sm);
+}
+
+/* Characteristics List */
+.quick-action-card__traits {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-md);
+}
+
+.quick-action-card__traits li {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  padding: 2px 0 2px 12px;
+  position: relative;
+}
+
+.quick-action-card__traits li::before {
+  content: "›";
+  position: absolute;
+  left: 0;
+}
+
+/* Level-specific trait markers */
+.quick-action-card[data-category="level-1"] .quick-action-card__traits li::before { color: var(--color-success); }
+.quick-action-card[data-category="level-2"] .quick-action-card__traits li::before { color: #06b6d4; }
+.quick-action-card[data-category="level-3"] .quick-action-card__traits li::before { color: var(--color-primary); }
+.quick-action-card[data-category="level-4"] .quick-action-card__traits li::before { color: #a855f7; }
+
+/* Highlighted Card (Level 4) */
+.quick-action-card--highlight {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+}
+
+@media (max-width: 1024px) {
+  .quick-actions {
+    flex-wrap: wrap;
+  }
+  .quick-actions .quick-action-card {
+    flex: 1 1 calc(50% - var(--space-lg));
+  }
+}
+
+@media (max-width: 640px) {
+  .quick-actions {
+    flex-direction: column;
+  }
+  .quick-actions .quick-action-card {
+    flex: 1 1 100%;
+  }
 }
 
 .playbooks-featured__cta {
@@ -446,6 +679,22 @@
   line-height: 1.4;
 }
 
+.action-code {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  margin: var(--space-sm) 0;
+  overflow-x: auto;
+}
+
+.action-code code {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.8rem;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
 @media (max-width: 1024px) {
   .playbooks-categories--simple {
     grid-template-columns: repeat(2, 1fr);
@@ -581,7 +830,503 @@
 }
 
 
+/* ============================================
+   STATUS CARD - Futuristic Online Dashboard
+   ============================================ */
+
+.status-card {
+  max-width: 700px;
+  margin: 0 auto var(--space-2xl);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(247, 153, 56, 0.05) 50%, rgba(20, 20, 20, 0.8) 100%);
+  border: 2px solid var(--color-success);
+  border-radius: var(--sp-card-radius);
+  padding: var(--space-xl) var(--space-2xl);
+  position: relative;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 80px rgba(34, 197, 94, 0.15),
+    0 0 40px rgba(34, 197, 94, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+/* Animated background scanline effect */
+.status-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-success), transparent);
+  animation: status-scanline 3s ease-in-out infinite;
+}
+
+@keyframes status-scanline {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(calc(100vh / 2));
+    opacity: 0;
+  }
+}
+
+/* Header */
+.status-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.status-card__indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-success);
+  box-shadow: 0 0 12px var(--color-success), 0 0 24px rgba(34, 197, 94, 0.5);
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 12px var(--color-success), 0 0 24px rgba(34, 197, 94, 0.5);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 20px var(--color-success), 0 0 40px rgba(34, 197, 94, 0.7);
+  }
+}
+
+.status-card__indicator--offline {
+  background: var(--color-error);
+  box-shadow: 0 0 12px var(--color-error);
+  animation: none;
+}
+
+.status-card__indicator--loading {
+  background: var(--color-warning);
+  animation: status-loading 1s ease-in-out infinite;
+}
+
+@keyframes status-loading {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.status-card__title {
+  font-family: var(--font-brand);
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-success);
+  margin: 0;
+}
+
+/* Status Table */
+.status-card__table {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.status-card__section {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+.status-card__section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.status-card__section-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary);
+}
+
+.status-card__section-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.status-card__section-title {
+  font-family: var(--font-brand);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+  flex: 1;
+}
+
+.status-card__count {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.875rem;
+  color: var(--color-success);
+  background: rgba(34, 197, 94, 0.1);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+/* Status List */
+.status-card__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.status-card__list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.status-card__list::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+.status-card__list::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+.status-card__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.status-card__item:last-child {
+  border-bottom: none;
+}
+
+.status-card__item-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-success);
+  flex-shrink: 0;
+}
+
+.status-card__item-indicator--warning {
+  background: var(--color-warning);
+}
+
+.status-card__item-indicator--error {
+  background: var(--color-error);
+}
+
+.status-card__item-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-card__item--loading .status-card__loading-text {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Actions */
+.status-card__actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.status-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-primary);
+  font-family: var(--font-brand);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.status-card__link:hover {
+  background: rgba(247, 153, 56, 0.1);
+  transform: translateY(-1px);
+}
+
+.status-card__link svg {
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.status-card__link:hover svg {
+  opacity: 1;
+}
+
+/* Scope/Permission badges */
+.status-card__item-scope {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+/* Connect button for MCP servers */
+.status-card__connect-btn {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.7rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+  margin-left: auto;
+  padding: 0 var(--space-xs);
+}
+
+.status-card__connect-btn:hover {
+  opacity: 1;
+}
+
+/* MCP Connect Modal */
+.mcp-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+
+.mcp-modal__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 1;
+}
+
+.mcp-modal__content {
+  position: relative;
+  z-index: 2;
+  background: #0d0d0d;
+  background: var(--color-bg-elevated, #0d0d0d);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  max-width: 560px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.mcp-modal__close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: var(--space-xs);
+}
+
+.mcp-modal__close:hover {
+  color: var(--color-text-primary);
+}
+
+.mcp-modal__title {
+  font-family: var(--font-brand);
+  font-size: 1.25rem;
+  margin-bottom: var(--space-sm);
+  color: var(--color-text-primary);
+}
+
+.mcp-modal__desc {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: var(--space-lg);
+}
+
+.mcp-modal__url-row {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+}
+
+.mcp-modal__url {
+  flex: 1;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.8rem;
+  color: var(--color-primary);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.mcp-modal__copy {
+  background: var(--color-primary);
+  color: var(--color-bg-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+  white-space: nowrap;
+}
+
+.mcp-modal__copy:hover {
+  opacity: 0.9;
+}
+
+.mcp-modal__instructions h4 {
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.mcp-modal__instructions h4:first-child {
+  margin-top: 0;
+}
+
+.mcp-modal__instructions p {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: var(--space-sm);
+}
+
+.mcp-modal__instructions pre {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  overflow-x: auto;
+}
+
+.mcp-modal__instructions code {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.mcp-modal__instructions pre::-webkit-scrollbar,
+.mcp-modal__url::-webkit-scrollbar {
+  height: 6px;
+}
+
+.mcp-modal__instructions pre::-webkit-scrollbar-track,
+.mcp-modal__url::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+  border-radius: 3px;
+}
+
+.mcp-modal__instructions pre::-webkit-scrollbar-thumb,
+.mcp-modal__url::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+/* Documentation Links */
+.status-card__docs {
+  text-align: center;
+  padding-top: var(--space-md);
+  margin-top: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.status-card__docs-label {
+  margin-right: var(--space-xs);
+}
+
+.status-card__doc-link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.status-card__doc-link:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .status-card {
+    padding: var(--space-lg);
+  }
+
+  .status-card__table {
+    grid-template-columns: 1fr;
+  }
+
+  .status-card__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .status-card__link {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .status-card__header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .status-card__title {
+    font-size: 1rem;
+  }
+}
+
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
+  .status-card::before {
+    animation: none;
+  }
+
+  .status-card__indicator {
+    animation: none;
+  }
+
   .playbooks-flow .playbook-connection {
     animation: none;
     stroke-dashoffset: 0;

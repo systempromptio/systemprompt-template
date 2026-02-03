@@ -1,14 +1,141 @@
 # Homepage Configuration
 
 playbooks:
-  title: "Welcome to"
-  title_highlight: "systemprompt"
-  subtitle: "A single binary that you own, can be deployed in a click"
+  title: "Welcome to the"
+  title_highlight: "endgame"
+  subtitle: "Agents that regenerate, learn and orchestrate agents. Run by superagents like Claude Code. Directed by you."
 
-  featured:
-    badge: "AGENTIC AI"
-    title: "Multi-Agent Orchestration"
-    description: "Deploy agents that communicate via A2A protocol, learn from their own performance metrics, and adapt in real-time. Built-in memory, observability, and MCP hosting—production-ready in 50MB of Rust you own and extend."
-    code: "systemprompt core playbooks show guide_start"
-    url: "https://systemprompt.io/playbooks"
-    cta_text: "Browse Playbooks"
+  status:
+    title: "systemprompt is online"
+    mcp_endpoint: "/api/v1/mcp/registry"
+    agents_endpoint: "/api/v1/agents/registry"
+    domains:
+      - id: core
+        name: Core
+        description: Content, playbooks, skills
+        url: https://systemprompt.io/documentation/cli/core/
+      - id: infra
+        name: Infra
+        description: Services, database, jobs, logs
+        url: https://systemprompt.io/documentation/cli/infra/
+      - id: admin
+        name: Admin
+        description: Users, agents, config
+        url: https://systemprompt.io/documentation/cli/admin/
+      - id: cloud
+        name: Cloud
+        description: Deployment, sync
+        url: https://systemprompt.io/documentation/cli/cloud/
+      - id: analytics
+        name: Analytics
+        description: Metrics & insights
+        url: https://systemprompt.io/documentation/cli/analytics/
+      - id: web
+        name: Web
+        description: Frontend config
+        url: https://systemprompt.io/documentation/cli/web/
+      - id: plugins
+        name: Plugins
+        description: MCP servers, extensions
+        url: https://systemprompt.io/documentation/cli/plugins/
+      - id: build
+        name: Build
+        description: Build MCP extensions
+        url: https://systemprompt.io/documentation/cli/build/
+
+whats_next:
+  title: "What do I do next?"
+  cards:
+    - id: "customize"
+      title: "CUSTOMIZE"
+      title_highlight: "& DEVELOP"
+      subtitle: "Build agents, skills, and MCP servers tailored to your needs."
+      icon_svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'
+      url: "/documentation/guides/build-agents"
+      features:
+        - "Add new agents in YAML"
+        - "Define custom skills"
+        - "Build MCP servers in Rust"
+        - "Connect to any LLM"
+        - "Extend with your own code"
+
+    - id: "deploy"
+      title: "DEPLOY"
+      title_highlight: "SECURELY"
+      subtitle: "Ship to production with OAuth, HTTPS, and full audit trails."
+      icon_svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+      url: "/documentation/guides/deploy"
+      features:
+        - "One-command cloud deploy"
+        - "OAuth-secured endpoints"
+        - "HTTPS by default"
+        - "Full audit logging"
+        - "Environment profiles"
+
+    - id: "automate"
+      title: "AUTOMATE"
+      title_highlight: "& SCHEDULE"
+      subtitle: "Run jobs on schedules and build agentic workflows."
+      icon_svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+      url: "/documentation/guides/scheduler"
+      features:
+        - "Cron-based job scheduling"
+        - "Agentic workflow pipelines"
+        - "Event-driven triggers"
+        - "Background task processing"
+        - "Job monitoring & logs"
+
+actions:
+  cards:
+    - category: "level-1"
+      title: "Level 1: Chat"
+      subtitle: "The Copy-Paste Era"
+      description: "You ask. AI answers. You copy and paste."
+      narrative: "Every interaction is isolated. The human is the middleware."
+      characteristics:
+        - "Single-turn conversations"
+        - "Manual data transfer"
+        - "No persistent context"
+      commands:
+        - "systemprompt admin agents message welcome -m 'Hello!' --blocking"
+        - "systemprompt infra logs request list --limit 1"
+
+    - category: "level-2"
+      title: "Level 2: Tools"
+      subtitle: "The Function-Calling Era"
+      description: "AI invokes tools. It reads data, calls APIs, writes files."
+      narrative: "Structured outputs, but you still orchestrate every step."
+      characteristics:
+        - "AI invokes tools"
+        - "Structured outputs"
+        - "Human as orchestrator"
+      commands:
+        - "systemprompt plugins mcp tools"
+        - "systemprompt plugins mcp call content-manager create_blog_post -a '{\"skill_id\": \"announcement_writing\", \"slug\": \"welcome-to-level-2\", \"description\": \"AI tools in action\", \"keywords\": [\"mcp\", \"tools\"], \"instructions\": \"Write a brief welcome announcement.\"}'"
+
+    - category: "level-3"
+      title: "Level 3: Agents"
+      subtitle: "The Autonomous Era"
+      description: "Agents run multi-step workflows. Define the goal - they find the path."
+      narrative: "Agents reason, plan, use tools, and iterate autonomously."
+      characteristics:
+        - "Goal-driven autonomy"
+        - "Multi-step reasoning"
+        - "Human as supervisor"
+      commands:
+        - "systemprompt admin agents message welcome -m 'Create an announcement blog' --blocking --timeout 120"
+        - "systemprompt core content list --source blog --limit 1"
+
+    - category: "level-4"
+      title: "Level 4: Mesh"
+      subtitle: "The Orchestration Era"
+      description: "Superagents coordinate specialized agents. Ask once - the mesh delivers."
+      narrative: "Load a playbook in Claude Code and follow the discourse."
+      characteristics:
+        - "Regeneration & self-healing"
+        - "Persistent memory"
+        - "Self-learning agents"
+      commands:
+        - "systemprompt core playbooks show content_blog"
+        - "Hey Claude, load and run content_blog playbook on local"
+      highlight: true

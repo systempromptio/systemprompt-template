@@ -10,7 +10,6 @@ includes:
   - ../mcp/systemprompt.yaml
   - ../mcp/soul.yaml
   - ../mcp/content-manager.yaml
-  - ../agents/systemprompt_hub.yaml
 
 agents: {}
 mcp_servers: {}

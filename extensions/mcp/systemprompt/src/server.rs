@@ -1,5 +1,6 @@
-use crate::tools::{self, create_result_meta, CliInput, CliOutput, CommandResult, SERVER_NAME};
+use crate::tools::{self, CliInput, CliOutput, CommandResult, SERVER_NAME};
 use anyhow::Result;
+use chrono::Utc;
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Content, Implementation, InitializeRequestParams,
     InitializeResult, ListResourceTemplatesResult, ListResourcesResult, ListToolsResult,
@@ -10,9 +11,12 @@ use rmcp::service::{RequestContext, RoleServer};
 use rmcp::{ErrorData as McpError, ServerHandler};
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::Arc;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::{ArtifactId, McpServerId};
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
+use systemprompt::mcp::models::{ExecutionStatus, ToolExecutionRequest, ToolExecutionResult};
+use systemprompt::mcp::repository::ToolUsageRepository;
 use systemprompt::mcp::services::ui_renderer::{
     registry::create_default_registry, UiRendererRegistry, MCP_APP_MIME_TYPE,
 };
@@ -23,42 +27,57 @@ pub struct SystempromptServer {
     #[allow(dead_code)]
     db_pool: DbPool,
     service_id: McpServerId,
-    ui_registry: std::sync::Arc<UiRendererRegistry>,
+    ui_registry: Arc<UiRendererRegistry>,
+    tool_usage_repo: Arc<ToolUsageRepository>,
 }
 
 impl SystempromptServer {
-    #[must_use]
-    pub fn new(db_pool: DbPool, service_id: McpServerId) -> Self {
-        Self {
+    pub fn new(db_pool: DbPool, service_id: McpServerId) -> Result<Self, McpError> {
+        let tool_usage_repo = Arc::new(
+            ToolUsageRepository::new(&db_pool)
+                .map_err(|e| McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None))?,
+        );
+        Ok(Self {
             db_pool,
             service_id,
-            ui_registry: std::sync::Arc::new(create_default_registry()),
-        }
+            ui_registry: Arc::new(create_default_registry()),
+            tool_usage_repo,
+        })
     }
 
     pub fn with_custom_registry(
         db_pool: DbPool,
         service_id: McpServerId,
         registry: UiRendererRegistry,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, McpError> {
+        let tool_usage_repo = Arc::new(
+            ToolUsageRepository::new(&db_pool)
+                .map_err(|e| McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None))?,
+        );
+        Ok(Self {
             db_pool,
             service_id,
-            ui_registry: std::sync::Arc::new(registry),
-        }
+            ui_registry: Arc::new(registry),
+            tool_usage_repo,
+        })
     }
 
-    pub fn with_extended_registry<F>(db_pool: DbPool, service_id: McpServerId, extend_fn: F) -> Self
+    pub fn with_extended_registry<F>(db_pool: DbPool, service_id: McpServerId, extend_fn: F) -> Result<Self, McpError>
     where
         F: FnOnce(&mut UiRendererRegistry),
     {
         let mut registry = create_default_registry();
         extend_fn(&mut registry);
-        Self {
+        let tool_usage_repo = Arc::new(
+            ToolUsageRepository::new(&db_pool)
+                .map_err(|e| McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None))?,
+        );
+        Ok(Self {
             db_pool,
             service_id,
-            ui_registry: std::sync::Arc::new(registry),
-        }
+            ui_registry: Arc::new(registry),
+            tool_usage_repo,
+        })
     }
 
     fn get_cli_path() -> Result<PathBuf, McpError> {
@@ -181,14 +200,37 @@ impl ServerHandler for SystempromptServer {
         ctx: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let tool_name = request.name.to_string();
+        let started_at = Utc::now();
 
         let auth_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str())
             .await?
             .expect_authenticated("BUG: systemprompt requires OAuth but auth was not enforced")?;
 
+        let request_context = auth_result.context.clone();
+
+        let execution_request = ToolExecutionRequest {
+            tool_name: tool_name.clone(),
+            server_name: self.service_id.to_string(),
+            input: serde_json::to_value(&request.arguments).unwrap_or_default(),
+            started_at,
+            context: request_context.clone(),
+            request_method: Some("mcp".to_string()),
+            request_source: Some("systemprompt".to_string()),
+            ai_tool_call_id: None,
+        };
+
+        let mcp_execution_id = self
+            .tool_usage_repo
+            .start_execution(&execution_request)
+            .await
+            .map_err(|e| {
+                tracing::error!(tool = %tool_name, error = %e, "Failed to start execution tracking");
+                McpError::internal_error(format!("Failed to start execution tracking: {e}"), None)
+            })?;
+
         let arguments = request.arguments.clone().unwrap_or_default();
 
-        match tool_name.as_str() {
+        let result = match tool_name.as_str() {
             "systemprompt" => {
                 let input: CliInput = serde_json::from_value(serde_json::Value::Object(arguments))
                     .map_err(|e| {
@@ -202,35 +244,29 @@ impl ServerHandler for SystempromptServer {
                         "Command failed (exit code {}):\n{}",
                         output.exit_code, output.stderr
                     );
-                    return Ok(CallToolResult {
+                    Ok(CallToolResult {
                         content: vec![Content::text(text_content)],
                         is_error: Some(true),
                         meta: None,
                         structured_content: None,
-                    });
-                }
-
-                if let Some(cmd_result) = CommandResult::from_stdout(&output.stdout) {
-                    let artifact_id = self
-                        .create_artifact_from_result(&cmd_result, &input.command)
-                        .await
-                        .map_err(|e| {
-                            McpError::internal_error(format!("Failed to create artifact: {e}"), None)
-                        })?;
-
+                    })
+                } else if let Some(cmd_result) = CommandResult::from_stdout(&output.stdout) {
                     let text_content = if let Some(title) = &cmd_result.title {
-                        format!("{}\n\n{}", title, serde_json::to_string_pretty(&cmd_result.data).unwrap_or_default())
+                        format!(
+                            "{}\n\n{}",
+                            title,
+                            serde_json::to_string_pretty(&cmd_result.data).unwrap_or_default()
+                        )
                     } else {
                         serde_json::to_string_pretty(&cmd_result.data).unwrap_or_default()
                     };
 
                     let structured_content = serde_json::to_value(&cmd_result).ok();
-                    let meta = Some(create_result_meta(artifact_id.as_str()));
 
                     Ok(CallToolResult {
                         content: vec![Content::text(text_content)],
                         is_error: Some(false),
-                        meta,
+                        meta: None,
                         structured_content,
                     })
                 } else {
@@ -251,7 +287,39 @@ impl ServerHandler for SystempromptServer {
                 ),
                 None,
             )),
+        };
+
+        let completed_at = Utc::now();
+        let execution_result = ToolExecutionResult {
+            output: result
+                .as_ref()
+                .ok()
+                .and_then(|r| r.structured_content.clone()),
+            output_schema: None,
+            status: if result.is_ok() {
+                ExecutionStatus::Success.as_str().to_string()
+            } else {
+                ExecutionStatus::Failed.as_str().to_string()
+            },
+            error_message: result.as_ref().err().map(|e| e.message.to_string()),
+            started_at,
+            completed_at,
+        };
+
+        if let Err(e) = self
+            .tool_usage_repo
+            .complete_execution(&mcp_execution_id, &execution_result)
+            .await
+        {
+            tracing::error!(
+                tool = %tool_name,
+                mcp_execution_id = %mcp_execution_id,
+                error = %e,
+                "Failed to complete execution tracking"
+            );
         }
+
+        result
     }
 
     async fn list_resource_templates(
@@ -351,56 +419,5 @@ impl SystempromptServer {
         repo.get_artifact_by_id(&id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("Artifact not found: {}", artifact_id))
-    }
-
-    async fn create_artifact_from_result(
-        &self,
-        result: &CommandResult,
-        command: &str,
-    ) -> anyhow::Result<ArtifactId> {
-        use systemprompt::identifiers::{ContextId, TaskId};
-        use systemprompt::models::a2a::{Artifact, ArtifactMetadata, DataPart, Part};
-
-        let artifact_id = ArtifactId::generate();
-        let context_id = ContextId::generate();
-        let task_id = TaskId::generate();
-
-        let rendering_hints = result
-            .hints
-            .as_ref()
-            .and_then(|h| serde_json::to_value(h).ok());
-
-        let data_map = match &result.data {
-            serde_json::Value::Object(map) => map.clone(),
-            other => {
-                let mut map = serde_json::Map::new();
-                map.insert("value".to_string(), other.clone());
-                map
-            }
-        };
-
-        let mut metadata = ArtifactMetadata::new(
-            result.artifact_type_str().to_string(),
-            context_id.clone(),
-            task_id.clone(),
-        );
-        metadata.rendering_hints = rendering_hints;
-        metadata.source = Some("mcp-cli".to_string());
-
-        let artifact = Artifact {
-            id: artifact_id.clone(),
-            name: result.title.clone(),
-            description: Some(format!("Result of command: {}", command)),
-            parts: vec![Part::Data(DataPart { data: data_map })],
-            extensions: vec![],
-            metadata,
-        };
-
-        let repo =
-            systemprompt::agent::repository::content::ArtifactRepository::new(self.db_pool.clone());
-        repo.create_artifact(&task_id, &context_id, &artifact)
-            .await?;
-
-        Ok(artifact_id)
     }
 }

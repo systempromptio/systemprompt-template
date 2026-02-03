@@ -3,6 +3,7 @@ use std::sync::Arc;
 use chrono::Utc;
 use sqlx::PgPool;
 
+use crate::identifiers::MemoryId;
 use crate::models::{CreateMemoryParams, MemoryType, SoulMemory};
 
 #[derive(Debug, Clone)]
@@ -17,7 +18,7 @@ impl MemoryRepository {
     }
 
     pub async fn create(&self, params: &CreateMemoryParams) -> Result<SoulMemory, sqlx::Error> {
-        let id = uuid::Uuid::new_v4().to_string();
+        let id = MemoryId::generate();
         let now = Utc::now();
         let memory_type = params.memory_type.as_str();
         let category = params.category.as_str();
@@ -34,7 +35,7 @@ impl MemoryRepository {
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, TRUE)
             RETURNING
-                id,
+                id as "id: MemoryId",
                 memory_type,
                 category,
                 subject,
@@ -53,7 +54,7 @@ impl MemoryRepository {
                 expires_at,
                 is_active
             "#,
-            id,
+            id.as_str(),
             memory_type,
             category,
             params.subject,

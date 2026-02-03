@@ -20,24 +20,162 @@
         <!-- Hero Section -->
         <section class="playbooks-section">
             <div class="container">
-                <h2 class="section-title">{{site.homepage.playbooks.title}} <span class="highlight">{{site.homepage.playbooks.title_highlight}}</span></h2>
+                <h1 class="section-title">{{site.homepage.playbooks.title}} <span class="highlight">{{site.homepage.playbooks.title_highlight}}</span></h1>
                 <p class="section-subtitle">{{site.homepage.playbooks.subtitle}}</p>
 
-                {{#if site.homepage.playbooks.featured}}
-                <div class="playbooks-featured">
-                    <span class="playbooks-featured__badge">{{site.homepage.playbooks.featured.badge}}</span>
-                    <h3 class="playbooks-featured__title">{{site.homepage.playbooks.featured.title}}</h3>
-                    <p class="playbooks-featured__description">{{site.homepage.playbooks.featured.description}}</p>
-                    <div class="playbooks-featured__code">
-                        <code>$ {{site.homepage.playbooks.featured.code}}</code>
+                {{#if site.homepage.playbooks.status}}
+                <div class="status-card" id="system-status-card"
+                     data-mcp-endpoint="{{site.homepage.playbooks.status.mcp_endpoint}}"
+                     data-agents-endpoint="{{site.homepage.playbooks.status.agents_endpoint}}">
+                    <!-- Status Header -->
+                    <div class="status-card__header">
+                        <span class="status-card__indicator" id="status-indicator"></span>
+                        <h3 class="status-card__title">{{site.homepage.playbooks.status.title}}</h3>
                     </div>
-                    <a href="{{site.homepage.playbooks.featured.url}}" class="playbooks-featured__cta">{{site.homepage.playbooks.featured.cta_text}} <span class="arrow">→</span></a>
+
+
+                    <!-- Status Table -->
+                    <div class="status-card__table">
+                        <!-- MCP Services Section -->
+                        <div class="status-card__section">
+                            <div class="status-card__section-header">
+                                <span class="status-card__section-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                    </svg>
+                                </span>
+                                <span class="status-card__section-title">MCP Services</span>
+                                <span class="status-card__count" id="mcp-count">--</span>
+                            </div>
+                            <ul class="status-card__list" id="mcp-services-list">
+                                <li class="status-card__item status-card__item--loading">
+                                    <span class="status-card__loading-text">Loading services...</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Agents Section -->
+                        <div class="status-card__section">
+                            <div class="status-card__section-header">
+                                <span class="status-card__section-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <circle cx="12" cy="8" r="4"/>
+                                        <path d="M20 21a8 8 0 10-16 0"/>
+                                    </svg>
+                                </span>
+                                <span class="status-card__section-title">Active Agents</span>
+                                <span class="status-card__count" id="agents-count">--</span>
+                            </div>
+                            <ul class="status-card__list" id="agents-list">
+                                <li class="status-card__item status-card__item--loading">
+                                    <span class="status-card__loading-text">Loading agents...</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- API Links -->
+                    <div class="status-card__actions">
+                        <a href="{{site.homepage.playbooks.status.mcp_endpoint}}" class="status-card__link" target="_blank" rel="noopener">
+                            <span>MCP Registry</span>
+                            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                                <path d="M3.75 2h3.5a.75.75 0 0 1 0 1.5h-3.5a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-3.5a.75.75 0 0 1 1.5 0v3.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5C2 2.784 2.784 2 3.75 2Zm6.854-1h4.146a.25.25 0 0 1 .25.25v4.146a.25.25 0 0 1-.427.177L13.03 4.03 9.28 7.78a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042l3.75-3.75-1.543-1.543A.25.25 0 0 1 10.604 1Z"/>
+                            </svg>
+                        </a>
+                        <a href="{{site.homepage.playbooks.status.agents_endpoint}}" class="status-card__link" target="_blank" rel="noopener">
+                            <span>Agent Registry</span>
+                            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                                <path d="M3.75 2h3.5a.75.75 0 0 1 0 1.5h-3.5a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-3.5a.75.75 0 0 1 1.5 0v3.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5C2 2.784 2.784 2 3.75 2Zm6.854-1h4.146a.25.25 0 0 1 .25.25v4.146a.25.25 0 0 1-.427.177L13.03 4.03 9.28 7.78a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042l3.75-3.75-1.543-1.543A.25.25 0 0 1 10.604 1Z"/>
+                            </svg>
+                        </a>
+                    </div>
+
+                    <!-- Documentation Links -->
+                    <div class="status-card__docs">
+                        <span class="status-card__docs-label">Documentation:</span>
+                        {{#each site.homepage.playbooks.status.domains}}
+                        <a href="{{this.url}}" class="status-card__doc-link" target="_blank" rel="noopener">{{this.name}}</a>{{#unless @last}} ·{{/unless}}
+                        {{/each}}
+                    </div>
+                </div>
+
+                <!-- Evolution Section -->
+                {{#if site.homepage.actions.section_title}}
+                <h2 class="evolution-section-title">{{site.homepage.actions.section_title}}</h2>
+                <p class="evolution-section-subtitle">{{site.homepage.actions.section_subtitle}}</p>
+                {{/if}}
+
+                <div class="quick-actions">
+                    {{#each site.homepage.actions.cards}}
+                    <div class="quick-action-card {{#if this.highlight}}quick-action-card--highlight{{/if}}" data-category="{{this.category}}">
+                        <div class="quick-action-card__header">
+                            <span class="quick-action-card__name">{{this.title}}</span>
+                            {{#if this.subtitle}}
+                            <span class="quick-action-card__subtitle">{{this.subtitle}}</span>
+                            {{/if}}
+                        </div>
+
+                        <p class="quick-action-card__desc">{{this.description}}</p>
+
+                        {{#if this.narrative}}
+                        <p class="quick-action-card__narrative">{{this.narrative}}</p>
+                        {{/if}}
+
+                        {{#if this.characteristics}}
+                        <ul class="quick-action-card__traits">
+                            {{#each this.characteristics}}
+                            <li>{{this}}</li>
+                            {{/each}}
+                        </ul>
+                        {{/if}}
+
+                        {{#each this.commands}}
+                        <div class="quick-action-card__code">
+                            <code>{{this}}</code>
+                            <button class="copy-btn" data-code="{{this}}" aria-label="Copy to clipboard">
+                                <svg class="copy-icon" viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                                    <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/>
+                                    <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/>
+                                </svg>
+                                <svg class="check-icon" viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                                    <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 1 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{/each}}
                 </div>
                 {{/if}}
             </div>
         </section>
+
+        <!-- What's Next Section -->
+        {{#if site.homepage.whats_next.title}}
+        <h2 class="section-title whats-next-title">{{site.homepage.whats_next.title}}</h2>
+        {{/if}}
+        <section class="diagonal-hero">
+            {{#each site.homepage.whats_next.cards}}
+            <div class="diagonal-pane diagonal-pane--{{this.id}}">
+                <div class="diagonal-content">
+                    <div class="diagonal-icon">
+                        {{{this.icon_svg}}}
+                    </div>
+                    <h2 class="diagonal-title">{{this.title}} <span class="highlight">{{this.title_highlight}}</span></h2>
+                    <p class="diagonal-subtitle">{{this.subtitle}}</p>
+                    <ul class="diagonal-features">
+                        {{#each this.features}}
+                        <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
+                    <a href="{{this.url}}" class="diagonal-cta" target="_blank">Learn more →</a>
+                </div>
+            </div>
+            {{/each}}
+        </section>
     </main>
 
     {{{FOOTER}}}
+    {{{SCRIPTS}}}
 </body>
 </html>

@@ -10,7 +10,10 @@ use crate::navigation::{BrandingConfig, NavigationConfig};
 #[derive(Debug, Clone, Error)]
 pub enum ConfigError {
     #[error("Failed to parse {config_name}: {message}")]
-    Parse { config_name: String, message: String },
+    Parse {
+        config_name: String,
+        message: String,
+    },
 }
 
 pub fn load_navigation_config() -> Result<Option<Arc<NavigationConfig>>, ConfigError> {
@@ -18,12 +21,11 @@ pub fn load_navigation_config() -> Result<Option<Arc<NavigationConfig>>, ConfigE
         return Ok(None);
     };
 
-    let nav_config: NavigationConfig = serde_yaml::from_value(nav_value).map_err(|e| {
-        ConfigError::Parse {
+    let nav_config: NavigationConfig =
+        serde_yaml::from_value(nav_value).map_err(|e| ConfigError::Parse {
             config_name: "navigation.yaml".to_string(),
             message: e.to_string(),
-        }
-    })?;
+        })?;
 
     tracing::info!("Loaded navigation config from config/navigation.yaml");
 

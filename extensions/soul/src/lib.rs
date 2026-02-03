@@ -3,6 +3,7 @@
 pub mod discord;
 pub mod error;
 pub mod extension;
+pub mod identifiers;
 pub mod jobs;
 pub mod models;
 pub mod repository;
@@ -13,6 +14,7 @@ pub use discord::{
 };
 pub use error::SoulError;
 pub use extension::SoulExtension;
+pub use identifiers::MemoryId;
 pub use jobs::{DiscordGatewayJob, HeartbeatJob, MemorySynthesisJob};
 pub use models::{CreateMemoryParams, MemoryCategory, MemoryType, SoulMemory};
 pub use repository::MemoryRepository;

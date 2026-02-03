@@ -8,7 +8,7 @@ use axum::{
 };
 use chrono::Utc;
 use sqlx::PgPool;
-use systemprompt::identifiers::{CampaignId, ContentId, LinkClickId, LinkId, SessionId};
+use systemprompt::identifiers::{LinkClickId, SessionId};
 
 const DEFAULT_CLICK_LIMIT: i64 = 100;
 
@@ -40,7 +40,7 @@ pub async fn generate_link_handler(
                 .as_ref()
                 .map_or("https://example.com", |c| c.base_url().as_str());
             let response = GenerateLinkResponse {
-                id: link.id.to_string(),
+                id: link.id,
                 short_code: link.short_code.clone(),
                 short_url: format!("{}/r/{}", base_url.trim_end_matches('/'), link.short_code),
                 target_url: link.target_url,
@@ -57,12 +57,10 @@ pub async fn list_links_handler(
 ) -> Response {
     let repo = LinkRepository::new(state.pool.clone());
 
-    let result = if let Some(campaign_id) = query.campaign_id {
-        let campaign_id = CampaignId::new(campaign_id);
-        repo.list_links_by_campaign(&campaign_id).await
-    } else if let Some(content_id) = query.content_id {
-        let content_id = ContentId::new(content_id);
-        repo.list_links_by_source_content(&content_id).await
+    let result = if let Some(ref campaign_id) = query.campaign_id {
+        repo.list_links_by_campaign(campaign_id).await
+    } else if let Some(ref content_id) = query.content_id {
+        repo.list_links_by_source_content(content_id).await
     } else {
         Ok(vec![])
     };
@@ -84,7 +82,7 @@ pub async fn record_click_handler(
     let analytics_repo = LinkAnalyticsRepository::new(state.pool.clone());
 
     let click_id = LinkClickId::generate();
-    let link_id = LinkId::new(request.link_id);
+    let link_id = request.link_id;
     let session_id = SessionId::new(
         request
             .session_id
@@ -150,7 +148,7 @@ pub async fn content_journey_handler(
 ) -> Response {
     let service = LinkAnalyticsService::new(state.pool.clone());
 
-    match service.get_content_journey(&query.content_id).await {
+    match service.get_content_journey(query.content_id.as_str()).await {
         Ok(journey) => Json(journey).into_response(),
         Err(e) => error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
     }

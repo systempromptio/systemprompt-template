@@ -112,6 +112,62 @@ async fn main() -> anyhow::Result<()> {
 
 ---
 
+## CRITICAL: RBAC and RequestContext
+
+**All `call_tool` handlers MUST extract RequestContext for proper execution tracking.**
+
+Without this, artifact persistence fails with foreign key constraint errors.
+
+```rust
+use systemprompt::mcp::middleware::enforce_rbac_from_registry;
+use systemprompt::mcp::repository::ToolUsageRepository;
+use systemprompt::mcp::models::{ToolExecutionRequest, ToolExecutionResult};
+use chrono::Utc;
+
+async fn call_tool(
+    &self,
+    request: CallToolRequestParams,
+    ctx: RequestContext<RoleServer>,
+) -> Result<CallToolResult, McpError> {
+    let started_at = Utc::now();
+
+    let auth_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str()).await?;
+    let authenticated_ctx = auth_result.expect_authenticated("requires OAuth")?;
+    let request_context = authenticated_ctx.context.clone();
+
+    let execution_request = ToolExecutionRequest {
+        tool_name: request.name.to_string(),
+        server_name: self.service_id.to_string(),
+        input: serde_json::to_value(&request.arguments).unwrap_or_default(),
+        started_at,
+        context: request_context.clone(),
+        request_method: Some("mcp".to_string()),
+        request_source: Some("my-server".to_string()),
+        ai_tool_call_id: None,
+    };
+
+    let mcp_execution_id = self.tool_usage_repo
+        .start_execution(&execution_request).await?;
+
+    let result = handle_tool_call(&request.name, request, &request_context).await;
+
+    self.tool_usage_repo.complete_execution(&mcp_execution_id, &ToolExecutionResult {
+        output: result.as_ref().ok().and_then(|r| r.structured_content.clone()),
+        output_schema: None,
+        status: if result.is_ok() { "success" } else { "failed" }.to_string(),
+        error_message: result.as_ref().err().map(|e| e.message.to_string()),
+        started_at,
+        completed_at: Utc::now(),
+    }).await.ok();
+
+    result
+}
+```
+
+-> See [MCP Checklist](build_mcp-checklist) for complete requirements.
+
+---
+
 ## Tool Implementation
 
 File: `src/tools/mod.rs`. See `extensions/mcp/systemprompt/src/tools/` for reference.
@@ -126,10 +182,10 @@ pub fn register_tools() -> Vec<Tool> {
 pub async fn handle_tool_call(
     name: &str,
     request: CallToolRequestParam,
-    db_pool: &DbPool,
+    ctx: &RequestContext,
 ) -> Result<CallToolResult, McpError> {
     match name {
-        "my_tool" => handle_my_tool(db_pool, request).await,
+        "my_tool" => handle_my_tool(ctx, request).await,
         _ => Err(McpError::method_not_found())
     }
 }
@@ -184,6 +240,8 @@ impl ExtensionError for ToolError {
 - [ ] Loads configuration
 - [ ] Registers tools
 - [ ] Binds to configured port
+- [ ] **CRITICAL**: `call_tool` extracts RequestContext via `enforce_rbac_from_registry`
+- [ ] **CRITICAL**: Uses `ToolUsageRepository` for execution tracking
 
 ---
 

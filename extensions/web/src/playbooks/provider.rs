@@ -47,13 +47,13 @@ impl PageDataProvider for PlaybooksListPageDataProvider {
     }
 
     async fn provide_page_data(&self, ctx: &PageContext<'_>) -> Result<Value> {
-        let db = ctx
-            .db_pool::<Arc<Database>>()
-            .ok_or_else(|| anyhow::anyhow!("PlaybooksListPageDataProvider: No database in context"))?;
+        let db = ctx.db_pool::<Arc<Database>>().ok_or_else(|| {
+            anyhow::anyhow!("PlaybooksListPageDataProvider: No database in context")
+        })?;
 
-        let pool = db
-            .pool()
-            .ok_or_else(|| anyhow::anyhow!("PlaybooksListPageDataProvider: Pool not initialized"))?;
+        let pool = db.pool().ok_or_else(|| {
+            anyhow::anyhow!("PlaybooksListPageDataProvider: Pool not initialized")
+        })?;
 
         let playbooks = sqlx::query_as!(
             Playbook,
