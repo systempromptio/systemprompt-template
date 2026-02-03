@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                slug,\n                COALESCE(related_playbooks, '[]'::jsonb) as \"related_playbooks!\",\n                COALESCE(related_code, '[]'::jsonb) as \"related_code!\"\n            FROM markdown_content\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "related_playbooks!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "related_code!",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "83311b5f5de47df9dcc99c38477d13eef6dbe7ad3beb999d1a9ad5f4e29cb8d3"
+}

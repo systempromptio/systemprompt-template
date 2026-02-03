@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM markdown_content WHERE source_id = $1 AND slug != ALL($2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0fa9b0aa72729744fdbf2bf8ba1b42b87d04c42a8aef425842220db1234d133f"
+}

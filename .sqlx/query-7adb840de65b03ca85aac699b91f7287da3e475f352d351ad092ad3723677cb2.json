@@ -1,0 +1,138 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO soul_memories (\n                id, memory_type, category, subject, content, context_text,\n                priority, confidence, source_task_id, source_context_id,\n                tags, metadata, created_at, updated_at, expires_at, is_active\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, TRUE)\n            RETURNING\n                id as \"id: MemoryId\",\n                memory_type,\n                category,\n                subject,\n                content,\n                context_text,\n                priority,\n                confidence as \"confidence: f32\",\n                source_task_id,\n                source_context_id,\n                tags,\n                metadata,\n                created_at,\n                updated_at,\n                last_accessed_at,\n                access_count,\n                expires_at,\n                is_active\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: MemoryId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "memory_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "category",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "subject",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "context_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "priority",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "confidence: f32",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 8,
+        "name": "source_task_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "source_context_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "tags",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 11,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 14,
+        "name": "last_accessed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 15,
+        "name": "access_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 16,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 17,
+        "name": "is_active",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Float4",
+        "Text",
+        "Text",
+        "TextArray",
+        "Jsonb",
+        "Timestamptz",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "7adb840de65b03ca85aac699b91f7287da3e475f352d351ad092ad3723677cb2"
+}
