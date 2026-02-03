@@ -51,20 +51,16 @@ cd my-project
 ### 2. Build
 
 ```bash
-SQLX_OFFLINE=true cargo build --release
+just build --release
 ```
-
-The `SQLX_OFFLINE=true` flag is required for first build (no database yet).
 
 ### 3. Setup
 
 ```bash
 # Login to systemprompt.io (free, enables profile management)
-systemprompt cloud auth login
+just login
 
-# Create tenant - choose one:
-
-# Option A: Local PostgreSQL
+# Start PostgreSQL (local development)
 docker run -d --name systemprompt-db \
   -e POSTGRES_DB=systemprompt \
   -e POSTGRES_USER=systemprompt \
@@ -72,25 +68,27 @@ docker run -d --name systemprompt-db \
   -p 5432:5432 \
   postgres:16
 
-systemprompt cloud tenant create --database-url postgres://systemprompt:systemprompt@localhost:5432/systemprompt
+# Create tenant and profile
+just tenant create --database-url postgres://systemprompt:systemprompt@localhost:5432/systemprompt
+just profile create local
 
-# Option B: Cloud (managed PostgreSQL)
-systemprompt cloud tenant create --region iad
+# Run migrations and start
+just migrate
+just start
+```
 
-# Continue setup
-systemprompt cloud profile create local
-systemprompt infra db migrate
-systemprompt infra services start --all
+**Or for Cloud (managed PostgreSQL):**
+
+```bash
+just tenant create --region iad
+just profile create production
+just migrate
+just start
 ```
 
 ### 4. Verify
 
 Visit http://localhost:8080
-
-```bash
-systemprompt infra services status
-systemprompt admin agents list
-```
 
 ## The Playbook System
 

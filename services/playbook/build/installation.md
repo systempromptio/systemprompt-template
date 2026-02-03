@@ -1,15 +1,12 @@
 ---
 title: "Installation Playbook"
-description: "Machine-executable steps to install and configure SystemPrompt from the template."
-author: "SystemPrompt"
-slug: "build-installation"
-keywords: "installation, setup, template, configuration"
-image: ""
-kind: "playbook"
-public: true
-tags: []
-published_at: "2026-01-30"
-updated_at: "2026-02-02"
+description: "Interactive setup steps for SystemPrompt from the template."
+keywords:
+  - installation
+  - setup
+  - template
+  - configuration
+category: build
 ---
 
 # Installation
@@ -17,6 +14,7 @@ updated_at: "2026-02-02"
 Install SystemPrompt from the template repository.
 
 > **Requires**: Rust 1.75+, Git, Docker (for local PostgreSQL) OR systemprompt.io Cloud account
+> **Note**: These are interactive commands requiring terminal access. See [Justfile Playbook](../cli/justfile.md)
 
 ---
 
@@ -29,8 +27,6 @@ rustc --version    # 1.75.0+
 git --version
 gh --version       # Optional but recommended
 ```
-
-PostgreSQL is the only external dependency. Any PostgreSQL 15+ works.
 
 ---
 
@@ -52,13 +48,13 @@ cd my-ai
 
 ---
 
-## Build Binary
+## Build
 
 ```bash
-SQLX_OFFLINE=true cargo build --release
+just build --release
 ```
 
-The `SQLX_OFFLINE=true` flag is required for first build (no database yet).
+First build auto-detects offline mode (no database yet).
 
 ---
 
@@ -67,10 +63,10 @@ The `SQLX_OFFLINE=true` flag is required for first build (no database yet).
 **IMPORTANT: Manual command only. Do not run via agents.**
 
 ```bash
-systemprompt cloud auth login
+just login
 ```
 
-This opens a browser for GitHub or Google OAuth. Registration is:
+Opens browser for GitHub or Google OAuth. Registration is:
 - **Free** — No payment required
 - **Required** — License grant depends on authentication
 - **One-time** — Credentials persist in `.systemprompt/credentials.json`
@@ -94,44 +90,34 @@ docker run -d --name systemprompt-db \
   postgres:16
 ```
 
-Create tenant with your database URL:
+Create tenant:
 
 ```bash
-systemprompt cloud tenant create --database-url postgres://systemprompt:systemprompt@localhost:5432/systemprompt
+just tenant create --database-url postgres://systemprompt:systemprompt@localhost:5432/systemprompt
 ```
-
-Other database URL examples:
-
-| Host | DATABASE_URL |
-|------|--------------|
-| Docker | `postgres://systemprompt:systemprompt@localhost:5432/systemprompt` |
-| Neon | `postgres://user:pass@ep-xxx.us-east-2.aws.neon.tech/systemprompt` |
-| Supabase | `postgres://postgres:pass@db.xxx.supabase.co:5432/postgres` |
 
 **Option B: Cloud (managed PostgreSQL)**
 
 ```bash
-systemprompt cloud tenant create --region iad
+just tenant create --region iad
 ```
-
-Provisions managed PostgreSQL in your chosen region.
 
 ---
 
 ## Create Profile
 
 ```bash
-systemprompt cloud profile create local
+just profile create local
 ```
 
-This creates `.systemprompt/profiles/local/profile.yaml` with your configuration.
+Creates `.systemprompt/profiles/local/profile.yaml` with your configuration.
 
 ---
 
 ## Run Migrations
 
 ```bash
-systemprompt infra db migrate
+just migrate
 ```
 
 ---
@@ -142,21 +128,9 @@ systemprompt infra db migrate
 just start
 ```
 
-Or via CLI:
-
-```bash
-systemprompt infra services start --all
-```
-
 ---
 
-## Verify Installation
-
-```bash
-systemprompt infra services status
-systemprompt infra db status
-systemprompt admin agents list
-```
+## Verify
 
 Visit `http://localhost:8080` to see the homepage.
 
@@ -167,9 +141,9 @@ Visit `http://localhost:8080` to see the homepage.
 | Issue | Solution |
 |-------|----------|
 | Build fails on macOS | Install OpenSSL: `brew install openssl` |
-| Database connection refused | Verify PostgreSQL is running, check `DATABASE_URL` |
+| Database connection refused | Verify PostgreSQL is running |
 | Login fails | Ensure browser access, check network |
-| Migrations fail | Check `DATABASE_URL` format, verify database exists |
+| Migrations fail | Check database URL, verify database exists |
 
 ---
 
@@ -177,11 +151,12 @@ Visit `http://localhost:8080` to see the homepage.
 
 | Task | Command |
 |------|---------|
-| Build | `SQLX_OFFLINE=true cargo build --release` |
-| Login | `systemprompt cloud auth login` (manual only) |
-| Create local tenant | `systemprompt cloud tenant create --database-url postgres://...` |
-| Create cloud tenant | `systemprompt cloud tenant create --region iad` |
-| Create profile | `systemprompt cloud profile create <name>` |
-| Run migrations | `systemprompt infra db migrate` |
-| Start services | `systemprompt infra services start --all` |
-| Check status | `systemprompt infra services status` |
+| Build | `just build --release` |
+| Login | `just login` (manual only) |
+| Create local tenant | `just tenant create --database-url postgres://...` |
+| Create cloud tenant | `just tenant create --region iad` |
+| Create profile | `just profile create <name>` |
+| Run migrations | `just migrate` |
+| Start services | `just start` |
+
+-> See [Justfile Playbook](../cli/justfile.md) for all interactive commands.
