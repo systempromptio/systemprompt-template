@@ -1,0 +1,15 @@
+mcp_servers:
+  moltbook:
+    binary: "systemprompt-mcp-moltbook"
+    package: "moltbook"
+    port: 5030
+    endpoint: "http://localhost:8080/api/v1/mcp/moltbook/mcp"
+    enabled: false
+    display_in_web: true
+    description: "Moltbook MCP Server - AI agent social network tools"
+
+    oauth:
+      required: true
+      scopes: ["admin"]
+      audience: "mcp"
+      client_id: null
