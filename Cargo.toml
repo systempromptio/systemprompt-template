@@ -15,7 +15,7 @@ resolver = "2"
 [workspace.package]
 edition = "2021"
 version = "0.1.0"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Edward Jack Burton <edward@systemprompt.io>"]
 license = "MIT"
 
 [workspace.dependencies]
