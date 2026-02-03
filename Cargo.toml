@@ -199,5 +199,5 @@ workspace = true
 # LOCAL DEVELOPMENT PATCHES (disabled by default)
 # Uncomment to use local systemprompt-core for development
 # ============================================
-[patch.crates-io]
-systemprompt = { path = "../systemprompt-core/systemprompt" }
+# [patch.crates-io]
+# systemprompt = { path = "../systemprompt-core/systemprompt" }
