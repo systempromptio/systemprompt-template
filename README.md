@@ -30,21 +30,21 @@ Built on [systemprompt.io](https://systemprompt.io) — a 50MB production-ready 
 ### Prerequisites
 
 - **Rust 1.75+** — [rustup.rs](https://rustup.rs/)
-- **Docker** — for local PostgreSQL
 - **just** — command runner (`cargo install just`)
 
-### 1. Create Your Project
+### 1. Fork or Download
 
+**Fork on GitHub** (recommended):
 ```bash
-gh repo create my-project --template systempromptio/systemprompt-template --clone --private
-cd my-project
+# Fork via GitHub UI, then:
+git clone https://github.com/YOUR-USERNAME/systemprompt-template.git
+cd systemprompt-template
 ```
 
-Or download directly:
-
+**Or download directly:**
 ```bash
-git clone --recursive https://github.com/systempromptio/systemprompt-template.git my-project
-cd my-project
+git clone https://github.com/systempromptio/systemprompt-template.git
+cd systemprompt-template
 ```
 
 ### 2. Build
@@ -53,16 +53,18 @@ cd my-project
 just build
 ```
 
-### 3. Setup & Start
+### 3. Login & Setup
 
 ```bash
-just db-up      # Start PostgreSQL
 just login      # Authenticate with systemprompt.io cloud
-just profile    # Create local profile
-just start      # Launch services
+just tenant     # Create your tenant
 ```
 
-### 4. Open
+### 4. Start
+
+```bash
+just start
+```
 
 Visit **http://localhost:8080**
 
@@ -221,12 +223,10 @@ systemprompt-template/
 | Command | Description |
 |---------|-------------|
 | `just build` | Build the project |
-| `just start` | Start all services |
 | `just login` | Authenticate with cloud |
-| `just profile` | Create/select profile |
+| `just tenant` | Create/select tenant |
+| `just start` | Start all services |
 | `just deploy` | Build and deploy to cloud |
-| `just db-up` | Start local PostgreSQL |
-| `just db-down` | Stop local PostgreSQL |
 | `just migrate` | Run database migrations |
 
 ---
