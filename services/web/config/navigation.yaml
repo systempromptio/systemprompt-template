@@ -46,21 +46,21 @@ header:
 
     - id: playbooks
       label: "Playbooks"
-      href: "/playbooks"
+      href: "https://systemprompt.io/playbooks"
       dropdown: true
       sections:
         - title: "Categories"
           links:
             - label: "All Playbooks"
-              href: "/playbooks"
+              href: "https://systemprompt.io/playbooks"
             - label: "Guides"
-              href: "/playbooks?category=guide"
+              href: "https://systemprompt.io/playbooks?category=guide"
             - label: "CLI"
-              href: "/playbooks?category=cli"
+              href: "https://systemprompt.io/playbooks?category=cli"
             - label: "Build"
-              href: "/playbooks?category=build"
+              href: "https://systemprompt.io/playbooks?category=build"
             - label: "Content"
-              href: "/playbooks?category=content"
+              href: "https://systemprompt.io/playbooks?category=content"
 
   cta:
     label: "Get Started"
@@ -76,7 +76,7 @@ footer:
   resources:
     - path: "/blog"
       label: "Blog"
-    - path: "/playbooks"
+    - path: "https://systemprompt.io/playbooks"
       label: "Playbooks"
     - path: "/documentation"
       label: "Documentation"
