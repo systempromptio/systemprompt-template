@@ -3,22 +3,6 @@
 
 header:
   items:
-    - id: features
-      label: "Features"
-      href: "#"
-      dropdown: true
-      sections:
-        - title: "Core Features"
-          links:
-            - label: "Agentic Mesh"
-              href: "/features/agentic-mesh"
-            - label: "Embedded AI library"
-              href: "/features/self-hosted-ai-platform"
-            - label: "Unified Control Plane"
-              href: "/features/unified-control-plane"
-            - label: "The Closed Loop"
-              href: "/features/closed-loop-agents"
-
     - id: documentation
       label: "Documentation"
       href: "/documentation"
@@ -26,12 +10,10 @@ header:
       sections:
         - title: "Getting Started"
           links:
+            - label: "Overview"
+              href: "/documentation"
             - label: "Installation"
               href: "/documentation/installation"
-            - label: "Licensing"
-              href: "/documentation/licensing"
-            - label: "Early Access"
-              href: "/documentation/early-access"
             - label: "Playbooks"
               href: "/documentation/playbooks"
         - title: "Configuration"
@@ -79,13 +61,11 @@ header:
               href: "/playbooks?category=build"
             - label: "Content"
               href: "/playbooks?category=content"
-            - label: "Validation"
-              href: "/playbooks?category=validation"
 
   cta:
     label: "Get Started"
-    href: "https://github.com/systempromptio/systemprompt-template"
-    external: true
+    href: "/documentation/installation"
+    external: false
 
 footer:
   legal:
@@ -93,15 +73,6 @@ footer:
       label: "Privacy Policy"
     - path: "/legal/cookie-policy"
       label: "Cookie Policy"
-  features:
-    - path: "/features/agentic-mesh"
-      label: "Agentic Mesh"
-    - path: "/features/self-hosted-ai-platform"
-      label: "Embedded AI"
-    - path: "/features/unified-control-plane"
-      label: "Control Plane"
-    - path: "/features/closed-loop-agents"
-      label: "Closed Loop"
   resources:
     - path: "/blog"
       label: "Blog"
@@ -111,12 +82,9 @@ footer:
       label: "Documentation"
 
 social:
-  - href: "https://github.com/systempromptio"
+  - href: "https://github.com/systempromptio/systemprompt-template"
     type: "github"
     label: "GitHub"
-  - href: "https://twitter.com/systemprompt"
-    type: "twitter"
-    label: "Twitter"
 
 # Docs sidebar - rendered dynamically via site.docs_sidebar in templates
 docs_sidebar:
@@ -128,8 +96,6 @@ docs_sidebar:
         href: "/documentation/installation"
       - label: "Licensing"
         href: "/documentation/licensing"
-      - label: "Early Access"
-        href: "/documentation/early-access"
       - label: "Playbooks"
         href: "/documentation/playbooks"
 
@@ -211,4 +177,3 @@ docs_sidebar:
         href: "/documentation/extensions/mcp"
       - label: "CLI Extensions"
         href: "/documentation/extensions/cli"
-

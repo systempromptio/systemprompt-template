@@ -36,6 +36,7 @@ services/playbook/
 ├── guide/        guide_* — Onboarding, meta
 ├── cli/          cli_* — All CLI operations (commands, setup, tracking)
 ├── build/        build_* — Development standards (Rust, extensions)
+│   └── cloud/    build_cloud_* — Docker, containers, deployment
 └── content/      content_* — Content creation workflows
 ```
 
@@ -85,6 +86,7 @@ This keeps related content together while maintaining clear boundaries.
 |---------|-------------|-----------|
 | CLI playbook | `cli_agents` | `cli/agents.md` |
 | Build playbook | `build_architecture` | `build/architecture.md` |
+| Cloud playbook | `build_cloud_docker` | `build/cloud/docker.md` |
 | Guide playbook | `guide_start` | `guide/start.md` |
 | Content playbook | `content_blog` | `content/blog.md` |
 

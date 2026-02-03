@@ -1,531 +1,251 @@
 # Homepage Configuration
-# All content sections for the landing page
+# Self-documenting template - shows users how to customize their project
 
 hero:
-  title: "Ship agents to production"
-  title_highlight: "in record time."
-  subtitle: "50MB of production ready Rust with auth, memory, MCP hosting and observability. Everything your agents need to serve real users."
-  cta: "Get Started"
-  cta_url: "https://github.com/systempromptio/systemprompt-template"
-  cta_secondary: "Learn More"
-  cta_secondary_url: "/features/self-hosted-ai-platform"
+  title: "Welcome to Your"
+  title_highlight: "Template"
+  subtitle: "You've cloned a systemprompt.io template. Everything you see is customizable through YAML config files. Start with guide_start to learn how."
+  cta: "Read guide_start"
+  cta_url: "/playbooks/guide_start"
+  cta_secondary: "Browse Playbooks"
+  cta_secondary_url: "/playbooks"
 
-value_props:
-  - id: "platform"
-    title: "EMBEDDED"
-    title_highlight: "RUST LIBRARY"
-    subtitle: "50MB binary with everything. A complete AI infrastructure you compile into your project."
-    icon: "server"
-    url: "/features/self-hosted-ai-platform"
-    features:
-      - "Complete stack in one binary"
-      - "Production auth built in"
-      - "MCP hosting, secured"
-      - "Extensible at compile time"
-      - "Observability without instrumentation"
-  - id: "cli"
-    title: "UNIFIED"
-    title_highlight: "CONTROL PLANE"
-    subtitle: "The same commands work for you and your AI agents. Local or remote. Every action audited."
-    icon: "terminal"
-    url: "/features/unified-control-plane"
-    features:
-      - "Superagent-ready interface"
-      - "Transparent remote routing"
-      - "Eight unified domains"
-      - "Complete audit visibility"
-      - "Config-driven operations"
-  - id: "agentic"
-    title: "THE CLOSED"
-    title_highlight: "LOOP"
-    subtitle: "Your agents can query their own performance and adapt in real-time. The feedback loop is built in."
-    icon: "refresh-cw"
-    url: "/features/closed-loop-agents"
-    features:
-      - "MCP tool calls -> PostgreSQL -> CLI queries"
-      - "A2A self-analysis in real-time"
-      - "Behavioral pattern recognition"
-      - "Dynamic context & skill modification"
-      - "Production audit trail with trace IDs"
-
+# Hidden - not relevant for template
 integrations:
-  label: "Works with"
-  brands:
-    - name: "Gemini"
-      logo: "/files/images/brands/gemini.svg"
-      url: "https://gemini.google.com"
-    - name: "Claude"
-      logo: "/files/images/brands/claude.svg"
-      url: "https://claude.ai"
-    - name: "Moltbot"
-      logo: "/files/images/brands/moltbot.svg"
-      url: "https://moltbot.com"
-    - name: "ChatGPT"
-      logo: "/files/images/brands/chatgpt.svg"
-      url: "https://chatgpt.com"
+  label: ""
+  brands: []
 
-architecture:
-  title: "How It Works"
-  subtitle: "Connect any AI. Deploy anywhere. Ship to your users."
-  message: "Your AI client connects to systemprompt.io via MCP. systemprompt.io handles auth, permissions, and user isolation. Deploy locally during development, then ship to cloud or your own domain for production."
+# Three core capabilities of the template
+value_props:
+  - id: "content"
+    title: "CONTENT"
+    title_highlight: "SYSTEM"
+    subtitle: "Write in Markdown, publish to your site. Blog posts, documentation, and legal pages included."
+    icon: "file-text"
+    url: "/playbooks/build_web-content"
+    features:
+      - "Blog posts: services/content/blog/"
+      - "Documentation: services/content/documentation/"
+      - "Legal pages: services/content/legal/"
+      - "Publish: systemprompt infra jobs run publish_pipeline"
+      - "Playbook: build_web-content"
+  - id: "theming"
+    title: "THEME"
+    title_highlight: "CONFIG"
+    subtitle: "Colors, fonts, and branding defined in one YAML file. Change once, applied everywhere."
+    icon: "eye"
+    url: "/playbooks/build_web-templates"
+    features:
+      - "Theme: services/web/config/theme.yaml"
+      - "Branding: name, logo, favicon"
+      - "Colors: light and dark mode palettes"
+      - "Typography: fonts, sizes, weights"
+      - "Playbook: build_web-templates"
+  - id: "playbooks"
+    title: "PLAYBOOK"
+    title_highlight: "GUIDES"
+    subtitle: "Step-by-step instructions for every task. Read by humans and AI agents alike."
+    icon: "file-text"
+    url: "/playbooks"
+    features:
+      - "List all: systemprompt core playbooks list"
+      - "Read one: systemprompt core playbooks show <id>"
+      - "guide_* - Start here"
+      - "build_* - Development"
+      - "cli_* - Command reference"
 
+# Files to edit - actual paths
 features:
-  title: "Everything your AI needs. Built in."
-  subtitle: "AI execution. Agent orchestration. MCP. Auth. Production-ready from day one."
+  title: "Files to Edit"
+  subtitle: "Your template is configured through these files"
   categories:
-    - name: "Execute"
+    - name: "Homepage & Navigation"
       features:
-        - title: "Runs AI"
-          description: "Anthropic, OpenAI, Gemini—one API. Vision, reasoning, streaming, cost tracking."
-          icon: "cpu"
-          url: "/documentation/services/ai"
-        - title: "Orchestrates agents"
-          description: "A2A protocol. Multi-agent workflows. Task management. Shared state."
-          icon: "git-branch"
-          url: "/documentation/services/agents"
-        - title: "Schedules jobs"
-          description: "Cron-based automation. Background tasks. Content publishing. Maintenance."
-          icon: "clock"
-          url: "/documentation/services/scheduler"
-    - name: "Integrate"
-      features:
-        - title: "Hosts MCP"
-          description: "Production tool servers with real OAuth. Your capabilities, secured."
-          icon: "server"
-          url: "/documentation/services/mcp"
-        - title: "Runs workflows"
-          description: "Skills and playbooks. Define once, execute anywhere. YAML automation."
-          icon: "play"
-          url: "/documentation/services/workflows"
-        - title: "Serves web"
-          description: "Templates, navigation, theming. Your brand, your domain, your interface."
+        - title: "This Homepage"
+          description: "services/web/config/homepage.yaml"
           icon: "layout"
+          url: "/playbooks/guide_recipes"
+        - title: "Header & Footer"
+          description: "services/web/config/navigation.yaml"
+          icon: "layout"
+          url: "/playbooks/cli_web"
+        - title: "Site Metadata"
+          description: "services/web/metadata.yaml"
+          icon: "server"
           url: "/documentation/services/web"
-    - name: "Secure"
+    - name: "Theming & Assets"
       features:
-        - title: "Handles auth"
-          description: "OAuth2/OIDC + WebAuthn included. Ship AI, not login screens."
-          icon: "key"
-          url: "/documentation/services/auth"
-        - title: "Isolates users"
-          description: "Multi-tenant from day one. Per-user scopes enforced automatically."
-          icon: "users"
-          url: "/documentation/services/users"
-    - name: "Operate"
+        - title: "Theme Config"
+          description: "services/web/config/theme.yaml"
+          icon: "eye"
+          url: "/playbooks/build_web-templates"
+        - title: "CSS Files"
+          description: "storage/files/css/*.css"
+          icon: "code"
+          url: "/playbooks/build_web-assets"
+        - title: "Templates"
+          description: "services/web/templates/*.html"
+          icon: "code"
+          url: "/playbooks/build_web-templates"
+    - name: "Content"
       features:
-        - title: "Stores files"
-          description: "Upload, serve, permission. No S3 config. No CDN. Works."
-          icon: "folder"
-          url: "/documentation/services/files"
-        - title: "Tracks everything"
-          description: "Costs, usage, audit trails. Every AI request logged automatically."
-          icon: "bar-chart"
-          url: "/documentation/services/analytics"
-        - title: "Manages content"
-          description: "Blog, docs, legal pages. Markdown in, indexed database out. SEO included."
+        - title: "Blog Posts"
+          description: "services/content/blog/*.md"
           icon: "file-text"
-          url: "/documentation/services/content"
+          url: "/playbooks/build_web-content"
+        - title: "Documentation"
+          description: "services/content/documentation/**/*.md"
+          icon: "file-text"
+          url: "/playbooks/build_web-content"
+        - title: "Legal Pages"
+          description: "services/content/legal/*.md"
+          icon: "shield"
+          url: "/legal/privacy-policy"
 
 how_it_works:
-  title: "Get started in minutes"
+  title: "Customization Steps"
   steps:
     - number: "1"
-      title: "Clone"
-      description: "Create your project from the GitHub template"
-      code: "gh repo create my-ai --template systempromptio/systemprompt-template --clone"
+      title: "Read guide_start"
+      description: "Understand the playbook system"
+      code: "systemprompt core playbooks show guide_start"
     - number: "2"
-      title: "Build"
-      description: "Build the CLI binary (offline mode for first build)"
-      code: "SQLX_OFFLINE=true cargo build --release"
+      title: "Update Branding"
+      description: "Set your name, logo, and colors"
+      code: "# Edit services/web/config/theme.yaml"
     - number: "3"
-      title: "Login"
-      description: "Authenticate with systemprompt.io"
-      code: "systemprompt cloud auth login"
+      title: "Edit This Homepage"
+      description: "Replace this content with yours"
+      code: "# Edit services/web/config/homepage.yaml"
     - number: "4"
-      title: "Profile"
-      description: "Create a local or cloud deployment profile"
-      code: "systemprompt cloud profile create local"
+      title: "Configure Navigation"
+      description: "Set header and footer links"
+      code: "# Edit services/web/config/navigation.yaml"
     - number: "5"
-      title: "Run"
-      description: "Start all services locally"
-      code: "just start"
+      title: "Add Your Content"
+      description: "Create blog posts and docs"
+      code: "# Add files to services/content/"
+    - number: "6"
+      title: "Publish"
+      description: "Build and deploy your site"
+      code: "systemprompt infra jobs run publish_pipeline"
 
 playbooks:
-  title: "Machine-Native Guides"
-  title_highlight: "Written by agents. For agents."
-  subtitle: "Point your super agent to a playbook and watch the magic happen. Deterministic. Self-repairing. Executable."
+  title: "Playbooks"
+  title_highlight: "Your Guide"
+  subtitle: "Every customization task has a playbook. Find yours below."
 
   flow:
     steps:
       - number: "1"
-        label: "You"
-        icon: "user"
+        label: "Find"
+        icon: "search"
       - number: "2"
-        label: "Playbook"
+        label: "Read"
         icon: "book-open"
       - number: "3"
-        label: "Agent"
-        icon: "cpu"
-      - number: "4"
-        label: "Result"
+        label: "Follow"
         icon: "check-circle"
+      - number: "4"
+        label: "Done"
+        icon: "rocket"
 
   featured:
-    badge: "REQUIRED"
-    title: "START HERE"
-    description: "The required entry point for every agent. Read this playbook first before any task."
+    badge: "START HERE"
+    title: "Getting Started Guide"
+    description: "Required first read. Master index linking to all playbooks."
     code: "systemprompt core playbooks show guide_start"
     url: "/playbooks/guide_start"
 
   categories:
     - id: "guide"
-      name: "Getting Started"
-      count: 4
+      name: "Guides"
+      count: 7
       color: "#22c55e"
-      description: "Entry points and meta-guides for agents"
+      description: "Start here - entry points for common tasks"
       url: "/playbooks?category=guide"
-    - id: "cli"
-      name: "CLI Operations"
-      count: 21
-      color: "#06b6d4"
-      description: "Session, agents, services, database, deployment"
-      url: "/playbooks?category=cli"
     - id: "build"
-      name: "Development"
+      name: "Build"
       count: 13
       color: "#a855f7"
-      description: "Extensions, MCP servers, Rust standards, web"
+      description: "Web assets, content, templates, extensions"
       url: "/playbooks?category=build"
+    - id: "cli"
+      name: "CLI Reference"
+      count: 21
+      color: "#06b6d4"
+      description: "All CLI commands documented"
+      url: "/playbooks?category=cli"
     - id: "content"
-      name: "Content Creation"
-      count: 10
+      name: "Content"
+      count: 4
       color: "#ec4899"
-      description: "Blog posts, LinkedIn, Twitter, Medium, Substack"
+      description: "Blog, social media, publishing"
       url: "/playbooks?category=content"
 
   differentiators:
-    - icon: "check-circle"
-      title: "Deterministic"
-      description: "Same input, same output. Every time."
+    - icon: "terminal"
+      title: "CLI Commands"
+      description: "Copy-paste commands that work"
+    - icon: "map"
+      title: "Step-by-Step"
+      description: "Ordered steps, not scattered docs"
     - icon: "refresh-cw"
-      title: "Self-Repairing"
-      description: "Agents fix playbooks when they encounter errors."
-    - icon: "zap"
-      title: "Executable"
-      description: "Not documentation. Runnable instructions."
-    - icon: "layers"
-      title: "Composable"
-      description: "Playbooks reference playbooks. Build on what works."
+      title: "Self-Updating"
+      description: "Fix a playbook, sync to database"
+    - icon: "users"
+      title: "Human & AI"
+      description: "Readable by you and your agents"
 
   cta_primary: "Browse All Playbooks"
   cta_primary_url: "/playbooks"
-  cta_secondary: "Read guide_start"
-  cta_secondary_url: "/playbooks/guide_start"
+  cta_secondary: "View CLI Reference"
+  cta_secondary_url: "/playbooks?category=cli"
 
+# Hidden - marketing sections not relevant for template
 use_cases:
-  title: "Built for production workloads"
-  cases:
-    - title: "MCP Server Hosting"
-      description: "Host your MCP servers with real authentication. Connect Claude Desktop to production APIs securely."
-      icon: "server"
-      url: "/documentation/services/mcp"
-      code: |
-        # services/mcp/systemprompt.yaml
-        mcp_servers:
-          systemprompt:
-            binary: "systemprompt-mcp"
-            port: 5010
-            oauth:
-              required: true
-              scopes: ["admin"]
-              audience: "mcp"
-    - title: "Multi-Tenant AI Products"
-      description: "Ship AI products where every user gets isolated agent access with proper permissions."
-      icon: "users"
-      url: "/playbooks"
-      code: |
-        # services/agents/welcome.yaml
-        card:
-          securitySchemes:
-            oauth2:
-              type: oauth2
-              flows:
-                authorizationCode:
-                  scopes:
-                    anonymous: "Public access"
-                    user: "Authenticated user access"
-    - title: "Internal AI Tooling"
-      description: "Give your team shared agents with proper permissions. No more credential sharing."
-      icon: "building"
-      url: "/playbooks"
-      code: |
-        # services/agents/welcome.yaml
-        agents:
-          welcome:
-            enabled: true
-            card:
-              skills:
-                - id: "general_assistance"
-                  name: "General Assistance"
-                - id: "content_writing"
-                  name: "Content Writing"
-    - title: "Agent-to-Agent Orchestration"
-      description: "Multiple agents coordinating via A2A protocol with shared state and permissions."
-      icon: "network"
-      url: "/documentation/services/agents"
-      code: |
-        # services/agents/welcome.yaml (A2A card)
-        card:
-          protocolVersion: "0.3.0"
-          preferredTransport: "JSONRPC"
-          capabilities:
-            streaming: true
-            pushNotifications: false
-    - title: "Agentic Mesh"
-      description: "Automated, scalable workflows run by agents. Deterministic scheduling meets agentic intelligence."
-      icon: "grid"
-      url: "/documentation/services/scheduler"
-      code: |
-        # services/scheduler/config.yaml
-        scheduler:
-          enabled: true
-          jobs:
-            - name: publish_content
-              extension: core
-              job: publish_content
-              schedule: "0 */30 * * * *"
-
-technical:
-  title: "Built on open standards"
-  subtitle: "Your binary. Your rules. We're just a library."
-  tagline: "No vendor lock-in. Production-grade from day one."
-
-  standards:
-    - id: "mcp"
-      name: "Model Context Protocol"
-      short_name: "MCP"
-      logo: "/files/images/standards/mcp.svg"
-      tagline: "Connect any AI client to your tools"
-      description: "The open protocol from Anthropic for connecting AI clients to external capabilities. HTTP-native, OAuth2-protected, production-ready."
-      benefits:
-        - "Works with Claude Code, Claude Desktop, ChatGPT"
-        - "HTTP transport with real authentication"
-        - "Per-tool OAuth2 scopes"
-      link: "/documentation/services/mcp"
-
-    - id: "a2a"
-      name: "Agent-to-Agent Protocol"
-      short_name: "A2A"
-      logo: "/files/images/standards/a2a.svg"
-      tagline: "Agents that discover and collaborate"
-      description: "Google's open protocol for agent interoperability. Discovery, capabilities negotiation, and secure multi-agent communication."
-      benefits:
-        - "Automatic agent discovery"
-        - "Capability negotiation"
-        - "Secure cross-agent messaging"
-      link: "/documentation/services/agents"
-
-    - id: "oauth2"
-      name: "OAuth 2.0 / OIDC"
-      short_name: "OAuth2"
-      logo: "/files/images/standards/oauth2.svg"
-      tagline: "Battle-tested authorization"
-      description: "Full OAuth2 authorization server with OpenID Connect. PKCE flows, token introspection, scoped permissions for every tool call."
-      benefits:
-        - "Authorization code with PKCE"
-        - "Client credentials flow"
-        - "Standard OIDC discovery"
-      link: "/playbooks/cli_session"
-
-    - id: "webauthn"
-      name: "WebAuthn"
-      short_name: "WebAuthn"
-      logo: "/files/images/standards/webauthn.svg"
-      tagline: "Passwordless by default"
-      description: "W3C standard for phishing-resistant authentication. Face ID, Touch ID, YubiKey - no passwords to steal."
-      benefits:
-        - "Face ID / Touch ID / Windows Hello"
-        - "Hardware security keys"
-        - "Phishing-resistant by design"
-      link: "/playbooks/cli_session"
-
-  extensions:
-    title: "Your extensions. Your binary."
-    subtitle: "systemprompt.io is a library you control, not a platform that controls you."
-    ownership_message: "Import the SystemPrompt library into your Rust project. Compile your binary—you own it. Extensions are your code: Rust wrappers where you implement your logic, your integrations, your features."
-    traits:
-      - name: "Extension"
-        description: "The base trait. Identity, version, dependencies."
-        url: "/documentation/extensions"
-        code: |
-          impl Extension for MyExtension {
-              fn metadata(&self) -> ExtensionMetadata {
-                  ExtensionMetadata {
-                      id: "my-extension",
-                      name: "My Extension",
-                      version: env!("CARGO_PKG_VERSION"),
-                  }
-              }
-          }
-          register_extension!(MyExtension);
-      - name: "ApiExtension"
-        description: "Add HTTP routes. Full Axum power."
-        url: "/documentation/extensions"
-        code: |
-          fn router(&self, ctx: &dyn ExtensionContext) -> Option<ExtensionRouter> {
-              let router = Router::new()
-                  .route("/items", get(list_items).post(create_item))
-                  .with_state(ctx.database());
-              Some(ExtensionRouter::new(router, "/api/v1"))
-          }
-      - name: "SchemaExtension"
-        description: "Add database tables. Migrations included."
-        url: "/documentation/extensions"
-        code: |
-          fn schemas(&self) -> Vec<SchemaDefinition> {
-              vec![SchemaDefinition::inline(
-                  "my_items",
-                  include_str!("../schema/items.sql")
-              )]
-          }
-      - name: "JobExtension"
-        description: "Background jobs. Cron scheduling."
-        url: "/documentation/extensions"
-        code: |
-          fn jobs(&self) -> Vec<Arc<dyn Job>> {
-              vec![Arc::new(CleanupJob), Arc::new(SyncJob)]
-          }
-      - name: "ProviderExtension"
-        description: "Custom LLM providers. Your models."
-        url: "/documentation/extensions"
-        code: |
-          fn llm_providers(&self) -> Vec<Arc<dyn LlmProvider>> {
-              vec![Arc::new(MyCustomProvider::new())]
-          }
-    architecture_note: "One trait, many capabilities. The Extension trait provides optional methods for HTTP routes, database schemas, background jobs, and LLM providers. Extensions register via the inventory crate for compile-time discovery."
-
-  differentiator:
-    title: "Library, not platform"
-    items:
-      - icon: "package"
-        title: "You own the binary"
-        description: "Compile once, deploy anywhere. No runtime dependencies on us."
-      - icon: "package"
-        title: "Library dependency"
-        description: "Add systemprompt.io as a Cargo dependency. Pin your version. Update when ready."
-      - icon: "check-circle"
-        title: "If it compiles, it works"
-        description: "Rust's type system catches errors at compile time. No runtime surprises."
-      - icon: "lock"
-        title: "Extensions stay private"
-        description: "Build proprietary logic on open core. We never see your code."
-      - icon: "rocket"
-        title: "Ship YOUR product"
-        description: "White-label ready. Your domain. Your brand."
-
-  cta_primary: "View Extension Guide"
-  cta_primary_url: "/documentation/extensions/rust"
-  cta_secondary: "View Architecture"
-  cta_secondary_url: "/documentation/config"
+  title: ""
+  cases: []
 
 comparison:
-  title: "Framework vs. Runtime"
+  title: ""
   superagent:
-    title: "AI Frameworks (LangChain, CrewAI)"
-    items:
-      - text: "Chains, agents, tools"
-        icon: "puzzle"
-      - text: "Your API keys"
-        icon: "key"
-      - text: "Single-user by default"
-        icon: "user"
-      - text: "Auth: build it yourself"
-        icon: "wrench"
-      - text: "Multi-tenant: build it yourself"
-        icon: "layers"
-      - text: "2-4 weeks on auth alone"
-        icon: "calendar"
+    title: ""
+    items: []
   harness:
-    title: "AI Runtime (systemprompt.io)"
-    items:
-      - text: "Multi-user from day one"
-        url: "/playbooks/cli_session"
-        icon: "users"
-      - text: "OAuth2/OIDC + WebAuthn"
-        url: "/playbooks/cli_session"
-        icon: "key"
-      - text: "Automatic user isolation"
-        url: "/playbooks/cli_session"
-        icon: "layers"
-      - text: "Per-user, per-agent, per-tool scopes"
-        url: "/playbooks/cli_session"
-        icon: "shield"
-      - text: "Rate limits, TLS 1.3, audit logs"
-        url: "/documentation/config"
-        icon: "check"
-      - text: "Clone, configure, deploy"
-        url: "/documentation/installation"
-        icon: "zap"
+    title: ""
+    items: []
+
+technical:
+  title: ""
+  subtitle: ""
+  tagline: ""
+  standards: []
+  extensions:
+    title: ""
+    subtitle: ""
+    ownership_message: ""
+    traits: []
+    architecture_note: ""
+  differentiator:
+    title: ""
+    items: []
+  cta_primary: ""
+  cta_primary_url: ""
+  cta_secondary: ""
+  cta_secondary_url: ""
 
 pricing:
-  title: "Pricing & Licensing"
-  subtitle: "Source-available. BYOK. Sandbox everything. Optional cloud hosting."
+  title: ""
+  subtitle: ""
   docs_url: ""
-  tiers:
-    - name: "Free"
-      price: "Free"
-      description: "BSL license, self-hosted"
-      features:
-        - "Self-hosted (just needs PostgreSQL)"
-        - "BYOK (OpenAI, Gemini, Anthropic)"
-        - "All core features"
-        - "Unlimited agents & MCP servers"
-        - "Completely sandboxed"
-        - "Community support"
-      cta: "Download Template"
-      cta_url: "https://github.com/systempromptio/systemprompt-template"
-      highlight: false
-    - name: "Cloud"
-      price: "From $29/mo"
-      description: "Managed hosting, variable resources"
-      features:
-        - "One-click deploy"
-        - "Managed PostgreSQL"
-        - "Automatic backups"
-        - "Your tenant URL"
-        - "Scale resources as needed"
-        - "Email support"
-      cta: "Start Free Trial"
-      cta_url: "https://app.systemprompt.io/signup"
-      highlight: true
-    - name: "Licensed Enterprise"
-      price: "Contact Us"
-      description: "Private infrastructure & business licensing"
-      features:
-        - "Install on your private infrastructure"
-        - "Volume licensing"
-        - "Dedicated support"
-        - "SLA guarantee"
-        - "Custom integrations"
-      cta: "Contact Us"
-      cta_url: "mailto:info@systemprompt.io"
-      highlight: false
+  tiers: []
 
 faq:
-  title: "Frequently asked questions"
-  items:
-    - question: "What's the difference between systemprompt.io and Claude/ChatGPT?"
-      answer: "Claude and ChatGPT are AI models. systemprompt.io is a Rust framework for deploying AI to production. It provides auth, MCP hosting, agent orchestration, and observability in a single binary. You call the AI; we handle the infrastructure."
-    - question: "Can I self-host everything?"
-      answer: "Yes. systemprompt.io compiles to a single binary. Point it at any PostgreSQL database and run it on bare metal, in a VM, or containerized. The self-hosted version includes all core features. Cloud hosting is available for teams who want managed infrastructure."
-    - question: "What MCP clients are supported?"
-      answer: "Any MCP client works with systemprompt.io: Claude Code, Claude Desktop, ChatGPT, and any tool that speaks the Model Context Protocol. Our servers use HTTP-native transports supported by modern clients."
-    - question: "How does authentication work?"
-      answer: "systemprompt.io uses OAuth2/OIDC for API authentication and WebAuthn for passwordless user login. Every MCP tool call and agent interaction is authenticated and authorized against scoped permissions."
-    - question: "Is this open source?"
-      answer: "systemprompt.io is source-available under BSL-1.1 (Business Source License). You can view, modify, and self-host the code. After 4 years, each version converts to Apache 2.0. The template you customize is MIT licensed and fully yours."
+  title: ""
+  items: []
 
 final_cta:
-  title: "SHIP AI TO YOUR USERS"
-  subtitle: "You bring the intelligence. We handle the multiplayer infrastructure."
-  button: "Get Started Free"
+  title: "Ready to Customize?"
+  subtitle: "Read guide_start, then follow the playbooks for each task."
+  button: "Start with guide_start"

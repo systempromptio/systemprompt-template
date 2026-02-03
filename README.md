@@ -2,28 +2,12 @@
 
 **Production-ready AI infrastructure in 5 minutes.**
 
-Clone, build, run. Get 7 agents, 13 skills, and 68 operational playbooks out of the box.
-
 [![Built on systemprompt-core](https://img.shields.io/badge/built%20on-systemprompt--core-blue)](https://github.com/systempromptio/systemprompt-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## What You Get
 
 This template extends [systemprompt-core](https://github.com/systempromptio/systemprompt-core) with production-ready patterns:
-
-| Component | Count | What It Does |
-|-----------|-------|--------------|
-| **Extensions** | 4 | Web publishing, memory (Soul), MCP servers |
-| **Agents** | 7 | Pre-configured AI agents with different specializations |
-| **Skills** | 13 | Blog writing, technical content, announcements, research |
-| **Playbooks** | 68 | Machine-executable guides for every operation |
-
-**Why use the template instead of core directly?**
-
-- **Immediate productivity** - Agents and skills work out of the box
-- **Production patterns** - Real extensions showing how to build your own
-- **Self-documenting** - 68 playbooks guide every task
-- **Cloud-ready** - One command deployment
 
 ## Quick Start
 
@@ -51,29 +35,25 @@ cd my-project
 ### 2. Build
 
 ```bash
-just build --release
+just build 
 ```
 
 ### 3. Setup
 
 ```bash
-# Login to systemprompt.io (free, enables profile management)
+# Registers/Login to systemprompt.io (free, enables profile management) [](https://systemprompt.io/blog/open-source-ai-era) 
 just login
 
-# Start PostgreSQL (local development)
 docker run -d --name systemprompt-db \
   -e POSTGRES_DB=systemprompt \
   -e POSTGRES_USER=systemprompt \
   -e POSTGRES_PASSWORD=systemprompt \
   -p 5432:5432 \
-  postgres:16
+  postgres:18-alpine
 
-# Create tenant and profile
-just tenant create --database-url postgres://systemprompt:systemprompt@localhost:5432/systemprompt
-just profile create local
-
-# Run migrations and start
-just migrate
+[Follow interactive cli]
+just tenant 
+just profile
 just start
 ```
 

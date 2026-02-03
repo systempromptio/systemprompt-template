@@ -105,7 +105,7 @@ logout:
 whoami:
     {{CLI}} cloud auth whoami
 tenant:
-    {{CLI_RELEASE}} cloud tenant
+    {{CLI}} cloud tenant
 profile:
     {{CLI}} cloud profile
 profiles:

@@ -127,11 +127,9 @@ backup/
 extensions/mcp/*/.env
 Screenshot*.png
 
-# Storage - generated/uploaded files
+# Storage - generated/uploaded files only
 storage/files/uploads/
 storage/files/images/generated/
-storage/files/css/
-storage/files/js/
 
 # SQLx offline cache - MUST be committed for offline builds
 # .sqlx/

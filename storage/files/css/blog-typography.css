@@ -1,0 +1,269 @@
+
+.blog-content {
+  
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-regular);
+
+  
+  max-width: 680px;
+
+  
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+
+  
+  orphans: 3;
+  widows: 3;
+}
+
+
+
+.blog-content h1,
+.blog-content h2,
+.blog-content h3,
+.blog-content h4,
+.blog-content h5,
+.blog-content h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.3;
+  color: var(--color-text-primary);
+  margin-top: 2.5em;
+  margin-bottom: 0.75em;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+
+  
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+.blog-content h1 {
+  font-size: 2.5rem;    
+  margin-top: 0;
+  letter-spacing: -0.03em;
+}
+
+.blog-content h2 {
+  font-size: 2rem;      
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.25em;
+}
+
+.blog-content h3 {
+  font-size: 1.5rem;    
+}
+
+.blog-content h4 {
+  font-size: 1.25rem;   
+}
+
+.blog-content h5,
+.blog-content h6 {
+  font-size: 1rem;      
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+
+
+.blog-content p {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+}
+
+
+.blog-content h1 + p,
+.blog-content h2 + p,
+.blog-content h3 + p,
+.blog-content h4 + p {
+  margin-top: 0;
+}
+
+
+.blog-content .lead,
+.blog-content > p:first-of-type {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  margin-bottom: 2em;
+}
+
+
+
+.blog-content a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: all var(--animation-fast) ease;
+}
+
+.blog-content a:hover {
+  color: var(--color-text-primary);
+  text-decoration-thickness: 2px;
+}
+
+.blog-content a:visited {
+  color: var(--color-text-secondary);
+}
+
+
+.blog-content a[href^="http"]::after {
+  content: "↗";
+  font-size: 0.8em;
+  margin-left: 0.2em;
+  opacity: 0.5;
+}
+
+
+
+.blog-content em {
+  font-style: italic;
+}
+
+.blog-content strong {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.blog-content strong em,
+.blog-content em strong {
+  font-weight: var(--font-weight-bold);
+  font-style: italic;
+}
+
+
+
+.blog-content ul,
+.blog-content ol {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+  padding-left: 1.75em;
+}
+
+.blog-content li {
+  margin-bottom: 0.5em;
+  line-height: 1.6;
+}
+
+.blog-content li > ul,
+.blog-content li > ol {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+
+.blog-content ul {
+  list-style-type: disc;
+}
+
+.blog-content ul ul {
+  list-style-type: circle;
+}
+
+.blog-content ol {
+  list-style-type: decimal;
+}
+
+.blog-content ol ol {
+  list-style-type: lower-alpha;
+}
+
+
+
+.blog-content blockquote {
+  margin: 2em 0;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-surface-variant);
+  border-radius: var(--radius-sm);
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.blog-content blockquote p {
+  margin-bottom: 0.75em;
+}
+
+.blog-content blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.blog-content blockquote cite {
+  display: block;
+  font-style: normal;
+  font-size: 0.9em;
+  color: var(--color-text-disabled);
+  margin-top: 0.5em;
+}
+
+.blog-content blockquote cite::before {
+  content: "— ";
+}
+
+
+
+.blog-content hr {
+  border: none;
+  border-top: 2px solid var(--color-border);
+  margin: 3em 0;
+  opacity: 0.5;
+}
+
+
+.blog-content hr.decorative {
+  border: none;
+  text-align: center;
+  margin: 3em 0;
+}
+
+.blog-content hr.decorative::after {
+  content: "* * *";
+  color: var(--color-text-disabled);
+  letter-spacing: 1em;
+}
+
+
+
+@media (max-width: 768px) {
+  .blog-content {
+    font-size: 17px;
+  }
+
+  .blog-content h1 {
+    font-size: 2rem;
+  }
+
+  .blog-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .blog-content h3 {
+    font-size: 1.25rem;
+  }
+
+  .blog-content .lead,
+  .blog-content > p:first-of-type {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .blog-content {
+    font-size: 16px;
+  }
+
+  .blog-content h1 {
+    font-size: 1.75rem;
+  }
+
+  .blog-content h2 {
+    font-size: 1.375rem;
+  }
+}

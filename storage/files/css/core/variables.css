@@ -1,0 +1,125 @@
+:root {
+  --orange-50: hsl(28, 91%, 95%);
+  --orange-100: hsl(28, 91%, 90%);
+  --orange-200: hsl(28, 91%, 80%);
+  --orange-300: hsl(28, 91%, 70%);
+  --orange-400: hsl(28, 91%, 65%);
+  --orange-500: hsl(28, 91%, 60%);
+  --orange-600: hsl(28, 91%, 50%);
+  --orange-700: hsl(28, 91%, 40%);
+  --orange-800: hsl(28, 91%, 30%);
+  --orange-900: hsl(28, 91%, 20%);
+  --orange-950: hsl(28, 91%, 10%);
+
+  --color-primary: var(--orange-500);
+  --color-primary-hover: var(--orange-400);
+  --color-primary-dark: var(--orange-700);
+  --color-primary-rgb: 247, 153, 56;
+  --color-text-on-primary: #000000;
+  --color-background: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-elevated: #141414;
+  --color-surface-variant: #1a1a1a;
+  --color-surface-dark: #0d0d0d;
+  --color-text: #ffffff;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #666666;
+  --color-text-disabled: #555555;
+  --color-border: rgba(255, 255, 255, 0.1);
+
+  --color-success: #22c55e;
+  --color-warning: #fbbf24;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  --terminal-dot-close: #ff5f57;
+  --terminal-dot-minimize: #febc2e;
+  --terminal-dot-maximize: #28c840;
+
+  --syntax-bg: #282c34;
+  --syntax-fg: #abb2bf;
+  --syntax-comment: #5c6370;
+  --syntax-keyword: #c678dd;
+  --syntax-string: #98c379;
+  --syntax-number: #d19a66;
+  --syntax-function: #61afef;
+  --syntax-variable: #e06c75;
+  --syntax-operator: #56b6c2;
+  --syntax-class: #e5c07b;
+
+  --font-brand: "Zepto", system-ui, sans-serif;
+  --font-body: "OpenSans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: "Zepto", Georgia, serif;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-xxl: 28px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  --spacing-xs: var(--space-xs);
+  --spacing-sm: var(--space-sm);
+  --spacing-md: var(--space-md);
+  --spacing-lg: var(--space-lg);
+  --spacing-xl: var(--space-xl);
+  --spacing-xxl: var(--space-2xl);
+
+  --container-max: 1200px;
+  --header-height: 72px;
+  --sidebar-left-width: 280px;
+  --sidebar-right-width: 220px;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-round: 9999px;
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.7);
+
+  --animation-fast: 150ms;
+  --animation-normal: 300ms;
+  --animation-slow: 500ms;
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  --z-base: 1;
+  --z-sidebar: 50;
+  --z-sidebar-toggle: 60;
+  --z-mobile-menu: 99;
+  --z-navigation: 100;
+  --z-modal: 1000;
+
+  --sp-card-radius-main: 18px;
+  --sp-card-radius-notch: 6px;
+  --sp-card-radius: 18px 6px 18px 18px;
+  --sp-card-border-width: 1px;
+  --sp-card-bg-glass: rgba(20, 20, 20, 0.6);
+  --sp-card-bg-gradient: linear-gradient(135deg,
+    hsla(28, 91%, 60%, 0.25) 0%,
+    hsla(28, 91%, 60%, 0.18) 50%,
+    hsla(28, 91%, 60%, 0.13) 100%);
+  --sp-card-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --sp-card-shadow-hover: 0 8px 32px rgba(247, 153, 56, 0.15);
+  --sp-card-shadow-highlight: 0 0 20px rgba(247, 153, 56, 0.2);
+}

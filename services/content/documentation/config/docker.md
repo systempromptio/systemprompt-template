@@ -187,13 +187,13 @@ services:
       - postgres
 
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: systemprompt
       POSTGRES_PASSWORD: localdev
       POSTGRES_DB: systemprompt
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
 
 volumes:
   pgdata:

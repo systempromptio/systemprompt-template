@@ -139,80 +139,8 @@
     {{{HEADER}}}
 
     <main>
-        <!-- Hero Section -->
-        <section class="hero">
-            <!-- Simplified mobile diagram (full-width Z-pattern with orbits) -->
-            <div class="hero-diagram-mobile">
-                <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
-                    <defs>
-                        <filter id="glow-mobile" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                            <feMerge>
-                                <feMergeNode in="coloredBlur"/>
-                                <feMergeNode in="SourceGraphic"/>
-                            </feMerge>
-                        </filter>
-                    </defs>
-
-                    <!-- Static connection lines (no animation on mobile) -->
-                    <path d="M75,55 Q130,50 140,100" fill="none" stroke="var(--orange-600)" stroke-width="2" opacity="0.4"/>
-                    <path d="M260,200 Q290,230 325,245" fill="none" stroke="var(--orange-600)" stroke-width="2" opacity="0.4"/>
-
-                    <!-- Claude node (top-left) -->
-                    <g transform="translate(45,55)">
-                        <circle r="30" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" opacity="0.9"/>
-                        <image href="/files/images/brands/claude.svg" x="-20" y="-20" width="40" height="40"/>
-                    </g>
-
-                    <!-- SystemPrompt hub (center) with orbital features -->
-                    <g transform="translate(200,150)">
-                        <!-- Orbital ring -->
-                        <circle r="70" fill="none" stroke="var(--orange-600)" stroke-width="1" opacity="0.2" stroke-dasharray="4,4"/>
-
-                        <!-- Mini orbital icons -->
-                        <g class="orbit-icon" transform="translate(-55,-40)">
-                            <circle r="14" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
-                            <text text-anchor="middle" y="3" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="6">AUTH</text>
-                        </g>
-                        <g class="orbit-icon" transform="translate(55,-40)">
-                            <circle r="14" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
-                            <text text-anchor="middle" y="3" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="6">USERS</text>
-                        </g>
-                        <g class="orbit-icon" transform="translate(-65,15)">
-                            <circle r="14" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
-                            <text text-anchor="middle" y="3" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="6">AI</text>
-                        </g>
-                        <g class="orbit-icon" transform="translate(65,15)">
-                            <circle r="14" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
-                            <text text-anchor="middle" y="3" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="6">JOBS</text>
-                        </g>
-                        <g class="orbit-icon" transform="translate(0,60)">
-                            <circle r="14" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1"/>
-                            <text text-anchor="middle" y="3" fill="var(--orange-500)" font-family="Zepto, system-ui" font-size="6">LOGS</text>
-                        </g>
-
-                        <!-- Core hub - refined layered effect -->
-                        <circle r="42" fill="var(--orange-600)" opacity="0.08" filter="url(#glow-mobile)"/>
-                        <circle r="40" fill="none" stroke="var(--orange-600)" stroke-width="0.5" opacity="0.3"/>
-                        <circle r="38" fill="none" stroke="var(--orange-500)" stroke-width="0.5" opacity="0.5" stroke-dasharray="2,3"/>
-                        <circle r="36" fill="none" stroke="var(--orange-500)" stroke-width="1" opacity="0.7"/>
-                        <circle r="34" fill="var(--color-surface)" stroke="var(--orange-500)" stroke-width="0.5"/>
-                        <!-- SystemPrompt logo -->
-                        <image href="/files/images/logo.svg" x="-28" y="-5" width="56" height="10"/>
-                    </g>
-
-                    <!-- Web/Deploy node (bottom-right) -->
-                    <g transform="translate(355,245)">
-                        <circle r="30" fill="var(--color-surface)" stroke="var(--orange-600)" stroke-width="1" opacity="0.9"/>
-                        <svg x="-16" y="-16" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="1.5">
-                            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                        </svg>
-                    </g>
-                </svg>
-            </div>
-
-            <!-- Background architecture diagram -->
-            <div class="hero-diagram">
+        <!-- Hero Section - Simplified for template -->
+        <section class="hero hero--simple">
                 <svg viewBox="0 0 800 600" class="arch-hero" preserveAspectRatio="xMidYMid meet">
                     <defs>
                         <!-- Glow filter -->

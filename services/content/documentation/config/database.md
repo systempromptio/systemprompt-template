@@ -83,7 +83,7 @@ docker run -d \
   -e POSTGRES_USER=systemprompt \
   -e POSTGRES_PASSWORD=localdev \
   -p 5432:5432 \
-  postgres:16
+  postgres:18-alpine
 ```
 
 DATABASE_URL: `postgres://systemprompt:localdev@localhost:5432/systemprompt`

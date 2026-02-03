@@ -8,14 +8,15 @@
 #   config/theme.yaml       - Colors, typography, spacing
 
 # Branding (required for validation, also in config/theme.yaml for runtime)
+# ===== CUSTOMIZE THESE =====
 branding:
-  name: "systemprompt.io"
-  title: "AI Agent Infrastructure | Deploy Production AI Apps - systemprompt.io"
-  description: "Production-ready AI infrastructure with built-in auth, MCP hosting, agent orchestration, and user isolation. One Rust binary, deploy anywhere."
-  copyright: "2025 systemprompt.io. All rights reserved."
-  themeColor: "#f79938"
+  name: "Your Project"
+  title: "Your Project - Your Tagline Here"
+  description: "Replace this with your project description for SEO and social sharing."
+  copyright: "2025 Your Company. All rights reserved."
+  themeColor: "#3b82f6"
   display_sitename: true
-  twitter_handle: "@systemprompt"
+  twitter_handle: "@your_handle"
   image: "/files/images/logo.png"
   logo:
     primary:
@@ -257,9 +258,9 @@ social_action_bar:
   enable_share: true
 
 nav:
-  app_url: "https://app.systemprompt.io"
+  app_url: ""  # Your app URL if applicable
   docs_url: "/documentation"
   blog_url: "/blog"
   playbooks_url: "/playbooks"
-  github_url: "https://github.com/systempromptio/systemprompt-core"
-  getting_started_url: "https://github.com/systempromptio/systemprompt-template"
+  github_url: "https://github.com/your-org/your-repo"
+  getting_started_url: "/documentation/installation"

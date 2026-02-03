@@ -2,13 +2,14 @@
 # Colors, typography, spacing, and design tokens
 
 branding:
-  name: "SystemPrompt"
-  title: "SystemPrompt - Ship AI to your users"
-  description: "The multiplayer runtime for AI. Ship AI products to your users with auth, permissions, files, scheduling, and user isolation built in."
-  copyright: "2025 SystemPrompt. All rights reserved."
-  themeColor: "#f79938"
+  # ===== CUSTOMIZE THESE =====
+  name: "Your Project"
+  title: "Your Project - Your Tagline Here"
+  description: "Replace this with your project description for SEO and social sharing."
+  copyright: "2025 Your Company. All rights reserved."
+  themeColor: "#3b82f6"  # Blue - change to your brand color
   display_sitename: true
-  twitter_handle: "@systemprompt"
+  twitter_handle: "@your_handle"
   image: "/files/images/logo.png"
   logo:
     primary:
@@ -53,7 +54,8 @@ fonts:
         weight: 400
         style: "normal"
 
-# Orange palette: hsl(28, 91%, X%)
+# Color palette - Blue default (change hue for your brand)
+# Hue guide: 0=red, 28=orange, 120=green, 220=blue, 280=purple
 colors:
   light:
     primary:

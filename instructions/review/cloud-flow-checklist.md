@@ -165,7 +165,7 @@ cat .systemprompt/profiles/local/docker-compose.yml
 
 **docker-compose.yml checks:**
 - [ ] Defines `postgres` service
-- [ ] Uses correct image (`postgres:16-alpine` or similar)
+- [ ] Uses correct image (`postgres:18-alpine` or similar)
 - [ ] Exposes port 5432
 - [ ] Has healthcheck configured
 

@@ -37,10 +37,6 @@ pub fn web_assets(paths: &dyn systemprompt::extension::AssetPaths) -> Vec<AssetD
             "css/homepage-sections.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-pricing.css"),
-            "css/homepage-pricing.css",
-        ),
-        AssetDefinition::css(
             storage_css.join("homepage-playbooks.css"),
             "css/homepage-playbooks.css",
         ),
@@ -59,29 +55,7 @@ pub fn web_assets(paths: &dyn systemprompt::extension::AssetPaths) -> Vec<AssetD
             storage_css.join("syntax-highlight.css"),
             "css/syntax-highlight.css",
         ),
-        AssetDefinition::css(
-            storage_css.join("animation-memory-loop.css"),
-            "css/animation-memory-loop.css",
-        ),
         AssetDefinition::css(storage_css.join("feature-base.css"), "css/feature-base.css"),
-        AssetDefinition::css(storage_css.join("feature-rust.css"), "css/feature-rust.css"),
-        AssetDefinition::css(storage_css.join("feature-cli.css"), "css/feature-cli.css"),
-        AssetDefinition::css(
-            storage_css.join("feature-memory.css"),
-            "css/feature-memory.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("feature-closed-loop.css"),
-            "css/feature-closed-loop.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("feature-agentic-mesh.css"),
-            "css/feature-agentic-mesh.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("animation-cli-remote.css"),
-            "css/animation-cli-remote.css",
-        ),
         AssetDefinition::css(
             storage_css.join("content-cards.css"),
             "css/content-cards.css",
