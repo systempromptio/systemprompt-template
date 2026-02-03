@@ -7,7 +7,7 @@
     <title>{{feature.title}} - {{site.branding.name}}</title>
     <meta name="description" content="{{#if feature.description}}{{feature.description}}{{else}}{{feature.subtitle}}{{/if}}">
     <meta name="keywords" content="{{feature.title}}, SystemPrompt, AI platform, {{#if feature.keywords}}{{feature.keywords}}{{else}}AI agents, MCP hosting{{/if}}">
-    <link rel="canonical" href="https://systemprompt.io/features/{{feature.slug}}">
+    <link rel="canonical" href="{{ORG_URL}}/features/{{feature.slug}}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{site.branding.favicon}}">
@@ -16,16 +16,16 @@
     <meta property="og:title" content="{{feature.title}} - {{site.branding.name}}">
     <meta property="og:description" content="{{#if feature.description}}{{feature.description}}{{else}}{{feature.subtitle}}{{/if}}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://systemprompt.io/features/{{feature.slug}}">
+    <meta property="og:url" content="{{ORG_URL}}/features/{{feature.slug}}">
     <meta property="og:site_name" content="{{site.branding.name}}">
-    <meta property="og:image" content="{{#if feature.image}}{{feature.image}}{{else}}https://systemprompt.io/files/images/logo.png{{/if}}">
+    <meta property="og:image" content="{{#if feature.image}}{{feature.image}}{{else}}{{DEFAULT_IMAGE}}{{/if}}">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="{{site.branding.twitter_handle}}">
     <meta name="twitter:title" content="{{feature.title}}">
     <meta name="twitter:description" content="{{#if feature.description}}{{feature.description}}{{else}}{{feature.subtitle}}{{/if}}">
-    <meta name="twitter:image" content="{{#if feature.image}}{{feature.image}}{{else}}https://systemprompt.io/files/images/logo.png{{/if}}">
+    <meta name="twitter:image" content="{{#if feature.image}}{{feature.image}}{{else}}{{DEFAULT_IMAGE}}{{/if}}">
 
     <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
@@ -34,15 +34,15 @@
         "@type": "WebPage",
         "name": "{{feature.title}}",
         "description": "{{#if feature.description}}{{feature.description}}{{else}}{{feature.subtitle}}{{/if}}",
-        "url": "https://systemprompt.io/features/{{feature.slug}}",
+        "url": "{{ORG_URL}}/features/{{feature.slug}}",
         "publisher": {
             "@type": "Organization",
-            "name": "SystemPrompt",
-            "url": "https://systemprompt.io"
+            "name": "{{site.branding.name}}",
+            "url": "{{ORG_URL}}"
         },
         "isPartOf": {
             "@type": "WebSite",
-            "@id": "https://systemprompt.io/#website"
+            "@id": "{{ORG_URL}}/#website"
         }
     }
     </script>
@@ -53,9 +53,9 @@
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://systemprompt.io"},
-            {"@type": "ListItem", "position": 2, "name": "Features", "item": "https://systemprompt.io/features"},
-            {"@type": "ListItem", "position": 3, "name": "{{feature.title}}", "item": "https://systemprompt.io/features/{{feature.slug}}"}
+            {"@type": "ListItem", "position": 1, "name": "Home", "item": "{{ORG_URL}}"},
+            {"@type": "ListItem", "position": 2, "name": "Features", "item": "{{ORG_URL}}/features"},
+            {"@type": "ListItem", "position": 3, "name": "{{feature.title}}", "item": "{{ORG_URL}}/features/{{feature.slug}}"}
         ]
     }
     </script>

@@ -4,13 +4,16 @@ use crate::assets::web_assets;
 use systemprompt::database::Database;
 use systemprompt::extension::prelude::ContentDataProvider;
 use systemprompt::extension::prelude::*;
-use systemprompt::template_provider::{ComponentRenderer, PageDataProvider, PagePrerenderer};
+use systemprompt::template_provider::{
+    ComponentRenderer, PageDataProvider, PagePrerenderer, TemplateDataExtender,
+};
 use systemprompt::traits::Job;
 
 use crate::blog::{BlogListPageDataProvider, BlogPostPageDataProvider};
 use crate::config::BlogConfigValidated;
 use crate::config_loader::{self, ConfigError};
 use crate::docs::{DocsContentDataProvider, DocsPageDataProvider};
+use crate::extenders::OrgUrlExtender;
 use crate::features::{FeaturePagePrerenderer, FeaturesConfig};
 use crate::homepage::{HomepageConfig, HomepagePageDataProvider, HomepagePrerenderer};
 use crate::navigation::{NavigationConfig, NavigationPageDataProvider};
@@ -190,6 +193,10 @@ impl Extension for WebExtension {
             Arc::new(MemoryLoopAnimationPartialRenderer),
             Arc::new(AgenticMeshAnimationPartialRenderer),
         ]
+    }
+
+    fn template_data_extenders(&self) -> Vec<Arc<dyn TemplateDataExtender>> {
+        vec![Arc::new(OrgUrlExtender::new())]
     }
 
     fn schemas(&self) -> Vec<SchemaDefinition> {

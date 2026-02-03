@@ -7,6 +7,7 @@ mod config_loader;
 pub mod docs;
 pub mod error;
 pub mod extension;
+pub mod extenders;
 pub mod features;
 pub mod homepage;
 pub mod jobs;
@@ -55,6 +56,7 @@ pub use models::{
     Tag, TrackClickParams, UtmParams,
 };
 
+pub use extenders::OrgUrlExtender;
 pub use jobs::ContentIngestionJob;
 pub use repository::{
     ContentRepository, LinkAnalyticsRepository, LinkRepository, SearchRepository,

@@ -5,6 +5,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde_json::{json, Value};
 use systemprompt::database::Database;
+use systemprompt::models::Config;
 use systemprompt::template_provider::{PageContext, PageDataProvider};
 
 use super::renderers::{render_references, render_related_posts, render_social_action_bar};
@@ -101,8 +102,10 @@ impl PageDataProvider for BlogPostPageDataProvider {
             let slug = item.get("slug").and_then(|v| v.as_str()).unwrap_or("");
             let title = item.get("title").and_then(|v| v.as_str()).unwrap_or("");
 
-            let org_url = "https://tyingshoelaces.com";
-            let social_bar = render_social_action_bar(slug, title, org_url);
+            let org_url = Config::get()
+                .map(|c| c.api_external_url.clone())
+                .unwrap_or_default();
+            let social_bar = render_social_action_bar(slug, title, &org_url);
             obj.insert("SOCIAL_ACTION_BAR".to_string(), Value::String(social_bar));
 
             if let Some(links) = item.get("links") {

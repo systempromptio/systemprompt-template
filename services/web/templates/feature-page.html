@@ -13,7 +13,7 @@
     <!-- Open Graph -->
     <meta property="og:title" content="{{TITLE}}">
     <meta property="og:description" content="{{DESCRIPTION}}">
-    <meta property="og:image" content="{{#if IMAGE}}{{IMAGE}}{{else}}https://systemprompt.io/files/images/logo.png{{/if}}">
+    <meta property="og:image" content="{{#if IMAGE}}{{IMAGE}}{{else}}{{DEFAULT_IMAGE}}{{/if}}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{CANONICAL_URL}}">
     <meta property="og:site_name" content="{{ORG_NAME}}">
@@ -23,7 +23,7 @@
     <meta name="twitter:site" content="{{site.branding.twitter_handle}}">
     <meta name="twitter:title" content="{{TITLE}}">
     <meta name="twitter:description" content="{{DESCRIPTION}}">
-    <meta name="twitter:image" content="{{#if IMAGE}}{{IMAGE}}{{else}}https://systemprompt.io/files/images/logo.png{{/if}}">
+    <meta name="twitter:image" content="{{#if IMAGE}}{{IMAGE}}{{else}}{{DEFAULT_IMAGE}}{{/if}}">
 
     <!-- Theme Color -->
     <meta name="theme-color" content="{{site.branding.themeColor}}">

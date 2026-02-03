@@ -9,8 +9,11 @@
 [![Rust](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18+-336791.svg)](https://www.postgresql.org/)
 [![MCP](https://img.shields.io/badge/MCP-compatible-purple.svg)](https://modelcontextprotocol.io/)
+[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2.svg)](https://discord.gg/wkAbSuPWpr)
 
-[Getting Started](#quick-start) · [Documentation](https://systemprompt.io/documentation) · [Playbooks](#playbooks) · [Extensions](#extensions)
+[Getting Started](#quick-start) · [Documentation](https://systemprompt.io/documentation) · [Discord](https://discord.gg/wkAbSuPWpr) · [Playbooks](#playbooks)
+
+**Questions or issues?** Join us on [Discord](https://discord.gg/wkAbSuPWpr) for help.
 
 </div>
 
@@ -158,6 +161,28 @@ See playbook: `systemprompt core playbooks show cli_deploy`
 
 ---
 
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Your Project (this template)                           │
+│  ├── extensions/       # Your Rust code                 │
+│  └── services/         # Your YAML configuration        │
+└─────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│  core/ (git submodule - READ ONLY)                      │
+│  └── systemprompt-core                                  │
+│      ├── API server + CLI                               │
+│      ├── Agent runtime + A2A protocol                   │
+│      ├── MCP server hosting                             │
+│      └── Auth (OAuth2 + WebAuthn)                       │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Built on systemprompt-core
 
 This template extends [systemprompt-core](https://github.com/systempromptio/systemprompt-core) which provides:
@@ -179,6 +204,6 @@ Depends on [systemprompt-core](https://github.com/systempromptio/systemprompt-co
 
 <div align="center">
 
-**[Documentation](https://systemprompt.io/documentation)** · **[systemprompt-core](https://github.com/systempromptio/systemprompt-core)** · **[Issues](https://github.com/systempromptio/systemprompt-template/issues)**
+**[Documentation](https://systemprompt.io/documentation)** · **[Discord](https://discord.gg/wkAbSuPWpr)** · **[systemprompt-core](https://github.com/systempromptio/systemprompt-core)** · **[Issues](https://github.com/systempromptio/systemprompt-template/issues)**
 
 </div>

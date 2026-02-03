@@ -2,6 +2,16 @@
 
 All notable changes to systemprompt-template will be documented in this file.
 
+## [0.1.1] - 2026-02-03
+
+### Added
+- systemprompt-core as git submodule in `core/`
+- Discord community links and badge to README
+- Architecture diagram showing template/core relationship
+
+### Changed
+- Updated README with improved documentation links
+
 ## [0.1.0] - 2026-02-03
 
 ### Added
