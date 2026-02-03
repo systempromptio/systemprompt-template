@@ -28,3 +28,10 @@ scheduler:
       job: database_cleanup
       schedule: "0 0 4 * * *"
       enabled: true
+
+    # Web extension jobs (publishing pipeline)
+    - name: publish_pipeline
+      extension: web
+      job: publish_pipeline
+      schedule: "0 */15 * * * *"
+      enabled: true

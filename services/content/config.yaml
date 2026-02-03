@@ -40,7 +40,7 @@ content_sources:
       name: "Documentation"
       description: "Guides and reference documentation"
       image: "/files/images/logo.png"
-      keywords: "docs, documentation, guides, systemprompt, mcp, agents"
+      keywords: "docs, documentation, guides"
     indexing:
       clear_before: false
       recursive: true
@@ -56,60 +56,6 @@ content_sources:
         priority: 0.9
         changefreq: "daily"
 
-  legal:
-    path: "content/legal"
-    source_id: "legal"
-    category_id: "pages"
-    enabled: true
-    allowed_content_types: ["legal"]
-    indexing:
-      recursive: true
-    sitemap:
-      enabled: true
-      url_pattern: "/legal/{slug}"
-      priority: 0.3
-      changefreq: "monthly"
-      fetch_from: "database"
-
-  skills:
-    path: "skills"
-    source_id: "skills"
-    category_id: "skills"
-    enabled: true
-    description: "Agent skills for automation"
-    allowed_content_types: ["skill"]
-    indexing:
-      clear_before: false
-      recursive: true
-      override_existing: true
-
-  playbooks:
-    path: "content/playbooks"
-    source_id: "playbooks"
-    category_id: "playbooks"
-    enabled: true
-    description: "Step-by-step guides for common tasks"
-    allowed_content_types: ["playbook"]
-    branding:
-      name: "Playbooks"
-      description: "Step-by-step guides for CLI operations, development, and content creation"
-      image: "/files/images/logo.png"
-      keywords: "playbooks, guides, cli, systemprompt"
-    indexing:
-      clear_before: false
-      recursive: true
-    sitemap:
-      enabled: true
-      url_pattern: "/playbooks/{slug}"
-      priority: 0.7
-      changefreq: "weekly"
-      fetch_from: "database"
-      parent_route:
-        enabled: true
-        url: "https://systemprompt.io/playbooks"
-        priority: 0.8
-        changefreq: "daily"
-
 categories:
   blog:
     name: "Blog"
@@ -120,14 +66,6 @@ categories:
   pages:
     name: "Pages"
     slug: "pages"
-  skills:
-    name: "Skills"
-    slug: "skills"
-    description: "Agent skills for AI-powered automation"
-  playbooks:
-    name: "Playbooks"
-    slug: "playbooks"
-    description: "Step-by-step guides for common tasks"
 
 metadata:
   default_author: "Author"
@@ -135,15 +73,15 @@ metadata:
 
   structured_data:
     organization:
-      name: "systemprompt.io"
-      url: "https://systemprompt.io"
-      logo: "https://systemprompt.io/files/images/logo.png"
-      description: "The production harness for AI superagents"
+      name: "Your Organization"
+      url: "https://example.com"
+      logo: "https://example.com/logo.png"
+      description: "Your organization description"
 
     blog:
       type: "Blog"
       name: "Blog"
-      url: "https://systemprompt.io/blog"
+      url: "https://example.com/blog"
       description: "Articles and updates"
       article_section: "Technology"
       language: "en-US"
