@@ -25,22 +25,6 @@ content_sources:
     enabled: true
     override_existing: true
 
-  - source_id: "playbooks"
-    category_id: "playbooks"
-    path: "../content/playbooks"
-    allowed_content_types:
-      - playbook
-    enabled: true
-    override_existing: true
-
-  - source_id: "legal"
-    category_id: "legal"
-    path: "../content/legal"
-    allowed_content_types:
-      - page
-    enabled: true
-    override_existing: true
-
 # Base URL for generated links
 base_url: "http://localhost:8080"
 
