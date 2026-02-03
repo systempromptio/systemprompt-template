@@ -2,7 +2,7 @@
 
 # systemprompt-template
 
-**Production-ready AI infrastructure in 5 minutes.**
+**From chat to autonomous agent mesh in 3 commands.**
 
 [![Built on systemprompt-core](https://img.shields.io/badge/built%20on-systemprompt--core-blue)](https://github.com/systempromptio/systemprompt-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -11,25 +11,17 @@
 [![MCP](https://img.shields.io/badge/MCP-compatible-purple.svg)](https://modelcontextprotocol.io/)
 [![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2.svg)](https://discord.gg/wkAbSuPWpr)
 
-[Getting Started](#quick-start) · [Documentation](https://systemprompt.io/documentation) · [Discord](https://discord.gg/wkAbSuPWpr) · [Playbooks](#playbooks)
-
-**Questions or issues?** Join us on [Discord](https://discord.gg/wkAbSuPWpr) for help.
+[Documentation](https://systemprompt.io/documentation) · [Discord](https://discord.gg/wkAbSuPWpr) · [Issues](https://github.com/systempromptio/systemprompt-template/issues)
 
 </div>
 
 ---
 
-A starter template for [systemprompt.io](https://systemprompt.io) — the production infrastructure for AI agents. This template provides pre-built extensions, operational playbooks, and configured agents so you can ship faster.
+This template gives you a complete AI agent infrastructure running locally. Start it, open `localhost:8080`, and experience the evolution from simple chat to autonomous agent orchestration — with live, runnable examples at each level.
 
-## What's Included
+Built on [systemprompt.io](https://systemprompt.io) — a 50MB production-ready Rust library with authentication, memory, MCP hosting, and observability built in. You own the code. You extend it. You deploy it anywhere.
 
-| Component | Description |
-|-----------|-------------|
-| **2 Extensions** | Web publishing + Soul memory system |
-| **3 MCP Servers** | CLI execution, memory ops, content management |
-| **13 Skills** | Blog writing, technical docs, general assistance, and more |
-| **99 Playbooks** | Machine-readable guides for every operation |
-| **Pre-configured Agent** | Ready-to-use AI assistant |
+> **This is a library, not a platform.** You build your own binary by extending the core. No vendor lock-in. Self-hosted with PostgreSQL.
 
 ---
 
@@ -39,6 +31,7 @@ A starter template for [systemprompt.io](https://systemprompt.io) — the produc
 
 - **Rust 1.75+** — [rustup.rs](https://rustup.rs/)
 - **Docker** — for local PostgreSQL
+- **just** — command runner (`cargo install just`)
 
 ### 1. Create Your Project
 
@@ -47,52 +40,200 @@ gh repo create my-project --template systempromptio/systemprompt-template --clon
 cd my-project
 ```
 
-### 2. Build & Run
+Or download directly:
+
+```bash
+git clone --recursive https://github.com/systempromptio/systemprompt-template.git my-project
+cd my-project
+```
+
+### 2. Build
 
 ```bash
 just build
-just db-up
-just login
-just tenant
-just profile
-just start
 ```
 
-### 3. Open
+### 3. Setup & Start
+
+```bash
+just db-up      # Start PostgreSQL
+just login      # Authenticate with systemprompt.io cloud
+just profile    # Create local profile
+just start      # Launch services
+```
+
+### 4. Open
 
 Visit **http://localhost:8080**
+
+---
+
+## What You'll See
+
+When you open the homepage, you'll see the **"Welcome to the endgame"** dashboard:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Welcome to the endgame                                          │
+│                                                                  │
+│  Agents that regenerate, learn and orchestrate agents.           │
+│  Run by superagents like Claude Code. Directed by you.           │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  systemprompt online                                      │   │
+│  │  ├── MCP Services: 3 running                              │   │
+│  │  └── Active Agents: 1 ready                               │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  [Level 1: Chat] [Level 2: Tools] [Level 3: Agents] [Level 4]   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Each level card shows **runnable commands** you can copy and execute to experience that level of AI capability.
+
+---
+
+## The AI Evolution
+
+The homepage demonstrates the four levels of AI capability. This template takes you from Level 1 to Level 4:
+
+### Level 1: Chat — The Copy-Paste Era
+
+Single-turn conversations. You ask, AI answers, you copy and paste.
+
+```bash
+systemprompt admin agents message welcome -m "Hello!" --blocking
+```
+
+### Level 2: Tools — The Function-Calling Era
+
+AI invokes tools. It reads data, calls APIs, writes files.
+
+```bash
+systemprompt plugins mcp tools
+systemprompt plugins mcp call content-manager create_blog_post -a '{"skill_id": "announcement_writing", "slug": "welcome-post", "description": "AI tools demo", "keywords": ["mcp"], "instructions": "Write a welcome announcement."}'
+```
+
+### Level 3: Agents — The Autonomous Era
+
+Define the goal — agents find the path. Multi-step reasoning with tool use.
+
+```bash
+systemprompt admin agents message welcome -m "Create an announcement blog" --blocking --timeout 120
+systemprompt infra jobs run publish_pipeline
+```
+
+### Level 4: Mesh — The Orchestration Era
+
+Superagents coordinate specialized agents. Load a playbook in Claude Code and let the mesh deliver.
+
+```bash
+systemprompt core playbooks show content_blog
+# Then in Claude Code: "Run the content_blog playbook and publish the results"
+```
+
+**Level 4 is the endgame** — agents that regenerate, learn from performance metrics, and orchestrate other agents.
+
+---
+
+## What's Included
+
+| Component | Count | Description |
+|-----------|-------|-------------|
+| **Extensions** | 4 | Web publishing, Soul memory, MCP servers, CLI tools |
+| **MCP Servers** | 3 | `systemprompt` (CLI), `soul` (memory), `content-manager` |
+| **Playbooks** | 96 | Machine-readable operational guides |
+| **Agent** | 1 | Pre-configured welcome assistant |
+| **Skills** | 5+ | General assistance, content writing, technical writing |
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Your Project (this template)                                    │
+│                                                                  │
+│  extensions/              ← Your Rust code                       │
+│  ├── web/                   Web publishing, themes, SEO          │
+│  ├── soul/                  Long-term memory system              │
+│  ├── mcp/                   MCP servers (3 included)             │
+│  └── cli/                   CLI extensions                       │
+│                                                                  │
+│  services/                ← Your configuration (YAML/Markdown)   │
+│  ├── agents/                Agent definitions                    │
+│  ├── skills/                Skill configurations                 │
+│  ├── playbook/              96 operational playbooks             │
+│  └── web/                   Themes, templates, homepage          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  core/ (git submodule - READ ONLY)                               │
+│                                                                  │
+│  systemprompt-core provides:                                     │
+│  ├── API server + CLI                                            │
+│  ├── Agent runtime + A2A protocol                                │
+│  ├── MCP server hosting                                          │
+│  ├── Auth (OAuth2 + WebAuthn)                                    │
+│  ├── Memory systems                                              │
+│  └── Observability + logging                                     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Key rules:**
+- Rust code → `extensions/`
+- Configuration → `services/`
+- Core is **read-only** (git submodule)
 
 ---
 
 ## Project Structure
 
 ```
-├── extensions/          # Your Rust code
-│   ├── web/             # Web publishing extension
-│   ├── soul/            # Memory system extension
-│   └── mcp/             # MCP servers (systemprompt, soul, content-manager)
+systemprompt-template/
+├── extensions/              # Your Rust code
+│   ├── web/                 # Web publishing extension
+│   ├── soul/                # Memory system extension
+│   ├── mcp/                 # MCP servers
+│   │   ├── systemprompt/    #   CLI execution (admin-only)
+│   │   ├── soul/            #   Memory operations
+│   │   └── content-manager/ #   Content creation
+│   └── cli/                 # CLI extensions
 │
-├── services/            # Configuration (YAML/Markdown only)
-│   ├── agents/          # Agent definitions
-│   ├── skills/          # Skill configurations
-│   ├── mcp/             # MCP server configs
-│   ├── playbook/        # 99 operational playbooks
-│   └── web/             # Theme and branding
+├── services/                # Configuration (YAML/Markdown only)
+│   ├── agents/              # Agent definitions
+│   ├── skills/              # Skill configurations
+│   ├── mcp/                 # MCP server configs
+│   ├── playbook/            # 96 operational playbooks
+│   └── web/                 # Theme, templates, homepage config
 │
-├── Cargo.toml           # Workspace manifest
-└── justfile             # Development commands
+├── core/                    # READ-ONLY - systemprompt-core submodule
+├── Cargo.toml               # Workspace manifest
+└── justfile                 # Development commands
 ```
 
-**Key rules:**
-- Rust code → `extensions/`
-- Configuration → `services/`
-- Core is read-only (git submodule)
+---
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `just build` | Build the project |
+| `just start` | Start all services |
+| `just login` | Authenticate with cloud |
+| `just profile` | Create/select profile |
+| `just deploy` | Build and deploy to cloud |
+| `just db-up` | Start local PostgreSQL |
+| `just db-down` | Stop local PostgreSQL |
+| `just migrate` | Run database migrations |
 
 ---
 
 ## Playbooks
 
-Every operation has a playbook. Don't guess commands — read the playbook.
+Every operation has a playbook. Don't guess — read the playbook first.
 
 ```bash
 # List all playbooks
@@ -111,44 +252,25 @@ systemprompt core playbooks show <playbook_id>
 | `cli_*` | CLI command references |
 | `build_*` | Development standards |
 | `content_*` | Content creation workflows |
+| `config_*` | Configuration references |
+| `domain_*` | Domain-specific operations |
 
 ---
 
-## Extensions
+## What's Next?
 
-### Web Extension
+### Customize & Develop
 
-Blog publishing, documentation, navigation, and content management with SEO.
+Build agents, skills, and MCP servers tailored to your needs.
 
-### Soul Extension
+- Add new agents in `services/agents/`
+- Define custom skills in `services/skills/`
+- Build MCP servers in `extensions/mcp/`
+- See: `systemprompt core playbooks show build_getting-started`
 
-Long-term memory and context retention with Discord integration.
+### Deploy Securely
 
-### MCP Servers
-
-| Server | Purpose |
-|--------|---------|
-| `systemprompt` | Execute CLI commands (admin-only) |
-| `soul` | Memory operations |
-| `content-manager` | Content creation and management |
-
----
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `just build` | Build the project |
-| `just start` | Start all services |
-| `just migrate` | Run database migrations |
-| `just login` | Authenticate with cloud |
-| `just deploy` | Build and deploy to cloud |
-| `just db-up` | Start local PostgreSQL |
-| `just db-down` | Stop local PostgreSQL |
-
----
-
-## Cloud Deployment
+Ship to production with OAuth, HTTPS, and full audit trails.
 
 ```bash
 just login
@@ -157,40 +279,31 @@ just profile create production
 just deploy --profile production
 ```
 
-See playbook: `systemprompt core playbooks show cli_deploy`
+See: `systemprompt core playbooks show cli_deploy`
 
----
+### Automate & Schedule
 
-## Architecture
+Run jobs on schedules and build agentic workflows.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  Your Project (this template)                           │
-│  ├── extensions/       # Your Rust code                 │
-│  └── services/         # Your YAML configuration        │
-└─────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│  core/ (git submodule - READ ONLY)                      │
-│  └── systemprompt-core                                  │
-│      ├── API server + CLI                               │
-│      ├── Agent runtime + A2A protocol                   │
-│      ├── MCP server hosting                             │
-│      └── Auth (OAuth2 + WebAuthn)                       │
-└─────────────────────────────────────────────────────────┘
-```
+- Cron-based job scheduling
+- Event-driven triggers
+- Agentic workflow pipelines
+
+See: `systemprompt core playbooks show cli_jobs`
 
 ---
 
 ## Built on systemprompt-core
 
-This template extends [systemprompt-core](https://github.com/systempromptio/systemprompt-core) which provides:
+This template extends [systemprompt-core](https://github.com/systempromptio/systemprompt-core) — a production-ready AI agent orchestration library that provides:
 
-- Complete runtime (API + agents + MCP)
-- Authentication (OAuth2, WebAuthn)
-- Database layer (PostgreSQL)
-- A2A agent-to-agent protocol
+- **Complete runtime**: API server, agent runtime, MCP hosting
+- **Authentication**: OAuth2 for APIs, WebAuthn for passwordless login
+- **Memory systems**: Long-term, short-term, and working memory
+- **A2A protocol**: Agent-to-agent communication and orchestration
+- **Observability**: Full request logging and audit trails
+
+Works with Claude Code, Claude Desktop, ChatGPT, and any MCP-compatible tool.
 
 ---
 
@@ -205,5 +318,7 @@ Depends on [systemprompt-core](https://github.com/systempromptio/systemprompt-co
 <div align="center">
 
 **[Documentation](https://systemprompt.io/documentation)** · **[Discord](https://discord.gg/wkAbSuPWpr)** · **[systemprompt-core](https://github.com/systempromptio/systemprompt-core)** · **[Issues](https://github.com/systempromptio/systemprompt-template/issues)**
+
+Questions or issues? Join us on [Discord](https://discord.gg/wkAbSuPWpr) for help.
 
 </div>
