@@ -135,3 +135,7 @@ storage/files/js/
 
 # SQLx offline cache - MUST be committed for offline builds
 # .sqlx/
+
+# Generated web output
+web/dist/*
+!web/dist/README.md
