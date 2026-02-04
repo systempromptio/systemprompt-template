@@ -144,12 +144,11 @@
   }
 
   function sendEvent(eventType, data) {
-    let payload;
-    if (eventType === 'page_exit') {
-      payload = data;
-    } else {
-      return;
-    }
+    const payload = {
+      event_type: eventType,
+      page_url: window.location.pathname,
+      ...data
+    };
 
     const jsonPayload = JSON.stringify(payload);
 

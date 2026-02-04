@@ -3,7 +3,7 @@ use std::sync::Arc;
 use systemprompt::extension::prelude::*;
 use systemprompt::traits::Job;
 
-use crate::jobs::{DiscordGatewayJob, HeartbeatJob, MemorySynthesisJob};
+use crate::jobs::{HeartbeatJob, MemorySynthesisJob};
 
 pub const SCHEMA_SOUL_MEMORIES: &str = include_str!("../schema/001_soul_memories.sql");
 
@@ -39,7 +39,6 @@ impl Extension for SoulExtension {
         vec![
             Arc::new(MemorySynthesisJob),
             Arc::new(HeartbeatJob),
-            Arc::new(DiscordGatewayJob),
         ]
     }
 

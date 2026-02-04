@@ -35,6 +35,9 @@ Built on [systemprompt.io](https://systemprompt.io). You own the code. You exten
 
 - **Rust 1.75+**: [rustup.rs](https://rustup.rs/)
 - **just**: command runner (`cargo install just`)
+- **Docker**: for local PostgreSQL ([docker.com](https://www.docker.com/))
+- **jq**: JSON processor (`brew install jq` / `apt install jq`)
+- **yq**: YAML processor (`brew install yq` / `apt install yq`)
 
 ### 1. Create Your Project
 
@@ -264,7 +267,7 @@ systemprompt-template/
 |---------|-------------|
 | `just build` | Build the project |
 | `just login` | Authenticate with cloud |
-| `just tenant` | Create/select tenant |
+| `just tenant` | Create tenant (database, profile, migrations) |
 | `just start` | Start all services |
 | `just deploy` | Build and deploy to cloud |
 | `just migrate` | Run database migrations |
