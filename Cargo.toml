@@ -4,8 +4,6 @@ members = [
     "extensions/web",
     "extensions/soul",
     "extensions/moltbook",
-    # CLI binaries
-    "extensions/cli/discord",
     # MCP servers
     "extensions/mcp/systemprompt",
     "extensions/mcp/soul",
@@ -14,9 +12,14 @@ members = [
 ]
 resolver = "2"
 
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+
 [workspace.package]
 edition = "2021"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Edward Jack Burton <edward@systemprompt.io>"]
 license = "MIT"
 
@@ -24,7 +27,7 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.1.3", features = ["full"] }
+systemprompt = { version = "0.1.4", features = ["full"] }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -129,8 +132,6 @@ hmac = "0.12"
 webauthn-rs = { version = "0.5", features = ["danger-allow-state-serialisation"] }
 bincode = "1.3"
 
-# Discord
-serenity = { version = "0.12", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }
 secrecy = { version = "0.10", features = ["serde"] }
 
 # Markdown processing
@@ -199,8 +200,7 @@ serde_yaml = "0.9"
 workspace = true
 
 # ============================================
-# LOCAL DEVELOPMENT PATCHES
-# Using local systemprompt-core for latest features
+# LOCAL DEVELOPMENT PATCHES (uncomment for local dev)
 # ============================================
-[patch.crates-io]
-systemprompt = { path = "../systemprompt-core/systemprompt" }
+# [patch.crates-io]
+# systemprompt = { path = "../systemprompt-core/systemprompt" }

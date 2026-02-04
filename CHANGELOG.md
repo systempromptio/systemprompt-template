@@ -2,6 +2,21 @@
 
 All notable changes to systemprompt-template will be documented in this file.
 
+## [0.1.3] - 2026-02-04
+
+### Changed
+- Updated systemprompt-core dependency to v0.1.4 from crates.io
+- Removed local path patch for production deployment
+
+### Added
+- MCP OAuth 2.1 discovery endpoints support (RFC 8707)
+- Improved CLI session handling and profile switching
+
+## [0.1.2] - 2026-02-04
+
+### Changed
+- Internal development release with local patches
+
 ## [0.1.1] - 2026-02-03
 
 ### Added
