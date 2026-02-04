@@ -1,6 +1,10 @@
 <div align="center">
 
-<img src="https://systemprompt.io/files/images/logo-dark.svg" alt="systemprompt.io" width="400">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://systemprompt.io/files/images/logo.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://systemprompt.io/files/images/logo-dark.svg">
+  <img src="https://systemprompt.io/files/images/logo-dark.svg" alt="systemprompt.io" width="400">
+</picture>
 
 **Production AI agent mesh in 3 commands.**
 
@@ -17,11 +21,11 @@
 
 ---
 
-This template gives you a complete AI agent infrastructure running locally. Start it, open `localhost:8080`, and experience the evolution from simple chat to autonomous agent orchestration — with live, runnable examples at each level.
+Love OpenClaw? This is what comes next. A production-grade AI agent infrastructure that compiles into a single Rust binary with auth, memory, MCP hosting, and observability built in. One dependency: PostgreSQL.
 
-Built on [systemprompt.io](https://systemprompt.io) — a 50MB production-ready Rust library with authentication, memory, MCP hosting, and observability built in. You own the code. You extend it. You deploy it anywhere.
+Built on [systemprompt.io](https://systemprompt.io). You own the code. You extend it. You deploy it anywhere.
 
-> **This is a library, not a platform.** You build your own binary by extending the core. No vendor lock-in. Self-hosted with PostgreSQL.
+> **This is a library, not a framework.** No vendor lock-in. Self-hosted with PostgreSQL. [Migrating from OpenClaw?](https://systemprompt.io/blog/openclaw-to-systemprompt-migration)
 
 ---
 
@@ -29,22 +33,16 @@ Built on [systemprompt.io](https://systemprompt.io) — a 50MB production-ready 
 
 ### Prerequisites
 
-- **Rust 1.75+** — [rustup.rs](https://rustup.rs/)
-- **just** — command runner (`cargo install just`)
+- **Rust 1.75+**: [rustup.rs](https://rustup.rs/)
+- **just**: command runner (`cargo install just`)
 
-### 1. Fork or Download
+### 1. Create Your Project
 
-**Fork on GitHub** (recommended):
+Click **"Use this template"** on GitHub, or run:
+
 ```bash
-# Fork via GitHub UI, then:
-git clone https://github.com/YOUR-USERNAME/systemprompt-template.git
-cd systemprompt-template
-```
-
-**Or download directly:**
-```bash
-git clone https://github.com/systempromptio/systemprompt-template.git
-cd systemprompt-template
+gh repo create my-agent-platform --template systempromptio/systemprompt-template --clone
+cd my-agent-platform
 ```
 
 ### 2. Build
@@ -100,7 +98,7 @@ Each level card shows **runnable commands** you can copy and execute to experien
 
 The homepage demonstrates the four levels of AI capability. This template takes you from Level 1 to Level 4:
 
-### Level 1: Chat — The Copy-Paste Era
+### Level 1: Chat / The Copy-Paste Era
 
 Single-turn conversations. You ask, AI answers, you copy and paste.
 
@@ -108,7 +106,7 @@ Single-turn conversations. You ask, AI answers, you copy and paste.
 systemprompt admin agents message welcome -m "Hello!" --blocking
 ```
 
-### Level 2: Tools — The Function-Calling Era
+### Level 2: Tools / The Function-Calling Era
 
 AI invokes tools. It reads data, calls APIs, writes files.
 
@@ -117,16 +115,16 @@ systemprompt plugins mcp tools
 systemprompt plugins mcp call content-manager create_blog_post -a '{"skill_id": "announcement_writing", "slug": "welcome-post", "description": "AI tools demo", "keywords": ["mcp"], "instructions": "Write a welcome announcement."}'
 ```
 
-### Level 3: Agents — The Autonomous Era
+### Level 3: Agents / The Autonomous Era
 
-Define the goal — agents find the path. Multi-step reasoning with tool use.
+Define the goal, agents find the path. Multi-step reasoning with tool use.
 
 ```bash
 systemprompt admin agents message welcome -m "Create an announcement blog" --blocking --timeout 120
 systemprompt infra jobs run publish_pipeline
 ```
 
-### Level 4: Mesh — The Orchestration Era
+### Level 4: Mesh / The Orchestration Era
 
 Superagents coordinate specialized agents. Load a playbook in Claude Code and let the mesh deliver.
 
@@ -135,17 +133,17 @@ systemprompt core playbooks show content_blog
 # Then in Claude Code: "Run the content_blog playbook and publish the results"
 ```
 
-**Level 4 is the endgame** — agents that regenerate, learn from performance metrics, and orchestrate other agents.
+**Level 4 is the endgame**: agents that regenerate, learn from performance metrics, and orchestrate other agents.
 
 ---
 
 ## What's Included
 
 See the full documentation at **[systemprompt.io/documentation](https://systemprompt.io/documentation)** for:
-- [Extensions](https://systemprompt.io/documentation/extensions/) — Web publishing, memory systems, MCP servers
-- [Services](https://systemprompt.io/documentation/services/) — Agents, AI providers, authentication, analytics
-- [Configuration](https://systemprompt.io/documentation/config/) — Profiles, secrets, tenants, deployment
-- [CLI Reference](https://systemprompt.io/documentation/reference/cli/) — Complete command reference
+- [Extensions](https://systemprompt.io/documentation/extensions/): Web publishing, memory systems, MCP servers
+- [Services](https://systemprompt.io/documentation/services/): Agents, AI providers, authentication, analytics
+- [Configuration](https://systemprompt.io/documentation/config/): Profiles, secrets, tenants, deployment
+- [CLI Reference](https://systemprompt.io/documentation/reference/cli/): Complete command reference
 
 ---
 
@@ -159,7 +157,7 @@ Playbooks are **machine-readable instruction guides** that eliminate AI hallucin
 # List all playbooks
 systemprompt core playbooks list
 
-# Start here — the master index
+# Start here, the master index
 systemprompt core playbooks show guide_start
 
 # Show any playbook
@@ -179,7 +177,7 @@ systemprompt core playbooks show <playbook_id>
 
 | Playbook | Description |
 |----------|-------------|
-| `guide_start` | Master index — read this first |
+| `guide_start` | Master index, read this first |
 | `guide_coding-standards` | Rust patterns and code standards |
 | `cli_agents` | Agent management commands |
 | `cli_deploy` | Deployment procedures |
@@ -311,7 +309,7 @@ See: `systemprompt core playbooks show cli_jobs`
 
 ## Built on systemprompt-core
 
-This template extends [systemprompt-core](https://github.com/systempromptio/systemprompt-core) — a production-ready AI agent orchestration library that provides:
+This template extends [systemprompt-core](https://github.com/systempromptio/systemprompt-core), a production-ready AI agent orchestration library that provides:
 
 - **Complete runtime**: API server, agent runtime, MCP hosting
 - **Authentication**: OAuth2 for APIs, WebAuthn for passwordless login
@@ -325,7 +323,7 @@ Works with Claude Code, Claude Desktop, ChatGPT, and any MCP-compatible tool.
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT, see [LICENSE](LICENSE)
 
 Depends on [systemprompt-core](https://github.com/systempromptio/systemprompt-core) (FSL-1.1-ALv2).
 
