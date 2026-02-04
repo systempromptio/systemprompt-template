@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT content\n           FROM ai_request_messages\n           WHERE request_id = $1 AND role = 'system' AND sequence_number = 0\n           LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "content",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "17fd18ab12f1dffebc396bb4d1a57434e9559cb283469ffc7f1d09b41db85679"
+}

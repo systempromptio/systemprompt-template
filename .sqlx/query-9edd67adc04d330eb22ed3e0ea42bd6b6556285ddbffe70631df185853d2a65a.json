@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_contexts (context_id, user_id, session_id, name, created_at, updated_at)\n           VALUES ($1, $2, $3, $4, $5, $6)\n           ON CONFLICT (context_id) DO UPDATE SET\n             user_id = EXCLUDED.user_id,\n             session_id = EXCLUDED.session_id,\n             name = EXCLUDED.name,\n             updated_at = EXCLUDED.updated_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9edd67adc04d330eb22ed3e0ea42bd6b6556285ddbffe70631df185853d2a65a"
+}

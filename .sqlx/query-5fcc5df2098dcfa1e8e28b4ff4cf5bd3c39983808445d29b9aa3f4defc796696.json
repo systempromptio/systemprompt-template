@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT id as \"id!\", provider as \"provider!\", model as \"model!\",\n            input_tokens, output_tokens, cost_microdollars as \"cost_microdollars!\",\n            latency_ms, task_id, trace_id\n        FROM ai_requests WHERE id = $1 OR id LIKE $2 LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "provider!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "model!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "input_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "output_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "cost_microdollars!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "latency_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "task_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "trace_id",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "5fcc5df2098dcfa1e8e28b4ff4cf5bd3c39983808445d29b9aa3f4defc796696"
+}

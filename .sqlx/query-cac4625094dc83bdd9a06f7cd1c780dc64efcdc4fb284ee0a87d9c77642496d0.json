@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM services\n            WHERE status IN ('error', 'crashed')\n               OR (status = 'running' AND pid IS NULL)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "cac4625094dc83bdd9a06f7cd1c780dc64efcdc4fb284ee0a87d9c77642496d0"
+}

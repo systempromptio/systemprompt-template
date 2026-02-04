@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                EXTRACT(HOUR FROM started_at)::INTEGER as \"task_hour!\",\n                COUNT(*)::bigint as \"task_count!\"\n            FROM agent_tasks\n            WHERE agent_name ILIKE $1\n              AND started_at >= $2 AND started_at < $3\n            GROUP BY EXTRACT(HOUR FROM started_at)\n            ORDER BY 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "task_hour!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "task_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "3a9055018a5360648aa8d7570c61d27f49487e6aea85c399ad6f26ff88b35a55"
+}

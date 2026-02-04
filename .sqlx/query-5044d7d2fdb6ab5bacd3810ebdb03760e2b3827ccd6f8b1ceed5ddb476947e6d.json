@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE agent_tasks SET\n                        status = 'completed',\n                        updated_at = $1,\n                        completed_at = CURRENT_TIMESTAMP,\n                        started_at = COALESCE(started_at, CURRENT_TIMESTAMP),\n                        execution_time_ms = EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - COALESCE(started_at, CURRENT_TIMESTAMP))) * 1000\n                    WHERE task_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5044d7d2fdb6ab5bacd3810ebdb03760e2b3827ccd6f8b1ceed5ddb476947e6d"
+}

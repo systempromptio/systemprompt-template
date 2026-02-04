@@ -1,0 +1,72 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                u.id, u.name, u.email, u.full_name, u.status, u.roles, u.created_at,\n                COUNT(s.session_id) FILTER (WHERE s.ended_at IS NULL) as \"active_sessions!\",\n                MAX(s.last_activity_at) as last_session_at\n            FROM users u\n            LEFT JOIN user_sessions s ON s.user_id = u.id\n            WHERE u.status != $1\n              AND NOT ($2 = ANY(u.roles))\n            GROUP BY u.id\n            ORDER BY last_session_at DESC NULLS LAST\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "full_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "roles",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "active_sessions!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "last_session_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "3fa24baca35ef27621ad334253bbd10d2dd920bb984b17f19c9373b54043cd85"
+}

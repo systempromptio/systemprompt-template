@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH page_view_stats AS (\n                SELECT\n                    COUNT(*) as total_views,\n                    COUNT(DISTINCT user_id) as unique_visitors\n                FROM analytics_events\n                WHERE event_type = 'page_view'\n                    AND timestamp >= $1 AND timestamp < $2\n            ),\n            engagement_stats AS (\n                SELECT\n                    COALESCE(AVG(time_on_page_ms) / 1000.0, 0) as avg_time_on_page_seconds,\n                    COALESCE(AVG(max_scroll_depth), 0) as avg_scroll_depth,\n                    COALESCE(SUM(click_count), 0) as total_clicks\n                FROM engagement_events\n                WHERE created_at >= $1 AND created_at < $2\n            )\n            SELECT\n                pv.total_views::bigint as \"total_views!\",\n                pv.unique_visitors::bigint as \"unique_visitors!\",\n                es.avg_time_on_page_seconds::float8 as \"avg_time_on_page_seconds\",\n                es.avg_scroll_depth::float8 as \"avg_scroll_depth\",\n                es.total_clicks::bigint as \"total_clicks!\"\n            FROM page_view_stats pv, engagement_stats es\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_views!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "unique_visitors!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "avg_time_on_page_seconds",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "avg_scroll_depth",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_clicks!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "748430026863d9593f0c6f528f406cdcd4120ff67af9405a68e9062b3fc92063"
+}

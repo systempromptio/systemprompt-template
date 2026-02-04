@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT funnel_id, step_order, name, match_pattern, match_type\n            FROM funnel_steps WHERE funnel_id = $1 ORDER BY step_order\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "funnel_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "step_order",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "match_pattern",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "match_type",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9c9c2143cdcd03a2c144eaad6ff98d393130c8e5e6c0768e19c224d2aeb5184f"
+}

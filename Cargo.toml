@@ -27,7 +27,7 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.1.4", features = ["full"] }
+systemprompt = { version = "0.1.5", features = ["full"] }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -200,7 +200,7 @@ serde_yaml = "0.9"
 workspace = true
 
 # ============================================
-# LOCAL DEVELOPMENT PATCHES (uncomment for local dev)
+# LOCAL DEVELOPMENT PATCHES
 # ============================================
 # [patch.crates-io]
-# systemprompt = { path = "../systemprompt-core/systemprompt" }
+# systemprompt = { path = "../../systemprompt-core/systemprompt" }

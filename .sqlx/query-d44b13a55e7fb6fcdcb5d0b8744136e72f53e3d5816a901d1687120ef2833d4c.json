@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO services (name, module_name, status, port, binary_mtime)\n            VALUES ($1, $2, $3, $4, $5)\n            ON CONFLICT (name) DO UPDATE SET\n              module_name = EXCLUDED.module_name,\n              status = EXCLUDED.status,\n              port = EXCLUDED.port,\n              binary_mtime = EXCLUDED.binary_mtime,\n              updated_at = CURRENT_TIMESTAMP\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d44b13a55e7fb6fcdcb5d0b8744136e72f53e3d5816a901d1687120ef2833d4c"
+}

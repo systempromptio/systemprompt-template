@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT MIN(timestamp) as \"earliest\", MAX(timestamp) as \"latest\"\n            FROM logs\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "earliest",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "latest",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "7a98f7ab294d81ddcfb4d27ccf1d0b0e43544e902842bdc222a4b27fb865bfae"
+}

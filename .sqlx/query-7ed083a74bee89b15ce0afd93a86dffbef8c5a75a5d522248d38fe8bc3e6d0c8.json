@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM oauth_clients WHERE last_used_at IS NULL AND created_at < $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7ed083a74bee89b15ce0afd93a86dffbef8c5a75a5d522248d38fe8bc3e6d0c8"
+}

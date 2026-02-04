@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                t.agent_name as \"agent_name!\",\n                COUNT(*)::bigint as \"task_count!\",\n                COUNT(*) FILTER (WHERE t.status = 'completed')::bigint as \"completed_count!\",\n                COALESCE(AVG(t.execution_time_ms), 0)::bigint as \"avg_execution_time_ms!\",\n                COALESCE(SUM(r.cost_microdollars), 0)::bigint as \"total_cost_microdollars!\",\n                MAX(t.started_at) as \"last_active!\"\n            FROM agent_tasks t\n            LEFT JOIN ai_requests r ON r.task_id = t.task_id\n            WHERE t.started_at >= $1 AND t.started_at < $2\n              AND t.agent_name IS NOT NULL\n            GROUP BY t.agent_name\n            ORDER BY MAX(t.started_at) DESC\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "agent_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "task_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "completed_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "avg_execution_time_ms!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_cost_microdollars!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "last_active!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "6b5e33cc3b1a97c9749d7816c0f480c4d033149d7d08a6e488beed0cc700d9ed"
+}

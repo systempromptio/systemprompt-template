@@ -1,0 +1,166 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                id as \"id: EngagementEventId\", session_id, user_id, page_url,\n                content_id as \"content_id: ContentId\",\n                time_on_page_ms, time_to_first_interaction_ms, time_to_first_scroll_ms,\n                max_scroll_depth, scroll_velocity_avg, scroll_direction_changes,\n                click_count, mouse_move_distance_px, keyboard_events, copy_events,\n                focus_time_ms as \"focus_time_ms!\",\n                blur_count as \"blur_count!\",\n                tab_switches as \"tab_switches!\",\n                visible_time_ms as \"visible_time_ms!\",\n                hidden_time_ms as \"hidden_time_ms!\",\n                is_rage_click, is_dead_click, reading_pattern,\n                created_at, updated_at\n            FROM engagement_events\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: EngagementEventId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "session_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "page_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "content_id: ContentId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "time_on_page_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "time_to_first_interaction_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "time_to_first_scroll_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "max_scroll_depth",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "scroll_velocity_avg",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 10,
+        "name": "scroll_direction_changes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "click_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "mouse_move_distance_px",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "keyboard_events",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "copy_events",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "focus_time_ms!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 16,
+        "name": "blur_count!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 17,
+        "name": "tab_switches!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 18,
+        "name": "visible_time_ms!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 19,
+        "name": "hidden_time_ms!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 20,
+        "name": "is_rage_click",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 21,
+        "name": "is_dead_click",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 22,
+        "name": "reading_pattern",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 23,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 24,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "07290f98e00c988ebf3a21613cce8e2aa9930e646c76d91e7ccebf76b7b14cf6"
+}

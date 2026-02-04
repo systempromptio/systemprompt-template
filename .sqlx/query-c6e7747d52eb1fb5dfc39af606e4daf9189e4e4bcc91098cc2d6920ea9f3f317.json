@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                id,\n                user_id as \"user_id: UserId\",\n                session_id as \"session_id: SessionId\",\n                event_type,\n                event_category,\n                endpoint as page_url,\n                event_data,\n                timestamp\n            FROM analytics_events\n            WHERE event_data->>'content_id' = $1\n            ORDER BY timestamp DESC\n            LIMIT $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id: UserId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "session_id: SessionId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "event_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "event_category",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "page_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "event_data",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 7,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "c6e7747d52eb1fb5dfc39af606e4daf9189e4e4bcc91098cc2d6920ea9f3f317"
+}

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT ip_address, COUNT(*) as session_count\n            FROM user_sessions\n            WHERE started_at >= NOW() - INTERVAL '24 hours'\n              AND ip_address IS NOT NULL\n              AND is_scanner = true\n            GROUP BY ip_address\n            HAVING COUNT(*) >= $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ip_address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "session_count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null
+    ]
+  },
+  "hash": "108a8dd90303c5fc0c40648ce4eceddda7a5b91743ddc3f3144ffe28e4daa903"
+}

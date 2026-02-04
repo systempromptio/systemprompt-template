@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            timestamp,\n            level as type,\n            CONCAT(module, ': ', message) as details,\n            user_id,\n            session_id,\n            task_id,\n            context_id,\n            metadata\n        FROM logs\n        WHERE trace_id = $1\n        ORDER BY timestamp ASC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "details",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "session_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "task_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "context_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "metadata",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "d093d02f1996276b7beaa0edc112992c1d7bc2d7acca541e1ce138ab929d15c2"
+}

@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                id as \"id!\",\n                artifact_id as \"artifact_id!\",\n                mcp_execution_id as \"mcp_execution_id!\",\n                context_id,\n                user_id,\n                server_name as \"server_name!\",\n                artifact_type as \"artifact_type!\",\n                title,\n                data as \"data!\",\n                metadata,\n                created_at as \"created_at!\",\n                expires_at\n            FROM mcp_artifacts\n            WHERE artifact_id = $1\n              AND (expires_at IS NULL OR expires_at > NOW())\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "artifact_id!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "mcp_execution_id!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "context_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "user_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "server_name!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "artifact_type!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "title",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "data!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "54abfcda1abcc71b2f593f5f98ca269aae496554429150cc31aabd0120dd63cb"
+}

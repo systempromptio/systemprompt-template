@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, model, provider, max_tokens, input_tokens, output_tokens, cost_microdollars, latency_ms\n           FROM ai_requests\n           WHERE task_id = $1\n           ORDER BY created_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "model",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "provider",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "max_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "input_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "output_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "cost_microdollars",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "latency_ms",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "42622760576d57c369ab78eb1acae4e0bb5b2c1b352a4f1459f4182069c0f2db"
+}

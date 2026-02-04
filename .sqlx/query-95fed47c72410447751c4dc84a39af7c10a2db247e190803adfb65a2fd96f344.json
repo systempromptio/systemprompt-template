@@ -1,0 +1,166 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT session_id as \"session_id: SessionId\",\n               user_id as \"user_id?: UserId\",\n               fingerprint_hash, ip_address, user_agent, device_type,\n               browser, os, country, city, referrer_url, utm_source, utm_medium,\n               utm_campaign, is_bot, is_scanner, is_behavioral_bot, behavioral_bot_reason,\n               started_at, last_activity_at, ended_at, request_count, task_count,\n               ai_request_count, message_count\n        FROM user_sessions\n        WHERE user_id = $1 AND ended_at IS NULL\n        ORDER BY last_activity_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id: SessionId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id?: UserId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "fingerprint_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "ip_address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "user_agent",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "device_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "browser",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "os",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "country",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "city",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "referrer_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "utm_source",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 12,
+        "name": "utm_medium",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 13,
+        "name": "utm_campaign",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 14,
+        "name": "is_bot",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
+        "name": "is_scanner",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 16,
+        "name": "is_behavioral_bot",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 17,
+        "name": "behavioral_bot_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 18,
+        "name": "started_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 19,
+        "name": "last_activity_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 20,
+        "name": "ended_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 21,
+        "name": "request_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 22,
+        "name": "task_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 23,
+        "name": "ai_request_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 24,
+        "name": "message_count",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "95fed47c72410447751c4dc84a39af7c10a2db247e190803adfb65a2fd96f344"
+}
