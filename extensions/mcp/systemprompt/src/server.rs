@@ -1,150 +1,39 @@
-use crate::tools::{self, CliInput, CliOutput, CommandResult, SERVER_NAME};
+use crate::cli;
+use crate::tools::{self, CliInput, SERVER_NAME};
 use anyhow::Result;
-use chrono::Utc;
 use rmcp::model::{
-    CallToolRequestParams, CallToolResult, Content, Implementation, InitializeRequestParams,
-    InitializeResult, ListResourceTemplatesResult, ListResourcesResult, ListToolsResult,
-    PaginatedRequestParams, ProtocolVersion, RawResourceTemplate, ReadResourceRequestParams,
-    ReadResourceResult, ResourceContents, ResourceTemplate, ServerCapabilities, ServerInfo,
+    CallToolRequestParams, CallToolResult, Icon, Implementation, InitializeRequestParams,
+    InitializeResult, ListResourcesResult, ListToolsResult, Meta,
+    PaginatedRequestParams, ProtocolVersion, RawResource, ReadResourceRequestParams,
+    ReadResourceResult, Resource, ResourceContents, ServerCapabilities, ServerInfo,
 };
 use rmcp::service::{RequestContext, RoleServer};
 use rmcp::{ErrorData as McpError, ServerHandler};
-use std::path::PathBuf;
-use std::process::Command;
-use std::sync::Arc;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::{ArtifactId, McpServerId};
+use systemprompt::identifiers::{McpExecutionId, McpServerId};
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
-use systemprompt::mcp::models::{ExecutionStatus, ToolExecutionRequest, ToolExecutionResult};
-use systemprompt::mcp::repository::ToolUsageRepository;
-use systemprompt::mcp::services::ui_renderer::{
-    registry::create_default_registry, UiRendererRegistry, MCP_APP_MIME_TYPE,
+use systemprompt::mcp::services::ui_renderer::{CspPolicy, UiMetadata, MCP_APP_MIME_TYPE};
+use systemprompt::mcp::{
+    build_experimental_capabilities, McpArtifactRepository, McpResponseBuilder, WEBSITE_URL,
 };
-use systemprompt::models::ProfileBootstrap;
+use systemprompt::models::artifacts::{CliArtifact, CommandResultRaw, TextArtifact};
+use systemprompt::models::execution::context::RequestContext as SysRequestContext;
+
+const ARTIFACT_VIEWER_TEMPLATE: &str = include_str!("../templates/artifact-viewer.html");
 
 #[derive(Clone)]
 pub struct SystempromptServer {
     db_pool: DbPool,
     service_id: McpServerId,
-    ui_registry: Arc<UiRendererRegistry>,
-    tool_usage_repo: Arc<ToolUsageRepository>,
 }
 
 impl SystempromptServer {
-    pub fn new(db_pool: DbPool, service_id: McpServerId) -> Result<Self, McpError> {
-        let tool_usage_repo = Arc::new(ToolUsageRepository::new(&db_pool).map_err(|e| {
-            McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None)
-        })?);
-        Ok(Self {
+    #[must_use]
+    pub fn new(db_pool: DbPool, service_id: McpServerId) -> Self {
+        Self {
             db_pool,
             service_id,
-            ui_registry: Arc::new(create_default_registry()),
-            tool_usage_repo,
-        })
-    }
-
-    pub fn with_custom_registry(
-        db_pool: DbPool,
-        service_id: McpServerId,
-        registry: UiRendererRegistry,
-    ) -> Result<Self, McpError> {
-        let tool_usage_repo = Arc::new(ToolUsageRepository::new(&db_pool).map_err(|e| {
-            McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None)
-        })?);
-        Ok(Self {
-            db_pool,
-            service_id,
-            ui_registry: Arc::new(registry),
-            tool_usage_repo,
-        })
-    }
-
-    pub fn with_extended_registry<F>(
-        db_pool: DbPool,
-        service_id: McpServerId,
-        extend_fn: F,
-    ) -> Result<Self, McpError>
-    where
-        F: FnOnce(&mut UiRendererRegistry),
-    {
-        let mut registry = create_default_registry();
-        extend_fn(&mut registry);
-        let tool_usage_repo = Arc::new(ToolUsageRepository::new(&db_pool).map_err(|e| {
-            McpError::internal_error(format!("Failed to init ToolUsageRepository: {e}"), None)
-        })?);
-        Ok(Self {
-            db_pool,
-            service_id,
-            ui_registry: Arc::new(registry),
-            tool_usage_repo,
-        })
-    }
-
-    fn get_cli_path() -> Result<PathBuf, McpError> {
-        if let Ok(path) = std::env::var("SYSTEMPROMPT_CLI_PATH") {
-            return Ok(PathBuf::from(path));
         }
-
-        let profile = ProfileBootstrap::get()
-            .map_err(|e| McpError::internal_error(format!("Failed to get profile: {e}"), None))?;
-
-        Ok(PathBuf::from(&profile.paths.bin).join("systemprompt"))
-    }
-
-    fn get_workdir() -> PathBuf {
-        if let Ok(path) = std::env::var("SYSTEMPROMPT_WORKDIR") {
-            return PathBuf::from(path);
-        }
-
-        ProfileBootstrap::get()
-            .map_or_else(|_| PathBuf::from("."), |p| PathBuf::from(&p.paths.system))
-    }
-
-    fn execute_cli(command: &str, auth_token: &str) -> Result<CliOutput, McpError> {
-        let cli_path = Self::get_cli_path()?;
-        let workdir = Self::get_workdir();
-
-        let args = shell_words::split(command).map_err(|e| {
-            McpError::invalid_params(format!("Failed to parse command arguments: {e}"), None)
-        })?;
-
-        tracing::info!(
-            cli_path = %cli_path.display(),
-            workdir = %workdir.display(),
-            args = ?args,
-            "Executing CLI command"
-        );
-
-        let output = Command::new(&cli_path)
-            .args(&args)
-            .env("SYSTEMPROMPT_NON_INTERACTIVE", "1")
-            .env("SYSTEMPROMPT_OUTPUT_FORMAT", "json")
-            .env("SYSTEMPROMPT_AUTH_TOKEN", auth_token)
-            .current_dir(workdir)
-            .output()
-            .map_err(|e| {
-                McpError::internal_error(format!("Failed to execute CLI command: {e}"), None)
-            })?;
-
-        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-        let exit_code = output.status.code().unwrap_or(-1);
-        let success = output.status.success();
-
-        tracing::info!(
-            exit_code = exit_code,
-            success = success,
-            stdout_len = stdout.len(),
-            stderr_len = stderr.len(),
-            "CLI command completed"
-        );
-
-        Ok(CliOutput {
-            stdout,
-            stderr,
-            exit_code,
-            success,
-        })
     }
 }
 
@@ -155,18 +44,31 @@ impl ServerHandler for SystempromptServer {
             capabilities: ServerCapabilities::builder()
                 .enable_tools()
                 .enable_resources()
+                .enable_experimental_with(build_experimental_capabilities())
                 .build(),
             server_info: Implementation {
                 name: format!("SystemPrompt ({})", self.service_id),
                 version: env!("CARGO_PKG_VERSION").to_string(),
-                icons: None,
+                icons: Some(vec![
+                    Icon {
+                        src: format!("{WEBSITE_URL}/files/images/favicon-32x32.png"),
+                        mime_type: Some("image/png".to_string()),
+                        sizes: Some(vec!["32x32".to_string()]),
+                    },
+                    Icon {
+                        src: format!("{WEBSITE_URL}/files/images/favicon-96x96.png"),
+                        mime_type: Some("image/png".to_string()),
+                        sizes: Some(vec!["96x96".to_string()]),
+                    },
+                ]),
                 title: Some("SystemPrompt CLI".to_string()),
-                website_url: None,
+                website_url: Some(WEBSITE_URL.to_string()),
             },
             instructions: Some(
-                "MANDATORY: Before ANY task, run 'core playbooks show guide_start' to load the required playbook guide. \
-                Agents MUST load and follow playbooks before executing tasks. \
-                All operations are playbook-driven. Do not improvise commands.".to_string(),
+                "Execute SystemPrompt CLI commands. MANDATORY FIRST STEP: Run 'core playbooks show guide_start' \
+                 before any task. Playbooks: 'core playbooks show <id>' or 'core playbooks list'. \
+                 Discord: 'plugins run discord send \"message\"'. Full documentation: https://systemprompt.io/playbooks"
+                    .to_string(),
             ),
         }
     }
@@ -193,159 +95,41 @@ impl ServerHandler for SystempromptServer {
         })
     }
 
-    #[allow(clippy::too_many_lines)]
     async fn call_tool(
         &self,
         request: CallToolRequestParams,
         ctx: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let tool_name = request.name.to_string();
-        let started_at = Utc::now();
 
         let auth_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str())
             .await?
             .expect_authenticated("BUG: systemprompt requires OAuth but auth was not enforced")?;
 
         let request_context = auth_result.context.clone();
-
-        let execution_request = ToolExecutionRequest {
-            tool_name: tool_name.clone(),
-            server_name: self.service_id.to_string(),
-            input: serde_json::to_value(&request.arguments).unwrap_or(serde_json::Value::Null),
-            started_at,
-            context: request_context.clone(),
-            request_method: Some("mcp".to_string()),
-            request_source: Some("systemprompt".to_string()),
-            ai_tool_call_id: None,
-        };
-
-        let mcp_execution_id = self
-            .tool_usage_repo
-            .start_execution(&execution_request)
-            .await
-            .map_err(|e| {
-                tracing::error!(tool = %tool_name, error = %e, "Failed to start execution tracking");
-                McpError::internal_error(format!("Failed to start execution tracking: {e}"), None)
-            })?;
+        let mcp_execution_id = McpExecutionId::generate();
 
         let arguments = request.arguments.clone().unwrap_or_default();
 
-        let result = match tool_name.as_str() {
+        match tool_name.as_str() {
             "systemprompt" => {
-                let input: CliInput = serde_json::from_value(serde_json::Value::Object(arguments))
-                    .map_err(|e| {
-                        McpError::invalid_params(format!("Invalid input parameters: {e}"), None)
-                    })?;
-
-                let output = Self::execute_cli(&input.command, auth_result.token())?;
-
-                if !output.success {
-                    let text_content = format!(
-                        "Command failed (exit code {}):\n{}",
-                        output.exit_code, output.stderr
-                    );
-                    Ok(CallToolResult {
-                        content: vec![Content::text(text_content)],
-                        is_error: Some(true),
-                        meta: None,
-                        structured_content: None,
-                    })
-                } else if let Some(cmd_result) = CommandResult::from_stdout(&output.stdout) {
-                    let text_content = if let Some(title) = &cmd_result.title {
-                        format!(
-                            "{}\n\n{}",
-                            title,
-                            serde_json::to_string_pretty(&cmd_result.data)
-                                .expect("cmd_result.data serialization cannot fail")
-                        )
-                    } else {
-                        serde_json::to_string_pretty(&cmd_result.data)
-                            .expect("cmd_result.data serialization cannot fail")
-                    };
-
-                    let structured_content = serde_json::to_value(&cmd_result).ok();
-
-                    Ok(CallToolResult {
-                        content: vec![Content::text(text_content)],
-                        is_error: Some(false),
-                        meta: None,
-                        structured_content,
-                    })
-                } else {
-                    Ok(CallToolResult {
-                        content: vec![Content::text(output.stdout.clone())],
-                        is_error: Some(false),
-                        meta: None,
-                        structured_content: None,
-                    })
-                }
+                self.handle_systemprompt_tool(
+                    arguments,
+                    auth_result.token(),
+                    &request_context,
+                    &mcp_execution_id,
+                )
+                .await
             }
             _ => Err(McpError::invalid_params(
                 format!(
-                    "Unknown tool: '{tool_name}'\n\n\
-                    MANDATORY FIRST STEP: Run 'core playbooks show guide_start' before any task.\n\n\
-                    Use 'systemprompt' tool with command 'core playbooks show guide_start' to get started."
+                    "Unknown tool: '{tool_name}'\n\nMANDATORY FIRST STEP: Run 'core playbooks show \
+                     guide_start' before any task.\n\nUse 'systemprompt' tool with command 'core \
+                     playbooks show guide_start' to get started."
                 ),
                 None,
             )),
-        };
-
-        let completed_at = Utc::now();
-        let execution_result = ToolExecutionResult {
-            output: result
-                .as_ref()
-                .ok()
-                .and_then(|r| r.structured_content.clone()),
-            output_schema: None,
-            status: if result.is_ok() {
-                ExecutionStatus::Success.as_str().to_string()
-            } else {
-                ExecutionStatus::Failed.as_str().to_string()
-            },
-            error_message: result.as_ref().err().map(|e| e.message.to_string()),
-            started_at,
-            completed_at,
-        };
-
-        if let Err(e) = self
-            .tool_usage_repo
-            .complete_execution(&mcp_execution_id, &execution_result)
-            .await
-        {
-            tracing::error!(
-                tool = %tool_name,
-                mcp_execution_id = %mcp_execution_id,
-                error = %e,
-                "Failed to complete execution tracking"
-            );
         }
-
-        result
-    }
-
-    async fn list_resource_templates(
-        &self,
-        _request: Option<PaginatedRequestParams>,
-        _ctx: RequestContext<RoleServer>,
-    ) -> Result<ListResourceTemplatesResult, McpError> {
-        let raw_template = RawResourceTemplate {
-            uri_template: format!("ui://{SERVER_NAME}/{{artifact_id}}"),
-            name: "artifact-ui".to_string(),
-            title: Some("Artifact UI".to_string()),
-            description: Some("Interactive UI for SystemPrompt artifacts. Use with artifact IDs returned from tool calls.".to_string()),
-            mime_type: Some(MCP_APP_MIME_TYPE.to_string()),
-            icons: None,
-        };
-        let template = ResourceTemplate {
-            raw: raw_template,
-            annotations: None,
-        };
-
-        Ok(ListResourceTemplatesResult {
-            resource_templates: vec![template],
-            next_cursor: None,
-            meta: None,
-        })
     }
 
     async fn list_resources(
@@ -353,8 +137,33 @@ impl ServerHandler for SystempromptServer {
         _request: Option<PaginatedRequestParams>,
         _ctx: RequestContext<RoleServer>,
     ) -> Result<ListResourcesResult, McpError> {
+        let resource = Resource {
+            raw: RawResource {
+                uri: format!("ui://{SERVER_NAME}/artifact-viewer"),
+                name: "Artifact Viewer".to_string(),
+                title: Some("systemprompt.io Artifact Viewer".to_string()),
+                description: Some(
+                    "Interactive UI viewer for systemprompt.io artifacts. Renders playbooks, lists, \
+                     and text content with syntax highlighting. Template receives artifact data \
+                     dynamically via MCP Apps ui/notifications/tool-result protocol."
+                        .to_string(),
+                ),
+                mime_type: Some(MCP_APP_MIME_TYPE.to_string()),
+                size: Some(ARTIFACT_VIEWER_TEMPLATE.len() as u32),
+                icons: Some(vec![
+                    Icon {
+                        src: format!("{WEBSITE_URL}/files/images/favicon-32x32.png"),
+                        mime_type: Some("image/png".to_string()),
+                        sizes: Some(vec!["32x32".to_string()]),
+                    },
+                ]),
+                meta: None,
+            },
+            annotations: None,
+        };
+
         Ok(ListResourcesResult {
-            resources: vec![],
+            resources: vec![resource],
             next_cursor: None,
             meta: None,
         })
@@ -366,27 +175,29 @@ impl ServerHandler for SystempromptServer {
         _ctx: RequestContext<RoleServer>,
     ) -> Result<ReadResourceResult, McpError> {
         let uri = &request.uri;
+        let expected_uri = format!("ui://{SERVER_NAME}/artifact-viewer");
 
-        let artifact_id = Self::parse_ui_uri(uri).ok_or_else(|| {
-            McpError::invalid_params(
-                format!("Invalid UI resource URI: {uri}. Expected format: ui://{SERVER_NAME}/{{artifact_id}}"),
+        if uri != &expected_uri {
+            return Err(McpError::invalid_params(
+                format!(
+                    "Unknown resource URI: {uri}. Expected: {expected_uri}"
+                ),
                 None,
-            )
-        })?;
+            ));
+        }
 
-        let artifact = self.fetch_artifact(&artifact_id).await.map_err(|e| {
-            McpError::internal_error(format!("Failed to fetch artifact: {e}"), None)
-        })?;
+        let ui_meta = UiMetadata::for_static_template(SERVER_NAME)
+            .with_csp(CspPolicy::strict())
+            .with_prefers_border(true);
 
-        let html = self.ui_registry.render(&artifact).await.map_err(|e| {
-            McpError::internal_error(format!("Failed to render artifact UI: {e}"), None)
-        })?;
+        let resource_meta = ui_meta.to_resource_meta();
+        let meta = Meta(resource_meta.to_meta_map());
 
         let contents = ResourceContents::TextResourceContents {
             uri: uri.clone(),
             mime_type: Some(MCP_APP_MIME_TYPE.to_string()),
-            text: html.html,
-            meta: None,
+            text: ARTIFACT_VIEWER_TEMPLATE.to_string(),
+            meta: Some(meta),
         };
 
         Ok(ReadResourceResult {
@@ -396,26 +207,62 @@ impl ServerHandler for SystempromptServer {
 }
 
 impl SystempromptServer {
-    fn parse_ui_uri(uri: &str) -> Option<String> {
-        let prefix = format!("ui://{SERVER_NAME}/");
-        if uri.starts_with(&prefix) {
-            Some(uri[prefix.len()..].to_string())
-        } else {
-            None
-        }
-    }
-
-    async fn fetch_artifact(
+    async fn handle_systemprompt_tool(
         &self,
-        artifact_id: &str,
-    ) -> anyhow::Result<systemprompt::models::a2a::Artifact> {
-        use systemprompt::agent::repository::content::ArtifactRepository;
+        arguments: serde_json::Map<String, serde_json::Value>,
+        auth_token: &str,
+        ctx: &SysRequestContext,
+        execution_id: &McpExecutionId,
+    ) -> Result<CallToolResult, McpError> {
+        let input: CliInput = serde_json::from_value(serde_json::Value::Object(arguments))
+            .map_err(|e| {
+                McpError::invalid_params(format!("Invalid input parameters: {e}"), None)
+            })?;
 
-        let repo = ArtifactRepository::new(self.db_pool.clone());
-        let id = ArtifactId::new(artifact_id);
+        let output = cli::execute(&input.command, auth_token)?;
 
-        repo.get_artifact_by_id(&id)
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Artifact not found: {artifact_id}"))
+        if !output.success {
+            let error_message = format!(
+                "Command failed (exit code {}):\n{}",
+                output.exit_code, output.stderr
+            );
+            return Ok(McpResponseBuilder::<()>::build_error(error_message));
+        }
+
+        let artifact_repo = McpArtifactRepository::new(&self.db_pool)
+            .map_err(|e| McpError::internal_error(format!("Failed to create artifact repository: {e}"), None))?;
+
+        let (artifact, artifact_type, title) = match CommandResultRaw::from_json(&output.stdout) {
+            Ok(cmd_result) => {
+                let artifact_type = format!("{:?}", cmd_result.artifact_type).to_lowercase();
+                let title = cmd_result.title.clone();
+
+                match cmd_result.to_cli_artifact(ctx) {
+                    Ok(artifact) => (artifact, artifact_type, title),
+                    Err(e) => {
+                        tracing::warn!(error = %e, "Failed to convert CLI result to artifact, falling back to text");
+                        let content = serde_json::to_string_pretty(&cmd_result.data)
+                            .unwrap_or_else(|_| cmd_result.data.to_string());
+                        let text_artifact = TextArtifact::new(&content, ctx);
+                        (CliArtifact::text(text_artifact), "text".to_string(), title)
+                    }
+                }
+            }
+            Err(_) => {
+                let text_artifact = TextArtifact::new(&output.stdout, ctx)
+                    .with_title("Command Output");
+                (CliArtifact::text(text_artifact), "text".to_string(), Some("Command Output".to_string()))
+            }
+        };
+
+        McpResponseBuilder::new(artifact, SERVER_NAME, ctx, execution_id)
+            .build_and_persist(
+                output.stdout.clone(),
+                &artifact_repo,
+                &artifact_type,
+                title,
+            )
+            .await
+            .map_err(|e| McpError::internal_error(format!("Failed to build response: {e}"), None))
     }
 }

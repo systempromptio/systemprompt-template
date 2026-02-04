@@ -1,16 +1,16 @@
 use anyhow::Result;
-use rmcp::model::{CallToolRequestParams, CallToolResult, Content};
+use rmcp::model::{CallToolRequestParams, CallToolResult};
 use rmcp::ErrorData as McpError;
 use std::sync::Arc;
 use systemprompt::agent::services::SkillService;
 use systemprompt::ai::{AiMessage, AiService, GoogleSearchParams};
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::{ArtifactId, McpExecutionId};
+use systemprompt::identifiers::McpExecutionId;
+use systemprompt::mcp::McpResponseBuilder;
 use systemprompt::models::artifacts::{
-    CardSection, PresentationCardResponse, ResearchArtifact, SourceCitation, ToolResponse,
+    CardSection, PresentationCardResponse, ResearchArtifact, SourceCitation,
 };
 use systemprompt::models::execution::context::RequestContext;
-use systemprompt::models::ExecutionMetadata;
 
 use super::helpers::extract_string_array;
 use crate::server::ProgressCallback;
@@ -30,8 +30,6 @@ pub async fn handle(
     if let Some(ref notify) = progress {
         notify(0.0, Some(100.0), Some("Starting research...".to_string())).await;
     }
-
-    let artifact_id = uuid::Uuid::new_v4().to_string();
 
     let args = request.arguments.as_ref().ok_or_else(|| {
         McpError::invalid_request("Missing arguments for research_blog tool", None)
@@ -60,14 +58,13 @@ pub async fn handle(
 
     let focus_areas = extract_string_array(args, "focus_areas");
 
+    // NOTE: Google Search grounding is a Gemini-only feature.
+    // This tool requires Gemini regardless of the configured default_provider.
     if let Some(ref notify) = progress {
         notify(
             10.0,
             Some(100.0),
-            Some(
-                "Querying Gemini with Google Search (Gemini required for search grounding)..."
-                    .to_string(),
-            ),
+            Some("Querying Gemini with Google Search (Gemini required for search grounding)...".to_string()),
         )
         .await;
     }
@@ -79,6 +76,8 @@ pub async fn handle(
         AiMessage::user(&research_prompt),
     ];
 
+    // Use default Gemini model (configured in ai/config.yaml under providers.gemini.default_model)
+    // model: None lets the provider use its configured default
     let search_params = GoogleSearchParams {
         messages,
         sampling: None,
@@ -99,6 +98,7 @@ pub async fn handle(
         .await;
     }
 
+    // Build typed SourceCitation list
     let sources: Vec<SourceCitation> = search_response
         .sources
         .iter()
@@ -108,6 +108,7 @@ pub async fn handle(
     let source_count = sources.len();
     let query_count = search_response.web_search_queries.len();
 
+    // Build PresentationCardResponse for the research artifact
     let card = PresentationCardResponse {
         artifact_type: "presentation_card".to_string(),
         title: format!("Research: {topic}"),
@@ -124,9 +125,8 @@ pub async fn handle(
         skill_name: Some("Blog Research".to_string()),
     };
 
-    #[allow(clippy::cast_possible_truncation)]
-    let research_artifact =
-        ResearchArtifact::new(topic, card, sources.clone()).with_query_count(query_count as u32);
+    let research_artifact = ResearchArtifact::new(topic, card, sources.clone())
+        .with_query_count(query_count as u32);
 
     if let Some(ref notify) = progress {
         notify(100.0, Some(100.0), Some("Research complete".to_string())).await;
@@ -134,33 +134,18 @@ pub async fn handle(
 
     tracing::info!(
         topic = %topic,
-        artifact_id = %artifact_id,
         source_count = %source_count,
         "Research completed"
     );
 
-    let metadata = ExecutionMetadata::with_request(&ctx)
-        .with_tool("research_blog")
-        .with_skill(skill_id, "Blog Research");
-
-    let response = ToolResponse::new(
-        ArtifactId::new(&artifact_id),
-        mcp_execution_id.clone(),
-        research_artifact,
-        metadata.clone(),
+    let summary = format!(
+        "Research complete for '{topic}'. Found {source_count} sources and used {query_count} search queries.\n\n\
+         Use create_blog_post with the artifact_id from the response metadata to load research findings."
     );
 
-    Ok(CallToolResult {
-        content: vec![Content::text(format!(
-            "Research complete for '{topic}'. Found {source_count} sources and used {query_count} search queries.\n\n\
-             **Artifact ID: {artifact_id}**\n\n\
-             Use this artifact_id when calling create_blog_post to load research findings and sources. \
-             Do NOT call research_blog again for this topic."
-        ))],
-        structured_content: response.to_json().ok(),
-        is_error: Some(false),
-        meta: metadata.to_meta(),
-    })
+    McpResponseBuilder::new(research_artifact, "research_blog", &ctx, mcp_execution_id)
+        .build(summary)
+        .map_err(|e| McpError::internal_error(format!("Failed to build response: {e}"), None))
 }
 
 fn build_research_prompt(topic: &str, focus_areas: &[String]) -> String {

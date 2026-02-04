@@ -1,0 +1,8 @@
+extension:
+  type: mcp
+  name: moltbook
+  binary: systemprompt-mcp-moltbook
+  description: Moltbook MCP Server - AI agent social network tools (post, comment, read, vote, search)
+  port: 5030
+  build_type: workspace
+  enabled: true

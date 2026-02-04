@@ -1,22 +1,5 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use serde_json::json;
-use systemprompt::models::artifacts::ToolResponse;
-
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct FeaturedImageArtifact {
-    #[serde(rename = "x-artifact-type")]
-    pub artifact_type: String,
-    pub image_id: String,
-    pub public_url: String,
-    pub file_path: String,
-    pub mime_type: String,
-    pub resolution: String,
-    pub aspect_ratio: String,
-    pub generation_time_ms: u64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub cost_estimate: Option<f32>,
-}
+use systemprompt::models::artifacts::{ImageArtifact, ToolResponse};
 
 #[must_use]
 pub fn input_schema() -> serde_json::Value {
@@ -55,7 +38,7 @@ pub fn input_schema() -> serde_json::Value {
 
 #[must_use]
 pub fn output_schema() -> serde_json::Value {
-    ToolResponse::<FeaturedImageArtifact>::schema()
+    ToolResponse::<ImageArtifact>::schema()
 }
 
 pub fn build_image_prompt(
@@ -65,7 +48,9 @@ pub fn build_image_prompt(
     summary: &str,
     style_hints: Option<&str>,
 ) -> String {
-    let style_section = style_hints.map_or_else(String::new, |s| format!("\nStyle guidance: {s}"));
+    let style_section = style_hints
+        .map(|s| format!("\nStyle guidance: {s}"))
+        .unwrap_or_default();
 
     format!(
         "{skill_content}\n\n\

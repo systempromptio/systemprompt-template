@@ -1,9 +1,7 @@
 use anyhow::Result;
 use chrono::Utc;
-use rmcp::model::{CallToolRequestParams, CallToolResult, Content as McpContent};
+use rmcp::model::{CallToolRequestParams, CallToolResult};
 use rmcp::ErrorData as McpError;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use systemprompt::agent::repository::content::ArtifactRepository;
@@ -11,33 +9,17 @@ use systemprompt::agent::services::SkillService;
 use systemprompt::ai::{AiMessage, AiRequest, AiService};
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::{ArtifactId, McpExecutionId, SourceId};
+use systemprompt::mcp::McpResponseBuilder;
 use systemprompt::models::a2a::{Artifact, DataPart, Part};
-use systemprompt::models::artifacts::ToolResponse;
+use systemprompt::models::artifacts::TextArtifact;
 use systemprompt::models::execution::context::RequestContext;
-use systemprompt::models::ExecutionMetadata;
 use systemprompt_web_extension::{ContentKind, ContentRepository, CreateContentParams};
 
 use super::helpers::{build_user_prompt, extract_title};
 use crate::server::ProgressCallback;
 use crate::tools::shared::extract_string_array;
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct BlogPostArtifact {
-    #[serde(rename = "x-artifact-type")]
-    pub artifact_type: String,
-    pub content_id: String,
-    pub title: String,
-    pub slug: String,
-    pub description: String,
-    pub word_count: usize,
-    pub keywords: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub content_preview: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub research_artifact_id: Option<String>,
-}
-
-#[allow(clippy::too_many_lines, clippy::too_many_arguments, clippy::missing_panics_doc)]
+#[allow(clippy::too_many_lines)]
 pub async fn handle(
     db_pool: &DbPool,
     request: CallToolRequestParams,
@@ -48,9 +30,9 @@ pub async fn handle(
     progress: Option<ProgressCallback>,
     mcp_execution_id: &McpExecutionId,
 ) -> Result<CallToolResult, McpError> {
-    let pg_pool = db_pool
-        .pool()
-        .ok_or_else(|| McpError::internal_error("Database pool not available", None))?;
+    let pg_pool = db_pool.pool().ok_or_else(|| {
+        McpError::internal_error("Database pool not available", None)
+    })?;
     let content_repo = ContentRepository::new(pg_pool);
 
     if let Some(ref notify) = progress {
@@ -84,6 +66,7 @@ pub async fn handle(
         ));
     }
 
+    // Extract category (default to "article")
     let category = args
         .get("category")
         .and_then(|v| v.as_str())
@@ -97,21 +80,20 @@ pub async fn handle(
     let voice_skill = skill_loader
         .load_skill("edwards_voice", &ctx)
         .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to load edwards_voice skill, using empty");
-            String::new()
-        });
+        .unwrap_or_default();
 
     if let Some(ref notify) = progress {
         notify(10.0, Some(100.0), Some("Skills loaded...".to_string())).await;
     }
 
+    // artifact_id is optional for announcements (can be empty string or omitted)
     let artifact_id_str = args
         .get("artifact_id")
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
     let research_data = if artifact_id_str.is_empty() {
+        // No research artifact - create empty research data (for announcements)
         if let Some(ref notify) = progress {
             notify(
                 15.0,
@@ -125,6 +107,7 @@ pub async fn handle(
             sources: Vec::new(),
         }
     } else {
+        // Load research artifact
         let artifact_id = ArtifactId::new(artifact_id_str);
 
         if let Some(ref notify) = progress {
@@ -200,6 +183,8 @@ pub async fn handle(
         .await;
     }
 
+    // Use configured default provider and model from ai/config.yaml
+    // Use 4096 max tokens for cross-provider compatibility (OpenAI limit)
     let request = AiRequest::builder(
         messages,
         ai_service.default_provider(),
@@ -233,10 +218,12 @@ pub async fn handle(
         .await;
     }
 
+    // Generate content hash for deduplication
     let mut hasher = Sha256::new();
     hasher.update(generated_content.as_bytes());
     let version_hash = format!("{:x}", hasher.finalize());
 
+    // Convert research sources to links for the references section
     let links: serde_json::Value = serde_json::to_value(
         research_data
             .sources
@@ -249,8 +236,9 @@ pub async fn handle(
             })
             .collect::<Vec<_>>(),
     )
-    .expect("links serialization cannot fail");
+    .unwrap_or_default();
 
+    // Create content params for database
     let content_params = CreateContentParams::new(
         slug.clone(),
         title.clone(),
@@ -266,6 +254,7 @@ pub async fn handle(
     .with_version_hash(version_hash)
     .with_links(links);
 
+    // Save to database
     let content = content_repo.create(&content_params).await.map_err(|e| {
         tracing::error!(error = %e, slug = %slug, "Failed to save blog post to database");
         McpError::internal_error(format!("Failed to save blog post to database: {e}"), None)
@@ -274,12 +263,7 @@ pub async fn handle(
     let blog_content_id = content.id.to_string();
 
     if let Some(ref notify) = progress {
-        notify(
-            100.0,
-            Some(100.0),
-            Some("Blog post saved to database!".to_string()),
-        )
-        .await;
+        notify(100.0, Some(100.0), Some("Blog post saved to database!".to_string())).await;
     }
 
     tracing::info!(
@@ -290,52 +274,29 @@ pub async fn handle(
         "Created and saved blog post to database"
     );
 
-    let blog_post_artifact = BlogPostArtifact {
-        artifact_type: "blog_post".to_string(),
-        content_id: blog_content_id.clone(),
-        title: title.clone(),
-        slug: slug.clone(),
-        description: description.clone(),
-        word_count,
-        keywords: keywords.clone(),
-        content_preview: Some(generated_content.chars().take(1000).collect::<String>()),
-        research_artifact_id: if artifact_id_str.is_empty() {
-            None
-        } else {
-            Some(artifact_id_str.to_string())
-        },
-    };
-
-    let exec_metadata = ExecutionMetadata::with_request(&ctx)
-        .with_tool("create_blog_post")
+    // Use TextArtifact for the blog post content
+    let artifact = TextArtifact::new(&generated_content, &ctx)
+        .with_title(&title)
         .with_skill(skill_id, skill_name(skill_id));
 
-    let response = ToolResponse::new(
-        ArtifactId::new(&blog_content_id),
-        mcp_execution_id.clone(),
-        blog_post_artifact,
-        exec_metadata.clone(),
+    let summary = format!(
+        "SAVED blog post '{title}' to database\n\n\
+         Content ID: {blog_content_id}\n\
+         Slug: {slug}\n\
+         Category: {category}\n\
+         URL: /blog/{slug}\n\
+         Word count: {word_count}\n\
+         Skill: {} ({})\n\n\
+         Content Preview:\n{}\n\n\
+         NEXT STEP: Run `infra jobs run publish_pipeline` to publish the content to the live site.",
+        skill_name(skill_id),
+        skill_id,
+        &generated_content.chars().take(500).collect::<String>()
     );
 
-    Ok(CallToolResult {
-        content: vec![McpContent::text(format!(
-            "✅ SAVED blog post '{title}' to database\n\n\
-             Content ID: {blog_content_id}\n\
-             Slug: {slug}\n\
-             Category: {category}\n\
-             URL: /blog/{slug}\n\
-             Word count: {word_count}\n\
-             Skill: {} ({})\n\n\
-             Content Preview:\n{}\n\n\
-             ⚠️ NEXT STEP: Run `infra jobs run publish_pipeline` to publish the content to the live site.",
-            skill_name(skill_id),
-            skill_id,
-            &generated_content.chars().take(500).collect::<String>()
-        ))],
-        structured_content: response.to_json().ok(),
-        is_error: Some(false),
-        meta: exec_metadata.to_meta(),
-    })
+    McpResponseBuilder::new(artifact, "create_blog_post", &ctx, mcp_execution_id)
+        .build(summary)
+        .map_err(|e| McpError::internal_error(format!("Failed to build response: {e}"), None))
 }
 
 struct ResearchData {
@@ -349,7 +310,7 @@ fn extract_research_data(artifact: &Artifact) -> Result<ResearchData, McpError> 
             let summary = data
                 .get("summary")
                 .and_then(|v| v.as_str())
-                .unwrap_or("")
+                .unwrap_or_default()
                 .to_string();
 
             let sources: Vec<(String, String)> = data

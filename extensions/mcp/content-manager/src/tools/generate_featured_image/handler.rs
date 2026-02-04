@@ -1,21 +1,21 @@
 use anyhow::Result;
-use rmcp::model::{CallToolRequestParams, CallToolResult, Content};
+use rmcp::model::{CallToolRequestParams, CallToolResult};
 use rmcp::ErrorData as McpError;
 use std::sync::Arc;
 use systemprompt::agent::services::SkillService;
 use systemprompt::ai::{AspectRatio, ImageGenerationRequest, ImageResolution, ImageService};
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::{ArtifactId, McpExecutionId};
-use systemprompt::models::artifacts::ToolResponse;
+use systemprompt::identifiers::McpExecutionId;
+use systemprompt::mcp::McpResponseBuilder;
+use systemprompt::models::artifacts::ImageArtifact;
 use systemprompt::models::execution::context::RequestContext;
-use systemprompt::models::ExecutionMetadata;
 
-use super::helpers::{build_image_prompt, FeaturedImageArtifact};
+use super::helpers::build_image_prompt;
 use crate::server::ProgressCallback;
 
 const MAX_RETRIES: u32 = 2;
 
-#[allow(clippy::too_many_arguments, clippy::too_many_lines)]
+#[allow(clippy::too_many_arguments)]
 pub async fn handle(
     _db_pool: &DbPool,
     request: CallToolRequestParams,
@@ -78,11 +78,12 @@ pub async fn handle(
     let aspect_ratio = args
         .get("aspect_ratio")
         .and_then(|v| v.as_str())
-        .map_or(AspectRatio::Landscape169, |s| match s {
+        .map(|s| match s {
             "1:1" => AspectRatio::Square,
             "4:3" => AspectRatio::Landscape43,
             _ => AspectRatio::Landscape169,
-        });
+        })
+        .unwrap_or(AspectRatio::Landscape169);
 
     if let Some(ref notify) = progress {
         notify(
@@ -95,6 +96,7 @@ pub async fn handle(
 
     let prompt = build_image_prompt(&skill_content, topic, title, summary, style_hints);
 
+    // Query provider capabilities to select best supported resolution
     let resolution = select_best_resolution(image_service);
 
     let image_request = ImageGenerationRequest {
@@ -110,6 +112,8 @@ pub async fn handle(
         mcp_execution_id: Some(mcp_execution_id.to_string()),
     };
 
+    // Note: Image generation uses the configured default image provider (Gemini or OpenAI)
+    // Anthropic does not support image generation
     if let Some(ref notify) = progress {
         notify(
             30.0,
@@ -130,18 +134,6 @@ pub async fn handle(
         .await;
     }
 
-    let image_artifact = FeaturedImageArtifact {
-        artifact_type: "featured_image".to_string(),
-        image_id: response.id.clone(),
-        public_url: response.public_url.clone().unwrap_or_else(String::new),
-        file_path: response.file_path.clone().unwrap_or_else(String::new),
-        mime_type: response.mime_type.clone(),
-        resolution: response.resolution.as_str().to_string(),
-        aspect_ratio: response.aspect_ratio.as_str().to_string(),
-        generation_time_ms: response.generation_time_ms,
-        cost_estimate: response.cost_estimate,
-    };
-
     if let Some(ref notify) = progress {
         notify(
             100.0,
@@ -158,36 +150,32 @@ pub async fn handle(
         "Generated featured image"
     );
 
-    let metadata = ExecutionMetadata::with_request(&ctx)
-        .with_tool("generate_featured_image")
-        .with_skill(skill_id, "Blog Image Generation");
+    let public_url = response.public_url.clone().unwrap_or_default();
 
-    let tool_response = ToolResponse::new(
-        ArtifactId::new(&response.id),
-        mcp_execution_id.clone(),
-        image_artifact,
-        metadata.clone(),
+    // Use ImageArtifact for the generated image
+    let artifact = ImageArtifact::new(&public_url, &ctx)
+        .with_alt(format!("Featured image for: {}", title))
+        .with_caption(format!("Generated for blog post: {}", title))
+        .with_skill("blog_image_generation", "Blog Image Generation");
+
+    let summary = format!(
+        "Generated featured image for '{title}'\n\n\
+         Image ID: {}\n\
+         Public URL: {}\n\
+         Resolution: {}\n\
+         Aspect Ratio: {}\n\
+         Generation Time: {}ms\n\n\
+         Use this image_id or public_url in your blog post frontmatter.",
+        response.id,
+        public_url,
+        response.resolution.as_str(),
+        response.aspect_ratio.as_str(),
+        response.generation_time_ms
     );
 
-    Ok(CallToolResult {
-        content: vec![Content::text(format!(
-            "Generated featured image for '{title}'\n\n\
-            Image ID: {}\n\
-            Public URL: {}\n\
-            Resolution: {}\n\
-            Aspect Ratio: {}\n\
-            Generation Time: {}ms\n\n\
-            Use this image_id or public_url in your blog post frontmatter.",
-            response.id,
-            response.public_url.unwrap_or_else(String::new),
-            response.resolution.as_str(),
-            response.aspect_ratio.as_str(),
-            response.generation_time_ms
-        ))],
-        structured_content: tool_response.to_json().ok(),
-        is_error: Some(false),
-        meta: metadata.to_meta(),
-    })
+    McpResponseBuilder::new(artifact, "generate_featured_image", &ctx, mcp_execution_id)
+        .build(summary)
+        .map_err(|e| McpError::internal_error(format!("Failed to build response: {e}"), None))
 }
 
 async fn generate_with_retry(
@@ -231,22 +219,16 @@ async fn generate_with_retry(
     ))
 }
 
+/// Select the best resolution supported by the default image provider.
+/// Prefers higher resolutions (4K > 2K > 1K) when available.
 fn select_best_resolution(image_service: &Arc<ImageService>) -> ImageResolution {
     image_service
         .default_provider_capabilities()
         .and_then(|caps| {
-            [
-                ImageResolution::FourK,
-                ImageResolution::TwoK,
-                ImageResolution::OneK,
-            ]
-            .into_iter()
-            .find(|r| caps.supported_resolutions.contains(r))
+            // Prefer highest resolution available
+            [ImageResolution::FourK, ImageResolution::TwoK, ImageResolution::OneK]
+                .into_iter()
+                .find(|r| caps.supported_resolutions.contains(r))
         })
-        .unwrap_or_else(|| {
-            tracing::warn!(
-                "No supported resolution found in provider capabilities, using 1K default"
-            );
-            ImageResolution::OneK
-        })
+        .unwrap_or_default()
 }

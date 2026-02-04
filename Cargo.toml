@@ -3,12 +3,14 @@ members = [
     # Local extensions
     "extensions/web",
     "extensions/soul",
+    "extensions/moltbook",
     # CLI binaries
     "extensions/cli/discord",
     # MCP servers
     "extensions/mcp/systemprompt",
     "extensions/mcp/soul",
     "extensions/mcp/content-manager",
+    "extensions/mcp/moltbook",
 ]
 resolver = "2"
 
@@ -62,6 +64,7 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.18", features = ["v4", "serde"] }
 validator = { version = "0.16", features = ["derive"] }
 regex = "1.11"
+shell-words = "1.1"
 cargo_metadata = "0.18"
 indexmap = { version = "2.0", features = ["serde"] }
 
@@ -196,8 +199,8 @@ serde_yaml = "0.9"
 workspace = true
 
 # ============================================
-# LOCAL DEVELOPMENT PATCHES (disabled by default)
-# Uncomment to use local systemprompt-core for development
+# LOCAL DEVELOPMENT PATCHES
+# Using local systemprompt-core for latest features
 # ============================================
-# [patch.crates-io]
-# systemprompt = { path = "../systemprompt-core/systemprompt" }
+[patch.crates-io]
+systemprompt = { path = "../systemprompt-core/systemprompt" }

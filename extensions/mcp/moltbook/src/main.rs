@@ -3,11 +3,11 @@ use std::{env, sync::Arc};
 use systemprompt::identifiers::McpServerId;
 use systemprompt::models::{Config, ProfileBootstrap, SecretsBootstrap};
 use systemprompt::system::AppContext;
-use systemprompt_mcp_content_manager::ContentManagerServer;
+use systemprompt_mcp_moltbook::MoltbookServer;
 use tokio::net::TcpListener;
 
-const DEFAULT_SERVICE_ID: &str = "content-manager";
-const DEFAULT_PORT: u16 = 5040;
+const DEFAULT_SERVICE_ID: &str = "moltbook";
+const DEFAULT_PORT: u16 = 5030;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -38,10 +38,7 @@ async fn main() -> Result<()> {
         DEFAULT_PORT
     };
 
-    let server = ContentManagerServer::new(ctx.db_pool().clone(), service_id.clone(), ctx.clone())
-        .await
-        .context("Failed to initialize ContentManagerServer")?;
-
+    let server = MoltbookServer::new(ctx.db_pool().clone(), service_id.clone())?;
     let router = systemprompt::mcp::create_router(server, ctx.db_pool());
     let addr = format!("0.0.0.0:{port}");
     let listener = TcpListener::bind(&addr).await?;
@@ -49,7 +46,7 @@ async fn main() -> Result<()> {
     tracing::info!(
         service_id = %service_id,
         addr = %addr,
-        "Content Manager MCP server listening"
+        "Moltbook MCP server listening"
     );
 
     axum::serve(listener, router).await?;

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>systemprompt.io Artifact Viewer</title>
+  <style>
+    :root {
+      --bg-primary: #0f0f14;
+      --bg-secondary: #1a1a24;
+      --bg-tertiary: #252532;
+      --text-primary: #f0f0f5;
+      --text-secondary: #9898a8;
+      --text-muted: #6a6a78;
+      --accent-primary: #6366f1;
+      --accent-secondary: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.15);
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --border: #2d2d3d;
+      --border-hover: #3d3d52;
+      --code-bg: #0a0a0f;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Monaco, 'Cascadia Code', monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      color: var(--text-secondary);
+      gap: 20px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-text {
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .artifact {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      animation: fadeIn 0.3s ease-out;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .artifact-header {
+      padding: 16px 20px;
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .artifact-title {
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .artifact-title::before {
+      content: '';
+      width: 4px;
+      height: 20px;
+      background: var(--accent-primary);
+      border-radius: 2px;
+    }
+
+    .artifact-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .artifact-type {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent-secondary);
+      background: var(--accent-glow);
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .artifact-content {
+      padding: 20px;
+      flex: 1;
+      overflow: auto;
+    }
+
+    .text-content {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--code-bg);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+    }
+
+    .list-content {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .list-item {
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      transition: all 0.2s ease;
+    }
+
+    .list-item:hover {
+      border-color: var(--border-hover);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .list-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .list-item-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text-primary);
+    }
+
+    .list-item-category {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent-secondary);
+      background: var(--accent-glow);
+      padding: 2px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .list-item-description {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+
+    .list-item-link {
+      color: var(--accent-primary);
+      font-size: 13px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.2s ease;
+    }
+
+    .list-item-link:hover {
+      color: var(--accent-secondary);
+      text-decoration: underline;
+    }
+
+    .list-item-link::after {
+      content: '\2192';
+      font-size: 12px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .error-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .error-icon {
+      width: 24px;
+      height: 24px;
+      background: var(--error);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .error-title {
+      font-weight: 600;
+      color: var(--error);
+      font-size: 15px;
+    }
+
+    .error-message {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    pre {
+      background: var(--code-bg);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      border: 1px solid var(--border);
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .json-key { color: #79c0ff; }
+    .json-string { color: #a5d6ff; }
+    .json-number { color: #ffa657; }
+    .json-boolean { color: #ff7b72; }
+    .json-null { color: #8b949e; }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-hover);
+    }
+  </style>
+</head>
+<body>
+  <div id="content">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Waiting for artifact data...</div>
+    </div>
+  </div>
+
+  <script>
+    let initialized = false;
+
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      const div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+
+    function syntaxHighlightJson(json) {
+      if (typeof json !== 'string') {
+        json = JSON.stringify(json, null, 2);
+      }
+      return json.replace(
+        /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        function(match) {
+          let cls = 'json-number';
+          if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+              cls = 'json-key';
+              match = match.slice(0, -1);
+              return '<span class="' + cls + '">' + escapeHtml(match) + '</span>:';
+            } else {
+              cls = 'json-string';
+            }
+          } else if (/true|false/.test(match)) {
+            cls = 'json-boolean';
+          } else if (/null/.test(match)) {
+            cls = 'json-null';
+          }
+          return '<span class="' + cls + '">' + escapeHtml(match) + '</span>';
+        }
+      );
+    }
+
+    function renderText(data) {
+      const content = data.content || data.text || JSON.stringify(data, null, 2);
+      return `<div class="text-content">${escapeHtml(content)}</div>`;
+    }
+
+    function renderList(data) {
+      const items = data.items || [];
+      if (items.length === 0) {
+        return `
+          <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <div>No items to display</div>
+          </div>
+        `;
+      }
+
+      let html = '<ul class="list-content">';
+      for (const item of items) {
+        html += '<li class="list-item">';
+        html += '<div class="list-item-header">';
+        if (item.title) {
+          html += `<div class="list-item-title">${escapeHtml(item.title)}</div>`;
+        }
+        if (item.category) {
+          html += `<span class="list-item-category">${escapeHtml(item.category)}</span>`;
+        }
+        html += '</div>';
+        if (item.description) {
+          html += `<div class="list-item-description">${escapeHtml(item.description)}</div>`;
+        }
+        if (item.url) {
+          html += `<a class="list-item-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">View resource</a>`;
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+      return html;
+    }
+
+    function renderJson(data) {
+      return `<pre><code>${syntaxHighlightJson(data)}</code></pre>`;
+    }
+
+    function renderArtifact(result) {
+      const content = document.getElementById('content');
+
+      if (!result || !result.structuredContent) {
+        content.innerHTML = `
+          <div class="artifact">
+            <div class="artifact-header">
+              <span class="artifact-title">Raw Response</span>
+              <div class="artifact-meta">
+                <span class="artifact-type">JSON</span>
+              </div>
+            </div>
+            <div class="artifact-content">
+              ${renderJson(result)}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const structured = result.structuredContent;
+      const artifactType = structured.artifact_type || 'unknown';
+      const title = structured.title || 'Artifact';
+      const artifactData = structured.artifact || structured;
+
+      let renderedContent;
+      switch (artifactType) {
+        case 'text':
+          renderedContent = renderText(artifactData);
+          break;
+        case 'list':
+          renderedContent = renderList(artifactData);
+          break;
+        default:
+          renderedContent = renderJson(artifactData);
+      }
+
+      content.innerHTML = `
+        <div class="artifact">
+          <div class="artifact-header">
+            <span class="artifact-title">${escapeHtml(title)}</span>
+            <div class="artifact-meta">
+              <span class="artifact-type">${escapeHtml(artifactType)}</span>
+            </div>
+          </div>
+          <div class="artifact-content">
+            ${renderedContent}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderError(message) {
+      const content = document.getElementById('content');
+      content.innerHTML = `
+        <div class="error">
+          <div class="error-header">
+            <div class="error-icon">!</div>
+            <div class="error-title">Error</div>
+          </div>
+          <div class="error-message">${escapeHtml(message)}</div>
+        </div>
+      `;
+    }
+
+    window.addEventListener('message', (event) => {
+      try {
+        const data = event.data;
+
+        if (data?.method === 'ui/notifications/tool-result') {
+          renderArtifact(data.params);
+        } else if (data?.jsonrpc === '2.0' && data?.result) {
+          renderArtifact(data.result);
+        } else if (data?.structuredContent) {
+          renderArtifact(data);
+        }
+      } catch (err) {
+        console.error('Error handling message:', err);
+        renderError(err.message);
+      }
+    });
+
+    window.parent.postMessage({
+      jsonrpc: '2.0',
+      method: 'ui/notifications/initialized'
+    }, '*');
+
+    initialized = true;
+  </script>
+</body>
+</html>

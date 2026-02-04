@@ -1,3 +1,4 @@
+mod cli;
 pub mod server;
 pub mod tools;
 

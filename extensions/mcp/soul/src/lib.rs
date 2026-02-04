@@ -1,4 +1,3 @@
-mod handlers;
 pub mod server;
 pub mod tools;
 

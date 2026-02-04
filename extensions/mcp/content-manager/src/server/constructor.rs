@@ -23,7 +23,12 @@ pub struct ContentManagerServer {
 }
 
 impl ContentManagerServer {
-    pub fn new(db_pool: DbPool, service_id: McpServerId, _ctx: Arc<AppContext>) -> Result<Self> {
+    #[allow(clippy::unused_async)]
+    pub async fn new(
+        db_pool: DbPool,
+        service_id: McpServerId,
+        _ctx: Arc<AppContext>,
+    ) -> Result<Self> {
         let config_loader = EnhancedConfigLoader::from_env()?;
         let services_config = config_loader.load()?;
 
@@ -33,6 +38,8 @@ impl ContentManagerServer {
                 .context("Failed to initialize AiService")?,
         );
 
+        // Initialize ImageService for image generation
+        // Use FilesConfig for validated storage paths
         FilesConfig::init().context("Failed to initialize FilesConfig")?;
         let files_config = FilesConfig::get().context("Failed to get FilesConfig")?;
 
@@ -45,12 +52,16 @@ impl ContentManagerServer {
             format!("{}/images/generated", files_config.url_prefix()),
         );
 
+        // Create image providers from all enabled configs that support image generation
         let image_providers = ImageProviderFactory::create_all(&services_config.ai.providers)
             .unwrap_or_else(|e| {
                 tracing::warn!(error = %e, "No image providers available");
                 std::collections::HashMap::new()
             });
 
+        // Determine default image provider:
+        // 1. If default_provider supports images and was created, use it
+        // 2. Otherwise use first available image provider
         let default_image_provider = {
             let default = &services_config.ai.default_provider;
             if ImageProviderFactory::supports_image_generation(default)

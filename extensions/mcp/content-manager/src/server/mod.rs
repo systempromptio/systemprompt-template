@@ -2,13 +2,14 @@ mod constructor;
 
 pub use constructor::ContentManagerServer;
 
-use crate::tools;
+use crate::tools::{self, SERVER_NAME};
 use anyhow::Result;
 use chrono::Utc;
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Implementation, InitializeRequestParams,
-    InitializeResult, ListToolsResult, PaginatedRequestParams, ProgressNotificationParam,
-    ProgressToken, ProtocolVersion, ServerCapabilities, ServerInfo,
+    InitializeResult, ListResourcesResult, ListToolsResult, Meta, PaginatedRequestParams,
+    ProgressNotificationParam, ProgressToken, ProtocolVersion, RawResource, ReadResourceRequestParams,
+    ReadResourceResult, Resource, ResourceContents, ServerCapabilities, ServerInfo,
 };
 use rmcp::service::{Peer, RequestContext, RoleServer};
 use rmcp::{ErrorData as McpError, ServerHandler};
@@ -16,6 +17,10 @@ use std::future::Future;
 use std::pin::Pin;
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
 use systemprompt::mcp::models::{ExecutionStatus, ToolExecutionRequest, ToolExecutionResult};
+use systemprompt::mcp::services::ui_renderer::{CspPolicy, UiMetadata, MCP_APP_MIME_TYPE};
+use systemprompt::mcp::build_experimental_capabilities;
+
+const ARTIFACT_VIEWER_TEMPLATE: &str = include_str!("../../templates/artifact-viewer.html");
 
 pub type ProgressCallback = Box<
     dyn Fn(f64, Option<f64>, Option<String>) -> Pin<Box<dyn Future<Output = ()> + Send>>
@@ -46,7 +51,11 @@ impl ServerHandler for ContentManagerServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
             protocol_version: ProtocolVersion::V_2024_11_05,
-            capabilities: ServerCapabilities::builder().enable_tools().build(),
+            capabilities: ServerCapabilities::builder()
+                .enable_tools()
+                .enable_resources()
+                .enable_experimental_with(build_experimental_capabilities())
+                .build(),
             server_info: Implementation {
                 name: format!("Content Manager ({})", self.service_id),
                 version: env!("CARGO_PKG_VERSION").to_string(),
@@ -92,21 +101,24 @@ impl ServerHandler for ContentManagerServer {
         let tool_name = request.name.to_string();
         let started_at = Utc::now();
 
+        // Enforce RBAC
         let auth_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str()).await?;
         let authenticated_ctx = auth_result
             .expect_authenticated("content-manager requires OAuth but auth was not enforced")?;
 
         let request_context = authenticated_ctx.context.clone();
 
+        // Create progress callback if token provided
         let progress_callback = ctx
             .meta
             .get_progress_token()
             .map(|token| create_progress_callback(token.clone(), ctx.peer.clone()));
 
+        // Record execution start in mcp_tool_executions table
         let execution_request = ToolExecutionRequest {
             tool_name: tool_name.clone(),
             server_name: self.service_id.to_string(),
-            input: serde_json::to_value(&request.arguments).unwrap_or(serde_json::Value::Null),
+            input: serde_json::to_value(&request.arguments).unwrap_or_default(),
             started_at,
             context: request_context.clone(),
             request_method: Some("mcp".to_string()),
@@ -123,6 +135,7 @@ impl ServerHandler for ContentManagerServer {
                 McpError::internal_error(format!("Failed to start execution tracking: {e}"), None)
             })?;
 
+        // Handle tool call
         let result = tools::handle_tool_call(
             &tool_name,
             request,
@@ -137,6 +150,7 @@ impl ServerHandler for ContentManagerServer {
         )
         .await;
 
+        // Record execution completion
         let completed_at = Utc::now();
         let execution_result = ToolExecutionResult {
             output: result
@@ -172,5 +186,70 @@ impl ServerHandler for ContentManagerServer {
         }
 
         result
+    }
+
+    async fn list_resources(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _ctx: RequestContext<RoleServer>,
+    ) -> Result<ListResourcesResult, McpError> {
+        let resource = Resource {
+            raw: RawResource {
+                uri: format!("ui://{SERVER_NAME}/artifact-viewer"),
+                name: "Artifact Viewer".to_string(),
+                title: Some("Content Manager Viewer".to_string()),
+                description: Some(
+                    "Interactive UI viewer for Content Manager artifacts. Displays research \
+                     results, blog post content, and generated images with rich formatting. \
+                     Template receives artifact data via MCP Apps ui/notifications/tool-result."
+                        .to_string(),
+                ),
+                mime_type: Some(MCP_APP_MIME_TYPE.to_string()),
+                size: Some(ARTIFACT_VIEWER_TEMPLATE.len() as u32),
+                icons: None,
+                meta: None,
+            },
+            annotations: None,
+        };
+
+        Ok(ListResourcesResult {
+            resources: vec![resource],
+            next_cursor: None,
+            meta: None,
+        })
+    }
+
+    async fn read_resource(
+        &self,
+        request: ReadResourceRequestParams,
+        _ctx: RequestContext<RoleServer>,
+    ) -> Result<ReadResourceResult, McpError> {
+        let uri = &request.uri;
+        let expected_uri = format!("ui://{SERVER_NAME}/artifact-viewer");
+
+        if uri != &expected_uri {
+            return Err(McpError::invalid_params(
+                format!("Unknown resource URI: {uri}. Expected: {expected_uri}"),
+                None,
+            ));
+        }
+
+        let ui_meta = UiMetadata::for_static_template(SERVER_NAME)
+            .with_csp(CspPolicy::strict())
+            .with_prefers_border(true);
+
+        let resource_meta = ui_meta.to_resource_meta();
+        let meta = Meta(resource_meta.to_meta_map());
+
+        let contents = ResourceContents::TextResourceContents {
+            uri: uri.clone(),
+            mime_type: Some(MCP_APP_MIME_TYPE.to_string()),
+            text: ARTIFACT_VIEWER_TEMPLATE.to_string(),
+            meta: Some(meta),
+        };
+
+        Ok(ReadResourceResult {
+            contents: vec![contents],
+        })
     }
 }

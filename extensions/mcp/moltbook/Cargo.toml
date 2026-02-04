@@ -1,16 +1,20 @@
 [package]
-name = "systemprompt-mcp-agent"
+name = "systemprompt-mcp-moltbook"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+description = "Moltbook MCP server - AI agent social network integration tools"
 
 [[bin]]
-name = "systemprompt-mcp-agent"
+name = "systemprompt-mcp-moltbook"
 path = "src/main.rs"
 
 [dependencies]
 systemprompt = { workspace = true, features = ["full"] }
+
+# Moltbook extension for client and models
+systemprompt-moltbook-extension = { path = "../../moltbook" }
 
 anyhow.workspace = true
 tokio.workspace = true
@@ -23,8 +27,6 @@ serde.workspace = true
 serde_json.workspace = true
 
 tracing.workspace = true
-
-shell-words.workspace = true
 
 [lints]
 workspace = true

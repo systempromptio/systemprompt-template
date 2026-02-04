@@ -1,8 +1,28 @@
-use rmcp::model::Tool;
+use rmcp::model::{Meta, Tool};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use systemprompt::mcp::{default_tool_visibility, tool_ui_meta};
+use systemprompt::models::artifacts::{ListArtifact, TextArtifact, ToolResponse};
 
 pub const SERVER_NAME: &str = "soul";
+
+fn text_output_schema() -> serde_json::Map<String, serde_json::Value> {
+    ToolResponse::<TextArtifact>::schema()
+        .as_object()
+        .cloned()
+        .expect("schema must be object")
+}
+
+fn list_output_schema() -> serde_json::Map<String, serde_json::Value> {
+    ToolResponse::<ListArtifact>::schema()
+        .as_object()
+        .cloned()
+        .expect("schema must be object")
+}
+
+fn create_ui_meta() -> Meta {
+    Meta(tool_ui_meta(SERVER_NAME, &default_tool_visibility()))
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetContextInput {
@@ -62,29 +82,27 @@ pub fn list_tools() -> Vec<Tool> {
     ]
 }
 
-fn get_context_input_schema() -> serde_json::Map<String, serde_json::Value> {
-    let mut map = serde_json::Map::new();
-    map.insert("type".to_string(), serde_json::json!("object"));
-    map.insert("properties".to_string(), serde_json::json!({
-        "memory_types": {
-            "type": "array",
-            "items": { "type": "string", "enum": ["core", "long_term", "short_term", "working"] },
-            "description": "Filter by memory types. Default: all types."
-        },
-        "subject": {
-            "type": "string",
-            "description": "Filter memories by subject (partial match)."
-        },
-        "max_items": {
-            "type": "integer",
-            "default": 50,
-            "description": "Maximum number of memories to return."
-        }
-    }));
-    map
-}
-
 fn create_get_context_tool() -> Tool {
+    let input_schema = serde_json::json!({
+        "type": "object",
+        "properties": {
+            "memory_types": {
+                "type": "array",
+                "items": { "type": "string", "enum": ["core", "long_term", "short_term", "working"] },
+                "description": "Filter by memory types. Default: all types."
+            },
+            "subject": {
+                "type": "string",
+                "description": "Filter memories by subject (partial match)."
+            },
+            "max_items": {
+                "type": "integer",
+                "default": 50,
+                "description": "Maximum number of memories to return."
+            }
+        }
+    });
+
     Tool {
         name: "memory_get_context".to_string().into(),
         title: Some("Get Memory Context".to_string()),
@@ -94,61 +112,56 @@ fn create_get_context_tool() -> Tool {
                 .to_string()
                 .into(),
         ),
-        input_schema: Arc::new(get_context_input_schema()),
-        output_schema: None,
+        input_schema: Arc::new(input_schema.as_object().cloned().unwrap()),
+        output_schema: Some(Arc::new(text_output_schema())),
         annotations: None,
         icons: None,
-        meta: None,
+        meta: Some(create_ui_meta()),
     }
 }
 
-fn store_input_schema() -> serde_json::Map<String, serde_json::Value> {
-    let mut map = serde_json::Map::new();
-    map.insert("type".to_string(), serde_json::json!("object"));
-    map.insert("properties".to_string(), serde_json::json!({
-        "memory_type": {
-            "type": "string",
-            "enum": ["core", "long_term", "short_term", "working"],
-            "description": "Memory type: core (permanent), long_term (persistent), short_term (24-48h), working (session)"
-        },
-        "category": {
-            "type": "string",
-            "enum": ["fact", "preference", "goal", "relationship", "reminder"],
-            "description": "Memory category"
-        },
-        "subject": {
-            "type": "string",
-            "description": "Who/what this memory is about (e.g., 'user', 'project', person name)"
-        },
-        "content": {
-            "type": "string",
-            "description": "The actual memory content"
-        },
-        "context_text": {
-            "type": "string",
-            "description": "Optional pre-formatted text for context injection"
-        },
-        "priority": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 100,
-            "default": 50,
-            "description": "Priority for ordering in context (0-100, higher = more important)"
-        },
-        "tags": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "Searchable tags"
-        }
-    }));
-    map.insert(
-        "required".to_string(),
-        serde_json::json!(["memory_type", "category", "subject", "content"]),
-    );
-    map
-}
-
 fn create_store_tool() -> Tool {
+    let input_schema = serde_json::json!({
+        "type": "object",
+        "properties": {
+            "memory_type": {
+                "type": "string",
+                "enum": ["core", "long_term", "short_term", "working"],
+                "description": "Memory type: core (permanent), long_term (persistent), short_term (24-48h), working (session)"
+            },
+            "category": {
+                "type": "string",
+                "enum": ["fact", "preference", "goal", "relationship", "reminder"],
+                "description": "Memory category"
+            },
+            "subject": {
+                "type": "string",
+                "description": "Who/what this memory is about (e.g., 'user', 'project', person name)"
+            },
+            "content": {
+                "type": "string",
+                "description": "The actual memory content"
+            },
+            "context_text": {
+                "type": "string",
+                "description": "Optional pre-formatted text for context injection"
+            },
+            "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "default": 50,
+                "description": "Priority for ordering in context (0-100, higher = more important)"
+            },
+            "tags": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Searchable tags"
+            }
+        },
+        "required": ["memory_type", "category", "subject", "content"]
+    });
+
     Tool {
         name: "memory_store".to_string().into(),
         title: Some("Store Memory".to_string()),
@@ -158,20 +171,18 @@ fn create_store_tool() -> Tool {
                 .to_string()
                 .into(),
         ),
-        input_schema: Arc::new(store_input_schema()),
-        output_schema: None,
+        input_schema: Arc::new(input_schema.as_object().cloned().unwrap()),
+        output_schema: Some(Arc::new(text_output_schema())),
         annotations: None,
         icons: None,
-        meta: None,
+        meta: Some(create_ui_meta()),
     }
 }
 
-fn search_input_schema() -> serde_json::Map<String, serde_json::Value> {
-    let mut map = serde_json::Map::new();
-    map.insert("type".to_string(), serde_json::json!("object"));
-    map.insert(
-        "properties".to_string(),
-        serde_json::json!({
+fn create_search_tool() -> Tool {
+    let input_schema = serde_json::json!({
+        "type": "object",
+        "properties": {
             "query": {
                 "type": "string",
                 "description": "Search query (matches content, subject, and tags)"
@@ -191,13 +202,10 @@ fn search_input_schema() -> serde_json::Map<String, serde_json::Value> {
                 "default": 20,
                 "description": "Maximum results to return"
             }
-        }),
-    );
-    map.insert("required".to_string(), serde_json::json!(["query"]));
-    map
-}
+        },
+        "required": ["query"]
+    });
 
-fn create_search_tool() -> Tool {
     Tool {
         name: "memory_search".to_string().into(),
         title: Some("Search Memories".to_string()),
@@ -207,31 +215,26 @@ fn create_search_tool() -> Tool {
                 .to_string()
                 .into(),
         ),
-        input_schema: Arc::new(search_input_schema()),
-        output_schema: None,
+        input_schema: Arc::new(input_schema.as_object().cloned().unwrap()),
+        output_schema: Some(Arc::new(list_output_schema())),
         annotations: None,
         icons: None,
-        meta: None,
+        meta: Some(create_ui_meta()),
     }
 }
 
-fn forget_input_schema() -> serde_json::Map<String, serde_json::Value> {
-    let mut map = serde_json::Map::new();
-    map.insert("type".to_string(), serde_json::json!("object"));
-    map.insert(
-        "properties".to_string(),
-        serde_json::json!({
+fn create_forget_tool() -> Tool {
+    let input_schema = serde_json::json!({
+        "type": "object",
+        "properties": {
             "id": {
                 "type": "string",
                 "description": "The memory ID to forget (soft-delete)"
             }
-        }),
-    );
-    map.insert("required".to_string(), serde_json::json!(["id"]));
-    map
-}
+        },
+        "required": ["id"]
+    });
 
-fn create_forget_tool() -> Tool {
     Tool {
         name: "memory_forget".to_string().into(),
         title: Some("Forget Memory".to_string()),
@@ -240,10 +243,10 @@ fn create_forget_tool() -> Tool {
                 .to_string()
                 .into(),
         ),
-        input_schema: Arc::new(forget_input_schema()),
-        output_schema: None,
+        input_schema: Arc::new(input_schema.as_object().cloned().unwrap()),
+        output_schema: Some(Arc::new(text_output_schema())),
         annotations: None,
         icons: None,
-        meta: None,
+        meta: Some(create_ui_meta()),
     }
 }

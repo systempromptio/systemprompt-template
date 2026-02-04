@@ -1,12 +1,19 @@
 use anyhow::Result;
-use rmcp::model::{CallToolRequestParams, CallToolResult, Tool};
+use rmcp::model::{CallToolRequestParams, CallToolResult, Meta, Tool};
 use rmcp::ErrorData as McpError;
 use std::sync::Arc;
+
+pub const SERVER_NAME: &str = "content-manager";
+
+fn create_ui_meta() -> Meta {
+    Meta(tool_ui_meta(SERVER_NAME, &default_tool_visibility()))
+}
 use systemprompt::agent::repository::content::ArtifactRepository;
 use systemprompt::agent::services::SkillService;
 use systemprompt::ai::{AiService, ImageService};
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::McpExecutionId;
+use systemprompt::mcp::{default_tool_visibility, tool_ui_meta, McpResponseBuilder};
 use systemprompt::models::execution::context::RequestContext;
 
 pub mod create_blog_post;
@@ -56,14 +63,8 @@ fn create_tool(
     input_schema: &serde_json::Value,
     output_schema: &serde_json::Value,
 ) -> Tool {
-    let input_obj = input_schema
-        .as_object()
-        .cloned()
-        .expect("input_schema must be a JSON object");
-    let output_obj = output_schema
-        .as_object()
-        .cloned()
-        .expect("output_schema must be a JSON object");
+    let input_obj = input_schema.as_object().cloned().unwrap_or_default();
+    let output_obj = output_schema.as_object().cloned().unwrap_or_default();
 
     Tool {
         name: name.to_string().into(),
@@ -73,7 +74,7 @@ fn create_tool(
         output_schema: Some(Arc::new(output_obj)),
         annotations: None,
         icons: None,
-        meta: None,
+        meta: Some(create_ui_meta()),
     }
 }
 
@@ -128,9 +129,9 @@ pub async fn handle_tool_call(
             )
             .await
         }
-        _ => Err(McpError::invalid_params(
-            format!("Unknown tool: '{name}'"),
-            None,
-        )),
+        _ => Ok(McpResponseBuilder::<()>::build_error(format!(
+            "Unknown tool: '{name}'\n\n\
+            Available tools: research_blog, create_blog_post, generate_featured_image"
+        ))),
     }
 }

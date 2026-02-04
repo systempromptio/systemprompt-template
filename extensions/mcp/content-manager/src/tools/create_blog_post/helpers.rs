@@ -1,7 +1,5 @@
 use serde_json::json;
-use systemprompt::models::artifacts::ToolResponse;
-
-use super::handler::BlogPostArtifact;
+use systemprompt::models::artifacts::{TextArtifact, ToolResponse};
 
 #[must_use]
 pub fn input_schema() -> serde_json::Value {
@@ -46,7 +44,7 @@ pub fn input_schema() -> serde_json::Value {
 
 #[must_use]
 pub fn output_schema() -> serde_json::Value {
-    ToolResponse::<BlogPostArtifact>::schema()
+    ToolResponse::<TextArtifact>::schema()
 }
 
 pub fn extract_title(content: &str) -> String {
