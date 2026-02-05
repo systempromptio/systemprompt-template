@@ -2,6 +2,7 @@
 title: "General Assistance"
 description: "A skill for providing general-purpose AI assistance"
 kind: "skill"
+slug: general_assistance
 public: true
 ---
 

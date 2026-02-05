@@ -104,6 +104,7 @@ whoami:
 
 tenant:
     {{CLI}} cloud tenant
+    {{CLI}} core skills sync --direction to-db -y
 
 profile:
     {{CLI}} cloud profile

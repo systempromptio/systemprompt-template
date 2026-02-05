@@ -2,6 +2,13 @@
 
 All notable changes to systemprompt-template will be documented in this file.
 
+## [0.1.4] - 2026-02-05
+
+### Fixed
+- Fixed `default_max_output_tokens` from 8192 to 4096 (OpenAI gpt-4-turbo limit)
+- Added missing `slug` field to `general_assistance` and `content_writing` skills
+- Added automatic skills sync to `just tenant` for fresh installs
+
 ## [0.1.3] - 2026-02-04
 
 ### Changed

@@ -2,6 +2,7 @@
 title: "Content Writing"
 description: "A skill for writing, editing, and improving text content"
 kind: "skill"
+slug: content_writing
 public: true
 ---
 
