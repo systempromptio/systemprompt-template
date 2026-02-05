@@ -1,5 +1,5 @@
 ai:
-  default_provider: "openai"
+  default_provider: "gemini"
   default_max_output_tokens: 4096
   sampling:
     enable_smart_routing: false

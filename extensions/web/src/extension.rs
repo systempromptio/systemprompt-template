@@ -50,7 +50,6 @@ pub const SCHEMA_LINK_ANALYTICS_VIEWS: &str =
 pub const SCHEMA_CONTENT_PERFORMANCE_METRICS: &str =
     include_str!("../schema/006_content_performance_metrics.sql");
 pub const SCHEMA_MARKDOWN_FTS: &str = include_str!("../schema/007_markdown_fts.sql");
-pub const SCHEMA_ENGAGEMENT_EVENTS: &str = include_str!("../schema/008_engagement_events.sql");
 pub const SCHEMA_CONTENT_RELATED_METADATA: &str =
     include_str!("../schema/009_content_related_metadata.sql");
 pub const SCHEMA_CONTENT_RELATED_DOCS: &str =
@@ -211,7 +210,6 @@ impl Extension for WebExtension {
                 SCHEMA_CONTENT_PERFORMANCE_METRICS,
             ),
             SchemaDefinition::inline("markdown_fts", SCHEMA_MARKDOWN_FTS),
-            SchemaDefinition::inline("engagement_events", SCHEMA_ENGAGEMENT_EVENTS),
             SchemaDefinition::inline("content_related_metadata", SCHEMA_CONTENT_RELATED_METADATA),
             SchemaDefinition::inline("content_related_docs", SCHEMA_CONTENT_RELATED_DOCS),
             SchemaDefinition::inline("content_category", SCHEMA_CONTENT_CATEGORY),

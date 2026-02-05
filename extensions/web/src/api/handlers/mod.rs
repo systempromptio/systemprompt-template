@@ -1,5 +1,4 @@
 mod content;
-mod engagement;
 mod links;
 mod search;
 
@@ -12,5 +11,3 @@ pub use links::{
 };
 
 pub use search::search_handler;
-
-pub use engagement::{engagement_batch_handler, engagement_handler};

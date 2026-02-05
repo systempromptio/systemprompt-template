@@ -27,22 +27,13 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.1.8", features = ["full"] }
+systemprompt = { version = "0.1.9", features = ["full"] }
 
 # ============================================
 # LOCAL EXTENSIONS
 # ============================================
 systemprompt-web-extension = { path = "extensions/web" }
 systemprompt-soul-extension = { path = "extensions/soul" }
-
-# ============================================
-# VERSION PINNING OPTIONS (uncomment to use)
-# ============================================
-# Option 1: Track main branch (default - shown above)
-# Option 2: Pin to tag (recommended for production)
-# systemprompt-models = { git = "https://github.com/systempromptio/systemprompt-core", tag = "v0.1.0" }
-# Option 3: Pin to specific commit
-# systemprompt-models = { git = "https://github.com/systempromptio/systemprompt-core", rev = "abc123def456" }
 
 # Core runtime dependencies
 tokio = { version = "1.47", features = ["full"] }
@@ -200,7 +191,7 @@ serde_yaml = "0.9"
 workspace = true
 
 # ============================================
-# LOCAL DEVELOPMENT PATCHES
+# LOCAL DEVELOPMENT PATCHES (uncomment to use local core)
 # ============================================
 # [patch.crates-io]
-# systemprompt = { path = "../../systemprompt-core/systemprompt" }
+# systemprompt = { path = "../systemprompt-core/systemprompt" }

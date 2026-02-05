@@ -33,11 +33,6 @@ pub fn router(pool: Arc<PgPool>, config: Option<Arc<BlogConfigValidated>>) -> Ro
             get(handlers::campaign_performance_handler),
         )
         .route("/links/journey", get(handlers::content_journey_handler))
-        .route("/engagement", post(handlers::engagement_handler))
-        .route(
-            "/engagement/batch",
-            post(handlers::engagement_batch_handler),
-        )
         .route("/search", get(handlers::search_handler))
         .with_state(state)
 }
