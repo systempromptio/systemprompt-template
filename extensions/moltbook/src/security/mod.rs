@@ -8,31 +8,33 @@ static INJECTION_PATTERNS: OnceLock<Vec<Regex>> = OnceLock::new();
 fn get_injection_patterns() -> &'static Vec<Regex> {
     INJECTION_PATTERNS.get_or_init(|| {
         vec![
-            Regex::new(r"(?i)ignore\s+(all\s+)?previous\s+instructions?").unwrap(),
-            Regex::new(r"(?i)disregard\s+(all\s+)?prior\s+instructions?").unwrap(),
-            Regex::new(r"(?i)forget\s+(all\s+)?instructions?").unwrap(),
-            Regex::new(r"(?i)new\s+instructions?:").unwrap(),
-            Regex::new(r"(?i)system\s*prompt:").unwrap(),
-            Regex::new(r"(?i)\[system\]").unwrap(),
-            Regex::new(r"(?i)<\|system\|>").unwrap(),
-            Regex::new(r"(?i)you\s+are\s+now\s+a").unwrap(),
-            Regex::new(r"(?i)act\s+as\s+if\s+you").unwrap(),
-            Regex::new(r"(?i)pretend\s+(you\s+are|to\s+be)").unwrap(),
-            Regex::new(r"(?i)roleplay\s+as").unwrap(),
-            Regex::new(r"(?i)override\s+your\s+(instructions?|programming)").unwrap(),
-            Regex::new(r"(?i)reveal\s+your\s+(api\s+key|secret|password|credentials?)").unwrap(),
-            Regex::new(r"(?i)what\s+is\s+your\s+(api\s+key|secret|password)").unwrap(),
-            Regex::new(r"(?i)execute\s+(this\s+)?command").unwrap(),
-            Regex::new(r"(?i)run\s+(this\s+)?(shell\s+)?command").unwrap(),
-            Regex::new(r"(?i)curl\s+-").unwrap(),
-            Regex::new(r"(?i)wget\s+").unwrap(),
-            Regex::new(r"(?i)base64\s+(decode|encode)").unwrap(),
-            Regex::new(r"(?i)eval\s*\(").unwrap(),
-            Regex::new(r"(?i)from\s+now\s+on").unwrap(),
-            Regex::new(r"(?i)starting\s+now").unwrap(),
-            Regex::new(r"(?i)your\s+new\s+role").unwrap(),
-            Regex::new(r"(?i)do\s+not\s+follow\s+your").unwrap(),
-            Regex::new(r"(?i)bypass\s+(your\s+)?(safety|security|restrictions?)").unwrap(),
+            Regex::new(r"(?i)ignore\s+(all\s+)?previous\s+instructions?").expect("valid regex"),
+            Regex::new(r"(?i)disregard\s+(all\s+)?prior\s+instructions?").expect("valid regex"),
+            Regex::new(r"(?i)forget\s+(all\s+)?instructions?").expect("valid regex"),
+            Regex::new(r"(?i)new\s+instructions?:").expect("valid regex"),
+            Regex::new(r"(?i)system\s*prompt:").expect("valid regex"),
+            Regex::new(r"(?i)\[system\]").expect("valid regex"),
+            Regex::new(r"(?i)<\|system\|>").expect("valid regex"),
+            Regex::new(r"(?i)you\s+are\s+now\s+a").expect("valid regex"),
+            Regex::new(r"(?i)act\s+as\s+if\s+you").expect("valid regex"),
+            Regex::new(r"(?i)pretend\s+(you\s+are|to\s+be)").expect("valid regex"),
+            Regex::new(r"(?i)roleplay\s+as").expect("valid regex"),
+            Regex::new(r"(?i)override\s+your\s+(instructions?|programming)").expect("valid regex"),
+            Regex::new(r"(?i)reveal\s+your\s+(api\s+key|secret|password|credentials?)")
+                .expect("valid regex"),
+            Regex::new(r"(?i)what\s+is\s+your\s+(api\s+key|secret|password)").expect("valid regex"),
+            Regex::new(r"(?i)execute\s+(this\s+)?command").expect("valid regex"),
+            Regex::new(r"(?i)run\s+(this\s+)?(shell\s+)?command").expect("valid regex"),
+            Regex::new(r"(?i)curl\s+-").expect("valid regex"),
+            Regex::new(r"(?i)wget\s+").expect("valid regex"),
+            Regex::new(r"(?i)base64\s+(decode|encode)").expect("valid regex"),
+            Regex::new(r"(?i)eval\s*\(").expect("valid regex"),
+            Regex::new(r"(?i)from\s+now\s+on").expect("valid regex"),
+            Regex::new(r"(?i)starting\s+now").expect("valid regex"),
+            Regex::new(r"(?i)your\s+new\s+role").expect("valid regex"),
+            Regex::new(r"(?i)do\s+not\s+follow\s+your").expect("valid regex"),
+            Regex::new(r"(?i)bypass\s+(your\s+)?(safety|security|restrictions?)")
+                .expect("valid regex"),
         ]
     })
 }
@@ -40,17 +42,16 @@ fn get_injection_patterns() -> &'static Vec<Regex> {
 pub fn detect_prompt_injection(content: &str) -> Result<(), MoltbookError> {
     let patterns = get_injection_patterns();
 
-    for pattern in patterns.iter() {
+    for pattern in patterns {
         if pattern.is_match(content) {
-            let matched = pattern.find(content).map(|m| m.as_str()).unwrap_or("");
+            let matched = pattern.find(content).map_or("", |m| m.as_str());
             tracing::warn!(
                 pattern = %pattern.as_str(),
                 matched = %matched,
                 "Prompt injection pattern detected"
             );
             return Err(MoltbookError::PromptInjection(format!(
-                "Content contains potentially malicious pattern: {}",
-                matched
+                "Content contains potentially malicious pattern: {matched}"
             )));
         }
     }
@@ -59,6 +60,8 @@ pub fn detect_prompt_injection(content: &str) -> Result<(), MoltbookError> {
 }
 
 pub fn sanitize_content(content: &str) -> String {
+    const MAX_LENGTH: usize = 10000;
+
     let mut sanitized = content.to_string();
 
     sanitized = sanitized.replace('\x00', "");
@@ -74,7 +77,6 @@ pub fn sanitize_content(content: &str) -> String {
         sanitized = sanitized.replace(from, to);
     }
 
-    const MAX_LENGTH: usize = 10000;
     if sanitized.len() > MAX_LENGTH {
         sanitized = sanitized.chars().take(MAX_LENGTH).collect();
     }

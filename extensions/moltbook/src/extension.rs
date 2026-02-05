@@ -15,8 +15,8 @@ impl MoltbookExtension {
     pub const PREFIX: &'static str = "moltbook";
 
     #[must_use]
-    pub fn new() -> Self {
-        Self::default()
+    pub const fn new() -> Self {
+        Self
     }
 
     #[must_use]

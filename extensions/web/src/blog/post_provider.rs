@@ -102,9 +102,8 @@ impl PageDataProvider for BlogPostPageDataProvider {
             let slug = item.get("slug").and_then(|v| v.as_str()).unwrap_or("");
             let title = item.get("title").and_then(|v| v.as_str()).unwrap_or("");
 
-            let org_url = Config::get()
-                .map(|c| c.api_external_url.clone())
-                .unwrap_or_default();
+            let org_url =
+                Config::get().map_or_else(|_| String::new(), |c| c.api_external_url.clone());
             let social_bar = render_social_action_bar(slug, title, &org_url);
             obj.insert("SOCIAL_ACTION_BAR".to_string(), Value::String(social_bar));
 

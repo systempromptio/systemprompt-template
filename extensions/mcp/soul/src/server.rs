@@ -1,4 +1,6 @@
-use crate::tools::{self, ForgetInput, GetContextInput, SearchInput, StoreMemoryInput, SERVER_NAME};
+use crate::tools::{
+    self, ForgetInput, GetContextInput, SearchInput, StoreMemoryInput, SERVER_NAME,
+};
 use anyhow::Result;
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Implementation, InitializeRequestParams,
@@ -12,7 +14,9 @@ use systemprompt::database::DbPool;
 use systemprompt::identifiers::{McpExecutionId, McpServerId};
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
 use systemprompt::mcp::services::ui_renderer::{CspPolicy, UiMetadata, MCP_APP_MIME_TYPE};
-use systemprompt::mcp::{build_experimental_capabilities, McpArtifactRepository, McpResponseBuilder};
+use systemprompt::mcp::{
+    build_experimental_capabilities, McpArtifactRepository, McpResponseBuilder,
+};
 use systemprompt::models::artifacts::{ListArtifact, ListItem, TextArtifact};
 use systemprompt::models::execution::context::RequestContext;
 use systemprompt_soul_extension::{CreateMemoryParams, MemoryCategory, MemoryService, MemoryType};
@@ -118,31 +122,16 @@ impl ServerHandler for SoulMcpServer {
                         .await
                     }
                     "memory_store" => {
-                        self.handle_store(
-                            arguments,
-                            &service,
-                            &request_context,
-                            &mcp_execution_id,
-                        )
-                        .await
+                        self.handle_store(arguments, &service, &request_context, &mcp_execution_id)
+                            .await
                     }
                     "memory_search" => {
-                        self.handle_search(
-                            arguments,
-                            &service,
-                            &request_context,
-                            &mcp_execution_id,
-                        )
-                        .await
+                        self.handle_search(arguments, &service, &request_context, &mcp_execution_id)
+                            .await
                     }
                     "memory_forget" => {
-                        self.handle_forget(
-                            arguments,
-                            &service,
-                            &request_context,
-                            &mcp_execution_id,
-                        )
-                        .await
+                        self.handle_forget(arguments, &service, &request_context, &mcp_execution_id)
+                            .await
                     }
                     _ => unreachable!(),
                 }
@@ -171,6 +160,7 @@ impl ServerHandler for SoulMcpServer {
                         .to_string(),
                 ),
                 mime_type: Some(MCP_APP_MIME_TYPE.to_string()),
+                #[allow(clippy::cast_possible_truncation)]
                 size: Some(ARTIFACT_VIEWER_TEMPLATE.len() as u32),
                 icons: None,
                 meta: None,
@@ -248,8 +238,7 @@ impl SoulMcpServer {
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to get context: {e}"), None))?;
 
-        let artifact = TextArtifact::new(&context_string, ctx)
-            .with_title("Memory Context");
+        let artifact = TextArtifact::new(&context_string, ctx).with_title("Memory Context");
 
         McpResponseBuilder::new(artifact, "memory_get_context", ctx, execution_id)
             .build(&context_string)
@@ -299,14 +288,19 @@ impl SoulMcpServer {
             memory.id, memory.memory_type, memory.category, memory.subject
         );
 
-        let artifact = TextArtifact::new(&summary, ctx)
-            .with_title("Memory Stored");
+        let artifact = TextArtifact::new(&summary, ctx).with_title("Memory Stored");
 
-        let artifact_repo = McpArtifactRepository::new(&self.db_pool)
-            .map_err(|e| McpError::internal_error(format!("Failed to create artifact repository: {e}"), None))?;
+        let artifact_repo = McpArtifactRepository::new(&self.db_pool).map_err(|e| {
+            McpError::internal_error(format!("Failed to create artifact repository: {e}"), None)
+        })?;
 
         McpResponseBuilder::new(artifact, "memory_store", ctx, execution_id)
-            .build_and_persist(summary.clone(), &artifact_repo, "text", Some("Memory Stored".to_string()))
+            .build_and_persist(
+                summary.clone(),
+                &artifact_repo,
+                "text",
+                Some("Memory Stored".to_string()),
+            )
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to build response: {e}"), None))
     }
@@ -336,19 +330,17 @@ impl SoulMcpServer {
 
             return McpResponseBuilder::new(artifact, "memory_search", ctx, execution_id)
                 .build("No memories found matching your query.")
-                .map_err(|e| McpError::internal_error(format!("Failed to build response: {e}"), None));
+                .map_err(|e| {
+                    McpError::internal_error(format!("Failed to build response: {e}"), None)
+                });
         }
 
         let items: Vec<ListItem> = memories
             .iter()
             .map(|m| {
-                ListItem::new(
-                    &m.subject,
-                    &m.content,
-                    format!("memory://{}", m.id),
-                )
-                .with_id(m.id.to_string())
-                .with_category(&m.category)
+                ListItem::new(&m.subject, &m.content, format!("memory://{}", m.id))
+                    .with_id(m.id.to_string())
+                    .with_category(&m.category)
             })
             .collect();
 
@@ -380,16 +372,23 @@ impl SoulMcpServer {
         if forgotten {
             let summary = format!("Memory '{}' has been forgotten.", input.id);
 
-            let artifact = TextArtifact::new(&summary, ctx)
-                .with_title("Memory Forgotten");
+            let artifact = TextArtifact::new(&summary, ctx).with_title("Memory Forgotten");
 
-            let artifact_repo = McpArtifactRepository::new(&self.db_pool)
-                .map_err(|e| McpError::internal_error(format!("Failed to create artifact repository: {e}"), None))?;
+            let artifact_repo = McpArtifactRepository::new(&self.db_pool).map_err(|e| {
+                McpError::internal_error(format!("Failed to create artifact repository: {e}"), None)
+            })?;
 
             McpResponseBuilder::new(artifact, "memory_forget", ctx, execution_id)
-                .build_and_persist(summary.clone(), &artifact_repo, "text", Some("Memory Forgotten".to_string()))
+                .build_and_persist(
+                    summary.clone(),
+                    &artifact_repo,
+                    "text",
+                    Some("Memory Forgotten".to_string()),
+                )
                 .await
-                .map_err(|e| McpError::internal_error(format!("Failed to build response: {e}"), None))
+                .map_err(|e| {
+                    McpError::internal_error(format!("Failed to build response: {e}"), None)
+                })
         } else {
             // Memory not found - return error
             Ok(McpResponseBuilder::<()>::build_error(format!(

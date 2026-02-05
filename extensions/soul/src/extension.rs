@@ -36,10 +36,7 @@ impl Extension for SoulExtension {
     }
 
     fn jobs(&self) -> Vec<Arc<dyn Job>> {
-        vec![
-            Arc::new(MemorySynthesisJob),
-            Arc::new(HeartbeatJob),
-        ]
+        vec![Arc::new(MemorySynthesisJob), Arc::new(HeartbeatJob)]
     }
 
     fn priority(&self) -> u32 {

@@ -78,7 +78,7 @@ impl EngagementRepository {
             data.as_ref().and_then(|d| d.time_on_page_ms).unwrap_or(0),
             data.as_ref().and_then(|d| d.time_to_first_interaction_ms),
             data.as_ref().and_then(|d| d.time_to_first_scroll_ms),
-            data.as_ref().and_then(|d| d.scroll_depth).unwrap_or(0),
+            data.as_ref().and_then(|d| d.max_scroll_depth).unwrap_or(0),
             data.as_ref()
                 .and_then(|d| d.scroll_velocity_avg)
                 .map(|v| v as f32),
@@ -87,9 +87,9 @@ impl EngagementRepository {
             data.as_ref().and_then(|d| d.mouse_move_distance_px),
             data.as_ref().and_then(|d| d.keyboard_events),
             data.as_ref().and_then(|d| d.copy_events),
-            0i32,
-            0i32,
-            0i32,
+            data.as_ref().and_then(|d| d.focus_time_ms).unwrap_or(0),
+            data.as_ref().and_then(|d| d.blur_count).unwrap_or(0),
+            data.as_ref().and_then(|d| d.tab_switches).unwrap_or(0),
             data.as_ref().and_then(|d| d.visible_time_ms).unwrap_or(0),
             data.as_ref().and_then(|d| d.hidden_time_ms).unwrap_or(0),
             data.as_ref().and_then(|d| d.is_rage_click),

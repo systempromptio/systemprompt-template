@@ -150,7 +150,10 @@ pub async fn handle(
         "Generated featured image"
     );
 
-    let public_url = response.public_url.clone().unwrap_or_default();
+    let public_url = response
+        .public_url
+        .clone()
+        .ok_or_else(|| McpError::internal_error("Image generation returned no public URL", None))?;
 
     // Use ImageArtifact for the generated image
     let artifact = ImageArtifact::new(&public_url, &ctx)
@@ -226,9 +229,13 @@ fn select_best_resolution(image_service: &Arc<ImageService>) -> ImageResolution 
         .default_provider_capabilities()
         .and_then(|caps| {
             // Prefer highest resolution available
-            [ImageResolution::FourK, ImageResolution::TwoK, ImageResolution::OneK]
-                .into_iter()
-                .find(|r| caps.supported_resolutions.contains(r))
+            [
+                ImageResolution::FourK,
+                ImageResolution::TwoK,
+                ImageResolution::OneK,
+            ]
+            .into_iter()
+            .find(|r| caps.supported_resolutions.contains(r))
         })
-        .unwrap_or_default()
+        .unwrap_or(ImageResolution::OneK)
 }

@@ -30,9 +30,9 @@ pub async fn handle(
     progress: Option<ProgressCallback>,
     mcp_execution_id: &McpExecutionId,
 ) -> Result<CallToolResult, McpError> {
-    let pg_pool = db_pool.pool().ok_or_else(|| {
-        McpError::internal_error("Database pool not available", None)
-    })?;
+    let pg_pool = db_pool
+        .pool()
+        .ok_or_else(|| McpError::internal_error("Database pool not available", None))?;
     let content_repo = ContentRepository::new(pg_pool);
 
     if let Some(ref notify) = progress {
@@ -80,7 +80,7 @@ pub async fn handle(
     let voice_skill = skill_loader
         .load_skill("edwards_voice", &ctx)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| String::new());
 
     if let Some(ref notify) = progress {
         notify(10.0, Some(100.0), Some("Skills loaded...".to_string())).await;
@@ -236,7 +236,7 @@ pub async fn handle(
             })
             .collect::<Vec<_>>(),
     )
-    .unwrap_or_default();
+    .expect("JSON serialization cannot fail for Vec");
 
     // Create content params for database
     let content_params = CreateContentParams::new(
@@ -263,7 +263,12 @@ pub async fn handle(
     let blog_content_id = content.id.to_string();
 
     if let Some(ref notify) = progress {
-        notify(100.0, Some(100.0), Some("Blog post saved to database!".to_string())).await;
+        notify(
+            100.0,
+            Some(100.0),
+            Some("Blog post saved to database!".to_string()),
+        )
+        .await;
     }
 
     tracing::info!(
@@ -310,7 +315,7 @@ fn extract_research_data(artifact: &Artifact) -> Result<ResearchData, McpError> 
             let summary = data
                 .get("summary")
                 .and_then(|v| v.as_str())
-                .unwrap_or_default()
+                .unwrap_or("")
                 .to_string();
 
             let sources: Vec<(String, String)> = data
@@ -325,7 +330,7 @@ fn extract_research_data(artifact: &Artifact) -> Result<ResearchData, McpError> 
                         })
                         .collect()
                 })
-                .unwrap_or_default();
+                .unwrap_or_else(Vec::new);
 
             return Ok(ResearchData { summary, sources });
         }

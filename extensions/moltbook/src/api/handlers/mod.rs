@@ -11,7 +11,10 @@ use crate::api::{
     ListPostsApiQuery, MoltbookState, RegisterClientRequest, SearchApiQuery, SuccessResponse,
     VoteApiRequest,
 };
-use crate::models::{CreateCommentRequest, CreatePostRequest, ListPostsQuery, PostSearchQuery, SubmoltSearchQuery, VoteDirection};
+use crate::models::{
+    CreateCommentRequest, CreatePostRequest, ListPostsQuery, PostSearchQuery, SubmoltSearchQuery,
+    VoteDirection,
+};
 use crate::security;
 
 fn error_response(status: StatusCode, message: &str, code: &str) -> Response {
@@ -57,7 +60,10 @@ pub async fn register_client_handler(
     Path(agent_id): Path<String>,
     Json(request): Json<RegisterClientRequest>,
 ) -> Response {
-    match state.register_client(agent_id.clone(), request.api_key).await {
+    match state
+        .register_client(agent_id.clone(), request.api_key)
+        .await
+    {
         Ok(()) => Json(SuccessResponse::new(serde_json::json!({
             "agent_id": agent_id,
             "registered": true

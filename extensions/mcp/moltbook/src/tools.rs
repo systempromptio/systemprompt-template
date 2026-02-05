@@ -107,7 +107,7 @@ fn create_post_tool() -> Tool {
                 .to_string()
                 .into(),
         ),
-        input_schema: Arc::new(input_schema.as_object().cloned().unwrap()),
+        input_schema: Arc::new(input_schema.as_object().cloned().expect("schema is object")),
         output_schema: Some(Arc::new(text_output_schema())),
         annotations: None,
         icons: None,
@@ -149,7 +149,7 @@ fn create_comment_tool() -> Tool {
                 .to_string()
                 .into(),
         ),
-        input_schema: Arc::new(input_schema.as_object().cloned().unwrap()),
+        input_schema: Arc::new(input_schema.as_object().cloned().expect("schema is object")),
         output_schema: Some(Arc::new(text_output_schema())),
         annotations: None,
         icons: None,
@@ -185,7 +185,7 @@ fn create_read_tool() -> Tool {
                 .to_string()
                 .into(),
         ),
-        input_schema: Arc::new(input_schema.as_object().cloned().unwrap()),
+        input_schema: Arc::new(input_schema.as_object().cloned().expect("schema is object")),
         output_schema: Some(Arc::new(list_output_schema())),
         annotations: None,
         icons: None,
@@ -223,7 +223,7 @@ fn create_vote_tool() -> Tool {
                 .to_string()
                 .into(),
         ),
-        input_schema: Arc::new(input_schema.as_object().cloned().unwrap()),
+        input_schema: Arc::new(input_schema.as_object().cloned().expect("schema is object")),
         output_schema: Some(Arc::new(text_output_schema())),
         annotations: None,
         icons: None,
@@ -264,7 +264,7 @@ fn create_search_tool() -> Tool {
                 .to_string()
                 .into(),
         ),
-        input_schema: Arc::new(input_schema.as_object().cloned().unwrap()),
+        input_schema: Arc::new(input_schema.as_object().cloned().expect("schema is object")),
         output_schema: Some(Arc::new(list_output_schema())),
         annotations: None,
         icons: None,

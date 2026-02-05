@@ -14,7 +14,9 @@ use systemprompt::database::DbPool;
 use systemprompt::identifiers::{McpExecutionId, McpServerId};
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
 use systemprompt::mcp::services::ui_renderer::{CspPolicy, UiMetadata, MCP_APP_MIME_TYPE};
-use systemprompt::mcp::{build_experimental_capabilities, McpArtifactRepository, McpResponseBuilder};
+use systemprompt::mcp::{
+    build_experimental_capabilities, McpArtifactRepository, McpResponseBuilder,
+};
 use systemprompt::models::artifacts::{ListArtifact, ListItem, TextArtifact};
 use systemprompt::models::execution::context::RequestContext as SysRequestContext;
 use systemprompt_moltbook_extension::{
@@ -60,10 +62,7 @@ impl MoltbookServer {
         env::var("moltbook_api_key")
             .or_else(|_| env::var("MOLTBOOK_API_KEY"))
             .map_err(|_| {
-                McpError::internal_error(
-                    "moltbook_api_key not found in secrets".to_string(),
-                    None,
-                )
+                McpError::internal_error("moltbook_api_key not found in secrets".to_string(), None)
             })
     }
 }
@@ -270,8 +269,7 @@ impl MoltbookServer {
             response.id, response.id, input.submolt
         );
 
-        let artifact = TextArtifact::new(&summary, ctx)
-            .with_title("Moltbook Post Created");
+        let artifact = TextArtifact::new(&summary, ctx).with_title("Moltbook Post Created");
 
         McpResponseBuilder::new(artifact, "moltbook_post", ctx, execution_id)
             .build(&summary)
@@ -308,8 +306,7 @@ impl MoltbookServer {
             response.id, input.post_id
         );
 
-        let artifact = TextArtifact::new(&summary, ctx)
-            .with_title("Moltbook Comment Created");
+        let artifact = TextArtifact::new(&summary, ctx).with_title("Moltbook Comment Created");
 
         McpResponseBuilder::new(artifact, "moltbook_comment", ctx, execution_id)
             .build(&summary)
@@ -363,11 +360,17 @@ impl MoltbookServer {
 
         let summary = format!("Found {} posts in feed", count);
 
-        let artifact_repo = McpArtifactRepository::new(&self.db_pool)
-            .map_err(|e| McpError::internal_error(format!("Failed to create artifact repository: {e}"), None))?;
+        let artifact_repo = McpArtifactRepository::new(&self.db_pool).map_err(|e| {
+            McpError::internal_error(format!("Failed to create artifact repository: {e}"), None)
+        })?;
 
         McpResponseBuilder::new(artifact, "moltbook_read", ctx, execution_id)
-            .build_and_persist(summary.clone(), &artifact_repo, "list", Some("Moltbook Feed".to_string()))
+            .build_and_persist(
+                summary.clone(),
+                &artifact_repo,
+                "list",
+                Some("Moltbook Feed".to_string()),
+            )
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to build response: {e}"), None))
     }
@@ -406,8 +409,7 @@ impl MoltbookServer {
             input.post_id, input.direction
         );
 
-        let artifact = TextArtifact::new(&summary, ctx)
-            .with_title("Moltbook Vote");
+        let artifact = TextArtifact::new(&summary, ctx).with_title("Moltbook Vote");
 
         McpResponseBuilder::new(artifact, "moltbook_vote", ctx, execution_id)
             .build(&summary)
@@ -457,11 +459,17 @@ impl MoltbookServer {
 
         let summary = format!("Found {} posts matching '{}'", count, input.query);
 
-        let artifact_repo = McpArtifactRepository::new(&self.db_pool)
-            .map_err(|e| McpError::internal_error(format!("Failed to create artifact repository: {e}"), None))?;
+        let artifact_repo = McpArtifactRepository::new(&self.db_pool).map_err(|e| {
+            McpError::internal_error(format!("Failed to create artifact repository: {e}"), None)
+        })?;
 
         McpResponseBuilder::new(artifact, "moltbook_search", ctx, execution_id)
-            .build_and_persist(summary.clone(), &artifact_repo, "list", Some("Moltbook Search".to_string()))
+            .build_and_persist(
+                summary.clone(),
+                &artifact_repo,
+                "list",
+                Some("Moltbook Search".to_string()),
+            )
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to build response: {e}"), None))
     }

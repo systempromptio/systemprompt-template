@@ -58,14 +58,10 @@ impl RateLimiter {
     }
 
     pub fn check_and_update(&mut self, operation: &str) -> Result<(), MoltbookError> {
-        let limit = self
-            .limits
-            .get(operation)
-            .cloned()
-            .unwrap_or(RateLimit {
-                max_requests: 100,
-                window: Duration::from_secs(60),
-            });
+        let limit = self.limits.get(operation).cloned().unwrap_or(RateLimit {
+            max_requests: 100,
+            window: Duration::from_secs(60),
+        });
 
         let now = Instant::now();
         let cutoff = now - limit.window;

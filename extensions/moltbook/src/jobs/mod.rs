@@ -26,18 +26,16 @@ impl Job for MoltbookSyncJob {
 
         tracing::info!("Running Moltbook sync job");
 
-        let row: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM moltbook_agents WHERE enabled = true",
-        )
-        .fetch_one(pool)
-        .await?;
+        let row: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM moltbook_agents WHERE enabled = true")
+                .fetch_one(pool)
+                .await?;
 
         let count = row.0;
 
         tracing::info!(agent_count = count, "Moltbook sync complete");
 
-        Ok(JobResult::success()
-            .with_message(format!("Synced {} Moltbook agents", count)))
+        Ok(JobResult::success().with_message(format!("Synced {} Moltbook agents", count)))
     }
 }
 
@@ -73,14 +71,14 @@ impl Job for MoltbookAnalyticsJob {
         tracing::info!("Running Moltbook analytics job");
 
         let stats: AnalyticsStats = sqlx::query_as(
-            r#"
+            r"
             SELECT
                 COUNT(DISTINCT agent_id) as agent_count,
                 COUNT(*) as post_count,
                 COALESCE(SUM(upvotes), 0) as total_upvotes
             FROM moltbook_posts
             WHERE created_at > NOW() - INTERVAL '24 hours'
-            "#,
+            ",
         )
         .fetch_one(pool)
         .await?;

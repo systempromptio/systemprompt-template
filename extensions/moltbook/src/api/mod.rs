@@ -32,7 +32,11 @@ impl MoltbookState {
         clients.get(agent_id).cloned()
     }
 
-    pub async fn register_client(&self, agent_id: String, api_key: String) -> Result<(), crate::error::MoltbookError> {
+    pub async fn register_client(
+        &self,
+        agent_id: String,
+        api_key: String,
+    ) -> Result<(), crate::error::MoltbookError> {
         let client = MoltbookClient::new(api_key)?;
         let mut clients = self.clients.write().await;
         clients.insert(agent_id, client);
@@ -47,12 +51,21 @@ pub fn router(pool: Arc<PgPool>) -> Router {
         .route("/health", get(handlers::health_handler))
         .route("/agents", get(handlers::list_agents_handler))
         .route("/agents/:agent_id", get(handlers::get_agent_handler))
-        .route("/agents/:agent_id/register", post(handlers::register_client_handler))
+        .route(
+            "/agents/:agent_id/register",
+            post(handlers::register_client_handler),
+        )
         .route("/posts", post(handlers::create_post_handler))
         .route("/posts", get(handlers::list_posts_handler))
         .route("/posts/:post_id", get(handlers::get_post_handler))
-        .route("/posts/:post_id/comments", post(handlers::create_comment_handler))
-        .route("/posts/:post_id/comments", get(handlers::list_comments_handler))
+        .route(
+            "/posts/:post_id/comments",
+            post(handlers::create_comment_handler),
+        )
+        .route(
+            "/posts/:post_id/comments",
+            get(handlers::list_comments_handler),
+        )
         .route("/posts/:post_id/vote", post(handlers::vote_post_handler))
         .route("/feed", get(handlers::get_feed_handler))
         .route("/search/posts", get(handlers::search_posts_handler))

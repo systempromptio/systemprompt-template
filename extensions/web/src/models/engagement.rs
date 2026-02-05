@@ -37,10 +37,12 @@ pub struct EngagementEvent {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Default)]
+#[serde(default)]
 pub struct EngagementEventRequest {
     pub session_id: Option<String>,
     pub user_id: Option<String>,
+    #[serde(default)]
     pub page_url: String,
     pub content_id: Option<String>,
     pub data: Option<EngagementData>,
@@ -49,32 +51,45 @@ pub struct EngagementEventRequest {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct EngagementData {
-    pub scroll_depth: Option<i32>,
+    // Event metadata
+    pub event_type: Option<EventType>,
+    pub referrer: Option<String>,
+    pub title: Option<String>,
+
+    // Time metrics
     pub time_on_page_ms: Option<i32>,
     pub time_to_first_interaction_ms: Option<i32>,
     pub time_to_first_scroll_ms: Option<i32>,
-    pub scroll_velocity_avg: Option<i32>,
-    pub scroll_direction_changes: Option<i32>,
-    pub mouse_move_distance_px: Option<i32>,
-    pub keyboard_events: Option<i32>,
-    pub copy_events: Option<i32>,
+    pub focus_time_ms: Option<i32>,
     pub visible_time_ms: Option<i32>,
     pub hidden_time_ms: Option<i32>,
-    pub click_count: Option<i32>,
-    pub is_rage_click: Option<bool>,
-    pub is_dead_click: Option<bool>,
-    pub reading_pattern: Option<String>,
 
+    // Scroll metrics
+    pub max_scroll_depth: Option<i32>,
+    pub scroll_velocity_avg: Option<i32>,
+    pub scroll_direction_changes: Option<i32>,
     pub depth: Option<i32>,
     pub milestone: Option<i32>,
     pub direction: Option<String>,
     pub velocity: Option<i32>,
 
+    // Interaction metrics
+    pub click_count: Option<i32>,
+    pub mouse_move_distance_px: Option<i32>,
+    pub keyboard_events: Option<i32>,
+    pub copy_events: Option<i32>,
+    pub blur_count: Option<i32>,
+    pub tab_switches: Option<i32>,
+
+    // Behavior flags
+    pub is_rage_click: Option<bool>,
+    pub is_dead_click: Option<bool>,
+    pub reading_pattern: Option<String>,
+
+    // Link click data
     pub target_url: Option<String>,
     pub link_text: Option<String>,
     pub is_external: Option<bool>,
-
-    pub title: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

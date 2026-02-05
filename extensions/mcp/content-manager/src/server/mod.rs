@@ -8,17 +8,18 @@ use chrono::Utc;
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Implementation, InitializeRequestParams,
     InitializeResult, ListResourcesResult, ListToolsResult, Meta, PaginatedRequestParams,
-    ProgressNotificationParam, ProgressToken, ProtocolVersion, RawResource, ReadResourceRequestParams,
-    ReadResourceResult, Resource, ResourceContents, ServerCapabilities, ServerInfo,
+    ProgressNotificationParam, ProgressToken, ProtocolVersion, RawResource,
+    ReadResourceRequestParams, ReadResourceResult, Resource, ResourceContents, ServerCapabilities,
+    ServerInfo,
 };
 use rmcp::service::{Peer, RequestContext, RoleServer};
 use rmcp::{ErrorData as McpError, ServerHandler};
 use std::future::Future;
 use std::pin::Pin;
+use systemprompt::mcp::build_experimental_capabilities;
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
 use systemprompt::mcp::models::{ExecutionStatus, ToolExecutionRequest, ToolExecutionResult};
 use systemprompt::mcp::services::ui_renderer::{CspPolicy, UiMetadata, MCP_APP_MIME_TYPE};
-use systemprompt::mcp::build_experimental_capabilities;
 
 const ARTIFACT_VIEWER_TEMPLATE: &str = include_str!("../../templates/artifact-viewer.html");
 
@@ -118,7 +119,7 @@ impl ServerHandler for ContentManagerServer {
         let execution_request = ToolExecutionRequest {
             tool_name: tool_name.clone(),
             server_name: self.service_id.to_string(),
-            input: serde_json::to_value(&request.arguments).unwrap_or_default(),
+            input: serde_json::to_value(&request.arguments).expect("arguments serialize to JSON"),
             started_at,
             context: request_context.clone(),
             request_method: Some("mcp".to_string()),

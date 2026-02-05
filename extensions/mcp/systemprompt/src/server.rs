@@ -3,9 +3,9 @@ use crate::tools::{self, CliInput, SERVER_NAME};
 use anyhow::Result;
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Icon, Implementation, InitializeRequestParams,
-    InitializeResult, ListResourcesResult, ListToolsResult, Meta,
-    PaginatedRequestParams, ProtocolVersion, RawResource, ReadResourceRequestParams,
-    ReadResourceResult, Resource, ResourceContents, ServerCapabilities, ServerInfo,
+    InitializeResult, ListResourcesResult, ListToolsResult, Meta, PaginatedRequestParams,
+    ProtocolVersion, RawResource, ReadResourceRequestParams, ReadResourceResult, Resource,
+    ResourceContents, ServerCapabilities, ServerInfo,
 };
 use rmcp::service::{RequestContext, RoleServer};
 use rmcp::{ErrorData as McpError, ServerHandler};
@@ -149,6 +149,7 @@ impl ServerHandler for SystempromptServer {
                         .to_string(),
                 ),
                 mime_type: Some(MCP_APP_MIME_TYPE.to_string()),
+                #[allow(clippy::cast_possible_truncation)]
                 size: Some(ARTIFACT_VIEWER_TEMPLATE.len() as u32),
                 icons: Some(vec![
                     Icon {
@@ -179,9 +180,7 @@ impl ServerHandler for SystempromptServer {
 
         if uri != &expected_uri {
             return Err(McpError::invalid_params(
-                format!(
-                    "Unknown resource URI: {uri}. Expected: {expected_uri}"
-                ),
+                format!("Unknown resource URI: {uri}. Expected: {expected_uri}"),
                 None,
             ));
         }
@@ -229,39 +228,37 @@ impl SystempromptServer {
             return Ok(McpResponseBuilder::<()>::build_error(error_message));
         }
 
-        let artifact_repo = McpArtifactRepository::new(&self.db_pool)
-            .map_err(|e| McpError::internal_error(format!("Failed to create artifact repository: {e}"), None))?;
+        let artifact_repo = McpArtifactRepository::new(&self.db_pool).map_err(|e| {
+            McpError::internal_error(format!("Failed to create artifact repository: {e}"), None)
+        })?;
 
-        let (artifact, artifact_type, title) = match CommandResultRaw::from_json(&output.stdout) {
-            Ok(cmd_result) => {
-                let artifact_type = format!("{:?}", cmd_result.artifact_type).to_lowercase();
-                let title = cmd_result.title.clone();
+        let (artifact, artifact_type, title) = if let Ok(cmd_result) =
+            CommandResultRaw::from_json(&output.stdout)
+        {
+            let artifact_type = format!("{:?}", cmd_result.artifact_type).to_lowercase();
+            let title = cmd_result.title.clone();
 
-                match cmd_result.to_cli_artifact(ctx) {
-                    Ok(artifact) => (artifact, artifact_type, title),
-                    Err(e) => {
-                        tracing::warn!(error = %e, "Failed to convert CLI result to artifact, falling back to text");
-                        let content = serde_json::to_string_pretty(&cmd_result.data)
-                            .unwrap_or_else(|_| cmd_result.data.to_string());
-                        let text_artifact = TextArtifact::new(&content, ctx);
-                        (CliArtifact::text(text_artifact), "text".to_string(), title)
-                    }
+            match cmd_result.to_cli_artifact(ctx) {
+                Ok(artifact) => (artifact, artifact_type, title),
+                Err(e) => {
+                    tracing::warn!(error = %e, "Failed to convert CLI result to artifact, falling back to text");
+                    let content = serde_json::to_string_pretty(&cmd_result.data)
+                        .unwrap_or_else(|_| cmd_result.data.to_string());
+                    let text_artifact = TextArtifact::new(&content, ctx);
+                    (CliArtifact::text(text_artifact), "text".to_string(), title)
                 }
             }
-            Err(_) => {
-                let text_artifact = TextArtifact::new(&output.stdout, ctx)
-                    .with_title("Command Output");
-                (CliArtifact::text(text_artifact), "text".to_string(), Some("Command Output".to_string()))
-            }
+        } else {
+            let text_artifact = TextArtifact::new(&output.stdout, ctx).with_title("Command Output");
+            (
+                CliArtifact::text(text_artifact),
+                "text".to_string(),
+                Some("Command Output".to_string()),
+            )
         };
 
         McpResponseBuilder::new(artifact, SERVER_NAME, ctx, execution_id)
-            .build_and_persist(
-                output.stdout.clone(),
-                &artifact_repo,
-                &artifact_type,
-                title,
-            )
+            .build_and_persist(output.stdout.clone(), &artifact_repo, &artifact_type, title)
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to build response: {e}"), None))
     }

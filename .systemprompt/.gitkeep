@@ -1,0 +1,2 @@
+# This file ensures the .systemprompt directory exists after cloning.
+# All contents are gitignored except directory structure.

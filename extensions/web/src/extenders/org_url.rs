@@ -21,7 +21,7 @@ impl Default for OrgUrlExtender {
 
 #[async_trait]
 impl TemplateDataExtender for OrgUrlExtender {
-    fn extender_id(&self) -> &str {
+    fn extender_id(&self) -> &'static str {
         "org-url"
     }
 
@@ -37,8 +37,8 @@ impl TemplateDataExtender for OrgUrlExtender {
         let config = Config::get()?;
         let org_url = &config.api_external_url;
 
-        let default_image = format!("{}/files/images/logo.png", org_url);
-        let org_logo = format!("{}/files/images/logo.svg", org_url);
+        let default_image = format!("{org_url}/files/images/logo.png");
+        let org_logo = format!("{org_url}/files/images/logo.svg");
 
         if let Some(obj) = data.as_object_mut() {
             obj.insert("ORG_URL".to_string(), json!(org_url));

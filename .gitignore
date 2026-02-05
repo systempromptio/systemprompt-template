@@ -115,8 +115,21 @@ services/profiles/*.profile.yml
 # Sensitive data directories
 backup/
 
-# .systemprompt - ignore entire directory (sensitive/generated data)
-.systemprompt/
+# .systemprompt - ignore contents but keep directory structure
+.systemprompt/*
+!.systemprompt/.gitkeep
+!.systemprompt/profiles/
+.systemprompt/profiles/*
+!.systemprompt/profiles/.gitkeep
+!.systemprompt/sessions/
+.systemprompt/sessions/*
+!.systemprompt/sessions/.gitkeep
+!.systemprompt/storage/
+.systemprompt/storage/*
+!.systemprompt/storage/.gitkeep
+!.systemprompt/docker/
+.systemprompt/docker/*
+!.systemprompt/docker/.gitkeep
 extensions/mcp/*/.env
 Screenshot*.png
 

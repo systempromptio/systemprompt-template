@@ -1,3 +1,13 @@
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::missing_panics_doc)]
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::manual_let_else)]
+#![allow(clippy::wildcard_imports)]
+#![allow(clippy::uninlined_format_args)]
+#![allow(clippy::unchecked_duration_subtraction)]
+#![allow(clippy::default_trait_access)]
+
 pub mod api;
 pub mod client;
 pub mod error;

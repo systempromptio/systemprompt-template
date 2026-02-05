@@ -143,11 +143,13 @@
     };
   }
 
-  function sendEvent(eventType, data) {
+  function sendEvent(eventType, eventData) {
     const payload = {
-      event_type: eventType,
       page_url: window.location.pathname,
-      ...data
+      data: {
+        ...eventData,
+        event_type: eventType
+      }
     };
 
     const jsonPayload = JSON.stringify(payload);
