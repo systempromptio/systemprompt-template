@@ -1,13 +1,7 @@
 set dotenv-load
 
-# CLI binary selection (release preferred, then debug)
-CLI := if path_exists("target/release/systemprompt") == "true" {
-    "target/release/systemprompt"
-} else if path_exists("target/debug/systemprompt") == "true" {
-    "target/debug/systemprompt"
-} else {
-    "echo 'ERROR: No CLI binary found. Run: just build'"
-}
+# CLI binary selection (newest binary preferred)
+CLI := `R="target/release/systemprompt"; D="target/debug/systemprompt"; if [ -f "$R" ] && [ -f "$D" ]; then if [ "$R" -nt "$D" ]; then echo "$R"; else echo "$D"; fi; elif [ -f "$R" ]; then echo "$R"; elif [ -f "$D" ]; then echo "$D"; else echo "echo 'ERROR: No CLI binary found. Run: just build'"; fi`
 
 CLI_RELEASE := "target/release/systemprompt"
 
