@@ -1,6 +1,6 @@
 ---
 title: "Platform Agent"
-description: "Configuration and governance of the developer_agent for development workflows, code review, CI/CD automation, and security scanning."
+description: "Reference architecture for a platform agent covering development workflows, code review, CI/CD automation, and security scanning. This configuration would be scoped in the Phase 1 PRD."
 author: "systemprompt.io"
 slug: "agent-developer"
 keywords: "platform agent, code review, ci/cd, security scanning, development"
@@ -21,9 +21,11 @@ related_docs:
     url: "/documentation/tool-governance"
 ---
 
-# Platform Agent
+# Platform Agent — Reference Architecture
 
-**TL;DR:** The Platform Agent (`developer_agent`) demonstrates a developer orchestration agent for engineering teams. It uses MCP for discovery and A2A for delegation. Our demo mirrors this with code review, CI/CD automation, security scanning, and architecture guidance. It connects to the `systemprompt` MCP server for platform management. In our demo, it runs on port 9026 with `admin`-scoped OAuth.
+> **Note:** This is a reference architecture document. It demonstrates how a platform agent would be configured in a Foodles deployment. The specific agent configuration, skills, MCP server access, and RBAC rules would be scoped collaboratively during the Phase 1 PRD.
+
+**TL;DR:** The Platform Agent shows a developer orchestration agent for engineering teams. It uses MCP for discovery and A2A for delegation. This reference covers code review, CI/CD automation, security scanning, and architecture guidance. It connects to the `systemprompt` MCP server for platform management with `admin`-scoped OAuth.
 
 ## Overview
 

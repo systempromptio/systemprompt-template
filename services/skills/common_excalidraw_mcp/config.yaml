@@ -1,0 +1,4 @@
+id: common_excalidraw_mcp
+name: "Excalidraw MCP"
+description: "Create and edit Excalidraw diagrams via MCP server. 23 tools for elements, layout, export, and Mermaid conversion"
+enabled: true

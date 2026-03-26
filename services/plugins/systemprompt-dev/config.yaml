@@ -1,6 +1,6 @@
 plugin:
   id: systemprompt-dev
-  name: "foodles Dev"
+  name: "systemprompt-dev"
   description: "Complete development toolkit: Rust, frontend, architecture standards, extension development guides, and 6 specialized agents"
   version: "1.0.0"
   enabled: true
@@ -8,26 +8,36 @@ plugin:
   skills:
     source: explicit
     include:
-      - dev_rust_standards
-      - dev_frontend_standards
-      - dev_web_standards
       - dev_architecture_standards
-      - dev_ext_data_providers
-      - dev_ext_rendering
       - dev_ext_infrastructure
       - dev_ext_feeds
-      - dev_ext_providers
+      - dev_ext_rendering
+      - dev_frontend_standards
       - dev_ext_hooks
+      - dev_ext_providers
+      - dev_rust_standards
+      - dev_ext_data_providers
+      - dev_web_standards
 
   agents:
     source: explicit
-    include: []
+    include:
+      - architect
+      - rust_impl
+      - frontend_impl
+      - standards
+      - quality_gate
+      - overseer
 
-  mcp_servers: []
+  mcp_servers:
+    []
+
+  hooks: {}
 
   roles:
-    - dev
-  depends: [common-skills]
+    []
+
+  scripts: []
 
   keywords:
     - rust
@@ -45,9 +55,7 @@ plugin:
     - plugins
     - hooks
     - agents
-  category: development
+  category: general
 
-  license: PROPRIETARY
   author:
-    name: "Foodles"
-    email: "help@foodles.com"
+    name: "foodles.com"

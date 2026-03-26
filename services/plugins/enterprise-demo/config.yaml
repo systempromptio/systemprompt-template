@@ -1,29 +1,35 @@
 plugin:
   id: enterprise-demo
-  name: Enterprise Demo
-  description: Enterprise governance demo showing web search and secret detection policies
-  version: 2.0.0
+  name: "enterprise-demo"
+  description: "Enterprise governance demo — web search and secret detection policies with HTTP hooks"
+  version: "2.0.0"
   enabled: true
+
   skills:
     source: explicit
     include:
-    - example_web_search
-    - use_dangerous_secret
+      - use_dangerous_secret
+      - example_web_search
+
   agents:
     source: explicit
-    include: []
+    include:
+      []
+
   mcp_servers:
-  - systemprompt
+    - systemprompt
+    - skill-manager
+
+  hooks: {}
+
   roles:
-  - admin
-  depends: []
+    []
+
+  scripts: []
+
   keywords:
-  - enterprise
-  - governance
-  - demo
-  - security
-  category: enterprise
-  license: PROPRIETARY
+    []
+  category: general
+
   author:
-    name: Foodles
-    email: help@foodles.com
+    name: "Foodles"

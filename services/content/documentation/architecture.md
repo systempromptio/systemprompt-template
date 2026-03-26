@@ -110,7 +110,7 @@ The services layer is YAML and Markdown only — no Rust code. This is where you
 
 | Directory | Contents |
 |-----------|----------|
-| `services/agents/` | Agent YAML configs (developer_agent, associate_agent, etc.) |
+| `services/agents/` | Agent YAML configs |
 | `services/skills/` | Skill definitions in Markdown |
 | `services/plugins/` | Plugin manifests bundling agents, skills, and MCP servers |
 | `services/content/` | Documentation, pages, and content in Markdown with YAML frontmatter |

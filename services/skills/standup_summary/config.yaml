@@ -1,0 +1,4 @@
+id: standup_summary
+name: "Standup Summary"
+description: "Generate a concise standup update from recent git activity and open tasks"
+enabled: true

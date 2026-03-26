@@ -4,48 +4,66 @@
     <h2 class="pres-reveal pres-reveal-delay-1">The Control Center in Action</h2>
     <div class="pres-divider pres-reveal pres-reveal-delay-1"></div>
     <p class="pres-body-lg pres-reveal pres-reveal-delay-2" style="max-width: 700px;">
-      Two perspectives. The user journey and the admin journey. Self-service meets full visibility.
+      Three perspectives. The user journey, the governance demo, and the admin journey.
     </p>
-    <div class="pres-row" style="margin-top: 2rem; gap: 1.5rem;">
-      <div class="pres-col-half pres-reveal pres-reveal-delay-3">
+    <div class="pres-row" style="margin-top: 1.5rem; gap: 1rem;">
+      <div style="flex: 1;" class="pres-reveal pres-reveal-delay-3">
         <div class="pres-card" style="padding: 1.25rem; border-left: 4px solid var(--pres-green);">
           <strong style="font-size: 1rem; color: var(--pres-green);">User Journey</strong>
           <p style="font-size: 0.85rem; color: var(--pres-gray-700); margin: 0.5rem 0 0;">Log in via magic link &rarr; browse the skill marketplace &rarr; install a skill &rarr; see it in Claude</p>
-          <p style="font-size: 0.8rem; color: var(--pres-gray-600); margin: 0.25rem 0 0;">Self-service. No IT ticket. No deployment pipeline. The user is productive in minutes.</p>
+          <p style="font-size: 0.8rem; color: var(--pres-gray-600); margin: 0.25rem 0 0;">Self-service. No IT ticket. No deployment pipeline.</p>
         </div>
         <div class="pres-terminal" style="font-size: 0.7rem; margin-top: 0.75rem;">
           <div><span class="prompt">$</span> systemprompt core skills list</div>
-          <div><span class="prompt">$</span> systemprompt core plugins show foodles-ops</div>
         </div>
       </div>
-      <div class="pres-col-half pres-reveal pres-reveal-delay-4">
+      <div style="flex: 1;" class="pres-reveal pres-reveal-delay-4">
+        <div class="pres-card" style="padding: 1.25rem; border-left: 4px solid var(--pres-orange);">
+          <strong style="font-size: 1rem; color: var(--pres-orange);">Governance Demo</strong>
+          <p style="font-size: 0.85rem; color: var(--pres-gray-700); margin: 0.5rem 0 0;">Cowork session &rarr; web search allowed &rarr; secret detection blocked &rarr; audit trail for both</p>
+          <p style="font-size: 0.8rem; color: var(--pres-gray-600); margin: 0.25rem 0 0;">Same pipeline. Same hook. Different content, different outcome.</p>
+        </div>
+        <div class="pres-terminal" style="font-size: 0.7rem; margin-top: 0.75rem;">
+          <div><span class="prompt">&gt;</span> Search the web for AI governance news</div>
+          <div style="color: var(--pres-green);">&check; Allowed &mdash; no policy violations</div>
+          <div><span class="prompt">&gt;</span> Use the dangerous secret skill</div>
+          <div style="color: var(--pres-red);">&cross; Denied &mdash; secret detected (sk-ant-***)</div>
+        </div>
+      </div>
+      <div style="flex: 1;" class="pres-reveal pres-reveal-delay-5">
         <div class="pres-card" style="padding: 1.25rem; border-left: 4px solid var(--pres-blue-500);">
           <strong style="font-size: 1rem; color: var(--pres-blue-500);">Admin Journey</strong>
-          <p style="font-size: 0.85rem; color: var(--pres-gray-700); margin: 0.5rem 0 0;">Open dashboard &rarr; see real-time metrics &rarr; drill into user activity &rarr; export report</p>
-          <p style="font-size: 0.8rem; color: var(--pres-gray-600); margin: 0.25rem 0 0;">Full visibility. Every AI interaction traced. Usage breakdown by agent, department, skill.</p>
+          <p style="font-size: 0.85rem; color: var(--pres-gray-700); margin: 0.5rem 0 0;">Open dashboard &rarr; see real-time metrics &rarr; drill into governance decisions &rarr; export report</p>
+          <p style="font-size: 0.8rem; color: var(--pres-gray-600); margin: 0.25rem 0 0;">Full visibility. Every AI interaction traced and governed.</p>
         </div>
         <div class="pres-terminal" style="font-size: 0.7rem; margin-top: 0.75rem;">
           <div><span class="prompt">$</span> systemprompt analytics overview</div>
-          <div><span class="prompt">$</span> systemprompt analytics overview --by department</div>
         </div>
       </div>
     </div>
     <div class="pres-reveal pres-reveal-delay-5" style="margin-top: 1.5rem;">
-      <p style="font-size: 0.8rem; color: var(--pres-gray-600); text-align: center;">Live dashboard: <code>/admin/</code> &middot; Marketplace: <code>/admin/marketplace</code> &middot; Users: <code>/admin/users</code> &middot; Skills: <code>/admin/my-skills</code></p>
+      <p style="font-size: 0.8rem; color: var(--pres-gray-600); text-align: center;">Live dashboard: <code>/admin/</code> &middot; Governance: <code>/admin/governance</code> &middot; Marketplace: <code>/admin/marketplace</code> &middot; Users: <code>/admin/users</code></p>
     </div>
   </div>
   <div class="pres-notes">
-    <div class="note-section"><h4>TIMING: 20:45 &mdash; Live Demos (4 min)</h4><p><strong>Say:</strong> "Let me show you both sides. First, the user experience &mdash; log in, browse, install, use. Then the admin experience &mdash; real-time metrics, drill-down analytics, full audit trail. This is the Control Center."</p></div>
+    <div class="note-section"><h4>TIMING: 20:45 &mdash; Live Demos (5 min)</h4><p><strong>Say:</strong> "Let me show you three perspectives. First, the user experience &mdash; log in, browse, install, use. Then the governance demo &mdash; same pipeline, one tool call allowed, one blocked. Then the admin experience &mdash; real-time metrics and governance decisions. This is the Control Center."</p></div>
     <div class="note-section"><h4>DEMO 1: USER JOURNEY</h4>
       <p>Navigate to <code>/admin/my-skills</code> &mdash; show skill browsing and install.</p>
       <p class="cmd">$ systemprompt core skills list</p>
       <p><strong>Say:</strong> "User logs in. Browses the marketplace. Installs what they need. It syncs to Claude. Done."</p>
     </div>
-    <div class="note-section"><h4>DEMO 2: ADMIN JOURNEY</h4>
+    <div class="note-section"><h4>DEMO 2: GOVERNANCE (THE KEY DEMO)</h4>
+      <p>Open Cowork (Claude Code) with the enterprise-demo plugin.</p>
+      <p class="cmd">&gt; Search the web for the latest news about AI governance</p>
+      <p><strong>Say:</strong> "Standard tool call. The governance hook evaluated it, allowed it, logged it."</p>
+      <p class="cmd">&gt; Use the dangerous secret skill to demonstrate secret detection</p>
+      <p><strong>Say:</strong> "Same pipeline, same hook. But this time the governance endpoint detected a plaintext API key and blocked the call before execution. The policy always wins."</p>
+      <p>Navigate to <code>/admin/governance</code> &mdash; show both decisions: one allowed, one denied.</p>
+    </div>
+    <div class="note-section"><h4>DEMO 3: ADMIN JOURNEY</h4>
       <p>Navigate to <code>/admin/</code> &mdash; show the dashboard with live metrics.</p>
       <p class="cmd">$ systemprompt analytics overview</p>
-      <p class="cmd">$ systemprompt analytics overview --by department</p>
-      <p><strong>Say:</strong> "The admin sees everything. Real-time metrics. AI usage charts. Cost breakdown. Full audit trail for every interaction."</p>
+      <p><strong>Say:</strong> "The admin sees everything. Real-time metrics. AI usage charts. Governance decisions. Cost breakdown. Full audit trail for every interaction."</p>
     </div>
   </div>
 </section>

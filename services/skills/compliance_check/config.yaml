@@ -1,0 +1,4 @@
+id: compliance_check
+name: "Compliance Check"
+description: "Verify code changes meet regulatory and organizational compliance requirements"
+enabled: true

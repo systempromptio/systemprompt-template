@@ -1,77 +1,93 @@
 ---
-title: "Demo: Refused Path — User Agent Denied Admin MCP"
-description: "Live CLI demo showing a user-scoped agent being denied access to the admin MCP server by the governance layer."
+title: "Demo: Blocked Skill — Secret Detection Denies Tool Call"
+description: "Live demo showing the use-dangerous-secret skill being blocked by the PreToolUse governance hook when a plaintext API key is detected in the tool input."
 author: "systemprompt.io"
 slug: "demo-refused-path"
-keywords: "demo, refused path, denied, user, mcp, governance, rbac"
+keywords: "demo, refused path, denied, secret detection, governance, hook"
 kind: "guide"
 public: true
-tags: ["demo", "governance", "mcp", "denied", "rbac"]
+tags: ["demo", "governance", "denied", "hooks", "secrets"]
 published_at: "2026-03-20"
-updated_at: "2026-03-20"
+updated_at: "2026-03-26"
 after_reading_this:
-  - "Run the refused path demo end-to-end"
+  - "Run the blocked path demo end-to-end using Cowork"
   - "Understand what governance checks fail and why"
-  - "Read the audit trail proving the request was denied"
+  - "Read the audit trail proving the tool call was denied"
 related_docs:
-  - title: "Happy Path"
+  - title: "Allowed Path"
     url: "/documentation/demo-happy-path"
   - title: "Detailed Breakdown"
     url: "/documentation/demo-breakdown"
-  - title: "Access Control"
-    url: "/documentation/access-control"
   - title: "Tool Governance"
     url: "/documentation/tool-governance"
+  - title: "Secrets"
+    url: "/documentation/secrets"
 ---
 
 ## Overview
 
-This demo sends the **same request** to `associate_agent`, which has **user** OAuth scope and access only to the **no** MCP server (not systemprompt). The governance layer blocks access to the admin CLI tool. The denial is fully logged.
+This demo uses Cowork (Claude Code) with the **enterprise-demo** plugin installed. The `use-dangerous-secret` skill instructs Claude to write a file containing a plaintext API key (`sk-ant-demo-FAKE12345678901234567890`). The PreToolUse governance hook detects the secret pattern and **blocks the tool call before it executes**. The denial is fully logged.
 
-**Cost:** This makes one real AI inference call (the model still processes the message, but the tool call is blocked).
+**Cost:** This makes one real AI inference call (the model still processes the message, but the tool call is blocked by the governance hook).
 
 ---
 
 ## Prerequisites
 
 ```bash
+# Platform services running
 systemprompt infra services status
+
+# Enterprise-demo plugin installed in Claude Code
+claude plugin list
 ```
 
-Ensure the API and `associate_agent` are running.
+Ensure the platform is healthy and the enterprise-demo plugin appears in Claude Code's plugin list.
 
 ---
 
-## Step 1: Send the message
+## Step 1: Invoke the skill in Cowork
 
-```bash
-systemprompt admin agents message associate_agent \
-  -m "List all agents running on this platform using the CLI tools" \
-  --blocking --timeout 60
-```
+Open Claude Code with the enterprise-demo plugin and ask:
+
+> "Use the dangerous secret skill to demonstrate secret detection"
+
+This triggers the `use-dangerous-secret` skill, which instructs Claude to write a file containing the test API key `sk-ant-demo-FAKE12345678901234567890`.
 
 ### What happens in the system
 
-1. **Authentication** — The request is authenticated via OAuth2. `associate_agent` has scope `user`.
-2. **RBAC check** — The ACL table is consulted. User scope has access to `associate_agent`. **Allowed** (the agent itself is accessible).
-3. **Agent loaded** — `associate_agent` is initialized with its system prompt, skills (General Assistance only), and MCP server mapping (`no` only).
-4. **AI inference** — The message is sent to the AI model. The model sees the available MCP tools — **only no tools are available**, not systemprompt.
-5. **Tool governance** — The agent cannot see the `systemprompt` MCP server at all. It is not in the agent's `mcpServers` list. The governance layer enforces this at the mapping level — the tool simply does not exist for this agent.
-6. **Response** — The agent either:
-   - Explains it doesn't have access to CLI tools and cannot list agents
-   - Attempts to answer from its own knowledge (without tool use)
-   - Uses no tools (which don't help with listing agents)
-7. **Audit** — Full trace recorded, showing no MCP tool call for `systemprompt` (because the mapping prevented it)
+1. **Skill loaded** — Claude Code loads the `use-dangerous-secret` skill from the enterprise-demo plugin
+2. **Tool selection** — Claude decides to call a tool (e.g., Write) with the secret value in the input
+3. **PreToolUse hook fires** — The HTTP hook sends the tool name and input to the governance endpoint (`/api/public/hooks/govern`)
+4. **Governance evaluation** — The endpoint runs the secret detection rule first:
+   - Secret detection — scans tool input for API keys, tokens, passwords. **Match found: `sk-ant-` prefix pattern.**
+   - Evaluation short-circuits — remaining rules are not evaluated
+5. **Hook returns deny** — `permissionDecision: deny` with reason: "Secret detected in tool input" sent back to Claude Code
+6. **Tool call blocked** — Claude Code prevents the tool from executing and displays the denial reason
+7. **Governance decision logged** — The deny decision, policy (`secret_injection`), and redacted snippet are recorded in the governance audit trail
 
 ### What to look for in the output
 
-- The agent should **not** return a real list of agents
-- The response should indicate it cannot access the CLI tools or does not have the right permissions
-- No `systemprompt` MCP tool call appears in the trace
+- Claude should indicate the tool call was **blocked** by the governance hook
+- The denial reason should reference secret detection
+- No file should have been written — the tool never executed
 
 ---
 
-## Step 2: View the audit trail
+## Step 2: View the governance decision
+
+Navigate to `/admin/governance` in the browser. The most recent entry should show:
+
+| Field | Value |
+|-------|-------|
+| **Tool** | Write (or whichever tool Claude attempted) |
+| **Decision** | deny |
+| **Policy** | secret_injection |
+| **Reason** | Secret detected in tool input — `sk-ant-` pattern matched |
+
+---
+
+## Step 3: View the audit trail
 
 ```bash
 # List recent requests — find the request ID
@@ -83,40 +99,31 @@ systemprompt infra logs audit <request-id> --full
 
 ### What to look for
 
-- **Identity layer** — Same user, but agent is `associate_agent`
-- **Agent layer** — `associate_agent`, user scope, no MCP only
-- **Permissions layer** — Agent is accessible, but `systemprompt` MCP is NOT in the tool mapping
-- **Tool layer** — Either empty (no tool calls) or shows only `no` calls (which don't help)
-- **AI Request layer** — Tokens in/out, cost. The model still ran, but couldn't use the admin tools
+- **Identity layer** — Your user, session ID
+- **Governance layer** — PreToolUse hook evaluated, decision: **deny**, policy: secret_injection
+- **Tool layer** — Tool call attempted but blocked before execution
+- **Evaluated rules** — Shows which rule triggered the denial and the redacted secret snippet
 
-### Compare with the happy path
+### Compare with the allowed path
 
 Run both audit trails side by side:
 
 ```bash
-# Happy path (developer_agent) — should show systemprompt tool call
-systemprompt infra logs audit <happy-path-id> --full
+# Allowed path (web search) — should show allow decision
+systemprompt infra logs audit <allowed-path-id> --full
 
-# Refused path (associate_agent) — should show NO systemprompt tool call
-systemprompt infra logs audit <refused-path-id> --full
+# Blocked path (secret) — should show deny decision
+systemprompt infra logs audit <blocked-path-id> --full
 ```
 
-The difference is the governance layer. Same question, different agent, different permissions, different outcome.
-
----
-
-## Step 3: View the trace
-
-```bash
-systemprompt infra logs trace list --agent associate_agent --limit 3
-```
-
-The trace shows the agent received the message but did not make a `systemprompt` MCP tool call. The mapping prevented it.
+The difference is the governance evaluation. Same pipeline, same hook, different content, different outcome.
 
 ---
 
 ## Why this matters
 
-This is the core governance proposition: **access is explicitly declared, not defaulted.** `associate_agent` is a user-scope agent for frontline employees. It should not have access to the admin CLI. The governance layer enforces this without the agent having to know about it — the tool simply does not exist in its context.
+This is the core governance proposition: **policies evaluate tool call content in real time.** The agent was explicitly instructed to use the secret — the skill contains the API key in its instructions. But the governance hook intercepted the tool call, inspected the input, detected the secret pattern, and blocked execution before any data was exposed.
 
-If someone tries to reconfigure an agent to add unauthorized MCP servers, the change goes through the same governed pipeline: RBAC check, audit log, permission validation. The platform prevents privilege escalation by design.
+This demonstrates that enterprise governance can enforce content-based policies across all tool calls, regardless of what the agent or user intended. The governance endpoint evaluates 37 secret patterns covering AWS keys, GitHub tokens, Stripe keys, database connection strings, private keys, JWT tokens, and more.
+
+If a user or skill attempts to pass sensitive data through a tool call, the governance layer catches it — even when the agent is explicitly told to do so. The policy always wins.

@@ -120,7 +120,7 @@ If any check fails, the tool call is rejected before execution.
 Each agent declares which MCP servers it connects to in its YAML configuration:
 
 ```yaml
-# developer_agent.yaml
+# agent configuration example
 metadata:
   mcpServers:
   - systemprompt
@@ -128,25 +128,30 @@ metadata:
 
 This declaration limits the agent's tool access:
 
-| Agent | MCP Servers | Tool Access |
-|-------|-------------|-------------|
-| `associate_agent` | None | No external tool access |
-| `developer_agent` | `systemprompt` | Platform management tools |
+| Agent Scope | MCP Servers | Tool Access |
+|-------------|-------------|-------------|
+| Admin-scoped agents | `systemprompt`, `skill-manager` | Platform management and skill tools |
+| User-scoped agents | `skill-manager` only | User-level skill management |
+| No MCP agents | None | No external tool access |
 
 An agent without MCP servers cannot call any tools. This is a secure default -- tools are explicitly added, not inherited.
 
+In addition to agent-level MCP mapping, the enterprise-demo plugin uses **HTTP governance hooks** to evaluate tool call content at runtime. The PreToolUse hook inspects every tool input for policy violations (secret detection, scope restrictions, blocklist checks, rate limits) and can deny a tool call even when the agent has MCP access.
+
 ### Plugin-Level Tool Control
 
-The Enterprise Agent Governance plugin declares shared MCP servers:
+The enterprise-demo plugin bundles MCP servers and governance hooks:
 
 ```yaml
 # enterprise-demo/config.yaml
-plugin:
-  mcp_servers:
+skills:
+  - example_web_search
+  - use_dangerous_secret
+mcp_servers:
   - systemprompt
 ```
 
-MCP servers listed in the plugin are available to agents within that plugin -- but only if the agent also declares the server in its own configuration. The plugin provides the server; the agent opts in to using it.
+MCP servers listed in the plugin are available to agents within that plugin -- but only if the agent also declares the server in its own configuration. The plugin provides the server; the agent opts in to using it. The governance hooks apply to all tool calls regardless of MCP server mapping.
 
 ## Tool Execution Logging
 
@@ -159,7 +164,7 @@ Every tool call generates a log entry containing:
 | Timestamp | UTC time of the call | `2026-03-19T14:32:01.234Z` |
 | Tool name | The MCP tool that was called | `list_agents` |
 | MCP server | Which server handled the call | `systemprompt` |
-| Agent | Which agent initiated the call | `developer_agent` |
+| Agent | Which agent initiated the call | `platform_agent` |
 | User | The authenticated user context | `dev-user-42` |
 | Parameters | Input parameters (sanitized) | `{limit: 10}` |
 | Status | Success or failure | `success` |
@@ -180,10 +185,10 @@ systemprompt infra logs tools list --status error
 systemprompt infra logs tools list --server systemprompt
 
 # Filter by agent
-systemprompt infra logs tools list --agent developer_agent
+systemprompt infra logs tools list --agent <agent-name>
 
 # Combine filters
-systemprompt infra logs tools list --agent developer_agent --status error --since 1h
+systemprompt infra logs tools list --agent <agent-name> --status error --since 1h
 
 # View detailed log for a specific request
 systemprompt infra logs audit <request-id> --full
@@ -204,7 +209,7 @@ Tool execution logs are retained according to the platform's log retention polic
 
 ```bash
 # List all tools available to a specific agent
-systemprompt admin agents tools developer_agent --detailed
+systemprompt admin agents tools <agent-name> --detailed
 
 # List all tools across all agents
 systemprompt admin agents tools --all
@@ -222,10 +227,13 @@ Layer 1: Plugin declares MCP servers
   └── enterprise-demo plugin includes "systemprompt" server
 
 Layer 2: Agent declares MCP server connections
-  └── developer_agent includes "systemprompt" in mcpServers
+  └── Admin-scoped agent includes "systemprompt" in mcpServers
 
 Layer 3: OAuth scoping filters available tools
-  └── developer_agent's admin scope grants access to admin-scoped tools
+  └── Admin scope grants access to admin-scoped tools
+
+Layer 4: PreToolUse governance hook (HTTP)
+  └── Evaluates tool input content (secrets, blocklist, rate limits)
 ```
 
 All three layers must align for a tool to be accessible to an agent. This defense-in-depth approach ensures that:
@@ -233,6 +241,7 @@ All three layers must align for a tool to be accessible to an agent. This defens
 - A plugin cannot grant tool access to agents that do not opt in
 - An agent cannot access tools from MCP servers not in its plugin
 - OAuth scoping provides the final authorization check
+- The PreToolUse governance hook provides content-based policy enforcement as the last line of defence
 
 ### Modifying Agent-Tool Access
 
@@ -245,7 +254,7 @@ To change which tools an agent can access:
 Example: To give an agent access to a new MCP server:
 
 ```yaml
-# 1. Add to the agent's config (services/agents/associate_agent.yaml)
+# 1. Add to the agent's config (services/agents/<agent-name>.yaml)
 metadata:
   mcpServers:
   - product-search
@@ -376,8 +385,7 @@ This shows:
 systemprompt analytics tools stats --compare-agents
 
 # Tool usage by agent
-systemprompt analytics tools stats --agent developer_agent
-systemprompt analytics tools stats --agent developer_agent
+systemprompt analytics tools stats --agent <agent-name>
 ```
 
 ### Usage Patterns to Watch

@@ -1,58 +1,42 @@
 plugin:
   id: sales-skills
-  name: Sales Skills
-  description: CRM reports, pipeline health monitoring, diagnostics, and email delivery for the sales team
-  version: 1.1.0
+  name: "sales-skills"
+  description: "CRM reports, pipeline health monitoring, diagnostics, and email delivery for the sales team"
+  version: "1.1.0"
   enabled: true
-  depends:
-  - common-skills
+
   skills:
     source: explicit
     include:
-    - sales_crm_report
-    - sales_crm_debug
-    - sales_crm_send_emails
-    - sales_crm_health_monitor
+      - sales_crm_health_monitor
+      - sales_crm_send_emails
+      - sales_crm_report
+      - sales_crm_debug
+
   agents:
     source: explicit
-    include: []
-  mcp_servers: []
-  variables:
-  - name: ODOO_URL
-    description: Odoo instance URL
-    required: true
-    secret: false
-    example: https://miempresa.odoo.com
-  - name: ODOO_DB
-    description: Odoo database name
-    required: true
-    secret: false
-    example: master
-  - name: ODOO_KEY
-    description: Odoo API key
-    required: true
-    secret: true
-  - name: ODOO_USER
-    description: Odoo username (email)
-    required: true
-    secret: false
-    example: user@company.com
-  - name: EMAIL_SMTP_PASSWORD
-    description: SMTP password for email delivery (Gmail app password)
-    required: false
-    secret: true
+    include:
+      - sales_analyst
+
+  mcp_servers:
+    []
+
+  hooks: {}
+
   roles:
-  - sales
+    []
+
+  scripts: []
+
   keywords:
-  - sales
-  - crm
-  - pipeline
-  - reports
-  - diagnostics
-  - health
-  - email
-  category: sales
-  license: PROPRIETARY
+    - sales
+    - crm
+    - pipeline
+    - reports
+    - diagnostics
+    - health
+    - email
+  category: general
+
   author:
-    name: Foodles
-    email: help@foodles.com
+    name: "Foodles"

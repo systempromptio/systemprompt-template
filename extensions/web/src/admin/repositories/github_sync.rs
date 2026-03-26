@@ -491,6 +491,135 @@ pub(crate) fn import_or_update_plugin(services_path: &Path, bundle: &PluginBundl
     Ok(())
 }
 
+/// Sync a marketplace from locally-available plugins.
+/// Reads `storage/files/plugins/.claude-plugin/marketplace.json`, imports each plugin
+/// into `services/plugins/`, and writes the associations to the database.
+/// Always runs on every startup to ensure the marketplace is never empty.
+pub async fn sync_marketplace_from_local(
+    pool: &Arc<PgPool>,
+    marketplace_id: &str,
+) -> Result<SyncResult> {
+    let start = std::time::Instant::now();
+
+    let marketplace_json_path =
+        PathBuf::from("storage/files/plugins/.claude-plugin/marketplace.json");
+    if !marketplace_json_path.exists() {
+        anyhow::bail!("Local marketplace.json not found");
+    }
+
+    let services_path = ProfileBootstrap::get()
+        .map(|p| PathBuf::from(&p.paths.services))
+        .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
+
+    let content = std::fs::read_to_string(&marketplace_json_path)
+        .map_err(|e| anyhow::anyhow!("Failed to read local marketplace.json: {e}"))?;
+    let marketplace: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| anyhow::anyhow!("Failed to parse local marketplace.json: {e}"))?;
+
+    let plugins = marketplace
+        .get("plugins")
+        .and_then(|v| v.as_array())
+        .ok_or_else(|| anyhow::anyhow!("Local marketplace.json missing 'plugins' array"))?;
+
+    let mut plugin_ids = Vec::new();
+    let mut success_count = 0u64;
+    let mut error_count = 0u64;
+
+    for plugin_entry in plugins {
+        let Some(source) = plugin_entry.get("source").and_then(|v| v.as_str()) else {
+            error_count += 1;
+            continue;
+        };
+
+        let source_path = source.strip_prefix("./").unwrap_or(source);
+        let plugin_dir = PathBuf::from(source_path);
+
+        if !plugin_dir.exists() {
+            tracing::debug!(
+                path = %plugin_dir.display(),
+                "Local plugin directory not found, skipping"
+            );
+            continue;
+        }
+
+        match build_bundle_from_directory(&plugin_dir) {
+            Ok(bundle) => {
+                let plugin_id = bundle.id.clone();
+                match import_or_update_plugin(&services_path, &bundle) {
+                    Ok(()) => {
+                        plugin_ids.push(plugin_id.clone());
+                        success_count += 1;
+                        tracing::info!(plugin_id = %plugin_id, "Plugin synced from local");
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            plugin_id = %plugin_id,
+                            error = %e,
+                            "Failed to import local plugin"
+                        );
+                        error_count += 1;
+                    }
+                }
+            }
+            Err(e) => {
+                tracing::warn!(
+                    source = %source,
+                    error = %e,
+                    "Failed to build bundle from local directory"
+                );
+                error_count += 1;
+            }
+        }
+    }
+
+    // Update org marketplace associations
+    if !plugin_ids.is_empty() {
+        if let Err(e) =
+            super::org_marketplaces::set_marketplace_plugins(pool, marketplace_id, &plugin_ids)
+                .await
+        {
+            tracing::error!(error = %e, "Failed to update marketplace plugin associations");
+            error_count += 1;
+        }
+
+        if let Err(e) = mark_all_users_dirty(pool).await {
+            tracing::warn!(error = %e, "Failed to mark users dirty after local sync");
+        }
+    }
+
+    let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+
+    let _ = super::org_marketplaces::insert_sync_log(
+        pool,
+        marketplace_id,
+        "sync",
+        "success",
+        None,
+        i32::try_from(success_count).unwrap_or(i32::MAX),
+        i32::try_from(error_count).unwrap_or(i32::MAX),
+        None,
+        "local",
+        Some(i64::try_from(duration_ms).unwrap_or(i64::MAX)),
+    )
+    .await;
+
+    tracing::info!(
+        marketplace_id,
+        plugins = success_count,
+        errors = error_count,
+        duration_ms,
+        "Local marketplace sync completed"
+    );
+
+    Ok(SyncResult {
+        commit_hash: String::new(),
+        plugins_synced: success_count,
+        errors: error_count,
+        changed: true,
+        duration_ms,
+    })
+}
+
 pub(crate) async fn mark_all_users_dirty(pool: &Arc<PgPool>) -> Result<(), sqlx::Error> {
     sqlx::query("UPDATE marketplace_sync_status SET dirty = true, last_changed_at = NOW()")
         .execute(pool.as_ref())

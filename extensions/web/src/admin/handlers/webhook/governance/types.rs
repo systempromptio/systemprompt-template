@@ -1,15 +1,12 @@
+use std::sync::Arc;
+
 use serde::Serialize;
+use sqlx::PgPool;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct GovernanceResponse {
     #[serde(rename = "hookSpecificOutput")]
     pub hook_specific_output: HookSpecificOutput,
-    pub decision: &'static str,
-    pub reason: String,
-    pub policy: String,
-    pub agent_scope: String,
-    pub tool_name: String,
-    pub evaluated_rules: Vec<EvaluatedRule>,
 }
 
 #[derive(Debug, Serialize)]
@@ -58,4 +55,23 @@ pub(super) struct AuditRecord {
     pub reason: String,
     pub evaluated_rules: serde_json::Value, // JSON: protocol boundary — stored as JSONB
     pub plugin_id: Option<String>,
+}
+
+pub(super) struct AuthDenialParams<'a> {
+    pub pool: &'a Arc<PgPool>,
+    pub session_id: &'a str,
+    pub tool_name: &'a str,
+    pub agent_id: Option<&'a str>,
+    pub plugin_id: Option<&'a str>,
+}
+
+pub(super) struct AuditParams<'a> {
+    pub pool: &'a Arc<PgPool>,
+    pub user_id: &'a str,
+    pub session_id: &'a str,
+    pub tool_name: &'a str,
+    pub agent_id: Option<&'a str>,
+    pub agent_scope: &'a str,
+    pub evaluation: &'a RuleEvaluation,
+    pub plugin_id: Option<&'a str>,
 }

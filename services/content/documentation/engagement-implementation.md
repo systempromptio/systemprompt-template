@@ -99,6 +99,22 @@ The Control Center is built on the platform's extension architecture, but it is 
 
 ---
 
+## PRD Scope
+
+The PRD defines the complete feature set for the Foodles Control Center. The platform's full capability set is available for scoping based on Foodles's priorities. Areas that will be collaboratively defined include:
+
+- **Skills and skill governance** — which skills are available, how they are created, approved, and distributed across departments
+- **Plugin and marketplace management** — how plugins are curated, approved, and published within the organisation
+- **Governance tools** — whitelisting and blacklisting rules for tools, skills, MCP servers, and content patterns
+- **Achievement and gamification analysis** — engagement tracking, achievement definitions aligned to organisational goals, and leaderboard configuration
+- **User analytics with internal data mapping** — how platform analytics integrate with Foodles's existing data sources and internal reporting structures
+- **Full dashboard capabilities** — which metrics, charts, drill-downs, and export options are included in the Foodles Control Center
+- **MCP server integration and controls** — which MCP servers are deployed, how they are governed, and how OAuth scopes are configured per role and department
+
+The PRD is a collaborative document. Both sides contribute to scoping decisions, ensuring the delivered Control Center matches Foodles's operational requirements.
+
+---
+
 ## What Happens After Phase 1
 
 | Outcome | What Happens Next |

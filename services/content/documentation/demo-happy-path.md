@@ -1,78 +1,100 @@
 ---
-title: "Demo: Happy Path — Admin Agent with MCP Access"
-description: "Live CLI demo showing an admin-scoped agent successfully using the systemprompt MCP server through the governed pipeline."
+title: "Demo: Allowed Skill — Web Search Passes Governance"
+description: "Live demo showing the example-web-search skill passing through the PreToolUse governance hook. The tool call is evaluated, allowed, and tracked."
 author: "systemprompt.io"
 slug: "demo-happy-path"
-keywords: "demo, happy path, admin, mcp, governance, agent"
+keywords: "demo, happy path, governance, allowed, web search, hook"
 kind: "guide"
 public: true
-tags: ["demo", "governance", "mcp", "admin"]
+tags: ["demo", "governance", "allowed", "hooks"]
 published_at: "2026-03-20"
-updated_at: "2026-03-20"
+updated_at: "2026-03-26"
 after_reading_this:
-  - "Run the happy path demo end-to-end"
+  - "Run the allowed path demo end-to-end using Cowork"
   - "Understand what governance checks pass and why"
-  - "Read the audit trail proving the request was authorized"
+  - "Read the audit trail proving the tool call was allowed"
 related_docs:
-  - title: "Refused Path"
+  - title: "Blocked Path"
     url: "/documentation/demo-refused-path"
   - title: "Detailed Breakdown"
     url: "/documentation/demo-breakdown"
-  - title: "Access Control"
-    url: "/documentation/access-control"
-  - title: "MCP Servers"
-    url: "/documentation/mcp-servers"
+  - title: "Tool Governance"
+    url: "/documentation/tool-governance"
+  - title: "Hooks"
+    url: "/documentation/hooks"
 ---
 
 ## Overview
 
-This demo sends a real message to `developer_agent`, which has **admin** OAuth scope and access to the **systemprompt** MCP server (the CLI executor tool). The agent uses the MCP tool to answer the question. The full request is governed, traced, and logged.
+This demo uses Cowork (Claude Code) with the **enterprise-demo** plugin installed. The `example-web-search` skill instructs Claude to use the WebSearch tool. The PreToolUse governance hook evaluates the tool input, finds no policy violations, and allows the call. The full request is governed, traced, and logged.
 
-**Cost:** This makes one real AI inference call.
+**Cost:** This makes one real AI inference call plus one web search.
 
 ---
 
 ## Prerequisites
 
 ```bash
+# Platform services running
 systemprompt infra services status
+
+# Enterprise-demo plugin installed in Claude Code
+claude plugin list
 ```
 
-Ensure the API and `developer_agent` are running.
+Ensure the platform is healthy and the enterprise-demo plugin appears in Claude Code's plugin list.
 
 ---
 
-## Step 1: Send the message
+## Step 1: Invoke the skill in Cowork
 
-```bash
-systemprompt admin agents message developer_agent \
-  -m "List all agents running on this platform" \
-  --blocking --timeout 60
-```
+Open Claude Code with the enterprise-demo plugin and ask:
+
+> "Search the web for the latest news about AI governance"
+
+This triggers the `example-web-search` skill, which instructs Claude to use the WebSearch tool.
 
 ### What happens in the system
 
-1. **Authentication** — The request is authenticated via OAuth2. `developer_agent` has scope `admin`.
-2. **RBAC check** — The ACL table is consulted. Admin scope has access to `developer_agent` and the `enterprise-demo` plugin. **Allowed.**
-3. **Agent loaded** — `developer_agent` is initialized with its system prompt, skills (General Assistance, Rust Standards, Architecture Standards), and MCP server mapping (`systemprompt`).
-4. **AI inference** — The message is sent to the AI model (Claude). The model sees the available MCP tools and decides to call the `systemprompt` CLI tool.
-5. **MCP tool governance** — Before the tool call executes:
-   - OAuth2 token validated for the `systemprompt` MCP server
-   - Agent-tool mapping checked: `developer_agent` is mapped to `systemprompt`. **Allowed.**
-   - Pre-hook fires (authenticate, rate-limit, log)
-6. **Tool execution** — The `systemprompt` MCP server executes the CLI command (e.g., `admin agents list`)
-7. **Post-hook** — Result logged, duration recorded
-8. **Response** — The AI model formats the tool output and returns it to the user
-9. **Audit** — Full 5-layer trace recorded: Identity, Agent Context, Permissions, Tool Execution, AI Request
+1. **Skill loaded** — Claude Code loads the `example-web-search` skill from the enterprise-demo plugin
+2. **Tool selection** — Claude decides to call the WebSearch tool based on the skill instruction
+3. **PreToolUse hook fires** — The HTTP hook sends the tool name and input to the governance endpoint (`/api/public/hooks/govern`)
+4. **Governance evaluation** — The endpoint runs four rules in sequence:
+   - Secret detection — scans tool input for API keys, tokens, passwords. **No match.**
+   - Scope check — validates agent scope against tool restrictions. **Allowed.**
+   - Tool blocklist — checks for destructive operations. **Not blocked.**
+   - Rate limiting — checks call frequency. **Within limits.**
+5. **Hook returns allow** — `permissionDecision: allow` sent back to Claude Code
+6. **Tool executes** — WebSearch runs and returns results
+7. **PostToolUse hook fires** — Async tracking hook logs the event to the platform
+8. **Response** — Claude formats the search results and presents them to the user
 
 ### What to look for in the output
 
-- The agent should return a list of agents (associate_agent, developer_agent, systemprompt_admin)
-- The response should indicate it used a tool to get this information (not just guessing)
+- Claude should return web search results about AI governance
+- The response should indicate it used the WebSearch tool (not just answering from memory)
 
 ---
 
-## Step 2: View the audit trail
+## Step 2: View the governance decision
+
+Navigate to `/admin/governance` in the browser, or use the CLI:
+
+```bash
+# View recent governance decisions
+systemprompt infra logs view --level info --since 10m
+```
+
+### What to look for
+
+- **Tool name** — `WebSearch`
+- **Decision** — `allow`
+- **Policy** — No policy triggered (all rules passed)
+- **Timestamp** — Matches when you ran the demo
+
+---
+
+## Step 3: View the audit trail
 
 ```bash
 # List recent requests — find the request ID
@@ -84,29 +106,23 @@ systemprompt infra logs audit <request-id> --full
 
 ### What to look for
 
-- **Identity layer** — Your user, admin role, session ID
-- **Agent layer** — `developer_agent`, `enterprise-demo` plugin, model name
-- **Permissions layer** — ACL check: `agent:developer_agent` + `role:admin` → **allow**
-- **Tool layer** — `systemprompt` MCP server called, tool executed, duration, status: OK
-- **AI Request layer** — Tokens in/out, cost, latency, status: completed
-
----
-
-## Step 3: View the trace
-
-```bash
-systemprompt infra logs trace list --agent developer_agent --limit 3
-systemprompt infra logs trace show <trace-id> --all
-```
-
-The trace shows every step the agent took: receiving the message, deciding to call the MCP tool, the tool call itself, and formatting the response.
+- **Identity layer** — Your user, session ID
+- **Governance layer** — PreToolUse hook evaluated, decision: allow
+- **Tool layer** — WebSearch called, status: OK, duration recorded
+- **Tracking layer** — PostToolUse event logged with tool name, duration, and result status
 
 ---
 
 ## Step 4: View analytics
 
 ```bash
-systemprompt analytics agents show developer_agent
+systemprompt analytics overview --since 1h
 ```
 
-Shows: total requests, success rate, average latency, token usage, cost. The request from Step 1 should appear in these stats.
+Shows: total events, tool calls, sessions, and costs. The web search from Step 1 should appear in these stats.
+
+---
+
+## Next
+
+Run the [blocked path demo](/documentation/demo-refused-path) to see the same governance pipeline deny a tool call.

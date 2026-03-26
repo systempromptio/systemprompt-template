@@ -150,8 +150,8 @@ The dashboard provides enterprise-scale visibility designed for large organizati
 
 The platform tracks token consumption for each agent independently:
 
-- **developer_agent** — Token usage from internal developer workflows (code assistance, documentation, API integration)
-- **associate_agent** — Token usage from domain-specific interactions (scheduling, task management)
+- **Platform agents** — Token usage from internal developer workflows (code assistance, documentation, API integration)
+- **Domain agents** — Token usage from department-specific interactions (revenue management, operations, scheduling)
 
 Each agent's consumption is broken down by input tokens, output tokens, and total cost, allowing precise attribution of AI spend to business functions.
 
@@ -161,7 +161,7 @@ For enterprise chargeback, the dashboard aggregates costs at the department leve
 
 ### Model Usage Distribution
 
-The model usage chart (described above) extends to show distribution across agents. Track which models each agent uses most frequently — for example, whether `associate_agent` is consuming more expensive models than necessary, or whether `developer_agent` could be shifted to a more cost-effective model for routine tasks.
+The model usage chart (described above) extends to show distribution across agents. Track which models each agent uses most frequently — for example, whether domain agents are consuming more expensive models than necessary, or whether platform agents could be shifted to a more cost-effective model for routine tasks.
 
 ### CLI Commands for Cost Analytics
 
@@ -187,3 +187,15 @@ Cost data visibility is governed by the same RBAC system that controls all platf
 ### Export to CSV
 
 Finance teams can export cost and usage data to CSV for integration with existing accounting and budgeting systems. Exports include per-agent breakdowns, department rollups, model-level costs, and daily/weekly/monthly aggregations. Use the dashboard export button or the CLI to generate reports on demand.
+
+---
+
+## Enterprise Analytics: Internal Data Integration
+
+The dashboard analytics extend to enterprise-scale reporting with internal data mapping. Capabilities available for scoping in the Phase 1 PRD include:
+
+- **Internal data source mapping** — correlate platform analytics with Foodles's existing data structures (CRM, ERP, workforce management) for unified reporting
+- **Custom analytics dashboards** — define which metrics, charts, and drill-downs appear in the Foodles Control Center based on operational priorities
+- **User analytics with role context** — map platform usage data to Foodles's internal user hierarchy, teams, and reporting lines
+- **Cross-system engagement metrics** — combine AI usage data with business outcomes to measure the impact of AI adoption on operational KPIs
+- **Scheduled reporting** — automated report generation and distribution to stakeholders on configurable schedules

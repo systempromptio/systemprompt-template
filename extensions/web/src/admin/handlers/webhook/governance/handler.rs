@@ -14,8 +14,23 @@ use crate::admin::types::{GovernQuery, HookEventPayload};
 use super::audit;
 use super::rules;
 use super::scope;
-use super::types::{AuditRecord, GovernanceContext, GovernanceResponse, HookSpecificOutput};
+use super::types::{
+    AuditParams, AuditRecord, AuthDenialParams, GovernanceContext, GovernanceResponse,
+    HookSpecificOutput,
+};
 use crate::admin::handlers::webhook::helpers::{extract_bearer_token, get_jwt_config};
+
+fn build_deny_response(reason: &str) -> Response {
+    let response = GovernanceResponse {
+        hook_specific_output: HookSpecificOutput {
+            hook_event_name: "PreToolUse",
+            permission_decision: "deny",
+            permission_decision_reason: Some(format!("[GOVERNANCE] {reason}")),
+        },
+    };
+
+    (StatusCode::OK, Json(response)).into_response()
+}
 
 pub(crate) async fn govern_tool_use(
     State(pool): State<Arc<PgPool>>,
@@ -23,23 +38,32 @@ pub(crate) async fn govern_tool_use(
     Query(query): Query<GovernQuery>,
     Json(payload): Json<HookEventPayload>,
 ) -> Response {
+    let tool_name = payload.tool_name.as_deref().unwrap_or("unknown");
+    let session_id = payload.session_id.as_deref().unwrap_or("unknown");
+    let agent_id = payload.agent_id.as_deref();
+    let plugin_id = query.plugin_id.as_deref();
+
+    let denial_params = AuthDenialParams {
+        pool: &pool,
+        session_id,
+        tool_name,
+        agent_id,
+        plugin_id,
+    };
+
     let Some(token) = extract_bearer_token(&headers) else {
-        return (
-            StatusCode::UNAUTHORIZED,
-            Json(serde_json::json!({"error": "Missing Authorization header"})), // JSON: protocol boundary
-        )
-            .into_response();
+        let reason = "Missing Authorization header — tool call blocked";
+        spawn_auth_denial(&denial_params, reason);
+        return build_deny_response(reason);
     };
 
     let (jwt_secret, jwt_issuer) = match get_jwt_config() {
         Ok(v) => v,
         Err(e) => {
             tracing::error!(error = %e, "Failed to load JWT config");
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal configuration error"})), // JSON: protocol boundary
-            )
-                .into_response();
+            let reason = "Internal configuration error — tool call blocked";
+            spawn_auth_denial(&denial_params, reason);
+            return build_deny_response(reason);
         }
     };
 
@@ -55,19 +79,13 @@ pub(crate) async fn govern_tool_use(
         Ok(c) => c,
         Err(e) => {
             tracing::warn!(error = %e, "Governance webhook JWT validation failed");
-            return (
-                StatusCode::UNAUTHORIZED,
-                Json(serde_json::json!({"error": "Invalid or expired token"})), // JSON: protocol boundary
-            )
-                .into_response();
+            let reason = "Invalid or expired token — tool call blocked";
+            spawn_auth_denial(&denial_params, reason);
+            return build_deny_response(reason);
         }
     };
 
     let user_id = &claims.sub;
-    let tool_name = payload.tool_name.as_deref().unwrap_or("unknown");
-    let agent_id = payload.agent_id.as_deref();
-    let session_id = payload.session_id.as_deref().unwrap_or("unknown");
-    let plugin_id = query.plugin_id.as_deref();
 
     let agent_scope = match agent_id {
         Some(id) => scope::resolve_agent_scope(id),
@@ -84,16 +102,16 @@ pub(crate) async fn govern_tool_use(
 
     let evaluation = rules::evaluate(&pool, &ctx).await;
 
-    spawn_audit_recording(
-        &pool,
+    spawn_audit_recording(&AuditParams {
+        pool: &pool,
         user_id,
         session_id,
         tool_name,
         agent_id,
-        &agent_scope,
-        &evaluation,
+        agent_scope: &agent_scope,
+        evaluation: &evaluation,
         plugin_id,
-    );
+    });
 
     let deny_reason = if evaluation.decision == "deny" {
         Some(format!("[GOVERNANCE] {}", evaluation.reason))
@@ -107,40 +125,44 @@ pub(crate) async fn govern_tool_use(
             permission_decision: evaluation.decision,
             permission_decision_reason: deny_reason,
         },
-        decision: evaluation.decision,
-        reason: evaluation.reason,
-        policy: evaluation.policy,
-        agent_scope,
-        tool_name: tool_name.to_string(),
-        evaluated_rules: evaluation.rules,
     };
 
     (StatusCode::OK, Json(response)).into_response()
 }
 
-#[allow(clippy::too_many_arguments)]
-fn spawn_audit_recording(
-    pool: &Arc<PgPool>,
-    user_id: &str,
-    session_id: &str,
-    tool_name: &str,
-    agent_id: Option<&str>,
-    agent_scope: &str,
-    evaluation: &super::types::RuleEvaluation,
-    plugin_id: Option<&str>,
-) {
-    let p = pool.clone();
+fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
+    let p = params.pool.clone();
     let record = AuditRecord {
-        user_id: user_id.to_string(),
-        session_id: session_id.to_string(),
-        tool_name: tool_name.to_string(),
-        agent_id: agent_id.map(str::to_string),
-        agent_scope: agent_scope.to_string(),
-        decision: evaluation.decision.to_string(),
-        policy: evaluation.policy.clone(),
-        reason: evaluation.reason.clone(),
-        evaluated_rules: serde_json::to_value(&evaluation.rules).unwrap_or_default(), // JSON: stored as JSONB
-        plugin_id: plugin_id.map(str::to_string),
+        user_id: "unauthenticated".to_string(),
+        session_id: params.session_id.to_string(),
+        tool_name: params.tool_name.to_string(),
+        agent_id: params.agent_id.map(str::to_string),
+        agent_scope: "unauthenticated".to_string(),
+        decision: "deny".to_string(),
+        policy: "auth_failure".to_string(),
+        reason: reason.to_string(),
+        evaluated_rules: serde_json::json!([{"rule": "authentication", "result": "fail", "detail": reason}]), // JSON: protocol boundary
+        plugin_id: params.plugin_id.map(str::to_string),
+    };
+
+    tokio::spawn(async move {
+        audit::record_decision(&p, &record).await;
+    });
+}
+
+fn spawn_audit_recording(params: &AuditParams<'_>) {
+    let p = params.pool.clone();
+    let record = AuditRecord {
+        user_id: params.user_id.to_string(),
+        session_id: params.session_id.to_string(),
+        tool_name: params.tool_name.to_string(),
+        agent_id: params.agent_id.map(str::to_string),
+        agent_scope: params.agent_scope.to_string(),
+        decision: params.evaluation.decision.to_string(),
+        policy: params.evaluation.policy.clone(),
+        reason: params.evaluation.reason.clone(),
+        evaluated_rules: serde_json::to_value(&params.evaluation.rules).unwrap_or_default(), // JSON: protocol boundary
+        plugin_id: params.plugin_id.map(str::to_string),
     };
 
     tokio::spawn(async move {

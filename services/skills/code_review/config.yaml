@@ -1,0 +1,4 @@
+id: code_review
+name: "Code Review"
+description: "Structured code review against a checklist of best practices"
+enabled: true

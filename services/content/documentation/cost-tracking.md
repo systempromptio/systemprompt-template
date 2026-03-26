@@ -53,7 +53,7 @@ Every AI request records the following cost-relevant data:
 | Dimension | What It Tracks | Why It Matters |
 |-----------|---------------|----------------|
 | **Model** | Which AI model processed the request (e.g., Claude Sonnet, GPT-4) | Different models have different per-token costs |
-| **Agent** | Which agent initiated the request (e.g., developer_agent) | Identifies which workflows consume the most AI |
+| **Agent** | Which agent initiated the request | Identifies which workflows consume the most AI |
 | **Provider** | Which AI provider served the request (e.g., Anthropic, OpenAI) | Tracks vendor spend for contract negotiations |
 | **Department** | Which department the requesting user belongs to | Enables chargeback to cost centers |
 | **User** | Which user triggered the request | Identifies individual usage patterns |
@@ -238,8 +238,8 @@ Each agent's AI consumption is tracked independently. This answers the question:
 
 | Agent | Role | Typical Cost Profile |
 |-------|------|---------------------|
-| **developer_agent** | Code assistance and tooling | Variable — spikes during development sprints |
-| **associate_agent** | Domain-specific workflows | Medium volume — queries during business hours |
+| **Platform agents** | Code assistance, tooling, and admin operations | Variable — spikes during development sprints |
+| **Domain agents** | Department-specific workflows (revenue, operations) | Medium volume — queries during business hours |
 
 ### Identifying Cost Anomalies
 

@@ -164,3 +164,4 @@ storage/marketplace-versions/
 .systemprompt/tenants.json
 .systemprompt/profiles/*/secrets.json
 .systemprompt/sessions/
+storage/github-marketplaces/

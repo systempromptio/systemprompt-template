@@ -115,13 +115,13 @@ Each API endpoint category has its own base rate limit. These are the production
 
 ### Why MCP Has the Highest Rate
 
-A single user action — like asking developer_agent to check platform status — can generate multiple MCP tool calls:
+A single user action — like asking an agent to check platform status — can generate multiple MCP tool calls:
 
 1. User asks: "What is the current platform status?"
-2. developer_agent calls service status tool (1 MCP call)
-3. developer_agent calls agent list tool (1 MCP call)
-4. developer_agent calls log check tool (1 MCP call)
-5. developer_agent calls analytics tool (1 MCP call)
+2. Agent calls service status tool (1 MCP call)
+3. Agent calls agent list tool (1 MCP call)
+4. Agent calls log check tool (1 MCP call)
+5. Agent calls analytics tool (1 MCP call)
 
 Five MCP calls from one user message. At scale with thousands of concurrent users, the MCP endpoint needs the highest base rate.
 

@@ -177,3 +177,17 @@ The Access Control page interacts with these API endpoints:
 | **Department filter shows no departments** | Departments are pulled from the `department` field on user records. If no users have departments assigned, the filter will be empty. Assign departments to users from the Users page. |
 | **Bulk assign button stays disabled** | You must select at least one entity checkbox before the Bulk Assign button becomes active. Use the select-all checkbox in the table header to select all visible entities. |
 | **Coverage shows 0 for all entities** | This means no department-level rules have been configured. Open individual entities and assign department access, or use bulk assignment to set department rules across multiple entities. |
+
+---
+
+## Enterprise Governance: Whitelisting & Blacklisting
+
+The access control system supports granular whitelisting and blacklisting of tools, skills, MCP servers, and content patterns. These capabilities are available for scoping in the Phase 1 PRD:
+
+- **Tool whitelisting** — explicitly allow specific tools for specific roles or departments. Only whitelisted tools are available to governed agents.
+- **Tool blacklisting** — block specific tools globally or by scope. Destructive operations, sensitive data access, or unapproved integrations can be denied at the governance layer.
+- **Skill approval workflows** — require admin approval before new skills are published to the marketplace or assigned to agents.
+- **MCP server restrictions** — control which MCP servers are available to which roles and departments. Prevent user-scoped agents from accessing admin-only servers.
+- **Content pattern policies** — define regex patterns for content that should be blocked in tool inputs (e.g., API keys, PII, internal identifiers). The governance hook enforces these patterns at runtime.
+
+These rules are enforced by the PreToolUse governance hook, which evaluates every tool call before execution. The specific rules, patterns, and approval workflows are defined collaboratively in the PRD.

@@ -28,9 +28,6 @@ pub fn import_plugin_bundle(
     let hooks = parse_import_hooks(&bundle.files, plugin_id);
     let mcp_servers = parse_import_mcp_servers(&bundle.files);
 
-    std::fs::create_dir_all(plugin_dir.join("scripts"))?;
-    write_import_scripts(&bundle.files, &plugin_dir)?;
-
     let req = CreatePluginRequest {
         id: plugin_id.clone(),
         name: metadata.name,
@@ -47,7 +44,12 @@ pub fn import_plugin_bundle(
         hooks,
     };
 
-    super::plugin_crud_ops::create_plugin(services_path, &req)
+    let detail = super::plugin_crud_ops::create_plugin(services_path, &req)?;
+
+    std::fs::create_dir_all(plugin_dir.join("scripts"))?;
+    write_import_scripts(&bundle.files, &plugin_dir)?;
+
+    Ok(detail)
 }
 
 struct ImportMetadata {

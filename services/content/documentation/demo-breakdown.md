@@ -1,6 +1,6 @@
 ---
 title: "Demo: Detailed Breakdown — What Happens Under the Hood"
-description: "Step-by-step technical breakdown of the governance pipeline for both the happy and refused demo paths, with CLI commands to inspect every layer."
+description: "Step-by-step technical breakdown of the governance pipeline for both the allowed and blocked demo paths, with CLI commands to inspect every layer."
 author: "systemprompt.io"
 slug: "demo-breakdown"
 keywords: "demo, breakdown, audit, trace, analytics, governance, cli"
@@ -8,15 +8,15 @@ kind: "guide"
 public: true
 tags: ["demo", "governance", "audit", "analytics", "trace"]
 published_at: "2026-03-20"
-updated_at: "2026-03-20"
+updated_at: "2026-03-26"
 after_reading_this:
   - "Inspect every governance layer using CLI commands"
-  - "Compare audit trails between allowed and denied requests"
-  - "Understand the full request lifecycle from authentication to analytics"
+  - "Compare audit trails between allowed and denied tool calls"
+  - "Understand the full request lifecycle from hook evaluation to analytics"
 related_docs:
-  - title: "Happy Path"
+  - title: "Allowed Path"
     url: "/documentation/demo-happy-path"
-  - title: "Refused Path"
+  - title: "Blocked Path"
     url: "/documentation/demo-refused-path"
   - title: "Audit Trails & Events"
     url: "/documentation/events"
@@ -26,40 +26,41 @@ related_docs:
 
 ## Overview
 
-This page walks through exactly what happens in the governance pipeline for both demo paths, with CLI commands to inspect every layer. Run the happy path and refused path demos first, then use the commands below to examine the results.
+This page walks through exactly what happens in the governance pipeline for both demo paths, with CLI commands to inspect every layer. Run the allowed path and blocked path demos first, then use the commands below to examine the results.
 
 ---
 
-## Setup: The two agents
+## Setup: The two skills
 
-| | developer_agent | associate_agent |
+| | example-web-search | use-dangerous-secret |
 |---|---|---|
-| **OAuth scope** | admin | user |
-| **MCP servers** | systemprompt (CLI executor, port 5010) | none |
-| **Skills** | General Assistance, Rust Standards, Architecture Standards | General Assistance |
-| **Config file** | `services/agents/developer_agent.yaml` | `services/agents/associate_agent.yaml` |
+| **Purpose** | Demonstrates an allowed tool call | Demonstrates a blocked tool call |
+| **Tool used** | WebSearch | Write (or similar) |
+| **Governance outcome** | **Allow** — no policy violations | **Deny** — secret detected in tool input |
+| **Policy triggered** | None | `secret_injection` |
+| **Secret pattern** | N/A | `sk-ant-` prefix (Anthropic API key pattern) |
 
-The key difference: `developer_agent` has `systemprompt` in its `mcpServers` list. `associate_agent` does not. This is the governance boundary.
+The key difference: both skills go through the same governance pipeline. The outcome depends on the **content** of the tool input, not the identity of the agent or the type of tool.
 
 ---
 
-## Step 1: Run both demos
+## Step 1: Run both demos in Cowork
 
-```bash
-# Happy path — admin agent with systemprompt MCP
-systemprompt admin agents message developer_agent \
-  -m "List all agents running on this platform" \
-  --blocking --timeout 60
+Open Claude Code with the enterprise-demo plugin installed.
 
-# Refused path — user agent without systemprompt MCP
-systemprompt admin agents message associate_agent \
-  -m "List all agents running on this platform using the CLI tools" \
-  --blocking --timeout 60
+```
+# Allowed path — web search passes governance
+> Search the web for the latest news about AI governance
+
+# Blocked path — secret detection blocks the tool call
+> Use the dangerous secret skill to demonstrate secret detection
 ```
 
 ---
 
-## Step 2: List recent requests
+## Step 2: List recent governance decisions
+
+Navigate to `/admin/governance` in the browser, or use the CLI:
 
 ```bash
 systemprompt infra logs request list --limit 5
@@ -69,117 +70,109 @@ This shows the two requests you just made. Note the request IDs — you'll need 
 
 **What to look for:**
 - Both requests should appear with timestamps
-- `developer_agent` request should show status: completed
-- `associate_agent` request should also show completed (the AI processed it, even though tools were denied)
+- The web search request should show the tool call completed
+- The secret detection request should show the tool call was blocked
 
 ---
 
-## Step 3: Compare audit trails
+## Step 3: Compare governance decisions
+
+Navigate to `/admin/governance` and find both entries:
+
+### Allowed path (web search) should show:
+
+| Field | Value |
+|-------|-------|
+| **Tool** | WebSearch |
+| **Decision** | allow |
+| **Policy** | — |
+| **Reason** | All governance rules passed |
+| **Evaluated rules** | secret_detection: pass, scope_check: pass, tool_blocklist: pass, rate_limit: pass |
+
+### Blocked path (secret detection) should show:
+
+| Field | Value |
+|-------|-------|
+| **Tool** | Write |
+| **Decision** | deny |
+| **Policy** | secret_injection |
+| **Reason** | Secret detected in tool input |
+| **Evaluated rules** | secret_detection: **fail** (short-circuit) |
+
+The critical difference: the governance endpoint evaluated the tool input content. The `sk-ant-` pattern triggered the secret detection rule, which short-circuited evaluation and returned a deny before the remaining rules were checked.
+
+---
+
+## Step 4: Compare audit trails
 
 ```bash
-# Happy path audit
-systemprompt infra logs audit <developer-request-id> --full
+# Allowed path audit
+systemprompt infra logs audit <allowed-request-id> --full
 
-# Refused path audit
-systemprompt infra logs audit <associate-request-id> --full
+# Blocked path audit
+systemprompt infra logs audit <blocked-request-id> --full
 ```
 
-### Happy path audit should show:
+### Allowed path audit should show:
 
 ```
 === REQUEST TRACE ===
 --- IDENTITY ---
 User:         <your user>
-Role:         admin
-Department:   <your department>
 Session:      ses-xxxxx
 
---- AGENT ---
-Agent:        developer_agent
-Plugin:       enterprise-demo
-Model:        claude-4-sonnet
-
---- PERMISSIONS ---
-ACL:          agent:developer_agent → role:admin → ALLOW
-MCP:          systemprompt → role:admin → ALLOW
+--- GOVERNANCE ---
+Hook:         PreToolUse
+Tool:         WebSearch
+Decision:     allow
+Rules:        secret_detection: pass, scope_check: pass, tool_blocklist: pass, rate_limit: pass
 
 --- TOOL CALLS ---
-1. systemprompt (CLI)    → OK   (Xms)
+1. WebSearch    → OK   (Xms)
 
---- AI REQUEST ---
-Tokens In:    X,XXX
-Tokens Out:   X,XXX
-Cost:         $X.XXXX
-Status:       completed
+--- TRACKING ---
+PostToolUse event logged
 ```
 
-### Refused path audit should show:
+### Blocked path audit should show:
 
 ```
 === REQUEST TRACE ===
 --- IDENTITY ---
 User:         <your user>
-Role:         admin
-Department:   <your department>
 Session:      ses-xxxxx
 
---- AGENT ---
-Agent:        associate_agent
-Plugin:       enterprise-demo
-Model:        claude-4-sonnet
-
---- PERMISSIONS ---
-ACL:          agent:associate_agent → role:admin → ALLOW
+--- GOVERNANCE ---
+Hook:         PreToolUse
+Tool:         Write
+Decision:     deny
+Policy:       secret_injection
+Reason:       Secret detected — sk-ant-*** pattern matched
+Rules:        secret_detection: FAIL (short-circuit)
 
 --- TOOL CALLS ---
-(none — systemprompt not in agent's MCP mapping)
-
---- AI REQUEST ---
-Tokens In:    X,XXX
-Tokens Out:   X,XXX
-Cost:         $X.XXXX
-Status:       completed
+(blocked — tool never executed)
 ```
 
-The critical difference: **no tool calls** in the refused path. The `systemprompt` MCP server was never offered to the agent because it's not in the `mcpServers` list.
-
----
-
-## Step 4: Examine execution traces
-
-```bash
-# Developer agent traces — should show MCP tool calls
-systemprompt infra logs trace list --agent developer_agent --limit 3
-systemprompt infra logs trace show <trace-id> --all
-
-# Associate agent traces — should show NO MCP tool calls
-systemprompt infra logs trace list --agent associate_agent --limit 3
-systemprompt infra logs trace show <trace-id> --all
-```
-
-The `--all` flag shows every step in the execution: message received, tool discovery, tool calls (or lack thereof), response generation.
+The critical difference: **no tool execution** in the blocked path. The governance hook denied the call before the tool could run.
 
 ---
 
 ## Step 5: View analytics
 
 ```bash
-# Per-agent analytics
-systemprompt analytics agents show developer_agent
-systemprompt analytics agents show associate_agent
-
-# Cost breakdown by agent
-systemprompt analytics costs breakdown --by agent
-
 # Overall overview
 systemprompt analytics overview --since 1h
+
+# Cost breakdown
+systemprompt analytics costs breakdown --by model
 ```
 
 **What to look for:**
-- Both agents show one request each
-- `developer_agent` may show higher token usage (tool call adds to the conversation)
-- Cost breakdown shows per-agent spend
-- Tool usage analytics may show `systemprompt` tool with 1 call from `developer_agent`, 0 from `associate_agent`
+- Both requests appear as AI inference calls (the model processed both messages)
+- The allowed path shows a tool call in the tool usage stats
+- The blocked path shows a governance denial in the governance stats
+- Cost tracking captures both requests (the AI still ran, even when the tool was blocked)
 
 ---
 
@@ -188,45 +181,37 @@ systemprompt analytics overview --since 1h
 ```bash
 # All tool calls
 systemprompt analytics tools stats
-
-# Specific tool details
-systemprompt analytics tools list
 ```
 
-This shows which MCP tools were called, by which agents, success/failure rates, and average durations. The `systemprompt` tool should show exactly one call from `developer_agent`.
+This shows which tools were called, success/failure rates, and average durations. WebSearch should show one successful call. The blocked Write call should appear as a governance denial, not a tool failure.
 
 ---
 
 ## How to replicate
 
-These three commands are all you need:
+These steps are all you need:
 
 ```bash
-# 1. Happy path
-systemprompt admin agents message developer_agent \
-  -m "List all agents running on this platform" \
-  --blocking --timeout 60
+# 1. Allowed path — invoke example-web-search in Cowork
+# Ask: "Search the web for the latest news about AI governance"
 
-# 2. Refused path
-systemprompt admin agents message associate_agent \
-  -m "List all agents running on this platform using the CLI tools" \
-  --blocking --timeout 60
+# 2. Blocked path — invoke use-dangerous-secret in Cowork
+# Ask: "Use the dangerous secret skill to demonstrate secret detection"
 
 # 3. Compare
 systemprompt infra logs request list --limit 5
-systemprompt infra logs audit <happy-path-id> --full
-systemprompt infra logs audit <refused-path-id> --full
-systemprompt analytics costs breakdown --by agent
+systemprompt infra logs audit <allowed-path-id> --full
+systemprompt infra logs audit <blocked-path-id> --full
 ```
 
-Each run of demos 1 and 2 makes one AI inference call. The audit and analytics commands are read-only and free.
+The Cowork invocations make real AI inference calls. The audit and analytics commands are read-only and free.
 
 ---
 
 ## What this proves
 
-1. **RBAC works** — Different agents have different OAuth scopes. The ACL table governs access.
-2. **MCP governance works** — Agent-tool mapping is explicit. Tools not in the mapping don't exist for that agent.
-3. **Audit is complete** — Every request has a full 5-layer trace: who, which agent, what permissions, which tools, what the AI did.
-4. **Analytics are real** — Cost, token usage, latency — all tracked per-agent, per-tool, per-model.
-5. **The governance gap is filled** — You can answer: "What did the AI do on behalf of this user, and was it authorized?"
+1. **PreToolUse governance works** — Every tool call is evaluated by the governance endpoint before execution. The hook has full authority to allow or deny.
+2. **Content-based policy enforcement works** — The governance decision is based on what the tool input contains, not just who is calling. Secret patterns are detected regardless of intent.
+3. **Audit is complete** — Every governance decision is logged with the full evaluation context: which rules ran, which triggered, and why.
+4. **Analytics are real** — Cost, token usage, governance decisions — all tracked per-tool, per-session, per-policy.
+5. **The governance gap is filled** — You can answer: "What did the AI attempt to do, was it authorized, and if not, why was it blocked?"

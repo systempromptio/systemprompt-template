@@ -77,6 +77,7 @@ The engagement comprises Phase 1 (PRD & Development) and Phase 2 (Platform Licen
 
 A branded Control Center dashboard built on the platform's extension architecture. This is a standalone codebase — **owned by Foodles** — with all skills migrated and configured for Foodles's operations.
 
+- Collaboratively scoped PRD covering all platform capabilities — governance, analytics, marketplace, skills, user engagement, and internal data integration
 - White-label dashboard with Foodles branding
 - Full skill migration and agent configuration
 - Running on our cloud for hands-on evaluation

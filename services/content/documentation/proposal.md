@@ -64,6 +64,7 @@ This is an enterprise AI governance platform — a single Rust binary backed by 
 | **MCP Integration** | Native MCP protocol support with per-server OAuth, hooks on every tool invocation, and central server registry |
 | **Skills & Plugins** | Governed bundles of agents, skills, and MCP servers — assigned by role and department. Custom skills created in seconds |
 | **Analytics** | Per-department, per-model, per-agent cost tracking. Usage dashboards with CSV export for chargeback |
+| **Gamification & Engagement** | Achievement system, leaderboards, usage-driven engagement analytics. Department-scoped engagement tracking |
 | **Horizontal Scaling** | Stateless JWT-based architecture. N replicas behind a load balancer. Connection pooling via SQLx |
 
 ### Architecture
@@ -89,5 +90,5 @@ For detailed answers to questions about data sovereignty, model lock-in, cost ju
 ## Next Steps
 
 1. **Review the engagement** — see the [Engagement Summary](/documentation/engagement-summary) for the full two-phase breakdown
-2. **Schedule a meeting** — agree on a joint PRD document covering the initial Phase 1 engagement: a customised and personalised Control Center for the Foodles organisation
+2. **Schedule a meeting** — agree on a joint PRD document covering the initial Phase 1 engagement: a customised and personalised Control Center for the Foodles organisation. The PRD covers the complete feature set — skills, marketplace, governance tools (whitelisting, blacklisting), analytics, user engagement, and internal data integration — scoped collaboratively to Foodles's priorities
 3. **Begin Phase 1** — sign the PRD, begin development on systemprompt cloud infrastructure

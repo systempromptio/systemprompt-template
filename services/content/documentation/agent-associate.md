@@ -1,6 +1,6 @@
 ---
 title: "Revenue Agent"
-description: "Configuration and governance of the associate_agent for revenue management, pricing optimization, occupancy analytics, and competitive intelligence workflows."
+description: "Reference architecture for a revenue agent covering pricing optimization, occupancy analytics, and competitive intelligence. This configuration would be scoped in the Phase 1 PRD."
 author: "systemprompt.io"
 slug: "agent-associate"
 keywords: "revenue agent, pricing, occupancy, revenue management, competitive intelligence"
@@ -21,9 +21,11 @@ related_docs:
     url: "/documentation/scaling"
 ---
 
-# Revenue Agent
+# Revenue Agent — Reference Architecture
 
-**TL;DR:** The Revenue Agent (`associate_agent`) demonstrates a revenue-manager-facing agent for hospitality. It consolidates pricing optimization, occupancy analytics, competitive intelligence, and rate management into a single interface for revenue managers. In our demo, it runs on port 9028, uses `user`-scoped OAuth (the only agent that does not require admin scope), and is designed for high-concurrency usage patterns during rate update cycles.
+> **Note:** This is a reference architecture document. It demonstrates how a domain-specific agent would be configured in a Foodles deployment. The specific agent configuration, skills, data sources, and department scoping would be defined collaboratively during the Phase 1 PRD.
+
+**TL;DR:** The Revenue Agent shows a revenue-manager-facing agent for hospitality. It consolidates pricing optimization, occupancy analytics, competitive intelligence, and rate management into a single interface for revenue managers. This reference uses `user`-scoped OAuth (not admin scope) and is designed for high-concurrency usage patterns during rate update cycles.
 
 ## Overview
 

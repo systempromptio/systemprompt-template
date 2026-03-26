@@ -1,6 +1,6 @@
 ---
 title: "Demo Guide — 30-Minute Walkthrough"
-description: "Step-by-step presenter's guide for the Foodles enterprise demo. Covers platform architecture, agent governance, MCP integration, skills, plugins, and analytics."
+description: "Step-by-step presenter's guide for the Foodles enterprise demo. Covers platform architecture, tool governance, MCP integration, skills, plugins, and analytics."
 author: "systemprompt.io"
 slug: "demo"
 keywords: "demo, walkthrough, presentation, enterprise, governance"
@@ -8,7 +8,7 @@ kind: "guide"
 public: true
 tags: ["demo", "enterprise", "presentation"]
 published_at: "2026-03-19"
-updated_at: "2026-03-19"
+updated_at: "2026-03-26"
 after_reading_this:
   - "Run the complete 30-minute enterprise demo from start to finish"
   - "Navigate each segment with the correct CLI commands and dashboard routes"
@@ -42,12 +42,13 @@ Complete every item before the meeting starts. Do not skip any of these.
 | Check | What to Verify | How to Verify |
 |-------|---------------|---------------|
 | Platform running | All services healthy | `systemprompt infra services status` |
-| Agents loaded | All configured agents running | `systemprompt admin agents list` |
+| Enterprise demo plugin | Plugin installed in Claude Code | `claude plugin list` — confirm `enterprise-demo` appears |
+| Plugin token set | `SYSTEMPROMPT_PLUGIN_TOKEN` configured | Check Claude Code environment settings |
 | Browser ready | Logged into /admin/ with admin credentials | Navigate to `/admin/login` and authenticate |
 | CLI terminal ready | Terminal open alongside browser | Run `systemprompt --help` to confirm |
 | Dashboard populated | Demo data visible in analytics | Navigate to `/admin/` and confirm metric ribbon shows data |
 | Documentation pages | All doc pages rendering | Navigate to `/documentation/proposal` and confirm content loads |
-| MCP servers running | MCP servers responding on assigned ports | `systemprompt core plugins list` to verify MCP server status |
+| MCP servers responding | MCP servers authenticated | Run a tool from the `systemprompt` MCP server in Claude Code |
 
 **If anything fails:** Run `systemprompt infra logs view --level error --since 5m` immediately. Fix before continuing.
 
@@ -90,7 +91,7 @@ systemprompt --help
 # Show running services — everything healthy
 systemprompt infra services status
 
-# Show plugin ecosystem — plugins bundle agents, skills, MCP servers
+# Show plugin ecosystem — plugins bundle skills, MCP servers, and hooks
 systemprompt core plugins list
 ```
 
@@ -123,33 +124,61 @@ systemprompt core plugins list
 
 ---
 
-## Segment 3: Agent Governance (8 min) — THE CORE SEGMENT
+## Segment 3: Tool Governance (8 min) — THE CORE SEGMENT
 
-**Purpose:** This is Lee's domain. Agent governance is the primary reason for this meeting. Spend the most time here and go deep.
+**Purpose:** This is Lee's domain. Tool governance is the primary reason for this meeting. Spend the most time here and go deep.
 
 ---
 
-### 3a. RBAC — Role-Based Access Control (2 min)
+### 3a. Live Governance Demo with Cowork (3 min)
 
 #### What to Show
 
-1. Navigate to `/admin/` — the main admin dashboard
-2. Navigate to the Access Control page from the sidebar
-3. Show the three tabs: Plugins, Agents, MCP Servers
+This is the centrepiece of the demo. Run Claude Code (Cowork) with the enterprise-demo plugin to demonstrate real-time tool governance.
 
-#### What to Demo
+#### Demo 1: Allowed Tool Call — Web Search
 
-- Click on `developer_agent` to open the side panel
-- Show how it's scoped to specific roles (`admin`, `viewer`)
-- Show department-based access — which departments can interact with this agent
-- Return to the table and select multiple agents using checkboxes
-- Click **Bulk Assign** to show how access rules apply across multiple entities at once
+In Cowork, invoke the `example-web-search` skill:
 
-#### What to Say
+> "Search the web for the latest news about AI governance"
 
-> "Every agent, plugin, and MCP server has role-based and department-based scoping. developer_agent has admin scope and MCP access. associate_agent has user scope only — no tool access."
+**What happens in the system:**
+1. Claude Code receives the skill instruction
+2. Claude decides to call the WebSearch tool
+3. The PreToolUse HTTP hook fires — sends the tool input to the governance endpoint
+4. The governance endpoint inspects the input — no secret pattern detected, scope allowed
+5. Hook returns **allow** — Claude Code proceeds
+6. WebSearch tool executes and returns results
+7. PostToolUse tracking hook fires — event logged
 
-> "Bulk assignment means your team can roll out access changes across all agents in one action — not one at a time."
+**What to say:**
+
+> "Standard tool call. The governance hook evaluated it in real time, allowed it, and logged it. Every tool call goes through this pipeline — no exceptions."
+
+#### Demo 2: Blocked Tool Call — Secret Detection
+
+In Cowork, invoke the `use-dangerous-secret` skill:
+
+> "Use the dangerous secret skill to demonstrate secret detection"
+
+**What happens in the system:**
+1. Claude Code receives the skill instruction containing the test key `sk-ant-demo-FAKE12345678901234567890`
+2. Claude attempts to call a tool (e.g., Write) with the secret in the input
+3. The PreToolUse HTTP hook fires — sends the tool input to the governance endpoint
+4. The governance endpoint detects the `sk-ant-` pattern matching the secret detection rule
+5. Hook returns **deny** with reason: secret detected
+6. Claude Code blocks the tool call and displays the denial
+7. The governance decision is logged in the audit trail
+
+**What to say:**
+
+> "Same pipeline, same hook. But this time the governance endpoint detected a plaintext API key in the tool input and blocked it before execution. The agent was explicitly told to use the secret — governance overrode the instruction."
+
+#### Navigate to the Governance Dashboard
+
+After both demos, navigate to `/admin/governance` in the browser.
+
+> "Both decisions are here. The allow and the deny. Timestamp, tool name, policy, reason, scope. This is the compliance view."
 
 ---
 
@@ -181,7 +210,7 @@ systemprompt infra logs audit <request-id> --full
 
 ---
 
-### 3c. Secret Encryption (2 min)
+### 3c. Secret Encryption (1.5 min)
 
 #### What to Show
 
@@ -203,7 +232,7 @@ Navigate to secrets management in the admin dashboard.
 
 ---
 
-### 3d. Rate Limiting (2 min)
+### 3d. Rate Limiting (1.5 min)
 
 #### Key Points
 
@@ -232,6 +261,7 @@ Per-endpoint limits with a **3x burst multiplier** for traffic spikes.
 - [Authentication](/documentation/authentication)
 - [Secrets](/documentation/secrets)
 - [Rate Limiting & Compliance](/documentation/rate-limiting)
+- [Tool Governance](/documentation/tool-governance)
 
 ### Transition
 
@@ -246,8 +276,8 @@ Per-endpoint limits with a **3x burst multiplier** for traffic spikes.
 ### What to Show
 
 1. Navigate to MCP servers in the admin dashboard
-2. Click into an MCP server to show its configuration: binary path, port, endpoint, OAuth config
-3. Show the MCP server list with status indicators
+2. Show the two MCP servers from the enterprise-demo plugin: `systemprompt` (admin tools) and `skill-manager` (user tools)
+3. Show how each server has its own OAuth configuration and scope
 
 ### CLI Commands to Run
 
@@ -264,13 +294,13 @@ systemprompt core plugins list
 | **OAuth per server** | Each MCP server has its own OAuth configuration and scopes |
 | **Hooks on every call** | Every MCP tool invocation fires hooks — audit, rate limit, validate |
 | **Central registry** | All MCP servers registered centrally, discoverable by agents |
-| **Port management** | MCP servers run on ports 5000-5999, managed automatically |
+| **HTTP transport** | MCP servers use HTTP endpoints — no local binary management |
 
 ### What to Say
 
 > "Your Platform Agent uses MCP for discovery and data access — our platform is the governance layer that sits between agents and MCP servers. Every tool call is authenticated, rate-limited, and logged."
 
-> "Each MCP server has its own OAuth configuration. Agent A can access Server X but not Server Y. That's not just RBAC — it's per-server, per-agent scope validation."
+> "Each MCP server has its own OAuth configuration. The enterprise-demo plugin bundles two: `systemprompt` for admin operations and `skill-manager` for user-level skill management. Different scopes, different permissions, same governance pipeline."
 
 ### Links to Reference
 
@@ -286,12 +316,12 @@ systemprompt core plugins list
 
 ## Segment 5: Skills & Plugins (5 min)
 
-**Purpose:** Show how the platform organizes agents, skills, and MCP servers into governed bundles.
+**Purpose:** Show how the platform organizes skills, MCP servers, and hooks into governed plugin bundles.
 
 ### What to Show
 
-1. Navigate to the plugins dashboard — show the four tabs: Plugins, Agents, MCP Servers, Skills
-2. Expand a plugin to show its bundled resources (agents, skills, MCP servers)
+1. Navigate to the plugins dashboard — show the plugin structure
+2. Show the enterprise-demo plugin: its two skills, two MCP servers, and governance hooks
 3. Navigate to the Skills page — show system skills vs custom skills
 4. Create a custom skill live (this should take about 30 seconds)
 
@@ -299,12 +329,12 @@ systemprompt core plugins list
 
 1. Navigate to the skills creation interface
 2. Create a skill like "Foodles Rate Parity Policy" — a simple knowledge skill
-3. Show how it immediately becomes available to the assigned agent
+3. Show how it immediately becomes available in the plugin
 4. Point out that no YAML editing was required — the platform handles it
 
 ### What to Say
 
-> "The plugin system organizes agents into governed bundles. Each agent gets the skills it needs — developer_agent gets the code skills and MCP access, associate_agent gets domain skills without tool access. Each bundle has its own RBAC, its own MCP servers, its own audit trail."
+> "The plugin system bundles skills, MCP servers, and governance hooks into governed units. The enterprise-demo plugin has two skills — one that passes governance and one that gets blocked — plus two MCP servers and a full set of HTTP hooks. Each plugin is self-contained and governs its own boundaries."
 
 > "Skills are the knowledge layer. They're how you inject domain expertise into agents without retraining models. Custom skills take 30 seconds to create and are immediately available."
 
@@ -312,7 +342,6 @@ systemprompt core plugins list
 
 - [Plugins](/documentation/plugins)
 - [Skills](/documentation/skills)
-- [Agents](/documentation/agents)
 
 ### Transition
 
@@ -335,7 +364,7 @@ systemprompt core plugins list
 
 ### What to Say
 
-> "Cost visibility by model, department, user. You can see that the Revenue Management department consumed 40% of tokens last week, primarily through the Revenue Agent using Claude. RBAC governs what each role sees — analysts see their department only."
+> "Cost visibility by model, department, user. You can see which departments consumed the most tokens, which models are being used, and which skills are most popular. RBAC governs what each role sees — analysts see their department only."
 
 > "This is the data your finance team needs for chargeback. Export to CSV, filter by date range, break down by any dimension."
 
@@ -356,11 +385,11 @@ Navigate to `/documentation/proposal` in the browser.
 
 ### What to Say
 
-> "Perpetual licence, full source code, self-hosted. This is not a vendor dependency — if we disappear tomorrow, you have the binary, the source, and the documentation."
+> "Full source code, self-hosted, enterprise-licensed. This is not a vendor dependency — if we disappear tomorrow, you have the binary, the source, and the documentation."
 
-> "The licence is independent of any consulting engagement. You can deploy independently or engage us for integration, skill authoring, and training — scoped to what you need."
+> "Stage 1 is a collaborative PRD where we scope everything together — skills, marketplace management, governance tools, whitelisting and blacklisting rules, achievement analytics, user analytics mapped to your internal data, and the full dashboard capabilities. We define the exact deliverables before any code is written."
 
-> "A focused pilot is the perfect model — start with one agent, prove value, expand."
+> "A focused pilot is the perfect model — start with the governance demo you just saw, prove value, expand."
 
 ### Ask
 
@@ -389,7 +418,7 @@ systemprompt infra services restart
 
 **If the platform is down:** Switch to the CLI-only demo path. Every feature shown in the dashboard is also available from the CLI. The demo still works — it just looks different.
 
-**If a specific MCP server is down:** Skip Segment 4 and reference it verbally. Move the time to Segment 3 (governance) which is the most important segment anyway.
+**If an MCP server is unresponsive:** Skip Segment 4 and reference it verbally. Move the time to Segment 3 (governance) which is the most important segment anyway.
 
 ---
 
@@ -399,12 +428,12 @@ Use this table to map concerns to demo segments. If a concern comes up out of or
 
 | Concern | Where to Address | Key Proof Point |
 |---------|-----------------|-----------------|
-| **Agent consolidation** | Segment 1 + Capability Brief | Platform agents with plugin governance bundles |
+| **Tool governance** | Segment 3a | Live Cowork demo — allowed vs blocked tool calls with HTTP hooks |
 | **Scaling Architecture** | Segment 2 | Stateless Rust binary, horizontal scaling, connection pooling, tiered rate limits |
-| **Security and governance** | Segment 3 | RBAC with bulk assignment, full audit trails, ChaCha20-Poly1305 encryption, tiered rate limiting |
+| **Security and governance** | Segment 3 | PreToolUse governance hooks, full audit trails, ChaCha20-Poly1305 encryption, tiered rate limiting |
 | **MCP standardization** | Segment 4 | MCP-native protocol, OAuth per server, hooks on every tool call, central registry |
-| **Cost control** | Segment 6 | Per-department, per-model, per-agent cost tracking with CSV export |
-| **Vendor risk** | Segment 7 | Perpetual licence, full source code, self-hosted, no SaaS dependency |
+| **Cost control** | Segment 6 | Per-department, per-model cost tracking with CSV export |
+| **Vendor risk** | Segment 7 | Full source code, self-hosted, enterprise-licensed, no SaaS dependency |
 
 ---
 
@@ -414,7 +443,7 @@ Use this table to map concerns to demo segments. If a concern comes up out of or
 |---------|----------|-----------|-------|
 | 1 | 3 min | 3 min | Opening Alignment |
 | 2 | 5 min | 8 min | Platform Architecture |
-| 3 | 8 min | 16 min | Agent Governance (RBAC, Audit, Secrets, Rate Limiting) |
+| 3 | 8 min | 16 min | Tool Governance (Live Cowork Demo, Audit, Secrets, Rate Limiting) |
 | 4 | 5 min | 21 min | MCP Integration |
 | 5 | 5 min | 26 min | Skills & Plugins |
 | 6 | 2 min | 28 min | Analytics & Observability |
