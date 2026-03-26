@@ -5,7 +5,7 @@ use super::types::{EvaluatedRule, GovernanceContext, RuleEvaluation};
 
 const ADMIN_ONLY_TOOL_PREFIXES: &[&str] = &["mcp__systemprompt__", "mcp__skill-manager__"];
 
-const RATE_LIMIT_PER_MINUTE: i64 = 60;
+const RATE_LIMIT_PER_MINUTE: i64 = 300;
 
 pub(super) async fn evaluate(pool: &PgPool, ctx: &GovernanceContext<'_>) -> RuleEvaluation {
     let mut rules = Vec::new();

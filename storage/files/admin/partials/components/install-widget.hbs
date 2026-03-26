@@ -19,43 +19,20 @@
         </div>
         <div class="install-dropdown-tabs">
             <a href="/admin/plugins/" class="tab-btn">Configure</a>
-            <button class="tab-btn active" data-install-tab="cowork">Cowork</button>
-            <button class="tab-btn" data-install-tab="code">Code</button>
+            <button class="tab-btn" data-install-tab="cowork">Cowork</button>
+            <button class="tab-btn active" data-install-tab="code">Code</button>
         </div>
         <div class="install-dropdown-body">
-            <div class="install-tab-content" data-install-panel="cowork">
+            <div class="install-tab-content" data-install-panel="cowork" style="display:none">
                 <div class="install-copybox">
                     <code class="install-code">{{marketplace.github_url}}</code>
                     <button class="btn btn-secondary" data-copy="{{marketplace.github_url}}">Copy</button>
                 </div>
             </div>
-            <div class="install-tab-content" data-install-panel="code" style="display:none">
+            <div class="install-tab-content" data-install-panel="code">
                 <div class="install-copybox">
                     <code class="install-code">{{marketplace.install_cmd}}</code>
                     <button class="btn btn-secondary" data-copy="{{marketplace.install_cmd}}">Copy</button>
-                </div>
-            </div>
-        </div>
-        <div class="install-setup">
-            <div class="install-setup-title">Add to <code>~/.claude/settings.json</code> → <code>env</code></div>
-            <div class="install-setup-field">
-                <label class="install-setup-label">SYSTEMPROMPT_URL</label>
-                <div class="install-copybox">
-                    <code class="install-code">{{marketplace.site_url}}</code>
-                    <button class="btn btn-secondary" data-copy="{{marketplace.site_url}}">Copy</button>
-                </div>
-            </div>
-            <div class="install-setup-field">
-                <label class="install-setup-label">SYSTEMPROMPT_TOKEN</label>
-                <div class="install-copybox install-token-box">
-                    <code class="install-code install-token-value" data-masked="true">{{marketplace.plugin_token}}</code>
-                    <button class="btn btn-secondary install-reveal-btn" data-action="toggle-token" title="Show/hide token">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                    </button>
-                    <button class="btn btn-secondary" data-copy="{{marketplace.plugin_token}}">Copy</button>
                 </div>
             </div>
         </div>

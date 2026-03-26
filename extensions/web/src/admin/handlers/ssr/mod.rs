@@ -104,13 +104,25 @@ fn render_page(
         );
         let github_repo = "systempromptio/systemprompt-enterprise-demo-marketplace";
         let github_url = format!("https://github.com/{github_repo}");
-        let install_cmd = format!("claude plugin marketplace add {github_repo}");
         let plugin_token = crate::admin::repositories::export_auth::generate_plugin_token(
             &user_ctx.user_id,
             &user_ctx.username,
             &user_ctx.email,
         )
         .unwrap_or_default();
+
+        // Build authenticated marketplace URL for Claude Code:
+        // Embed token as HTTP basic auth in the git URL so hooks are bundled automatically.
+        let base_url = mkt_ctx.site_url.trim_end_matches('/');
+        let authed_url = if let Some(rest) = base_url.strip_prefix("https://") {
+            format!("https://{}@{}/api/public/marketplace/{}", plugin_token, rest, mkt_ctx.user_id)
+        } else if let Some(rest) = base_url.strip_prefix("http://") {
+            format!("http://{}@{}/api/public/marketplace/{}", plugin_token, rest, mkt_ctx.user_id)
+        } else {
+            format!("{}/api/public/marketplace/{}", base_url, mkt_ctx.user_id)
+        };
+        let install_cmd = format!("claude plugin add {authed_url}");
+
         obj.insert(
             "marketplace".to_string(),
             json!({
