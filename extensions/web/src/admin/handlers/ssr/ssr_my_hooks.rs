@@ -81,9 +81,7 @@ pub(crate) async fn my_hook_edit_page(
         None
     };
 
-    let is_forked = hook
-        .as_ref()
-        .is_some_and(|h| h.base_hook_id.is_some());
+    let is_forked = hook.as_ref().is_some_and(|h| h.base_hook_id.is_some());
 
     let data = json!({
         "page": "my-hook-edit",

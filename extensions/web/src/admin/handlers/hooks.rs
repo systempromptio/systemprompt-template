@@ -26,19 +26,17 @@ pub(crate) async fn list_hooks_handler(
 
     let catalog_hooks = match hook_catalog::list_catalog_hooks(&pool).await {
         Ok(hooks) if !hooks.is_empty() => hooks,
-        _ => {
-            match hook_catalog::list_file_hooks(&services_path) {
-                Ok(hooks) => hooks,
-                Err(e) => {
-                    tracing::error!(error = %e, "Failed to list hooks");
-                    return (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(serde_json::json!({"error": e.to_string()})),
-                    )
-                        .into_response();
-                }
+        _ => match hook_catalog::list_file_hooks(&services_path) {
+            Ok(hooks) => hooks,
+            Err(e) => {
+                tracing::error!(error = %e, "Failed to list hooks");
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(serde_json::json!({"error": e.to_string()})),
+                )
+                    .into_response();
             }
-        }
+        },
     };
 
     let hooks: Vec<_> = catalog_hooks

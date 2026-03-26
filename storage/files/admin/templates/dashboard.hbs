@@ -51,6 +51,12 @@
             <span class="metric-ribbon-label">MCP Rejections</span>
         </div>
         {{/if}}
+        {{#if governance_denied}}
+        <div class="metric-ribbon-item metric-ribbon-danger" data-key="governance_denied">
+            <span class="metric-ribbon-value">{{governance_denied}}</span>
+            <span class="metric-ribbon-label">Policy Violations</span>
+        </div>
+        {{/if}}
         <div class="metric-ribbon-item metric-ribbon-accent" data-key="total_plugins">
             <span class="metric-ribbon-value">{{total_plugins}}</span>
             <span class="metric-ribbon-label">Plugins</span>
@@ -334,7 +340,28 @@
             {{/if}}
         </div>
         <div>
-            <div class="section-title">MCP Security Summary</div>
+            <div class="section-title">Governance Decisions</div>
+            {{#if governance_events}}
+            <div class="card p-5">
+                {{#each governance_events}}
+                <div class="feed-item" data-ts="{{created_at}}">
+                    <div class="feed-icon {{#if is_denied}}feed-red{{else}}feed-green{{/if}}"></div>
+                    <div class="feed-content">
+                        <span class="feed-text">
+                            {{#if is_denied}}<span class="mcp-badge mcp-badge-danger">DENIED</span>{{else}}<span class="mcp-badge mcp-badge-success">ALLOWED</span>{{/if}}
+                            <strong>{{tool_name}}</strong>
+                            {{#if agent_id}}({{agent_id}}){{/if}}
+                        </span>
+                        <span class="feed-time text-sm text-tertiary">{{reason}}</span>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+            {{else}}
+            {{> components/empty-state message="No governance decisions yet."}}
+            {{/if}}
+
+            <div class="section-title" style="margin-top: var(--space-6)">MCP Server Stats</div>
             {{#if mcp_access_stats}}
             <div class="mcp-security-cards">
                 {{#each mcp_access_stats}}

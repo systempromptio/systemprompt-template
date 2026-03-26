@@ -178,16 +178,12 @@ pub async fn get_raw_env_vars_for_export(
         .await?;
         return Ok(fallback
             .into_iter()
-            .map(|(name, val, is_secret)| {
-                (name, if is_secret { String::new() } else { val })
-            })
+            .map(|(name, val, is_secret)| (name, if is_secret { String::new() } else { val }))
             .collect());
     }
 
     Ok(rows
         .into_iter()
-        .map(|(name, val, is_secret)| {
-            (name, if is_secret { String::new() } else { val })
-        })
+        .map(|(name, val, is_secret)| (name, if is_secret { String::new() } else { val }))
         .collect())
 }

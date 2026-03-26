@@ -2,9 +2,7 @@ use std::sync::Arc;
 
 use sqlx::PgPool;
 
-use super::super::types::{
-    CreateUserPluginRequest, UpdateUserPluginRequest, UserPlugin,
-};
+use super::super::types::{CreateUserPluginRequest, UpdateUserPluginRequest, UserPlugin};
 
 pub async fn list_user_plugins(
     pool: &Arc<PgPool>,

@@ -170,9 +170,7 @@ pub async fn resolve_authorized_org_plugin_ids(
         });
 
         let has_dept_match = mkt_rules.iter().any(|r| {
-            r.rule_type == "department"
-                && r.access == "allow"
-                && r.rule_value == user_department
+            r.rule_type == "department" && r.access == "allow" && r.rule_value == user_department
         });
 
         if is_admin || has_role_match || has_dept_match {
@@ -256,7 +254,9 @@ pub async fn list_marketplaces_for_plugins(
     Ok(map)
 }
 
-pub async fn list_github_marketplaces(pool: &Arc<PgPool>) -> Result<Vec<OrgMarketplace>, sqlx::Error> {
+pub async fn list_github_marketplaces(
+    pool: &Arc<PgPool>,
+) -> Result<Vec<OrgMarketplace>, sqlx::Error> {
     sqlx::query_as::<_, OrgMarketplace>(
         "SELECT id, name, description, enabled, github_repo_url, created_at, updated_at
          FROM org_marketplaces

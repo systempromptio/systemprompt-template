@@ -100,6 +100,22 @@ Wait for "All services started successfully" then retry from step 1.
 
 ---
 
+## STEP 7: MCP ACCESS TRACKING
+
+```
+./demo/07-mcp-access-tracking.sh
+```
+
+SAY: "Every MCP tool call is tracked. We make two real calls — one to the skill-manager, one to the systemprompt CLI server. Both authenticate via OAuth, both execute a tool. Every event — authentication, tool execution — is recorded in user_activity."
+
+EXPECT: Two successful MCP tool calls, then a database query showing 4 events (2 authenticated + 2 used). Script prints the dashboard URL where you can see them.
+
+SAY: "On the dashboard you can see the MCP Server Access section — per-server stats, Granted/Rejected badges, and the live activity feed picks them up in real time. When a rejection happens, the metric ribbon shows an MCP Rejections counter."
+
+Dashboard: http://localhost:8080/admin/
+
+---
+
 ## COST
 
-Steps 1 and 2 each cost one AI call (~$0.01 on Gemini Flash). Step 3 is free (read-only).
+Steps 1 and 2 each cost one AI call (~$0.01 on Gemini Flash). Step 3 is free (read-only). Step 7 is free (direct MCP calls, no AI).

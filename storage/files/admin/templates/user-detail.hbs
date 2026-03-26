@@ -1,8 +1,6 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/back-button href="/admin/users/" label="Back to Users"}}
-
     {{#if not_found}}
     {{> components/empty-state message="User not found."}}
     {{else if user}}

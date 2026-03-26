@@ -18,9 +18,7 @@ fn internal_error(msg: &str, err: impl std::fmt::Display) -> Response {
     tracing::error!(error = %err, "{msg}");
     (
         StatusCode::INTERNAL_SERVER_ERROR,
-        Html(format!(
-            "<h1>Internal Server Error</h1><p>{msg}: {err}</p>"
-        )),
+        Html(format!("<h1>Internal Server Error</h1><p>{msg}: {err}</p>")),
     )
         .into_response()
 }
@@ -96,10 +94,8 @@ pub(crate) async fn org_marketplaces_page(
         })
         .collect();
 
-    let all_roles_json: Vec<serde_json::Value> = known_roles
-        .iter()
-        .map(|r| json!({ "value": r }))
-        .collect();
+    let all_roles_json: Vec<serde_json::Value> =
+        known_roles.iter().map(|r| json!({ "value": r })).collect();
 
     let mut marketplaces_json: Vec<serde_json::Value> = Vec::new();
     let mut total_plugins = 0usize;
@@ -204,9 +200,10 @@ pub(crate) async fn org_marketplaces_page(
             .ok()
             .flatten();
 
-        let user_access_count = repositories::org_marketplaces::count_users_with_marketplace_access(&pool, &mkt.id)
-            .await
-            .unwrap_or(0);
+        let user_access_count =
+            repositories::org_marketplaces::count_users_with_marketplace_access(&pool, &mkt.id)
+                .await
+                .unwrap_or(0);
 
         marketplaces_json.push(json!({
             "id": mkt.id,

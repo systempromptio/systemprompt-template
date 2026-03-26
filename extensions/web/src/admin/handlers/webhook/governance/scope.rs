@@ -42,7 +42,7 @@ pub(super) fn resolve_agent_scope(agent_id: &str) -> String {
 
 fn extract_scope_from_config(config: &serde_yaml::Value, agent_id: &str) -> Option<String> {
     let agents_map = config.get("agents")?.as_mapping()?;
-    let agent_val = agents_map.get(&serde_yaml::Value::String(agent_id.to_string()))?;
+    let agent_val = agents_map.get(serde_yaml::Value::String(agent_id.to_string()))?;
 
     if let Some(scope) = agent_val
         .get("oauth")

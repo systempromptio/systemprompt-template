@@ -59,4 +59,6 @@ pub(crate) use users::{
     create_user_handler, dashboard_handler, delete_user_handler, list_events_handler,
     list_users_handler, update_user_handler, user_detail_handler, user_usage_handler,
 };
-pub(crate) use webhook::{govern_tool_use, track_hook_event, track_statusline_event, track_transcript_event};
+pub(crate) use webhook::{
+    govern_tool_use, track_hook_event, track_statusline_event, track_transcript_event,
+};

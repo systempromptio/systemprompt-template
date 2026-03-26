@@ -29,10 +29,7 @@ pub fn render_social_action_bar(_slug: &str, _title: &str, _org_url: &str) -> St
     let social_links = [
         ("github", "https://github.com/foodaborad"),
         ("twitter", "https://twitter.com/foodaborad"),
-        (
-            "linkedin",
-            "https://www.linkedin.com/company/foodaborad",
-        ),
+        ("linkedin", "https://www.linkedin.com/company/foodaborad"),
     ];
 
     let mut links_html: Vec<String> = social_links

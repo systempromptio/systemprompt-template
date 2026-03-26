@@ -93,7 +93,10 @@ pub(crate) async fn my_skill_edit_page(
         None
     };
 
-    let is_forked = skill.as_ref().and_then(|s| s.base_skill_id.as_ref()).is_some();
+    let is_forked = skill
+        .as_ref()
+        .and_then(|s| s.base_skill_id.as_ref())
+        .is_some();
 
     let mut skill_json = serde_json::to_value(&skill).unwrap_or(json!(null));
     if let Some(obj) = skill_json.as_object_mut() {

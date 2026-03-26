@@ -168,10 +168,7 @@ pub(crate) async fn track_statusline_event(
     let plugin_id = query.plugin_id.as_deref();
     let metadata = build_statusline_metadata(&payload);
 
-    let model_id = payload
-        .model
-        .as_ref()
-        .and_then(|m| m.api_model_id.clone());
+    let model_id = payload.model.as_ref().and_then(|m| m.api_model_id.clone());
     let input_tokens = payload
         .context_window
         .as_ref()

@@ -1,6 +1,6 @@
 ---
 title: "Phase 2: Maintenance & Support"
-description: "Monthly maintenance retainer beginning at production deployment (Phase 2). Platform updates, security patches, priority support. List price €2,000/month, partner rate €1,200/month."
+description: "Monthly maintenance retainer beginning at production deployment (Phase 2). Platform updates, security patches, priority support."
 author: "systemprompt.io"
 slug: "engagement-maintenance"
 keywords: "maintenance, support, retainer, monthly, updates, security, SLA"
@@ -30,15 +30,7 @@ related_docs:
 
 ## Pricing
 
-| | List Price | Partner Price |
-|---|----------:|-------------:|
-| **Monthly rate** | €2,000/month | **€1,200/month** |
-| **Annual total** | €24,000 | **€14,400** |
-| **Saving** | | **€9,600 (40%)** |
-
-> **Reference implementation partner rate.** The 40% discount reflects Foodles's role as a flagship deployment partner.
-
-**Payment:** €1,200/month, paid monthly in advance beginning at production deployment (Phase 2).
+The maintenance retainer is priced monthly with preferential reference partner terms. Pricing will be discussed as part of the engagement process. Payment is monthly in advance, beginning at production deployment (Phase 2).
 
 ---
 
@@ -83,15 +75,6 @@ Upon cancellation:
 - The platform continues to function — the retainer covers updates and support, not operational capability
 
 ---
-
-## Annual Summary
-
-| Item | Amount |
-|------|-------:|
-| Monthly rate (partner) | €1,200 |
-| Annual total | €14,400 |
-| List price annual | €24,000 |
-| Annual saving | €9,600 |
 
 ---
 

@@ -69,9 +69,10 @@ pub(crate) async fn govern_tool_use(
     let session_id = payload.session_id.as_deref().unwrap_or("unknown");
     let plugin_id = query.plugin_id.as_deref();
 
-    let agent_scope = agent_id
-        .map(scope::resolve_agent_scope)
-        .unwrap_or_else(|| "unknown".to_string());
+    let agent_scope = match agent_id {
+        Some(id) => scope::resolve_agent_scope(id),
+        None => "unknown".to_string(),
+    };
 
     let ctx = GovernanceContext {
         tool_name,

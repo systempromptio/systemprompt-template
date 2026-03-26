@@ -104,10 +104,7 @@ pub async fn generate_org_marketplace_export_bundles(
         let version = files
             .iter()
             .find(|f| f.path == ".claude-plugin/plugin.json")
-            .and_then(|f| {
-                serde_json::from_str::<serde_json::Value>(&f.content)
-                    .ok()
-            })
+            .and_then(|f| serde_json::from_str::<serde_json::Value>(&f.content).ok())
             .and_then(|v| v.get("version").and_then(|v| v.as_str()).map(String::from))
             .unwrap_or_else(|| plugin.base.version.clone());
 

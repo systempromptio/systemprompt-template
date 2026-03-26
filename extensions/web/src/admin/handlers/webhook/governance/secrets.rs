@@ -22,7 +22,10 @@ const SECRET_PATTERNS: &[(&str, &str)] = &[
     ("Heroku API Key", "heroku_api_key"),
     ("Private Key Header", "-----BEGIN RSA PRIVATE KEY-----"),
     ("Private Key Header (EC)", "-----BEGIN EC PRIVATE KEY-----"),
-    ("Private Key Header (generic)", "-----BEGIN PRIVATE KEY-----"),
+    (
+        "Private Key Header (generic)",
+        "-----BEGIN PRIVATE KEY-----",
+    ),
     ("Generic password field", "password="),
     ("Generic secret field", "secret="),
     ("Bearer token literal", "Bearer eyJ"),

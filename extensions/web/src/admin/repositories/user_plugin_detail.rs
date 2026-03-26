@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use sqlx::PgPool;
 
-use super::super::types::{UserPluginWithAssociations};
+use super::super::types::UserPluginWithAssociations;
 use super::user_plugins::get_user_plugin;
 
 pub async fn get_plugin_with_associations(

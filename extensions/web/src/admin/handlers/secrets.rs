@@ -86,8 +86,7 @@ pub(crate) async fn resolve_secrets_handler(
         }
     };
 
-    match secret_resolve::resolve_secrets_for_plugin(&pool, &user_id, &plugin_id, &master_key)
-        .await
+    match secret_resolve::resolve_secrets_for_plugin(&pool, &user_id, &plugin_id, &master_key).await
     {
         Ok(secrets) => Json(secrets).into_response(),
         Err(e) => {

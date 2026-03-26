@@ -94,7 +94,10 @@ pub(super) fn read_mcp_server_from_fs(
                             .unwrap_or("")
                             .to_string(),
                         #[allow(clippy::cast_possible_truncation)]
-                        port: cfg.get("port").and_then(serde_yaml::Value::as_i64).unwrap_or(0) as i32,
+                        port: cfg
+                            .get("port")
+                            .and_then(serde_yaml::Value::as_i64)
+                            .unwrap_or(0) as i32,
                         endpoint: cfg
                             .get("endpoint")
                             .and_then(|v| v.as_str())
@@ -146,7 +149,10 @@ pub(super) struct HookData {
     pub is_async: bool,
 }
 
-pub(super) fn read_hook_from_fs(services_path: &std::path::Path, hook_id: &str) -> Option<HookData> {
+pub(super) fn read_hook_from_fs(
+    services_path: &std::path::Path,
+    hook_id: &str,
+) -> Option<HookData> {
     let plugins_path = services_path.join("plugins");
     if !plugins_path.exists() {
         return None;

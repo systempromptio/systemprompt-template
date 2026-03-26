@@ -147,8 +147,7 @@ impl HelperDef for JsonHelper {
         let val = h
             .param(0)
             .map_or(serde_json::Value::Null, |v| v.value().clone());
-        let json_str =
-            serde_json::to_string_pretty(&val).unwrap_or_else(|_| "null".to_string());
+        let json_str = serde_json::to_string_pretty(&val).unwrap_or_else(|_| "null".to_string());
         let escaped = json_str
             .replace('&', "&amp;")
             .replace('<', "&lt;")

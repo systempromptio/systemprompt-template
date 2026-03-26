@@ -107,12 +107,10 @@ pub(crate) async fn hooks_page(
 
     let mut catalog_hooks = match hook_catalog::list_catalog_hooks(&pool).await {
         Ok(hooks) if !hooks.is_empty() => hooks,
-        _ => {
-            hook_catalog::list_file_hooks(&services_path).unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to list hooks from disk");
-                vec![]
-            })
-        }
+        _ => hook_catalog::list_file_hooks(&services_path).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list hooks from disk");
+            vec![]
+        }),
     };
 
     for hook in &mut catalog_hooks {

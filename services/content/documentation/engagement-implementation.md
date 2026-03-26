@@ -1,6 +1,6 @@
 ---
 title: "Phase 1: PRD & Development"
-description: "Phase 1 of the engagement — collaborative PRD, Control Center build-out on systemprompt cloud, hands-on evaluation. List price €25,000, reference partner rate €15,000."
+description: "Phase 1 of the engagement — collaborative PRD, Control Center build-out on systemprompt cloud, hands-on evaluation."
 author: "systemprompt.io"
 slug: "engagement-implementation"
 keywords: "PRD, development, Control Center, dashboard, branding, skill migration, evaluation, phase 1"
@@ -30,14 +30,7 @@ related_docs:
 
 ## Pricing
 
-| | List Price | Partner Price |
-|---|----------:|-------------:|
-| **PRD & Development** | €25,000 | **€15,000** |
-| **Saving** | | **€10,000 (40%)** |
-
-> **Reference implementation partner rate.** The 40% discount reflects Foodles's role as a flagship deployment partner.
-
-**Payment:** €15,000 in advance before work begins. Work on the joint PRD and development starts upon receipt of payment.
+Phase 1 pricing reflects preferential reference partner terms and will be discussed as part of the engagement process. Payment is required in advance before work begins.
 
 ---
 

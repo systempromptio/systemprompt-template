@@ -64,6 +64,7 @@ async fn fetch_dashboard_data(
         tool_success_rates: vec![],
         mcp_access_events: vec![],
         mcp_access_stats: vec![],
+        governance_events: vec![],
     });
     let users = users_result.unwrap_or_else(|e| {
         tracing::warn!(error = %e, "Failed to list users for dashboard");
@@ -201,6 +202,27 @@ pub(crate) async fn dashboard_page(
 
     let total_rejected: i64 = dash.mcp_access_stats.iter().map(|s| s.rejected).sum();
 
+    let governance_json: Vec<serde_json::Value> = dash
+        .governance_events
+        .iter()
+        .map(|e| {
+            json!({
+                "tool_name": e.tool_name,
+                "agent_id": e.agent_id,
+                "decision": e.decision,
+                "reason": e.reason,
+                "created_at": e.created_at,
+                "is_denied": e.decision == "deny",
+            })
+        })
+        .collect();
+
+    let governance_denied: i64 = dash
+        .governance_events
+        .iter()
+        .filter(|e| e.decision == "deny")
+        .count() as i64;
+
     let chart_data = super::compute_area_chart_data(&dash.usage_timeseries, range_key);
 
     let total_tokens = dash.stats.total_input_tokens + dash.stats.total_output_tokens;
@@ -258,6 +280,8 @@ pub(crate) async fn dashboard_page(
         "mcp_access_events": mcp_events_json,
         "mcp_access_stats": dash.mcp_access_stats,
         "total_rejected": total_rejected,
+        "governance_events": governance_json,
+        "governance_denied": governance_denied,
     });
     super::render_page(&engine, "dashboard", &data, &user_ctx, &mkt_ctx)
 }

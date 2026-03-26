@@ -79,14 +79,29 @@ pub(crate) async fn my_marketplace_page(
         inherited_count += 1;
 
         let skills_arr: Vec<serde_json::Value> = if let Some(ref d) = detail {
-            d.skills.iter().map(|s| json!({"id": s, "name": s})).collect()
-        } else { vec![] };
+            d.skills
+                .iter()
+                .map(|s| json!({"id": s, "name": s}))
+                .collect()
+        } else {
+            vec![]
+        };
         let agents_arr: Vec<serde_json::Value> = if let Some(ref d) = detail {
-            d.agents.iter().map(|a| json!({"id": a, "name": a})).collect()
-        } else { vec![] };
+            d.agents
+                .iter()
+                .map(|a| json!({"id": a, "name": a}))
+                .collect()
+        } else {
+            vec![]
+        };
         let mcp_arr: Vec<serde_json::Value> = if let Some(ref d) = detail {
-            d.mcp_servers.iter().map(|m| json!({"id": m, "name": m})).collect()
-        } else { vec![] };
+            d.mcp_servers
+                .iter()
+                .map(|m| json!({"id": m, "name": m}))
+                .collect()
+        } else {
+            vec![]
+        };
 
         plugins_json.push(json!({
             "plugin_id": pid,

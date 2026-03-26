@@ -53,6 +53,12 @@ pub const SCHEMA_TRANSCRIPT_TOKEN_TRACKING: &str =
     include_str!("../schema/041_transcript_token_tracking.sql");
 pub const SCHEMA_PLUGIN_INSTALLATIONS: &str =
     include_str!("../schema/042_plugin_installations.sql");
+pub const SCHEMA_SEED_ENTERPRISE_DEMO: &str =
+    include_str!("../schema/043_seed_enterprise_demo_marketplace.sql");
+pub const SCHEMA_MARKETPLACE_GITHUB: &str =
+    include_str!("../schema/044_marketplace_github.sql");
+pub const SCHEMA_GOVERNANCE_DECISIONS: &str =
+    include_str!("../schema/045_governance_decisions.sql");
 
 pub fn schema_definitions() -> Vec<SchemaDefinition> {
     vec![
@@ -104,5 +110,8 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
             SCHEMA_TRANSCRIPT_TOKEN_TRACKING,
         ),
         SchemaDefinition::inline("plugin_installations", SCHEMA_PLUGIN_INSTALLATIONS),
+        SchemaDefinition::inline("seed_enterprise_demo", SCHEMA_SEED_ENTERPRISE_DEMO),
+        SchemaDefinition::inline("marketplace_github", SCHEMA_MARKETPLACE_GITHUB),
+        SchemaDefinition::inline("governance_decisions", SCHEMA_GOVERNANCE_DECISIONS),
     ]
 }

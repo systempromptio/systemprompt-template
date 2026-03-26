@@ -59,10 +59,7 @@ impl Job for GitHubMarketplaceSyncJob {
             };
 
             match repositories::github_sync::sync_marketplace_from_github(
-                &pool,
-                &mkt.id,
-                repo_url,
-                "cron",
+                &pool, &mkt.id, repo_url, "cron",
             )
             .await
             {

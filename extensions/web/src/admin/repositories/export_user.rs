@@ -1,12 +1,10 @@
-use std::path::Path;
-use std::sync::Arc;
-use sqlx::PgPool;
-use systemprompt::models::Config;
+use super::super::types::{UserAgent, UserSkill};
 use super::export::{PluginBundle, PluginFile, SyncPluginsResponse};
-use super::super::types::{UserSkill, UserAgent};
 use super::export_auth::generate_plugin_token;
 use super::export_builders::PluginBuildContext;
-use super::export_scripts::{build_hooks_file, collect_user_hooks, build_marketplace, load_marketplace_identity};
+use super::export_scripts::{
+    build_hooks_file, build_marketplace, collect_user_hooks, load_marketplace_identity,
+};
 use super::export_validation::{compute_bundle_counts, compute_export_totals};
 use super::plugin_env::get_raw_env_vars_for_export;
 use super::user_agents::list_user_agents;
@@ -15,6 +13,10 @@ use super::user_mcp_servers::list_user_mcp_servers;
 use super::user_plugin_detail::get_plugin_with_associations;
 use super::user_plugins::list_user_plugins;
 use super::user_skills::list_user_skills;
+use sqlx::PgPool;
+use std::path::Path;
+use std::sync::Arc;
+use systemprompt::models::Config;
 
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::too_many_lines)]
@@ -35,12 +37,14 @@ pub async fn generate_export_bundles(
     let platform_url = Config::get().map_or_else(|_| String::new(), |c| c.api_external_url.clone());
 
     let is_admin = roles.iter().any(|r| r == "admin");
-    let org_plugin_ids =
-        super::org_marketplaces::resolve_authorized_org_plugin_ids(pool, roles, department, is_admin)
-            .await
-            .unwrap_or_default();
+    let org_plugin_ids = super::org_marketplaces::resolve_authorized_org_plugin_ids(
+        pool, roles, department, is_admin,
+    )
+    .await
+    .unwrap_or_default();
 
-    let plugin_configs = super::export_auth::load_plugin_configs_by_ids(&plugins_path, &org_plugin_ids)?;
+    let plugin_configs =
+        super::export_auth::load_plugin_configs_by_ids(&plugins_path, &org_plugin_ids)?;
 
     let mut bundles = Vec::new();
     for (plugin_id, plugin) in &plugin_configs {
@@ -104,7 +108,9 @@ pub async fn generate_export_bundles(
         if !user_plugin.enabled {
             continue;
         }
-        let Ok(Some(assoc)) = get_plugin_with_associations(pool, user_id, &user_plugin.plugin_id).await else {
+        let Ok(Some(assoc)) =
+            get_plugin_with_associations(pool, user_id, &user_plugin.plugin_id).await
+        else {
             continue;
         };
 
@@ -216,7 +222,13 @@ pub async fn generate_export_bundles(
         });
     }
 
-    build_orphan_bundle(&all_user_skills, &all_user_agents, &claimed_skill_ids, &claimed_agent_ids, &mut bundles)?;
+    build_orphan_bundle(
+        &all_user_skills,
+        &all_user_agents,
+        &claimed_skill_ids,
+        &claimed_agent_ids,
+        &mut bundles,
+    )?;
 
     let identity = load_marketplace_identity(services_path);
     let marketplace = build_marketplace(&plugin_configs, &bundles, &identity)?;

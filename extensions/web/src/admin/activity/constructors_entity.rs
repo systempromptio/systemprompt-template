@@ -1,6 +1,6 @@
+use super::constructors::truncate;
 use super::enums::{entity_label, ActivityAction, ActivityCategory, ActivityEntity};
 use super::types::{ActivityEntityRef, NewActivity};
-use super::constructors::truncate;
 
 impl NewActivity {
     #[must_use]
@@ -138,12 +138,7 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn tool_used(
-        user_id: &str,
-        tool_name: &str,
-        session_id: &str,
-        detail: &str,
-    ) -> Self {
+    pub fn tool_used(user_id: &str, tool_name: &str, session_id: &str, detail: &str) -> Self {
         Self {
             user_id: user_id.to_string(),
             category: ActivityCategory::ToolUsage,
@@ -159,12 +154,7 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn skill_used_rich(
-        user_id: &str,
-        tool_name: &str,
-        session_id: &str,
-        detail: &str,
-    ) -> Self {
+    pub fn skill_used_rich(user_id: &str, tool_name: &str, session_id: &str, detail: &str) -> Self {
         Self {
             user_id: user_id.to_string(),
             category: ActivityCategory::SkillUsage,
@@ -228,11 +218,7 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn task_completed_activity(
-        user_id: &str,
-        session_id: &str,
-        subject: Option<&str>,
-    ) -> Self {
+    pub fn task_completed_activity(user_id: &str, session_id: &str, subject: Option<&str>) -> Self {
         let description = match subject {
             Some(s) => format!("Completed task: '{s}'"),
             None => "Completed a task".to_string(),
@@ -248,11 +234,7 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn context_compacted(
-        user_id: &str,
-        session_id: &str,
-        trigger: Option<&str>,
-    ) -> Self {
+    pub fn context_compacted(user_id: &str, session_id: &str, trigger: Option<&str>) -> Self {
         let description = if trigger == Some("auto") {
             "Context auto-compacted".to_string()
         } else {
@@ -269,11 +251,7 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn permission_requested(
-        user_id: &str,
-        session_id: &str,
-        tool: &str,
-    ) -> Self {
+    pub fn permission_requested(user_id: &str, session_id: &str, tool: &str) -> Self {
         Self {
             user_id: user_id.to_string(),
             category: ActivityCategory::Notification,

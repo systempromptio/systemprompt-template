@@ -48,7 +48,11 @@ pub async fn sync_marketplace_from_github(
     let last_hash = std::fs::read_to_string(&marker_path).unwrap_or_default();
     if current_hash.trim() == last_hash.trim() && !last_hash.is_empty() {
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
-        tracing::info!(marketplace_id, commit = &current_hash[..8.min(current_hash.len())], "Marketplace unchanged");
+        tracing::info!(
+            marketplace_id,
+            commit = &current_hash[..8.min(current_hash.len())],
+            "Marketplace unchanged"
+        );
         return Ok(SyncResult {
             commit_hash: current_hash,
             plugins_synced: 0,
@@ -178,7 +182,11 @@ pub async fn publish_marketplace_to_github(
 ) -> Result<SyncResult> {
     let start = std::time::Instant::now();
 
-    tracing::info!(marketplace_id, repo_url, "Starting GitHub marketplace publish");
+    tracing::info!(
+        marketplace_id,
+        repo_url,
+        "Starting GitHub marketplace publish"
+    );
 
     let services_path = ProfileBootstrap::get()
         .map(|p| PathBuf::from(&p.paths.services))
@@ -258,7 +266,10 @@ pub async fn publish_marketplace_to_github(
         });
     }
 
-    git_commit(&local_path, &format!("Marketplace update from admin ({})", marketplace_id))?;
+    git_commit(
+        &local_path,
+        &format!("Marketplace update from admin ({})", marketplace_id),
+    )?;
     git_push(&local_path, &push_url)?;
 
     let current_hash = git_head_hash(&local_path)?;
@@ -340,8 +351,12 @@ pub(crate) fn git_head_hash(repo_path: &Path) -> Result<String> {
 
 pub(crate) fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBundle> {
     let plugin_json_path = plugin_dir.join(".claude-plugin/plugin.json");
-    let manifest_content = std::fs::read_to_string(&plugin_json_path)
-        .map_err(|e| anyhow::anyhow!("Failed to read plugin.json at {}: {e}", plugin_json_path.display()))?;
+    let manifest_content = std::fs::read_to_string(&plugin_json_path).map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to read plugin.json at {}: {e}",
+            plugin_json_path.display()
+        )
+    })?;
     let manifest: serde_json::Value = serde_json::from_str(&manifest_content)?;
 
     let plugin_id = manifest
@@ -477,11 +492,9 @@ pub(crate) fn import_or_update_plugin(services_path: &Path, bundle: &PluginBundl
 }
 
 pub(crate) async fn mark_all_users_dirty(pool: &Arc<PgPool>) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "UPDATE marketplace_sync_status SET dirty = true, last_changed_at = NOW()",
-    )
-    .execute(pool.as_ref())
-    .await?;
+    sqlx::query("UPDATE marketplace_sync_status SET dirty = true, last_changed_at = NOW()")
+        .execute(pool.as_ref())
+        .await?;
     Ok(())
 }
 

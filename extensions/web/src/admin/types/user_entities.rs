@@ -125,7 +125,6 @@ pub struct MarketplaceSyncStatus {
     pub created_at: DateTime<Utc>,
 }
 
-
 #[derive(Debug, Deserialize)]
 pub struct ForkPluginRequest {
     pub org_plugin_id: String,

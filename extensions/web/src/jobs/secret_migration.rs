@@ -29,9 +29,7 @@ impl Job for SecretMigrationJob {
         let start = std::time::Instant::now();
 
         let Ok(master_key) = secret_crypto::load_master_key() else {
-            return Ok(JobResult::success()
-                .with_stats(0, 0)
-                .with_duration(0));
+            return Ok(JobResult::success().with_stats(0, 0).with_duration(0));
         };
 
         let db = ctx

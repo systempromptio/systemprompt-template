@@ -15,16 +15,12 @@ pub async fn list_selected_org_plugins(
     Ok(rows.into_iter().map(|r| r.0).collect())
 }
 
-pub async fn has_any_selections(
-    pool: &Arc<PgPool>,
-    user_id: &str,
-) -> Result<bool, sqlx::Error> {
-    let row: (bool,) = sqlx::query_as(
-        "SELECT EXISTS(SELECT 1 FROM user_selected_org_plugins WHERE user_id = $1)",
-    )
-    .bind(user_id)
-    .fetch_one(pool.as_ref())
-    .await?;
+pub async fn has_any_selections(pool: &Arc<PgPool>, user_id: &str) -> Result<bool, sqlx::Error> {
+    let row: (bool,) =
+        sqlx::query_as("SELECT EXISTS(SELECT 1 FROM user_selected_org_plugins WHERE user_id = $1)")
+            .bind(user_id)
+            .fetch_one(pool.as_ref())
+            .await?;
     Ok(row.0)
 }
 

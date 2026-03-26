@@ -29,11 +29,7 @@ impl BundleAdminJsJob {
             let mut entries: Vec<_> = std::fs::read_dir(&bundles_dir)
                 .with_context(|| format!("Failed to read bundles dir: {}", bundles_dir.display()))?
                 .filter_map(std::result::Result::ok)
-                .filter(|e| {
-                    e.path()
-                        .extension()
-                        .is_some_and(|ext| ext == "txt")
-                })
+                .filter(|e| e.path().extension().is_some_and(|ext| ext == "txt"))
                 .collect();
             entries.sort_by_key(std::fs::DirEntry::file_name);
 

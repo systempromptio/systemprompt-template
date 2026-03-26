@@ -3,10 +3,7 @@ use sqlx::PgPool;
 use super::secrets::detect_secrets;
 use super::types::{EvaluatedRule, GovernanceContext, RuleEvaluation};
 
-const ADMIN_ONLY_TOOL_PREFIXES: &[&str] = &[
-    "mcp__systemprompt__",
-    "mcp__skill-manager__",
-];
+const ADMIN_ONLY_TOOL_PREFIXES: &[&str] = &["mcp__systemprompt__", "mcp__skill-manager__"];
 
 const RATE_LIMIT_PER_MINUTE: i64 = 60;
 
@@ -16,10 +13,36 @@ pub(super) async fn evaluate(pool: &PgPool, ctx: &GovernanceContext<'_>) -> Rule
     let mut deny_reason = String::new();
     let mut deny_policy = String::new();
 
-    evaluate_secret_detection(ctx, &mut rules, &mut denied, &mut deny_reason, &mut deny_policy);
-    evaluate_scope(ctx, &mut rules, &mut denied, &mut deny_reason, &mut deny_policy);
-    evaluate_blocklist(ctx, &mut rules, &mut denied, &mut deny_reason, &mut deny_policy);
-    evaluate_rate_limit(pool, ctx, &mut rules, &mut denied, &mut deny_reason, &mut deny_policy).await;
+    evaluate_secret_detection(
+        ctx,
+        &mut rules,
+        &mut denied,
+        &mut deny_reason,
+        &mut deny_policy,
+    );
+    evaluate_scope(
+        ctx,
+        &mut rules,
+        &mut denied,
+        &mut deny_reason,
+        &mut deny_policy,
+    );
+    evaluate_blocklist(
+        ctx,
+        &mut rules,
+        &mut denied,
+        &mut deny_reason,
+        &mut deny_policy,
+    );
+    evaluate_rate_limit(
+        pool,
+        ctx,
+        &mut rules,
+        &mut denied,
+        &mut deny_reason,
+        &mut deny_policy,
+    )
+    .await;
 
     if denied {
         RuleEvaluation {
@@ -128,7 +151,10 @@ fn evaluate_scope(
         rules.push(EvaluatedRule {
             rule: "scope_check",
             result: "pass",
-            detail: format!("{} scope is allowed for tool: {}", ctx.agent_scope, ctx.tool_name),
+            detail: format!(
+                "{} scope is allowed for tool: {}",
+                ctx.agent_scope, ctx.tool_name
+            ),
         });
     }
 }
@@ -163,7 +189,10 @@ fn evaluate_blocklist(
         rules.push(EvaluatedRule {
             rule: "tool_blocklist",
             result: "fail",
-            detail: format!("Tool '{}' matches destructive pattern blocklist", ctx.tool_name),
+            detail: format!(
+                "Tool '{}' matches destructive pattern blocklist",
+                ctx.tool_name
+            ),
         });
     } else {
         rules.push(EvaluatedRule {
@@ -204,9 +233,8 @@ async fn evaluate_rate_limit(
 
     if count >= RATE_LIMIT_PER_MINUTE {
         *denied = true;
-        *deny_reason = format!(
-            "Rate limit exceeded: {count}/{RATE_LIMIT_PER_MINUTE} calls this minute"
-        );
+        *deny_reason =
+            format!("Rate limit exceeded: {count}/{RATE_LIMIT_PER_MINUTE} calls this minute");
         *deny_policy = "rate_limit".to_string();
         rules.push(EvaluatedRule {
             rule: "rate_limit",

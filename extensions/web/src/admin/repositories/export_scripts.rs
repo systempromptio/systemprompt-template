@@ -78,9 +78,7 @@ pub(super) fn collect_tracking_hooks(
     script_name: &str,
     is_windows: bool,
 ) -> Vec<HookEntry> {
-    let plugin_id = script_name
-        .replace("track-", "")
-        .replace("-usage.sh", "");
+    let plugin_id = script_name.replace("track-", "").replace("-usage.sh", "");
 
     let catalog_hooks = hook_catalog::list_file_hooks(services_path).unwrap_or_default();
     let system_hooks: Vec<_> = catalog_hooks

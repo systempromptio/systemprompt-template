@@ -1,13 +1,25 @@
 {
   "name": "systemprompt-marketplace",
   "owner": {
-    "name": "foodles.com"
+    "name": "systemprompt.io"
   },
   "metadata": {
-    "description": "foodles.com plugin marketplace",
+    "description": "systemprompt.io plugin marketplace",
     "version": "0.1.0"
   },
   "plugins": [
+    {
+      "name": "systemprompt",
+      "source": "./storage/files/plugins/systemprompt",
+      "description": "Your AI consultant for building custom skills, agents, and secrets through guided Socratic interviews",
+      "version": "2.1.0"
+    },
+    {
+      "name": "enterprise-demo",
+      "source": "./storage/files/plugins/enterprise-demo",
+      "description": "Enterprise-scale smart corporate catering platform demonstrating multi-agent orchestration, security controls, audit compliance, and MCP-native architecture for enterprise deployments",
+      "version": "1.0.0"
+    },
     {
       "name": "systemprompt-admin",
       "source": "./storage/files/plugins/systemprompt-admin",
@@ -21,6 +33,12 @@
       "version": "1.1.0"
     },
     {
+      "name": "marketing-skills",
+      "source": "./storage/files/plugins/marketing-skills",
+      "description": "Content creation, blog writing, announcements, guides, and brand voice skills for the marketing team",
+      "version": "1.0.0"
+    },
+    {
       "name": "systemprompt-dev",
       "source": "./storage/files/plugins/systemprompt-dev",
       "description": "Complete development toolkit: Rust, frontend, architecture standards, extension development guides, and 6 specialized agents",
@@ -30,6 +48,12 @@
       "name": "common-skills",
       "source": "./storage/files/plugins/common-skills",
       "description": "Odoo operations, brand guidelines, diagramming, quality gates, and marketing tools for all employees",
+      "version": "1.0.0"
+    },
+    {
+      "name": "leadership-skills",
+      "source": "./storage/files/plugins/leadership-skills",
+      "description": "AI usage analytics and team insights for leadership",
       "version": "1.0.0"
     }
   ]

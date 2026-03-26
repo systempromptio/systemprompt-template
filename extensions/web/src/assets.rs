@@ -72,10 +72,7 @@ pub fn web_assets(paths: &dyn systemprompt::extension::AssetPaths) -> Vec<AssetD
             "css/content-cards.css",
         ),
         AssetDefinition::css(storage_css.join("playbook.css"), "css/playbook.css"),
-        AssetDefinition::css(
-            storage_css.join("presentation.css"),
-            "css/presentation.css",
-        ),
+        AssetDefinition::css(storage_css.join("presentation.css"), "css/presentation.css"),
         AssetDefinition::js(storage_js.join("analytics.js"), "js/analytics.js"),
         AssetDefinition::js(storage_js.join("docs.js"), "js/docs.js"),
         AssetDefinition::js(storage_js.join("mobile-menu.js"), "js/mobile-menu.js"),

@@ -1,6 +1,6 @@
 ---
 title: "Engagement Summary"
-description: "Two-phase reference implementation partnership — Phase 1: PRD and development on our cloud. Phase 2: production license on Foodles infrastructure. Total engagement: €65,400."
+description: "Two-phase reference implementation partnership — Phase 1: PRD and development on our cloud. Phase 2: production license on Foodles infrastructure."
 author: "systemprompt.io"
 slug: "engagement-summary"
 keywords: "engagement, proposal, partnership, reference implementation, pricing, cost summary, PRD, phases"
@@ -12,7 +12,7 @@ updated_at: "2026-03-25"
 after_reading_this:
   - "Understand the two-phase engagement model: PRD then production"
   - "Know the two-tier IP model: licensed platform vs. client-owned extension code"
-  - "See the reference implementation partner discount applied across all services"
+  - "See the reference implementation partner terms applied across all services"
 related_docs:
   - title: "Phase 1: PRD & Development"
     url: "/documentation/engagement-implementation"
@@ -32,7 +32,7 @@ related_docs:
 
 ## Partnership
 
-We are proposing a two-phase reference implementation partnership. Foodles becomes a flagship deployment of the platform, and in return receives a 40% discount across all services.
+We are proposing a two-phase reference implementation partnership. Foodles becomes a flagship deployment of the platform, and in return receives preferential partnership terms.
 
 This is not a standard commercial engagement. We are investing in Foodles as a reference partner because we believe in the alignment between Foodles's AI strategy and the platform's governance architecture. A successful deployment here demonstrates enterprise-grade AI governance in hospitality at scale — and that is valuable to both organisations.
 
@@ -43,10 +43,6 @@ This is not a standard commercial engagement. We are investing in Foodles as a r
 The engagement is designed so that Foodles can evaluate the platform hands-on before committing to a production license. Phase 2 only begins once Phase 1 has been signed off by both sides.
 
 ### Phase 1: PRD & Development
-
-| | List Price | Partner Price | Saving |
-|---|----------:|-------------:|-------:|
-| **PRD & Development** | €25,000 | **€15,000** | €10,000 |
 
 - Detailed PRD agreed between both sides
 - Control Center built on systemprompt cloud infrastructure
@@ -60,12 +56,6 @@ The engagement is designed so that Foodles can evaluate the platform hands-on be
 
 ### Phase 2: Production License & Support
 
-| | List Price | Partner Price | Saving |
-|---|----------:|-------------:|-------:|
-| **Platform License** — 12 months | €60,000 | **€36,000** | €24,000 |
-| **Maintenance & Support** — 12 months | €24,000 | **€14,400** | €9,600 |
-| **Phase 2 Total** | €84,000 | **€50,400** | €33,600 |
-
 - Begins only after Phase 1 sign-off
 - Platform deployed on Foodles infrastructure
 - 12-month production use license, paid in advance
@@ -77,13 +67,7 @@ The engagement is designed so that Foodles can evaluate the platform hands-on be
 
 ## Total Engagement
 
-| Phase | List Price | Partner Price | Saving |
-|-------|----------:|-------------:|-------:|
-| **Phase 1** — PRD & Development | €25,000 | **€15,000** | €10,000 |
-| **Phase 2** — License + Maintenance | €84,000 | **€50,400** | €33,600 |
-| **Total** | **€109,000** | **€65,400** | **€43,600** |
-
-> **Reference partner discount: 40% across all services.** Total savings of €43,600 over list pricing.
+The engagement comprises Phase 1 (PRD & Development) and Phase 2 (Platform License + Maintenance & Support). Pricing is available on request. Reference implementation partners receive preferential terms across all components.
 
 ---
 
@@ -126,13 +110,11 @@ The extension codebase — the Control Center dashboard, all skills, agents, con
 
 ## Payment Structure
 
-All payments are required in advance. Work begins upon receipt of payment.
+Payment terms will be discussed as part of the engagement process.
 
-| Payment | Amount | When |
-|---------|-------:|------|
-| **Phase 1: PRD & Development** | €15,000 | In advance, before work begins |
-| **Phase 2: Platform license** | €36,000 | 12 months upfront, upon entering Phase 2. License granted on receipt. |
-| **Phase 2: Maintenance** | €1,200/month | Monthly in advance, beginning at production deployment |
+- **Phase 1:** Payment in advance before work begins
+- **Phase 2 — Platform license:** Paid upfront upon entering Phase 2. License granted on receipt.
+- **Phase 2 — Maintenance:** Monthly in advance, beginning at production deployment
 
 > Phase 2 payments are only due after both sides sign off on Phase 1 delivery.
 

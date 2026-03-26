@@ -9,10 +9,10 @@ use axum::{
 };
 use sqlx::PgPool;
 
-use crate::admin::repositories;
 pub(crate) use super::marketplace_git_json::{
     marketplace_json_handler, org_marketplace_json_handler,
 };
+use crate::admin::repositories;
 
 pub(crate) fn detect_platform(headers: &HeaderMap) -> &'static str {
     if let Some(ua) = headers

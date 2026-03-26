@@ -132,9 +132,7 @@ fn internal_error(msg: &str, err: impl std::fmt::Display) -> Response {
     tracing::error!(error = %err, "{msg}");
     (
         StatusCode::INTERNAL_SERVER_ERROR,
-        Html(format!(
-            "<h1>Internal Server Error</h1><p>{msg}: {err}</p>"
-        )),
+        Html(format!("<h1>Internal Server Error</h1><p>{msg}: {err}</p>")),
     )
         .into_response()
 }

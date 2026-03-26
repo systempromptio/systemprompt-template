@@ -216,10 +216,18 @@ pub fn extract_transcript_tokens(
 
     #[allow(clippy::cast_sign_loss)]
     for entry in entries.iter().skip(skip_count as usize) {
-        if entry.get("isSidechain").and_then(serde_json::Value::as_bool) == Some(true) {
+        if entry
+            .get("isSidechain")
+            .and_then(serde_json::Value::as_bool)
+            == Some(true)
+        {
             continue;
         }
-        if entry.get("isApiErrorMessage").and_then(serde_json::Value::as_bool) == Some(true) {
+        if entry
+            .get("isApiErrorMessage")
+            .and_then(serde_json::Value::as_bool)
+            == Some(true)
+        {
             continue;
         }
 
@@ -232,10 +240,16 @@ pub fn extract_transcript_tokens(
         }
 
         if let Some(usage) = message.get("usage") {
-            if let Some(inp) = usage.get("input_tokens").and_then(serde_json::Value::as_i64) {
+            if let Some(inp) = usage
+                .get("input_tokens")
+                .and_then(serde_json::Value::as_i64)
+            {
                 input_tokens += inp;
             }
-            if let Some(out) = usage.get("output_tokens").and_then(serde_json::Value::as_i64) {
+            if let Some(out) = usage
+                .get("output_tokens")
+                .and_then(serde_json::Value::as_i64)
+            {
                 output_tokens += out;
             }
         }

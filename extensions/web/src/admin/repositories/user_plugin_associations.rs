@@ -179,28 +179,40 @@ pub async fn list_user_plugins_enriched(
     let mut skill_map: std::collections::HashMap<String, Vec<AssociatedEntity>> =
         std::collections::HashMap::new();
     for (plugin_id, id, name) in skill_rows {
-        skill_map.entry(plugin_id).or_default().push(AssociatedEntity { id, name });
+        skill_map
+            .entry(plugin_id)
+            .or_default()
+            .push(AssociatedEntity { id, name });
     }
 
     let mut agent_map: std::collections::HashMap<String, Vec<AssociatedEntity>> =
         std::collections::HashMap::new();
     for (plugin_id, id, name) in agent_rows {
-        agent_map.entry(plugin_id).or_default().push(AssociatedEntity { id, name });
+        agent_map
+            .entry(plugin_id)
+            .or_default()
+            .push(AssociatedEntity { id, name });
     }
 
     let mut mcp_map: std::collections::HashMap<String, Vec<AssociatedEntity>> =
         std::collections::HashMap::new();
     for (plugin_id, id, name) in mcp_rows {
-        mcp_map.entry(plugin_id).or_default().push(AssociatedEntity { id, name });
+        mcp_map
+            .entry(plugin_id)
+            .or_default()
+            .push(AssociatedEntity { id, name });
     }
 
     let mut hook_map: std::collections::HashMap<String, Vec<AssociatedHook>> =
         std::collections::HashMap::new();
     for (plugin_id, id, name, event, matcher, is_async) in hook_rows {
-        hook_map
-            .entry(plugin_id)
-            .or_default()
-            .push(AssociatedHook { id, name, event, matcher, is_async });
+        hook_map.entry(plugin_id).or_default().push(AssociatedHook {
+            id,
+            name,
+            event,
+            matcher,
+            is_async,
+        });
     }
 
     let enriched = plugins
@@ -254,4 +266,3 @@ pub struct UserPluginEnriched {
     pub mcp_count: usize,
     pub hook_count: usize,
 }
-

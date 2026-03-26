@@ -23,7 +23,11 @@ pub(crate) fn compute_hourly_chart(
     }).collect()
 }
 
-pub(crate) fn compute_bar_chart<T, F, G>(items: &[T], get_count: F, build_json: G) -> Vec<serde_json::Value>
+pub(crate) fn compute_bar_chart<T, F, G>(
+    items: &[T],
+    get_count: F,
+    build_json: G,
+) -> Vec<serde_json::Value>
 where
     F: Fn(&T) -> i64,
     G: Fn(&T, i64) -> serde_json::Value,

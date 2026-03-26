@@ -15,8 +15,9 @@ mod webhook;
 pub use dashboard::{
     AchievementInfo, ActivityStats, DashboardData, DashboardQuery, DepartmentActivity,
     DepartmentQuery, DepartmentScore, EventRow, EventTypeBreakdown, EventsQuery, EventsResponse,
-    HourlyActivity, LeaderboardEntry, ModelUsage, PaginationQuery, ProjectActivity, SkillCount,
-    McpAccessSummary, TimeSeriesBucket, ToolSuccessRate, TopUser, UnlockedAchievement,
+    GovernanceDecisionRow, GovernanceEvent, HourlyActivity, LeaderboardEntry, McpAccessSummary,
+    ModelUsage, PaginationQuery,
+    ProjectActivity, SkillCount, TimeSeriesBucket, ToolSuccessRate, TopUser, UnlockedAchievement,
     UserGamificationProfile,
 };
 pub use jobs::JobSummary;

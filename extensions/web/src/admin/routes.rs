@@ -21,10 +21,7 @@ pub fn hooks_webhook_router(pool: Arc<PgPool>) -> Router {
         .route("/hooks/track", post(handlers::track_hook_event))
         .route("/hooks/govern", post(handlers::govern_tool_use))
         .route("/hooks/statusline", post(handlers::track_statusline_event))
-        .route(
-            "/hooks/transcript",
-            post(handlers::track_transcript_event),
-        )
+        .route("/hooks/transcript", post(handlers::track_transcript_event))
         .with_state(pool)
 }
 
@@ -121,6 +118,7 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
         .route("/jobs", get(handlers::ssr::jobs_page))
         .route("/events", get(handlers::ssr::events_page))
         .route("/access-control", get(handlers::ssr::access_control_page))
+        .route("/governance", get(handlers::ssr::governance_page))
         .route("/leaderboard", get(handlers::ssr::leaderboard_page))
         .route("/achievements", get(handlers::ssr::achievements_page))
         .route("/user", get(handlers::ssr::user_detail_page))
@@ -168,10 +166,7 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
         .route("/my/hooks", get(handlers::ssr::my_hooks_page))
         .route("/my/hooks/edit", get(handlers::ssr::my_hook_edit_page))
         .route("/my/secrets", get(handlers::ssr::my_secrets_page))
-        .route(
-            "/my/plugins/view",
-            get(handlers::ssr::my_plugin_view_page),
-        )
+        .route("/my/plugins/view", get(handlers::ssr::my_plugin_view_page))
         .route(
             "/my/versions",
             get(handlers::ssr::marketplace_versions_page),

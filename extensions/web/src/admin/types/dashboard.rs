@@ -21,6 +21,7 @@ pub struct DashboardData {
     pub tool_success_rates: Vec<ToolSuccessRate>,
     pub mcp_access_events: Vec<activity::ActivityTimelineEvent>,
     pub mcp_access_stats: Vec<McpAccessSummary>,
+    pub governance_events: Vec<GovernanceEvent>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
@@ -115,6 +116,30 @@ pub struct McpAccessSummary {
     pub granted: i64,
     pub rejected: i64,
     pub tool_calls: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct GovernanceEvent {
+    pub id: String,
+    pub user_id: String,
+    pub tool_name: String,
+    pub agent_id: Option<String>,
+    pub decision: String,
+    pub reason: String,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct GovernanceDecisionRow {
+    pub id: String,
+    pub user_id: String,
+    pub tool_name: String,
+    pub agent_id: Option<String>,
+    pub agent_scope: Option<String>,
+    pub decision: String,
+    pub policy: String,
+    pub reason: String,
+    pub created_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]

@@ -32,7 +32,11 @@ pub fn generate_nonce() -> [u8; 12] {
     nonce
 }
 
-pub fn encrypt(key: &[u8; 32], nonce: &[u8; 12], plaintext: &[u8]) -> Result<Vec<u8>, SecretCryptoError> {
+pub fn encrypt(
+    key: &[u8; 32],
+    nonce: &[u8; 12],
+    plaintext: &[u8],
+) -> Result<Vec<u8>, SecretCryptoError> {
     let cipher = ChaCha20Poly1305::new(key.into());
     let nonce = Nonce::from_slice(nonce);
     cipher
@@ -40,7 +44,11 @@ pub fn encrypt(key: &[u8; 32], nonce: &[u8; 12], plaintext: &[u8]) -> Result<Vec
         .map_err(|e| SecretCryptoError::EncryptionFailed(e.to_string()))
 }
 
-pub fn decrypt(key: &[u8; 32], nonce: &[u8; 12], ciphertext: &[u8]) -> Result<Vec<u8>, SecretCryptoError> {
+pub fn decrypt(
+    key: &[u8; 32],
+    nonce: &[u8; 12],
+    ciphertext: &[u8],
+) -> Result<Vec<u8>, SecretCryptoError> {
     let cipher = ChaCha20Poly1305::new(key.into());
     let nonce = Nonce::from_slice(nonce);
     cipher
@@ -58,8 +66,7 @@ pub fn load_master_key() -> Result<[u8; 32], SecretCryptoError> {
         })
         .ok_or(SecretCryptoError::MasterKeyMissing)?;
 
-    let bytes = hex::decode(hex_key.trim())
-        .map_err(|_| SecretCryptoError::InvalidKeyMaterial)?;
+    let bytes = hex::decode(hex_key.trim()).map_err(|_| SecretCryptoError::InvalidKeyMaterial)?;
 
     let key: [u8; 32] = bytes
         .try_into()

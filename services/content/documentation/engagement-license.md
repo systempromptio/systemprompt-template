@@ -1,6 +1,6 @@
 ---
 title: "Phase 2: Platform License"
-description: "12-month production use license, beginning after Phase 1 sign-off. List price €5,000/month, reference partner rate €3,000/month."
+description: "12-month production use license, beginning after Phase 1 sign-off."
 author: "systemprompt.io"
 slug: "engagement-license"
 keywords: "license, platform, production use, annual, pricing, partner discount"
@@ -30,15 +30,7 @@ related_docs:
 
 ## Pricing
 
-| | List Price | Partner Price |
-|---|----------:|-------------:|
-| **Monthly rate** | €5,000/month | **€3,000/month** |
-| **Annual total** | €60,000 | **€36,000** |
-| **Saving** | | **€24,000 (40%)** |
-
-> **Reference implementation partner rate.** The 40% discount reflects Foodles's role as a flagship deployment partner.
-
-**Payment:** €36,000 paid 12 months upfront after Phase 1 sign-off. The production license is granted upon receipt of payment.
+The platform license is priced on an annual basis with preferential reference partner terms. Pricing will be discussed as part of the engagement process. The production license is granted upon receipt of payment after Phase 1 sign-off.
 
 ---
 

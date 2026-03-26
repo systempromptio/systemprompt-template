@@ -31,10 +31,7 @@ pub(super) fn build_statusline_metadata(payload: &StatusLinePayload) -> serde_js
                 );
             }
             if let Some(v) = usage.cache_read_input_tokens {
-                map.insert(
-                    "cache_read_input_tokens".to_string(),
-                    serde_json::json!(v),
-                );
+                map.insert("cache_read_input_tokens".to_string(), serde_json::json!(v));
             }
         }
     }
@@ -98,13 +95,22 @@ pub(super) fn build_metadata(payload: &HookEventPayload) -> serde_json::Value {
             map.insert("error".to_string(), serde_json::json!(error));
         }
         if let Some(ref transcript_path) = payload.transcript_path {
-            map.insert("transcript_path".to_string(), serde_json::json!(transcript_path));
+            map.insert(
+                "transcript_path".to_string(),
+                serde_json::json!(transcript_path),
+            );
         }
         if let Some(ref permission_mode) = payload.permission_mode {
-            map.insert("permission_mode".to_string(), serde_json::json!(permission_mode));
+            map.insert(
+                "permission_mode".to_string(),
+                serde_json::json!(permission_mode),
+            );
         }
         if let Some(ref last_assistant_message) = payload.last_assistant_message {
-            map.insert("last_assistant_message".to_string(), serde_json::json!(last_assistant_message));
+            map.insert(
+                "last_assistant_message".to_string(),
+                serde_json::json!(last_assistant_message),
+            );
         }
         if let Some(ref prompt) = payload.prompt {
             map.insert("prompt".to_string(), serde_json::json!(prompt));

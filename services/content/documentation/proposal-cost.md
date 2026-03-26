@@ -1,6 +1,6 @@
 ---
 title: "Pricing & Commercial Terms"
-description: "License pricing, consulting services, and monthly retainer for the enterprise AI governance platform."
+description: "Overview of engagement components — license, consulting services, and monthly retainer for the enterprise AI governance platform."
 author: "systemprompt.io"
 slug: "proposal-cost"
 keywords: "cost, pricing, retainer, commercial terms, payment, licensing"
@@ -28,16 +28,15 @@ related_docs:
 
 ---
 
-## Engagement Cost Breakdown
+## Engagement Components
 
-| Phase | Component | Partner Price |
-|-------|-----------|-------------:|
-| **Phase 1** | [**PRD & Development**](/documentation/engagement-implementation) — Control Center build-out | €15,000 |
-| **Phase 2** | [**Platform License**](/documentation/engagement-license) — 12-month production use | €36,000 |
-| **Phase 2** | [**Maintenance & Support**](/documentation/engagement-maintenance) — 12 months at €1,200/month | €14,400 |
-| | **Total Engagement** | **€65,400** |
+The engagement comprises three components. Pricing for each is available on request.
 
-For the full engagement overview including list pricing and reference partner discounts, see the [Engagement Summary](/documentation/engagement-summary).
+- [**Phase 1: PRD & Development**](/documentation/engagement-implementation) — Control Center build-out
+- [**Phase 2: Platform License**](/documentation/engagement-license) — 12-month production use
+- [**Phase 2: Maintenance & Support**](/documentation/engagement-maintenance) — Monthly retainer
+
+For the full engagement overview, see the [Engagement Summary](/documentation/engagement-summary).
 
 ---
 

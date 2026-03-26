@@ -4,11 +4,11 @@
   left: 0;
   right: 0;
   z-index: 100;
-  background: rgba(10, 15, 40, 0.85);
+  background: rgba(180, 75, 20, 0.9);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   padding: var(--space-sm) 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .site-footer .footer-bottom {

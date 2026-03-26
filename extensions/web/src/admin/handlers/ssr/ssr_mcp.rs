@@ -243,12 +243,8 @@ pub(crate) async fn mcp_edit_page(
         None
     };
 
-    let is_internal = server
-        .as_ref()
-        .is_some_and(|s| s.server_type == "internal");
-    let is_external = server
-        .as_ref()
-        .is_none_or(|s| s.server_type == "external");
+    let is_internal = server.as_ref().is_some_and(|s| s.server_type == "internal");
+    let is_external = server.as_ref().is_none_or(|s| s.server_type == "external");
     let raw_yaml = if let Some(id) = server_id {
         let sp = match super::get_services_path() {
             Ok(p) => p,

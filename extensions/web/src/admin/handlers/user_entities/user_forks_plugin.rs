@@ -27,8 +27,8 @@ pub(crate) async fn fork_org_plugin_handler(
         Err(r) => return r,
     };
 
-    let org_plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
-        .unwrap_or_default();
+    let org_plugins =
+        repositories::list_plugins_for_roles(&services_path, &user_ctx.roles).unwrap_or_default();
 
     let org_plugin = org_plugins.iter().find(|p| p.id == req.org_plugin_id);
     let Some(org_plugin) = org_plugin else {
@@ -39,9 +39,7 @@ pub(crate) async fn fork_org_plugin_handler(
             .into_response();
     };
 
-    let plugin_id = req
-        .plugin_id
-        .unwrap_or_else(|| req.org_plugin_id.clone());
+    let plugin_id = req.plugin_id.unwrap_or_else(|| req.org_plugin_id.clone());
 
     let create_plugin_req = CreateUserPluginRequest {
         plugin_id: plugin_id.clone(),
@@ -107,8 +105,7 @@ pub(crate) async fn fork_org_plugin_handler(
     let agents_path = services_path.join("agents");
     let mut forked_agent_ids = Vec::new();
     for agent_info in &org_plugin.agents {
-        let (name, description, system_prompt) =
-            read_agent_from_fs(&agents_path, &agent_info.id);
+        let (name, description, system_prompt) = read_agent_from_fs(&agents_path, &agent_info.id);
         let create_req = crate::admin::types::CreateUserAgentRequest {
             agent_id: agent_info.id.clone(),
             name: if name.is_empty() {
@@ -150,9 +147,7 @@ pub(crate) async fn fork_org_plugin_handler(
             oauth_audience: mcp.oauth_audience,
             base_mcp_server_id: Some(mcp_id.clone()),
         };
-        match repositories::create_user_mcp_server(&pool, &user_ctx.user_id, &create_req)
-            .await
-        {
+        match repositories::create_user_mcp_server(&pool, &user_ctx.user_id, &create_req).await {
             Ok(m) => forked_mcp_ids.push(m.id),
             Err(e) => tracing::warn!(
                 error = %e,

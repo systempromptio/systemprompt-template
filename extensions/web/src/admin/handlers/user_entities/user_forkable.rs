@@ -36,8 +36,8 @@ pub(crate) async fn list_forkable_plugins_handler(
         Err(r) => return r,
     };
 
-    let org_plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
-        .unwrap_or_default();
+    let org_plugins =
+        repositories::list_plugins_for_roles(&services_path, &user_ctx.roles).unwrap_or_default();
 
     let user_plugins = repositories::list_user_plugins(&pool, &user_ctx.user_id)
         .await
@@ -76,8 +76,8 @@ pub(crate) async fn list_forkable_skills_handler(
         Err(r) => return r,
     };
 
-    let org_plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
-        .unwrap_or_default();
+    let org_plugins =
+        repositories::list_plugins_for_roles(&services_path, &user_ctx.roles).unwrap_or_default();
 
     let user_skills = repositories::list_user_skills(&pool, &user_ctx.user_id)
         .await
@@ -117,8 +117,8 @@ pub(crate) async fn list_forkable_agents_handler(
         Err(r) => return r,
     };
 
-    let org_plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
-        .unwrap_or_default();
+    let org_plugins =
+        repositories::list_plugins_for_roles(&services_path, &user_ctx.roles).unwrap_or_default();
 
     let user_agents = repositories::list_user_agents(&pool, &user_ctx.user_id)
         .await
@@ -158,8 +158,8 @@ pub(crate) async fn list_forkable_mcp_servers_handler(
         Err(r) => return r,
     };
 
-    let org_plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
-        .unwrap_or_default();
+    let org_plugins =
+        repositories::list_plugins_for_roles(&services_path, &user_ctx.roles).unwrap_or_default();
 
     let user_mcp = repositories::list_user_mcp_servers(&pool, &user_ctx.user_id)
         .await
@@ -198,8 +198,8 @@ pub(crate) async fn list_forkable_hooks_handler(
         Err(r) => return r,
     };
 
-    let org_plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
-        .unwrap_or_default();
+    let org_plugins =
+        repositories::list_plugins_for_roles(&services_path, &user_ctx.roles).unwrap_or_default();
 
     let user_hooks = repositories::list_user_hooks(&pool, &user_ctx.user_id)
         .await

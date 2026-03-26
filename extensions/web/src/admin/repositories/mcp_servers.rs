@@ -237,9 +237,7 @@ pub fn update_mcp_server(
 pub fn delete_mcp_server(services_path: &Path, server_id: &str) -> Result<bool, anyhow::Error> {
     if let Ok(Some(server)) = get_mcp_server(services_path, server_id) {
         if !server.removable {
-            anyhow::bail!(
-                "MCP server '{server_id}' is a system default and cannot be deleted"
-            );
+            anyhow::bail!("MCP server '{server_id}' is a system default and cannot be deleted");
         }
     }
     let mcp_dir = services_path.join("mcp");

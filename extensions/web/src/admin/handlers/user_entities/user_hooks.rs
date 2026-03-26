@@ -1,9 +1,7 @@
 use std::sync::Arc;
 
 use crate::admin::repositories;
-use crate::admin::types::{
-    CreateUserHookRequest, UpdateUserHookRequest, UserContext,
-};
+use crate::admin::types::{CreateUserHookRequest, UpdateUserHookRequest, UserContext};
 use axum::{
     extract::{Extension, Json, Path, State},
     http::StatusCode,

@@ -10,8 +10,8 @@ pub fn build_plugin_zip(bundle: &PluginBundle) -> Result<Vec<u8>, anyhow::Error>
     let buf = Vec::new();
     let mut zip = ZipWriter::new(std::io::Cursor::new(buf));
 
-    let default_opts = SimpleFileOptions::default()
-        .compression_method(zip::CompressionMethod::Deflated);
+    let default_opts =
+        SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
     for file in &bundle.files {
         let opts = if file.executable {
@@ -41,10 +41,13 @@ pub fn build_marketplace_zip(response: &SyncPluginsResponse) -> Result<Vec<u8>, 
     let buf = Vec::new();
     let mut zip = ZipWriter::new(std::io::Cursor::new(buf));
 
-    let default_opts = SimpleFileOptions::default()
-        .compression_method(zip::CompressionMethod::Deflated);
+    let default_opts =
+        SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
-    zip.start_file(&response.marketplace.path, default_opts.unix_permissions(0o644))?;
+    zip.start_file(
+        &response.marketplace.path,
+        default_opts.unix_permissions(0o644),
+    )?;
     zip.write_all(response.marketplace.content.as_bytes())?;
 
     for bundle in &response.plugins {

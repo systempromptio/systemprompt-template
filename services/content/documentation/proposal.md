@@ -32,35 +32,20 @@ related_docs:
 
 This engagement is structured in two phases. Phase 1 is a collaborative development phase — no production commitment required. Phase 2 only begins once both sides are satisfied with the result.
 
-### Phase 1: PRD & Delivery — €15,000
+### Phase 1: PRD & Delivery
 
 Agree a detailed PRD between both sides. The Control Center is then built and delivered on systemprompt cloud infrastructure according to the PRD. Fixed price. Both sides evaluate hands-on throughout development. Phase 1 ends with formal sign-off.
 
-| | List Price | Partner Price |
-|---|----------:|-------------:|
-| **PRD agreement and Control Center delivery** | €25,000 | **€15,000** |
-
-### Phase 2: Production License & Support — €50,400
+### Phase 2: Production License & Support
 
 After Phase 1 sign-off, the platform is deployed on Foodles infrastructure and goes live. 12-month production use license with monthly maintenance and support.
 
-| | List Price | Partner Price |
-|---|----------:|-------------:|
-| **Platform license** — 12 months at €3,000/month, paid in advance | €60,000 | **€36,000** |
-| **Maintenance & support** — 12 months at €1,200/month | €24,000 | **€14,400** |
-| **Phase 2 total** | €84,000 | **€50,400** |
-
-### Total Engagement
-
-| | List Price | Partner Price | Saving |
-|---|----------:|-------------:|-------:|
-| Phase 1 | €25,000 | **€15,000** | €10,000 |
-| Phase 2 | €84,000 | **€50,400** | €33,600 |
-| **Total** | **€109,000** | **€65,400** | **€43,600** |
+- **Platform license** — 12-month production use, paid in advance
+- **Maintenance & support** — monthly retainer for updates, security patches, and priority support
 
 > **Phase 2 is conditional on Phase 1 sign-off.** Foodles is not committed to the production license until both sides agree the PRD has been delivered successfully.
 
-All pricing reflects a **40% reference implementation partner discount** across every service line.
+Pricing is available on request and will be discussed as part of the engagement process. Reference implementation partners receive preferential terms.
 
 [Read the full engagement summary](/documentation/engagement-summary)
 

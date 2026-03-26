@@ -173,8 +173,7 @@ pub(crate) async fn sync_marketplace_handler(
             .into_response();
     };
 
-    match github_sync::sync_marketplace_from_github(&pool, &id, repo_url, &user_ctx.user_id).await
-    {
+    match github_sync::sync_marketplace_from_github(&pool, &id, repo_url, &user_ctx.user_id).await {
         Ok(result) => (
             StatusCode::OK,
             Json(json!({

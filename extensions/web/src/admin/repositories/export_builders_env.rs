@@ -1,10 +1,7 @@
 use super::export::PluginFile;
 use super::export_builders::PluginBuildContext;
 
-pub(super) fn build_env_files(
-    ctx: &PluginBuildContext<'_>,
-    files: &mut Vec<PluginFile>,
-) -> bool {
+pub(super) fn build_env_files(ctx: &PluginBuildContext<'_>, files: &mut Vec<PluginFile>) -> bool {
     let mut missing = Vec::new();
     for var_def in &ctx.plugin.variables {
         if var_def.required && !var_def.secret {
@@ -23,11 +20,7 @@ pub(super) fn build_env_files(
         return false;
     }
 
-    let has_secrets = ctx
-        .plugin
-        .variables
-        .iter()
-        .any(|v| v.secret);
+    let has_secrets = ctx.plugin.variables.iter().any(|v| v.secret);
 
     let mut env_lines = Vec::new();
     env_lines.push("# Plugin environment variables".to_string());

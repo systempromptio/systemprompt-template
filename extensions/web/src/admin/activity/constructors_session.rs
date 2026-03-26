@@ -1,6 +1,6 @@
+use super::constructors::truncate;
 use super::enums::{ActivityAction, ActivityCategory, ActivityEntity};
 use super::types::{ActivityEntityRef, NewActivity};
-use super::constructors::truncate;
 
 impl NewActivity {
     #[must_use]
@@ -99,7 +99,10 @@ impl NewActivity {
         let description = if source == Some("resume") {
             format!("Resumed session ({model})")
         } else if let Some(path) = project_path {
-            format!("Started session on {} ({model})", super::constructors::extract_project_name(path))
+            format!(
+                "Started session on {} ({model})",
+                super::constructors::extract_project_name(path)
+            )
         } else {
             format!("Started a session ({model})")
         };
@@ -122,11 +125,7 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn session_ended_rich(
-        user_id: &str,
-        session_id: &str,
-        reason: Option<&str>,
-    ) -> Self {
+    pub fn session_ended_rich(user_id: &str, session_id: &str, reason: Option<&str>) -> Self {
         let description = match reason {
             Some(r) => format!("Ended a session ({r})"),
             None => "Ended a session".to_string(),
@@ -146,11 +145,7 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn agent_response(
-        user_id: &str,
-        session_id: &str,
-        message_preview: Option<&str>,
-    ) -> Self {
+    pub fn agent_response(user_id: &str, session_id: &str, message_preview: Option<&str>) -> Self {
         let description = match message_preview {
             Some(msg) => format!("Claude responded: \"{}\"", truncate(msg, 80)),
             None => "Claude finished responding".to_string(),
@@ -166,11 +161,7 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn subagent_started(
-        user_id: &str,
-        session_id: &str,
-        agent_type: Option<&str>,
-    ) -> Self {
+    pub fn subagent_started(user_id: &str, session_id: &str, agent_type: Option<&str>) -> Self {
         Self {
             user_id: user_id.to_string(),
             category: ActivityCategory::Session,
@@ -212,11 +203,7 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn teammate_idle(
-        user_id: &str,
-        session_id: &str,
-        name: Option<&str>,
-    ) -> Self {
+    pub fn teammate_idle(user_id: &str, session_id: &str, name: Option<&str>) -> Self {
         let who = name.unwrap_or("unknown");
         Self {
             user_id: user_id.to_string(),

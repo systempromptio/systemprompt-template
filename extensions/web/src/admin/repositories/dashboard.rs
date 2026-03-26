@@ -12,7 +12,10 @@ use super::dashboard_queries::{
     fetch_department_activity, fetch_hourly_activity, fetch_model_usage, fetch_popular_skills,
     fetch_project_activity, fetch_timeline, fetch_tool_success_rates, fetch_top_users,
 };
-use super::dashboard_queries_extra::{fetch_mcp_access_events, fetch_mcp_access_stats};
+use super::dashboard_queries_extra::{
+    fetch_governance_events, fetch_mcp_access_events, fetch_mcp_access_stats,
+};
+pub use super::dashboard_queries_extra::list_governance_decisions;
 
 pub async fn get_dashboard_data(
     pool: &Arc<PgPool>,
@@ -35,6 +38,7 @@ pub async fn get_dashboard_data(
         tool_success_rates,
         mcp_access_events,
         mcp_access_stats,
+        governance_events,
     ) = tokio::try_join!(
         fetch_timeline(pool, department),
         fetch_top_users(pool, department),
@@ -51,6 +55,7 @@ pub async fn get_dashboard_data(
         fetch_tool_success_rates(pool, department),
         fetch_mcp_access_events(pool),
         fetch_mcp_access_stats(pool),
+        fetch_governance_events(pool),
     )?;
 
     Ok(DashboardData {
@@ -69,6 +74,7 @@ pub async fn get_dashboard_data(
         tool_success_rates,
         mcp_access_events,
         mcp_access_stats,
+        governance_events,
     })
 }
 

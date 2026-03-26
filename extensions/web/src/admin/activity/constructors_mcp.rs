@@ -1,6 +1,6 @@
+use super::constructors::truncate;
 use super::enums::{ActivityAction, ActivityCategory, ActivityEntity};
 use super::types::{ActivityEntityRef, NewActivity};
-use super::constructors::truncate;
 
 impl NewActivity {
     #[must_use]

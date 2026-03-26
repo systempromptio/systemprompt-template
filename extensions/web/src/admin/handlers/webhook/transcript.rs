@@ -10,8 +10,8 @@ use sqlx::PgPool;
 use systemprompt::models::auth::JwtAudience;
 
 use crate::admin::repositories;
-use crate::admin::types::TranscriptQuery;
 use crate::admin::types::TranscriptPayload;
+use crate::admin::types::TranscriptQuery;
 
 use super::helpers::{extract_bearer_token, get_jwt_config};
 
@@ -75,8 +75,7 @@ pub(crate) async fn track_transcript_event(
             .await
             .unwrap_or(0);
 
-        let tokens =
-            repositories::extract_transcript_tokens(&transcript, skip_count);
+        let tokens = repositories::extract_transcript_tokens(&transcript, skip_count);
 
         let transcript_id = match repositories::insert_session_transcript(
             &p,
@@ -94,7 +93,8 @@ pub(crate) async fn track_transcript_event(
             }
         };
 
-        let (prev_input, prev_output) = get_previous_transcript_totals(p.as_ref(), &sid, &transcript_id).await;
+        let (prev_input, prev_output) =
+            get_previous_transcript_totals(p.as_ref(), &sid, &transcript_id).await;
         let total_input = prev_input + tokens.input_tokens;
         let total_output = prev_output + tokens.output_tokens;
 
@@ -127,7 +127,11 @@ pub(crate) async fn track_transcript_event(
     StatusCode::NO_CONTENT.into_response()
 }
 
-async fn get_previous_transcript_totals(pool: &PgPool, session_id: &str, exclude_id: &str) -> (i64, i64) {
+async fn get_previous_transcript_totals(
+    pool: &PgPool,
+    session_id: &str,
+    exclude_id: &str,
+) -> (i64, i64) {
     let row: Option<(i64, i64)> = sqlx::query_as(
         "SELECT COALESCE(total_input_tokens, 0), COALESCE(total_output_tokens, 0)
          FROM session_transcripts

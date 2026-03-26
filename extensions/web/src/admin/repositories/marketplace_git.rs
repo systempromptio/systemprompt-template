@@ -105,13 +105,9 @@ pub async fn get_or_generate_org_marketplace_repo(
         .map(|p| PathBuf::from(&p.paths.services))
         .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
 
-    let response = generate_org_marketplace_export_bundles(
-        &services_path,
-        pool,
-        marketplace_id,
-        platform,
-    )
-    .await?;
+    let response =
+        generate_org_marketplace_export_bundles(&services_path, pool, marketplace_id, platform)
+            .await?;
 
     let base_dir = PathBuf::from(CACHE_DIR)
         .join("org")

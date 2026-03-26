@@ -8,8 +8,8 @@ use axum::{
 };
 use sqlx::PgPool;
 
-use crate::admin::repositories;
 use super::marketplace_git::detect_platform;
+use crate::admin::repositories;
 
 pub(crate) async fn org_marketplace_json_handler(
     State(pool): State<Arc<PgPool>>,
