@@ -1,0 +1,146 @@
+@layer components {
+
+.data-table th.col-checkbox,
+.data-table td.col-checkbox {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    padding: var(--sp-space-2) var(--sp-space-2) var(--sp-space-2) var(--sp-space-3);
+    text-align: center;
+    vertical-align: middle;
+}
+
+.entity-batch-checkbox {
+    cursor: pointer;
+    accent-color: var(--sp-accent);
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.entity-batch-checkbox:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.entity-batch-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-2) var(--sp-space-4);
+    margin-bottom: var(--sp-space-3);
+    background: color-mix(in oklch, var(--sp-accent) 8%, var(--sp-bg-surface));
+    border: 1px solid color-mix(in oklch, var(--sp-accent) 25%, var(--sp-border-subtle));
+    border-radius: var(--sp-radius-card-brand);
+    position: sticky;
+    top: 0;
+    z-index: var(--sp-z-sticky-header);
+    transition: opacity var(--sp-duration-fast) var(--sp-ease-in-out);
+}
+
+.entity-batch-bar[hidden] {
+    display: none;
+}
+
+.entity-batch-count {
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.entity-batch-btn {
+    padding: var(--sp-space-1) var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+    font-weight: 500;
+    font-family: inherit;
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--sp-duration-fast),
+                border-color var(--sp-duration-fast),
+                color var(--sp-duration-fast);
+}
+
+.entity-batch-btn:hover {
+    background: var(--sp-bg-surface-raised);
+    border-color: var(--sp-accent);
+    color: var(--sp-text-primary);
+}
+
+.entity-batch-btn--danger {
+    color: var(--sp-danger);
+    border-color: color-mix(in oklch, var(--sp-danger) 30%, var(--sp-border-subtle));
+}
+
+.entity-batch-btn--danger:hover {
+    background: color-mix(in oklch, var(--sp-danger) 8%, var(--sp-bg-surface));
+    border-color: var(--sp-danger);
+    color: var(--sp-danger);
+}
+
+.data-table tr.entity-row--selected td {
+    background: color-mix(in oklch, var(--sp-accent) 6%, var(--sp-bg-surface));
+}
+
+.data-table tr.entity-row--selected td:first-child {
+    box-shadow: inset 3px 0 0 var(--sp-accent);
+}
+
+.data-table tr.entity-row--leaving td {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 300ms var(--sp-ease-out), transform 300ms var(--sp-ease-out);
+    pointer-events: none;
+}
+
+@media (max-width: 768px) {
+    .entity-batch-bar {
+        padding: var(--sp-space-2) var(--sp-space-3);
+        gap: var(--sp-space-2);
+    }
+
+    .data-table th.col-checkbox,
+    .data-table td.col-checkbox {
+        width: 36px;
+        min-width: 36px;
+        max-width: 36px;
+        padding: var(--sp-space-1) var(--sp-space-2);
+    }
+
+    .entity-batch-checkbox {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .entity-batch-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        margin: 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        z-index: var(--sp-z-sticky-header);
+        box-shadow: var(--sp-shadow-md);
+        padding: var(--sp-space-3) var(--sp-space-4);
+        padding-bottom: calc(var(--sp-space-3) + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .data-table tr.entity-row--leaving td {
+        transition: none;
+    }
+}
+
+}

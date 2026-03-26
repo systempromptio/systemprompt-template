@@ -81,11 +81,11 @@ impl Job for GitHubMarketplaceSyncJob {
                         "sync",
                         "error",
                         None,
-                        0,
-                        1,
+                        0i64,
+                        1i64,
                         Some(&e.to_string()),
                         "cron",
-                        None,
+                        None::<i64>,
                     )
                     .await;
                     total_errors += 1;

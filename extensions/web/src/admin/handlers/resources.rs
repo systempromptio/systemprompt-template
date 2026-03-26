@@ -7,27 +7,20 @@ use axum::{
     Json,
 };
 use sqlx::PgPool;
-use systemprompt::models::ProfileBootstrap;
+
+use systemprompt::identifiers::AgentId;
 
 use crate::admin::activity::{self, ActivityEntity, NewActivity};
+use crate::admin::handlers::shared;
 use crate::admin::repositories;
 use crate::admin::types::{
     CreateAgentRequest, CreateUserAgentRequest, UpdateAgentRequest, UserContext,
 };
 
+use super::responses::AgentsListResponse;
+
 pub(crate) fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
-    ProfileBootstrap::get()
-        .map(|p| std::path::PathBuf::from(&p.paths.services))
-        .map_err(|e| {
-            tracing::error!(error = %e, "Failed to get profile bootstrap");
-            Box::new(
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({"error": "Failed to load profile"})),
-                )
-                    .into_response(),
-            )
-        })
+    shared::get_services_path()
 }
 
 pub(crate) async fn list_agents_handler(Extension(user_ctx): Extension<UserContext>) -> Response {
@@ -39,27 +32,26 @@ pub(crate) async fn list_agents_handler(Extension(user_ctx): Extension<UserConte
         Ok(a) => a,
         Err(e) => {
             tracing::error!(error = %e, "Failed to list agents");
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response();
+            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string());
         }
     };
     if user_ctx.is_admin {
-        return Json(agents).into_response();
+        return Json(AgentsListResponse { agents }).into_response();
     }
-    let plugins =
-        repositories::list_plugins_for_roles(&services_path, &user_ctx.roles).unwrap_or_default();
+    let plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list plugins for role filtering");
+            Vec::new()
+        });
     let visible_ids: std::collections::HashSet<String> = plugins
         .iter()
-        .flat_map(|p| p.agents.iter().map(|a| a.id.clone()))
+        .flat_map(|p| p.agents.iter().map(|a| a.id.as_str().to_string()))
         .collect();
     let filtered: Vec<_> = agents
         .into_iter()
-        .filter(|a| visible_ids.contains(&a.id))
+        .filter(|a| visible_ids.contains(a.id.as_str()))
         .collect();
-    Json(filtered).into_response()
+    Json(AgentsListResponse { agents: filtered }).into_response()
 }
 
 pub(crate) async fn get_agent_handler(Path(agent_id): Path<String>) -> Response {
@@ -67,20 +59,12 @@ pub(crate) async fn get_agent_handler(Path(agent_id): Path<String>) -> Response 
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::get_agent(&services_path, &agent_id) {
+    match repositories::find_agent(&services_path, &agent_id) {
         Ok(Some(agent)) => Json(agent).into_response(),
-        Ok(None) => (
-            StatusCode::NOT_FOUND,
-            Json(serde_json::json!({"error": "Agent not found"})),
-        )
-            .into_response(),
+        Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Agent not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get agent");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response()
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
         }
     }
 }
@@ -102,7 +86,7 @@ pub(crate) async fn create_agent_handler(
             tokio::spawn(async move {
                 activity::record(
                     &pool,
-                    NewActivity::entity_created(&uid, ActivityEntity::Agent, &aid, &name),
+                    NewActivity::entity_created(&uid, ActivityEntity::Agent, aid.as_str(), &name),
                 )
                 .await;
             });
@@ -110,11 +94,7 @@ pub(crate) async fn create_agent_handler(
         }
         Err(e) => {
             tracing::error!(error = %e, "Failed to create agent");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response()
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
         }
     }
 }
@@ -143,18 +123,10 @@ pub(crate) async fn update_agent_handler(
             });
             Json(agent).into_response()
         }
-        Ok(None) => (
-            StatusCode::NOT_FOUND,
-            Json(serde_json::json!({"error": "Agent not found"})),
-        )
-            .into_response(),
+        Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Agent not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to update agent");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response()
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
         }
     }
 }
@@ -165,11 +137,7 @@ pub(crate) async fn delete_agent_handler(
     Path(agent_id): Path<String>,
 ) -> Response {
     if !user_ctx.is_admin {
-        return (
-            StatusCode::FORBIDDEN,
-            Json(serde_json::json!({"error": "Admin access required"})),
-        )
-            .into_response();
+        return shared::error_response(StatusCode::FORBIDDEN, "Admin access required");
     }
     let services_path = match get_services_path() {
         Ok(p) => p,
@@ -188,18 +156,10 @@ pub(crate) async fn delete_agent_handler(
             });
             StatusCode::NO_CONTENT.into_response()
         }
-        Ok(false) => (
-            StatusCode::NOT_FOUND,
-            Json(serde_json::json!({"error": "Agent not found"})),
-        )
-            .into_response(),
+        Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "Agent not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to delete agent");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response()
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
         }
     }
 }
@@ -217,7 +177,12 @@ pub(crate) async fn create_user_agent_handler(
             tokio::spawn(async move {
                 activity::record(
                     &pool,
-                    NewActivity::entity_created(&uid, ActivityEntity::UserAgent, &aid, &name),
+                    NewActivity::entity_created(
+                        &uid,
+                        ActivityEntity::UserAgent,
+                        aid.as_str(),
+                        &name,
+                    ),
                 )
                 .await;
             });
@@ -225,11 +190,7 @@ pub(crate) async fn create_user_agent_handler(
         }
         Err(e) => {
             tracing::error!(error = %e, "Failed to create user agent");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response()
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
         }
     }
 }
@@ -237,8 +198,9 @@ pub(crate) async fn create_user_agent_handler(
 pub(crate) async fn delete_user_agent_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
-    Path(agent_id): Path<String>,
+    Path(agent_id_raw): Path<String>,
 ) -> Response {
+    let agent_id = AgentId::new(agent_id_raw);
     match repositories::delete_user_agent(&pool, &user_ctx.user_id, &agent_id).await {
         Ok(true) => {
             let aid = agent_id.clone();
@@ -246,24 +208,21 @@ pub(crate) async fn delete_user_agent_handler(
             tokio::spawn(async move {
                 activity::record(
                     &pool,
-                    NewActivity::entity_deleted(&uid, ActivityEntity::UserAgent, &aid, &aid),
+                    NewActivity::entity_deleted(
+                        &uid,
+                        ActivityEntity::UserAgent,
+                        aid.as_str(),
+                        aid.as_str(),
+                    ),
                 )
                 .await;
             });
             StatusCode::NO_CONTENT.into_response()
         }
-        Ok(false) => (
-            StatusCode::NOT_FOUND,
-            Json(serde_json::json!({"error": "User agent not found"})),
-        )
-            .into_response(),
+        Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "User agent not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to delete user agent");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response()
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
         }
     }
 }

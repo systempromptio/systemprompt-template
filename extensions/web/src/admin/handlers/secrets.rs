@@ -11,10 +11,19 @@ use systemprompt::models::auth::JwtAudience;
 use systemprompt::models::{Config, SecretsBootstrap};
 use systemprompt::oauth::validate_jwt_token;
 
+use systemprompt::identifiers::UserId;
+
+use crate::admin::handlers::shared;
 use crate::admin::handlers::users::extract_user_from_cookie;
+use crate::admin::repositories::secret_audit;
 use crate::admin::repositories::secret_crypto;
 use crate::admin::repositories::secret_keys;
 use crate::admin::repositories::secret_resolve;
+
+use super::responses::{
+    AuditLogEntry, AuditLogListResponse, ResolutionTokenResponse, ResultOkResponse,
+    SecretsListResponse,
+};
 
 #[derive(serde::Deserialize)]
 pub(crate) struct ResolveQuery {
@@ -27,23 +36,19 @@ pub(crate) async fn create_resolution_token_handler(
     headers: HeaderMap,
 ) -> Response {
     let user_id = match validate_plugin_jwt(&headers) {
-        Ok(id) => id,
-        Err(r) => return r,
+        Ok(id) => UserId::new(&id),
+        Err(r) => return *r,
     };
 
     match secret_resolve::create_resolution_token(&pool, &user_id, &plugin_id).await {
-        Ok(token) => Json(serde_json::json!({
-            "token": token,
-            "expires_in": 300
-        }))
+        Ok(token) => Json(ResolutionTokenResponse {
+            token,
+            expires_in: 300,
+        })
         .into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to create resolution token");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Failed to create token"})),
-            )
-                .into_response()
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Failed to create token")
         }
     }
 }
@@ -58,44 +63,43 @@ pub(crate) async fn resolve_secrets_handler(
             Ok(v) => v,
             Err(e) => {
                 tracing::warn!(error = %e, "Token validation failed");
-                return (
+                return shared::error_response(
                     StatusCode::UNAUTHORIZED,
-                    Json(serde_json::json!({"error": "Invalid or expired token"})),
-                )
-                    .into_response();
+                    "Invalid or expired token",
+                );
             }
         };
 
     if token_plugin_id != plugin_id {
-        return (
-            StatusCode::FORBIDDEN,
-            Json(serde_json::json!({"error": "Token plugin mismatch"})),
-        )
-            .into_response();
+        return shared::error_response(StatusCode::FORBIDDEN, "Token plugin mismatch");
     }
 
     let master_key = match secret_crypto::load_master_key() {
         Ok(k) => k,
         Err(e) => {
             tracing::error!(error = %e, "Failed to load master key");
-            return (
+            return shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal configuration error"})),
-            )
-                .into_response();
+                "Internal configuration error",
+            );
         }
     };
 
-    match secret_resolve::resolve_secrets_for_plugin(&pool, &user_id, &plugin_id, &master_key).await
+    match secret_resolve::resolve_secrets_for_plugin(
+        &pool,
+        &UserId::new(&user_id),
+        &plugin_id,
+        &master_key,
+    )
+    .await
     {
-        Ok(secrets) => Json(secrets).into_response(),
+        Ok(secrets) => Json(SecretsListResponse { secrets }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to resolve secrets");
-            (
+            shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Failed to resolve secrets"})),
+                "Failed to resolve secrets",
             )
-                .into_response()
         }
     }
 }
@@ -105,52 +109,33 @@ pub(crate) async fn audit_log_handler(
     Path(plugin_id): Path<String>,
     headers: HeaderMap,
 ) -> Response {
-    let (user_id, _, _) = match extract_user_from_cookie(&headers) {
-        Ok(u) => u,
-        Err(e) => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                Json(serde_json::json!({"error": e})),
-            )
-                .into_response()
-        }
+    let session = match extract_user_from_cookie(&headers) {
+        Ok(s) => s,
+        Err(e) => return shared::error_response(StatusCode::UNAUTHORIZED, &e),
     };
+    let user_id = session.user_id;
 
-    let rows = sqlx::query_as::<_, (String, String, String, String, Option<String>, String)>(
-        "SELECT id, var_name, action, actor_id, ip_address, \
-         created_at::text FROM secret_audit_log \
-         WHERE user_id = $1 AND plugin_id = $2 \
-         ORDER BY created_at DESC LIMIT 100",
-    )
-    .bind(&user_id)
-    .bind(&plugin_id)
-    .fetch_all(pool.as_ref())
-    .await;
-
-    match rows {
+    match secret_audit::list_audit_log(&pool, &user_id, &plugin_id).await {
         Ok(entries) => {
-            let json: Vec<serde_json::Value> = entries
+            let items: Vec<AuditLogEntry> = entries
                 .into_iter()
-                .map(|(id, var_name, action, actor_id, ip, created_at)| {
-                    serde_json::json!({
-                        "id": id,
-                        "var_name": var_name,
-                        "action": action,
-                        "actor_id": actor_id,
-                        "ip_address": ip,
-                        "created_at": created_at
-                    })
+                .map(|row| AuditLogEntry {
+                    id: row.id,
+                    var_name: row.var_name,
+                    action: row.action,
+                    actor_id: row.actor_id,
+                    ip_address: row.ip_address,
+                    created_at: row.created_at,
                 })
                 .collect();
-            Json(json).into_response()
+            Json(AuditLogListResponse { entries: items }).into_response()
         }
         Err(e) => {
             tracing::error!(error = %e, "Failed to query audit log");
-            (
+            shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Failed to load audit log"})),
+                "Failed to load audit log",
             )
-                .into_response()
         }
     }
 }
@@ -160,83 +145,59 @@ pub(crate) async fn rotate_handler(
     Path(plugin_id): Path<String>,
     headers: HeaderMap,
 ) -> Response {
-    let (user_id, _, _) = match extract_user_from_cookie(&headers) {
-        Ok(u) => u,
-        Err(e) => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                Json(serde_json::json!({"error": e})),
-            )
-                .into_response()
-        }
+    let session = match extract_user_from_cookie(&headers) {
+        Ok(s) => s,
+        Err(e) => return shared::error_response(StatusCode::UNAUTHORIZED, &e),
     };
+    let user_id = session.user_id;
 
     let master_key = match secret_crypto::load_master_key() {
         Ok(k) => k,
         Err(e) => {
             tracing::error!(error = %e, "Failed to load master key");
-            return (
+            return shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal configuration error"})),
-            )
-                .into_response();
+                "Internal configuration error",
+            );
         }
     };
 
     if let Err(e) = secret_keys::rotate_user_dek(&pool, &user_id, &master_key).await {
         tracing::error!(error = %e, user_id = %user_id, "DEK rotation failed");
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({"error": "Key rotation failed"})),
-        )
-            .into_response();
+        return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Key rotation failed");
     }
 
-    let audit_id = uuid::Uuid::new_v4().to_string();
-    let _ = sqlx::query(
-        "INSERT INTO secret_audit_log (id, user_id, plugin_id, var_name, action, actor_id) \
-         VALUES ($1, $2, $3, '*', 'rotated', $2)",
-    )
-    .bind(&audit_id)
-    .bind(&user_id)
-    .bind(&plugin_id)
-    .execute(pool.as_ref())
-    .await;
+    if let Err(e) = secret_audit::insert_audit_entry(&pool, &user_id, &plugin_id, "rotated").await {
+        tracing::warn!(error = %e, "Failed to insert secret audit log");
+    }
 
-    Json(serde_json::json!({"result": "ok"})).into_response()
+    Json(ResultOkResponse { result: "ok" }).into_response()
 }
 
-#[allow(clippy::result_large_err)]
-fn validate_plugin_jwt(headers: &HeaderMap) -> Result<String, Response> {
+fn validate_plugin_jwt(headers: &HeaderMap) -> Result<String, Box<Response>> {
     let token = headers
         .get("authorization")
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.strip_prefix("Bearer "))
         .ok_or_else(|| {
-            (
-                StatusCode::UNAUTHORIZED,
-                Json(serde_json::json!({"error": "Missing Authorization header"})),
-            )
-                .into_response()
+            shared::boxed_error_response(StatusCode::UNAUTHORIZED, "Missing Authorization header")
         })?;
 
     let jwt_secret = SecretsBootstrap::jwt_secret().map_err(|e| {
         tracing::error!(error = %e, "Failed to load JWT secret");
-        (
+        shared::boxed_error_response(
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({"error": "Internal configuration error"})),
+            "Internal configuration error",
         )
-            .into_response()
     })?;
 
     let jwt_issuer = Config::get()
         .map_err(|e| {
             tracing::error!(error = %e, "Failed to load config");
-            (
+            shared::boxed_error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal configuration error"})),
+                "Internal configuration error",
             )
-                .into_response()
         })?
         .jwt_issuer
         .clone();
@@ -249,11 +210,7 @@ fn validate_plugin_jwt(headers: &HeaderMap) -> Result<String, Response> {
     )
     .map_err(|e| {
         tracing::warn!(error = %e, "Plugin JWT validation failed");
-        (
-            StatusCode::UNAUTHORIZED,
-            Json(serde_json::json!({"error": "Invalid or expired token"})),
-        )
-            .into_response()
+        shared::boxed_error_response(StatusCode::UNAUTHORIZED, "Invalid or expired token")
     })?;
 
     Ok(claims.sub.clone())

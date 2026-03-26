@@ -8,13 +8,15 @@ use axum::{
 };
 use sqlx::PgPool;
 
+use systemprompt::identifiers::{SkillId, UserId};
+
 use crate::admin::activity::{self, NewActivity};
 use crate::admin::repositories;
 use crate::admin::types::{MarketplaceRestoreResponse, NewChangelogEntry};
 
 async fn restore_skills_and_log(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     target_version: &crate::admin::types::MarketplaceVersion,
     new_version_record_id: String,
 ) -> Result<usize, Response> {
@@ -32,13 +34,13 @@ async fn restore_skills_and_log(
         )
     })?;
 
-    let _ = repositories::marketplace_versions::insert_changelog_entries(
+    if let Err(e) = repositories::marketplace_versions::insert_changelog_entries(
         pool,
         &[NewChangelogEntry {
-            user_id: user_id.to_string(),
+            user_id: user_id.clone(),
             version_id: new_version_record_id,
             action: "restored".to_string(),
-            skill_id: "*".to_string(),
+            skill_id: SkillId::new("*"),
             skill_name: format!("Restored from version {}", target_version.version_number),
             detail: format!(
                 "Restored {} skills from version {}",
@@ -46,7 +48,10 @@ async fn restore_skills_and_log(
             ),
         }],
     )
-    .await;
+    .await
+    {
+        tracing::warn!(error = %e, "Failed to insert changelog entries");
+    }
 
     if let Err(e) = repositories::marketplace_sync::invalidate_git_cache(user_id) {
         tracing::warn!(error = %e, "Failed to invalidate git cache (non-fatal)");
@@ -57,10 +62,10 @@ async fn restore_skills_and_log(
 
 async fn load_target_version(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     version_id: &str,
 ) -> Result<crate::admin::types::MarketplaceVersion, Response> {
-    match repositories::marketplace_versions::get_marketplace_version(pool, user_id, version_id)
+    match repositories::marketplace_versions::find_marketplace_version(pool, user_id, version_id)
         .await
     {
         Ok(Some(v)) => Ok(v),
@@ -78,9 +83,10 @@ async fn load_target_version(
     }
 }
 
+// JSON: required by trait contract (DB JSONB column)
 async fn snapshot_current(
     pool: &Arc<PgPool>,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<serde_json::Value, Response> {
     repositories::marketplace_sync::snapshot_current_skills(pool, user_id)
         .await
@@ -98,12 +104,13 @@ pub(crate) async fn marketplace_restore_handler(
     Path((user_id_raw, version_id)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Response {
-    let user_id = user_id_raw
+    let user_id_str = user_id_raw
         .strip_suffix(".git")
         .unwrap_or(&user_id_raw)
         .to_string();
+    let user_id = UserId::new(user_id_str.clone());
 
-    if let Err(r) = super::authenticate(&headers, &user_id) {
+    if let Err(r) = super::authenticate(&headers, &user_id_str) {
         return *r;
     }
 

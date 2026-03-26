@@ -1,3 +1,4 @@
+use crate::error::MarketplaceError;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sqlx::PgPool;
@@ -30,26 +31,28 @@ pub struct SyncResult {
 pub async fn list_skill_files(
     pool: &PgPool,
     skill_id: &str,
-) -> Result<Vec<SkillFile>, anyhow::Error> {
-    let rows = sqlx::query_as::<_, SkillFile>(
-        "SELECT * FROM skill_files WHERE skill_id = $1 ORDER BY category, file_path",
+) -> Result<Vec<SkillFile>, MarketplaceError> {
+    let rows = sqlx::query_as!(
+        SkillFile,
+        "SELECT id, skill_id, file_path, content, category, language, executable, size_bytes, checksum, created_at, updated_at FROM skill_files WHERE skill_id = $1 ORDER BY category, file_path",
+        skill_id,
     )
-    .bind(skill_id)
     .fetch_all(pool)
     .await?;
     Ok(rows)
 }
 
-pub async fn get_skill_file(
+pub async fn find_skill_file(
     pool: &PgPool,
     skill_id: &str,
     file_path: &str,
-) -> Result<Option<SkillFile>, anyhow::Error> {
-    let row = sqlx::query_as::<_, SkillFile>(
-        "SELECT * FROM skill_files WHERE skill_id = $1 AND file_path = $2",
+) -> Result<Option<SkillFile>, MarketplaceError> {
+    let row = sqlx::query_as!(
+        SkillFile,
+        "SELECT id, skill_id, file_path, content, category, language, executable, size_bytes, checksum, created_at, updated_at FROM skill_files WHERE skill_id = $1 AND file_path = $2",
+        skill_id,
+        file_path,
     )
-    .bind(skill_id)
-    .bind(file_path)
     .fetch_optional(pool)
     .await?;
     Ok(row)
@@ -61,20 +64,20 @@ pub async fn update_skill_file_content(
     file_path: &str,
     content: &str,
     services_path: &Path,
-) -> Result<bool, anyhow::Error> {
+) -> Result<bool, MarketplaceError> {
     let size_bytes = i64::try_from(content.len()).unwrap_or(0);
     let checksum = compute_checksum(content);
 
-    let result = sqlx::query(
+    let result = sqlx::query!(
         r"UPDATE skill_files
           SET content = $3, size_bytes = $4, checksum = $5, updated_at = NOW()
           WHERE skill_id = $1 AND file_path = $2",
+        skill_id,
+        file_path,
+        content,
+        size_bytes,
+        checksum,
     )
-    .bind(skill_id)
-    .bind(file_path)
-    .bind(content)
-    .bind(size_bytes)
-    .bind(&checksum)
     .execute(pool)
     .await?;
 
@@ -93,7 +96,7 @@ pub async fn update_skill_file_content(
 pub async fn sync_skill_files(
     pool: &PgPool,
     services_path: &Path,
-) -> Result<SyncResult, anyhow::Error> {
+) -> Result<SyncResult, MarketplaceError> {
     let skills_dir = services_path.join("skills");
     let mut result = SyncResult {
         created: 0,
@@ -158,7 +161,7 @@ async fn upsert_skill_file(
     content: &str,
     path: &Path,
     result: &mut SyncResult,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), MarketplaceError> {
     let checksum = compute_checksum(content);
     let category = detect_category(rel_path);
     let filename = match path.file_name() {
@@ -170,7 +173,7 @@ async fn upsert_skill_file(
     let executable = language == "python" || language == "bash";
     let id = uuid::Uuid::new_v4().to_string();
 
-    let query_result = sqlx::query(
+    let query_result = sqlx::query!(
         r"INSERT INTO skill_files (id, skill_id, file_path, content, category, language, executable, size_bytes, checksum)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
           ON CONFLICT (skill_id, file_path) DO UPDATE
@@ -182,28 +185,29 @@ async fn upsert_skill_file(
               checksum = EXCLUDED.checksum,
               updated_at = NOW()
           WHERE skill_files.checksum != EXCLUDED.checksum",
+        id,
+        skill_id,
+        rel_path,
+        content,
+        category,
+        language,
+        executable,
+        size_bytes,
+        checksum,
     )
-    .bind(&id)
-    .bind(skill_id)
-    .bind(rel_path)
-    .bind(content)
-    .bind(category)
-    .bind(language)
-    .bind(executable)
-    .bind(size_bytes)
-    .bind(&checksum)
     .execute(pool)
     .await?;
 
     if query_result.rows_affected() == 0 {
         result.unchanged += 1;
     } else {
-        let exists =
-            sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM skill_files WHERE id = $1)")
-                .bind(&id)
-                .fetch_one(pool)
-                .await
-                .unwrap_or(false);
+        let exists = sqlx::query_scalar!(
+            "SELECT EXISTS(SELECT 1 FROM skill_files WHERE id = $1) as \"exists!\"",
+            id,
+        )
+        .fetch_one(pool)
+        .await
+        .unwrap_or(false);
 
         if exists {
             result.created += 1;

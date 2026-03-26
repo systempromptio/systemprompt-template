@@ -1,7 +1,7 @@
 <div class="actions-menu" data-actions-for="{{entityId}}">
-    <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
-    <div class="actions-dropdown">
-        <a href="{{editHref}}" class="actions-item">Edit</a>
-        <button class="actions-item actions-item-danger" data-action="delete" data-entity-type="{{entityType}}" data-entity-id="{{entityId}}">Delete</button>
+    <button type="button" class="actions-trigger" data-action="menu" title="Actions" aria-label="Actions menu" aria-expanded="false" aria-haspopup="true">&#8942;</button>
+    <div class="actions-dropdown" role="menu">
+        <a href="{{editHref}}" class="actions-item" role="menuitem">Edit</a>
+        <button type="button" class="actions-item actions-item-danger" data-action="delete" data-entity-type="{{entityType}}" data-entity-id="{{entityId}}" role="menuitem">Delete</button>
     </div>
 </div>

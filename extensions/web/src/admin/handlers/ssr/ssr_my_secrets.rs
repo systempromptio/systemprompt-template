@@ -7,8 +7,9 @@ use axum::{
     extract::{Extension, State},
     response::Response,
 };
-use serde_json::json;
 use sqlx::PgPool;
+
+use super::types::{MySecretsPageData, NamedEntity, SecretGroupView, SecretVarView, SecretsStats};
 
 pub(crate) async fn my_secrets_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -23,52 +24,57 @@ pub(crate) async fn my_secrets_page(
             vec![]
         });
 
-    let user_plugins = repositories::user_plugins::list_user_plugins(&pool, &user_ctx.user_id)
+    let user_plugins = repositories::list_user_plugins(&pool, &user_ctx.user_id)
         .await
         .unwrap_or_default();
 
     let total_count = env_vars.len();
     let secret_count = env_vars.iter().filter(|v| v.is_secret).count();
 
-    let mut plugin_groups: std::collections::BTreeMap<String, Vec<serde_json::Value>> =
+    let mut plugin_groups: std::collections::BTreeMap<String, Vec<SecretVarView>> =
         std::collections::BTreeMap::new();
     for v in &env_vars {
         let entry = plugin_groups.entry(v.plugin_id.clone()).or_default();
-        entry.push(json!({
-            "id": v.id,
-            "plugin_id": v.plugin_id,
-            "var_name": v.var_name,
-            "var_value": v.var_value,
-            "is_secret": v.is_secret,
-        }));
+        entry.push(SecretVarView {
+            id: v.id.clone(),
+            plugin_id: v.plugin_id.clone(),
+            var_name: v.var_name.clone(),
+            var_value: v.var_value.clone(),
+            is_secret: v.is_secret,
+        });
     }
 
-    let groups_json: Vec<serde_json::Value> = plugin_groups
+    let groups: Vec<SecretGroupView> = plugin_groups
         .into_iter()
         .map(|(plugin_id, vars)| {
             let count = vars.len();
-            json!({
-                "plugin_id": plugin_id,
-                "variables": vars,
-                "count": count,
-            })
+            SecretGroupView {
+                plugin_id,
+                variables: vars,
+                count,
+            }
         })
         .collect();
 
-    let plugins_json: Vec<serde_json::Value> = user_plugins
+    let plugins: Vec<NamedEntity> = user_plugins
         .iter()
-        .map(|p| json!({"id": p.plugin_id, "name": p.name}))
+        .map(|p| NamedEntity {
+            id: p.plugin_id.clone(),
+            name: p.name.clone(),
+        })
         .collect();
 
-    let data = json!({
-        "page": "my-secrets",
-        "title": "My Secrets",
-        "groups": groups_json,
-        "plugins": plugins_json,
-        "stats": {
-            "total_count": total_count,
-            "secret_count": secret_count,
+    let data = MySecretsPageData {
+        page: "my-secrets",
+        title: "My Secrets",
+        groups,
+        plugins,
+        stats: SecretsStats {
+            total_count,
+            secret_count,
         },
-    });
-    super::render_page(&engine, "my-secrets", &data, &user_ctx, &mkt_ctx)
+    };
+
+    let value = serde_json::to_value(&data).unwrap_or_default();
+    super::render_page(&engine, "my-secrets", &value, &user_ctx, &mkt_ctx)
 }

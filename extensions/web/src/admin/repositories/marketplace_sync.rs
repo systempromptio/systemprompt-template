@@ -3,16 +3,19 @@ use std::sync::Arc;
 
 use sqlx::PgPool;
 
+use systemprompt::identifiers::{SkillId, UserId};
+
 use crate::admin::types::{ParsedSkill, SyncDiff, UserSkill};
+use crate::error::MarketplaceError;
 
 pub use super::marketplace_sync_archive::extract_archive;
 pub use super::marketplace_sync_parse::parse_skills_from_directory;
 
 pub async fn compute_skill_diff(
     pool: &Arc<PgPool>,
-    user_id: &str,
+    user_id: &UserId,
     uploaded: &[ParsedSkill],
-) -> Result<SyncDiff, anyhow::Error> {
+) -> Result<SyncDiff, MarketplaceError> {
     let existing = super::user_skills::list_user_skills(pool, user_id).await?;
 
     let existing_map: std::collections::HashMap<&str, &UserSkill> =
@@ -44,7 +47,7 @@ pub async fn compute_skill_diff(
         }
     }
 
-    let deleted: Vec<(String, String)> = existing
+    let deleted: Vec<(SkillId, String)> = existing
         .iter()
         .filter(|s| !uploaded_map.contains_key(s.skill_id.as_str()))
         .map(|s| (s.skill_id.clone(), s.name.clone()))
@@ -59,55 +62,57 @@ pub async fn compute_skill_diff(
 
 pub async fn apply_sync_diff(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     diff: &SyncDiff,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), MarketplaceError> {
     let mut tx = pool.begin().await?;
 
     for skill in &diff.added {
         let id = uuid::Uuid::new_v4().to_string();
-        sqlx::query(
+        sqlx::query!(
             r"
             INSERT INTO user_skills (id, user_id, skill_id, name, description, content, tags, base_skill_id)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             ",
+            id,
+            user_id.as_str(),
+            skill.skill_id.as_str(),
+            skill.name,
+            skill.description,
+            skill.content,
+            &skill.tags as &[String],
+            skill.base_skill_id.as_ref().map(SkillId::as_str),
         )
-        .bind(&id)
-        .bind(user_id)
-        .bind(&skill.skill_id)
-        .bind(&skill.name)
-        .bind(&skill.description)
-        .bind(&skill.content)
-        .bind(&skill.tags)
-        .bind(&skill.base_skill_id)
         .execute(&mut *tx)
         .await?;
     }
 
     for (skill, _detail) in &diff.updated {
-        sqlx::query(
+        sqlx::query!(
             r"
             UPDATE user_skills
             SET name = $3, description = $4, content = $5, base_skill_id = $6, updated_at = NOW()
             WHERE user_id = $1 AND skill_id = $2
             ",
+            user_id.as_str(),
+            skill.skill_id.as_str(),
+            skill.name,
+            skill.description,
+            skill.content,
+            skill.base_skill_id.as_ref().map(SkillId::as_str),
         )
-        .bind(user_id)
-        .bind(&skill.skill_id)
-        .bind(&skill.name)
-        .bind(&skill.description)
-        .bind(&skill.content)
-        .bind(&skill.base_skill_id)
         .execute(&mut *tx)
         .await?;
     }
 
     for (skill_id, _name) in &diff.deleted {
-        sqlx::query("DELETE FROM user_skills WHERE user_id = $1 AND skill_id = $2")
-            .bind(user_id)
-            .bind(skill_id)
-            .execute(&mut *tx)
-            .await?;
+        sqlx::query!(
+            "DELETE FROM user_skills WHERE user_id = $1 AND skill_id = $2",
+            user_id.as_str(),
+            skill_id.as_str(),
+        )
+        .execute(&mut *tx)
+        .await?;
     }
 
     tx.commit().await?;
@@ -116,45 +121,48 @@ pub async fn apply_sync_diff(
 
 pub async fn snapshot_current_skills(
     pool: &Arc<PgPool>,
-    user_id: &str,
-) -> Result<serde_json::Value, anyhow::Error> {
+    user_id: &UserId,
+) -> Result<serde_json::Value, MarketplaceError> {
+    // JSON: DB jsonb column (skills_snapshot)
     let skills = super::user_skills::list_user_skills(pool, user_id).await?;
     Ok(serde_json::to_value(&skills)?)
 }
 
 pub async fn restore_skills_from_snapshot(
     pool: &PgPool,
-    user_id: &str,
-    snapshot: &serde_json::Value,
-) -> Result<usize, anyhow::Error> {
+    user_id: &UserId,
+    snapshot: &serde_json::Value, // JSON: DB jsonb column (skills_snapshot)
+) -> Result<usize, MarketplaceError> {
     let skills: Vec<UserSkill> = serde_json::from_value(snapshot.clone())?;
 
     let mut tx = pool.begin().await?;
 
-    sqlx::query("DELETE FROM user_skills WHERE user_id = $1")
-        .bind(user_id)
-        .execute(&mut *tx)
-        .await?;
+    sqlx::query!(
+        "DELETE FROM user_skills WHERE user_id = $1",
+        user_id.as_str(),
+    )
+    .execute(&mut *tx)
+    .await?;
 
     for skill in &skills {
-        sqlx::query(
+        sqlx::query!(
             r"
             INSERT INTO user_skills (id, user_id, skill_id, name, description, content, enabled, version, tags, base_skill_id, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             ",
+            skill.id,
+            user_id.as_str(),
+            skill.skill_id.as_str(),
+            skill.name,
+            skill.description,
+            skill.content,
+            skill.enabled,
+            skill.version,
+            &skill.tags as &[String],
+            skill.base_skill_id.as_ref().map(SkillId::as_str),
+            skill.created_at,
+            skill.updated_at,
         )
-        .bind(&skill.id)
-        .bind(user_id)
-        .bind(&skill.skill_id)
-        .bind(&skill.name)
-        .bind(&skill.description)
-        .bind(&skill.content)
-        .bind(skill.enabled)
-        .bind(&skill.version)
-        .bind(&skill.tags)
-        .bind(&skill.base_skill_id)
-        .bind(skill.created_at)
-        .bind(skill.updated_at)
         .execute(&mut *tx)
         .await?;
     }
@@ -163,8 +171,8 @@ pub async fn restore_skills_from_snapshot(
     Ok(skills.len())
 }
 
-pub fn invalidate_git_cache(user_id: &str) -> Result<(), std::io::Error> {
-    let cache_dir = PathBuf::from(super::marketplace_git::CACHE_DIR).join(user_id);
+pub fn invalidate_git_cache(user_id: &UserId) -> Result<(), std::io::Error> {
+    let cache_dir = PathBuf::from(super::marketplace_git::CACHE_DIR).join(user_id.as_str());
     if cache_dir.exists() {
         std::fs::remove_dir_all(&cache_dir)?;
     }
@@ -172,11 +180,11 @@ pub fn invalidate_git_cache(user_id: &str) -> Result<(), std::io::Error> {
 }
 
 pub fn save_upload_archive(
-    user_id: &str,
+    user_id: &UserId,
     version_number: i32,
     data: &[u8],
-) -> Result<String, anyhow::Error> {
-    let dir = PathBuf::from("storage/marketplace-versions").join(user_id);
+) -> Result<String, MarketplaceError> {
+    let dir = PathBuf::from("storage/marketplace-versions").join(user_id.as_str());
     std::fs::create_dir_all(&dir)?;
 
     let filename = format!("{version_number}.tar.gz");

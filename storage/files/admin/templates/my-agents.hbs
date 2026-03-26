@@ -1,101 +1,118 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    <!-- Toolbar -->
+    {{> components/page-hero}}
+
+    <section aria-label="Agents">
     <div class="toolbar">
         <div class="search-group">
-            <input type="text" class="search-input" placeholder="Search agents..." id="my-agents-search">
+            <input type="text" class="search-input" placeholder="Search agents..." id="my-agents-search" aria-label="Search agents">
         </div>
-        <button class="btn btn-secondary" id="my-agents-bulk-bar" disabled>
-            Bulk Actions (<span data-bulk-count>0</span>)
-        </button>
-        <button class="btn btn-secondary" id="my-agents-fork-btn">Fork from Org</button>
         <a href="/admin/my/agents/edit/" class="btn btn-primary">+ New Agent</a>
     </div>
 
-    <!-- Stats bar -->
     {{#if stats}}
-    <div class="config-stats" style="margin-bottom:var(--space-4)">
-        <span class="badge badge-blue">{{stats.agent_count}} agent{{#if (not (eq stats.agent_count 1))}}s{{/if}}</span>
-        <span class="badge badge-green">{{stats.active_count}} active</span>
+    <div class="config-stats mb-4">
+        <span class="badge badge-info">{{stats.agent_count}} agent{{#if (not (eq stats.agent_count 1))}}s{{/if}}</span>
     </div>
     {{/if}}
+
+    <p class="text-muted mb-4">All agents in your workspace. Agents are added when you add plugins from the <a href="/admin/browse/plugins/">Plugin Directory</a>.</p>
+
+    <div class="entity-batch-bar" id="entity-batch-bar" hidden>
+        <span class="entity-batch-count" id="entity-batch-count">0 selected</span>
+        <button type="button" class="entity-batch-btn entity-batch-btn--danger" id="entity-batch-delete">Delete Selected</button>
+    </div>
 
     {{#if agents}}
     <div class="table-container">
         <table class="data-table" id="my-agents-table">
             <thead>
                 <tr>
-                    <th style="width:40px" data-no-row-click><input type="checkbox" class="bulk-select-all"></th>
+                    <th class="col-checkbox"><input type="checkbox" id="entity-select-all" class="entity-batch-checkbox" aria-label="Select all"></th>
                     <th>Name</th>
                     <th>Plugins</th>
                     <th>Source</th>
-                    <th>Status</th>
+                    <th>Usage</th>
                     <th class="col-actions"></th>
                 </tr>
             </thead>
             <tbody>
                 {{#each agents}}
-                <tr class="clickable-row" data-entity-type="user-agent" data-entity-id="{{agent_id}}" data-name="{{toLowerCase name}}">
-                    <td data-no-row-click>
-                        <input type="checkbox" class="bulk-checkbox" data-entity-id="{{agent_id}}">
-                    </td>
+                <tr class="clickable-row" data-expandable aria-expanded="false" data-entity-type="user-agent" data-entity-id="{{agent_id}}" data-name="{{toLowerCase name}}">
+                    <td class="col-checkbox" data-no-row-click><input type="checkbox" class="entity-batch-checkbox entity-row-checkbox" data-batch-id="{{agent_id}}" aria-label="Select {{name}}"></td>
                     <td>
-                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{agent_id}}">&#9654;</span> {{name}}</div>
+                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{agent_id}}" aria-hidden="true">&#9654;</span> {{name}}</div>
                         {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
                     </td>
                     <td>
                         <div class="badge-row">
-                            {{#each plugin_names}}<span class="badge badge-purple">{{this}}</span>{{/each}}
-                            {{#unless plugin_names}}<span style="color:var(--text-tertiary)">&mdash;</span>{{/unless}}
+                            {{#each plugin_names}}<a href="/admin/my/plugins/edit?id={{this}}" class="badge badge-purple text-no-decor cursor-pointer">{{this}}</a>{{/each}}
+                            {{#unless plugin_names}}<span class="text-tertiary">&mdash;</span>{{/unless}}
                         </div>
                     </td>
                     <td>
-                        {{#if is_forked}}<span class="badge badge-yellow">forked</span>{{else}}<span class="badge badge-green">custom</span>{{/if}}
+                        {{#if base_agent_id}}<span class="badge badge-purple">Official</span>{{else}}<span class="badge badge-success">Custom</span>{{/if}}
                     </td>
                     <td>
-                        {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
+                        {{#if (gt total_uses 0)}}
+                            <div class="usage-metric">
+                                <span class="badge badge-info">{{total_uses}} uses</span>
+                                <span class="text-tertiary text-xs">{{sessions_used_in}} sessions</span>
+                            </div>
+                        {{else}}
+                            <span class="text-tertiary">&mdash;</span>
+                        {{/if}}
                     </td>
                     <td class="col-actions" data-no-row-click>
                         <div class="actions-menu" data-actions-for="{{agent_id}}">
-                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                            <button type="button" class="actions-trigger" data-action="menu" title="Actions" aria-label="Actions menu">&#8942;</button>
                             <div class="actions-dropdown">
                                 <a href="/admin/my/agents/edit/?id={{agent_id}}" class="actions-item">Edit</a>
                                 <div class="actions-popup-separator"></div>
-                                <button class="actions-item actions-item-danger" data-delete-entity="{{agent_id}}" data-entity-type="user-agent">Delete</button>
+                                <button type="button" class="actions-item actions-item-danger" data-delete-entity="{{agent_id}}" data-entity-type="user-agent">Delete</button>
                             </div>
                         </div>
                     </td>
                 </tr>
-                <!-- Detail expand row -->
-                <tr class="detail-row" data-detail-for="{{agent_id}}">
-                    <td colspan="6">
+                <tr class="detail-row" data-detail-for="{{agent_id}}" aria-hidden="true">
+                    <td colspan="7">
                         <div class="detail-row-content">
-                            <!-- System prompt preview -->
                             {{#if prompt_preview}}
                             <div class="detail-section">
                                 <strong>System Prompt Preview</strong>
-                                <pre style="white-space:pre-wrap;font-size:var(--text-sm);color:var(--text-secondary);max-height:200px;overflow:auto;margin-top:var(--space-2)">{{prompt_preview}}</pre>
+                                <pre class="detail-pre-wrap text-sm text-secondary mt-2">{{prompt_preview}}</pre>
                             </div>
                             {{/if}}
-                            <!-- Plugin assignments -->
                             {{#if plugin_names}}
                             <div class="detail-section">
                                 <strong>Plugin Assignments</strong>
-                                <div class="badge-row" style="margin-top:var(--space-1)">
-                                    {{#each plugin_names}}<span class="badge badge-purple">{{this}}</span>{{/each}}
+                                <div class="badge-row mt-1">
+                                    {{#each plugin_names}}<a href="/admin/my/plugins/edit?id={{this}}" class="badge badge-purple text-no-decor cursor-pointer">{{this}}</a>{{/each}}
+                                </div>
+                            </div>
+                            {{/if}}
+                            {{#if (gt total_uses 0)}}
+                            <div class="detail-section">
+                                <strong>Metrics</strong>
+                                <div class="badge-row mt-2">
+                                    <span class="badge badge-info">{{total_uses}} total uses</span>
+                                    <span class="badge badge-success">{{sessions_used_in}} sessions</span>
+                                    {{#if (gt scored_sessions 0)}}
+                                    <span class="badge badge-warning">{{avg_effectiveness}} AI score ({{scored_sessions}} scored)</span>
+                                    <span class="badge badge-purple">{{goal_achievement_pct}}% goals</span>
+                                    {{/if}}
                                 </div>
                             </div>
                             {{/if}}
                             {{#if base_agent_id}}
                             <div class="detail-section">
-                                <span style="font-size:var(--text-sm);color:var(--text-secondary)">Forked from: <code class="code-inline">{{base_agent_id}}</code></span>
+                                <span class="text-sm text-secondary">Added from: <span class="badge badge-purple">Official</span> <code class="code-inline">{{base_agent_id}}</code></span>
                             </div>
                             {{/if}}
-                            <!-- JSON toggle -->
                             <div class="detail-section">
-                                <button class="btn btn-secondary btn-sm" data-toggle-json="{{agent_id}}" style="font-size:var(--text-xs);padding:2px 8px;margin-bottom:var(--space-2)">Show JSON</button>
-                                <div class="json-view" data-json-for="{{agent_id}}" style="display:none"></div>
+                                <button type="button" class="btn btn-secondary btn-sm text-xs btn-compact mb-2" data-toggle-json="{{agent_id}}">Show JSON</button>
+                                <div class="json-view d-none" data-json-for="{{agent_id}}"></div>
                             </div>
                         </div>
                     </td>
@@ -108,34 +125,15 @@
     {{> components/empty-state message="No agents yet. Create your first agent to get started."}}
     {{/if}}
 
-    <!-- Hidden agent detail data -->
     {{#each agents}}
     <script type="application/json" data-my-agent-detail="{{agent_id}}">
         {{{json this}}}
     </script>
     {{/each}}
-
-    <!-- Fork panel -->
-    <div class="panel-overlay" id="fork-panel-overlay"></div>
-    <div class="side-panel" id="fork-panel" data-overlay="fork-panel-overlay">
-        <div class="panel-header">
-            <h2 data-panel-title style="margin:0;font-size:var(--text-lg)"></h2>
-            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
-        </div>
-        <div class="panel-body" data-panel-body></div>
-        <div class="panel-footer" data-panel-footer></div>
-    </div>
+    </section>
 
     {{/inline}}
     {{#*inline "scripts"}}
-    <script src="/js/admin-my-workspace.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            if (AdminApp.initMyAgents) {
-                AdminApp.initMyAgents();
-            }
-        });
-    </script>
+    <script data-cfasync="false" src="/js/pages/admin-my-agents.js" type="module" defer></script>
     {{/inline}}
 {{/layout}}

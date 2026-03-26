@@ -1,4 +1,4 @@
 <label class="toggle-switch">
-    <input type="checkbox"{{#if checked}} checked{{/if}} data-entity-type="{{entityType}}" data-entity-id="{{entityId}}" data-action="toggle">
+    <input type="checkbox" role="switch"{{#if checked}} checked aria-checked="true"{{else}} aria-checked="false"{{/if}} data-entity-type="{{entityType}}" data-entity-id="{{entityId}}" data-action="toggle">
     <span class="toggle-slider"></span>
 </label>

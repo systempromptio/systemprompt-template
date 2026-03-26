@@ -1,0 +1,102 @@
+@layer responsive {
+@media (max-width: 768px) {
+    .header-actions {
+        position: relative;
+        flex-shrink: 0;
+    }
+    .header-actions-toggle {
+        display: flex;
+    }
+    .header-actions-menu {
+        display: none;
+        position: absolute;
+        top: calc(100% + var(--sp-space-2));
+        right: 0;
+        background: var(--sp-bg-surface);
+        border: 1px solid var(--sp-border-default);
+        border-radius: var(--sp-radius-md);
+        box-shadow: var(--sp-shadow-lg);
+        padding: var(--sp-space-2);
+        min-width: 200px;
+        z-index: var(--sp-z-sticky-header);
+        flex-direction: column;
+        gap: var(--sp-space-2);
+    }
+    .header-actions.open .header-actions-menu {
+        display: flex;
+    }
+    .header-actions-menu .header-help-link {
+        width: 100%;
+        height: auto;
+        border-radius: var(--sp-radius-sm);
+        padding: var(--sp-space-2) var(--sp-space-3);
+        justify-content: flex-start;
+        gap: var(--sp-space-2);
+    }
+    .header-actions-menu .header-help-link::after {
+        content: 'Help';
+        font-size: var(--sp-text-sm);
+        color: var(--sp-text-secondary);
+    }
+    .header-actions-menu .install-menu {
+        width: 100%;
+    }
+    .header-actions-menu .install-trigger {
+        width: 100%;
+        justify-content: flex-start;
+        padding: var(--sp-space-2) var(--sp-space-3);
+        gap: var(--sp-space-2);
+        border-radius: var(--sp-radius-sm);
+        min-height: 40px;
+    }
+    .header-actions-menu .install-trigger::after {
+        content: 'Share & Install';
+        font-size: var(--sp-text-sm);
+        color: var(--sp-text-secondary);
+    }
+    .header-actions-menu .user-widget-row {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-space-2);
+        padding: var(--sp-space-2) var(--sp-space-3);
+    }
+    .header-actions-menu .user-widget {
+        width: 38px;
+        height: 38px;
+    }
+    .header-actions-menu .user-widget__xp-ring {
+        width: 38px;
+        height: 38px;
+    }
+    .header-actions-menu .install-dropdown {
+        position: fixed;
+        top: auto;
+        right: var(--sp-space-3);
+        left: var(--sp-space-3);
+        width: auto;
+    }
+
+    .section-title {
+        font-size: var(--sp-text-sm);
+        margin: var(--sp-space-4) 0 var(--sp-space-2);
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .toast-container {
+        left: var(--sp-space-3);
+        right: var(--sp-space-3);
+        top: var(--sp-space-3);
+    }
+    .toast {
+        max-width: none;
+    }
+    .platform-info-bar { flex-wrap: wrap; }
+    .section-header { flex-wrap: wrap; }
+    .selection-save-bar { flex-direction: column; gap: var(--sp-space-2); }
+
+    html .hide-mobile { display: none; }
+}
+}

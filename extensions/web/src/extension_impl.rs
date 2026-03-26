@@ -129,7 +129,8 @@ impl Extension for WebExtension {
         let pool = db.pool()?;
         let write_pool = db.write_pool_arc().unwrap_or_else(|_| pool.clone());
 
-        let admin_api = admin::admin_router(&pool, write_pool.clone());
+        let tier_cache = admin::tier_enforcement::TierEnforcementCache::default();
+        let admin_api = admin::admin_router(pool.clone(), write_pool.clone(), tier_cache.clone());
         let webhook_api = admin::hooks_webhook_router(write_pool.clone());
         let secrets_api = admin::secrets_router(write_pool);
         let marketplace_git = admin::marketplace_git_router(pool.clone());

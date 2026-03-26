@@ -3,15 +3,12 @@ use std::path::Path;
 
 use super::plugin_resolvers::resolve_all_plugin_skill_ids;
 
+pub type EntityPluginMap = HashMap<String, Vec<(String, String)>>;
+
 #[must_use]
-#[allow(clippy::type_complexity)]
 pub fn build_entity_plugin_maps(
     services_path: &Path,
-) -> (
-    HashMap<String, Vec<(String, String)>>,
-    HashMap<String, Vec<(String, String)>>,
-    HashMap<String, Vec<(String, String)>>,
-) {
+) -> (EntityPluginMap, EntityPluginMap, EntityPluginMap) {
     use systemprompt::models::PluginConfigFile;
 
     let plugins_path = services_path.join("plugins");

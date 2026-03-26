@@ -1,0 +1,194 @@
+@layer components {
+
+
+.usage-chart-container {
+    background: var(--sp-bg-surface-gradient);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-brand);
+    padding: var(--sp-space-6);
+    margin-bottom: var(--sp-space-6);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--sp-shadow-elevated);
+    contain: layout style;
+    min-height: 340px;
+}
+
+.usage-chart-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: var(--sp-space-6);
+    right: var(--sp-space-6);
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--sp-accent), transparent);
+    border-radius: 0 0 var(--sp-radius-xs) var(--sp-radius-xs);
+    opacity: 0.6;
+}
+
+.usage-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-space-5);
+    flex-wrap: wrap;
+    gap: var(--sp-space-3);
+}
+
+.usage-chart-title {
+    font-size: var(--sp-text-lg);
+    font-weight: 700;
+    color: var(--sp-text-primary);
+}
+
+.usage-chart-legend {
+    display: flex;
+    gap: var(--sp-space-4);
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+}
+
+.legend-item::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: var(--sp-radius-xs);
+}
+
+.legend-sessions::before { background: var(--sp-chart-purple); }
+.legend-active-users::before { background: var(--sp-chart-green); }
+.legend-prompts::before { background: var(--sp-chart-blue); }
+.legend-tools::before { background: var(--sp-accent); }
+.legend-errors::before { background: var(--sp-chart-red); }
+
+.chart-range-tabs {
+    display: flex;
+    gap: var(--sp-space-1);
+}
+
+.chart-range-tab {
+    padding: var(--sp-space-1) var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-text-tertiary);
+    background: transparent;
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-button);
+    text-decoration: none;
+    transition: color var(--sp-duration-fast), background var(--sp-duration-fast), border-color var(--sp-duration-fast), box-shadow var(--sp-duration-fast);
+    cursor: pointer;
+}
+
+.chart-range-tab:hover {
+    color: var(--sp-text-secondary);
+    border-color: var(--sp-border-default);
+}
+
+.chart-range-tab.active {
+    color: var(--sp-accent);
+    background: var(--sp-accent-dim);
+    border-color: color-mix(in oklch, var(--sp-accent) 40%, transparent);
+    box-shadow: 0 1px 3px color-mix(in oklch, var(--sp-accent) 20%, transparent);
+    font-weight: 700;
+}
+
+.usage-chart-peak {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.usage-chart-body {
+    position: relative;
+}
+
+.usage-chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 240px;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-sm);
+}
+
+.usage-svg {
+    width: 100%;
+    height: 240px;
+    display: block;
+}
+
+.area-path {
+    opacity: 0;
+    animation: areaFadeIn 1.2s var(--sp-ease-out) forwards;
+}
+
+.area-path:nth-child(8) { animation-delay: 0s; }
+.area-path:nth-child(9) { animation-delay: 0.1s; }
+.area-path:nth-child(10) { animation-delay: 0.2s; }
+.area-path:nth-child(11) { animation-delay: 0.3s; }
+.area-path:nth-child(12) { animation-delay: 0.4s; }
+
+.line-path {
+    stroke-dasharray: 3000;
+    stroke-dashoffset: 3000;
+    animation: lineReveal 2s var(--sp-ease-out) 0.5s forwards;
+}
+
+@keyframes areaFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes lineReveal {
+    to { stroke-dashoffset: 0; }
+}
+
+.chart-grid-line {
+    stroke: var(--sp-border-subtle);
+    stroke-width: 0.5;
+}
+
+.area-sessions { fill: url(#grad-sessions); }
+.area-active-users { fill: url(#grad-active-users); }
+.area-prompts { fill: url(#grad-prompts); }
+.area-tools { fill: url(#grad-tools); }
+.area-errors { fill: url(#grad-errors); }
+.line-top { stroke: var(--sp-accent); }
+
+.chart-axis-label {
+    font-size: var(--sp-text-xs);
+    fill: var(--sp-text-tertiary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+
+.usage-chart-x-axis {
+    display: flex;
+    justify-content: space-between;
+    padding-top: var(--sp-space-2);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-family: var(--sp-font-family);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .area-path {
+        animation: none;
+        opacity: 1;
+    }
+    .line-path {
+        animation: none;
+        stroke-dasharray: none;
+        stroke-dashoffset: 0;
+    }
+}
+
+}

@@ -16,17 +16,10 @@
             {{#each filter_tags}}<option value="{{this}}">{{this}}</option>{{/each}}
         </select>
     </div>
-    <div class="bulk-actions-bar" id="bulk-bar" style="display:none">
-        <span><strong data-bulk-count>0</strong> selected</span>
-        <button class="btn btn-sm btn-secondary" id="bulk-assign-btn">Assign to Plugin</button>
-        <button class="btn btn-sm btn-secondary" id="bulk-category-btn">Set Category</button>
-        <button class="btn btn-sm btn-danger" id="bulk-delete-btn">Delete Selected</button>
-    </div>
     {{#if skills}}
     {{#> components/data-table}}
         <thead>
             <tr>
-                <th style="width:40px"><input type="checkbox" class="bulk-select-all"></th>
                 <th>Name</th>
                 <th>Skill ID</th>
                 <th>Source</th>
@@ -41,7 +34,6 @@
         <tbody>
         {{#each skills}}
         <tr class="clickable-row" data-name="{{toLowerCase name}}" data-skill-id="{{skill_id}}" data-description="{{toLowerCase description}}" data-source="{{source}}" data-plugins="{{#each assigned_plugins}}{{name}},{{/each}}" data-tags="{{#each tags}}{{this}},{{/each}}">
-            <td data-no-row-click><input type="checkbox" class="bulk-checkbox" data-entity-id="{{skill_id}}"></td>
             <td>
                 <div class="cell-primary">{{name}}</div>
                 {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
@@ -57,7 +49,7 @@
                     <span class="badge badge-purple">{{name}}</span>
                     {{/each}}
                 {{else}}
-                    <span style="color:var(--text-tertiary)">—</span>
+                    <span class="text-tertiary">—</span>
                 {{/if}}
                 </div>
             </td>
@@ -65,7 +57,7 @@
                 {{#if (gt agent_count 0)}}
                 <span class="badge badge-blue">{{agent_count}}</span>
                 {{else}}
-                <span style="color:var(--text-tertiary)">—</span>
+                <span class="text-tertiary">—</span>
                 {{/if}}
             </td>
             <td>{{#if usage_count}}<span class="usage-badge">{{usage_count}}</span>{{else}}<span class="text-muted">--</span>{{/if}}</td>
@@ -73,22 +65,22 @@
             <td><span class="metadata-timestamp" title="{{updated_at}}">{{updated_at}}</span></td>
             <td class="col-actions" data-no-row-click>
                 <div class="actions-menu" data-actions-for="{{skill_id}}">
-                    <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                    <button type="button" class="actions-trigger" data-action="menu" title="Actions" aria-label="Actions menu">&#8942;</button>
                     <div class="actions-dropdown">
-                        <button class="actions-item" data-edit-skill="{{skill_id}}">Edit</button>
-                        <button class="actions-item" data-browse-skill="{{skill_id}}" data-skill-name="{{name}}">Files</button>
-                        {{#if (eq source "system")}}<button class="actions-item" data-fork-skill="{{skill_id}}">Customize</button>{{/if}}
-                        <button class="actions-item" data-assign-skill="{{skill_id}}" data-skill-name="{{name}}">Assign to Plugin</button>
+                        <button type="button" class="actions-item" data-edit-skill="{{skill_id}}">Edit</button>
+                        <button type="button" class="actions-item" data-browse-skill="{{skill_id}}" data-skill-name="{{name}}">Files</button>
+                        {{#if (eq source "system")}}<button type="button" class="actions-item" data-fork-skill="{{skill_id}}">Customize</button>{{/if}}
+                        <button type="button" class="actions-item" data-assign-skill="{{skill_id}}" data-skill-name="{{name}}">Assign to Plugin</button>
                         {{#if (eq source "custom")}}
                         <div class="actions-popup-separator"></div>
-                        <button class="actions-item actions-item-danger" data-delete-skill="{{skill_id}}">Delete</button>
+                        <button type="button" class="actions-item actions-item-danger" data-delete-skill="{{skill_id}}">Delete</button>
                         {{/if}}
                     </div>
                 </div>
             </td>
         </tr>
         <tr class="detail-row">
-            <td colspan="10">
+            <td colspan="9">
                 <div class="detail-row-content" data-skill-expand="{{skill_id}}"></div>
             </td>
         </tr>
@@ -105,41 +97,36 @@
     </script>
     {{/each}}
 
-    <!-- Assign to Plugin side panel -->
     <div class="panel-overlay" id="assign-overlay"></div>
     <div class="assign-panel" id="assign-panel" data-overlay="assign-overlay">
         <div class="assign-panel-header">
-            <h3 data-panel-title style="margin:0;font-size:var(--text-lg)">Assign Skill</h3>
-            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
+            <h3 data-panel-title class="mb-0 text-lg">Assign Skill</h3>
+            <button type="button" class="btn btn-icon text-lg" data-panel-close aria-label="Close panel">&times;</button>
         </div>
         <div class="assign-panel-body" data-panel-body></div>
         <div class="assign-panel-footer" data-panel-footer></div>
     </div>
 
-    <!-- Edit side panel -->
     <div class="panel-overlay" id="edit-overlay"></div>
     <div class="edit-panel" id="edit-panel" data-overlay="edit-overlay">
         <div class="edit-panel-header">
-            <h3 data-panel-title style="margin:0;font-size:var(--text-lg)">Edit</h3>
-            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
+            <h3 data-panel-title class="mb-0 text-lg">Edit</h3>
+            <button type="button" class="btn btn-icon text-lg" data-panel-close aria-label="Close panel">&times;</button>
         </div>
         <div class="edit-panel-body" data-panel-body></div>
         <div class="edit-panel-footer" data-panel-footer></div>
     </div>
 
-    <!-- All plugins data for assign panel -->
     <script type="application/json" id="all-plugins-data">
         {{{json all_plugins}}}
     </script>
 
     {{/inline}}
     {{#*inline "scripts"}}
-    <script src="/js/admin-org.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            AdminApp.initOrgSkills();
-        });
+    <script data-cfasync="false" type="module" src="/js/pages/admin-org-skills.js" defer></script>
+    <script data-cfasync="false" type="module">
+        import { initOrgSkills } from '/js/pages/admin-org-skills.js';
+        initOrgSkills();
     </script>
     {{/inline}}
 {{/layout}}

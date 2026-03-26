@@ -1,0 +1,141 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+
+    <div class="detail-header">
+        {{> components/back-button href="/admin/my/marketplace" label="Back to My Marketplace"}}
+        <div class="ml-auto d-flex gap-2">
+            <a href="/api/public/marketplace/{{marketplace.user_id}}/export/plugin/{{plugin.plugin_id}}.zip" class="btn btn-secondary btn-sm" title="Download as ZIP for Cowork organization upload">Export ZIP</a>
+            {{#unless (eq plugin.base_plugin_id "systemprompt")}}
+            <a href="/admin/my/plugins/edit?id={{plugin.plugin_id}}" class="btn btn-primary btn-sm">Edit Plugin</a>
+            {{/unless}}
+        </div>
+    </div>
+
+    <div class="card mb-6">
+        <div class="d-flex align-start justify-between flex-wrap gap-3">
+            <div>
+                <h2 class="plugin-view-header">{{plugin.name}}</h2>
+                {{#if plugin.description}}<p class="text-muted plugin-view-desc">{{plugin.description}}</p>{{/if}}
+                <div class="d-flex gap-2 flex-wrap">
+                    {{#if plugin.base_plugin_id}}
+                    <span class="badge badge-purple">Official</span>
+                    {{else}}
+                    <span class="badge badge-gray">Custom</span>
+                    {{/if}}
+                    {{#if plugin.category}}<span class="badge badge-sm">{{plugin.category}}</span>{{/if}}
+                    {{#if plugin.version}}<span class="badge badge-sm badge-subtle">v{{plugin.version}}</span>{{/if}}
+                </div>
+            </div>
+            <div class="config-stats">
+                <span class="badge badge-success">{{plugin.skill_count}} skills</span>
+                <span class="badge badge-info">{{plugin.agent_count}} agents</span>
+                <span class="badge badge-warning">{{plugin.mcp_count}} connectors</span>
+                {{#if (gt plugin.hook_count 0)}}<span class="badge badge-purple">{{plugin.hook_count}} hooks</span>{{/if}}
+            </div>
+        </div>
+    </div>
+
+    {{> components/plugin-install-guide}}
+
+    {{#if (gt plugin.skill_count 0)}}
+    <section aria-label="Plugin skills">
+    <div class="section-header">
+        <h3>Skills ({{plugin.skill_count}})</h3>
+    </div>
+    {{#> components/data-table}}
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th class="col-actions"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each plugin.skills}}
+            <tr>
+                <td>
+                    <div class="cell-primary">{{name}}</div>
+                    {{#if description}}<div class="cell-secondary">{{description}}</div>{{/if}}
+                </td>
+                <td class="col-actions">
+                    {{#unless (eq ../plugin.base_plugin_id "systemprompt")}}
+                    <a href="/admin/my/skills/edit?id={{id}}" class="btn btn-secondary btn-sm">Edit</a>
+                    {{/unless}}
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    </section>
+    {{/if}}
+
+    {{#if (gt plugin.agent_count 0)}}
+    <section aria-label="Plugin agents">
+    <div class="section-header">
+        <h3>Agents ({{plugin.agent_count}})</h3>
+    </div>
+    {{#> components/data-table}}
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th class="col-actions"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each plugin.agents}}
+            <tr>
+                <td>
+                    <div class="cell-primary">{{name}}</div>
+                </td>
+                <td class="col-actions">
+                    {{#unless (eq ../plugin.base_plugin_id "systemprompt")}}
+                    <a href="/admin/my/agents/edit?id={{id}}" class="btn btn-secondary btn-sm">Edit</a>
+                    {{/unless}}
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    </section>
+    {{/if}}
+
+    {{#if (gt plugin.mcp_count 0)}}
+    <section aria-label="Plugin connectors">
+    <div class="section-header">
+        <h3>Connectors ({{plugin.mcp_count}})</h3>
+    </div>
+    {{#> components/data-table}}
+        <thead>
+            <tr>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each plugin.mcp_servers}}
+            <tr>
+                <td>
+                    <div class="cell-primary">{{name}}</div>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    </section>
+    {{/if}}
+
+    {{#if (gt plugin.hook_count 0)}}
+    <section aria-label="Plugin hooks">
+    <div class="section-header">
+        <h3>Hooks ({{plugin.hook_count}})</h3>
+    </div>
+    <div class="card">
+        <p class="text-muted text-sm">This plugin includes {{plugin.hook_count}} event hooks that track tool usage, permissions, sessions, and agent activity. <a href="/admin/my/hooks">Manage hooks &rarr;</a></p>
+    </div>
+    </section>
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" src="/js/services/bootstrap.js" type="module" defer></script>
+    {{/inline}}
+{{/layout}}

@@ -1,17 +1,13 @@
+use std::fmt::Write;
 use std::path::Path;
 
 use super::export::PluginFile;
-use super::export_builders_env::build_env_files;
 use super::export_resolvers::{
     build_agent_md, build_skill_md, collect_skill_auxiliary_files, resolve_export_agents,
     resolve_export_skills,
 };
-use super::export_scripts::{
-    build_hooks_file, build_transcript_script_from_template,
-    build_transcript_script_ps1_from_template, collect_platform_hooks,
-    collect_tracking_http_hooks, env_hook_entry, governance_http_hook, transcript_hook_entry,
-};
 use super::export_validation::{build_manifest, compute_content_version, validate_bundle};
+use crate::error::MarketplaceError;
 
 pub(super) struct PluginBuildContext<'a> {
     pub plugin_id: &'a str,
@@ -19,21 +15,24 @@ pub(super) struct PluginBuildContext<'a> {
     pub plugins_path: &'a Path,
     pub skills_path: &'a Path,
     pub services_path: &'a Path,
-    pub plugin_token: &'a str,
     pub platform_url: &'a str,
-    pub platform: &'a str,
-    pub env_vars: &'a std::collections::HashMap<String, String>,
+    pub token: Option<&'a str>,
 }
 
 pub(super) fn build_plugin_files(
     ctx: &PluginBuildContext<'_>,
-) -> Result<Vec<PluginFile>, anyhow::Error> {
-    let is_windows = ctx.platform == "windows";
+) -> Result<Vec<PluginFile>, MarketplaceError> {
     let mut files = Vec::new();
 
     let agents_path = ctx.services_path.join("agents");
     let skill_ids = resolve_export_skills(&ctx.plugin.base, ctx.skills_path, &agents_path)?;
-    build_skill_files(&skill_ids, &mut files)?;
+    build_skill_files(
+        &skill_ids,
+        ctx.platform_url,
+        ctx.token,
+        ctx.plugin_id,
+        &mut files,
+    )?;
     build_agent_files(&ctx.plugin.base, ctx.services_path, &mut files)?;
     build_mcp_files(
         &ctx.plugin.base,
@@ -42,66 +41,7 @@ pub(super) fn build_plugin_files(
         &mut files,
     )?;
 
-    // Transcript script (command hook — needs local file access)
-    let transcript_script_name = format!("upload-{}-transcript.sh", ctx.plugin_id);
-    if ctx.plugin_id == "common-skills" {
-        if is_windows {
-            let ps1_name = transcript_script_name.replace(".sh", ".ps1");
-            files.push(PluginFile {
-                path: format!("scripts/{ps1_name}"),
-                content: build_transcript_script_ps1_from_template(
-                    ctx.services_path,
-                    ctx.plugin_token,
-                    ctx.platform_url,
-                    ctx.plugin_id,
-                ),
-                executable: true,
-            });
-        } else {
-            files.push(PluginFile {
-                path: format!("scripts/{transcript_script_name}"),
-                content: build_transcript_script_from_template(
-                    ctx.services_path,
-                    ctx.plugin_token,
-                    ctx.platform_url,
-                    ctx.plugin_id,
-                ),
-                executable: true,
-            });
-        }
-    }
-
-    let env_files_generated = if ctx.plugin.variables.is_empty() {
-        false
-    } else {
-        build_env_files(ctx, &mut files)
-    };
-
-    // HTTP hooks for tracking and governance (all plugins)
-    let mut hook_entries =
-        collect_tracking_http_hooks(ctx.platform_url, ctx.plugin_id, ctx.plugin_token);
-    hook_entries.push(governance_http_hook(
-        ctx.platform_url,
-        ctx.plugin_id,
-        ctx.plugin_token,
-    ));
-    if ctx.plugin_id == "common-skills" {
-        hook_entries.push(transcript_hook_entry(&transcript_script_name, is_windows));
-    }
-    if !ctx.plugin.base.hooks.is_empty() {
-        hook_entries.extend(collect_platform_hooks(&ctx.plugin.base, is_windows));
-    }
-    if env_files_generated {
-        hook_entries.insert(0, env_hook_entry(is_windows));
-    }
-    let hooks_json = build_hooks_file(&hook_entries);
-    files.push(PluginFile {
-        path: "hooks/hooks.json".to_string(),
-        content: serde_json::to_string_pretty(&hooks_json)?,
-        executable: false,
-    });
-
-    build_script_files(ctx, is_windows, &mut files)?;
+    build_script_files(ctx, &mut files)?;
 
     let content_version = compute_content_version(&ctx.plugin.base.version, &files);
     let manifest = build_manifest(&ctx.plugin.base, Some(&content_version));
@@ -118,11 +58,17 @@ pub(super) fn build_plugin_files(
 
 fn build_skill_files(
     skill_ids: &[(String, std::path::PathBuf)],
+    platform_url: &str,
+    token: Option<&str>,
+    plugin_id: &str,
     files: &mut Vec<PluginFile>,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), MarketplaceError> {
     for (skill_id, skill_dir) in skill_ids {
         let kebab_name = skill_id.replace('_', "-");
-        let content = build_skill_md(skill_id, skill_dir)?;
+        let hooks_yaml = token
+            .filter(|t| !t.is_empty() && !platform_url.is_empty())
+            .map(|t| build_skill_hooks_yaml_public(platform_url, t, &kebab_name, plugin_id));
+        let content = build_skill_md(skill_id, skill_dir, hooks_yaml.as_deref())?;
         files.push(PluginFile {
             path: format!("skills/{kebab_name}/SKILL.md"),
             content,
@@ -146,7 +92,7 @@ fn build_agent_files(
     plugin: &systemprompt::models::PluginConfig,
     services_path: &Path,
     files: &mut Vec<PluginFile>,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), MarketplaceError> {
     let agent_ids = resolve_export_agents(plugin, services_path)?;
     let agents_dir = services_path.join("agents");
     for agent_id in &agent_ids {
@@ -165,33 +111,38 @@ fn build_mcp_files(
     services_path: &Path,
     platform_url: &str,
     files: &mut Vec<PluginFile>,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), MarketplaceError> {
     if plugin.mcp_servers.is_empty() {
         return Ok(());
     }
-    let mut mcp_servers = serde_json::Map::new();
+    let mut mcp_server_entries = std::collections::HashMap::new();
     for mcp_name in &plugin.mcp_servers {
-        let url = match super::mcp_servers::get_mcp_server(services_path, mcp_name) {
-            Ok(Some(server))
-                if !server.endpoint.is_empty()
-                    && !server.endpoint.starts_with("http://localhost") =>
-            {
-                server.endpoint
-            }
-            _ => format!("{platform_url}/api/v1/mcp/{mcp_name}/mcp"),
+        let Ok(Some(server_detail)) = super::mcp_servers::find_mcp_server(services_path, mcp_name)
+        else {
+            tracing::warn!(mcp_server = %mcp_name, "MCP server not found during plugin export, skipping");
+            continue;
         };
-        let mut server = serde_json::Map::new();
-        server.insert(
-            "type".to_string(),
-            serde_json::Value::String("http".to_string()),
+        let url = if !server_detail.endpoint.is_empty()
+            && !server_detail.endpoint.starts_with("http://localhost")
+        {
+            server_detail.endpoint
+        } else {
+            format!("{platform_url}/api/v1/mcp/{mcp_name}/mcp")
+        };
+        mcp_server_entries.insert(
+            mcp_name.clone(),
+            super::export::McpServerEntry {
+                server_type: "http".to_string(),
+                url,
+            },
         );
-        server.insert("url".to_string(), serde_json::Value::String(url));
-        mcp_servers.insert(mcp_name.clone(), serde_json::Value::Object(server));
     }
-    let mcp_json = serde_json::json!({ "mcpServers": mcp_servers });
+    let mcp_config = super::export::McpConfigFile {
+        mcp_servers: mcp_server_entries,
+    };
     files.push(PluginFile {
         path: ".mcp.json".to_string(),
-        content: serde_json::to_string_pretty(&mcp_json)?,
+        content: serde_json::to_string_pretty(&mcp_config)?,
         executable: false,
     });
     Ok(())
@@ -199,9 +150,8 @@ fn build_mcp_files(
 
 fn build_script_files(
     ctx: &PluginBuildContext<'_>,
-    _is_windows: bool,
     files: &mut Vec<PluginFile>,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), MarketplaceError> {
     for script in &ctx.plugin.base.scripts {
         if script.source == "generated:tracking" {
             continue;
@@ -217,4 +167,101 @@ fn build_script_files(
         }
     }
     Ok(())
+}
+
+pub(super) fn build_hook_files(
+    platform_url: &str,
+    token: &str,
+    files: &mut Vec<PluginFile>,
+) -> Result<(), MarketplaceError> {
+    use std::collections::HashMap;
+
+    use super::super::types::hooks_export::{
+        HookEventType, HookHandler, HooksFile, HttpHook, MatcherGroup,
+    };
+
+    if platform_url.is_empty() || token.is_empty() {
+        return Ok(());
+    }
+
+    let track_url = format!("{platform_url}/api/public/hooks/track");
+    let auth_header = format!("Bearer {token}");
+
+    let events = [
+        HookEventType::PreToolUse,
+        HookEventType::PostToolUse,
+        HookEventType::PostToolUseFailure,
+        HookEventType::PermissionRequest,
+        HookEventType::UserPromptSubmit,
+        HookEventType::Stop,
+        HookEventType::SubagentStop,
+        HookEventType::TaskCompleted,
+        HookEventType::SessionStart,
+        HookEventType::SessionEnd,
+        HookEventType::SubagentStart,
+        HookEventType::Notification,
+        HookEventType::TeammateIdle,
+    ];
+
+    let mut hooks = HashMap::new();
+    for event in events {
+        let matcher_group = MatcherGroup {
+            matcher: "*".to_string(),
+            hooks: vec![HookHandler::Http(HttpHook {
+                url: track_url.clone(),
+                headers: Some(HashMap::from([(
+                    "Authorization".to_string(),
+                    auth_header.clone(),
+                )])),
+                timeout: Some(30),
+            })],
+        };
+        hooks.insert(event, vec![matcher_group]);
+    }
+
+    let hooks_file = HooksFile { description: None, hooks };
+    files.push(PluginFile {
+        path: "hooks/hooks.json".to_string(),
+        content: serde_json::to_string_pretty(&hooks_file)?,
+        executable: false,
+    });
+
+    Ok(())
+}
+
+pub(crate) fn build_skill_hooks_yaml_public(
+    platform_url: &str,
+    token: &str,
+    skill_name: &str,
+    plugin_id: &str,
+) -> String {
+    let track_url =
+        format!("{platform_url}/api/public/hooks/skill-track?sid={skill_name}&pid={plugin_id}");
+    let auth = format!("Bearer {token}");
+
+    let events = [
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "PostToolUseFailure",
+        "PermissionRequest",
+        "Stop",
+        "SubagentStart",
+        "SubagentStop",
+        "TaskCompleted",
+        "SessionStart",
+        "SessionEnd",
+        "Notification",
+        "TeammateIdle",
+        "InstructionsLoaded",
+    ];
+
+    let mut yaml = String::from("hooks:\n");
+    for event in events {
+        let _ = write!(
+            yaml,
+            "  {event}:\n    - matcher: \"*\"\n      hooks:\n        - type: http\n          url: \"{track_url}\"\n          headers:\n            Authorization: \"{auth}\"\n          timeout: 30\n"
+        );
+    }
+    yaml
 }

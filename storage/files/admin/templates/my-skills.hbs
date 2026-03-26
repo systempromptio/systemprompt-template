@@ -1,110 +1,138 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    <!-- Toolbar -->
+    {{> components/page-hero}}
+
+    <section aria-label="Skills">
     <div class="toolbar">
         <div class="search-group">
-            <input type="text" class="search-input" placeholder="Search skills..." id="my-skills-search">
+            <input type="text" class="search-input" placeholder="Search skills..." id="my-skills-search" aria-label="Search skills">
         </div>
-        <select class="filter-select" id="my-skills-tag-filter" style="min-width:140px">
+        <select class="filter-select min-w-filter" id="my-skills-tag-filter">
             <option value="">All Tags</option>
             {{#each all_tags}}
             <option value="{{this}}">{{this}}</option>
             {{/each}}
         </select>
-        <button class="btn btn-secondary" id="my-skills-bulk-bar" disabled>
-            Bulk Actions (<span data-bulk-count>0</span>)
-        </button>
-        <button class="btn btn-secondary" id="my-skills-fork-btn">Fork from Org</button>
         <a href="/admin/my/skills/edit/" class="btn btn-primary">+ New Skill</a>
     </div>
 
-    <!-- Stats bar -->
+    <p class="text-muted mb-4">All skills in your workspace. Skills are added when you add plugins from the <a href="/admin/browse/plugins/">Plugin Directory</a>.</p>
+
     {{#if stats}}
-    <div class="config-stats" style="margin-bottom:var(--space-4)">
-        <span class="badge badge-blue">{{stats.skill_count}} skill{{#if (not (eq stats.skill_count 1))}}s{{/if}}</span>
-        <span class="badge badge-green">{{stats.active_count}} active</span>
+    <div class="config-stats mb-4">
+        <span class="badge badge-info">{{stats.skill_count}} skill{{#if (not (eq stats.skill_count 1))}}s{{/if}}</span>
     </div>
     {{/if}}
+    <div class="entity-batch-bar" id="entity-batch-bar" hidden>
+        <span class="entity-batch-count" id="entity-batch-count">0 selected</span>
+        <button type="button" class="entity-batch-btn entity-batch-btn--danger" id="entity-batch-delete">Delete Selected</button>
+    </div>
 
     {{#if skills}}
     <div class="table-container">
         <table class="data-table" id="my-skills-table">
             <thead>
                 <tr>
-                    <th style="width:40px" data-no-row-click><input type="checkbox" class="bulk-select-all"></th>
+                    <th class="col-checkbox"><input type="checkbox" id="entity-select-all" class="entity-batch-checkbox" aria-label="Select all"></th>
                     <th>Name</th>
                     <th>Tags</th>
+                    <th>Plugin</th>
                     <th>Source</th>
-                    <th>Status</th>
                     <th>Usage</th>
                     <th class="col-actions"></th>
                 </tr>
             </thead>
             <tbody>
                 {{#each skills}}
-                <tr class="clickable-row" data-entity-type="user-skill" data-entity-id="{{skill_id}}" data-name="{{toLowerCase name}}" data-tags="{{#each tags}}{{this}} {{/each}}">
-                    <td data-no-row-click>
-                        <input type="checkbox" class="bulk-checkbox" data-entity-id="{{skill_id}}">
-                    </td>
+                <tr class="clickable-row" data-expandable aria-expanded="false" data-entity-type="user-skill" data-entity-id="{{skill_id}}" data-name="{{toLowerCase name}}" data-tags="{{#each tags}}{{this}} {{/each}}">
+                    <td class="col-checkbox" data-no-row-click><input type="checkbox" class="entity-batch-checkbox entity-row-checkbox" data-batch-id="{{skill_id}}" aria-label="Select {{name}}"></td>
                     <td>
-                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{skill_id}}">&#9654;</span> {{name}}</div>
+                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{skill_id}}" aria-hidden="true">&#9654;</span> {{name}}</div>
                         {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
                     </td>
                     <td>
                         <div class="badge-row">
-                            {{#each tags}}<span class="badge badge-gray">{{this}}</span>{{/each}}
+                            {{#each tags}}<span class="badge badge-secondary">{{this}}</span>{{/each}}
                         </div>
                     </td>
                     <td>
-                        {{#if is_forked}}<span class="badge badge-yellow">forked</span>{{else}}<span class="badge badge-green">custom</span>{{/if}}
+                        {{#if plugin_names}}
+                            {{#each plugin_names}}
+                            <a href="/admin/my/plugins/edit?id={{this.id}}" class="badge badge-purple text-no-decor cursor-pointer">{{this.name}}</a>
+                            {{/each}}
+                        {{else}}
+                            <span class="text-tertiary">&mdash;</span>
+                        {{/if}}
                     </td>
                     <td>
-                        {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
+                        {{#if base_skill_id}}<span class="badge badge-purple">Official</span>{{else}}<span class="badge badge-success">Custom</span>{{/if}}
                     </td>
                     <td>
-                        {{#if (gt usage_count 0)}}<span class="badge badge-blue">{{usage_count}}</span>{{else}}<span style="color:var(--text-tertiary)">&mdash;</span>{{/if}}
+                        {{#if (gt total_uses 0)}}
+                            <div class="usage-metric">
+                                <span class="badge badge-info">{{total_uses}} uses</span>
+                                <span class="text-tertiary text-xs">{{sessions_used_in}} sessions</span>
+                            </div>
+                        {{else}}
+                            <span class="text-tertiary">&mdash;</span>
+                        {{/if}}
                     </td>
                     <td class="col-actions" data-no-row-click>
                         <div class="actions-menu" data-actions-for="{{skill_id}}">
-                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                            <button type="button" class="actions-trigger" data-action="menu" title="Actions" aria-label="Actions menu">&#8942;</button>
                             <div class="actions-dropdown">
                                 <a href="/admin/my/skills/edit/?id={{skill_id}}" class="actions-item">Edit</a>
                                 <div class="actions-popup-separator"></div>
-                                <button class="actions-item actions-item-danger" data-delete-entity="{{skill_id}}" data-entity-type="user-skill">Delete</button>
+                                <button type="button" class="actions-item actions-item-danger" data-delete-entity="{{skill_id}}" data-entity-type="user-skill">Delete</button>
                             </div>
                         </div>
                     </td>
                 </tr>
-                <!-- Detail expand row -->
-                <tr class="detail-row" data-detail-for="{{skill_id}}">
-                    <td colspan="7">
+                <tr class="detail-row" data-detail-for="{{skill_id}}" aria-hidden="true">
+                    <td colspan="8">
                         <div class="detail-row-content">
-                            <!-- Content preview -->
                             {{#if content_preview}}
                             <div class="detail-section">
                                 <strong>Content Preview</strong>
-                                <pre style="white-space:pre-wrap;font-size:var(--text-sm);color:var(--text-secondary);max-height:200px;overflow:auto;margin-top:var(--space-2)">{{content_preview}}</pre>
+                                <pre class="detail-pre-wrap text-sm text-secondary mt-2">{{content_preview}}</pre>
                             </div>
                             {{/if}}
-                            <!-- Tags -->
                             {{#if tags}}
                             <div class="detail-section">
                                 <strong>Tags</strong>
-                                <div class="badge-row" style="margin-top:var(--space-1)">
-                                    {{#each tags}}<span class="badge badge-gray">{{this}}</span>{{/each}}
+                                <div class="badge-row mt-1">
+                                    {{#each tags}}<span class="badge badge-secondary">{{this}}</span>{{/each}}
                                 </div>
+                            </div>
+                            {{/if}}
+                            {{#if (gt total_uses 0)}}
+                            <div class="detail-section">
+                                <strong>Metrics</strong>
+                                <div class="badge-row mt-2">
+                                    <span class="badge badge-info">{{total_uses}} total uses</span>
+                                    <span class="badge badge-success">{{sessions_used_in}} sessions</span>
+                                    {{#if (gt scored_sessions 0)}}
+                                    <span class="badge badge-warning">{{avg_effectiveness}} AI score ({{scored_sessions}} scored)</span>
+                                    <span class="badge badge-purple">{{goal_achievement_pct}}% goals</span>
+                                    {{/if}}
+                                </div>
+                                {{#if skill_rating}}
+                                <div class="mt-2">
+                                    <span class="text-sm text-secondary">Your rating:</span>
+                                    {{> components/star-rating avg_rating=skill_rating avg_rating_display=skill_rating rating_count=1}}
+                                </div>
+                                {{/if}}
                             </div>
                             {{/if}}
                             {{#if base_skill_id}}
                             <div class="detail-section">
-                                <span style="font-size:var(--text-sm);color:var(--text-secondary)">Forked from: <code class="code-inline">{{base_skill_id}}</code></span>
+                                <span class="text-sm text-secondary">Added from: <code class="code-inline">{{base_skill_id}}</code> <span class="badge badge-purple">Official</span></span>
                             </div>
                             {{/if}}
-                            <!-- JSON toggle -->
                             <div class="detail-section">
-                                <button class="btn btn-secondary btn-sm" data-toggle-json="{{skill_id}}" style="font-size:var(--text-xs);padding:2px 8px;margin-bottom:var(--space-2)">Show JSON</button>
-                                <div class="json-view" data-json-for="{{skill_id}}" style="display:none"></div>
+                                <button type="button" class="btn btn-secondary btn-sm text-xs btn-compact mb-2" data-toggle-json="{{skill_id}}">Show JSON</button>
+                                <div class="json-view d-none" data-json-for="{{skill_id}}"></div>
                             </div>
                         </div>
                     </td>
@@ -117,34 +145,15 @@
     {{> components/empty-state message="No skills yet. Create your first skill to get started."}}
     {{/if}}
 
-    <!-- Hidden skill detail data -->
     {{#each skills}}
     <script type="application/json" data-my-skill-detail="{{skill_id}}">
         {{{json this}}}
     </script>
     {{/each}}
-
-    <!-- Fork panel -->
-    <div class="panel-overlay" id="fork-panel-overlay"></div>
-    <div class="side-panel" id="fork-panel" data-overlay="fork-panel-overlay">
-        <div class="panel-header">
-            <h2 data-panel-title style="margin:0;font-size:var(--text-lg)"></h2>
-            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
-        </div>
-        <div class="panel-body" data-panel-body></div>
-        <div class="panel-footer" data-panel-footer></div>
-    </div>
+    </section>
 
     {{/inline}}
     {{#*inline "scripts"}}
-    <script src="/js/admin-my-workspace.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            if (AdminApp.initMySkills) {
-                AdminApp.initMySkills();
-            }
-        });
-    </script>
+    <script data-cfasync="false" src="/js/pages/admin-my-skills.js" type="module" defer></script>
     {{/inline}}
 {{/layout}}

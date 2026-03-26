@@ -1,0 +1,349 @@
+<div class="cc-tab-panel cc-tab-panel--report" id="tab-report" role="tabpanel" aria-label="Report">
+{{#if has_report}}
+  <div class="cc-report">
+    <div class="cc-report-header">
+      <div class="cc-report-title-group">
+        <h2 class="cc-report-title">Daily Report</h2>
+        <span class="cc-report-subtitle">Performance fact sheet</span>
+        {{#if report.streak}}
+        <span class="cc-report-streak" title="Current streak">&#128293; {{report.streak}}d streak</span>
+        {{/if}}
+      </div>
+      <div class="cc-report-header-right">
+        <div class="cc-report-actions">
+          <button type="button" class="cc-report-action-btn" id="cc-report-print" title="Print report to PDF">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 5V1h8v4"/>
+              <rect x="2" y="5" width="12" height="7" rx="1"/>
+              <path d="M4 9h8v6H4z"/>
+            </svg>
+            <span>Print</span>
+          </button>
+          <div class="cc-report-share-wrapper">
+            <button type="button" class="cc-report-action-btn" id="cc-report-share" title="Share report">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="3" r="2"/>
+                <circle cx="4" cy="8" r="2"/>
+                <circle cx="12" cy="13" r="2"/>
+                <line x1="5.8" y1="9" x2="10.2" y2="12"/>
+                <line x1="10.2" y1="4" x2="5.8" y2="7"/>
+              </svg>
+              <span>Share</span>
+            </button>
+            <div class="cc-report-share-menu" id="cc-report-share-menu">
+              <button type="button" class="cc-report-share-item" data-action="copy-html">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M2 11V2h9"/></svg>
+                Copy as HTML
+              </button>
+              <button type="button" class="cc-report-share-item" data-action="download-pdf">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9m0 0l-3-3m3 3l3-3"/><path d="M2 12v2h12v-2"/></svg>
+                Download PDF
+              </button>
+              <button type="button" class="cc-report-share-item" data-action="download-html">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h8v12H4z"/><path d="M6 5h4M6 7h4M6 9h3"/></svg>
+                Download HTML
+              </button>
+              <button type="button" class="cc-report-share-item" data-action="copy-text">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h8v12H4z"/><path d="M6 5h4M6 7h4M6 9h3"/></svg>
+                Copy as text
+              </button>
+            </div>
+          </div>
+          {{#if current_user.is_admin}}
+          <button type="button" class="cc-report-action-btn" id="cc-report-regenerate" title="Regenerate today's report">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 8a7 7 0 0 1 13-3.5M15 2v3.5h-3.5"/>
+              <path d="M15 8a7 7 0 0 1-13 3.5M1 14v-3.5h3.5"/>
+            </svg>
+            <span>Regenerate</span>
+          </button>
+          {{else}}{{#if marketplace.is_premium}}
+          <button type="button" class="cc-report-action-btn" id="cc-report-regenerate" title="Regenerate today's report">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 8a7 7 0 0 1 13-3.5M15 2v3.5h-3.5"/>
+              <path d="M15 8a7 7 0 0 1-13 3.5M1 14v-3.5h3.5"/>
+            </svg>
+            <span>Regenerate</span>
+          </button>
+          {{/if}}{{/if}}
+        </div>
+        <span class="cc-report-date">{{report.report_date}}</span>
+        <div class="cc-report-countdown" id="cc-report-countdown" data-target-hour="23">
+          <span class="cc-report-countdown-label">Next report in</span>
+          <span class="cc-report-countdown-value" id="cc-report-countdown-value">--:--</span>
+        </div>
+      </div>
+    </div>
+
+    {{#if report.entity_counts}}
+    <section aria-label="Platform entities">
+    <div class="cc-report-entity-grid">
+      <div class="cc-report-entity-card">
+        <span class="cc-report-entity-value">{{report.entity_counts.plugins}}</span>
+        <span class="cc-report-entity-label">Plugins</span>
+      </div>
+      <div class="cc-report-entity-card">
+        <span class="cc-report-entity-value">{{report.entity_counts.skills}}</span>
+        <span class="cc-report-entity-label">Skills</span>
+      </div>
+      <div class="cc-report-entity-card">
+        <span class="cc-report-entity-value">{{report.entity_counts.agents}}</span>
+        <span class="cc-report-entity-label">Agents</span>
+      </div>
+      <div class="cc-report-entity-card">
+        <span class="cc-report-entity-value">{{report.entity_counts.mcp_servers}}</span>
+        <span class="cc-report-entity-label">MCP Servers</span>
+      </div>
+      <div class="cc-report-entity-card">
+        <span class="cc-report-entity-value">{{report.entity_counts.hooks}}</span>
+        <span class="cc-report-entity-label">Hooks</span>
+      </div>
+    </div>
+    </section>
+    {{/if}}
+
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">Performance Summary</h3>
+      {{#> components/data-table}}
+        <thead>
+          <tr>
+            <th class="cc-report-th-metric">Metric</th>
+            <th class="cc-report-th-value">Today</th>
+            <th class="cc-report-th-delta">vs Yesterday</th>
+            <th class="cc-report-th-delta">vs 7d Avg</th>
+            <th class="cc-report-th-delta">vs 14d Avg</th>
+            <th class="cc-report-th-delta cc-report-th-global">vs Global Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each report.performance}}
+          <tr>
+            <td class="cc-report-metric">{{label}}</td>
+            <td class="cc-report-value">{{value}}</td>
+            <td class="cc-report-delta cc-report-delta--{{yesterday_sentiment}}">
+              <span class="cc-report-arrow">{{yesterday_arrow}}</span> {{yesterday_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{week_sentiment}}">
+              <span class="cc-report-arrow">{{week_arrow}}</span> {{week_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{fortnight_sentiment}}">
+              <span class="cc-report-arrow">{{fortnight_arrow}}</span> {{fortnight_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{global_sentiment}}">
+              <span class="cc-report-arrow">{{global_arrow}}</span> {{global_delta}}
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      {{/components/data-table}}
+    </div>
+
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">Quality &amp; Goals</h3>
+      {{#> components/data-table}}
+        <thead>
+          <tr>
+            <th class="cc-report-th-metric">Metric</th>
+            <th class="cc-report-th-value">Today</th>
+            <th class="cc-report-th-delta">vs Yesterday</th>
+            <th class="cc-report-th-delta">vs 7d Avg</th>
+            <th class="cc-report-th-delta">vs 14d Avg</th>
+            <th class="cc-report-th-delta cc-report-th-global">vs Global Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each report.quality}}
+          <tr>
+            <td class="cc-report-metric">{{label}}</td>
+            <td class="cc-report-value">{{value}}</td>
+            <td class="cc-report-delta cc-report-delta--{{yesterday_sentiment}}">
+              <span class="cc-report-arrow">{{yesterday_arrow}}</span> {{yesterday_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{week_sentiment}}">
+              <span class="cc-report-arrow">{{week_arrow}}</span> {{week_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{fortnight_sentiment}}">
+              <span class="cc-report-arrow">{{fortnight_arrow}}</span> {{fortnight_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{global_sentiment}}">
+              <span class="cc-report-arrow">{{global_arrow}}</span> {{global_delta}}
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      {{/components/data-table}}
+    </div>
+
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">Productivity</h3>
+      {{#> components/data-table}}
+        <thead>
+          <tr>
+            <th class="cc-report-th-metric">Metric</th>
+            <th class="cc-report-th-value">Today</th>
+            <th class="cc-report-th-delta">vs Yesterday</th>
+            <th class="cc-report-th-delta">vs 7d Avg</th>
+            <th class="cc-report-th-delta">vs 14d Avg</th>
+            <th class="cc-report-th-delta cc-report-th-global">vs Global Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each report.productivity}}
+          <tr>
+            <td class="cc-report-metric">{{label}}</td>
+            <td class="cc-report-value">{{value}}</td>
+            <td class="cc-report-delta cc-report-delta--{{yesterday_sentiment}}">
+              <span class="cc-report-arrow">{{yesterday_arrow}}</span> {{yesterday_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{week_sentiment}}">
+              <span class="cc-report-arrow">{{week_arrow}}</span> {{week_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{fortnight_sentiment}}">
+              <span class="cc-report-arrow">{{fortnight_arrow}}</span> {{fortnight_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{global_sentiment}}">
+              <span class="cc-report-arrow">{{global_arrow}}</span> {{global_delta}}
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      {{/components/data-table}}
+    </div>
+
+    {{#if has_recent_analyses}}
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">Session Breakdown</h3>
+      {{#> components/data-table}}
+        <thead>
+          <tr>
+            <th>Session</th>
+            <th class="cc-report-th-value">Quality</th>
+            <th class="cc-report-th-value">Goal</th>
+            <th>Tags</th>
+            <th>Outcome</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each recent_analyses}}
+          <tr>
+            <td class="cc-report-session-title">{{title}}</td>
+            <td class="cc-report-value"><span class="cc-quality-gauge cc-quality-gauge--{{quality_class}}">{{quality_score}}/5</span></td>
+            <td class="cc-report-value"><span class="cc-goal-badge cc-goal-badge--{{goal_achieved}}">{{goal_achieved}}</span></td>
+            <td>{{#if tags_list}}<div class="cc-tag-badges">{{#each tags_list}}<span class="cc-tag-badge">{{this}}</span>{{/each}}</div>{{/if}}</td>
+            <td class="cc-report-session-outcome">{{goal_summary}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      {{/components/data-table}}
+    </div>
+    {{/if}}
+
+    {{#if report.has_category_breakdown}}
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">Work Distribution</h3>
+      <div class="cc-report-category-list">
+        {{#each report.category_breakdown}}
+        <div class="cc-report-category-row">
+          <span class="cc-report-category-label">{{label}}</span>
+          <div class="cc-report-category-bar-track">
+            <div class="cc-report-category-bar" style="width: {{bar_width}}%"></div>
+          </div>
+          <span class="cc-report-category-count">{{count}}</span>
+          <span class="cc-report-category-pct">{{pct}}%</span>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+    {{/if}}
+
+    {{#if report.insights}}
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">AI Insights</h3>
+      <div class="cc-report-insights-grid">
+        {{#if report.insights.summary}}
+        <div class="cc-report-insight">
+          <span class="cc-report-insight-label">Summary</span>
+          <p class="cc-report-insight-text">{{report.insights.summary}}</p>
+        </div>
+        {{/if}}
+        {{#if report.insights.has_patterns}}
+        <div class="cc-report-insight">
+          <span class="cc-report-insight-label">Patterns</span>
+          <p class="cc-report-insight-text">{{report.insights.patterns}}</p>
+        </div>
+        {{/if}}
+        {{#if report.insights.has_highlights}}
+        <div class="cc-report-insight cc-report-insight--highlight">
+          <span class="cc-report-insight-label">Highlights</span>
+          <p class="cc-report-insight-text">{{report.insights.highlights}}</p>
+        </div>
+        {{/if}}
+        {{#if report.insights.has_trends}}
+        <div class="cc-report-insight">
+          <span class="cc-report-insight-label">Trends</span>
+          <p class="cc-report-insight-text">{{report.insights.trends}}</p>
+        </div>
+        {{/if}}
+        {{#if report.insights.has_skill_gaps}}
+        <div class="cc-report-insight">
+          <span class="cc-report-insight-label">Skill Gaps</span>
+          <p class="cc-report-insight-text">{{report.insights.skill_gaps}}</p>
+        </div>
+        {{/if}}
+        {{#if report.insights.has_recommendation}}
+        <div class="cc-report-insight cc-report-insight--highlight">
+          <span class="cc-report-insight-label">Recommendation</span>
+          <p class="cc-report-insight-text">{{report.insights.top_recommendation}}</p>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+    {{/if}}
+
+    {{#if report.history}}
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">7-Day Trend</h3>
+      <div class="cc-report-history-grid">
+        <div class="cc-report-history-item">
+          <span class="cc-report-history-label">Sessions</span>
+          <svg class="cc-report-sparkline" data-metric="sessions" data-values="{{#each report.history}}{{sessions}}{{#unless @last}},{{/unless}}{{/each}}" viewBox="0 0 60 20" preserveAspectRatio="none" role="img" aria-label="Sessions trend over 7 days"></svg>
+        </div>
+        <div class="cc-report-history-item">
+          <span class="cc-report-history-label">Quality</span>
+          <svg class="cc-report-sparkline" data-metric="quality" data-values="{{#each report.history}}{{quality}}{{#unless @last}},{{/unless}}{{/each}}" viewBox="0 0 60 20" preserveAspectRatio="none" role="img" aria-label="Quality trend over 7 days"></svg>
+        </div>
+        <div class="cc-report-history-item">
+          <span class="cc-report-history-label">APM</span>
+          <svg class="cc-report-sparkline" data-metric="apm" data-values="{{#each report.history}}{{apm}}{{#unless @last}},{{/unless}}{{/each}}" viewBox="0 0 60 20" preserveAspectRatio="none" role="img" aria-label="APM trend over 7 days"></svg>
+        </div>
+        <div class="cc-report-history-item">
+          <span class="cc-report-history-label">Errors</span>
+          <svg class="cc-report-sparkline" data-metric="errors" data-values="{{#each report.history}}{{errors}}{{#unless @last}},{{/unless}}{{/each}}" viewBox="0 0 60 20" preserveAspectRatio="none" role="img" aria-label="Errors trend over 7 days"></svg>
+        </div>
+      </div>
+    </div>
+    {{/if}}
+  </div>
+{{else}}
+  <div class="cc-report cc-report--empty">
+    <p class="cc-report-empty-text">No daily summary data available yet. Run <code>systemprompt infra jobs run daily_summary</code> to generate your first report.</p>
+    {{#if current_user.is_admin}}
+    <button type="button" class="cc-report-action-btn" id="cc-report-regenerate" title="Generate today's report">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 8a7 7 0 0 1 13-3.5M15 2v3.5h-3.5"/>
+        <path d="M15 8a7 7 0 0 1-13 3.5M1 14v-3.5h3.5"/>
+      </svg>
+      <span>Generate Report</span>
+    </button>
+    {{else}}{{#if marketplace.is_premium}}
+    <button type="button" class="cc-report-action-btn" id="cc-report-regenerate" title="Generate today's report">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 8a7 7 0 0 1 13-3.5M15 2v3.5h-3.5"/>
+        <path d="M15 8a7 7 0 0 1-13 3.5M1 14v-3.5h3.5"/>
+      </svg>
+      <span>Generate Report</span>
+    </button>
+    {{/if}}{{/if}}
+  </div>
+{{/if}}
+</div>

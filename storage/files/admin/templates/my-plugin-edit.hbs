@@ -2,76 +2,48 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/back-button href="/admin/my/plugins/" label="Back to My Plugins"}}
+    <section aria-label="Edit Plugin">
     <h2>{{title}}</h2>
     {{#if plugin.base_plugin_id}}
-    <div style="margin-bottom:var(--space-4)">
+    <div class="mb-4">
         <span class="badge badge-yellow">Forked from: {{plugin.base_plugin_id}}</span>
     </div>
     {{/if}}
-    <div class="card" style="max-width:800px">
+    <div class="card max-w-xl">
         <form id="my-plugin-form" data-api-path="/user/plugins/" data-entity="Plugin" data-id-field="plugin_id" data-list-path="/my/plugins/">
             {{> components/form-group label="Plugin ID" name="plugin_id" type="text" value=plugin.plugin_id placeholder="my-plugin" required=true readonly=is_edit hint="kebab-case"}}
             {{> components/form-group label="Name" name="name" type="text" value=plugin.name placeholder="My Plugin" required=true}}
             {{> components/form-group label="Description" name="description" type="textarea" value=plugin.description rows="3" placeholder="What this plugin does..."}}
-            <div style="display:flex;gap:var(--space-3)">
-                <div style="flex:1">
+            <div class="form-row">
+                <div class="flex-1">
                     {{> components/form-group label="Version" name="version" type="text" value=(default plugin.version "1.0.0")}}
                 </div>
-                <div style="flex:1">
+                <div class="flex-1">
                     {{> components/form-group label="Category" name="category" type="text" value=plugin.category placeholder="productivity"}}
                 </div>
             </div>
             {{> components/form-group label="Keywords" name="keywords" type="text" value=keywords_csv hint="comma-separated"}}
             {{> components/form-group label="Author Name" name="author_name" type="text" value=plugin.author_name placeholder="Your name"}}
-            {{> components/entity-checklist label="Skills" listId="skills" inputName="skills" items=skills_list}}
-            {{> components/entity-checklist label="Agents" listId="agents" inputName="agents" items=agents_list}}
-            {{> components/entity-checklist label="MCP Servers" listId="mcp_servers" inputName="mcp_servers" items=mcp_list}}
-            <div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">
+            <div class="form-section">
+                <h4 class="form-section-heading">Composition</h4>
+                <div class="checklist-grid">
+                    {{> components/entity-checklist label="Skills" listId="skills" inputName="skills" items=skills_list}}
+                    {{> components/entity-checklist label="Agents" listId="agents" inputName="agents" items=agents_list}}
+                    {{> components/entity-checklist label="MCP Servers" listId="mcp-servers" inputName="mcp_servers" items=mcp_list}}
+                </div>
+            </div>
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary">{{#if is_edit}}Save Changes{{else}}Create Plugin{{/if}}</button>
                 <a href="/admin/my/plugins/" class="btn btn-secondary">Cancel</a>
                 {{#if is_edit}}
-                <button type="button" class="btn btn-danger" id="btn-delete-my-plugin" style="margin-left:auto">Delete</button>
+                <button type="button" class="btn btn-danger ml-auto" id="btn-delete-my-plugin">Delete</button>
                 {{/if}}
             </div>
         </form>
     </div>
+    </section>
     {{/inline}}
     {{#*inline "scripts"}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            AdminApp.interactions.initEditForm('my-plugin-form', {
-                buildBody: function(form, formData) {
-                    var keywordsRaw = formData.get('keywords') || '';
-                    var keywords = keywordsRaw.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
-                    return {
-                        plugin_id: formData.get('plugin_id'),
-                        name: formData.get('name'),
-                        description: formData.get('description') || '',
-                        version: formData.get('version') || '1.0.0',
-                        category: formData.get('category') || '',
-                        keywords: keywords,
-                        author_name: formData.get('author_name') || ''
-                    };
-                }
-            });
-            var deleteBtn = document.getElementById('btn-delete-my-plugin');
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', function() {
-                    var pluginId = document.querySelector('[name="plugin_id"]').value;
-                    if (confirm('Delete this plugin?')) {
-                        AdminApp.api('/user/plugins/' + encodeURIComponent(pluginId), { method: 'DELETE' })
-                            .then(function() {
-                                AdminApp.Toast.show('Plugin deleted', 'success');
-                                window.location.href = '/admin/my/plugins/';
-                            })
-                            .catch(function(err) {
-                                AdminApp.Toast.show(err.message || 'Failed to delete', 'error');
-                            });
-                    }
-                });
-            }
-        });
-    </script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-my-plugin-edit.js" defer></script>
     {{/inline}}
 {{/layout}}

@@ -9,6 +9,8 @@ use axum::{
 };
 use sqlx::PgPool;
 
+use systemprompt::identifiers::UserId;
+
 use crate::admin::activity::{self, NewActivity};
 use crate::admin::repositories;
 use crate::admin::types::{MarketplaceUploadResponse, NewChangelogEntry};
@@ -37,10 +39,10 @@ fn extract_and_parse_archive(
 
 pub(crate) async fn create_version_and_prune(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     version_type: &str,
     snapshot_path: &str,
-    snapshot: &serde_json::Value,
+    snapshot: &serde_json::Value, // JSON: required by trait contract (DB JSONB column)
 ) -> Result<(crate::admin::types::MarketplaceVersion, i32), Response> {
     let latest_version =
         repositories::marketplace_versions::get_latest_version_number(pool, user_id)
@@ -87,13 +89,13 @@ pub(crate) async fn create_version_and_prune(
 
 fn build_changelog(
     diff: &crate::admin::types::SyncDiff,
-    user_id: &str,
+    user_id: &UserId,
     version_id: &str,
 ) -> Vec<NewChangelogEntry> {
     let mut entries = Vec::new();
     for skill in &diff.added {
         entries.push(NewChangelogEntry {
-            user_id: user_id.to_string(),
+            user_id: user_id.clone(),
             version_id: version_id.to_string(),
             action: "added".to_string(),
             skill_id: skill.skill_id.clone(),
@@ -103,7 +105,7 @@ fn build_changelog(
     }
     for (skill, detail) in &diff.updated {
         entries.push(NewChangelogEntry {
-            user_id: user_id.to_string(),
+            user_id: user_id.clone(),
             version_id: version_id.to_string(),
             action: "updated".to_string(),
             skill_id: skill.skill_id.clone(),
@@ -113,7 +115,7 @@ fn build_changelog(
     }
     for (skill_id, skill_name) in &diff.deleted {
         entries.push(NewChangelogEntry {
-            user_id: user_id.to_string(),
+            user_id: user_id.clone(),
             version_id: version_id.to_string(),
             action: "deleted".to_string(),
             skill_id: skill_id.clone(),
@@ -126,7 +128,7 @@ fn build_changelog(
 
 async fn apply_changes_and_respond(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     diff: &crate::admin::types::SyncDiff,
     changelog_entries: &[NewChangelogEntry],
     new_version: i32,
@@ -163,9 +165,11 @@ async fn apply_changes_and_respond(
 
 async fn snapshot_and_save(
     pool: &Arc<PgPool>,
-    user_id: &str,
+    user_id: &UserId,
     body: &Bytes,
 ) -> Result<(serde_json::Value, String), Response> {
+    // JSON: required by trait contract (DB JSONB column)
+
     let snapshot = repositories::marketplace_sync::snapshot_current_skills(pool, user_id)
         .await
         .map_err(|e| {
@@ -191,12 +195,13 @@ pub(crate) async fn marketplace_upload_handler(
     headers: HeaderMap,
     body: Bytes,
 ) -> Response {
-    let user_id = user_id_raw
+    let user_id_str = user_id_raw
         .strip_suffix(".git")
         .unwrap_or(&user_id_raw)
         .to_string();
+    let user_id = UserId::new(user_id_str.clone());
 
-    if let Err(r) = super::authenticate(&headers, &user_id) {
+    if let Err(r) = super::authenticate(&headers, &user_id_str) {
         return *r;
     }
 

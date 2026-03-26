@@ -1,4 +1,6 @@
-use super::export::{ExportTotals, PluginBundle, PluginBundleCounts, PluginFile};
+use super::export::{
+    ExportTotals, ManifestAuthor, PluginBundle, PluginBundleCounts, PluginFile, PluginManifest,
+};
 
 pub(super) fn validate_bundle(files: &[PluginFile], expected_skills: usize) {
     let mut warnings = Vec::new();
@@ -35,14 +37,6 @@ pub(super) fn validate_bundle(files: &[PluginFile], expected_skills: usize) {
         }
     }
 
-    for f in files.iter().filter(|f| f.path == "hooks/hooks.json") {
-        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&f.content) {
-            if val.get("hooks").is_none() {
-                warnings.push("hooks.json missing required {\"hooks\": ...} wrapper".to_string());
-            }
-        }
-    }
-
     for w in &warnings {
         tracing::warn!(warning = %w, "Export validation");
     }
@@ -51,45 +45,34 @@ pub(super) fn validate_bundle(files: &[PluginFile], expected_skills: usize) {
 pub(super) fn build_manifest(
     plugin: &systemprompt::models::PluginConfig,
     version_override: Option<&str>,
-) -> serde_json::Value {
-    let mut manifest = serde_json::Map::new();
-    manifest.insert(
-        "name".to_string(),
-        serde_json::Value::String(plugin.id.clone()),
-    );
-    manifest.insert(
-        "description".to_string(),
-        serde_json::Value::String(plugin.description.clone()),
-    );
-    manifest.insert(
-        "version".to_string(),
-        serde_json::Value::String(version_override.unwrap_or(&plugin.version).to_string()),
-    );
-    let mut author_obj = serde_json::Map::new();
-    author_obj.insert(
-        "name".to_string(),
-        serde_json::Value::String(plugin.author.name.clone()),
-    );
-    author_obj.insert(
-        "email".to_string(),
-        serde_json::Value::String(plugin.author.email.clone()),
-    );
-    manifest.insert("author".to_string(), serde_json::Value::Object(author_obj));
-    serde_json::Value::Object(manifest)
+) -> PluginManifest {
+    PluginManifest {
+        name: plugin.id.clone(),
+        description: plugin.description.clone(),
+        version: version_override.unwrap_or(&plugin.version).to_string(),
+        author: Some(ManifestAuthor {
+            name: plugin.author.name.clone(),
+            email: plugin.author.email.clone(),
+        }),
+        hooks: Some("./hooks/hooks.json".to_string()),
+        keywords: Vec::new(),
+    }
 }
 
 pub(super) fn compute_content_version(base_version: &str, files: &[PluginFile]) -> String {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
+    use sha2::{Digest, Sha256};
 
-    let mut hasher = DefaultHasher::new();
+    let mut hasher = Sha256::new();
     for file in files {
-        file.path.hash(&mut hasher);
-        file.content.hash(&mut hasher);
+        hasher.update(file.path.as_bytes());
+        hasher.update(b"\0");
+        hasher.update(file.content.as_bytes());
+        hasher.update(b"\0");
     }
-    let hash = hasher.finish();
+    let hash = hasher.finalize();
+    let short_hash = hex::encode(&hash[..4]);
 
-    format!("{base_version}+{hash:08x}")
+    format!("{base_version}+{short_hash}")
 }
 
 pub(super) fn compute_bundle_counts(files: &[PluginFile]) -> PluginBundleCounts {
@@ -110,10 +93,6 @@ pub(super) fn compute_bundle_counts(files: &[PluginFile]) -> PluginBundleCounts 
         .iter()
         .filter(|f| f.path.starts_with("agents/"))
         .count();
-    let hooks = files
-        .iter()
-        .filter(|f| f.path == "hooks/hooks.json")
-        .count();
     let mcp_servers = usize::from(files.iter().any(|f| f.path == ".mcp.json"));
     let scripts = files
         .iter()
@@ -122,7 +101,6 @@ pub(super) fn compute_bundle_counts(files: &[PluginFile]) -> PluginBundleCounts 
     PluginBundleCounts {
         skills,
         agents,
-        hooks,
         mcp_servers,
         scripts,
         total_files: files.len(),

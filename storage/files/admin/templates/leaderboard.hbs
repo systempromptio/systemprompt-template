@@ -1,107 +1,127 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    <div class="dashboard-stats">
-        <div class="stat-card" id="stat-ranked">
-            <div class="label">Ranked Users</div>
-            <div class="value">-</div>
-        </div>
-        <div class="stat-card" id="stat-avg-xp">
-            <div class="label">Avg XP</div>
-            <div class="value">-</div>
-        </div>
-        <div class="stat-card" id="stat-achievements">
-            <div class="label">Achievements Unlocked</div>
-            <div class="value">-</div>
-        </div>
-        <div class="stat-card" id="stat-streaks">
-            <div class="label">Active Streaks</div>
-            <div class="value">-</div>
-        </div>
+
+    {{> components/page-hero}}
+
+    <section aria-label="Leaderboard">
+    <div class="leaderboard-tabs" role="tablist" aria-label="Sort leaderboard by">
+        <a href="?sort=xp" class="leaderboard-tab{{#if sort_xp}} leaderboard-tab--active{{/if}}">XP</a>
+        <a href="?sort=sessions" class="leaderboard-tab{{#if sort_sessions}} leaderboard-tab--active{{/if}}">Sessions</a>
+        <a href="?sort=prompts" class="leaderboard-tab{{#if sort_prompts}} leaderboard-tab--active{{/if}}">Prompts</a>
+        <a href="?sort=tools" class="leaderboard-tab{{#if sort_tools}} leaderboard-tab--active{{/if}}">Tools</a>
+        <a href="?sort=subagents" class="leaderboard-tab{{#if sort_subagents}} leaderboard-tab--active{{/if}}">Subagents</a>
+        <a href="?sort=streak" class="leaderboard-tab{{#if sort_streak}} leaderboard-tab--active{{/if}}">Streak</a>
+        <a href="?sort=achievements" class="leaderboard-tab{{#if sort_achievements}} leaderboard-tab--active{{/if}}">Achievements</a>
     </div>
 
-    <div class="tab-bar">
-        <a href="/admin/leaderboard/?tab=individual" class="tab-btn{{#if tab_individual}} active{{/if}}">All Users</a>
-        <a href="/admin/leaderboard/?tab=department" class="tab-btn{{#if tab_department}} active{{/if}}">By Department</a>
+    {{#if has_podium}}
+    <div class="leaderboard-podium" role="list" aria-label="Top 3 users">
+        {{#each podium}}
+        <div class="leaderboard-podium__card leaderboard-podium__card--{{medal}}" role="listitem">
+            <span class="leaderboard-podium__position" aria-label="Position {{position}}">{{position}}</span>
+            <div class="leaderboard-podium__badge rank-ladder__step-badge rank-tier-{{rank_level}}">{{rank_level}}</div>
+            <span class="leaderboard-podium__name">{{display_name}}</span>
+            <span class="leaderboard-podium__level-label">Lv. {{rank_level}}</span>
+            <span class="rank-badge rank-tier-{{rank_level}}">{{rank_name}}</span>
+            <span class="leaderboard-podium__xp"><span class="metric-value">{{total_xp}}</span> XP</span>
+            <div class="leaderboard-podium__metrics">
+                <span class="leaderboard-podium__metric" title="Total Sessions"><span class="metric-value">{{total_sessions}}</span> sess</span>
+                <span class="leaderboard-podium__metric" title="Total Tool Uses"><span class="metric-value">{{total_tool_uses}}</span> tools</span>
+            </div>
+            {{#if (gt current_streak 0)}}
+            <span class="leaderboard-streak{{#if (gt current_streak 3)}} leaderboard-streak--hot{{/if}}">&#128293; {{current_streak}}d</span>
+            {{/if}}
+        </div>
+        {{/each}}
     </div>
+    {{/if}}
 
-    {{#if tab_individual}}
-    <div id="leaderboard-content" aria-live="polite">
-        {{#if leaderboard}}
+    {{#if entries}}
+    <div class="card">
+        <div class="leaderboard-table-note">
+            <small>Cumulative lifetime activity metrics</small>
+        </div>
         {{#> components/data-table}}
-            <thead><tr><th>#</th><th>User</th><th>Department</th><th>XP</th><th>Streak</th><th>Achievements</th><th>Last Active</th></tr></thead>
+            <thead>
+                <tr>
+                    <th class="col-rank">#</th>
+                    <th>User</th>
+                    <th class="col-number">Level</th>
+                    <th>Rank</th>
+                    <th class="col-number">XP</th>
+                    <th class="col-number" title="Total sessions">Sessions</th>
+                    <th class="col-number" title="Total prompts sent">Prompts</th>
+                    <th class="col-number" title="Total tool uses">Tools</th>
+                    <th class="col-number" title="Total subagent spawns">Subagents</th>
+                    <th class="col-number">Streak</th>
+                    <th class="col-number">Achievements</th>
+                    <th class="col-number" title="Skills created">Skills</th>
+                    <th class="col-number" title="Total days active">Days</th>
+                </tr>
+            </thead>
             <tbody>
-            {{#each leaderboard}}
-            <tr class="clickable-row" data-user-href="/admin/user/?id={{user_id}}" data-xp="{{default total_xp 0}}" data-achievements="{{default achievement_count 0}}" data-streak="{{default current_streak 0}}">
-                <td><span class="leaderboard-rank{{#if (eq @index 0)}} leaderboard-rank-1{{else if (eq @index 1)}} leaderboard-rank-2{{else if (eq @index 2)}} leaderboard-rank-3{{/if}}">{{add @index 1}}</span></td>
-                <td><div class="user-cell"><div class="user-avatar">{{initials (default display_name "A")}}</div><div class="user-info"><span class="user-name">{{default display_name "Anonymous"}}</span></div></div></td>
-                <td>{{#if department}}<span class="badge badge-blue">{{department}}</span>{{else}}<span class="text-tertiary">-</span>{{/if}}</td>
-                <td class="numeric">{{default total_xp 0}}</td>
-                <td class="numeric">{{#if current_streak}}{{current_streak}}d{{else}}-{{/if}}</td>
-                <td class="numeric">{{default achievement_count 0}}</td>
-                <td>{{#if last_active_date}}<span title="{{formatDate last_active_date}}">{{relativeTime last_active_date}}</span>{{else}}Never{{/if}}</td>
+            {{#each entries}}
+            <tr{{#if is_self}} class="leaderboard-table__self" aria-current="true"{{/if}}>
+                <td><strong>{{position}}</strong></td>
+                <td>
+                    <div class="user-cell">
+                        <span class="user-level-badge rank-tier-{{rank_level}} user-level-badge--sm">
+                            <span class="user-level-number">{{rank_level}}</span>
+                        </span>
+                        {{#if display_name}}{{display_name}}{{else}}<span class="text-tertiary">Anonymous</span>{{/if}}
+                    </div>
+                </td>
+                <td class="text-right"><span class="level-number-badge rank-tier-{{rank_level}}">{{rank_level}}</span></td>
+                <td><span class="rank-badge rank-tier-{{rank_level}}">{{rank_name}}</span></td>
+                <td class="text-right"><span class="xp-value">{{total_xp}}</span></td>
+                <td class="text-right"><span class="metric-value">{{total_sessions}}</span></td>
+                <td class="text-right"><span class="metric-value">{{total_prompts}}</span></td>
+                <td class="text-right"><span class="metric-value">{{total_tool_uses}}</span></td>
+                <td class="text-right"><span class="metric-value">{{total_subagents}}</span></td>
+                <td class="text-right">
+                    {{#if (gt longest_streak 0)}}
+                    <span class="leaderboard-streak{{#if (gt longest_streak 3)}} leaderboard-streak--hot{{/if}}">{{longest_streak}}d</span>
+                    {{else}}
+                    <span class="text-tertiary">-</span>
+                    {{/if}}
+                </td>
+                <td class="text-right">{{achievement_count}}</td>
+                <td class="text-right"><span class="metric-value">{{unique_skills_count}}</span></td>
+                <td class="text-right"><span class="metric-value">{{total_days_active}}</span></td>
             </tr>
             {{/each}}
             </tbody>
+            {{#if ../has_averages}}
+            <tfoot>
+            <tr class="leaderboard-table__averages">
+                <td></td>
+                <td><em>Platform Average</em></td>
+                <td></td>
+                <td></td>
+                <td class="text-right">{{../averages.avg_xp}}</td>
+                <td class="text-right">{{../averages.avg_sessions}}</td>
+                <td class="text-right">{{../averages.avg_prompts}}</td>
+                <td class="text-right">{{../averages.avg_tool_uses}}</td>
+                <td class="text-right">{{../averages.avg_subagents}}</td>
+                <td class="text-right">{{../averages.avg_streak}}</td>
+                <td class="text-right">{{../averages.avg_achievements}}</td>
+                <td class="text-right"></td>
+                <td class="text-right">{{../averages.avg_days_active}}</td>
+            </tr>
+            </tfoot>
+            {{/if}}
         {{/components/data-table}}
-        {{else}}
-        {{> components/empty-state message="No leaderboard data yet."}}
-        {{/if}}
+    </div>
+    {{else}}
+    <div class="empty-state">
+        <p>No leaderboard data yet. Start using the platform to earn XP!</p>
     </div>
     {{/if}}
+    </section>
 
-    {{#if tab_department}}
-    <div id="department-content" aria-live="polite">
-        {{#if departments}}
-        <div class="dept-grid">
-            {{#each departments}}
-            <div class="card p-5">
-                <div class="card-title dept-card-title">{{department}}</div>
-                <div class="stats-grid-3col">
-                    <div><div class="stat-label">Total XP</div><div class="stat-value">{{total_xp}}</div></div>
-                    <div><div class="stat-label">Avg XP</div><div class="stat-value">{{avg_xp}}</div></div>
-                    <div><div class="stat-label">Users</div><div class="stat-value">{{user_count}}</div></div>
-                </div>
-                {{#if top_user}}
-                <div class="dept-top-user">Top: <strong>{{default top_user.display_name top_user.user_id}}</strong> ({{default top_user.xp 0}} XP)</div>
-                {{/if}}
-            </div>
-            {{/each}}
-        </div>
-        {{else}}
-        {{> components/empty-state message="No department data available."}}
-        {{/if}}
-    </div>
-    {{/if}}
     {{/inline}}
     {{#*inline "scripts"}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            // Update stats from table data
-            var rows = document.querySelectorAll('.data-table tbody tr');
-            var ranked = rows.length;
-            var totalXp = 0, totalAch = 0, activeStreaks = 0;
-            rows.forEach(function(row) {
-                var xp = parseInt(row.getAttribute('data-xp') || '0', 10);
-                var ach = parseInt(row.getAttribute('data-achievements') || '0', 10);
-                var streak = parseInt(row.getAttribute('data-streak') || '0', 10);
-                totalXp += xp;
-                totalAch += ach;
-                if (streak > 0) activeStreaks++;
-            });
-            var avgXp = ranked > 0 ? Math.round(totalXp / ranked) : 0;
-            var el;
-            el = document.querySelector('#stat-ranked .value'); if (el) el.textContent = ranked;
-            el = document.querySelector('#stat-avg-xp .value'); if (el) el.textContent = avgXp;
-            el = document.querySelector('#stat-achievements .value'); if (el) el.textContent = totalAch;
-            el = document.querySelector('#stat-streaks .value'); if (el) el.textContent = activeStreaks;
-            // Clickable rows
-            document.addEventListener('click', function(e) {
-                var tr = e.target.closest('[data-user-href]');
-                if (tr) window.location.href = tr.getAttribute('data-user-href');
-            });
-        });
-    </script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-leaderboard.js"></script>
     {{/inline}}
 {{/layout}}

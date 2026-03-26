@@ -1,99 +1,226 @@
 use std::sync::Arc;
 
-use crate::admin::repositories;
+use crate::admin::repositories::{self, conversation_analytics};
 use crate::admin::templates::AdminTemplateEngine;
-use crate::admin::types::{MarketplaceContext, UserContext};
+use crate::admin::types::{HooksQuery, MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
 };
-use serde_json::json;
 use sqlx::PgPool;
+
+use super::types::{
+    EventBreakdownView, HookCodeEntry, HookCodeHook, HookView, HooksStats, MyHooksPageData,
+    NamedEntity,
+};
+
+const HOOK_EVENT_TYPES: &[&str] = &[
+    "PreToolUse",
+    "PostToolUse",
+    "PostToolUseFailure",
+    "PermissionRequest",
+    "UserPromptSubmit",
+    "Stop",
+    "SubagentStop",
+    "TaskCompleted",
+    "SessionStart",
+    "SessionEnd",
+    "SubagentStart",
+    "Notification",
+    "TeammateIdle",
+    "InstructionsLoaded",
+];
 
 pub(crate) async fn my_hooks_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
+    Query(query): Query<HooksQuery>,
 ) -> Response {
-    let hooks = repositories::list_user_hooks(&pool, &user_ctx.user_id)
+    if let Err(e) =
+        repositories::user_hooks::ensure_default_hooks(&pool, &user_ctx.user_id, &mkt_ctx.site_url)
+            .await
+    {
+        tracing::warn!(error = %e, "Failed to ensure default hooks");
+    }
+
+    let hooks = repositories::user_hooks::list_user_hooks(&pool, &user_ctx.user_id)
         .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list user hooks");
-            vec![]
-        });
+        .unwrap_or_default();
 
-    let hook_count = hooks.len();
-    let enabled_count = hooks.iter().filter(|h| h.enabled).count();
+    let user_plugins = repositories::list_user_plugins(&pool, &user_ctx.user_id)
+        .await
+        .unwrap_or_default();
 
-    let hooks_json: Vec<serde_json::Value> = hooks
+    let range = match query.range.as_str() {
+        "24h" | "7d" | "14d" => query.range.as_str(),
+        _ => "7d",
+    };
+
+    let (event_breakdown, timeseries, summary, hook_quality) = tokio::join!(
+        repositories::user_hooks::get_hook_event_breakdown(&pool, &user_ctx.user_id),
+        repositories::user_hooks::get_hook_timeseries(&pool, &user_ctx.user_id, range),
+        repositories::user_hooks::get_hook_summary_stats(&pool, &user_ctx.user_id, range),
+        async {
+            conversation_analytics::fetch_hook_session_quality(&pool, &user_ctx.user_id)
+                .await
+                .unwrap_or_default()
+        },
+    );
+
+    let event_breakdown = event_breakdown.unwrap_or_default();
+    let timeseries = timeseries.unwrap_or_default();
+    let chart = super::charts::compute_hooks_chart_data(&timeseries, range);
+
+    let quality_map: std::collections::HashMap<&str, _> = hook_quality
         .iter()
-        .map(|h| {
-            json!({
-                "id": h.id,
-                "hook_id": h.hook_id,
-                "name": h.name,
-                "description": h.description,
-                "event": h.event,
-                "matcher": h.matcher,
-                "command": h.command,
-                "is_async": h.is_async,
-                "enabled": h.enabled,
-                "base_hook_id": h.base_hook_id,
-                "is_forked": h.base_hook_id.is_some(),
-                "created_at": h.created_at,
-                "updated_at": h.updated_at,
-            })
+        .map(|q| (q.event_type.as_str(), q))
+        .collect();
+
+    let avg_session_quality = if hook_quality.is_empty() {
+        0.0
+    } else {
+        let count = hook_quality.len();
+        hook_quality.iter().map(|q| q.avg_quality).sum::<f64>()
+            / f64::from(u32::try_from(count).unwrap_or(1))
+    };
+
+    let event_breakdown_views = build_event_breakdown_views(&event_breakdown, &quality_map);
+
+    let plugin_name_map: std::collections::HashMap<String, String> = user_plugins
+        .iter()
+        .map(|p| (p.plugin_id.clone(), p.name.clone()))
+        .collect();
+    let hooks_views = build_hook_views(&hooks, &plugin_name_map);
+
+    let plugins: Vec<NamedEntity> = user_plugins
+        .iter()
+        .map(|p| NamedEntity {
+            id: p.plugin_id.clone(),
+            name: p.name.clone(),
         })
         .collect();
 
-    let data = json!({
-        "page": "my-hooks",
-        "title": "My Hooks",
-        "hooks": hooks_json,
-        "hook_count": hook_count,
-        "enabled_count": enabled_count,
-        "hook_events": [
-            "PostToolUse", "PostToolUseFailure", "PreToolUse",
-            "UserPromptSubmit", "SessionStart", "SessionEnd",
-            "Stop", "SubagentStart", "SubagentStop", "Notification"
-        ],
-    });
-    super::render_page(&engine, "my-hooks", &data, &user_ctx, &mkt_ctx)
-}
-
-pub(crate) async fn my_hook_edit_page(
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
-    State(pool): State<Arc<PgPool>>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
-) -> Response {
-    let hook_id = params.get("id");
-    let is_edit = hook_id.is_some();
-
-    let hook = if let Some(id) = hook_id {
-        let hooks = repositories::list_user_hooks(&pool, &user_ctx.user_id)
-            .await
-            .unwrap_or_default();
-        hooks.into_iter().find(|h| h.hook_id == *id)
-    } else {
-        None
+    let data = MyHooksPageData {
+        page: "my-hooks",
+        title: "My Hooks",
+        has_hooks: !hooks_views.is_empty(),
+        hooks: hooks_views,
+        plugins,
+        stats: HooksStats {
+            total_count: hooks.len(),
+            enabled_count: hooks.iter().filter(|h| h.enabled).count(),
+            total_events: summary.total_events,
+            total_errors: summary.total_errors,
+            content_input_bytes: summary.content_input_bytes,
+            content_output_bytes: summary.content_output_bytes,
+            avg_session_quality: format!("{avg_session_quality:.1}"),
+        },
+        event_breakdown: event_breakdown_views,
+        chart: serde_json::to_value(chart).unwrap_or_default(), // JSON: protocol boundary
+        range: range.to_string(),
+        range_24h: range == "24h",
+        range_7d: range == "7d",
+        range_14d: range == "14d",
+        hook_event_types: HOOK_EVENT_TYPES.to_vec(),
     };
 
-    let is_forked = hook.as_ref().is_some_and(|h| h.base_hook_id.is_some());
+    let value = serde_json::to_value(&data).unwrap_or_default();
+    super::render_page(&engine, "my-hooks", &value, &user_ctx, &mkt_ctx)
+}
 
-    let data = json!({
-        "page": "my-hook-edit",
-        "title": if is_edit { "Edit My Hook" } else { "Create My Hook" },
-        "is_edit": is_edit,
-        "hook": hook,
-        "is_forked": is_forked,
-        "hook_events": [
-            "PostToolUse", "PostToolUseFailure", "PreToolUse",
-            "UserPromptSubmit", "SessionStart", "SessionEnd",
-            "Stop", "SubagentStart", "SubagentStop", "Notification"
-        ],
-    });
-    super::render_page(&engine, "my-hook-edit", &data, &user_ctx, &mkt_ctx)
+fn build_event_breakdown_views(
+    event_breakdown: &[crate::admin::types::HookEventTypeStat],
+    quality_map: &std::collections::HashMap<
+        &str,
+        &crate::admin::types::conversation_analytics::HookSessionQuality,
+    >,
+) -> Vec<EventBreakdownView> {
+    let max_event_count = event_breakdown
+        .iter()
+        .map(|e| e.event_count)
+        .max()
+        .unwrap_or(1)
+        .max(1);
+    event_breakdown
+        .iter()
+        .map(|e| {
+            let pct = e.event_count.saturating_mul(100) / max_event_count;
+            let quality = quality_map.get(e.event_type.as_str());
+            EventBreakdownView {
+                event_type: e.event_type.clone(),
+                event_count: e.event_count,
+                error_count: e.error_count,
+                content_input_bytes: e.content_input_bytes,
+                content_output_bytes: e.content_output_bytes,
+                pct,
+                avg_quality: quality.map_or("0.0".to_string(), |q| format!("{:.1}", q.avg_quality)),
+                quality_goal_pct: quality.map_or("0.0".to_string(), |q| {
+                    format!("{:.0}", q.goal_achievement_pct)
+                }),
+                quality_sessions: quality.map_or(0, |q| q.session_count),
+            }
+        })
+        .collect()
+}
+
+fn build_hook_views(
+    hooks: &[crate::admin::types::UserHook],
+    plugin_name_map: &std::collections::HashMap<String, String>,
+) -> Vec<HookView> {
+    hooks
+        .iter()
+        .map(|h| {
+            let hook_code_entry = if h.hook_type == "http" {
+                HookCodeEntry {
+                    matcher: h.matcher.clone(),
+                    hooks: vec![HookCodeHook {
+                        hook_type: "http".to_string(),
+                        url: Some(h.url.clone()),
+                        headers: Some(h.headers.clone()), // JSON: protocol boundary
+                        command: None,
+                        is_async: None,
+                        timeout: Some(h.timeout),
+                    }],
+                }
+            } else {
+                HookCodeEntry {
+                    matcher: h.matcher.clone(),
+                    hooks: vec![HookCodeHook {
+                        hook_type: "command".to_string(),
+                        url: None,
+                        headers: None,
+                        command: Some(h.command.clone()),
+                        is_async: Some(h.is_async),
+                        timeout: Some(h.timeout),
+                    }],
+                }
+            };
+            let hook_code = serde_json::to_string_pretty(&[&hook_code_entry]).unwrap_or_default();
+            HookView {
+                id: h.id.clone(),
+                hook_name: h.hook_name.clone(),
+                description: h.description.clone(),
+                event_type: h.event_type.clone(),
+                hook_type: h.hook_type.clone(),
+                matcher: h.matcher.clone(),
+                url: h.url.clone(),
+                command: h.command.clone(),
+                headers: h.headers.clone(), // JSON: protocol boundary
+                timeout: h.timeout,
+                is_async: h.is_async,
+                enabled: h.enabled,
+                is_default: h.is_default,
+                plugin_id: h.plugin_id.clone(),
+                plugin_name: h
+                    .plugin_id
+                    .as_ref()
+                    .and_then(|pid| plugin_name_map.get(pid))
+                    .unwrap_or(&String::new())
+                    .clone(),
+                hook_code,
+            }
+        })
+        .collect()
 }

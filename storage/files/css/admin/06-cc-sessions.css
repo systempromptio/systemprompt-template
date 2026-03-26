@@ -1,0 +1,185 @@
+@layer components {
+
+
+
+.cc-sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-3);
+    margin-bottom: var(--sp-space-4);
+}
+
+.cc-session-card {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-brand);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    box-shadow: var(--sp-shadow-card);
+}
+
+.cc-session-active {
+    border-left: 3px solid var(--sp-success);
+    background: color-mix(in oklch, var(--sp-success) 3%, var(--sp-bg-surface));
+}
+
+.cc-session-header {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin-bottom: var(--sp-space-2);
+}
+
+.cc-session-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-success);
+    flex-shrink: 0;
+    animation: cc-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cc-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--sp-success) 40%, transparent); }
+    50% { box-shadow: 0 0 0 4px color-mix(in oklch, var(--sp-success) 0%, transparent); }
+}
+
+.cc-session-model {
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cc-session-time {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    margin-left: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.cc-session-stats {
+    display: flex;
+    gap: var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.cc-session-errors {
+    color: var(--sp-danger);
+    font-weight: 600;
+}
+
+.cc-session-tokens {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    margin-top: var(--sp-space-1);
+    font-variant-numeric: tabular-nums;
+}
+
+
+
+.cc-token-card {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-brand);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    margin-bottom: var(--sp-space-4);
+    box-shadow: var(--sp-shadow-card);
+}
+
+.cc-token-model-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--sp-space-2) 0;
+    font-size: var(--sp-text-xs);
+}
+
+.cc-token-model-row + .cc-token-model-row {
+    border-top: 1px solid var(--sp-border-subtle);
+}
+
+.cc-token-model-name {
+    color: var(--sp-text-secondary);
+    font-weight: 500;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: var(--sp-space-2);
+}
+
+.cc-token-model-tokens {
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+
+
+
+.cc-side-panel {
+    min-width: 0;
+}
+
+
+.cc-sessions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+    margin-bottom: var(--sp-space-4);
+}
+
+.cc-session {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-inner-brand);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    box-shadow: var(--sp-shadow-card);
+}
+
+.cc-session--active {
+    border-left: 3px solid var(--sp-success);
+    background: color-mix(in oklch, var(--sp-success) 3%, var(--sp-bg-surface));
+}
+
+.cc-session-top {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin-bottom: var(--sp-space-1);
+}
+
+.cc-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-success);
+    flex-shrink: 0;
+    animation: cc-pulse 2s ease-in-out infinite;
+}
+
+.cc-session-meta {
+    display: flex;
+    gap: var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.cc-session-err {
+    color: var(--sp-danger);
+    font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-session-live-dot,
+    .cc-live-dot {
+        animation: none;
+    }
+}
+
+}

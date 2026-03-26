@@ -8,6 +8,19 @@ use super::super::types::{
 };
 use super::{xp_to_next_rank, ACHIEVEMENTS};
 
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct LeaderboardAverages {
+    pub avg_xp: f64,
+    pub avg_sessions: f64,
+    pub avg_prompts: f64,
+    pub avg_tool_uses: f64,
+    pub avg_subagents: f64,
+    pub avg_streak: f64,
+    pub avg_achievements: f64,
+    pub avg_days_active: f64,
+    pub total_users: i64,
+}
+
 pub async fn get_leaderboard(
     pool: &Arc<PgPool>,
     limit: i64,
@@ -161,9 +174,8 @@ pub async fn get_user_gamification(
     let (xp_needed, next_name) = xp_to_next_rank(row.total_xp);
 
     Ok(Some(UserGamificationProfile {
-        user_id: row.user_id,
+        user_id: row.user_id.into(),
         display_name: row.display_name,
-        department: row.department,
         rank_level: row.rank_level,
         rank_name: row.rank_name,
         total_xp: row.total_xp,
@@ -288,4 +300,50 @@ pub async fn get_department_scores(
         .fetch_all(pool.as_ref())
         .await
     }
+}
+
+/// Alias for `get_user_gamification` used by SSR/SSE handlers.
+pub async fn find_user_gamification(
+    pool: &Arc<PgPool>,
+    user_id: &str,
+) -> Result<Option<UserGamificationProfile>, sqlx::Error> {
+    get_user_gamification(pool, user_id).await
+}
+
+/// Returns aggregate averages across all leaderboard users.
+pub async fn get_leaderboard_averages(
+    pool: &Arc<PgPool>,
+) -> Result<LeaderboardAverages, sqlx::Error> {
+    #[derive(sqlx::FromRow)]
+    struct AvgRow {
+        avg_xp: Option<f64>,
+        avg_events: Option<f64>,
+        avg_streak: Option<f64>,
+        avg_achievements: Option<f64>,
+        total_users: i64,
+    }
+
+    let row = sqlx::query_as::<_, AvgRow>(
+        r"SELECT
+            COALESCE(AVG(r.total_xp), 0)::FLOAT8 AS avg_xp,
+            COALESCE(AVG(r.events_count), 0)::FLOAT8 AS avg_events,
+            COALESCE(AVG(r.current_streak), 0)::FLOAT8 AS avg_streak,
+            COALESCE(AVG((SELECT COUNT(*) FROM employee_achievements ea WHERE ea.user_id = r.user_id)), 0)::FLOAT8 AS avg_achievements,
+            COUNT(*)::BIGINT AS total_users
+        FROM employee_ranks r",
+    )
+    .fetch_one(pool.as_ref())
+    .await?;
+
+    Ok(LeaderboardAverages {
+        avg_xp: row.avg_xp.unwrap_or(0.0),
+        avg_sessions: row.avg_events.unwrap_or(0.0),
+        avg_prompts: 0.0,
+        avg_tool_uses: 0.0,
+        avg_subagents: 0.0,
+        avg_streak: row.avg_streak.unwrap_or(0.0),
+        avg_achievements: row.avg_achievements.unwrap_or(0.0),
+        avg_days_active: 0.0,
+        total_users: row.total_users,
+    })
 }

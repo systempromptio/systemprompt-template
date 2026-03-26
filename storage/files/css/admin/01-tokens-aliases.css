@@ -1,0 +1,63 @@
+@layer tokens {
+:root {
+    /* Semantic color aliases */
+    --sp-error: var(--sp-danger);
+    --sp-info: var(--sp-accent);
+    --sp-color-primary: var(--sp-accent);
+    --sp-color-success: var(--sp-success);
+    --sp-color-info: light-dark(oklch(0.62 0.18 260), oklch(0.70 0.14 250));
+    --sp-color-warning: var(--sp-warning);
+    --sp-accent-blue: light-dark(oklch(0.62 0.18 260), oklch(0.70 0.14 250));
+    --sp-accent-surface: light-dark(
+      color-mix(in oklch, var(--sp-accent) 6%, var(--sp-bg-surface)),
+      color-mix(in oklch, var(--sp-accent) 8%, var(--sp-bg-surface))
+    );
+
+    /* Background extras */
+    --sp-bg-input: light-dark(oklch(1.0 0 0), oklch(0.19 0.01 47));
+    --sp-bg-primary: var(--sp-bg-surface);
+    --sp-bg-secondary: var(--sp-bg-surface-raised);
+    --sp-bg-tertiary: light-dark(oklch(0.96 0.005 70), oklch(0.23 0.01 48));
+    --sp-bg-warning: light-dark(
+      color-mix(in oklch, var(--sp-warning) 10%, var(--sp-bg-surface)),
+      color-mix(in oklch, var(--sp-warning) 12%, var(--sp-bg-surface))
+    );
+    --sp-surface-1: var(--sp-bg-surface);
+    --sp-surface-2: var(--sp-bg-surface-raised);
+
+    /* Border extras */
+    --sp-border: var(--sp-border-default);
+    --sp-border-color: var(--sp-border-default);
+    --sp-border-hover: var(--sp-border-strong);
+    --sp-border-primary: light-dark(
+      color-mix(in oklch, var(--sp-accent) 30%, var(--sp-border-default)),
+      color-mix(in oklch, var(--sp-accent) 25%, var(--sp-border-default))
+    );
+
+    /* Text extras */
+    --sp-text-muted: var(--sp-text-tertiary);
+
+    /* Font extras */
+    --sp-font-mono: "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+
+    /* Z-index extras */
+    --sp-z-modal-backdrop: 1400;
+    --sp-z-tooltip: 3000;
+
+    /* sp-prefixed semantic tokens (used by settings/gamification components) */
+    --sp-color-primary: var(--sp-accent);
+    --sp-color-success: var(--sp-success);
+    --sp-color-border: var(--sp-border-default);
+    --sp-color-surface: var(--sp-bg-surface);
+    --sp-color-text: var(--sp-text-primary);
+    --sp-color-text-secondary: var(--sp-text-secondary);
+    --sp-font-size-sm: var(--sp-text-sm);
+    --sp-font-size-md: var(--sp-text-base);
+    --sp-font-size-xl: var(--sp-text-xl);
+    --sp-space-xs: var(--sp-space-1);
+    --sp-space-sm: var(--sp-space-2);
+    --sp-space-md: var(--sp-space-4);
+    --sp-space-lg: var(--sp-space-6);
+    --sp-space-xl: var(--sp-space-8);
+}
+}

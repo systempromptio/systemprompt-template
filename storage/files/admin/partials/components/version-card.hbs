@@ -1,29 +1,29 @@
-<div class="plugin-card version-card" style="border-left:3px solid {{#if (eq version_type "restore")}}var(--warning){{else}}var(--accent){{/if}}">
+<div class="plugin-card version-card {{#if (eq version_type "restore")}}plugin-card--warning{{else}}plugin-card--accent{{/if}}">
     <div class="plugin-header" data-toggle-version="{{id}}" data-version-user="{{user_id}}">
-        <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap">
-                <h3 style="margin:0;font-size:var(--text-base);font-weight:600;color:var(--text-primary)">Version {{version_number}}</h3>
+        <div class="plugin-card__body">
+            <div class="plugin-card__title-row">
+                <h3 class="plugin-card__title">Version {{version_number}}</h3>
                 {{#if (eq version_type "restore")}}<span class="badge badge-yellow">restore</span>{{else}}<span class="badge badge-blue">upload</span>{{/if}}
                 <span class="badge badge-green">{{skills_count}} skill{{#if (not (eq skills_count 1))}}s{{/if}}</span>
             </div>
-            <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1)">
+            <div class="plugin-card__date">
                 {{formatDate created_at}} ({{relativeTime created_at}})
             </div>
             {{#if skill_names}}
-            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:var(--space-2)">
+            <div class="plugin-card__tags">
                 {{#each skill_names}}
-                <span class="badge {{#if base_skill_id}}badge-yellow{{else}}badge-gray{{/if}}" style="font-size:10px">{{default name skill_id}}</span>
+                <span class="badge {{#if base_skill_id}}badge-yellow{{else}}badge-gray{{/if}}">{{default name skill_id}}</span>
                 {{/each}}
             </div>
             {{/if}}
         </div>
-        <div style="display:flex;align-items:center;gap:var(--space-2)">
-            <button class="btn btn-secondary btn-sm" data-restore-version="{{id}}" data-restore-num="{{version_number}}" data-restore-user="{{user_id}}" style="font-size:var(--text-xs)">Restore</button>
-            <span class="expand-icon" style="font-size:var(--text-sm);color:var(--text-tertiary);transition:transform var(--duration-fast) var(--ease-out);display:inline-block">&#9660;</span>
+        <div class="plugin-actions">
+            <button type="button" class="btn btn-secondary btn-sm btn--xs" data-restore-version="{{id}}" data-restore-num="{{version_number}}" data-restore-user="{{user_id}}">Restore</button>
+            <span class="expand-icon" aria-hidden="true">&#9660;</span>
         </div>
     </div>
-    <div class="plugin-details" style="border-top:1px solid var(--border-subtle);display:none">
-        <div style="padding:var(--space-4)">
+    <div class="plugin-details" style="display:none" data-details-for="{{id}}">
+        <div class="plugin-tabs-container">
             <div class="loading-center"><div class="loading-spinner" role="status"><span class="sr-only">Loading...</span></div></div>
         </div>
     </div>

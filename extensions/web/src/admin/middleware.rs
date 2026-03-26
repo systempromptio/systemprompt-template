@@ -9,6 +9,8 @@ use axum::{
 };
 use sqlx::PgPool;
 
+use systemprompt::identifiers::{Email, UserId};
+
 use super::activity;
 use super::handlers::extract_user_from_cookie;
 use super::types::{MarketplaceContext, UserContext};
@@ -19,39 +21,41 @@ pub async fn user_context_middleware(
     next: Next,
 ) -> Response {
     let headers = request.headers();
-    let (user_id, username, email) = match extract_user_from_cookie(headers) {
-        Ok(u) => u,
+    let session = match extract_user_from_cookie(headers) {
+        Ok(s) => s,
         Err(reason) => {
             tracing::warn!(reason = %reason, "UserContext middleware: no valid session");
             let guest = UserContext {
-                user_id: String::new(),
+                user_id: UserId::new(""),
                 username: String::new(),
-                email: String::new(),
+                email: Email::new(""),
                 roles: vec!["user".to_string()],
                 department: String::new(),
                 is_admin: false,
+                email_verified: false,
             };
             request.extensions_mut().insert(guest);
             return next.run(request).await;
         }
     };
 
-    let (roles, department) = fetch_user_roles_department(&pool, &user_id)
+    let (roles, department) = fetch_user_roles_department(&pool, session.user_id.as_str())
         .await
         .unwrap_or_else(|| (vec!["user".to_string()], String::new()));
 
     let is_admin = roles.contains(&"admin".to_string());
     let ctx = UserContext {
-        user_id,
-        username,
-        email,
+        user_id: session.user_id,
+        username: session.username,
+        email: session.email,
         roles,
         department,
         is_admin,
+        email_verified: false,
     };
 
     let login_pool = pool.clone();
-    let login_uid = ctx.user_id.clone();
+    let login_uid = ctx.user_id.as_str().to_string();
     let login_name = ctx.username.clone();
     tokio::spawn(async move {
         activity::record(
@@ -121,22 +125,48 @@ pub async fn marketplace_context_middleware(
         });
 
     let ctx = MarketplaceContext {
-        user_id: user_ctx.user_id.clone(),
+        user_id: user_ctx.user_id.to_string(),
         site_url,
         total_plugins: counts.total_plugins,
         total_skills: counts.total_skills,
         agents_count: counts.agents_count,
         mcp_count: counts.mcp_count,
+        tier_name: String::from("Free"),
+        is_premium: false,
+        rank_level: 1,
+        rank_name: String::from("Beginner"),
+        rank_tier: String::from("bronze"),
+        total_xp: 0,
+        xp_progress_pct: 0.0,
+        has_completed_onboarding: false,
+        current_streak: 0,
+        longest_streak: 0,
+        next_rank_name: String::from("Apprentice"),
+        xp_to_next_rank: 100,
     };
 
     request.extensions_mut().insert(ctx);
     next.run(request).await
 }
 
+/// Middleware that requires a logged-in user (non-empty user_id).
+/// Redirects to login page for SSR routes (unlike require_auth which returns 401 JSON).
+pub async fn require_user_middleware(request: Request, next: Next) -> Response {
+    let user_ctx = request.extensions().get::<UserContext>().cloned();
+    match user_ctx {
+        Some(ctx) if !ctx.user_id.as_str().is_empty() => next.run(request).await,
+        _ => {
+            let uri = request.uri().path().to_string();
+            let redirect_url = format!("/admin/login?redirect={uri}");
+            axum::response::Redirect::temporary(&redirect_url).into_response()
+        }
+    }
+}
+
 pub async fn require_auth_middleware(request: Request, next: Next) -> Response {
     let user_ctx = request.extensions().get::<UserContext>().cloned();
     match user_ctx {
-        Some(ctx) if !ctx.user_id.is_empty() => next.run(request).await,
+        Some(ctx) if !ctx.user_id.as_str().is_empty() => next.run(request).await,
         _ => (
             StatusCode::UNAUTHORIZED,
             axum::Json(serde_json::json!({"error": "Authentication required"})),
@@ -158,7 +188,7 @@ pub async fn require_admin_middleware(request: Request, next: Next) -> Response 
 }
 
 pub async fn auth_me_handler(Extension(user_ctx): Extension<UserContext>) -> Response {
-    if user_ctx.user_id.is_empty() {
+    if user_ctx.user_id.as_str().is_empty() {
         return (StatusCode::UNAUTHORIZED, "Not authenticated").into_response();
     }
     axum::Json(serde_json::json!({

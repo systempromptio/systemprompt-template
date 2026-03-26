@@ -1,178 +1,216 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    <!-- Toolbar -->
+    {{> components/page-hero}}
+
+    <p class="text-muted mb-4">Your configured collection of plugins, skills, agents, and connectors. This is what gets shared when others install your marketplace.</p>
+
+    <div class="platform-info-bar">
+        <span class="badge badge-gray">Platform</span>
+        <strong>systemprompt.io</strong> — always included
+        {{#if platform_plugin}}
+        {{#if (gt platform_plugin.skill_count 0)}}<span class="badge badge-success">{{platform_plugin.skill_count}} skills</span>{{/if}}
+        {{#if (gt platform_plugin.agent_count 0)}}<span class="badge badge-info">{{platform_plugin.agent_count}} agents</span>{{/if}}
+        {{#if (gt platform_plugin.mcp_count 0)}}<span class="badge badge-warning">{{platform_plugin.mcp_count}} MCP</span>{{/if}}
+        {{#if (gt platform_plugin.hook_count 0)}}<span class="badge badge-purple">{{platform_plugin.hook_count}} hooks</span>{{/if}}
+        <a href="/admin/my/plugins/view?id={{platform_plugin.plugin_id}}" class="btn btn-secondary btn-sm ml-auto">View</a>
+        {{/if}}
+    </div>
+
+    <section aria-label="Marketplace statistics">
+    <div class="marketplace-stats-ribbon">
+        <div class="marketplace-stat-card">
+            <div class="marketplace-stat-icon marketplace-stat-icon--plugins">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="marketplace-stat-info">
+                <span class="marketplace-stat-value">{{stats.plugin_count}}</span>
+                <span class="marketplace-stat-label">Plugins</span>
+                {{#if stats.plugin_delta}}<span class="marketplace-stat-delta marketplace-stat-delta--up">{{stats.plugin_delta}}</span>{{/if}}
+                {{#if stats.plugin_period}}<span class="marketplace-stat-period">{{stats.plugin_period}}</span>{{/if}}
+            </div>
+        </div>
+        <div class="marketplace-stat-card">
+            <div class="marketplace-stat-icon marketplace-stat-icon--skills">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </div>
+            <div class="marketplace-stat-info">
+                <span class="marketplace-stat-value">{{stats.total_skills}}</span>
+                <span class="marketplace-stat-label">Skills</span>
+                {{#if stats.skills_delta}}<span class="marketplace-stat-delta marketplace-stat-delta--up">{{stats.skills_delta}}</span>{{/if}}
+                {{#if stats.skills_period}}<span class="marketplace-stat-period">{{stats.skills_period}}</span>{{/if}}
+            </div>
+        </div>
+        <div class="marketplace-stat-card">
+            <div class="marketplace-stat-icon marketplace-stat-icon--agents">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="marketplace-stat-info">
+                <span class="marketplace-stat-value">{{stats.total_agents}}</span>
+                <span class="marketplace-stat-label">Agents</span>
+                {{#if stats.agents_delta}}<span class="marketplace-stat-delta marketplace-stat-delta--up">{{stats.agents_delta}}</span>{{/if}}
+                {{#if stats.agents_period}}<span class="marketplace-stat-period">{{stats.agents_period}}</span>{{/if}}
+            </div>
+        </div>
+        <div class="marketplace-stat-card">
+            <div class="marketplace-stat-icon marketplace-stat-icon--mcp">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            </div>
+            <div class="marketplace-stat-info">
+                <span class="marketplace-stat-value">{{stats.total_mcp}}</span>
+                <span class="marketplace-stat-label">Connectors</span>
+                {{#if stats.mcp_delta}}<span class="marketplace-stat-delta marketplace-stat-delta--up">{{stats.mcp_delta}}</span>{{/if}}
+                {{#if stats.mcp_period}}<span class="marketplace-stat-period">{{stats.mcp_period}}</span>{{/if}}
+            </div>
+        </div>
+        <div class="marketplace-stat-card">
+            <div class="marketplace-stat-icon marketplace-stat-icon--hooks">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <div class="marketplace-stat-info">
+                <span class="marketplace-stat-value">{{stats.total_hooks}}</span>
+                <span class="marketplace-stat-label">Hooks</span>
+                {{#if stats.hooks_delta}}<span class="marketplace-stat-delta marketplace-stat-delta--up">{{stats.hooks_delta}}</span>{{/if}}
+                {{#if stats.hooks_period}}<span class="marketplace-stat-period">{{stats.hooks_period}}</span>{{/if}}
+            </div>
+        </div>
+    </div>
+    </section>
+
+    {{#if has_plugins}}
+    <details class="marketplace-share-section" open>
+        <summary class="marketplace-share-toggle">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            <strong>Connect &amp; Install</strong>
+            <span class="text-muted text-sm">— connect Claude and install your plugins</span>
+        </summary>
+        <div class="marketplace-share-body">
+            <p class="text-sm text-muted mb-3">Connect Claude via the MCP server URL, then export your marketplace as a single plugin for Cowork.</p>
+            <div class="marketplace-share-option">
+                <span class="text-sm text-muted">MCP Server URL</span>
+                <div class="install-copybox">
+                    <code class="install-code">{{marketplace.mcp_url}}</code>
+                    <button type="button" class="btn btn-secondary btn-sm" data-copy="{{marketplace.mcp_url}}">Copy</button>
+                </div>
+            </div>
+            <div class="marketplace-share-option">
+                <span class="text-sm text-muted">Export for Cowork</span>
+                <p class="text-sm text-muted">Download your entire marketplace as a single plugin ZIP. Import in Claude Desktop under Settings &rarr; Plugins &rarr; Import.</p>
+                <a href="/api/public/marketplace/{{marketplace.user_id}}/export/cowork.zip" class="btn btn-primary btn-sm" download>Export for Cowork</a>
+            </div>
+        </div>
+    </details>
+
     <div class="toolbar">
         <div class="search-group">
-            <input type="text" class="search-input" placeholder="Search marketplace..." id="my-marketplace-search">
+            <input type="text" class="search-input" placeholder="Search plugins..." id="my-marketplace-search" aria-label="Search plugins">
         </div>
-        <select class="filter-select" id="my-marketplace-source-filter" style="min-width:140px">
-            <option value="">All Sources</option>
-            <option value="inherited">Inherited</option>
-            <option value="customized">Customized</option>
-            <option value="custom">Custom</option>
-        </select>
-        <select class="filter-select" id="my-marketplace-category-filter" style="min-width:140px">
-            <option value="">All Categories</option>
-            {{#each categories}}
-            <option value="{{this}}">{{this}}</option>
-            {{/each}}
-        </select>
+        <a href="/admin/browse/plugins/" class="btn btn-primary btn-sm">Browse Plugins</a>
     </div>
 
-    <!-- Stats bar -->
-    <div class="config-stats" id="stats-my-marketplace">
-        <span class="config-stat"><span class="config-stat-dot blue"></span> <span class="config-stat-value">{{stats.total_count}}</span> total plugins</span>
-        <span class="config-stat"><span class="config-stat-dot purple"></span> <span class="config-stat-value">{{stats.inherited_count}}</span> inherited</span>
-        <span class="config-stat"><span class="config-stat-dot yellow"></span> <span class="config-stat-value">{{stats.customized_count}}</span> customized</span>
-        <span class="config-stat"><span class="config-stat-dot green"></span> <span class="config-stat-value">{{stats.custom_count}}</span> custom</span>
-    </div>
-
-    {{#if plugins}}
-    <div class="table-container">
-        <table class="data-table" id="my-marketplace-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Source</th>
-                    <th>Resources</th>
-                    <th class="col-actions"></th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each plugins}}
-                <tr class="clickable-row" data-entity-type="my-marketplace-plugin" data-entity-id="{{plugin_id}}" data-name="{{toLowerCase name}}" data-category="{{category}}" data-source="{{source}}">
-                    <td>
-                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{plugin_id}}">&#9654;</span> {{name}}</div>
-                        {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
-                    </td>
-                    <td>
-                        {{#if category}}<span class="badge badge-blue">{{category}}</span>{{else}}<span style="color:var(--text-tertiary)">—</span>{{/if}}
-                    </td>
-                    <td>
-                        {{#if (eq source "inherited")}}<span class="badge badge-purple">inherited</span>{{/if}}
-                        {{#if (eq source "customized")}}<span class="badge badge-yellow">customized</span>{{/if}}
-                        {{#if (eq source "custom")}}<span class="badge badge-green">custom</span>{{/if}}
-                    </td>
-                    <td>
-                        <div class="cell-badges">
-                            {{#if (gt skill_count 0)}}<span class="badge badge-green">{{skill_count}} skill{{#if (not (eq skill_count 1))}}s{{/if}}</span>{{/if}}
-                            {{#if (gt agent_count 0)}}<span class="badge badge-blue">{{agent_count}} agent{{#if (not (eq agent_count 1))}}s{{/if}}</span>{{/if}}
-                            {{#if (gt mcp_count 0)}}<span class="badge badge-yellow">{{mcp_count}} MCP</span>{{/if}}
-                            {{#if (gt hook_count 0)}}<span class="badge badge-gray">{{hook_count}} hook{{#if (not (eq hook_count 1))}}s{{/if}}</span>{{/if}}
-                        </div>
-                    </td>
-                    <td class="col-actions" data-no-row-click>
-                        {{#if (eq source "inherited")}}
-                        <button class="btn btn-secondary btn-sm" data-customize-plugin="{{plugin_id}}">Customize</button>
+    <section aria-label="Marketplace plugins">
+    <div class="plugin-selection-grid" id="my-marketplace-grid">
+        {{#each plugins}}
+        <div class="marketplace-card{{#unless enabled}} plugin-disabled{{/unless}}{{#unless base_plugin_id}} marketplace-card--custom{{/unless}}" data-plugin-id="{{plugin_id}}">
+            <div class="marketplace-card-accent"></div>
+            <div class="marketplace-card-body">
+                <div class="marketplace-card-header">
+                    <div class="marketplace-card-title-row">
+                        <strong class="marketplace-card-name">{{name}}</strong>
+                        {{#if base_plugin_id}}
+                        <span class="marketplace-card-source marketplace-card-source--official"><span class="marketplace-card-source-dot"></span> Official</span>
                         {{else}}
-                        <div class="actions-menu" data-actions-for="{{plugin_id}}">
-                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
-                            <div class="actions-dropdown">
-                                <a href="/admin/my/plugins/edit/?id={{plugin_id}}" class="actions-item">Edit</a>
-                                <div class="actions-popup-separator"></div>
-                                <button class="actions-item actions-item-danger" data-delete-plugin="{{plugin_id}}">Delete</button>
-                            </div>
-                        </div>
+                        <span class="marketplace-card-source marketplace-card-source--custom"><span class="marketplace-card-source-dot"></span> Custom</span>
                         {{/if}}
-                    </td>
-                </tr>
-                <!-- Detail expand row -->
-                <tr class="detail-row" data-detail-for="{{plugin_id}}">
-                    <td colspan="5">
-                        <div class="detail-row-content">
-                            {{#if base_plugin_id}}
-                            <div class="detail-section" style="margin-bottom:var(--space-3)">
-                                <span style="font-size:var(--text-sm);color:var(--text-secondary)">Forked from: <code style="font-size:var(--text-xs)">{{base_plugin_id}}</code></span>
-                            </div>
-                            {{/if}}
+                    </div>
+                    {{#if category}}<span class="marketplace-card-category">{{category}}</span>{{/if}}
+                </div>
 
-                            {{#if (gt skill_count 0)}}
-                            <div class="detail-section">
-                                <strong>Skills ({{skill_count}})</strong>
-                                {{#if skills}}
-                                <table class="detail-sub-table" style="margin-top:var(--space-2)">
-                                    {{#each skills}}
-                                    <tr><td>{{name}}</td></tr>
-                                    {{/each}}
-                                </table>
-                                {{/if}}
-                            </div>
-                            {{/if}}
+                {{#if description}}
+                <p class="marketplace-card-desc text-sm">{{description}}</p>
+                {{/if}}
 
-                            {{#if (gt agent_count 0)}}
-                            <div class="detail-section">
-                                <strong>Agents ({{agent_count}})</strong>
-                                {{#if agents}}
-                                <table class="detail-sub-table" style="margin-top:var(--space-2)">
-                                    {{#each agents}}
-                                    <tr><td>{{name}}</td></tr>
-                                    {{/each}}
-                                </table>
-                                {{/if}}
-                            </div>
-                            {{/if}}
+                <div class="marketplace-card-summary">
+                    {{#if (gt skill_count 0)}}<span class="marketplace-summary-pill"><span class="pill-dot pill-dot--skill"></span> {{skill_count}} skill{{#if (not (eq skill_count 1))}}s{{/if}}</span>{{/if}}
+                    {{#if (gt agent_count 0)}}<span class="marketplace-summary-pill"><span class="pill-dot pill-dot--agent"></span> {{agent_count}} agent{{#if (not (eq agent_count 1))}}s{{/if}}</span>{{/if}}
+                    {{#if (gt mcp_count 0)}}<span class="marketplace-summary-pill"><span class="pill-dot pill-dot--mcp"></span> {{mcp_count}} connector{{#if (not (eq mcp_count 1))}}s{{/if}}</span>{{/if}}
+                    {{#if (gt hook_count 0)}}<span class="marketplace-summary-pill"><span class="pill-dot pill-dot--hook"></span> {{hook_count}} hook{{#if (not (eq hook_count 1))}}s{{/if}}</span>{{/if}}
+                </div>
 
-                            {{#if (gt mcp_count 0)}}
-                            <div class="detail-section">
-                                <strong>MCP Servers ({{mcp_count}})</strong>
-                                {{#if mcp_servers}}
-                                <table class="detail-sub-table" style="margin-top:var(--space-2)">
-                                    {{#each mcp_servers}}
-                                    <tr><td>{{name}}</td></tr>
-                                    {{/each}}
-                                </table>
-                                {{/if}}
-                            </div>
-                            {{/if}}
-
-                            {{#if (gt hook_count 0)}}
-                            <div class="detail-section">
-                                <strong>Hooks ({{hook_count}})</strong>
-                                {{#if hooks}}
-                                <table class="detail-sub-table" style="margin-top:var(--space-2)">
-                                    {{#each hooks}}
-                                    <tr><td><span class="badge badge-blue">{{event}}</span> <code style="font-size:var(--text-xs)">{{matcher}}</code>{{#if is_async}} <span class="badge badge-gray">async</span>{{/if}}</td></tr>
-                                    {{/each}}
-                                </table>
-                                {{/if}}
-                            </div>
-                            {{/if}}
-
-                            <!-- JSON view -->
-                            <div class="detail-section">
-                                <button class="btn btn-secondary btn-sm" data-toggle-json="{{plugin_id}}" style="font-size:var(--text-xs);padding:2px 8px;margin-bottom:var(--space-2)">Show JSON</button>
-                                <div class="json-view" data-json-for="{{plugin_id}}" style="display:none"></div>
-                            </div>
+                <div class="marketplace-card-contents">
+                    {{#if (gt skill_count 0)}}
+                    <div class="marketplace-card-section">
+                        <div class="marketplace-card-section-label">Skills</div>
+                        <div class="marketplace-card-tags">
+                            {{#each skills}}
+                            <span class="marketplace-tag marketplace-tag--skill">{{name}}</span>
+                            {{/each}}
                         </div>
-                    </td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
-    </div>
-    {{else}}
-    {{> components/empty-state message="No plugins available in your marketplace."}}
-    {{/if}}
+                    </div>
+                    {{/if}}
 
-    <!-- Hidden plugin detail data -->
-    {{#each plugins}}
-    <script type="application/json" data-my-marketplace-detail="{{plugin_id}}">
-        {{{json this}}}
-    </script>
-    {{/each}}
+                    {{#if (gt agent_count 0)}}
+                    <div class="marketplace-card-section">
+                        <div class="marketplace-card-section-label">Agents</div>
+                        <div class="marketplace-card-tags">
+                            {{#each agents}}
+                            <span class="marketplace-tag marketplace-tag--agent">{{name}}</span>
+                            {{/each}}
+                        </div>
+                    </div>
+                    {{/if}}
+
+                    {{#if (gt mcp_count 0)}}
+                    <details class="marketplace-card-expandable">
+                        <summary class="marketplace-card-expand-trigger">
+                            <span class="marketplace-card-section-label">Connectors</span>
+                            <span class="marketplace-expand-hint">{{mcp_count}} connector{{#if (not (eq mcp_count 1))}}s{{/if}} — show</span>
+                        </summary>
+                        <div class="marketplace-card-tags mt-2">
+                            {{#each mcp_servers}}
+                            <span class="marketplace-tag marketplace-tag--mcp">{{name}}</span>
+                            {{/each}}
+                        </div>
+                    </details>
+                    {{/if}}
+                </div>
+
+                <div class="marketplace-card-footer">
+                    <a href="/admin/my/plugins/view?id={{plugin_id}}" class="marketplace-card-link">View Details &rarr;</a>
+                    {{#if (eq base_plugin_id "systemprompt")}}
+                    <a href="/admin/my/plugins/view?id={{plugin_id}}" class="marketplace-card-action">View</a>
+                    {{else}}
+                    <a href="/admin/my/plugins/edit?id={{plugin_id}}" class="marketplace-card-action">Edit</a>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    </section>
+    {{else}}
+    <div class="marketplace-empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-tertiary mb-4">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+        </svg>
+        <h3 class="marketplace-empty-heading">Build your marketplace</h3>
+        <p class="text-muted marketplace-empty-text">
+            Browse the Plugin Directory to add pre-built plugins with skills, agents, and connectors — or create a custom plugin from scratch.
+        </p>
+        <div class="d-flex gap-3 justify-center">
+            <a href="/admin/browse/plugins/" class="btn btn-primary">Browse Plugins</a>
+            <a href="/admin/my/plugins/edit/" class="btn btn-secondary">Create Custom Plugin</a>
+        </div>
+    </div>
+    {{/if}}
 
     {{/inline}}
     {{#*inline "scripts"}}
-    <script src="/js/admin-my-workspace.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            if (AdminApp.initMyMarketplace) {
-                AdminApp.initMyMarketplace();
-            }
-        });
-    </script>
+    <script data-cfasync="false" src="/js/pages/admin-my-marketplace.js" type="module" defer></script>
     {{/inline}}
 {{/layout}}

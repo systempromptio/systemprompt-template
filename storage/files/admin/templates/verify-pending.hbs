@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>systemprompt.io - Verify Your Email</title>
+    <link rel="stylesheet" href="/css/core/fonts.css?v={{css_version}}">
+    <link rel="stylesheet" href="/css/admin-bundle.css?v={{css_version}}">
+    <script>(function(){var t;try{t=localStorage.getItem('sp-admin-theme')}catch(e){}if(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)t='dark';if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}})();</script>
+    <style>html,body{margin:0;background:oklch(0.96 0.004 70);color:#1c1917;font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}[data-theme="dark"],[data-theme="dark"] body{background:oklch(0.16 0.01 45);color:#fafaf9}</style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="card">
+            <div class="login-logo">
+                <img src="/files/images/logo-dark.svg" alt="systemprompt.io" height="40" class="logo-light">
+                <img src="/files/images/logo.svg" alt="systemprompt.io" height="40" class="logo-dark">
+            </div>
+            <p class="login-subtitle">Verify your email</p>
+
+            <div id="verify-message" class="text-center p-4">
+                <p class="text-base text-primary mb-2">Check your inbox</p>
+                <p class="text-sm text-tertiary mb-4">
+                    We've sent a verification link to your email address.
+                    Click the link to activate your account.
+                </p>
+                <p class="text-sm text-tertiary mb-4">
+                    The link expires in 24 hours.
+                </p>
+
+                <div id="resend-success" class="login-error login-error--success" hidden>
+                    Verification email sent!
+                </div>
+                <div id="resend-error" class="login-error" hidden></div>
+
+                <div class="form-group">
+                    <label for="resend-email">Email</label>
+                    <input class="form-input" type="email" id="resend-email" placeholder="you@company.com" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="resend-btn" class="btn btn-primary w-full">Resend Verification Email</button>
+                </div>
+            </div>
+
+            <p class="text-center mt-4 text-tertiary text-sm">
+                <a href="/api/public/auth/session" data-action="resend-verification">Sign out</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const resendBtn = document.getElementById('resend-btn');
+        const emailInput = document.getElementById('resend-email');
+        const successEl = document.getElementById('resend-success');
+        const errorEl = document.getElementById('resend-error');
+        let cooldown = false;
+
+        resendBtn.addEventListener('click', async function() {
+            if (cooldown) return;
+            const email = emailInput.value.trim();
+            if (!email || !email.includes('@')) {
+                errorEl.textContent = 'Please enter a valid email address.';
+                errorEl.style.display = 'block';
+                successEl.style.display = 'none';
+                return;
+            }
+
+            resendBtn.disabled = true;
+            resendBtn.textContent = 'Sending...';
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/public/auth/resend-verification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                if (res.ok) {
+                    successEl.style.display = 'block';
+                    cooldown = true;
+                    let seconds = 60;
+                    resendBtn.textContent = 'Resend in ' + seconds + 's';
+                    const interval = setInterval(function() {
+                        seconds--;
+                        if (seconds <= 0) {
+                            clearInterval(interval);
+                            cooldown = false;
+                            resendBtn.disabled = false;
+                            resendBtn.textContent = 'Resend Verification Email';
+                        } else {
+                            resendBtn.textContent = 'Resend in ' + seconds + 's';
+                        }
+                    }, 1000);
+                } else {
+                    const data = await res.json();
+                    errorEl.textContent = data.error || 'Something went wrong. Please try again.';
+                    errorEl.style.display = 'block';
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = 'Resend Verification Email';
+                }
+            } catch(e) {
+                errorEl.textContent = 'Network error. Please try again.';
+                errorEl.style.display = 'block';
+                resendBtn.disabled = false;
+                resendBtn.textContent = 'Resend Verification Email';
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

@@ -1,7 +1,9 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::path::Path;
 
-use super::super::types::{AgentInfo, SkillInfo};
+use systemprompt::identifiers::{AgentId, SkillId};
+
+use super::super::types::{AgentInfo, RequiredSecret, SkillInfo};
 
 pub(crate) fn resolve_all_plugin_skill_ids(
     plugin: &systemprompt::models::PluginConfig,
@@ -49,32 +51,31 @@ pub(crate) fn resolve_plugin_skills(
     plugin: &systemprompt::models::PluginConfig,
     skills_path: &Path,
     agents_path: &Path,
-    enabled_map: &HashMap<String, bool>,
 ) -> Vec<SkillInfo> {
     resolve_all_plugin_skill_ids(plugin, skills_path, agents_path)
         .into_iter()
         .map(|skill_id| {
             let skill_dir = skills_path.join(&skill_id);
-            let (name, description) = read_skill_config(&skill_dir, &skill_id);
+            let (name, description, required_secrets) = read_skill_config(&skill_dir, &skill_id);
             let kebab_name = skill_id.replace('_', "-");
             let command = format!("/{}:{}", plugin.id, kebab_name);
-            let enabled = *enabled_map.get(&skill_id).unwrap_or(&true);
             SkillInfo {
-                id: skill_id,
+                id: skill_id.clone(),
                 name,
                 description,
                 command,
                 source: "system".to_string(),
-                enabled,
+                enabled: true,
+                required_secrets,
             }
         })
         .collect()
 }
 
-fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String) {
+fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String, Vec<RequiredSecret>) {
     let config_path = skill_dir.join("config.yaml");
     if !config_path.exists() {
-        return (skill_id.to_string(), String::new());
+        return (skill_id.to_string(), String::new(), Vec::new());
     }
     let cfg_text = std::fs::read_to_string(&config_path).unwrap_or_else(|e| {
         tracing::warn!(
@@ -102,7 +103,20 @@ fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String) {
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
-    (name, desc)
+    let required_secrets: Vec<RequiredSecret> = cfg
+        .get("required_secrets")
+        .and_then(|v| serde_yaml::from_value(v.clone()).ok())
+        .unwrap_or_default();
+    (name, desc, required_secrets)
+}
+
+pub(crate) fn read_skill_required_secrets(
+    skills_path: &Path,
+    skill_id: &str,
+) -> Vec<RequiredSecret> {
+    let skill_dir = skills_path.join(skill_id);
+    let (_, _, required_secrets) = read_skill_config(&skill_dir, skill_id);
+    required_secrets
 }
 
 pub(super) fn collect_agent_skills(agent_ids: &[String], agents_path: &Path) -> Vec<String> {
@@ -185,9 +199,9 @@ pub(crate) fn resolve_plugin_agents(
     agent_ids
         .into_iter()
         .map(|agent_id| {
-            let description = get_agent_description(&agent_id, agents_path)
+            let description = agent_description(&agent_id, agents_path)
                 .unwrap_or_else(|| format!("{agent_id} agent"));
-            let enabled = get_agent_enabled(&agent_id, agents_path);
+            let enabled = agent_enabled(&agent_id, agents_path);
             AgentInfo {
                 id: agent_id.clone(),
                 name: agent_id,
@@ -198,7 +212,7 @@ pub(crate) fn resolve_plugin_agents(
         .collect()
 }
 
-fn get_agent_enabled(agent_id: &str, agents_dir: &Path) -> bool {
+fn agent_enabled(agent_id: &str, agents_dir: &Path) -> bool {
     if !agents_dir.exists() {
         return true;
     }
@@ -227,7 +241,7 @@ fn get_agent_enabled(agent_id: &str, agents_dir: &Path) -> bool {
     true
 }
 
-fn get_agent_description(agent_id: &str, agents_dir: &Path) -> Option<String> {
+fn agent_description(agent_id: &str, agents_dir: &Path) -> Option<String> {
     if !agents_dir.exists() {
         return None;
     }

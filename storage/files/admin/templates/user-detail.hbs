@@ -21,7 +21,6 @@
             <tr><td><strong>User ID</strong></td><td>{{user.user_id}}</td></tr>
             {{#if user.display_name}}<tr><td><strong>Display Name</strong></td><td>{{user.display_name}}</td></tr>{{/if}}
             {{#if user.email}}<tr><td><strong>Email</strong></td><td>{{user.email}}</td></tr>{{/if}}
-            {{#if user.department}}<tr><td><strong>Department</strong></td><td><span class="badge badge-blue">{{user.department}}</span></td></tr>{{/if}}
             {{#if user.roles}}<tr><td><strong>Roles</strong></td><td>{{#each user.roles}}<span class="badge badge-blue">{{this}}</span> {{/each}}</td></tr>{{/if}}
             <tr><td><strong>Status</strong></td><td>{{#if user.is_active}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Inactive</span>{{/if}}</td></tr>
             <tr><td><strong>Member Since</strong></td><td>{{formatDate user.created_at}}</td></tr>
@@ -30,7 +29,7 @@
 
     {{#if gamification}}
     <div class="gamification-profile mb-6">
-        <h3>Gamification</h3>
+        <h3>Achievements</h3>
         <div class="dashboard-stats mb-6">
             {{> components/stat-card label="Total XP" value=(default gamification.total_xp 0)}}
             {{> components/stat-card label="Rank" value=(default gamification.rank_name "Spark")}}
@@ -44,16 +43,20 @@
         <div class="achievement-grid">
             {{#each enriched_achievements}}
             <div class="achievement-card unlocked">
-                <div class="achievement-icon">{{#if (eq category "First Steps")}}&#x26A1;{{else if (eq category "Milestones")}}&#x1F4CA;{{else if (eq category "Exploration")}}&#x1F50D;{{else if (eq category "Creation")}}&#x2728;{{else if (eq category "Streaks")}}&#x1F525;{{else if (eq category "Ranks")}}&#x1F3C6;{{else if (eq category "Tokens")}}&#x1FA99;{{else if (eq category "Special")}}&#x2B50;{{else}}&#x2B50;{{/if}}</div>
-                <div style="font-weight:600;font-size:var(--text-sm);color:var(--text-primary)">{{name}}</div>
-                <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1)">{{description}}</div>
-                <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1)"><span class="badge badge-blue">{{category}}</span></div>
+                <div class="achievement-icon">{{#if (eq category "First Steps")}}&#x26A1;{{else if (eq category "Milestones")}}&#x1F4CA;{{else if (eq category "Exploration")}}&#x1F50D;{{else if (eq category "Creation")}}&#x2728;{{else if (eq category "Streaks")}}&#x1F525;{{else if (eq category "Ranks")}}&#x1F3C6;{{else if (eq category "Bytes")}}&#x1FA99;{{else if (eq category "Special")}}&#x2B50;{{else}}&#x2B50;{{/if}}</div>
+                <div class="achievement-name">{{name}}</div>
+                <div class="achievement-detail">{{description}}</div>
+                <div class="achievement-detail"><span class="badge badge-blue">{{category}}</span></div>
             </div>
             {{/each}}
         </div>
     </div>
     {{/if}}
     {{/if}}
+
+    <div class="card mb-6 text-center">
+        <a href="/admin/my/activity" class="btn btn-primary">View Full Activity Dashboard</a>
+    </div>
 
     {{#if user.activity_summary}}
     <div class="card mb-6">
@@ -96,7 +99,7 @@
         <div class="live-feed">
             {{#each user.recent_activity}}
             <div class="feed-item">
-                <div class="feed-icon {{#if (eq category "login")}}feed-blue{{else if (eq category "skill_usage")}}feed-orange{{else if (eq category "marketplace_edit")}}feed-green{{else if (eq category "marketplace_connect")}}feed-purple{{else if (eq category "session")}}feed-cyan{{else}}feed-blue{{/if}}"></div>
+                <div class="feed-icon {{#if (eq category "login")}}feed-blue{{else if (eq category "skill_usage")}}feed-orange{{else if (eq category "marketplace_edit")}}feed-green{{else if (eq category "marketplace_connect")}}feed-purple{{else if (eq category "claude_code")}}feed-cyan{{else if (eq category "session")}}feed-cyan{{else}}feed-blue{{/if}}"></div>
                 <div class="feed-content">
                     <span class="feed-text">{{description}}</span>
                     <span class="feed-time" title="{{formatDate created_at}}">{{relativeTime created_at}}</span>
@@ -114,10 +117,5 @@
     {{/if}}
     {{/inline}}
     {{#*inline "scripts"}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-        });
-    </script>
     {{/inline}}
 {{/layout}}

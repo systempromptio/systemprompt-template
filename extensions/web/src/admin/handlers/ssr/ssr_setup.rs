@@ -1,0 +1,93 @@
+use crate::admin::templates::AdminTemplateEngine;
+use crate::admin::types::{MarketplaceContext, UserContext};
+use axum::extract::{Extension, Query};
+use axum::response::{IntoResponse, Response};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+
+#[derive(Serialize)]
+struct SetupPhase {
+    number: u8,
+    title: &'static str,
+    description: &'static str,
+    guide_url: &'static str,
+    action_url: &'static str,
+    action_label: &'static str,
+    complete: bool,
+    current: bool,
+}
+
+#[derive(Deserialize)]
+pub(crate) struct SetupQuery {
+    #[serde(default)]
+    verified: Option<String>,
+}
+
+pub(crate) async fn setup_page(
+    Extension(user_ctx): Extension<UserContext>,
+    Extension(mkt_ctx): Extension<MarketplaceContext>,
+    Extension(engine): Extension<AdminTemplateEngine>,
+    Query(query): Query<SetupQuery>,
+) -> Response {
+    if mkt_ctx.has_completed_onboarding {
+        return axum::response::Redirect::temporary("/control-center").into_response();
+    }
+
+    let phase1_complete = mkt_ctx.has_completed_onboarding;
+    let phase2_complete = phase1_complete && mkt_ctx.total_plugins > 0;
+    let phase3_complete = phase2_complete && mkt_ctx.total_skills > 0;
+    let just_verified = query.verified.is_some();
+
+    let phases = vec![
+        SetupPhase {
+            number: 1,
+            title: "Connect Claude to systemprompt.io",
+            description: "The essential first step. Connect your Claude surface so skills, plugins, and analytics actually work. Without this, nothing else matters.",
+            guide_url: "/platform/connecting",
+            action_url: "",
+            action_label: "",
+            complete: phase1_complete,
+            current: !phase1_complete,
+        },
+        SetupPhase {
+            number: 2,
+            title: "Browse and Fork Plugins",
+            description: "Explore the plugin catalogue. Fork industry-specific plugins to build your personalised skill library with proven defaults.",
+            guide_url: "/platform/forking-plugins",
+            action_url: "/admin/browse/plugins/",
+            action_label: "Browse Plugins",
+            complete: phase2_complete,
+            current: phase1_complete && !phase2_complete,
+        },
+        SetupPhase {
+            number: 3,
+            title: "Customize Your Skills",
+            description: "Use the Skill Manager MCP server to edit forked skills, create new ones, and build a library that matches how your team works.",
+            guide_url: "/platform/skills/editing",
+            action_url: "/admin/my/skills/",
+            action_label: "My Skills",
+            complete: phase3_complete,
+            current: phase2_complete && !phase3_complete,
+        },
+        SetupPhase {
+            number: 4,
+            title: "Monitor, Report, and Improve",
+            description: "Track skill effectiveness with analytics. Identify what is working, retire what is not, and iterate your way to a world-class skill library.",
+            guide_url: "/platform/control-center",
+            action_url: "/control-center",
+            action_label: "Control Center",
+            complete: false,
+            current: phase3_complete,
+        },
+    ];
+
+    let data = json!({
+        "page": "setup",
+        "title": "Setup Guide",
+        "phases": phases,
+        "all_phases_started": phase1_complete,
+        "just_verified": just_verified,
+    });
+
+    super::render_page(&engine, "setup", &data, &user_ctx, &mkt_ctx)
+}

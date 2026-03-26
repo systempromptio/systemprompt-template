@@ -8,6 +8,9 @@ use axum::{
 };
 use sqlx::PgPool;
 
+use systemprompt::identifiers::UserId;
+
+use crate::admin::handlers::responses::{ChangelogListResponse, VersionsListResponse};
 use crate::admin::repositories;
 
 pub(crate) async fn marketplace_versions_handler(
@@ -15,19 +18,20 @@ pub(crate) async fn marketplace_versions_handler(
     Path(user_id_raw): Path<String>,
     headers: HeaderMap,
 ) -> Response {
-    let user_id = user_id_raw
+    let user_id_str = user_id_raw
         .strip_suffix(".git")
         .unwrap_or(&user_id_raw)
         .to_string();
+    let user_id = UserId::new(user_id_str.clone());
 
-    if let Err(r) = super::authenticate(&headers, &user_id) {
+    if let Err(r) = super::authenticate(&headers, &user_id_str) {
         return *r;
     }
 
     match repositories::marketplace_versions::list_marketplace_versions(pool.as_ref(), &user_id)
         .await
     {
-        Ok(versions) => Json(versions).into_response(),
+        Ok(versions) => Json(VersionsListResponse { versions }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to list versions");
             super::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Failed to list versions")
@@ -40,17 +44,18 @@ pub(crate) async fn marketplace_changelog_handler(
     Path(user_id_raw): Path<String>,
     headers: HeaderMap,
 ) -> Response {
-    let user_id = user_id_raw
+    let user_id_str = user_id_raw
         .strip_suffix(".git")
         .unwrap_or(&user_id_raw)
         .to_string();
+    let user_id = UserId::new(user_id_str.clone());
 
-    if let Err(r) = super::authenticate(&headers, &user_id) {
+    if let Err(r) = super::authenticate(&headers, &user_id_str) {
         return *r;
     }
 
     match repositories::marketplace_versions::list_changelog(pool.as_ref(), &user_id, 50).await {
-        Ok(entries) => Json(entries).into_response(),
+        Ok(entries) => Json(ChangelogListResponse { entries }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to list changelog");
             super::error_response(
@@ -91,10 +96,28 @@ pub(crate) async fn get_base_skill_content_handler(
         return super::error_response(StatusCode::NOT_FOUND, "Base skill config not found");
     };
 
-    let content_str = std::fs::read_to_string(&content_path).unwrap_or_else(|_| String::new());
+    let content_str = match std::fs::read_to_string(&content_path) {
+        Ok(s) => s,
+        Err(e) => {
+            tracing::warn!(error = %e, path = %content_path.display(), "Failed to read skill content");
+            return super::error_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to read skill content",
+            );
+        }
+    };
 
-    let config: serde_json::Value =
-        serde_yaml::from_str(&config_str).unwrap_or(serde_json::json!({}));
+    // JSON: protocol boundary (skill config YAML has user-defined schema)
+    let config: serde_json::Value = match serde_yaml::from_str(&config_str) {
+        Ok(v) => v,
+        Err(e) => {
+            tracing::warn!(error = %e, path = %config_path.display(), "Failed to parse skill config YAML");
+            return super::error_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to parse skill config",
+            );
+        }
+    };
 
     let name = config
         .get("name")
@@ -107,13 +130,15 @@ pub(crate) async fn get_base_skill_content_handler(
         .unwrap_or("")
         .to_string();
 
-    Json(serde_json::json!({
-        "skill_id": skill_id,
-        "name": name,
-        "description": description,
-        "content": content_str,
-        "config": config_str,
-    }))
+    Json(
+        crate::admin::handlers::responses::BaseSkillContentResponse {
+            skill_id,
+            name,
+            description,
+            content: content_str,
+            config: config_str,
+        },
+    )
     .into_response()
 }
 
@@ -122,16 +147,17 @@ pub(crate) async fn marketplace_version_detail_handler(
     Path((user_id_raw, version_id)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Response {
-    let user_id = user_id_raw
+    let user_id_str = user_id_raw
         .strip_suffix(".git")
         .unwrap_or(&user_id_raw)
         .to_string();
+    let user_id = UserId::new(user_id_str.clone());
 
-    if let Err(r) = super::authenticate(&headers, &user_id) {
+    if let Err(r) = super::authenticate(&headers, &user_id_str) {
         return *r;
     }
 
-    match repositories::marketplace_versions::get_marketplace_version(
+    match repositories::marketplace_versions::find_marketplace_version(
         pool.as_ref(),
         &user_id,
         &version_id,
@@ -149,7 +175,7 @@ pub(crate) async fn marketplace_version_detail_handler(
 
 pub(crate) async fn marketplace_all_versions_handler(State(pool): State<Arc<PgPool>>) -> Response {
     match repositories::marketplace_versions::list_all_versions_summary(pool.as_ref()).await {
-        Ok(versions) => Json(versions).into_response(),
+        Ok(versions) => Json(VersionsListResponse { versions }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to list all versions");
             super::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Failed to list versions")

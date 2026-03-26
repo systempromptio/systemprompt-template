@@ -2,23 +2,6 @@ use anyhow::{Context, Result};
 use std::path::PathBuf;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-const CSS_MODULE_ORDER: &[&str] = &[
-    "tokens.css",
-    "base.css",
-    "sidebar.css",
-    "tables.css",
-    "dashboard.css",
-    "components.css",
-    "hooks.css",
-    "panels.css",
-    "plugins.css",
-    "gamification.css",
-    "access-control.css",
-    "org-views.css",
-    "login.css",
-    "responsive.css",
-];
-
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BundleAdminCssJob;
 
@@ -40,13 +23,32 @@ impl BundleAdminCssJob {
             .unwrap_or(&css_dir)
             .join("admin-bundle.css");
 
+        // Auto-discover CSS files and sort lexicographically.
+        // Numeric prefixes (01-, 02-, ..., 14-) ensure correct load order.
+        let mut css_files: Vec<PathBuf> = Vec::new();
+        let mut read_dir = tokio::fs::read_dir(&css_dir)
+            .await
+            .with_context(|| format!("Failed to read CSS directory: {}", css_dir.display()))?;
+
+        while let Some(entry) = read_dir.next_entry().await? {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) == Some("css") {
+                css_files.push(path);
+            }
+        }
+
+        css_files.sort();
+
         let mut bundle = String::new();
         let mut bundled = 0u64;
         let mut failed = 0u64;
 
-        for filename in CSS_MODULE_ORDER {
-            let file_path = css_dir.join(filename);
-            match tokio::fs::read_to_string(&file_path).await {
+        for file_path in &css_files {
+            let filename = file_path
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy();
+            match tokio::fs::read_to_string(file_path).await {
                 Ok(content) => {
                     if !bundle.is_empty() {
                         bundle.push('\n');

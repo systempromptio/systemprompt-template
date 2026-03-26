@@ -1,0 +1,128 @@
+@layer utilities {
+
+.loading-shimmer {
+    background: linear-gradient(90deg, var(--sp-shimmer-from) 25%, var(--sp-shimmer-via) 50%, var(--sp-shimmer-to) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: var(--sp-radius-sm);
+}
+
+/* ── Flush-left layout system ──
+   Elements that should touch the sidebar get negative margin to break
+   out of the parent padding, flat left radius, and no left border.
+   --sp-admin-gutter is the current content padding-left value. */
+/* Full-width flush: tables, toolbars, metric ribbons, tabs, charts */
+.admin-main .table-container,
+.admin-main .metric-ribbon,
+.admin-main .cc-tabs,
+.admin-main .toolbar,
+.admin-main .usage-chart-container,
+.admin-main .cc-stats-bar {
+    margin-left: calc(-1 * var(--sp-space-6));
+    border-radius: 0 0.375rem 1.125rem 0;
+    border-left: none;
+}
+
+/* Tabs: flat left, no rounding */
+.admin-main .cc-tabs {
+    border-radius: 0 var(--sp-radius-brand-tr) 0 0;
+}
+
+/* Toolbar: search inputs inside should also lose left radius */
+.admin-main .toolbar .search-input,
+.admin-main .toolbar .filter-select {
+    border-radius: 0 var(--sp-radius-button) var(--sp-radius-button) 0;
+}
+
+/* Cards, stat cards, alert sections: flush-left radius (no negative margin) */
+.admin-main .card,
+.admin-main .alert-section,
+.admin-main .quick-stat-card,
+.admin-main .stat-card,
+.admin-main .sf-session-card,
+.admin-main .realtime-pulse-card {
+    border-radius: 0 0.375rem 1.125rem 0;
+}
+
+/* Card headers match the flush pattern */
+.admin-main .card-header {
+    border-radius: 0 var(--sp-radius-brand-tr) 0 0;
+}
+
+/* Stat card grids: flush the whole grid to sidebar */
+.admin-main .dashboard-grid,
+.admin-main .stats-grid-3col,
+.admin-main .quick-stats-grid,
+.admin-main .realtime-pulse-grid,
+.admin-main .health-cards,
+.admin-main .dashboard-stats {
+    margin-left: calc(-1 * var(--sp-space-6));
+    padding-left: var(--sp-space-6);
+}
+
+/* Dashboard tabs wrapper: flush to sidebar */
+.admin-main .dashboard-tabs {
+    margin-left: calc(-1 * var(--sp-space-6));
+}
+
+/* Two-column grids: flush the grid, children handle themselves */
+.admin-main .dashboard-two-col,
+.admin-main .alerts-row {
+    margin-left: calc(-1 * var(--sp-space-6));
+    padding-left: var(--sp-space-6);
+}
+
+/* Nested elements inside cards: no extra margin, flat radius */
+.admin-main .card .table-container,
+.admin-main .card-body--flush .table-container {
+    margin-left: 0;
+    border-radius: 0;
+    border-left: none;
+}
+
+/* Right-column items in grids: restore standard brand radius */
+.admin-main .dashboard-two-col > *:nth-child(2n) > .card,
+.admin-main .dashboard-two-col > *:nth-child(2n) > .table-container,
+.admin-main .alerts-row > *:nth-child(2n) {
+    border-radius: var(--sp-radius-card-brand);
+    border-left: 1px solid var(--sp-border-subtle);
+    margin-left: 0;
+}
+
+/* Preserve colored left borders on alert variants */
+.admin-main .alert-danger {
+    border-left: 4px solid var(--sp-danger);
+}
+.admin-main .alert-warning {
+    border-left: 4px solid var(--sp-warning);
+}
+
+.px-6 { padding-left: var(--sp-space-6); padding-right: var(--sp-space-6); }
+
+.entity-row-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--sp-accent); }
+.events-row { cursor: pointer; }
+.events-row:hover { background: var(--sp-accent-dim); }
+.events-detail-row > td { padding: 0; background: var(--sp-bg-surface-raised); }
+.group-header-row { background: var(--sp-bg-surface-raised); font-weight: 600; }
+.group-header-row td { border-bottom: 2px solid var(--sp-border-default); }
+
+.field-label {
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+    margin-bottom: var(--sp-space-1);
+    display: block;
+}
+.field-input {
+    width: 100%;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    font-size: var(--sp-text-sm);
+    font-family: inherit;
+    color: var(--sp-text-primary);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-button);
+    transition: border-color var(--sp-duration-fast);
+}
+.field-input:focus { outline: none; border-color: var(--sp-accent); box-shadow: 0 0 0 2px color-mix(in oklch, var(--sp-accent) 20%, transparent); }
+}

@@ -1,0 +1,82 @@
+@layer utilities {
+
+.marketplace-empty-heading {
+  font-size: var(--sp-text-lg);
+  font-weight: 600;
+  margin: 0 0 var(--sp-space-2);
+}
+.marketplace-empty-text {
+  max-width: 420px;
+  margin: 0 auto var(--sp-space-5);
+  line-height: 1.5;
+}
+
+.plugin-view-header {
+  margin: 0 0 var(--sp-space-2);
+  font-size: var(--sp-text-xl);
+  font-weight: 700;
+}
+.plugin-view-desc {
+  margin: 0 0 var(--sp-space-3);
+  max-width: 600px;
+}
+
+.panel-title-inline {
+  margin: 0;
+  font-size: var(--sp-text-lg);
+}
+
+.link-primary-bold {
+  color: var(--sp-text-primary);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.badge-padded { padding: var(--sp-space-1) var(--sp-space-3); }
+.btn-compact { font-size: var(--sp-text-xs); padding: 0.125rem var(--sp-space-2); }
+
+.mkt-list { display: flex; flex-direction: column; gap: var(--sp-space-3); }
+.mkt-card-accent { border-left: 3px solid var(--sp-accent); }
+.mkt-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--sp-radius-full);
+  background: var(--sp-accent);
+  color: var(--sp-text-on-accent);
+  font-weight: 700;
+  font-size: var(--sp-text-xs);
+}
+.mkt-card-title { margin: 0; font-size: var(--sp-text-base); font-weight: 600; color: var(--sp-text-primary); }
+.mkt-card-desc { margin: var(--sp-space-1) 0 0; font-size: var(--sp-text-sm); color: var(--sp-text-secondary); }
+.mkt-expand-icon {
+  font-size: var(--sp-text-sm);
+  color: var(--sp-text-tertiary);
+  transition: transform var(--sp-duration-fast) var(--sp-ease-out);
+  display: inline-block;
+}
+.mkt-details {
+  padding: var(--sp-space-3);
+  border-top: 1px solid var(--sp-border-primary);
+}
+.min-w-0 { min-width: 0; }
+
+.xp-bar-track {
+  background: var(--sp-bg-tertiary);
+  border-radius: var(--sp-radius-sm);
+  height: 8px;
+  overflow: hidden;
+}
+.xp-bar-fill {
+  background: var(--sp-color-primary);
+  width: var(--sp-fill);
+  height: 100%;
+  border-radius: var(--sp-radius-sm);
+}
+
+.py-2 { padding-top: var(--sp-space-2); padding-bottom: var(--sp-space-2); }
+.mb-1 { margin-bottom: var(--sp-space-1); }
+
+}

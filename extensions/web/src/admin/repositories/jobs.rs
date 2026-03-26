@@ -5,7 +5,8 @@ use sqlx::PgPool;
 use crate::admin::types::JobSummary;
 
 pub async fn list_jobs(pool: &Arc<PgPool>) -> Result<Vec<JobSummary>, sqlx::Error> {
-    sqlx::query_as::<_, JobSummary>(
+    sqlx::query_as!(
+        JobSummary,
         r"
         SELECT
             id,

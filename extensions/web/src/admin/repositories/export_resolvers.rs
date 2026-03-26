@@ -2,12 +2,13 @@ use std::collections::HashSet;
 use std::path::Path;
 
 use super::plugin_resolvers::collect_agent_skills;
+use crate::error::MarketplaceError;
 
 pub(super) fn resolve_export_skills(
     plugin: &systemprompt::models::PluginConfig,
     skills_path: &Path,
     agents_path: &Path,
-) -> Result<Vec<(String, std::path::PathBuf)>, anyhow::Error> {
+) -> Result<Vec<(String, std::path::PathBuf)>, MarketplaceError> {
     let mut resolved = Vec::new();
 
     if plugin.skills.source == systemprompt::models::ComponentSource::Explicit {
@@ -60,7 +61,11 @@ pub(super) fn resolve_export_skills(
     Ok(resolved)
 }
 
-pub(super) fn build_skill_md(skill_id: &str, skill_dir: &Path) -> Result<String, anyhow::Error> {
+pub(super) fn build_skill_md(
+    skill_id: &str,
+    skill_dir: &Path,
+    skill_hooks_yaml: Option<&str>,
+) -> Result<String, MarketplaceError> {
     let config_path = skill_dir.join("config.yaml");
     let description = if config_path.exists() {
         let cfg_text = std::fs::read_to_string(&config_path)?;
@@ -85,11 +90,16 @@ pub(super) fn build_skill_md(skill_id: &str, skill_dir: &Path) -> Result<String,
         )
     };
 
+    let hooks_section = skill_hooks_yaml
+        .map(|h| format!("{h}\n"))
+        .unwrap_or_default();
+
     let kebab_name = skill_id.replace('_', "-");
     Ok(format!(
-        "---\nname: {}\ndescription: \"{}\"\n---\n\n{}\n",
+        "---\nname: {}\ndescription: \"{}\"\n{}---\n\n{}\n",
         kebab_name,
         description.replace('"', "\\\""),
+        hooks_section,
         body.trim()
     ))
 }
@@ -191,7 +201,7 @@ fn collect_aux_recursive(
 pub(super) fn resolve_export_agents(
     plugin: &systemprompt::models::PluginConfig,
     services_path: &Path,
-) -> Result<Vec<String>, anyhow::Error> {
+) -> Result<Vec<String>, MarketplaceError> {
     if plugin.agents.source == systemprompt::models::ComponentSource::Explicit {
         return Ok(plugin.agents.include.clone());
     }
@@ -226,7 +236,10 @@ pub(super) fn resolve_export_agents(
     Ok(ids)
 }
 
-pub(super) fn build_agent_md(agent_id: &str, agents_dir: &Path) -> Result<String, anyhow::Error> {
+pub(super) fn build_agent_md(
+    agent_id: &str,
+    agents_dir: &Path,
+) -> Result<String, MarketplaceError> {
     if !agents_dir.exists() {
         return Ok(format!(
             "---\nname: {agent_id}\ndescription: \"{agent_id} agent\"\n---\n\nYou are the {agent_id} agent.\n",

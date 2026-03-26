@@ -1,0 +1,98 @@
+
+
+
+.cc-skill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--sp-space-3);
+}
+.cc-skill-card {
+    background: var(--sp-bg-surface-gradient);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-brand);
+    padding: var(--sp-space-4);
+    transition: border-color var(--sp-duration-fast), box-shadow var(--sp-duration-fast);
+    box-shadow: var(--sp-shadow-card), var(--sp-shadow-inner-glow);
+}
+.cc-skill-card:hover {
+    border-color: var(--sp-accent);
+    box-shadow: var(--sp-shadow-card-hover);
+}
+.cc-skill-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--sp-space-3);
+}
+.cc-skill-card-name {
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+    word-break: break-word;
+}
+.cc-skill-card-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--sp-space-2);
+    text-align: center;
+}
+.cc-skill-stat {
+    display: flex;
+    flex-direction: column;
+}
+.cc-skill-stat-value {
+    font-size: var(--sp-text-lg);
+    font-weight: 700;
+    color: var(--sp-text-primary);
+    line-height: 1.2;
+}
+.cc-skill-stat-label {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cc-components-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--sp-space-4);
+}
+.cc-component-section {
+    background: var(--sp-bg-surface-gradient);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-brand);
+    padding: var(--sp-space-4);
+    box-shadow: var(--sp-shadow-card), var(--sp-shadow-inner-glow);
+}
+.cc-component-title {
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+    margin: 0 0 var(--sp-space-3) 0;
+    padding-bottom: var(--sp-space-2);
+    border-bottom: 1px solid var(--sp-border-subtle);
+}
+.cc-component-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+}
+.cc-component-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-1) 0;
+}
+.cc-component-count {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    white-space: nowrap;
+}
+.cc-component-empty {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-tertiary);
+    font-style: italic;
+    margin: 0;
+}

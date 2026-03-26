@@ -1,17 +1,96 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
+
+    {{> components/page-hero}}
+
+    <section aria-label="Rank progression">
+    <div class="rank-ladder-section">
+        <h3 class="rank-ladder-title">Rank Progression <span class="rank-ladder-level-label">Level {{current_rank_level}} / {{max_rank}}</span></h3>
+        <div class="rank-ladder-wrapper">
+            {{#if can_scroll_left}}
+            <button class="rank-ladder-nav rank-ladder-nav--left" id="rank-nav-left" title="Show earlier ranks" aria-label="Show earlier ranks">&#9664;</button>
+            {{/if}}
+            <div class="rank-ladder" id="rank-ladder" data-current-level="{{current_rank_level}}" data-max-rank="{{max_rank}}">
+                {{#each ranks}}
+                <div class="rank-ladder__step{{#if is_current}} rank-ladder__step--current{{else}}{{#if is_completed}} rank-ladder__step--completed{{/if}}{{/if}}">
+                    <div class="rank-ladder__step-badge rank-tier-{{level}}" aria-label="Level {{level}}{{#if is_current}} - current rank{{/if}}{{#if is_completed}} - completed{{/if}}">{{level}}</div>
+                    <span class="rank-ladder__step-name">{{name}}</span>
+                    <span class="rank-ladder__step-xp">{{xp}} XP</span>
+                </div>
+                {{/each}}
+            </div>
+            {{#if can_scroll_right}}
+            <button class="rank-ladder-nav rank-ladder-nav--right" id="rank-nav-right" title="Show later ranks" aria-label="Show later ranks">&#9654;</button>
+            {{/if}}
+        </div>
+    </div>
+
+    </section>
+
+    <details class="xp-guide">
+        <summary class="xp-guide__header">
+            <span class="xp-guide__title">How to earn XP</span>
+            <span class="achievement-category__chevron">&#9654;</span>
+        </summary>
+        <div class="xp-guide__grid">
+            <div class="xp-guide__item"><span class="xp-guide__amount">+10</span><span class="xp-guide__action">Session completed</span></div>
+            <div class="xp-guide__item"><span class="xp-guide__amount">+50</span><span class="xp-guide__action">Create a skill</span></div>
+            <div class="xp-guide__item"><span class="xp-guide__amount">+25</span><span class="xp-guide__action">First unique skill use</span></div>
+            <div class="xp-guide__item"><span class="xp-guide__amount">+15</span><span class="xp-guide__action">Task completed</span></div>
+            <div class="xp-guide__item"><span class="xp-guide__amount">+15</span><span class="xp-guide__action">Daily streak bonus</span></div>
+            <div class="xp-guide__item"><span class="xp-guide__amount">+5</span><span class="xp-guide__action">Login</span></div>
+            <div class="xp-guide__item"><span class="xp-guide__amount">+5</span><span class="xp-guide__action">Spawn subagent</span></div>
+            <div class="xp-guide__item"><span class="xp-guide__amount">+3</span><span class="xp-guide__action">Submit prompt</span></div>
+            <div class="xp-guide__item"><span class="xp-guide__amount">+3</span><span class="xp-guide__action">Use a skill</span></div>
+            <div class="xp-guide__item"><span class="xp-guide__amount">+3</span><span class="xp-guide__action">MCP tool call</span></div>
+            <div class="xp-guide__item"><span class="xp-guide__amount">+2</span><span class="xp-guide__action">Tool use</span></div>
+            <div class="xp-guide__item"><span class="xp-guide__amount">+10</span><span class="xp-guide__action">Per MB content</span></div>
+        </div>
+    </details>
+
+    <section aria-label="Achievement collection">
+    <h3 class="mb-4">Achievements <span class="text-tertiary text-sm font-normal">{{unlocked_count}} of {{total_count}} unlocked</span></h3>
+
+    {{#each achievements_by_category}}
+    <details class="achievement-category" {{#if (gt unlocked_count 0)}}open{{/if}}>
+        <summary class="achievement-category__header">
+            <span class="achievement-category__icon">{{{icon}}}</span>
+            <span class="achievement-category__name">{{category}}</span>
+            <span class="achievement-category__count">{{unlocked_count}}/{{total_count}}</span>
+            <div class="achievement-category__bar" role="progressbar" aria-valuenow="{{completion_pct}}" aria-valuemin="0" aria-valuemax="100" aria-label="{{category}} completion">
+                <div class="achievement-category__bar-fill" style="width: {{completion_pct}}%"></div>
+            </div>
+            <span class="achievement-category__chevron">&#9654;</span>
+        </summary>
+        <div class="achievement-grid">
+            {{#each achievements}}
+            <div class="achievement-card {{#if is_unlocked}}unlocked{{else}}locked{{/if}}">
+                <div class="achievement-card__header">
+                    <span class="achievement-card__name">{{name}}</span>
+                    <span class="achievement-rarity achievement-rarity--{{rarity_label}}">{{rarity_label}}</span>
+                </div>
+                <div class="achievement-card__desc">{{description}}</div>
+                {{#if is_unlocked}}
+                <div class="achievement-card__date">Unlocked {{relativeTime unlocked_at}}</div>
+                {{else}}
+                <div class="achievement-card__status">Locked</div>
+                {{/if}}
+            </div>
+            {{/each}}
+        </div>
+    </details>
+    {{/each}}
+    </section>
+
+    {{#unless achievements_by_category}}
     <div id="achievements-content" aria-live="polite">
         <div class="loading-center"><div class="loading-spinner" role="status"><span class="sr-only">Loading...</span></div></div>
     </div>
+    {{/unless}}
+
     {{/inline}}
     {{#*inline "scripts"}}
-    <script src="/js/admin-achievements.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            AdminApp.renderAchievements();
-        });
-    </script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-achievements.js"></script>
     {{/inline}}
 {{/layout}}

@@ -194,11 +194,11 @@ pub(crate) async fn sync_marketplace_handler(
                 "sync",
                 "error",
                 None,
-                0,
-                1,
+                0i64,
+                1i64,
                 Some(&e.to_string()),
-                &user_ctx.user_id,
-                None,
+                user_ctx.user_id.as_str(),
+                None::<i64>,
             )
             .await;
             (
@@ -264,11 +264,11 @@ pub(crate) async fn publish_marketplace_handler(
                 "publish",
                 "error",
                 None,
-                0,
-                1,
+                0i64,
+                1i64,
                 Some(&e.to_string()),
-                &user_ctx.user_id,
-                None,
+                user_ctx.user_id.as_str(),
+                None::<i64>,
             )
             .await;
             (

@@ -1,0 +1,138 @@
+
+
+:root {
+  
+  --sp-primitive-orange-50:  oklch(0.96 0.03 60);
+  --sp-primitive-orange-100: oklch(0.93 0.06 58);
+  --sp-primitive-orange-200: oklch(0.85 0.12 55);
+  --sp-primitive-orange-300: oklch(0.78 0.15 53);
+  --sp-primitive-orange-400: oklch(0.75 0.16 52);
+  --sp-primitive-orange-500: oklch(0.72 0.17 52);
+  --sp-primitive-orange-600: oklch(0.67 0.18 50);
+  --sp-primitive-orange-700: oklch(0.57 0.16 48);
+  --sp-primitive-orange-800: oklch(0.47 0.13 47);
+  --sp-primitive-orange-900: oklch(0.37 0.09 46);
+  --sp-primitive-orange-950: oklch(0.25 0.05 45);
+
+  
+  --sp-primitive-warm-50:  oklch(0.98 0.004 70);
+  --sp-primitive-warm-100: oklch(0.96 0.005 70);
+  --sp-primitive-warm-200: oklch(0.92 0.008 65);
+  --sp-primitive-warm-300: oklch(0.86 0.010 60);
+  --sp-primitive-warm-400: oklch(0.70 0.01 70);
+  --sp-primitive-warm-500: oklch(0.53 0.01 65);
+  --sp-primitive-warm-600: oklch(0.41 0.01 60);
+  --sp-primitive-warm-700: oklch(0.34 0.01 55);
+  --sp-primitive-warm-800: oklch(0.24 0.01 50);
+  --sp-primitive-warm-900: oklch(0.20 0.01 50);
+  --sp-primitive-warm-950: oklch(0.13 0.01 45);
+
+  
+  --sp-primitive-white: oklch(1.00 0 0);
+  --sp-primitive-black: oklch(0 0 0);
+
+  
+  --sp-primitive-green-500:  oklch(0.72 0.19 155);
+  --sp-primitive-green-400:  oklch(0.78 0.16 165);
+  --sp-primitive-green-300:  oklch(0.80 0.18 155);
+  --sp-primitive-amber-500:  oklch(0.83 0.16 85);
+  --sp-primitive-amber-400:  oklch(0.76 0.16 75);
+  --sp-primitive-red-500:    oklch(0.63 0.21 25);
+  --sp-primitive-red-400:    oklch(0.70 0.17 20);
+  --sp-primitive-blue-500:   oklch(0.62 0.18 260);
+  --sp-primitive-blue-400:   oklch(0.70 0.14 250);
+
+  
+  --sp-primitive-accent-blue:        oklch(0.70 0.14 250);
+  --sp-primitive-accent-blue-light:  oklch(0.78 0.10 255);
+  --sp-primitive-accent-purple:      oklch(0.68 0.18 300);
+  --sp-primitive-accent-purple-light: oklch(0.80 0.12 300);
+  --sp-primitive-accent-green:       oklch(0.80 0.18 155);
+  --sp-primitive-accent-green-light: oklch(0.88 0.14 155);
+  --sp-primitive-accent-pink:        oklch(0.70 0.17 350);
+  --sp-primitive-accent-pink-light:  oklch(0.80 0.12 350);
+  --sp-primitive-accent-cyan:        oklch(0.79 0.13 200);
+  --sp-primitive-accent-cyan-light:  oklch(0.87 0.10 200);
+
+  
+  --sp-text-xs:   clamp(0.7rem, 0.66rem + 0.2vw, 0.75rem);
+  --sp-text-sm:   clamp(0.8rem, 0.75rem + 0.25vw, 0.875rem);
+  --sp-text-base: clamp(0.875rem, 0.82rem + 0.28vw, 0.9375rem);
+  --sp-text-md:   clamp(0.9375rem, 0.87rem + 0.33vw, 1rem);
+  --sp-text-lg:   clamp(1rem, 0.93rem + 0.35vw, 1.125rem);
+  --sp-text-xl:   clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
+  --sp-text-2xl:  clamp(1.4rem, 1.2rem + 1vw, 1.75rem);
+  --sp-text-3xl:  clamp(1.75rem, 1.4rem + 1.75vw, 2.5rem);
+  --sp-text-4xl:  clamp(2.25rem, 1.6rem + 3.2vw, 4rem);
+
+  
+  --sp-leading-tight:   1.1;
+  --sp-leading-snug:    1.25;
+  --sp-leading-normal:  1.5;
+  --sp-leading-relaxed: 1.625;
+
+  
+  --sp-tracking-tight:  -0.02em;
+  --sp-tracking-normal: 0;
+  --sp-tracking-wide:   0.05em;
+
+  
+  --sp-font-normal:   400;
+  --sp-font-medium:   500;
+  --sp-font-semibold: 600;
+  --sp-font-bold:     700;
+
+  
+  --sp-space-1:  0.25rem;
+  --sp-space-2:  0.5rem;
+  --sp-space-3:  0.75rem;
+  --sp-space-4:  1rem;
+  --sp-space-5:  1.25rem;
+  --sp-space-6:  1.5rem;
+  --sp-space-8:  2rem;
+  --sp-space-10: 2.5rem;
+  --sp-space-12: 3rem;
+  --sp-space-16: 4rem;
+  --sp-space-20: 5rem;
+  --sp-space-24: 6rem;
+  --sp-space-32: 8rem;
+
+  
+  --sp-radius-xs:   0.125rem;
+  --sp-radius-sm:   0.25rem;
+  --sp-radius-md:   0.5rem;
+  --sp-radius-lg:   0.75rem;
+  --sp-radius-xl:   1rem;
+  --sp-radius-full: 9999px;
+
+  
+  --sp-corners-sm: 0.375rem 0.125rem 0.375rem 0.375rem;
+  --sp-corners-md: 1.125rem 0.375rem 1.125rem 1.125rem;
+  --sp-corners-lg: 1.5rem 0.5rem 1.5rem 1.5rem;
+  --sp-corners-inner-sm: 0.25rem 0.0625rem 0.25rem 0.25rem;
+  --sp-corners-inner-md: 0.625rem 0.25rem 0.625rem 0.625rem;
+  --sp-corners-inner-lg: 1.125rem 0.375rem 1.125rem 1.125rem;
+
+  
+  --sp-duration-instant:  50ms;
+  --sp-duration-fast:     100ms;
+  --sp-duration-normal:   200ms;
+  --sp-duration-moderate: 300ms;
+  --sp-duration-slow:     400ms;
+  --sp-duration-slower:   600ms;
+
+  
+  --sp-ease-default: ease-out;
+  --sp-ease-in:      ease-in;
+  --sp-ease-out:     ease-out;
+  --sp-ease-in-out:  ease-in-out;
+  --sp-ease-bounce:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --sp-ease-spring:  cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  
+  --sp-shadow-xs: 0 1px 2px oklch(0.30 0.02 50 / 0.06);
+  --sp-shadow-sm: 0 1px 3px oklch(0.30 0.02 50 / 0.08), 0 1px 2px oklch(0.30 0.02 50 / 0.06);
+  --sp-shadow-md: 0 4px 6px oklch(0.30 0.02 50 / 0.08), 0 2px 4px oklch(0.30 0.02 50 / 0.06);
+  --sp-shadow-lg: 0 10px 15px oklch(0.30 0.02 50 / 0.08), 0 4px 6px oklch(0.30 0.02 50 / 0.04);
+  --sp-shadow-xl: 0 20px 25px oklch(0.30 0.02 50 / 0.10), 0 8px 10px oklch(0.30 0.02 50 / 0.05);
+}

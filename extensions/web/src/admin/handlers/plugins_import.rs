@@ -8,11 +8,15 @@ use axum::{
 };
 use sqlx::PgPool;
 
+use systemprompt::identifiers::SkillId;
+
 use crate::admin::activity::{self, ActivityEntity, NewActivity};
+use crate::admin::handlers::shared;
 use crate::admin::repositories;
 use crate::admin::types::{CreateSkillRequest, ImportPluginRequest, UserContext};
 
 use super::resources::get_services_path;
+use super::responses::ImportUserBundleResponse;
 
 pub(crate) async fn import_plugin_handler(
     State(pool): State<Arc<PgPool>>,
@@ -37,32 +41,27 @@ async fn fetch_plugin_bundle(
     url: &str,
 ) -> Result<crate::admin::repositories::export::PluginBundle, Response> {
     let resp = reqwest::get(url).await.map_err(|e| {
-        (
+        shared::error_response(
             StatusCode::BAD_REQUEST,
-            Json(serde_json::json!({"error": format!("Failed to fetch URL: {e}")})),
+            &format!("Failed to fetch URL: {e}"),
         )
-            .into_response()
     })?;
 
     if !resp.status().is_success() {
         let status = resp.status();
-        return Err((
+        return Err(shared::error_response(
             StatusCode::BAD_REQUEST,
-            Json(serde_json::json!({"error": format!("Failed to fetch URL: HTTP {status}")})),
-        )
-            .into_response());
+            &format!("Failed to fetch URL: HTTP {status}"),
+        ));
     }
 
     resp.json::<crate::admin::repositories::export::PluginBundle>()
         .await
         .map_err(|e| {
-            (
+            shared::error_response(
                 StatusCode::BAD_REQUEST,
-                Json(
-                    serde_json::json!({"error": format!("Failed to parse plugin bundle JSON: {e}")}),
-                ),
+                &format!("Failed to parse plugin bundle JSON: {e}"),
             )
-                .into_response()
         })
 }
 
@@ -84,7 +83,7 @@ fn import_bundle_for_site(
                 activity::record(
                     &pool,
                     NewActivity::entity_imported(
-                        "admin",
+                        &systemprompt::identifiers::UserId::new("admin"),
                         ActivityEntity::Plugin,
                         &pid,
                         &name,
@@ -97,11 +96,7 @@ fn import_bundle_for_site(
         }
         Err(e) => {
             tracing::error!(error = %e, "Failed to import plugin");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response()
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
         }
     }
 }
@@ -123,11 +118,7 @@ async fn import_bundle_for_user(
         .collect();
 
     if skills.is_empty() {
-        return (
-            StatusCode::BAD_REQUEST,
-            Json(serde_json::json!({"error": "No skills found in bundle"})),
-        )
-            .into_response();
+        return shared::error_response(StatusCode::BAD_REQUEST, "No skills found in bundle");
     }
 
     let mut imported_count = 0u32;
@@ -140,7 +131,7 @@ async fn import_bundle_for_user(
             .unwrap_or(&skill_file.path)
             .to_string();
         let req = CreateSkillRequest {
-            skill_id: skill_id.clone(),
+            skill_id: SkillId::new(skill_id.clone()),
             name: skill_id.clone(),
             description: String::new(),
             content: skill_file.content.clone(),
@@ -168,10 +159,10 @@ async fn import_bundle_for_user(
 
     (
         StatusCode::CREATED,
-        Json(serde_json::json!({
-            "message": format!("Imported {imported_count} skills for current user"),
-            "imported_count": imported_count,
-        })),
+        Json(ImportUserBundleResponse {
+            message: format!("Imported {imported_count} skills for current user"),
+            imported_count,
+        }),
     )
         .into_response()
 }

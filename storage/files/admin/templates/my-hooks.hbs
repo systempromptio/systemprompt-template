@@ -1,28 +1,26 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    <!-- Toolbar -->
+    {{> components/page-hero}}
+
+    <section aria-label="Hooks">
     <div class="toolbar">
         <div class="search-group">
-            <input type="text" class="search-input" placeholder="Search hooks..." id="my-hooks-search">
+            <input type="text" class="search-input" placeholder="Search hooks..." id="my-hooks-search" aria-label="Search hooks">
         </div>
-        <select class="filter-select" id="my-hook-event-filter" style="min-width:160px">
-            <option value="">All Events</option>
-            {{#each hook_events}}
-            <option value="{{this}}">{{this}}</option>
-            {{/each}}
-        </select>
-        <button class="btn btn-secondary" id="my-hooks-bulk-bar" disabled>
-            Bulk Actions (<span data-bulk-count>0</span>)
-        </button>
-        <button class="btn btn-secondary" id="my-hooks-fork-btn">Fork from Org</button>
-        <a href="/admin/my/hooks/edit/" class="btn btn-primary">+ New Hook</a>
+        <button type="button" class="btn btn-primary" id="add-hook-btn">+ Add Custom Hook</button>
     </div>
 
-    <!-- Stats bar -->
-    <div class="config-stats" id="stats-my-hooks">
-        <span class="config-stat"><span class="config-stat-dot blue"></span> <span class="config-stat-value">{{hook_count}}</span> hooks</span>
-        <span class="config-stat"><span class="config-stat-dot green"></span> <span class="config-stat-value">{{enabled_count}}</span> enabled</span>
+    <p class="text-muted mb-4">Hooks fire on Claude Code events. They are created automatically when you install plugins, or you can create custom HTTP hooks.</p>
+
+    <div class="config-stats mb-4" id="stats-my-hooks">
+        <span class="badge badge-info">{{stats.total_count}} hook{{#if (not (eq stats.total_count 1))}}s{{/if}}</span>
+        <span class="badge badge-success">{{stats.enabled_count}} enabled</span>
+    </div>
+
+    <div class="entity-batch-bar" id="entity-batch-bar" hidden>
+        <span class="entity-batch-count" id="entity-batch-count">0 selected</span>
+        <button type="button" class="entity-batch-btn entity-batch-btn--danger" id="entity-batch-delete">Delete Selected</button>
     </div>
 
     {{#if hooks}}
@@ -30,73 +28,111 @@
         <table class="data-table" id="my-hooks-table">
             <thead>
                 <tr>
-                    <th style="width:40px" data-no-row-click><input type="checkbox" class="bulk-select-all"></th>
+                    <th class="col-checkbox"><input type="checkbox" id="entity-select-all" class="entity-batch-checkbox" aria-label="Select all"></th>
+                    <th>Event Type</th>
                     <th>Name</th>
-                    <th>Event</th>
+                    <th>Type</th>
+                    <th>Plugin</th>
                     <th>Matcher</th>
-                    <th>Async</th>
                     <th>Source</th>
-                    <th>Status</th>
+                    <th>Enabled</th>
                     <th class="col-actions"></th>
                 </tr>
             </thead>
             <tbody>
                 {{#each hooks}}
-                <tr class="clickable-row" data-entity-type="my-hook" data-entity-id="{{hook_id}}" data-name="{{toLowerCase name}}" data-event="{{event}}">
-                    <td data-no-row-click>
-                        <input type="checkbox" class="bulk-checkbox" data-entity-id="{{hook_id}}">
+                <tr class="clickable-row" data-expandable aria-expanded="false" data-entity-id="{{this.id}}"
+                    data-hook-id="{{this.id}}"
+                    data-hook-name="{{this.hook_name}}"
+                    data-description="{{this.description}}"
+                    data-event-type="{{this.event_type}}"
+                    data-hook-type="{{this.hook_type}}"
+                    data-url="{{this.url}}"
+                    data-command="{{this.command}}"
+                    data-matcher="{{this.matcher}}"
+                    data-timeout="{{this.timeout}}"
+                    data-is-async="{{this.is_async}}"
+                    data-enabled="{{this.enabled}}"
+                    data-is-default="{{this.is_default}}"
+                    data-plugin-id="{{this.plugin_id}}"
+                    data-name="{{toLowerCase this.hook_name}}">
+                    <td class="col-checkbox" data-no-row-click><input type="checkbox" class="entity-batch-checkbox entity-row-checkbox" data-batch-id="{{this.id}}" {{#if this.is_default}}disabled title="Default hooks cannot be deleted"{{/if}} aria-label="Select {{this.hook_name}}"></td>
+                    <td><code>{{this.event_type}}</code></td>
+                    <td><div class="cell-primary"><span class="expand-indicator" data-expand-for="{{this.id}}" aria-hidden="true">&#9654;</span> {{this.hook_name}}</div></td>
+                    <td>
+                        {{#if (eq this.hook_type "http")}}
+                        <span class="badge badge-info">http</span>
+                        {{else}}
+                        <span class="badge badge-purple">command</span>
+                        {{/if}}
                     </td>
                     <td>
-                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{hook_id}}">&#9654;</span> {{name}}</div>
-                        {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
+                        {{#if this.plugin_id}}
+                        <span class="badge badge-purple">{{this.plugin_name}}</span>
+                        {{else}}
+                        <span class="text-tertiary">&mdash;</span>
+                        {{/if}}
                     </td>
-                    <td><span class="badge badge-blue">{{event}}</span></td>
+                    <td><code class="text-tertiary">{{this.matcher}}</code></td>
                     <td>
-                        {{#if matcher}}<code class="code-inline" style="font-size:var(--text-xs)">{{truncate matcher 30}}</code>{{else}}<span style="color:var(--text-tertiary)">--</span>{{/if}}
+                        {{#if this.is_default}}
+                        <span class="badge badge-info">Default</span>
+                        {{else}}
+                        <span class="badge badge-success">Custom</span>
+                        {{/if}}
                     </td>
                     <td>
-                        {{#if is_async}}<span class="badge badge-gray">async</span>{{else}}<span style="color:var(--text-tertiary)">--</span>{{/if}}
-                    </td>
-                    <td>
-                        {{#if is_forked}}<span class="badge badge-yellow">forked</span>{{else}}<span class="badge badge-green">custom</span>{{/if}}
-                    </td>
-                    <td>
-                        {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
+                        {{#if this.enabled}}
+                        <span class="badge badge-success">enabled</span>
+                        {{else}}
+                        <span class="badge badge-secondary">disabled</span>
+                        {{/if}}
                     </td>
                     <td class="col-actions" data-no-row-click>
-                        <div class="actions-menu" data-actions-for="{{hook_id}}">
-                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                        <div class="actions-menu">
+                            <button type="button" class="actions-trigger" data-action="menu" title="Actions" aria-label="Actions menu">&#8942;</button>
                             <div class="actions-dropdown">
-                                <a href="/admin/my/hooks/edit/?id={{hook_id}}" class="actions-item">Edit</a>
-                                <div class="actions-popup-separator"></div>
-                                <button class="actions-item actions-item-danger" data-delete-hook="{{hook_id}}">Delete</button>
+                                <a class="actions-item" href="/admin/my/hooks/stats?id={{this.id}}">View Stats</a>
+                                <button type="button" class="actions-item toggle-hook-btn" data-hook-id="{{this.id}}">{{#if this.enabled}}Disable{{else}}Enable{{/if}}</button>
+                                {{#unless this.is_default}}
+                                <button type="button" class="actions-item edit-hook-btn" data-hook-id="{{this.id}}">Edit</button>
+                                <button type="button" class="actions-item actions-item-danger delete-hook-btn" data-hook-id="{{this.id}}">Delete</button>
+                                {{/unless}}
                             </div>
                         </div>
                     </td>
                 </tr>
-                <!-- Detail expand row -->
-                <tr class="detail-row" data-detail-for="{{hook_id}}">
-                    <td colspan="8">
+                <tr class="detail-row" data-detail-for="{{this.id}}" aria-hidden="true">
+                    <td colspan="9">
                         <div class="detail-row-content">
+                            {{#if this.description}}
                             <div class="detail-section">
-                                <strong>Command</strong>
-                                <pre style="background:var(--bg-secondary);padding:var(--space-3);border-radius:var(--radius-md);overflow-x:auto;margin-top:var(--space-2)"><code>{{command}}</code></pre>
-                            </div>
-                            {{#if matcher}}
-                            <div class="detail-section" style="margin-top:var(--space-3)">
-                                <strong>Matcher Pattern</strong>
-                                <pre style="background:var(--bg-secondary);padding:var(--space-3);border-radius:var(--radius-md);overflow-x:auto;margin-top:var(--space-2)"><code>{{matcher}}</code></pre>
-                            </div>
-                            {{/if}}
-                            {{#if base_hook_id}}
-                            <div class="detail-section" style="margin-top:var(--space-3)">
-                                <span style="font-size:var(--text-sm);color:var(--text-secondary)">Forked from: <code style="font-size:var(--text-xs)">{{base_hook_id}}</code></span>
+                                <strong>Description</strong>
+                                <p class="text-sm text-secondary mt-1">{{this.description}}</p>
                             </div>
                             {{/if}}
                             <div class="detail-section">
-                                <button class="btn btn-secondary btn-sm" data-toggle-json="{{hook_id}}" style="font-size:var(--text-xs);padding:2px 8px;margin-bottom:var(--space-2)">Show JSON</button>
-                                <div class="json-view" data-json-for="{{hook_id}}" style="display:none"></div>
+                                <strong>Configuration</strong>
+                                <div class="badge-row mt-1">
+                                    <span class="badge badge-secondary">timeout: {{this.timeout}}s</span>
+                                    {{#if this.is_async}}<span class="badge badge-info">async</span>{{/if}}
+                                    {{#if this.matcher}}<span class="badge badge-secondary">matcher: {{this.matcher}}</span>{{/if}}
+                                </div>
                             </div>
+                            {{#if (eq this.hook_type "http")}}
+                            {{#if this.url}}
+                            <div class="detail-section">
+                                <strong>URL</strong>
+                                <p class="text-sm mt-1"><code>{{this.url}}</code></p>
+                            </div>
+                            {{/if}}
+                            {{/if}}
+                            {{#if this.hook_code}}
+                            <div class="detail-section">
+                                <strong>Code</strong>
+                                <pre class="detail-pre-wrap text-sm text-secondary mt-2">{{this.hook_code}}</pre>
+                            </div>
+                            {{/if}}
                         </div>
                     </td>
                 </tr>
@@ -105,37 +141,186 @@
         </table>
     </div>
     {{else}}
-    {{> components/empty-state message="No hooks yet. Create your first hook or fork one from the org."}}
+    {{> components/empty-state message="No hooks configured. Hooks are created automatically when you install plugins, or create custom hooks."}}
     {{/if}}
 
-    <!-- Hidden detail data -->
-    {{#each hooks}}
-    <script type="application/json" data-my-hook-detail="{{hook_id}}">
-        {{{json this}}}
-    </script>
-    {{/each}}
-
-    <!-- Fork panel -->
-    <div class="panel-overlay" id="fork-panel-overlay"></div>
-    <div class="side-panel" id="fork-panel" data-overlay="fork-panel-overlay">
-        <div class="panel-header">
-            <h2 data-panel-title style="margin:0;font-size:var(--text-lg)"></h2>
-            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
+    {{#if has_hooks}}
+    <div class="mt-8">
+        <div class="metric-ribbon" id="metric-ribbon">
+            <div class="metric-ribbon-item" data-key="total_events">
+                <span class="metric-ribbon-value">{{stats.total_events}}</span>
+                <span class="metric-ribbon-label">Total Firings</span>
+            </div>
+            {{#if stats.total_errors}}
+            <div class="metric-ribbon-item metric-ribbon-danger" data-key="total_errors">
+                <span class="metric-ribbon-value">{{stats.total_errors}}</span>
+                <span class="metric-ribbon-label">Errors</span>
+            </div>
+            {{/if}}
+            <div class="metric-ribbon-item" data-key="content_input_bytes">
+                <span class="metric-ribbon-value">{{stats.content_input_bytes}}</span>
+                <span class="metric-ribbon-label">Input Bytes</span>
+            </div>
+            <div class="metric-ribbon-item" data-key="content_output_bytes">
+                <span class="metric-ribbon-value">{{stats.content_output_bytes}}</span>
+                <span class="metric-ribbon-label">Output Bytes</span>
+            </div>
+            <div class="metric-ribbon-item">
+                <div class="metric-ribbon-value">{{stats.avg_session_quality}}</div>
+                <div class="metric-ribbon-label">Avg Session Quality</div>
+            </div>
         </div>
-        <div class="panel-body" data-panel-body></div>
-        <div class="panel-footer" data-panel-footer></div>
+
+        <div class="usage-chart-container">
+            <div class="usage-chart-header">
+                <div class="usage-chart-title">Hook Activity</div>
+                <div class="chart-range-tabs">
+                    <a href="?range=24h" class="chart-range-tab {{#if range_24h}}active{{/if}}">24h</a>
+                    <a href="?range=7d" class="chart-range-tab {{#if range_7d}}active{{/if}}">7d</a>
+                    <a href="?range=14d" class="chart-range-tab {{#if range_14d}}active{{/if}}">14d</a>
+                </div>
+                <div class="usage-chart-legend">
+                    <span class="legend-item legend-tools">Events</span>
+                    <span class="legend-item legend-errors">Errors</span>
+                </div>
+                <div class="usage-chart-peak">Peak: {{chart.peak}}</div>
+            </div>
+            {{#if chart.has_data}}
+            <div class="usage-chart-body">
+                <svg viewBox="0 0 960 280" preserveAspectRatio="none" class="usage-svg" aria-label="Hook activity chart">
+                    <defs>
+                        <linearGradient id="grad-events" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#6B68FA" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="#6B68FA" stop-opacity="0.08"/>
+                        </linearGradient>
+                        <linearGradient id="grad-errors" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#EF4444" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="#EF4444" stop-opacity="0.08"/>
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="3" result="blur"/>
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                    </defs>
+                    {{#each chart.y_labels}}
+                    <line x1="40" y1="{{this.y}}" x2="960" y2="{{this.y}}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+                    <text x="36" y="{{this.y}}" class="chart-axis-label" text-anchor="end" dominant-baseline="middle">{{this.label}}</text>
+                    {{/each}}
+                    {{#if chart.paths.events}}<path d="{{chart.paths.events}}" fill="url(#grad-events)" class="area-path"/>{{/if}}
+                    {{#if chart.paths.errors}}<path d="{{chart.paths.errors}}" fill="url(#grad-errors)" class="area-path"/>{{/if}}
+                    {{#if chart.paths.top_line}}<path d="{{chart.paths.top_line}}" fill="none" stroke="#6B68FA" stroke-width="2" filter="url(#glow)" class="line-path"/>{{/if}}
+                </svg>
+                <div class="usage-chart-x-axis">
+                    {{#each chart.x_labels}}
+                    <span>{{this}}</span>
+                    {{/each}}
+                </div>
+            </div>
+            {{else}}
+            <div class="usage-chart-body usage-chart-empty">
+                <p>No activity data for this time range.</p>
+            </div>
+            {{/if}}
+        </div>
+
+        <div class="card mb-6">
+            <h3 class="mb-4">Events by Type</h3>
+            {{#each event_breakdown}}
+            <div class="d-flex align-center gap-3 mb-2">
+                <code class="min-w-label text-sm">{{this.event_type}}</code>
+                <div class="bar-track">
+                    <div class="bar-fill" style="--fill: {{this.pct}}%"></div>
+                </div>
+                <span class="min-w-count text-right text-sm text-secondary">{{this.event_count}}</span>
+                {{#if this.error_count}}<span class="text-right text-sm text-danger min-w-sm">{{this.error_count}} err</span>{{/if}}
+                    {{#if (gt quality_sessions 0)}}
+                    <span class="badge badge-warning">{{avg_quality}} quality</span>
+                    {{/if}}
+            </div>
+            {{/each}}
+            {{#unless event_breakdown}}
+            <p class="text-tertiary">No events recorded yet.</p>
+            {{/unless}}
+        </div>
     </div>
+    {{/if}}
+
+    </section>
+
+    <div class="panel-overlay" id="hook-panel-overlay" role="presentation"></div>
+    <aside class="side-panel" id="hook-panel" data-overlay="hook-panel-overlay" role="dialog" aria-modal="true" aria-labelledby="hook-panel-title">
+        <div class="panel-header">
+            <h2 id="hook-panel-title">Add Custom Hook</h2>
+            <button type="button" id="hook-panel-close" aria-label="Close panel">&times;</button>
+        </div>
+        <div class="panel-body">
+            <form id="hook-form">
+                <div class="form-group">
+                    <label for="hook-name">Hook Name</label>
+                    <input type="text" id="hook-name" class="form-control" placeholder="my-webhook" required>
+                </div>
+                <div class="form-group">
+                    <label for="hook-description">Description</label>
+                    <textarea id="hook-description" class="form-control" rows="3" placeholder="Describe what this hook does"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="hook-event-type">Event Type</label>
+                    <select id="hook-event-type" class="form-control" required>
+                        <option value="">Select event type...</option>
+                        {{#each hook_event_types}}
+                        <option value="{{this}}">{{this}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="hook-plugin">Plugin (optional)</label>
+                    <select id="hook-plugin" class="form-control">
+                        <option value="">None</option>
+                        {{#each plugins}}
+                        <option value="{{this.id}}">{{this.name}}</option>
+                        {{/each}}
+                    </select>
+                    <small class="text-tertiary">Associate this hook with a plugin</small>
+                </div>
+                <div class="form-group">
+                    <label for="hook-type">Hook Type</label>
+                    <select id="hook-type" class="form-control" required>
+                        <option value="http">http</option>
+                        <option value="command">command</option>
+                    </select>
+                </div>
+                <div class="form-group" id="hook-url-group">
+                    <label for="hook-url">URL</label>
+                    <input type="url" id="hook-url" class="form-control" placeholder="https://example.com/webhook">
+                </div>
+                <div class="form-group" id="hook-command-group" hidden>
+                    <label for="hook-command">Command</label>
+                    <textarea id="hook-command" class="form-control" rows="3" placeholder="echo 'hello'"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="hook-matcher">Matcher</label>
+                    <input type="text" id="hook-matcher" class="form-control" placeholder="*" value="*">
+                </div>
+                <div class="form-group">
+                    <label for="hook-timeout">Timeout (seconds)</label>
+                    <input type="number" id="hook-timeout" class="form-control" value="10" min="1" max="300">
+                </div>
+                <div class="form-group">
+                    <label class="label-flex">
+                        <input type="checkbox" id="hook-is-async">
+                        Run asynchronously
+                    </label>
+                </div>
+                <div class="d-flex gap-3 mt-6">
+                    <button type="submit" class="btn btn-primary" id="hook-save-btn">Save</button>
+                    <button type="button" class="btn btn-secondary" id="hook-cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </aside>
 
     {{/inline}}
     {{#*inline "scripts"}}
-    <script src="/js/admin-my-workspace.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            if (AdminApp.initMyHooks) {
-                AdminApp.initMyHooks();
-            }
-        });
-    </script>
+    <script data-cfasync="false" src="/js/pages/admin-my-hooks.js" type="module" defer></script>
     {{/inline}}
 {{/layout}}

@@ -1,0 +1,36 @@
+<section aria-label="Status overview">
+<div class="profile-hero">
+    <div class="profile-hero__rank">
+        <div class="profile-hero__badge rank-tier-{{marketplace.rank_level}}">{{marketplace.rank_level}}</div>
+        <div class="profile-hero__rank-info">
+            <div class="profile-hero__rank-name">Lv. {{marketplace.rank_level}} &middot; {{marketplace.rank_name}}</div>
+            <div class="profile-hero__xp-row">
+                <div class="profile-hero__xp-bar" role="progressbar" aria-valuenow="{{marketplace.xp_progress_pct}}" aria-valuemin="0" aria-valuemax="100" aria-label="XP progress to next rank">
+                    <div class="profile-hero__xp-fill" style="width: {{marketplace.xp_progress_pct}}%"></div>
+                </div>
+                <span class="profile-hero__xp-label">
+                    {{marketplace.xp_progress_pct}}% &middot; {{marketplace.total_xp}} XP{{#if marketplace.next_rank_name}} &middot; {{marketplace.xp_to_next_rank}} to {{marketplace.next_rank_name}}{{/if}}
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="profile-hero__stats">
+        <div class="profile-hero__stat">
+            <span class="profile-hero__stat-value">{{marketplace.current_streak}}d</span>
+            <span class="profile-hero__stat-label">Streak</span>
+        </div>
+        <div class="profile-hero__stat">
+            <span class="profile-hero__stat-value">{{marketplace.longest_streak}}d</span>
+            <span class="profile-hero__stat-label">Best</span>
+        </div>
+        {{#if page_stats}}
+        {{#each page_stats}}
+        <div class="profile-hero__stat" {{#if this.key}}data-key="{{this.key}}"{{/if}}>
+            <span class="profile-hero__stat-value">{{this.value}}</span>
+            <span class="profile-hero__stat-label">{{this.label}}</span>
+        </div>
+        {{/each}}
+        {{/if}}
+    </div>
+</div>
+</section>

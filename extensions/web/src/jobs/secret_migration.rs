@@ -1,5 +1,6 @@
 use anyhow::Result;
 use systemprompt::database::DbPool;
+use systemprompt::identifiers::UserId;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::admin::repositories::{secret_crypto, secret_keys};
@@ -61,7 +62,7 @@ impl Job for SecretMigrationJob {
 
         for (id, user_id, var_name, var_value) in &rows {
             let result: Result<()> = async {
-                let dek = secret_keys::get_or_create_user_dek(&pool, user_id, &master_key)
+                let dek = secret_keys::get_or_create_user_dek(&pool, &UserId::new(user_id), &master_key)
                     .await
                     .map_err(|e| anyhow::anyhow!("DEK error: {e}"))?;
 

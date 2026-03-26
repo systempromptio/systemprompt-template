@@ -73,6 +73,16 @@ pub struct HookOverview {
     pub id: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RequiredSecret {
+    #[serde(default)]
+    pub key: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub required: bool,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SkillInfo {
     pub id: String,
@@ -82,6 +92,8 @@ pub struct SkillInfo {
     pub source: String,
     #[serde(default = "super::plugins::default_true")]
     pub enabled: bool,
+    #[serde(default)]
+    pub required_secrets: Vec<RequiredSecret>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -94,15 +106,28 @@ pub struct AgentInfo {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct AgentSkillInfo {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AgentDetail {
     pub id: String,
     pub name: String,
     pub description: String,
     pub enabled: bool,
     pub is_primary: bool,
+    #[serde(default)]
+    pub show_in_ui: bool,
     pub system_prompt: String,
     pub port: Option<u16>,
     pub endpoint: Option<String>,
+    #[serde(default)]
+    pub mcp_servers: Vec<String>,
+    #[serde(default)]
+    pub skills: Vec<AgentSkillInfo>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

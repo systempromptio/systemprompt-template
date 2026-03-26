@@ -2,123 +2,99 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 use systemprompt::models::ProfileBootstrap;
 
-use super::export::{generate_export_bundles, generate_org_marketplace_export_bundles};
+use super::export::generate_export_bundles;
+use crate::error::MarketplaceError;
 
-pub const CACHE_DIR: &str = "/tmp/foodles-marketplace-repos";
+pub const CACHE_DIR: &str = "/tmp/systemprompt-marketplace-repos";
 const CACHE_TTL_SECS: u64 = 300;
 
 pub async fn get_or_generate_marketplace_repo(
     pool: &Arc<PgPool>,
-    user_id: &str,
+    user_id: &UserId,
     platform: &str,
-) -> Result<PathBuf, anyhow::Error> {
+) -> Result<PathBuf, MarketplaceError> {
+    generate_repo(pool, user_id, platform, "repo.git", true).await
+}
+
+pub async fn get_or_generate_cowork_repo(
+    pool: &Arc<PgPool>,
+    user_id: &UserId,
+    platform: &str,
+) -> Result<PathBuf, MarketplaceError> {
+    generate_repo(pool, user_id, platform, "cowork-repo.git", false).await
+}
+
+async fn generate_repo(
+    pool: &Arc<PgPool>,
+    user_id: &UserId,
+    platform: &str,
+    repo_name: &str,
+    strip_hooks: bool,
+) -> Result<PathBuf, MarketplaceError> {
     let persistent_repo = PathBuf::from("storage/marketplace-versions")
-        .join(user_id)
-        .join("repo.git");
+        .join(user_id.as_str())
+        .join(repo_name);
     if persistent_repo.join("HEAD").exists() {
         return Ok(persistent_repo);
     }
 
     let repo_path = PathBuf::from(CACHE_DIR)
-        .join(user_id)
+        .join(user_id.as_str())
         .join(platform)
-        .join("repo.git");
+        .join(repo_name);
 
     if is_cache_valid(&repo_path) {
         return Ok(repo_path);
     }
 
-    let _ = super::marketplace_sync_status::mark_user_dirty(pool, user_id).await;
+    if let Err(e) = super::marketplace_sync_status::mark_user_dirty(pool, user_id).await {
+        tracing::warn!(error = %e, "Failed to mark user dirty");
+    }
 
-    let (username, email, roles, department) = lookup_user_basic(pool, user_id).await?;
+    let user_info = lookup_user_basic(pool, user_id).await?;
 
     let services_path = ProfileBootstrap::get()
         .map(|p| PathBuf::from(&p.paths.services))
-        .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
+        .map_err(|e| MarketplaceError::Internal(format!("Failed to get profile: {e}")))?;
 
-    let response = generate_export_bundles(
-        &services_path,
+    let export_params = super::export::ExportParams {
+        services_path: &services_path,
         pool,
         user_id,
-        &username,
-        &email,
-        &roles,
-        &department,
-        platform,
-    )
-    .await?;
+        username: &user_info.display_name,
+        email: &user_info.email,
+        roles: &user_info.roles,
+    };
+    let response = generate_export_bundles(&export_params).await?;
 
-    let base_dir = PathBuf::from(CACHE_DIR).join(user_id).join(platform);
-    let work_dir = base_dir.join("work");
+    let base_dir = PathBuf::from(CACHE_DIR)
+        .join(user_id.as_str())
+        .join(platform);
+    let work_dir = base_dir.join(format!("{repo_name}-work"));
 
-    if base_dir.exists() {
-        std::fs::remove_dir_all(&base_dir)?;
-    }
-    std::fs::create_dir_all(&work_dir)?;
-
-    let marketplace_path = work_dir.join(&response.marketplace.path);
-    if let Some(parent) = marketplace_path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    std::fs::write(&marketplace_path, &response.marketplace.content)?;
-
-    for bundle in &response.plugins {
-        for file in &bundle.files {
-            let file_path = work_dir.join("plugins").join(&bundle.id).join(&file.path);
-            if let Some(parent) = file_path.parent() {
-                std::fs::create_dir_all(parent)?;
-            }
-            std::fs::write(&file_path, &file.content)?;
-            if file.executable {
-                #[cfg(unix)]
-                {
-                    use std::os::unix::fs::PermissionsExt;
-                    std::fs::set_permissions(&file_path, std::fs::Permissions::from_mode(0o755))?;
-                }
-            }
-        }
-    }
-
-    create_bare_repo(&work_dir, &repo_path)?;
+    write_export_to_disk(&response, &work_dir, strip_hooks)?;
+    create_bare_repo(
+        &work_dir,
+        &repo_path,
+        &user_info.display_name,
+        &user_info.email,
+    )?;
 
     Ok(repo_path)
 }
 
-pub async fn get_or_generate_org_marketplace_repo(
-    pool: &Arc<PgPool>,
-    marketplace_id: &str,
-    platform: &str,
-) -> Result<PathBuf, anyhow::Error> {
-    let repo_path = PathBuf::from(CACHE_DIR)
-        .join("org")
-        .join(marketplace_id)
-        .join(platform)
-        .join("repo.git");
-
-    if is_cache_valid(&repo_path) {
-        return Ok(repo_path);
+fn write_export_to_disk(
+    response: &super::export::SyncPluginsResponse,
+    work_dir: &Path,
+    strip_hooks: bool,
+) -> Result<(), MarketplaceError> {
+    if work_dir.exists() {
+        std::fs::remove_dir_all(work_dir)?;
     }
-
-    let services_path = ProfileBootstrap::get()
-        .map(|p| PathBuf::from(&p.paths.services))
-        .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
-
-    let response =
-        generate_org_marketplace_export_bundles(&services_path, pool, marketplace_id, platform)
-            .await?;
-
-    let base_dir = PathBuf::from(CACHE_DIR)
-        .join("org")
-        .join(marketplace_id)
-        .join(platform);
-    let work_dir = base_dir.join("work");
-
-    if base_dir.exists() {
-        std::fs::remove_dir_all(&base_dir)?;
-    }
-    std::fs::create_dir_all(&work_dir)?;
+    std::fs::create_dir_all(work_dir)?;
 
     let marketplace_path = work_dir.join(&response.marketplace.path);
     if let Some(parent) = marketplace_path.parent() {
@@ -132,7 +108,12 @@ pub async fn get_or_generate_org_marketplace_repo(
             if let Some(parent) = file_path.parent() {
                 std::fs::create_dir_all(parent)?;
             }
-            std::fs::write(&file_path, &file.content)?;
+            let content = if strip_hooks && file.path == ".claude-plugin/plugin.json" {
+                strip_manifest_hooks(&file.content)
+            } else {
+                file.content.clone()
+            };
+            std::fs::write(&file_path, &content)?;
             if file.executable {
                 #[cfg(unix)]
                 {
@@ -142,10 +123,17 @@ pub async fn get_or_generate_org_marketplace_repo(
             }
         }
     }
+    Ok(())
+}
 
-    create_bare_repo(&work_dir, &repo_path)?;
-
-    Ok(repo_path)
+fn strip_manifest_hooks(content: &str) -> String {
+    match serde_json::from_str::<super::export::PluginManifest>(content) {
+        Ok(mut manifest) => {
+            manifest.hooks = None;
+            serde_json::to_string_pretty(&manifest).unwrap_or_else(|_| content.to_string())
+        }
+        Err(_) => content.to_string(),
+    }
 }
 
 fn is_cache_valid(repo_path: &Path) -> bool {
@@ -160,21 +148,41 @@ fn is_cache_valid(repo_path: &Path) -> bool {
     false
 }
 
-fn create_bare_repo(work_dir: &Path, repo_path: &Path) -> Result<(), anyhow::Error> {
+fn create_bare_repo(
+    work_dir: &Path,
+    repo_path: &Path,
+    username: &str,
+    email: &str,
+) -> Result<(), MarketplaceError> {
     use std::process::Command;
 
-    let run = |args: &[&str], dir: &Path| -> Result<(), anyhow::Error> {
+    let author_name = if username.is_empty() {
+        "systemprompt.io"
+    } else {
+        username
+    };
+    let author_email = if email.is_empty() {
+        "ed@systemprompt.io"
+    } else {
+        email
+    };
+
+    let run = |args: &[&str], dir: &Path| -> Result<(), MarketplaceError> {
         let output = Command::new("git")
             .args(args)
             .current_dir(dir)
-            .env("GIT_AUTHOR_NAME", "Foodles")
-            .env("GIT_AUTHOR_EMAIL", "support@foodles.com")
-            .env("GIT_COMMITTER_NAME", "Foodles")
-            .env("GIT_COMMITTER_EMAIL", "support@foodles.com")
+            .env("GIT_AUTHOR_NAME", author_name)
+            .env("GIT_AUTHOR_EMAIL", author_email)
+            .env("GIT_COMMITTER_NAME", author_name)
+            .env("GIT_COMMITTER_EMAIL", author_email)
             .output()?;
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("git {} failed: {}", args.join(" "), stderr);
+            return Err(MarketplaceError::Internal(format!(
+                "git {} failed: {}",
+                args.join(" "),
+                stderr
+            )));
         }
         Ok(())
     };
@@ -182,14 +190,18 @@ fn create_bare_repo(work_dir: &Path, repo_path: &Path) -> Result<(), anyhow::Err
     run(&["init"], work_dir)?;
     run(&["add", "-A"], work_dir)?;
     run(&["commit", "-m", "marketplace export"], work_dir)?;
+    let work_dir_str = work_dir
+        .to_str()
+        .ok_or_else(|| MarketplaceError::Internal("work_dir path is not valid UTF-8".into()))?;
+    let repo_path_str = repo_path
+        .to_str()
+        .ok_or_else(|| MarketplaceError::Internal("repo_path is not valid UTF-8".into()))?;
+    let parent_dir = work_dir
+        .parent()
+        .ok_or_else(|| MarketplaceError::Internal("work_dir has no parent directory".into()))?;
     run(
-        &[
-            "clone",
-            "--bare",
-            work_dir.to_str().expect("work_dir path is valid UTF-8"),
-            repo_path.to_str().expect("repo_path path is valid UTF-8"),
-        ],
-        work_dir.parent().expect("work_dir has a parent directory"),
+        &["clone", "--bare", work_dir_str, repo_path_str],
+        parent_dir,
     )?;
     run(&["update-server-info"], repo_path)?;
 
@@ -198,25 +210,21 @@ fn create_bare_repo(work_dir: &Path, repo_path: &Path) -> Result<(), anyhow::Err
     Ok(())
 }
 
-#[allow(clippy::type_complexity)]
 pub async fn lookup_user_basic(
     pool: &Arc<PgPool>,
-    user_id: &str,
-) -> Result<(String, String, Vec<String>, String), anyhow::Error> {
-    let row: Option<(Option<String>, Option<String>, Vec<String>, String)> = sqlx::query_as(
-        "SELECT COALESCE(display_name, full_name, name), email, roles, COALESCE(department, '') FROM users WHERE id = $1",
+    user_id: &UserId,
+) -> Result<crate::admin::types::UserBasicInfo, MarketplaceError> {
+    let row = sqlx::query!(
+        "SELECT COALESCE(display_name, full_name, name) as display_name, email, roles FROM users WHERE id = $1",
+        user_id.as_str(),
     )
-    .bind(user_id)
     .fetch_optional(pool.as_ref())
-    .await?;
+    .await?
+    .ok_or_else(|| MarketplaceError::NotFound(format!("User not found: {user_id}")))?;
 
-    match row {
-        Some((name, email, roles, department)) => Ok((
-            name.unwrap_or_else(String::new),
-            email.unwrap_or_else(String::new),
-            roles,
-            department,
-        )),
-        None => anyhow::bail!("User not found: {user_id}"),
-    }
+    Ok(crate::admin::types::UserBasicInfo {
+        display_name: row.display_name.unwrap_or_default(),
+        email: row.email,
+        roles: row.roles,
+    })
 }

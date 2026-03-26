@@ -1,0 +1,195 @@
+@layer components {
+
+
+.sp-getting-started-checklist .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-4) var(--sp-space-6);
+    border-bottom: 1px solid var(--sp-border-subtle);
+    transition: opacity var(--sp-duration-fast);
+}
+
+.sp-getting-started-checklist .checklist-item:last-child {
+    border-bottom: none;
+    padding-bottom: var(--sp-space-6);
+}
+
+.sp-getting-started-checklist .checklist-item input[type="checkbox"] {
+    appearance: none;
+    margin-top: 0.1875rem;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    flex-shrink: 0;
+    cursor: pointer;
+    border: 2px solid var(--sp-border-strong);
+    border-radius: var(--sp-radius-xs);
+    background: var(--sp-bg-surface);
+    transition: background var(--sp-duration-fast),
+                border-color var(--sp-duration-fast);
+    position: relative;
+}
+
+.sp-getting-started-checklist .checklist-item input[type="checkbox"]:checked {
+    background: var(--sp-accent);
+    border-color: var(--sp-accent);
+}
+
+.sp-getting-started-checklist .checklist-item input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 6px;
+    height: 11px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.sp-getting-started-checklist .checklist-item label {
+    font-weight: 600;
+    cursor: pointer;
+    display: block;
+    margin-bottom: var(--sp-space-1);
+    font-size: var(--sp-text-base);
+}
+
+.sp-getting-started-checklist .checklist-item .checklist-hint {
+    display: block;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+}
+
+.gs-banner {
+    background: linear-gradient(135deg,
+        color-mix(in oklch, var(--sp-accent) 8%, var(--sp-bg-surface)) 0%,
+        var(--sp-bg-surface) 100%);
+    border: 1px solid color-mix(in oklch, var(--sp-accent) 20%, var(--sp-border-subtle));
+    border-radius: var(--sp-radius-card-brand);
+    padding: var(--sp-space-10) var(--sp-space-8);
+    text-align: center;
+    margin-bottom: var(--sp-space-6);
+}
+
+.gs-banner-title {
+    font-size: var(--sp-text-2xl);
+    font-weight: 700;
+    color: var(--sp-text-primary);
+    margin: 0 0 var(--sp-space-3);
+    font-family: var(--sp-font-heading);
+    letter-spacing: -0.02em;
+}
+
+.gs-banner-subtitle {
+    font-size: var(--sp-text-base);
+    color: var(--sp-text-secondary);
+    margin: 0 auto var(--sp-space-8);
+    max-width: 520px;
+    line-height: 1.6;
+}
+
+.gs-steps {
+    display: flex;
+    gap: var(--sp-space-8);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: var(--sp-space-8);
+}
+
+.gs-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-space-2);
+    max-width: 160px;
+}
+
+.gs-step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-accent);
+    color: var(--sp-text-on-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: var(--sp-text-sm);
+    flex-shrink: 0;
+}
+
+.gs-step-text {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+    text-align: center;
+    line-height: 1.4;
+}
+
+.gs-copybox {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    background: var(--sp-bg-surface-raised);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-md);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.gs-copybox code {
+    flex: 1;
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-primary);
+    word-break: break-all;
+}
+
+.checklist-hint a {
+    color: var(--sp-accent);
+}
+
+.checklist-hint a:hover {
+    color: var(--sp-accent-hover);
+}
+
+.gs-stat-ribbon {
+    display: flex;
+    gap: var(--sp-space-4);
+    margin-bottom: var(--sp-space-6);
+}
+
+.gs-stat-ribbon .card {
+    flex: 1;
+    padding: var(--sp-space-4);
+}
+
+.install-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-6);
+    counter-reset: install-step;
+}
+.install-step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-accent);
+    color: var(--sp-text-on-accent);
+    font-weight: 700;
+    font-size: var(--sp-text-sm);
+    flex-shrink: 0;
+}
+.install-step-content {
+    flex: 1;
+    min-width: 0;
+}
+.install-tab-content { padding: var(--sp-space-3) 0; }
+.install-dropdown-body { padding: var(--sp-space-2); }
+
+}

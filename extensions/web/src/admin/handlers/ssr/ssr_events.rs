@@ -25,19 +25,14 @@ pub(crate) async fn events_page(
             .into_response();
     }
 
-    let (response, event_breakdown) = tokio::join!(
-        repositories::list_events(&pool, &query, None),
-        repositories::fetch_event_breakdown(&pool, None),
-    );
-
-    let response = response.unwrap_or_else(|_| crate::admin::types::EventsResponse {
-        events: vec![],
-        total: 0,
-        limit: query.limit,
-        offset: query.offset,
-    });
-
-    let event_breakdown = event_breakdown.unwrap_or_default();
+    let response = repositories::list_events(&pool, &query)
+        .await
+        .unwrap_or_else(|_| crate::admin::types::EventsResponse {
+            events: vec![],
+            total: 0,
+            limit: query.limit,
+            offset: query.offset,
+        });
 
     let has_prev = response.offset > 0;
     let has_next = response.offset + response.limit < response.total;
@@ -61,7 +56,6 @@ pub(crate) async fn events_page(
         "next_offset": next_offset,
         "search": query.search,
         "event_type": query.event_type,
-        "event_breakdown": event_breakdown,
     });
     super::render_page(&engine, "events", &data, &user_ctx, &mkt_ctx)
 }

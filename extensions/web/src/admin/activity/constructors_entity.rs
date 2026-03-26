@@ -4,9 +4,9 @@ use super::types::{ActivityEntityRef, NewActivity};
 
 impl NewActivity {
     #[must_use]
-    pub fn skill_used(user_id: &str, tool_name: &str, session_id: &str) -> Self {
+    pub fn skill_used(user_id: impl AsRef<str>, tool_name: &str, session_id: &str) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::SkillUsage,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
@@ -20,9 +20,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn entity_created(user_id: &str, entity: ActivityEntity, id: &str, name: &str) -> Self {
+    pub fn entity_created(user_id: impl AsRef<str>, entity: ActivityEntity, id: &str, name: &str) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Created,
             entity: Some(ActivityEntityRef {
@@ -36,9 +36,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn entity_updated(user_id: &str, entity: ActivityEntity, id: &str, name: &str) -> Self {
+    pub fn entity_updated(user_id: impl AsRef<str>, entity: ActivityEntity, id: &str, name: &str) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Updated,
             entity: Some(ActivityEntityRef {
@@ -52,9 +52,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn entity_deleted(user_id: &str, entity: ActivityEntity, id: &str, name: &str) -> Self {
+    pub fn entity_deleted(user_id: impl AsRef<str>, entity: ActivityEntity, id: &str, name: &str) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Deleted,
             entity: Some(ActivityEntityRef {
@@ -68,15 +68,31 @@ impl NewActivity {
     }
 
     #[must_use]
+    pub fn entity_forked(user_id: impl AsRef<str>, entity: ActivityEntity, id: &str, name: &str) -> Self {
+        Self {
+            user_id: user_id.as_ref().to_string(),
+            category: ActivityCategory::MarketplaceEdit,
+            action: ActivityAction::Created,
+            entity: Some(ActivityEntityRef {
+                entity_type: entity,
+                entity_id: Some(id.to_string()),
+                entity_name: Some(name.to_string()),
+            }),
+            description: format!("Forked {} '{name}'", entity_label(entity)),
+            metadata: serde_json::json!({}),
+        }
+    }
+
+    #[must_use]
     pub fn entity_imported(
-        user_id: &str,
+        user_id: impl AsRef<str>,
         entity: ActivityEntity,
         id: &str,
         name: &str,
         description: &str,
     ) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Imported,
             entity: Some(ActivityEntityRef {
@@ -90,9 +106,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn marketplace_uploaded(user_id: &str, version: i32) -> Self {
+    pub fn marketplace_uploaded(user_id: impl AsRef<str>, version: i32) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::MarketplaceConnect,
             action: ActivityAction::Uploaded,
             entity: Some(ActivityEntityRef {
@@ -106,9 +122,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn marketplace_restored(user_id: &str, version: i32) -> Self {
+    pub fn marketplace_restored(user_id: impl AsRef<str>, version: i32) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::MarketplaceConnect,
             action: ActivityAction::Restored,
             entity: Some(ActivityEntityRef {
@@ -122,9 +138,10 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn user_skill_imported(user_id: &str, bundle_id: &str, imported_count: u32) -> Self {
+    pub fn user_skill_imported(user_id: impl AsRef<str>, bundle_id: &str, imported_count: u32) -> Self {
+        let uid = user_id.as_ref();
         Self {
-            user_id: user_id.to_string(),
+            user_id: uid.to_string(),
             category: ActivityCategory::UserManagement,
             action: ActivityAction::Imported,
             entity: Some(ActivityEntityRef {
@@ -132,15 +149,15 @@ impl NewActivity {
                 entity_id: Some(bundle_id.to_string()),
                 entity_name: Some(bundle_id.to_string()),
             }),
-            description: format!("Imported {imported_count} skills for user '{user_id}'"),
+            description: format!("Imported {imported_count} skills for user '{uid}'"),
             metadata: serde_json::json!({}),
         }
     }
 
     #[must_use]
-    pub fn tool_used(user_id: &str, tool_name: &str, session_id: &str, detail: &str) -> Self {
+    pub fn tool_used(user_id: impl AsRef<str>, tool_name: &str, session_id: &str, detail: &str) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::ToolUsage,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
@@ -154,9 +171,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn skill_used_rich(user_id: &str, tool_name: &str, session_id: &str, detail: &str) -> Self {
+    pub fn skill_used_rich(user_id: impl AsRef<str>, tool_name: &str, session_id: &str, detail: &str) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::SkillUsage,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
@@ -171,14 +188,14 @@ impl NewActivity {
 
     #[must_use]
     pub fn tool_error(
-        user_id: &str,
+        user_id: impl AsRef<str>,
         tool_name: &str,
         session_id: &str,
         error: Option<&str>,
     ) -> Self {
         let msg = truncate(error.unwrap_or("unknown error"), 60);
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::Error,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
@@ -193,7 +210,7 @@ impl NewActivity {
 
     #[must_use]
     pub fn notification(
-        user_id: &str,
+        user_id: impl AsRef<str>,
         session_id: &str,
         ntype: Option<&str>,
         message: Option<&str>,
@@ -208,7 +225,7 @@ impl NewActivity {
             (None, None) => "Notification received".to_string(),
         };
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::Notification,
             action: ActivityAction::Submitted,
             entity: None,
@@ -218,13 +235,13 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn task_completed_activity(user_id: &str, session_id: &str, subject: Option<&str>) -> Self {
+    pub fn task_completed_activity(user_id: impl AsRef<str>, session_id: &str, subject: Option<&str>) -> Self {
         let description = match subject {
             Some(s) => format!("Completed task: '{s}'"),
             None => "Completed a task".to_string(),
         };
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::TaskCompletion,
             action: ActivityAction::Ended,
             entity: None,
@@ -234,14 +251,14 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn context_compacted(user_id: &str, session_id: &str, trigger: Option<&str>) -> Self {
+    pub fn context_compacted(user_id: impl AsRef<str>, session_id: &str, trigger: Option<&str>) -> Self {
         let description = if trigger == Some("auto") {
             "Context auto-compacted".to_string()
         } else {
             "Context manually compacted".to_string()
         };
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::Compaction,
             action: ActivityAction::Used,
             entity: None,
@@ -251,9 +268,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn permission_requested(user_id: &str, session_id: &str, tool: &str) -> Self {
+    pub fn permission_requested(user_id: impl AsRef<str>, session_id: &str, tool: &str) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::Notification,
             action: ActivityAction::Submitted,
             entity: Some(ActivityEntityRef {

@@ -4,6 +4,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
+use systemprompt::identifiers::UserId;
 use systemprompt::models::ProfileBootstrap;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
@@ -52,7 +53,7 @@ impl Job for MarketplaceSyncJob {
         let mut error_count = 0u64;
 
         for user_id in &dirty_users {
-            match generate_and_persist_marketplace(&pool, user_id).await {
+            match generate_and_persist_marketplace(&pool, user_id.as_str()).await {
                 Ok(()) => {
                     if let Err(e) =
                         repositories::marketplace_sync_status::mark_user_synced(&pool, user_id)
@@ -97,24 +98,23 @@ impl Job for MarketplaceSyncJob {
 }
 
 pub async fn generate_and_persist_marketplace(pool: &Arc<PgPool>, user_id: &str) -> Result<()> {
-    let (username, email, roles, department) =
-        repositories::marketplace_git::lookup_user_basic(pool, user_id).await?;
+    let user_basic =
+        repositories::marketplace_git::lookup_user_basic(pool, &UserId::new(user_id)).await?;
 
     let services_path = ProfileBootstrap::get()
         .map(|p| PathBuf::from(&p.paths.services))
         .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
 
-    let response = repositories::generate_export_bundles(
-        &services_path,
+    let uid = UserId::new(user_id);
+    let params = repositories::ExportParams {
+        services_path: &services_path,
         pool,
-        user_id,
-        &username,
-        &email,
-        &roles,
-        &department,
-        "unix",
-    )
-    .await?;
+        user_id: &uid,
+        username: &user_basic.display_name,
+        email: &user_basic.email,
+        roles: &user_basic.roles,
+    };
+    let response = repositories::generate_export_bundles(&params).await?;
 
     let base_dir = PathBuf::from("storage/marketplace-versions").join(user_id);
     let work_dir = base_dir.join("work");
@@ -156,7 +156,7 @@ pub async fn generate_and_persist_marketplace(pool: &Arc<PgPool>, user_id: &str)
     }
     create_bare_repo(&work_dir, &repo_path)?;
 
-    let _ = repositories::marketplace_sync::invalidate_git_cache(user_id);
+    let _ = repositories::marketplace_sync::invalidate_git_cache(&UserId::new(user_id));
 
     Ok(())
 }

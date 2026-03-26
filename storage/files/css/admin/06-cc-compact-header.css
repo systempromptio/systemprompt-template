@@ -1,0 +1,160 @@
+@layer components {
+
+.cc-compact-header {
+    background: var(--sp-bg-hero-gradient);
+    border: 1px solid var(--sp-border-default);
+    border-top: 3px solid var(--sp-accent);
+    border-radius: var(--sp-radius-card-brand);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    padding: var(--sp-space-4) var(--sp-space-5);
+    margin-bottom: var(--sp-space-4);
+    box-shadow: var(--sp-shadow-hero), var(--sp-shadow-inner-glow);
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: var(--sp-space-4);
+    contain: layout style;
+}
+
+/* ── Column containers ── */
+
+.cc-compact-col--stats {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+}
+
+.cc-compact-col--profile {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding-left: var(--sp-space-4);
+    border-left: 1px solid var(--sp-border-subtle);
+}
+
+/* ── Stats layout ── */
+
+.cc-compact-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.cc-stat-group {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    flex-wrap: wrap;
+}
+
+/* Visual separator between groups */
+.cc-stat-group--secondary {
+    padding-left: var(--sp-space-2);
+    border-left: 1px solid var(--sp-border-subtle);
+}
+
+/* ── Stat pills ── */
+
+.cc-compact-stats .cc-stat-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: color-mix(in oklch, var(--sp-bg-surface-overlay) 60%, transparent);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    padding: 0.375rem var(--sp-space-3);
+    white-space: nowrap;
+    line-height: 1;
+    box-shadow: 0 1px 2px color-mix(in oklch, #000 4%, transparent);
+    transition:
+        background var(--sp-duration-fast),
+        border-color var(--sp-duration-fast),
+        box-shadow var(--sp-duration-fast),
+        transform var(--sp-duration-fast);
+}
+
+.cc-compact-stats .cc-stat-item:hover {
+    background: color-mix(in oklch, var(--sp-bg-surface-overlay) 90%, transparent);
+}
+
+.cc-compact-stats .cc-stat-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.cc-compact-stats .cc-stat-link:hover .cc-stat-item {
+    border-color: var(--sp-border-default);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px color-mix(in oklch, #000 8%, transparent);
+}
+
+.cc-compact-stats .cc-stat-link:hover .cc-stat-label {
+    color: var(--sp-text-secondary);
+}
+
+/* ── Stat typography ── */
+
+.cc-compact-stats .cc-stat-value {
+    font-size: var(--sp-text-base);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--sp-text-primary);
+    line-height: 1;
+}
+
+.cc-compact-stats .cc-stat-label {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.cc-compact-stats .cc-stat-sep {
+    display: none;
+}
+
+/* ── Hero stat (active count) ── */
+
+.cc-compact-stats .cc-stat-item--hero {
+    background: linear-gradient(
+        135deg,
+        color-mix(in oklch, var(--sp-success) 15%, transparent),
+        color-mix(in oklch, var(--sp-success) 8%, transparent)
+    );
+    border-color: color-mix(in oklch, var(--sp-success) 30%, transparent);
+    padding: 0.375rem var(--sp-space-3);
+    box-shadow:
+        0 1px 3px color-mix(in oklch, var(--sp-success) 10%, transparent),
+        inset 0 1px 0 color-mix(in oklch, #fff 5%, transparent);
+}
+
+.cc-compact-stats .cc-stat-item--hero .cc-stat-value {
+    font-size: var(--sp-text-lg);
+    color: var(--sp-success);
+}
+
+/* Live dot inside the hero pill */
+.cc-compact-stats .cc-stat-item--hero .live-dot {
+    flex-shrink: 0;
+}
+
+/* Legacy: active_now colour when not using --sp-hero */
+.cc-compact-stats .cc-stat-item[data-stat="active_now"] .cc-stat-value {
+    color: var(--sp-success);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-compact-stats .cc-stat-item,
+    .cc-compact-stats .cc-stat-link:hover .cc-stat-item {
+        transition: none;
+        transform: none;
+    }
+}
+
+}

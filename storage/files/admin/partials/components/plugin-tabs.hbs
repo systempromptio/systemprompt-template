@@ -1,34 +1,33 @@
-<div style="border-top:1px solid var(--border-subtle);padding:var(--space-4)">
-    <div class="plugin-tabs" style="display:flex;gap:var(--space-2);margin-bottom:var(--space-4)">
-        <button class="plugin-tab active" data-tab="skills" data-plugin-owner="{{pluginId}}">Skills <span class="plugin-tab-count">{{skill_count}}</span></button>
-        <button class="plugin-tab" data-tab="agents" data-plugin-owner="{{pluginId}}">Agents <span class="plugin-tab-count">{{agent_count}}</span></button>
-        <button class="plugin-tab" data-tab="mcp" data-plugin-owner="{{pluginId}}">MCP Servers <span class="plugin-tab-count">{{mcp_count}}</span></button>
-        <button class="plugin-tab" data-tab="hooks" data-plugin-owner="{{pluginId}}">Hooks <span class="plugin-tab-count">{{hook_count}}</span></button>
-        <button class="plugin-tab" data-tab="env" data-plugin-owner="{{pluginId}}">Env</button>
+<div class="plugin-tabs-container">
+    <div class="plugin-tabs" role="tablist" aria-label="Plugin details">
+        <button type="button" class="plugin-tab active" role="tab" aria-selected="true" aria-controls="tab-skills-{{pluginId}}" data-tab="skills" data-plugin-owner="{{pluginId}}">Skills <span class="plugin-tab-count">{{skill_count}}</span></button>
+        <button type="button" class="plugin-tab" role="tab" aria-selected="false" aria-controls="tab-agents-{{pluginId}}" data-tab="agents" data-plugin-owner="{{pluginId}}">Agents <span class="plugin-tab-count">{{agent_count}}</span></button>
+        <button type="button" class="plugin-tab" role="tab" aria-selected="false" aria-controls="tab-mcp-{{pluginId}}" data-tab="mcp" data-plugin-owner="{{pluginId}}">MCP Servers <span class="plugin-tab-count">{{mcp_count}}</span></button>
+        <button type="button" class="plugin-tab" role="tab" aria-selected="false" aria-controls="tab-env-{{pluginId}}" data-tab="env" data-plugin-owner="{{pluginId}}">Env</button>
     </div>
-    <div class="plugin-tab-content" data-tab-panel="skills" data-plugin-owner="{{pluginId}}">
+    <div class="plugin-tab-content" role="tabpanel" id="tab-skills-{{pluginId}}" data-tab-panel="skills" data-plugin-owner="{{pluginId}}">
         {{#if skills}}
         {{#each skills}}
         <div class="detail-item">
             <div class="detail-item-info">
-                <div class="detail-item-name">{{name}} <span class="badge {{#if (eq source "custom")}}badge-green{{else}}badge-blue{{/if}}">{{default source "system"}}</span></div>
-                {{#if description}}<div class="detail-item-desc" style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:var(--space-1)">{{description}}</div>{{/if}}
+                <div class="detail-item-name">{{name}} <span class="badge {{#if (eq source "custom")}}badge-success{{else}}badge-info{{/if}}">{{default source "system"}}</span></div>
+                {{#if description}}<div class="detail-item-desc">{{description}}</div>{{/if}}
             </div>
-            <button class="btn btn-secondary btn-sm" data-browse-skill="{{id}}" data-skill-name="{{name}}" style="margin-left:auto;font-size:var(--text-xs);padding:2px 8px">Files</button>
-            {{#if command}}<span style="font-size:var(--text-xs);color:var(--text-tertiary)">{{command}}</span>{{/if}}
+            <button type="button" class="btn btn-secondary btn-sm btn--files" data-browse-skill="{{id}}" data-skill-name="{{name}}">Files</button>
+            {{#if command}}<span class="detail-item-command">{{command}}</span>{{/if}}
         </div>
         {{/each}}
         {{else}}
         <div class="empty-state"><p>No skills assigned to this plugin.</p></div>
         {{/if}}
     </div>
-    <div class="plugin-tab-content" data-tab-panel="agents" data-plugin-owner="{{pluginId}}" style="display:none">
+    <div class="plugin-tab-content" role="tabpanel" id="tab-agents-{{pluginId}}" data-tab-panel="agents" data-plugin-owner="{{pluginId}}" hidden>
         {{#if agents}}
         {{#each agents}}
         <div class="detail-item">
             <div class="detail-item-info">
                 <div class="detail-item-name">{{name}}</div>
-                {{#if description}}<div class="detail-item-desc" style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:var(--space-1)">{{description}}</div>{{/if}}
+                {{#if description}}<div class="detail-item-desc">{{description}}</div>{{/if}}
             </div>
         </div>
         {{/each}}
@@ -36,7 +35,7 @@
         <div class="empty-state"><p>No agents assigned to this plugin.</p></div>
         {{/if}}
     </div>
-    <div class="plugin-tab-content" data-tab-panel="mcp" data-plugin-owner="{{pluginId}}" style="display:none">
+    <div class="plugin-tab-content" role="tabpanel" id="tab-mcp-{{pluginId}}" data-tab-panel="mcp" data-plugin-owner="{{pluginId}}" hidden>
         {{#if mcp_servers}}
         {{#each mcp_servers}}
         <div class="detail-item">
@@ -49,28 +48,9 @@
         <div class="empty-state"><p>No MCP servers assigned to this plugin.</p></div>
         {{/if}}
     </div>
-    <div class="plugin-tab-content" data-tab-panel="hooks" data-plugin-owner="{{pluginId}}" style="display:none">
-        {{#if hooks}}
-        {{#each hooks}}
-        <div class="detail-item">
-            <div class="detail-item-info">
-                <div class="detail-item-name">
-                    <span class="badge badge-blue">{{event}}</span>
-                    <span style="color:var(--text-secondary);font-size:var(--text-sm)">matcher:</span>
-                    <code style="background:var(--bg-surface-raised);padding:2px 6px;border-radius:var(--radius-xs);font-size:var(--text-xs)">{{matcher}}</code>
-                    {{#if is_async}}<span class="badge badge-gray">async</span>{{/if}}
-                </div>
-                <div class="detail-item-desc" style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1);font-family:monospace">{{command}}</div>
-            </div>
-        </div>
-        {{/each}}
-        {{else}}
-        <div class="empty-state"><p>No hooks configured for this plugin.</p></div>
-        {{/if}}
-    </div>
-    <div class="plugin-tab-content" data-tab-panel="env" data-plugin-owner="{{pluginId}}" style="display:none">
+    <div class="plugin-tab-content" role="tabpanel" id="tab-env-{{pluginId}}" data-tab-panel="env" data-plugin-owner="{{pluginId}}" hidden>
         <div id="env-status-{{pluginId}}">
-            <div style="padding:var(--space-4);color:var(--text-tertiary);font-size:var(--text-sm)">Click to load environment variables...</div>
+            <div class="plugin-tab-placeholder">Click to load environment variables...</div>
         </div>
     </div>
 </div>

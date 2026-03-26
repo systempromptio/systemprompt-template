@@ -1,8 +1,11 @@
 use std::path::{Path, PathBuf};
 
+use systemprompt::identifiers::SkillId;
+
 use crate::admin::types::ParsedSkill;
 
 use super::marketplace_sync_archive::MAX_FILE_SIZE;
+use crate::error::MarketplaceError;
 
 fn find_skills_dir(extract_dir: &Path) -> Option<PathBuf> {
     let custom_skills = extract_dir.join("plugins").join("custom").join("skills");
@@ -36,16 +39,18 @@ fn find_skills_dir(extract_dir: &Path) -> Option<PathBuf> {
     None
 }
 
-fn parse_skill_md(raw: &str) -> Result<(String, String, String), anyhow::Error> {
+fn parse_skill_md(raw: &str) -> Result<(String, String, String), MarketplaceError> {
     let trimmed = raw.trim();
     if !trimmed.starts_with("---") {
-        anyhow::bail!("SKILL.md missing YAML frontmatter (no opening ---)");
+        return Err(MarketplaceError::Internal(
+            "SKILL.md missing YAML frontmatter (no opening ---)".to_string(),
+        ));
     }
 
     let after_first = &trimmed[3..];
-    let end_idx = after_first
-        .find("\n---")
-        .ok_or_else(|| anyhow::anyhow!("SKILL.md missing closing --- for frontmatter"))?;
+    let end_idx = after_first.find("\n---").ok_or_else(|| {
+        MarketplaceError::Internal("SKILL.md missing closing --- for frontmatter".to_string())
+    })?;
 
     let yaml_block = &after_first[..end_idx].trim();
     let content = after_first[end_idx + 4..].trim().to_string();
@@ -70,7 +75,7 @@ fn parse_skill_md(raw: &str) -> Result<(String, String, String), anyhow::Error> 
 pub fn parse_skills_from_directory(
     extract_dir: &Path,
     base_skills_dir: &Path,
-) -> Result<Vec<ParsedSkill>, anyhow::Error> {
+) -> Result<Vec<ParsedSkill>, MarketplaceError> {
     let Some(skills_dir) = find_skills_dir(extract_dir) else {
         return Ok(Vec::new());
     };
@@ -112,12 +117,12 @@ pub fn parse_skills_from_directory(
         let base_skill_id = determine_base_skill_id(&skill_id, base_skills_dir);
 
         skills.push(ParsedSkill {
-            skill_id,
+            skill_id: SkillId::new(skill_id),
             name,
             description,
             content,
             tags: Vec::new(),
-            base_skill_id,
+            base_skill_id: base_skill_id.map(SkillId::new),
         });
     }
 

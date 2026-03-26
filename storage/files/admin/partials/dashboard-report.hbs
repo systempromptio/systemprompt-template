@@ -1,0 +1,310 @@
+<div class="cc-tab-panel {{#if tab_report}}cc-tab-panel--active{{/if}}" id="tab-report">
+{{#if has_dashboard_report}}
+  <div class="cc-report">
+    <div class="cc-report-header">
+      <div class="cc-report-title-group">
+        <h2 class="cc-report-title">Traffic & SEO Report</h2>
+        <span class="cc-report-subtitle">Web analytics fact sheet</span>
+      </div>
+      <div class="cc-report-header-right">
+        <div class="cc-report-actions">
+          <button type="button" class="cc-report-action-btn" id="dashboard-report-print" title="Print report">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 5V1h8v4"/>
+              <rect x="2" y="5" width="12" height="7" rx="1"/>
+              <path d="M4 9h8v6H4z"/>
+            </svg>
+            <span>Print</span>
+          </button>
+          <button type="button" class="cc-report-action-btn" id="dashboard-report-regenerate" title="Regenerate report">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 8a7 7 0 0 1 13-3.5M15 2v3.5h-3.5"/>
+              <path d="M15 8a7 7 0 0 1-13 3.5M1 14v-3.5h3.5"/>
+            </svg>
+            <span>Regenerate</span>
+          </button>
+        </div>
+        <span class="cc-report-date">{{dashboard_report.report_date}}</span>
+        <span class="cc-report-subtitle">Generated at {{dashboard_report.generated_at}}</span>
+        <div class="cc-report-countdown" id="dashboard-report-countdown">
+          <span class="cc-report-countdown-label">Next report in</span>
+          <span class="cc-report-countdown-value" id="dashboard-report-countdown-value">--:--</span>
+        </div>
+      </div>
+    </div>
+
+    {{!-- Traffic Overview --}}
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">Traffic Overview</h3>
+      {{#> components/data-table}}
+        <thead>
+          <tr>
+            <th class="cc-report-th-metric">Metric</th>
+            <th class="cc-report-th-value">Today</th>
+            <th class="cc-report-th-delta">vs Yesterday</th>
+            <th class="cc-report-th-delta">vs 7d Avg</th>
+            <th class="cc-report-th-delta">vs 14d Avg</th>
+            <th class="cc-report-th-delta cc-report-th-global">vs 30d Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each dashboard_report.traffic_overview}}
+          <tr>
+            <td class="cc-report-metric">{{label}}</td>
+            <td class="cc-report-value">{{value}}</td>
+            <td class="cc-report-delta cc-report-delta--{{yesterday_sentiment}}">
+              <span class="cc-report-arrow">{{yesterday_arrow}}</span> {{yesterday_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{week_sentiment}}">
+              <span class="cc-report-arrow">{{week_arrow}}</span> {{week_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{fortnight_sentiment}}">
+              <span class="cc-report-arrow">{{fortnight_arrow}}</span> {{fortnight_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{global_sentiment}}">
+              <span class="cc-report-arrow">{{global_arrow}}</span> {{global_delta}}
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      {{/components/data-table}}
+    </div>
+
+    {{!-- User Acquisition --}}
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">User Acquisition</h3>
+      {{#> components/data-table}}
+        <thead>
+          <tr>
+            <th class="cc-report-th-metric">Metric</th>
+            <th class="cc-report-th-value">Today</th>
+            <th class="cc-report-th-delta">vs Yesterday</th>
+            <th class="cc-report-th-delta">vs 7d Avg</th>
+            <th class="cc-report-th-delta">vs 14d Avg</th>
+            <th class="cc-report-th-delta cc-report-th-global">vs 30d Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each dashboard_report.user_acquisition}}
+          <tr>
+            <td class="cc-report-metric">{{label}}</td>
+            <td class="cc-report-value">{{value}}</td>
+            <td class="cc-report-delta cc-report-delta--{{yesterday_sentiment}}">
+              <span class="cc-report-arrow">{{yesterday_arrow}}</span> {{yesterday_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{week_sentiment}}">
+              <span class="cc-report-arrow">{{week_arrow}}</span> {{week_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{fortnight_sentiment}}">
+              <span class="cc-report-arrow">{{fortnight_arrow}}</span> {{fortnight_delta}}
+            </td>
+            <td class="cc-report-delta cc-report-delta--{{global_sentiment}}">
+              <span class="cc-report-arrow">{{global_arrow}}</span> {{global_delta}}
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      {{/components/data-table}}
+    </div>
+
+    {{!-- SEO Metrics Summary --}}
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">SEO Performance</h3>
+      <div class="cc-report-entity-grid">
+        <div class="cc-report-entity-card">
+          <span class="cc-report-entity-value">{{dashboard_report.seo_impressions}}</span>
+          <span class="cc-report-entity-label">Search Impressions</span>
+        </div>
+        <div class="cc-report-entity-card">
+          <span class="cc-report-entity-value">{{dashboard_report.seo_clicks}}</span>
+          <span class="cc-report-entity-label">Search Clicks</span>
+        </div>
+        <div class="cc-report-entity-card">
+          <span class="cc-report-entity-value">{{dashboard_report.seo_ctr}}</span>
+          <span class="cc-report-entity-label">Avg CTR</span>
+        </div>
+        <div class="cc-report-entity-card">
+          <span class="cc-report-entity-value">{{dashboard_report.seo_indexed}}</span>
+          <span class="cc-report-entity-label">Indexed Pages</span>
+        </div>
+        <div class="cc-report-entity-card">
+          <span class="cc-report-entity-value">{{dashboard_report.seo_avg_position}}</span>
+          <span class="cc-report-entity-label">Avg Position</span>
+        </div>
+      </div>
+    </div>
+
+    {{!-- Top Content --}}
+    {{#if dashboard_report.has_top_content}}
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">Top Content (7 Days)</h3>
+      {{#> components/data-table}}
+        <thead>
+          <tr>
+            <th>Page</th>
+            <th class="cc-report-th-value">Views (7d)</th>
+            <th class="cc-report-th-value">Views (30d)</th>
+            <th class="cc-report-th-value">Visitors</th>
+            <th class="cc-report-th-value">Avg Time</th>
+            <th class="cc-report-th-value">Trend</th>
+            <th class="cc-report-th-value">Impressions</th>
+            <th class="cc-report-th-value">Clicks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each dashboard_report.top_content}}
+          <tr>
+            <td><span class="traffic-page-url" title="{{title}}">{{title}}</span></td>
+            <td class="numeric">{{views_7d}}</td>
+            <td class="numeric">{{views_30d}}</td>
+            <td class="numeric">{{unique_visitors}}</td>
+            <td class="numeric">{{avg_time}}</td>
+            <td class="cc-report-delta cc-report-delta--{{trend_class}}">
+              <span class="cc-report-arrow">{{trend_icon}}</span>
+            </td>
+            <td class="numeric">{{search_impressions}}</td>
+            <td class="numeric">{{search_clicks}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      {{/components/data-table}}
+    </div>
+    {{/if}}
+
+    {{!-- Top Landing Pages --}}
+    {{#if dashboard_report.has_landing_pages}}
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">Top Landing Pages (24h)</h3>
+      {{#> components/data-table}}
+        <thead>
+          <tr>
+            <th>Page</th>
+            <th class="cc-report-th-value">Sessions</th>
+            <th class="cc-report-th-value">Avg Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each dashboard_report.landing_pages}}
+          <tr>
+            <td><span class="traffic-page-url" title="{{page_url}}">{{page_url}}</span></td>
+            <td class="numeric">{{sessions}}</td>
+            <td class="numeric">{{avg_time}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      {{/components/data-table}}
+    </div>
+    {{/if}}
+
+    {{!-- Geo / Device / Source breakdowns --}}
+    <div class="dashboard-two-col" style="margin-top:var(--space-4)">
+      {{#if dashboard_report.has_geo}}
+      <div>
+        <div class="section-title">Geographic Distribution</div>
+        <div class="card p-5">
+          {{#each dashboard_report.geo_breakdown}}
+          <div class="skill-bar-row">
+            <div class="skill-bar-label">{{label}}</div>
+            <div class="skill-bar-track">
+              <div class="progress-bar"><div class="progress-fill progress-purple" style="--fill: {{pct}}%"></div></div>
+            </div>
+            <div class="skill-bar-count">{{sessions}}</div>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+      {{/if}}
+      {{#if dashboard_report.has_devices}}
+      <div>
+        <div class="section-title">Device Breakdown</div>
+        <div class="card p-5">
+          {{#each dashboard_report.device_breakdown}}
+          <div class="skill-bar-row">
+            <div class="skill-bar-label">{{label}}</div>
+            <div class="skill-bar-track">
+              <div class="progress-bar"><div class="progress-fill progress-green" style="--fill: {{pct}}%"></div></div>
+            </div>
+            <div class="skill-bar-count">{{sessions}}</div>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+      {{/if}}
+    </div>
+
+    {{#if dashboard_report.has_sources}}
+    <div class="dashboard-two-col" style="margin-top:var(--space-4)">
+      <div>
+        <div class="section-title">Traffic Sources</div>
+        <div class="card p-5">
+          {{#each dashboard_report.source_breakdown}}
+          <div class="skill-bar-row">
+            <div class="skill-bar-label">{{label}}</div>
+            <div class="skill-bar-track">
+              <div class="progress-bar"><div class="progress-fill progress-blue" style="--fill: {{pct}}%"></div></div>
+            </div>
+            <div class="skill-bar-count">{{sessions}}</div>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Content Marketing</div>
+        <div class="cc-report-entity-grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="cc-report-entity-card">
+            <span class="cc-report-entity-value">{{dashboard_report.content_funnel.total_published}}</span>
+            <span class="cc-report-entity-label">Published</span>
+          </div>
+          <div class="cc-report-entity-card">
+            <span class="cc-report-entity-value">{{dashboard_report.content_funnel.avg_views_per_piece}}</span>
+            <span class="cc-report-entity-label">Avg Views / Piece</span>
+          </div>
+          <div class="cc-report-entity-card">
+            <span class="cc-report-entity-value">{{dashboard_report.content_funnel.total_shares}}</span>
+            <span class="cc-report-entity-label">Total Shares</span>
+          </div>
+          <div class="cc-report-entity-card">
+            <span class="cc-report-entity-value">{{dashboard_report.content_funnel.total_comments}}</span>
+            <span class="cc-report-entity-label">Total Comments</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {{/if}}
+
+    {{!-- 7-Day Sparklines --}}
+    <div class="cc-report-section">
+      <h3 class="cc-report-section-title">7-Day Trend</h3>
+      <div class="cc-report-history-grid">
+        <div class="cc-report-history-item">
+          <span class="cc-report-history-label">Sessions</span>
+          <svg class="cc-report-sparkline" data-metric="sessions" data-values="{{dashboard_report.sparkline_sessions}}" viewBox="0 0 60 20" role="img" aria-labelledby="sparkline-title-sessions"><title id="sparkline-title-sessions">Sessions trend over 7 days</title></svg>
+        </div>
+        <div class="cc-report-history-item">
+          <span class="cc-report-history-label">Page Views</span>
+          <svg class="cc-report-sparkline" data-metric="page_views" data-values="{{dashboard_report.sparkline_page_views}}" viewBox="0 0 60 20" role="img" aria-labelledby="sparkline-title-pv"><title id="sparkline-title-pv">Page views trend over 7 days</title></svg>
+        </div>
+        <div class="cc-report-history-item">
+          <span class="cc-report-history-label">Signups</span>
+          <svg class="cc-report-sparkline" data-metric="signups" data-values="{{dashboard_report.sparkline_signups}}" viewBox="0 0 60 20" role="img" aria-labelledby="sparkline-title-signups"><title id="sparkline-title-signups">Signups trend over 7 days</title></svg>
+        </div>
+        <div class="cc-report-history-item">
+          <span class="cc-report-history-label">Avg Time (s)</span>
+          <svg class="cc-report-sparkline" data-metric="avg_time" data-values="{{dashboard_report.sparkline_avg_time}}" viewBox="0 0 60 20" role="img" aria-labelledby="sparkline-title-avgtime"><title id="sparkline-title-avgtime">Average time on page trend over 7 days</title></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+{{else}}
+  <div class="cc-report cc-report--empty">
+    <p class="cc-report-empty-text">No traffic report data available yet. Click "Generate Report" or run <code>systemprompt infra jobs run admin_traffic_report</code>.</p>
+    <button type="button" class="cc-report-action-btn" id="dashboard-report-regenerate" title="Generate report">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 8a7 7 0 0 1 13-3.5M15 2v3.5h-3.5"/>
+        <path d="M15 8a7 7 0 0 1-13 3.5M1 14v-3.5h3.5"/>
+      </svg>
+      <span>Generate Report</span>
+    </button>
+  </div>
+{{/if}}
+</div>

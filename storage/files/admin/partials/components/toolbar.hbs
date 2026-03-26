@@ -1,6 +1,6 @@
-<div class="toolbar">
+<div class="toolbar" role="toolbar" aria-label="{{default toolbarLabel "Actions"}}">
     <div class="search-group">
-        <input type="text" class="search-input" placeholder="{{searchPlaceholder}}" id="{{searchId}}">
+        <input type="text" class="search-input" placeholder="{{searchPlaceholder}}" id="{{searchId}}" aria-label="{{searchPlaceholder}}">
     </div>
     {{#if newHref}}
     <a href="{{newHref}}" class="btn btn-primary">{{newLabel}}</a>

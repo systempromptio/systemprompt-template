@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use systemprompt::identifiers::{Email, UserId};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MarketplacePlugin {
@@ -29,9 +30,9 @@ pub struct MarketplacePlugin {
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct PluginUser {
-    pub user_id: String,
+    pub user_id: UserId,
     pub display_name: Option<String>,
-    pub email: Option<String>,
+    pub email: Option<Email>,
     pub department: Option<String>,
     pub event_count: i64,
     pub last_used: DateTime<Utc>,
@@ -51,7 +52,7 @@ pub struct VisibilityRule {
 pub struct PluginRating {
     pub id: String,
     pub plugin_id: String,
-    pub user_id: String,
+    pub user_id: UserId,
     pub rating: i16,
     pub review: Option<String>,
     pub created_at: DateTime<Utc>,
@@ -76,7 +77,7 @@ pub struct PluginRatingAggregate {
 
 #[derive(Debug, Deserialize)]
 pub struct SubmitRatingRequest {
-    pub user_id: String,
+    pub user_id: UserId,
     pub rating: i16,
     pub review: Option<String>,
 }

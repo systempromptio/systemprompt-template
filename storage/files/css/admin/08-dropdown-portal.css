@@ -1,0 +1,29 @@
+@layer components {
+
+.sp-dropdown-portal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    z-index: var(--sp-z-dropdown);
+    pointer-events: none;
+}
+
+.sp-dropdown-menu {
+    position: fixed;
+    left: auto;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+    background: var(--sp-bg-surface-overlay);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-md);
+    box-shadow: var(--sp-shadow-lg);
+    min-width: 140px;
+    padding: var(--sp-space-1) 0;
+    z-index: var(--sp-z-dropdown);
+}
+
+}

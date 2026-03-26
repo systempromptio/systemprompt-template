@@ -1,0 +1,143 @@
+@layer components {
+
+.badge-purple {
+    background: var(--sp-badge-purple-dim);
+    color: var(--sp-badge-purple);
+}
+
+.badge-blue {
+    background: var(--sp-accent-dim);
+    color: var(--sp-accent);
+}
+
+.badge-yellow {
+    background: var(--sp-warning-dim);
+    color: var(--sp-warning);
+}
+
+.evolution-card {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-brand);
+    padding: var(--sp-space-5);
+    margin-bottom: var(--sp-space-5);
+}
+
+.evolution-card h4 {
+    color: var(--sp-text-primary);
+}
+
+.evolution-table {
+    font-size: var(--sp-text-sm);
+}
+
+.insurance-badge {
+    font-size: var(--sp-text-xs);
+    margin-left: var(--sp-space-1);
+    vertical-align: middle;
+}
+
+.table-preview {
+    max-height: 200px;
+    overflow: auto;
+}
+
+.detail-data-table {
+    width: 100%;
+    font-size: var(--sp-text-sm);
+    border-collapse: collapse;
+}
+.detail-data-table th,
+.detail-data-table td {
+    padding: var(--sp-space-2) var(--sp-space-1);
+}
+.detail-data-table thead tr {
+    text-align: left;
+    border-bottom: 2px solid var(--sp-border-default);
+}
+.detail-data-table tbody tr {
+    border-bottom: 1px solid var(--sp-border-default);
+}
+
+@media (max-width: 768px) {
+    .table-container {
+        margin-left: calc(-1 * var(--sp-space-3));
+        margin-right: calc(-1 * var(--sp-space-3));
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    /* On mobile, admin-layout is display:block with height:auto,
+       so flex-based table sizing doesn't work. Use max-height fallback. */
+    .admin-main > .table-container {
+        flex: none;
+        min-height: 0;
+    }
+
+    .admin-main > .table-container > .table-scroll {
+        flex: none;
+        max-height: 60vh;
+    }
+
+    .table-scroll {
+        max-height: 60vh;
+        overflow-x: auto;
+    }
+
+    .data-table th {
+        padding: var(--sp-space-2) var(--sp-space-3);
+        font-size: var(--sp-text-xs);
+    }
+
+    .data-table td {
+        padding: var(--sp-space-2) var(--sp-space-3);
+        font-size: var(--sp-text-sm);
+    }
+
+    .data-table td.col-actions {
+        padding: var(--sp-space-1) var(--sp-space-2);
+    }
+
+    .col-checkbox input[type="checkbox"] {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: var(--sp-space-2);
+        padding: var(--sp-space-2) var(--sp-space-3);
+        font-size: var(--sp-text-xs);
+    }
+
+    .pagination-controls button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 767px) {
+    .data-table th:first-child,
+    .data-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: var(--sp-bg-surface);
+    }
+
+    .data-table th:first-child {
+        background: var(--sp-bg-card-header);
+    }
+}
+
+@media (max-width: 480px) {
+    .table-container {
+        margin-left: calc(-1 * var(--sp-space-2));
+        margin-right: calc(-1 * var(--sp-space-2));
+    }
+}
+
+}

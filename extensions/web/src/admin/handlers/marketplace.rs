@@ -8,39 +8,30 @@ use axum::{
     Json,
 };
 use sqlx::PgPool;
-use systemprompt::models::ProfileBootstrap;
 
+use crate::admin::handlers::shared;
 use crate::admin::repositories;
 use crate::admin::types::{
     MarketplacePlugin, MarketplaceQuery, SubmitRatingRequest, UpdateVisibilityRequest, UserContext,
 };
+
+use super::responses::{MarketplaceListResponse, RulesResponse, UsersListResponse};
 
 pub(crate) async fn list_marketplace_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<MarketplaceQuery>,
 ) -> Response {
-    let services_path = match ProfileBootstrap::get() {
-        Ok(profile) => std::path::PathBuf::from(&profile.paths.services),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to get profile bootstrap");
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Failed to load profile"})),
-            )
-                .into_response();
-        }
+    let services_path = match shared::get_services_path() {
+        Ok(p) => p,
+        Err(r) => return *r,
     };
 
     let plugins = match repositories::list_plugins_for_roles(&services_path, &user_ctx.roles) {
         Ok(p) => p,
         Err(e) => {
             tracing::error!(error = %e, "Failed to list plugins");
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response();
+            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string());
         }
     };
 
@@ -92,7 +83,10 @@ pub(crate) async fn list_marketplace_handler(
 
     sort_and_filter(&mut marketplace_plugins, &query);
 
-    Json(marketplace_plugins).into_response()
+    Json(MarketplaceListResponse {
+        plugins: marketplace_plugins,
+    })
+    .into_response()
 }
 
 fn build_marketplace_plugin(
@@ -102,7 +96,7 @@ fn build_marketplace_plugin(
     ratings_map: &HashMap<String, crate::admin::types::PluginRatingAggregate>,
     visibility_rules: &HashMap<String, Vec<crate::admin::types::VisibilityRule>>,
 ) -> MarketplacePlugin {
-    let detail = repositories::get_plugin_detail(services_path, &plugin.id);
+    let detail = repositories::find_plugin_detail(services_path, &plugin.id);
     let (version, category, keywords, author, roles, enabled) = match detail {
         Ok(Some(d)) => (
             d.version,
@@ -150,7 +144,7 @@ fn build_marketplace_plugin(
         skill_count: plugin.skills.len(),
         agent_count: plugin.agents.len(),
         mcp_server_count: plugin.mcp_servers.len(),
-        hook_count: plugin.hooks.len(),
+        hook_count: 0,
         roles,
         visibility_rules: plugin_rules,
         total_events,
@@ -199,14 +193,10 @@ pub(crate) async fn marketplace_plugin_users_handler(
     Path(plugin_id): Path<String>,
 ) -> Response {
     match repositories::get_plugin_users(&pool, &plugin_id).await {
-        Ok(users) => Json(users).into_response(),
+        Ok(users) => Json(UsersListResponse { users }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, plugin_id, "Failed to get plugin users");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response()
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
         }
     }
 }
@@ -217,11 +207,7 @@ pub(crate) async fn submit_rating_handler(
     Json(body): Json<SubmitRatingRequest>,
 ) -> Response {
     if body.rating < 1 || body.rating > 5 {
-        return (
-            StatusCode::BAD_REQUEST,
-            Json(serde_json::json!({"error": "Rating must be between 1 and 5"})),
-        )
-            .into_response();
+        return shared::error_response(StatusCode::BAD_REQUEST, "Rating must be between 1 and 5");
     }
     match repositories::upsert_rating(
         &pool,
@@ -235,11 +221,7 @@ pub(crate) async fn submit_rating_handler(
         Ok(rating) => (StatusCode::CREATED, Json(rating)).into_response(),
         Err(e) => {
             tracing::error!(error = %e, plugin_id, "Failed to submit rating");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response()
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
         }
     }
 }
@@ -250,14 +232,10 @@ pub(crate) async fn update_visibility_handler(
     Json(body): Json<UpdateVisibilityRequest>,
 ) -> Response {
     match repositories::set_visibility_rules(&pool, &plugin_id, &body.rules).await {
-        Ok(rules) => Json(rules).into_response(),
+        Ok(rules) => Json(RulesResponse { rules }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, plugin_id, "Failed to update visibility rules");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
-            )
-                .into_response()
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
         }
     }
 }

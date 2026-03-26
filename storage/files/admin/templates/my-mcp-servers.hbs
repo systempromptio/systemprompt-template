@@ -1,112 +1,126 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    <!-- Toolbar -->
+    {{> components/page-hero}}
+
+    <section aria-label="MCP Servers">
     <div class="toolbar">
         <div class="search-group">
-            <input type="text" class="search-input" placeholder="Search MCP servers..." id="my-mcp-search">
+            <input type="text" class="search-input" placeholder="Search MCP servers..." id="my-mcp-search" aria-label="Search MCP servers">
         </div>
-        <button class="btn btn-secondary" id="my-mcp-bulk-bar" disabled>
-            Bulk Actions (<span data-bulk-count>0</span>)
-        </button>
-        <button class="btn btn-secondary" id="my-mcp-fork-btn">Fork from Org</button>
-        <a href="/admin/my/mcp-servers/edit/" class="btn btn-primary">+ New MCP Server</a>
+        <button type="button" class="btn btn-primary" id="add-mcp-btn">+ Add MCP Server</button>
     </div>
 
-    <!-- Stats bar -->
-    <div class="config-stats" id="stats-my-mcp">
-        <span class="config-stat"><span class="config-stat-dot blue"></span> <span class="config-stat-value">{{server_count}}</span> servers</span>
-        <span class="config-stat"><span class="config-stat-dot green"></span> <span class="config-stat-value">{{enabled_count}}</span> enabled</span>
+    <p class="text-muted mb-4">All MCP server connections in your workspace. Connectors are added when you add plugins from the <a href="/admin/browse/plugins/">Plugin Directory</a>.</p>
+
+    <div class="config-stats mb-4" id="stats-my-mcp">
+        <span class="badge badge-info">{{stats.total_count}} server{{#if (not (eq stats.total_count 1))}}s{{/if}}</span>
+        <span class="badge badge-success">{{stats.enabled_count}} enabled</span>
     </div>
 
-    {{#if mcp_servers}}
+    <div class="entity-batch-bar" id="entity-batch-bar" hidden>
+        <span class="entity-batch-count" id="entity-batch-count">0 selected</span>
+        <button type="button" class="entity-batch-btn entity-batch-btn--danger" id="entity-batch-delete">Delete Selected</button>
+    </div>
+
+    {{#if servers}}
     <div class="table-container">
         <table class="data-table" id="my-mcp-table">
             <thead>
                 <tr>
-                    <th style="width:40px" data-no-row-click><input type="checkbox" class="bulk-select-all"></th>
-                    <th>Name</th>
+                    <th class="col-checkbox"><input type="checkbox" id="entity-select-all" class="entity-batch-checkbox" aria-label="Select all"></th>
                     <th>Server ID</th>
-                    <th>Connection</th>
-                    <th>OAuth</th>
+                    <th>Name</th>
+                    <th>URL</th>
+                    <th>Plugin</th>
                     <th>Source</th>
-                    <th>Status</th>
+                    <th>Enabled</th>
+                    <th>Usage</th>
                     <th class="col-actions"></th>
                 </tr>
             </thead>
             <tbody>
-                {{#each mcp_servers}}
-                <tr class="clickable-row" data-entity-type="my-mcp" data-entity-id="{{mcp_server_id}}" data-name="{{toLowerCase name}}">
-                    <td data-no-row-click>
-                        <input type="checkbox" class="bulk-checkbox" data-entity-id="{{mcp_server_id}}">
+                {{#each servers}}
+                <tr class="clickable-row" data-expandable aria-expanded="false" data-entity-id="{{this.mcp_server_id}}" data-server-id="{{this.mcp_server_id}}" data-name="{{toLowerCase this.name}}" data-name-val="{{this.name}}" data-description="{{this.description}}" data-endpoint="{{this.endpoint}}">
+                    <td class="col-checkbox" data-no-row-click><input type="checkbox" class="entity-batch-checkbox entity-row-checkbox" data-batch-id="{{this.mcp_server_id}}" aria-label="Select {{this.name}}"></td>
+                    <td><code>{{this.mcp_server_id}}</code></td>
+                    <td><div class="cell-primary"><span class="expand-indicator" data-expand-for="{{this.mcp_server_id}}" aria-hidden="true">&#9654;</span> {{this.name}}</div></td>
+                    <td><code class="text-tertiary">{{this.endpoint}}</code></td>
+                    <td>
+                        {{#if this.plugin_names}}
+                            {{#each this.plugin_names}}
+                            <a href="/admin/my/plugins/edit?id={{this.id}}" class="badge badge-purple text-no-decor cursor-pointer">{{this.name}}</a>
+                            {{/each}}
+                        {{else}}
+                            <span class="text-tertiary">&mdash;</span>
+                        {{/if}}
                     </td>
                     <td>
-                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{mcp_server_id}}">&#9654;</span> {{name}}</div>
-                        {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
-                    </td>
-                    <td><code class="code-inline">{{mcp_server_id}}</code></td>
-                    <td>
-                        {{#if endpoint}}<code class="code-inline" style="font-size:var(--text-xs)">{{truncate endpoint 30}}</code>
-                        {{else if port}}<code class="code-inline">:{{port}}</code>
-                        {{else}}<span style="color:var(--text-tertiary)">--</span>{{/if}}
-                    </td>
-                    <td>
-                        {{#if oauth_required}}<span class="badge badge-yellow">OAuth</span>{{else}}<span style="color:var(--text-tertiary)">--</span>{{/if}}
+                        {{#if this.is_system}}
+                        <span class="badge badge-info">System</span>
+                        {{else if this.base_mcp_server_id}}
+                        <span class="badge badge-purple">Official</span>
+                        {{else}}
+                        <span class="badge badge-success">Custom</span>
+                        {{/if}}
                     </td>
                     <td>
-                        {{#if is_forked}}<span class="badge badge-yellow">forked</span>{{else}}<span class="badge badge-green">custom</span>{{/if}}
+                        {{#if this.enabled}}
+                        <span class="badge badge-success">enabled</span>
+                        {{else}}
+                        <span class="badge badge-secondary">disabled</span>
+                        {{/if}}
                     </td>
                     <td>
-                        {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
+                        {{#if (gt total_uses 0)}}
+                            <div class="usage-metric">
+                                <span class="badge badge-info">{{total_uses}} uses</span>
+                                <span class="text-tertiary text-xs">{{session_count}} sessions</span>
+                            </div>
+                        {{else}}
+                            <span class="text-tertiary">&mdash;</span>
+                        {{/if}}
                     </td>
                     <td class="col-actions" data-no-row-click>
-                        <div class="actions-menu" data-actions-for="{{mcp_server_id}}">
-                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                        <div class="actions-menu">
+                            <button type="button" class="actions-trigger" data-action="menu" title="Actions" aria-label="Actions menu">&#8942;</button>
                             <div class="actions-dropdown">
-                                <a href="/admin/my/mcp-servers/edit/?id={{mcp_server_id}}" class="actions-item">Edit</a>
-                                <div class="actions-popup-separator"></div>
-                                <button class="actions-item actions-item-danger" data-delete-mcp="{{mcp_server_id}}">Delete</button>
+                                <button type="button" class="actions-item edit-mcp-btn" data-server-id="{{this.mcp_server_id}}">Edit</button>
+                                <button type="button" class="actions-item actions-item-danger delete-mcp-btn" data-server-id="{{this.mcp_server_id}}">Delete</button>
                             </div>
                         </div>
                     </td>
                 </tr>
-                <!-- Detail expand row -->
-                <tr class="detail-row" data-detail-for="{{mcp_server_id}}">
-                    <td colspan="8">
+                <tr class="detail-row" data-detail-for="{{this.mcp_server_id}}" aria-hidden="true">
+                    <td colspan="9">
                         <div class="detail-row-content">
-                            <div class="detail-section" style="display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:start">
-                                <div style="flex:1;min-width:200px">
-                                    <strong>Connection Details</strong>
-                                    <table class="detail-sub-table">
-                                        {{#if binary}}<tr><td style="color:var(--text-secondary)">Binary</td><td><code class="code-inline">{{binary}}</code></td></tr>{{/if}}
-                                        {{#if package_name}}<tr><td style="color:var(--text-secondary)">Package</td><td><code class="code-inline">{{package_name}}</code></td></tr>{{/if}}
-                                        {{#if port}}<tr><td style="color:var(--text-secondary)">Port</td><td>{{port}}</td></tr>{{/if}}
-                                        {{#if endpoint}}<tr><td style="color:var(--text-secondary)">Endpoint</td><td><code class="code-inline" style="font-size:var(--text-xs);word-break:break-all">{{endpoint}}</code></td></tr>{{/if}}
-                                    </table>
-                                </div>
-                                {{#if oauth_required}}
-                                <div style="flex:1;min-width:200px">
-                                    <strong>OAuth Config</strong>
-                                    <table class="detail-sub-table">
-                                        {{#if oauth_audience}}<tr><td style="color:var(--text-secondary)">Audience</td><td><code class="code-inline">{{oauth_audience}}</code></td></tr>{{/if}}
-                                        {{#if oauth_scopes}}
-                                        <tr><td style="color:var(--text-secondary)">Scopes</td><td>
-                                            {{#each oauth_scopes}}<span class="badge badge-gray">{{this}}</span> {{/each}}
-                                        </td></tr>
-                                        {{/if}}
-                                    </table>
-                                </div>
-                                {{/if}}
-                            </div>
-                            {{#if base_mcp_server_id}}
-                            <div class="detail-section" style="margin-top:var(--space-3)">
-                                <span style="font-size:var(--text-sm);color:var(--text-secondary)">Forked from: <code style="font-size:var(--text-xs)">{{base_mcp_server_id}}</code></span>
+                            {{#if this.description}}
+                            <div class="detail-section">
+                                <strong>Description</strong>
+                                <p class="text-sm text-secondary mt-1">{{this.description}}</p>
                             </div>
                             {{/if}}
                             <div class="detail-section">
-                                <button class="btn btn-secondary btn-sm" data-toggle-json="{{mcp_server_id}}" style="font-size:var(--text-xs);padding:2px 8px;margin-bottom:var(--space-2)">Show JSON</button>
-                                <div class="json-view" data-json-for="{{mcp_server_id}}" style="display:none"></div>
+                                <strong>Endpoint</strong>
+                                <p class="text-sm mt-1"><code>{{this.endpoint}}</code></p>
                             </div>
+                            {{#if this.base_mcp_server_id}}
+                            <div class="detail-section">
+                                <span class="text-sm text-secondary">Added from: <code class="code-inline">{{this.base_mcp_server_id}}</code> <span class="badge badge-purple">Official</span></span>
+                            </div>
+                            {{/if}}
+                            {{#if (gt this.total_uses 0)}}
+                            <div class="detail-section">
+                                <strong>Metrics</strong>
+                                <div class="text-sm mt-1">
+                                    <span>{{this.total_uses}} total uses across {{this.session_count}} sessions</span>
+                                    {{#if (gt this.scored_sessions 0)}}
+                                    <span class="ml-3">Effectiveness: {{this.avg_effectiveness}}/5.0 ({{this.scored_sessions}} rated)</span>
+                                    <span class="ml-3">Goal achievement: {{this.goal_achievement_pct}}%</span>
+                                    {{/if}}
+                                </div>
+                            </div>
+                            {{/if}}
                         </div>
                     </td>
                 </tr>
@@ -115,37 +129,46 @@
         </table>
     </div>
     {{else}}
-    {{> components/empty-state message="No MCP servers yet. Create your first server or fork one from the org."}}
+    {{> components/empty-state message="No MCP servers yet. Add your first MCP server to get started."}}
     {{/if}}
 
-    <!-- Hidden detail data -->
-    {{#each mcp_servers}}
-    <script type="application/json" data-my-mcp-detail="{{mcp_server_id}}">
-        {{{json this}}}
-    </script>
-    {{/each}}
+    </section>
 
-    <!-- Fork panel -->
-    <div class="panel-overlay" id="fork-panel-overlay"></div>
-    <div class="side-panel" id="fork-panel" data-overlay="fork-panel-overlay">
+    <div class="panel-overlay" id="mcp-panel-overlay" role="presentation"></div>
+    <aside class="side-panel" id="mcp-panel" data-overlay="mcp-panel-overlay" role="dialog" aria-modal="true" aria-labelledby="mcp-panel-title">
         <div class="panel-header">
-            <h2 data-panel-title style="margin:0;font-size:var(--text-lg)"></h2>
-            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
+            <h2 id="mcp-panel-title">Add MCP Server</h2>
+            <button type="button" id="mcp-panel-close" aria-label="Close panel">&times;</button>
         </div>
-        <div class="panel-body" data-panel-body></div>
-        <div class="panel-footer" data-panel-footer></div>
-    </div>
+        <div class="panel-body">
+            <form id="mcp-form">
+                <div class="form-group">
+                    <label for="mcp-server-id">Server ID</label>
+                    <input type="text" id="mcp-server-id" class="form-control" placeholder="slack" required>
+                    <small class="text-tertiary">kebab-case — becomes the key in .mcp.json</small>
+                </div>
+                <div class="form-group">
+                    <label for="mcp-name">Display Name</label>
+                    <input type="text" id="mcp-name" class="form-control" placeholder="Slack" required>
+                </div>
+                <div class="form-group">
+                    <label for="mcp-description">Description</label>
+                    <textarea id="mcp-description" class="form-control" rows="3" placeholder="Slack MCP server for messaging"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="mcp-endpoint">Endpoint URL</label>
+                    <input type="url" id="mcp-endpoint" class="form-control" placeholder="https://mcp.slack.com/sse" required>
+                </div>
+                <div class="d-flex gap-3 mt-6">
+                    <button type="submit" class="btn btn-primary" id="mcp-save-btn">Save</button>
+                    <button type="button" class="btn btn-secondary" id="mcp-cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </aside>
 
     {{/inline}}
     {{#*inline "scripts"}}
-    <script src="/js/admin-my-workspace.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            if (AdminApp.initMyMcpServers) {
-                AdminApp.initMyMcpServers();
-            }
-        });
-    </script>
+    <script data-cfasync="false" src="/js/pages/admin-my-mcp.js" type="module" defer></script>
     {{/inline}}
 {{/layout}}

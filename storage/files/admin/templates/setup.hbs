@@ -1,0 +1,89 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    <div class="setup-page">
+        <div class="setup-hero">
+            <h2>Get started with systemprompt.io</h2>
+            <p>Follow these four phases to connect Claude, build your skill library, and start getting value from the platform. Phase 1 is required &mdash; without it, nothing else works.</p>
+        </div>
+
+        <div class="setup-stepper" role="list" aria-label="Setup phases">
+            {{#each phases}}
+            <div class="setup-phase {{#if complete}}setup-phase--complete{{else}}{{#if current}}setup-phase--current{{else}}setup-phase--upcoming{{/if}}{{/if}}" role="listitem">
+                <div class="setup-phase-indicator" aria-hidden="true">
+                    <div class="setup-phase-number">
+                        {{#if complete}}
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                            <path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/>
+                        </svg>
+                        {{else}}
+                        {{number}}
+                        {{/if}}
+                    </div>
+                    {{#unless @last}}
+                    <div class="setup-phase-connector"></div>
+                    {{/unless}}
+                </div>
+                <div class="setup-phase-content">
+                    <div class="setup-phase-header">
+                        <h3>Phase {{number}}: {{title}}</h3>
+                        {{#if complete}}
+                        <span class="setup-badge setup-badge--complete">Complete</span>
+                        {{else}}
+                        {{#if current}}
+                        <span class="setup-badge setup-badge--current">Current</span>
+                        {{else}}
+                        <span class="sr-only">Upcoming</span>
+                        {{/if}}
+                        {{/if}}
+                    </div>
+                    <p>{{description}}</p>
+                    <div class="setup-phase-actions">
+                        <a href="{{guide_url}}" class="setup-phase-link" target="_blank" rel="noopener noreferrer">
+                            Read the guide
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 3l5 5-5 5"/>
+                            </svg>
+                        </a>
+                        {{#if action_url}}
+                        <a href="{{action_url}}" class="setup-phase-action">
+                            {{action_label}}
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 3l5 5-5 5"/>
+                            </svg>
+                        </a>
+                        {{/if}}
+                    </div>
+                    {{#if current}}
+                    {{#if (eq number 1)}}
+                    <div class="setup-phase-expand">
+                        {{> control-center-onboarding setup_context=true marketplace=@root.marketplace}}
+                    </div>
+                    {{/if}}
+                    {{/if}}
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module">
+    import { showToast } from '/js/services/toast.js';
+    // Inline tab init to avoid pulling in the full control-center feed dependency chain
+    for (const tab of document.querySelectorAll('.cc-onboarding-tab')) {
+        tab.addEventListener('click', () => {
+            const target = 'onboard-' + tab.getAttribute('data-onboard');
+            for (const t of document.querySelectorAll('.cc-onboarding-tab')) t.classList.remove('cc-onboarding-tab--active');
+            for (const p of document.querySelectorAll('.cc-onboarding-panel')) p.classList.remove('cc-onboarding-panel--active');
+            tab.classList.add('cc-onboarding-tab--active');
+            document.getElementById(target)?.classList.add('cc-onboarding-panel--active');
+        });
+    }
+    {{#if just_verified}}
+    showToast('Email verified! Your account is now active.', 'success');
+    window.history.replaceState({}, '', '/admin/setup');
+    {{/if}}
+    </script>
+    {{/inline}}
+{{/layout}}

@@ -1,0 +1,153 @@
+@layer components {
+
+.sp-expand-icon-open {
+    transform: rotate(180deg);
+}
+
+.sp-mkt-empty-users {
+    margin-top: var(--sp-space-2);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-mkt-users-list {
+    margin-top: var(--sp-space-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+}
+
+.sp-mkt-user-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    font-size: var(--sp-text-xs);
+    padding: var(--sp-space-1) 0;
+    border-bottom: 1px solid var(--sp-border-primary);
+}
+
+.sp-mkt-user-name {
+    font-weight: 600;
+    color: var(--sp-text-primary);
+}
+
+.sp-mkt-user-date {
+    color: var(--sp-text-tertiary);
+}
+
+.sp-mkt-no-plugins {
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-sm);
+}
+
+.sp-mkt-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-1) 0;
+    cursor: pointer;
+}
+
+.sp-mkt-roles-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+    padding: var(--sp-space-2) 0;
+}
+
+.sp-mkt-role-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin-right: var(--sp-space-3);
+    font-size: var(--sp-text-sm);
+    cursor: pointer;
+}
+
+.sp-mkt-plugin-filter {
+    margin-bottom: var(--sp-space-2);
+}
+
+.sp-mkt-checklist-scroll {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-md);
+    padding: var(--sp-space-2);
+}
+
+.sp-mkt-delete-btn {
+    margin-right: auto;
+}
+
+.sp-visibility-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--sp-overlay-medium);
+    backdrop-filter: blur(4px);
+    z-index: var(--sp-z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn var(--sp-duration-normal) var(--sp-ease-out);
+}
+
+.sp-visibility-dialog {
+    background: var(--sp-bg-surface-overlay);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-card-brand);
+    padding: var(--sp-space-7);
+    max-width: 520px;
+    width: 90%;
+    box-shadow: var(--sp-shadow-float);
+    animation: dialogIn var(--sp-duration-normal) var(--sp-ease-out);
+    color: var(--sp-text-primary);
+}
+
+.sp-visibility-header {
+    margin: 0 0 var(--sp-space-4);
+    font-size: var(--sp-text-lg);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+}
+
+.sp-visibility-rules {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: var(--sp-space-4);
+}
+
+.sp-visibility-rule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-sm);
+    margin-bottom: var(--sp-space-2);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-primary);
+}
+
+.sp-visibility-empty {
+    padding: var(--sp-space-4);
+    text-align: center;
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-visibility-actions {
+    display: flex;
+    gap: var(--sp-space-3);
+    justify-content: flex-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-visibility-overlay,
+    .sp-visibility-dialog {
+        animation: none;
+    }
+}
+
+}

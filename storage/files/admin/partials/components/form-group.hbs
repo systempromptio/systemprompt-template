@@ -1,18 +1,19 @@
 <div class="form-group">
-    {{#if label}}<label class="field-label">{{label}}{{#if hint}} <span class="form-hint">({{hint}})</span>{{/if}}</label>{{/if}}
+    {{#if label}}<label class="field-label" for="field-{{name}}">{{label}}{{#if hint}} <span class="form-hint" id="hint-{{name}}">({{hint}})</span>{{/if}}</label>{{/if}}
     {{#if (eq type "textarea")}}
-    <textarea class="field-input" name="{{name}}" rows="{{default rows "4"}}" placeholder="{{default placeholder ""}}"{{#if required}} required{{/if}}{{#if readonly}} readonly{{/if}}>{{default value ""}}</textarea>
+    <textarea class="field-input" id="field-{{name}}" name="{{name}}" rows="{{default rows "4"}}" placeholder="{{default placeholder ""}}"{{#if required}} required aria-required="true"{{/if}}{{#if readonly}} readonly{{/if}}{{#if hint}} aria-describedby="hint-{{name}}"{{/if}}>{{default value ""}}</textarea>
     {{else if (eq type "select")}}
-    <select class="field-input" name="{{name}}"{{#if required}} required{{/if}}>
+    <select class="field-input" id="field-{{name}}" name="{{name}}"{{#if required}} required aria-required="true"{{/if}}{{#if hint}} aria-describedby="hint-{{name}}"{{/if}}>
         {{> @partial-block}}
     </select>
     {{else if (eq type "checkbox")}}
     <label class="toggle-switch toggle-label">
-        <input type="checkbox" name="{{name}}"{{#if checked}} checked{{/if}}>
+        <input type="checkbox" id="field-{{name}}" name="{{name}}"{{#if checked}} checked{{/if}}>
         <span class="toggle-slider"></span>
         <span class="field-label toggle-label-text">{{default checkboxLabel ""}}</span>
     </label>
     {{else}}
-    <input class="field-input" type="{{default type "text"}}" name="{{name}}" placeholder="{{default placeholder ""}}" value="{{default value ""}}"{{#if required}} required{{/if}}{{#if readonly}} readonly{{/if}}>
+    <input class="field-input" id="field-{{name}}" type="{{default type "text"}}" name="{{name}}" placeholder="{{default placeholder ""}}" value="{{default value ""}}"{{#if required}} required aria-required="true"{{/if}}{{#if readonly}} readonly{{/if}}{{#if hint}} aria-describedby="hint-{{name}}"{{/if}}>
     {{/if}}
+    <div class="error-msg" id="error-{{name}}" role="alert" aria-live="polite"></div>
 </div>

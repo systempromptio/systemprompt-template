@@ -1,0 +1,124 @@
+@layer reset {
+*, *::before, *::after { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: var(--sp-font-family);
+    color: var(--sp-text-primary);
+    background: var(--sp-bg-base);
+    line-height: 1.5;
+
+}
+}
+
+@layer base {
+.admin-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--sp-bg-base);
+    color: var(--sp-text-primary);
+    font-family: var(--sp-font-family);
+    font-size: var(--sp-text-base);
+    line-height: 1.5;
+
+}
+
+.admin-main {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--sp-bg-main-gradient);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    contain: layout style;
+}
+
+/* Screen-reader only utility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.admin-main > *:not(.admin-footer) {
+    padding-left: var(--sp-space-10);
+    padding-right: var(--sp-space-10);
+}
+
+header.admin-header,
+.admin-main > .admin-header {
+    padding-top: var(--sp-space-8);
+}
+
+.admin-main > .admin-footer {
+    margin-top: auto;
+}
+
+.admin-main::before,
+.admin-main::after {
+    content: '';
+    position: fixed;
+    pointer-events: none;
+    z-index: var(--sp-z-sticky);
+}
+
+.admin-main::before {
+    top: 0;
+    left: 220px;
+    right: 0;
+    bottom: 0;
+    background: var(--sp-bg-main-accent-tl);
+}
+
+.admin-main::after {
+    top: 0;
+    left: 220px;
+    right: 0;
+    bottom: 0;
+    background: var(--sp-bg-main-accent-br);
+}
+
+.admin-main > * {
+    position: relative;
+    z-index: var(--sp-z-sticky);
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: var(--sp-z-sticky-header);
+    margin-bottom: var(--sp-space-7);
+    padding-bottom: var(--sp-space-5);
+    border-bottom: none;
+    background-image: linear-gradient(90deg, var(--sp-border-subtle), var(--sp-border-subtle), transparent);
+    background-size: 100% 1px;
+    background-position: bottom;
+    background-repeat: no-repeat;
+}
+
+.admin-header h1 {
+    font-size: var(--sp-text-xl);
+    font-weight: 600;
+    margin: 0;
+    color: var(--sp-text-primary);
+    letter-spacing: -0.01em;
+    font-family: var(--sp-font-heading);
+    flex: 1;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+}
+
+}

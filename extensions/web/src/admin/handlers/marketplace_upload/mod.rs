@@ -2,12 +2,13 @@ use std::path::PathBuf;
 
 use axum::{
     http::{HeaderMap, StatusCode},
-    response::{IntoResponse, Response},
-    Json,
+    response::Response,
 };
 use systemprompt::models::auth::JwtAudience;
-use systemprompt::models::{Config, ProfileBootstrap, SecretsBootstrap};
+use systemprompt::models::{Config, SecretsBootstrap};
 use systemprompt::oauth::validate_jwt_token;
+
+use super::shared;
 
 mod api;
 mod restore;
@@ -25,12 +26,9 @@ fn authenticate(headers: &HeaderMap, user_id: &str) -> Result<(), Box<Response>>
     if let Some(token) = extract_bearer_token(headers) {
         let (jwt_secret, jwt_issuer) = get_jwt_config().map_err(|e| {
             tracing::error!(error = %e, "Failed to load JWT config");
-            Box::new(
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({"error": "Internal configuration error"})),
-                )
-                    .into_response(),
+            shared::boxed_error_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal configuration error",
             )
         })?;
 
@@ -42,55 +40,35 @@ fn authenticate(headers: &HeaderMap, user_id: &str) -> Result<(), Box<Response>>
         )
         .map_err(|e| {
             tracing::warn!(error = %e, "Marketplace upload JWT validation failed");
-            Box::new(
-                (
-                    StatusCode::UNAUTHORIZED,
-                    Json(serde_json::json!({"error": "Invalid or expired token"})),
-                )
-                    .into_response(),
-            )
+            shared::boxed_error_response(StatusCode::UNAUTHORIZED, "Invalid or expired token")
         })?;
 
         if claims.sub != user_id {
-            return Err(Box::new(
-                (
-                    StatusCode::FORBIDDEN,
-                    Json(serde_json::json!({"error": "Token does not match user ID"})),
-                )
-                    .into_response(),
+            return Err(shared::boxed_error_response(
+                StatusCode::FORBIDDEN,
+                "Token does not match user ID",
             ));
         }
 
         return Ok(());
     }
 
-    if let Ok((cookie_user_id, _, _)) = super::users::extract_user_from_cookie(headers) {
-        let _ = cookie_user_id;
+    if super::users::extract_user_from_cookie(headers).is_ok() {
         return Ok(());
     }
 
-    Err(Box::new(
-        (
-            StatusCode::UNAUTHORIZED,
-            Json(serde_json::json!({"error": "Missing Authorization Bearer token or session cookie"})),
-        )
-            .into_response(),
+    Err(shared::boxed_error_response(
+        StatusCode::UNAUTHORIZED,
+        "Missing Authorization Bearer token or session cookie",
     ))
 }
 
 fn error_response(status: StatusCode, message: &str) -> Response {
-    (status, Json(serde_json::json!({"error": message}))).into_response()
+    shared::error_response(status, message)
 }
 
 fn get_services_path() -> Result<PathBuf, Box<Response>> {
-    let profile = ProfileBootstrap::get().map_err(|e| {
-        tracing::error!(error = %e, "Failed to get profile bootstrap");
-        Box::new(error_response(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Failed to load profile",
-        ))
-    })?;
-    Ok(PathBuf::from(&profile.paths.services))
+    shared::get_services_path()
 }
 
 fn extract_bearer_token(headers: &HeaderMap) -> Option<&str> {
@@ -106,8 +84,17 @@ fn extract_bearer_token(headers: &HeaderMap) -> Option<&str> {
         .and_then(|v| v.strip_prefix("Bearer "))
 }
 
-fn get_jwt_config() -> Result<(String, String), anyhow::Error> {
-    let secret = SecretsBootstrap::jwt_secret()?.to_string();
-    let issuer = Config::get()?.jwt_issuer.clone();
+fn get_jwt_config() -> Result<(String, String), crate::error::MarketplaceError> {
+    let secret = SecretsBootstrap::jwt_secret()
+        .map_err(|e| {
+            crate::error::MarketplaceError::Internal(format!("Failed to load JWT secret: {e}"))
+        })?
+        .to_string();
+    let issuer = Config::get()
+        .map_err(|e| {
+            crate::error::MarketplaceError::Internal(format!("Failed to load config: {e}"))
+        })?
+        .jwt_issuer
+        .clone();
     Ok((secret, issuer))
 }

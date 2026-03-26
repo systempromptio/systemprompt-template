@@ -12,8 +12,6 @@ pub enum SecretCryptoError {
     MasterKeyMissing,
     #[error("Invalid key material")]
     InvalidKeyMaterial,
-    #[error("User DEK not found for user {0}")]
-    DekNotFound(String),
     #[error("Database error: {0}")]
     Database(String),
 }

@@ -1,0 +1,105 @@
+@layer tokens {
+:root {
+    --sp-chart-purple: light-dark(oklch(0.55 0.22 295), oklch(0.68 0.16 295));
+    --sp-chart-blue:   light-dark(oklch(0.62 0.18 260), oklch(0.70 0.14 250));
+    --sp-chart-green:  light-dark(oklch(0.69 0.17 165), oklch(0.78 0.16 165));
+    --sp-chart-amber:  light-dark(oklch(0.76 0.16 75), oklch(0.83 0.16 85));
+    --sp-chart-red:    light-dark(oklch(0.63 0.21 25), oklch(0.70 0.17 20));
+    --sp-chart-cyan:   light-dark(oklch(0.72 0.12 200), oklch(0.82 0.11 200));
+
+    --sp-progress-green-from: light-dark(oklch(0.69 0.17 165), oklch(0.78 0.16 165));
+    --sp-progress-green-to:   light-dark(oklch(0.78 0.16 165), oklch(0.85 0.13 160));
+    --sp-progress-amber-from: light-dark(oklch(0.76 0.16 75), oklch(0.83 0.16 85));
+    --sp-progress-amber-to:   light-dark(oklch(0.83 0.16 85), oklch(0.88 0.13 85));
+    --sp-progress-red-from:   light-dark(oklch(0.63 0.21 25), oklch(0.70 0.17 20));
+    --sp-progress-red-to:     light-dark(oklch(0.70 0.17 20), oklch(0.78 0.10 20));
+
+    --sp-nav-label-1: light-dark(oklch(0.55 0.16 52), oklch(0.75 0.16 52));
+    --sp-nav-label-2: light-dark(oklch(0.55 0.12 300), oklch(0.80 0.12 300));
+    --sp-nav-label-3: light-dark(oklch(0.52 0.10 255), oklch(0.78 0.10 255));
+    --sp-nav-label-4: light-dark(oklch(0.55 0.13 160), oklch(0.85 0.13 160));
+    --sp-nav-label-5: light-dark(oklch(0.58 0.13 85), oklch(0.88 0.13 85));
+    --sp-nav-badge-text: light-dark(oklch(0.55 0.10 20), oklch(0.78 0.10 20));
+
+    --sp-feed-purple: light-dark(oklch(0.55 0.22 295), oklch(0.68 0.16 295));
+    --sp-feed-cyan:   light-dark(oklch(0.72 0.12 200), oklch(0.82 0.11 200));
+    --sp-feed-indigo: light-dark(oklch(0.57 0.18 280), oklch(0.65 0.14 280));
+    --sp-feed-gold:   light-dark(oklch(0.76 0.16 75), oklch(0.83 0.16 85));
+    --sp-badge-purple: light-dark(oklch(0.68 0.16 295), oklch(0.68 0.16 295));
+    --sp-badge-purple-dim: light-dark(
+      color-mix(in oklch, oklch(0.68 0.16 295) 15%, transparent),
+      color-mix(in oklch, oklch(0.68 0.16 295) 18%, transparent)
+    );
+
+    /* Rank tier colors: 10 tiers covering 50 levels (5 levels per tier) */
+    --sp-rank-tier-1-color: light-dark(oklch(0.72 0.03 250), oklch(0.82 0.03 250));
+    --sp-rank-tier-1-bg:    light-dark(oklch(0.50 0.03 250), oklch(0.55 0.03 250));
+    --sp-rank-tier-2-color: light-dark(oklch(0.70 0.14 250), oklch(0.78 0.10 255));
+    --sp-rank-tier-2-bg:    light-dark(oklch(0.55 0.14 250), oklch(0.50 0.14 255));
+    --sp-rank-tier-3-color: light-dark(oklch(0.78 0.16 165), oklch(0.85 0.13 160));
+    --sp-rank-tier-3-bg:    light-dark(oklch(0.58 0.16 165), oklch(0.55 0.16 160));
+    --sp-rank-tier-4-color: light-dark(oklch(0.68 0.16 295), oklch(0.80 0.12 300));
+    --sp-rank-tier-4-bg:    light-dark(oklch(0.55 0.16 295), oklch(0.50 0.16 300));
+    --sp-rank-tier-5-color: light-dark(oklch(0.76 0.16 75), oklch(0.88 0.13 85));
+    --sp-rank-tier-5-bg:    light-dark(oklch(0.56 0.16 75), oklch(0.52 0.16 85));
+    --sp-rank-tier-6-color: light-dark(oklch(0.65 0.20 345), oklch(0.78 0.11 350));
+    --sp-rank-tier-6-bg:    light-dark(oklch(0.52 0.18 345), oklch(0.48 0.18 350));
+    --sp-rank-tier-7-color: light-dark(oklch(0.70 0.18 45), oklch(0.80 0.12 60));
+    --sp-rank-tier-7-bg:    light-dark(oklch(0.55 0.18 45), oklch(0.52 0.18 60));
+    --sp-rank-tier-8-color: light-dark(oklch(0.55 0.22 295), oklch(0.68 0.16 295));
+    --sp-rank-tier-8-bg:    light-dark(oklch(0.45 0.20 295), oklch(0.42 0.20 295));
+    --sp-rank-tier-9-color: light-dark(oklch(0.72 0.12 200), oklch(0.82 0.11 200));
+    --sp-rank-tier-9-bg:    light-dark(oklch(0.52 0.14 200), oklch(0.48 0.14 200));
+    --sp-rank-tier-10-color: light-dark(oklch(0.82 0.17 95), oklch(0.88 0.15 95));
+    --sp-rank-tier-10-bg:    light-dark(oklch(0.58 0.17 95), oklch(0.55 0.17 95));
+
+    --sp-rank-1-color: var(--sp-rank-tier-1-color);
+    --sp-rank-2-color: var(--sp-rank-tier-1-color);
+    --sp-rank-3-color: var(--sp-rank-tier-2-color);
+    --sp-rank-4-color: var(--sp-rank-tier-2-color);
+    --sp-rank-5-color: var(--sp-rank-tier-3-color);
+    --sp-rank-6-color: var(--sp-rank-tier-3-color);
+    --sp-rank-7-color: var(--sp-rank-tier-4-color);
+    --sp-rank-8-color: var(--sp-rank-tier-5-color);
+    --sp-rank-9-color: var(--sp-rank-tier-6-color);
+    --sp-rank-10-color: var(--sp-rank-tier-7-color);
+    --sp-rank-1-bg: var(--sp-rank-tier-1-bg);
+    --sp-rank-2-bg: var(--sp-rank-tier-1-bg);
+    --sp-rank-3-bg: var(--sp-rank-tier-2-bg);
+    --sp-rank-4-bg: var(--sp-rank-tier-2-bg);
+    --sp-rank-5-bg: var(--sp-rank-tier-3-bg);
+    --sp-rank-6-bg: var(--sp-rank-tier-3-bg);
+    --sp-rank-7-bg: var(--sp-rank-tier-4-bg);
+    --sp-rank-8-bg: var(--sp-rank-tier-5-bg);
+    --sp-rank-9-bg: var(--sp-rank-tier-6-bg);
+    --sp-rank-10-bg: var(--sp-rank-tier-7-bg);
+    --sp-rank-1-ladder-bg: var(--sp-rank-tier-1-bg);
+    --sp-rank-3-ladder-bg: var(--sp-rank-tier-2-bg);
+    --sp-rank-5-ladder-bg: var(--sp-rank-tier-3-bg);
+    --sp-rank-7-ladder-bg: var(--sp-rank-tier-4-bg);
+    --sp-rank-10-ladder-bg: var(--sp-rank-tier-7-bg);
+
+    --sp-rarity-epic-bg: light-dark(
+      color-mix(in oklch, oklch(0.60 0.20 295) 15%, transparent),
+      color-mix(in oklch, oklch(0.60 0.20 295) 18%, transparent)
+    );
+    --sp-rarity-epic-fg: light-dark(oklch(0.65 0.20 295), oklch(0.70 0.20 295));
+
+    --sp-bg-surface-alt: light-dark(oklch(0.96 0.006 68), oklch(0.22 0.01 47));
+    --sp-badge-accent-bg: light-dark(
+      color-mix(in oklch, var(--sp-accent) 8%, var(--sp-bg-surface)),
+      color-mix(in oklch, var(--sp-accent) 12%, var(--sp-bg-surface))
+    );
+    --sp-badge-accent-fg: light-dark(oklch(0.50 0.12 48), oklch(0.75 0.14 52));
+    --sp-badge-warning-bg: light-dark(
+      color-mix(in oklch, var(--sp-warning) 8%, var(--sp-bg-surface)),
+      color-mix(in oklch, var(--sp-warning) 12%, var(--sp-bg-surface))
+    );
+    --sp-badge-warning-fg: light-dark(oklch(0.52 0.10 80), oklch(0.75 0.12 80));
+    --sp-badge-danger-bg: light-dark(
+      color-mix(in oklch, var(--sp-danger) 8%, var(--sp-bg-surface)),
+      color-mix(in oklch, var(--sp-danger) 10%, var(--sp-bg-surface))
+    );
+    --sp-badge-danger-fg: light-dark(oklch(0.48 0.12 20), oklch(0.72 0.12 20));
+}
+}

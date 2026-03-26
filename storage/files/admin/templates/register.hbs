@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>systemprompt.io Admin - Create Account</title>
+    <link rel="stylesheet" href="/css/core/fonts.css?v={{css_version}}">
+    <link rel="stylesheet" href="/css/admin-bundle.css?v={{css_version}}">
+    <script>(function(){var t;try{t=localStorage.getItem('sp-admin-theme')}catch(e){}if(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)t='dark';if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}})();</script>
+    <style>html,body{margin:0;background:oklch(0.96 0.004 70);color:#1c1917;font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}[data-theme="dark"],[data-theme="dark"] body{background:oklch(0.16 0.01 45);color:#fafaf9}</style>
+</head>
+<body>
+    <main class="login-container">
+        <div class="card">
+            <div class="login-logo">
+                <img src="/files/images/logo-dark.svg" alt="systemprompt.io" height="40" class="logo-light">
+                <img src="/files/images/logo.svg" alt="systemprompt.io" height="40" class="logo-dark">
+            </div>
+            <p class="login-subtitle">Create your account</p>
+
+            <div id="error" class="login-error" role="alert" aria-live="polite"></div>
+
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="reg-email">Email</label>
+                    <input class="form-input" type="email" id="reg-email" placeholder="you@company.com" required autocomplete="email" aria-describedby="error">
+                </div>
+                <div class="form-group">
+                    <label for="reg-name">Full Name</label>
+                    <input class="form-input" type="text" id="reg-name" placeholder="Jane Smith" required autocomplete="name">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary w-full">Create Account</button>
+                </div>
+            </form>
+
+            <div id="loading" class="login-loading" hidden aria-live="polite">
+                <div class="login-spinner" role="status" aria-label="Loading"></div>
+                <p id="loading-text">Setting up your account...</p>
+            </div>
+
+            <div id="retry" class="login-retry" hidden>
+                <a href="/admin/register">Try again</a>
+            </div>
+
+            <p class="text-center mt-4 text-tertiary text-sm">
+                Already have an account? <a href="/admin/login" class="text-accent">Sign in</a>
+            </p>
+        </div>
+    </main>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const CLIENT_ID = 'marketplace-admin';
+        const WEBAUTHN_BASE = '/api/v1/core/oauth/webauthn';
+        const LOGIN_PATH = '/admin/login';
+
+        const form = document.getElementById('register-form');
+        const errorDiv = document.getElementById('error');
+        const loadingSection = document.getElementById('loading');
+        const loadingText = document.getElementById('loading-text');
+        const retrySection = document.getElementById('retry');
+
+        // --- PKCE Helpers ---
+
+        function generateRandomString(length) {
+            const array = new Uint8Array(length);
+            crypto.getRandomValues(array);
+            return Array.from(array, b => b.toString(36).padStart(2, '0')).join('').slice(0, length);
+        }
+
+        async function generateCodeChallenge(verifier) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(verifier);
+            const digest = await crypto.subtle.digest('SHA-256', data);
+            return btoa(String.fromCharCode(...new Uint8Array(digest)))
+                .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        // --- WebAuthn Helpers ---
+
+        function base64urlToArrayBuffer(base64url) {
+            const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+            const padding = '='.repeat((4 - base64.length % 4) % 4);
+            const base64Padded = base64 + padding;
+            const binary = atob(base64Padded);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function preparePublicKeyCredentialCreationOptions(options) {
+            return {
+                ...options,
+                challenge: base64urlToArrayBuffer(options.challenge),
+                user: {
+                    ...options.user,
+                    id: base64urlToArrayBuffer(options.user.id)
+                },
+                excludeCredentials: options.excludeCredentials?.map(cred => ({
+                    ...cred,
+                    id: base64urlToArrayBuffer(cred.id)
+                }))
+            };
+        }
+
+        async function makeRequest(url, method, body) {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            const response = await fetch(url, options);
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error_description || data.error || 'Request failed');
+            }
+            return {
+                data,
+                challengeId: response.headers.get('x-challenge-id')
+            };
+        }
+
+        // --- UI Helpers ---
+
+        function showError(msg) {
+            errorDiv.textContent = msg;
+            errorDiv.style.display = 'block';
+            loadingSection.style.display = 'none';
+            form.style.display = 'block';
+            retrySection.style.display = 'block';
+        }
+
+        function showLoading(msg) {
+            loadingText.textContent = msg || 'Setting up your account...';
+            form.style.display = 'none';
+            errorDiv.style.display = 'none';
+            loadingSection.style.display = 'block';
+        }
+
+        // --- Redirect if already authenticated ---
+
+        function hasValidAdminToken() {
+            try {
+                const cookie = document.cookie.split('; ').find(c => c.startsWith('access_token='));
+                if (!cookie) return false;
+                const token = cookie.split('=').slice(1).join('=');
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const scopes = (payload.scope || '').split(' ');
+                if (!scopes.includes('user')) return false;
+                if (payload.exp && payload.exp * 1000 < Date.now()) return false;
+                return true;
+            } catch { return false; }
+        }
+
+        if (hasValidAdminToken()) {
+            window.location.href = '/admin/';
+            return;
+        }
+
+        // --- WebAuthn Check ---
+
+        if (!window.PublicKeyCredential) {
+            errorDiv.textContent = 'Your browser does not support passkeys. Please use a modern browser (Chrome, Firefox, Safari, Edge).';
+            errorDiv.style.display = 'block';
+            form.querySelector('button[type="submit"]').disabled = true;
+        }
+
+        // --- Form Submit: WebAuthn Registration ---
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('reg-email').value.trim();
+            const displayName = document.getElementById('reg-name').value.trim();
+
+            if (!email || !displayName) {
+                showError('Please fill in all fields.');
+                return;
+            }
+
+            try {
+                showLoading('Creating your passkey...');
+
+                // Step 1: Start WebAuthn registration
+                const username = email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+                const startResponse = await makeRequest(
+                    WEBAUTHN_BASE + '/register/start?username=' + encodeURIComponent(username) + '&email=' + encodeURIComponent(email),
+                    'POST'
+                );
+
+                // Step 2: Create credential with browser WebAuthn API
+                const publicKeyOptions = preparePublicKeyCredentialCreationOptions(startResponse.data.publicKey);
+                const credential = await navigator.credentials.create({
+                    publicKey: publicKeyOptions
+                });
+
+                if (!credential) {
+                    throw new Error('Passkey creation was cancelled');
+                }
+
+                showLoading('Finishing registration...');
+
+                // Step 3: Finish registration
+                const finishResponse = await makeRequest(WEBAUTHN_BASE + '/register/finish', 'POST', {
+                    challenge_id: startResponse.challengeId,
+                    username: username,
+                    email: email,
+                    credential: {
+                        id: credential.id,
+                        rawId: Array.from(new Uint8Array(credential.rawId)),
+                        response: {
+                            attestationObject: Array.from(new Uint8Array(credential.response.attestationObject)),
+                            clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON))
+                        },
+                        type: credential.type
+                    }
+                });
+
+                // Step 4: Store profile data for post-OAuth completion
+                localStorage.setItem('pending_registration', JSON.stringify({
+                    email: email,
+                    display_name: displayName
+                }));
+
+                // Step 5: Generate PKCE params and complete OAuth flow
+                const codeVerifier = generateRandomString(64);
+                const codeChallenge = await generateCodeChallenge(codeVerifier);
+                const csrfState = generateRandomString(32);
+
+                localStorage.setItem('pkce_code_verifier', codeVerifier);
+                localStorage.setItem('pkce_csrf_state', csrfState);
+                localStorage.setItem('login_redirect', '/admin/');
+
+                showLoading('Redirecting...');
+
+                const completeParams = new URLSearchParams({
+                    user_id: finishResponse.data.user_id,
+                    response_type: 'code',
+                    client_id: CLIENT_ID,
+                    redirect_uri: window.location.origin + LOGIN_PATH,
+                    scope: 'user',
+                    state: csrfState,
+                    code_challenge: codeChallenge,
+                    code_challenge_method: 'S256'
+                });
+
+                window.location.href = WEBAUTHN_BASE + '/complete?' + completeParams.toString();
+
+            } catch (error) {
+                if (error.name === 'NotAllowedError') {
+                    showError('Passkey creation was cancelled or not allowed.');
+                } else if (error.name === 'NotSupportedError') {
+                    showError('Passkeys are not supported on this device.');
+                } else {
+                    showError(error.message || 'Registration failed. Please try again.');
+                }
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

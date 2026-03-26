@@ -1,56 +1,66 @@
 use std::path::Path;
 
-use systemprompt::models::auth::{AuthenticatedUser, JwtAudience, Permission};
-use systemprompt::models::{Config, SecretsBootstrap};
-use systemprompt::oauth::services::{
-    generate_access_token_jti, generate_jwt, JwtConfig, JwtSigningParams,
-};
-
 use super::super::types::PlatformPluginConfig;
 use super::super::types::PlatformPluginConfigFile;
+use crate::error::MarketplaceError;
 
-pub fn generate_plugin_token(
-    user_id: &str,
-    username: &str,
-    email: &str,
-) -> Result<String, anyhow::Error> {
-    use systemprompt::identifiers::SessionId;
+pub fn _load_authorized_plugin_configs(
+    plugins_path: &Path,
+    roles: &[String],
+) -> Result<Vec<(String, PlatformPluginConfig)>, MarketplaceError> {
+    let all_plugins = load_all_plugin_configs(plugins_path)?;
 
-    let jwt_secret = SecretsBootstrap::jwt_secret()?;
-    let jwt_issuer = &Config::get()?.jwt_issuer;
+    let is_admin = roles.iter().any(|r| r == "admin");
+    let mut authorized: Vec<(String, PlatformPluginConfig)> = all_plugins
+        .iter()
+        .filter(|(_, plugin)| {
+            if !plugin.base.enabled {
+                return false;
+            }
+            if is_admin || plugin.roles.is_empty() {
+                return true;
+            }
+            plugin.roles.iter().any(|r| roles.contains(r))
+        })
+        .cloned()
+        .collect();
 
-    let id = uuid::Uuid::parse_str(user_id)
-        .map_err(|e| anyhow::anyhow!("Invalid user ID '{user_id}': {e}"))?;
+    let mut seen_ids: std::collections::HashSet<String> =
+        authorized.iter().map(|(_, p)| p.base.id.clone()).collect();
+    let mut i = 0;
+    while i < authorized.len() {
+        let deps = authorized[i].1.depends.clone();
+        for dep_id in &deps {
+            if seen_ids.contains(dep_id) {
+                continue;
+            }
+            if let Some(dep) = all_plugins.iter().find(|(_, p)| p.base.id == *dep_id) {
+                if !dep.1.base.enabled {
+                    return Err(MarketplaceError::Internal(format!(
+                        "Plugin '{}' depends on '{}' which is disabled",
+                        authorized[i].1.base.id, dep_id
+                    )));
+                }
+                seen_ids.insert(dep_id.clone());
+                authorized.push(dep.clone());
+            } else {
+                return Err(MarketplaceError::Internal(format!(
+                    "Plugin '{}' depends on '{}' which was not found",
+                    authorized[i].1.base.id, dep_id
+                )));
+            }
+        }
+        i += 1;
+    }
 
-    let user = AuthenticatedUser {
-        id,
-        username: username.to_string(),
-        email: email.to_string(),
-        permissions: vec![Permission::User],
-        roles: vec!["user".to_string()],
-    };
-
-    let config = JwtConfig {
-        permissions: vec![Permission::User],
-        audience: vec![JwtAudience::Resource("hook".to_string())],
-        expires_in_hours: Some(8760),
-        resource: None,
-    };
-
-    let jti = generate_access_token_jti();
-    let session_id = SessionId::generate();
-    let signing = JwtSigningParams {
-        secret: jwt_secret,
-        issuer: jwt_issuer,
-    };
-
-    generate_jwt(&user, config, jti, &session_id, &signing)
+    authorized.sort_by(|a, b| a.0.cmp(&b.0));
+    Ok(authorized)
 }
 
 pub fn load_plugin_configs_by_ids(
     plugins_path: &Path,
     authorized_ids: &std::collections::HashSet<String>,
-) -> Result<Vec<(String, PlatformPluginConfig)>, anyhow::Error> {
+) -> Result<Vec<(String, PlatformPluginConfig)>, MarketplaceError> {
     let all_plugins = load_all_plugin_configs(plugins_path)?;
 
     let mut authorized: Vec<(String, PlatformPluginConfig)> = all_plugins
@@ -70,20 +80,18 @@ pub fn load_plugin_configs_by_ids(
             }
             if let Some(dep) = all_plugins.iter().find(|(_, p)| p.base.id == *dep_id) {
                 if !dep.1.base.enabled {
-                    anyhow::bail!(
+                    return Err(MarketplaceError::Internal(format!(
                         "Plugin '{}' depends on '{}' which is disabled",
-                        authorized[i].1.base.id,
-                        dep_id
-                    );
+                        authorized[i].1.base.id, dep_id
+                    )));
                 }
                 seen_ids.insert(dep_id.clone());
                 authorized.push(dep.clone());
             } else {
-                anyhow::bail!(
+                return Err(MarketplaceError::Internal(format!(
                     "Plugin '{}' depends on '{}' which was not found",
-                    authorized[i].1.base.id,
-                    dep_id
-                );
+                    authorized[i].1.base.id, dep_id
+                )));
             }
         }
         i += 1;
@@ -95,9 +103,7 @@ pub fn load_plugin_configs_by_ids(
 
 fn load_all_plugin_configs(
     plugins_path: &Path,
-) -> Result<Vec<(String, PlatformPluginConfig)>, anyhow::Error> {
-    use anyhow::Context;
-
+) -> Result<Vec<(String, PlatformPluginConfig)>, MarketplaceError> {
     let mut plugins = Vec::new();
     if !plugins_path.exists() {
         return Ok(plugins);
@@ -107,7 +113,7 @@ fn load_all_plugin_configs(
         .filter_map(|e| match e {
             Ok(entry) => Some(entry),
             Err(err) => {
-                tracing::warn!("Failed to read plugins directory entry: {}", err);
+                tracing::warn!(error = %err, "Failed to read plugins directory entry");
                 None
             }
         })
@@ -123,8 +129,9 @@ fn load_all_plugin_configs(
         if !config_path.exists() {
             continue;
         }
-        let content = std::fs::read_to_string(&config_path)
-            .with_context(|| format!("Failed to read {}", config_path.display()))?;
+        let content = std::fs::read_to_string(&config_path).map_err(|e| {
+            MarketplaceError::Internal(format!("Failed to read {}: {e}", config_path.display()))
+        })?;
         let plugin_file: PlatformPluginConfigFile = match serde_yaml::from_str(&content) {
             Ok(p) => p,
             Err(_) => continue,

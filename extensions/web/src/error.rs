@@ -2,6 +2,68 @@ use axum::http::StatusCode;
 use systemprompt::traits::ExtensionError;
 use thiserror::Error;
 
+use crate::admin::repositories::secret_crypto::SecretCryptoError;
+
+/// Error type for marketplace/admin operations (migrated from systemprompt-web).
+#[derive(Error, Debug)]
+pub enum MarketplaceError {
+    #[error("Internal error: {0}")]
+    Internal(String),
+
+    #[error("Bad request: {0}")]
+    BadRequest(String),
+
+    #[error("Not found: {0}")]
+    NotFound(String),
+
+    #[error("Database error: {0}")]
+    Database(#[from] sqlx::Error),
+
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+
+    #[error("YAML error: {0}")]
+    Yaml(#[from] serde_yaml::Error),
+
+    #[error("JSON error: {0}")]
+    Json(#[from] serde_json::Error),
+
+    #[error("Crypto error: {0}")]
+    Crypto(#[from] SecretCryptoError),
+}
+
+impl ExtensionError for MarketplaceError {
+    fn code(&self) -> &'static str {
+        match self {
+            Self::Internal(_) => "INTERNAL_ERROR",
+            Self::BadRequest(_) => "BAD_REQUEST",
+            Self::NotFound(_) => "NOT_FOUND",
+            Self::Database(_) => "DATABASE_ERROR",
+            Self::Io(_) => "IO_ERROR",
+            Self::Yaml(_) => "YAML_ERROR",
+            Self::Json(_) => "JSON_ERROR",
+            Self::Crypto(_) => "CRYPTO_ERROR",
+        }
+    }
+
+    fn status(&self) -> StatusCode {
+        match self {
+            Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+            Self::NotFound(_) => StatusCode::NOT_FOUND,
+            Self::Internal(_)
+            | Self::Database(_)
+            | Self::Io(_)
+            | Self::Yaml(_)
+            | Self::Json(_)
+            | Self::Crypto(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+
+    fn is_retryable(&self) -> bool {
+        matches!(self, Self::Database(_) | Self::Io(_))
+    }
+}
+
 #[derive(Error, Debug)]
 pub enum BlogError {
     #[error("Database must be PostgreSQL")]

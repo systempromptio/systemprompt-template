@@ -1,0 +1,145 @@
+@layer components {
+
+.cc-report {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-card-brand);
+    box-shadow: var(--sp-shadow-card);
+    padding: var(--sp-space-6);
+    contain: layout style;
+}
+
+.cc-report--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    padding: var(--sp-space-8);
+}
+
+.cc-report-empty-text {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-tertiary);
+    text-align: center;
+    line-height: 1.6;
+}
+
+.cc-report-empty-text code {
+    font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+    font-size: var(--sp-text-xs);
+    background: var(--sp-bg-surface-overlay);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-sm);
+    padding: 0.15em 0.4em;
+}
+
+.cc-report-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: var(--sp-space-4);
+    margin-bottom: var(--sp-space-5);
+    border-bottom: 1px solid var(--sp-border-default);
+}
+
+.cc-report-title-group {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-space-3);
+}
+
+.cc-report-title {
+    font-size: var(--sp-text-lg);
+    font-weight: 700;
+    color: var(--sp-text-primary);
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.cc-report-subtitle {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.cc-report-date {
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.cc-report-header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--sp-space-1);
+}
+
+.cc-report-countdown {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.cc-report-countdown-value {
+    font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+    font-weight: 600;
+    color: var(--sp-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.cc-report-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+}
+
+.cc-report-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-2) var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--sp-accent);
+    background: color-mix(in oklch, var(--sp-accent) 8%, transparent);
+    border: 1px solid color-mix(in oklch, var(--sp-accent) 25%, transparent);
+    border-radius: var(--sp-radius-full);
+    cursor: pointer;
+    transition: all var(--sp-duration-fast) var(--sp-ease-out);
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+}
+
+.cc-report-action-btn:hover {
+    color: var(--sp-accent);
+    background: color-mix(in oklch, var(--sp-accent) 15%, transparent);
+    border-color: color-mix(in oklch, var(--sp-accent) 40%, transparent);
+    box-shadow: 0 2px 8px color-mix(in oklch, var(--sp-accent) 15%, transparent);
+}
+
+.cc-report-action-btn:active {
+    transform: scale(0.97);
+}
+
+.cc-report-action-btn svg {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-report-action-btn {
+        transition: none;
+    }
+    .cc-report-action-btn:active {
+        transform: none;
+    }
+}
+
+}

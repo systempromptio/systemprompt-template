@@ -7,8 +7,8 @@ pub struct OrgMarketplace {
     pub id: String,
     pub name: String,
     pub description: String,
-    pub enabled: bool,
     pub github_repo_url: Option<String>,
+    pub enabled: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -37,8 +37,6 @@ pub struct CreateOrgMarketplaceRequest {
     #[serde(default)]
     pub description: String,
     #[serde(default)]
-    pub github_repo_url: Option<String>,
-    #[serde(default)]
     pub plugin_ids: Vec<String>,
 }
 
@@ -46,21 +44,5 @@ pub struct CreateOrgMarketplaceRequest {
 pub struct UpdateOrgMarketplaceRequest {
     pub name: Option<String>,
     pub description: Option<String>,
-    pub github_repo_url: Option<Option<String>>,
     pub plugin_ids: Option<Vec<String>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct GitHubSyncLogEntry {
-    pub id: i64,
-    pub marketplace_id: String,
-    pub action: String,
-    pub status: String,
-    pub commit_hash: Option<String>,
-    pub plugin_count: i32,
-    pub error_count: i32,
-    pub error_message: Option<String>,
-    pub triggered_by: Option<String>,
-    pub duration_ms: Option<i64>,
-    pub created_at: DateTime<Utc>,
 }

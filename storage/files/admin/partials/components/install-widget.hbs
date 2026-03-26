@@ -1,39 +1,46 @@
 {{#if marketplace.user_id}}
 <div class="install-menu" id="install-menu">
-    <button class="install-trigger" type="button" aria-label="Install instructions" aria-expanded="false" title="Install instructions">
+    <button class="install-trigger" type="button" aria-label="Share & Install" aria-expanded="false" aria-haspopup="true" title="Share & Install">
+        {{#if (gt marketplace.total_plugins 0)}}<span class="plugin-counter" id="plugin-counter">{{marketplace.total_plugins}}</span>{{/if}}
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
         </svg>
     </button>
     <div class="install-dropdown">
         <div class="install-dropdown-header">
-            <div class="install-dropdown-title">Install Plugin</div>
+            <div class="install-dropdown-title">Share & Install</div>
             <div class="install-widget-stats">
-                <span class="install-stat"><strong>{{marketplace.total_plugins}}</strong> plugins</span>
+                <span class="install-stat"><strong id="plugin-stat-count">{{marketplace.total_plugins}}</strong> plugins</span>
                 <span class="install-stat"><strong>{{marketplace.total_skills}}</strong> skills</span>
                 <span class="install-stat"><strong>{{marketplace.agents_count}}</strong> agents</span>
                 <span class="install-stat"><strong>{{marketplace.mcp_count}}</strong> MCP servers</span>
             </div>
         </div>
-        <div class="install-dropdown-tabs">
-            <a href="/admin/plugins/" class="tab-btn">Configure</a>
-            <button class="tab-btn" data-install-tab="cowork">Cowork</button>
-            <button class="tab-btn active" data-install-tab="code">Code</button>
+        <div class="install-dropdown-tabs" role="tablist" aria-label="Install method">
+            <button type="button" class="tab-btn" data-install-tab="configure" role="tab" aria-selected="false" aria-controls="install-panel-configure">Configure</button>
+            <button type="button" class="tab-btn active" data-install-tab="claude-code" role="tab" aria-selected="true" aria-controls="install-panel-claude-code">Claude Code</button>
+            <button type="button" class="tab-btn" data-install-tab="cowork" role="tab" aria-selected="false" aria-controls="install-panel-cowork">Cowork</button>
         </div>
         <div class="install-dropdown-body">
-            <div class="install-tab-content" data-install-panel="cowork" style="display:none">
+            <div class="install-tab-content" data-install-panel="configure" id="install-panel-configure" role="tabpanel" hidden>
+                <p class="install-tab-hint">Manage your installed plugins, skills and agents.</p>
+                <a href="/admin/my/plugins/" class="btn btn-primary btn-sm">Go to My Plugins</a>
+            </div>
+            <div class="install-tab-content" data-install-panel="claude-code" id="install-panel-claude-code" role="tabpanel">
+                <p class="install-tab-hint">Install your marketplace in Claude Code from the CLI:</p>
                 <div class="install-copybox">
-                    <code class="install-code">{{marketplace.github_url}}</code>
-                    <button class="btn btn-secondary" data-copy="{{marketplace.github_url}}">Copy</button>
+                    <code class="install-code">claude plugin marketplace add {{marketplace.git_url}}</code>
+                    <button type="button" class="btn btn-secondary" data-copy="claude plugin marketplace add {{marketplace.git_url}}">Copy</button>
                 </div>
             </div>
-            <div class="install-tab-content" data-install-panel="code">
-                <div class="install-copybox">
-                    <code class="install-code">{{marketplace.install_cmd}}</code>
-                    <button class="btn btn-secondary" data-copy="{{marketplace.install_cmd}}">Copy</button>
-                </div>
+            <div class="install-tab-content" data-install-panel="cowork" id="install-panel-cowork" role="tabpanel" hidden>
+                <p class="install-tab-hint">Export your marketplace as a single plugin for Cowork:</p>
+                <a href="/api/public/marketplace/{{marketplace.user_id}}/export/cowork.zip" class="btn btn-primary btn-sm" download>Export for Cowork</a>
+                <a href="/admin/my/marketplace" class="btn btn-secondary btn-sm">My Marketplace</a>
             </div>
         </div>
     </div>

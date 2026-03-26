@@ -2,85 +2,20 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
 
-    {{!-- Metric Ribbon --}}
-    <div class="metric-ribbon">
-        <div class="metric-ribbon-item">
-            <span class="metric-ribbon-value">{{total_users}}</span>
-            <span class="metric-ribbon-label">Total Users</span>
-        </div>
-        <div class="metric-ribbon-item">
-            <span class="metric-ribbon-value">{{active_users}}</span>
-            <span class="metric-ribbon-label">Active</span>
-        </div>
-        <div class="metric-ribbon-item">
-            <span class="metric-ribbon-value">{{departments_count}}</span>
-            <span class="metric-ribbon-label">Departments</span>
-        </div>
-        <div class="metric-ribbon-item">
-            <span class="metric-ribbon-value">{{total_events}}</span>
-            <span class="metric-ribbon-label">Total Events</span>
-        </div>
-    </div>
+    {{> components/page-hero}}
 
-    {{!-- Department Breakdown --}}
-    {{#if dept_chart}}
-    <div class="card" style="margin-bottom:var(--space-4)">
-        <div class="card-header"><h3 class="card-title">Departments</h3></div>
-        <div class="card-body" style="overflow-x:auto">
-            <table class="dept-table">
-                <thead>
-                    <tr>
-                        <th>Department</th>
-                        <th>Users</th>
-                        <th>Active 24h</th>
-                        <th>Active 7d</th>
-                        <th>Prompts</th>
-                        <th>Sessions</th>
-                        <th>Tokens</th>
-                        <th style="min-width:100px">Size</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {{#each dept_chart}}
-                    <tr>
-                        <td>{{department}}</td>
-                        <td>{{active_count}} / {{user_count}}</td>
-                        <td>{{active_24h}}</td>
-                        <td>{{active_7d}}</td>
-                        <td>{{total_prompts}}</td>
-                        <td>{{total_sessions}} {{#if session_trend_up}}<span class="trend-up" title="{{sessions_this_week}} this week vs {{sessions_prev_week}} last week">&#9650;</span>{{/if}}{{#if session_trend_down}}<span class="trend-down" title="{{sessions_this_week}} this week vs {{sessions_prev_week}} last week">&#9660;</span>{{/if}}</td>
-                        <td>{{total_tokens}}</td>
-                        <td class="dept-bar-cell">
-                            <div class="bar-track">
-                                <div class="bar-fill" style="width:{{pct}}%"></div>
-                            </div>
-                        </td>
-                    </tr>
-                {{/each}}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {{/if}}
-
-    {{!-- Toolbar --}}
-    <div class="toolbar">
+    <div class="toolbar" role="toolbar" aria-label="Actions">
         <div class="search-group">
-            <input type="text" class="search-input" placeholder="Search users..." id="user-search">
+            <input type="text" class="search-input" placeholder="Search users..." id="user-search" aria-label="Search users...">
         </div>
-        <select class="filter-select" id="department-filter" style="min-width:160px">
-            <option value="">All Departments</option>
-            {{#each department_options}}
-            <option value="{{this}}" {{#if (eq this ../selected_department)}}selected{{/if}}>{{this}}</option>
-            {{/each}}
-        </select>
-        <button class="btn btn-primary" id="btn-add-user">+ Add User</button>
+        <button type="button" class="btn btn-primary" id="btn-add-user" data-action="create-user">+ Add User</button>
     </div>
     {{> components/create-user-panel}}
 
+    <section aria-label="Users list" data-page="users">
     {{#if users}}
     {{#> components/data-table}}
-        <thead><tr><th>User</th><th>Department</th><th>Rank</th><th>XP</th><th>Prompts</th><th>Sessions</th><th>Tokens</th><th>Status</th><th>Last Active</th><th></th></tr></thead>
+        <thead><tr><th>User</th><th>Rank</th><th class="numeric">XP</th><th class="numeric">Logins</th><th class="numeric">Prompts</th><th class="numeric">Sessions</th><th class="numeric">Bytes</th><th>Status</th><th>Last Active</th><th></th></tr></thead>
         <tbody>
         {{#each users}}
         <tr data-user-name="{{toLowerCase (default display_name user_id)}}" data-user-email="{{toLowerCase (default email "")}}">
@@ -90,15 +25,15 @@
                     <span>{{default display_name user_id}}</span>
                 </a>
             </td>
-            <td>{{#if department}}<span class="badge badge-blue">{{department}}</span>{{else}}-{{/if}}</td>
             <td>{{default rank_name "-"}}</td>
-            <td>{{xp}}</td>
-            <td>{{prompts}}</td>
-            <td>{{sessions}}</td>
-            <td>{{tokens}}</td>
-            <td>{{#if is_active}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Inactive</span>{{/if}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{xp}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{logins}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{prompts}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{sessions}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{bytes}}</td>
+            <td>{{#if is_active}}<span class="badge badge-success">Active</span>{{else}}<span class="badge badge-secondary">Inactive</span>{{/if}}</td>
             <td>{{#if last_active}}<span title="{{formatDate last_active}}">{{relativeTime last_active}}</span>{{else}}Never{{/if}}</td>
-            <td><button class="btn-actions-trigger" data-user-id="{{user_id}}" aria-label="Actions" aria-haspopup="true" aria-expanded="false" type="button">&#8943;</button></td>
+            <td><button class="btn-actions-trigger" data-user-id="{{user_id}}" aria-label="Actions for {{default display_name user_id}}" aria-haspopup="true" aria-expanded="false" type="button">&#8943;</button></td>
         </tr>
         {{/each}}
         </tbody>
@@ -106,52 +41,9 @@
     {{else}}
     {{> components/empty-state message="No users found."}}
     {{/if}}
+    </section>
     {{/inline}}
     {{#*inline "scripts"}}
-    <script src="/js/admin-users.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            // Search filtering
-            var searchInput = document.getElementById('user-search');
-            if (searchInput) {
-                var debounceTimer = null;
-                searchInput.addEventListener('input', function() {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(function() {
-                        var q = searchInput.value.toLowerCase().trim();
-                        var rows = document.querySelectorAll('.data-table tbody tr');
-                        for (var i = 0; i < rows.length; i++) {
-                            var name = rows[i].getAttribute('data-user-name') || '';
-                            var email = rows[i].getAttribute('data-user-email') || '';
-                            rows[i].style.display = (!q || name.indexOf(q) !== -1 || email.indexOf(q) !== -1) ? '' : 'none';
-                        }
-                    }, 200);
-                });
-            }
-            // Department filter
-            var deptFilter = document.getElementById('department-filter');
-            if (deptFilter) {
-                deptFilter.addEventListener('change', function() {
-                    var val = deptFilter.value;
-                    if (val) {
-                        window.location.href = '/admin/users/?department=' + encodeURIComponent(val);
-                    } else {
-                        window.location.href = '/admin/users/';
-                    }
-                });
-            }
-            // Add User panel (SSR panel is in DOM)
-            var addBtn = document.getElementById('btn-add-user');
-            if (addBtn && AdminApp.usersPanel) {
-                addBtn.addEventListener('click', function() { AdminApp.usersPanel.open(); });
-                AdminApp.usersPanel.bindEvents(function() { window.location.reload(); });
-            }
-            // Popup menus and toggle actions
-            if (AdminApp.usersInteractions) {
-                AdminApp.usersInteractions();
-            }
-        });
-    </script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-users.js"></script>
     {{/inline}}
 {{/layout}}

@@ -2,12 +2,12 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use super::super::types::{PluginOnboardingConfig, PluginOverview};
-use super::plugin_hook_resolvers::resolve_plugin_hooks;
 use super::plugin_resolvers::{
     resolve_all_plugin_skill_ids, resolve_plugin_agents, resolve_plugin_skills,
 };
+use crate::error::MarketplaceError;
 
-pub fn list_all_skill_ids(services_path: &Path) -> Result<Vec<String>, anyhow::Error> {
+pub fn list_all_skill_ids(services_path: &Path) -> Result<Vec<String>, MarketplaceError> {
     let skills_path = services_path.join("skills");
     let mut ids = Vec::new();
     if !skills_path.exists() {
@@ -26,8 +26,7 @@ pub fn list_all_skill_ids(services_path: &Path) -> Result<Vec<String>, anyhow::E
 pub fn get_plugin_skill_ids(
     services_path: &Path,
     plugin_id: &str,
-) -> Result<Vec<String>, anyhow::Error> {
-    use anyhow::Context;
+) -> Result<Vec<String>, MarketplaceError> {
     use systemprompt::models::PluginConfigFile;
 
     let config_path = services_path
@@ -35,11 +34,19 @@ pub fn get_plugin_skill_ids(
         .join(plugin_id)
         .join("config.yaml");
 
-    let content = std::fs::read_to_string(&config_path)
-        .with_context(|| format!("Plugin config not found: {}", config_path.display()))?;
+    let content = std::fs::read_to_string(&config_path).map_err(|e| {
+        MarketplaceError::Internal(format!(
+            "Plugin config not found: {}: {e}",
+            config_path.display()
+        ))
+    })?;
 
-    let plugin_file: PluginConfigFile = serde_yaml::from_str(&content)
-        .with_context(|| format!("Invalid plugin config: {}", config_path.display()))?;
+    let plugin_file: PluginConfigFile = serde_yaml::from_str(&content).map_err(|e| {
+        MarketplaceError::Internal(format!(
+            "Invalid plugin config: {}: {e}",
+            config_path.display()
+        ))
+    })?;
 
     let skills_path = services_path.join("skills");
     let agents_path = services_path.join("agents");
@@ -54,19 +61,22 @@ pub fn update_plugin_skills(
     services_path: &Path,
     plugin_id: &str,
     skill_ids: &[String],
-) -> Result<(), anyhow::Error> {
-    use anyhow::Context;
-
+) -> Result<(), MarketplaceError> {
     let config_path = services_path
         .join("plugins")
         .join(plugin_id)
         .join("config.yaml");
 
-    let content = std::fs::read_to_string(&config_path)
-        .with_context(|| format!("Plugin config not found: {}", config_path.display()))?;
+    let content = std::fs::read_to_string(&config_path).map_err(|e| {
+        MarketplaceError::Internal(format!(
+            "Plugin config not found: {}: {e}",
+            config_path.display()
+        ))
+    })?;
 
-    let mut doc: serde_yaml::Value = serde_yaml::from_str(&content)
-        .with_context(|| format!("Invalid YAML: {}", config_path.display()))?;
+    let mut doc: serde_yaml::Value = serde_yaml::from_str(&content).map_err(|e| {
+        MarketplaceError::Internal(format!("Invalid YAML: {}: {e}", config_path.display()))
+    })?;
 
     if let Some(plugin) = doc.get_mut("plugin") {
         if let Some(skills) = plugin.get_mut("skills") {
@@ -79,9 +89,11 @@ pub fn update_plugin_skills(
         }
     }
 
-    let yaml_str = serde_yaml::to_string(&doc).with_context(|| "Failed to serialize YAML")?;
-    std::fs::write(&config_path, yaml_str)
-        .with_context(|| format!("Failed to write: {}", config_path.display()))?;
+    let yaml_str = serde_yaml::to_string(&doc)
+        .map_err(|e| MarketplaceError::Internal(format!("Failed to serialize YAML: {e}")))?;
+    std::fs::write(&config_path, yaml_str).map_err(|e| {
+        MarketplaceError::Internal(format!("Failed to write: {}: {e}", config_path.display()))
+    })?;
 
     Ok(())
 }
@@ -96,7 +108,7 @@ pub struct MarketplaceCounts {
 pub fn count_marketplace_items(
     services_path: &Path,
     roles: &[String],
-) -> Result<MarketplaceCounts, anyhow::Error> {
+) -> Result<MarketplaceCounts, MarketplaceError> {
     use super::super::types::PlatformPluginConfigFile;
 
     let plugins_path = services_path.join("plugins");
@@ -152,20 +164,14 @@ pub fn count_marketplace_items(
 pub fn list_plugins_for_roles(
     services_path: &Path,
     roles: &[String],
-) -> Result<Vec<PluginOverview>, anyhow::Error> {
-    list_plugins_for_roles_full(services_path, roles, &HashMap::new(), &HashMap::new())
+) -> Result<Vec<PluginOverview>, MarketplaceError> {
+    list_plugins_for_roles_full(services_path, roles)
 }
 
-#[allow(clippy::implicit_hasher)]
 pub fn list_plugins_for_roles_full(
     services_path: &Path,
     roles: &[String],
-    enabled_map: &HashMap<String, bool>,
-    hook_enabled_map: &HashMap<String, bool>,
-) -> Result<Vec<PluginOverview>, anyhow::Error> {
-    use super::super::types::PlatformPluginConfigFile;
-    use anyhow::Context;
-
+) -> Result<Vec<PluginOverview>, MarketplaceError> {
     let plugins_path = services_path.join("plugins");
     let skills_path = services_path.join("skills");
     let agents_path = services_path.join("agents");
@@ -188,56 +194,59 @@ pub fn list_plugins_for_roles_full(
     entries.sort_by_key(std::fs::DirEntry::file_name);
 
     for entry in entries {
-        let path = entry.path();
-        if !path.is_dir() {
-            continue;
-        }
-
-        let config_path = path.join("config.yaml");
-        if !config_path.exists() {
-            continue;
-        }
-
-        let content = std::fs::read_to_string(&config_path)
-            .with_context(|| format!("Failed to read {}", config_path.display()))?;
-
-        let plugin_file: PlatformPluginConfigFile = match serde_yaml::from_str(&content) {
-            Ok(p) => p,
-            Err(_) => continue,
-        };
-
-        let plugin = plugin_file.plugin;
-
-        let is_admin = roles.iter().any(|r| r == "admin");
-
-        if !plugin.base.enabled && !is_admin {
-            continue;
-        }
-
-        if !is_admin && !plugin.roles.is_empty() && !plugin.roles.iter().any(|r| roles.contains(r))
+        if let Some(overview) = try_load_plugin_overview(&entry, roles, &skills_path, &agents_path)?
         {
-            continue;
+            overviews.push(overview);
         }
-
-        let skill_infos =
-            resolve_plugin_skills(&plugin.base, &skills_path, &agents_path, enabled_map);
-        let agent_infos = resolve_plugin_agents(&plugin.base, &agents_path);
-        let hook_infos = resolve_plugin_hooks(&config_path, &plugin.base.id, hook_enabled_map);
-
-        overviews.push(PluginOverview {
-            id: plugin.base.id,
-            name: plugin.base.name,
-            description: plugin.base.description,
-            enabled: plugin.base.enabled,
-            skills: skill_infos,
-            agents: agent_infos,
-            mcp_servers: plugin.base.mcp_servers,
-            hooks: hook_infos,
-            depends: plugin.depends,
-        });
     }
 
     Ok(overviews)
+}
+
+fn try_load_plugin_overview(
+    entry: &std::fs::DirEntry,
+    roles: &[String],
+    skills_path: &Path,
+    agents_path: &Path,
+) -> Result<Option<PluginOverview>, MarketplaceError> {
+    use super::super::types::PlatformPluginConfigFile;
+
+    let path = entry.path();
+    if !path.is_dir() {
+        return Ok(None);
+    }
+    let config_path = path.join("config.yaml");
+    if !config_path.exists() {
+        return Ok(None);
+    }
+    let content = std::fs::read_to_string(&config_path).map_err(|e| {
+        MarketplaceError::Internal(format!("Failed to read {}: {e}", config_path.display()))
+    })?;
+    let plugin_file: PlatformPluginConfigFile = match serde_yaml::from_str(&content) {
+        Ok(p) => p,
+        Err(_) => return Ok(None),
+    };
+    let plugin = plugin_file.plugin;
+    let is_admin = roles.iter().any(|r| r == "admin");
+    if !plugin.base.enabled && !is_admin {
+        return Ok(None);
+    }
+    if !is_admin && !plugin.roles.is_empty() && !plugin.roles.iter().any(|r| roles.contains(r)) {
+        return Ok(None);
+    }
+    let skill_infos = resolve_plugin_skills(&plugin.base, skills_path, agents_path);
+    let agent_infos = resolve_plugin_agents(&plugin.base, agents_path);
+    Ok(Some(PluginOverview {
+        id: plugin.base.id,
+        name: plugin.base.name,
+        description: plugin.base.description,
+        enabled: plugin.base.enabled,
+        skills: skill_infos,
+        agents: agent_infos,
+        mcp_servers: plugin.base.mcp_servers,
+        hooks: vec![],
+        depends: plugin.depends,
+    }))
 }
 
 #[must_use]

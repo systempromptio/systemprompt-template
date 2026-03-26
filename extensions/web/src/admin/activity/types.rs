@@ -19,7 +19,7 @@ pub struct NewActivity {
     pub metadata: serde_json::Value,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct ActivityTimelineEvent {
     pub id: String,
     pub user_id: String,
@@ -32,7 +32,7 @@ pub struct ActivityTimelineEvent {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct ActivityCategorySummary {
     pub category: String,
     pub count: i64,

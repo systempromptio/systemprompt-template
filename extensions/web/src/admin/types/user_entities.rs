@@ -1,11 +1,12 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct UserPlugin {
     pub id: String,
-    pub user_id: String,
+    pub user_id: UserId,
     pub plugin_id: String,
     pub name: String,
     pub description: String,
@@ -22,8 +23,8 @@ pub struct UserPlugin {
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct UserMcpServer {
     pub id: String,
-    pub user_id: String,
-    pub mcp_server_id: String,
+    pub user_id: UserId,
+    pub mcp_server_id: McpServerId,
     pub name: String,
     pub description: String,
     pub binary: String,
@@ -34,7 +35,7 @@ pub struct UserMcpServer {
     pub oauth_required: bool,
     pub oauth_scopes: Vec<String>,
     pub oauth_audience: String,
-    pub base_mcp_server_id: Option<String>,
+    pub base_mcp_server_id: Option<McpServerId>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -70,7 +71,7 @@ pub struct UpdateUserPluginRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct CreateUserMcpServerRequest {
-    pub mcp_server_id: String,
+    pub mcp_server_id: McpServerId,
     pub name: String,
     #[serde(default)]
     pub description: String,
@@ -89,7 +90,7 @@ pub struct CreateUserMcpServerRequest {
     #[serde(default)]
     pub oauth_audience: String,
     #[serde(default)]
-    pub base_mcp_server_id: Option<String>,
+    pub base_mcp_server_id: Option<McpServerId>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -109,15 +110,14 @@ pub struct UpdateUserMcpServerRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserPluginWithAssociations {
     pub plugin: UserPlugin,
-    pub skill_ids: Vec<String>,
-    pub agent_ids: Vec<String>,
-    pub mcp_server_ids: Vec<String>,
-    pub hook_ids: Vec<String>,
+    pub skill_ids: Vec<SkillId>,
+    pub agent_ids: Vec<AgentId>,
+    pub mcp_server_ids: Vec<McpServerId>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct MarketplaceSyncStatus {
-    pub user_id: String,
+    pub user_id: UserId,
     pub dirty: bool,
     pub last_synced_at: Option<DateTime<Utc>>,
     pub last_changed_at: DateTime<Utc>,
@@ -134,23 +134,23 @@ pub struct ForkPluginRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct ForkSkillRequest {
-    pub org_skill_id: String,
+    pub org_skill_id: SkillId,
     #[serde(default)]
-    pub skill_id: Option<String>,
+    pub skill_id: Option<SkillId>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ForkAgentRequest {
-    pub org_agent_id: String,
+    pub org_agent_id: AgentId,
     #[serde(default)]
-    pub agent_id: Option<String>,
+    pub agent_id: Option<AgentId>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ForkMcpServerRequest {
-    pub org_mcp_server_id: String,
+    pub org_mcp_server_id: McpServerId,
     #[serde(default)]
-    pub mcp_server_id: Option<String>,
+    pub mcp_server_id: Option<McpServerId>,
 }
 
 #[derive(Debug, Deserialize)]

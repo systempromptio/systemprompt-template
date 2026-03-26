@@ -2,208 +2,185 @@ use std::sync::Arc;
 
 use sqlx::PgPool;
 
-use super::super::types::{ActivityStats, EventTypeBreakdown, TimeSeriesBucket};
+use super::super::types::{ActivityStats, TimeSeriesBucket};
 
-pub async fn fetch_event_breakdown(
-    pool: &Arc<PgPool>,
-    department: Option<&str>,
-) -> Result<Vec<EventTypeBreakdown>, sqlx::Error> {
-    if let Some(dept) = department {
-        sqlx::query_as::<_, EventTypeBreakdown>(
-            r"SELECT p.event_type, COUNT(*)::BIGINT AS count
-            FROM plugin_usage_events p
-            JOIN users u ON u.id = p.user_id
-            WHERE NOT ('anonymous' = ANY(u.roles))
-              AND u.email NOT LIKE '%@anonymous.local'
-              AND u.department = $1
-            GROUP BY p.event_type ORDER BY count DESC",
-        )
-        .bind(dept)
-        .fetch_all(pool.as_ref())
-        .await
-    } else {
-        sqlx::query_as::<_, EventTypeBreakdown>(
-            r"SELECT p.event_type, COUNT(*)::BIGINT AS count
-            FROM plugin_usage_events p
-            JOIN users u ON u.id = p.user_id
-            WHERE NOT ('anonymous' = ANY(u.roles))
-              AND u.email NOT LIKE '%@anonymous.local'
-            GROUP BY p.event_type ORDER BY count DESC",
-        )
-        .fetch_all(pool.as_ref())
-        .await
-    }
-}
+pub async fn get_activity_stats(pool: &Arc<PgPool>) -> Result<ActivityStats, sqlx::Error> {
+    let row = sqlx::query!(
+        r#"SELECT
+            COALESCE(COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE), 0)::BIGINT AS "events_today!",
+            COALESCE(COUNT(*) FILTER (WHERE created_at >= DATE_TRUNC('week', CURRENT_DATE)), 0)::BIGINT AS "events_this_week!",
+            COALESCE(COUNT(*) FILTER (WHERE category = 'marketplace_edit'), 0)::BIGINT AS "total_edits!",
+            COALESCE(COUNT(*) FILTER (WHERE category = 'login'), 0)::BIGINT AS "total_logins!"
+        FROM user_activity"#,
+    )
+    .fetch_one(pool.as_ref())
+    .await?;
 
-pub async fn get_activity_stats(
-    pool: &Arc<PgPool>,
-    department: Option<&str>,
-) -> Result<ActivityStats, sqlx::Error> {
-    if let Some(dept) = department {
-        sqlx::query_as::<_, ActivityStats>(
-            r"SELECT
-                COALESCE(COUNT(*) FILTER (WHERE p.created_at >= CURRENT_DATE), 0)::BIGINT AS events_today,
-                COALESCE(COUNT(*) FILTER (WHERE p.created_at >= DATE_TRUNC('week', CURRENT_DATE)), 0)::BIGINT AS events_this_week,
-                COALESCE(COUNT(DISTINCT p.session_id), 0)::BIGINT AS total_sessions,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type ILIKE '%error%' OR p.event_type ILIKE '%fail%'), 0)::BIGINT AS error_count,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_PostToolUse'), 0)::BIGINT AS tool_uses,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_UserPromptSubmit'), 0)::BIGINT AS prompts,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_SubagentStart'), 0)::BIGINT AS subagents_spawned,
-                COALESCE((SELECT SUM(total_input_tokens) FROM plugin_session_summaries), 0)::BIGINT AS total_input_tokens,
-                COALESCE((SELECT SUM(total_output_tokens) FROM plugin_session_summaries), 0)::BIGINT AS total_output_tokens,
-                COALESCE((SELECT SUM((p2.metadata->>'total_cost_usd')::NUMERIC) FROM plugin_usage_events p2 WHERE p2.event_type = 'claude_code_StatusLine'), 0.0)::FLOAT8 AS total_cost_usd,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_PostToolUseFailure'), 0)::BIGINT AS failure_count
-            FROM plugin_usage_events p
-            JOIN users u ON u.id = p.user_id
-            WHERE NOT ('anonymous' = ANY(u.roles))
-              AND u.email NOT LIKE '%@anonymous.local'
-              AND u.department = $1",
-        )
-        .bind(dept)
-        .fetch_one(pool.as_ref())
-        .await
-    } else {
-        sqlx::query_as::<_, ActivityStats>(
-            r"SELECT
-                COALESCE(COUNT(*) FILTER (WHERE p.created_at >= CURRENT_DATE), 0)::BIGINT AS events_today,
-                COALESCE(COUNT(*) FILTER (WHERE p.created_at >= DATE_TRUNC('week', CURRENT_DATE)), 0)::BIGINT AS events_this_week,
-                COALESCE(COUNT(DISTINCT p.session_id), 0)::BIGINT AS total_sessions,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type ILIKE '%error%' OR p.event_type ILIKE '%fail%'), 0)::BIGINT AS error_count,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_PostToolUse'), 0)::BIGINT AS tool_uses,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_UserPromptSubmit'), 0)::BIGINT AS prompts,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_SubagentStart'), 0)::BIGINT AS subagents_spawned,
-                COALESCE((SELECT SUM(total_input_tokens) FROM plugin_session_summaries), 0)::BIGINT AS total_input_tokens,
-                COALESCE((SELECT SUM(total_output_tokens) FROM plugin_session_summaries), 0)::BIGINT AS total_output_tokens,
-                COALESCE((SELECT SUM((p2.metadata->>'total_cost_usd')::NUMERIC) FROM plugin_usage_events p2 WHERE p2.event_type = 'claude_code_StatusLine'), 0.0)::FLOAT8 AS total_cost_usd,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_PostToolUseFailure'), 0)::BIGINT AS failure_count
-            FROM plugin_usage_events p
-            JOIN users u ON u.id = p.user_id
-            WHERE NOT ('anonymous' = ANY(u.roles))
-              AND u.email NOT LIKE '%@anonymous.local'",
-        )
-        .fetch_one(pool.as_ref())
-        .await
-    }
+    let mcp_row = sqlx::query!(
+        r#"SELECT
+            COUNT(*)::BIGINT AS "mcp_tool_calls!",
+            COALESCE(COUNT(*) FILTER (WHERE status = 'failed'), 0)::BIGINT AS "mcp_errors!"
+        FROM mcp_tool_executions"#,
+    )
+    .fetch_one(pool.as_ref())
+    .await;
+
+    let (mcp_tool_calls, mcp_errors) = match mcp_row {
+        Ok(r) => (r.mcp_tool_calls, r.mcp_errors),
+        Err(e) => {
+            tracing::warn!(error = %e, "Failed to query mcp_tool_executions for dashboard stats");
+            (0, 0)
+        }
+    };
+
+    Ok(ActivityStats {
+        events_today: row.events_today,
+        events_this_week: row.events_this_week,
+        total_edits: row.total_edits,
+        mcp_tool_calls,
+        mcp_errors,
+        total_logins: row.total_logins,
+    })
 }
 
 pub async fn fetch_usage_timeseries(
     pool: &Arc<PgPool>,
-    department: Option<&str>,
     interval: &str,
+    bucket_interval: &str,
 ) -> Result<Vec<TimeSeriesBucket>, sqlx::Error> {
-    if let Some(dept) = department {
-        let sql = format!(
-            r"SELECT
-                date_trunc('hour', p.created_at) AS bucket,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_PostToolUse'), 0)::BIGINT AS tool_uses,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_UserPromptSubmit'), 0)::BIGINT AS prompts,
-                COALESCE(COUNT(DISTINCT p.user_id), 0)::BIGINT AS active_users,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_SessionStart'), 0)::BIGINT AS sessions,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type ILIKE '%fail%' OR p.event_type ILIKE '%error%'), 0)::BIGINT AS errors
-            FROM plugin_usage_events p
-            JOIN users u ON u.id = p.user_id
-            WHERE p.created_at >= NOW() - INTERVAL '{interval}'
-              AND NOT ('anonymous' = ANY(u.roles))
-              AND u.email NOT LIKE '%@anonymous.local'
-              AND u.department = $1
-            GROUP BY bucket
-            ORDER BY bucket"
-        );
-        sqlx::query_as::<_, TimeSeriesBucket>(&sql)
-            .bind(dept)
-            .fetch_all(pool.as_ref())
-            .await
+    let trunc = if bucket_interval.contains("hour") {
+        "hour"
     } else {
-        let sql = format!(
-            r"SELECT
-                date_trunc('hour', p.created_at) AS bucket,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_PostToolUse'), 0)::BIGINT AS tool_uses,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_UserPromptSubmit'), 0)::BIGINT AS prompts,
-                COALESCE(COUNT(DISTINCT p.user_id), 0)::BIGINT AS active_users,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type = 'claude_code_SessionStart'), 0)::BIGINT AS sessions,
-                COALESCE(COUNT(*) FILTER (WHERE p.event_type ILIKE '%fail%' OR p.event_type ILIKE '%error%'), 0)::BIGINT AS errors
-            FROM plugin_usage_events p
-            JOIN users u ON u.id = p.user_id
-            WHERE p.created_at >= NOW() - INTERVAL '{interval}'
-              AND NOT ('anonymous' = ANY(u.roles))
-              AND u.email NOT LIKE '%@anonymous.local'
-            GROUP BY bucket
-            ORDER BY bucket"
-        );
-        sqlx::query_as::<_, TimeSeriesBucket>(&sql)
-            .fetch_all(pool.as_ref())
-            .await
-    }
+        "day"
+    };
+    let sql = format!(
+        r"WITH buckets AS (
+            SELECT generate_series(
+                date_trunc('{trunc}', NOW() - INTERVAL '{interval}'),
+                NOW(),
+                INTERVAL '{bucket_interval}'
+            ) AS bucket
+        ),
+        activity AS (
+            SELECT
+                date_trunc('{trunc}', a.created_at) AS bucket,
+                0::BIGINT AS mcp_calls,
+                COUNT(*) FILTER (WHERE a.category = 'marketplace_edit')::BIGINT AS edits,
+                COUNT(DISTINCT a.user_id)::BIGINT AS active_users,
+                COUNT(*) FILTER (WHERE a.category = 'login')::BIGINT AS logins,
+                0::BIGINT AS mcp_errors
+            FROM user_activity a
+            WHERE a.created_at >= NOW() - INTERVAL '{interval}'
+            GROUP BY 1
+        ),
+        mcp AS (
+            SELECT
+                date_trunc('{trunc}', m.created_at) AS bucket,
+                COUNT(*)::BIGINT AS mcp_calls,
+                0::BIGINT AS edits,
+                0::BIGINT AS active_users,
+                0::BIGINT AS logins,
+                COUNT(*) FILTER (WHERE m.status = 'failed')::BIGINT AS mcp_errors
+            FROM mcp_tool_executions m
+            WHERE m.created_at >= NOW() - INTERVAL '{interval}'
+            GROUP BY 1
+        )
+        SELECT
+            b.bucket,
+            COALESCE(SUM(d.mcp_calls), 0)::BIGINT AS tool_uses,
+            COALESCE(SUM(d.edits), 0)::BIGINT AS prompts,
+            COALESCE(SUM(d.active_users), 0)::BIGINT AS active_users,
+            COALESCE(SUM(d.logins), 0)::BIGINT AS sessions,
+            COALESCE(SUM(d.mcp_errors), 0)::BIGINT AS errors
+        FROM buckets b
+        LEFT JOIN (
+            SELECT * FROM activity UNION ALL SELECT * FROM mcp
+        ) d ON d.bucket = b.bucket
+        GROUP BY b.bucket
+        ORDER BY b.bucket"
+    );
+    sqlx::query_as::<_, TimeSeriesBucket>(&sql)
+        .fetch_all(pool.as_ref())
+        .await
 }
 
-pub async fn fetch_active_users_24h(
+pub async fn fetch_user_usage_timeseries(
     pool: &Arc<PgPool>,
-    department: Option<&str>,
-) -> Result<i64, sqlx::Error> {
-    if let Some(dept) = department {
-        sqlx::query_scalar::<_, i64>(
-            r"SELECT COALESCE(COUNT(DISTINCT p.user_id), 0)::BIGINT
-            FROM plugin_usage_events p
-            JOIN users u ON u.id = p.user_id
-            WHERE p.created_at >= NOW() - INTERVAL '24 hours'
-              AND NOT ('anonymous' = ANY(u.roles))
-              AND u.email NOT LIKE '%@anonymous.local'
-              AND u.department = $1",
-        )
-        .bind(dept)
-        .fetch_one(pool.as_ref())
-        .await
+    user_id: &str,
+    interval: &str,
+    bucket_interval: &str,
+) -> Result<Vec<TimeSeriesBucket>, sqlx::Error> {
+    let trunc = if bucket_interval.contains("hour") {
+        "hour"
     } else {
-        sqlx::query_scalar::<_, i64>(
-            r"SELECT COALESCE(COUNT(DISTINCT p.user_id), 0)::BIGINT
-            FROM plugin_usage_events p
-            JOIN users u ON u.id = p.user_id
-            WHERE p.created_at >= NOW() - INTERVAL '24 hours'
-              AND NOT ('anonymous' = ANY(u.roles))
-              AND u.email NOT LIKE '%@anonymous.local'",
+        "day"
+    };
+    let sql = format!(
+        r"WITH buckets AS (
+            SELECT generate_series(
+                date_trunc('{trunc}', NOW() - INTERVAL '{interval}'),
+                NOW(),
+                INTERVAL '{bucket_interval}'
+            ) AS bucket
+        ),
+        activity AS (
+            SELECT
+                date_trunc('{trunc}', a.created_at) AS bucket,
+                0::BIGINT AS mcp_calls,
+                COUNT(*) FILTER (WHERE a.category = 'marketplace_edit')::BIGINT AS edits,
+                1::BIGINT AS active_users,
+                COUNT(*) FILTER (WHERE a.category = 'login')::BIGINT AS logins,
+                0::BIGINT AS mcp_errors
+            FROM user_activity a
+            WHERE a.created_at >= NOW() - INTERVAL '{interval}'
+              AND a.user_id = $1
+            GROUP BY 1
+        ),
+        mcp AS (
+            SELECT
+                date_trunc('{trunc}', m.created_at) AS bucket,
+                COUNT(*)::BIGINT AS mcp_calls,
+                0::BIGINT AS edits,
+                0::BIGINT AS active_users,
+                0::BIGINT AS logins,
+                COUNT(*) FILTER (WHERE m.status = 'failed')::BIGINT AS mcp_errors
+            FROM mcp_tool_executions m
+            WHERE m.created_at >= NOW() - INTERVAL '{interval}'
+              AND m.user_id = $1
+            GROUP BY 1
         )
-        .fetch_one(pool.as_ref())
+        SELECT
+            b.bucket,
+            COALESCE(SUM(d.mcp_calls), 0)::BIGINT AS tool_uses,
+            COALESCE(SUM(d.edits), 0)::BIGINT AS prompts,
+            COALESCE(SUM(d.active_users), 0)::BIGINT AS active_users,
+            COALESCE(SUM(d.logins), 0)::BIGINT AS sessions,
+            COALESCE(SUM(d.mcp_errors), 0)::BIGINT AS errors
+        FROM buckets b
+        LEFT JOIN (
+            SELECT * FROM activity UNION ALL SELECT * FROM mcp
+        ) d ON d.bucket = b.bucket
+        GROUP BY b.bucket
+        ORDER BY b.bucket"
+    );
+    sqlx::query_as::<_, TimeSeriesBucket>(&sql)
+        .bind(user_id)
+        .fetch_all(pool.as_ref())
         .await
-    }
 }
 
-pub async fn fetch_avg_session_duration(
-    pool: &Arc<PgPool>,
-    department: Option<&str>,
-) -> Result<i64, sqlx::Error> {
-    if let Some(dept) = department {
-        sqlx::query_scalar::<_, i64>(
-            r"SELECT COALESCE(
-                EXTRACT(EPOCH FROM AVG(e.created_at - s.created_at))::BIGINT,
-                0
-            )
-            FROM plugin_usage_events s
-            JOIN plugin_usage_events e ON e.session_id = s.session_id AND e.event_type = 'claude_code_SessionEnd'
-            JOIN users u ON u.id = s.user_id
-            WHERE s.event_type = 'claude_code_SessionStart'
-              AND s.created_at >= NOW() - INTERVAL '7 days'
-              AND NOT ('anonymous' = ANY(u.roles))
-              AND u.email NOT LIKE '%@anonymous.local'
-              AND u.department = $1",
-        )
-        .bind(dept)
-        .fetch_one(pool.as_ref())
-        .await
-    } else {
-        sqlx::query_scalar::<_, i64>(
-            r"SELECT COALESCE(
-                EXTRACT(EPOCH FROM AVG(e.created_at - s.created_at))::BIGINT,
-                0
-            )
-            FROM plugin_usage_events s
-            JOIN plugin_usage_events e ON e.session_id = s.session_id AND e.event_type = 'claude_code_SessionEnd'
-            JOIN users u ON u.id = s.user_id
-            WHERE s.event_type = 'claude_code_SessionStart'
-              AND s.created_at >= NOW() - INTERVAL '7 days'
-              AND NOT ('anonymous' = ANY(u.roles))
-              AND u.email NOT LIKE '%@anonymous.local'",
-        )
-        .fetch_one(pool.as_ref())
-        .await
-    }
+pub async fn fetch_active_users_24h(pool: &Arc<PgPool>) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT COALESCE(COUNT(DISTINCT combined.user_id), 0)::BIGINT as "count!"
+        FROM (
+            SELECT user_id FROM user_activity WHERE created_at >= NOW() - INTERVAL '24 hours'
+            UNION
+            SELECT user_id FROM mcp_tool_executions WHERE created_at >= NOW() - INTERVAL '24 hours' AND user_id IS NOT NULL
+        ) combined
+        JOIN users u ON u.id = combined.user_id
+        WHERE NOT ('anonymous' = ANY(u.roles))
+          AND u.email NOT LIKE '%@anonymous.local'"#,
+    )
+    .fetch_one(pool.as_ref())
+    .await
 }

@@ -1,0 +1,98 @@
+
+
+.cc-onboarding-code {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    background: var(--sp-bg-surface-overlay);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-sm);
+    padding: var(--sp-space-2) var(--sp-space-3);
+    margin: var(--sp-space-2) 0;
+}
+.cc-onboarding-code code {
+    flex: 1;
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-primary);
+    word-break: break-all;
+}
+.cc-onboarding-code .btn-copy {
+    flex-shrink: 0;
+    padding: var(--sp-space-1) var(--sp-space-2);
+    font-size: var(--sp-text-xs);
+    background: transparent;
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-sm);
+    color: var(--sp-text-secondary);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color var(--sp-duration-fast),
+                border-color var(--sp-duration-fast);
+}
+.cc-onboarding-code .btn-copy:hover {
+    color: var(--sp-accent);
+    border-color: var(--sp-accent);
+}
+.cc-onboarding-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--sp-text-sm);
+    margin: var(--sp-space-2) 0;
+}
+.cc-onboarding-table th,
+.cc-onboarding-table td {
+    text-align: left;
+    padding: var(--sp-space-1) var(--sp-space-2);
+    border-bottom: 1px solid var(--sp-border-subtle);
+}
+.cc-onboarding-table th {
+    color: var(--sp-text-tertiary);
+    font-weight: 500;
+    font-size: var(--sp-text-xs);
+}
+.cc-onboarding-table td {
+    color: var(--sp-text-primary);
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+}
+.cc-onboarding--hiding {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity var(--sp-duration-slow) var(--sp-ease-out), transform var(--sp-duration-slow) var(--sp-ease-out);
+}
+
+@media (max-width: 768px) {
+    .cc-tabs {
+        overflow-x: auto;
+    }
+    .cc-skill-grid,
+    .cc-components-grid,
+    .cc-insights-grid {
+        grid-template-columns: 1fr;
+    }
+    .cc-skill-card-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .cc-perf-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .cc-session-meta {
+        flex-wrap: wrap;
+    }
+    .cc-onboarding-tabs {
+        overflow-x: auto;
+    }
+    .cc-onboarding-step {
+        flex-direction: column;
+    }
+    .cc-step-content h3 {
+        line-height: 1.4;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-onboarding--hiding {
+        transition: none;
+    }
+}

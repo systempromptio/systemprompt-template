@@ -1,0 +1,40 @@
+@layer components {
+
+.sp-skill-files-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--sp-overlay-medium);
+    backdrop-filter: blur(4px);
+    z-index: var(--sp-z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn var(--sp-duration-normal) var(--sp-ease-out);
+}
+
+.sp-skill-files-panel {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-lg);
+    width: 90vw;
+    max-width: 1100px;
+    height: 80vh;
+    overflow: hidden;
+    box-shadow: var(--sp-shadow-lg);
+    display: flex;
+    flex-direction: column;
+}
+
+.sp-skill-files-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-skill-files-validation-error {
+    color: var(--sp-danger);
+}
+
+}

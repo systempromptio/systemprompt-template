@@ -3,7 +3,7 @@
     {{#*inline "content"}}
     {{> components/back-button href="/admin/org/agents/" label="Back to Agents"}}
     <h2>{{title}}</h2>
-    <div class="card" style="max-width:800px">
+    <div class="card max-w-lg">
         <form id="agent-form" data-api-path="/agents/" data-entity="Agent" data-id-field="id" data-list-path="/agents/">
             {{> components/form-group label="ID" name="id" type="text" value=agent.id placeholder="my-agent-id" required=true readonly=is_edit hint="kebab-case"}}
             {{> components/form-group label="Name" name="name" type="text" value=agent.name placeholder="Agent name" required=true}}
@@ -22,20 +22,6 @@
     </div>
     {{/inline}}
     {{#*inline "scripts"}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            AdminApp.interactions.initEditForm('agent-form', {
-                buildBody: function(form, formData) {
-                    return {
-                        name: formData.get('name'),
-                        description: formData.get('description') || '',
-                        system_prompt: formData.get('system_prompt') || '',
-                        enabled: form.querySelector('[name="enabled"]').checked
-                    };
-                }
-            });
-        });
-    </script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-agent-edit.js" defer></script>
     {{/inline}}
 {{/layout}}

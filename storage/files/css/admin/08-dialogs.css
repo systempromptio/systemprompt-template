@@ -1,0 +1,181 @@
+@layer components {
+
+.confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--sp-overlay-medium);
+    backdrop-filter: blur(4px);
+    z-index: var(--sp-z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn var(--sp-duration-normal) var(--sp-ease-out);
+}
+
+.confirm-dialog {
+    background: var(--sp-bg-surface-overlay);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-card-brand);
+    padding: var(--sp-space-7);
+    max-width: 400px;
+    width: 90%;
+    box-shadow: var(--sp-shadow-float);
+    animation: dialogIn var(--sp-duration-normal) var(--sp-ease-out);
+    color: var(--sp-text-primary);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes dialogIn {
+    from { opacity: 0; transform: scale(0.95) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.btn-actions-trigger,
+.actions-trigger {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    color: var(--sp-text-secondary);
+    border-radius: var(--sp-radius-sm);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--sp-text-md);
+    line-height: 1;
+    letter-spacing: 2px;
+    transition: background var(--sp-duration-fast) var(--sp-ease-in-out),
+                border-color var(--sp-duration-fast) var(--sp-ease-in-out),
+                color var(--sp-duration-fast) var(--sp-ease-in-out);
+}
+
+.btn-actions-trigger:hover,
+.btn-actions-trigger.active,
+.actions-trigger:hover,
+.actions-menu.open .actions-trigger {
+    background: var(--sp-bg-surface-raised);
+    border-color: var(--sp-border-strong);
+    color: var(--sp-text-primary);
+}
+
+.btn-actions-trigger:focus-visible,
+.actions-trigger:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--sp-bg-canvas), 0 0 0 4px var(--sp-accent);
+}
+
+.actions-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.actions-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: var(--sp-space-1);
+    background: var(--sp-bg-surface-overlay);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-card-inner-brand);
+    box-shadow: var(--sp-shadow-float);
+    z-index: var(--sp-z-dropdown);
+    min-width: 140px;
+    padding: var(--sp-space-1) 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity var(--sp-duration-fast) var(--sp-ease-in-out),
+                visibility var(--sp-duration-fast),
+                transform var(--sp-duration-fast) var(--sp-ease-in-out);
+}
+
+.actions-menu.open .actions-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.actions-item {
+    display: block;
+    width: 100%;
+    padding: var(--sp-space-2) var(--sp-space-4);
+    background: transparent;
+    border: none;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background var(--sp-duration-fast), color var(--sp-duration-fast);
+}
+
+.actions-item:hover,
+.actions-item:focus-visible {
+    background: var(--sp-bg-surface-raised);
+    color: var(--sp-text-primary);
+    outline: none;
+}
+
+.actions-item-danger {
+    color: var(--sp-danger);
+}
+
+.actions-item-danger:hover {
+    background: var(--sp-danger-dim);
+    color: var(--sp-danger);
+}
+
+.sp-env-dialog {
+    width: 560px;
+    max-width: 90vw;
+}
+
+.sp-env-title {
+    margin: 0 0 var(--sp-space-4);
+}
+
+.sp-env-scroll {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.sp-env-actions {
+    display: flex;
+    gap: var(--sp-space-3);
+    justify-content: flex-end;
+    margin-top: var(--sp-space-4);
+}
+
+.sp-env-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-space-6);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-env-save-success {
+    background: var(--sp-success);
+    border-color: var(--sp-success);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .confirm-overlay,
+    .confirm-dialog {
+        animation: none;
+    }
+    .actions-dropdown {
+        transition: none;
+    }
+}
+
+}

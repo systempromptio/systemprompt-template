@@ -2,40 +2,28 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/back-button href="/admin/my/agents/" label="Back to My Agents"}}
+    <section aria-label="Edit Agent">
     <h2>{{title}}</h2>
     {{#if is_forked}}
-    <div class="fork-indicator" style="margin-bottom:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--bg-warning);border-radius:var(--radius-md);font-size:var(--text-sm)">
+    <div class="fork-indicator">
         <span class="badge badge-yellow">forked</span> This agent was forked from <code class="code-inline">{{agent.base_agent_id}}</code>
     </div>
     {{/if}}
-    <div class="card" style="max-width:800px">
+    <div class="card max-w-xl">
         <form id="my-agent-form" data-api-path="/user/agents/" data-entity="Agent" data-id-field="agent_id" data-list-path="/my/agents/">
             {{> components/form-group label="Agent ID" name="agent_id" type="text" value=agent.agent_id placeholder="my-agent-id" required=true readonly=is_edit hint="kebab-case"}}
             {{> components/form-group label="Name" name="name" type="text" value=agent.name placeholder="Agent name" required=true}}
             {{> components/form-group label="Description" name="description" type="text" value=agent.description placeholder="Brief description"}}
             {{> components/form-group label="System Prompt" name="system_prompt" type="textarea" value=agent.system_prompt rows="15" placeholder="Custom instructions for this agent..."}}
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="submit" class="btn btn-primary">{{#if is_edit}}Save Changes{{else}}Create Agent{{/if}}</button>
                 <a href="/admin/my/agents/" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
     </div>
+    </section>
     {{/inline}}
     {{#*inline "scripts"}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            AdminApp.interactions.initEditForm('my-agent-form', {
-                buildBody: function(form, formData) {
-                    return {
-                        agent_id: formData.get('agent_id'),
-                        name: formData.get('name'),
-                        description: formData.get('description') || '',
-                        system_prompt: formData.get('system_prompt') || ''
-                    };
-                }
-            });
-        });
-    </script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-my-agent-edit.js" defer></script>
     {{/inline}}
 {{/layout}}

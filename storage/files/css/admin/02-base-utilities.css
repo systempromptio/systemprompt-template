@@ -1,0 +1,108 @@
+@layer utilities {
+.text-semibold { font-weight: 600; }
+.text-bold { font-weight: 700; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-danger { color: var(--sp-danger); }
+.text-success { color: var(--sp-success); }
+.text-warning { color: var(--sp-warning); }
+.text-muted { color: var(--sp-text-secondary); }
+.text-tertiary { color: var(--sp-text-tertiary); }
+.text-accent { color: var(--sp-accent); }
+.text-xs { font-size: var(--sp-text-xs); }
+.text-sm { font-size: var(--sp-text-sm); }
+.text-lg { font-size: var(--sp-text-lg); }
+.link-accent { color: var(--sp-accent); text-decoration: none; }
+.clickable { cursor: pointer; }
+.relative { position: relative; }
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-1 { flex: 1; }
+.flex-wrap { flex-wrap: wrap; }
+.items-start { align-items: flex-start; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-1 { gap: var(--sp-space-1); }
+.gap-2 { gap: var(--sp-space-2); }
+.gap-3 { gap: var(--sp-space-3); }
+.gap-4 { gap: var(--sp-space-4); }
+.gap-6 { gap: var(--sp-space-6); }
+.mt-1 { margin-top: var(--sp-space-1); }
+.mt-2 { margin-top: var(--sp-space-2); }
+.mt-3 { margin-top: var(--sp-space-3); }
+.mt-4 { margin-top: var(--sp-space-4); }
+.mt-6 { margin-top: var(--sp-space-6); }
+.mt-8 { margin-top: var(--sp-space-8); }
+.mb-0 { margin-bottom: 0; }
+.mb-2 { margin-bottom: var(--sp-space-2); }
+.mb-3 { margin-bottom: var(--sp-space-3); }
+.mb-4 { margin-bottom: var(--sp-space-4); }
+.mb-6 { margin-bottom: var(--sp-space-6); }
+.mb-8 { margin-bottom: var(--sp-space-8); }
+.ml-auto { margin-left: auto; }
+.m-0 { margin: 0; }
+.p-3 { padding: var(--sp-space-3); }
+.p-4 { padding: var(--sp-space-4); }
+.p-6 { padding: var(--sp-space-6); }
+.p-8 { padding: var(--sp-space-8); }
+.w-full { width: 100%; }
+.hidden { display: none; }
+.block { display: block; }
+.inline-block { display: inline-block; }
+.border-top { border-top: 1px solid var(--sp-border-subtle); }
+.border-bottom { border-bottom: 1px solid var(--sp-border-subtle); }
+.rounded { border-radius: var(--sp-radius-sm); }
+.overflow-auto { overflow: auto; }
+.overflow-x-auto { overflow-x: auto; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.no-wrap { white-space: nowrap; }
+.empty-center { text-align: center; padding: var(--sp-space-12); color: var(--sp-text-tertiary); }
+.font-mono { font-family: 'Menlo', 'Consolas', monospace; }
+.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-space-3); }
+.grid-auto-fill { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--sp-space-4); }
+.grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-space-3); }
+.p-5 { padding: var(--sp-space-5); }
+.stat-label { font-size: var(--sp-text-xs); color: var(--sp-text-tertiary); }
+.stat-value { font-size: var(--sp-text-lg); font-weight: 700; color: var(--sp-text-primary); }
+.card-title { font-weight: 600; font-size: var(--sp-text-md); color: var(--sp-text-primary); margin-bottom: var(--sp-space-3); }
+.col-rank { width: 40px; }
+.col-number { text-align: right; }
+.sp-skip-link {
+    position: absolute;
+    top: -100%;
+    left: var(--sp-space-2);
+    padding: var(--sp-space-2) var(--sp-space-4);
+    background: var(--sp-accent);
+    color: var(--sp-text-on-accent);
+    border-radius: 0 0 var(--sp-radius-sm) var(--sp-radius-sm);
+    z-index: var(--sp-z-toast);
+    text-decoration: none;
+    font-weight: 600;
+    transition: top var(--sp-duration-fast) var(--sp-ease-out);
+}
+.sp-skip-link:focus-visible {
+    top: 0;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.health-value,
+.metric-ribbon-value,
+.stat-card .value,
+.bar-value,
+.skill-bar-count {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+}

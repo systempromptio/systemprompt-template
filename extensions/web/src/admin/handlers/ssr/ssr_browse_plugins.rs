@@ -8,8 +8,9 @@ use axum::{
     extract::{Extension, State},
     response::Response,
 };
-use serde_json::json;
 use sqlx::PgPool;
+
+use super::types::{BrowsePluginStats, BrowsePluginView, BrowsePluginsPageData};
 
 pub(crate) async fn browse_plugins_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -23,12 +24,7 @@ pub(crate) async fn browse_plugins_page(
     };
 
     let (marketplace_groups, user_plugins_result) = tokio::join!(
-        repositories::org_marketplaces::resolve_authorized_marketplace_groups(
-            &pool,
-            &user_ctx.roles,
-            &user_ctx.department,
-            user_ctx.is_admin,
-        ),
+        repositories::org_marketplaces::resolve_authorized_marketplace_groups(&pool,),
         repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id),
     );
 
@@ -40,64 +36,70 @@ pub(crate) async fn browse_plugins_page(
         .filter_map(|ep| ep.plugin.base_plugin_id.clone())
         .collect();
 
+    let (mut plugins, categories_set, already_added_count) =
+        collect_browse_plugins(&marketplace_groups, &services_path, &added_base_ids);
+
+    plugins.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+    let total_available = plugins.len();
+    let mut categories: Vec<String> = categories_set.into_iter().collect();
+    categories.sort();
+
+    let data = BrowsePluginsPageData {
+        page: "browse-plugins",
+        title: "Browse Plugins",
+        plugins,
+        categories,
+        stats: BrowsePluginStats {
+            total_available,
+            already_added: already_added_count,
+        },
+    };
+
+    let value = serde_json::to_value(&data).unwrap_or_default();
+    super::render_page(&engine, "browse-plugins", &value, &user_ctx, &mkt_ctx)
+}
+
+fn collect_browse_plugins(
+    marketplace_groups: &[(
+        crate::admin::types::marketplaces::OrgMarketplace,
+        Vec<String>,
+    )],
+    services_path: &std::path::Path,
+    added_base_ids: &HashSet<String>,
+) -> (Vec<BrowsePluginView>, HashSet<String>, usize) {
     let mut categories_set: HashSet<String> = HashSet::new();
-    let mut plugins_json: Vec<serde_json::Value> = Vec::new();
+    let mut plugins: Vec<BrowsePluginView> = Vec::new();
     let mut already_added_count = 0usize;
 
-    for (_mkt, plugin_ids) in &marketplace_groups {
+    for (_mkt, plugin_ids) in marketplace_groups {
         for pid in plugin_ids {
             if pid == "systemprompt" {
                 continue;
             }
-
-            let Ok(Some(detail)) = repositories::get_plugin_detail(&services_path, pid) else {
+            let Ok(Some(detail)) = repositories::find_plugin_detail(services_path, pid) else {
                 continue;
             };
-
-            let category = &detail.category;
-            if !category.is_empty() {
-                categories_set.insert(category.clone());
+            if !detail.category.is_empty() {
+                categories_set.insert(detail.category.clone());
             }
-
             let already_added = added_base_ids.contains(pid);
             if already_added {
                 already_added_count += 1;
             }
-
-            plugins_json.push(json!({
-                "plugin_id": pid,
-                "name": detail.name,
-                "description": detail.description,
-                "category": detail.category,
-                "version": detail.version,
-                "skill_count": detail.skills.len(),
-                "agent_count": detail.agents.len(),
-                "mcp_count": detail.mcp_servers.len(),
-                "already_added": already_added,
-            }));
+            plugins.push(BrowsePluginView {
+                plugin_id: pid.clone(),
+                name: detail.name,
+                description: detail.description,
+                category: detail.category,
+                version: detail.version,
+                skill_count: detail.skills.len(),
+                agent_count: detail.agents.len(),
+                mcp_count: detail.mcp_servers.len(),
+                already_added,
+            });
         }
     }
 
-    plugins_json.sort_by(|a, b| {
-        let a_name = a["name"].as_str().unwrap_or("");
-        let b_name = b["name"].as_str().unwrap_or("");
-        a_name.to_lowercase().cmp(&b_name.to_lowercase())
-    });
-
-    let total_available = plugins_json.len();
-    let mut categories: Vec<String> = categories_set.into_iter().collect();
-    categories.sort();
-
-    let data = json!({
-        "page": "browse-plugins",
-        "title": "Browse Plugins",
-        "plugins": plugins_json,
-        "categories": categories,
-        "stats": {
-            "total_available": total_available,
-            "already_added": already_added_count,
-        },
-    });
-
-    super::render_page(&engine, "browse-plugins", &data, &user_ctx, &mkt_ctx)
+    (plugins, categories_set, already_added_count)
 }

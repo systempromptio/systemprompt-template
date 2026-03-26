@@ -1,0 +1,106 @@
+@layer components {
+
+
+.metric-ribbon {
+    display: flex;
+    gap: 0;
+    margin-bottom: var(--sp-space-6);
+    padding: 0;
+    background: var(--sp-bg-surface-overlay);
+    border: 1px solid var(--sp-border-default);
+    border-top: 2px solid var(--sp-accent);
+    border-radius: var(--sp-radius-widget-brand);
+    overflow: hidden;
+    box-shadow: var(--sp-shadow-elevated), var(--sp-shadow-inner-glow);
+    font-variant-numeric: tabular-nums;
+}
+
+.metric-ribbon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--sp-space-5) var(--sp-space-6);
+    min-width: 80px;
+    flex: 1;
+    position: relative;
+    transition: background var(--sp-duration-fast);
+}
+
+.metric-ribbon-item::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, var(--sp-border-default), transparent);
+}
+
+.metric-ribbon-item:last-child::after {
+    display: none;
+}
+
+.metric-ribbon-item:hover {
+    background: color-mix(in oklch, var(--sp-warm-900) 2%, transparent);
+}
+
+.metric-ribbon-value {
+    font-size: var(--sp-text-2xl);
+    font-weight: 700;
+    color: var(--sp-text-primary);
+    line-height: 1.1;
+}
+
+.metric-ribbon-label {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: var(--sp-space-1);
+}
+
+.metric-ribbon-delta {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    font-weight: 500;
+    margin-top: 0.125rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.metric-ribbon-delta:empty {
+    display: none;
+}
+
+.metric-ribbon-period {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-muted, var(--sp-text-tertiary));
+    font-weight: 400;
+    margin-top: 0.0625rem;
+}
+
+.metric-ribbon-period:empty {
+    display: none;
+}
+
+.metric-ribbon-danger .metric-ribbon-value { color: color-mix(in oklch, var(--sp-danger) 85%, var(--sp-text-primary)); }
+.metric-ribbon-accent .metric-ribbon-value { color: color-mix(in oklch, var(--sp-accent) 85%, var(--sp-text-primary)); }
+
+@keyframes metricFlash {
+    0% { color: var(--sp-accent); transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+.metric-flash { animation: metricFlash 0.6s var(--sp-ease-out); }
+
+.metric-ribbon-health--healthy .metric-ribbon-value {
+    color: oklch(0.65 0.2 145);
+}
+.metric-ribbon-health--warning .metric-ribbon-value {
+    color: oklch(0.75 0.15 65);
+}
+.metric-ribbon-health--critical .metric-ribbon-value {
+    color: oklch(0.65 0.25 25);
+}
+
+}

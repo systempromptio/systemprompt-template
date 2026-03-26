@@ -1,69 +1,75 @@
+use crate::admin::handlers::extract_user_from_cookie;
+use crate::admin::numeric;
 use crate::admin::templates::AdminTemplateEngine;
 use crate::admin::types::{MarketplaceContext, UserContext};
 use crate::utils::html_escape;
 use axum::{
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
+    http::{HeaderMap, StatusCode},
+    response::{Html, IntoResponse, Redirect, Response},
     Extension,
 };
 use serde_json::json;
 
 pub(crate) const ACCESS_DENIED_HTML: &str = "<h1>Access Denied</h1><p>Admin access required.</p>";
 
-mod chart_helpers;
-mod ssr_access_control;
+pub(crate) mod charts;
 mod ssr_add_passkey;
-mod ssr_agents;
 mod ssr_browse_plugins;
+pub(crate) mod ssr_control_center;
 mod ssr_dashboard;
+mod ssr_dashboard_report;
+mod ssr_dashboard_traffic;
+mod ssr_dashboard_types;
 mod ssr_events;
 mod ssr_gamification;
-mod ssr_governance;
-mod ssr_hooks;
 mod ssr_jobs;
 mod ssr_marketplace;
-mod ssr_mcp;
+mod ssr_my_activity;
 mod ssr_my_agents;
 mod ssr_my_hooks;
 mod ssr_my_marketplace;
-mod ssr_my_mcp;
+mod ssr_my_mcp_servers;
 mod ssr_my_plugin_view;
 mod ssr_my_plugins;
+mod ssr_my_plugins_helpers;
 mod ssr_my_secrets;
 mod ssr_my_skills;
-mod ssr_org_marketplace_edit;
-mod ssr_org_marketplaces;
-mod ssr_plugin_edit;
-mod ssr_plugins;
-mod ssr_skills;
+mod ssr_profile;
+mod ssr_settings;
+mod ssr_setup;
 mod ssr_users;
+pub(crate) mod types;
 
-pub(crate) use chart_helpers::{compute_area_chart_data, compute_bar_chart, compute_hourly_chart};
-pub(crate) use ssr_access_control::access_control_page;
 pub(crate) use ssr_add_passkey::add_passkey_page;
-pub(crate) use ssr_agents::{agent_edit_page, agents_page};
 pub(crate) use ssr_browse_plugins::browse_plugins_page;
+pub(crate) use ssr_control_center::build_session_groups_with_status;
+pub(crate) use ssr_control_center::control_center_page;
+pub(crate) use ssr_control_center::handle_analyse_session;
+pub(crate) use ssr_control_center::handle_batch_update_session_status;
+pub(crate) use ssr_control_center::handle_generate_report;
+pub(crate) use ssr_control_center::handle_rate_session;
+pub(crate) use ssr_control_center::handle_rate_skill;
+pub(crate) use ssr_control_center::handle_update_session_status;
 pub(crate) use ssr_dashboard::dashboard_page;
+pub(crate) use ssr_dashboard_report::handle_generate_traffic_report;
 pub(crate) use ssr_events::events_page;
-pub(crate) use ssr_gamification::{achievements_page, leaderboard_page};
-pub(crate) use ssr_governance::governance_page;
-pub(crate) use ssr_hooks::{hook_edit_page, hooks_page};
+pub(crate) use ssr_gamification::achievements_page;
+pub(crate) use ssr_gamification::leaderboard_page;
 pub(crate) use ssr_jobs::jobs_page;
-pub(crate) use ssr_marketplace::{marketplace_page, marketplace_versions_page};
-pub(crate) use ssr_mcp::{mcp_edit_page, mcp_servers_page};
+pub(crate) use ssr_marketplace::marketplace_versions_page;
+pub(crate) use ssr_my_activity::my_activity_page;
 pub(crate) use ssr_my_agents::{my_agent_edit_page, my_agents_page};
-pub(crate) use ssr_my_hooks::{my_hook_edit_page, my_hooks_page};
+pub(crate) use ssr_my_hooks::my_hooks_page;
 pub(crate) use ssr_my_marketplace::my_marketplace_page;
-pub(crate) use ssr_my_mcp::{my_mcp_edit_page, my_mcp_servers_page};
+pub(crate) use ssr_my_mcp_servers::my_mcp_servers_page;
 pub(crate) use ssr_my_plugin_view::my_plugin_view_page;
 pub(crate) use ssr_my_plugins::{my_plugin_edit_page, my_plugins_page};
 pub(crate) use ssr_my_secrets::my_secrets_page;
 pub(crate) use ssr_my_skills::{my_skill_edit_page, my_skills_page};
-pub(crate) use ssr_org_marketplace_edit::org_marketplace_edit_page;
-pub(crate) use ssr_org_marketplaces::org_marketplaces_page;
-pub(crate) use ssr_plugin_edit::{plugin_create_page, plugin_edit_page};
-pub(crate) use ssr_plugins::plugins_page;
-pub(crate) use ssr_skills::{skill_edit_page, skills_page};
+pub(crate) use ssr_profile::handle_generate_profile_report;
+pub(crate) use ssr_profile::profile_page;
+pub(crate) use ssr_settings::settings_page;
+pub(crate) use ssr_setup::setup_page;
 pub(crate) use ssr_users::{user_detail_page, users_page};
 
 pub(crate) async fn login_page(Extension(engine): Extension<AdminTemplateEngine>) -> Response {
@@ -83,7 +89,49 @@ pub(crate) async fn login_page(Extension(engine): Extension<AdminTemplateEngine>
     }
 }
 
-fn render_page(
+pub(crate) async fn verify_pending_page(
+    Extension(engine): Extension<AdminTemplateEngine>,
+) -> Response {
+    match engine.render("verify-pending", &json!({})) {
+        Ok(html) => Html(html).into_response(),
+        Err(e) => {
+            tracing::error!(error = ?e, "Verify-pending page render failed");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Html(format!(
+                    "<h1>Error</h1><p>{}</p>",
+                    html_escape(&e.to_string())
+                )),
+            )
+                .into_response()
+        }
+    }
+}
+
+pub(crate) async fn register_page(
+    headers: HeaderMap,
+    Extension(engine): Extension<AdminTemplateEngine>,
+) -> Response {
+    if extract_user_from_cookie(&headers).is_ok() {
+        return Redirect::to("/control-center").into_response();
+    }
+    match engine.render("register", &json!({})) {
+        Ok(html) => Html(html).into_response(),
+        Err(e) => {
+            tracing::error!(error = ?e, "Register page render failed");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Html(format!(
+                    "<h1>Error</h1><p>{}</p>",
+                    html_escape(&e.to_string())
+                )),
+            )
+                .into_response()
+        }
+    }
+}
+
+pub(crate) fn render_page(
     engine: &AdminTemplateEngine,
     template: &str,
     data: &serde_json::Value,
@@ -98,31 +146,22 @@ fn render_page(
                 "user_id": user_ctx.user_id,
                 "username": user_ctx.username,
                 "roles": user_ctx.roles,
-                "department": user_ctx.department,
                 "is_admin": user_ctx.is_admin,
             }),
         );
-        let github_repo = "systempromptio/systemprompt-enterprise-demo-marketplace";
-        let github_url = format!("https://github.com/{github_repo}");
-        let plugin_token = crate::admin::repositories::export_auth::generate_plugin_token(
-            &user_ctx.user_id,
-            &user_ctx.username,
-            &user_ctx.email,
-        )
-        .unwrap_or_default();
-
-        // Build authenticated marketplace URL for Claude Code:
-        // Embed token as HTTP basic auth in the git URL so hooks are bundled automatically.
-        let base_url = mkt_ctx.site_url.trim_end_matches('/');
-        let authed_url = if let Some(rest) = base_url.strip_prefix("https://") {
-            format!("https://{}@{}/api/public/marketplace/{}", plugin_token, rest, mkt_ctx.user_id)
-        } else if let Some(rest) = base_url.strip_prefix("http://") {
-            format!("http://{}@{}/api/public/marketplace/{}", plugin_token, rest, mkt_ctx.user_id)
-        } else {
-            format!("{}/api/public/marketplace/{}", base_url, mkt_ctx.user_id)
-        };
-        let install_cmd = format!("claude plugin add {authed_url}");
-
+        let git_url = format!(
+            "{}/api/public/marketplace/{}.git",
+            mkt_ctx.site_url, mkt_ctx.user_id
+        );
+        let cowork_git_url = format!(
+            "{}/api/public/marketplace/{}/cowork.git",
+            mkt_ctx.site_url, mkt_ctx.user_id
+        );
+        let install_cmd = format!("/plugin marketplace add {git_url}");
+        let mcp_url = format!(
+            "{}/api/v1/mcp/skill-manager/mcp",
+            mkt_ctx.site_url
+        );
         obj.insert(
             "marketplace".to_string(),
             json!({
@@ -132,11 +171,26 @@ fn render_page(
                 "total_skills": mkt_ctx.total_skills,
                 "agents_count": mkt_ctx.agents_count,
                 "mcp_count": mkt_ctx.mcp_count,
-                "github_url": github_url,
+                "git_url": git_url,
+                "cowork_git_url": cowork_git_url,
                 "install_cmd": install_cmd,
-                "plugin_token": plugin_token,
+                "mcp_url": mcp_url,
+                "tier_name": mkt_ctx.tier_name,
+                "is_premium": mkt_ctx.is_premium,
+                "rank_level": mkt_ctx.rank_level,
+                "rank_name": mkt_ctx.rank_name,
+                "rank_tier": mkt_ctx.rank_tier,
+                "total_xp": mkt_ctx.total_xp,
+                "xp_progress_pct": numeric::round_to_i64(mkt_ctx.xp_progress_pct),
+                "has_completed_onboarding": mkt_ctx.has_completed_onboarding,
+                "current_streak": mkt_ctx.current_streak,
+                "longest_streak": mkt_ctx.longest_streak,
+                "next_rank_name": mkt_ctx.next_rank_name,
+                "xp_to_next_rank": mkt_ctx.xp_to_next_rank,
             }),
         );
+        obj.entry("page_stats".to_string())
+            .or_insert_with(|| json!([]));
     }
     match engine.render(template, &merged) {
         Ok(html) => Html(html).into_response(),
@@ -154,6 +208,6 @@ fn render_page(
     }
 }
 
-fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
-    super::resources::get_services_path()
+pub(crate) fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
+    super::shared::get_services_path()
 }
