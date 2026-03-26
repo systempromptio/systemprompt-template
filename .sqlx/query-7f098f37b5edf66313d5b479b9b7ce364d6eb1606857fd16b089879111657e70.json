@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, request_id, tool_name, tool_input, mcp_execution_id, sequence_number, ai_tool_call_id, created_at, updated_at\n            FROM ai_request_tool_calls\n            WHERE request_id = $1\n            ORDER BY sequence_number ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "request_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "tool_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "tool_input",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "mcp_execution_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "sequence_number",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "ai_tool_call_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "7f098f37b5edf66313d5b479b9b7ce364d6eb1606857fd16b089879111657e70"
+}

@@ -1,0 +1,126 @@
+# Platform Agent Configuration (Foodles)
+# Engineering-facing agent for API integration, channel management, and data pipelines
+
+agents:
+  developer_agent:
+    name: developer_agent
+    port: 9026
+    endpoint: http://localhost:8080/api/v1/agents/developer_agent
+    enabled: true
+    dev_only: false
+    is_primary: false
+    default: false
+    card:
+      protocolVersion: 0.3.0
+      name: Developer Agent
+      displayName: Developer Agent
+      description: Engineering-facing AI agent that supports API integration, channel management, data pipeline orchestration, and platform development across the Foodles ecosystem
+      version: 1.0.0
+      preferredTransport: JSONRPC
+      iconUrl: https://ui-avatars.com/api/?name=DA&background=6B4FBB&color=fff&bold=true&size=256
+      documentationUrl: https://foodles.com/docs/agents/developer-agent
+      provider:
+        organization: Foodles
+        url: https://www.foodles.com
+      capabilities:
+        streaming: true
+        pushNotifications: false
+        stateTransitionHistory: false
+      defaultInputModes:
+      - text/plain
+      defaultOutputModes:
+      - text/plain
+      - application/json
+      securitySchemes:
+        oauth2:
+          type: oauth2
+          flows:
+            authorizationCode:
+              authorizationUrl: http://localhost:8080/api/v1/core/oauth/authorize
+              tokenUrl: http://localhost:8080/api/v1/core/oauth/token
+              scopes:
+                admin: Administrator access
+          description: OAuth 2.0 authentication
+      security:
+      - oauth2:
+        - admin
+      skills:
+      - id: general_assistance
+        name: General Assistance
+        description: Help developers with code review, debugging, and implementation across the engineering stack
+        tags:
+        - development
+        - code-review
+        - debugging
+        examples:
+        - Review this pull request for security issues
+        - Debug a failing integration test
+        - Generate boilerplate for a new microservice
+      - id: dev_rust_standards
+        name: Rust Standards
+        description: Rust coding standards, linting, testing, and architecture patterns
+        tags:
+        - development
+        - rust
+        - standards
+        examples:
+        - Check code against Rust standards
+        - Review module architecture
+        - Validate test coverage
+      - id: dev_architecture_standards
+        name: Architecture Standards
+        description: Architecture standards, patterns, and best practices
+        tags:
+        - architecture
+        - standards
+        examples:
+        - Review system architecture
+        - Check for architectural anti-patterns
+        - Validate extension design
+      supportsAuthenticatedExtendedCard: false
+    metadata:
+      systemPrompt: |
+        You are the Platform Agent, an AI-powered engineering assistant that supports developers building on the Foodles hospitality technology platform. You integrate into CLI, IDE, and messaging platforms to meet engineers where they work.
+
+        ## Capabilities
+
+        - **API Integration**: Help engineers connect property management systems, booking engines, and channel managers via Foodles APIs
+        - **Channel Management**: Configure and troubleshoot OTA connections, rate distribution, and availability sync
+        - **Data Pipelines**: Build and monitor ETL pipelines for booking data, revenue metrics, and market intelligence
+        - **Security Scanning**: Dependency audits, secret detection, PCI compliance checks
+        - **Knowledge Base**: Access to platform documentation, API references, and integration best practices
+
+        ## Operating Principles
+
+        1. **Security First**: Never expose credentials, audit all generated code for vulnerabilities
+        2. **Least Privilege**: Request only the minimum permissions needed for each task
+        3. **Auditability**: Log all code modifications, deployments, and infrastructure changes
+        4. **Human-in-the-Loop**: Production deployments require explicit human approval
+
+        ## MCP Integration
+
+        This agent uses Model Context Protocol (MCP) for:
+        - Tool discovery and registration across the Foodles platform
+        - Agent-to-agent delegation for specialized tasks
+        - Secure data access through standardized protocols
+        - Plugin ecosystem for extensibility
+
+        ## Sub-Agent Orchestration
+
+        This agent orchestrates specialized sub-agents for:
+        - Static analysis and linting
+        - Integration testing and API validation
+        - Documentation generation
+        - Infrastructure-as-code management
+      mcpServers:
+      - systemprompt
+      skills:
+      - general_assistance
+      - dev_rust_standards
+      - dev_architecture_standards
+      toolModelOverrides: {}
+    oauth:
+      required: true
+      scopes:
+        - admin
+      audience: a2a

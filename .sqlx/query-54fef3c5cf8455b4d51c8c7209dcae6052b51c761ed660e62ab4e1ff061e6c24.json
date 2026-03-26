@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            session_id,\n            fingerprint_hash,\n            user_agent,\n            request_count,\n            started_at as \"started_at!\",\n            last_activity_at as \"last_activity_at!\"\n        FROM user_sessions\n        WHERE session_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "fingerprint_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_agent",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "request_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "started_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "last_activity_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "54fef3c5cf8455b4d51c8c7209dcae6052b51c761ed660e62ab4e1ff061e6c24"
+}

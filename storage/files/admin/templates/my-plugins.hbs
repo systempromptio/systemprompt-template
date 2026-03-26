@@ -1,0 +1,197 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search plugins..." id="my-plugins-search">
+        </div>
+        <select class="filter-select" id="my-plugins-category-filter" style="min-width:140px">
+            <option value="">All Categories</option>
+            {{#each categories}}
+            <option value="{{this}}">{{this}}</option>
+            {{/each}}
+        </select>
+        <button class="btn btn-secondary" id="my-plugins-bulk-bar" disabled>
+            Bulk Actions (<span data-bulk-count>0</span>)
+        </button>
+        <button class="btn btn-secondary" id="my-plugins-fork-btn">Fork from Org</button>
+        <a href="/admin/my/plugins/edit/" class="btn btn-primary">+ Create Plugin</a>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="config-stats" id="stats-my-plugins">
+        <span class="config-stat"><span class="config-stat-dot blue"></span> <span class="config-stat-value">{{stats.plugin_count}}</span> plugins</span>
+        <span class="config-stat"><span class="config-stat-dot green"></span> <span class="config-stat-value">{{stats.enabled_count}}</span> enabled</span>
+    </div>
+
+    {{#if plugins}}
+    <div class="table-container">
+        <table class="data-table" id="my-plugins-table">
+            <thead>
+                <tr>
+                    <th style="width:40px" data-no-row-click><input type="checkbox" class="bulk-select-all"></th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Version</th>
+                    <th>Resources</th>
+                    <th>Source</th>
+                    <th class="col-actions"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each plugins}}
+                <tr class="clickable-row" data-entity-type="my-plugin" data-entity-id="{{plugin_id}}" data-name="{{toLowerCase name}}" data-category="{{category}}">
+                    <td data-no-row-click>
+                        <input type="checkbox" class="bulk-checkbox" data-entity-id="{{plugin_id}}">
+                    </td>
+                    <td>
+                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{plugin_id}}">&#9654;</span> {{name}}</div>
+                        {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
+                    </td>
+                    <td>
+                        {{#if category}}<span class="badge badge-blue">{{category}}</span>{{else}}<span style="color:var(--text-tertiary)">—</span>{{/if}}
+                    </td>
+                    <td>
+                        {{#if version}}<span class="badge badge-gray">{{version}}</span>{{else}}<span style="color:var(--text-tertiary)">—</span>{{/if}}
+                    </td>
+                    <td>
+                        <div class="cell-badges">
+                            {{#if (gt skill_count 0)}}<span class="badge badge-green badge-clickable" data-expand-section="skills" data-plugin-id="{{plugin_id}}">{{skill_count}} skill{{#if (not (eq skill_count 1))}}s{{/if}}</span>{{/if}}
+                            {{#if (gt agent_count 0)}}<span class="badge badge-blue badge-clickable" data-expand-section="agents" data-plugin-id="{{plugin_id}}">{{agent_count}} agent{{#if (not (eq agent_count 1))}}s{{/if}}</span>{{/if}}
+                            {{#if (gt mcp_count 0)}}<span class="badge badge-yellow badge-clickable" data-expand-section="mcp" data-plugin-id="{{plugin_id}}">{{mcp_count}} MCP</span>{{/if}}
+                            {{#if (gt hook_count 0)}}<span class="badge badge-gray badge-clickable" data-expand-section="hooks" data-plugin-id="{{plugin_id}}">{{hook_count}} hook{{#if (not (eq hook_count 1))}}s{{/if}}</span>{{/if}}
+                        </div>
+                    </td>
+                    <td>
+                        {{#if base_plugin_id}}<span class="badge badge-yellow">forked</span>{{else}}<span class="badge badge-green">custom</span>{{/if}}
+                    </td>
+                    <td class="col-actions" data-no-row-click>
+                        <div class="actions-menu" data-actions-for="{{plugin_id}}">
+                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                            <div class="actions-dropdown">
+                                <a href="/admin/my/plugins/edit/?id={{plugin_id}}" class="actions-item">Edit</a>
+                                <div class="actions-popup-separator"></div>
+                                <button class="actions-item actions-item-danger" data-delete-plugin="{{plugin_id}}">Delete</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <!-- Detail expand row -->
+                <tr class="detail-row" data-detail-for="{{plugin_id}}">
+                    <td colspan="7">
+                        <div class="detail-row-content">
+                            <!-- Summary bar -->
+                            <div class="detail-section" style="display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:center;margin-bottom:var(--space-3)">
+                                {{#if author_name}}<span style="font-size:var(--text-sm);color:var(--text-secondary)">Author: <strong>{{author_name}}</strong></span>{{/if}}
+                                {{#if base_plugin_id}}<span style="font-size:var(--text-sm);color:var(--text-secondary)">Forked from: <code style="font-size:var(--text-xs)">{{base_plugin_id}}</code></span>{{/if}}
+                                {{#if keywords}}
+                                <div class="badge-row">
+                                    {{#each keywords}}<span class="badge badge-gray">{{this}}</span>{{/each}}
+                                </div>
+                                {{/if}}
+                            </div>
+
+                            <!-- Skills sub-table -->
+                            <div class="detail-section" data-section="skills" data-plugin-id="{{plugin_id}}">
+                                <strong>Skills (<span data-count="skills" data-for-plugin="{{plugin_id}}">{{skill_count}}</span>)</strong>
+                                <table class="detail-sub-table">
+                                    {{#each skills}}
+                                    <tr data-item-row>
+                                        <td>{{name}}</td>
+                                        <td style="text-align:right"><button class="btn-icon-remove" data-remove-from-plugin="{{id}}" data-resource-type="skills" data-plugin-id="{{../plugin_id}}" title="Remove skill">&#10005;</button></td>
+                                    </tr>
+                                    {{/each}}
+                                    <tr class="add-row"><td colspan="2"><button class="btn btn-secondary btn-sm" data-add-to-plugin="skills" data-plugin-id="{{plugin_id}}" style="font-size:var(--text-xs);padding:2px 8px">+ Add Skill</button></td></tr>
+                                </table>
+                            </div>
+
+                            <!-- Agents sub-table -->
+                            <div class="detail-section" data-section="agents" data-plugin-id="{{plugin_id}}">
+                                <strong>Agents (<span data-count="agents" data-for-plugin="{{plugin_id}}">{{agent_count}}</span>)</strong>
+                                <table class="detail-sub-table">
+                                    {{#each agents}}
+                                    <tr data-item-row>
+                                        <td>{{name}}</td>
+                                        <td style="text-align:right"><button class="btn-icon-remove" data-remove-from-plugin="{{id}}" data-resource-type="agents" data-plugin-id="{{../plugin_id}}" title="Remove agent">&#10005;</button></td>
+                                    </tr>
+                                    {{/each}}
+                                    <tr class="add-row"><td colspan="2"><button class="btn btn-secondary btn-sm" data-add-to-plugin="agents" data-plugin-id="{{plugin_id}}" style="font-size:var(--text-xs);padding:2px 8px">+ Add Agent</button></td></tr>
+                                </table>
+                            </div>
+
+                            <!-- MCP sub-table -->
+                            <div class="detail-section" data-section="mcp" data-plugin-id="{{plugin_id}}">
+                                <strong>MCP Servers (<span data-count="mcp_servers" data-for-plugin="{{plugin_id}}">{{mcp_count}}</span>)</strong>
+                                <table class="detail-sub-table">
+                                    {{#each mcp_servers}}
+                                    <tr data-item-row>
+                                        <td>{{name}}</td>
+                                        <td style="text-align:right"><button class="btn-icon-remove" data-remove-from-plugin="{{id}}" data-resource-type="mcp_servers" data-plugin-id="{{../plugin_id}}" title="Remove MCP server">&#10005;</button></td>
+                                    </tr>
+                                    {{/each}}
+                                    <tr class="add-row"><td colspan="2"><button class="btn btn-secondary btn-sm" data-add-to-plugin="mcp_servers" data-plugin-id="{{plugin_id}}" style="font-size:var(--text-xs);padding:2px 8px">+ Add MCP Server</button></td></tr>
+                                </table>
+                            </div>
+
+                            <!-- Hooks sub-table -->
+                            <div class="detail-section" data-section="hooks" data-plugin-id="{{plugin_id}}">
+                                <strong>Hooks (<span data-count="hooks" data-for-plugin="{{plugin_id}}">{{hook_count}}</span>)</strong>
+                                <table class="detail-sub-table">
+                                    {{#each hooks}}
+                                    <tr data-item-row>
+                                        <td><span class="badge badge-blue">{{event}}</span> <code style="font-size:var(--text-xs)">{{matcher}}</code>{{#if is_async}} <span class="badge badge-gray">async</span>{{/if}}</td>
+                                        <td style="text-align:right"><button class="btn-icon-remove" data-remove-from-plugin="{{id}}" data-resource-type="hooks" data-plugin-id="{{../plugin_id}}" title="Remove hook">&#10005;</button></td>
+                                    </tr>
+                                    {{/each}}
+                                    <tr class="add-row"><td colspan="2"><button class="btn btn-secondary btn-sm" data-add-to-plugin="hooks" data-plugin-id="{{plugin_id}}" style="font-size:var(--text-xs);padding:2px 8px">+ Add Hook</button></td></tr>
+                                </table>
+                            </div>
+
+                            <!-- JSON config view -->
+                            <div class="detail-section">
+                                <button class="btn btn-secondary btn-sm" data-toggle-json="{{plugin_id}}" style="font-size:var(--text-xs);padding:2px 8px;margin-bottom:var(--space-2)">Show JSON</button>
+                                <div class="json-view" data-json-for="{{plugin_id}}" style="display:none"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    {{> components/empty-state message="No plugins yet. Create your first plugin or fork one from the org."}}
+    {{/if}}
+
+    <!-- Hidden plugin detail data -->
+    {{#each plugins}}
+    <script type="application/json" data-my-plugin-detail="{{plugin_id}}">
+        {{{json this}}}
+    </script>
+    {{/each}}
+
+    <!-- Fork panel -->
+    <div class="panel-overlay" id="fork-panel-overlay"></div>
+    <div class="side-panel" id="fork-panel" data-overlay="fork-panel-overlay">
+        <div class="panel-header">
+            <h2 data-panel-title style="margin:0;font-size:var(--text-lg)"></h2>
+            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
+        </div>
+        <div class="panel-body" data-panel-body></div>
+        <div class="panel-footer" data-panel-footer></div>
+    </div>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-my-workspace.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            if (AdminApp.initMyPlugins) {
+                AdminApp.initMyPlugins();
+            }
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

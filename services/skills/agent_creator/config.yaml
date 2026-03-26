@@ -1,0 +1,12 @@
+id: agent_creator
+name: "Agent Creator"
+description: "Socratic interview to design and create a custom AI agent with skills and MCP server access"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+tags:
+  - marketplace
+  - creator
+  - agents
+  - socratic
+  - builder

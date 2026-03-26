@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    id as \"id!\",\n                    trace_id as \"trace_id!\",\n                    timestamp as \"timestamp!\",\n                    level as \"level!\",\n                    module as \"module!\",\n                    message as \"message!\",\n                    metadata\n                FROM logs\n                WHERE timestamp >= $1\n                ORDER BY timestamp DESC\n                LIMIT $2\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "trace_id!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "timestamp!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "level!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "module!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "message!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "metadata",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "218cc60d5a1836a3f577c10cfee67ffa8841992c66ac2d130b8a3efaf073e3f3"
+}

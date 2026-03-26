@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT mcp_execution_id, tool_name, server_name, status, execution_time_ms,\n                  error_message, input, output\n           FROM mcp_tool_executions\n           WHERE task_id = $1 OR context_id = $2\n           ORDER BY started_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "mcp_execution_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "tool_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "server_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "status",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "execution_time_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "error_message",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "input",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "output",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "59c1bad11b445449c1c99a015a047267161ee634892b96b3906653a05721f980"
+}

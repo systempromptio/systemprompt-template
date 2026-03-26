@@ -1,0 +1,13 @@
+id: research_blog
+name: "Blog Research"
+description: "Research and analyze topics for blog content creation - gather sources, analyze trends, identify insights"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - content
+tags:
+  - research
+  - content_planning
+  - blog
+  - intelligence_gathering

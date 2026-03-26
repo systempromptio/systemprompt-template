@@ -1,0 +1,17 @@
+id: tracking_worktree_create
+name: "Worktree Create Tracking"
+description: "Records when git worktrees are created"
+version: "1.0.0"
+enabled: true
+event: WorktreeCreate
+matcher: "*"
+command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-{plugin_id}-usage.sh"
+async: true
+category: system
+plugins:
+  - common-skills
+tags:
+  - tracking
+  - analytics
+visible_to:
+  - admin

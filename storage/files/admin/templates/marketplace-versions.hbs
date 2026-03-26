@@ -1,0 +1,47 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    <div id="marketplace-versions-content" aria-live="polite">
+        <div class="toolbar">
+            <div class="search-group" style="display:flex;align-items:center;gap:var(--space-3)">
+                <label style="font-weight:600;font-size:var(--text-sm);white-space:nowrap">Filter by user:</label>
+                <select id="mv-user-select" class="btn btn-secondary" style="cursor:pointer;min-width:250px">
+                    <option value="">All Users</option>
+                    {{#each users}}
+                    <option value="{{user_id}}" {{#if selected}}selected{{/if}}>{{default display_name (default email user_id)}}</option>
+                    {{/each}}
+                </select>
+            </div>
+            <div style="display:flex;gap:var(--space-2)">
+                <button class="btn btn-primary" data-tab="versions">Versions</button>
+                <button class="btn btn-secondary" data-tab="changelog">Changelog</button>
+            </div>
+        </div>
+
+        <div id="mv-versions-tab">
+            {{#if user_groups}}
+            <div class="versions-list" style="display:flex;flex-direction:column;gap:var(--space-4)">
+                {{#each user_groups}}
+                {{> components/user-group}}
+                {{/each}}
+            </div>
+            {{else}}
+            {{> components/empty-state message="No marketplace versions found."}}
+            {{/if}}
+        </div>
+
+        <div id="mv-changelog-tab" style="display:none">
+            {{> components/empty-state message="Select a user to view changelog."}}
+        </div>
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-marketplace.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.initMarketplaceVersions('#marketplace-versions-content');
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

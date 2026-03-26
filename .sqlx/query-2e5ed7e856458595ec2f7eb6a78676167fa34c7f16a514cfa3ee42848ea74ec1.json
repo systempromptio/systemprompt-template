@@ -1,0 +1,189 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO engagement_events (\n                id, session_id, user_id, page_url, content_id,\n                time_on_page_ms, time_to_first_interaction_ms, time_to_first_scroll_ms,\n                max_scroll_depth, scroll_velocity_avg, scroll_direction_changes,\n                click_count, mouse_move_distance_px, keyboard_events, copy_events,\n                focus_time_ms, blur_count, tab_switches,\n                visible_time_ms, hidden_time_ms,\n                is_rage_click, is_dead_click, reading_pattern,\n                created_at, updated_at\n            )\n            VALUES (\n                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,\n                $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $24\n            )\n            RETURNING\n                id as \"id: EngagementEventId\",\n                session_id as \"session_id: SessionId\",\n                user_id as \"user_id: UserId\",\n                page_url,\n                content_id as \"content_id: ContentId\",\n                time_on_page_ms,\n                time_to_first_interaction_ms,\n                time_to_first_scroll_ms,\n                max_scroll_depth,\n                scroll_velocity_avg,\n                scroll_direction_changes,\n                click_count,\n                mouse_move_distance_px,\n                keyboard_events,\n                copy_events,\n                focus_time_ms,\n                blur_count,\n                tab_switches,\n                visible_time_ms,\n                hidden_time_ms,\n                is_rage_click,\n                is_dead_click,\n                reading_pattern,\n                created_at,\n                updated_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: EngagementEventId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "session_id: SessionId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id: UserId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "page_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "content_id: ContentId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "time_on_page_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "time_to_first_interaction_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "time_to_first_scroll_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "max_scroll_depth",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "scroll_velocity_avg",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 10,
+        "name": "scroll_direction_changes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "click_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "mouse_move_distance_px",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "keyboard_events",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "copy_events",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "focus_time_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 16,
+        "name": "blur_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 17,
+        "name": "tab_switches",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 18,
+        "name": "visible_time_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 19,
+        "name": "hidden_time_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 20,
+        "name": "is_rage_click",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 21,
+        "name": "is_dead_click",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 22,
+        "name": "reading_pattern",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 23,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 24,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Varchar",
+        "Text",
+        "Text",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Float4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Varchar",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "2e5ed7e856458595ec2f7eb6a78676167fa34c7f16a514cfa3ee42848ea74ec1"
+}

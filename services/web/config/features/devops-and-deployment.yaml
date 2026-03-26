@@ -1,0 +1,93 @@
+# Feature: DevOps & Deployment
+# Single binary, Docker, profiles, build pipeline, scaling
+
+slug: "devops-and-deployment"
+title: "DevOps & Deployment | Single Binary, Docker & Profile-Based Config"
+headline: "DEPLOY ANYWHERE."
+headline_highlight: "OWN EVERYTHING."
+subtitle: "A single Rust binary that runs as sidecar, gateway, or embedded library. Docker-ready with profile-based configuration for dev, staging, and production. Build once, deploy on your infrastructure."
+description: "Self-hosted AI governance deployment with a single Rust binary, Docker support, profile-based configuration, and enterprise scaling. Deploy as sidecar, gateway, or embedded library on your own infrastructure."
+icon: "terminal"
+keywords: "AI deployment, self-hosted, Docker, Rust binary, DevOps, CI/CD, scaling, infrastructure"
+
+highlights:
+  - text: "Single Rust binary, no runtime dependencies"
+    id: "single-binary"
+  - text: "Docker-ready with multi-stage builds"
+    id: "docker"
+  - text: "Profile-based config for any environment"
+    id: "profiles"
+  - text: "Four deployment models for any architecture"
+    id: "deployment-models"
+
+cta:
+  text: "View Documentation"
+  url: "/documentation/architecture"
+  secondary_text: "Installation Guide"
+  secondary_url: "/documentation/installation"
+
+sections:
+  - id: "single-binary"
+    title: "Single Binary Architecture"
+    content: |
+      <p>The entire platform compiles to a single Rust binary with no external runtime dependencies. No JVM, no Node.js, no Python interpreter. The binary includes the web server, API layer, background job runner, template engine, and all governance logic.</p>
+      <p>This means deployment is copying one file. No dependency resolution, no package managers, no version conflicts. The binary runs on any Linux x86_64 system with a PostgreSQL connection.</p>
+    items:
+      - title: "Zero Runtime Dependencies"
+        description: "No JVM, Node.js, or Python. One binary, one PostgreSQL connection. That is the entire dependency tree."
+      - title: "All-In-One Binary"
+        description: "Web server, API, job runner, template engine, and governance logic compiled into a single executable."
+      - title: "Predictable Deployments"
+        description: "No dependency resolution at deploy time. Copy the binary, set environment variables, start the process."
+
+  - id: "docker"
+    title: "Docker & Container Deployment"
+    content: |
+      <p>Multi-stage Docker builds produce minimal container images. The build stage compiles the Rust binary, the runtime stage copies only the binary and static assets into a slim base image. No build tools, no source code, no development dependencies in production.</p>
+      <p>Container images work with any orchestration platform: Docker Compose for development, Kubernetes for production, ECS or Cloud Run for managed deployments.</p>
+    items:
+      - title: "Multi-Stage Builds"
+        description: "Build stage compiles, runtime stage contains only the binary and assets. Minimal attack surface, minimal image size."
+      - title: "Any Orchestrator"
+        description: "Docker Compose, Kubernetes, ECS, Cloud Run, or bare metal. The container runs anywhere containers run."
+      - title: "Health Checks Built In"
+        description: "HTTP health endpoints for liveness and readiness probes. Container orchestrators get the signals they need."
+
+  - id: "profiles"
+    title: "Profile-Based Configuration"
+    content: |
+      <p>Profiles separate environment-specific configuration from application logic. A local profile enables debug logging, hot reload, and development databases. A production profile enables TLS, connection pooling, and production-grade settings. Switch profiles with a single environment variable.</p>
+      <p>Each profile is a directory containing a config.yaml, Docker configuration, and environment-specific overrides. Create custom profiles for staging, QA, or any environment your pipeline requires.</p>
+    items:
+      - title: "Environment Isolation"
+        description: "Local, staging, and production profiles with independent database, logging, and security settings."
+      - title: "Single Variable Switch"
+        description: "Change the active profile with one environment variable. No config file editing, no rebuild required."
+      - title: "Custom Profiles"
+        description: "Create profiles for any environment. Each profile is a directory with config.yaml and Docker overrides."
+
+  - id: "deployment-models"
+    title: "Deployment Models"
+    content: |
+      <p>Four deployment models cover any architecture. Sidecar mode runs alongside each agent instance. Gateway mode provides a centralised governance layer for all agents. Embedded mode compiles governance directly into your application. Multi-tenant mode serves multiple organisations from a single deployment.</p>
+      <p>Choose the model that fits your infrastructure. Start with gateway mode for simplicity, move to sidecar for isolation, or embed for maximum performance.</p>
+    items:
+      - title: "Sidecar Mode"
+        description: "Run alongside each agent instance. Process-level isolation with shared-nothing architecture."
+      - title: "Gateway Mode"
+        description: "Centralised governance layer. All agents route through a single governance endpoint."
+      - title: "Embedded Mode"
+        description: "Compile governance directly into your application. Zero network overhead, maximum performance."
+      - title: "Multi-Tenant Mode"
+        description: "Serve multiple organisations from a single deployment with tenant-level data isolation."
+
+related:
+  - title: "Governance & Security"
+    description: "RBAC, audit trails, encrypted secrets, and rate limiting for all AI usage."
+    url: "/features/governance-and-security"
+  - title: "Marketplace & Skill Management"
+    description: "Create, fork, and distribute skills and plugins across your organisation."
+    url: "/features/marketplace-and-skill-management"
+  - title: "Analytics & Observability"
+    description: "20+ dashboard metrics, activity tracking, and usage reporting."
+    url: "/features/analytics-and-observability"

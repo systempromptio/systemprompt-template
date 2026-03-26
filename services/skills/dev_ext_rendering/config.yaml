@@ -1,0 +1,16 @@
+id: dev_ext_rendering
+name: "Extension: Rendering"
+description: "ComponentRenderer, TemplateProvider, TemplateDataExtender, and PagePrerenderer trait implementations"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - architect
+  - rust_impl
+  - frontend_impl
+tags:
+  - extensions
+  - rendering
+  - components
+  - templates
+  - prerendering

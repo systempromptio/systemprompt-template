@@ -1,0 +1,14 @@
+id: technical_writing
+name: "Technical Writing"
+description: "Create contrarian technical deep-dives that challenge conventional wisdom"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - content
+tags:
+  - writing
+  - technical
+  - contrarian
+  - deep-dive
+  - architecture

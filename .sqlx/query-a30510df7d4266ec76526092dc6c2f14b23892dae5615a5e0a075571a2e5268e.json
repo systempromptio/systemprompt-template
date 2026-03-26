@@ -1,0 +1,73 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    id as \"id!\",\n                    provider as \"provider!\",\n                    model as \"model!\",\n                    input_tokens,\n                    output_tokens,\n                    cost_microdollars,\n                    latency_ms,\n                    cache_hit,\n                    created_at as \"created_at!\"\n                FROM ai_requests\n                WHERE created_at >= $1 AND created_at < $2\n                  AND model ILIKE $3\n                ORDER BY created_at DESC\n                LIMIT $4\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "provider!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "model!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "input_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "output_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "cost_microdollars",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "latency_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "cache_hit",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "a30510df7d4266ec76526092dc6c2f14b23892dae5615a5e0a075571a2e5268e"
+}

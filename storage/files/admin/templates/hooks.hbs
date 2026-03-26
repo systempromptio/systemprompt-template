@@ -1,0 +1,161 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+
+    <div class="metric-ribbon">
+        <div class="metric-ribbon-item">
+            <span class="metric-ribbon-value">{{system_event_count}}</span>
+            <span class="metric-ribbon-label">System Hooks</span>
+        </div>
+        <div class="metric-ribbon-item">
+            <span class="metric-ribbon-value">{{system_plugin_count}}</span>
+            <span class="metric-ribbon-label">Tracked Plugins</span>
+        </div>
+        <div class="metric-ribbon-item">
+            <span class="metric-ribbon-value">{{custom_count}}</span>
+            <span class="metric-ribbon-label">Custom Hooks</span>
+        </div>
+        <div class="metric-ribbon-item">
+            <span class="metric-ribbon-value">{{total_hooks}}</span>
+            <span class="metric-ribbon-label">Total Hooks</span>
+        </div>
+    </div>
+
+    <div class="hooks-section">
+        {{> components/toolbar searchId="hook-search" searchPlaceholder="Search hooks..." newHref="/admin/org/hooks/edit/" newLabel="+ New Hook"}}
+        {{#if has_hooks}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th>Name</th>
+                <th>Event</th>
+                <th>Command</th>
+                <th>Assigned Plugins</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th class="col-actions"></th>
+            </tr></thead>
+            <tbody>
+            {{#each hooks}}
+            <tr class="clickable-row" data-name="{{toLowerCase name}}" data-entity-type="hook" data-entity-id="{{id}}" data-enabled="{{#if enabled}}enabled{{else}}disabled{{/if}}" data-system="{{system}}">
+                <td>
+                    <div class="cell-primary">{{name}}</div>
+                    {{#if description}}<div class="cell-secondary">{{truncate description 60}}</div>{{/if}}
+                </td>
+                <td><code class="code-inline">{{event}}</code></td>
+                <td title="{{command}}"><code class="code-inline">{{truncate command 40}}</code></td>
+                <td>
+                    <div class="badge-row">
+                        {{#each plugins}}
+                        <span class="badge badge-purple">{{this}}</span>
+                        {{/each}}
+                    </div>
+                </td>
+                <td>
+                    <div class="badge-row">
+                        {{#if system}}
+                        <span class="badge badge-blue">System</span>
+                        {{/if}}
+                        {{#if is_async}}
+                        <span class="badge badge-info">Async</span>
+                        {{else}}
+                            {{#unless system}}
+                            <span class="badge badge-gray">Sync</span>
+                            {{/unless}}
+                        {{/if}}
+                    </div>
+                </td>
+                <td>
+                    {{#if system}}
+                    <span class="badge badge-green">Enabled <span style="font-size:0.8em">&#128274;</span></span>
+                    {{else}}
+                        {{#if enabled}}
+                        <span class="badge badge-green">Enabled</span>
+                        {{else}}
+                        <span class="badge badge-gray">Disabled</span>
+                        {{/if}}
+                    {{/if}}
+                </td>
+                <td class="col-actions" data-no-row-click>
+                    <div class="actions-menu" data-actions-for="{{id}}">
+                        <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                        <div class="actions-dropdown">
+                            {{#unless system}}
+                            <a href="/admin/org/hooks/edit/?id={{id}}" class="actions-item">Edit</a>
+                            {{/unless}}
+                            <button class="actions-item" data-hook-details="{{id}}">Details</button>
+                            {{#unless system}}
+                            <div class="actions-popup-separator"></div>
+                            <button class="actions-item actions-item-danger" data-action="delete" data-entity-type="hook" data-entity-id="{{id}}">Delete</button>
+                            {{/unless}}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr class="detail-row" data-detail-for="{{id}}">
+                <td colspan="7">
+                    <div class="detail-row-content">
+                        {{#if matcher}}
+                        <div class="detail-section">
+                            <strong>Matcher</strong>
+                            <div><code class="code-inline">{{matcher}}</code></div>
+                        </div>
+                        {{/if}}
+                        <div class="detail-section">
+                            <strong>Full Command</strong>
+                            <pre class="json-view" style="max-height:150px">{{command}}</pre>
+                        </div>
+                        <div class="detail-section">
+                            <strong>Plugin Context</strong>
+                            {{#if plugin_ids}}
+                            <div><span class="text-muted">Plugin IDs:</span>
+                                {{#each plugin_ids}}<code class="code-inline" style="margin-right:var(--space-1)">{{this}}</code>{{/each}}
+                            </div>
+                            {{/if}}
+                            {{#if visible_to}}
+                            <div><span class="text-muted">Visible to:</span>
+                                <div class="badge-row" style="margin-top:var(--space-1)">
+                                    {{#each visible_to}}<span class="badge badge-blue">{{this}}</span>{{/each}}
+                                </div>
+                            </div>
+                            {{/if}}
+                        </div>
+                        <div class="detail-section">
+                            <strong>Properties</strong>
+                            <div class="badge-row">
+                                {{#if is_async}}<span class="badge badge-info">Async</span>{{else}}<span class="badge badge-gray">Sync</span>{{/if}}
+                                {{#if system}}<span class="badge badge-blue">System</span>{{else}}<span class="badge badge-green">Custom</span>{{/if}}
+                            </div>
+                        </div>
+                        <div class="detail-section">
+                            <strong>Configuration JSON</strong>
+                            <div class="json-toggle" data-hook-json="{{id}}" style="cursor:pointer;color:var(--text-link);font-size:var(--text-sm)">Show JSON</div>
+                            <div class="json-container" data-hook-json-container="{{id}}" style="display:none"></div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No hooks found. Click '+ New Hook' to create one."}}
+        {{/if}}
+    </div>
+
+    {{#each hooks}}
+    <script type="application/json" data-hook-detail="{{id}}">
+        {{{json this}}}
+    </script>
+    {{/each}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-org.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.initOrgHooks();
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

@@ -1,0 +1,13 @@
+id: common_odoo_studio_fields
+name: "Odoo Studio Fields"
+description: "Create custom fields, models, menus, and views in Odoo following Studio conventions (x_studio_*, x_*)"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - odoo_operations
+tags:
+  - odoo
+  - studio
+  - fields
+  - models

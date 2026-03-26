@@ -1,0 +1,17 @@
+id: tracking_notification
+name: "Notification Tracking"
+description: "Records notification events"
+version: "1.0.0"
+enabled: true
+event: Notification
+matcher: "*"
+command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-{plugin_id}-usage.sh"
+async: true
+category: system
+plugins:
+  - common-skills
+tags:
+  - tracking
+  - analytics
+visible_to:
+  - admin

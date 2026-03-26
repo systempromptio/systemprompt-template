@@ -1,0 +1,241 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search entities..." id="acl-search">
+        </div>
+        <select class="filter-select" id="acl-role-filter" style="min-width:120px">
+            <option value="">All Roles</option>
+            {{#each known_roles}}
+            <option value="{{this}}">{{this}}</option>
+            {{/each}}
+        </select>
+        <select class="filter-select" id="acl-dept-filter" style="min-width:150px">
+            <option value="">All Departments</option>
+            {{#each departments}}
+            <option value="{{department}}">{{department}} ({{user_count}})</option>
+            {{/each}}
+        </select>
+        <button class="btn btn-primary" id="acl-bulk-assign" disabled>
+            Bulk Assign (<span id="acl-selection-count">0</span>)
+        </button>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar" id="acl-tabs">
+        <button class="tab-btn active" data-acl-tab="plugins">Plugins <span class="tab-count">{{stats.plugin_count}}</span></button>
+        <button class="tab-btn" data-acl-tab="agents">Agents <span class="tab-count">{{stats.agent_count}}</span></button>
+        <button class="tab-btn" data-acl-tab="mcp">MCP Servers <span class="tab-count">{{stats.mcp_count}}</span></button>
+    </div>
+
+    <!-- Coverage Summary -->
+    <div class="acl-coverage-bar" id="acl-coverage">
+        <span class="config-stat"><span class="config-stat-dot green"></span> <span id="acl-coverage-text">Loading...</span></span>
+    </div>
+
+    <!-- ===== PLUGINS PANEL ===== -->
+    <div data-acl-panel="plugins">
+        {{#if plugins}}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px" data-no-row-click><input type="checkbox" class="acl-select-all" data-acl-tab-target="plugins"></th>
+                        <th>Name</th>
+                        <th>Roles</th>
+                        <th>Departments</th>
+                        <th style="width:80px">Coverage</th>
+                        <th style="width:90px">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each plugins}}
+                    <tr class="clickable-row acl-entity-row" data-entity-type="plugin" data-entity-id="{{id}}" data-name="{{toLowerCase name}}">
+                        <td data-no-row-click>
+                            <input type="checkbox" class="acl-entity-checkbox" data-entity-type="plugin" data-entity-id="{{id}}">
+                        </td>
+                        <td>
+                            <div class="cell-primary">{{name}}</div>
+                            {{#if description}}<div class="cell-secondary">{{truncate description 60}}</div>{{/if}}
+                        </td>
+                        <td>
+                            <div class="cell-badges">
+                                {{#each roles}}{{#if assigned}}<span class="badge badge-blue">{{name}}</span>{{/if}}{{/each}}
+                                {{#unless role_count}}<span class="badge badge-gray">All</span>{{/unless}}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="cell-badges">
+                                {{#each departments}}{{#if assigned}}<span class="badge {{#if default_included}}badge-green{{else}}badge-yellow{{/if}}" title="{{#if default_included}}Default (enforced){{else}}Visible{{/if}}">{{name}}</span>{{/if}}{{/each}}
+                                {{#unless department_count}}<span class="badge badge-gray">None</span>{{/unless}}
+                            </div>
+                        </td>
+                        <td><span class="acl-coverage-indicator">{{department_count}}/{{total_departments}}</span></td>
+                        <td>
+                            {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        {{> components/empty-state message="No plugins configured."}}
+        {{/if}}
+    </div>
+
+    <!-- ===== AGENTS PANEL ===== -->
+    <div data-acl-panel="agents" style="display:none">
+        {{#if agents}}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px" data-no-row-click><input type="checkbox" class="acl-select-all" data-acl-tab-target="agents"></th>
+                        <th>Name</th>
+                        <th>Roles</th>
+                        <th>Departments</th>
+                        <th style="width:80px">Coverage</th>
+                        <th style="width:90px">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each agents}}
+                    <tr class="clickable-row acl-entity-row" data-entity-type="agent" data-entity-id="{{id}}" data-name="{{toLowerCase name}}">
+                        <td data-no-row-click>
+                            <input type="checkbox" class="acl-entity-checkbox" data-entity-type="agent" data-entity-id="{{id}}">
+                        </td>
+                        <td>
+                            <div class="cell-primary">{{name}}</div>
+                            {{#if description}}<div class="cell-secondary">{{truncate description 60}}</div>{{/if}}
+                        </td>
+                        <td>
+                            <div class="cell-badges">
+                                {{#each roles}}{{#if assigned}}<span class="badge badge-blue">{{name}}</span>{{/if}}{{/each}}
+                                {{#unless role_count}}<span class="badge badge-gray">All</span>{{/unless}}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="cell-badges">
+                                {{#each departments}}{{#if assigned}}<span class="badge {{#if default_included}}badge-green{{else}}badge-yellow{{/if}}" title="{{#if default_included}}Default (enforced){{else}}Visible{{/if}}">{{name}}</span>{{/if}}{{/each}}
+                                {{#unless department_count}}<span class="badge badge-gray">None</span>{{/unless}}
+                            </div>
+                        </td>
+                        <td><span class="acl-coverage-indicator">{{department_count}}/{{total_departments}}</span></td>
+                        <td>
+                            {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        {{> components/empty-state message="No agents configured."}}
+        {{/if}}
+    </div>
+
+    <!-- ===== MCP SERVERS PANEL ===== -->
+    <div data-acl-panel="mcp" style="display:none">
+        {{#if mcp_servers}}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px" data-no-row-click><input type="checkbox" class="acl-select-all" data-acl-tab-target="mcp"></th>
+                        <th>Name</th>
+                        <th>Roles</th>
+                        <th>Departments</th>
+                        <th style="width:80px">Coverage</th>
+                        <th style="width:90px">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each mcp_servers}}
+                    <tr class="clickable-row acl-entity-row" data-entity-type="mcp_server" data-entity-id="{{id}}" data-name="{{toLowerCase name}}">
+                        <td data-no-row-click>
+                            <input type="checkbox" class="acl-entity-checkbox" data-entity-type="mcp_server" data-entity-id="{{id}}">
+                        </td>
+                        <td>
+                            <div class="cell-primary">{{name}}</div>
+                            {{#if description}}<div class="cell-secondary">{{truncate description 60}}</div>{{/if}}
+                        </td>
+                        <td>
+                            <div class="cell-badges">
+                                {{#each roles}}{{#if assigned}}<span class="badge badge-blue">{{name}}</span>{{/if}}{{/each}}
+                                {{#unless role_count}}<span class="badge badge-gray">All</span>{{/unless}}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="cell-badges">
+                                {{#each departments}}{{#if assigned}}<span class="badge {{#if default_included}}badge-green{{else}}badge-yellow{{/if}}" title="{{#if default_included}}Default (enforced){{else}}Visible{{/if}}">{{name}}</span>{{/if}}{{/each}}
+                                {{#unless department_count}}<span class="badge badge-gray">None</span>{{/unless}}
+                            </div>
+                        </td>
+                        <td><span class="acl-coverage-indicator">{{department_count}}/{{total_departments}}</span></td>
+                        <td>
+                            {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        {{> components/empty-state message="No MCP servers configured."}}
+        {{/if}}
+    </div>
+
+    <!-- Entity data for JS -->
+    {{#each plugins}}
+    <script type="application/json" data-acl-entity="plugin-{{id}}">{{{json this}}}</script>
+    {{/each}}
+    {{#each agents}}
+    <script type="application/json" data-acl-entity="agent-{{id}}">{{{json this}}}</script>
+    {{/each}}
+    {{#each mcp_servers}}
+    <script type="application/json" data-acl-entity="mcp_server-{{id}}">{{{json this}}}</script>
+    {{/each}}
+
+    <!-- ===== SIDE PANEL ===== -->
+    <div class="panel-overlay" id="acl-overlay"></div>
+    <div class="side-panel" id="acl-detail-panel">
+        <div class="panel-header">
+            <h2 id="acl-panel-title" style="margin:0;font-size:var(--text-lg)"></h2>
+            <button class="btn btn-icon" id="acl-panel-close" style="font-size:var(--text-lg)">&times;</button>
+        </div>
+        <div class="panel-body" id="acl-panel-body"></div>
+        <div class="panel-footer" id="acl-panel-footer">
+            <button class="btn btn-secondary" id="acl-panel-cancel">Cancel</button>
+            <button class="btn btn-primary" id="acl-panel-save">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- ===== BULK ASSIGN PANEL ===== -->
+    <div class="panel-overlay" id="acl-bulk-overlay"></div>
+    <div class="side-panel" id="acl-bulk-panel">
+        <div class="panel-header">
+            <h2 style="margin:0;font-size:var(--text-lg)">Bulk Assign Access</h2>
+            <button class="btn btn-icon" id="acl-bulk-close" style="font-size:var(--text-lg)">&times;</button>
+        </div>
+        <div class="panel-body" id="acl-bulk-body"></div>
+        <div class="panel-footer">
+            <button class="btn btn-secondary" id="acl-bulk-cancel">Cancel</button>
+            <button class="btn btn-primary" id="acl-bulk-apply">Apply to Selected</button>
+        </div>
+    </div>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-access.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.initAccessControl();
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

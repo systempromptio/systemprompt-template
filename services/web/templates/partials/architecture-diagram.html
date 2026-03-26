@@ -1,0 +1,299 @@
+<!-- Architecture Diagram: AI Client → Governance Layer → AI Backend -->
+<!-- Desktop version -->
+<div class="arch-diagram arch-diagram--desktop" aria-hidden="true">
+    <svg viewBox="0 0 900 580" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <filter id="arch-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="arch-glow-lg" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+                <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <marker id="arch-arrow-down" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                <path d="M1,1 L4,6 L7,1" fill="none" stroke="var(--brand-400)" stroke-width="1.5"/>
+            </marker>
+        </defs>
+
+        <!-- ═══════════ TIER LABELS ═══════════ -->
+        <text x="450" y="30" text-anchor="middle" fill="var(--brand-300)" font-family="Dosis, system-ui, sans-serif" font-size="11" letter-spacing="0.2em" font-weight="700">AI CLIENTS</text>
+        <text x="450" y="46" text-anchor="middle" fill="var(--color-text-secondary)" font-family="Dosis, system-ui, sans-serif" font-size="9" letter-spacing="0.1em">Any MCP-compatible client</text>
+
+        <!-- ═══════════ TOP TIER: AI CLIENTS ═══════════ -->
+        <g class="arch-clients">
+            <!-- Claude Code -->
+            <g transform="translate(150,100)">
+                <rect x="-65" y="-35" width="130" height="70" rx="8" fill="var(--color-surface)" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.9"/>
+                <svg x="-10" y="-22" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-300)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="18" rx="2"/><path d="m7 9 3 3-3 3"/><path d="M13 15h4"/>
+                </svg>
+                <text text-anchor="middle" y="12" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="11" font-weight="700">Claude Code</text>
+            </g>
+
+            <!-- Claude Cowork -->
+            <g transform="translate(350,100)">
+                <rect x="-65" y="-35" width="130" height="70" rx="8" fill="var(--color-surface)" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.9"/>
+                <svg x="-10" y="-22" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-300)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <text text-anchor="middle" y="12" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="11" font-weight="700">Claude Cowork</text>
+            </g>
+
+            <!-- Claude Desktop -->
+            <g transform="translate(550,100)">
+                <rect x="-65" y="-35" width="130" height="70" rx="8" fill="var(--color-surface)" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.9"/>
+                <svg x="-10" y="-22" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-300)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                <text text-anchor="middle" y="12" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="11" font-weight="700">Claude Desktop</text>
+            </g>
+
+            <!-- Foodles Agent -->
+            <g transform="translate(750,100)">
+                <rect x="-65" y="-35" width="130" height="70" rx="8" fill="var(--color-surface)" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.9"/>
+                <svg x="-10" y="-22" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-300)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                </svg>
+                <text text-anchor="middle" y="12" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="11" font-weight="700">Foodles Agent</text>
+            </g>
+        </g>
+
+        <!-- ═══════════ CONNECTION PATHS (Client → Governance) ═══════════ -->
+        <g class="arch-connections-top">
+            <path id="arch-c1" d="M150,135 L150,230" fill="none" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.4"/>
+            <path id="arch-c2" d="M350,135 L350,230" fill="none" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.4"/>
+            <path id="arch-c3" d="M550,135 L550,230" fill="none" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.4"/>
+            <path id="arch-c4" d="M750,135 L750,230" fill="none" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.4"/>
+        </g>
+
+        <!-- Particles flowing down (client → governance) -->
+        <g class="arch-particles-down">
+            <circle r="3" fill="var(--brand-300)" filter="url(#arch-glow)">
+                <animateMotion dur="2s" repeatCount="indefinite"><mpath href="#arch-c1"/></animateMotion>
+            </circle>
+            <circle r="3" fill="var(--brand-300)" filter="url(#arch-glow)">
+                <animateMotion dur="2.3s" repeatCount="indefinite" begin="-0.5s"><mpath href="#arch-c2"/></animateMotion>
+            </circle>
+            <circle r="3" fill="var(--brand-300)" filter="url(#arch-glow)">
+                <animateMotion dur="1.8s" repeatCount="indefinite" begin="-1s"><mpath href="#arch-c3"/></animateMotion>
+            </circle>
+            <circle r="3" fill="var(--brand-300)" filter="url(#arch-glow)">
+                <animateMotion dur="2.5s" repeatCount="indefinite" begin="-0.3s"><mpath href="#arch-c4"/></animateMotion>
+            </circle>
+        </g>
+
+        <!-- ═══════════ MIDDLE TIER: GOVERNANCE LAYER ═══════════ -->
+        <g class="arch-governance">
+            <!-- Outer glow -->
+            <rect x="50" y="230" width="800" height="120" rx="12" fill="var(--brand-500)" opacity="0.06" filter="url(#arch-glow-lg)"/>
+            <!-- Main band -->
+            <rect x="50" y="230" width="800" height="120" rx="12" fill="var(--color-surface-elevated)" stroke="var(--brand-400)" stroke-width="2"/>
+            <!-- Pulsing border -->
+            <rect x="50" y="230" width="800" height="120" rx="12" fill="none" stroke="var(--brand-300)" stroke-width="1" opacity="0.3">
+                <animate attributeName="opacity" values="0.1;0.4;0.1" dur="3s" repeatCount="indefinite"/>
+            </rect>
+
+            <!-- Governance label -->
+            <text x="450" y="256" text-anchor="middle" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="11" letter-spacing="0.2em" font-weight="700">GOVERNANCE LAYER</text>
+            <text x="450" y="270" text-anchor="middle" fill="var(--color-text-secondary)" font-family="Dosis, system-ui, sans-serif" font-size="9" letter-spacing="0.05em">Single Rust binary. Sidecar or gateway.</text>
+
+            <!-- 6 capability badges -->
+            <g transform="translate(110,310)">
+                <rect x="-45" y="-16" width="90" height="32" rx="6" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">Secrets</text>
+            </g>
+            <g transform="translate(240,310)">
+                <rect x="-45" y="-16" width="90" height="32" rx="6" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">Audit</text>
+            </g>
+            <g transform="translate(370,310)">
+                <rect x="-45" y="-16" width="90" height="32" rx="6" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">RBAC</text>
+            </g>
+            <g transform="translate(500,310)">
+                <rect x="-45" y="-16" width="90" height="32" rx="6" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">Cost</text>
+            </g>
+            <g transform="translate(630,310)">
+                <rect x="-45" y="-16" width="90" height="32" rx="6" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">Policy Controls</text>
+            </g>
+            <g transform="translate(760,310)">
+                <rect x="-45" y="-16" width="90" height="32" rx="6" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">Hooks</text>
+            </g>
+        </g>
+
+        <!-- ═══════════ CONNECTION PATHS (Governance → Backend) ═══════════ -->
+        <g class="arch-connections-bottom">
+            <path id="arch-b1" d="M150,350 L150,440" fill="none" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.4"/>
+            <path id="arch-b2" d="M350,350 L350,440" fill="none" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.4"/>
+            <path id="arch-b3" d="M550,350 L550,440" fill="none" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.4"/>
+            <path id="arch-b4" d="M750,350 L750,440" fill="none" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.4"/>
+        </g>
+
+        <!-- Particles flowing down (governance → backend) -->
+        <g class="arch-particles-down-2">
+            <circle r="3" fill="var(--brand-300)" filter="url(#arch-glow)">
+                <animateMotion dur="2.2s" repeatCount="indefinite" begin="-0.8s"><mpath href="#arch-b1"/></animateMotion>
+            </circle>
+            <circle r="3" fill="var(--brand-300)" filter="url(#arch-glow)">
+                <animateMotion dur="1.9s" repeatCount="indefinite" begin="-0.2s"><mpath href="#arch-b2"/></animateMotion>
+            </circle>
+            <circle r="3" fill="var(--brand-300)" filter="url(#arch-glow)">
+                <animateMotion dur="2.4s" repeatCount="indefinite" begin="-1.2s"><mpath href="#arch-b3"/></animateMotion>
+            </circle>
+            <circle r="3" fill="var(--brand-300)" filter="url(#arch-glow)">
+                <animateMotion dur="2.1s" repeatCount="indefinite" begin="-0.6s"><mpath href="#arch-b4"/></animateMotion>
+            </circle>
+        </g>
+
+        <!-- ═══════════ BOTTOM TIER: AI BACKEND ═══════════ -->
+        <text x="450" y="435" text-anchor="middle" fill="var(--brand-300)" font-family="Dosis, system-ui, sans-serif" font-size="11" letter-spacing="0.2em" font-weight="700">AI BACKEND</text>
+        <text x="450" y="451" text-anchor="middle" fill="var(--color-text-secondary)" font-family="Dosis, system-ui, sans-serif" font-size="9" letter-spacing="0.1em">MCP servers and enterprise services</text>
+
+        <g class="arch-backends">
+            <!-- MCP Server -->
+            <g transform="translate(150,505)">
+                <rect x="-65" y="-35" width="130" height="70" rx="8" fill="var(--color-surface)" stroke="var(--brand-600)" stroke-width="1.5" opacity="0.9"/>
+                <svg x="-10" y="-22" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><circle cx="6" cy="6" r="1"/><circle cx="6" cy="18" r="1"/>
+                </svg>
+                <text text-anchor="middle" y="12" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="11" font-weight="700">MCP Servers</text>
+            </g>
+
+            <!-- Data APIs -->
+            <g transform="translate(350,505)">
+                <rect x="-65" y="-35" width="130" height="70" rx="8" fill="var(--color-surface)" stroke="var(--brand-600)" stroke-width="1.5" opacity="0.9"/>
+                <svg x="-10" y="-22" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                </svg>
+                <text text-anchor="middle" y="12" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="11" font-weight="700">Data APIs</text>
+            </g>
+
+            <!-- External Services -->
+            <g transform="translate(550,505)">
+                <rect x="-65" y="-35" width="130" height="70" rx="8" fill="var(--color-surface)" stroke="var(--brand-600)" stroke-width="1.5" opacity="0.9"/>
+                <svg x="-10" y="-22" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                <text text-anchor="middle" y="12" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="11" font-weight="700">External Services</text>
+            </g>
+
+            <!-- Internal Tools -->
+            <g transform="translate(750,505)">
+                <rect x="-65" y="-35" width="130" height="70" rx="8" fill="var(--color-surface)" stroke="var(--brand-600)" stroke-width="1.5" opacity="0.9"/>
+                <svg x="-10" y="-22" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+                <text text-anchor="middle" y="12" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="11" font-weight="700">Internal Tools</text>
+            </g>
+        </g>
+    </svg>
+</div>
+
+<!-- Mobile version -->
+<div class="arch-diagram arch-diagram--mobile" aria-hidden="true">
+    <svg viewBox="0 0 360 520" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <filter id="arch-glow-m" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+        </defs>
+
+        <!-- TOP: AI CLIENTS -->
+        <text x="180" y="20" text-anchor="middle" fill="var(--brand-300)" font-family="Dosis, system-ui, sans-serif" font-size="9" letter-spacing="0.15em" font-weight="700">AI CLIENTS</text>
+
+        <g class="arch-clients-mobile">
+            <g transform="translate(90,60)">
+                <rect x="-55" y="-22" width="110" height="44" rx="6" fill="var(--color-surface)" stroke="var(--brand-500)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">Claude Code</text>
+            </g>
+            <g transform="translate(270,60)">
+                <rect x="-55" y="-22" width="110" height="44" rx="6" fill="var(--color-surface)" stroke="var(--brand-500)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">Cowork</text>
+            </g>
+            <g transform="translate(90,115)">
+                <rect x="-55" y="-22" width="110" height="44" rx="6" fill="var(--color-surface)" stroke="var(--brand-500)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">Desktop</text>
+            </g>
+            <g transform="translate(270,115)">
+                <rect x="-55" y="-22" width="110" height="44" rx="6" fill="var(--color-surface)" stroke="var(--brand-500)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">Foodles Agent</text>
+            </g>
+        </g>
+
+        <!-- Connection lines -->
+        <path id="arch-cm1" d="M180,140 L180,180" fill="none" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.4"/>
+        <circle r="2.5" fill="var(--brand-300)" filter="url(#arch-glow-m)">
+            <animateMotion dur="1.5s" repeatCount="indefinite"><mpath href="#arch-cm1"/></animateMotion>
+        </circle>
+
+        <!-- MIDDLE: GOVERNANCE LAYER -->
+        <g class="arch-governance-mobile">
+            <rect x="20" y="180" width="320" height="130" rx="10" fill="var(--color-surface-elevated)" stroke="var(--brand-400)" stroke-width="1.5"/>
+            <rect x="20" y="180" width="320" height="130" rx="10" fill="none" stroke="var(--brand-300)" stroke-width="0.5" opacity="0.3">
+                <animate attributeName="opacity" values="0.1;0.4;0.1" dur="3s" repeatCount="indefinite"/>
+            </rect>
+
+            <text x="180" y="202" text-anchor="middle" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="9" letter-spacing="0.15em" font-weight="700">GOVERNANCE LAYER</text>
+            <text x="180" y="214" text-anchor="middle" fill="var(--color-text-secondary)" font-family="Dosis, system-ui, sans-serif" font-size="8">Single Rust binary. Sidecar or gateway.</text>
+
+            <!-- 2x3 grid of badges -->
+            <g transform="translate(75,245)">
+                <rect x="-40" y="-12" width="80" height="24" rx="4" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="0.75"/>
+                <text text-anchor="middle" y="3" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="9" font-weight="700">Secrets</text>
+            </g>
+            <g transform="translate(180,245)">
+                <rect x="-40" y="-12" width="80" height="24" rx="4" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="0.75"/>
+                <text text-anchor="middle" y="3" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="9" font-weight="700">Audit</text>
+            </g>
+            <g transform="translate(285,245)">
+                <rect x="-40" y="-12" width="80" height="24" rx="4" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="0.75"/>
+                <text text-anchor="middle" y="3" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="9" font-weight="700">RBAC</text>
+            </g>
+            <g transform="translate(75,278)">
+                <rect x="-40" y="-12" width="80" height="24" rx="4" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="0.75"/>
+                <text text-anchor="middle" y="3" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="9" font-weight="700">Cost</text>
+            </g>
+            <g transform="translate(180,278)">
+                <rect x="-40" y="-12" width="80" height="24" rx="4" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="0.75"/>
+                <text text-anchor="middle" y="3" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="9" font-weight="700">Policy Controls</text>
+            </g>
+            <g transform="translate(285,278)">
+                <rect x="-40" y="-12" width="80" height="24" rx="4" fill="var(--brand-500)" opacity="0.15" stroke="var(--brand-400)" stroke-width="0.75"/>
+                <text text-anchor="middle" y="3" fill="var(--brand-200)" font-family="Dosis, system-ui, sans-serif" font-size="9" font-weight="700">Hooks</text>
+            </g>
+        </g>
+
+        <!-- Connection lines -->
+        <path id="arch-cm2" d="M180,310 L180,350" fill="none" stroke="var(--brand-500)" stroke-width="1.5" opacity="0.4"/>
+        <circle r="2.5" fill="var(--brand-300)" filter="url(#arch-glow-m)">
+            <animateMotion dur="1.5s" repeatCount="indefinite" begin="-0.5s"><mpath href="#arch-cm2"/></animateMotion>
+        </circle>
+
+        <!-- BOTTOM: AI BACKEND -->
+        <text x="180" y="365" text-anchor="middle" fill="var(--brand-300)" font-family="Dosis, system-ui, sans-serif" font-size="9" letter-spacing="0.15em" font-weight="700">AI BACKEND</text>
+
+        <g class="arch-backends-mobile">
+            <g transform="translate(90,400)">
+                <rect x="-55" y="-22" width="110" height="44" rx="6" fill="var(--color-surface)" stroke="var(--brand-600)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">MCP Servers</text>
+            </g>
+            <g transform="translate(270,400)">
+                <rect x="-55" y="-22" width="110" height="44" rx="6" fill="var(--color-surface)" stroke="var(--brand-600)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">Data APIs</text>
+            </g>
+            <g transform="translate(90,455)">
+                <rect x="-55" y="-22" width="110" height="44" rx="6" fill="var(--color-surface)" stroke="var(--brand-600)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">External Services</text>
+            </g>
+            <g transform="translate(270,455)">
+                <rect x="-55" y="-22" width="110" height="44" rx="6" fill="var(--color-surface)" stroke="var(--brand-600)" stroke-width="1"/>
+                <text text-anchor="middle" y="4" fill="var(--color-text)" font-family="Dosis, system-ui, sans-serif" font-size="10" font-weight="700">Internal Tools</text>
+            </g>
+        </g>
+    </svg>
+</div>

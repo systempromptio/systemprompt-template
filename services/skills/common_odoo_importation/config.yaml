@@ -1,0 +1,12 @@
+id: common_odoo_importation
+name: "Odoo Importation"
+description: "Bulk data import into Odoo using the official load method. Supports XLSX/CSV, batch processing, and external ID generation"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - odoo_operations
+tags:
+  - odoo
+  - import
+  - data

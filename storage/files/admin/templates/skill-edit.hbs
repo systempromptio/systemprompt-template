@@ -1,0 +1,39 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/back-button href="/admin/org/skills/" label="Back to Skills"}}
+    <h2>{{title}}</h2>
+    <div class="card" style="max-width:800px">
+        <form id="skill-form" data-api-path="/skills/" data-entity="Skill" data-id-field="skill_id" data-list-path="/skills/">
+            {{> components/form-group label="Skill ID" name="skill_id" type="text" value=skill.skill_id placeholder="my-skill-id" required=true readonly=is_edit hint="kebab-case"}}
+            {{> components/form-group label="Name" name="name" type="text" value=skill.name placeholder="Skill name" required=true}}
+            {{> components/form-group label="Description" name="description" type="text" value=skill.description placeholder="Brief description"}}
+            {{> components/form-group label="Content" name="content" type="textarea" value=skill.content rows="15" placeholder="Skill content..."}}
+            {{> components/form-group label="Tags" name="tags" type="text" value=skill.tags_csv placeholder="tag1, tag2, tag3" hint="comma-separated"}}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="/admin/org/skills/" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.interactions.initEditForm('skill-form', {
+                buildBody: function(form, formData) {
+                    var tagsRaw = formData.get('tags') || '';
+                    var tags = tagsRaw.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+                    return {
+                        name: formData.get('name'),
+                        description: formData.get('description') || '',
+                        content: formData.get('content') || '',
+                        tags: tags
+                    };
+                }
+            });
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

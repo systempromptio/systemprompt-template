@@ -1,0 +1,35 @@
+<div class="plugin-card" style="border-left:3px solid var(--accent)" data-plugin-id="{{id}}" data-name="{{toLowerCase name}}">
+    <div class="plugin-header" data-toggle-plugin="{{id}}">
+        <div style="flex:1;min-width:0">
+            <h3 style="margin:0;font-size:var(--text-base);font-weight:600;color:var(--text-primary)">{{name}}</h3>
+            {{#if description}}<p style="margin:var(--space-1) 0 0;font-size:var(--text-sm);color:var(--text-secondary)">{{description}}</p>{{/if}}
+            <div class="plugin-meta" style="display:flex;gap:var(--space-2);margin-top:var(--space-2);flex-wrap:wrap">
+                <span class="badge badge-blue">{{skill_count}} skill{{#if (not (eq skill_count 1))}}s{{/if}}</span>
+                <span class="badge badge-gray">{{agent_count}} agent{{#if (not (eq agent_count 1))}}s{{/if}}</span>
+                {{#if (gt mcp_count 0)}}<span class="badge badge-yellow">{{mcp_count}} MCP</span>{{/if}}
+                {{#if (gt hook_count 0)}}<span class="badge badge-green">{{hook_count}} hook{{#if (not (eq hook_count 1))}}s{{/if}}</span>{{/if}}
+            </div>
+            {{#if depends}}
+            <div style="margin-top:var(--space-2);font-size:var(--text-xs);color:var(--text-warning,#b45309)"><strong>Depends on:</strong> {{#each depends}}<span class="badge badge-yellow">{{this}}</span> {{/each}}<span style="color:var(--text-tertiary)">(must be installed first)</span></div>
+            {{/if}}
+        </div>
+        <div class="plugin-actions" style="display:flex;align-items:center;gap:var(--space-2)">
+            {{#if (not (eq id "custom"))}}
+            <div class="actions-menu" data-actions-for="{{id}}">
+                <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                <div class="actions-dropdown">
+                    <a href="/admin/plugins/edit/?id={{id}}" class="actions-item">Edit</a>
+                    <button class="actions-item" data-generate-plugin="{{id}}" data-platform="unix">Generate (macOS/Linux)</button>
+                    <button class="actions-item" data-generate-plugin="{{id}}" data-platform="windows">Generate (Windows)</button>
+                    <div class="actions-popup-separator"></div>
+                    <button class="actions-item actions-item-danger" data-delete-plugin="{{id}}">Delete</button>
+                </div>
+            </div>
+            {{/if}}
+            <span class="expand-icon" style="font-size:var(--text-sm);color:var(--text-tertiary);transition:transform var(--duration-fast) var(--ease-out);display:inline-block">&#9660;</span>
+        </div>
+    </div>
+    <div class="plugin-details" style="display:none" data-details-for="{{id}}">
+        {{> components/plugin-tabs pluginId=id skills=skills agents=agents mcp_servers=mcp_servers hooks=hooks skill_count=skill_count agent_count=agent_count mcp_count=mcp_count hook_count=hook_count}}
+    </div>
+</div>

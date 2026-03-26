@@ -1,0 +1,36 @@
+<section class="pres-slide" id="slide-8" style="background: var(--pres-gray-50);">
+  <div class="pres-slide-content">
+    <span class="pres-overline pres-reveal" style="color: var(--pres-blue-500);">SECTION 3 &middot; VISIBILITY</span>
+    <h2 class="pres-reveal pres-reveal-delay-1">The Admin Dashboard</h2>
+    <div class="pres-divider pres-reveal pres-reveal-delay-1"></div>
+    <div class="pres-kpi-grid pres-reveal pres-reveal-delay-2">
+      <div class="pres-kpi"><span class="pres-kpi-value" style="font-size:1.5rem;">Events</span><span class="pres-kpi-label">Real-time activity stream</span></div>
+      <div class="pres-kpi"><span class="pres-kpi-value" style="font-size:1.5rem;">Users</span><span class="pres-kpi-label">Active users right now</span></div>
+      <div class="pres-kpi"><span class="pres-kpi-value" style="font-size:1.5rem;">Tools</span><span class="pres-kpi-label">Tool calls &amp; success rate</span></div>
+      <div class="pres-kpi"><span class="pres-kpi-value" style="font-size:1.5rem;">Skills</span><span class="pres-kpi-label">Installed &amp; popular skills</span></div>
+    </div>
+    <div class="pres-row pres-reveal pres-reveal-delay-3">
+      <div class="pres-col-half">
+        <h3>What Admins See</h3>
+        <ul class="pres-features" style="font-size:0.9rem;">
+          <li><strong>Metric ribbon</strong> &mdash; events, tool uses, prompts, sessions, users, errors, plugins, skills</li>
+          <li><strong>AI usage chart</strong> &mdash; token consumption over time (24h, 7d, 14d toggle)</li>
+          <li><strong>Live activity feed</strong> &mdash; real-time event streaming via server-sent events</li>
+          <li><strong>Leaderboard</strong> &mdash; top users by logins, prompts, plugin adoption, token usage</li>
+          <li><strong>Tool reliability</strong> &mdash; success rate per tool, failure patterns</li>
+        </ul>
+      </div>
+      <div class="pres-col-half">
+        <h3>Drill Down</h3>
+        <ul class="pres-features" style="font-size:0.9rem;">
+          <li><strong>By agent</strong> &mdash; which agent is most used, adoption trends</li>
+          <li><strong>By department</strong> &mdash; usage breakdown across teams</li>
+          <li><strong>By skill</strong> &mdash; which skills are most popular, adoption rates</li>
+          <li><strong>CSV export</strong> &mdash; filter by date, agent, department</li>
+        </ul>
+        <div class="pres-terminal" style="margin-top:0.75rem;"><div><span class="prompt">$</span> systemprompt analytics overview</div><div class="output" style="margin-top:0.5rem;"><div>Active Users (24h):&nbsp;&nbsp;<span class="highlight">847</span></div><div>Sessions (24h):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">2,341</span></div><div>Tool Calls (24h):&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">12,847</span></div><div>Top Agent:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;guest_agent (42%)</div><div>Top Skill:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Booking Policy (31%)</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="pres-notes"><div class="note-section"><h4>TIMING: 10:30 &mdash; Dashboard (3 min)</h4><p><strong>Say:</strong> "This is the admin's view. The metric ribbon across the top gives you an instant snapshot: events, tool uses, prompts, sessions, active users, errors, plugins, skills. All real-time."</p><p><strong>Say:</strong> "The AI usage chart shows token consumption over time. Toggle between 24 hours, 7 days, 14 days. The live activity feed streams events as they happen."</p><p><strong>Say:</strong> "And you can drill into any dimension. By agent, by department, by skill. Everything is exportable to CSV."</p><p>Navigate to <code>/admin/</code> dashboard live.</p><p class="cmd">$ systemprompt analytics overview</p></div></div>
+</section>

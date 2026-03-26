@@ -1,0 +1,53 @@
+plugin:
+  id: systemprompt-dev
+  name: "foodles Dev"
+  description: "Complete development toolkit: Rust, frontend, architecture standards, extension development guides, and 6 specialized agents"
+  version: "1.0.0"
+  enabled: true
+
+  skills:
+    source: explicit
+    include:
+      - dev_rust_standards
+      - dev_frontend_standards
+      - dev_web_standards
+      - dev_architecture_standards
+      - dev_ext_data_providers
+      - dev_ext_rendering
+      - dev_ext_infrastructure
+      - dev_ext_feeds
+      - dev_ext_providers
+      - dev_ext_hooks
+
+  agents:
+    source: explicit
+    include: []
+
+  mcp_servers: []
+
+  roles:
+    - dev
+  depends: [common-skills]
+
+  keywords:
+    - rust
+    - clippy
+    - lint
+    - testing
+    - frontend
+    - css
+    - javascript
+    - web
+    - development
+    - standards
+    - architecture
+    - extensions
+    - plugins
+    - hooks
+    - agents
+  category: development
+
+  license: PROPRIETARY
+  author:
+    name: "Foodles"
+    email: "help@foodles.com"

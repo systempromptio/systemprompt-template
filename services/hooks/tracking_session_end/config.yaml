@@ -1,0 +1,17 @@
+id: tracking_session_end
+name: "Session End Tracking"
+description: "Records when user sessions end"
+version: "1.0.0"
+enabled: true
+event: SessionEnd
+matcher: "*"
+command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-{plugin_id}-usage.sh"
+async: true
+category: system
+plugins:
+  - common-skills
+tags:
+  - tracking
+  - analytics
+visible_to:
+  - admin

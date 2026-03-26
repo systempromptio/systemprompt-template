@@ -1,0 +1,142 @@
+:root {
+  --brand-50: hsl(14, 95%, 96%);
+  --brand-100: hsl(14, 90%, 91%);
+  --brand-200: hsl(14, 85%, 82%);
+  --brand-300: hsl(14, 80%, 70%);
+  --brand-400: hsl(14, 80%, 58%);
+  --brand-500: hsl(14, 83%, 53%);
+  --brand-600: hsl(14, 70%, 47%);
+  --brand-700: hsl(14, 65%, 41%);
+  --brand-800: hsl(14, 60%, 35%);
+  --brand-900: hsl(14, 55%, 25%);
+  --brand-950: hsl(14, 50%, 15%);
+
+  --color-primary: #ed6841;
+  --color-primary-hover: #d45c3a;
+  --color-primary-dark: #bc5133;
+  --color-primary-rgb: 237, 104, 65;
+  --color-text-on-primary: #ffffff;
+  --color-background: #FFFDF5;
+  --color-surface: #F5F2ED;
+  --color-surface-elevated: #F9F6F1;
+  --color-surface-variant: #FFFFFF;
+  --color-surface-dark: #E8E4DE;
+  --color-text: #252526;
+  --color-text-primary: #252526;
+  --color-text-secondary: #3a3a3b;
+  --color-text-muted: #A2AAB9;
+  --color-text-disabled: #A2AAB9;
+  --color-border: #D6DCE8;
+
+  --color-success: #22c55e;
+  --color-warning: #fbbf24;
+  --color-error: #ef4444;
+  --color-info: #ed6841;
+
+  --terminal-dot-close: #ff5f57;
+  --terminal-dot-minimize: #febc2e;
+  --terminal-dot-maximize: #28c840;
+
+  --syntax-bg: #1A2025;
+  --syntax-fg: #abb2bf;
+  --syntax-comment: #5c6370;
+  --syntax-keyword: #ed6841;
+  --syntax-string: #22c55e;
+  --syntax-number: #FF6B35;
+  --syntax-function: #ed6841;
+  --syntax-variable: #e06c75;
+  --syntax-operator: #ed6841;
+  --syntax-class: #FFC55B;
+
+  --font-brand: "Dosis", system-ui, sans-serif;
+  --font-body: "Roboto", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: "Dosis", system-ui, sans-serif;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-xxl: 28px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  --spacing-xs: var(--space-xs);
+  --spacing-sm: var(--space-sm);
+  --spacing-md: var(--space-md);
+  --spacing-lg: var(--space-lg);
+  --spacing-xl: var(--space-xl);
+  --spacing-xxl: var(--space-2xl);
+
+  --container-max: 1200px;
+  --header-height: 72px;
+  --sidebar-left-width: 280px;
+  --sidebar-right-width: 220px;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-round: 9999px;
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.1);
+
+  --animation-fast: 150ms;
+  --animation-normal: 300ms;
+  --animation-slow: 500ms;
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  --z-base: 1;
+  --z-sidebar: 50;
+  --z-sidebar-toggle: 60;
+  --z-mobile-menu: 99;
+  --z-navigation: 100;
+  --z-modal: 1000;
+
+  --sp-card-radius-main: 18px;
+  --sp-card-radius-notch: 6px;
+  --sp-card-radius: 18px 6px 18px 18px;
+  --sp-card-border-width: 1px;
+  --sp-card-bg-glass: hsla(45, 82%, 98%, 0.6);
+  --sp-card-bg-gradient: linear-gradient(135deg,
+    rgba(255, 133, 85, 0.06) 0%,
+    rgba(255, 220, 200, 0.08) 50%,
+    rgba(255, 253, 245, 0.04) 100%);
+  --sp-card-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  --sp-card-shadow-hover: 0 8px 32px rgba(37, 37, 38, 0.12);
+  --sp-card-shadow-highlight: 0 0 20px rgba(237, 104, 65, 0.15);
+  --brand-green: #FF6B35;
+  --brand-gradient: linear-gradient(135deg, #ffdcc8, #fffdf5);
+  --brand-gradient-reverse: linear-gradient(135deg, #fffdf5, #ffdcc8);
+
+  /* Foodles brand tokens */
+  --foodles-black: #252526;
+  --foodles-orange: #FF6B35;
+  --foodles-tints-cta-orange: #FF6B35;
+  --foodles-tints-orange-3: #ffdcc8;
+  --foodles-sand: #FFFDF5;
+  --foodles-sand-60: hsla(45, 82%, 98%, 0.6);
+  --foodles-yellow: #FFF4C1;
+  --foodles-teal: #006463;
+  --foodles-grey: #F5F2ED;
+  --foodles-cards-card-bg: #F5F2ED;
+}
+
+h1, h2, h3, h4, h5, h6 { letter-spacing: -0.03em; }

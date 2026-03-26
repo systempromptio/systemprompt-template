@@ -1,0 +1,98 @@
+.post-content pre code .token.comment,
+.post-content pre code .token.prolog,
+.post-content pre code .token.doctype,
+.post-content pre code .token.cdata {
+  color: var(--syntax-comment);
+  font-style: italic;
+}
+
+.post-content pre code .token.punctuation {
+  color: var(--syntax-fg);
+}
+
+.post-content pre code .token.property,
+.post-content pre code .token.tag,
+.post-content pre code .token.boolean,
+.post-content pre code .token.number,
+.post-content pre code .token.constant,
+.post-content pre code .token.symbol,
+.post-content pre code .token.deleted {
+  color: var(--syntax-number);
+}
+
+.post-content pre code .token.selector,
+.post-content pre code .token.attr-name,
+.post-content pre code .token.string,
+.post-content pre code .token.char,
+.post-content pre code .token.builtin,
+.post-content pre code .token.inserted {
+  color: var(--syntax-string);
+}
+
+.post-content pre code .token.operator,
+.post-content pre code .token.entity,
+.post-content pre code .token.url,
+.language-css .post-content pre code .token.string,
+.style .post-content pre code .token.string {
+  color: var(--syntax-operator);
+}
+
+.post-content pre code .token.atrule,
+.post-content pre code .token.attr-value,
+.post-content pre code .token.keyword {
+  color: var(--syntax-keyword);
+  font-weight: 600;
+}
+
+.post-content pre code .token.function,
+.post-content pre code .token.class-name {
+  color: var(--syntax-function);
+}
+
+.post-content pre code .token.regex,
+.post-content pre code .token.important,
+.post-content pre code .token.variable {
+  color: var(--syntax-variable);
+}
+
+.post-content pre code .token.important,
+.post-content pre code .token.bold {
+  font-weight: bold;
+}
+
+.post-content pre code .token.italic {
+  font-style: italic;
+}
+
+.post-content pre code .token.entity {
+  cursor: help;
+}
+
+.post-content pre code .language-bash .token.function {
+  color: var(--syntax-function);
+}
+
+.post-content pre code .language-json .token.property {
+  color: var(--syntax-variable);
+}
+
+.post-content pre code .language-json .token.string {
+  color: var(--syntax-string);
+}
+
+.post-content pre code .highlight-line {
+  display: block;
+  background-color: rgba(255, 255, 255, 0.05);
+  margin: 0 -24px;
+  padding: 0 24px;
+  border-left: 3px solid var(--syntax-function);
+}
+
+.post-content code:not(pre code) {
+  background: var(--color-surface-elevated);
+  color: var(--color-text);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  border: 1px solid var(--color-border);
+}

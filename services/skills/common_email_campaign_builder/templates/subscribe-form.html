@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suscripcion | Foodles</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════════
+       STANDALONE SUBSCRIBE FORM - EMBEDDABLE WIDGET
+       ═══════════════════════════════════════════════════════════════════════ */
+    
+    :root {
+      --foodles-warm-yellow: #E5B92B;
+      --foodles-blue-lilac: #6B4FBB;
+      --foodles-blue-space: #0A0F1A;
+      --foodles-light-sky: #00B67A;
+      --foodles-white: #FFFFFF;
+      
+      --glass-bg: rgba(255, 255, 255, 0.9);
+      --glass-border: rgba(107, 79, 187, 0.2);
+      --glass-shadow: 0 8px 32px rgba(0, 33, 90, 0.15);
+      
+      --bg-primary: #f8f9fa;
+      --text-primary: var(--foodles-blue-space);
+      --text-secondary: #4a5568;
+      
+      --transition-fast: 0.2s ease;
+      --transition-normal: 0.3s ease;
+    }
+    
+    [data-theme="dark"] {
+      --glass-bg: rgba(0, 33, 90, 0.9);
+      --glass-border: rgba(241, 60, 66, 0.2);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      --bg-primary: var(--foodles-blue-space);
+      --text-primary: var(--foodles-white);
+      --text-secondary: var(--foodles-light-sky);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Dosis', sans-serif;
+      background: var(--bg-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      transition: background var(--transition-normal);
+    }
+    
+    .subscribe-widget {
+      width: 100%;
+      max-width: 480px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 1.5rem;
+      box-shadow: var(--glass-shadow);
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .subscribe-widget::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(107, 79, 187, 0.1) 0%, rgba(241, 60, 66, 0.05) 100%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    
+    .widget-content {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .widget-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .widget-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--foodles-blue-lilac) 0%, var(--foodles-light-sky) 100%);
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+    
+    .widget-icon svg {
+      width: 32px;
+      height: 32px;
+      fill: var(--foodles-white);
+    }
+    
+    .widget-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--foodles-blue-lilac);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 0.5rem;
+    }
+    
+    [data-theme="dark"] .widget-title {
+      color: var(--foodles-white);
+    }
+    
+    .widget-subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    
+    .subscribe-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .form-group {
+      position: relative;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 1rem 1.25rem;
+      font-family: 'Dosis', sans-serif;
+      font-size: 1rem;
+      background: var(--bg-primary);
+      border: 2px solid var(--glass-border);
+      border-radius: 0.75rem;
+      color: var(--text-primary);
+      transition: all var(--transition-fast);
+    }
+    
+    .form-input::placeholder {
+      color: var(--text-secondary);
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--foodles-blue-lilac);
+      box-shadow: 0 0 0 4px rgba(107, 79, 187, 0.15);
+    }
+    
+    .form-input.is-invalid {
+      border-color: #dc3545;
+    }
+    
+    .error-message {
+      font-size: 0.85rem;
+      color: #dc3545;
+      margin-top: 0.5rem;
+      display: none;
+    }
+    
+    .form-input.is-invalid + .error-message {
+      display: block;
+    }
+    
+    .subscribe-btn {
+      width: 100%;
+      padding: 1rem 2rem;
+      font-family: 'Dosis', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: var(--foodles-warm-yellow);
+      color: var(--foodles-blue-space);
+      border: none;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    
+    .subscribe-btn:hover {
+      background: #d4a824;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(229, 185, 43, 0.4);
+    }
+    
+    .subscribe-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .privacy-text {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-top: 1rem;
+      line-height: 1.5;
+    }
+    
+    .privacy-text a {
+      color: var(--foodles-blue-lilac);
+      text-decoration: none;
+    }
+    
+    .privacy-text a:hover {
+      text-decoration: underline;
+    }
+    
+    .success-message {
+      text-align: center;
+      padding: 2rem 0;
+      display: none;
+    }
+    
+    .success-message.show {
+      display: block;
+    }
+    
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--foodles-warm-yellow);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    
+    .success-icon svg {
+      width: 32px;
+      height: 32px;
+      fill: var(--foodles-blue-space);
+    }
+    
+    .success-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .success-text {
+      color: var(--text-secondary);
+    }
+    
+    /* Theme Toggle */
+    .theme-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 40px;
+      height: 40px;
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+      z-index: 2;
+    }
+    
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      background: rgba(107, 79, 187, 0.1);
+    }
+    
+    .theme-toggle svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--foodles-blue-lilac);
+    }
+    
+    [data-theme="dark"] .theme-toggle svg {
+      stroke: var(--foodles-warm-yellow);
+    }
+    
+    /* Responsive */
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem;
+      }
+      
+      .subscribe-widget {
+        padding: 2rem 1.5rem;
+      }
+      
+      .widget-title {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="subscribe-widget">
+    <button class="theme-toggle" aria-label="Cambiar tema">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+    
+    <div class="widget-content">
+      <div class="widget-header">
+        <div class="widget-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6" fill="none" stroke="white" stroke-width="2"/>
+          </svg>
+        </div>
+        <h2 class="widget-title">{{WIDGET_TITLE}}</h2>
+        <p class="widget-subtitle">{{WIDGET_SUBTITLE}}</p>
+      </div>
+      
+      <form class="subscribe-form" id="subscribeForm">
+        <div class="form-group">
+          <input 
+            type="text" 
+            class="form-input" 
+            id="name" 
+            name="name" 
+            placeholder="Tu nombre"
+            required
+          >
+          <span class="error-message">Introduce tu nombre</span>
+        </div>
+        
+        <div class="form-group">
+          <input 
+            type="email" 
+            class="form-input" 
+            id="email" 
+            name="email" 
+            placeholder="tu@email.com"
+            required
+          >
+          <span class="error-message">Introduce un email valido</span>
+        </div>
+        
+        <button type="submit" class="subscribe-btn">{{SUBSCRIBE_CTA}}</button>
+        
+        <p class="privacy-text">
+          Al suscribirte aceptas nuestra <a href="#">politica de privacidad</a>.
+          Puedes darte de baja en cualquier momento.
+        </p>
+      </form>
+      
+      <div class="success-message" id="successMessage">
+        <div class="success-icon">
+          <svg viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="3"/>
+          </svg>
+        </div>
+        <h3 class="success-title">Suscripcion confirmada</h3>
+        <p class="success-text">Revisa tu bandeja de entrada para confirmar tu email.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme Management
+    const ThemeManager = {
+      STORAGE_KEY: 'foodles-theme',
+      
+      init() {
+        this.applyStoredTheme();
+        this.setupToggle();
+      },
+      
+      applyStoredTheme() {
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        if (stored) {
+          document.documentElement.setAttribute('data-theme', stored);
+        } else {
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (prefersDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+        }
+        this.updateIcon();
+      },
+      
+      toggle() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem(this.STORAGE_KEY, next);
+        this.updateIcon();
+      },
+      
+      setupToggle() {
+        const btn = document.querySelector('.theme-toggle');
+        btn.addEventListener('click', () => this.toggle());
+      },
+      
+      updateIcon() {
+        const btn = document.querySelector('.theme-toggle');
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        btn.innerHTML = isDark 
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>`;
+      }
+    };
+    
+    // Form Handling
+    const form = document.getElementById('subscribeForm');
+    const successMessage = document.getElementById('successMessage');
+    
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      let isValid = true;
+      const inputs = form.querySelectorAll('.form-input');
+      
+      inputs.forEach(input => {
+        input.classList.remove('is-invalid');
+        
+        if (input.required && !input.value.trim()) {
+          input.classList.add('is-invalid');
+          isValid = false;
+        }
+        
+        if (input.type === 'email' && input.value) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(input.value)) {
+            input.classList.add('is-invalid');
+            isValid = false;
+          }
+        }
+      });
+      
+      if (isValid) {
+        const btn = form.querySelector('.subscribe-btn');
+        btn.disabled = true;
+        btn.textContent = 'Enviando...';
+        
+        // Simulate API call
+        setTimeout(() => {
+          form.style.display = 'none';
+          successMessage.classList.add('show');
+        }, 1000);
+      }
+    });
+    
+    // Real-time validation
+    form.querySelectorAll('.form-input').forEach(input => {
+      input.addEventListener('input', () => {
+        input.classList.remove('is-invalid');
+      });
+    });
+    
+    // Initialize
+    ThemeManager.init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+id: governance_pre_tool_use
+name: "Tool Governance"
+description: "Evaluates tool calls against governance policies before execution. Returns allow or deny."
+version: "1.0.0"
+enabled: true
+event: PreToolUse
+matcher: "*"
+command: "${CLAUDE_PLUGIN_ROOT}/scripts/govern-{plugin_id}-tool.sh"
+async: false
+category: system
+plugins:
+  - common-skills
+tags:
+  - governance
+  - security
+  - pre-tool
+visible_to:
+  - admin

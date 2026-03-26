@@ -1,0 +1,15 @@
+id: dev_ext_hooks
+name: "Extension: Hooks & Events"
+description: "Hook catalog, lifecycle events, hook scripts, and event-driven automation"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - architect
+  - rust_impl
+tags:
+  - extensions
+  - hooks
+  - events
+  - lifecycle
+  - automation

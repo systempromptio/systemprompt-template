@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoria SEO | Foodles</title>
+  
+  <!-- Google Fonts: Dosis -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       FOODLES BRAND VARIABLES
+    ══════════════════════════════════════════════════════════════════════════ */
+    :root {
+      --foodles-warm-yellow: #E5B92B;
+      --foodles-blue-lilac: #6B4FBB;
+      --foodles-blue-space: #0A0F1A;
+      --foodles-light-sky: #00B67A;
+      
+      --bg-primary: #f8f9fc;
+      --bg-secondary: #ffffff;
+      --bg-glass: rgba(255, 255, 255, 0.7);
+      --text-primary: var(--foodles-blue-space);
+      --text-secondary: #5a6178;
+      --text-muted: #8a92a6;
+      --border-color: rgba(107, 79, 187, 0.15);
+      --shadow-color: rgba(0, 33, 90, 0.08);
+      --glass-blur: 12px;
+      --glass-border: rgba(255, 255, 255, 0.5);
+      
+      --status-success: #22c55e;
+      --status-warning: #f59e0b;
+      --status-error: #ef4444;
+      
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s ease;
+    }
+    
+    [data-theme="dark"] {
+      --bg-primary: #0d1321;
+      --bg-secondary: #151d2e;
+      --bg-glass: rgba(21, 29, 46, 0.8);
+      --text-primary: #ffffff;
+      --text-secondary: #b8c0d4;
+      --text-muted: #6b7388;
+      --border-color: rgba(107, 79, 187, 0.25);
+      --shadow-color: rgba(0, 0, 0, 0.3);
+      --glass-border: rgba(107, 79, 187, 0.2);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       BASE STYLES
+    ══════════════════════════════════════════════════════════════════════════ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Dosis', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      transition: background-color var(--transition-normal), color var(--transition-normal);
+    }
+    
+    .glass-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px var(--shadow-color);
+      transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════════════════════════════════════════ */
+    .header {
+      background: linear-gradient(135deg, var(--foodles-blue-space) 0%, #2a3672 100%);
+      padding: 1.5rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .logo-text {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .logo-text span {
+      color: var(--foodles-warm-yellow);
+    }
+    
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+    
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .theme-toggle-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    .theme-switch {
+      position: relative;
+      width: 48px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+    }
+    
+    .theme-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: var(--foodles-warm-yellow);
+      border-radius: 50%;
+      transition: transform var(--transition-normal);
+    }
+    
+    [data-theme="dark"] .theme-switch::after {
+      transform: translateX(24px);
+      background: var(--foodles-blue-lilac);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       MAIN CONTENT
+    ══════════════════════════════════════════════════════════════════════════ */
+    .main-content {
+      padding: 2rem 0 4rem;
+    }
+    
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    
+    .page-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       URL INPUT
+    ══════════════════════════════════════════════════════════════════════════ */
+    .url-input-wrapper {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .url-input {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      font-family: 'Dosis', sans-serif;
+      font-size: 0.95rem;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      transition: border-color var(--transition-fast);
+    }
+    
+    .url-input:focus {
+      outline: none;
+      border-color: var(--foodles-blue-lilac);
+    }
+    
+    .url-input::placeholder {
+      color: var(--text-muted);
+    }
+    
+    .analyze-btn {
+      padding: 1rem 2rem;
+      font-family: 'Dosis', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: var(--foodles-warm-yellow);
+      color: var(--foodles-blue-space);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    
+    .analyze-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(229, 185, 43, 0.3);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       SCORE DISPLAY
+    ══════════════════════════════════════════════════════════════════════════ */
+    .score-section {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 992px) {
+      .score-section {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .score-circle-wrapper {
+      padding: 2rem;
+      text-align: center;
+    }
+    
+    .score-circle {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 1.5rem;
+    }
+    
+    .score-circle svg {
+      transform: rotate(-90deg);
+    }
+    
+    .score-circle-bg {
+      fill: none;
+      stroke: var(--border-color);
+      stroke-width: 12;
+    }
+    
+    .score-circle-progress {
+      fill: none;
+      stroke: var(--foodles-blue-lilac);
+      stroke-width: 12;
+      stroke-linecap: round;
+      stroke-dasharray: 502;
+      stroke-dashoffset: 125;
+      transition: stroke-dashoffset 1s ease;
+    }
+    
+    .score-circle-progress.good { stroke: var(--status-success); }
+    .score-circle-progress.warning { stroke: var(--status-warning); }
+    .score-circle-progress.bad { stroke: var(--status-error); }
+    
+    .score-value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .score-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .score-categories {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    
+    @media (max-width: 576px) {
+      .score-categories {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .category-card {
+      padding: 1.25rem;
+    }
+    
+    .category-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    
+    .category-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    .category-score {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .category-bar {
+      height: 6px;
+      background: var(--border-color);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .category-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.8s ease;
+    }
+    
+    .category-bar-fill.good { background: var(--status-success); }
+    .category-bar-fill.warning { background: var(--status-warning); }
+    .category-bar-fill.bad { background: var(--status-error); }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       AUDIT SECTIONS
+    ══════════════════════════════════════════════════════════════════════════ */
+    .audit-section {
+      margin-bottom: 1.5rem;
+      padding: 1.5rem;
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .section-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--foodles-blue-lilac) 0%, var(--foodles-light-sky) 100%);
+      color: #fff;
+    }
+    
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    .audit-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .audit-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    
+    .status-indicator {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .status-indicator.success {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--status-success);
+    }
+    
+    .status-indicator.warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--status-warning);
+    }
+    
+    .status-indicator.error {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--status-error);
+    }
+    
+    .audit-content {
+      flex: 1;
+    }
+    
+    .audit-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+    
+    .audit-description {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    
+    .audit-value {
+      font-family: 'Dosis', monospace;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--foodles-blue-lilac);
+      background: rgba(107, 79, 187, 0.1);
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════════════════════════════════════════════════ */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .animate-in {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+    
+    .delay-1 { animation-delay: 0.1s; opacity: 0; }
+    .delay-2 { animation-delay: 0.2s; opacity: 0; }
+    .delay-3 { animation-delay: 0.3s; opacity: 0; }
+    .delay-4 { animation-delay: 0.4s; opacity: 0; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <div class="logo-text">SEO <span>Audit</span></div>
+        <div class="theme-toggle" onclick="toggleTheme()">
+          <span class="theme-toggle-label">Tema</span>
+          <div class="theme-switch"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <h1 class="page-title">Auditoria SEO</h1>
+      <p class="page-subtitle">Analiza cualquier URL para detectar problemas de posicionamiento</p>
+      
+      <!-- URL Input -->
+      <div class="url-input-wrapper">
+        <input type="url" class="url-input" placeholder="https://ejemplo.com/pagina" id="urlInput">
+        <button class="analyze-btn" onclick="analyzeUrl()">Analizar</button>
+      </div>
+      
+      <!-- Score Section -->
+      <div class="score-section animate-in delay-1">
+        <div class="glass-card score-circle-wrapper">
+          <div class="score-circle">
+            <svg width="180" height="180">
+              <circle class="score-circle-bg" cx="90" cy="90" r="80"/>
+              <circle class="score-circle-progress good" cx="90" cy="90" r="80"/>
+            </svg>
+            <div class="score-value">75</div>
+          </div>
+          <div class="score-label">Puntuacion SEO</div>
+        </div>
+        
+        <div class="score-categories">
+          <div class="glass-card category-card">
+            <div class="category-header">
+              <span class="category-name">Meta Tags</span>
+              <span class="category-score">85</span>
+            </div>
+            <div class="category-bar">
+              <div class="category-bar-fill good" style="width: 85%"></div>
+            </div>
+          </div>
+          
+          <div class="glass-card category-card">
+            <div class="category-header">
+              <span class="category-name">Contenido</span>
+              <span class="category-score">72</span>
+            </div>
+            <div class="category-bar">
+              <div class="category-bar-fill warning" style="width: 72%"></div>
+            </div>
+          </div>
+          
+          <div class="glass-card category-card">
+            <div class="category-header">
+              <span class="category-name">Rendimiento</span>
+              <span class="category-score">68</span>
+            </div>
+            <div class="category-bar">
+              <div class="category-bar-fill warning" style="width: 68%"></div>
+            </div>
+          </div>
+          
+          <div class="glass-card category-card">
+            <div class="category-header">
+              <span class="category-name">Seguridad</span>
+              <span class="category-score">95</span>
+            </div>
+            <div class="category-bar">
+              <div class="category-bar-fill good" style="width: 95%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Meta Tags Section -->
+      <div class="glass-card audit-section animate-in delay-2">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 7V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <h2 class="section-title">Meta Tags</h2>
+        </div>
+        
+        <div class="audit-item">
+          <div class="status-indicator success">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="audit-content">
+            <div class="audit-title">Title Tag</div>
+            <div class="audit-description">El titulo tiene una longitud optima de 58 caracteres</div>
+          </div>
+          <div class="audit-value">58 chars</div>
+        </div>
+        
+        <div class="audit-item">
+          <div class="status-indicator warning">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <circle cx="12" cy="17" r="1"/>
+            </svg>
+          </div>
+          <div class="audit-content">
+            <div class="audit-title">Meta Description</div>
+            <div class="audit-description">La descripcion es demasiado larga, puede ser truncada en resultados</div>
+          </div>
+          <div class="audit-value">178 chars</div>
+        </div>
+        
+        <div class="audit-item">
+          <div class="status-indicator success">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="audit-content">
+            <div class="audit-title">Canonical URL</div>
+            <div class="audit-description">URL canonica correctamente definida</div>
+          </div>
+          <div class="audit-value">OK</div>
+        </div>
+        
+        <div class="audit-item">
+          <div class="status-indicator error">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </div>
+          <div class="audit-content">
+            <div class="audit-title">Open Graph Tags</div>
+            <div class="audit-description">Faltan tags og:image y og:description para compartir en redes</div>
+          </div>
+          <div class="audit-value">2 missing</div>
+        </div>
+      </div>
+      
+      <!-- Content Section -->
+      <div class="glass-card audit-section animate-in delay-3">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <h2 class="section-title">Contenido</h2>
+        </div>
+        
+        <div class="audit-item">
+          <div class="status-indicator success">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="audit-content">
+            <div class="audit-title">Encabezado H1</div>
+            <div class="audit-description">La pagina tiene un unico H1 con la keyword principal</div>
+          </div>
+          <div class="audit-value">1 H1</div>
+        </div>
+        
+        <div class="audit-item">
+          <div class="status-indicator warning">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <circle cx="12" cy="17" r="1"/>
+            </svg>
+          </div>
+          <div class="audit-content">
+            <div class="audit-title">Estructura de Encabezados</div>
+            <div class="audit-description">Se salta de H2 a H4, falta nivel H3 en la jerarquia</div>
+          </div>
+          <div class="audit-value">Skip H3</div>
+        </div>
+        
+        <div class="audit-item">
+          <div class="status-indicator warning">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <circle cx="12" cy="17" r="1"/>
+            </svg>
+          </div>
+          <div class="audit-content">
+            <div class="audit-title">Imagenes sin Alt Text</div>
+            <div class="audit-description">7 imagenes no tienen atributo alt definido</div>
+          </div>
+          <div class="audit-value">7 imgs</div>
+        </div>
+        
+        <div class="audit-item">
+          <div class="status-indicator success">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="audit-content">
+            <div class="audit-title">Longitud del Contenido</div>
+            <div class="audit-description">La pagina tiene contenido suficiente para posicionar</div>
+          </div>
+          <div class="audit-value">1,842 words</div>
+        </div>
+      </div>
+      
+      <!-- Performance Section -->
+      <div class="glass-card audit-section animate-in delay-4">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+          </div>
+          <h2 class="section-title">Rendimiento</h2>
+        </div>
+        
+        <div class="audit-item">
+          <div class="status-indicator warning">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <circle cx="12" cy="17" r="1"/>
+            </svg>
+          </div>
+          <div class="audit-content">
+            <div class="audit-title">Tiempo de Carga</div>
+            <div class="audit-description">La pagina tarda mas de 2 segundos en cargar completamente</div>
+          </div>
+          <div class="audit-value">2.8s</div>
+        </div>
+        
+        <div class="audit-item">
+          <div class="status-indicator success">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="audit-content">
+            <div class="audit-title">Mobile Friendly</div>
+            <div class="audit-description">La pagina es responsive y funciona correctamente en moviles</div>
+          </div>
+          <div class="audit-value">OK</div>
+        </div>
+        
+        <div class="audit-item">
+          <div class="status-indicator success">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="audit-content">
+            <div class="audit-title">HTTPS</div>
+            <div class="audit-description">El sitio usa certificado SSL valido</div>
+          </div>
+          <div class="audit-value">Secure</div>
+        </div>
+      </div>
+      
+    </div>
+  </main>
+  
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('seo-manager-theme', newTheme);
+    }
+    
+    // Load saved theme
+    (function() {
+      const savedTheme = localStorage.getItem('seo-manager-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+    
+    // Analyze URL placeholder
+    function analyzeUrl() {
+      const url = document.getElementById('urlInput').value;
+      if (url) {
+        alert('Analizando: ' + url + '\n\nEn produccion, esto llamaria al script seo-analyzer.py');
+      }
+    }
+  </script>
+</body>
+</html>

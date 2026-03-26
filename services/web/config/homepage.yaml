@@ -1,0 +1,34 @@
+# Homepage Configuration
+
+hero:
+  title: "Govern"
+  title_highlight: "AI Usage."
+  subtitle: "One platform to deploy, secure, distribute, and observe AI usage across your entire organization. Role-based access and audit trails from day one. Self-hosted, no vendor lock-in."
+  eyebrow: "Smart Corporate Catering"
+  cta: "View Documentation"
+  cta_url: "/documentation"
+  cta_secondary: "Login"
+  cta_secondary_url: "/admin/login"
+
+features:
+  title: "Platform Features"
+  subtitle: "Enterprise-grade governance for AI usage at scale"
+  categories:
+    - name: "Core Capabilities"
+      features:
+        - title: "DevOps & Deployment"
+          description: "Single Rust binary with Docker support. Deploy as sidecar, gateway, or embedded library. Profile-based config for dev, staging, and production."
+          icon: "terminal"
+          url: "/features/devops-and-deployment"
+        - title: "Governance & Security"
+          description: "RBAC, MCP tool governance, audit trails, encrypted secrets, hooks on every tool call, and tiered rate limiting. Defense-in-depth for all AI usage."
+          icon: "shield"
+          url: "/features/governance-and-security"
+        - title: "Marketplace & Skill Management"
+          description: "Every user gets a personalised marketplace served as a git repository. Native one-click integration with all Claude clients including Cowork and Code."
+          icon: "rocket"
+          url: "/features/marketplace-and-skill-management"
+        - title: "Analytics & Observability"
+          description: "13 activity categories, 20+ dashboard metrics, and real-time usage tracking. CLI analytics with CSV export for leadership reporting."
+          icon: "chart"
+          url: "/features/analytics-and-observability"

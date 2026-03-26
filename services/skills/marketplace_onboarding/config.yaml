@@ -1,0 +1,12 @@
+id: marketplace_onboarding
+name: "Onboarding"
+description: "Socratic interview to discover your business needs and recommend skills, agents, and secrets"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+tags:
+  - marketplace
+  - onboarding
+  - socratic
+  - business
+  - discovery

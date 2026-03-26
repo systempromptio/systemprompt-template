@@ -1,0 +1,14 @@
+id: systemprompt_admin_skill_creation
+name: "Skill Creation"
+description: "Create, structure, and publish skills through the skill-plugin-marketplace pipeline"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - systemprompt_admin
+tags:
+  - admin
+  - skills
+  - plugins
+  - marketplace
+  - authoring

@@ -1,0 +1,14 @@
+id: systemprompt_cli
+name: "systemprompt CLI"
+description: "Comprehensive guide to systemprompt CLI commands, domains, and workflows"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - systemprompt_admin
+tags:
+  - cli
+  - reference
+  - help
+  - commands
+  - admin

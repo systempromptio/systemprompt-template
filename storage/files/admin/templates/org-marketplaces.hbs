@@ -1,0 +1,222 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search marketplaces..." id="mkt-search">
+        </div>
+        <select class="filter-select" id="mkt-dept-filter" style="min-width:140px">
+            <option value="">All Departments</option>
+            {{#each all_departments}}
+            <option value="{{name}}">{{name}}</option>
+            {{/each}}
+        </select>
+        <button class="btn btn-primary" data-create-marketplace>+ Create Marketplace</button>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="config-stats" id="stats-marketplaces">
+        <span class="config-stat"><span class="config-stat-dot blue"></span> <span class="config-stat-value">{{stats.marketplace_count}}</span> marketplaces</span>
+        <span class="config-stat"><span class="config-stat-dot green"></span> <span class="config-stat-value">{{stats.total_plugins}}</span> total plugins</span>
+        <span class="config-stat"><span class="config-stat-dot blue"></span> <span class="config-stat-value">{{stats.total_skills}}</span> total skills</span>
+    </div>
+
+    {{#if marketplaces}}
+    <div class="table-container">
+        <table class="data-table" id="mkt-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Source</th>
+                    <th>Plugins</th>
+                    <th>Resources</th>
+                    <th>Access</th>
+                    <th class="col-actions"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each marketplaces}}
+                <tr class="clickable-row" data-entity-type="marketplace" data-entity-id="{{id}}" data-name="{{toLowerCase name}}">
+                    <td>
+                        <div class="cell-primary">{{name}}</div>
+                        {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
+                    </td>
+                    <td>
+                        {{#if has_github}}
+                        <span class="badge badge-purple" title="{{github_repo_url}}">GitHub</span>
+                        {{#if last_sync}}<div class="cell-secondary" style="margin-top:2px;font-size:var(--text-xs)">Synced {{formatDate last_sync.created_at}}</div>{{/if}}
+                        {{else}}
+                        <span class="badge badge-gray">Local</span>
+                        {{/if}}
+                    </td>
+                    <td>
+                        <span class="badge badge-purple">{{plugin_count}} plugin{{#if (not (eq plugin_count 1))}}s{{/if}}</span>
+                    </td>
+                    <td>
+                        <div class="cell-badges">
+                            {{#if (gt skill_count 0)}}<span class="badge badge-green">{{skill_count}} skill{{#if (not (eq skill_count 1))}}s{{/if}}</span>{{/if}}
+                            {{#if (gt agent_count 0)}}<span class="badge badge-blue">{{agent_count}} agent{{#if (not (eq agent_count 1))}}s{{/if}}</span>{{/if}}
+                            {{#if (gt mcp_count 0)}}<span class="badge badge-yellow">{{mcp_count}} MCP</span>{{/if}}
+                            {{#if (gt hook_count 0)}}<span class="badge badge-gray">{{hook_count}} hook{{#if (not (eq hook_count 1))}}s{{/if}}</span>{{/if}}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cell-badges">
+                            <span class="badge badge-blue">{{user_access_count}} user{{#if (not (eq user_access_count 1))}}s{{/if}}</span>
+                            {{#if role_count}}<span class="badge badge-gray">{{role_count}} role{{#if (not (eq role_count 1))}}s{{/if}}</span>{{/if}}
+                            {{#if department_count}}<span class="badge badge-gray">{{department_count}} dept{{#if (not (eq department_count 1))}}s{{/if}}</span>{{/if}}
+                            {{#unless role_count}}{{#unless department_count}}<span class="badge badge-yellow">All Users</span>{{/unless}}{{/unless}}
+                        </div>
+                    </td>
+                    <td class="col-actions" data-no-row-click>
+                        <div class="actions-menu" data-actions-for="{{id}}">
+                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                            <div class="actions-dropdown">
+                                <button class="actions-item" data-edit-marketplace="{{id}}">Edit</button>
+                                <button class="actions-item" data-manage-plugins="{{id}}">Manage Plugins</button>
+                                {{#if has_github}}
+                                <div class="actions-popup-separator"></div>
+                                <button class="actions-item" data-sync-marketplace="{{id}}">Sync from GitHub</button>
+                                <button class="actions-item" data-publish-marketplace="{{id}}">Publish to GitHub</button>
+                                {{/if}}
+                                <div class="actions-popup-separator"></div>
+                                <button class="actions-item" data-copy-install-link="{{id}}">Copy Install Link</button>
+                                <button class="actions-item actions-item-danger" data-delete-marketplace="{{id}}">Delete</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="detail-row" data-detail-for="{{id}}" style="display:none">
+                    <td colspan="6">
+                        <div class="detail-row-content">
+                            {{#if has_github}}
+                            <div class="detail-section">
+                                <strong>GitHub Repository</strong>
+                                <div style="margin-top:var(--space-1);font-size:var(--text-sm)">
+                                    <a href="{{github_repo_url}}" target="_blank" rel="noopener" style="color:var(--text-link)">{{github_repo_url}}</a>
+                                </div>
+                                {{#if last_sync}}
+                                <div style="margin-top:var(--space-1);font-size:var(--text-xs);color:var(--text-tertiary)">
+                                    Last {{last_sync.action}}: {{formatDate last_sync.created_at}} &middot;
+                                    {{last_sync.plugin_count}} plugins &middot;
+                                    {{#if last_sync.commit_hash}}commit {{truncate last_sync.commit_hash 8}}{{/if}}
+                                </div>
+                                {{/if}}
+                            </div>
+                            {{/if}}
+                            <div class="detail-section">
+                                <strong>Access Control</strong>
+                                <div style="margin-top:var(--space-1);font-size:var(--text-sm)">
+                                    <div style="margin-bottom:var(--space-1)">
+                                        <span style="color:var(--text-secondary)">Effective users:</span>
+                                        <strong>{{user_access_count}}</strong>
+                                    </div>
+                                    {{#if role_count}}
+                                    <div style="margin-bottom:var(--space-1)">
+                                        <span style="color:var(--text-secondary)">Roles:</span>
+                                        {{#each roles}}{{#if assigned}}<span class="badge badge-blue" style="margin-left:4px">{{name}}</span>{{/if}}{{/each}}
+                                    </div>
+                                    {{/if}}
+                                    {{#if department_count}}
+                                    <div style="margin-bottom:var(--space-1)">
+                                        <span style="color:var(--text-secondary)">Departments:</span>
+                                        {{#each departments}}{{#if assigned}}<span class="badge {{#if default_included}}badge-yellow{{else}}badge-green{{/if}}" style="margin-left:4px">{{name}}</span>{{/if}}{{/each}}
+                                    </div>
+                                    {{/if}}
+                                    {{#unless role_count}}{{#unless department_count}}
+                                    <div style="color:var(--text-tertiary)">No restrictions - available to all users</div>
+                                    {{/unless}}{{/unless}}
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <strong>Plugins ({{plugin_count}})</strong>
+                                {{#if (gt plugin_count 0)}}
+                                <table class="detail-sub-table" style="margin-top:var(--space-2)">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Category</th>
+                                            <th>Resources</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{#each plugins}}
+                                        <tr>
+                                            <td>{{name}}</td>
+                                            <td>{{#if category}}<span class="badge badge-purple">{{category}}</span>{{else}}<span style="color:var(--text-tertiary)">--</span>{{/if}}</td>
+                                            <td>
+                                                <div class="cell-badges">
+                                                    {{#if (gt skill_count 0)}}<span class="badge badge-green">{{skill_count}} skills</span>{{/if}}
+                                                    {{#if (gt agent_count 0)}}<span class="badge badge-blue">{{agent_count}} agents</span>{{/if}}
+                                                    {{#if (gt mcp_count 0)}}<span class="badge badge-yellow">{{mcp_count}} MCP</span>{{/if}}
+                                                    {{#if (gt hook_count 0)}}<span class="badge badge-gray">{{hook_count}} hooks</span>{{/if}}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {{/each}}
+                                    </tbody>
+                                </table>
+                                {{else}}
+                                <p class="empty-inline" style="margin-top:var(--space-1)">No plugins assigned</p>
+                                {{/if}}
+                            </div>
+                            <div class="detail-section">
+                                <button class="btn btn-secondary btn-sm" data-toggle-json="{{id}}" style="font-size:var(--text-xs);padding:2px 8px">Show JSON</button>
+                                <div data-json-container="{{id}}" style="display:none;margin-top:var(--space-2)"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    {{> components/empty-state message="No marketplaces configured. Create one to group plugins together."}}
+    {{/if}}
+
+    <!-- Hidden marketplace detail data for JS -->
+    {{#each marketplaces}}
+    <script type="application/json" data-marketplace-detail="{{id}}">
+        {{{json this}}}
+    </script>
+    {{/each}}
+    <script type="application/json" id="mkt-all-roles">{{{json all_roles}}}</script>
+    <script type="application/json" id="mkt-all-departments">{{{json all_departments_detail}}}</script>
+
+    <!-- Side Panel for Manage Plugins -->
+    <div class="panel-overlay" id="mkt-panel-overlay"></div>
+    <div class="side-panel" id="mkt-panel" data-overlay="mkt-panel-overlay">
+        <div class="panel-header">
+            <h2 data-panel-title style="margin:0;font-size:var(--text-lg)"></h2>
+            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
+        </div>
+        <div class="panel-body" data-panel-body></div>
+        <div class="panel-footer" data-panel-footer></div>
+    </div>
+
+    <!-- Side Panel for Edit/Create -->
+    <div class="panel-overlay" id="mkt-edit-overlay"></div>
+    <div class="side-panel" id="mkt-edit-panel" data-overlay="mkt-edit-overlay">
+        <div class="panel-header">
+            <h2 data-panel-title style="margin:0;font-size:var(--text-lg)"></h2>
+            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
+        </div>
+        <div class="panel-body" data-panel-body></div>
+        <div class="panel-footer" data-panel-footer></div>
+    </div>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-org.js"></script>
+    <script src="/js/admin-marketplace.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.initOrgMarketplaces();
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

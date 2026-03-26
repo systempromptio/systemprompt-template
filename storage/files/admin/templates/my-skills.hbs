@@ -1,0 +1,150 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search skills..." id="my-skills-search">
+        </div>
+        <select class="filter-select" id="my-skills-tag-filter" style="min-width:140px">
+            <option value="">All Tags</option>
+            {{#each all_tags}}
+            <option value="{{this}}">{{this}}</option>
+            {{/each}}
+        </select>
+        <button class="btn btn-secondary" id="my-skills-bulk-bar" disabled>
+            Bulk Actions (<span data-bulk-count>0</span>)
+        </button>
+        <button class="btn btn-secondary" id="my-skills-fork-btn">Fork from Org</button>
+        <a href="/admin/my/skills/edit/" class="btn btn-primary">+ New Skill</a>
+    </div>
+
+    <!-- Stats bar -->
+    {{#if stats}}
+    <div class="config-stats" style="margin-bottom:var(--space-4)">
+        <span class="badge badge-blue">{{stats.skill_count}} skill{{#if (not (eq stats.skill_count 1))}}s{{/if}}</span>
+        <span class="badge badge-green">{{stats.active_count}} active</span>
+    </div>
+    {{/if}}
+
+    {{#if skills}}
+    <div class="table-container">
+        <table class="data-table" id="my-skills-table">
+            <thead>
+                <tr>
+                    <th style="width:40px" data-no-row-click><input type="checkbox" class="bulk-select-all"></th>
+                    <th>Name</th>
+                    <th>Tags</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th>Usage</th>
+                    <th class="col-actions"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each skills}}
+                <tr class="clickable-row" data-entity-type="user-skill" data-entity-id="{{skill_id}}" data-name="{{toLowerCase name}}" data-tags="{{#each tags}}{{this}} {{/each}}">
+                    <td data-no-row-click>
+                        <input type="checkbox" class="bulk-checkbox" data-entity-id="{{skill_id}}">
+                    </td>
+                    <td>
+                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{skill_id}}">&#9654;</span> {{name}}</div>
+                        {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
+                    </td>
+                    <td>
+                        <div class="badge-row">
+                            {{#each tags}}<span class="badge badge-gray">{{this}}</span>{{/each}}
+                        </div>
+                    </td>
+                    <td>
+                        {{#if is_forked}}<span class="badge badge-yellow">forked</span>{{else}}<span class="badge badge-green">custom</span>{{/if}}
+                    </td>
+                    <td>
+                        {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
+                    </td>
+                    <td>
+                        {{#if (gt usage_count 0)}}<span class="badge badge-blue">{{usage_count}}</span>{{else}}<span style="color:var(--text-tertiary)">&mdash;</span>{{/if}}
+                    </td>
+                    <td class="col-actions" data-no-row-click>
+                        <div class="actions-menu" data-actions-for="{{skill_id}}">
+                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                            <div class="actions-dropdown">
+                                <a href="/admin/my/skills/edit/?id={{skill_id}}" class="actions-item">Edit</a>
+                                <div class="actions-popup-separator"></div>
+                                <button class="actions-item actions-item-danger" data-delete-entity="{{skill_id}}" data-entity-type="user-skill">Delete</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <!-- Detail expand row -->
+                <tr class="detail-row" data-detail-for="{{skill_id}}">
+                    <td colspan="7">
+                        <div class="detail-row-content">
+                            <!-- Content preview -->
+                            {{#if content_preview}}
+                            <div class="detail-section">
+                                <strong>Content Preview</strong>
+                                <pre style="white-space:pre-wrap;font-size:var(--text-sm);color:var(--text-secondary);max-height:200px;overflow:auto;margin-top:var(--space-2)">{{content_preview}}</pre>
+                            </div>
+                            {{/if}}
+                            <!-- Tags -->
+                            {{#if tags}}
+                            <div class="detail-section">
+                                <strong>Tags</strong>
+                                <div class="badge-row" style="margin-top:var(--space-1)">
+                                    {{#each tags}}<span class="badge badge-gray">{{this}}</span>{{/each}}
+                                </div>
+                            </div>
+                            {{/if}}
+                            {{#if base_skill_id}}
+                            <div class="detail-section">
+                                <span style="font-size:var(--text-sm);color:var(--text-secondary)">Forked from: <code class="code-inline">{{base_skill_id}}</code></span>
+                            </div>
+                            {{/if}}
+                            <!-- JSON toggle -->
+                            <div class="detail-section">
+                                <button class="btn btn-secondary btn-sm" data-toggle-json="{{skill_id}}" style="font-size:var(--text-xs);padding:2px 8px;margin-bottom:var(--space-2)">Show JSON</button>
+                                <div class="json-view" data-json-for="{{skill_id}}" style="display:none"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    {{> components/empty-state message="No skills yet. Create your first skill to get started."}}
+    {{/if}}
+
+    <!-- Hidden skill detail data -->
+    {{#each skills}}
+    <script type="application/json" data-my-skill-detail="{{skill_id}}">
+        {{{json this}}}
+    </script>
+    {{/each}}
+
+    <!-- Fork panel -->
+    <div class="panel-overlay" id="fork-panel-overlay"></div>
+    <div class="side-panel" id="fork-panel" data-overlay="fork-panel-overlay">
+        <div class="panel-header">
+            <h2 data-panel-title style="margin:0;font-size:var(--text-lg)"></h2>
+            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
+        </div>
+        <div class="panel-body" data-panel-body></div>
+        <div class="panel-footer" data-panel-footer></div>
+    </div>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-my-workspace.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            if (AdminApp.initMySkills) {
+                AdminApp.initMySkills();
+            }
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

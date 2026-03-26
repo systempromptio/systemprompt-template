@@ -1,0 +1,211 @@
+# Theme Configuration
+# Colors, typography, spacing, and design tokens
+
+branding:
+  # ===== CUSTOMIZE THESE =====
+  name: "foodles"
+  title: "Foodles — Smart Corporate Catering"
+  description: "One platform to secure, distribute, and observe AI agents across your entire organization. Role-based access, audit trails, and cost visibility from day one."
+  copyright: "2026 Foodles"
+  themeColor: "#ed6841"
+  display_sitename: true
+  twitter_handle: "@foodaborad"
+  image: "/files/images/logo.png"
+  logo:
+    primary:
+      svg: "/files/images/logo.svg"
+      webp: "/files/images/logo.webp"
+      png: "/files/images/logo.png"
+    dark:
+      png: "/files/images/logo.png"
+    small:
+      png: "/files/images/logo.png"
+  favicon: "/files/images/favicon.ico"
+
+fonts:
+  body:
+    family: "Roboto"
+    fallback: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+    files: []
+  heading:
+    family: "Dosis"
+    fallback: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+    files: []
+  brand:
+    family: "Dosis"
+    fallback: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+    files: []
+
+# Color palette - Blue default (change hue for your brand)
+# Hue guide: 0=red, 28=orange, 120=green, 220=blue, 280=purple
+colors:
+  light:
+    primary:
+      hsl: "hsl(240, 1%, 15%)"
+      rgb: [37, 37, 38]
+    secondary:
+      hsl: "hsl(18, 100%, 60%)"
+      rgb: [255, 107, 53]
+    accent: "#ed6841"
+    success: "#10b981"
+    warning: "#f59e0b"
+    error: "#ef4444"
+    surface:
+      default: "#FFFFFF"
+      dark: "#FFFDF5"
+      variant: "#F5F2ED"
+      secondaryContainer: "#F7F4EF"
+      errorContainer: "#FEE2E2"
+    text:
+      primary: "#252526"
+      secondary: "#464E5D"
+      inverted: "#FFFFFF"
+      disabled: "#A2AAB9"
+    background:
+      default: "#FFFDF5"
+      dark: "#F5F2ED"
+    border:
+      default: "#D6DCE8"
+      dark: "#A2AAB9"
+      outline: "#A2AAB9"
+
+  dark:
+    primary:
+      hsl: "hsl(240, 1%, 15%)"
+      rgb: [37, 37, 38]
+    secondary:
+      hsl: "hsl(18, 100%, 60%)"
+      rgb: [255, 107, 53]
+    accent: "#ed6841"
+    success: "#34d399"
+    warning: "#fbbf24"
+    error: "#f87171"
+    surface:
+      default: "#1A1A1A"
+      dark: "#0A0A0A"
+      variant: "#2A2A2A"
+      secondaryContainer: "rgba(37, 37, 38, 0.1)"
+      errorContainer: "rgba(248, 113, 113, 0.1)"
+    text:
+      primary: "#FFFFFF"
+      secondary: "#A0A0A0"
+      inverted: "#000000"
+      disabled: "#666666"
+    background:
+      default: "#1A2025"
+      dark: "#141A1E"
+    border:
+      default: "rgba(255, 255, 255, 0.1)"
+      dark: "#333333"
+      outline: "#666666"
+
+typography:
+  sizes:
+    xs: "12px"
+    sm: "14px"
+    md: "16px"
+    lg: "18px"
+    xl: "20px"
+    xxl: "30px"
+  weights:
+    regular: 400
+    medium: 500
+    semibold: 600
+    bold: 700
+
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "32px"
+  xxl: "48px"
+
+radius:
+  xs: "2px"
+  sm: "4px"
+  md: "8px"
+  lg: "12px"
+  xl: "16px"
+  xxl: "24px"
+  round: "9999px"
+
+shadows:
+  light:
+    sm: "0 1px 2px rgba(0, 0, 0, 0.04)"
+    md: "0 4px 6px rgba(0, 0, 0, 0.07)"
+    lg: "0 10px 15px rgba(0, 0, 0, 0.1)"
+    accent: "0 4px 14px rgba(237, 104, 65, 0.15)"
+  dark:
+    sm: "0 2px 4px rgba(0, 0, 0, 0.3)"
+    md: "0 4px 8px rgba(0, 0, 0, 0.4)"
+    lg: "0 10px 20px rgba(0, 0, 0, 0.5)"
+    accent: "0 4px 14px rgba(237, 104, 65, 0.25)"
+
+animation:
+  fast: "150ms"
+  normal: "250ms"
+  slow: "400ms"
+
+zIndex:
+  base: 1
+  content: 10
+  navigation: 100
+  modal: 1000
+  tooltip: 2000
+
+layout:
+  headerHeight: "72px"
+  sidebarLeft:
+    width: "20%"
+    minWidth: "240px"
+    maxWidth: "320px"
+  sidebarRight:
+    width: "15%"
+    minWidth: "200px"
+    maxWidth: "280px"
+  navHeight: "72px"
+  contentMaxWidth: "1200px"
+
+card:
+  radius:
+    default: "16px"
+    cut: "4px"
+  padding:
+    sm: "12px"
+    md: "16px"
+    lg: "24px"
+  gradient:
+    start: "rgba(237, 104, 65, 0.08)"
+    mid: "rgba(237, 104, 65, 0.04)"
+    end: "rgba(237, 104, 65, 0.01)"
+
+mobile:
+  spacing:
+    xs: "4px"
+    sm: "8px"
+    md: "12px"
+    lg: "16px"
+    xl: "24px"
+    xxl: "32px"
+  typography:
+    sizes:
+      xs: "11px"
+      sm: "13px"
+      md: "15px"
+      lg: "17px"
+      xl: "19px"
+      xxl: "26px"
+  layout:
+    headerHeight: "64px"
+    navHeight: "64px"
+  card:
+    padding:
+      sm: "10px"
+      md: "12px"
+      lg: "16px"
+
+touchTargets:
+  default: "44px"
+  sm: "40px"
+  lg: "48px"

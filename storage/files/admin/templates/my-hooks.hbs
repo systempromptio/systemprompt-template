@@ -1,0 +1,141 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search hooks..." id="my-hooks-search">
+        </div>
+        <select class="filter-select" id="my-hook-event-filter" style="min-width:160px">
+            <option value="">All Events</option>
+            {{#each hook_events}}
+            <option value="{{this}}">{{this}}</option>
+            {{/each}}
+        </select>
+        <button class="btn btn-secondary" id="my-hooks-bulk-bar" disabled>
+            Bulk Actions (<span data-bulk-count>0</span>)
+        </button>
+        <button class="btn btn-secondary" id="my-hooks-fork-btn">Fork from Org</button>
+        <a href="/admin/my/hooks/edit/" class="btn btn-primary">+ New Hook</a>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="config-stats" id="stats-my-hooks">
+        <span class="config-stat"><span class="config-stat-dot blue"></span> <span class="config-stat-value">{{hook_count}}</span> hooks</span>
+        <span class="config-stat"><span class="config-stat-dot green"></span> <span class="config-stat-value">{{enabled_count}}</span> enabled</span>
+    </div>
+
+    {{#if hooks}}
+    <div class="table-container">
+        <table class="data-table" id="my-hooks-table">
+            <thead>
+                <tr>
+                    <th style="width:40px" data-no-row-click><input type="checkbox" class="bulk-select-all"></th>
+                    <th>Name</th>
+                    <th>Event</th>
+                    <th>Matcher</th>
+                    <th>Async</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th class="col-actions"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each hooks}}
+                <tr class="clickable-row" data-entity-type="my-hook" data-entity-id="{{hook_id}}" data-name="{{toLowerCase name}}" data-event="{{event}}">
+                    <td data-no-row-click>
+                        <input type="checkbox" class="bulk-checkbox" data-entity-id="{{hook_id}}">
+                    </td>
+                    <td>
+                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{hook_id}}">&#9654;</span> {{name}}</div>
+                        {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
+                    </td>
+                    <td><span class="badge badge-blue">{{event}}</span></td>
+                    <td>
+                        {{#if matcher}}<code class="code-inline" style="font-size:var(--text-xs)">{{truncate matcher 30}}</code>{{else}}<span style="color:var(--text-tertiary)">--</span>{{/if}}
+                    </td>
+                    <td>
+                        {{#if is_async}}<span class="badge badge-gray">async</span>{{else}}<span style="color:var(--text-tertiary)">--</span>{{/if}}
+                    </td>
+                    <td>
+                        {{#if is_forked}}<span class="badge badge-yellow">forked</span>{{else}}<span class="badge badge-green">custom</span>{{/if}}
+                    </td>
+                    <td>
+                        {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
+                    </td>
+                    <td class="col-actions" data-no-row-click>
+                        <div class="actions-menu" data-actions-for="{{hook_id}}">
+                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                            <div class="actions-dropdown">
+                                <a href="/admin/my/hooks/edit/?id={{hook_id}}" class="actions-item">Edit</a>
+                                <div class="actions-popup-separator"></div>
+                                <button class="actions-item actions-item-danger" data-delete-hook="{{hook_id}}">Delete</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <!-- Detail expand row -->
+                <tr class="detail-row" data-detail-for="{{hook_id}}">
+                    <td colspan="8">
+                        <div class="detail-row-content">
+                            <div class="detail-section">
+                                <strong>Command</strong>
+                                <pre style="background:var(--bg-secondary);padding:var(--space-3);border-radius:var(--radius-md);overflow-x:auto;margin-top:var(--space-2)"><code>{{command}}</code></pre>
+                            </div>
+                            {{#if matcher}}
+                            <div class="detail-section" style="margin-top:var(--space-3)">
+                                <strong>Matcher Pattern</strong>
+                                <pre style="background:var(--bg-secondary);padding:var(--space-3);border-radius:var(--radius-md);overflow-x:auto;margin-top:var(--space-2)"><code>{{matcher}}</code></pre>
+                            </div>
+                            {{/if}}
+                            {{#if base_hook_id}}
+                            <div class="detail-section" style="margin-top:var(--space-3)">
+                                <span style="font-size:var(--text-sm);color:var(--text-secondary)">Forked from: <code style="font-size:var(--text-xs)">{{base_hook_id}}</code></span>
+                            </div>
+                            {{/if}}
+                            <div class="detail-section">
+                                <button class="btn btn-secondary btn-sm" data-toggle-json="{{hook_id}}" style="font-size:var(--text-xs);padding:2px 8px;margin-bottom:var(--space-2)">Show JSON</button>
+                                <div class="json-view" data-json-for="{{hook_id}}" style="display:none"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    {{> components/empty-state message="No hooks yet. Create your first hook or fork one from the org."}}
+    {{/if}}
+
+    <!-- Hidden detail data -->
+    {{#each hooks}}
+    <script type="application/json" data-my-hook-detail="{{hook_id}}">
+        {{{json this}}}
+    </script>
+    {{/each}}
+
+    <!-- Fork panel -->
+    <div class="panel-overlay" id="fork-panel-overlay"></div>
+    <div class="side-panel" id="fork-panel" data-overlay="fork-panel-overlay">
+        <div class="panel-header">
+            <h2 data-panel-title style="margin:0;font-size:var(--text-lg)"></h2>
+            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
+        </div>
+        <div class="panel-body" data-panel-body></div>
+        <div class="panel-footer" data-panel-footer></div>
+    </div>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-my-workspace.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            if (AdminApp.initMyHooks) {
+                AdminApp.initMyHooks();
+            }
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

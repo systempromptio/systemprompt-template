@@ -1,0 +1,47 @@
+plugin:
+  id: enterprise-demo
+  name: Smart Corporate Catering
+  description: Enterprise-scale smart corporate catering platform demonstrating multi-agent orchestration, security controls, audit compliance, and MCP-native architecture for enterprise deployments
+  version: 1.0.0
+  enabled: true
+  skills:
+    source: explicit
+    include:
+    - systemprompt_cli
+    - systemprompt_admin_user_management
+    - systemprompt_admin_analytics
+    - systemprompt_admin_agent_management
+    - systemprompt_admin_logs
+    - systemprompt_admin_services
+    - systemprompt_admin_jobs
+    - systemprompt_admin_database
+    - enterprise_agent_governance
+    - enterprise_security_compliance
+    - enterprise_mcp_management
+  agents:
+    source: explicit
+    include:
+    - systemprompt_admin
+    - associate_agent
+    - developer_agent
+  mcp_servers:
+  - systemprompt
+  roles:
+  - admin
+  depends: []
+  keywords:
+  - enterprise
+  - governance
+  - agents
+  - security
+  - compliance
+  - mcp
+  - multi-tenant
+  - audit
+  - rbac
+  - scaling
+  category: enterprise
+  license: PROPRIETARY
+  author:
+    name: Foodles
+    email: help@foodles.com

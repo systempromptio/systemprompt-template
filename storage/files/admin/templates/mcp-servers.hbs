@@ -1,0 +1,194 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/toolbar searchId="mcp-search" searchPlaceholder="Search MCP servers..." newHref="/admin/org/mcp-servers/edit/" newLabel="+ Add External MCP Server"}}
+    {{#if mcp_servers}}
+    {{#> components/data-table}}
+        <thead><tr>
+            <th>Server</th>
+            <th>Type</th>
+            <th>Connection</th>
+            <th>Assigned Plugins</th>
+            <th>Roles</th>
+            <th>Departments</th>
+            <th>OAuth</th>
+            <th>Status</th>
+            <th class="col-actions"></th>
+        </tr></thead>
+        <tbody>
+        {{#each mcp_servers}}
+        <tr class="clickable-row" data-name="{{toLowerCase id}}" data-entity-type="mcp-server" data-entity-id="{{id}}" data-enabled="{{#if enabled}}enabled{{else}}disabled{{/if}}">
+            <td>
+                <div class="cell-primary">{{id}}</div>
+                {{#if description}}<div class="cell-secondary">{{truncate description 60}}</div>{{/if}}
+            </td>
+            <td>
+                {{#if is_external}}
+                <span class="badge badge-blue">External</span>
+                {{else}}
+                <span class="badge badge-purple">Internal</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if is_external}}
+                <code class="code-inline" style="font-size:var(--text-xs)">{{endpoint}}</code>
+                {{else}}
+                <div>
+                    {{#if (eq service_status "running")}}
+                    <span class="badge badge-green">Running</span>
+                    {{else}}
+                    {{#if (eq service_status "stopped")}}
+                    <span class="badge badge-gray">Stopped</span>
+                    {{else}}
+                    {{#if (eq service_status "starting")}}
+                    <span class="badge badge-yellow">Starting</span>
+                    {{else}}
+                    {{#if (eq service_status "failed")}}
+                    <span class="badge badge-red">Failed</span>
+                    {{else}}
+                    <span class="badge badge-gray">Unknown</span>
+                    {{/if}}
+                    {{/if}}
+                    {{/if}}
+                    {{/if}}
+                    {{#if (gt total_executions 0)}}
+                    <div class="cell-secondary" style="margin-top:var(--space-1)">{{total_executions}} calls · {{success_rate}}%</div>
+                    {{/if}}
+                </div>
+                {{/if}}
+            </td>
+            <td>
+                <div class="badge-row">
+                    {{#if assigned_plugins}}
+                        {{#each assigned_plugins}}
+                        <span class="badge badge-purple">{{name}}</span>
+                        {{/each}}
+                    {{else}}
+                        <span class="text-muted">—</span>
+                    {{/if}}
+                </div>
+            </td>
+            <td>
+                <div class="badge-row">
+                    {{#if roles}}
+                        {{#each roles}}
+                        <span class="badge badge-blue">{{name}}</span>
+                        {{/each}}
+                    {{else}}
+                        <span class="badge badge-gray">All</span>
+                    {{/if}}
+                </div>
+            </td>
+            <td>
+                <div class="badge-row">
+                    {{#if departments}}
+                        {{#each departments}}
+                        <span class="badge {{#if default_included}}badge-yellow{{else}}badge-green{{/if}}">{{name}}</span>
+                        {{/each}}
+                    {{else}}
+                        <span class="badge badge-gray">None</span>
+                    {{/if}}
+                </div>
+            </td>
+            <td>
+                {{#if oauth_required}}
+                <span class="badge badge-yellow">OAuth</span>
+                {{else}}
+                <span class="text-muted">—</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if enabled}}
+                <span class="badge badge-green">Enabled</span>
+                {{else}}
+                <span class="badge badge-gray">Disabled</span>
+                {{/if}}
+            </td>
+            <td class="col-actions" data-no-row-click>
+                <div class="actions-menu" data-actions-for="{{id}}">
+                    <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                    <div class="actions-dropdown">
+                        <a href="/admin/org/mcp-servers/edit/?id={{id}}" class="actions-item">Edit</a>
+                        <button class="actions-item" data-assign-mcp="{{id}}" data-mcp-name="{{id}}">Assign to Plugin</button>
+                        <div class="actions-popup-separator"></div>
+                        <button class="actions-item actions-item-danger" data-action="delete" data-entity-type="mcp-server" data-entity-id="{{id}}">Delete</button>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr class="detail-row" data-detail-for="{{id}}">
+            <td colspan="9">
+                <div class="detail-row-content">
+                    {{#if description}}
+                    <div class="detail-section">
+                        <strong>Description</strong>
+                        <p>{{description}}</p>
+                    </div>
+                    {{/if}}
+                    <div class="detail-section">
+                        <strong>Connection</strong>
+                        {{#if is_internal}}
+                        {{#if binary}}<div><span class="text-muted">Binary:</span> <code class="code-inline">{{binary}}</code></div>{{/if}}
+                        {{#if port}}<div><span class="text-muted">Port:</span> {{port}}</div>{{/if}}
+                        {{#if endpoint}}<div><span class="text-muted">Endpoint:</span> <code class="code-inline">{{endpoint}}</code></div>{{/if}}
+                        {{#if package_name}}<div><span class="text-muted">Package:</span> <code class="code-inline">{{package_name}}</code></div>{{/if}}
+                        {{else}}
+                        {{#if endpoint}}<div><span class="text-muted">Connection String:</span> <code class="code-inline">{{endpoint}}</code></div>{{/if}}
+                        {{/if}}
+                    </div>
+                    {{#if oauth_required}}
+                    <div class="detail-section">
+                        <strong>OAuth Configuration</strong>
+                        {{#if oauth_audience}}<div><span class="text-muted">Audience:</span> <code class="code-inline">{{oauth_audience}}</code></div>{{/if}}
+                        {{#if oauth_scopes}}
+                        <div><span class="text-muted">Scopes:</span>
+                            <div class="badge-row" style="margin-top:var(--space-1)">
+                                {{#each oauth_scopes}}<span class="badge badge-blue">{{this}}</span>{{/each}}
+                            </div>
+                        </div>
+                        {{/if}}
+                    </div>
+                    {{/if}}
+                    <div class="detail-section">
+                        <strong>Configuration JSON</strong>
+                        <div class="json-toggle" data-mcp-json="{{id}}" style="cursor:pointer;color:var(--text-link);font-size:var(--text-sm)">Show JSON</div>
+                        <div class="json-container" data-mcp-json-container="{{id}}" style="display:none"></div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No MCP servers found."}}
+    {{/if}}
+
+    {{#each mcp_servers}}
+    <script type="application/json" data-mcp-detail="{{id}}">
+        {{{json this}}}
+    </script>
+    {{/each}}
+
+    <!-- Assign to Plugin side panel -->
+    <div class="panel-overlay" id="assign-panel-overlay"></div>
+    <div class="assign-panel" id="assign-panel" data-overlay="assign-panel-overlay">
+        <div class="assign-panel-header">
+            <h3 data-panel-title style="margin:0;font-size:var(--text-lg)">Assign MCP Server</h3>
+            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
+        </div>
+        <div class="assign-panel-body" data-panel-body></div>
+        <div class="assign-panel-footer" data-panel-footer></div>
+    </div>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-org.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.initOrgMcpServers();
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

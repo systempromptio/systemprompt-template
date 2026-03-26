@@ -1,0 +1,14 @@
+<div class="form-group">
+    <label class="field-label">{{label}}</label>
+    <input type="text" class="field-input" placeholder="Filter..." data-filter-list="{{listId}}" style="margin-bottom:var(--space-2)">
+    <div class="checklist-container" data-checklist="{{listId}}" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">
+        {{#each items}}
+        <div class="checklist-item" data-item-name="{{toLowerCase (default name value)}}">
+            <input type="checkbox" name="{{../inputName}}" value="{{value}}"{{#if checked}} checked{{/if}} id="{{../listId}}-chk-{{@index}}">
+            <label for="{{../listId}}-chk-{{@index}}">{{default name value}}</label>
+        </div>
+        {{else}}
+        <div class="empty-state" style="padding:var(--space-4)"><p>None available.</p></div>
+        {{/each}}
+    </div>
+</div>

@@ -1,0 +1,49 @@
+{
+  "company": {
+    "weekly_hours": 37.5,
+    "schedule": {
+      "mon": 8.0,
+      "tue": 8.0,
+      "wed": 8.0,
+      "thu": 8.0,
+      "fri": 5.5
+    },
+    "breaks_logged": true
+  },
+  "thresholds": {
+    "green_pct": 95,
+    "yellow_pct": 80,
+    "low_hours_weekly": 30,
+    "max_hours_daily": 9,
+    "task_concentration_pct": 40,
+    "vague_entry_patterns": ["^/$", "^\\.$", "^-$", "^gestión$", "^reunion$", "^descanso$"]
+  },
+  "employees": [
+    {
+      "id": 206,
+      "name": "Elena Soler González",
+      "short_name": "Elena Soler",
+      "supervisor_id": 2,
+      "supervisor_name": "Víctor Peris",
+      "department": "Marketing",
+      "billable_target_monthly": 40,
+      "internal_allowance_monthly": null
+    },
+    {
+      "id": 203,
+      "name": "Álvaro Royo Niederleytner",
+      "short_name": "Álvaro Royo",
+      "supervisor_id": 2,
+      "supervisor_name": "Víctor Peris",
+      "department": "Marketing",
+      "billable_target_monthly": null,
+      "internal_allowance_monthly": null
+    }
+  ],
+  "delivery": {
+    "primary": "email",
+    "secondary": "telegram",
+    "supervisor_email": "support@foodles.com"
+  },
+  "internal_project_patterns": ["^Interno"]
+}

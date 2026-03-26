@@ -1,0 +1,15 @@
+id: enterprise_mcp_management
+name: "MCP Management"
+description: "Enterprise MCP server management - tool governance, server registry, OAuth scopes, execution logging, and protocol standards for Model Context Protocol"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - systemprompt_admin
+tags:
+  - enterprise
+  - mcp
+  - tools
+  - governance
+  - protocol
+  - integration

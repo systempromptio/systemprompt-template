@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEO Manager | Foodles</title>
+  
+  <!-- Google Fonts: Dosis -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       FOODLES BRAND VARIABLES
+    ══════════════════════════════════════════════════════════════════════════ */
+    :root {
+      /* Brand Colors */
+      --foodles-warm-yellow: #E5B92B;
+      --foodles-blue-lilac: #6B4FBB;
+      --foodles-blue-space: #0A0F1A;
+      --foodles-light-sky: #00B67A;
+      
+      /* Light Theme */
+      --bg-primary: #f8f9fc;
+      --bg-secondary: #ffffff;
+      --bg-glass: rgba(255, 255, 255, 0.7);
+      --text-primary: var(--foodles-blue-space);
+      --text-secondary: #5a6178;
+      --text-muted: #8a92a6;
+      --border-color: rgba(107, 79, 187, 0.15);
+      --shadow-color: rgba(0, 33, 90, 0.08);
+      --glass-blur: 12px;
+      --glass-border: rgba(255, 255, 255, 0.5);
+      
+      /* Transitions */
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s ease;
+      --transition-slow: 0.4s ease;
+    }
+    
+    /* Dark Theme */
+    [data-theme="dark"] {
+      --bg-primary: #0d1321;
+      --bg-secondary: #151d2e;
+      --bg-glass: rgba(21, 29, 46, 0.8);
+      --text-primary: #ffffff;
+      --text-secondary: #b8c0d4;
+      --text-muted: #6b7388;
+      --border-color: rgba(107, 79, 187, 0.25);
+      --shadow-color: rgba(0, 0, 0, 0.3);
+      --glass-border: rgba(107, 79, 187, 0.2);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       BASE STYLES
+    ══════════════════════════════════════════════════════════════════════════ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Dosis', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      transition: background-color var(--transition-normal), color var(--transition-normal);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       GLASSMORPHISM COMPONENTS
+    ══════════════════════════════════════════════════════════════════════════ */
+    .glass-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px var(--shadow-color);
+      transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    }
+    
+    .glass-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px var(--shadow-color);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════════════════════════════════════════ */
+    .header {
+      background: linear-gradient(135deg, var(--foodles-blue-space) 0%, #2a3672 100%);
+      padding: 1.5rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .logo-text {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .logo-text span {
+      color: var(--foodles-warm-yellow);
+    }
+    
+    /* Theme Toggle */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+    
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .theme-toggle-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    .theme-switch {
+      position: relative;
+      width: 48px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      transition: background var(--transition-fast);
+    }
+    
+    .theme-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: var(--foodles-warm-yellow);
+      border-radius: 50%;
+      transition: transform var(--transition-normal);
+    }
+    
+    [data-theme="dark"] .theme-switch::after {
+      transform: translateX(24px);
+      background: var(--foodles-blue-lilac);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       MAIN CONTENT
+    ══════════════════════════════════════════════════════════════════════════ */
+    .main-content {
+      padding: 2rem 0 4rem;
+    }
+    
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    
+    .page-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       BENTO BOX GRID
+    ══════════════════════════════════════════════════════════════════════════ */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: minmax(120px, auto);
+      gap: 1.25rem;
+    }
+    
+    .bento-item {
+      padding: 1.5rem;
+    }
+    
+    /* Grid Spans */
+    .bento-sm { grid-column: span 3; }
+    .bento-md { grid-column: span 4; }
+    .bento-lg { grid-column: span 6; }
+    .bento-xl { grid-column: span 8; }
+    .bento-full { grid-column: span 12; }
+    
+    .bento-tall { grid-row: span 2; }
+    
+    @media (max-width: 992px) {
+      .bento-sm, .bento-md { grid-column: span 6; }
+      .bento-lg, .bento-xl { grid-column: span 12; }
+    }
+    
+    @media (max-width: 576px) {
+      .bento-sm, .bento-md, .bento-lg { grid-column: span 12; }
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       METRIC CARDS
+    ══════════════════════════════════════════════════════════════════════════ */
+    .metric-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+    }
+    
+    .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    
+    .metric-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .metric-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    
+    .metric-icon.yellow { background: rgba(229, 185, 43, 0.15); color: var(--foodles-warm-yellow); }
+    .metric-icon.lilac { background: rgba(107, 79, 187, 0.15); color: var(--foodles-blue-lilac); }
+    .metric-icon.sky { background: rgba(138, 194, 219, 0.15); color: var(--foodles-light-sky); }
+    .metric-icon.space { background: rgba(0, 33, 90, 0.15); color: var(--foodles-blue-space); }
+    
+    [data-theme="dark"] .metric-icon.space { 
+      background: rgba(138, 194, 219, 0.15); 
+      color: var(--foodles-light-sky); 
+    }
+    
+    .metric-value {
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    
+    .metric-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+    }
+    
+    .metric-change.positive {
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+    }
+    
+    .metric-change.negative {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       CHART CONTAINER
+    ══════════════════════════════════════════════════════════════════════════ */
+    .chart-container {
+      position: relative;
+      height: 100%;
+      min-height: 250px;
+    }
+    
+    .chart-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       TASK LIST
+    ══════════════════════════════════════════════════════════════════════════ */
+    .task-list {
+      list-style: none;
+    }
+    
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.875rem 0;
+      border-bottom: 1px solid var(--border-color);
+      transition: background var(--transition-fast);
+    }
+    
+    .task-item:last-child {
+      border-bottom: none;
+    }
+    
+    .task-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--foodles-blue-lilac);
+      border-radius: 6px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .task-checkbox:hover {
+      background: rgba(107, 79, 187, 0.1);
+    }
+    
+    .task-checkbox.checked {
+      background: var(--foodles-blue-lilac);
+    }
+    
+    .task-checkbox.checked::after {
+      content: '';
+      width: 6px;
+      height: 10px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      margin-bottom: 2px;
+    }
+    
+    .task-content {
+      flex: 1;
+    }
+    
+    .task-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+    
+    .task-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    .task-priority {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    .priority-high {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    
+    .priority-medium {
+      background: rgba(229, 185, 43, 0.15);
+      color: var(--foodles-warm-yellow);
+    }
+    
+    .priority-low {
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       KEYWORD TABLE
+    ══════════════════════════════════════════════════════════════════════════ */
+    .keyword-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .keyword-table th {
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .keyword-table td {
+      padding: 0.875rem 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .keyword-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .keyword-text {
+      font-weight: 500;
+    }
+    
+    .position-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 28px;
+      padding: 0 0.5rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    
+    .position-top3 {
+      background: linear-gradient(135deg, var(--foodles-blue-lilac) 0%, var(--foodles-light-sky) 100%);
+      color: #fff;
+    }
+    
+    .position-top10 {
+      background: rgba(107, 79, 187, 0.15);
+      color: var(--foodles-blue-lilac);
+    }
+    
+    .position-other {
+      background: var(--border-color);
+      color: var(--text-secondary);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       QUICK ACTIONS
+    ══════════════════════════════════════════════════════════════════════════ */
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      text-decoration: none;
+    }
+    
+    .action-btn:hover {
+      transform: translateY(-2px);
+      border-color: var(--foodles-blue-lilac);
+      box-shadow: 0 4px 20px rgba(107, 79, 187, 0.15);
+    }
+    
+    .action-btn-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, var(--foodles-blue-lilac) 0%, var(--foodles-light-sky) 100%);
+      color: #fff;
+    }
+    
+    .action-btn-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      text-align: center;
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════════════════════════════════════════════════ */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .animate-in {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+    
+    .delay-1 { animation-delay: 0.1s; opacity: 0; }
+    .delay-2 { animation-delay: 0.2s; opacity: 0; }
+    .delay-3 { animation-delay: 0.3s; opacity: 0; }
+    .delay-4 { animation-delay: 0.4s; opacity: 0; }
+    .delay-5 { animation-delay: 0.5s; opacity: 0; }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       SCROLLBAR
+    ══════════════════════════════════════════════════════════════════════════ */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--foodles-blue-lilac);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--foodles-blue-space);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <div class="logo-text">SEO <span>Manager</span></div>
+        <div class="theme-toggle" onclick="toggleTheme()">
+          <span class="theme-toggle-label">Tema</span>
+          <div class="theme-switch"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <h1 class="page-title">Panel de Control</h1>
+      <p class="page-subtitle">Monitoriza el rendimiento SEO de tu sitio web</p>
+      
+      <!-- Bento Grid -->
+      <div class="bento-grid">
+        
+        <!-- Metric: Organic Traffic -->
+        <div class="glass-card bento-item bento-sm animate-in delay-1">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Trafico Organico</span>
+              <div class="metric-icon yellow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value">24.8K</div>
+            <span class="metric-change positive">+12.5%</span>
+          </div>
+        </div>
+        
+        <!-- Metric: Avg Position -->
+        <div class="glass-card bento-item bento-sm animate-in delay-2">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Posicion Media</span>
+              <div class="metric-icon lilac">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="20" x2="12" y2="10"/>
+                  <line x1="18" y1="20" x2="18" y2="4"/>
+                  <line x1="6" y1="20" x2="6" y2="16"/>
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value">8.4</div>
+            <span class="metric-change positive">-2.1</span>
+          </div>
+        </div>
+        
+        <!-- Metric: Indexed Pages -->
+        <div class="glass-card bento-item bento-sm animate-in delay-3">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Paginas Indexadas</span>
+              <div class="metric-icon sky">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value">847</div>
+            <span class="metric-change positive">+23</span>
+          </div>
+        </div>
+        
+        <!-- Metric: Domain Authority -->
+        <div class="glass-card bento-item bento-sm animate-in delay-4">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Domain Authority</span>
+              <div class="metric-icon space">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value">42</div>
+            <span class="metric-change positive">+3</span>
+          </div>
+        </div>
+        
+        <!-- Chart: Traffic Evolution -->
+        <div class="glass-card bento-item bento-xl bento-tall animate-in delay-2">
+          <h3 class="chart-title">Evolucion del Trafico Organico</h3>
+          <div class="chart-container">
+            <canvas id="trafficChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="glass-card bento-item bento-md animate-in delay-3">
+          <h3 class="chart-title">Acciones Rapidas</h3>
+          <div class="action-grid">
+            <a href="#" class="action-btn">
+              <div class="action-btn-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+              </div>
+              <span class="action-btn-label">Analizar URL</span>
+            </a>
+            <a href="#" class="action-btn">
+              <div class="action-btn-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </div>
+              <span class="action-btn-label">Meta Tags</span>
+            </a>
+            <a href="#" class="action-btn">
+              <div class="action-btn-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </div>
+              <span class="action-btn-label">Exportar</span>
+            </a>
+            <a href="#" class="action-btn">
+              <div class="action-btn-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+              </div>
+              <span class="action-btn-label">Ajustes</span>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Keyword Rankings Table -->
+        <div class="glass-card bento-item bento-lg bento-tall animate-in delay-3">
+          <h3 class="chart-title">Keywords Principales</h3>
+          <table class="keyword-table">
+            <thead>
+              <tr>
+                <th>Keyword</th>
+                <th>Posicion</th>
+                <th>Volumen</th>
+                <th>Cambio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="keyword-text">desarrollo web valencia</td>
+                <td><span class="position-badge position-top3">2</span></td>
+                <td>1.2K</td>
+                <td><span class="metric-change positive">+1</span></td>
+              </tr>
+              <tr>
+                <td class="keyword-text">consultoria odoo</td>
+                <td><span class="position-badge position-top3">3</span></td>
+                <td>880</td>
+                <td><span class="metric-change positive">+2</span></td>
+              </tr>
+              <tr>
+                <td class="keyword-text">erp para pymes</td>
+                <td><span class="position-badge position-top10">7</span></td>
+                <td>2.4K</td>
+                <td><span class="metric-change negative">-1</span></td>
+              </tr>
+              <tr>
+                <td class="keyword-text">transformacion digital empresas</td>
+                <td><span class="position-badge position-top10">9</span></td>
+                <td>1.8K</td>
+                <td><span class="metric-change positive">+3</span></td>
+              </tr>
+              <tr>
+                <td class="keyword-text">implementacion crm</td>
+                <td><span class="position-badge position-other">14</span></td>
+                <td>1.1K</td>
+                <td><span class="metric-change positive">+5</span></td>
+              </tr>
+              <tr>
+                <td class="keyword-text">automatizacion procesos</td>
+                <td><span class="position-badge position-other">18</span></td>
+                <td>950</td>
+                <td><span class="metric-change negative">-2</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Tasks -->
+        <div class="glass-card bento-item bento-lg animate-in delay-4">
+          <h3 class="chart-title">Tareas SEO Pendientes</h3>
+          <ul class="task-list">
+            <li class="task-item">
+              <div class="task-checkbox" onclick="toggleTask(this)"></div>
+              <div class="task-content">
+                <div class="task-title">Optimizar meta descriptions de landing pages</div>
+                <div class="task-meta">
+                  <span class="task-priority priority-high">Alta</span>
+                  <span> - 5 paginas afectadas</span>
+                </div>
+              </div>
+            </li>
+            <li class="task-item">
+              <div class="task-checkbox" onclick="toggleTask(this)"></div>
+              <div class="task-content">
+                <div class="task-title">Corregir enlaces rotos detectados</div>
+                <div class="task-meta">
+                  <span class="task-priority priority-high">Alta</span>
+                  <span> - 12 enlaces</span>
+                </div>
+              </div>
+            </li>
+            <li class="task-item">
+              <div class="task-checkbox" onclick="toggleTask(this)"></div>
+              <div class="task-content">
+                <div class="task-title">Anadir alt text a imagenes del blog</div>
+                <div class="task-meta">
+                  <span class="task-priority priority-medium">Media</span>
+                  <span> - 34 imagenes</span>
+                </div>
+              </div>
+            </li>
+            <li class="task-item">
+              <div class="task-checkbox checked" onclick="toggleTask(this)"></div>
+              <div class="task-content">
+                <div class="task-title">Implementar schema markup en servicios</div>
+                <div class="task-meta">
+                  <span class="task-priority priority-low">Baja</span>
+                  <span> - Completado</span>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        
+      </div>
+    </div>
+  </main>
+  
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // ══════════════════════════════════════════════════════════════════════════
+    // THEME TOGGLE
+    // ══════════════════════════════════════════════════════════════════════════
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('seo-manager-theme', newTheme);
+    }
+    
+    // Load saved theme
+    (function() {
+      const savedTheme = localStorage.getItem('seo-manager-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+    
+    // ══════════════════════════════════════════════════════════════════════════
+    // TASK TOGGLE
+    // ══════════════════════════════════════════════════════════════════════════
+    function toggleTask(el) {
+      el.classList.toggle('checked');
+    }
+    
+    // ══════════════════════════════════════════════════════════════════════════
+    // TRAFFIC CHART
+    // ══════════════════════════════════════════════════════════════════════════
+    const ctx = document.getElementById('trafficChart').getContext('2d');
+    
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(107, 79, 187, 0.3)');
+    gradient.addColorStop(1, 'rgba(107, 79, 187, 0.01)');
+    
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+        datasets: [{
+          label: 'Sesiones organicas',
+          data: [12400, 14200, 13800, 16500, 18200, 17800, 19500, 21200, 20800, 22500, 23800, 24800],
+          borderColor: '#6B4FBB',
+          backgroundColor: gradient,
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#6B4FBB',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: '#0A0F1A',
+            titleFont: { family: 'Dosis', weight: '600' },
+            bodyFont: { family: 'Dosis' },
+            padding: 12,
+            cornerRadius: 8,
+            displayColors: false
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              font: { family: 'Dosis', size: 11 },
+              color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#8a92a6'
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(107, 79, 187, 0.1)'
+            },
+            ticks: {
+              font: { family: 'Dosis', size: 11 },
+              color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#8a92a6',
+              callback: function(value) {
+                return value >= 1000 ? (value / 1000) + 'K' : value;
+              }
+            }
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        }
+      }
+    });
+  </script>
+</body>
+</html>

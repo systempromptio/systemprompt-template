@@ -1,0 +1,13 @@
+id: systemprompt_admin_analytics
+name: "Analytics"
+description: "View traffic, costs, agent stats, and bot detection via the systemprompt CLI"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - systemprompt_admin
+tags:
+  - admin
+  - analytics
+  - reporting
+  - monitoring

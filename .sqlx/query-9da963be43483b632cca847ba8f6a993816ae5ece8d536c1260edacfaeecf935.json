@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                l.id as \"link_id: LinkId\",\n                COALESCE(l.click_count, 0)::bigint as \"click_count!\",\n                COALESCE(l.unique_click_count, 0)::bigint as \"unique_click_count!\",\n                COALESCE(l.conversion_count, 0)::bigint as \"conversion_count!\",\n                CASE\n                    WHEN COALESCE(l.click_count, 0) > 0 THEN\n                        COALESCE(l.conversion_count, 0)::float / l.click_count\n                    ELSE 0.0\n                END as conversion_rate\n            FROM campaign_links l\n            WHERE l.id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "link_id: LinkId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "click_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "unique_click_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "conversion_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "conversion_rate",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "9da963be43483b632cca847ba8f6a993816ae5ece8d536c1260edacfaeecf935"
+}

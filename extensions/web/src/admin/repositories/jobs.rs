@@ -1,0 +1,28 @@
+use std::sync::Arc;
+
+use sqlx::PgPool;
+
+use crate::admin::types::JobSummary;
+
+pub async fn list_jobs(pool: &Arc<PgPool>) -> Result<Vec<JobSummary>, sqlx::Error> {
+    sqlx::query_as::<_, JobSummary>(
+        r"
+        SELECT
+            id,
+            job_name,
+            schedule,
+            enabled,
+            last_run,
+            next_run,
+            last_status,
+            last_error,
+            run_count,
+            created_at,
+            updated_at
+        FROM scheduled_jobs
+        ORDER BY job_name
+        ",
+    )
+    .fetch_all(pool.as_ref())
+    .await
+}

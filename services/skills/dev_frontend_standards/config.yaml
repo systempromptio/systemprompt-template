@@ -1,0 +1,19 @@
+id: dev_frontend_standards
+name: "Frontend Standards"
+description: "Complete JavaScript, CSS, accessibility, event architecture, bundle pipeline, and admin UI coding standards"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - standards
+  - frontend_impl
+  - quality_gate
+  - overseer
+tags:
+  - frontend
+  - javascript
+  - css
+  - accessibility
+  - standards
+  - events
+  - pipeline

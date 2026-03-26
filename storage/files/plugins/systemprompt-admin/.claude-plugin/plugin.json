@@ -1,0 +1,19 @@
+{
+  "name": "systemprompt-admin",
+  "description": "CLI administration tools for managing users, analytics, agents, services, jobs, logs, and database",
+  "version": "0.1.0",
+  "author": {
+    "name": "foodles.com"
+  },
+  "keywords": [
+    "admin",
+    "users",
+    "analytics",
+    "agents",
+    "services",
+    "logs",
+    "jobs",
+    "database",
+    "management"
+  ]
+}

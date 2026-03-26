@@ -1,0 +1,87 @@
+/* Architecture Diagram Section */
+
+.architecture-section {
+    padding: var(--space-3xl) 0 var(--space-4xl);
+    position: relative;
+}
+
+.architecture-title {
+    text-align: center;
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: var(--space-sm);
+    letter-spacing: -0.01em;
+}
+
+.architecture-subtitle {
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: var(--font-size-md);
+    color: var(--color-text-secondary);
+    max-width: 680px;
+    margin: 0 auto var(--space-xl);
+    line-height: 1.6;
+}
+
+/* SVG diagram containers - constrained within .container */
+.arch-diagram svg {
+    width: 100%;
+    height: auto;
+}
+
+/* Responsive: show desktop, hide mobile by default */
+.arch-diagram--desktop {
+    display: block;
+}
+
+.arch-diagram--mobile {
+    display: none;
+}
+
+/* Scroll hint arrow below hero feature cards */
+a.hero-scroll-hint {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-xl);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    cursor: pointer;
+    pointer-events: auto;
+    position: relative;
+    z-index: 2;
+    opacity: 0.5;
+    animation: scroll-hint-bounce 2s ease-in-out infinite;
+}
+
+.hero-scroll-hint:hover {
+    opacity: 1;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+@keyframes scroll-hint-bounce {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(6px); opacity: 0.8; }
+}
+
+@media (max-width: 768px) {
+    .arch-diagram--desktop {
+        display: none;
+    }
+
+    .arch-diagram--mobile {
+        display: block;
+    }
+
+    .architecture-section {
+        padding: var(--space-2xl) 0 var(--space-3xl);
+    }
+
+    .architecture-subtitle {
+        padding: 0 var(--space-md);
+    }
+}

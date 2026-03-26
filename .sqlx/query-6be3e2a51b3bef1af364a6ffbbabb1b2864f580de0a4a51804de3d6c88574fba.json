@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id as \"id!\", timestamp as \"timestamp!\", level as \"level!\", module as \"module!\",\n            message as \"message!\", metadata, user_id as \"user_id!\", session_id as \"session_id!\",\n            task_id, trace_id as \"trace_id!\", context_id, client_id\n        FROM logs\n        WHERE ($1::VARCHAR IS NULL OR level = $1)\n        AND ($2::VARCHAR IS NULL OR module = $2)\n        AND ($3::VARCHAR IS NULL OR message LIKE $3)\n        ORDER BY timestamp DESC LIMIT $4 OFFSET $5\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "timestamp!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "level!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "module!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "message!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "metadata",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "user_id!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "session_id!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "task_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "trace_id!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "context_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "client_id",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "6be3e2a51b3bef1af364a6ffbbabb1b2864f580de0a4a51804de3d6c88574fba"
+}

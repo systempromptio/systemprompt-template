@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT status as \"status!\", COUNT(*)::bigint as \"status_count!\"\n            FROM agent_tasks\n            WHERE agent_name ILIKE $1\n              AND started_at >= $2 AND started_at < $3\n            GROUP BY status\n            ORDER BY 2 DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "status!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "status_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "9751c745f9e618acddbcc6abc8f4cd204e6b13c0946bab2cfc121cbfef2d9dbc"
+}

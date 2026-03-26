@@ -1,0 +1,21 @@
+# Site Metadata
+# SEO, branding, and metadata configuration
+# ===== CUSTOMIZE THESE =====
+
+site:
+  name: "Foodles"
+  title: "Foodles — Smart Corporate Catering"
+  description: "One platform to deploy, secure, distribute, and observe AI usage across your entire organization. Role-based access, audit trails, and cost visibility from day one."
+  author: "Foodles"
+  baseUrl: "https://www.foodles.com"
+
+seo:
+  defaultImage: "/files/images/logo.png"
+  twitterHandle: "@foodaborad"
+  keywords: "foodles, AI governance, AI usage governance, enterprise security, MCP, Claude Code, AI management, audit trails, RBAC"
+
+copyright:
+  holder: "Foodles"
+  year: 2026
+  link: "https://www.foodles.com"
+  notice: "2026 Foodles"

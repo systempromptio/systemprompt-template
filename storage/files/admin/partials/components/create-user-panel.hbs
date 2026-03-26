@@ -1,0 +1,54 @@
+<div class="panel-overlay" id="create-user-overlay"></div>
+<div class="side-panel" id="create-user-panel">
+    <div class="panel-header">
+        <h2>Add User</h2>
+        <button class="panel-close">&times;</button>
+    </div>
+    <div class="panel-body">
+        <div class="form-group">
+            <label>User ID</label>
+            <input class="field-input" type="text" id="new-user-id" placeholder="username or email">
+        </div>
+        <div class="form-group">
+            <label>Display Name</label>
+            <input class="field-input" type="text" id="new-user-name" placeholder="Full Name">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input class="field-input" type="email" id="new-user-email" placeholder="user@company.com">
+        </div>
+        <div class="form-group">
+            <label>Department</label>
+            <select class="field-input" id="new-user-dept">
+                <option value="">-- Select --</option>
+                <option value="ceo">ceo</option>
+                <option value="finance">finance</option>
+                <option value="sales">sales</option>
+                <option value="marketing">marketing</option>
+                <option value="operations">operations</option>
+                <option value="hr">hr</option>
+                <option value="it">it</option>
+                <option value="support">support</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Roles</label>
+            <div class="checkbox-group">
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="admin"> admin</label>
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="ceo"> ceo</label>
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="manager"> manager</label>
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="finance"> finance</label>
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="sales"> sales</label>
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="marketing"> marketing</label>
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="operations"> operations</label>
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="hr"> hr</label>
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="it"> it</label>
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="support"> support</label>
+            </div>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <button class="btn btn-secondary" data-action="cancel">Cancel</button>
+        <button class="btn btn-primary" data-action="save">Create User</button>
+    </div>
+</div>

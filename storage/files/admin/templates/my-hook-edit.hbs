@@ -1,0 +1,80 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/back-button href="/admin/my/hooks/" label="Back to My Hooks"}}
+    <h2>{{title}}</h2>
+    {{#if is_forked}}
+    <div class="config-stats" style="margin-bottom:var(--space-4)">
+        <span class="config-stat"><span class="config-stat-dot yellow"></span> Forked from: <code style="font-size:var(--text-xs)">{{hook.base_hook_id}}</code></span>
+    </div>
+    {{/if}}
+    <div class="card" style="max-width:800px">
+        <form id="my-hook-form" data-api-path="/user/hooks/" data-entity="Hook" data-id-field="hook_id" data-list-path="/my/hooks/">
+            {{> components/form-group label="Hook ID" name="hook_id" type="text" value=hook.hook_id placeholder="my-hook" required=true readonly=is_edit hint="kebab-case identifier"}}
+            {{> components/form-group label="Name" name="name" type="text" value=hook.name placeholder="My Hook" required=true}}
+            {{> components/form-group label="Description" name="description" type="textarea" value=hook.description rows="2" placeholder="What this hook does..."}}
+            <div class="form-group">
+                <label for="event">Event</label>
+                <select name="event" id="event" class="form-control" required>
+                    <option value="">Select event...</option>
+                    {{#each hook_events}}
+                    <option value="{{this}}" {{#if (eq this ../hook.event)}}selected{{/if}}>{{this}}</option>
+                    {{/each}}
+                </select>
+            </div>
+            {{> components/form-group label="Matcher" name="matcher" type="text" value=(default hook.matcher ".*") placeholder=".*" hint="Regex pattern to match"}}
+            {{> components/form-group label="Command" name="command" type="textarea" value=hook.command rows="6" placeholder="bash -c 'echo hello'" required=true}}
+            <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)">
+                <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer">
+                    <input type="checkbox" name="is_async" {{#if hook.is_async}}checked{{/if}}>
+                    <span>Async Execution</span>
+                </label>
+            </div>
+            <div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">
+                <button type="submit" class="btn btn-primary">{{#if is_edit}}Save Changes{{else}}Create Hook{{/if}}</button>
+                <a href="/admin/my/hooks/" class="btn btn-secondary">Cancel</a>
+                {{#if is_edit}}
+                <button type="button" class="btn btn-danger" id="btn-delete-my-hook" style="margin-left:auto">Delete</button>
+                {{/if}}
+            </div>
+        </form>
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-my-workspace.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.interactions.initEditForm('my-hook-form', {
+                buildBody: function(form, formData) {
+                    return {
+                        hook_id: formData.get('hook_id'),
+                        name: formData.get('name'),
+                        description: formData.get('description') || '',
+                        event: formData.get('event'),
+                        matcher: formData.get('matcher') || '.*',
+                        command: formData.get('command'),
+                        is_async: !!form.querySelector('[name="is_async"]').checked
+                    };
+                }
+            });
+            var deleteBtn = document.getElementById('btn-delete-my-hook');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    var hookId = document.querySelector('[name="hook_id"]').value;
+                    if (confirm('Delete this hook?')) {
+                        AdminApp.api('/user/hooks/' + encodeURIComponent(hookId), { method: 'DELETE' })
+                            .then(function() {
+                                AdminApp.Toast.show('Hook deleted', 'success');
+                                window.location.href = '/admin/my/hooks/';
+                            })
+                            .catch(function(err) {
+                                AdminApp.Toast.show(err.message || 'Failed to delete', 'error');
+                            });
+                    }
+                });
+            }
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

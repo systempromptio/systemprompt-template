@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{{HEAD_ASSETS}}}
+    <title>{{site.branding.title}}</title>
+    <meta name="description" content="{{site.branding.description}}">
+    <link rel="icon" type="image/x-icon" href="{{FAVICON_PATH}}">
+    <link rel="canonical" href="{{ORG_URL}}">
+    <meta property="og:title" content="{{site.branding.title}}">
+    <meta property="og:description" content="{{site.branding.description}}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ORG_URL}}">
+    <meta property="og:image" content="{{site.branding.image}}">
+    <meta property="og:site_name" content="{{site.branding.name}}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="{{TWITTER_HANDLE}}">
+    <meta name="twitter:title" content="{{site.branding.title}}">
+    <meta name="twitter:description" content="{{site.branding.description}}">
+    <meta name="twitter:image" content="{{site.branding.image}}">
+    <meta name="theme-color" content="{{site.branding.themeColor}}">
+    <link rel="stylesheet" href="{{CSS_BASE_PATH}}/homepage.css">
+</head>
+<body>
+    {{{HEADER}}}
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-glow"></div>
+            <div class="container">
+                <div class="hero-content">
+                    <p class="hero-eyebrow">{{#if site.homepage.hero.eyebrow}}{{site.homepage.hero.eyebrow}}{{else}}Smart Corporate Catering{{/if}}</p>
+                    <h1 class="hero-title">{{site.homepage.hero.title}} <span class="highlight">{{site.homepage.hero.title_highlight}}</span></h1>
+                    <p class="hero-subtitle">{{site.homepage.hero.subtitle}}</p>
+                </div>
+                {{#if site.homepage.features}}
+                {{#each site.homepage.features.categories}}
+                <div class="hero-features-grid">
+                    {{#each this.features}}
+                    <a href="{{this.url}}" class="hero-feature-card">
+                        <h3 class="hero-feature-title">{{this.title}}</h3>
+                        <p class="hero-feature-desc">{{this.description}}</p>
+                        <span class="hero-feature-arrow">&rarr;</span>
+                    </a>
+                    {{/each}}
+                </div>
+                {{/each}}
+                {{/if}}
+            </div>
+        </section>
+
+        <!-- Architecture section removed for white-label deployment -->
+
+    </main>
+
+    {{{FOOTER}}}
+    {{{SCRIPTS}}}
+    <script src="{{JS_BASE_PATH}}/homepage.js" defer></script>
+</body>
+</html>

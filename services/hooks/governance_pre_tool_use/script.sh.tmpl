@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Synchronous PreToolUse governance hook
+# Reads tool call payload from stdin, POSTs to backend governance endpoint,
+# parses the HTTP 200 response, and outputs a Claude Code permissionDecision.
+
+LOG="/tmp/systemprompt-governance-{{plugin_id}}.log"
+INPUT=$(cat)
+
+# POST to governance endpoint — synchronous, capture the response body
+RESPONSE=$(curl -s --max-time 10 -X POST \
+  "{{platform_url}}/api/public/hooks/govern?plugin_id={{plugin_id}}" \
+  -H "Authorization: Bearer {{token}}" \
+  -H "Content-Type: application/json" \
+  -d "$INPUT" 2>>"$LOG")
+
+CURL_EXIT=$?
+
+# Fail-open: if backend is unreachable, allow the tool call
+if [ $CURL_EXIT -ne 0 ] || [ -z "$RESPONSE" ]; then
+  echo "[$(date -Iseconds)] Governance endpoint unreachable, defaulting to ALLOW" >> "$LOG" 2>/dev/null
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}'
+  exit 0
+fi
+
+# Parse the decision from the backend JSON response
+DECISION=$(echo "$RESPONSE" | grep -o '"decision":"[^"]*"' | head -1 | cut -d'"' -f4)
+REASON=$(echo "$RESPONSE" | grep -o '"reason":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+# Log for audit/demo visibility
+echo "[$(date -Iseconds)] $DECISION: $REASON" >> "$LOG" 2>/dev/null
+
+if [ "$DECISION" = "deny" ]; then
+  # Block the tool call — Claude Code will see the reason
+  cat <<EOF
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"[GOVERNANCE] ${REASON}"}}
+EOF
+else
+  # Allow the tool call
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}'
+fi
+exit 0

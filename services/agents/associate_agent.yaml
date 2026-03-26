@@ -1,0 +1,90 @@
+# Revenue Agent Configuration (Foodles)
+# Revenue manager-facing agent for pricing optimization, rate intelligence, and demand forecasting
+
+agents:
+  associate_agent:
+    name: associate_agent
+    port: 9028
+    endpoint: http://localhost:8080/api/v1/agents/associate_agent
+    enabled: true
+    dev_only: false
+    is_primary: false
+    default: false
+    card:
+      protocolVersion: 0.3.0
+      name: Associate Agent
+      displayName: Associate Agent
+      description: Revenue manager-facing AI agent consolidating pricing optimization, rate intelligence, demand forecasting, and operational tasks for hotel revenue teams
+      version: 1.0.0
+      preferredTransport: JSONRPC
+      iconUrl: https://ui-avatars.com/api/?name=AA&background=00B67A&color=fff&bold=true&size=256
+      documentationUrl: https://foodles.com/docs/agents/associate-agent
+      provider:
+        organization: Foodles
+        url: https://www.foodles.com
+      capabilities:
+        streaming: true
+        pushNotifications: false
+        stateTransitionHistory: false
+      defaultInputModes:
+      - text/plain
+      defaultOutputModes:
+      - text/plain
+      - application/json
+      securitySchemes:
+        oauth2:
+          type: oauth2
+          flows:
+            authorizationCode:
+              authorizationUrl: http://localhost:8080/api/v1/core/oauth/authorize
+              tokenUrl: http://localhost:8080/api/v1/core/oauth/token
+              scopes:
+                admin: Administrator access
+                user: Standard user access
+          description: OAuth 2.0 authentication
+      security:
+      - oauth2:
+        - user
+      skills:
+      - id: general_assistance
+        name: General Assistance
+        description: Help with questions, explanations, and general tasks
+        tags:
+        - assistance
+        - general
+        examples:
+        - Check today's rate recommendations
+        - Look up competitor pricing for a property
+        - Show occupancy forecast for this week
+      supportsAuthenticatedExtendedCard: false
+    metadata:
+      systemPrompt: |
+        You are the Revenue Agent, an AI assistant designed to support hotel revenue managers with pricing optimization and demand management. You have USER-level access only.
+
+        CRITICAL RULE: You MUST NEVER fabricate, invent, or simulate data that you do not have. If a user asks you to perform an action that requires a tool or MCP server you do not have access to, you MUST respond by stating clearly that you do not have the required permissions or tool access. Do NOT make up fake output, do NOT pretend to run commands, do NOT simulate CLI output. State plainly: "I do not have access to that tool. This operation requires elevated permissions that have not been granted to this agent."
+
+        ## Capabilities
+
+        - **Pricing Optimization**: Dynamic rate recommendations, pricing rules, and yield management
+        - **Rate Intelligence**: Competitor rate monitoring, market positioning, and parity analysis
+        - **Demand Forecasting**: Occupancy predictions, booking pace analysis, and seasonal trend modeling
+        - **Performance Analytics**: RevPAR tracking, ADR analysis, and revenue KPI dashboards
+        - **Market Insights**: Access market data, event calendars, and demand drivers
+
+        ## Operating Principles
+
+        1. **Data Privacy**: Protect property-specific revenue data and competitive intelligence
+        2. **Role-Based Access**: Only show data appropriate to the revenue manager's property portfolio
+        3. **Operational Continuity**: Never disrupt live rate updates or in-progress pricing changes
+        4. **Clarity**: Present pricing recommendations clearly with supporting data for quick decision-making
+        5. **No Fabrication**: NEVER generate fake data, fake tool output, or fake command results. If you cannot perform an action because you lack tool access, say so.
+      mcpServers:
+      - systemprompt
+      skills:
+      - general_assistance
+      toolModelOverrides: {}
+    oauth:
+      required: true
+      scopes:
+        - user
+      audience: a2a

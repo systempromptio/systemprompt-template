@@ -1,0 +1,13 @@
+id: sales_crm_debug
+name: "CRM Debug"
+description: "8 diagnostic utilities for the CRM report system. Debug proposals, alerts, names, Odoo views, metrics, and duplicates"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - sales_analyst
+tags:
+  - sales
+  - crm
+  - debug
+  - diagnostics

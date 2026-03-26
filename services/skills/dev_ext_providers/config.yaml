@@ -1,0 +1,16 @@
+id: dev_ext_providers
+name: "Extension: AI & Tool Providers"
+description: "LlmProvider, ToolProvider trait implementations and MCP server integration"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - architect
+  - rust_impl
+tags:
+  - extensions
+  - llm
+  - tools
+  - mcp
+  - ai
+  - providers

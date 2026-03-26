@@ -1,0 +1,92 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/back-button href="/admin/org/marketplaces/" label="Back to Marketplaces"}}
+    <div class="card">
+        <form id="marketplace-edit-form" data-api-path="/org/marketplaces/" data-entity="marketplace" data-id-field="marketplace_id" data-list-path="/org/marketplaces/">
+            {{#if is_edit}}
+            {{> components/form-group label="Marketplace ID" name="marketplace_id" type="text" value=marketplace.id readonly=true}}
+            {{> components/form-group label="Name" name="name" type="text" value=marketplace.name required=true}}
+            {{> components/form-group label="Description" name="description" type="textarea" value=marketplace.description rows="3"}}
+            {{> components/role-checklist items=roles_list}}
+
+            <div class="form-group">
+                <label class="field-label">Departments</label>
+                <div class="checklist-container" style="max-height:400px;overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">
+                    <div class="checklist-item" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2);border-bottom:1px solid var(--border-subtle)">
+                        <input type="checkbox" id="dept-check-all">
+                        <label for="dept-check-all" style="flex:1;font-size:var(--text-sm);cursor:pointer;color:var(--text-primary);font-weight:600">Check all</label>
+                    </div>
+                    {{#each departments_list}}
+                    <div class="checklist-item" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-2)">
+                        <input type="checkbox" name="departments" value="{{this.value}}"{{#if this.checked}} checked{{/if}} id="dept-edit-{{@index}}">
+                        <label for="dept-edit-{{@index}}" style="flex:1;font-size:var(--text-sm);cursor:pointer;color:var(--text-primary)">{{this.value}}</label>
+                        <span class="badge badge-gray" style="font-size:var(--text-xs)">{{this.user_count}} users</span>
+                        <label style="display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);color:var(--text-secondary);cursor:pointer;white-space:nowrap">
+                            <input type="checkbox" name="dept_default_{{this.value}}" {{#if this.default_included}}checked{{/if}} class="dept-default-toggle">
+                            Default
+                        </label>
+                    </div>
+                    {{else}}
+                    <div class="empty-state" style="padding:var(--space-4)"><p>No departments configured.</p></div>
+                    {{/each}}
+                </div>
+                <span class="field-hint" style="margin-top:var(--space-2);display:block">Select which departments can access this marketplace. At least one department is required.</span>
+            </div>
+
+            {{> components/entity-checklist label="Plugins" listId="plugins" inputName="plugin_ids" items=plugins_list}}
+            <div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="/admin/org/marketplaces/" class="btn btn-secondary">Cancel</a>
+                <button type="button" class="btn btn-danger" id="btn-delete-marketplace" style="margin-left:auto">Delete</button>
+            </div>
+            {{else}}
+            {{> components/form-group label="Marketplace ID" name="marketplace_id" type="text" required=true hint="unique identifier, e.g. my-marketplace"}}
+            {{> components/form-group label="Name" name="name" type="text" required=true}}
+            {{> components/form-group label="Description" name="description" type="textarea" rows="3"}}
+
+            {{> components/role-checklist items=roles_list}}
+
+            <div class="form-group">
+                <label class="field-label">Departments</label>
+                <div class="checklist-container" style="max-height:400px;overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">
+                    <div class="checklist-item" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2);border-bottom:1px solid var(--border-subtle)">
+                        <input type="checkbox" id="dept-check-all">
+                        <label for="dept-check-all" style="flex:1;font-size:var(--text-sm);cursor:pointer;color:var(--text-primary);font-weight:600">Check all</label>
+                    </div>
+                    {{#each departments_list}}
+                    <div class="checklist-item" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-2)">
+                        <input type="checkbox" name="departments" value="{{this.value}}"{{#if this.checked}} checked{{/if}} id="dept-create-{{@index}}">
+                        <label for="dept-create-{{@index}}" style="flex:1;font-size:var(--text-sm);cursor:pointer;color:var(--text-primary)">{{this.value}}</label>
+                        <span class="badge badge-gray" style="font-size:var(--text-xs)">{{this.user_count}} users</span>
+                        <label style="display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);color:var(--text-secondary);cursor:pointer;white-space:nowrap">
+                            <input type="checkbox" name="dept_default_{{this.value}}" {{#if this.default_included}}checked{{/if}} class="dept-default-toggle">
+                            Default
+                        </label>
+                    </div>
+                    {{else}}
+                    <div class="empty-state" style="padding:var(--space-4)"><p>No departments configured.</p></div>
+                    {{/each}}
+                </div>
+                <span class="field-hint" style="margin-top:var(--space-2);display:block">Select which departments can access this marketplace. At least one department is required.</span>
+            </div>
+
+            {{> components/entity-checklist label="Plugins" listId="plugins" inputName="plugin_ids" items=plugins_list}}
+            <div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">
+                <button type="submit" class="btn btn-primary">Create Marketplace</button>
+                <a href="/admin/org/marketplaces/" class="btn btn-secondary">Cancel</a>
+            </div>
+            {{/if}}
+        </form>
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-marketplace.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.initMarketplaceEditForm();
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

@@ -1,0 +1,93 @@
+# Feature: Analytics & Observability
+# Activity tracking, dashboard metrics, CLI analytics, gamification
+
+slug: "analytics-and-observability"
+title: "Analytics & Observability | Metrics, Activity Tracking & Dashboard"
+headline: "FULL VISIBILITY."
+headline_highlight: "NO BLIND SPOTS."
+subtitle: "13 activity categories tracking every login, prompt, tool call, and session. 20+ dashboard metrics with real-time usage charts and activity feeds. CLI analytics with CSV export for leadership reporting."
+description: "Comprehensive AI analytics and observability with 13 activity categories, 20+ dashboard metrics, real-time activity tracking, CLI analytics, gamification, and CSV export for enterprise reporting."
+icon: "chart"
+keywords: "AI analytics, observability, audit dashboard, AI usage reporting, activity tracking, metrics, gamification"
+
+highlights:
+  - text: "13 activity categories tracking all AI usage"
+    id: "activity-tracking"
+  - text: "20+ dashboard metrics in real time"
+    id: "dashboard-metrics"
+  - text: "Token and session-level usage tracking"
+    id: "usage-tracking"
+  - text: "CLI analytics with CSV export"
+    id: "cli-analytics"
+
+cta:
+  text: "View Documentation"
+  url: "/documentation/dashboard"
+  secondary_text: "Metrics Reference"
+  secondary_url: "/documentation/metrics-reference"
+
+sections:
+  - id: "activity-tracking"
+    title: "Activity Tracking"
+    content: |
+      <p>Every AI interaction is captured through 13 activity categories: Login, Session, Prompt, SkillUsage, MarketplaceEdit, MarketplaceConnect, UserManagement, ToolUsage, Error, AgentResponse, Notification, TaskCompletion, and Compaction. Each event records user, timestamp, entity type, and rich metadata.</p>
+      <p>11 action types and 13 entity types provide fine-grained filtering across your entire AI deployment. Every event is stored with full context for audit and compliance.</p>
+    items:
+      - title: "13 Activity Categories"
+        description: "Login, Session, Prompt, SkillUsage, ToolUsage, Error, AgentResponse, and 6 more. Every type of AI interaction classified and tracked."
+      - title: "Rich Event Metadata"
+        description: "Each event stores entity type, entity name, description, and structured metadata. Full context for every interaction."
+      - title: "Real-Time Activity Feed"
+        description: "Live activity timeline with SSE updates. See what is happening across your AI deployment as it happens."
+
+  - id: "dashboard-metrics"
+    title: "Dashboard Metrics"
+    content: |
+      <p>The admin dashboard surfaces 20+ metrics across a stats ribbon, usage charts, and detail tables. The stats ribbon shows events today, tool uses, prompts, sessions, active users, errors, total tokens, and more.</p>
+      <p>Drill into top users by activity and token usage. View popular skills ranked by invocation count. Monitor tool success rates with per-tool success and failure counts. Track hourly activity patterns and see which AI models your organisation uses most.</p>
+    items:
+      - title: "Stats Ribbon"
+        description: "Events, tool uses, prompts, sessions, active users, errors, tokens, and more. Key metrics at a glance."
+      - title: "Usage Time Series"
+        description: "Stacked area chart with hourly buckets showing sessions, active users, prompts, tool uses, and errors over 24h/7d/14d."
+      - title: "Top Users & Skills"
+        description: "Most active users and most popular skills. Identify power users and high-value capabilities."
+      - title: "Tool Success Rates"
+        description: "Per-tool success, failure, and total counts with success percentage. Identify reliability issues before they impact users."
+
+  - id: "usage-tracking"
+    title: "Usage & Token Tracking"
+    content: |
+      <p>Every AI request is tracked with token counts and session context. Input and output tokens are recorded per session, giving you visibility into how AI is being consumed across your organisation.</p>
+      <p>Session summaries capture event counts, tool uses, prompts, errors, and token consumption. Daily aggregation tables provide fast querying for trend analysis and reporting.</p>
+    items:
+      - title: "Token Consumption"
+        description: "Input and output tokens recorded for every session. See total consumption across your organisation."
+      - title: "Session Summaries"
+        description: "Per-session records of events, tool uses, prompts, errors, and tokens. Complete session-level observability."
+      - title: "Daily Aggregations"
+        description: "Automatic daily rollups for fast trend analysis and historical reporting."
+
+  - id: "cli-analytics"
+    title: "CLI Analytics & Export"
+    content: |
+      <p>The <code>systemprompt analytics</code> CLI provides programmatic access to all metrics: overview, conversations, sessions, content, agents, tools, traffic, and requests. Filter by time range with <code>--since</code> and <code>--until</code> flags. Export any dataset to CSV with <code>--export</code>.</p>
+      <p>Gamification drives adoption with XP tracking, rank levels, achievement badges, streaks, and leaderboards. Track which teams are adopting AI most effectively and celebrate top contributors.</p>
+    items:
+      - title: "Full CLI Access"
+        description: "systemprompt analytics overview, tools, sessions, agents, traffic, and requests. All from the terminal."
+      - title: "CSV Export"
+        description: "Export any analytics view to CSV for downstream analysis, reporting, or integration with BI tools."
+      - title: "Gamification & Leaderboards"
+        description: "XP tracking, rank levels, achievement badges, streaks, and department scores. Drive AI adoption across your organisation."
+
+related:
+  - title: "DevOps & Deployment"
+    description: "Single Rust binary with Docker support and profile-based configuration."
+    url: "/features/devops-and-deployment"
+  - title: "Governance & Security"
+    description: "RBAC, audit trails, encrypted secrets, and rate limiting for all AI usage."
+    url: "/features/governance-and-security"
+  - title: "Marketplace & Skill Management"
+    description: "Personal marketplaces for every user with git-native distribution."
+    url: "/features/marketplace-and-skill-management"

@@ -1,0 +1,13 @@
+id: sales_crm_report
+name: "CRM Report"
+description: "Generate the weekly CRM report from Odoo. Fetches opportunities, calculates 21+ KPIs, produces HTML report, publishes to Odoo website"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - sales_analyst
+tags:
+  - sales
+  - crm
+  - reports
+  - kpi

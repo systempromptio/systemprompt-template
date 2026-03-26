@@ -1,0 +1,44 @@
+plugin:
+  id: common-skills
+  name: Common Skills
+  description: Odoo operations, brand guidelines, diagramming, quality gates, and marketing tools for all employees
+  version: 1.0.0
+  enabled: true
+  skills:
+    source: explicit
+    include:
+    - common_odoo_pilot
+    - common_odoo_importation
+    - common_odoo_frontend
+    - common_odoo_studio_fields
+
+    - common_content_collection
+    - common_quality_gate
+    - common_timesheet_report
+    - common_linkedin_content_manager
+    - common_seo_manager
+    - common_event_planner
+    - common_email_campaign_builder
+  agents:
+    source: explicit
+    include: []
+  mcp_servers:
+    - skill-manager
+    - systemprompt
+  roles: []
+  depends: []
+  keywords:
+  - odoo
+  - brand
+  - quality
+  - marketing
+  - linkedin
+  - seo
+  - email
+  - events
+  - timesheet
+  category: productivity
+  license: PROPRIETARY
+  author:
+    name: Foodles
+    email: help@foodles.com

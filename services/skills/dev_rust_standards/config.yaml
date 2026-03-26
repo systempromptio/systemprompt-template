@@ -1,0 +1,18 @@
+id: dev_rust_standards
+name: "Rust Standards"
+description: "Complete Rust coding, linting, testing, architecture, and layer boundary standards for Foodles development"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - standards
+  - rust_impl
+  - quality_gate
+  - overseer
+tags:
+  - rust
+  - clippy
+  - lint
+  - testing
+  - standards
+  - architecture

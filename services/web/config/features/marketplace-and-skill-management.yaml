@@ -1,0 +1,91 @@
+# Feature: Marketplace & Skill Management
+# Personal marketplaces, git-native distribution, skill creation, forking
+
+slug: "marketplace-and-skill-management"
+title: "Marketplace & Skill Management | Personal Marketplaces & Git-Native Distribution"
+headline: "EVERY USER."
+headline_highlight: "THEIR OWN MARKETPLACE."
+subtitle: "Every person in your organisation gets a personalised marketplace — a curated collection of skills, agents, and plugins served as a git repository. Inherit from the organisation, customise for the individual, manage centrally."
+description: "Personal AI marketplaces for every user. Each marketplace is a git repository with skills, agents, and plugins. Inherit from organisation defaults, customise per user, manage centrally. Native integration with Claude Code and all git-compatible services."
+icon: "rocket"
+keywords: "AI marketplace, skill management, personal marketplace, git repository, plugins, skills, agents, Claude Code"
+
+highlights:
+  - text: "Personal marketplace for every user"
+    id: "personal-marketplace"
+  - text: "Git-native — works with any git service"
+    id: "git-native"
+  - text: "30-second skill deployment"
+    id: "instant-skills"
+  - text: "Fork and customise without affecting baseline"
+    id: "forking"
+
+cta:
+  text: "View Documentation"
+  url: "/documentation/plugins"
+  secondary_text: "Skills Documentation"
+  secondary_url: "/documentation/skills"
+
+sections:
+  - id: "personal-marketplace"
+    title: "A Marketplace Per Person"
+    content: |
+      <p>Every user in your organisation gets their own personalised marketplace. It is a complete, self-contained collection of the skills, agents, plugins, and MCP servers available to that person. The marketplace is served as a git repository, which means native integration with Claude Code and any other git-compatible service.</p>
+      <p>Users can inherit from organisation-level defaults — the organisation defines the baseline of approved skills and agents, and each user's marketplace starts from that foundation. From there, users can fork and customise content for their specific needs, while the organisation retains full visibility and control.</p>
+    items:
+      - title: "One Marketplace Per User"
+        description: "Every person gets a dedicated, personalised marketplace containing exactly the AI capabilities approved for them."
+      - title: "Organisation Inheritance"
+        description: "Users inherit skills, agents, and plugins from the organisation baseline. Administrators control what enters the foundation."
+      - title: "Centralised Management"
+        description: "Administrators manage the organisation baseline and can see every user's marketplace. Full visibility, full control."
+
+  - id: "git-native"
+    title: "Git-Native Distribution"
+    content: |
+      <p>Each user's marketplace is a git repository. Clone it, pull updates, integrate it into your existing git workflows. The platform implements smart git upload-pack, so standard git tooling works out of the box with no proprietary protocols or custom clients required.</p>
+      <p>Because the marketplace is a git repository, it works natively with Claude Code's <code>--plugin</code> flag, Claude Desktop, and any MCP-compatible client. The same marketplace content that your organisation manages centrally is what runs on each user's machine.</p>
+    items:
+      - title: "Standard Git Protocol"
+        description: "Clone and pull with standard git. No proprietary sync protocol or custom CLI required."
+      - title: "Claude Code Native"
+        description: "Every marketplace includes .claude-plugin metadata. Run directly with the --plugin flag."
+      - title: "Automatic Sync"
+        description: "A background job detects changes and rebuilds affected marketplaces automatically. Changes propagate within minutes."
+
+  - id: "instant-skills"
+    title: "30-Second Skills"
+    content: |
+      <p>Skills are Markdown documents that give agents specialised knowledge. Create a skill in 30 seconds: write the content, assign it to a plugin, and it is live. No YAML configuration, no deployment pipeline, no restart required.</p>
+      <p>Skills are versioned and auditable. Every change is tracked with snapshots and changelog entries. Roll back to any previous version with full change history.</p>
+    items:
+      - title: "Markdown Format"
+        description: "Plain Markdown with frontmatter. No YAML schemas, no config files, no build steps."
+      - title: "Instant Deployment"
+        description: "Create or update a skill and it is live immediately. No restart, no deployment pipeline."
+      - title: "Version History"
+        description: "Snapshots and changelog tracking. Roll back to any previous version at any time."
+
+  - id: "forking"
+    title: "Forking & Customisation"
+    content: |
+      <p>Users can fork any skill, plugin, agent, or MCP server to create their own customised version without affecting the organisation baseline. The original is preserved and independently maintained. The fork tracks its origin so administrators always know where a customisation came from.</p>
+      <p>Forking enables department-specific or individual AI behaviour while maintaining a governed baseline. The customer support team can customise agent responses without affecting the development team. Each person's marketplace reflects their specific needs.</p>
+    items:
+      - title: "Non-Destructive Customisation"
+        description: "Fork any resource. The original baseline is preserved and independently maintained."
+      - title: "Origin Tracking"
+        description: "Every fork records its source. Administrators can see the full lineage of any customisation."
+      - title: "Individual or Team Scope"
+        description: "Customise at the individual level or the department level. Each scope is independent."
+
+related:
+  - title: "DevOps & Deployment"
+    description: "Single Rust binary with Docker support and profile-based configuration."
+    url: "/features/devops-and-deployment"
+  - title: "Governance & Security"
+    description: "RBAC, audit trails, encrypted secrets, and rate limiting for all AI usage."
+    url: "/features/governance-and-security"
+  - title: "Analytics & Observability"
+    description: "20+ dashboard metrics, activity tracking, and usage reporting."
+    url: "/features/analytics-and-observability"

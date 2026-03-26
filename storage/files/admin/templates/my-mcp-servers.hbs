@@ -1,0 +1,151 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search MCP servers..." id="my-mcp-search">
+        </div>
+        <button class="btn btn-secondary" id="my-mcp-bulk-bar" disabled>
+            Bulk Actions (<span data-bulk-count>0</span>)
+        </button>
+        <button class="btn btn-secondary" id="my-mcp-fork-btn">Fork from Org</button>
+        <a href="/admin/my/mcp-servers/edit/" class="btn btn-primary">+ New MCP Server</a>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="config-stats" id="stats-my-mcp">
+        <span class="config-stat"><span class="config-stat-dot blue"></span> <span class="config-stat-value">{{server_count}}</span> servers</span>
+        <span class="config-stat"><span class="config-stat-dot green"></span> <span class="config-stat-value">{{enabled_count}}</span> enabled</span>
+    </div>
+
+    {{#if mcp_servers}}
+    <div class="table-container">
+        <table class="data-table" id="my-mcp-table">
+            <thead>
+                <tr>
+                    <th style="width:40px" data-no-row-click><input type="checkbox" class="bulk-select-all"></th>
+                    <th>Name</th>
+                    <th>Server ID</th>
+                    <th>Connection</th>
+                    <th>OAuth</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th class="col-actions"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each mcp_servers}}
+                <tr class="clickable-row" data-entity-type="my-mcp" data-entity-id="{{mcp_server_id}}" data-name="{{toLowerCase name}}">
+                    <td data-no-row-click>
+                        <input type="checkbox" class="bulk-checkbox" data-entity-id="{{mcp_server_id}}">
+                    </td>
+                    <td>
+                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{mcp_server_id}}">&#9654;</span> {{name}}</div>
+                        {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
+                    </td>
+                    <td><code class="code-inline">{{mcp_server_id}}</code></td>
+                    <td>
+                        {{#if endpoint}}<code class="code-inline" style="font-size:var(--text-xs)">{{truncate endpoint 30}}</code>
+                        {{else if port}}<code class="code-inline">:{{port}}</code>
+                        {{else}}<span style="color:var(--text-tertiary)">--</span>{{/if}}
+                    </td>
+                    <td>
+                        {{#if oauth_required}}<span class="badge badge-yellow">OAuth</span>{{else}}<span style="color:var(--text-tertiary)">--</span>{{/if}}
+                    </td>
+                    <td>
+                        {{#if is_forked}}<span class="badge badge-yellow">forked</span>{{else}}<span class="badge badge-green">custom</span>{{/if}}
+                    </td>
+                    <td>
+                        {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
+                    </td>
+                    <td class="col-actions" data-no-row-click>
+                        <div class="actions-menu" data-actions-for="{{mcp_server_id}}">
+                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                            <div class="actions-dropdown">
+                                <a href="/admin/my/mcp-servers/edit/?id={{mcp_server_id}}" class="actions-item">Edit</a>
+                                <div class="actions-popup-separator"></div>
+                                <button class="actions-item actions-item-danger" data-delete-mcp="{{mcp_server_id}}">Delete</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <!-- Detail expand row -->
+                <tr class="detail-row" data-detail-for="{{mcp_server_id}}">
+                    <td colspan="8">
+                        <div class="detail-row-content">
+                            <div class="detail-section" style="display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:start">
+                                <div style="flex:1;min-width:200px">
+                                    <strong>Connection Details</strong>
+                                    <table class="detail-sub-table">
+                                        {{#if binary}}<tr><td style="color:var(--text-secondary)">Binary</td><td><code class="code-inline">{{binary}}</code></td></tr>{{/if}}
+                                        {{#if package_name}}<tr><td style="color:var(--text-secondary)">Package</td><td><code class="code-inline">{{package_name}}</code></td></tr>{{/if}}
+                                        {{#if port}}<tr><td style="color:var(--text-secondary)">Port</td><td>{{port}}</td></tr>{{/if}}
+                                        {{#if endpoint}}<tr><td style="color:var(--text-secondary)">Endpoint</td><td><code class="code-inline" style="font-size:var(--text-xs);word-break:break-all">{{endpoint}}</code></td></tr>{{/if}}
+                                    </table>
+                                </div>
+                                {{#if oauth_required}}
+                                <div style="flex:1;min-width:200px">
+                                    <strong>OAuth Config</strong>
+                                    <table class="detail-sub-table">
+                                        {{#if oauth_audience}}<tr><td style="color:var(--text-secondary)">Audience</td><td><code class="code-inline">{{oauth_audience}}</code></td></tr>{{/if}}
+                                        {{#if oauth_scopes}}
+                                        <tr><td style="color:var(--text-secondary)">Scopes</td><td>
+                                            {{#each oauth_scopes}}<span class="badge badge-gray">{{this}}</span> {{/each}}
+                                        </td></tr>
+                                        {{/if}}
+                                    </table>
+                                </div>
+                                {{/if}}
+                            </div>
+                            {{#if base_mcp_server_id}}
+                            <div class="detail-section" style="margin-top:var(--space-3)">
+                                <span style="font-size:var(--text-sm);color:var(--text-secondary)">Forked from: <code style="font-size:var(--text-xs)">{{base_mcp_server_id}}</code></span>
+                            </div>
+                            {{/if}}
+                            <div class="detail-section">
+                                <button class="btn btn-secondary btn-sm" data-toggle-json="{{mcp_server_id}}" style="font-size:var(--text-xs);padding:2px 8px;margin-bottom:var(--space-2)">Show JSON</button>
+                                <div class="json-view" data-json-for="{{mcp_server_id}}" style="display:none"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    {{> components/empty-state message="No MCP servers yet. Create your first server or fork one from the org."}}
+    {{/if}}
+
+    <!-- Hidden detail data -->
+    {{#each mcp_servers}}
+    <script type="application/json" data-my-mcp-detail="{{mcp_server_id}}">
+        {{{json this}}}
+    </script>
+    {{/each}}
+
+    <!-- Fork panel -->
+    <div class="panel-overlay" id="fork-panel-overlay"></div>
+    <div class="side-panel" id="fork-panel" data-overlay="fork-panel-overlay">
+        <div class="panel-header">
+            <h2 data-panel-title style="margin:0;font-size:var(--text-lg)"></h2>
+            <button class="btn btn-icon" data-panel-close style="font-size:var(--text-lg)">&times;</button>
+        </div>
+        <div class="panel-body" data-panel-body></div>
+        <div class="panel-footer" data-panel-footer></div>
+    </div>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-my-workspace.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            if (AdminApp.initMyMcpServers) {
+                AdminApp.initMyMcpServers();
+            }
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

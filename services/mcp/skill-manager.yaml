@@ -1,0 +1,16 @@
+mcp_servers:
+  skill-manager:
+    binary: "systemprompt-mcp-marketplace"
+    package: "marketplace"
+    port: 5050
+    endpoint: "http://localhost:8080/api/v1/mcp/skill-manager/mcp"
+    enabled: true
+    display_in_web: true
+    removable: false
+    description: "Foodles Skill Manager - The source of truth for all cloud agent skills, secrets, and sync operations"
+
+    oauth:
+      required: true
+      scopes: ["user", "admin"]
+      audience: "mcp"
+      client_id: null

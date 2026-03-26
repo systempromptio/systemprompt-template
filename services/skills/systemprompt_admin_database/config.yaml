@@ -1,0 +1,13 @@
+id: systemprompt_admin_database
+name: "Database Management"
+description: "Explore schema, run queries, and manage migrations via the systemprompt CLI"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - systemprompt_admin
+tags:
+  - admin
+  - database
+  - queries
+  - migrations

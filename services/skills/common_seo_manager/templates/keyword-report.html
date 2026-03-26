@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Investigacion de Keywords | Foodles</title>
+  
+  <!-- Google Fonts: Dosis -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       FOODLES BRAND VARIABLES
+    ══════════════════════════════════════════════════════════════════════════ */
+    :root {
+      --foodles-warm-yellow: #E5B92B;
+      --foodles-blue-lilac: #6B4FBB;
+      --foodles-blue-space: #0A0F1A;
+      --foodles-light-sky: #00B67A;
+      
+      --bg-primary: #f8f9fc;
+      --bg-secondary: #ffffff;
+      --bg-glass: rgba(255, 255, 255, 0.7);
+      --text-primary: var(--foodles-blue-space);
+      --text-secondary: #5a6178;
+      --text-muted: #8a92a6;
+      --border-color: rgba(107, 79, 187, 0.15);
+      --shadow-color: rgba(0, 33, 90, 0.08);
+      --glass-blur: 12px;
+      --glass-border: rgba(255, 255, 255, 0.5);
+      
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s ease;
+    }
+    
+    [data-theme="dark"] {
+      --bg-primary: #0d1321;
+      --bg-secondary: #151d2e;
+      --bg-glass: rgba(21, 29, 46, 0.8);
+      --text-primary: #ffffff;
+      --text-secondary: #b8c0d4;
+      --text-muted: #6b7388;
+      --border-color: rgba(107, 79, 187, 0.25);
+      --shadow-color: rgba(0, 0, 0, 0.3);
+      --glass-border: rgba(107, 79, 187, 0.2);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       BASE STYLES
+    ══════════════════════════════════════════════════════════════════════════ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Dosis', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      transition: background-color var(--transition-normal), color var(--transition-normal);
+    }
+    
+    .glass-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px var(--shadow-color);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════════════════════════════════════════ */
+    .header {
+      background: linear-gradient(135deg, var(--foodles-blue-space) 0%, #2a3672 100%);
+      padding: 1.5rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .logo-text {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .logo-text span {
+      color: var(--foodles-warm-yellow);
+    }
+    
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      cursor: pointer;
+    }
+    
+    .theme-toggle-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+    }
+    
+    .theme-switch {
+      position: relative;
+      width: 48px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+    }
+    
+    .theme-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: var(--foodles-warm-yellow);
+      border-radius: 50%;
+      transition: transform var(--transition-normal);
+    }
+    
+    [data-theme="dark"] .theme-switch::after {
+      transform: translateX(24px);
+      background: var(--foodles-blue-lilac);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       MAIN CONTENT
+    ══════════════════════════════════════════════════════════════════════════ */
+    .main-content {
+      padding: 2rem 0 4rem;
+    }
+    
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+    }
+    
+    .page-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       SEARCH INPUT
+    ══════════════════════════════════════════════════════════════════════════ */
+    .search-wrapper {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .search-input {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      font-family: 'Dosis', sans-serif;
+      font-size: 0.95rem;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      transition: border-color var(--transition-fast);
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--foodles-blue-lilac);
+    }
+    
+    .search-btn {
+      padding: 1rem 2rem;
+      font-family: 'Dosis', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: var(--foodles-warm-yellow);
+      color: var(--foodles-blue-space);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform var(--transition-fast);
+    }
+    
+    .search-btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       KEYWORD TABLE
+    ══════════════════════════════════════════════════════════════════════════ */
+    .keyword-section {
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .keyword-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .keyword-table th {
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .keyword-table td {
+      padding: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-color);
+      transition: background var(--transition-fast);
+    }
+    
+    .keyword-table tr:hover td {
+      background: rgba(107, 79, 187, 0.05);
+    }
+    
+    .keyword-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .keyword-name {
+      font-weight: 600;
+    }
+    
+    .difficulty-badge {
+      display: inline-block;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .difficulty-easy {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+    
+    .difficulty-medium {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+    }
+    
+    .difficulty-hard {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+    
+    .trend-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-weight: 600;
+    }
+    
+    .trend-up { color: #22c55e; }
+    .trend-down { color: #ef4444; }
+    .trend-stable { color: var(--text-muted); }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       RELATED KEYWORDS
+    ══════════════════════════════════════════════════════════════════════════ */
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+    
+    .related-card {
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      transition: border-color var(--transition-fast);
+      cursor: pointer;
+    }
+    
+    .related-card:hover {
+      border-color: var(--foodles-blue-lilac);
+    }
+    
+    .related-keyword {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .related-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    /* ══════════════════════════════════════════════════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════════════════════════════════════════════════ */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .animate-in {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+    
+    .delay-1 { animation-delay: 0.1s; opacity: 0; }
+    .delay-2 { animation-delay: 0.2s; opacity: 0; }
+    .delay-3 { animation-delay: 0.3s; opacity: 0; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <div class="logo-text">Keyword <span>Research</span></div>
+        <div class="theme-toggle" onclick="toggleTheme()">
+          <span class="theme-toggle-label">Tema</span>
+          <div class="theme-switch"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <h1 class="page-title">Investigacion de Keywords</h1>
+      <p class="page-subtitle">Descubre oportunidades de posicionamiento para tu negocio</p>
+      
+      <!-- Search -->
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Introduce una keyword semilla..." id="keywordInput">
+        <button class="search-btn">Investigar</button>
+      </div>
+      
+      <!-- Main Keywords Table -->
+      <div class="glass-card keyword-section animate-in delay-1">
+        <h2 class="section-title">Keywords Principales</h2>
+        <table class="keyword-table">
+          <thead>
+            <tr>
+              <th>Keyword</th>
+              <th>Volumen</th>
+              <th>Dificultad</th>
+              <th>CPC</th>
+              <th>Tendencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="keyword-name">desarrollo web valencia</td>
+              <td>1,200</td>
+              <td><span class="difficulty-badge difficulty-medium">Media</span></td>
+              <td>2.45</td>
+              <td>
+                <span class="trend-indicator trend-up">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="19" x2="12" y2="5"/>
+                    <polyline points="5 12 12 5 19 12"/>
+                  </svg>
+                  +15%
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td class="keyword-name">empresa desarrollo web</td>
+              <td>880</td>
+              <td><span class="difficulty-badge difficulty-hard">Alta</span></td>
+              <td>3.20</td>
+              <td>
+                <span class="trend-indicator trend-stable">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  0%
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td class="keyword-name">consultoria odoo espana</td>
+              <td>590</td>
+              <td><span class="difficulty-badge difficulty-easy">Baja</span></td>
+              <td>4.10</td>
+              <td>
+                <span class="trend-indicator trend-up">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="19" x2="12" y2="5"/>
+                    <polyline points="5 12 12 5 19 12"/>
+                  </svg>
+                  +28%
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td class="keyword-name">implementar erp pyme</td>
+              <td>480</td>
+              <td><span class="difficulty-badge difficulty-medium">Media</span></td>
+              <td>5.80</td>
+              <td>
+                <span class="trend-indicator trend-up">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="19" x2="12" y2="5"/>
+                    <polyline points="5 12 12 5 19 12"/>
+                  </svg>
+                  +8%
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td class="keyword-name">automatizacion procesos empresariales</td>
+              <td>320</td>
+              <td><span class="difficulty-badge difficulty-easy">Baja</span></td>
+              <td>2.90</td>
+              <td>
+                <span class="trend-indicator trend-down">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <polyline points="19 12 12 19 5 12"/>
+                  </svg>
+                  -5%
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Related Keywords -->
+      <div class="glass-card keyword-section animate-in delay-2">
+        <h2 class="section-title">Keywords Relacionadas</h2>
+        <div class="related-grid">
+          <div class="related-card">
+            <div class="related-keyword">diseño web profesional</div>
+            <div class="related-meta">
+              <span>Vol: 720</span>
+              <span>Dif: Media</span>
+            </div>
+          </div>
+          <div class="related-card">
+            <div class="related-keyword">agencia digital valencia</div>
+            <div class="related-meta">
+              <span>Vol: 540</span>
+              <span>Dif: Alta</span>
+            </div>
+          </div>
+          <div class="related-card">
+            <div class="related-keyword">paginas web para empresas</div>
+            <div class="related-meta">
+              <span>Vol: 1,100</span>
+              <span>Dif: Alta</span>
+            </div>
+          </div>
+          <div class="related-card">
+            <div class="related-keyword">desarrollo aplicaciones moviles</div>
+            <div class="related-meta">
+              <span>Vol: 890</span>
+              <span>Dif: Media</span>
+            </div>
+          </div>
+          <div class="related-card">
+            <div class="related-keyword">tienda online odoo</div>
+            <div class="related-meta">
+              <span>Vol: 210</span>
+              <span>Dif: Baja</span>
+            </div>
+          </div>
+          <div class="related-card">
+            <div class="related-keyword">integracion software empresas</div>
+            <div class="related-meta">
+              <span>Vol: 170</span>
+              <span>Dif: Baja</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Long Tail Keywords -->
+      <div class="glass-card keyword-section animate-in delay-3">
+        <h2 class="section-title">Long Tail Keywords</h2>
+        <table class="keyword-table">
+          <thead>
+            <tr>
+              <th>Keyword</th>
+              <th>Volumen</th>
+              <th>Dificultad</th>
+              <th>Intencion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="keyword-name">cuanto cuesta desarrollar una web en valencia</td>
+              <td>90</td>
+              <td><span class="difficulty-badge difficulty-easy">Baja</span></td>
+              <td>Comercial</td>
+            </tr>
+            <tr>
+              <td class="keyword-name">mejor empresa odoo partner espana</td>
+              <td>70</td>
+              <td><span class="difficulty-badge difficulty-easy">Baja</span></td>
+              <td>Comercial</td>
+            </tr>
+            <tr>
+              <td class="keyword-name">como implementar un erp en una pyme</td>
+              <td>140</td>
+              <td><span class="difficulty-badge difficulty-easy">Baja</span></td>
+              <td>Informacional</td>
+            </tr>
+            <tr>
+              <td class="keyword-name">diferencias entre odoo y sap</td>
+              <td>110</td>
+              <td><span class="difficulty-badge difficulty-easy">Baja</span></td>
+              <td>Informacional</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+    </div>
+  </main>
+  
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('seo-manager-theme', newTheme);
+    }
+    
+    (function() {
+      const savedTheme = localStorage.getItem('seo-manager-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+</body>
+</html>

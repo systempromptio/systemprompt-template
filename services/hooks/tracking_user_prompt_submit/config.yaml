@@ -1,0 +1,17 @@
+id: tracking_user_prompt_submit
+name: "Prompt Tracking"
+description: "Records when users submit prompts"
+version: "1.0.0"
+enabled: true
+event: UserPromptSubmit
+matcher: "*"
+command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-{plugin_id}-usage.sh"
+async: true
+category: system
+plugins:
+  - common-skills
+tags:
+  - tracking
+  - analytics
+visible_to:
+  - admin

@@ -1,0 +1,12 @@
+id: common_seo_manager
+name: "SEO Manager"
+description: "SEO management and audit tool with keyword analysis, meta tag generation, technical on-page audit, and reporting"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - marketing_manager
+tags:
+  - seo
+  - marketing
+  - audit

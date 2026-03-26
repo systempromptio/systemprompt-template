@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+LOG="/tmp/systemprompt-plugin-{{plugin_id}}.log"
+INPUT=$(cat)
+echo "[$(date -Iseconds)] Tracking event for {{plugin_id}}" >> "$LOG" 2>/dev/null
+curl -s --max-time 5 -X POST "{{platform_url}}/api/public/hooks/track?plugin_id={{plugin_id}}" \
+  -H "Authorization: Bearer {{token}}" \
+  -H "Content-Type: application/json" \
+  -d "$INPUT" \
+  >> "$LOG" 2>&1
+exit 0

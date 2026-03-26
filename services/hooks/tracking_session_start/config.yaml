@@ -1,0 +1,17 @@
+id: tracking_session_start
+name: "Session Start Tracking"
+description: "Records when user sessions begin"
+version: "1.0.0"
+enabled: true
+event: SessionStart
+matcher: "*"
+command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-{plugin_id}-usage.sh"
+async: true
+category: system
+plugins:
+  - common-skills
+tags:
+  - tracking
+  - analytics
+visible_to:
+  - admin

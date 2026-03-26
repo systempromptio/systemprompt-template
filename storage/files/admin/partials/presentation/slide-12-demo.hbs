@@ -1,0 +1,51 @@
+<section class="pres-slide" id="slide-12" style="background: var(--pres-gray-50);">
+  <div class="pres-slide-content">
+    <span class="pres-overline pres-reveal" style="color: var(--pres-blue-500);">LIVE DEMOS</span>
+    <h2 class="pres-reveal pres-reveal-delay-1">The Control Center in Action</h2>
+    <div class="pres-divider pres-reveal pres-reveal-delay-1"></div>
+    <p class="pres-body-lg pres-reveal pres-reveal-delay-2" style="max-width: 700px;">
+      Two perspectives. The user journey and the admin journey. Self-service meets full visibility.
+    </p>
+    <div class="pres-row" style="margin-top: 2rem; gap: 1.5rem;">
+      <div class="pres-col-half pres-reveal pres-reveal-delay-3">
+        <div class="pres-card" style="padding: 1.25rem; border-left: 4px solid var(--pres-green);">
+          <strong style="font-size: 1rem; color: var(--pres-green);">User Journey</strong>
+          <p style="font-size: 0.85rem; color: var(--pres-gray-700); margin: 0.5rem 0 0;">Log in via magic link &rarr; browse the skill marketplace &rarr; install a skill &rarr; see it in Claude</p>
+          <p style="font-size: 0.8rem; color: var(--pres-gray-600); margin: 0.25rem 0 0;">Self-service. No IT ticket. No deployment pipeline. The user is productive in minutes.</p>
+        </div>
+        <div class="pres-terminal" style="font-size: 0.7rem; margin-top: 0.75rem;">
+          <div><span class="prompt">$</span> systemprompt core skills list</div>
+          <div><span class="prompt">$</span> systemprompt core plugins show foodles-ops</div>
+        </div>
+      </div>
+      <div class="pres-col-half pres-reveal pres-reveal-delay-4">
+        <div class="pres-card" style="padding: 1.25rem; border-left: 4px solid var(--pres-blue-500);">
+          <strong style="font-size: 1rem; color: var(--pres-blue-500);">Admin Journey</strong>
+          <p style="font-size: 0.85rem; color: var(--pres-gray-700); margin: 0.5rem 0 0;">Open dashboard &rarr; see real-time metrics &rarr; drill into user activity &rarr; export report</p>
+          <p style="font-size: 0.8rem; color: var(--pres-gray-600); margin: 0.25rem 0 0;">Full visibility. Every AI interaction traced. Usage breakdown by agent, department, skill.</p>
+        </div>
+        <div class="pres-terminal" style="font-size: 0.7rem; margin-top: 0.75rem;">
+          <div><span class="prompt">$</span> systemprompt analytics overview</div>
+          <div><span class="prompt">$</span> systemprompt analytics overview --by department</div>
+        </div>
+      </div>
+    </div>
+    <div class="pres-reveal pres-reveal-delay-5" style="margin-top: 1.5rem;">
+      <p style="font-size: 0.8rem; color: var(--pres-gray-600); text-align: center;">Live dashboard: <code>/admin/</code> &middot; Marketplace: <code>/admin/marketplace</code> &middot; Users: <code>/admin/users</code> &middot; Skills: <code>/admin/my-skills</code></p>
+    </div>
+  </div>
+  <div class="pres-notes">
+    <div class="note-section"><h4>TIMING: 20:45 &mdash; Live Demos (4 min)</h4><p><strong>Say:</strong> "Let me show you both sides. First, the user experience &mdash; log in, browse, install, use. Then the admin experience &mdash; real-time metrics, drill-down analytics, full audit trail. This is the Control Center."</p></div>
+    <div class="note-section"><h4>DEMO 1: USER JOURNEY</h4>
+      <p>Navigate to <code>/admin/my-skills</code> &mdash; show skill browsing and install.</p>
+      <p class="cmd">$ systemprompt core skills list</p>
+      <p><strong>Say:</strong> "User logs in. Browses the marketplace. Installs what they need. It syncs to Claude. Done."</p>
+    </div>
+    <div class="note-section"><h4>DEMO 2: ADMIN JOURNEY</h4>
+      <p>Navigate to <code>/admin/</code> &mdash; show the dashboard with live metrics.</p>
+      <p class="cmd">$ systemprompt analytics overview</p>
+      <p class="cmd">$ systemprompt analytics overview --by department</p>
+      <p><strong>Say:</strong> "The admin sees everything. Real-time metrics. AI usage charts. Cost breakdown. Full audit trail for every interaction."</p>
+    </div>
+  </div>
+</section>

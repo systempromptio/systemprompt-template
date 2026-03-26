@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE services\n            SET status = 'stopped', pid = NULL, updated_at = CURRENT_TIMESTAMP\n            WHERE name = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d38589ab2b67bf30f8ea14b1184029ae60aafac26cc3af158cc8d46f599d45ea"
+}

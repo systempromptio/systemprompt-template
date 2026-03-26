@@ -1,0 +1,83 @@
+@layer components {
+
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: var(--space-5);
+}
+
+.login-container .card {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.login-title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    margin: 0 0 var(--space-1);
+    color: var(--text-primary);
+}
+
+.login-subtitle {
+    font-size: var(--text-sm);
+    color: var(--text-tertiary);
+    margin: 0 0 var(--space-5);
+}
+
+.login-error {
+    display: none;
+    background: var(--danger-dim);
+    color: var(--danger);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-4);
+    text-align: left;
+}
+
+.login-error.visible {
+    display: block;
+}
+
+.login-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    color: var(--text-tertiary);
+    font-size: var(--text-sm);
+}
+
+.login-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-default);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+.login-retry {
+    display: none;
+    margin-top: var(--space-2);
+}
+
+.login-retry.visible {
+    display: block;
+}
+
+.login-retry a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: var(--text-sm);
+}
+
+.login-retry a:hover {
+    text-decoration: underline;
+}
+
+}

@@ -1,0 +1,13 @@
+id: systemprompt_admin_jobs
+name: "Job Scheduling"
+description: "List, run, enable, and disable scheduled jobs via the systemprompt CLI"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - systemprompt_admin
+tags:
+  - admin
+  - jobs
+  - scheduling
+  - automation

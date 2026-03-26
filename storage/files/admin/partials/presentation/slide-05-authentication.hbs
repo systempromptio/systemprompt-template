@@ -1,0 +1,34 @@
+<section class="pres-slide" id="slide-5" style="background: #fff;">
+  <div class="pres-slide-content">
+    <span class="pres-overline pres-reveal" style="color: var(--pres-blue-500);">SECTION 1 &middot; GETTING STARTED</span>
+    <h2 class="pres-reveal pres-reveal-delay-1">Authentication &amp; User Signup</h2>
+    <div class="pres-divider pres-reveal pres-reveal-delay-1"></div>
+    <div class="pres-row" style="margin-top: 2rem;">
+      <div class="pres-col-half pres-reveal pres-reveal-delay-2">
+        <p class="pres-body-lg" style="margin-bottom: 1.5rem;">Passwordless authentication. Users receive a magic link, click it, and they are in. No passwords to manage, rotate, or forget.</p>
+        <ul class="pres-features">
+          <li><strong>Magic link login</strong> &mdash; email-based, no passwords</li>
+          <li><strong>Role assignment</strong> &mdash; admin, user, service, or custom roles on creation</li>
+          <li><strong>Department scoping</strong> &mdash; Revenue, Operations, Engineering, or your own departments</li>
+          <li><strong>Session management</strong> &mdash; active sessions, IP tracking, session expiry</li>
+          <li><strong>Bulk user operations</strong> &mdash; import, assign roles, manage at scale</li>
+        </ul>
+      </div>
+      <div class="pres-col-half pres-reveal pres-reveal-delay-3">
+        <h3 style="font-size:0.95rem;color:var(--pres-blue-700);margin-bottom:0.75rem;">The Onboarding Flow</h3>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem;">
+          <div class="pres-arch-box" style="text-align:center;padding:0.5rem;">User enters email address</div>
+          <div class="pres-arch-connector">&darr; magic link sent</div>
+          <div class="pres-arch-box primary" style="text-align:center;padding:0.5rem;">Click link &rarr; authenticated</div>
+          <div class="pres-arch-connector">&darr; role + department assigned</div>
+          <div class="pres-arch-box accent" style="text-align:center;padding:0.5rem;">Control Center dashboard</div>
+        </div>
+        <div class="pres-terminal" style="font-size:0.75rem;"><div><span class="prompt">$</span> systemprompt admin users list</div><div class="output" style="margin-top:0.5rem;"><div>ID&nbsp;&nbsp;Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Role&nbsp;&nbsp;&nbsp;Department&nbsp;&nbsp;&nbsp;Status</div><div>1&nbsp;&nbsp;&nbsp;Sarah Chen&nbsp;&nbsp;&nbsp;&nbsp;admin&nbsp;&nbsp;Operations&nbsp;&nbsp;&nbsp;<span class="highlight">active</span></div><div>2&nbsp;&nbsp;&nbsp;James Park&nbsp;&nbsp;&nbsp;&nbsp;user&nbsp;&nbsp;&nbsp;Revenue&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">active</span></div><div>3&nbsp;&nbsp;&nbsp;Maria Lopez&nbsp;&nbsp;&nbsp;user&nbsp;&nbsp;&nbsp;Engineering&nbsp;&nbsp;<span class="highlight">active</span></div><div>4&nbsp;&nbsp;&nbsp;Tom Wilson&nbsp;&nbsp;&nbsp;&nbsp;user&nbsp;&nbsp;&nbsp;Revenue&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">pending</span></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="pres-notes">
+    <div class="note-section"><h4>TIMING: 3:15 &mdash; Authentication (3 min)</h4><p><strong>Say:</strong> "Users get a magic link. No passwords to manage. The admin assigns roles and departments at creation. From that moment, role-based access control governs everything they can see and do in the Control Center."</p><p><strong>Say:</strong> "You can manage users in bulk &mdash; import from your directory, assign roles and departments at scale. Every session is tracked with IP and timestamp."</p></div>
+    <div class="note-section"><h4>LIVE DEMO</h4><p>Navigate to <code>/admin/users</code> to show user management dashboard.</p><p class="cmd">$ systemprompt admin users list</p></div>
+  </div>
+</section>

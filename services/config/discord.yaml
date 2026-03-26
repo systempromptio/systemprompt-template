@@ -1,0 +1,12 @@
+# Discord configuration - bot_token loaded from profile secrets.json (discord_bot_token key)
+default_user_id: "1243845333247856683"
+default_channel_id: "1380471019583836222"
+enabled: true
+
+# Gateway configuration for receiving Discord messages
+gateway:
+  enabled: true
+  target_agent: "welcome"
+  message_prefix: "DISCORD_MESSAGE"
+  ignore_channels: []
+  ignore_bots: true

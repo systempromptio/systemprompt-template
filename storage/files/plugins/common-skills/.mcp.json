@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "excalidraw": {
+      "url": "http://localhost:5000/api/v1/mcp/excalidraw/mcp"
+    }
+  }
+}

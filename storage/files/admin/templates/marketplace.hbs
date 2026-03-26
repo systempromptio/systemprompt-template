@@ -1,0 +1,88 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    <div id="marketplace-content" aria-live="polite">
+        <div class="toolbar">
+            <div class="search-group">
+                <input type="text" class="search-input" placeholder="Search marketplace..." id="mkt-search">
+            </div>
+            <select id="mkt-sort" class="btn btn-secondary" style="cursor:pointer">
+                <option value="rank">Rank</option>
+                <option value="rating">Highest Rated</option>
+                <option value="usage">Most Used</option>
+                <option value="name">Alphabetical</option>
+            </select>
+        </div>
+
+        {{#if marketplace_plugins}}
+        <div class="plugins-list" style="display:flex;flex-direction:column;gap:var(--space-3)">
+            {{#each marketplace_plugins}}
+            <div class="plugin-card" style="border-left:3px solid var(--accent)" data-plugin-id="{{id}}" data-search-name="{{toLowerCase name}}" data-search-desc="{{toLowerCase description}}" data-search-cat="{{toLowerCase category}}">
+                <div class="plugin-header" data-toggle-plugin="{{id}}">
+                    <div style="flex:1;min-width:0">
+                        <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap">
+                            <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:var(--text-xs)">#{{add @index 1}}</span>
+                            <h3 style="margin:0;font-size:var(--text-base);font-weight:600;color:var(--text-primary)">{{name}}</h3>
+                            {{#if version}}<span class="badge badge-gray">{{version}}</span>{{/if}}
+                            {{#if category}}<span class="badge badge-blue">{{category}}</span>{{/if}}
+                        </div>
+                        {{#if description}}<p style="margin:var(--space-1) 0 0;font-size:var(--text-sm);color:var(--text-secondary)">{{description}}</p>{{/if}}
+                        <div style="display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-2);flex-wrap:wrap">
+                            {{> components/star-rating avg_rating=avg_rating avg_rating_display=avg_rating_display rating_count=rating_count}}
+                            <span class="badge badge-green">{{default unique_users "0"}} users</span>
+                        </div>
+                        <div class="plugin-meta" style="display:flex;gap:var(--space-2);margin-top:var(--space-2);flex-wrap:wrap">
+                            <span class="badge badge-blue">{{skill_count}} skill{{#if (not (eq skill_count 1))}}s{{/if}}</span>
+                            <span class="badge badge-gray">{{agent_count}} agent{{#if (not (eq agent_count 1))}}s{{/if}}</span>
+                            {{#if (gt mcp_server_count 0)}}<span class="badge badge-yellow">{{mcp_server_count}} MCP</span>{{/if}}
+                            {{#if (gt hook_count 0)}}<span class="badge badge-green">{{hook_count}} hook{{#if (not (eq hook_count 1))}}s{{/if}}</span>{{/if}}
+                            <span class="badge {{#if enabled}}badge-green{{else}}badge-red{{/if}}">{{#if enabled}}Enabled{{else}}Disabled{{/if}}</span>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:var(--space-2)">
+                        <span class="expand-icon" style="font-size:var(--text-sm);color:var(--text-tertiary);transition:transform var(--duration-fast) var(--ease-out);display:inline-block">&#9660;</span>
+                    </div>
+                </div>
+                <div class="plugin-details" style="padding:var(--space-3);border-top:1px solid var(--border-primary);display:none">
+                    <div style="margin-bottom:var(--space-3)">
+                        <strong style="font-size:var(--text-sm);color:var(--text-primary)">Visibility</strong>
+                        <div style="margin-top:var(--space-2);display:flex;flex-wrap:wrap;gap:var(--space-1)">
+                            {{> components/visibility-badge roles=roles visibility_rules=visibility_rules}}
+                        </div>
+                        <button class="btn btn-secondary" style="margin-top:var(--space-2);font-size:var(--text-xs)" data-edit-visibility="{{id}}">Edit Visibility</button>
+                    </div>
+                    <div style="margin-bottom:var(--space-3)">
+                        <strong style="font-size:var(--text-sm);color:var(--text-primary)">Users</strong>
+                        <div style="margin-top:var(--space-2)">
+                            <button class="btn btn-secondary" style="font-size:var(--text-xs)" data-load-users="{{id}}">Load Users</button>
+                        </div>
+                        <div class="plugin-users-container" data-users-for="{{id}}"></div>
+                    </div>
+                    <div style="margin-bottom:var(--space-3)">
+                        <strong style="font-size:var(--text-sm);color:var(--text-primary)">Stats</strong>
+                        <div style="margin-top:var(--space-2);display:flex;flex-wrap:wrap;gap:var(--space-3);font-size:var(--text-xs)">
+                            <div><span style="color:var(--text-tertiary)">Total Events:</span> <strong>{{default total_events "0"}}</strong></div>
+                            <div><span style="color:var(--text-tertiary)">Active (7d):</span> <strong>{{default active_users_7d "0"}}</strong></div>
+                            <div><span style="color:var(--text-tertiary)">Active (30d):</span> <strong>{{default active_users_30d "0"}}</strong></div>
+                            <div><span style="color:var(--text-tertiary)">Rank Score:</span> <strong>{{default rank_score_display "0"}}</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+        {{else}}
+        {{> components/empty-state message="No marketplace plugins available."}}
+        {{/if}}
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-marketplace.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.initMarketplace('#marketplace-content', {{{json marketplace_plugins}}});
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

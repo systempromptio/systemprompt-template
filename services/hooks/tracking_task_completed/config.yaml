@@ -1,0 +1,17 @@
+id: tracking_task_completed
+name: "Task Completion Tracking"
+description: "Records task completion events"
+version: "1.0.0"
+enabled: true
+event: TaskCompleted
+matcher: "*"
+command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-{plugin_id}-usage.sh"
+async: true
+category: system
+plugins:
+  - common-skills
+tags:
+  - tracking
+  - analytics
+visible_to:
+  - admin

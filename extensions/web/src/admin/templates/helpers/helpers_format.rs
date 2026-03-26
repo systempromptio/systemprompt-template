@@ -1,0 +1,230 @@
+use handlebars::{Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext};
+
+pub(crate) struct FormatDateHelper;
+impl HelperDef for FormatDateHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let val = h.param(0).and_then(|v| v.value().as_str()).unwrap_or("-");
+        if val == "-" || val.is_empty() {
+            out.write("-")?;
+            return Ok(());
+        }
+        match chrono::DateTime::parse_from_rfc3339(val).or_else(|_| {
+            chrono::NaiveDateTime::parse_from_str(val, "%Y-%m-%dT%H:%M:%S%.f")
+                .map(|dt| dt.and_utc().fixed_offset())
+        }) {
+            Ok(dt) => {
+                let formatted = dt.format("%b %d, %Y %I:%M %p").to_string();
+                out.write(&formatted)?;
+            }
+            Err(_) => {
+                out.write(val)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+pub(crate) struct RelativeTimeHelper;
+impl HelperDef for RelativeTimeHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let val = h.param(0).and_then(|v| v.value().as_str()).unwrap_or("-");
+        if val == "-" || val.is_empty() {
+            out.write("-")?;
+            return Ok(());
+        }
+        match chrono::DateTime::parse_from_rfc3339(val).or_else(|_| {
+            chrono::NaiveDateTime::parse_from_str(val, "%Y-%m-%dT%H:%M:%S%.f")
+                .map(|dt| dt.and_utc().fixed_offset())
+        }) {
+            Ok(dt) => {
+                let now = chrono::Utc::now();
+                let diff = now.signed_duration_since(dt);
+                let mins = diff.num_minutes();
+                let result = if mins < 1 {
+                    "just now".to_string()
+                } else if mins < 60 {
+                    format!("{mins}m ago")
+                } else {
+                    let hours = diff.num_hours();
+                    if hours < 24 {
+                        format!("{hours}h ago")
+                    } else {
+                        let days = diff.num_days();
+                        if days < 30 {
+                            format!("{days}d ago")
+                        } else {
+                            dt.format("%b %d, %Y %I:%M %p").to_string()
+                        }
+                    }
+                };
+                out.write(&result)?;
+            }
+            Err(_) => {
+                out.write(val)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+pub(crate) struct InitialsHelper;
+impl HelperDef for InitialsHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let name = h.param(0).and_then(|v| v.value().as_str()).unwrap_or("?");
+        if name.is_empty() || name == "?" {
+            out.write("?")?;
+            return Ok(());
+        }
+        let initials: String = name
+            .split(|c: char| c.is_whitespace() || c == '@' || c == '.' || c == '_' || c == '-')
+            .filter(|s| !s.is_empty())
+            .take(2)
+            .filter_map(|s| s.chars().next())
+            .map(|c| c.to_uppercase().to_string())
+            .collect();
+        out.write(if initials.is_empty() { "?" } else { &initials })?;
+        Ok(())
+    }
+}
+
+pub(crate) struct TruncateHelper;
+impl HelperDef for TruncateHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let val = h.param(0).and_then(|v| v.value().as_str()).unwrap_or("");
+        let max = h
+            .param(1)
+            .and_then(|v| v.value().as_u64())
+            .map_or(60, |v| usize::try_from(v).unwrap_or(60));
+        if val.len() <= max {
+            out.write(val)?;
+        } else {
+            let truncated: String = val.chars().take(max).collect();
+            out.write(&truncated)?;
+            out.write("...")?;
+        }
+        Ok(())
+    }
+}
+
+pub(crate) struct JsonHelper;
+impl HelperDef for JsonHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let val = h
+            .param(0)
+            .map_or(serde_json::Value::Null, |v| v.value().clone());
+        let json_str =
+            serde_json::to_string_pretty(&val).unwrap_or_else(|_| "null".to_string());
+        let escaped = json_str
+            .replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;");
+        out.write(&escaped)?;
+        Ok(())
+    }
+}
+
+pub(crate) struct ConcatHelper;
+impl HelperDef for ConcatHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let mut result = String::new();
+        for param in h.params() {
+            match param.value() {
+                serde_json::Value::String(s) => result.push_str(s),
+                serde_json::Value::Number(n) => result.push_str(&n.to_string()),
+                serde_json::Value::Bool(b) => result.push_str(&b.to_string()),
+                serde_json::Value::Null => {}
+                other => result.push_str(&other.to_string()),
+            }
+        }
+        out.write(&result)?;
+        Ok(())
+    }
+}
+
+pub(crate) struct ToLowerCaseHelper;
+impl HelperDef for ToLowerCaseHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let val = h.param(0).and_then(|v| v.value().as_str()).unwrap_or("");
+        out.write(&val.to_lowercase())?;
+        Ok(())
+    }
+}
+
+pub(crate) struct DefaultHelper;
+impl HelperDef for DefaultHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let val = h.param(0).map(handlebars::PathAndJson::value);
+        let fallback = h.param(1).and_then(|v| v.value().as_str()).unwrap_or("");
+        let is_truthy = match val {
+            Some(serde_json::Value::Null) | None => false,
+            Some(serde_json::Value::String(s)) => !s.is_empty(),
+            Some(serde_json::Value::Bool(b)) => *b,
+            _ => true,
+        };
+        if is_truthy {
+            match val.expect("val is Some because is_truthy requires Some(_)") {
+                serde_json::Value::String(s) => out.write(s)?,
+                other => out.write(&other.to_string())?,
+            }
+        } else {
+            out.write(fallback)?;
+        }
+        Ok(())
+    }
+}

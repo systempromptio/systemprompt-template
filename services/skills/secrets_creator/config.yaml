@@ -1,0 +1,12 @@
+id: secrets_creator
+name: "Secrets Creator"
+description: "Socratic interview to manage plugin secrets and environment variables for external service connections"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+tags:
+  - marketplace
+  - creator
+  - secrets
+  - socratic
+  - environment

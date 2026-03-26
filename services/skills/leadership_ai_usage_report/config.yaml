@@ -1,0 +1,12 @@
+id: leadership_ai_usage_report
+name: "AI Usage Report"
+description: "Generate AI usage reports for leadership: team activity, costs, tool adoption, and session analytics"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents: []
+tags:
+  - leadership
+  - analytics
+  - usage
+  - reports

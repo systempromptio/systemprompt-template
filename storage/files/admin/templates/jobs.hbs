@@ -1,0 +1,55 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/toolbar searchId="job-search" searchPlaceholder="Search jobs..."}}
+    {{#if jobs}}
+    {{#> components/data-table}}
+        <thead><tr><th>Job</th><th>Schedule</th><th>Enabled</th><th>Last Run</th><th>Status</th><th>Next Run</th><th class="numeric">Runs</th></tr></thead>
+        <tbody>
+        {{#each jobs}}
+        <tr data-name="{{toLowerCase job_name}}">
+            <td class="cell-primary">{{job_name}}</td>
+            <td><code class="code-inline">{{schedule}}</code></td>
+            <td>{{#if enabled}}<span class="badge badge-success">Enabled</span>{{else}}<span class="badge badge-secondary">Disabled</span>{{/if}}</td>
+            <td>{{#if last_run}}{{relativeTime last_run}}{{else}}Never{{/if}}</td>
+            <td{{#if last_error}} title="{{last_error}}"{{/if}}>
+                {{#if (eq last_status "success")}}<span class="badge badge-success">Success</span>
+                {{else if (eq last_status "failed")}}<span class="badge badge-danger">Failed</span>
+                {{else if (eq last_status "running")}}<span class="badge badge-info">Running</span>
+                {{else if last_status}}<span class="badge badge-secondary">{{last_status}}</span>
+                {{else}}<span class="badge badge-secondary">Never run</span>
+                {{/if}}
+            </td>
+            <td>{{#if next_run}}{{relativeTime next_run}}{{else}}&mdash;{{/if}}</td>
+            <td class="numeric">{{run_count}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No jobs found."}}
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            var searchInput = document.getElementById('job-search');
+            if (searchInput) {
+                var debounceTimer = null;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function() {
+                        var q = searchInput.value.toLowerCase().trim();
+                        var rows = document.querySelectorAll('.data-table tbody tr');
+                        for (var i = 0; i < rows.length; i++) {
+                            var name = rows[i].getAttribute('data-name') || rows[i].textContent.toLowerCase();
+                            rows[i].style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+                        }
+                    }, 200);
+                });
+            }
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

@@ -1,0 +1,20 @@
+{
+  "name": "common-skills",
+  "description": "Odoo operations, brand guidelines, diagramming, quality gates, and marketing tools for all employees",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foodles"
+  },
+  "keywords": [
+    "odoo",
+    "brand",
+    "excalidraw",
+    "quality",
+    "marketing",
+    "linkedin",
+    "seo",
+    "email",
+    "events",
+    "timesheet"
+  ]
+}

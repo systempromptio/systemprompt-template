@@ -1,0 +1,29 @@
+plugin:
+  id: leadership-skills
+  name: Leadership Skills
+  description: AI usage analytics and team insights for leadership
+  version: 1.0.0
+  enabled: true
+  depends:
+  - common-skills
+  skills:
+    source: explicit
+    include:
+    - leadership_ai_usage_report
+  agents:
+    source: explicit
+    include: []
+  mcp_servers: []
+  roles:
+  - admin
+  keywords:
+  - leadership
+  - analytics
+  - usage
+  - reports
+  - team
+  category: leadership
+  license: PROPRIETARY
+  author:
+    name: Foodles
+    email: help@foodles.com

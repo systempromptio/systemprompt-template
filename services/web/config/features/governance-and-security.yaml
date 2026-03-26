@@ -1,0 +1,91 @@
+# Feature: Governance & Security
+# Merged from Agent Governance + MCP Integration
+
+slug: "governance-and-security"
+title: "Governance & Security | RBAC, MCP Tool Governance & Audit Trails"
+headline: "DEFENSE IN DEPTH"
+headline_highlight: "FOR ALL AI USAGE."
+subtitle: "Role-based access control, MCP tool governance, complete audit trails, ChaCha20-Poly1305 secret encryption, hooks on every tool call, and tiered rate limiting. Every prompt, every tool call, every session. Governed."
+description: "Enterprise AI governance with RBAC, MCP tool governance, audit trails, encrypted secrets, event hooks, and rate limiting. Defense-in-depth security for all AI usage at scale."
+icon: "shield"
+keywords: "AI governance, RBAC, MCP, tool governance, audit trails, secret encryption, rate limiting, AI security, OAuth2"
+
+highlights:
+  - text: "Role-based access with bulk assign"
+    id: "rbac"
+  - text: "MCP-native tool governance"
+    id: "mcp-governance"
+  - text: "16 event hooks for complete audit trails"
+    id: "audit-trails"
+  - text: "ChaCha20-Poly1305 secret encryption"
+    id: "secret-encryption"
+
+cta:
+  text: "View Documentation"
+  url: "/documentation/access-control"
+  secondary_text: "Tool Governance Docs"
+  secondary_url: "/documentation/tool-governance"
+
+sections:
+  - id: "rbac"
+    title: "RBAC & Bulk Assign"
+    content: |
+      <p>Unified ACL for plugins, agents, and MCP servers. Define access by role and department: admin, user, a2a, mcp, service, and anonymous. Bulk assign lets you roll out permission changes across all agents in a single action.</p>
+      <p>When you onboard a new department or change a policy, one bulk operation updates access for every agent simultaneously. No per-agent configuration drift.</p>
+    items:
+      - title: "Unified ACL"
+        description: "One permission model for plugins, agents, and MCP servers. No separate systems to synchronize."
+      - title: "Role + Department Rules"
+        description: "Six role tiers (admin, user, a2a, mcp, service, anon) combined with department-based scoping."
+      - title: "Bulk Assign"
+        description: "Roll out access changes across all agents in one action. No per-agent configuration required."
+
+  - id: "mcp-governance"
+    title: "MCP Tool Governance"
+    content: |
+      <p>MCP is the native protocol, not an adapter layer. Each MCP server has its own OAuth2 configuration with independent scopes. Per-server token expiry, scope validation, and credential rotation ensure that compromising one server does not grant access to others.</p>
+      <p>All MCP servers are registered in a central directory with port isolation (range 5000-5999). Administrators see every server, its status, its scopes, and its usage metrics from a single view.</p>
+    items:
+      - title: "Per-Server OAuth2"
+        description: "Each MCP server defines its own OAuth2 scopes. Independent token management and credential rotation."
+      - title: "Central Registry"
+        description: "Every MCP server registered, discoverable, and monitored from a single administrative view."
+      - title: "Port Isolation"
+        description: "Range 5000-5999, one port per server. No cross-server interference or shared process space."
+
+  - id: "audit-trails"
+    title: "Audit Trails & Event Hooks"
+    content: |
+      <p>16 event hooks covering sessions, tool use, prompts, configuration changes, permission updates, and subagent lifecycle. Every interaction is traced and stored as JSONB with full conversation context. Hooks run synchronously in the request path — a denied hook stops the action before it executes.</p>
+      <p>AI request auditing captures model, provider, and token counts. Use the CLI to inspect any request: <code>systemprompt infra logs audit &lt;id&gt; --full</code> returns the complete conversation chain.</p>
+    items:
+      - title: "16 Event Hooks"
+        description: "Sessions, tool use, prompts, config changes, permissions, and subagent lifecycle. All captured automatically."
+      - title: "Synchronous Enforcement"
+        description: "Hooks run in the request path. A denied hook stops the action immediately. No fire-and-forget."
+      - title: "Session Transcripts"
+        description: "Full conversation context stored as JSONB. Reconstruct any interaction from start to finish."
+
+  - id: "secret-encryption"
+    title: "Secret Encryption & Rate Limiting"
+    content: |
+      <p>All secrets encrypted with ChaCha20-Poly1305 AEAD, the same algorithm Signal uses for message encryption. Key versioning enables zero-downtime rotation. Every secret access is logged in the audit trail.</p>
+      <p>Token bucket rate limiting with role-based tiers protects your infrastructure from runaway usage. Admins get 10x base rate, users get 1x, A2A and MCP connections get 5x, and anonymous requests get 0.5x. A 3x burst multiplier handles traffic spikes.</p>
+    items:
+      - title: "ChaCha20-Poly1305 AEAD"
+        description: "Authenticated encryption with associated data. The same algorithm used by Signal for message security."
+      - title: "Key Versioning"
+        description: "Zero-downtime key rotation. Old keys decrypt existing secrets while new keys encrypt going forward."
+      - title: "Tiered Rate Limiting"
+        description: "Role-based token bucket rate limiting with burst multipliers. Protect infrastructure from runaway AI usage."
+
+related:
+  - title: "DevOps & Deployment"
+    description: "Single Rust binary with Docker support and profile-based configuration."
+    url: "/features/devops-and-deployment"
+  - title: "Marketplace & Skill Management"
+    description: "Create, fork, and distribute skills and plugins across your organisation."
+    url: "/features/marketplace-and-skill-management"
+  - title: "Analytics & Observability"
+    description: "20+ dashboard metrics, activity tracking, and usage reporting."
+    url: "/features/analytics-and-observability"

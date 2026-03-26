@@ -1,0 +1,139 @@
+# Navigation Configuration
+# Header, footer, and documentation sidebar
+
+header:
+  items:
+    - id: features
+      label: "Features"
+      href: "#"
+      dropdown: true
+      sections:
+        - links:
+            - label: "DevOps & Deployment"
+              href: "/features/devops-and-deployment"
+            - label: "Governance & Security"
+              href: "/features/governance-and-security"
+            - label: "Marketplace & Skill Management"
+              href: "/features/marketplace-and-skill-management"
+            - label: "Analytics & Observability"
+              href: "/features/analytics-and-observability"
+
+    - id: docs
+      label: "Docs"
+      href: "/documentation"
+
+    - id: presentation
+      label: "Presentation"
+      href: "/documentation/presentation"
+
+    - id: login
+      label: "Login"
+      href: "/admin/login"
+
+footer:
+  legal:
+    - path: "/legal/privacy-policy"
+      label: "Privacy Policy"
+    - path: "/legal/cookie-policy"
+      label: "Cookie Policy"
+  resources:
+    - path: "/documentation"
+      label: "Documentation"
+
+# Docs sidebar - rendered dynamically via site.docs_sidebar in templates
+docs_sidebar:
+  - title: "Proposal"
+    links:
+      - label: "Capability Brief"
+        href: "/documentation/proposal"
+      - label: "Engagement Summary"
+        href: "/documentation/engagement-summary"
+      - label: "Phase 1: PRD & Development"
+        href: "/documentation/engagement-implementation"
+      - label: "Phase 2: Platform License"
+        href: "/documentation/engagement-license"
+      - label: "Phase 2: Maintenance & Support"
+        href: "/documentation/engagement-maintenance"
+      - label: "Licensing Terms"
+        href: "/documentation/proposal-licensing"
+      - label: "Questions & Answers"
+        href: "/documentation/objections"
+
+  - title: "DevOps & Deployment"
+    links:
+      - label: "Architecture Overview"
+        href: "/documentation/architecture"
+      - label: "Installation & Setup"
+        href: "/documentation/installation"
+      - label: "Deployment Models"
+        href: "/documentation/deployment-models"
+      - label: "Configuration & Profiles"
+        href: "/documentation/configuration"
+      - label: "Scaling Architecture"
+        href: "/documentation/scaling"
+      - label: "Build & CI/CD Pipeline"
+        href: "/documentation/ci-cd"
+
+  - title: "Governance & Security"
+    links:
+      - label: "Access Control & RBAC"
+        href: "/documentation/access-control"
+      - label: "Authentication"
+        href: "/documentation/authentication"
+      - label: "Secrets & Encryption"
+        href: "/documentation/secrets"
+      - label: "MCP Servers"
+        href: "/documentation/mcp-servers"
+      - label: "Tool Governance"
+        href: "/documentation/tool-governance"
+      - label: "Hooks & Automation"
+        href: "/documentation/hooks"
+      - label: "Audit Trails & Events"
+        href: "/documentation/events"
+      - label: "Rate Limiting"
+        href: "/documentation/rate-limiting"
+
+  - title: "Marketplace & Skill Management"
+    links:
+      - label: "Plugins"
+        href: "/documentation/plugins"
+      - label: "Skills"
+        href: "/documentation/skills"
+      - label: "Agents"
+        href: "/documentation/agents"
+      - label: "Marketplace"
+        href: "/documentation/marketplace"
+      - label: "Marketplace Versions"
+        href: "/documentation/marketplace-versions"
+      - label: "Forking & Customization"
+        href: "/documentation/forking"
+      - label: "Distribution Channels"
+        href: "/documentation/distribution-channels"
+
+  - title: "Analytics & Observability"
+    links:
+      - label: "Dashboard"
+        href: "/documentation/dashboard"
+      - label: "Cost Tracking"
+        href: "/documentation/cost-tracking"
+      - label: "Activity Tracking"
+        href: "/documentation/activity-tracking"
+      - label: "Metrics Reference"
+        href: "/documentation/metrics-reference"
+      - label: "Content Analytics"
+        href: "/documentation/content-analytics"
+      - label: "CLI Analytics"
+        href: "/documentation/cli-analytics"
+      - label: "Gamification & Leaderboard"
+        href: "/documentation/gamification"
+
+  - title: "Reference"
+    links:
+      - label: "Getting Started"
+        href: "/documentation/getting-started"
+      - label: "User Management"
+        href: "/documentation/users"
+      - label: "Organizations"
+        href: "/documentation/organization"
+      - label: "Jobs & Background Tasks"
+        href: "/documentation/jobs"

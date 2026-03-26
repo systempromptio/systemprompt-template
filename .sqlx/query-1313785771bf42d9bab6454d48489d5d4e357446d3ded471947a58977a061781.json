@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE soul_memories\n            SET is_active = FALSE, updated_at = NOW()\n            WHERE expires_at IS NOT NULL AND expires_at <= NOW() AND is_active = TRUE\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "1313785771bf42d9bab6454d48489d5d4e357446d3ded471947a58977a061781"
+}

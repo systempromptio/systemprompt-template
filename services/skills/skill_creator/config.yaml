@@ -1,0 +1,12 @@
+id: skill_creator
+name: "Skill Creator"
+description: "Socratic interview to design and create a custom business skill with guided questions"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+tags:
+  - marketplace
+  - creator
+  - skills
+  - socratic
+  - builder

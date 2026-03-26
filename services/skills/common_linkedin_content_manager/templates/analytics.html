@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analitica | LinkedIn Manager</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Foodles UI -->
+  <link rel="stylesheet" href="../assets/css/foodles-ui.css">
+  
+  <style>
+    .chart-container {
+      position: relative;
+      height: 280px;
+    }
+    .metric-ring {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--foodles-blue-lilac) calc(var(--progress) * 3.6deg),
+        var(--border-color) 0
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+    .metric-ring-inner {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .top-post-item {
+      display: flex;
+      gap: var(--spacing-md);
+      padding: var(--spacing-md);
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast);
+    }
+    .top-post-item:hover {
+      background: var(--bg-glass);
+    }
+    .top-post-rank {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--foodles-blue-lilac);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+    .top-post-rank--gold { background: var(--foodles-warm-yellow); color: var(--foodles-blue-space); }
+    .hashtag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+    }
+    .hashtag-tag {
+      padding: 4px 12px;
+      background: rgba(107, 79, 187, 0.1);
+      border-radius: var(--radius-xl);
+      font-size: 0.875rem;
+      color: var(--foodles-blue-lilac);
+      transition: all var(--transition-fast);
+    }
+    .hashtag-tag:hover {
+      background: var(--foodles-blue-lilac);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- Navigation -->
+  <nav class="navbar-glass">
+    <div class="container d-flex justify-between align-center">
+      <a href="#" class="navbar-brand">LinkedIn Manager</a>
+      
+      <div class="d-flex align-center gap-lg">
+        <a href="calendar.html" class="nav-link">Calendario</a>
+        <a href="library.html" class="nav-link">Biblioteca</a>
+        <a href="analytics.html" class="nav-link active">Analitica</a>
+        <a href="editor.html" class="nav-link">Nuevo Post</a>
+      </div>
+      
+      <div class="theme-toggle" role="button" tabindex="0" aria-label="Cambiar tema">
+        <div class="theme-toggle__track">
+          <div class="theme-toggle__thumb"></div>
+        </div>
+        <span class="theme-toggle__label">Claro</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container py-4">
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-between align-center mb-lg">
+      <div>
+        <h1 class="mb-0">Panel de Analitica</h1>
+        <p class="text-muted mb-0">Rendimiento de tu contenido en LinkedIn</p>
+      </div>
+      <div class="d-flex gap-sm">
+        <select class="form-control-glass">
+          <option>Ultimos 7 dias</option>
+          <option selected>Ultimos 30 dias</option>
+          <option>Ultimos 90 dias</option>
+          <option>Este ano</option>
+        </select>
+        <button class="btn-foodles btn-outline">Exportar</button>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="bento-grid bento-grid--4cols mb-lg">
+      <div class="glass-card stat-card">
+        <div class="stat-value" data-value="45200">0</div>
+        <div class="stat-label">Impresiones totales</div>
+        <div class="stat-change stat-change--up">+23% vs periodo anterior</div>
+      </div>
+      <div class="glass-card stat-card">
+        <div class="stat-value" data-value="1847">0</div>
+        <div class="stat-label">Reacciones</div>
+        <div class="stat-change stat-change--up">+18% vs periodo anterior</div>
+      </div>
+      <div class="glass-card stat-card">
+        <div class="stat-value" data-value="312">0</div>
+        <div class="stat-label">Comentarios</div>
+        <div class="stat-change stat-change--up">+42% vs periodo anterior</div>
+      </div>
+      <div class="glass-card stat-card">
+        <div class="stat-value" data-value="89">0</div>
+        <div class="stat-label">Compartidos</div>
+        <div class="stat-change stat-change--down">-5% vs periodo anterior</div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="bento-grid bento-grid--mixed mb-lg">
+      
+      <!-- Impressions Chart - spans 2 cols -->
+      <div class="glass-card bento-span-2">
+        <div class="card-header">
+          <h3 class="card-title">Impresiones por dia</h3>
+        </div>
+        <div class="chart-container">
+          <canvas id="impressionsChart"></canvas>
+        </div>
+      </div>
+      
+      <!-- Engagement Rate Ring -->
+      <div class="glass-card text-center">
+        <div class="card-header">
+          <h3 class="card-title">Engagement Rate</h3>
+        </div>
+        <div class="metric-ring" style="--progress: 68">
+          <div class="metric-ring-inner">
+            <span class="stat-value" style="font-size: 1.5rem;">6.8%</span>
+            <span class="stat-label">Promedio</span>
+          </div>
+        </div>
+        <p class="text-muted mt-md mb-0">Objetivo: 5.0%</p>
+      </div>
+      
+      <!-- Post Types Distribution -->
+      <div class="glass-card">
+        <div class="card-header">
+          <h3 class="card-title">Por tipo de contenido</h3>
+        </div>
+        <div class="chart-container">
+          <canvas id="postTypesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second Row -->
+    <div class="bento-grid bento-grid--3cols mb-lg">
+      
+      <!-- Top Posts -->
+      <div class="glass-card bento-span-2">
+        <div class="card-header">
+          <h3 class="card-title">Publicaciones con mejor rendimiento</h3>
+        </div>
+        
+        <div class="top-post-item">
+          <div class="top-post-rank top-post-rank--gold">1</div>
+          <div class="flex-grow-1">
+            <strong>Transformacion digital en PYMES: por donde empezar</strong>
+            <div class="d-flex gap-lg mt-sm text-muted" style="font-size: 0.75rem;">
+              <span>8,420 impresiones</span>
+              <span>342 reacciones</span>
+              <span>56 comentarios</span>
+            </div>
+          </div>
+          <span class="badge-foodles badge--published">Publicado</span>
+        </div>
+        
+        <div class="top-post-item">
+          <div class="top-post-rank">2</div>
+          <div class="flex-grow-1">
+            <strong>Caso de exito: Integracion ERP en sector industrial</strong>
+            <div class="d-flex gap-lg mt-sm text-muted" style="font-size: 0.75rem;">
+              <span>6,890 impresiones</span>
+              <span>289 reacciones</span>
+              <span>41 comentarios</span>
+            </div>
+          </div>
+          <span class="badge-foodles badge--published">Publicado</span>
+        </div>
+        
+        <div class="top-post-item">
+          <div class="top-post-rank">3</div>
+          <div class="flex-grow-1">
+            <strong>5 errores comunes al implementar un sistema de gestion</strong>
+            <div class="d-flex gap-lg mt-sm text-muted" style="font-size: 0.75rem;">
+              <span>5,210 impresiones</span>
+              <span>198 reacciones</span>
+              <span>33 comentarios</span>
+            </div>
+          </div>
+          <span class="badge-foodles badge--published">Publicado</span>
+        </div>
+        
+        <div class="top-post-item">
+          <div class="top-post-rank">4</div>
+          <div class="flex-grow-1">
+            <strong>Por que el mantenimiento reactivo te sale mas caro</strong>
+            <div class="d-flex gap-lg mt-sm text-muted" style="font-size: 0.75rem;">
+              <span>4,780 impresiones</span>
+              <span>156 reacciones</span>
+              <span>28 comentarios</span>
+            </div>
+          </div>
+          <span class="badge-foodles badge--published">Publicado</span>
+        </div>
+      </div>
+      
+      <!-- Hashtag Performance -->
+      <div class="glass-card">
+        <div class="card-header">
+          <h3 class="card-title">Hashtags populares</h3>
+        </div>
+        <div class="hashtag-cloud">
+          <span class="hashtag-tag">#Odoo</span>
+          <span class="hashtag-tag">#ERP</span>
+          <span class="hashtag-tag">#TransformacionDigital</span>
+          <span class="hashtag-tag">#Foodles</span>
+          <span class="hashtag-tag">#GestionEmpresarial</span>
+          <span class="hashtag-tag">#Industria40</span>
+          <span class="hashtag-tag">#PYMES</span>
+          <span class="hashtag-tag">#Automatizacion</span>
+          <span class="hashtag-tag">#Software</span>
+          <span class="hashtag-tag">#Tecnologia</span>
+        </div>
+        
+        <div class="mt-lg">
+          <h4 class="mb-sm">Mejor rendimiento</h4>
+          <div class="d-flex justify-between align-center mb-sm">
+            <span>#TransformacionDigital</span>
+            <span class="text-lilac">+45%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill progress-bar-fill--primary" style="width: 85%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Best Times -->
+    <div class="glass-card">
+      <div class="card-header">
+        <h3 class="card-title">Mejores horarios de publicacion</h3>
+        <span class="text-muted">Basado en engagement historico</span>
+      </div>
+      <div class="chart-container" style="height: 200px;">
+        <canvas id="timingChart"></canvas>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/foodles-ui.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Theme-aware chart colors
+      const getChartColors = () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        return {
+          text: isDark ? '#f7fafc' : '#0A0F1A',
+          grid: isDark ? 'rgba(107, 79, 187, 0.1)' : 'rgba(28, 38, 93, 0.08)',
+          lilac: '#6B4FBB',
+          yellow: '#E5B92B',
+          sky: '#00B67A',
+          space: '#0A0F1A'
+        };
+      };
+
+      const colors = getChartColors();
+
+      // Impressions Chart
+      new Chart(document.getElementById('impressionsChart'), {
+        type: 'line',
+        data: {
+          labels: ['1', '5', '10', '15', '20', '25', '30'],
+          datasets: [{
+            label: 'Impresiones',
+            data: [1200, 1900, 1500, 2100, 1800, 2400, 2200],
+            borderColor: colors.lilac,
+            backgroundColor: 'rgba(107, 79, 187, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { color: colors.text },
+              grid: { color: colors.grid }
+            },
+            x: {
+              ticks: { color: colors.text },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
+      // Post Types Chart
+      new Chart(document.getElementById('postTypesChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Articulos', 'Imagenes', 'Carruseles', 'Videos'],
+          datasets: [{
+            data: [35, 30, 25, 10],
+            backgroundColor: [colors.lilac, colors.yellow, colors.sky, colors.space]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: colors.text, padding: 15 }
+            }
+          }
+        }
+      });
+
+      // Timing Heatmap (simplified as bar chart)
+      new Chart(document.getElementById('timingChart'), {
+        type: 'bar',
+        data: {
+          labels: ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'],
+          datasets: [
+            {
+              label: '09:00',
+              data: [65, 72, 80, 75, 60],
+              backgroundColor: 'rgba(107, 79, 187, 0.3)'
+            },
+            {
+              label: '12:00',
+              data: [80, 85, 78, 82, 70],
+              backgroundColor: 'rgba(107, 79, 187, 0.6)'
+            },
+            {
+              label: '16:00',
+              data: [55, 60, 58, 65, 45],
+              backgroundColor: 'rgba(107, 79, 187, 0.4)'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: colors.text }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { 
+                color: colors.text,
+                callback: (value) => value + '%'
+              },
+              grid: { color: colors.grid }
+            },
+            x: {
+              ticks: { color: colors.text },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

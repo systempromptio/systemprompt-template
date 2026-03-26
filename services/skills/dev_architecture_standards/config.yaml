@@ -1,0 +1,18 @@
+id: dev_architecture_standards
+name: "Architecture Standards"
+description: "Layer architecture, module boundaries, extension patterns, plugin structure, config system, and build pipeline standards"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - standards
+  - architect
+  - overseer
+  - quality_gate
+tags:
+  - architecture
+  - standards
+  - extensions
+  - plugins
+  - layers
+  - boundaries

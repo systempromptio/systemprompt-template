@@ -1,0 +1,17 @@
+id: tracking_permission_request
+name: "Permission Request Tracking"
+description: "Records permission request events"
+version: "1.0.0"
+enabled: true
+event: PermissionRequest
+matcher: "*"
+command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-{plugin_id}-usage.sh"
+async: true
+category: system
+plugins:
+  - common-skills
+tags:
+  - tracking
+  - analytics
+visible_to:
+  - admin

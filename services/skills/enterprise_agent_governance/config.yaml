@@ -1,0 +1,15 @@
+id: enterprise_agent_governance
+name: "Agent Governance"
+description: "Enterprise agent governance - manage agent fleets, enforce policies, control access, and monitor agent behavior at scale"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - systemprompt_admin
+tags:
+  - enterprise
+  - governance
+  - agents
+  - policy
+  - compliance
+  - fleet-management

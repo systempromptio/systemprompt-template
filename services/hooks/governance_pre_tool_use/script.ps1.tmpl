@@ -1,0 +1,37 @@
+# Synchronous PreToolUse governance hook (Windows)
+# Reads tool call payload from stdin, POSTs to backend governance endpoint,
+# parses the HTTP 200 response, and outputs a Claude Code permissionDecision.
+
+$logFile = Join-Path $env:TEMP "systemprompt-governance-{{plugin_id}}.log"
+$reader = [System.IO.StreamReader]::new([System.Console]::OpenStandardInput())
+$body = $reader.ReadToEnd()
+$reader.Close()
+
+$headers = @{
+    "Authorization" = "Bearer {{token}}"
+    "Content-Type"  = "application/json"
+}
+
+try {
+    $response = Invoke-RestMethod `
+        -Uri "{{platform_url}}/api/public/hooks/govern?plugin_id={{plugin_id}}" `
+        -Method Post `
+        -Headers $headers `
+        -Body $body `
+        -TimeoutSec 10
+
+    $decision = $response.decision
+    $reason   = $response.reason
+
+    Add-Content -Path $logFile -Value "[$(Get-Date -Format o)] $decision`: $reason" -ErrorAction SilentlyContinue
+
+    if ($decision -eq "deny") {
+        Write-Output "{`"hookSpecificOutput`":{`"hookEventName`":`"PreToolUse`",`"permissionDecision`":`"deny`",`"permissionDecisionReason`":`"[GOVERNANCE] $reason`"}}"
+    } else {
+        Write-Output "{`"hookSpecificOutput`":{`"hookEventName`":`"PreToolUse`",`"permissionDecision`":`"allow`"}}"
+    }
+} catch {
+    Add-Content -Path $logFile -Value "[$(Get-Date -Format o)] Governance error: $_" -ErrorAction SilentlyContinue
+    Write-Output "{`"hookSpecificOutput`":{`"hookEventName`":`"PreToolUse`",`"permissionDecision`":`"allow`"}}"
+}
+exit 0

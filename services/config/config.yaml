@@ -1,0 +1,27 @@
+# SystemPrompt Services Configuration
+# This file aggregates all service configurations
+
+includes:
+  - ../agents/systemprompt_admin.yaml
+  - ../agents/associate_agent.yaml
+  - ../agents/developer_agent.yaml
+  - ../skills/config.yaml
+  - ../ai/config.yaml
+  - ../web/config.yaml
+  - ../scheduler/config.yaml
+  - ../mcp/systemprompt.yaml
+  - ../mcp/skill-manager.yaml
+  - ../plugins/config.yaml
+
+agents: {}
+mcp_servers: {}
+
+settings:
+  agentPortRange: [9000, 9999]
+  mcpPortRange: [5000, 5999]
+  autoStartEnabled: true
+  validationStrict: true
+  schemaValidationMode: "skip"
+
+# AI configuration is defined in services/ai/config.yaml (included above)
+# Do NOT duplicate here - the include has google_search_enabled: true

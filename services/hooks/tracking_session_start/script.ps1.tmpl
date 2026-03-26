@@ -1,0 +1,33 @@
+$logFile = Join-Path $env:TEMP "systemprompt-plugin-{{plugin_id}}.log"
+$reader = [System.IO.StreamReader]::new([System.Console]::OpenStandardInput())
+$body = $reader.ReadToEnd()
+$reader.Close()
+# Read plugin metadata from plugin.json if available
+$pluginJson = Join-Path $env:CLAUDE_PLUGIN_ROOT ".claude-plugin\plugin.json"
+if (Test-Path $pluginJson) {
+    try {
+        $manifest = Get-Content $pluginJson -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+        if ($manifest.version) {
+            $obj = $body | ConvertFrom-Json
+            $obj | Add-Member -NotePropertyName "plugin_version" -NotePropertyValue $manifest.version -Force
+            if ($manifest.name) {
+                $obj | Add-Member -NotePropertyName "plugin_name" -NotePropertyValue $manifest.name -Force
+            }
+            if ($manifest.basePluginId) {
+                $obj | Add-Member -NotePropertyName "base_plugin_id" -NotePropertyValue $manifest.basePluginId -Force
+            }
+            $body = $obj | ConvertTo-Json -Depth 10 -Compress
+        }
+    } catch {}
+}
+$headers = @{
+    "Authorization" = "Bearer {{token}}"
+    "Content-Type"  = "application/json"
+}
+try {
+    Add-Content -Path $logFile -Value "[$(Get-Date -Format o)] Tracking event for {{plugin_id}}" -ErrorAction SilentlyContinue
+    Invoke-RestMethod -Uri "{{platform_url}}/api/public/hooks/track?plugin_id={{plugin_id}}" -Method Post -Headers $headers -Body $body -TimeoutSec 5 -ErrorAction SilentlyContinue | Out-Null
+} catch {
+    Add-Content -Path $logFile -Value "[$(Get-Date -Format o)] Error: $_" -ErrorAction SilentlyContinue
+}
+exit 0

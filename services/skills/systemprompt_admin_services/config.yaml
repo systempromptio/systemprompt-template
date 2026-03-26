@@ -1,0 +1,13 @@
+id: systemprompt_admin_services
+name: "Service Management"
+description: "Start, stop, restart, and health-check services via the systemprompt CLI"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - systemprompt_admin
+tags:
+  - admin
+  - services
+  - management
+  - infrastructure

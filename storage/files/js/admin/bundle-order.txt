@@ -1,0 +1,34 @@
+# Bundle manifest — defines concatenation order for admin-bundle.js
+# Single source of truth. BundleAdminJsJob reads this and concatenates.
+#
+# Foundation (must be first, in this order)
+core.js
+toast.js
+events.js
+shared.js
+form-utils.js
+interactions.js
+install-widget.js
+org-common.js
+# Pages
+users-panel.js
+users.js
+plugins-details.js
+skill-files.js
+plugin-env.js
+plugins.js
+marketplace-plugins.js
+marketplace-versions.js
+plugin-edit.js
+plugin-create-steps.js
+plugin-create.js
+export.js
+audit.js
+achievements.js
+skills.js
+agents.js
+hooks.js
+mcp-servers.js
+access-control.js
+marketplaces.js
+my-workspace.js

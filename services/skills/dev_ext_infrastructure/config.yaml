@@ -1,0 +1,16 @@
+id: dev_ext_infrastructure
+name: "Extension: Infrastructure"
+description: "Jobs, Schemas, Router, Assets, Storage Paths, Site Auth, and Config Validation trait implementations"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - architect
+  - rust_impl
+tags:
+  - extensions
+  - jobs
+  - schemas
+  - router
+  - assets
+  - infrastructure

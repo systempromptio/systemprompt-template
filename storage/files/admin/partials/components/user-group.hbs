@@ -1,0 +1,19 @@
+<div class="version-user-group">
+    <div class="version-user-header">
+        <div style="display:flex;align-items:center;gap:var(--space-3)">
+            <div class="user-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:var(--text-sm)">{{initials label}}</div>
+            <div>
+                <div style="font-weight:600;font-size:var(--text-sm)">{{label}}</div>
+                <div style="font-size:var(--text-xs);color:var(--text-tertiary)">
+                    {{version_count}} version{{#if (not (eq version_count 1))}}s{{/if}}
+                    &middot; Latest: v{{latest_version_number}} ({{relativeTime latest_created_at}})
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="version-timeline">
+        {{#each versions}}
+        {{> components/version-card}}
+        {{/each}}
+    </div>
+</div>

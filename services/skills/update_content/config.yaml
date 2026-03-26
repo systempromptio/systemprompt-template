@@ -1,0 +1,14 @@
+id: update_content
+name: "Update Content"
+description: "Read, understand, and carefully edit existing content while preserving its original voice, structure, and essence. Make precise, targeted updates based on user instructions and structured data"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - content
+tags:
+  - content_management
+  - editing
+  - updates
+  - revision
+  - precision

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="50" height="50">
+  <g transform="translate(5, 3)" fill="#FF6B35">
+    <!-- Fork -->
+    <rect x="4" y="0" width="2.5" height="20" rx="1.25"/>
+    <rect x="10" y="0" width="2.5" height="20" rx="1.25"/>
+    <rect x="16" y="0" width="2.5" height="20" rx="1.25"/>
+    <rect x="3" y="18" width="16.5" height="3.5" rx="1.75"/>
+    <rect x="9.5" y="20" width="3.5" height="24" rx="1.75"/>
+    <!-- Spoon -->
+    <ellipse cx="32" cy="8" rx="7" ry="10" fill="none" stroke="#FF6B35" stroke-width="3"/>
+    <rect x="30.25" y="17" width="3.5" height="27" rx="1.75"/>
+  </g>
+</svg>

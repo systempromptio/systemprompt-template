@@ -1,0 +1,18 @@
+id: tracking_post_tool_use_failure
+name: "Failure Tracking"
+description: "Records tool failure events for error analytics"
+version: "1.0.0"
+enabled: true
+event: PostToolUseFailure
+matcher: "*"
+command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-{plugin_id}-usage.sh"
+async: true
+category: system
+plugins:
+  - common-skills
+tags:
+  - tracking
+  - analytics
+  - errors
+visible_to:
+  - admin

@@ -1,0 +1,17 @@
+{
+  "session_id": "sess_a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "transcript_path": "/home/user/.claude/projects/my-project/transcripts/2026-03-03T10-15-30.jsonl",
+  "cwd": "/home/user/projects/my-project",
+  "permission_mode": "default",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/home/user/projects/my-project/src/utils/factorial.ts",
+    "content": "export function factorial(n: number): number {\n  if (n <= 1) return 1;\n  return n * factorial(n - 1);\n}\n"
+  },
+  "tool_response": {
+    "filePath": "/home/user/projects/my-project/src/utils/factorial.ts",
+    "success": true
+  },
+  "tool_use_id": "toolu_01XYZabc9876DEFghi5432jk"
+}

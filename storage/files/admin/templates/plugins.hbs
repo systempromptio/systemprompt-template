@@ -1,0 +1,214 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search plugins..." id="plugin-search">
+        </div>
+        <select class="filter-select" id="category-filter" style="min-width:140px">
+            <option value="">All Categories</option>
+            {{#each categories}}
+            <option value="{{this}}">{{this}}</option>
+            {{/each}}
+        </select>
+        <button class="btn btn-secondary" id="bulk-actions-btn" disabled>
+            Bulk Actions (<span id="bulk-count" data-bulk-count>0</span>)
+        </button>
+        <button class="btn btn-secondary" id="export-marketplace-btn">Export</button>
+        <a href="/admin/org/plugins/create/" class="btn btn-primary">+ Create Plugin</a>
+    </div>
+
+    {{#if plugins}}
+    <div class="table-container">
+        <table class="data-table" id="plugins-table">
+            <thead>
+                <tr>
+                    <th style="width:40px" data-no-row-click><input type="checkbox" class="bulk-select-all"></th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Version</th>
+                    <th>Roles</th>
+                    <th>Marketplaces</th>
+                    <th>Resources</th>
+                    <th class="col-actions"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each plugins}}
+                <tr class="clickable-row" data-entity-type="plugin" data-entity-id="{{id}}" data-name="{{toLowerCase name}}" data-category="{{category}}">
+                    <td data-no-row-click>
+                        {{#if (not (eq id "custom"))}}
+                        <input type="checkbox" class="bulk-checkbox" data-entity-id="{{id}}">
+                        {{/if}}
+                    </td>
+                    <td>
+                        <div class="cell-primary"><span class="expand-indicator" data-expand-for="{{id}}">&#9654;</span> {{name}}</div>
+                        {{#if description}}<div class="cell-secondary">{{truncate description 80}}</div>{{/if}}
+                    </td>
+                    <td>
+                        {{#if category}}<span class="badge badge-blue">{{category}}</span>{{else}}<span style="color:var(--text-tertiary)">—</span>{{/if}}
+                    </td>
+                    <td>
+                        {{#if version}}<span class="badge badge-gray">{{version}}</span>{{else}}<span style="color:var(--text-tertiary)">—</span>{{/if}}
+                    </td>
+                    <td>
+                        <div class="badge-row">
+                            {{#each role_names}}<span class="badge badge-blue">{{this}}</span>{{/each}}
+                            {{#unless role_names}}<span class="badge badge-gray">All</span>{{/unless}}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="badge-row">
+                            {{#each marketplace_badges}}<a href="/admin/org/org-marketplaces/edit/?id={{id}}" class="badge badge-purple" style="text-decoration:none">{{name}}</a>{{/each}}
+                            {{#unless marketplace_badges}}<span class="badge badge-gray">None</span>{{/unless}}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cell-badges">
+                            {{#if (gt skill_count 0)}}<span class="badge badge-green badge-clickable" data-expand-section="skills" data-plugin-id="{{id}}">{{skill_count}} skill{{#if (not (eq skill_count 1))}}s{{/if}}</span>{{/if}}
+                            {{#if (gt agent_count 0)}}<span class="badge badge-blue badge-clickable" data-expand-section="agents" data-plugin-id="{{id}}">{{agent_count}} agent{{#if (not (eq agent_count 1))}}s{{/if}}</span>{{/if}}
+                            {{#if (gt mcp_count 0)}}<span class="badge badge-yellow badge-clickable" data-expand-section="mcp" data-plugin-id="{{id}}">{{mcp_count}} MCP</span>{{/if}}
+                            {{#if (gt hook_count 0)}}<span class="badge badge-gray badge-clickable" data-expand-section="hooks" data-plugin-id="{{id}}">{{hook_count}} hook{{#if (not (eq hook_count 1))}}s{{/if}}</span>{{/if}}
+                        </div>
+                    </td>
+                    <td class="col-actions" data-no-row-click>
+                        {{#if (not (eq id "custom"))}}
+                        <div class="actions-menu" data-actions-for="{{id}}">
+                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                            <div class="actions-dropdown">
+                                <a href="/admin/org/plugins/edit/?id={{id}}" class="actions-item">Edit</a>
+                                <button class="actions-item" data-duplicate-plugin="{{id}}">Duplicate</button>
+                                <button class="actions-item" data-generate-plugin="{{id}}" data-platform="unix">Generate (macOS/Linux)</button>
+                                <button class="actions-item" data-generate-plugin="{{id}}" data-platform="windows">Generate (Windows)</button>
+                                <div class="actions-popup-separator"></div>
+                                <button class="actions-item actions-item-danger" data-delete-plugin="{{id}}">Delete</button>
+                            </div>
+                        </div>
+                        {{/if}}
+                    </td>
+                </tr>
+                <!-- Detail expand row -->
+                <tr class="detail-row" data-detail-for="{{id}}">
+                    <td colspan="8">
+                        <div class="detail-row-content">
+                            <!-- Summary bar -->
+                            <div class="detail-section" style="display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:center;margin-bottom:var(--space-3)">
+                                {{#if author_name}}<span style="font-size:var(--text-sm);color:var(--text-secondary)">Author: <strong>{{author_name}}</strong></span>{{/if}}
+                                {{#if keywords}}
+                                <div class="badge-row">
+                                    {{#each keywords}}<span class="badge badge-gray">{{this}}</span>{{/each}}
+                                </div>
+                                {{/if}}
+                                {{#if depends_list}}
+                                <div class="badge-row">
+                                    <span style="font-size:var(--text-xs);color:var(--text-tertiary)">Depends:</span>
+                                    {{#each depends_list}}<span class="badge badge-yellow">{{this}}</span>{{/each}}
+                                </div>
+                                {{/if}}
+                            </div>
+
+                            <!-- Skills sub-table -->
+                            <div class="detail-section" data-section="skills" data-plugin-id="{{id}}">
+                                <strong>Skills (<span data-count="skills" data-for-plugin="{{id}}">{{skill_count}}</span>)</strong>
+                                <table class="detail-sub-table">
+                                    {{#each skills}}
+                                    <tr data-item-row>
+                                        <td>{{name}} <span class="badge {{#if (eq source "custom")}}badge-green{{else}}badge-blue{{/if}}">{{source}}</span>{{#if base_skill_id}} <span class="badge badge-yellow">customized</span>{{/if}}</td>
+                                        <td style="text-align:right;white-space:nowrap">
+                                            <button class="btn btn-secondary btn-sm" data-browse-skill="{{id}}" data-skill-name="{{name}}" style="font-size:var(--text-xs);padding:2px 8px">Files</button>
+                                            <button class="btn-icon-remove" data-remove-from-plugin="{{id}}" data-resource-type="skills" data-plugin-id="{{../id}}" title="Remove skill">&#10005;</button>
+                                        </td>
+                                    </tr>
+                                    {{/each}}
+                                    <tr class="add-row"><td colspan="2"><button class="btn btn-secondary btn-sm" data-add-to-plugin="skills" data-plugin-id="{{id}}" style="font-size:var(--text-xs);padding:2px 8px">+ Add Skill</button></td></tr>
+                                </table>
+                            </div>
+
+                            <!-- Agents sub-table -->
+                            <div class="detail-section" data-section="agents" data-plugin-id="{{id}}">
+                                <strong>Agents (<span data-count="agents" data-for-plugin="{{id}}">{{agent_count}}</span>)</strong>
+                                <table class="detail-sub-table">
+                                    {{#each agents}}
+                                    <tr data-item-row>
+                                        <td>{{name}}{{#if base_agent_id}} <span class="badge badge-yellow">customized</span>{{/if}}</td>
+                                        <td style="text-align:right"><button class="btn-icon-remove" data-remove-from-plugin="{{id}}" data-resource-type="agents" data-plugin-id="{{../id}}" title="Remove agent">&#10005;</button></td>
+                                    </tr>
+                                    {{/each}}
+                                    <tr class="add-row"><td colspan="2"><button class="btn btn-secondary btn-sm" data-add-to-plugin="agents" data-plugin-id="{{id}}" style="font-size:var(--text-xs);padding:2px 8px">+ Add Agent</button></td></tr>
+                                </table>
+                            </div>
+
+                            <!-- MCP sub-table -->
+                            <div class="detail-section" data-section="mcp" data-plugin-id="{{id}}">
+                                <strong>MCP Servers (<span data-count="mcp_servers" data-for-plugin="{{id}}">{{mcp_count}}</span>)</strong>
+                                <table class="detail-sub-table">
+                                    {{#each mcp_servers}}
+                                    <tr data-item-row>
+                                        <td>{{this}}</td>
+                                        <td style="text-align:right"><button class="btn-icon-remove" data-remove-from-plugin="{{this}}" data-resource-type="mcp_servers" data-plugin-id="{{../id}}" title="Remove MCP server">&#10005;</button></td>
+                                    </tr>
+                                    {{/each}}
+                                    <tr class="add-row"><td colspan="2"><button class="btn btn-secondary btn-sm" data-add-to-plugin="mcp_servers" data-plugin-id="{{id}}" style="font-size:var(--text-xs);padding:2px 8px">+ Add MCP Server</button></td></tr>
+                                </table>
+                            </div>
+
+                            <!-- Hooks sub-table -->
+                            <div class="detail-section" data-section="hooks" data-plugin-id="{{id}}">
+                                <strong>Hooks (<span data-count="hooks" data-for-plugin="{{id}}">{{hook_count}}</span>)</strong>
+                                <table class="detail-sub-table">
+                                    {{#each hooks}}
+                                    <tr data-item-row>
+                                        <td><span class="badge badge-blue">{{event}}</span> <code style="font-size:var(--text-xs)">{{matcher}}</code>{{#if is_async}} <span class="badge badge-gray">async</span>{{/if}}</td>
+                                        <td style="text-align:right"><button class="btn-icon-remove" data-remove-from-plugin="{{id}}" data-resource-type="hooks" data-plugin-id="{{../id}}" title="Remove hook">&#10005;</button></td>
+                                    </tr>
+                                    {{/each}}
+                                    <tr class="add-row"><td colspan="2"><button class="btn btn-secondary btn-sm" data-add-to-plugin="hooks" data-plugin-id="{{id}}" style="font-size:var(--text-xs);padding:2px 8px">+ Add Hook</button></td></tr>
+                                </table>
+                            </div>
+
+                            <!-- JSON config view -->
+                            <div class="detail-section">
+                                <button class="btn btn-secondary btn-sm" data-toggle-json="{{id}}" style="font-size:var(--text-xs);padding:2px 8px;margin-bottom:var(--space-2)">Show JSON</button>
+                                <div class="json-view" data-json-for="{{id}}" style="display:none"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    {{> components/empty-state message="No plugins configured."}}
+    {{/if}}
+
+    <!-- Hidden plugin detail data -->
+    {{#each plugins}}
+    <script type="application/json" data-plugin-detail="{{id}}">
+        {{{json this}}}
+    </script>
+    {{/each}}
+
+    <!-- Side Panel -->
+    <div class="panel-overlay" id="config-overlay"></div>
+    <div class="side-panel" id="config-detail-panel">
+        <div class="panel-header">
+            <h2 id="panel-title" style="margin:0;font-size:var(--text-lg)"></h2>
+            <button class="btn btn-icon" id="panel-close" style="font-size:var(--text-lg)">&times;</button>
+        </div>
+        <div class="panel-body" id="panel-body"></div>
+        <div class="panel-footer" id="panel-footer"></div>
+    </div>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-plugins.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.initPluginsConfig();
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

@@ -1,0 +1,121 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{#if event_breakdown}}
+    <div class="metric-ribbon" style="align-items:center;flex-wrap:wrap;gap:var(--space-2)">
+        <span style="font-weight:700;font-size:var(--text-base);color:var(--text-primary);margin-right:var(--space-2)">{{total}} events</span>
+        {{#each event_breakdown}}
+            {{#if (eq event_type "claude_code_PostToolUse")}}<span class="badge badge-blue">Tool Use <strong>{{count}}</strong></span>
+            {{else if (eq event_type "claude_code_PostToolUseFailure")}}<span class="badge badge-red">Tool Failure <strong>{{count}}</strong></span>
+            {{else if (eq event_type "claude_code_SessionStart")}}<span class="badge badge-green">Session Start <strong>{{count}}</strong></span>
+            {{else if (eq event_type "claude_code_SessionEnd")}}<span class="badge badge-yellow">Session End <strong>{{count}}</strong></span>
+            {{else if (eq event_type "claude_code_Stop")}}<span class="badge badge-blue">Turn Complete <strong>{{count}}</strong></span>
+            {{else if (eq event_type "claude_code_SubagentStart")}}<span class="badge badge-blue">Subagent Start <strong>{{count}}</strong></span>
+            {{else if (eq event_type "claude_code_SubagentStop")}}<span class="badge badge-yellow">Subagent Stop <strong>{{count}}</strong></span>
+            {{else if (eq event_type "claude_code_UserPromptSubmit")}}<span class="badge badge-purple">User Prompt <strong>{{count}}</strong></span>
+            {{else}}<span class="badge badge-gray">{{event_type}} <strong>{{count}}</strong></span>
+            {{/if}}
+        {{/each}}
+    </div>
+    {{/if}}
+    <div class="toolbar">
+        <input type="text" class="search-input search-narrow" id="events-search" placeholder="Search users, tools, sessions..." value="{{default search ""}}">
+        <div class="flex-1"></div>
+        <span class="text-tertiary text-sm self-center">
+            {{#if (gt total 0)}}{{add offset 1}}{{else}}0{{/if}}-{{#if (gt total (add offset limit))}}{{add offset limit}}{{else}}{{total}}{{/if}} of {{total}}
+        </span>
+        {{#if has_prev}}
+        <a href="/admin/events/?offset={{prev_offset}}{{#if search}}&search={{search}}{{/if}}{{#if event_type}}&event_type={{event_type}}{{/if}}" class="btn btn-secondary btn-sm">Newer</a>
+        {{else}}
+        <button class="btn btn-secondary btn-sm" disabled>Newer</button>
+        {{/if}}
+        {{#if has_next}}
+        <a href="/admin/events/?offset={{next_offset}}{{#if search}}&search={{search}}{{/if}}{{#if event_type}}&event_type={{event_type}}{{/if}}" class="btn btn-secondary btn-sm">Older</a>
+        {{else}}
+        <button class="btn btn-secondary btn-sm" disabled>Older</button>
+        {{/if}}
+    </div>
+    {{#if events}}
+    {{#> components/data-table}}
+        <thead><tr><th>Timestamp</th><th>User</th><th>Event Type</th><th>Tool</th><th>Plugin</th><th>Session</th><th class="col-chevron"></th></tr></thead>
+        <tbody>
+        {{#each events}}
+        <tr class="events-row clickable" data-event-id="{{id}}">
+            <td><span class="date">{{formatDate created_at}}</span></td>
+            <td>{{default display_name user_id}}</td>
+            <td>
+                {{#if (eq event_type "claude_code_PostToolUse")}}<span class="badge badge-blue">Tool Use</span>
+                {{else if (eq event_type "claude_code_PostToolUseFailure")}}<span class="badge badge-red">Tool Failure</span>
+                {{else if (eq event_type "claude_code_SessionStart")}}<span class="badge badge-green">Session Start</span>
+                {{else if (eq event_type "claude_code_SessionEnd")}}<span class="badge badge-yellow">Session End</span>
+                {{else if (eq event_type "claude_code_Stop")}}<span class="badge badge-blue">Turn Complete</span>
+                {{else if (eq event_type "claude_code_SubagentStart")}}<span class="badge badge-blue">Subagent Start</span>
+                {{else if (eq event_type "claude_code_SubagentStop")}}<span class="badge badge-yellow">Subagent Stop</span>
+                {{else if (eq event_type "claude_code_UserPromptSubmit")}}<span class="badge badge-purple">User Prompt</span>
+                {{else}}<span class="badge badge-gray">{{event_type}}</span>
+                {{/if}}
+            </td>
+            <td>{{#if tool_name}}<code class="code-inline">{{tool_name}}</code>{{else}}<span class="text-tertiary">-</span>{{/if}}</td>
+            <td>{{#if plugin_id}}{{plugin_id}}{{else}}<span class="text-tertiary">-</span>{{/if}}</td>
+            <td>{{#if session_id}}<code class="code-inline">{{truncate session_id}}</code>{{else}}-{{/if}}</td>
+            <td class="text-center"><span class="expand-chevron">&#9654;</span></td>
+        </tr>
+        <tr class="events-detail-row" data-detail-for="{{id}}" style="display:none">
+            <td colspan="7" class="cell-no-pad">
+                <div class="detail-content">
+                    <div class="metadata-grid">
+                        <strong>Event ID:</strong><span>{{id}}</span>
+                        <strong>Full Type:</strong><span>{{event_type}}</span>
+                        <strong>Session ID:</strong><span>{{default session_id "-"}}</span>
+                        <strong>User ID:</strong><span>{{user_id}}</span>
+                        <strong>Timestamp:</strong><span>{{formatDate created_at}}</span>
+                    </div>
+                    <details>
+                        <summary class="detail-summary">Raw Metadata</summary>
+                        <pre class="detail-pre">{{json metadata}}</pre>
+                    </details>
+                </div>
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No events match the current filters."}}
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            // Search - navigate on enter
+            var searchInput = document.getElementById('events-search');
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        var q = searchInput.value.trim();
+                        var url = '/admin/events/';
+                        if (q) url += '?search=' + encodeURIComponent(q);
+                        window.location.href = url;
+                    }
+                });
+            }
+            // Expand/collapse detail rows
+            document.addEventListener('click', function(e) {
+                var row = e.target.closest('.events-row');
+                if (row) {
+                    var id = row.getAttribute('data-event-id');
+                    var detail = document.querySelector('[data-detail-for="' + id + '"]');
+                    var chevron = row.querySelector('.expand-chevron');
+                    if (detail) {
+                        var isOpen = detail.style.display !== 'none';
+                        detail.style.display = isOpen ? 'none' : '';
+                        if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(90deg)';
+                    }
+                }
+            });
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

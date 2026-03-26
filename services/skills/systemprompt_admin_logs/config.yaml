@@ -1,0 +1,13 @@
+id: systemprompt_admin_logs
+name: "Log Management"
+description: "View, filter, stream, trace, and audit logs via the systemprompt CLI"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - systemprompt_admin
+tags:
+  - admin
+  - logs
+  - debugging
+  - monitoring

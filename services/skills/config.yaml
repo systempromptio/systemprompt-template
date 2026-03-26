@@ -1,0 +1,83 @@
+# Skills configuration
+# Define skills available to agents
+id: skills_root
+name: "Skills Root"
+description: "Root configuration for all skills"
+enabled: true
+version: "1.0.0"
+
+includes:
+  # Admin
+  - systemprompt_cli/config.yaml
+  - systemprompt_admin_agent_management/config.yaml
+  - systemprompt_admin_analytics/config.yaml
+  - systemprompt_admin_database/config.yaml
+  - systemprompt_admin_jobs/config.yaml
+  - systemprompt_admin_logs/config.yaml
+  - systemprompt_admin_services/config.yaml
+  - systemprompt_admin_skill_creation/config.yaml
+  - systemprompt_admin_user_management/config.yaml
+
+  # Common
+  - common_content_collection/config.yaml
+  - common_email_campaign_builder/config.yaml
+  - common_event_planner/config.yaml
+  - common_foodles_brand/config.yaml
+  - common_linkedin_content_manager/config.yaml
+  - common_odoo_frontend/config.yaml
+  - common_odoo_importation/config.yaml
+  - common_odoo_pilot/config.yaml
+  - common_odoo_studio_fields/config.yaml
+  - common_quality_gate/config.yaml
+  - common_seo_manager/config.yaml
+  - common_timesheet_report/config.yaml
+
+  # Content
+  - announcement_writing/config.yaml
+  - blog_image_generation/config.yaml
+  - blog_writing/config.yaml
+  - content_writing/config.yaml
+  - edwards_voice/config.yaml
+  - guide_writing/config.yaml
+  - narrative_writing/config.yaml
+  - research_blog/config.yaml
+  - technical_content_writing/config.yaml
+  - technical_writing/config.yaml
+  - update_content/config.yaml
+
+  # Dev
+  - dev_rust_standards/config.yaml
+  - dev_web_standards/config.yaml
+  - dev_frontend_standards/config.yaml
+  - dev_architecture_standards/config.yaml
+  - dev_ext_data_providers/config.yaml
+  - dev_ext_rendering/config.yaml
+  - dev_ext_infrastructure/config.yaml
+  - dev_ext_feeds/config.yaml
+  - dev_ext_providers/config.yaml
+  - dev_ext_hooks/config.yaml
+
+  # General
+  - general_assistance/config.yaml
+
+  # Marketplace
+  - marketplace_onboarding/config.yaml
+  - skill_creator/config.yaml
+  - agent_creator/config.yaml
+  - secrets_creator/config.yaml
+
+  # Sales
+  - sales_crm_debug/config.yaml
+  - sales_crm_health_monitor/config.yaml
+  - sales_crm_report/config.yaml
+  - sales_crm_send_emails/config.yaml
+
+  # Enterprise
+  - enterprise_agent_governance/config.yaml
+  - enterprise_security_compliance/config.yaml
+  - enterprise_mcp_management/config.yaml
+
+  # Leadership
+  - leadership_ai_usage_report/config.yaml
+
+skills: {}

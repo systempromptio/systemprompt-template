@@ -1,0 +1,15 @@
+id: dev_ext_data_providers
+name: "Extension: Data Providers"
+description: "PageDataProvider, ContentDataProvider, and FrontmatterProcessor trait implementations"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - architect
+  - rust_impl
+tags:
+  - extensions
+  - data-providers
+  - page-data
+  - content
+  - frontmatter

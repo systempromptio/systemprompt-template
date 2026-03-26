@@ -1,0 +1,125 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/back-button href="/admin/users/" label="Back to Users"}}
+
+    {{#if not_found}}
+    {{> components/empty-state message="User not found."}}
+    {{else if user}}
+
+    <div class="dashboard-grid stats-grid-3col mb-6">
+        {{> components/stat-card label="User" value=(default user.display_name user.user_id) subtitle=user.user_id}}
+        {{> components/stat-card label="Total Events" value=(default user.total_events 0)}}
+        {{#if user.last_active}}
+        {{> components/stat-card label="Last Active" value=(relativeTime user.last_active)}}
+        {{else}}
+        {{> components/stat-card label="Last Active" value="Never"}}
+        {{/if}}
+    </div>
+
+    <div class="card mb-6">
+        <h3>Profile</h3>
+        <table class="data-table"><tbody>
+            <tr><td><strong>User ID</strong></td><td>{{user.user_id}}</td></tr>
+            {{#if user.display_name}}<tr><td><strong>Display Name</strong></td><td>{{user.display_name}}</td></tr>{{/if}}
+            {{#if user.email}}<tr><td><strong>Email</strong></td><td>{{user.email}}</td></tr>{{/if}}
+            {{#if user.department}}<tr><td><strong>Department</strong></td><td><span class="badge badge-blue">{{user.department}}</span></td></tr>{{/if}}
+            {{#if user.roles}}<tr><td><strong>Roles</strong></td><td>{{#each user.roles}}<span class="badge badge-blue">{{this}}</span> {{/each}}</td></tr>{{/if}}
+            <tr><td><strong>Status</strong></td><td>{{#if user.is_active}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Inactive</span>{{/if}}</td></tr>
+            <tr><td><strong>Member Since</strong></td><td>{{formatDate user.created_at}}</td></tr>
+        </tbody></table>
+    </div>
+
+    {{#if gamification}}
+    <div class="gamification-profile mb-6">
+        <h3>Gamification</h3>
+        <div class="dashboard-stats mb-6">
+            {{> components/stat-card label="Total XP" value=(default gamification.total_xp 0)}}
+            {{> components/stat-card label="Rank" value=(default gamification.rank_name "Spark")}}
+            {{> components/stat-card label="Current Streak" value=(concat (default gamification.current_streak 0) "d")}}
+            {{> components/stat-card label="Leaderboard" value=(concat "#" (default gamification.rank_position "-"))}}
+        </div>
+    </div>
+    {{#if enriched_achievements}}
+    <div class="card mb-6">
+        <h3>Achievements ({{achievements_count}})</h3>
+        <div class="achievement-grid">
+            {{#each enriched_achievements}}
+            <div class="achievement-card unlocked">
+                <div class="achievement-icon">{{#if (eq category "First Steps")}}&#x26A1;{{else if (eq category "Milestones")}}&#x1F4CA;{{else if (eq category "Exploration")}}&#x1F50D;{{else if (eq category "Creation")}}&#x2728;{{else if (eq category "Streaks")}}&#x1F525;{{else if (eq category "Ranks")}}&#x1F3C6;{{else if (eq category "Tokens")}}&#x1FA99;{{else if (eq category "Special")}}&#x2B50;{{else}}&#x2B50;{{/if}}</div>
+                <div style="font-weight:600;font-size:var(--text-sm);color:var(--text-primary)">{{name}}</div>
+                <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1)">{{description}}</div>
+                <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1)"><span class="badge badge-blue">{{category}}</span></div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+    {{/if}}
+    {{/if}}
+
+    {{#if user.activity_summary}}
+    <div class="card mb-6">
+        <h3>Activity Breakdown</h3>
+        <div class="dashboard-grid stats-grid-3col">
+            {{#each user.activity_summary}}
+            {{> components/stat-card label=category value=(default count 0)}}
+            {{/each}}
+        </div>
+    </div>
+    {{/if}}
+
+    <div class="card mb-6">
+        <h3>Custom Skills</h3>
+        {{#if user.skills}}
+        <div class="table-container"><div class="table-scroll">
+            <table class="data-table">
+                <thead><tr><th>Name</th><th>Description</th><th>Status</th><th>Tags</th><th>Updated</th></tr></thead>
+                <tbody>
+                {{#each user.skills}}
+                <tr>
+                    <td>{{name}}</td>
+                    <td>{{default description "-"}}</td>
+                    <td>{{#if enabled}}<span class="badge badge-green">Enabled</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}</td>
+                    <td>{{#if tags}}{{#each tags}}<span class="badge badge-blue">{{this}}</span> {{/each}}{{else}}-{{/if}}</td>
+                    <td>{{relativeTime updated_at}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+        </div></div>
+        {{else}}
+        {{> components/empty-state message="No custom skills."}}
+        {{/if}}
+    </div>
+
+    <div class="card">
+        <h3>Recent Activity</h3>
+        {{#if user.recent_activity}}
+        <div class="live-feed">
+            {{#each user.recent_activity}}
+            <div class="feed-item">
+                <div class="feed-icon {{#if (eq category "login")}}feed-blue{{else if (eq category "skill_usage")}}feed-orange{{else if (eq category "marketplace_edit")}}feed-green{{else if (eq category "marketplace_connect")}}feed-purple{{else if (eq category "session")}}feed-cyan{{else}}feed-blue{{/if}}"></div>
+                <div class="feed-content">
+                    <span class="feed-text">{{description}}</span>
+                    <span class="feed-time" title="{{formatDate created_at}}">{{relativeTime created_at}}</span>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+        {{else}}
+        {{> components/empty-state message="No activity recorded."}}
+        {{/if}}
+    </div>
+
+    {{else}}
+    {{> components/empty-state message="No user ID provided."}}
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

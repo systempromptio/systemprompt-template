@@ -1,0 +1,15 @@
+{{#if (gt avg_rating 0)}}
+<span class="star-rating">
+    {{#if (gt avg_rating 0.5)}}<span class="star star-filled">&#9733;</span>{{else}}<span class="star star-empty">&#9733;</span>{{/if}}
+    {{#if (gt avg_rating 1.5)}}<span class="star star-filled">&#9733;</span>{{else}}<span class="star star-empty">&#9733;</span>{{/if}}
+    {{#if (gt avg_rating 2.5)}}<span class="star star-filled">&#9733;</span>{{else}}<span class="star star-empty">&#9733;</span>{{/if}}
+    {{#if (gt avg_rating 3.5)}}<span class="star star-filled">&#9733;</span>{{else}}<span class="star star-empty">&#9733;</span>{{/if}}
+    {{#if (gt avg_rating 4.5)}}<span class="star star-filled">&#9733;</span>{{else}}<span class="star star-empty">&#9733;</span>{{/if}}
+    <span class="star-text">{{avg_rating_display}} ({{default rating_count "0"}})</span>
+</span>
+{{else}}
+<span class="star-rating">
+    <span class="star star-empty">&#9733;</span><span class="star star-empty">&#9733;</span><span class="star star-empty">&#9733;</span><span class="star star-empty">&#9733;</span><span class="star star-empty">&#9733;</span>
+    <span class="star-text">0.0 (0)</span>
+</span>
+{{/if}}

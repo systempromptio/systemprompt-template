@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM banned_ips\n            WHERE expires_at IS NOT NULL\n              AND expires_at < CURRENT_TIMESTAMP\n              AND NOT is_permanent\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "d689728a3e65bafac9abb5cdba30d4351d8a4aa6e743b6e8a7e5eadba4664baa"
+}

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT level as \"level!\", COUNT(*) as \"count\"\n            FROM logs\n            GROUP BY level\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "level!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "df21c151fd2988b1075b2f892d0792d43349069b3ba80b3022457520cb79f10a"
+}

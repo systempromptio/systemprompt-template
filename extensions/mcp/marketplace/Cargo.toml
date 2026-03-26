@@ -1,0 +1,44 @@
+[package]
+name = "systemprompt-mcp-marketplace"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "systemprompt-mcp-marketplace"
+path = "src/main.rs"
+
+[lib]
+name = "systemprompt_mcp_marketplace"
+path = "src/lib.rs"
+
+[dependencies]
+# Core framework (facade)
+systemprompt = { workspace = true, features = ["full"] }
+
+# Web extension for repository access
+systemprompt-web-extension = { path = "../../web" }
+
+# MCP Protocol
+rmcp.workspace = true
+
+# Web framework
+axum.workspace = true
+
+# Runtime
+tokio.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+async-trait.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+sqlx.workspace = true
+
+[lints]
+workspace = true

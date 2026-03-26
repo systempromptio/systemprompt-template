@@ -1,0 +1,390 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+
+    <div class="metric-ribbon" id="metric-ribbon">
+        <div class="metric-ribbon-item" data-key="events_today">
+            <span class="metric-ribbon-value">{{stats.events_today}}</span>
+            <span class="metric-ribbon-label">Events Today</span>
+        </div>
+        <div class="metric-ribbon-item" data-key="tool_uses">
+            <span class="metric-ribbon-value">{{stats.tool_uses}}</span>
+            <span class="metric-ribbon-label">Tool Uses</span>
+        </div>
+        <div class="metric-ribbon-item" data-key="prompts">
+            <span class="metric-ribbon-value">{{stats.prompts}}</span>
+            <span class="metric-ribbon-label">Prompts</span>
+        </div>
+        <div class="metric-ribbon-item" data-key="total_sessions">
+            <span class="metric-ribbon-value">{{stats.total_sessions}}</span>
+            <span class="metric-ribbon-label">Sessions</span>
+        </div>
+        <div class="metric-ribbon-item" data-key="active_users_24h">
+            <span class="metric-ribbon-value">{{active_users_24h}}</span>
+            <span class="metric-ribbon-label">Active Users</span>
+        </div>
+        {{#if stats.error_count}}
+        <div class="metric-ribbon-item metric-ribbon-danger" data-key="error_count">
+            <span class="metric-ribbon-value">{{stats.error_count}}</span>
+            <span class="metric-ribbon-label">Errors</span>
+        </div>
+        {{/if}}
+        {{#if stats.total_input_tokens}}
+        <div class="metric-ribbon-item" data-key="total_tokens">
+            <span class="metric-ribbon-value">{{total_tokens_display}}</span>
+            <span class="metric-ribbon-label">Tokens</span>
+        </div>
+        {{/if}}
+        {{#if stats.total_cost_usd}}
+        <div class="metric-ribbon-item" data-key="total_cost">
+            <span class="metric-ribbon-value">${{stats.total_cost_usd}}</span>
+            <span class="metric-ribbon-label">Cost</span>
+        </div>
+        {{/if}}
+        <div class="metric-ribbon-item metric-ribbon-danger" data-key="failure_count">
+            <span class="metric-ribbon-value">{{stats.failure_count}}</span>
+            <span class="metric-ribbon-label">Failures</span>
+        </div>
+        {{#if total_rejected}}
+        <div class="metric-ribbon-item metric-ribbon-danger" data-key="mcp_rejected">
+            <span class="metric-ribbon-value">{{total_rejected}}</span>
+            <span class="metric-ribbon-label">MCP Rejections</span>
+        </div>
+        {{/if}}
+        <div class="metric-ribbon-item metric-ribbon-accent" data-key="total_plugins">
+            <span class="metric-ribbon-value">{{total_plugins}}</span>
+            <span class="metric-ribbon-label">Plugins</span>
+        </div>
+        <div class="metric-ribbon-item metric-ribbon-accent" data-key="total_skills">
+            <span class="metric-ribbon-value">{{total_skills}}</span>
+            <span class="metric-ribbon-label">Skills</span>
+        </div>
+    </div>
+
+    <div class="usage-chart-container">
+        <div class="usage-chart-header">
+            <div class="usage-chart-title">AI Usage</div>
+            <div class="chart-range-tabs">
+                <a href="?range=24h" class="chart-range-tab {{#if range_24h}}active{{/if}}">24h</a>
+                <a href="?range=7d" class="chart-range-tab {{#if range_7d}}active{{/if}}">7d</a>
+                <a href="?range=14d" class="chart-range-tab {{#if range_14d}}active{{/if}}">14d</a>
+            </div>
+            <div class="usage-chart-legend">
+                <span class="legend-item legend-sessions">Sessions</span>
+                <span class="legend-item legend-active-users">Active Users</span>
+                <span class="legend-item legend-prompts">Prompts</span>
+                <span class="legend-item legend-tools">Tool Uses</span>
+                <span class="legend-item legend-errors">Errors</span>
+            </div>
+            <div class="usage-chart-peak">Peak: {{chart.peak}}</div>
+        </div>
+        {{#if chart.has_data}}
+        <div class="usage-chart-body">
+            <svg viewBox="0 0 960 280" preserveAspectRatio="none" class="usage-svg">
+                <defs>
+                    <linearGradient id="grad-sessions" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.7"/>
+                        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.08"/>
+                    </linearGradient>
+                    <linearGradient id="grad-active-users" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#10B981" stop-opacity="0.7"/>
+                        <stop offset="100%" stop-color="#10B981" stop-opacity="0.08"/>
+                    </linearGradient>
+                    <linearGradient id="grad-prompts" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.7"/>
+                        <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.08"/>
+                    </linearGradient>
+                    <linearGradient id="grad-tools" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#6B4FBB" stop-opacity="0.7"/>
+                        <stop offset="100%" stop-color="#6B4FBB" stop-opacity="0.08"/>
+                    </linearGradient>
+                    <linearGradient id="grad-errors" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#EF4444" stop-opacity="0.7"/>
+                        <stop offset="100%" stop-color="#EF4444" stop-opacity="0.08"/>
+                    </linearGradient>
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                {{#each chart.y_labels}}
+                <line x1="40" y1="{{this.y}}" x2="960" y2="{{this.y}}" stroke="rgba(0,0,0,0.08)" stroke-width="1"/>
+                <text x="36" y="{{this.y}}" class="chart-axis-label" text-anchor="end" dominant-baseline="middle">{{this.label}}</text>
+                {{/each}}
+                <path d="{{chart.paths.sessions}}" fill="url(#grad-sessions)" class="area-path"/>
+                <path d="{{chart.paths.active_users}}" fill="url(#grad-active-users)" class="area-path"/>
+                <path d="{{chart.paths.prompts}}" fill="url(#grad-prompts)" class="area-path"/>
+                <path d="{{chart.paths.tools}}" fill="url(#grad-tools)" class="area-path"/>
+                <path d="{{chart.paths.errors}}" fill="url(#grad-errors)" class="area-path"/>
+                <path d="{{chart.paths.top_line}}" fill="none" stroke="#6B4FBB" stroke-width="2" filter="url(#glow)" class="line-path"/>
+            </svg>
+            <div class="usage-chart-x-axis">
+                {{#each chart.x_labels}}
+                <span>{{this}}</span>
+                {{/each}}
+            </div>
+        </div>
+        {{else}}
+        <div class="usage-chart-body usage-chart-empty">
+            <p>No activity data for this time range.</p>
+        </div>
+        {{/if}}
+    </div>
+
+    <div class="dashboard-two-col">
+        <div>
+            <div class="section-title">Live Activity <span class="live-dot" id="sse-indicator"></span></div>
+            {{#if timeline}}
+            <div class="live-feed card p-5" id="live-feed">
+                {{#each timeline}}
+                <div class="feed-item" data-ts="{{created_at}}">
+                    <div class="feed-icon {{#if (eq category "login")}}feed-blue{{else if (eq category "marketplace_connect")}}feed-purple{{else if (eq category "marketplace_edit")}}feed-green{{else if (eq category "session")}}feed-cyan{{else if (eq category "tool_usage")}}feed-indigo{{else if (eq category "error")}}feed-red{{else if (eq category "mcp_access")}}feed-red{{else if (eq category "notification")}}feed-amber{{else if (eq category "agent_response")}}feed-teal{{else}}feed-orange{{/if}}"></div>
+                    <div class="feed-content">
+                        <span class="feed-text"><strong>{{default display_name "Anonymous"}}</strong> {{description}}</span>
+                        <span class="feed-time">{{relativeTime created_at}}</span>
+                    </div>
+                </div>
+                {{/each}}
+                <div class="section-footer"><a href="/admin/events/" class="text-sm">View all events &rarr;</a></div>
+            </div>
+            {{else}}
+            {{> components/empty-state message="No activity recorded yet."}}
+            {{/if}}
+        </div>
+        <div>
+            <div class="section-title">System Overview</div>
+            <div class="health-cards">
+                <div class="health-card">
+                    <div class="health-label">Error Rate</div>
+                    <div class="health-value {{#if stats.error_count}}text-danger{{else}}text-success{{/if}}">{{error_rate_pct}}%</div>
+                    <div class="health-bar"><div class="health-bar-fill {{#if stats.error_count}}health-bar-danger{{else}}health-bar-success{{/if}}" style="width:{{error_rate_pct}}%"></div></div>
+                </div>
+                <div class="health-card">
+                    <div class="health-label">Active Users (24h)</div>
+                    <div class="health-value">{{active_users_24h}}</div>
+                </div>
+                <div class="health-card">
+                    <div class="health-label">Avg Session</div>
+                    <div class="health-value">{{avg_session_display}}</div>
+                </div>
+            </div>
+
+            <div class="section-title">Models</div>
+            {{#if model_usage}}
+            <div class="card p-5">
+                {{#each model_usage}}
+                <div class="skill-bar-row">
+                    <div class="skill-bar-label" title="{{model}}">{{default short model}}</div>
+                    <div class="skill-bar-track">
+                        <div class="progress-bar"><div class="progress-fill progress-green" style="width:{{pct}}%"></div></div>
+                    </div>
+                    <div class="skill-bar-count">{{count}}</div>
+                </div>
+                {{/each}}
+            </div>
+            {{else}}
+            {{> components/empty-state message="No model usage data."}}
+            {{/if}}
+        </div>
+    </div>
+
+    <div class="dashboard-two-col">
+        <div>
+            <div class="section-title">Top Users</div>
+            {{#if top_users}}
+            {{#> components/data-table}}
+                <thead><tr><th>#</th><th>User</th><th>Logins</th><th>Prompts</th><th>Plugins</th><th>Tokens</th></tr></thead>
+                <tbody>
+                {{#each top_users}}
+                <tr>
+                    <td><span class="leaderboard-rank{{#if (eq @index 0)}} leaderboard-rank-1{{else if (eq @index 1)}} leaderboard-rank-2{{else if (eq @index 2)}} leaderboard-rank-3{{/if}}">{{add @index 1}}</span></td>
+                    <td><div class="user-cell"><div class="user-avatar">{{initials (default display_name "A")}}</div><div class="user-info"><span class="user-name">{{default display_name "Anonymous"}}</span></div></div></td>
+                    <td class="numeric">{{logins}}</td>
+                    <td class="numeric">{{prompts}}</td>
+                    <td class="numeric">{{plugins}}</td>
+                    <td class="numeric">{{#if (gt tokens 0)}}{{tokens}}{{else}}<span class="text-tertiary">-</span>{{/if}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            {{/components/data-table}}
+            {{else}}
+            {{> components/empty-state message="No user activity yet."}}
+            {{/if}}
+        </div>
+        <div>
+            <div class="section-title">Popular Skills</div>
+            {{#if popular_skills}}
+            <div class="card p-5">
+                {{#each popular_skills}}
+                <div class="skill-bar-row">
+                    <div class="skill-bar-label" title="{{tool_name}}">{{tool_name}}</div>
+                    <div class="skill-bar-track">
+                        <div class="progress-bar"><div class="progress-fill progress-blue" style="width:{{pct}}%"></div></div>
+                    </div>
+                    <div class="skill-bar-count">{{count}}</div>
+                </div>
+                {{/each}}
+            </div>
+            {{else}}
+            {{> components/empty-state message="No skill usage data yet."}}
+            {{/if}}
+        </div>
+    </div>
+
+    <div class="dashboard-two-col">
+        <div>
+            <div class="section-title">Activity (Last 24h)</div>
+            {{#if hourly_activity}}
+            <div class="card p-5">
+                <div class="mini-chart">
+                    {{#each hourly_activity}}
+                    <div class="mini-chart-bar" title="{{hour}}:00: {{count}} events">
+                        <div class="mini-chart-fill" style="height:{{pct}}%"></div>
+                        <div class="mini-chart-label">{{label}}</div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+            {{else}}
+            {{> components/empty-state message="No hourly activity data."}}
+            {{/if}}
+        </div>
+        <div>
+            <div class="section-title">Event Breakdown</div>
+            {{#if event_breakdown}}
+            <div class="card p-5">
+                {{#each event_breakdown}}
+                <div class="skill-bar-row">
+                    <div class="skill-bar-label" title="{{label}}">{{label}}</div>
+                    <div class="skill-bar-track">
+                        <div class="progress-bar"><div class="progress-fill {{#if is_error}}progress-red{{else}}progress-blue{{/if}}" style="width:{{pct}}%"></div></div>
+                    </div>
+                    <div class="skill-bar-count">{{count}}</div>
+                </div>
+                {{/each}}
+            </div>
+            {{else}}
+            {{> components/empty-state message="No event data."}}
+            {{/if}}
+        </div>
+    </div>
+
+    <div class="dashboard-two-col">
+        <div>
+            <div class="section-title">Active Projects</div>
+            {{#if project_activity}}
+            <div class="card p-5">
+                {{#each project_activity}}
+                <div class="skill-bar-row">
+                    <div class="skill-bar-label" title="{{project_path}}">{{project_name}}</div>
+                    <div class="skill-bar-track">
+                        <div class="progress-bar"><div class="progress-fill progress-blue" style="width:{{pct}}%"></div></div>
+                    </div>
+                    <div class="skill-bar-count">{{event_count}}</div>
+                </div>
+                {{/each}}
+            </div>
+            {{else}}
+            {{> components/empty-state message="No project data."}}
+            {{/if}}
+        </div>
+        <div>
+            <div class="section-title">Tool Reliability</div>
+            {{#if tool_success_rates}}
+            <div class="card p-5">
+                {{#each tool_success_rates}}
+                <div class="skill-bar-row">
+                    <div class="skill-bar-label">{{tool_name}}</div>
+                    <div class="skill-bar-track">
+                        <div class="progress-bar"><div class="progress-fill {{color_class}}" style="width:{{success_pct}}%"></div></div>
+                    </div>
+                    <div class="skill-bar-count">{{success_pct}}%</div>
+                </div>
+                {{/each}}
+            </div>
+            {{else}}
+            {{> components/empty-state message="No tool reliability data."}}
+            {{/if}}
+        </div>
+    </div>
+
+    <div class="dashboard-two-col">
+        <div>
+            <div class="section-title">MCP Server Access</div>
+            {{#if mcp_access_events}}
+            <div class="card p-5">
+                {{#> components/data-table}}
+                    <thead><tr><th>User</th><th>Server</th><th>Status</th><th>Detail</th></tr></thead>
+                    <tbody>
+                    {{#each mcp_access_events}}
+                    <tr class="{{#if is_rejected}}row-danger{{/if}}">
+                        <td>{{default display_name "Unknown"}}</td>
+                        <td>{{default server_name "—"}}</td>
+                        <td>
+                            {{#if is_rejected}}<span class="mcp-badge mcp-badge-danger">Rejected</span>{{else}}<span class="mcp-badge mcp-badge-success">Granted</span>{{/if}}
+                        </td>
+                        <td class="text-sm text-tertiary">{{description}}</td>
+                    </tr>
+                    {{/each}}
+                    </tbody>
+                {{/components/data-table}}
+            </div>
+            {{else}}
+            {{> components/empty-state message="No MCP access events yet."}}
+            {{/if}}
+        </div>
+        <div>
+            <div class="section-title">MCP Security Summary</div>
+            {{#if mcp_access_stats}}
+            <div class="mcp-security-cards">
+                {{#each mcp_access_stats}}
+                <div class="card p-5 mcp-server-card">
+                    <div class="mcp-server-name">{{server_name}}</div>
+                    <div class="mcp-stat-row">
+                        <div class="mcp-stat">
+                            <span class="mcp-stat-value text-success">{{granted}}</span>
+                            <span class="mcp-stat-label">Granted</span>
+                        </div>
+                        <div class="mcp-stat">
+                            <span class="mcp-stat-value {{#if rejected}}text-danger{{/if}}">{{rejected}}</span>
+                            <span class="mcp-stat-label">Rejected</span>
+                        </div>
+                        <div class="mcp-stat">
+                            <span class="mcp-stat-value">{{tool_calls}}</span>
+                            <span class="mcp-stat-label">Tool Calls</span>
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+            {{else}}
+            {{> components/empty-state message="No MCP server stats yet."}}
+            {{/if}}
+        </div>
+    </div>
+
+    {{#if department_activity}}
+    <div class="dashboard-two-col">
+        <div>
+            <div class="section-title">Department Activity</div>
+            <div class="card p-5">
+                {{#each department_activity}}
+                <div class="skill-bar-row">
+                    <div class="skill-bar-label" title="{{department}}">{{department}}</div>
+                    <div class="skill-bar-track">
+                        <div class="progress-bar"><div class="progress-fill progress-green" style="width:{{pct}}%"></div></div>
+                    </div>
+                    <div class="skill-bar-count">{{count}}</div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        <div></div>
+    </div>
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script>document.addEventListener('DOMContentLoaded', function() { AdminApp.Toast.init(); });</script>
+    <script src="/js/admin/dashboard-sse.js"></script>
+    {{/inline}}
+{{/layout}}

@@ -1,0 +1,17 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    <div id="achievements-content" aria-live="polite">
+        <div class="loading-center"><div class="loading-spinner" role="status"><span class="sr-only">Loading...</span></div></div>
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/admin-achievements.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.renderAchievements();
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

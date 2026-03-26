@@ -1,0 +1,54 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/back-button href="/admin/org/hooks/" label="Back to Hooks"}}
+    <h2>{{title}}</h2>
+    <div class="card" style="max-width:800px">
+        <form id="hook-form" data-api-path="/hooks/" data-entity="Hook" data-id-field="hook_id" data-list-path="/hooks/">
+            {{#if is_edit}}
+            <input type="hidden" name="hook_id" value="{{hook.id}}" readonly>
+            {{/if}}
+            {{> components/form-group label="Name" name="name" type="text" value=hook.name placeholder="e.g., Sound bell hook" required=true}}
+            {{> components/form-group label="Description" name="description" type="textarea" value=hook.description rows="2" placeholder="What does this hook do?"}}
+            {{#> components/form-group label="Plugin" name="plugin_id" type="select" required=true}}
+                <option value="">-- Select Plugin --</option>
+                {{#each plugins}}
+                <option value="{{id}}" {{#if (eq id ../hook.plugin_id)}}selected{{/if}}>{{default name id}}</option>
+                {{/each}}
+            {{/components/form-group}}
+            {{#> components/form-group label="Event" name="event" type="select" required=true}}
+                {{#each hook_events}}
+                <option value="{{this}}" {{#if (eq this ../hook.event)}}selected{{/if}}>{{this}}</option>
+                {{/each}}
+            {{/components/form-group}}
+            {{> components/form-group label="Matcher" name="matcher" type="text" value=hook.matcher placeholder="Matcher pattern"}}
+            {{> components/form-group label="Command" name="command" type="textarea" value=hook.command rows="3" placeholder="Command to execute"}}
+            {{> components/form-group type="checkbox" name="is_async" checked=hook.is_async checkboxLabel="Run Async"}}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="/admin/org/hooks/" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            AdminApp.interactions.initEditForm('hook-form', {
+                buildBody: function(form, formData) {
+                    return {
+                        plugin_id: formData.get('plugin_id'),
+                        event: formData.get('event'),
+                        matcher: formData.get('matcher') || '',
+                        command: formData.get('command') || '',
+                        is_async: form.querySelector('[name="is_async"]').checked,
+                        name: formData.get('name') || '',
+                        description: formData.get('description') || ''
+                    };
+                }
+            });
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

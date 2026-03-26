@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+LOG="/tmp/systemprompt-plugin-{{plugin_id}}.log"
+INPUT=$(cat)
+# Read plugin metadata from plugin.json if available
+PLUGIN_JSON="${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json"
+if [ -f "$PLUGIN_JSON" ]; then
+  PLUGIN_VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$PLUGIN_JSON" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"//' | sed 's/"$//')
+  PLUGIN_NAME=$(grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$PLUGIN_JSON" | head -1 | sed 's/.*"name"[[:space:]]*:[[:space:]]*"//' | sed 's/"$//')
+  BASE_PLUGIN_ID=$(grep -o '"basePluginId"[[:space:]]*:[[:space:]]*"[^"]*"' "$PLUGIN_JSON" | head -1 | sed 's/.*"basePluginId"[[:space:]]*:[[:space:]]*"//' | sed 's/"$//')
+  if [ -n "$PLUGIN_VERSION" ]; then
+    EXTRA="\"plugin_version\":\"${PLUGIN_VERSION}\",\"plugin_name\":\"${PLUGIN_NAME}\""
+    if [ -n "$BASE_PLUGIN_ID" ]; then
+      EXTRA="${EXTRA},\"base_plugin_id\":\"${BASE_PLUGIN_ID}\""
+    fi
+    INPUT=$(echo "$INPUT" | sed "s/}$/,${EXTRA}}/" )
+  fi
+fi
+echo "[$(date -Iseconds)] Tracking event for {{plugin_id}}" >> "$LOG" 2>/dev/null
+curl -s --max-time 5 -X POST "{{platform_url}}/api/public/hooks/track?plugin_id={{plugin_id}}" \
+  -H "Authorization: Bearer {{token}}" \
+  -H "Content-Type: application/json" \
+  -d "$INPUT" \
+  >> "$LOG" 2>&1
+exit 0

@@ -1,0 +1,17 @@
+id: tracking_config_change
+name: "Config Change Tracking"
+description: "Records when configuration files change"
+version: "1.0.0"
+enabled: true
+event: ConfigChange
+matcher: "*"
+command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-{plugin_id}-usage.sh"
+async: true
+category: system
+plugins:
+  - common-skills
+tags:
+  - tracking
+  - analytics
+visible_to:
+  - admin

@@ -1,0 +1,18 @@
+id: dev_web_standards
+name: "Web Standards"
+description: "Extension system, content templates, page prerendering, and CSS management standards for Foodles web development"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - standards
+  - frontend_impl
+  - quality_gate
+  - overseer
+tags:
+  - web
+  - frontend
+  - css
+  - templates
+  - extensions
+  - standards

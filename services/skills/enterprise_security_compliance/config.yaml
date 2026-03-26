@@ -1,0 +1,15 @@
+id: enterprise_security_compliance
+name: "Security & Compliance"
+description: "Enterprise security and compliance - audit trails, secret management, IP enforcement, session control, and regulatory compliance for AI agent deployments"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - systemprompt_admin
+tags:
+  - enterprise
+  - security
+  - compliance
+  - audit
+  - encryption
+  - infosec

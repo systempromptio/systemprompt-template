@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Upload the full conversation transcript on Stop events.
+# Reads the transcript_path from the hook stdin JSON, then POSTs
+# the JSONL file content to the platform.
+LOG="/tmp/systemprompt-transcript-{{plugin_id}}.log"
+INPUT=$(cat)
+
+# Extract transcript_path from the JSON payload
+TRANSCRIPT_PATH=$(echo "$INPUT" | grep -o '"transcript_path"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"transcript_path"[[:space:]]*:[[:space:]]*"//' | sed 's/"$//')
+SESSION_ID=$(echo "$INPUT" | grep -o '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"session_id"[[:space:]]*:[[:space:]]*"//' | sed 's/"$//')
+
+if [ -z "$TRANSCRIPT_PATH" ] || [ ! -f "$TRANSCRIPT_PATH" ]; then
+  echo "[$(date -Iseconds)] No transcript file at: $TRANSCRIPT_PATH" >> "$LOG" 2>/dev/null
+  exit 0
+fi
+
+# Read the JSONL file, convert each line to a JSON array element
+TRANSCRIPT_CONTENT=$(python3 -c "
+import json, sys
+lines = []
+with open(sys.argv[1], 'r') as f:
+    for line in f:
+        line = line.strip()
+        if line:
+            try:
+                lines.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+json.dump(lines, sys.stdout)
+" "$TRANSCRIPT_PATH" 2>/dev/null)
+
+if [ -z "$TRANSCRIPT_CONTENT" ]; then
+  # Fallback: send raw lines as string array if python3 not available
+  TRANSCRIPT_CONTENT=$(cat "$TRANSCRIPT_PATH" | jq -s '.' 2>/dev/null || echo '[]')
+fi
+
+PAYLOAD=$(jq -n --arg sid "$SESSION_ID" --argjson transcript "$TRANSCRIPT_CONTENT" \
+  '{"session_id": $sid, "transcript": $transcript}')
+
+echo "[$(date -Iseconds)] Uploading transcript for session $SESSION_ID ($(wc -c < "$TRANSCRIPT_PATH") bytes)" >> "$LOG" 2>/dev/null
+curl -s --max-time 30 -X POST "{{platform_url}}/api/public/hooks/transcript?plugin_id={{plugin_id}}" \
+  -H "Authorization: Bearer {{token}}" \
+  -H "Content-Type: application/json" \
+  -d "$PAYLOAD" \
+  >> "$LOG" 2>&1
+exit 0

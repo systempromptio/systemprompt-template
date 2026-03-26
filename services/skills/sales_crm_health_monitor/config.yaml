@@ -1,0 +1,13 @@
+id: sales_crm_health_monitor
+name: "CRM Health Monitor"
+description: "Evaluate CRM health analyzing pipeline, demos, win rate, and salesperson performance. CRM Health Score 0-100"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - sales_analyst
+tags:
+  - sales
+  - crm
+  - health
+  - monitoring

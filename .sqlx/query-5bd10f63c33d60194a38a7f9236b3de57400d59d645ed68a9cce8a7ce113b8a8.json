@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COUNT(*)::BIGINT as \"count!\"\n        FROM markdown_content\n        WHERE public = true\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "5bd10f63c33d60194a38a7f9236b3de57400d59d645ed68a9cce8a7ce113b8a8"
+}

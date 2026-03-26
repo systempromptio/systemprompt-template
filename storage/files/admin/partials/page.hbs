@@ -1,0 +1,20 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    <div id="{{contentId}}" aria-live="polite">
+        <div class="loading-center"><div class="loading-spinner" role="status"><span class="sr-only">Loading...</span></div></div>
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AdminApp.Toast.init();
+            {{#if contentSelector}}
+            AdminApp.{{renderFn}}('{{contentSelector}}');
+            {{else}}
+            AdminApp.{{renderFn}}();
+            {{/if}}
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

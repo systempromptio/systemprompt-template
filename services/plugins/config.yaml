@@ -1,0 +1,12 @@
+# Plugin configuration
+# Defines Claude Code plugins for marketplace distribution
+
+includes:
+  - systemprompt/config.yaml
+  - systemprompt-admin/config.yaml
+  - systemprompt-dev/config.yaml
+  - common-skills/config.yaml
+  - sales-skills/config.yaml
+  - enterprise-demo/config.yaml
+
+plugins: {}

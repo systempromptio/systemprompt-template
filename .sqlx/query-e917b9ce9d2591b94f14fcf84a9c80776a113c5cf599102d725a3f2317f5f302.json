@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COALESCE(\n                    SUBSTRING(l.message FROM 1 FOR 100),\n                    'Unknown error'\n                ) as \"error_type\",\n                COUNT(*)::bigint as \"error_count!\"\n            FROM agent_tasks at\n            LEFT JOIN logs l ON l.task_id = at.task_id AND l.level = 'ERROR'\n            WHERE at.agent_name ILIKE $1\n              AND at.started_at >= $2 AND at.started_at < $3\n              AND at.status = 'failed'\n            GROUP BY SUBSTRING(l.message FROM 1 FOR 100)\n            ORDER BY 2 DESC\n            LIMIT 10\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "error_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "error_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "e917b9ce9d2591b94f14fcf84a9c80776a113c5cf599102d725a3f2317f5f302"
+}

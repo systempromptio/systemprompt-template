@@ -1,0 +1,10 @@
+/* Dosis & Roboto - Foodles Brand Fonts */
+/* Dosis is used for headings and brand text. Roboto is used for body text.
+   The system fallback stack provides a visually similar experience
+   when fonts are unavailable. */
+
+:root {
+  --font-body: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-heading: 'Dosis', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+}

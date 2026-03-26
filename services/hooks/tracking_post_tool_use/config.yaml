@@ -1,0 +1,17 @@
+id: tracking_post_tool_use
+name: "Usage Tracking"
+description: "Records tool usage analytics after each tool call"
+version: "1.0.0"
+enabled: true
+event: PostToolUse
+matcher: "*"
+command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-{plugin_id}-usage.sh"
+async: true
+category: system
+plugins:
+  - common-skills
+tags:
+  - tracking
+  - analytics
+visible_to:
+  - admin

@@ -1,0 +1,13 @@
+id: systemprompt_admin_user_management
+name: "User Management"
+description: "Manage users, roles, sessions, and IP bans via the systemprompt CLI"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+assigned_agents:
+  - systemprompt_admin
+tags:
+  - admin
+  - users
+  - management
+  - roles
