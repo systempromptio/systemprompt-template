@@ -7,9 +7,9 @@ use super::export_resolvers::{
     resolve_export_skills,
 };
 use super::export_scripts::{
-    build_hooks_file, build_tracking_script_from_template, build_tracking_script_ps1_from_template,
-    build_transcript_script_from_template, build_transcript_script_ps1_from_template,
-    collect_platform_hooks, collect_tracking_hooks, env_hook_entry, transcript_hook_entry,
+    build_hooks_file, build_transcript_script_from_template,
+    build_transcript_script_ps1_from_template, collect_platform_hooks,
+    collect_tracking_http_hooks, env_hook_entry, governance_http_hook, transcript_hook_entry,
 };
 use super::export_validation::{build_manifest, compute_content_version, validate_bundle};
 
@@ -42,32 +42,7 @@ pub(super) fn build_plugin_files(
         &mut files,
     )?;
 
-    let tracking_script_name = format!("track-{}-usage.sh", ctx.plugin_id);
-    if is_windows {
-        let ps1_name = tracking_script_name.replace(".sh", ".ps1");
-        files.push(PluginFile {
-            path: format!("scripts/{ps1_name}"),
-            content: build_tracking_script_ps1_from_template(
-                ctx.services_path,
-                ctx.plugin_token,
-                ctx.platform_url,
-                ctx.plugin_id,
-            ),
-            executable: true,
-        });
-    } else {
-        files.push(PluginFile {
-            path: format!("scripts/{tracking_script_name}"),
-            content: build_tracking_script_from_template(
-                ctx.services_path,
-                ctx.plugin_token,
-                ctx.platform_url,
-                ctx.plugin_id,
-            ),
-            executable: true,
-        });
-    }
-
+    // Transcript script (command hook — needs local file access)
     let transcript_script_name = format!("upload-{}-transcript.sh", ctx.plugin_id);
     if ctx.plugin_id == "common-skills" {
         if is_windows {
@@ -102,14 +77,17 @@ pub(super) fn build_plugin_files(
         build_env_files(ctx, &mut files)
     };
 
-    let mut hook_entries = if ctx.plugin_id == "common-skills" {
-        let mut entries =
-            collect_tracking_hooks(ctx.services_path, &tracking_script_name, is_windows);
-        entries.push(transcript_hook_entry(&transcript_script_name, is_windows));
-        entries
-    } else {
-        Vec::new()
-    };
+    // HTTP hooks for tracking and governance (all plugins)
+    let mut hook_entries =
+        collect_tracking_http_hooks(ctx.platform_url, ctx.plugin_id, ctx.plugin_token);
+    hook_entries.push(governance_http_hook(
+        ctx.platform_url,
+        ctx.plugin_id,
+        ctx.plugin_token,
+    ));
+    if ctx.plugin_id == "common-skills" {
+        hook_entries.push(transcript_hook_entry(&transcript_script_name, is_windows));
+    }
     if !ctx.plugin.base.hooks.is_empty() {
         hook_entries.extend(collect_platform_hooks(&ctx.plugin.base, is_windows));
     }

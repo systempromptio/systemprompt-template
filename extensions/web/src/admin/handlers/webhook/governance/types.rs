@@ -2,12 +2,27 @@ use serde::Serialize;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct GovernanceResponse {
+    #[serde(rename = "hookSpecificOutput")]
+    pub hook_specific_output: HookSpecificOutput,
     pub decision: &'static str,
     pub reason: String,
     pub policy: String,
     pub agent_scope: String,
     pub tool_name: String,
     pub evaluated_rules: Vec<EvaluatedRule>,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct HookSpecificOutput {
+    #[serde(rename = "hookEventName")]
+    pub hook_event_name: &'static str,
+    #[serde(rename = "permissionDecision")]
+    pub permission_decision: &'static str,
+    #[serde(
+        rename = "permissionDecisionReason",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub permission_decision_reason: Option<String>,
 }
 
 #[derive(Debug, Serialize)]

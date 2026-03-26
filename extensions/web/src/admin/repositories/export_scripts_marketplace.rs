@@ -90,12 +90,16 @@ pub(super) fn build_marketplace(
     }
 
     let mut marketplace = serde_json::json!({
+        "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
         "name": identity.name,
+        "description": format!("{}'s plugin marketplace", identity.owner_name),
         "owner": {
             "name": identity.owner_name,
         },
         "metadata": {
-            "description": format!("Plugin marketplace exported from {}", identity.owner_name)
+            "description": format!("Plugin marketplace exported from {}", identity.owner_name),
+            "version": "1.0.0",
+            "pluginRoot": "./plugins"
         },
         "plugins": plugin_entries
     });

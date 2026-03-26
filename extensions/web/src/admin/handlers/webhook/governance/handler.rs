@@ -14,7 +14,7 @@ use crate::admin::types::{GovernQuery, HookEventPayload};
 use super::audit;
 use super::rules;
 use super::scope;
-use super::types::{AuditRecord, GovernanceContext, GovernanceResponse};
+use super::types::{AuditRecord, GovernanceContext, GovernanceResponse, HookSpecificOutput};
 use crate::admin::handlers::webhook::helpers::{extract_bearer_token, get_jwt_config};
 
 pub(crate) async fn govern_tool_use(
@@ -95,7 +95,18 @@ pub(crate) async fn govern_tool_use(
         plugin_id,
     );
 
+    let deny_reason = if evaluation.decision == "deny" {
+        Some(format!("[GOVERNANCE] {}", evaluation.reason))
+    } else {
+        None
+    };
+
     let response = GovernanceResponse {
+        hook_specific_output: HookSpecificOutput {
+            hook_event_name: "PreToolUse",
+            permission_decision: evaluation.decision,
+            permission_decision_reason: deny_reason,
+        },
         decision: evaluation.decision,
         reason: evaluation.reason,
         policy: evaluation.policy,

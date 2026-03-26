@@ -1,11 +1,9 @@
-use std::path::Path;
+use std::collections::HashMap;
 
 use super::super::types::UserHook;
-use super::hook_catalog;
 
 pub(super) use super::export_scripts_marketplace::{build_marketplace, load_marketplace_identity};
 pub(super) use super::export_scripts_templates::{
-    build_tracking_script_from_template, build_tracking_script_ps1_from_template,
     build_transcript_script_from_template, build_transcript_script_ps1_from_template,
     transcript_hook_entry,
 };
@@ -29,10 +27,21 @@ pub(super) const TRACKING_EVENTS: &[&str] = &[
     "WorktreeRemove",
 ];
 
+pub(super) enum HookType {
+    Command {
+        command: String,
+    },
+    Http {
+        url: String,
+        headers: HashMap<String, String>,
+        timeout: Option<u32>,
+    },
+}
+
 pub(super) struct HookEntry {
     pub event: String,
     pub matcher: Option<String>,
-    pub command: String,
+    pub hook_type: HookType,
     pub is_async: bool,
 }
 
@@ -40,11 +49,39 @@ pub(super) fn build_hooks_file(entries: &[HookEntry]) -> serde_json::Value {
     let mut events = serde_json::Map::new();
     for entry in entries {
         let mut handler = serde_json::Map::new();
-        handler.insert("type".into(), serde_json::Value::String("command".into()));
-        handler.insert(
-            "command".into(),
-            serde_json::Value::String(entry.command.clone()),
-        );
+        match &entry.hook_type {
+            HookType::Command { command } => {
+                handler.insert("type".into(), serde_json::Value::String("command".into()));
+                handler.insert(
+                    "command".into(),
+                    serde_json::Value::String(command.clone()),
+                );
+            }
+            HookType::Http {
+                url,
+                headers,
+                timeout,
+            } => {
+                handler.insert("type".into(), serde_json::Value::String("http".into()));
+                handler.insert("url".into(), serde_json::Value::String(url.clone()));
+                if !headers.is_empty() {
+                    let headers_map: serde_json::Map<String, serde_json::Value> = headers
+                        .iter()
+                        .map(|(k, v)| (k.clone(), serde_json::Value::String(v.clone())))
+                        .collect();
+                    handler.insert(
+                        "headers".into(),
+                        serde_json::Value::Object(headers_map),
+                    );
+                }
+                if let Some(t) = timeout {
+                    handler.insert(
+                        "timeout".into(),
+                        serde_json::Value::Number((*t).into()),
+                    );
+                }
+            }
+        }
         if entry.is_async {
             handler.insert("async".into(), serde_json::Value::Bool(true));
         }
@@ -71,46 +108,6 @@ pub(super) fn build_hooks_file(entries: &[HookEntry]) -> serde_json::Value {
     serde_json::json!({
         "hooks": events
     })
-}
-
-pub(super) fn collect_tracking_hooks(
-    services_path: &Path,
-    script_name: &str,
-    is_windows: bool,
-) -> Vec<HookEntry> {
-    let plugin_id = script_name.replace("track-", "").replace("-usage.sh", "");
-
-    let catalog_hooks = hook_catalog::list_file_hooks(services_path).unwrap_or_default();
-    let system_hooks: Vec<_> = catalog_hooks
-        .iter()
-        .filter(|h| h.category == "system")
-        .collect();
-
-    if system_hooks.is_empty() {
-        let command = format_script_command(script_name, is_windows);
-        return TRACKING_EVENTS
-            .iter()
-            .map(|event| HookEntry {
-                event: (*event).to_string(),
-                matcher: None,
-                command: command.clone(),
-                is_async: true,
-            })
-            .collect();
-    }
-
-    system_hooks
-        .iter()
-        .map(|hook| {
-            let command = format_catalog_command(&hook.command, &plugin_id, is_windows);
-            HookEntry {
-                event: hook.event.clone(),
-                matcher: Some(hook.matcher.clone()),
-                command,
-                is_async: hook.is_async,
-            }
-        })
-        .collect()
 }
 
 pub(super) fn collect_platform_hooks(
@@ -142,7 +139,7 @@ pub(super) fn collect_platform_hooks(
                     entries.push(HookEntry {
                         event: event_name.to_string(),
                         matcher: Some(matcher.matcher.clone()),
-                        command,
+                        hook_type: HookType::Command { command },
                         is_async: action.r#async,
                     });
                 }
@@ -158,7 +155,9 @@ pub(super) fn collect_user_hooks(hooks: &[&UserHook]) -> Vec<HookEntry> {
         .map(|h| HookEntry {
             event: h.event.clone(),
             matcher: Some(h.matcher.clone()),
-            command: h.command.clone(),
+            hook_type: HookType::Command {
+                command: h.command.clone(),
+            },
             is_async: h.is_async,
         })
         .collect()
@@ -173,7 +172,7 @@ pub(super) fn env_hook_entry(is_windows: bool) -> HookEntry {
     HookEntry {
         event: "SessionStart".to_string(),
         matcher: None,
-        command,
+        hook_type: HookType::Command { command },
         is_async: false,
     }
 }
@@ -189,21 +188,57 @@ pub(super) fn format_script_command(script_name: &str, is_windows: bool) -> Stri
     }
 }
 
-fn format_catalog_command(command_template: &str, plugin_id: &str, is_windows: bool) -> String {
-    if is_windows {
-        let win_cmd = command_template
-            .replace(".sh", ".ps1")
-            .replace("{plugin_id}", plugin_id)
-            .replace("${CLAUDE_PLUGIN_ROOT}", "$env:CLAUDE_PLUGIN_ROOT");
-        format!("powershell -ExecutionPolicy Bypass -Command \"& '{win_cmd}'\"")
-    } else {
-        command_template.replace("{plugin_id}", plugin_id)
-    }
-}
-
 fn to_windows_command(cmd: &str) -> String {
     let win_cmd = cmd
         .replace(".sh", ".ps1")
         .replace("${CLAUDE_PLUGIN_ROOT}", "$env:CLAUDE_PLUGIN_ROOT");
     format!("powershell -ExecutionPolicy Bypass -Command \"& '{win_cmd}'\"")
+}
+
+fn http_headers(token: &str) -> HashMap<String, String> {
+    let mut headers = HashMap::new();
+    headers.insert("Authorization".to_string(), format!("Bearer {token}"));
+    headers.insert("Content-Type".to_string(), "application/json".to_string());
+    headers
+}
+
+pub(super) fn collect_tracking_http_hooks(
+    platform_url: &str,
+    plugin_id: &str,
+    token: &str,
+) -> Vec<HookEntry> {
+    let url = format!("{platform_url}/api/public/hooks/track?plugin_id={plugin_id}");
+    let headers = http_headers(token);
+
+    TRACKING_EVENTS
+        .iter()
+        .map(|event| HookEntry {
+            event: (*event).to_string(),
+            matcher: None,
+            hook_type: HookType::Http {
+                url: url.clone(),
+                headers: headers.clone(),
+                timeout: None,
+            },
+            is_async: true,
+        })
+        .collect()
+}
+
+pub(super) fn governance_http_hook(
+    platform_url: &str,
+    plugin_id: &str,
+    token: &str,
+) -> HookEntry {
+    let url = format!("{platform_url}/api/public/hooks/govern?plugin_id={plugin_id}");
+    HookEntry {
+        event: "PreToolUse".to_string(),
+        matcher: None,
+        hook_type: HookType::Http {
+            url,
+            headers: http_headers(token),
+            timeout: Some(10),
+        },
+        is_async: false,
+    }
 }

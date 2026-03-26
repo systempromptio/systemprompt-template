@@ -1,0 +1,237 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://abc3dd581f80.systemprompt.io/api/public/hooks/track",
+            "headers": {
+              "Authorization": "Bearer $SYSTEMPROMPT_PLUGIN_TOKEN"
+            },
+            "allowedEnvVars": [
+              "SYSTEMPROMPT_PLUGIN_TOKEN"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

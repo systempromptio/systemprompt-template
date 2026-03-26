@@ -1,0 +1,11 @@
+id: use_dangerous_secret
+name: "Use Dangerous Secret"
+description: "Demonstration skill that attempts to use a plaintext secret, designed to be blocked by governance hooks"
+enabled: true
+version: "1.0.0"
+file: "index.md"
+tags:
+  - example
+  - demo
+  - governance
+  - security

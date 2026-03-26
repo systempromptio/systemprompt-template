@@ -1,0 +1,27 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "enterprise-demo-marketplace",
+  "description": "Enterprise governance demo marketplace from foodles.com",
+  "metadata": {
+    "description": "Demonstrates HTTP hooks, governance policies, and MCP server integration",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "owner": {
+    "name": "Foodles",
+    "email": "help@foodles.com"
+  },
+  "plugins": [
+    {
+      "name": "enterprise-demo",
+      "source": "./plugins/enterprise-demo",
+      "description": "Enterprise governance demo — web search and secret detection policies with HTTP hooks",
+      "version": "2.0.0",
+      "author": {
+        "name": "Foodles",
+        "email": "help@foodles.com"
+      },
+      "category": "enterprise"
+    }
+  ]
+}
