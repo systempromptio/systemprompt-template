@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, McpServerId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::TextArtifact;
@@ -67,11 +67,12 @@ impl McpToolHandler for UpdateMcpServerHandler {
             oauth_audience: input.oauth_audience,
         };
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
+        let mcp_server_id = McpServerId::new(&input.mcp_server_id);
         let server = systemprompt_web_extension::admin::repositories::user_mcp_servers::update_user_mcp_server(
             &pool,
             &user_id,
-            &input.mcp_server_id,
+            &mcp_server_id,
             &update_req,
         )
         .await

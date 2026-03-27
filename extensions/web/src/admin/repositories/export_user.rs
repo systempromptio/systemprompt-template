@@ -2,13 +2,10 @@ use super::super::types::{UserAgent, UserSkill};
 use super::export::{PluginBundle, PluginFile, SyncPluginsResponse};
 use super::export_auth::generate_plugin_token;
 use super::export_builders::PluginBuildContext;
-use super::export_scripts::{
-    build_hooks_file, build_marketplace, collect_user_hooks, load_marketplace_identity,
-};
+use super::export_scripts::{build_marketplace, load_marketplace_identity};
 use super::export_validation::{compute_bundle_counts, compute_export_totals};
 use super::plugin_env::get_raw_env_vars_for_export;
 use super::user_agents::list_user_agents;
-use super::user_hooks::list_user_hooks;
 use super::user_mcp_servers::list_user_mcp_servers;
 use super::user_plugin_detail::get_plugin_with_associations;
 use super::user_plugins::list_user_plugins;
@@ -16,6 +13,7 @@ use super::user_skills::list_user_skills;
 use sqlx::PgPool;
 use std::path::Path;
 use std::sync::Arc;
+use systemprompt::identifiers::UserId;
 use systemprompt::models::Config;
 
 #[allow(clippy::too_many_arguments)]
@@ -35,6 +33,7 @@ pub async fn generate_export_bundles(
 
     let plugin_token = generate_plugin_token(user_id, username, email)?;
     let platform_url = Config::get().map_or_else(|_| String::new(), |c| c.api_external_url.clone());
+    let uid = UserId::new(user_id);
 
     let is_admin = roles.iter().any(|r| r == "admin");
     let org_plugin_ids = super::org_marketplaces::resolve_authorized_org_plugin_ids(
@@ -48,7 +47,7 @@ pub async fn generate_export_bundles(
 
     let mut bundles = Vec::new();
     for (plugin_id, plugin) in &plugin_configs {
-        let env_vars = match get_raw_env_vars_for_export(pool, user_id, plugin_id).await {
+        let env_vars = match get_raw_env_vars_for_export(pool, &uid, plugin_id).await {
             Ok(vars) => vars,
             Err(e) => {
                 tracing::warn!(error = %e, plugin_id = %plugin_id, "Failed to load env vars for export");
@@ -91,25 +90,21 @@ pub async fn generate_export_bundles(
         });
     }
 
-    let user_plugins = list_user_plugins(pool, user_id).await.unwrap_or_default();
-    let all_user_skills = list_user_skills(pool, user_id).await.unwrap_or_default();
-    let all_user_agents = list_user_agents(pool, user_id).await.unwrap_or_default();
-    let all_user_mcp_servers = list_user_mcp_servers(pool, user_id)
+    let user_plugins = list_user_plugins(pool, &uid).await.unwrap_or_default();
+    let all_user_skills = list_user_skills(pool, &uid).await.unwrap_or_default();
+    let all_user_agents = list_user_agents(pool, &uid).await.unwrap_or_default();
+    let all_user_mcp_servers = list_user_mcp_servers(pool, &uid)
         .await
         .unwrap_or_default();
-    let all_user_hooks = list_user_hooks(pool, user_id).await.unwrap_or_default();
-
     let mut claimed_skill_ids = std::collections::HashSet::new();
     let mut claimed_agent_ids = std::collections::HashSet::new();
     let mut claimed_mcp_server_ids = std::collections::HashSet::new();
-    let mut claimed_hook_ids = std::collections::HashSet::new();
-
     for user_plugin in &user_plugins {
         if !user_plugin.enabled {
             continue;
         }
         let Ok(Some(assoc)) =
-            get_plugin_with_associations(pool, user_id, &user_plugin.plugin_id).await
+            get_plugin_with_associations(pool, &uid, &user_plugin.plugin_id).await
         else {
             continue;
         };
@@ -117,8 +112,8 @@ pub async fn generate_export_bundles(
         let mut files = Vec::new();
 
         for skill_id in &assoc.skill_ids {
-            claimed_skill_ids.insert(skill_id.clone());
-            if let Some(skill) = all_user_skills.iter().find(|s| s.id == *skill_id) {
+            claimed_skill_ids.insert(skill_id.as_str().to_owned());
+            if let Some(skill) = all_user_skills.iter().find(|s| s.id == skill_id.as_str()) {
                 let kebab_name = skill.skill_id.replace('_', "-");
                 let skill_md = format!(
                     "---\nname: {}\ndescription: \"{}\"\n---\n\n{}\n",
@@ -135,8 +130,8 @@ pub async fn generate_export_bundles(
         }
 
         for agent_id in &assoc.agent_ids {
-            claimed_agent_ids.insert(agent_id.clone());
-            if let Some(agent) = all_user_agents.iter().find(|a| a.id == *agent_id) {
+            claimed_agent_ids.insert(agent_id.as_str().to_owned());
+            if let Some(agent) = all_user_agents.iter().find(|a| a.id == agent_id.as_str()) {
                 let escaped_desc = agent.description.replace('"', "\\\"");
                 let agent_md = format!(
                     "---\nname: {}\ndescription: \"{escaped_desc}\"\n---\n\n{}\n",
@@ -153,8 +148,8 @@ pub async fn generate_export_bundles(
 
         let mut mcp_server_entries = serde_json::Map::new();
         for mcp_id in &assoc.mcp_server_ids {
-            claimed_mcp_server_ids.insert(mcp_id.clone());
-            if let Some(mcp) = all_user_mcp_servers.iter().find(|m| m.id == *mcp_id) {
+            claimed_mcp_server_ids.insert(mcp_id.as_str().to_owned());
+            if let Some(mcp) = all_user_mcp_servers.iter().find(|m| m.id == mcp_id.as_str()) {
                 let url = if mcp.endpoint.is_empty() {
                     format!("{platform_url}/api/v1/mcp/{}/mcp", mcp.mcp_server_id)
                 } else {
@@ -175,24 +170,6 @@ pub async fn generate_export_bundles(
             files.push(PluginFile {
                 path: ".mcp.json".to_string(),
                 content: serde_json::to_string_pretty(&mcp_json)?,
-                executable: false,
-            });
-        }
-
-        for hook_id in &assoc.hook_ids {
-            claimed_hook_ids.insert(hook_id.clone());
-        }
-        let plugin_hooks: Vec<_> = assoc
-            .hook_ids
-            .iter()
-            .filter_map(|hid| all_user_hooks.iter().find(|h| h.id == *hid))
-            .collect();
-        if !plugin_hooks.is_empty() {
-            let hook_entries = collect_user_hooks(&plugin_hooks);
-            let hooks_json = build_hooks_file(&hook_entries);
-            files.push(PluginFile {
-                path: "hooks/hooks.json".to_string(),
-                content: serde_json::to_string_pretty(&hooks_json)?,
                 executable: false,
             });
         }

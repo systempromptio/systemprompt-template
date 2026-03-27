@@ -43,12 +43,13 @@ impl McpToolHandler for DeleteAgentHandler {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = systemprompt::identifiers::UserId::new(ctx.user_id().to_string());
+        let agent_id = systemprompt::identifiers::AgentId::new(&input.agent_id);
         let deleted =
             systemprompt_web_extension::admin::repositories::user_agents::delete_user_agent(
                 &pool,
                 &user_id,
-                &input.agent_id,
+                &agent_id,
             )
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to delete agent: {e}"), None))?;
@@ -70,7 +71,7 @@ impl McpToolHandler for DeleteAgentHandler {
             "deleted": true,
             "agent_id": input.agent_id,
         }))
-        .unwrap_or_default();
+        .map_err(|e| McpError::internal_error(format!("Failed to serialize result: {e}"), None))?;
 
         let summary = format!("Deleted agent '{}'", input.agent_id);
         let content = format!("{summary}\n\n{result_json}");

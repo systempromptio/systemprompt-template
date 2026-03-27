@@ -9,6 +9,8 @@ use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::TextArtifact;
 use systemprompt::models::execution::context::RequestContext;
 
+use systemprompt::identifiers::UserId;
+
 use crate::tools::shared;
 
 #[derive(Deserialize, JsonSchema)]
@@ -27,7 +29,7 @@ pub struct ManageSecretsHandler {
 
 struct SecretContext {
     pool: Arc<systemprompt::database::PgPool>,
-    user_id: String,
+    user_id: UserId,
     plugin_id: String,
 }
 
@@ -57,7 +59,7 @@ impl McpToolHandler for ManageSecretsHandler {
 
         let secret_ctx = SecretContext {
             pool,
-            user_id: ctx.user_id().to_string(),
+            user_id: UserId::new(ctx.user_id().to_string()),
             plugin_id: input.plugin_id.clone(),
         };
 

@@ -43,10 +43,11 @@ impl McpToolHandler for DeleteMcpServerHandler {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = systemprompt::identifiers::UserId::new(ctx.user_id().to_string());
+        let mcp_server_id = systemprompt::identifiers::McpServerId::new(&input.mcp_server_id);
         let deleted =
             systemprompt_web_extension::admin::repositories::user_mcp_servers::delete_user_mcp_server(
-                &pool, &user_id, &input.mcp_server_id,
+                &pool, &user_id, &mcp_server_id,
             )
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to delete MCP server: {e}"), None))?;
@@ -68,7 +69,7 @@ impl McpToolHandler for DeleteMcpServerHandler {
             "deleted": true,
             "mcp_server_id": input.mcp_server_id,
         }))
-        .unwrap_or_default();
+        .map_err(|e| McpError::internal_error(format!("Failed to serialize result: {e}"), None))?;
 
         let summary = format!("Deleted MCP server '{}'", input.mcp_server_id);
         let content = format!("{summary}\n\n{result_json}");

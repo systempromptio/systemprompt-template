@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::TextArtifact;
@@ -43,7 +43,7 @@ impl McpToolHandler for GetPluginHandler {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
         let assoc = systemprompt_web_extension::admin::repositories::get_plugin_with_associations(
             &pool,
             &user_id,
@@ -63,10 +63,13 @@ impl McpToolHandler for GetPluginHandler {
 
         let plugin = &assoc.plugin;
 
-        let skill_slugs = shared::resolve_skill_uuids_to_slugs(&pool, &assoc.skill_ids).await;
-        let agent_slugs = shared::resolve_agent_uuids_to_slugs(&pool, &assoc.agent_ids).await;
+        let skill_strs: Vec<String> = assoc.skill_ids.iter().map(|id| id.to_string()).collect();
+        let agent_strs: Vec<String> = assoc.agent_ids.iter().map(|id| id.to_string()).collect();
+        let mcp_strs: Vec<String> = assoc.mcp_server_ids.iter().map(|id| id.to_string()).collect();
+        let skill_slugs = shared::resolve_skill_uuids_to_slugs(&pool, &skill_strs).await;
+        let agent_slugs = shared::resolve_agent_uuids_to_slugs(&pool, &agent_strs).await;
         let mcp_server_slugs =
-            shared::resolve_mcp_server_uuids_to_slugs(&pool, &assoc.mcp_server_ids).await;
+            shared::resolve_mcp_server_uuids_to_slugs(&pool, &mcp_strs).await;
 
         let plugin_json = serde_json::to_string_pretty(&serde_json::json!({
             "_display": { "type": "card", "entity": "plugin", "action": "retrieved" },
@@ -85,7 +88,7 @@ impl McpToolHandler for GetPluginHandler {
             "created_at": plugin.created_at.to_rfc3339(),
             "updated_at": plugin.updated_at.to_rfc3339(),
         }))
-        .unwrap_or_default();
+        .map_err(|e| McpError::internal_error(format!("Failed to serialize result: {e}"), None))?;
 
         let summary = format!("Retrieved plugin '{}' ({})", plugin.name, plugin.plugin_id);
         let content = format!("{summary}\n\n{plugin_json}");

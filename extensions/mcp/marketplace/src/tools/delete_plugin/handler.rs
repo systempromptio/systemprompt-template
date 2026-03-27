@@ -43,7 +43,7 @@ impl McpToolHandler for DeletePluginHandler {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = systemprompt::identifiers::UserId::new(ctx.user_id().to_string());
         let deleted =
             systemprompt_web_extension::admin::repositories::user_plugins::delete_user_plugin(
                 &pool,
@@ -70,7 +70,7 @@ impl McpToolHandler for DeletePluginHandler {
             "deleted": true,
             "plugin_id": input.plugin_id,
         }))
-        .unwrap_or_default();
+        .map_err(|e| McpError::internal_error(format!("Failed to serialize result: {e}"), None))?;
 
         let summary = format!("Deleted plugin '{}'", input.plugin_id);
         let content = format!("{summary}\n\n{result_json}");

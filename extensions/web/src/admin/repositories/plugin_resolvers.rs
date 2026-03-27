@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::path::Path;
 
-use systemprompt::identifiers::{AgentId, SkillId};
+
 
 use super::super::types::{AgentInfo, RequiredSecret, SkillInfo};
 

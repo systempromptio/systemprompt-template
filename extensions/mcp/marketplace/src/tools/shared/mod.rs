@@ -11,6 +11,7 @@ pub use slugs::{
     resolve_mcp_server_uuids_to_slugs, resolve_skill_slugs, resolve_skill_uuids_to_slugs,
 };
 
+use systemprompt::identifiers::UserId;
 use systemprompt_web_extension::admin::repositories;
 
 #[must_use]
@@ -30,7 +31,7 @@ pub fn generate_slug(name: &str) -> String {
     }
 }
 
-pub async fn invalidate_marketplace_cache(pool: &Arc<PgPool>, user_id: &str) {
+pub async fn invalidate_marketplace_cache(pool: &Arc<PgPool>, user_id: &UserId) {
     if let Err(e) = repositories::mark_user_dirty(pool, user_id).await {
         tracing::warn!(error = %e, "Failed to mark user dirty after MCP mutation");
     }

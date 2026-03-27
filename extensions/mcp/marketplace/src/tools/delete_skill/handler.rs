@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, SkillId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::TextArtifact;
@@ -43,12 +43,13 @@ impl McpToolHandler for DeleteSkillHandler {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
+        let skill_id = SkillId::new(input.skill_id.clone());
         let deleted =
             systemprompt_web_extension::admin::repositories::user_skills::delete_user_skill(
                 &pool,
                 &user_id,
-                &input.skill_id,
+                &skill_id,
             )
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to delete skill: {e}"), None))?;
@@ -70,7 +71,7 @@ impl McpToolHandler for DeleteSkillHandler {
             "deleted": true,
             "skill_id": input.skill_id,
         }))
-        .unwrap_or_default();
+        .map_err(|e| McpError::internal_error(format!("Failed to serialize result: {e}"), None))?;
 
         let summary = format!("Deleted skill '{}'", input.skill_id);
         let content = format!("{summary}\n\n{result_json}");

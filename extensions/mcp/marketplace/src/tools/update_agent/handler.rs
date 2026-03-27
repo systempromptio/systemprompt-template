@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{AgentId, McpExecutionId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::TextArtifact;
@@ -51,15 +51,15 @@ impl McpToolHandler for UpdateAgentHandler {
             name: input.name,
             description: input.description,
             system_prompt: input.system_prompt,
-            enabled: None,
         };
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
+        let agent_id = AgentId::new(&input.agent_id);
         let agent =
             systemprompt_web_extension::admin::repositories::user_agents::update_user_agent(
                 &pool,
                 &user_id,
-                &input.agent_id,
+                &agent_id,
                 &update_req,
             )
             .await

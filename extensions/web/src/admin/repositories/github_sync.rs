@@ -424,14 +424,14 @@ pub(crate) fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBun
 
     let mut skills_count = 0;
     let mut agents_count = 0;
-    let mut hooks_count = 0;
+    let mut _hooks_count = 0;
     for f in &files {
         if f.path.starts_with("skills/") && f.path.ends_with("SKILL.md") {
             skills_count += 1;
         } else if f.path.starts_with("agents/") && f.path.ends_with(".md") {
             agents_count += 1;
         } else if f.path == "hooks/hooks.json" {
-            hooks_count += 1;
+            _hooks_count += 1;
         }
     }
     let total_files = files.len();

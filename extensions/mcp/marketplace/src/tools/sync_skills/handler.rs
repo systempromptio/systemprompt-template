@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::{McpToolHandler, ProgressCallback};
 use systemprompt::models::artifacts::TextArtifact;
@@ -45,7 +45,7 @@ impl McpToolHandler for SyncSkillsHandler {
             notify(0.0, Some(100.0), Some("Starting skill sync...".to_string())).await;
         }
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
         let pool = self.db_pool.write_pool().ok_or_else(|| {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
@@ -66,7 +66,7 @@ impl McpToolHandler for SyncSkillsHandler {
         } else {
             skills
                 .into_iter()
-                .filter(|s| input.skill_ids.contains(&s.skill_id))
+                .filter(|s| input.skill_ids.iter().any(|id| id == s.skill_id.as_ref()))
                 .collect()
         };
 
@@ -101,7 +101,7 @@ impl McpToolHandler for SyncSkillsHandler {
             "timestamp": timestamp,
             "details": summary_detail,
         }))
-        .unwrap_or_default();
+        .map_err(|e| McpError::internal_error(format!("Failed to serialize result: {e}"), None))?;
 
         let summary = format!("Synced {skills_synced} skill(s) for user '{user_id}'");
         let content = format!("{summary}\n\n{result_json}");

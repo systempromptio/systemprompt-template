@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::{Column, ColumnType, TableArtifact};
@@ -38,7 +38,7 @@ impl McpToolHandler for ListMcpServersHandler {
         let pool = self.db_pool.pool().ok_or_else(|| {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
 
         let servers =
             systemprompt_web_extension::admin::repositories::user_mcp_servers::list_user_mcp_servers(

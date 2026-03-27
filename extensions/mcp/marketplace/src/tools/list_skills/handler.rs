@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::{Column, ColumnType, TableArtifact};
@@ -38,7 +38,7 @@ impl McpToolHandler for ListSkillsHandler {
         let pool = self.db_pool.pool().ok_or_else(|| {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
 
         let skills =
             systemprompt_web_extension::admin::repositories::user_skills::list_user_skills(
@@ -47,7 +47,8 @@ impl McpToolHandler for ListSkillsHandler {
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to list skills: {e}"), None))?;
 
-        let skill_ids: Vec<String> = skills.iter().map(|s| s.skill_id.clone()).collect();
+        let skill_ids: Vec<systemprompt::identifiers::SkillId> =
+            skills.iter().map(|s| s.skill_id.clone()).collect();
 
         let usage_counts =
             systemprompt_web_extension::admin::repositories::user_skills::fetch_skill_usage_counts(
@@ -77,9 +78,9 @@ impl McpToolHandler for ListSkillsHandler {
         let rows: Vec<serde_json::Value> = skills
             .iter()
             .map(|s| {
-                let usage = usage_counts.get(&s.skill_id).copied().unwrap_or(0);
+                let usage = usage_counts.get(s.skill_id.as_ref()).copied().unwrap_or(0);
                 let (avg_rating, _rating_count) =
-                    avg_ratings.get(&s.skill_id).copied().unwrap_or((0.0, 0));
+                    avg_ratings.get(s.skill_id.as_ref()).copied().unwrap_or((0.0, 0));
 
                 serde_json::json!({
                     "skill_id": s.skill_id,

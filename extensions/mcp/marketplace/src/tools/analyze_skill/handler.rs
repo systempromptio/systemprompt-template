@@ -5,7 +5,7 @@ use std::sync::Arc;
 use systemprompt::agent::services::SkillService;
 use systemprompt::ai::{AiMessage, AiRequest, AiService};
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::{McpToolHandler, ProgressCallback};
 use systemprompt::models::artifacts::TextArtifact;
@@ -47,7 +47,7 @@ impl McpToolHandler for AnalyzeSkillHandler {
             notify(0.0, Some(100.0), Some("Loading skill...".to_string())).await;
         }
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
         let pool = self.db_pool.pool().ok_or_else(|| {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
@@ -60,7 +60,7 @@ impl McpToolHandler for AnalyzeSkillHandler {
             {
                 Ok(skills) => skills
                     .into_iter()
-                    .find(|s| s.skill_id == input.skill_id)
+                    .find(|s| s.skill_id.as_ref() == input.skill_id)
                     .map(|s| {
                         format!(
                             "Name: {}\nDescription: {}\nContent:\n{}",

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, SkillId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::TextArtifact;
@@ -52,15 +52,15 @@ impl McpToolHandler for UpdateSkillHandler {
             description: input.description,
             content: input.content,
             tags: input.tags,
-            enabled: None,
         };
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
+        let skill_id = SkillId::new(&input.skill_id);
         let skill =
             systemprompt_web_extension::admin::repositories::user_skills::update_user_skill(
                 &pool,
                 &user_id,
-                &input.skill_id,
+                &skill_id,
                 &update_req,
             )
             .await

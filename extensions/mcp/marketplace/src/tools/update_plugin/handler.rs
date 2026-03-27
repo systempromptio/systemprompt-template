@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::TextArtifact;
@@ -64,7 +64,7 @@ impl McpToolHandler for UpdatePluginHandler {
             author_name: input.author_name,
         };
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
         let plugin =
             systemprompt_web_extension::admin::repositories::user_plugins::update_user_plugin(
                 &pool,
@@ -85,9 +85,11 @@ impl McpToolHandler for UpdatePluginHandler {
             })?;
 
         if let Some(ref skill_slugs) = input.skill_ids {
-            let uuids = shared::resolve_skill_slugs(&pool, &user_id, skill_slugs).await?;
+            let uuids = shared::resolve_skill_slugs(&pool, user_id.as_ref(), skill_slugs).await?;
+            let typed: Vec<systemprompt::identifiers::SkillId> =
+                uuids.into_iter().map(systemprompt::identifiers::SkillId::new).collect();
             systemprompt_web_extension::admin::repositories::set_plugin_skills(
-                &pool, &plugin.id, &uuids,
+                &pool, &plugin.id, &typed,
             )
             .await
             .map_err(|e| {
@@ -95,9 +97,11 @@ impl McpToolHandler for UpdatePluginHandler {
             })?;
         }
         if let Some(ref agent_slugs) = input.agent_ids {
-            let uuids = shared::resolve_agent_slugs(&pool, &user_id, agent_slugs).await?;
+            let uuids = shared::resolve_agent_slugs(&pool, user_id.as_ref(), agent_slugs).await?;
+            let typed: Vec<systemprompt::identifiers::AgentId> =
+                uuids.into_iter().map(systemprompt::identifiers::AgentId::new).collect();
             systemprompt_web_extension::admin::repositories::set_plugin_agents(
-                &pool, &plugin.id, &uuids,
+                &pool, &plugin.id, &typed,
             )
             .await
             .map_err(|e| {
@@ -105,9 +109,11 @@ impl McpToolHandler for UpdatePluginHandler {
             })?;
         }
         if let Some(ref mcp_server_slugs) = input.mcp_server_ids {
-            let uuids = shared::resolve_mcp_server_slugs(&pool, &user_id, mcp_server_slugs).await?;
+            let uuids = shared::resolve_mcp_server_slugs(&pool, user_id.as_ref(), mcp_server_slugs).await?;
+            let typed: Vec<systemprompt::identifiers::McpServerId> =
+                uuids.into_iter().map(systemprompt::identifiers::McpServerId::new).collect();
             systemprompt_web_extension::admin::repositories::set_plugin_mcp_servers(
-                &pool, &plugin.id, &uuids,
+                &pool, &plugin.id, &typed,
             )
             .await
             .map_err(|e| {
@@ -123,10 +129,12 @@ impl McpToolHandler for UpdatePluginHandler {
             )
             .await
         {
-            let skills = shared::resolve_skill_uuids_to_slugs(&pool, &assoc.skill_ids).await;
-            let agents = shared::resolve_agent_uuids_to_slugs(&pool, &assoc.agent_ids).await;
-            let mcps =
-                shared::resolve_mcp_server_uuids_to_slugs(&pool, &assoc.mcp_server_ids).await;
+            let skill_strs: Vec<String> = assoc.skill_ids.iter().map(|id| id.to_string()).collect();
+            let agent_strs: Vec<String> = assoc.agent_ids.iter().map(|id| id.to_string()).collect();
+            let mcp_strs: Vec<String> = assoc.mcp_server_ids.iter().map(|id| id.to_string()).collect();
+            let skills = shared::resolve_skill_uuids_to_slugs(&pool, &skill_strs).await;
+            let agents = shared::resolve_agent_uuids_to_slugs(&pool, &agent_strs).await;
+            let mcps = shared::resolve_mcp_server_uuids_to_slugs(&pool, &mcp_strs).await;
             (skills, agents, mcps)
         } else {
             (vec![], vec![], vec![])

@@ -10,7 +10,7 @@ use super::super::types::marketplaces::{
 pub async fn list_org_marketplaces(pool: &Arc<PgPool>) -> Result<Vec<OrgMarketplace>, sqlx::Error> {
     sqlx::query_as!(
         OrgMarketplace,
-        "SELECT id, name, description, enabled, created_at, updated_at
+        "SELECT id, name, description, github_repo_url, enabled, created_at, updated_at
          FROM org_marketplaces
          ORDER BY name",
     )
@@ -24,7 +24,7 @@ pub async fn find_org_marketplace(
 ) -> Result<Option<OrgMarketplace>, sqlx::Error> {
     sqlx::query_as!(
         OrgMarketplace,
-        "SELECT id, name, description, enabled, created_at, updated_at
+        "SELECT id, name, description, github_repo_url, enabled, created_at, updated_at
          FROM org_marketplaces
          WHERE id = $1",
         id,
@@ -41,7 +41,7 @@ pub async fn create_org_marketplace(
         OrgMarketplace,
         "INSERT INTO org_marketplaces (id, name, description, enabled)
          VALUES ($1, $2, $3, true)
-         RETURNING id, name, description, enabled, created_at, updated_at",
+         RETURNING id, name, description, github_repo_url, enabled, created_at, updated_at",
         req.id,
         req.name,
         req.description,
@@ -73,7 +73,7 @@ pub async fn update_org_marketplace(
         "UPDATE org_marketplaces
          SET name = $2, description = $3, updated_at = NOW()
          WHERE id = $1
-         RETURNING id, name, description, enabled, created_at, updated_at",
+         RETURNING id, name, description, github_repo_url, enabled, created_at, updated_at",
         id,
         name,
         description,

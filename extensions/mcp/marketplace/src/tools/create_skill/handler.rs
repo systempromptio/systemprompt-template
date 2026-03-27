@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::TextArtifact;
@@ -51,15 +51,15 @@ impl McpToolHandler for CreateSkillHandler {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
         let create_req = systemprompt_web_extension::admin::types::CreateSkillRequest {
-            skill_id: skill_id.clone(),
+            skill_id: systemprompt::identifiers::SkillId::new(skill_id.clone()),
             name: input.name.clone(),
             description: input.description.clone(),
             content: input.content.clone(),
             tags: input.tags,
-            base_skill_id: input.base_skill_id,
+            base_skill_id: input.base_skill_id.map(systemprompt::identifiers::SkillId::new),
         };
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
         let skill =
             systemprompt_web_extension::admin::repositories::user_skills::create_user_skill(
                 &pool,
@@ -94,7 +94,7 @@ impl McpToolHandler for CreateSkillHandler {
             "created_at": skill.created_at.to_rfc3339(),
             "updated_at": skill.updated_at.to_rfc3339(),
         }))
-        .unwrap_or_default();
+        .map_err(|e| McpError::internal_error(format!("Failed to serialize skill: {e}"), None))?;
 
         let summary = if let Some(ref plugin_id) = added_to_plugin {
             format!(

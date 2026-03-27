@@ -34,6 +34,7 @@ mod plugin_crud_ops;
 pub mod plugin_env;
 mod plugin_import;
 pub mod plugin_jwt;
+mod user_plugin_detail;
 mod plugin_maps;
 mod plugin_resolvers;
 pub mod plugins;
@@ -94,10 +95,11 @@ pub use user_hooks::{
     get_hook_summary_stats, get_hook_timeseries, list_user_hooks, toggle_user_hook,
     update_user_hook,
 };
+pub use user_plugin_detail::get_plugin_with_associations;
 pub use user_plugins::{
     count_user_plugin_items, create_user_plugin, delete_user_plugin, find_plugin_with_associations,
     find_user_plugin, is_entity_in_platform_plugin, list_user_plugins, list_user_plugins_enriched,
-    set_plugin_agents, set_plugin_skills, update_user_plugin,
+    set_plugin_agents, set_plugin_mcp_servers, set_plugin_skills, update_user_plugin,
 };
 pub use user_skills::{
     create_user_skill, delete_user_skill, fetch_agent_usage_counts, fetch_skill_avg_ratings,

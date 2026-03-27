@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::TextArtifact;
@@ -49,14 +49,14 @@ impl McpToolHandler for CreateAgentHandler {
         })?;
 
         let create_req = systemprompt_web_extension::admin::types::CreateUserAgentRequest {
-            agent_id: agent_id.clone(),
+            agent_id: systemprompt::identifiers::AgentId::new(agent_id.clone()),
             name: input.name.clone(),
             description: input.description.clone(),
             system_prompt: input.system_prompt.clone(),
-            base_agent_id: input.base_agent_id,
+            base_agent_id: input.base_agent_id.map(systemprompt::identifiers::AgentId::new),
         };
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
         let agent =
             systemprompt_web_extension::admin::repositories::user_agents::create_user_agent(
                 &pool,
@@ -83,7 +83,7 @@ impl McpToolHandler for CreateAgentHandler {
             "created_at": agent.created_at.to_rfc3339(),
             "updated_at": agent.updated_at.to_rfc3339(),
         }))
-        .unwrap_or_default();
+        .map_err(|e| McpError::internal_error(format!("Failed to serialize agent: {e}"), None))?;
 
         let summary = if let Some(ref plugin_id) = added_to_plugin {
             format!(

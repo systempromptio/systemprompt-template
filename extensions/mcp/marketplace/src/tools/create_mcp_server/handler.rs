@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::McpExecutionId;
+use systemprompt::identifiers::{McpExecutionId, UserId};
 use systemprompt::mcp::McpError;
 use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::TextArtifact;
@@ -60,7 +60,7 @@ impl McpToolHandler for CreateMcpServerHandler {
         })?;
 
         let create_req = systemprompt_web_extension::admin::types::CreateUserMcpServerRequest {
-            mcp_server_id: mcp_server_id.clone(),
+            mcp_server_id: systemprompt::identifiers::McpServerId::new(mcp_server_id.clone()),
             name: input.name.clone(),
             description: input.description.clone(),
             binary: input.binary.unwrap_or_default(),
@@ -70,10 +70,10 @@ impl McpToolHandler for CreateMcpServerHandler {
             oauth_required: input.oauth_required,
             oauth_scopes: input.oauth_scopes,
             oauth_audience: input.oauth_audience.unwrap_or_default(),
-            base_mcp_server_id: input.base_mcp_server_id,
+            base_mcp_server_id: input.base_mcp_server_id.map(systemprompt::identifiers::McpServerId::new),
         };
 
-        let user_id = ctx.user_id().to_string();
+        let user_id = UserId::new(ctx.user_id().to_string());
         let server = systemprompt_web_extension::admin::repositories::user_mcp_servers::create_user_mcp_server(
             &pool,
             &user_id,
@@ -111,7 +111,7 @@ impl McpToolHandler for CreateMcpServerHandler {
             "created_at": server.created_at.to_rfc3339(),
             "updated_at": server.updated_at.to_rfc3339(),
         }))
-        .unwrap_or_default();
+        .map_err(|e| McpError::internal_error(format!("Failed to serialize MCP server: {e}"), None))?;
 
         let summary = if let Some(ref plugin_id) = added_to_plugin {
             format!(

@@ -21,7 +21,6 @@ pub(crate) use batch_delete::{
     batch_delete_agents_handler, batch_delete_hooks_handler, batch_delete_mcp_servers_handler,
     batch_delete_secrets_handler, batch_delete_skills_handler,
 };
-pub(crate) use fork::fork_single_plugin;
 pub(crate) use fork::{fork_org_agent_handler, fork_org_plugin_handler, fork_org_skill_handler};
 pub(crate) use fork_lists::{
     list_forkable_agents_handler, list_forkable_plugins_handler, list_forkable_skills_handler,
