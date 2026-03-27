@@ -25,7 +25,7 @@ pub async fn build_skill_files(
     let hooks_section = ctx
         .token
         .filter(|t| !t.is_empty() && !ctx.platform_url.is_empty())
-        .map(|t| {
+        .map_or_else(String::new, |t| {
             let yaml = super::super::export_builders::build_skill_hooks_yaml_public(
                 ctx.platform_url,
                 t,
@@ -33,8 +33,7 @@ pub async fn build_skill_files(
                 ctx.plugin_id,
             );
             format!("{yaml}\n")
-        })
-        .unwrap_or_else(String::new);
+        });
     let skill_md = format!(
         "---\nname: {}\ndescription: \"{}\"\n{}---\n\n{}\n",
         kebab_name,

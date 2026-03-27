@@ -82,12 +82,11 @@ fn parse_agent_detail(agent_id: &str, val: &serde_yaml::Value) -> AgentDetail {
         mcp_servers: val
             .get("mcp_servers")
             .and_then(|v| v.as_sequence())
-            .map(|seq| {
+            .map_or_else(Vec::new, |seq| {
                 seq.iter()
                     .filter_map(|v| v.as_str().map(ToString::to_string))
                     .collect()
-            })
-            .unwrap_or_else(Vec::new),
+            }),
         skills: parse_agent_skills(val),
     }
 }
@@ -96,7 +95,7 @@ fn parse_agent_skills(val: &serde_yaml::Value) -> Vec<AgentSkillInfo> {
     val.get("card")
         .and_then(|c| c.get("skills"))
         .and_then(|s| s.as_sequence())
-        .map(|seq| {
+        .map_or_else(Vec::new, |seq| {
             seq.iter()
                 .filter_map(|skill| {
                     Some(AgentSkillInfo {
@@ -107,7 +106,6 @@ fn parse_agent_skills(val: &serde_yaml::Value) -> Vec<AgentSkillInfo> {
                 })
                 .collect()
         })
-        .unwrap_or_else(|| Vec::new())
 }
 
 pub fn find_agent(

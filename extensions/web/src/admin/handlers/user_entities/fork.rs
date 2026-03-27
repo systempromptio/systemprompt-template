@@ -80,12 +80,11 @@ fn read_skill_config(
     let tags: Vec<String> = cfg
         .get("tags")
         .and_then(|v| v.as_sequence())
-        .map(|seq| {
+        .map_or_else(Vec::new, |seq| {
             seq.iter()
                 .filter_map(|v| v.as_str().map(String::from))
                 .collect()
-        })
-        .unwrap_or_else(Vec::new);
+        });
     (name, desc, tags)
 }
 

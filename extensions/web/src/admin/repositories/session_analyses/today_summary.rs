@@ -83,7 +83,7 @@ pub async fn fetch_today_summary(pool: &PgPool, user_id: &UserId) -> TodaySummar
     .ok()
     .flatten()
     .flatten()
-    .unwrap_or_else(|| String::new());
+    .unwrap_or_else(String::new);
 
     TodaySummary {
         sessions_count: session_row.count,

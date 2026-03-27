@@ -130,9 +130,9 @@ pub async fn list_user_plugins_enriched(
     let enriched = plugins
         .into_iter()
         .map(|p| {
-            let skills = skill_map.remove(&p.id).unwrap_or_else(|| Vec::new());
-            let agents = agent_map.remove(&p.id).unwrap_or_else(|| Vec::new());
-            let mcp_servers = mcp_map.remove(&p.id).unwrap_or_else(|| Vec::new());
+            let skills = skill_map.remove(&p.id).unwrap_or_else(Vec::new);
+            let agents = agent_map.remove(&p.id).unwrap_or_else(Vec::new);
+            let mcp_servers = mcp_map.remove(&p.id).unwrap_or_else(Vec::new);
             UserPluginEnriched {
                 skill_count: skills.len(),
                 agent_count: agents.len(),
