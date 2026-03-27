@@ -42,9 +42,9 @@ pub struct ToolServices {
 
 fn build_tool<H: McpToolHandler>(handler: &H) -> Tool {
     let input_schema = handler.input_schema();
-    let input_obj = input_schema.as_object().cloned().unwrap_or_default();
+    let input_obj = input_schema.as_object().cloned().unwrap_or_else(serde_json::Map::new);
     let output_schema = handler.output_schema();
-    let output_obj = output_schema.as_object().cloned().unwrap_or_default();
+    let output_obj = output_schema.as_object().cloned().unwrap_or_else(serde_json::Map::new);
 
     let mut tool = Tool::default();
     tool.name = handler.tool_name().to_string().into();

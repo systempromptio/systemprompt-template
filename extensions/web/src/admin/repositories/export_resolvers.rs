@@ -92,7 +92,7 @@ pub(super) fn build_skill_md(
 
     let hooks_section = skill_hooks_yaml
         .map(|h| format!("{h}\n"))
-        .unwrap_or_default();
+        .unwrap_or_else(String::new);
 
     let kebab_name = skill_id.replace('_', "-");
     Ok(format!(

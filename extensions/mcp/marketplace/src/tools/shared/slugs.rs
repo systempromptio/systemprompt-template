@@ -57,7 +57,7 @@ async fn resolve_uuids_to_slugs_generic(
         .bind(uuids)
         .fetch_all(pool.as_ref())
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| Vec::new());
 
     let map: std::collections::HashMap<String, String> = rows.into_iter().collect();
     uuids

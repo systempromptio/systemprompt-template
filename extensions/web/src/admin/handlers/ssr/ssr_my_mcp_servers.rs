@@ -33,11 +33,11 @@ pub(crate) async fn my_mcp_servers_page(
         vec![]
     });
 
-    let user_plugins = user_plugins_res.unwrap_or_default();
+    let user_plugins = user_plugins_res.unwrap_or_else(|_| vec![]);
 
-    let usage_data = usage_res.unwrap_or_default();
-    let eff_data = eff_res.unwrap_or_default();
-    let _last_used_data = last_used_res.unwrap_or_default();
+    let usage_data = usage_res.unwrap_or_else(|_| vec![]);
+    let eff_data = eff_res.unwrap_or_else(|_| vec![]);
+    let _last_used_data = last_used_res.unwrap_or_else(|_| vec![]);
 
     let usage_map: HashMap<&str, _> = usage_data
         .iter()
@@ -80,7 +80,7 @@ pub(crate) async fn my_mcp_servers_page(
                 description: s.description.clone(),
                 endpoint: s.endpoint.clone(),
                 enabled: s.enabled,
-                plugin_names: mcp_plugin_map.get(&s.id).cloned().unwrap_or_default(),
+                plugin_names: mcp_plugin_map.get(&s.id).cloned().unwrap_or_else(|| vec![]),
                 base_mcp_server_id: s
                     .base_mcp_server_id
                     .as_ref()
@@ -111,6 +111,6 @@ pub(crate) async fn my_mcp_servers_page(
         },
     };
 
-    let value = serde_json::to_value(&data).unwrap_or_default();
+    let value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-mcp-servers", &value, &user_ctx, &mkt_ctx)
 }

@@ -106,7 +106,7 @@ fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String, Vec<R
     let required_secrets: Vec<RequiredSecret> = cfg
         .get("required_secrets")
         .and_then(|v| serde_yaml::from_value(v.clone()).ok())
-        .unwrap_or_default();
+        .unwrap_or_else(Vec::new);
     (name, desc, required_secrets)
 }
 

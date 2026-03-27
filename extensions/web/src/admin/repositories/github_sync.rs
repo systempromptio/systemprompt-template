@@ -131,7 +131,7 @@ pub async fn sync_marketplace_from_github(
     }
 
     let current_hash = git_head_hash(&local_path)?;
-    let last_hash = std::fs::read_to_string(&marker_path).unwrap_or_default();
+    let last_hash = std::fs::read_to_string(&marker_path).unwrap_or_else(|_| String::new());
     if current_hash.trim() == last_hash.trim() && !last_hash.is_empty() {
         let duration_ms = elapsed_ms(start);
         tracing::info!(
@@ -632,7 +632,7 @@ fn git_push(repo_path: &Path, remote_url: &str) -> Result<()> {
 }
 
 fn build_authenticated_url(repo_url: &str) -> String {
-    let token = std::env::var("GITHUB_MARKETPLACE_TOKEN").unwrap_or_default();
+    let token = std::env::var("GITHUB_MARKETPLACE_TOKEN").unwrap_or_else(|_| String::new());
     if token.is_empty() {
         return repo_url.to_string();
     }

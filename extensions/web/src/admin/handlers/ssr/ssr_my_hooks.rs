@@ -47,11 +47,11 @@ pub(crate) async fn my_hooks_page(
 
     let hooks = repositories::user_hooks::list_user_hooks(&pool, &user_ctx.user_id)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| vec![]);
 
     let user_plugins = repositories::list_user_plugins(&pool, &user_ctx.user_id)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| vec![]);
 
     let range = match query.range.as_str() {
         "24h" | "7d" | "14d" => query.range.as_str(),
@@ -65,12 +65,12 @@ pub(crate) async fn my_hooks_page(
         async {
             conversation_analytics::fetch_hook_session_quality(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_default()
+                .unwrap_or_else(|_| vec![])
         },
     );
 
-    let event_breakdown = event_breakdown.unwrap_or_default();
-    let timeseries = timeseries.unwrap_or_default();
+    let event_breakdown = event_breakdown.unwrap_or_else(|_| vec![]);
+    let timeseries = timeseries.unwrap_or_else(|_| vec![]);
     let chart = super::charts::compute_hooks_chart_data(&timeseries, range);
 
     let quality_map: std::collections::HashMap<&str, _> = hook_quality
@@ -118,7 +118,7 @@ pub(crate) async fn my_hooks_page(
             avg_session_quality: format!("{avg_session_quality:.1}"),
         },
         event_breakdown: event_breakdown_views,
-        chart: serde_json::to_value(chart).unwrap_or_default(), // JSON: protocol boundary
+        chart: serde_json::to_value(chart).unwrap_or_default(),
         range: range.to_string(),
         range_24h: range == "24h",
         range_7d: range == "7d",
@@ -126,7 +126,7 @@ pub(crate) async fn my_hooks_page(
         hook_event_types: HOOK_EVENT_TYPES.to_vec(),
     };
 
-    let value = serde_json::to_value(&data).unwrap_or_default();
+    let value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-hooks", &value, &user_ctx, &mkt_ctx)
 }
 
@@ -178,7 +178,7 @@ fn build_hook_views(
                     hooks: vec![HookCodeHook {
                         hook_type: "http".to_string(),
                         url: Some(h.url.clone()),
-                        headers: Some(h.headers.clone()), // JSON: protocol boundary
+                        headers: Some(h.headers.clone()),
                         command: None,
                         is_async: None,
                         timeout: Some(h.timeout),
@@ -197,7 +197,7 @@ fn build_hook_views(
                     }],
                 }
             };
-            let hook_code = serde_json::to_string_pretty(&[&hook_code_entry]).unwrap_or_default();
+            let hook_code = serde_json::to_string_pretty(&[&hook_code_entry]).unwrap_or_else(|_| String::new());
             HookView {
                 id: h.id.clone(),
                 hook_name: h.hook_name.clone(),
@@ -207,7 +207,7 @@ fn build_hook_views(
                 matcher: h.matcher.clone(),
                 url: h.url.clone(),
                 command: h.command.clone(),
-                headers: h.headers.clone(), // JSON: protocol boundary
+                headers: h.headers.clone(),
                 timeout: h.timeout,
                 is_async: h.is_async,
                 enabled: h.enabled,

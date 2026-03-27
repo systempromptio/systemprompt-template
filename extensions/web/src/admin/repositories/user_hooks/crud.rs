@@ -164,7 +164,7 @@ pub async fn update_user_hook(
         req.matcher.as_deref(),
         req.url.as_deref(),
         req.command.as_deref(),
-        req.headers.clone() as Option<serde_json::Value>, // JSON: DB jsonb column
+        req.headers.clone() as Option<serde_json::Value>,
         req.timeout,
         req.is_async,
         req.enabled,

@@ -74,7 +74,7 @@ fn extract_import_metadata(
         .and_then(|m| m.author.as_ref())
         .map_or("", |a| a.name.as_str())
         .to_string();
-    let keywords = manifest.map(|m| m.keywords.clone()).unwrap_or_default();
+    let keywords = manifest.map(|m| m.keywords.clone()).unwrap_or_else(Vec::new);
 
     ImportMetadata {
         name,

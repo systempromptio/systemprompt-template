@@ -52,13 +52,11 @@
   max-height: calc(100vh - var(--header-height, 72px));
   overflow-y: auto;
   padding-bottom: var(--spacing-xxl);
-  /* Hide scrollbar but keep functionality */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
 }
 
 .docs-nav::-webkit-scrollbar {
-  display: none; /* Chrome/Safari/Opera */
+  display: none;
 }
 
 .docs-nav-section {

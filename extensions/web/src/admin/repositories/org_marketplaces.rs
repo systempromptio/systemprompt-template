@@ -189,7 +189,6 @@ pub async fn list_marketplaces_for_plugins(
     Ok(map)
 }
 
-/// Lists all org marketplaces that have a GitHub repo URL configured.
 pub async fn list_github_marketplaces(
     pool: &Arc<PgPool>,
 ) -> Result<Vec<OrgMarketplace>, sqlx::Error> {
@@ -203,7 +202,6 @@ pub async fn list_github_marketplaces(
     .await
 }
 
-/// Insert a sync log entry for a marketplace operation.
 #[allow(clippy::too_many_arguments)]
 pub async fn insert_sync_log(
     pool: &Arc<PgPool>,

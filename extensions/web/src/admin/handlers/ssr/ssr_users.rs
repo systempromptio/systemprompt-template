@@ -76,7 +76,7 @@ pub(crate) async fn users_page(
 
     let rank_rows: Vec<UserRank> = repositories::fetch_user_ranks(&pool)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| Vec::new());
 
     let enriched_users = enrich_users_with_ranks(&users, &rank_rows);
 
@@ -89,7 +89,7 @@ pub(crate) async fn users_page(
         total_events,
     };
 
-    let mut value = serde_json::to_value(&data).unwrap_or_default();
+    let mut value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Null);
     if let Some(obj) = value.as_object_mut() {
         obj.insert(
             "page_stats".to_string(),
@@ -131,7 +131,7 @@ pub(crate) async fn user_detail_page(
             achievements_count: 0,
             not_found: true,
         };
-        let value = serde_json::to_value(&data).unwrap_or_default();
+        let value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Null);
         return super::render_page(&engine, "user-detail", &value, &user_ctx, &mkt_ctx);
     };
     let user_id = UserId::new(id.as_str());
@@ -165,7 +165,7 @@ pub(crate) async fn user_detail_page(
         achievements_count,
         not_found,
     };
-    let value = serde_json::to_value(&data).unwrap_or_default();
+    let value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Null);
     super::render_page(&engine, "user-detail", &value, &user_ctx, &mkt_ctx)
 }
 
@@ -190,5 +190,5 @@ fn enrich_achievements(
                 })
                 .collect()
         })
-        .unwrap_or_default()
+        .unwrap_or_else(Vec::new)
 }

@@ -28,22 +28,22 @@ pub(crate) async fn my_plugins_page(
         async {
             repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_default()
+                .unwrap_or_else(|_| vec![])
         },
         async {
             conversation_analytics::fetch_entity_usage_summary(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_default()
+                .unwrap_or_else(|_| vec![])
         },
         async {
             conversation_analytics::fetch_skill_effectiveness(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_default()
+                .unwrap_or_else(|_| vec![])
         },
         async {
             conversation_analytics::fetch_entity_effectiveness(&pool, &user_ctx.user_id, "agent")
                 .await
-                .unwrap_or_default()
+                .unwrap_or_else(|_| vec![])
         },
     );
 
@@ -77,7 +77,7 @@ pub(crate) async fn my_plugins_page(
         categories,
         stats: PluginStats { plugin_count },
     };
-    let data_value = serde_json::to_value(&data).unwrap_or_default();
+    let data_value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-plugins", &data_value, &user_ctx, &mkt_ctx)
 }
 
@@ -132,6 +132,6 @@ pub(crate) async fn my_plugin_edit_page(
         agents_list,
         mcp_list,
     };
-    let data_value = serde_json::to_value(&data).unwrap_or_default();
+    let data_value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-plugin-edit", &data_value, &user_ctx, &mkt_ctx)
 }

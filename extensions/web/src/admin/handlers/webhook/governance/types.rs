@@ -41,7 +41,7 @@ pub(super) struct GovernanceContext<'a> {
     pub agent_scope: &'a str,
     pub session_id: &'a str,
     pub user_id: &'a str,
-    pub tool_input: Option<&'a serde_json::Value>, // JSON: required by HookEventPayload contract
+    pub tool_input: Option<&'a serde_json::Value>,
 }
 
 pub(super) struct AuditRecord {
@@ -53,7 +53,7 @@ pub(super) struct AuditRecord {
     pub decision: String,
     pub policy: String,
     pub reason: String,
-    pub evaluated_rules: serde_json::Value, // JSON: protocol boundary — stored as JSONB
+    pub evaluated_rules: serde_json::Value,
     pub plugin_id: Option<String>,
 }
 

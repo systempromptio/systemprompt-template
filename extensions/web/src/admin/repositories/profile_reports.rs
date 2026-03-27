@@ -7,15 +7,15 @@ pub struct ProfileReportRow {
     pub archetype: String,
     pub archetype_description: String,
     pub archetype_confidence: i16,
-    pub strengths: Option<serde_json::Value>, // JSON: JSONB column
-    pub weaknesses: Option<serde_json::Value>, // JSON: JSONB column
+    pub strengths: Option<serde_json::Value>,
+    pub weaknesses: Option<serde_json::Value>,
     pub ai_narrative: Option<String>,
     pub ai_style_analysis: Option<String>,
     pub ai_comparison: Option<String>,
     pub ai_patterns: Option<String>,
     pub ai_improvements: Option<String>,
     pub ai_tips: Option<String>,
-    pub metrics_snapshot: Option<serde_json::Value>, // JSON: JSONB column
+    pub metrics_snapshot: Option<serde_json::Value>,
     pub period_days: i32,
     pub generated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -24,15 +24,15 @@ pub struct ProfileReportInput {
     pub archetype: String,
     pub archetype_description: String,
     pub archetype_confidence: i16,
-    pub strengths: serde_json::Value,  // JSON: JSONB column
-    pub weaknesses: serde_json::Value, // JSON: JSONB column
+    pub strengths: serde_json::Value,
+    pub weaknesses: serde_json::Value,
     pub ai_narrative: Option<String>,
     pub ai_style_analysis: Option<String>,
     pub ai_comparison: Option<String>,
     pub ai_patterns: Option<String>,
     pub ai_improvements: Option<String>,
     pub ai_tips: Option<String>,
-    pub metrics_snapshot: serde_json::Value, // JSON: JSONB column
+    pub metrics_snapshot: serde_json::Value,
     pub period_days: i32,
 }
 

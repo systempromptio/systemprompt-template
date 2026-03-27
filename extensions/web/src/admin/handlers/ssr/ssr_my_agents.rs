@@ -31,17 +31,17 @@ pub(crate) async fn my_agents_page(
         async {
             conversation_analytics::fetch_entity_effectiveness(&pool, &user_ctx.user_id, "agent")
                 .await
-                .unwrap_or_default()
+                .unwrap_or_else(|_| vec![])
         },
         async {
             conversation_analytics::fetch_entity_last_used(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_default()
+                .unwrap_or_else(|_| vec![])
         },
         async {
             conversation_analytics::fetch_entity_quality_trend(&pool, &user_ctx.user_id, "agent")
                 .await
-                .unwrap_or_default()
+                .unwrap_or_else(|_| vec![])
         },
         async {
             repositories::fetch_agent_plugin_assignments(&pool, &user_ctx.user_id)
@@ -124,7 +124,7 @@ fn build_single_agent_json(
     let plugins = plugin_assignments
         .get(a.agent_id.as_str())
         .cloned()
-        .unwrap_or_default();
+        .unwrap_or_else(|| vec![]);
     let trend_direction = trend.map_or("flat", |t| {
         if t.recent_avg > t.previous_avg + 0.2 {
             "up"
@@ -185,7 +185,7 @@ pub(crate) async fn my_agent_edit_page(
     let agent = if let Some(id) = agent_id {
         let agents = repositories::list_user_agents(&pool, &user_ctx.user_id)
             .await
-            .unwrap_or_default();
+            .unwrap_or_else(|_| vec![]);
         agents
             .into_iter()
             .find(|a| a.agent_id.as_str() == id.as_str())

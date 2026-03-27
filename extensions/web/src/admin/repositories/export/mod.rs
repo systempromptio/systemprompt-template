@@ -102,10 +102,10 @@ async fn resolve_org_plugin_ids(
 ) -> std::collections::HashSet<String> {
     let mut ids = super::org_marketplaces::resolve_authorized_org_plugin_ids(pool)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| std::collections::HashSet::new());
     let selected = super::user_plugin_selections::list_selected_org_plugins(pool, user_id)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| Vec::new());
     if selected.is_empty() {
         ids.retain(|id| id == "systemprompt");
     } else {
@@ -254,7 +254,6 @@ async fn build_user_bundles(
     Ok(())
 }
 
-/// Generate export bundles for an org marketplace (all plugins in the marketplace).
 pub async fn generate_org_marketplace_export_bundles(
     services_path: &Path,
     pool: &Arc<PgPool>,

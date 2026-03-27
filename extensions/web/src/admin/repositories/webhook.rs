@@ -10,7 +10,7 @@ pub struct UsageEventParams<'a> {
     pub session_id: &'a SessionId,
     pub event_type: &'a str,
     pub tool_name: Option<&'a str>,
-    pub metadata: &'a serde_json::Value, // JSON: DB jsonb column (polymorphic hook event data)
+    pub metadata: &'a serde_json::Value,
     pub description: Option<&'a str>,
     pub prompt_preview: Option<&'a str>,
     pub cwd: Option<&'a str>,

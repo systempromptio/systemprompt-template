@@ -31,8 +31,7 @@ pub async fn fetch_session_ai_summaries(
         session_ids,
     )
     .fetch_all(pool)
-    .await
-    .unwrap_or_default();
+    .await?;
 
     let mut result: Vec<(String, String, String, String)> = analysis_rows
         .into_iter()
@@ -57,15 +56,14 @@ pub async fn fetch_session_ai_summaries(
             &missing_vec,
         )
         .fetch_all(pool)
-        .await
-        .unwrap_or_default();
+        .await?;
 
         for r in fallback_rows {
             result.push((
                 r.session_id,
-                r.ai_summary.unwrap_or_default(),
-                r.ai_tags.unwrap_or_default(),
-                r.ai_title.unwrap_or_default(),
+                r.ai_summary.unwrap_or_else(String::new),
+                r.ai_tags.unwrap_or_else(String::new),
+                r.ai_title.unwrap_or_else(String::new),
             ));
         }
     }

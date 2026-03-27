@@ -10,9 +10,9 @@
 
     const isDocsPage = !!docsSidebar;
 
-    menuToggle.addEventListener('click', function() {
-      const isExpanded = this.getAttribute('aria-expanded') === 'true';
-      this.setAttribute('aria-expanded', !isExpanded);
+    menuToggle.addEventListener('click', () => {
+      const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
+      menuToggle.setAttribute('aria-expanded', !isExpanded);
 
       if (isDocsPage) {
         docsSidebar.classList.toggle('is-open');

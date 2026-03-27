@@ -34,7 +34,7 @@ async fn fetch_hourly_events(pool: &PgPool, user_id: &str) -> Vec<EventRow> {
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default()
+    .unwrap_or_else(|_| Vec::new())
 }
 
 struct SessionHourRow {
@@ -69,7 +69,7 @@ async fn fetch_hourly_sessions(pool: &PgPool, user_id: &str) -> Vec<SessionHourR
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default()
+    .unwrap_or_else(|_| Vec::new())
 }
 
 fn build_hourly_buckets(
@@ -140,7 +140,7 @@ async fn fetch_daily_events(pool: &PgPool, user_id: &str, days: i32) -> Vec<Dail
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default()
+    .unwrap_or_else(|_| Vec::new())
 }
 
 struct DailySessionRow {
@@ -176,7 +176,7 @@ async fn fetch_daily_sessions(pool: &PgPool, user_id: &str, days: i32) -> Vec<Da
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default()
+    .unwrap_or_else(|_| Vec::new())
 }
 
 fn build_daily_buckets(

@@ -101,7 +101,6 @@ async fn fetch_settings_data(
     let secrets_count = secrets_result.as_ref().map_or(0, std::vec::Vec::len);
 
     let sub_plan_id = subscription.as_ref().and_then(|s| s.plan_id);
-    // JSON: protocol boundary — limits come from DB as JSON
     let current_limits = sub_plan_id
         .and_then(|pid| plans.iter().find(|p| p.id == pid))
         .map_or_else(
@@ -114,7 +113,7 @@ async fn fetch_settings_data(
 
 fn build_usage_items(
     mkt_ctx: &MarketplaceContext,
-    current_limits: &serde_json::Value, // JSON: protocol boundary
+    current_limits: &serde_json::Value,
     hooks_count: usize,
     secrets_count: usize,
 ) -> Vec<UsageItemView> {

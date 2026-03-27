@@ -9,11 +9,11 @@
 
   function initCopyButtons() {
     document.querySelectorAll('.copy-btn').forEach((btn) => {
-      btn.addEventListener('click', async function() {
-        const code = this.getAttribute('data-code');
+      btn.addEventListener('click', async () => {
+        const code = btn.getAttribute('data-code');
         await navigator.clipboard.writeText(code);
-        this.classList.add('copied');
-        setTimeout(() => this.classList.remove('copied'), 2000);
+        btn.classList.add('copied');
+        setTimeout(() => btn.classList.remove('copied'), 2000);
       });
     });
   }

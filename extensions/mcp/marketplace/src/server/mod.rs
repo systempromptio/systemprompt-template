@@ -154,7 +154,6 @@ impl ServerHandler for MarketplaceServer {
 
         let request_context = authenticated_ctx.context.clone();
 
-        // Record successful tool execution
         {
             let pool = self.db_pool.clone();
             let uid = request_context.user_id().to_string();

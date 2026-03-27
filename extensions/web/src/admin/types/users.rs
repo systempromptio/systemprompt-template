@@ -74,7 +74,7 @@ pub struct UsageEvent {
     pub event_type: String,
     pub tool_name: Option<String>,
     pub created_at: DateTime<Utc>,
-    pub metadata: serde_json::Value, // JSON: DB JSONB column
+    pub metadata: serde_json::Value,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

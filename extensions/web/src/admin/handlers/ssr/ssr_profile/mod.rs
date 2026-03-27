@@ -70,9 +70,9 @@ pub(crate) async fn profile_page(
     let comparison_grid = data_loading::build_comparison_grid(&user_metrics, &global_averages);
     let category_breakdown = data_loading::build_category_breakdown(&recent_analyses);
 
-    let strengths_json = serde_json::to_value(&strengths).unwrap_or_default();
-    let weaknesses_json = serde_json::to_value(&weaknesses).unwrap_or_default();
-    let metrics_json = serde_json::to_value(&user_metrics).unwrap_or_default();
+    let strengths_json = serde_json::to_value(&strengths).unwrap_or(serde_json::Value::Array(vec![]));
+    let weaknesses_json = serde_json::to_value(&weaknesses).unwrap_or(serde_json::Value::Array(vec![]));
+    let metrics_json = serde_json::to_value(&user_metrics).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     let gamification_profile = gamification.ok().flatten();
     let has_gamification = gamification_profile.is_some();
 
@@ -160,15 +160,15 @@ pub(crate) async fn handle_generate_profile_report(
         archetype: archetype_result.id,
         archetype_description: archetype_result.description,
         archetype_confidence: i16::from(archetype_result.confidence),
-        strengths: serde_json::to_value(&strengths).unwrap_or_default(), // JSON: JSONB column
-        weaknesses: serde_json::to_value(&weaknesses).unwrap_or_default(), // JSON: JSONB column
+        strengths: serde_json::to_value(&strengths).unwrap_or(serde_json::Value::Array(vec![])),
+        weaknesses: serde_json::to_value(&weaknesses).unwrap_or(serde_json::Value::Array(vec![])),
         ai_narrative: Some(ai_report.narrative),
         ai_style_analysis: Some(ai_report.style_analysis),
         ai_comparison: Some(ai_report.comparison),
         ai_patterns: Some(ai_report.patterns),
         ai_improvements: Some(ai_report.improvements),
         ai_tips: Some(ai_report.tips),
-        metrics_snapshot: serde_json::to_value(&user_metrics).unwrap_or_default(), // JSON: JSONB column
+        metrics_snapshot: serde_json::to_value(&user_metrics).unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
         period_days: PROFILE_PERIOD_DAYS,
     };
 

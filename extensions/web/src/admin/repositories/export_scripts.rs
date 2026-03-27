@@ -35,7 +35,6 @@ pub(super) fn build_marketplace(
             }
         })
         .collect();
-    // Collapse consecutive dashes and trim leading/trailing dashes
     let slug = slug
         .split('-')
         .filter(|s| !s.is_empty())

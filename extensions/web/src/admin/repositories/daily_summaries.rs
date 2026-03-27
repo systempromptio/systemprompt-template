@@ -31,14 +31,14 @@ pub struct DailySummaryRow {
     pub achievements_unlocked: String,
     pub highlights: Option<String>,
     pub trends: Option<String>,
-    pub category_distribution: Option<serde_json::Value>, // JSON: DB jsonb column
+    pub category_distribution: Option<serde_json::Value>,
     pub plugins_count: i32,
     pub skills_count: i32,
     pub agents_count: i32,
     pub mcp_servers_count: i32,
     pub hooks_count: i32,
     pub health_score: Option<f32>,
-    pub skill_effectiveness: Option<serde_json::Value>, // JSON: DB jsonb column
+    pub skill_effectiveness: Option<serde_json::Value>,
     pub avg_session_duration_minutes: Option<f32>,
     pub avg_turns_per_session: Option<f32>,
     pub total_corrections: i32,
@@ -75,14 +75,14 @@ pub struct DailySummaryInput {
     pub achievements_unlocked: String,
     pub highlights: Option<String>,
     pub trends: Option<String>,
-    pub category_distribution: Option<serde_json::Value>, // JSON: DB jsonb column
+    pub category_distribution: Option<serde_json::Value>,
     pub plugins_count: i32,
     pub skills_count: i32,
     pub agents_count: i32,
     pub mcp_servers_count: i32,
     pub hooks_count: i32,
     pub health_score: Option<f32>,
-    pub skill_effectiveness: Option<serde_json::Value>, // JSON: DB jsonb column
+    pub skill_effectiveness: Option<serde_json::Value>,
     pub avg_session_duration_minutes: Option<f32>,
     pub avg_turns_per_session: Option<f32>,
     pub total_corrections: i32,
@@ -173,7 +173,7 @@ async fn execute_upsert(
         input.tool_diversity, input.multitasking_score, input.session_velocity,
         input.achievements_unlocked, input.highlights.clone() as Option<String>,
         input.trends.clone() as Option<String>,
-        input.category_distribution.clone() as Option<serde_json::Value>, // JSON: DB jsonb column
+        input.category_distribution.clone() as Option<serde_json::Value>,
         input.plugins_count, input.skills_count,
         input.agents_count, input.mcp_servers_count, input.hooks_count,
         input.health_score, input.skill_effectiveness.clone() as Option<serde_json::Value>,
@@ -225,7 +225,7 @@ pub async fn fetch_recent_daily_summaries(
     .bind(limit)
     .fetch_all(pool)
     .await
-    .unwrap_or_default()
+    .unwrap_or_else(|_| Vec::new())
 }
 
 pub async fn fetch_global_averages(pool: &PgPool) -> GlobalAverages {
@@ -249,5 +249,5 @@ pub async fn fetch_global_averages(pool: &PgPool) -> GlobalAverages {
     .await
     .ok()
     .flatten()
-    .unwrap_or_default()
+    .unwrap_or_else(GlobalAverages::default)
 }

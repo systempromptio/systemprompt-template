@@ -1,5 +1,3 @@
-/* Homepage Hero */
-
 .hero {
   min-height: calc(100vh - var(--header-height));
   display: flex;
@@ -71,8 +69,6 @@
   line-height: 1.7;
 }
 
-/* Hero Feature Cards */
-
 .hero-features-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -131,8 +127,6 @@
   transform: translateX(0);
 }
 
-/* Background glow */
-
 body::before {
   content: "";
   position: fixed;
@@ -145,8 +139,6 @@ body::before {
   pointer-events: none;
   z-index: -1;
 }
-
-/* Responsive */
 
 @media (max-width: 1024px) {
   .hero-features-grid {

@@ -53,7 +53,6 @@ impl Job for GitHubMarketplaceSyncJob {
         let mut total_success = 0u64;
         let mut total_errors = 0u64;
 
-        // First: import plugins from GitHub into services/plugins/
         for mkt in &marketplaces {
             let Some(ref repo_url) = mkt.github_repo_url else {
                 continue;
@@ -74,7 +73,6 @@ impl Job for GitHubMarketplaceSyncJob {
                         error = %e,
                         "Failed to sync marketplace from GitHub"
                     );
-                    // Log the error
                     let _ = repositories::org_marketplaces::insert_sync_log(
                         &pool,
                         &mkt.id,
@@ -93,9 +91,6 @@ impl Job for GitHubMarketplaceSyncJob {
             }
         }
 
-        // Then: sync from local marketplace.json — this resolves all plugins in
-        // services/plugins/ (both pre-existing and just imported from GitHub)
-        // and sets the final org_marketplace_plugins associations.
         for mkt in &marketplaces {
             match repositories::github_sync::sync_marketplace_from_local(&pool, &mkt.id).await {
                 Ok(result) => {

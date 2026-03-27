@@ -39,17 +39,17 @@ pub(crate) async fn my_skills_page(
         async {
             repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_default()
+                .unwrap_or_else(|_| vec![])
         },
         async {
             conversation_analytics::fetch_skill_effectiveness(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_default()
+                .unwrap_or_else(|_| vec![])
         },
         async {
             conversation_analytics::fetch_all_skill_ratings(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_default()
+                .unwrap_or_else(|_| vec![])
         },
     );
 
@@ -71,7 +71,7 @@ pub(crate) async fn my_skills_page(
         all_tags,
         stats: SkillStats { skill_count },
     };
-    let data_value = serde_json::to_value(&data).unwrap_or_default();
+    let data_value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-skills", &data_value, &user_ctx, &mkt_ctx)
 }
 
@@ -147,7 +147,7 @@ fn build_skills_json(
                 plugin_names: skill_plugin_map
                     .get(s.skill_id.as_str())
                     .cloned()
-                    .unwrap_or_default(),
+                    .unwrap_or_else(|| vec![]),
                 total_uses: eff.map_or(0, |e| e.total_uses),
                 sessions_used_in: eff.map_or(0, |e| e.sessions_used_in),
                 avg_effectiveness: format!("{avg_eff:.1}"),
@@ -157,7 +157,7 @@ fn build_skills_json(
                 skill_rating_notes: rating.map(|r| r.notes.clone()),
             };
 
-            let mut v = serde_json::to_value(s).unwrap_or_default();
+            let mut v = serde_json::to_value(s).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
             if let Some(obj) = v.as_object_mut() {
                 if let Ok(extra_value) = serde_json::to_value(&extra) {
                     if let Some(extra_obj) = extra_value.as_object() {
@@ -185,7 +185,7 @@ pub(crate) async fn my_skill_edit_page(
     let skill = if let Some(id) = skill_id {
         let skills = repositories::list_user_skills(&pool, &user_ctx.user_id)
             .await
-            .unwrap_or_default();
+            .unwrap_or_else(|_| vec![]);
         skills
             .into_iter()
             .find(|s| s.skill_id.as_str() == id.as_str())
@@ -212,13 +212,13 @@ pub(crate) async fn my_skill_edit_page(
         skill: skill_json,
         required_secrets,
     };
-    let data_value = serde_json::to_value(&data).unwrap_or_default();
+    let data_value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-skill-edit", &data_value, &user_ctx, &mkt_ctx)
 }
 
 fn build_skill_edit_json(skill: Option<&crate::admin::types::UserSkill>) -> serde_json::Value {
     if let Some(s) = skill {
-        let mut v = serde_json::to_value(s).unwrap_or_default();
+        let mut v = serde_json::to_value(s).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
         if let Some(obj) = v.as_object_mut() {
             if let Some(tags) = obj.get("tags").and_then(|t| t.as_array()) {
                 let csv: String = tags
@@ -239,7 +239,7 @@ fn build_skill_edit_json(skill: Option<&crate::admin::types::UserSkill>) -> serd
             tags: vec![],
             tags_csv: String::new(),
         })
-        .unwrap_or_default()
+        .unwrap_or(serde_json::Value::Object(serde_json::Map::new()))
     }
 }
 
@@ -253,11 +253,11 @@ async fn build_required_secrets(
     };
     let req_secrets = super::get_services_path()
         .map(|sp| repositories::read_skill_required_secrets(&sp.join("skills"), sid))
-        .unwrap_or_default();
+        .unwrap_or_else(|| vec![]);
 
     let stored = repositories::list_skill_secrets(pool, &user_ctx.user_id, &SkillId::new(sid))
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| vec![]);
     let stored_names: std::collections::HashSet<String> =
         stored.iter().map(|s| s.var_name.clone()).collect();
 

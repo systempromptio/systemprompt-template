@@ -29,7 +29,6 @@ pub struct SkillRating {
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct SkillEffectiveness {
     pub skill_name: String,
-    /// Canonical skill identifier (slug) for joining to `user_skills.skill_id`
     pub skill_id: String,
     pub total_uses: i64,
     pub sessions_used_in: i64,
@@ -42,7 +41,6 @@ pub struct SkillEffectiveness {
 pub struct EntityUsageSummary {
     pub entity_type: String,
     pub entity_name: String,
-    /// Canonical identifier for joining (`skill_id` slug for skills, `entity_name` for others)
     pub entity_id: String,
     pub total_uses: i64,
     pub session_count: i64,

@@ -5,7 +5,7 @@ pub struct AdminTrafficReportRow {
     pub id: String,
     pub report_date: chrono::NaiveDate,
     pub report_period: String,
-    pub report_data: serde_json::Value, // JSON: DB jsonb column (polymorphic report data)
+    pub report_data: serde_json::Value,
     pub generated_at: chrono::DateTime<chrono::Utc>,
 }
 
@@ -34,7 +34,7 @@ pub async fn upsert_report(
     pool: &PgPool,
     report_date: chrono::NaiveDate,
     period: &str,
-    data: &serde_json::Value, // JSON: DB jsonb column (polymorphic report data)
+    data: &serde_json::Value,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"

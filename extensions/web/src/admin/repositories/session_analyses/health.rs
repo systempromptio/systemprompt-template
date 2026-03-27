@@ -121,7 +121,7 @@ async fn fetch_latest_recommendation(pool: &PgPool, user_id: &UserId) -> String 
     .ok()
     .flatten()
     .flatten()
-    .unwrap_or_default()
+    .unwrap_or_else(String::new)
 }
 
 fn compute_health_score(avg_quality: f64, goals_achieved: i64, total_sessions: i64) -> i64 {

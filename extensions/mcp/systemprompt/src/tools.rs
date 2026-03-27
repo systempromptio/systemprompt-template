@@ -47,8 +47,8 @@ fn create_tool(
     input_schema: &serde_json::Value,
     output_schema: &serde_json::Value,
 ) -> Tool {
-    let input_obj = input_schema.as_object().cloned().unwrap_or_default();
-    let output_obj = output_schema.as_object().cloned().unwrap_or_default();
+    let input_obj = input_schema.as_object().cloned().unwrap_or_else(serde_json::Map::new);
+    let output_obj = output_schema.as_object().cloned().unwrap_or_else(serde_json::Map::new);
 
     let mut tool = Tool::default();
     tool.name = name.to_string().into();

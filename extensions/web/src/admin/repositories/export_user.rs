@@ -40,7 +40,7 @@ pub async fn generate_export_bundles(
         pool, roles, department, is_admin,
     )
     .await
-    .unwrap_or_default();
+    .unwrap_or_else(|_| std::collections::HashSet::new());
 
     let plugin_configs =
         super::export_auth::load_plugin_configs_by_ids(&plugins_path, &org_plugin_ids)?;
@@ -90,12 +90,18 @@ pub async fn generate_export_bundles(
         });
     }
 
-    let user_plugins = list_user_plugins(pool, &uid).await.unwrap_or_default();
-    let all_user_skills = list_user_skills(pool, &uid).await.unwrap_or_default();
-    let all_user_agents = list_user_agents(pool, &uid).await.unwrap_or_default();
+    let user_plugins = list_user_plugins(pool, &uid)
+        .await
+        .unwrap_or_else(|_| Vec::new());
+    let all_user_skills = list_user_skills(pool, &uid)
+        .await
+        .unwrap_or_else(|_| Vec::new());
+    let all_user_agents = list_user_agents(pool, &uid)
+        .await
+        .unwrap_or_else(|_| Vec::new());
     let all_user_mcp_servers = list_user_mcp_servers(pool, &uid)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| Vec::new());
     let mut claimed_skill_ids = std::collections::HashSet::new();
     let mut claimed_agent_ids = std::collections::HashSet::new();
     let mut claimed_mcp_server_ids = std::collections::HashSet::new();

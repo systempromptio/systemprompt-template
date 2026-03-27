@@ -141,7 +141,6 @@ pub async fn delete_user_complete(
             .await?;
     }
 
-    // Subscription data (marketplace schema, no cascade)
     for table in ["marketplace.subscriptions", "marketplace.paddle_customers"] {
         sqlx::query(&format!("DELETE FROM {table} WHERE user_id = $1"))
             .bind(uid)
@@ -149,8 +148,6 @@ pub async fn delete_user_complete(
             .await?;
     }
 
-    // Delete the user row — triggers ON DELETE CASCADE for remaining tables
-    // (user_activity, plugin_ratings, marketplace_versions, gamification, etc.)
     let result = sqlx::query("DELETE FROM users WHERE id = $1")
         .bind(uid)
         .execute(&mut *tx)

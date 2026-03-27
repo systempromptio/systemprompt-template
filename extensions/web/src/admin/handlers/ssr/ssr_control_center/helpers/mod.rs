@@ -94,17 +94,17 @@ pub(super) async fn fetch_control_center_data(
         repositories::apm_metrics::fetch_today_performance_summary(pool.as_ref(), user_id.as_str()),
     );
     (
-        recent_sessions_res.unwrap_or_default(),
+        recent_sessions_res.unwrap_or_else(|_| Vec::new()),
         today_stats,
         outcome_stats,
-        top_tools_res.unwrap_or_default(),
+        top_tools_res.unwrap_or_else(|_| Vec::new()),
         AnalyticsData {
-            skill_effectiveness: skill_effectiveness_res.unwrap_or_default(),
-            entity_usage: entity_usage_res.unwrap_or_default(),
-            session_ratings: session_ratings_res.unwrap_or_default(),
-            skill_ratings: skill_ratings_res.unwrap_or_default(),
-            entity_links: entity_links_res.unwrap_or_default(),
-            unused_skills: unused_skills_res.unwrap_or_default(),
+            skill_effectiveness: skill_effectiveness_res.unwrap_or_else(|_| Vec::new()),
+            entity_usage: entity_usage_res.unwrap_or_else(|_| Vec::new()),
+            session_ratings: session_ratings_res.unwrap_or_else(|_| Vec::new()),
+            skill_ratings: skill_ratings_res.unwrap_or_else(|_| Vec::new()),
+            entity_links: entity_links_res.unwrap_or_else(|_| Vec::new()),
+            unused_skills: unused_skills_res.unwrap_or_else(|_| Vec::new()),
             today_summary,
         },
         gamification_res.unwrap_or(None),
@@ -174,5 +174,5 @@ pub(super) fn build_template_data(params: &BuildTemplateDataParams<'_>) -> serde
     };
     let template = assemble_template(&input);
 
-    serde_json::to_value(&template).unwrap_or_default()
+    serde_json::to_value(&template).unwrap_or(serde_json::Value::Null)
 }

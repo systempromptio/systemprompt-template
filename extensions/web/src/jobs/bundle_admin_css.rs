@@ -23,8 +23,6 @@ impl BundleAdminCssJob {
             .unwrap_or(&css_dir)
             .join("admin-bundle.css");
 
-        // Auto-discover CSS files and sort lexicographically.
-        // Numeric prefixes (01-, 02-, ..., 14-) ensure correct load order.
         let mut css_files: Vec<PathBuf> = Vec::new();
         let mut read_dir = tokio::fs::read_dir(&css_dir)
             .await
@@ -46,7 +44,7 @@ impl BundleAdminCssJob {
         for file_path in &css_files {
             let filename = file_path
                 .file_name()
-                .unwrap_or_default()
+                .unwrap_or_else(|| std::ffi::OsStr::new(""))
                 .to_string_lossy();
             match tokio::fs::read_to_string(file_path).await {
                 Ok(content) => {

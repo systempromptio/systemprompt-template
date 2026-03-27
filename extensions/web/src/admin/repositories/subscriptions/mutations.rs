@@ -12,7 +12,7 @@ pub struct UpsertSubscriptionParams<'a> {
     pub status: &'a str,
     pub period_start: Option<DateTime<Utc>>,
     pub period_end: Option<DateTime<Utc>>,
-    pub paddle_data: Option<serde_json::Value>, // JSON: DB jsonb column (external API data)
+    pub paddle_data: Option<serde_json::Value>,
 }
 
 pub struct UpsertPlanParams<'a> {
@@ -24,8 +24,8 @@ pub struct UpsertPlanParams<'a> {
     pub amount_cents: i32,
     pub currency: &'a str,
     pub billing_interval: &'a str,
-    pub features: &'a serde_json::Value, // JSON: DB jsonb column
-    pub limits: &'a serde_json::Value,   // JSON: DB jsonb column
+    pub features: &'a serde_json::Value,
+    pub limits: &'a serde_json::Value,
     pub sort_order: i32,
 }
 
@@ -49,8 +49,6 @@ pub async fn update_paddle_customer_id(
     user_id: &UserId,
     paddle_customer_id: &str,
 ) -> Result<(), sqlx::Error> {
-    // Check if another user already has this paddle_customer_id.
-    // This happens when multiple user_ids share the same email.
     let existing = sqlx::query_scalar!(
         "SELECT user_id FROM marketplace.paddle_customers WHERE paddle_customer_id = $1 AND user_id != $2",
         paddle_customer_id,
@@ -66,7 +64,6 @@ pub async fn update_paddle_customer_id(
             existing_user = %other_user_id,
             "Paddle customer ID already linked to another user — updating to current user"
         );
-        // Move the paddle_customer_id from the old row to the current user
         sqlx::query!(
             "UPDATE marketplace.paddle_customers SET paddle_customer_id = NULL, updated_at = now() WHERE paddle_customer_id = $1 AND user_id != $2",
             paddle_customer_id,
@@ -100,7 +97,7 @@ pub async fn upsert_subscription(
         params.status,
         params.period_start,
         params.period_end,
-        params.paddle_data.clone() as Option<serde_json::Value>, // JSON: DB jsonb column (external API data)
+        params.paddle_data.clone() as Option<serde_json::Value>,
     )
     .fetch_one(pool)
     .await
@@ -127,7 +124,7 @@ pub async fn store_webhook_event(
     pool: &PgPool,
     event_id: &str,
     event_type: &str,
-    payload: &serde_json::Value, // JSON: DB jsonb column (external webhook payload)
+    payload: &serde_json::Value,
 ) -> Result<bool, sqlx::Error> {
     let result = sqlx::query!(
         "INSERT INTO marketplace.paddle_webhook_events (event_id, event_type, payload) VALUES ($1, $2, $3) ON CONFLICT (event_id) DO NOTHING",

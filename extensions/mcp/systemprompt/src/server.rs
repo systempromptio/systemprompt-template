@@ -207,7 +207,6 @@ impl ServerHandler for SystempromptServer {
 
         let request_context = auth_result.context.clone();
 
-        // Record successful tool execution
         {
             let pool = self.db_pool.clone();
             let uid = request_context.user_id().to_string();

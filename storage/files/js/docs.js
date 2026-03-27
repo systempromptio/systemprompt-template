@@ -80,17 +80,17 @@
 
   function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
-        const href = this.getAttribute('href');
+      anchor.addEventListener('click', (e) => {
+        const href = anchor.getAttribute('href');
         if (href === '#') return;
 
-        const target = document.getElementById(href.slice(1));
-        if (!target) return;
+        const el = document.getElementById(href.slice(1));
+        if (!el) return;
 
         e.preventDefault();
 
         const offset = 80;
-        const targetPosition = target.offsetTop - offset;
+        const targetPosition = el.offsetTop - offset;
 
         window.scrollTo({
           top: targetPosition,
@@ -118,11 +118,9 @@
 
   function throttle(func, limit) {
     let inThrottle;
-    return function() {
-      const args = arguments;
-      const context = this;
+    return (...args) => {
       if (!inThrottle) {
-        func.apply(context, args);
+        func(...args);
         inThrottle = true;
         setTimeout(() => inThrottle = false, limit);
       }

@@ -99,7 +99,7 @@ impl McpToolHandler for ListPluginsHandler {
 
                 let onboarding_value = onboarding
                     .and_then(|o| serde_json::to_string(o).ok())
-                    .unwrap_or_default();
+                    .unwrap_or_else(|| String::new());
 
                 serde_json::json!({
                     "plugin_id": p.plugin_id,
@@ -110,9 +110,9 @@ impl McpToolHandler for ListPluginsHandler {
                     "category": p.category,
                     "keywords": p.keywords,
                     "base_plugin_id": p.base_plugin_id,
-                    "skills": serde_json::to_string(&skills).unwrap_or_default(),
-                    "agents": serde_json::to_string(&agents).unwrap_or_default(),
-                    "mcp_servers": serde_json::to_string(&mcp_servers).unwrap_or_default(),
+                    "skills": serde_json::to_string(&skills).unwrap_or_else(|_| String::new()),
+                    "agents": serde_json::to_string(&agents).unwrap_or_else(|_| String::new()),
+                    "mcp_servers": serde_json::to_string(&mcp_servers).unwrap_or_else(|_| String::new()),
                     "onboarding": onboarding_value,
                     "created_at": p.created_at.to_rfc3339(),
                     "updated_at": p.updated_at.to_rfc3339(),

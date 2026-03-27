@@ -114,7 +114,7 @@ async fn fetch_role_based_plan(pool: &PgPool, user_id: &UserId) -> Option<(TierL
     #[derive(sqlx::FromRow)]
     struct RolePlanRow {
         plan_name: String,
-        limits: Option<serde_json::Value>, // JSON: DB JSONB column
+        limits: Option<serde_json::Value>,
     }
 
     let row: Option<RolePlanRow> = sqlx::query_as(
@@ -140,7 +140,7 @@ async fn fetch_free_plan(pool: &PgPool) -> (TierLimits, String) {
     #[derive(sqlx::FromRow)]
     struct FreePlanRow {
         plan_name: String,
-        limits: Option<serde_json::Value>, // JSON: DB JSONB column
+        limits: Option<serde_json::Value>,
     }
 
     let row: Option<FreePlanRow> = sqlx::query_as(
@@ -167,7 +167,7 @@ struct TierRow {
     plan_name: String,
     status: String,
     current_period_end: Option<chrono::DateTime<Utc>>,
-    limits: Option<serde_json::Value>, // JSON: DB JSONB column → parsed via parse_limits
+    limits: Option<serde_json::Value>,
 }
 
 async fn fetch_subscription_tier(

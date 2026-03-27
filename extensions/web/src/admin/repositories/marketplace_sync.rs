@@ -123,7 +123,6 @@ pub async fn snapshot_current_skills(
     pool: &Arc<PgPool>,
     user_id: &UserId,
 ) -> Result<serde_json::Value, MarketplaceError> {
-    // JSON: DB jsonb column (skills_snapshot)
     let skills = super::user_skills::list_user_skills(pool, user_id).await?;
     Ok(serde_json::to_value(&skills)?)
 }
@@ -131,7 +130,7 @@ pub async fn snapshot_current_skills(
 pub async fn restore_skills_from_snapshot(
     pool: &PgPool,
     user_id: &UserId,
-    snapshot: &serde_json::Value, // JSON: DB jsonb column (skills_snapshot)
+    snapshot: &serde_json::Value,
 ) -> Result<usize, MarketplaceError> {
     let skills: Vec<UserSkill> = serde_json::from_value(snapshot.clone())?;
 

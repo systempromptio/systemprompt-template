@@ -42,7 +42,7 @@ pub(crate) async fn create_version_and_prune(
     user_id: &UserId,
     version_type: &str,
     snapshot_path: &str,
-    snapshot: &serde_json::Value, // JSON: required by trait contract (DB JSONB column)
+    snapshot: &serde_json::Value,
 ) -> Result<(crate::admin::types::MarketplaceVersion, i32), Response> {
     let latest_version =
         repositories::marketplace_versions::get_latest_version_number(pool, user_id)
@@ -168,8 +168,6 @@ async fn snapshot_and_save(
     user_id: &UserId,
     body: &Bytes,
 ) -> Result<(serde_json::Value, String), Response> {
-    // JSON: required by trait contract (DB JSONB column)
-
     let snapshot = repositories::marketplace_sync::snapshot_current_skills(pool, user_id)
         .await
         .map_err(|e| {

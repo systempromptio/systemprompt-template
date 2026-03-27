@@ -141,7 +141,7 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
         decision: "deny".to_string(),
         policy: "auth_failure".to_string(),
         reason: reason.to_string(),
-        evaluated_rules: serde_json::json!([{"rule": "authentication", "result": "fail", "detail": reason}]), // JSON: protocol boundary
+        evaluated_rules: serde_json::json!([{"rule": "authentication", "result": "fail", "detail": reason}]),
         plugin_id: params.plugin_id.map(str::to_string),
     };
 
@@ -161,7 +161,7 @@ fn spawn_audit_recording(params: &AuditParams<'_>) {
         decision: params.evaluation.decision.to_string(),
         policy: params.evaluation.policy.clone(),
         reason: params.evaluation.reason.clone(),
-        evaluated_rules: serde_json::to_value(&params.evaluation.rules).unwrap_or_default(), // JSON: protocol boundary
+        evaluated_rules: serde_json::to_value(&params.evaluation.rules).unwrap_or_default(),
         plugin_id: params.plugin_id.map(str::to_string),
     };
 

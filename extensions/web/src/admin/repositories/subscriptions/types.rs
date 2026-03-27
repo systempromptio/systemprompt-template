@@ -12,8 +12,8 @@ pub struct PlanRow {
     pub amount_cents: i32,
     pub currency: String,
     pub billing_interval: String,
-    pub features: serde_json::Value, // JSON: DB jsonb column
-    pub limits: serde_json::Value,   // JSON: DB jsonb column
+    pub features: serde_json::Value,
+    pub limits: serde_json::Value,
     pub sort_order: i32,
     pub is_active: bool,
 }
@@ -29,7 +29,7 @@ pub struct SubscriptionRow {
     pub current_period_start: Option<DateTime<Utc>>,
     pub current_period_end: Option<DateTime<Utc>>,
     pub cancel_at: Option<DateTime<Utc>>,
-    pub paddle_data: Option<serde_json::Value>, // JSON: DB jsonb column (external API data)
+    pub paddle_data: Option<serde_json::Value>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

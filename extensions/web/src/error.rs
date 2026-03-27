@@ -4,7 +4,6 @@ use thiserror::Error;
 
 use crate::admin::repositories::secret_crypto::SecretCryptoError;
 
-/// Error type for marketplace/admin operations (migrated from systemprompt-web).
 #[derive(Error, Debug)]
 pub enum MarketplaceError {
     #[error("Internal error: {0}")]

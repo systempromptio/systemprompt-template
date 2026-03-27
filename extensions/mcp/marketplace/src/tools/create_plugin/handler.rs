@@ -63,9 +63,9 @@ impl McpToolHandler for CreatePluginHandler {
             name: input.name.clone(),
             description: input.description.clone(),
             version: input.version.unwrap_or_else(|| "1.0.0".to_string()),
-            category: input.category.unwrap_or_default(),
+            category: input.category.unwrap_or_else(|| String::new()),
             keywords: input.keywords.clone(),
-            author_name: input.author_name.unwrap_or_default(),
+            author_name: input.author_name.unwrap_or_else(|| String::new()),
             base_plugin_id: None,
         };
 

@@ -28,11 +28,11 @@ pub struct SessionAnalysisRow {
     pub error_analysis: Option<String>,
     pub skill_assessment: Option<String>,
     pub recommendations: Option<String>,
-    pub skill_scores: Option<serde_json::Value>, // JSON: DB jsonb column
+    pub skill_scores: Option<serde_json::Value>,
     pub category: String,
-    pub goal_outcome_map: Option<serde_json::Value>, // JSON: DB jsonb column
-    pub efficiency_metrics: Option<serde_json::Value>, // JSON: DB jsonb column
-    pub best_practices_checklist: Option<serde_json::Value>, // JSON: DB jsonb column
+    pub goal_outcome_map: Option<serde_json::Value>,
+    pub efficiency_metrics: Option<serde_json::Value>,
+    pub best_practices_checklist: Option<serde_json::Value>,
     pub improvement_hints: Option<String>,
     pub corrections_count: i32,
     pub session_duration_minutes: Option<i32>,
@@ -42,11 +42,11 @@ pub struct SessionAnalysisRow {
 struct InsertParams {
     tags: String,
     composed_summary: String,
-    skill_scores_json: Option<serde_json::Value>, // JSON: DB jsonb column
+    skill_scores_json: Option<serde_json::Value>,
     category: String,
-    goal_outcome_map_json: Option<serde_json::Value>, // JSON: DB jsonb column
-    efficiency_metrics_json: Option<serde_json::Value>, // JSON: DB jsonb column
-    best_practices_json: Option<serde_json::Value>,   // JSON: DB jsonb column
+    goal_outcome_map_json: Option<serde_json::Value>,
+    efficiency_metrics_json: Option<serde_json::Value>,
+    best_practices_json: Option<serde_json::Value>,
     corrections_count: i32,
     duration_minutes: Option<i32>,
     total_turns: Option<i32>,

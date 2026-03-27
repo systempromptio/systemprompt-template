@@ -116,7 +116,6 @@ pub async fn get_user_activity_summary(
     .await
 }
 
-/// Search user entity activity with optional text filter, returning paginated results and total count.
 pub async fn search_user_entity_activity(
     pool: &Arc<PgPool>,
     user_id: &str,
@@ -182,7 +181,6 @@ pub async fn search_user_entity_activity(
     }
 }
 
-/// Get user entity activity with pagination.
 pub async fn get_user_entity_activity(
     pool: &Arc<PgPool>,
     user_id: &str,
@@ -205,7 +203,6 @@ pub async fn get_user_entity_activity(
     .await
 }
 
-/// Count total entity activity for a user.
 pub async fn count_user_entity_activity(
     pool: &Arc<PgPool>,
     user_id: &str,

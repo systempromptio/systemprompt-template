@@ -104,7 +104,7 @@ impl ContentAnalyticsAggregationJob {
         let id = format!("cpm_{}", uuid::Uuid::new_v4());
 
         let previous_23d = stats.views_30d - stats.views_7d;
-        let avg_previous_week = f64::from(i32::try_from(previous_23d).unwrap_or(0)) / 3.0; // ~3 weeks
+        let avg_previous_week = f64::from(i32::try_from(previous_23d).unwrap_or(0)) / 3.0;
         let views_7d_f64 = f64::from(i32::try_from(stats.views_7d).unwrap_or(0));
         let trend_direction = if views_7d_f64 > avg_previous_week * 1.2 {
             "up"

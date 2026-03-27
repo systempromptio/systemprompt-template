@@ -90,14 +90,12 @@ pub(super) struct TopPageEnhancedView {
 pub(super) struct TrafficResult {
     pub has_traffic: bool,
     pub kpis: Option<TrafficKpisView>,
-    // JSON: required by trait contract
     pub chart: serde_json::Value,
     pub sources: Vec<SourceBar>,
     pub geo: Vec<GeoBar>,
     pub devices: Vec<DeviceBar>,
     pub top_pages: Vec<TopPageView>,
     pub top_pages_enhanced: Vec<TopPageEnhancedView>,
-    // JSON: required by trait contract
     pub country_chart: serde_json::Value,
     pub realtime_pulse: Option<RealtimePulseView>,
     pub content_performance: Vec<ContentPerformanceView>,
@@ -170,11 +168,8 @@ pub(super) struct TabFlags {
 pub(super) struct DashboardTemplateData {
     pub page: &'static str,
     pub title: &'static str,
-    // JSON: required by trait contract
     pub stats: serde_json::Value,
-    // JSON: required by trait contract
     pub timeline: serde_json::Value,
-    // JSON: required by trait contract
     pub top_users: serde_json::Value,
     pub popular_skills: Vec<SkillBar>,
     pub hourly_activity: Vec<HourlyBar>,
@@ -183,7 +178,6 @@ pub(super) struct DashboardTemplateData {
     pub total_skills: usize,
     pub agents_count: usize,
     pub mcp_count: usize,
-    // JSON: required by trait contract
     pub chart: serde_json::Value,
     pub range: String,
     #[serde(flatten)]
@@ -197,14 +191,12 @@ pub(super) struct DashboardTemplateData {
     pub traffic_range_flags: TrafficRangeFlags,
     pub traffic_period_label: &'static str,
     pub traffic_kpis: Option<TrafficKpisView>,
-    // JSON: required by trait contract
     pub traffic_chart: serde_json::Value,
     pub traffic_sources: Vec<SourceBar>,
     pub traffic_geo: Vec<GeoBar>,
     pub traffic_devices: Vec<DeviceBar>,
     pub traffic_top_pages: Vec<TopPageView>,
     pub top_pages_enhanced: Vec<TopPageEnhancedView>,
-    // JSON: required by trait contract
     pub country_chart: serde_json::Value,
     pub realtime_pulse: Option<RealtimePulseView>,
     pub content_performance: Vec<ContentPerformanceView>,
@@ -226,7 +218,6 @@ pub(super) struct ActivityData {
     pub hourly: Vec<HourlyBar>,
     pub skills: Vec<SkillBar>,
     pub tools: Vec<ToolSuccessBar>,
-    // JSON: required by trait contract
     pub chart: serde_json::Value,
 }
 
@@ -295,7 +286,6 @@ pub(super) fn build_activity_data(dash: &types::DashboardData, range_key: &str) 
         })
         .collect();
 
-    // JSON: required by trait contract
     let chart = serde_json::to_value(super::charts::compute_area_chart_data(
         &dash.usage_timeseries,
         range_key,

@@ -26,7 +26,7 @@ pub async fn create_marketplace_version(
     version_number: i32,
     version_type: &str,
     snapshot_path: &str,
-    skills_snapshot: &serde_json::Value, // JSON: DB jsonb column
+    skills_snapshot: &serde_json::Value,
 ) -> Result<MarketplaceVersion, sqlx::Error> {
     sqlx::query_as!(
         MarketplaceVersion,

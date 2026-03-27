@@ -133,7 +133,7 @@ async fn handle_list(
         "variables": var_list,
         "total": total,
     }))
-    .unwrap_or_default();
+    .unwrap_or_else(|_| String::new());
 
     let summary = format!(
         "Found {total} environment variable(s) for plugin '{}'",
@@ -173,7 +173,7 @@ async fn handle_set(
         "is_secret": is_secret,
         "success": true,
     }))
-    .unwrap_or_default();
+    .unwrap_or_else(|_| String::new());
 
     let summary = format!(
         "Set environment variable '{var_name}' for plugin '{}'",
@@ -210,7 +210,7 @@ async fn handle_delete(
         "deleted": deleted,
         "success": true,
     }))
-    .unwrap_or_default();
+    .unwrap_or_else(|_| String::new());
 
     let summary = if deleted {
         format!(

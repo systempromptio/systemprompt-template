@@ -1,7 +1,4 @@
 
-
-
-
 .content-card {
   display: flex;
   flex-direction: column;
@@ -23,8 +20,6 @@
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
-
-
 
 .content-card .card-content {
   flex: 1;
@@ -58,8 +53,6 @@
   line-height: 1.6;
   flex-grow: 1;
 }
-
-
 
 .content-card .meta {
   display: flex;

@@ -28,7 +28,7 @@
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        const index = Array.from(slides).indexOf(entry.target);
+        const index = Array.from(slides).findIndex((s) => s === entry.target);
         if (counter) counter.textContent = index + 1;
         nav.querySelectorAll('a').forEach((dot, i) => { dot.classList.toggle('active', i === index); });
         entry.target.querySelectorAll('.pres-reveal').forEach((el) => { el.classList.add('visible'); });

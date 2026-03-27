@@ -223,7 +223,7 @@ pub async fn lookup_user_basic(
     .ok_or_else(|| MarketplaceError::NotFound(format!("User not found: {user_id}")))?;
 
     Ok(crate::admin::types::UserBasicInfo {
-        display_name: row.display_name.unwrap_or_default(),
+        display_name: row.display_name.unwrap_or_else(String::new),
         email: row.email,
         roles: row.roles,
     })

@@ -299,7 +299,6 @@ pub async fn get_department_scores(
     }
 }
 
-/// Alias for `get_user_gamification` used by SSR/SSE handlers.
 pub async fn find_user_gamification(
     pool: &Arc<PgPool>,
     user_id: &str,
@@ -307,7 +306,6 @@ pub async fn find_user_gamification(
     get_user_gamification(pool, user_id).await
 }
 
-/// Returns aggregate averages across all leaderboard users.
 pub async fn get_leaderboard_averages(
     pool: &Arc<PgPool>,
 ) -> Result<LeaderboardAverages, sqlx::Error> {

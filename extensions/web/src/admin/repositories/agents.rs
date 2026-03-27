@@ -87,7 +87,7 @@ fn parse_agent_detail(agent_id: &str, val: &serde_yaml::Value) -> AgentDetail {
                     .filter_map(|v| v.as_str().map(ToString::to_string))
                     .collect()
             })
-            .unwrap_or_default(),
+            .unwrap_or_else(Vec::new),
         skills: parse_agent_skills(val),
     }
 }

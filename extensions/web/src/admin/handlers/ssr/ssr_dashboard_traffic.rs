@@ -228,13 +228,11 @@ fn build_traffic_breakdowns(
     t: &crate::admin::types::TrafficData,
     traffic_range_key: &str,
 ) -> TrafficBreakdowns {
-    // JSON: required by trait contract
     let chart = serde_json::to_value(super::charts::compute_traffic_chart_data(
         &t.timeseries,
         traffic_range_key,
     ))
     .unwrap_or_default();
-    // JSON: required by trait contract
     let country_chart = serde_json::to_value(super::charts::compute_country_traffic_chart(
         &t.country_timeseries,
         traffic_range_key,

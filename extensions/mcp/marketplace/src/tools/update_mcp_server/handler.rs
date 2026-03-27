@@ -102,7 +102,7 @@ impl McpToolHandler for UpdateMcpServerHandler {
             "created_at": server.created_at.to_rfc3339(),
             "updated_at": server.updated_at.to_rfc3339(),
         }))
-        .unwrap_or_default();
+        .unwrap_or_else(|_| String::new());
 
         let summary = format!(
             "Updated MCP server '{}' ({})",

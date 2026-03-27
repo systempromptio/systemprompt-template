@@ -34,7 +34,7 @@ pub async fn build_skill_files(
             );
             format!("{yaml}\n")
         })
-        .unwrap_or_default();
+        .unwrap_or_else(String::new);
     let skill_md = format!(
         "---\nname: {}\ndescription: \"{}\"\n{}---\n\n{}\n",
         kebab_name,
