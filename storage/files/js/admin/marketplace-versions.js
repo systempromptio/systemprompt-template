@@ -213,7 +213,6 @@
 
             const compareBtn = e.target.closest('[data-compare-skill]');
             if (compareBtn) {
-                e.stopPropagation();
                 const skillId = compareBtn.getAttribute('data-compare-skill');
                 const baseSkillId = compareBtn.getAttribute('data-base-skill');
                 const compareVersionId = compareBtn.getAttribute('data-compare-version');
@@ -224,7 +223,6 @@
             }
 
             if (e.target.closest('[data-close-diff]')) {
-                e.stopPropagation();
                 const diffVersionCard = e.target.closest('.version-card');
                 const diffDetails = diffVersionCard && diffVersionCard.querySelector('.plugin-details');
                 activeDiff = null;
@@ -237,7 +235,6 @@
 
             const restoreBtn = e.target.closest('[data-restore-version]');
             if (restoreBtn) {
-                e.stopPropagation();
                 await handleRestore(
                     restoreBtn.getAttribute('data-restore-version'),
                     restoreBtn.getAttribute('data-restore-num'),

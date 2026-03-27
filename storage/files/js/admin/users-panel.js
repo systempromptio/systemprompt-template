@@ -30,51 +30,46 @@
         }
     };
     const bindCreatePanelEvents = (refreshFn) => {
-        document.addEventListener('click', async (e) => {
-            if (e.target.id === 'create-user-overlay') {
-                closeCreatePanel();
+        app.events.on('click', '#create-user-overlay', () => {
+            closeCreatePanel();
+        });
+
+        app.events.on('click', '#create-user-panel .panel-close', () => {
+            closeCreatePanel();
+        });
+
+        app.events.on('click', '#create-user-panel [data-action="cancel"]', () => {
+            closeCreatePanel();
+        });
+
+        app.events.on('click', '#create-user-panel [data-action="save"]', async () => {
+            const userId = document.getElementById('new-user-id').value.trim();
+            const displayName = document.getElementById('new-user-name').value.trim();
+            const email = document.getElementById('new-user-email').value.trim();
+            const deptVal = document.getElementById('new-user-dept').value;
+            const roleBoxes = document.querySelectorAll('#create-user-panel input[name="roles"]:checked');
+            const roles = Array.from(roleBoxes).map((cb) => cb.value);
+            if (!userId) {
+                app.Toast.show('User ID is required', 'error');
                 return;
             }
-            const closeBtn = e.target.closest('#create-user-panel .panel-close');
-            if (closeBtn) {
+            try {
+                await app.api('/users', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        user_id: userId,
+                        display_name: displayName || userId,
+                        email: email,
+                        department: deptVal,
+                        roles: roles
+                    })
+                });
+                app.Toast.show('User created', 'success');
                 closeCreatePanel();
-                return;
-            }
-            const cancelBtn = e.target.closest('#create-user-panel [data-action="cancel"]');
-            if (cancelBtn) {
-                closeCreatePanel();
-                return;
-            }
-            const saveBtn = e.target.closest('#create-user-panel [data-action="save"]');
-            if (saveBtn) {
-                const userId = document.getElementById('new-user-id').value.trim();
-                const displayName = document.getElementById('new-user-name').value.trim();
-                const email = document.getElementById('new-user-email').value.trim();
-                const deptVal = document.getElementById('new-user-dept').value;
-                const roleBoxes = document.querySelectorAll('#create-user-panel input[name="roles"]:checked');
-                const roles = Array.from(roleBoxes).map((cb) => cb.value);
-                if (!userId) {
-                    app.Toast.show('User ID is required', 'error');
-                    return;
-                }
-                try {
-                    await app.api('/users', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            user_id: userId,
-                            display_name: displayName || userId,
-                            email: email,
-                            department: deptVal,
-                            roles: roles
-                        })
-                    });
-                    app.Toast.show('User created', 'success');
-                    closeCreatePanel();
-                    resetForm();
-                    refreshFn();
-                } catch (err) {
-                    app.Toast.show(err.message || 'Failed to create user', 'error');
-                }
+                resetForm();
+                refreshFn();
+            } catch (err) {
+                app.Toast.show(err.message || 'Failed to create user', 'error');
             }
         });
     };

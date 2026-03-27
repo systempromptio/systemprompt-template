@@ -29,10 +29,8 @@
             });
         }
 
-        document.addEventListener('click', (e) => {
-            const toggle = e.target.closest('[data-mcp-json]');
-            if (!toggle) return;
-            const mcpId = toggle.getAttribute('data-mcp-json');
+        app.events.on('click', '[data-mcp-json]', (e, el) => {
+            const mcpId = el.getAttribute('data-mcp-json');
             const container = document.querySelector('[data-mcp-json-container="' + mcpId + '"]');
             if (!container) return;
 
@@ -47,17 +45,15 @@
                     }
                 }
                 container.style.display = 'block';
-                toggle.textContent = 'Hide JSON';
+                el.textContent = 'Hide JSON';
             } else {
                 container.style.display = 'none';
-                toggle.textContent = 'Show JSON';
+                el.textContent = 'Show JSON';
             }
         });
 
-        document.addEventListener('click', (e) => {
-            const deleteBtn = e.target.closest('[data-action="delete"][data-entity-type="mcp-server"]');
-            if (!deleteBtn) return;
-            const id = deleteBtn.getAttribute('data-entity-id');
+        app.events.on('click', '[data-action="delete"][data-entity-type="mcp-server"]', (e, el) => {
+            const id = el.getAttribute('data-entity-id');
             if (!confirm('Delete MCP server "' + id + '"? This cannot be undone.')) return;
 
             app.api('/mcp-servers/' + encodeURIComponent(id), {
@@ -96,11 +92,9 @@
             allPlugins: allPlugins
         });
 
-        document.addEventListener('click', (e) => {
-            const assignBtn = e.target.closest('[data-assign-mcp]');
-            if (!assignBtn) return;
-            const mcpId = assignBtn.getAttribute('data-assign-mcp');
-            const mcpName = assignBtn.getAttribute('data-mcp-name') || mcpId;
+        app.events.on('click', '[data-assign-mcp]', (e, el) => {
+            const mcpId = el.getAttribute('data-assign-mcp');
+            const mcpName = el.getAttribute('data-mcp-name') || mcpId;
 
             let currentPluginIds = [];
             const script = document.querySelector('script[data-mcp-detail="' + mcpId + '"]');

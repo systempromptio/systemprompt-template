@@ -48,7 +48,6 @@
 
     app.usersInteractions = () => {
         app.events.on('click', '.btn-actions-trigger', (e, trigger) => {
-            e.stopPropagation();
             const userId = trigger.dataset.userId;
             const portal = getOrCreatePortal();
             const isOpen = portal.classList.contains('open') && activePopupId === userId;
@@ -74,7 +73,6 @@
 
             portal.querySelectorAll('.actions-popup-item').forEach((item) => {
                 item.addEventListener('click', (ev) => {
-                    ev.stopPropagation();
                     const action = item.dataset.action;
                     const itemUserId = item.dataset.userId;
                     closeAllPopups();

@@ -151,14 +151,12 @@
 
             const visBtn = e.target.closest('[data-edit-visibility]');
             if (visBtn) {
-                e.stopPropagation();
                 showVisibilityModal(visBtn.getAttribute('data-edit-visibility'));
                 return;
             }
 
             const loadUsersBtn = e.target.closest('[data-load-users]');
             if (loadUsersBtn) {
-                e.stopPropagation();
                 const pluginId = loadUsersBtn.getAttribute('data-load-users');
                 loadUsersBtn.disabled = true;
                 loadUsersBtn.textContent = 'Loading...';

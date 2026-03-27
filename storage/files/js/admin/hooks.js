@@ -29,10 +29,8 @@
             });
         }
 
-        document.addEventListener('click', (e) => {
-            const toggle = e.target.closest('[data-hook-json]');
-            if (!toggle) return;
-            const hookId = toggle.getAttribute('data-hook-json');
+        app.events.on('click', '[data-hook-json]', (e, el) => {
+            const hookId = el.getAttribute('data-hook-json');
             const container = document.querySelector('[data-hook-json-container="' + hookId + '"]');
             if (!container) return;
 
@@ -47,17 +45,15 @@
                     }
                 }
                 container.style.display = 'block';
-                toggle.textContent = 'Hide JSON';
+                el.textContent = 'Hide JSON';
             } else {
                 container.style.display = 'none';
-                toggle.textContent = 'Show JSON';
+                el.textContent = 'Show JSON';
             }
         });
 
-        document.addEventListener('click', (e) => {
-            const deleteBtn = e.target.closest('[data-action="delete"][data-entity-type="hook"]');
-            if (!deleteBtn) return;
-            const id = deleteBtn.getAttribute('data-entity-id');
+        app.events.on('click', '[data-action="delete"][data-entity-type="hook"]', (e, el) => {
+            const id = el.getAttribute('data-entity-id');
             if (!confirm('Delete this hook? This cannot be undone.')) return;
 
             app.api('/hooks/' + encodeURIComponent(id), {
@@ -77,10 +73,8 @@
             });
         });
 
-        document.addEventListener('click', (e) => {
-            const detailsBtn = e.target.closest('[data-hook-details]');
-            if (!detailsBtn) return;
-            const hookId = detailsBtn.getAttribute('data-hook-details');
+        app.events.on('click', '[data-hook-details]', (e, el) => {
+            const hookId = el.getAttribute('data-hook-details');
             const row = document.querySelector('tr[data-entity-id="' + hookId + '"].clickable-row');
             if (!row) return;
             const detailRow = row.nextElementSibling;

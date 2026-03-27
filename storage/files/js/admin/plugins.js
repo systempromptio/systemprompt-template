@@ -303,7 +303,6 @@
         });
 
         app.events.on('click', '[data-remove-from-plugin]', (e, btn) => {
-            e.stopPropagation();
             const itemId = btn.getAttribute('data-remove-from-plugin');
             const resourceType = btn.getAttribute('data-resource-type');
             const pluginId = btn.getAttribute('data-plugin-id');
@@ -359,7 +358,6 @@
         });
 
         app.events.on('click', '[data-add-to-plugin]', (e, btn) => {
-            e.stopPropagation();
             const resourceType = btn.getAttribute('data-add-to-plugin');
             const pluginId = btn.getAttribute('data-plugin-id');
             if (!pluginId || pluginId === 'custom') return;
@@ -466,14 +464,12 @@
         });
 
         app.events.on('click', '[data-expand-section]', (e, expandBadge) => {
-            e.stopPropagation();
             const section = expandBadge.getAttribute('data-expand-section');
             const pluginId = expandBadge.getAttribute('data-plugin-id');
             toggleDetailRow(pluginId, section);
         });
 
         app.events.on('click', '[data-browse-skill]', (e, el) => {
-            e.stopPropagation();
             e.preventDefault();
             const skillId = el.getAttribute('data-browse-skill');
             const skillName = el.getAttribute('data-skill-name') || skillId;
@@ -481,7 +477,6 @@
         });
 
         app.events.on('click', '[data-toggle-json]', (e, jsonToggle) => {
-            e.stopPropagation();
             const pid = jsonToggle.getAttribute('data-toggle-json');
             const jsonView = document.querySelector('[data-json-for="' + pid + '"]');
             if (jsonView) {
@@ -511,20 +506,17 @@
         });
 
         app.events.on('click', '[data-open-env]', (e, envBtn) => {
-            e.stopPropagation();
             const envPluginId = envBtn.getAttribute('data-open-env');
             const pluginName = envBtn.getAttribute('data-plugin-name') || envPluginId;
             if (app.pluginEnv) app.pluginEnv.open(envPluginId, pluginName);
         });
 
         app.events.on('click', '[data-generate-plugin]', (e, generateBtn) => {
-            e.stopPropagation();
             const platform = generateBtn.getAttribute('data-platform') || 'unix';
             handleExport(generateBtn.getAttribute('data-generate-plugin'), generateBtn, platform);
         });
 
         app.events.on('click', '[data-delete-plugin]', (e, deletePluginBtn) => {
-            e.stopPropagation();
             app.shared.closeAllMenus();
             showDeleteConfirm(deletePluginBtn.getAttribute('data-delete-plugin'));
         });

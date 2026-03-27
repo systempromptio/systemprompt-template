@@ -182,9 +182,7 @@
                 return body;
             };
 
-            document.addEventListener('click', (e) => {
-                const btn = e.target.closest('[data-edit-save]');
-                if (!btn) return;
+            app.events.on('click', '[data-edit-save]', (e, btn) => {
                 btn.disabled = true;
                 btn.textContent = 'Saving...';
                 const body = collectFormData();

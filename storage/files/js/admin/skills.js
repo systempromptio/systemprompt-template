@@ -59,10 +59,8 @@
     }
 
     function initDeleteHandlers() {
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-delete-skill]');
-            if (!btn) return;
-            const skillId = btn.getAttribute('data-delete-skill');
+        app.events.on('click', '[data-delete-skill]', (e, el) => {
+            const skillId = el.getAttribute('data-delete-skill');
             if (!confirm('Are you sure you want to delete skill "' + skillId + '"? This cannot be undone.')) return;
 
             fetch('/api/admin/skills/' + encodeURIComponent(skillId), { method: 'DELETE' })
@@ -81,10 +79,8 @@
     }
 
     function initForkHandlers() {
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-fork-skill]');
-            if (!btn) return;
-            const skillId = btn.getAttribute('data-fork-skill');
+        app.events.on('click', '[data-fork-skill]', (e, el) => {
+            const skillId = el.getAttribute('data-fork-skill');
             const data = getSkillDetail(skillId);
             if (!data) return;
 
@@ -123,28 +119,24 @@
         });
         if (!assignApi) return;
 
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-assign-skill]');
-            if (!btn) return;
-            const skillId = btn.getAttribute('data-assign-skill');
-            const skillName = btn.getAttribute('data-skill-name') || skillId;
+        app.events.on('click', '[data-assign-skill]', (e, el) => {
+            const skillId = el.getAttribute('data-assign-skill');
+            const skillName = el.getAttribute('data-skill-name') || skillId;
             const data = getSkillDetail(skillId);
             const currentPluginIds = data && data.assigned_plugin_ids ? data.assigned_plugin_ids : [];
             assignApi.open(skillId, skillName, currentPluginIds);
         });
 
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-assign-save]');
-            if (!btn) return;
-            const entityId = btn.getAttribute('data-entity-id');
+        app.events.on('click', '[data-assign-save]', (e, el) => {
+            const entityId = el.getAttribute('data-entity-id');
             const checkboxes = document.querySelectorAll('#assign-panel input[name="plugin_id"]');
             const selectedPlugins = [];
             checkboxes.forEach((cb) => {
                 if (cb.checked) selectedPlugins.push(cb.value);
             });
 
-            btn.disabled = true;
-            btn.textContent = 'Saving...';
+            el.disabled = true;
+            el.textContent = 'Saving...';
 
             const promises = allPlugins.map((plugin) => {
                 return fetch('/api/admin/plugins/' + encodeURIComponent(plugin.id) + '/skills')
@@ -178,8 +170,8 @@
                 })
                 .catch(() => {
                     app.Toast.show('Failed to update assignments', 'error');
-                    btn.disabled = false;
-                    btn.textContent = 'Save';
+                    el.disabled = false;
+                    el.textContent = 'Save';
                 });
         });
     }
@@ -199,10 +191,8 @@
             ]
         });
 
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-edit-skill]');
-            if (!btn) return;
-            const skillId = btn.getAttribute('data-edit-skill');
+        app.events.on('click', '[data-edit-skill]', (e, el) => {
+            const skillId = el.getAttribute('data-edit-skill');
             const data = getSkillDetail(skillId);
             if (data && editPanel) editPanel.open(skillId, data);
         });

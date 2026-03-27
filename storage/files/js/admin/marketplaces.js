@@ -76,7 +76,6 @@
         });
 
         app.events.on('click', '.actions-trigger', (e, trigger) => {
-            e.stopPropagation();
             const menu = trigger.closest('.actions-menu');
             const dd = menu ? menu.querySelector('.actions-dropdown') : null;
             if (dd) {

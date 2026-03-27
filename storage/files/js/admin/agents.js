@@ -68,10 +68,8 @@
     }
 
     function initDeleteHandlers() {
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-delete-agent]');
-            if (!btn) return;
-            const agentId = btn.getAttribute('data-delete-agent');
+        app.events.on('click', '[data-delete-agent]', (e, el) => {
+            const agentId = el.getAttribute('data-delete-agent');
             if (!confirm('Are you sure you want to delete agent "' + agentId + '"? This cannot be undone.')) return;
 
             fetch('/api/admin/agents/' + encodeURIComponent(agentId), { method: 'DELETE' })
@@ -90,10 +88,8 @@
     }
 
     function initForkHandlers() {
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-fork-agent]');
-            if (!btn) return;
-            const agentId = btn.getAttribute('data-fork-agent');
+        app.events.on('click', '[data-fork-agent]', (e, el) => {
+            const agentId = el.getAttribute('data-fork-agent');
             const data = getAgentDetail(agentId);
             if (!data) return;
 
@@ -133,28 +129,24 @@
         });
         if (!assignApi) return;
 
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-assign-agent]');
-            if (!btn) return;
-            const agentId = btn.getAttribute('data-assign-agent');
-            const agentName = btn.getAttribute('data-agent-name') || agentId;
+        app.events.on('click', '[data-assign-agent]', (e, el) => {
+            const agentId = el.getAttribute('data-assign-agent');
+            const agentName = el.getAttribute('data-agent-name') || agentId;
             const data = getAgentDetail(agentId);
             const currentPluginIds = data && data.assigned_plugin_ids ? data.assigned_plugin_ids : [];
             assignApi.open(agentId, agentName, currentPluginIds);
         });
 
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-assign-save]');
-            if (!btn) return;
-            const entityId = btn.getAttribute('data-entity-id');
+        app.events.on('click', '[data-assign-save]', (e, el) => {
+            const entityId = el.getAttribute('data-entity-id');
             const checkboxes = document.querySelectorAll('#assign-panel input[name="plugin_id"]');
             const selectedPlugins = [];
             checkboxes.forEach((cb) => {
                 if (cb.checked) selectedPlugins.push(cb.value);
             });
 
-            btn.disabled = true;
-            btn.textContent = 'Saving...';
+            el.disabled = true;
+            el.textContent = 'Saving...';
 
             const promises = allPlugins.map((plugin) => {
                 return fetch('/api/admin/plugins/' + encodeURIComponent(plugin.id) + '/agents')
@@ -188,8 +180,8 @@
                 })
                 .catch(() => {
                     app.Toast.show('Failed to update assignments', 'error');
-                    btn.disabled = false;
-                    btn.textContent = 'Save';
+                    el.disabled = false;
+                    el.textContent = 'Save';
                 });
         });
     }
@@ -207,10 +199,8 @@
             ]
         });
 
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-edit-agent]');
-            if (!btn) return;
-            const agentId = btn.getAttribute('data-edit-agent');
+        app.events.on('click', '[data-edit-agent]', (e, el) => {
+            const agentId = el.getAttribute('data-edit-agent');
             const data = getAgentDetail(agentId);
             if (data && editPanel) editPanel.open(agentId, data);
         });

@@ -404,9 +404,7 @@
         MyCommon.initFilterSelect('my-marketplace-source-filter', '#my-marketplace-table', 'data-source');
         MyCommon.initFilterSelect('my-marketplace-category-filter', '#my-marketplace-table', 'data-category');
 
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-customize-plugin]');
-            if (!btn) return;
+        app.events.on('click', '[data-customize-plugin]', (e, btn) => {
             const pluginId = btn.getAttribute('data-customize-plugin');
             btn.disabled = true;
             btn.textContent = 'Customizing...';
