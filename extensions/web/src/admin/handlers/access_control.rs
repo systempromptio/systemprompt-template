@@ -129,12 +129,11 @@ pub(crate) async fn access_control_departments_handler(
     }
 }
 
-#[allow(clippy::similar_names)]
 fn sync_plugin_roles_to_yaml(
     plugin_id: &str,
-    rules: &[crate::admin::types::access_control::AccessControlRuleInput],
+    access_rules: &[crate::admin::types::access_control::AccessControlRuleInput],
 ) {
-    let roles: Vec<String> = rules
+    let allowed_roles: Vec<String> = access_rules
         .iter()
         .filter(|r| r.rule_type == "role" && r.access == "allow")
         .map(|r| r.rule_value.clone())
@@ -156,7 +155,7 @@ fn sync_plugin_roles_to_yaml(
         category: None,
         keywords: None,
         author_name: None,
-        roles: Some(roles),
+        roles: Some(allowed_roles),
         skills: None,
         agents: None,
         mcp_servers: None,

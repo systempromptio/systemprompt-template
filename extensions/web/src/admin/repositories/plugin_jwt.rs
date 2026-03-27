@@ -4,6 +4,8 @@ use systemprompt::models::auth::{Permission, RateLimitTier, UserType};
 use systemprompt::models::{Config, SecretsBootstrap};
 use systemprompt::security::{SessionGenerator, SessionParams};
 
+const PLUGIN_TOKEN_DURATION_DAYS: i64 = 365;
+
 pub fn generate_plugin_token(
     user_id: &UserId,
     email: &str,
@@ -24,7 +26,7 @@ pub fn generate_plugin_token(
         user_id,
         session_id: &session_id,
         email,
-        duration: Duration::days(365),
+        duration: Duration::days(PLUGIN_TOKEN_DURATION_DAYS),
         user_type: UserType::Service,
         permissions: vec![Permission::Service],
         roles: vec![],

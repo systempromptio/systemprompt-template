@@ -109,7 +109,7 @@ pub(crate) async fn marketplace_json_handler(
         }
     };
 
-    let (username, email, roles, department) =
+    let (username, email, roles, _department) =
         match repositories::marketplace_git::lookup_user_basic(&pool, &user_id).await {
             Ok(info) => info,
             Err(e) => {
@@ -120,18 +120,16 @@ pub(crate) async fn marketplace_json_handler(
 
     let _ = repositories::marketplace_sync_status::mark_user_dirty(&pool, &user_id).await;
 
-    let response = match repositories::generate_export_bundles(
-        &services_path,
-        &pool,
-        &user_id,
-        &username,
-        &email,
-        &roles,
-        &department,
-        platform,
-    )
-    .await
-    {
+    let uid = systemprompt::identifiers::UserId::new(&user_id);
+    let export_params = repositories::ExportParams {
+        services_path: &services_path,
+        pool: &pool,
+        user_id: &uid,
+        username: &username,
+        email: &email,
+        roles: &roles,
+    };
+    let response = match repositories::generate_export_bundles(&export_params).await {
         Ok(r) => r,
         Err(e) => {
             tracing::error!(error = %e, "Failed to generate export bundles");

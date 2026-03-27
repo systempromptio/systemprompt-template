@@ -6,10 +6,12 @@ use handlebars::Handlebars;
 use serde_json::Value;
 
 use super::helpers;
+use crate::navigation::BrandingConfig;
 
 #[derive(Clone)]
 pub struct AdminTemplateEngine {
     hbs: Arc<Handlebars<'static>>,
+    branding: Option<BrandingConfig>,
 }
 
 impl AdminTemplateEngine {
@@ -24,7 +26,21 @@ impl AdminTemplateEngine {
         Self::register_templates(&mut hbs, &templates_dir)?;
         helpers::register_helpers(&mut hbs);
 
-        Ok(Self { hbs: Arc::new(hbs) })
+        Ok(Self {
+            hbs: Arc::new(hbs),
+            branding: None,
+        })
+    }
+
+    #[must_use]
+    pub fn with_branding(mut self, branding: Option<BrandingConfig>) -> Self {
+        self.branding = branding;
+        self
+    }
+
+    #[must_use]
+    pub fn branding(&self) -> Option<&BrandingConfig> {
+        self.branding.as_ref()
     }
 
     fn register_partials_recursive(

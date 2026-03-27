@@ -209,6 +209,7 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
         )
         .route("/my/activity", get(handlers::ssr::my_activity_page))
         .route("/setup", get(handlers::ssr::setup_page))
+        .route("/demo-register", get(handlers::ssr::demo_register_page))
         .route("/auth/me", get(middleware::auth_me_handler))
         .layer(Extension(engine.clone()))
         .layer(axum_middleware::from_fn_with_state(
@@ -222,14 +223,23 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
             pool.clone(),
             middleware::user_context_middleware,
         ))
-        .with_state(pool);
+        .with_state(pool.clone());
 
     let combined = Router::new()
         .route("/login", get(handlers::ssr::login_page))
         .route("/register", get(handlers::ssr::register_page))
         .route("/add-passkey", get(handlers::ssr::add_passkey_page))
         .route("/verify-pending", get(handlers::ssr::verify_pending_page))
+        .route(
+            "/api/magic-link/request",
+            post(handlers::magic_link::request_magic_link),
+        )
+        .route(
+            "/api/magic-link/validate",
+            post(handlers::magic_link::validate_magic_link),
+        )
         .layer(Extension(engine))
+        .with_state(pool)
         .fallback_service(inner);
 
     Router::new().fallback_service(

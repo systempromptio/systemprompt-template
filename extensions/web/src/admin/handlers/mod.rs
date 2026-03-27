@@ -1,5 +1,7 @@
+pub(crate) mod demo_register;
 pub(crate) mod export_zip;
 pub(crate) mod hooks_track;
+pub(crate) mod magic_link;
 mod jobs;
 mod marketplace;
 pub(crate) mod marketplace_git;

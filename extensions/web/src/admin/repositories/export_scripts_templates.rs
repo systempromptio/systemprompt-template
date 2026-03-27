@@ -35,7 +35,7 @@ fn build_transcript_script(token: &str, platform_url: &str, plugin_id: &str) -> 
     let url = format!("{platform_url}/api/public/hooks/transcript?plugin_id={plugin_id}");
     format!(
         r#"#!/usr/bin/env bash
-LOG="/tmp/foodles-transcript-{plugin_id}.log"
+LOG="/tmp/sp-transcript-{plugin_id}.log"
 INPUT=$(cat)
 TRANSCRIPT_PATH=$(echo "$INPUT" | grep -o '"transcript_path"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"transcript_path"[[:space:]]*:[[:space:]]*"//' | sed 's/"$//')
 SESSION_ID=$(echo "$INPUT" | grep -o '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"session_id"[[:space:]]*:[[:space:]]*"//' | sed 's/"$//')
@@ -73,7 +73,7 @@ exit 0
 fn build_transcript_script_ps1(token: &str, platform_url: &str, plugin_id: &str) -> String {
     let url = format!("{platform_url}/api/public/hooks/transcript?plugin_id={plugin_id}");
     format!(
-        r#"$logFile = Join-Path $env:TEMP "foodles-transcript-{plugin_id}.log"
+        r#"$logFile = Join-Path $env:TEMP "sp-transcript-{plugin_id}.log"
 $reader = [System.IO.StreamReader]::new([System.Console]::OpenStandardInput())
 $body = $reader.ReadToEnd()
 $reader.Close()

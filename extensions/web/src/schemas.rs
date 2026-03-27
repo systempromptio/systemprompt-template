@@ -59,6 +59,16 @@ pub const SCHEMA_MARKETPLACE_GITHUB: &str =
     include_str!("../schema/044_marketplace_github.sql");
 pub const SCHEMA_GOVERNANCE_DECISIONS: &str =
     include_str!("../schema/045_governance_decisions.sql");
+pub const SCHEMA_MCP_ACCESS_TRACKING: &str =
+    include_str!("../schema/045_mcp_access_tracking.sql");
+pub const SCHEMA_ADMIN_DASHBOARD_TABLES: &str =
+    include_str!("../schema/046_admin_dashboard_tables.sql");
+pub const SCHEMA_ADMIN_DASHBOARD_VIEWS: &str =
+    include_str!("../schema/047_admin_dashboard_views.sql");
+pub const SCHEMA_ADMIN_DASHBOARD_COLUMNS: &str =
+    include_str!("../schema/048_admin_dashboard_columns.sql");
+pub const SCHEMA_PROFILE_REPORTS_HOOKS_FIX: &str =
+    include_str!("../schema/049_profile_reports_and_hooks_fix.sql");
 
 pub fn schema_definitions() -> Vec<SchemaDefinition> {
     vec![
@@ -113,5 +123,10 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::inline("seed_enterprise_demo", SCHEMA_SEED_ENTERPRISE_DEMO),
         SchemaDefinition::inline("marketplace_github", SCHEMA_MARKETPLACE_GITHUB),
         SchemaDefinition::inline("governance_decisions", SCHEMA_GOVERNANCE_DECISIONS),
+        SchemaDefinition::inline("mcp_access_tracking", SCHEMA_MCP_ACCESS_TRACKING),
+        SchemaDefinition::inline("admin_dashboard_tables", SCHEMA_ADMIN_DASHBOARD_TABLES),
+        SchemaDefinition::inline("admin_dashboard_views", SCHEMA_ADMIN_DASHBOARD_VIEWS),
+        SchemaDefinition::inline("admin_dashboard_columns", SCHEMA_ADMIN_DASHBOARD_COLUMNS),
+        SchemaDefinition::inline("profile_reports_hooks_fix", SCHEMA_PROFILE_REPORTS_HOOKS_FIX),
     ]
 }

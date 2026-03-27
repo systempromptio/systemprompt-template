@@ -9,8 +9,6 @@ use axum::{
 };
 use sqlx::PgPool;
 
-use systemprompt::identifiers::{Email, UserId};
-
 use super::activity;
 use super::handlers::extract_user_from_cookie;
 use super::types::{MarketplaceContext, UserContext};
@@ -25,16 +23,6 @@ pub async fn user_context_middleware(
         Ok(s) => s,
         Err(reason) => {
             tracing::warn!(reason = %reason, "UserContext middleware: no valid session");
-            let guest = UserContext {
-                user_id: UserId::new(""),
-                username: String::new(),
-                email: Email::new(""),
-                roles: vec!["user".to_string()],
-                department: String::new(),
-                is_admin: false,
-                email_verified: false,
-            };
-            request.extensions_mut().insert(guest);
             return next.run(request).await;
         }
     };

@@ -2,7 +2,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Serialize;
 
-use super::svg::{build_stacked_area, build_y_labels, svg_x, AxisLabel, XAxisLabel};
+use super::svg::{
+    build_stacked_area, build_y_labels, svg_x, AxisLabel, XAxisLabel, SVG_HEIGHT, SVG_WIDTH,
+};
 
 const COUNTRY_COLORS: &[&str] = &[
     "oklch(0.70 0.15 145)",
@@ -205,8 +207,8 @@ pub(crate) fn compute_country_traffic_chart(
         };
     }
 
-    let svg_w: f64 = 960.0;
-    let svg_h: f64 = 280.0;
+    let svg_w: f64 = SVG_WIDTH;
+    let svg_h: f64 = SVG_HEIGHT;
 
     let cs = collect_country_series(data);
     let n = cs.time_buckets.len();

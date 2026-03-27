@@ -6,6 +6,8 @@ use systemprompt::ai::AiService;
 use super::analysis;
 use super::archetype;
 
+const PROFILE_REPORT_MAX_TOKENS: u32 = 65_536;
+
 pub(super) const PROFILE_REPORT_PROMPT: &str = "\
 You are an expert analyst of Claude Code usage patterns. \
 Given a user's aggregate metrics over 30 days, their archetype classification, \
@@ -154,7 +156,7 @@ pub(super) async fn generate_ai_profile(
         messages,
         ai.default_provider(),
         ai.default_model(),
-        65536,
+        PROFILE_REPORT_MAX_TOKENS,
         ctx,
     )
     .with_structured_output(StructuredOutputOptions::with_schema(profile_report_schema()))

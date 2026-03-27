@@ -31,6 +31,9 @@ pub async fn fetch_usage_from_db(pool: &PgPool, user_id: &UserId) -> UsageSnapsh
     .bind(uid)
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %uid, "Failed to fetch daily usage for tier enforcement");
+    })
     .ok()
     .flatten();
 

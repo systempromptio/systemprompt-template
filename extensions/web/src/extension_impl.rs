@@ -155,8 +155,15 @@ impl Extension for WebExtension {
             .join("storage")
             .join("files")
             .join("admin");
+        let branding = match config_loader::load_branding_config() {
+            Ok(val) => val,
+            Err(e) => {
+                tracing::warn!(error = %e, "Failed to load branding config for admin");
+                None
+            }
+        };
         let engine = match admin::templates::AdminTemplateEngine::new(&admin_dir) {
-            Ok(engine) => engine,
+            Ok(engine) => engine.with_branding(branding),
             Err(e) => {
                 tracing::error!(error = %e, "Failed to initialize admin template engine");
                 return Some(ExtensionRouter::public(api_router, "/api/public"));
@@ -229,4 +236,24 @@ impl Extension for WebExtension {
     ) -> Vec<systemprompt::extension::AssetDefinition> {
         web_assets(paths)
     }
+}
+
+fn init_ai_service() -> Option<Arc<systemprompt::ai::AiService>> {
+    let config = systemprompt::models::Config::get().ok()?;
+    let services_config = systemprompt::loader::ConfigLoader::load().ok()?;
+
+    let db = tokio::task::block_in_place(|| {
+        tokio::runtime::Handle::current().block_on(systemprompt::database::Database::from_config(
+            &config.database_type,
+            &config.database_url,
+        ))
+    })
+    .ok()?;
+
+    let db_pool: systemprompt::database::DbPool = Arc::new(db);
+    let tool_provider = Arc::new(systemprompt::ai::NoopToolProvider::new());
+    let ai_service =
+        systemprompt::ai::AiService::new(db_pool, &services_config.ai, tool_provider, None).ok()?;
+    tracing::info!("AI service initialized for hook summary generation");
+    Some(Arc::new(ai_service))
 }

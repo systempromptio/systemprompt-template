@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 
+const MAX_BATCH_DELETE_IDS: usize = 100;
+
 use super::plugins::is_entity_in_platform_plugin;
 
 #[derive(Debug, Deserialize)]
@@ -38,7 +40,7 @@ struct BatchDeleteResponse {
 }
 
 fn validate_ids(ids: &[String]) -> Option<Response> {
-    if ids.is_empty() || ids.len() > 100 {
+    if ids.is_empty() || ids.len() > MAX_BATCH_DELETE_IDS {
         return Some(shared::error_response(
             StatusCode::BAD_REQUEST,
             "ids must contain between 1 and 100 items",
@@ -204,7 +206,7 @@ pub(crate) async fn batch_delete_secrets_handler(
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<BatchDeleteSecretsRequest>,
 ) -> Response {
-    if req.items.is_empty() || req.items.len() > 100 {
+    if req.items.is_empty() || req.items.len() > MAX_BATCH_DELETE_IDS {
         return shared::error_response(
             StatusCode::BAD_REQUEST,
             "items must contain between 1 and 100 entries",

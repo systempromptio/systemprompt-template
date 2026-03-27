@@ -5,12 +5,10 @@ use axum::{
     response::{Html, IntoResponse, Response},
     Extension,
 };
-use serde_json::json;
-
 pub(crate) async fn add_passkey_page(
     Extension(engine): Extension<AdminTemplateEngine>,
 ) -> Response {
-    match engine.render("add-passkey", &json!({})) {
+    match engine.render("add-passkey", &super::branding_context(&engine)) {
         Ok(html) => Html(html).into_response(),
         Err(e) => {
             tracing::error!(error = ?e, "Add-passkey page render failed");

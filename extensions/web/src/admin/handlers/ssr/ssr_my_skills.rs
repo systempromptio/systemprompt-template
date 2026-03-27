@@ -8,6 +8,8 @@ use crate::admin::repositories::conversation_analytics;
 use crate::admin::templates::AdminTemplateEngine;
 use crate::admin::types::conversation_analytics::{SkillEffectiveness, SkillRating};
 use crate::admin::types::{MarketplaceContext, UserContext};
+
+const CONTENT_PREVIEW_LEN: usize = 200;
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -130,8 +132,8 @@ fn build_skills_json(
         .iter()
         .map(|s| {
             let usage = usage_counts.get(s.skill_id.as_str()).copied().unwrap_or(0);
-            let content_preview = if s.content.len() > 200 {
-                format!("{}...", &s.content[..200])
+            let content_preview = if s.content.len() > CONTENT_PREVIEW_LEN {
+                format!("{}...", &s.content[..CONTENT_PREVIEW_LEN])
             } else {
                 s.content.clone()
             };

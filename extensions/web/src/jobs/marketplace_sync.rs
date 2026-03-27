@@ -164,14 +164,26 @@ pub async fn generate_and_persist_marketplace(pool: &Arc<PgPool>, user_id: &str)
 fn create_bare_repo(work_dir: &std::path::Path, repo_path: &std::path::Path) -> Result<()> {
     use std::process::Command;
 
+    let (git_name, git_email) = crate::config_loader::load_branding_config()
+        .ok()
+        .flatten()
+        .map_or_else(
+            || ("SystemPrompt".to_string(), "support@systemprompt.io".to_string()),
+            |b| {
+                let name = if b.display_name.is_empty() { "SystemPrompt".to_string() } else { b.display_name };
+                let email = if b.support_email.is_empty() { "support@systemprompt.io".to_string() } else { b.support_email };
+                (name, email)
+            },
+        );
+
     let run = |args: &[&str], dir: &std::path::Path| -> Result<()> {
         let output = Command::new("git")
             .args(args)
             .current_dir(dir)
-            .env("GIT_AUTHOR_NAME", "Foodles")
-            .env("GIT_AUTHOR_EMAIL", "support@foodles.com")
-            .env("GIT_COMMITTER_NAME", "Foodles")
-            .env("GIT_COMMITTER_EMAIL", "support@foodles.com")
+            .env("GIT_AUTHOR_NAME", &git_name)
+            .env("GIT_AUTHOR_EMAIL", &git_email)
+            .env("GIT_COMMITTER_NAME", &git_name)
+            .env("GIT_COMMITTER_EMAIL", &git_email)
             .output()?;
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);

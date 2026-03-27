@@ -17,8 +17,12 @@ mod ssr_add_passkey;
 mod ssr_browse_plugins;
 pub(crate) mod ssr_control_center;
 mod ssr_dashboard;
+mod ssr_demo_register;
+mod ssr_dashboard_activity;
+mod ssr_dashboard_helpers;
 mod ssr_dashboard_report;
 mod ssr_dashboard_traffic;
+mod ssr_dashboard_traffic_pages;
 mod ssr_dashboard_types;
 mod ssr_events;
 mod ssr_gamification;
@@ -51,6 +55,7 @@ pub(crate) use ssr_control_center::handle_rate_session;
 pub(crate) use ssr_control_center::handle_rate_skill;
 pub(crate) use ssr_control_center::handle_update_session_status;
 pub(crate) use ssr_dashboard::dashboard_page;
+pub(crate) use ssr_demo_register::demo_register_page;
 pub(crate) use ssr_dashboard_report::handle_generate_traffic_report;
 pub(crate) use ssr_events::events_page;
 pub(crate) use ssr_gamification::achievements_page;
@@ -72,8 +77,15 @@ pub(crate) use ssr_settings::settings_page;
 pub(crate) use ssr_setup::setup_page;
 pub(crate) use ssr_users::{user_detail_page, users_page};
 
+fn branding_context(engine: &AdminTemplateEngine) -> serde_json::Value {
+    match engine.branding() {
+        Some(b) => json!({"branding": b}),
+        None => json!({}),
+    }
+}
+
 pub(crate) async fn login_page(Extension(engine): Extension<AdminTemplateEngine>) -> Response {
-    match engine.render("login", &json!({})) {
+    match engine.render("login", &branding_context(&engine)) {
         Ok(html) => Html(html).into_response(),
         Err(e) => {
             tracing::error!(error = ?e, "Login page render failed");
@@ -92,7 +104,7 @@ pub(crate) async fn login_page(Extension(engine): Extension<AdminTemplateEngine>
 pub(crate) async fn verify_pending_page(
     Extension(engine): Extension<AdminTemplateEngine>,
 ) -> Response {
-    match engine.render("verify-pending", &json!({})) {
+    match engine.render("verify-pending", &branding_context(&engine)) {
         Ok(html) => Html(html).into_response(),
         Err(e) => {
             tracing::error!(error = ?e, "Verify-pending page render failed");
@@ -115,7 +127,7 @@ pub(crate) async fn register_page(
     if extract_user_from_cookie(&headers).is_ok() {
         return Redirect::to("/control-center").into_response();
     }
-    match engine.render("register", &json!({})) {
+    match engine.render("register", &branding_context(&engine)) {
         Ok(html) => Html(html).into_response(),
         Err(e) => {
             tracing::error!(error = ?e, "Register page render failed");
@@ -191,6 +203,11 @@ pub(crate) fn render_page(
         );
         obj.entry("page_stats".to_string())
             .or_insert_with(|| json!([]));
+        if let Some(branding) = engine.branding() {
+            if let Ok(val) = serde_json::to_value(branding) {
+                obj.insert("branding".to_string(), val);
+            }
+        }
     }
     match engine.render(template, &merged) {
         Ok(html) => Html(html).into_response(),

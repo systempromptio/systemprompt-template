@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::Serialize;
 
-use super::svg::{build_svg_line, build_y_labels, svg_x, AxisLabel};
+use super::svg::{build_svg_line, build_y_labels, svg_x, AxisLabel, SVG_HEIGHT, SVG_WIDTH};
 
 pub(crate) fn compute_bar_chart<T, F, G>(
     items: &[T],
@@ -46,8 +46,8 @@ pub(crate) fn compute_area_chart_data(
         };
     }
 
-    let svg_w: f64 = 960.0;
-    let svg_h: f64 = 280.0;
+    let svg_w: f64 = SVG_WIDTH;
+    let svg_h: f64 = SVG_HEIGHT;
     let n = buckets.len();
 
     let peak = buckets

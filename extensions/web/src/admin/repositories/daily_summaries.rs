@@ -209,6 +209,9 @@ pub async fn fetch_daily_summary(
     .bind(date)
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch daily summary");
+    })
     .ok()
     .flatten()
 }
@@ -247,6 +250,9 @@ pub async fn fetch_global_averages(pool: &PgPool) -> GlobalAverages {
     )
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, "Failed to fetch global averages");
+    })
     .ok()
     .flatten()
     .unwrap_or_else(GlobalAverages::default)

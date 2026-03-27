@@ -1,5 +1,8 @@
 use serde::Serialize;
 
+pub(super) const SVG_WIDTH: f64 = 960.0;
+pub(super) const SVG_HEIGHT: f64 = 280.0;
+
 #[derive(Serialize)]
 pub(super) struct AxisLabel {
     pub label: String,

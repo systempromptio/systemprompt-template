@@ -198,6 +198,22 @@ impl HelperDef for ToLowerCaseHelper {
     }
 }
 
+pub(crate) struct ToUpperCaseHelper;
+impl HelperDef for ToUpperCaseHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let val = h.param(0).and_then(|v| v.value().as_str()).unwrap_or("");
+        out.write(&val.to_uppercase())?;
+        Ok(())
+    }
+}
+
 pub(crate) struct CssVersionHelper;
 impl HelperDef for CssVersionHelper {
     fn call<'reg: 'rc, 'rc>(
@@ -212,7 +228,7 @@ impl HelperDef for CssVersionHelper {
         static VERSION: OnceLock<String> = OnceLock::new();
         let v = VERSION.get_or_init(|| {
             let path = std::env::current_dir()
-                .unwrap_or_default()
+                .unwrap_or_else(|_| std::path::PathBuf::from("."))
                 .join("storage/files/css/css-manifest.json");
             std::fs::read_to_string(&path)
                 .ok()

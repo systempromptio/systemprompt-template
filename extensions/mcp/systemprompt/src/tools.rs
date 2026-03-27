@@ -2,7 +2,7 @@ use rmcp::model::{Meta, Tool};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use systemprompt::mcp::{default_tool_visibility, tool_ui_meta};
+use systemprompt::mcp::{default_tool_visibility, tool_ui_meta, WEBSITE_URL};
 use systemprompt::models::artifacts::{CliArtifact, ToolResponse};
 
 pub const SERVER_NAME: &str = "systemprompt";
@@ -66,7 +66,7 @@ pub fn list_tools() -> Vec<Tool> {
         SERVER_NAME,
         "systemprompt",
         "SystemPrompt CLI",
-        "Execute SystemPrompt CLI commands. Pass the command WITHOUT the 'systemprompt' prefix.\n\n\
+        &format!("Execute SystemPrompt CLI commands. Pass the command WITHOUT the 'systemprompt' prefix.\n\n\
         MANDATORY FIRST STEP: Run 'core playbooks show guide_start' before any task.\n\n\
         Common commands:\n  \
         - core playbooks show guide_start: Load the getting started guide (ALWAYS DO THIS FIRST)\n  \
@@ -75,8 +75,8 @@ pub fn list_tools() -> Vec<Tool> {
         - plugins run discord send \"message\": Send Discord notification\n  \
         - plugins run discord send \"message\" --channel <id>: Send to specific channel\n  \
         - admin agents list: List agents\n\n\
-        Example: {\"command\": \"core playbooks show guide_start\"}\n\n\
-        Full documentation: https://foodles.com/playbooks",
+        Example: {{\"command\": \"core playbooks show guide_start\"}}\n\n\
+        Full documentation: {WEBSITE_URL}/playbooks"),
         &input_schema(),
         &output_schema(),
     )]

@@ -5,14 +5,10 @@ use anyhow::Result;
 use sqlx::PgPool;
 use systemprompt::models::ProfileBootstrap;
 
-use super::export::PluginBundle;
 pub(crate) use super::github_sync_bundle::{
     build_bundle_from_directory, import_or_update_plugin,
 };
 pub(crate) use super::github_sync_git::{git_clone_shallow, git_head_hash, git_pull};
-use super::github_sync_git::{
-    build_authenticated_url, git_add_all, git_commit, git_has_changes, git_push,
-};
 
 #[derive(Debug, Clone)]
 pub struct SyncResult {
@@ -109,7 +105,7 @@ async fn finalize_sync(
     }
 }
 
-fn elapsed_ms(start: std::time::Instant) -> u64 {
+pub(super) fn elapsed_ms(start: std::time::Instant) -> u64 {
     u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX)
 }
 
@@ -178,15 +174,17 @@ pub async fn sync_marketplace_from_github(
 
     let _ = super::org_marketplaces::insert_sync_log(
         pool,
-        marketplace_id,
-        "sync",
-        "success",
-        Some(&current_hash),
-        i64::try_from(tally.success_count).unwrap_or(i64::MAX),
-        i64::try_from(tally.error_count).unwrap_or(i64::MAX),
-        None,
-        triggered_by,
-        Some(i64::try_from(duration_ms).unwrap_or(i64::MAX)),
+        &super::org_marketplaces::SyncLogEntry {
+            marketplace_id,
+            operation: "sync",
+            status: "success",
+            commit_hash: Some(&current_hash),
+            plugins_synced: i64::try_from(tally.success_count).unwrap_or(i64::MAX),
+            errors: i64::try_from(tally.error_count).unwrap_or(i64::MAX),
+            error_message: None,
+            triggered_by,
+            duration_ms: Some(i64::try_from(duration_ms).unwrap_or(i64::MAX)),
+        },
     )
     .await;
 
@@ -208,139 +206,7 @@ pub async fn sync_marketplace_from_github(
     })
 }
 
-fn write_plugin_bundles_to_repo(bundles: &[PluginBundle], local_path: &Path) -> Result<u64> {
-    let mut plugin_count = 0u64;
-
-    for bundle in bundles {
-        let plugin_dir = local_path.join(&bundle.id);
-
-        if plugin_dir.exists() {
-            std::fs::remove_dir_all(&plugin_dir)?;
-        }
-        std::fs::create_dir_all(&plugin_dir)?;
-
-        for file in &bundle.files {
-            let file_path = plugin_dir.join(&file.path);
-            if let Some(parent) = file_path.parent() {
-                std::fs::create_dir_all(parent)?;
-            }
-            std::fs::write(&file_path, &file.content)?;
-
-            #[cfg(unix)]
-            if file.executable {
-                use std::os::unix::fs::PermissionsExt;
-                std::fs::set_permissions(&file_path, std::fs::Permissions::from_mode(0o755))?;
-            }
-        }
-
-        plugin_count += 1;
-    }
-
-    Ok(plugin_count)
-}
-
-pub async fn publish_marketplace_to_github(
-    pool: &Arc<PgPool>,
-    marketplace_id: &str,
-    repo_url: &str,
-    triggered_by: &str,
-) -> Result<SyncResult> {
-    let start = std::time::Instant::now();
-
-    tracing::info!(
-        marketplace_id,
-        repo_url,
-        "Starting GitHub marketplace publish"
-    );
-
-    let services_path = ProfileBootstrap::get()
-        .map(|p| PathBuf::from(&p.paths.services))
-        .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
-
-    let local_path = PathBuf::from("storage/github-marketplaces").join(marketplace_id);
-
-    if local_path.join(".git").exists() {
-        git_pull(&local_path)?;
-    } else {
-        std::fs::create_dir_all(&local_path)?;
-        let push_url = build_authenticated_url(repo_url);
-        git_clone_shallow(&push_url, &local_path)?;
-    }
-
-    let export = super::export::generate_org_marketplace_export_bundles(
-        &services_path,
-        pool,
-        marketplace_id,
-        "linux",
-    )
-    .await?;
-
-    let plugin_count = write_plugin_bundles_to_repo(&export.plugins, &local_path)?;
-
-    let marketplace_json_path = local_path.join(".claude-plugin/marketplace.json");
-    if let Some(parent) = marketplace_json_path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    std::fs::write(&marketplace_json_path, &export.marketplace.content)?;
-
-    let push_url = build_authenticated_url(repo_url);
-    git_add_all(&local_path)?;
-
-    let has_changes = git_has_changes(&local_path)?;
-    if !has_changes {
-        let duration_ms = elapsed_ms(start);
-        tracing::info!(marketplace_id, "No changes to publish");
-        return Ok(SyncResult {
-            commit_hash: git_head_hash(&local_path)?,
-            plugins_synced: plugin_count,
-            errors: 0,
-            changed: false,
-            duration_ms,
-        });
-    }
-
-    git_commit(
-        &local_path,
-        &format!("Marketplace update from admin ({marketplace_id})"),
-    )?;
-    git_push(&local_path, &push_url)?;
-
-    let current_hash = git_head_hash(&local_path)?;
-    let duration_ms = elapsed_ms(start);
-
-    let marker_path = local_path.join(".last-commit");
-    let _ = std::fs::write(&marker_path, &current_hash);
-
-    let _ = super::org_marketplaces::insert_sync_log(
-        pool,
-        marketplace_id,
-        "publish",
-        "success",
-        Some(&current_hash),
-        i64::try_from(plugin_count).unwrap_or(i64::MAX),
-        0i64,
-        None,
-        triggered_by,
-        Some(i64::try_from(duration_ms).unwrap_or(i64::MAX)),
-    )
-    .await;
-
-    tracing::info!(
-        marketplace_id,
-        plugins = plugin_count,
-        commit = &current_hash[..std::cmp::min(8, current_hash.len())],
-        duration_ms,
-        "GitHub marketplace publish completed"
-    );
-
-    Ok(SyncResult {
-        commit_hash: current_hash,
-        plugins_synced: plugin_count,
-        errors: 0,
-        changed: true,
-        duration_ms,
-    })
-}
+pub use super::github_sync_publish::publish_marketplace_to_github;
 
 pub async fn sync_marketplace_from_local(
     pool: &Arc<PgPool>,
@@ -377,15 +243,17 @@ pub async fn sync_marketplace_from_local(
 
     let _ = super::org_marketplaces::insert_sync_log(
         pool,
-        marketplace_id,
-        "sync",
-        "success",
-        None,
-        i64::try_from(tally.success_count).unwrap_or(i64::MAX),
-        i64::try_from(tally.error_count).unwrap_or(i64::MAX),
-        None,
-        "local",
-        Some(i64::try_from(duration_ms).unwrap_or(i64::MAX)),
+        &super::org_marketplaces::SyncLogEntry {
+            marketplace_id,
+            operation: "sync",
+            status: "success",
+            commit_hash: None,
+            plugins_synced: i64::try_from(tally.success_count).unwrap_or(i64::MAX),
+            errors: i64::try_from(tally.error_count).unwrap_or(i64::MAX),
+            error_message: None,
+            triggered_by: "local",
+            duration_ms: Some(i64::try_from(duration_ms).unwrap_or(i64::MAX)),
+        },
     )
     .await;
 

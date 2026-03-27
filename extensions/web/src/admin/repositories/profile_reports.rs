@@ -74,6 +74,9 @@ pub async fn fetch_profile_report(pool: &PgPool, user_id: &str) -> Option<Profil
     .bind(user_id)
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch profile report");
+    })
     .ok()
     .flatten()
 }
@@ -224,6 +227,9 @@ async fn fetch_aggregate_row(pool: &PgPool, user_id: &str, days: i32) -> Option<
     .bind(days)
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch aggregate metrics for profile report");
+    })
     .ok()
     .flatten()
 }

@@ -80,6 +80,9 @@ pub async fn fetch_today_summary(pool: &PgPool, user_id: &UserId) -> TodaySummar
     )
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id.as_str(), "Failed to fetch today's top recommendation");
+    })
     .ok()
     .flatten()
     .flatten()

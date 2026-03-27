@@ -6,6 +6,7 @@ use systemprompt::models::Config;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::admin::templates::helpers;
+use crate::config_loader;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CompileAdminTemplatesJob;
@@ -93,6 +94,11 @@ impl CompileAdminTemplatesJob {
             |c| c.api_external_url.trim_end_matches('/').to_string(),
         );
 
+        let branding_value = match config_loader::load_branding_config() {
+            Ok(Some(b)) => serde_json::to_value(&b).unwrap_or_default(),
+            _ => serde_json::Value::Null,
+        };
+
         let pages = discover_templates(&templates_dir)?;
 
         tracing::info!(count = pages.len(), "Discovered admin templates");
@@ -100,15 +106,19 @@ impl CompileAdminTemplatesJob {
         let mut compiled = 0u64;
         let mut failed = 0u64;
 
+        let compile_ctx = CompilePageCtx {
+            hbs: &hbs,
+            templates_dir: &templates_dir,
+            compiled_dir: &compiled_dir,
+            site_url: &site_url,
+            branding_value: &branding_value,
+        };
         for (template_file, page_id, output_path) in &pages {
             match compile_page(
-                &hbs,
-                &templates_dir,
-                &compiled_dir,
+                &compile_ctx,
                 template_file,
                 page_id,
                 output_path,
-                &site_url,
             )
             .await
             {
@@ -171,26 +181,36 @@ fn register_partials_recursive(
     Ok(())
 }
 
+struct CompilePageCtx<'a> {
+    hbs: &'a Handlebars<'a>,
+    templates_dir: &'a std::path::Path,
+    compiled_dir: &'a std::path::Path,
+    site_url: &'a str,
+    branding_value: &'a serde_json::Value,
+}
+
 async fn compile_page(
-    hbs: &Handlebars<'_>,
-    templates_dir: &std::path::Path,
-    compiled_dir: &std::path::Path,
+    ctx: &CompilePageCtx<'_>,
     template_file: &str,
     page_id: &str,
     output_path: &str,
-    site_url: &str,
 ) -> Result<()> {
-    let template_content = tokio::fs::read_to_string(templates_dir.join(template_file))
+    let template_content = tokio::fs::read_to_string(ctx.templates_dir.join(template_file))
         .await
         .with_context(|| format!("Failed to read template: {template_file}"))?;
 
-    let data = json!({ "page": page_id, "site_url": site_url });
+    let mut data = json!({ "page": page_id, "site_url": ctx.site_url });
+    if !ctx.branding_value.is_null() {
+        data.as_object_mut()
+            .expect("json object")
+            .insert("branding".to_string(), ctx.branding_value.clone());
+    }
 
-    let rendered = hbs
+    let rendered = ctx.hbs
         .render_template(&template_content, &data)
         .with_context(|| format!("Failed to render template: {template_file}"))?;
 
-    let dest = compiled_dir.join(output_path);
+    let dest = ctx.compiled_dir.join(output_path);
     if let Some(parent) = dest.parent() {
         tokio::fs::create_dir_all(parent)
             .await

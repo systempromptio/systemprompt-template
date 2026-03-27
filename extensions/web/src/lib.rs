@@ -16,6 +16,7 @@ pub mod jobs;
 pub mod models;
 pub mod navigation;
 pub mod partials;
+mod partials_animations;
 pub mod playbooks;
 pub mod repository;
 mod schemas;

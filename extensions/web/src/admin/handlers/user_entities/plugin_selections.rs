@@ -70,6 +70,9 @@ pub(crate) async fn list_available_plugins_handler(
             continue;
         }
         let detail = repositories::find_plugin_detail(&services_path, plugin_id)
+            .map_err(|e| {
+                tracing::warn!(error = ?e, plugin_id = %plugin_id, "Failed to load plugin detail for selection page");
+            })
             .ok()
             .flatten();
         let (name, description, category, skill_count, agent_count, mcp_count) =

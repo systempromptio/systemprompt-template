@@ -18,19 +18,19 @@ pub(super) fn build_statusline_metadata(payload: &StatusLinePayload) -> serde_js
             map.insert("context_window_size".to_string(), serde_json::json!(size));
         }
         if let Some(ref usage) = cw.current_usage {
-            if let Some(v) = usage.input_tokens {
+            if let Some(v) = usage.input {
                 map.insert("input_tokens".to_string(), serde_json::json!(v));
             }
-            if let Some(v) = usage.output_tokens {
+            if let Some(v) = usage.output {
                 map.insert("output_tokens".to_string(), serde_json::json!(v));
             }
-            if let Some(v) = usage.cache_creation_input_tokens {
+            if let Some(v) = usage.cache_creation_input {
                 map.insert(
                     "cache_creation_input_tokens".to_string(),
                     serde_json::json!(v),
                 );
             }
-            if let Some(v) = usage.cache_read_input_tokens {
+            if let Some(v) = usage.cache_read_input {
                 map.insert("cache_read_input_tokens".to_string(), serde_json::json!(v));
             }
         }

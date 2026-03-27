@@ -1,7 +1,8 @@
 use serde::Serialize;
 
 use super::svg::{
-    build_stacked_area, build_svg_line, build_y_labels, svg_x, AxisLabel, XAxisLabel,
+    build_stacked_area, build_svg_line, build_y_labels, svg_x, AxisLabel, SVG_HEIGHT, SVG_WIDTH,
+    XAxisLabel,
 };
 
 #[derive(Serialize)]
@@ -39,8 +40,8 @@ pub(crate) fn compute_traffic_chart_data(
         };
     }
 
-    let svg_w: f64 = 960.0;
-    let svg_h: f64 = 280.0;
+    let svg_w: f64 = SVG_WIDTH;
+    let svg_h: f64 = SVG_HEIGHT;
     let n = buckets.len();
 
     let peak = buckets.iter().map(|b| b.sessions).max().unwrap_or(1).max(1);

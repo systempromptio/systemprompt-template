@@ -18,6 +18,9 @@ pub async fn fetch_session_analysis(pool: &PgPool, session_id: &str) -> Option<S
     )
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, session_id = %session_id, "Failed to fetch session analysis");
+    })
     .ok()
     .flatten()
 }

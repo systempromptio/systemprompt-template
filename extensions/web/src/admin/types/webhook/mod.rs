@@ -203,12 +203,15 @@ pub struct ContextWindow {
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(clippy::struct_field_names)]
 pub struct ContextWindowUsage {
-    pub input_tokens: Option<i64>,
-    pub output_tokens: Option<i64>,
-    pub cache_creation_input_tokens: Option<i64>,
-    pub cache_read_input_tokens: Option<i64>,
+    #[serde(rename = "input_tokens")]
+    pub input: Option<i64>,
+    #[serde(rename = "output_tokens")]
+    pub output: Option<i64>,
+    #[serde(rename = "cache_creation_input_tokens")]
+    pub cache_creation_input: Option<i64>,
+    #[serde(rename = "cache_read_input_tokens")]
+    pub cache_read_input: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]

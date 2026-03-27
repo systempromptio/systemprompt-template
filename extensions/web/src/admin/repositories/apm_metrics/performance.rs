@@ -102,6 +102,9 @@ async fn fetch_today_aggregates(
     )
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch today's performance aggregates");
+    })
     .ok()
     .flatten();
 

@@ -190,6 +190,9 @@ async fn load_achievements_data(
 
     let profile = crate::admin::gamification::queries::find_user_gamification(pool, user_id)
         .await
+        .map_err(|e| {
+            tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch gamification profile for achievements");
+        })
         .ok()
         .flatten();
 
@@ -259,7 +262,11 @@ pub(crate) async fn leaderboard_page(
         crate::admin::gamification::queries::get_leaderboard_averages(&pool),
     );
     let entries = entries.unwrap_or_else(|_| vec![]);
-    let averages = averages.ok();
+    let averages = averages
+        .map_err(|e| {
+            tracing::warn!(error = %e, "Failed to fetch leaderboard averages");
+        })
+        .ok();
 
     let current_user_id = user_ctx.user_id.to_string();
     let data = build_leaderboard_data(&entries, averages.as_ref(), &current_user_id, sort);

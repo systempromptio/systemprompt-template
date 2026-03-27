@@ -16,6 +16,9 @@ pub async fn add_to_plugin(
     if let Some(plugin_id) = target_plugin_id {
         let assoc = find_plugin_with_associations(&pool, user_id, plugin_id)
             .await
+            .map_err(|e| {
+                tracing::warn!(error = %e, plugin_id = %plugin_id, "Failed to fetch plugin associations for target plugin");
+            })
             .ok()
             .flatten();
 
@@ -86,6 +89,9 @@ pub async fn auto_add_to_default_plugin(
     let first_plugin = plugins.last()?;
     let assoc = find_plugin_with_associations(&pool, user_id, &first_plugin.plugin_id)
         .await
+        .map_err(|e| {
+            tracing::warn!(error = %e, plugin_id = %first_plugin.plugin_id, "Failed to fetch plugin associations for default plugin");
+        })
         .ok()
         .flatten()?;
 

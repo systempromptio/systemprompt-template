@@ -6,6 +6,8 @@ use crate::admin::repositories::conversation_analytics;
 use crate::admin::templates::AdminTemplateEngine;
 use crate::admin::types::conversation_analytics::{EntityLastUsed, EntityQualityTrend};
 use crate::admin::types::{EntityEffectiveness, MarketplaceContext, UserAgent, UserContext};
+
+const PROMPT_PREVIEW_LEN: usize = 200;
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -115,8 +117,8 @@ fn build_single_agent_json(
     let eff = effectiveness_map.get(a.name.as_str());
     let lu = last_used_map.get(a.name.as_str());
     let trend = trend_map.get(a.name.as_str());
-    let prompt_preview = if a.system_prompt.len() > 200 {
-        format!("{}...", &a.system_prompt[..200])
+    let prompt_preview = if a.system_prompt.len() > PROMPT_PREVIEW_LEN {
+        format!("{}...", &a.system_prompt[..PROMPT_PREVIEW_LEN])
     } else {
         a.system_prompt.clone()
     };

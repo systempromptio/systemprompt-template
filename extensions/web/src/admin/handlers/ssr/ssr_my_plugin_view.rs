@@ -82,6 +82,9 @@ fn render_platform_plugin_view(
     };
 
     let detail = repositories::find_plugin_detail(&services_path, "systemprompt")
+        .map_err(|e| {
+            tracing::warn!(error = ?e, "Failed to load systemprompt plugin detail");
+        })
         .ok()
         .flatten();
 

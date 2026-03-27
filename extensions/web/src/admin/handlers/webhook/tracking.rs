@@ -173,12 +173,12 @@ pub(crate) async fn track_statusline_event(
         .context_window
         .as_ref()
         .and_then(|cw| cw.current_usage.as_ref())
-        .and_then(|u| u.input_tokens);
+        .and_then(|u| u.input);
     let output_tokens = payload
         .context_window
         .as_ref()
         .and_then(|cw| cw.current_usage.as_ref())
-        .and_then(|u| u.output_tokens);
+        .and_then(|u| u.output);
 
     match repositories::insert_plugin_usage_event(
         &pool,

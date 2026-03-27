@@ -18,6 +18,9 @@ use crate::admin::handlers::{responses::PluginsListResponse, shared};
 async fn is_platform_plugin(pool: &Arc<PgPool>, user_id: &UserId, plugin_id: &str) -> bool {
     repositories::find_user_plugin(pool, user_id, plugin_id)
         .await
+        .map_err(|e| {
+            tracing::warn!(error = %e, user_id = %user_id.as_str(), plugin_id = %plugin_id, "Failed to check if plugin is platform plugin");
+        })
         .ok()
         .flatten()
         .is_some_and(|p| p.base_plugin_id.as_deref() == Some("systemprompt"))

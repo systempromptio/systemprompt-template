@@ -27,6 +27,9 @@ pub async fn calculate_daily_throughput(
     )
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch throughput totals");
+    })
     .ok()
     .flatten();
 
@@ -98,6 +101,9 @@ pub async fn calculate_session_velocity(pool: &PgPool, user_id: &str, date: Naiv
     )
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch session velocity data");
+    })
     .ok()
     .flatten();
 

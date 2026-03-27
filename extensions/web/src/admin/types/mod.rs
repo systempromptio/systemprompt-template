@@ -3,6 +3,7 @@ pub mod control_center;
 pub mod conversation_analytics;
 mod dashboard;
 mod dashboard_enterprise;
+mod dashboard_traffic;
 pub mod hooks;
 pub mod hooks_export;
 mod jobs;

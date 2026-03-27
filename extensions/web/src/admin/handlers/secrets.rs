@@ -8,6 +8,8 @@ use axum::{
 };
 use sqlx::PgPool;
 use systemprompt::models::auth::JwtAudience;
+
+const RESOLUTION_TOKEN_EXPIRY_SECS: u32 = 300;
 use systemprompt::models::{Config, SecretsBootstrap};
 use systemprompt::oauth::validate_jwt_token;
 
@@ -43,7 +45,7 @@ pub(crate) async fn create_resolution_token_handler(
     match secret_resolve::create_resolution_token(&pool, &user_id, &plugin_id).await {
         Ok(token) => Json(ResolutionTokenResponse {
             token,
-            expires_in: 300,
+            expires_in: RESOLUTION_TOKEN_EXPIRY_SECS,
         })
         .into_response(),
         Err(e) => {

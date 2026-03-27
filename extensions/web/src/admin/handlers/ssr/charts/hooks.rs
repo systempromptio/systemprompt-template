@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use super::svg::{build_stacked_area, build_svg_line, build_y_labels, AxisLabel};
+use super::svg::{build_stacked_area, build_svg_line, build_y_labels, AxisLabel, SVG_HEIGHT, SVG_WIDTH};
 
 #[derive(Serialize)]
 struct HooksChartPaths {
@@ -36,8 +36,8 @@ pub(crate) fn compute_hooks_chart_data(
         };
     }
 
-    let svg_w: f64 = 960.0;
-    let svg_h: f64 = 280.0;
+    let svg_w: f64 = SVG_WIDTH;
+    let svg_h: f64 = SVG_HEIGHT;
     let n = buckets.len();
 
     let peak = buckets.iter().map(|b| b.event_count).max().unwrap_or(1);

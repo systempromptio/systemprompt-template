@@ -37,6 +37,10 @@ pub(crate) fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<
             "/gamification/recalculate",
             post(gamification::recalculate_handler),
         )
+        .route(
+            "/demo-register",
+            post(handlers::demo_register::create_demo_user_handler),
+        )
         .with_state(write_pool.clone());
 
     reads.merge(writes).layer(axum_middleware::from_fn(

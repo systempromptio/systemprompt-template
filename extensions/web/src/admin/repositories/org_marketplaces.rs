@@ -202,32 +202,35 @@ pub async fn list_github_marketplaces(
     .await
 }
 
-#[allow(clippy::too_many_arguments)]
+pub struct SyncLogEntry<'a> {
+    pub marketplace_id: &'a str,
+    pub operation: &'a str,
+    pub status: &'a str,
+    pub commit_hash: Option<&'a str>,
+    pub plugins_synced: i64,
+    pub errors: i64,
+    pub error_message: Option<&'a str>,
+    pub triggered_by: &'a str,
+    pub duration_ms: Option<i64>,
+}
+
 pub async fn insert_sync_log(
     pool: &Arc<PgPool>,
-    marketplace_id: &str,
-    operation: &str,
-    status: &str,
-    commit_hash: Option<&str>,
-    plugins_synced: i64,
-    errors: i64,
-    error_message: Option<&str>,
-    triggered_by: &str,
-    duration_ms: Option<i64>,
+    entry: &SyncLogEntry<'_>,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
         "INSERT INTO org_marketplace_sync_logs (marketplace_id, operation, status, commit_hash, plugins_synced, errors, error_message, triggered_by, duration_ms)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
     )
-    .bind(marketplace_id)
-    .bind(operation)
-    .bind(status)
-    .bind(commit_hash)
-    .bind(plugins_synced)
-    .bind(errors)
-    .bind(error_message)
-    .bind(triggered_by)
-    .bind(duration_ms)
+    .bind(entry.marketplace_id)
+    .bind(entry.operation)
+    .bind(entry.status)
+    .bind(entry.commit_hash)
+    .bind(entry.plugins_synced)
+    .bind(entry.errors)
+    .bind(entry.error_message)
+    .bind(entry.triggered_by)
+    .bind(entry.duration_ms)
     .execute(pool.as_ref())
     .await?;
     Ok(())

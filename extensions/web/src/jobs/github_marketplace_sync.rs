@@ -75,15 +75,17 @@ impl Job for GitHubMarketplaceSyncJob {
                     );
                     let _ = repositories::org_marketplaces::insert_sync_log(
                         &pool,
-                        &mkt.id,
-                        "sync",
-                        "error",
-                        None,
-                        0i64,
-                        1i64,
-                        Some(&e.to_string()),
-                        "cron",
-                        None::<i64>,
+                        &repositories::org_marketplaces::SyncLogEntry {
+                            marketplace_id: &mkt.id,
+                            operation: "sync",
+                            status: "error",
+                            commit_hash: None,
+                            plugins_synced: 0,
+                            errors: 1,
+                            error_message: Some(&e.to_string()),
+                            triggered_by: "cron",
+                            duration_ms: None,
+                        },
                     )
                     .await;
                     total_errors += 1;

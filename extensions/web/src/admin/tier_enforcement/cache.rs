@@ -130,6 +130,9 @@ async fn fetch_role_based_plan(pool: &PgPool, user_id: &UserId) -> Option<(TierL
     .bind(user_id.as_str())
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id.as_str(), "Failed to fetch role-based plan");
+    })
     .ok()
     .flatten();
 
@@ -151,6 +154,9 @@ async fn fetch_free_plan(pool: &PgPool) -> (TierLimits, String) {
     )
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, "Failed to fetch free plan from DB");
+    })
     .ok()
     .flatten();
 
@@ -189,6 +195,9 @@ async fn fetch_subscription_tier(
     .bind(user_id.as_str())
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id.as_str(), "Failed to fetch subscription tier");
+    })
     .ok()
     .flatten();
 

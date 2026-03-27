@@ -30,6 +30,9 @@ pub(crate) async fn update_user_settings_handler(
     let existing =
         repositories::user_settings::find_user_settings(&pool, user_ctx.user_id.as_str())
             .await
+            .map_err(|e| {
+                tracing::warn!(error = %e, user_id = %user_ctx.user_id.as_str(), "Failed to fetch existing user settings");
+            })
             .ok()
             .flatten();
 

@@ -190,15 +190,17 @@ pub(crate) async fn sync_marketplace_handler(
             tracing::error!(error = %e, marketplace_id = %id, "Marketplace sync failed");
             let _ = repositories::org_marketplaces::insert_sync_log(
                 &pool,
-                &id,
-                "sync",
-                "error",
-                None,
-                0i64,
-                1i64,
-                Some(&e.to_string()),
-                user_ctx.user_id.as_str(),
-                None::<i64>,
+                &repositories::org_marketplaces::SyncLogEntry {
+                    marketplace_id: &id,
+                    operation: "sync",
+                    status: "error",
+                    commit_hash: None,
+                    plugins_synced: 0,
+                    errors: 1,
+                    error_message: Some(&e.to_string()),
+                    triggered_by: user_ctx.user_id.as_str(),
+                    duration_ms: None,
+                },
             )
             .await;
             (
@@ -260,15 +262,17 @@ pub(crate) async fn publish_marketplace_handler(
             tracing::error!(error = %e, marketplace_id = %id, "Marketplace publish failed");
             let _ = repositories::org_marketplaces::insert_sync_log(
                 &pool,
-                &id,
-                "publish",
-                "error",
-                None,
-                0i64,
-                1i64,
-                Some(&e.to_string()),
-                user_ctx.user_id.as_str(),
-                None::<i64>,
+                &repositories::org_marketplaces::SyncLogEntry {
+                    marketplace_id: &id,
+                    operation: "publish",
+                    status: "error",
+                    commit_hash: None,
+                    plugins_synced: 0,
+                    errors: 1,
+                    error_message: Some(&e.to_string()),
+                    triggered_by: user_ctx.user_id.as_str(),
+                    duration_ms: None,
+                },
             )
             .await;
             (

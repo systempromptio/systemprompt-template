@@ -154,6 +154,9 @@ pub async fn gather_analysis_context(
     )
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to fetch session metrics for AI context");
+    })
     .ok()
     .flatten();
 
@@ -171,6 +174,9 @@ pub async fn gather_analysis_context(
     )
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to fetch session timing for AI context");
+    })
     .ok()
     .flatten();
 
@@ -225,6 +231,9 @@ pub async fn resolve_last_message(
     )
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to resolve last message");
+    })
     .ok()
     .flatten()
     .unwrap_or_else(String::new)

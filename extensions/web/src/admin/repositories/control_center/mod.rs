@@ -116,6 +116,9 @@ async fn fetch_daily_stats(pool: &Arc<PgPool>, user_id: &UserId) -> DailyRow {
     )
     .fetch_optional(pool.as_ref())
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id.as_str(), "Failed to fetch daily usage row for control center");
+    })
     .ok()
     .flatten()
     .map_or(
@@ -163,6 +166,9 @@ pub async fn fetch_today_outcome_stats(pool: &Arc<PgPool>, user_id: &UserId) -> 
     )
     .fetch_optional(pool.as_ref())
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id.as_str(), "Failed to fetch today's outcome stats");
+    })
     .ok()
     .flatten()
     .map_or(

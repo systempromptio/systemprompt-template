@@ -59,6 +59,9 @@ pub(crate) async fn my_plugins_page(
         .map(|a| (a.entity_name.as_str(), a))
         .collect();
     let platform_plugin = super::get_services_path()
+        .map_err(|_| {
+            tracing::warn!("Failed to get services path for My Plugins page");
+        })
         .ok()
         .and_then(|p| build_platform_plugin(&p));
     let (plugins_json, categories) = collect_my_plugins(

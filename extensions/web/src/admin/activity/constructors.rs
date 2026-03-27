@@ -16,12 +16,3 @@ pub(super) fn extract_project_name(path: &str) -> &str {
         .unwrap_or(path)
 }
 
-#[allow(dead_code)]
-fn short_path(path: &str) -> String {
-    let parts: Vec<&str> = path.split('/').filter(|p| !p.is_empty()).collect();
-    if parts.len() >= 2 {
-        format!("{}/{}", parts[parts.len() - 2], parts[parts.len() - 1])
-    } else {
-        path.to_string()
-    }
-}

@@ -118,6 +118,9 @@ async fn fetch_latest_recommendation(pool: &PgPool, user_id: &UserId) -> String 
     )
     .fetch_optional(pool)
     .await
+    .map_err(|e| {
+        tracing::warn!(error = %e, user_id = %user_id.as_str(), "Failed to fetch latest recommendation");
+    })
     .ok()
     .flatten()
     .flatten()

@@ -181,6 +181,9 @@ pub async fn is_entity_in_platform_plugin(
         )
         .fetch_optional(pool.as_ref())
         .await
+        .map_err(|e| {
+            tracing::warn!(error = %e, user_id = %user_id.as_str(), entity_id = %entity_id, "Failed to check skill entity ownership");
+        })
         .ok()
         .flatten()
         .is_some(),
@@ -194,6 +197,9 @@ pub async fn is_entity_in_platform_plugin(
         )
         .fetch_optional(pool.as_ref())
         .await
+        .map_err(|e| {
+            tracing::warn!(error = %e, user_id = %user_id.as_str(), entity_id = %entity_id, "Failed to check agent entity ownership");
+        })
         .ok()
         .flatten()
         .is_some(),
