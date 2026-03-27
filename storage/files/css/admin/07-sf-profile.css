@@ -1,12 +1,91 @@
 .profile-hero {
     display: flex;
     gap: 2rem;
-    align-items: flex-start;
-    margin-bottom: 2rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
     flex-wrap: wrap;
+    padding: 1rem 1.25rem;
+    border-radius: var(--sp-radius-md);
+    background: var(--sp-surface-1);
+    border: 1px solid var(--sp-border-color);
 }
 .profile-hero-left { flex: 1 1 400px; }
 .profile-hero-right { flex: 0 0 auto; min-width: 200px; }
+
+.profile-hero__rank {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1 1 auto;
+}
+.profile-hero__badge {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--sp-text-on-accent);
+    flex-shrink: 0;
+}
+.profile-hero__badge.rank-tier-1 { background: var(--sp-rank-tier-1-bg); }
+.profile-hero__badge.rank-tier-2 { background: var(--sp-rank-tier-2-bg); }
+.profile-hero__badge.rank-tier-3 { background: var(--sp-rank-tier-3-bg); }
+.profile-hero__rank-info { flex: 1; min-width: 0; }
+.profile-hero__rank-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--sp-text-primary);
+    margin-bottom: 0.25rem;
+}
+.profile-hero__xp-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.profile-hero__xp-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--sp-surface-2);
+    border-radius: var(--sp-radius-xs);
+    overflow: hidden;
+}
+.profile-hero__xp-fill {
+    height: 100%;
+    background: var(--sp-success);
+    border-radius: var(--sp-radius-xs);
+    transition: width 0.3s ease;
+}
+.profile-hero__xp-label {
+    font-size: 0.75rem;
+    color: var(--sp-text-secondary);
+    white-space: nowrap;
+}
+.profile-hero__stats {
+    display: flex;
+    gap: 1.5rem;
+    flex-shrink: 0;
+}
+.profile-hero__stat {
+    text-align: center;
+}
+.profile-hero__stat-value {
+    display: block;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--sp-text-primary);
+    line-height: 1.2;
+}
+.profile-hero__stat-label {
+    display: block;
+    font-size: 0.6875rem;
+    color: var(--sp-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
 
 .profile-archetype-badge {
     display: flex;

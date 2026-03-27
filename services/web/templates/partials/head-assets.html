@@ -3,7 +3,7 @@
   #password-gate {
     position: fixed; inset: 0; z-index: 10000;
     display: flex; align-items: center; justify-content: center;
-    background: #FFFDF5; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--sp-color-background, #FFFDF5); font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   #password-gate .gate-card {
     background: #FFFFFF; border: 1px solid #D6DCE8;
@@ -16,7 +16,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 24px;
   }
-  #password-gate h2 { color: #252526; font-size: 22px; font-weight: 600; margin: 0 0 8px; }
+  #password-gate h2 { color: var(--sp-color-text, #252526); font-size: 22px; font-weight: 600; margin: 0 0 8px; }
   #password-gate .gate-sub { color: #A2AAB9; font-size: 14px; margin: 0 0 32px; }
   #password-gate input {
     width: 100%; box-sizing: border-box; padding: 14px 16px;
@@ -24,11 +24,11 @@
     border-radius: 8px; color: #252526; font-size: 15px;
     outline: none; transition: border-color 0.2s;
   }
-  #password-gate input:focus { border-color: #ed6841; }
+  #password-gate input:focus { border-color: var(--sp-color-primary, #ed6841); }
   #password-gate input.gate-error { border-color: #ef4444; }
   #password-gate button {
     width: 100%; padding: 14px; margin-top: 16px;
-    background: #FF6B35; color: #fff; border: none; border-radius: 8px;
+    background: var(--sp-color-primary, #FF6B35); color: #fff; border: none; border-radius: 8px;
     font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s;
   }
   #password-gate button:hover { background: #FF8555; }
@@ -44,8 +44,9 @@
 </style>
 <script>
 (function() {
-  var HASH = '88afe7f16a24c14b041bd33f3ee3dcee8df4c2be58f37958ff310765b40057de';
-  if (sessionStorage.getItem('foodlesDemoUnlocked') === 'true') return;
+  var HASH = '{{site.branding.password_hash}}';
+  if (!HASH) return;
+  if (sessionStorage.getItem('{{site.branding.session_storage_key}}') === 'true') return;
   document.documentElement.className += ' gate-active';
   document.addEventListener('DOMContentLoaded', function() {
     document.body.classList.add('gate-locked');
@@ -74,7 +75,7 @@
           return b.toString(16).padStart(2, '0');
         }).join('');
         if (hex === HASH) {
-          sessionStorage.setItem('foodlesDemoUnlocked', 'true');
+          sessionStorage.setItem('{{site.branding.session_storage_key}}', 'true');
           gate.remove();
           document.body.classList.remove('gate-locked');
         } else {

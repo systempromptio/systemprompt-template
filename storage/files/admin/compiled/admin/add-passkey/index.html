@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>foodles.com Admin - Add Passkey</title>
+    <link rel="stylesheet" href="/css/core/fonts.css?v=0">
+    <link rel="stylesheet" href="/css/admin-bundle.css?v=0">
+</head>
+<body>
+    <div class="login-container">
+        <div class="card">
+            <div class="login-logo"><img src="/files/images/logo.svg" alt="foodles.com" height="40"></div>
+            <p class="login-subtitle">Add a passkey to sign in</p>
+
+            <div id="error" class="login-error"></div>
+
+            <div id="passkey-form" hidden>
+                <p class="text-center text-sm text-tertiary mb-3">
+                    Creating a passkey for <strong id="user-email" class="text-primary"></strong>
+                </p>
+                <div class="form-actions">
+                    <button type="button" id="create-passkey-btn" class="btn btn-primary w-full">Create Passkey</button>
+                </div>
+            </div>
+
+            <div id="loading" class="login-loading">
+                <div class="login-spinner"></div>
+                <p id="loading-text">Validating link...</p>
+            </div>
+
+            <div id="retry" class="login-retry" hidden>
+                <a href="/admin/login">Back to sign in</a>
+            </div>
+        </div>
+    </div>
+
+    <script data-cfasync="false" src="/js/services/webauthn-passkey.js" type="module"></script>
+</body>
+</html>

@@ -133,7 +133,7 @@ button.cta-button {
 
 a.cta-button:hover,
 button.cta-button:hover {
-  background: var(--sp-foodles-orange, #FF8555);
+  background: var(--sp-client-orange, #FF8555);
   color: var(--sp-color-text-on-primary);
   transform: translateY(-1px);
 }

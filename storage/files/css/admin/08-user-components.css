@@ -61,16 +61,16 @@
     transition: stroke-dashoffset 0.8s ease-out;
 }
 
-.rank-ring-tier-1  { stroke: var(--sp-rank-tier-1-color); }
-.rank-ring-tier-2  { stroke: var(--sp-rank-tier-2-color); }
-.rank-ring-tier-3  { stroke: var(--sp-rank-tier-3-color); }
-.rank-ring-tier-4  { stroke: var(--sp-rank-tier-4-color); }
-.rank-ring-tier-5  { stroke: var(--sp-rank-tier-5-color); }
-.rank-ring-tier-6  { stroke: var(--sp-rank-tier-6-color); }
-.rank-ring-tier-7  { stroke: var(--sp-rank-tier-7-color); }
-.rank-ring-tier-8  { stroke: var(--sp-rank-tier-8-color); }
-.rank-ring-tier-9  { stroke: var(--sp-rank-tier-9-color); }
-.rank-ring-tier-10 { stroke: var(--sp-rank-tier-10-color); }
+.rank-ring-tier-1, .rank-ring-tier-bronze   { stroke: var(--sp-rank-tier-1-color); }
+.rank-ring-tier-2, .rank-ring-tier-silver   { stroke: var(--sp-rank-tier-2-color); }
+.rank-ring-tier-3, .rank-ring-tier-gold     { stroke: var(--sp-rank-tier-3-color); }
+.rank-ring-tier-4, .rank-ring-tier-platinum { stroke: var(--sp-rank-tier-4-color); }
+.rank-ring-tier-5, .rank-ring-tier-diamond  { stroke: var(--sp-rank-tier-5-color); }
+.rank-ring-tier-6, .rank-ring-tier-emerald  { stroke: var(--sp-rank-tier-6-color); }
+.rank-ring-tier-7, .rank-ring-tier-sapphire { stroke: var(--sp-rank-tier-7-color); }
+.rank-ring-tier-8, .rank-ring-tier-ruby     { stroke: var(--sp-rank-tier-8-color); }
+.rank-ring-tier-9, .rank-ring-tier-obsidian { stroke: var(--sp-rank-tier-9-color); }
+.rank-ring-tier-10, .rank-ring-tier-legendary { stroke: var(--sp-rank-tier-10-color); }
 
 .rank-ring-1  { stroke: var(--sp-rank-1-color); }
 .rank-ring-2  { stroke: var(--sp-rank-2-color); }
@@ -102,15 +102,15 @@
     z-index: var(--sp-z-sticky-header);
 }
 
-.rank-bg-tier-1  { background: var(--sp-rank-tier-1-bg); }
-.rank-bg-tier-2  { background: var(--sp-rank-tier-2-bg); }
-.rank-bg-tier-3  { background: var(--sp-rank-tier-3-bg); }
-.rank-bg-tier-4  { background: linear-gradient(135deg, var(--sp-rank-tier-4-bg), var(--sp-rank-tier-4-color)); }
-.rank-bg-tier-5  { background: linear-gradient(135deg, var(--sp-rank-tier-5-bg), var(--sp-rank-tier-5-color)); }
-.rank-bg-tier-6  { background: linear-gradient(135deg, var(--sp-rank-tier-6-bg), var(--sp-rank-tier-6-color)); box-shadow: 0 0 4px color-mix(in oklch, var(--sp-rank-tier-6-color) 30%, transparent); }
-.rank-bg-tier-7  { background: linear-gradient(135deg, var(--sp-rank-tier-7-bg), var(--sp-rank-tier-7-color)); box-shadow: 0 0 4px color-mix(in oklch, var(--sp-rank-tier-7-color) 30%, transparent); }
-.rank-bg-tier-8  { background: linear-gradient(135deg, var(--sp-rank-tier-8-bg), var(--sp-rank-tier-8-color)); box-shadow: 0 0 6px color-mix(in oklch, var(--sp-rank-tier-8-color) 40%, transparent); }
-.rank-bg-tier-9  { background: linear-gradient(135deg, var(--sp-rank-tier-9-bg), var(--sp-rank-tier-9-color)); box-shadow: 0 0 6px color-mix(in oklch, var(--sp-rank-tier-9-color) 40%, transparent); }
-.rank-bg-tier-10 { background: linear-gradient(135deg, var(--sp-rank-tier-10-bg), var(--sp-rank-tier-10-color)); box-shadow: 0 0 8px color-mix(in oklch, var(--sp-rank-tier-10-color) 50%, transparent); }
+.rank-bg-tier-1, .rank-bg-tier-bronze   { background: var(--sp-rank-tier-1-bg); }
+.rank-bg-tier-2, .rank-bg-tier-silver   { background: var(--sp-rank-tier-2-bg); }
+.rank-bg-tier-3, .rank-bg-tier-gold     { background: var(--sp-rank-tier-3-bg); }
+.rank-bg-tier-4, .rank-bg-tier-platinum { background: linear-gradient(135deg, var(--sp-rank-tier-4-bg), var(--sp-rank-tier-4-color)); }
+.rank-bg-tier-5, .rank-bg-tier-diamond  { background: linear-gradient(135deg, var(--sp-rank-tier-5-bg), var(--sp-rank-tier-5-color)); }
+.rank-bg-tier-6, .rank-bg-tier-emerald  { background: linear-gradient(135deg, var(--sp-rank-tier-6-bg), var(--sp-rank-tier-6-color)); box-shadow: 0 0 4px color-mix(in oklch, var(--sp-rank-tier-6-color) 30%, transparent); }
+.rank-bg-tier-7, .rank-bg-tier-sapphire { background: linear-gradient(135deg, var(--sp-rank-tier-7-bg), var(--sp-rank-tier-7-color)); box-shadow: 0 0 4px color-mix(in oklch, var(--sp-rank-tier-7-color) 30%, transparent); }
+.rank-bg-tier-8, .rank-bg-tier-ruby     { background: linear-gradient(135deg, var(--sp-rank-tier-8-bg), var(--sp-rank-tier-8-color)); box-shadow: 0 0 6px color-mix(in oklch, var(--sp-rank-tier-8-color) 40%, transparent); }
+.rank-bg-tier-9, .rank-bg-tier-obsidian { background: linear-gradient(135deg, var(--sp-rank-tier-9-bg), var(--sp-rank-tier-9-color)); box-shadow: 0 0 6px color-mix(in oklch, var(--sp-rank-tier-9-color) 40%, transparent); }
+.rank-bg-tier-10, .rank-bg-tier-legendary { background: linear-gradient(135deg, var(--sp-rank-tier-10-bg), var(--sp-rank-tier-10-color)); box-shadow: 0 0 8px color-mix(in oklch, var(--sp-rank-tier-10-color) 50%, transparent); }
 
 }

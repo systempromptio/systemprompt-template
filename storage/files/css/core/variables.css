@@ -126,16 +126,16 @@
   --sp-brand-gradient: linear-gradient(135deg, #ffdcc8, #fffdf5);
   --sp-brand-gradient-reverse: linear-gradient(135deg, #fffdf5, #ffdcc8);
 
-  --sp-foodles-black: #252526;
-  --sp-foodles-orange: #FF6B35;
-  --sp-foodles-tints-cta-orange: #FF6B35;
-  --sp-foodles-tints-orange-3: #ffdcc8;
-  --sp-foodles-sand: #FFFDF5;
-  --sp-foodles-sand-60: hsla(45, 82%, 98%, 0.6);
-  --sp-foodles-yellow: #FFF4C1;
-  --sp-foodles-teal: #006463;
-  --sp-foodles-grey: #F5F2ED;
-  --sp-foodles-cards-card-bg: #F5F2ED;
+  --sp-client-black: #252526;
+  --sp-client-orange: #FF6B35;
+  --sp-client-tints-cta-orange: #FF6B35;
+  --sp-client-tints-orange-3: #ffdcc8;
+  --sp-client-sand: #FFFDF5;
+  --sp-client-sand-60: hsla(45, 82%, 98%, 0.6);
+  --sp-client-yellow: #FFF4C1;
+  --sp-client-teal: #006463;
+  --sp-client-grey: #F5F2ED;
+  --sp-client-cards-card-bg: #F5F2ED;
 }
 
 h1, h2, h3, h4, h5, h6 { letter-spacing: -0.03em; }

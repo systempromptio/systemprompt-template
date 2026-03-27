@@ -4,28 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <title>Foodles Admin - </title>
-    <link rel="stylesheet" href="https://use.typekit.net/sis4nqz.css">
-    <link rel="icon" type="image/x-icon" href="/files/images/favicon.ico">
-    <link rel="stylesheet" href="/css/admin-bundle.css">
-    <script>window.ADMIN_API_BASE = '/api/public/admin'; window.ADMIN_BASE = '/admin';</script>
+    <title>foodles.com Admin - </title>
+    <link rel="stylesheet" href="/css/core/fonts.css?v=0">
+    <link rel="stylesheet" href="/css/admin-bundle.css?v=0">
+    <script data-cfasync="false">(function(){let t;try{t=localStorage.getItem('sp-admin-theme')}catch(e){}if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}})();</script>
+    <style>html,body{margin:0;background:oklch(0.96 0.004 70);color:#1c1917;font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}[data-theme="dark"],[data-theme="dark"] body{background:oklch(0.16 0.01 45);color:#fafaf9}</style>
 </head>
 <body>
+    <a href="#main" class="sp-skip-link">Skip to main content</a>
     <div class="admin-layout" data-section="my-skill-edit">
         <aside class="admin-sidebar" id="admin-sidebar">
             <button class="sidebar-close-btn" type="button" aria-label="Close menu">&times;</button>
-            <a href="/admin" class="admin-sidebar-brand" aria-label="Foodles - Go to dashboard">
-                <img src="/files/images/logo-white.svg" alt="Foodles" class="admin-logo" />
+            <a href="/control-center" class="admin-sidebar-brand" aria-label="foodles.com - Go to dashboard">
+                <img src="/files/images/logo.svg" alt="foodles.com" class="admin-logo admin-logo--light" />
+                <img src="/files/images/logo-white.svg" alt="foodles.com" class="admin-logo admin-logo--dark" />
             </a>
-            <nav>
+            <nav aria-label="Admin navigation">
                 <h2 class="nav-label">General</h2>
-                <a href="/admin">
-                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-                    Dashboard
+                <a href="/admin/setup">
+                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8z"/><path d="M11.28 5.72a.75.75 0 010 1.06l-4 4a.75.75 0 01-1.06 0l-2-2a.75.75 0 111.06-1.06L6.75 9.19l3.47-3.47a.75.75 0 011.06 0z"/></svg>
+                    Setup Guide
                 </a>
-                <a href="/admin/user?id=">
+                <a href="/control-center">
+                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM8 4v4l3 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="8" r="1.5"/></svg>
+                    Control Center
+                </a>
+                <a href="/admin/profile">
                     <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
-                    Profile
+                    Profile & Insights
                 </a>
                 <h2 class="nav-label">My Workspace</h2>
                 <a href="/admin/my/marketplace/">
@@ -45,36 +51,61 @@
                     My Agents
                 </a>
                 <a href="/admin/my/mcp-servers/">
-                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="4" rx="1"/><rect x="2" y="10" width="12" height="4" rx="1"/><circle cx="5" cy="4" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12a1 1 0 011 1v3a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1zm0 7h12a1 1 0 011 1v3a1 1 0 01-1 1H2a1 1 0 01-1-1v-3a1 1 0 011-1zm9 1.5a1 1 0 100 2 1 1 0 000-2zm0-7a1 1 0 100 2 1 1 0 000-2z"/></svg>
                     My MCP Servers
                 </a>
                 <a href="/admin/my/hooks/">
-                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M10 2a3 3 0 013 3v2a1 1 0 01-1 1H8v3a3 3 0 01-6 0v-1h2v1a1 1 0 002 0V8H4a1 1 0 01-1-1V5a3 3 0 013-3h4zm0 2H6a1 1 0 00-1 1v1h6V5a1 1 0 00-1-1z"/></svg>
+                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a2.5 2.5 0 00-2.5 2.5v2a.5.5 0 01-.5.5H3.5A2.5 2.5 0 001 8.5v0A2.5 2.5 0 003.5 11H5a.5.5 0 01.5.5v1A2.5 2.5 0 008 15a2.5 2.5 0 002.5-2.5v-1a.5.5 0 01.5-.5h1.5A2.5 2.5 0 0015 8.5v0A2.5 2.5 0 0012.5 6H11a.5.5 0 01-.5-.5v-2A2.5 2.5 0 008 1z"/></svg>
                     My Hooks
                 </a>
-                <a href="/admin/my/versions/">
+                <a href="/admin/my/secrets/">
+                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a5 5 0 015 5c0 1.5-.7 2.9-1.7 3.9L13 10.6l1.7 1.7a1 1 0 01-1.4 1.4L11.6 12l-1.7 1.7A5 5 0 118 0zm0 2a3 3 0 100 6 3 3 0 000-6z"/></svg>
+                    My Secrets
+                </a>
+                <a href="/admin/my/activity">
                     <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v6l4 2M14 8A6 6 0 112 8a6 6 0 0112 0z"/><path d="M1 12l2 2 2-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Versions
+                    Activity
+                </a>
+                <h2 class="nav-label">Plugin Directory</h2>
+                <a href="/admin/browse/plugins/">
+                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM8 4a.75.75 0 01.75.75v2.5h2.5a.75.75 0 010 1.5h-2.5v2.5a.75.75 0 01-1.5 0v-2.5h-2.5a.75.75 0 010-1.5h2.5v-2.5A.75.75 0 018 4z"/></svg>
+                    Browse Plugins
+                </a>
+                <h2 class="nav-label">Account</h2>
+                <a href="/admin/settings">
+                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 100 6.492 3.246 3.246 0 000-6.492zM5.754 8a2.246 2.246 0 114.492 0 2.246 2.246 0 01-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0a1.97 1.97 0 01-2.93 1.116c-1.583-.966-3.393.844-2.426 2.426a1.97 1.97 0 01-1.116 2.93c-1.79.527-1.79 3.065 0 3.592a1.97 1.97 0 011.116 2.93c-.966 1.583.844 3.393 2.426 2.426a1.97 1.97 0 012.93 1.116c.527 1.79 3.065 1.79 3.592 0a1.97 1.97 0 012.93-1.116c1.583.966 3.393-.844 2.426-2.426a1.97 1.97 0 011.116-2.93c1.79-.527 1.79-3.065 0-3.592a1.97 1.97 0 01-1.116-2.93c.966-1.583-.844-3.393-2.426-2.426a1.97 1.97 0 01-2.93-1.116zM8 0c.424 0 .79.292.892.702l.153.52a2.97 2.97 0 004.416 1.681l.471-.287a.926.926 0 011.264.852v.066a.926.926 0 01-.412.77l-.471.287A2.97 2.97 0 0013 8c0 1.252.764 2.326 1.852 2.78l.007.004.454.277a.926.926 0 01-.852 1.636l-.472-.287a2.97 2.97 0 00-4.416 1.681l-.153.52A.926.926 0 018 15a.926.926 0 01-.892-.702l-.153-.52a2.97 2.97 0 00-4.416-1.681l-.471.287a.926.926 0 01-1.264-.852v-.066c0-.318.163-.614.412-.77l.471-.287A2.97 2.97 0 003 8c0-1.252-.764-2.326-1.852-2.78l-.007-.004-.454-.277a.926.926 0 01.852-1.636l.472.287a2.97 2.97 0 004.416-1.681l.153-.52A.926.926 0 018 0z"/></svg>
+                    Settings
                 </a>
                 <h2 class="nav-label">Achievements</h2>
-                <a href="/admin/leaderboard/">
-                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M3 14V8h2v6H3zm4 0V4h2v10H7zm4 0V1h2v13h-2z"/></svg>
-                    Leaderboard
-                </a>
                 <a href="/admin/achievements/">
                     <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0l2 5h5l-4 3.5 1.5 5L8 10.5 3.5 13.5 5 8.5 1 5h5z"/></svg>
                     Achievements
                 </a>
+                <a href="/admin/leaderboard">
+                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 11h3v4H2v-4zm4.5-4h3v8h-3V7zM11 3h3v12h-3V3z"/></svg>
+                    Leaderboard
+                </a>
                 <h2 class="nav-label">Support</h2>
-                <a href="/documentation">
+                <a href="/documentation" target="_blank" rel="noopener noreferrer">
                     <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M6 6a2 2 0 113.5 1.8c-.5.3-.5.5-.5 1.2M8 12v.5" stroke-linecap="round"/></svg>
                     Help & Docs
                 </a>
+                <a href="https://discord.gg/wkAbSuPWpr" target="_blank" rel="noopener noreferrer">
+                    <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M13.5 3.4A13 13 0 0010.3 2.5a.05.05 0 00-.05.02c-.14.25-.3.57-.4.83a12 12 0 00-3.7 0 8 8 0 00-.42-.83.05.05 0 00-.05-.02A13 13 0 002.5 3.4a.04.04 0 00-.02.02C.9 6.1.5 8.7.7 11.3a.05.05 0 00.02.04 13.2 13.2 0 004 2 .05.05 0 00.06-.02c.3-.43.58-.88.82-1.35a.05.05 0 00-.03-.07 8.7 8.7 0 01-1.25-.6.05.05 0 01-.004-.08c.08-.06.17-.13.25-.19a.05.05 0 01.05-.01c2.6 1.2 5.4 1.2 8 0a.05.05 0 01.05 0c.08.07.17.13.25.2a.05.05 0 01-.003.08c-.4.23-.82.43-1.25.6a.05.05 0 00-.03.07c.24.47.52.92.82 1.35a.05.05 0 00.05.02 13.2 13.2 0 004-2 .05.05 0 00.02-.03c.24-2.56-.4-5.14-1.78-7.87a.04.04 0 00-.02-.02zM5.7 9.7c-.7 0-1.26-.63-1.26-1.4s.55-1.4 1.26-1.4c.7 0 1.27.64 1.26 1.4 0 .78-.56 1.4-1.26 1.4zm4.6 0c-.7 0-1.26-.63-1.26-1.4s.55-1.4 1.26-1.4c.7 0 1.27.64 1.26 1.4 0 .78-.55 1.4-1.26 1.4z"/></svg>
+                    Contact Us
+                </a>
             </nav>
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Toggle dark mode">
+                    <svg class="theme-icon theme-icon--light" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5a.5.5 0 01.5.5v1a.5.5 0 01-1 0V2a.5.5 0 01.5-.5zm0 11a.5.5 0 01.5.5v1a.5.5 0 01-1 0v-1a.5.5 0 01.5-.5zm6.5-5.5a.5.5 0 010 1h-1a.5.5 0 010-1h1zm-12 0a.5.5 0 010 1H1.5a.5.5 0 010-1h1zm10.45-3.95a.5.5 0 010 .7l-.7.7a.5.5 0 11-.7-.7l.7-.7a.5.5 0 01.7 0zM4.45 11.55a.5.5 0 010 .7l-.7.7a.5.5 0 01-.7-.7l.7-.7a.5.5 0 01.7 0zm7.8.7a.5.5 0 01-.7 0l-.7-.7a.5.5 0 01.7-.7l.7.7a.5.5 0 010 .7zM4.45 4.45a.5.5 0 01-.7 0l-.7-.7a.5.5 0 01.7-.7l.7.7a.5.5 0 010 .7z"/></svg>
+                    <svg class="theme-icon theme-icon--dark" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6 1a7 7 0 009.37 9.32A7 7 0 116 1z"/></svg>
+                    <span class="theme-label">Dark mode</span>
+                </button>
+            </div>
         </aside>
-        <div class="sidebar-overlay" id="sidebar-overlay"></div>
-        <main class="admin-main">
-            <div class="admin-header">
+        <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+        <main class="admin-main" id="main">
+            <header class="admin-header" role="banner">
                 <button class="sidebar-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="admin-sidebar">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <rect x="2" y="4" width="16" height="2" rx="1"/>
@@ -83,84 +114,97 @@
                     </svg>
                 </button>
                 <h1></h1>
-                <div class="user-profile" id="user-profile">
-                    <div class="user-avatar" id="user-avatar"></div>
-                    <div class="user-info">
-                        <span class="user-name" id="user-name"></span>
-                        <span class="user-meta" id="user-meta"></span>
-                    </div>
-                    <button id="btn-logout" class="btn-logout" title="Sign out">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <div class="header-actions" id="header-actions">
+                    <button class="header-actions-toggle" type="button" aria-label="Actions menu" aria-expanded="false" aria-haspopup="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/>
+                        </svg>
                     </button>
+                    <div class="header-actions-menu">
+                        <a href="/platform/my-skill-edit" target="_blank" rel="noopener noreferrer" class="header-help-link" title="Help for this page" aria-label="Help for ">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M9 9a3.5 3.5 0 116 2c0 1.5-2 2.5-3 3"/>
+                                <line x1="12" y1="18.5" x2="12.01" y2="18.5"/>
+                            </svg>
+                        </a>
+                        <div class="user-widget-row">
+                            <a href="/admin/achievements/" class="user-widget user-widget--tier-" id="user-profile" title="Level   —  XP">
+                                <svg class="user-widget__xp-ring" viewBox="0 0 44 44" aria-hidden="true">
+                                    <circle class="user-widget__xp-track" cx="22" cy="22" r="20" />
+                                    <circle class="user-widget__xp-fill rank-ring-tier-" cx="22" cy="22" r="20" stroke-dasharray="125.66" style="stroke-dashoffset: calc(125.66px - 125.66px *  / 100)" />
+                                </svg>
+                                <div class="user-widget__avatar" id="user-avatar"></div>
+                                <span class="user-widget__level rank-bg-tier-"></span>
+                            </a>
+                            <button type="button" id="btn-logout" class="btn-logout" title="Sign out" aria-label="Sign out">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+            </header>
+            <div class="global-limit-warnings" id="global-limit-warnings" hidden></div>
+            <div class="sp-onboarding-banner" id="onboarding-banner">
+                <div class="sp-onboarding-banner__content">
+                    <svg class="sp-onboarding-banner__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    <span>Connect Claude to foodles.com to start tracking conversations.</span>
+                    <a href="/admin/setup" class="sp-onboarding-banner__link">Complete setup</a>
+                </div>
+                <button type="button" class="sp-onboarding-banner__dismiss" id="onboarding-banner-dismiss" aria-label="Dismiss">&times;</button>
             </div>
                 <div class="detail-header">
-                    <a href="/admin/my/skills/" class="btn btn-secondary btn-sm">&larr; Back to My Skills</a>
+                    <a href="/admin/my/skills/" class="btn btn-secondary btn-sm" aria-label="Go back to Back to My Skills">&larr; Back to My Skills</a>
                 </div>
+                <section aria-label="Edit Skill">
                 <h2></h2>
-                <div class="card" style="max-width:800px">
+                <div class="card max-w-xl">
                     <form id="my-skill-form" data-api-path="/user/skills/" data-entity="Skill" data-id-field="skill_id" data-list-path="/my/skills/">
                         <div class="form-group">
-                            <label class="field-label">Skill ID <span class="form-hint">(kebab-case)</span></label>
-                            <input class="field-input" type="text" name="skill_id" placeholder="my-skill-id" value="" required>
+                            <label class="field-label" for="field-skill_id">Skill ID <span class="form-hint" id="hint-skill_id">(kebab-case)</span></label>
+                            <input class="field-input" id="field-skill_id" type="text" name="skill_id" placeholder="my-skill-id" value="" required aria-required="true" aria-describedby="hint-skill_id">
+                            <div class="error-msg" id="error-skill_id" role="alert" aria-live="polite"></div>
                         </div>
                         <div class="form-group">
-                            <label class="field-label">Name</label>
-                            <input class="field-input" type="text" name="name" placeholder="Skill name" value="" required>
+                            <label class="field-label" for="field-name">Name</label>
+                            <input class="field-input" id="field-name" type="text" name="name" placeholder="Skill name" value="" required aria-required="true">
+                            <div class="error-msg" id="error-name" role="alert" aria-live="polite"></div>
                         </div>
                         <div class="form-group">
-                            <label class="field-label">Description</label>
-                            <input class="field-input" type="text" name="description" placeholder="Brief description" value="">
+                            <label class="field-label" for="field-description">Description</label>
+                            <input class="field-input" id="field-description" type="text" name="description" placeholder="Brief description" value="">
+                            <div class="error-msg" id="error-description" role="alert" aria-live="polite"></div>
                         </div>
                         <div class="form-group">
-                            <label class="field-label">Content</label>
-                            <textarea class="field-input" name="content" rows="15" placeholder="Skill content (markdown)..."></textarea>
+                            <label class="field-label" for="field-content">Content</label>
+                            <textarea class="field-input" id="field-content" name="content" rows="15" placeholder="Skill content (markdown)..."></textarea>
+                            <div class="error-msg" id="error-content" role="alert" aria-live="polite"></div>
                         </div>
                         <div class="form-group">
-                            <label class="field-label">Tags <span class="form-hint">(comma-separated)</span></label>
-                            <input class="field-input" type="text" name="tags" placeholder="tag1, tag2, tag3" value="">
+                            <label class="field-label" for="field-tags">Tags <span class="form-hint" id="hint-tags">(comma-separated)</span></label>
+                            <input class="field-input" id="field-tags" type="text" name="tags" placeholder="tag1, tag2, tag3" value="" aria-describedby="hint-tags">
+                            <div class="error-msg" id="error-tags" role="alert" aria-live="polite"></div>
                         </div>
                         <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">Save</button>
+                            <button type="submit" class="btn btn-primary">Create Skill</button>
                             <a href="/admin/my/skills/" class="btn btn-secondary">Cancel</a>
                         </div>
                     </form>
                 </div>
+                </section>
+            <footer class="admin-footer" role="contentinfo">
+                <div class="admin-footer-inner">
+                    <span class="admin-footer-brand">foodles.com</span>
+                    <span class="admin-footer-sep" aria-hidden="true">&middot;</span>
+                    <a href="/platform" class="admin-footer-link">Documentation</a>
+                    <span class="admin-footer-sep" aria-hidden="true">&middot;</span>
+                    <a href="/platform/support" class="admin-footer-link">Support</a>
+                </div>
+            </footer>
         </main>
     </div>
-    <footer class="admin-footer">
-        Powered by <a href="https://foodles.com" target="_blank" rel="noopener"><img src="/files/images/logo-white.svg" alt="Foodles" class="admin-footer-logo" /></a>
-    </footer>
-    <script src="/js/admin-core.js"></script>
-    <script src="/js/admin/sidebar-toggle.js"></script>
-    <script>
-        (function() {
-            var u = window.AdminApp && window.AdminApp.user;
-            if (u) {
-                var av = document.getElementById('user-avatar');
-                var nm = document.getElementById('user-name');
-                if (av) av.textContent = window.AdminApp.getUserInitials(u.username);
-                if (nm) nm.textContent = u.username;
-            }
-        })();
-    </script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                AdminApp.Toast.init();
-                AdminApp.interactions.initEditForm('my-skill-form', {
-                    buildBody: function(form, formData) {
-                        var tagsRaw = formData.get('tags') || '';
-                        var tags = tagsRaw.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
-                        return {
-                            skill_id: formData.get('skill_id'),
-                            name: formData.get('name'),
-                            description: formData.get('description') || '',
-                            content: formData.get('content') || '',
-                            tags: tags
-                        };
-                    }
-                });
-            });
-        </script>
+<script data-cfasync="false" type="module" src="/js/services/bootstrap.js?v=0" defer></script>
+        <script data-cfasync="false" type="module" src="/js/pages/admin-my-skill-edit.js" defer></script>
 </body>
 </html>

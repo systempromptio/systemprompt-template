@@ -115,3 +115,10 @@
     color: var(--sp-text-secondary);
     line-height: 1.5;
 }
+.cc-onboarding-notice--warning {
+    background: var(--sp-warning-dim);
+    border-color: color-mix(in oklch, var(--sp-warning) 30%, transparent);
+}
+.cc-onboarding-notice--warning strong {
+    color: var(--sp-warning);
+}

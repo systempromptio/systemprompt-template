@@ -5,7 +5,7 @@
     <div class="pres-divider pres-reveal pres-reveal-delay-1"></div>
     <div class="pres-row" style="margin-top: 2rem;">
       <div class="pres-col-half pres-reveal pres-reveal-delay-2">
-        <h3 style="font-size:0.95rem;color:var(--sp-pres-blue-700);margin-bottom:0.75rem;">Your Foodles IP, Your Platform</h3>
+        <h3 style="font-size:0.95rem;color:var(--sp-pres-blue-700);margin-bottom:0.75rem;">Your {{default branding.display_name "Foodles"}} IP, Your Platform</h3>
         <ul class="pres-features">
           <li><strong>Upload your knowledge</strong> &mdash; brand guidelines, SOPs, policies, operational procedures become AI skills</li>
           <li><strong>Customize per department</strong> &mdash; Revenue gets revenue skills, Operations gets ops skills, each team gets what they need</li>
@@ -22,8 +22,8 @@
       </div>
       <div class="pres-col-half pres-reveal pres-reveal-delay-3">
         <h3 style="font-size:0.95rem;color:var(--sp-pres-blue-700);margin-bottom:0.75rem;">Personalization Workflow</h3>
-        <div class="pres-terminal" style="font-size:0.75rem;"><div><span class="prompt">$</span> systemprompt core skills create</div><div class="output" style="margin-top:0.5rem;"><div>? Skill name: <span class="highlight">Foodles Booking Policy</span></div><div>? What does this skill do?</div><div>&nbsp;&nbsp;<span class="highlight">Guides agents on our booking, cancellation,</span></div><div>&nbsp;&nbsp;<span class="highlight">and refund policies for all properties</span></div><div>? Tags: <span class="highlight">booking, policy, guest-facing</span></div><div></div><div><span class="highlight">Skill created</span> &mdash; syncing to marketplace...</div></div></div>
-        <div class="pres-terminal" style="margin-top:1rem;font-size:0.75rem;"><div><span class="prompt">$</span> systemprompt core plugins show foodles-ops</div><div class="output" style="margin-top:0.5rem;"><div><span class="highlight">Foodles Operations</span> v1.0.0</div><div>Author: Foodles | Category: operations</div><div>Agents: guest_agent, revenue_agent</div><div>Skills: 8 | MCP: systemprompt</div><div>Departments: Operations, Revenue</div></div></div>
+        <div class="pres-terminal" style="font-size:0.75rem;"><div><span class="prompt">$</span> systemprompt core skills create</div><div class="output" style="margin-top:0.5rem;"><div>? Skill name: <span class="highlight">{{default branding.display_name "Foodles"}} Booking Policy</span></div><div>? What does this skill do?</div><div>&nbsp;&nbsp;<span class="highlight">Guides agents on our booking, cancellation,</span></div><div>&nbsp;&nbsp;<span class="highlight">and refund policies for all properties</span></div><div>? Tags: <span class="highlight">booking, policy, guest-facing</span></div><div></div><div><span class="highlight">Skill created</span> &mdash; syncing to marketplace...</div></div></div>
+        <div class="pres-terminal" style="margin-top:1rem;font-size:0.75rem;"><div><span class="prompt">$</span> systemprompt core plugins show {{toLowerCase (default branding.name "foodles")}}-ops</div><div class="output" style="margin-top:0.5rem;"><div><span class="highlight">{{default branding.display_name "Foodles"}} Operations</span> v1.0.0</div><div>Author: {{default branding.display_name "Foodles"}} | Category: operations</div><div>Agents: guest_agent, revenue_agent</div><div>Skills: 8 | MCP: systemprompt</div><div>Departments: Operations, Revenue</div></div></div>
         <div style="margin-top:1rem; padding: 1rem; background: var(--sp-pres-gray-50); border-radius: 8px; border-left: 4px solid var(--sp-pres-green);">
           <p style="margin: 0; font-size: 0.85rem; font-weight: 600;">Your data never leaves your infrastructure. Audit trails, secrets, user data &mdash; all inside your boundary.</p>
         </div>
@@ -31,7 +31,7 @@
     </div>
   </div>
   <div class="pres-notes">
-    <div class="note-section"><h4>TIMING: 16:45 &mdash; Personalization (4 min)</h4><p><strong>Say:</strong> "This is where Foodles IP lives. Your brand guidelines, your SOPs, your operational knowledge &mdash; uploaded as skills that your AI agents use. Create a skill in 30 seconds through a guided interview. No YAML, no config files."</p><p><strong>Say:</strong> "Customize per department. Revenue gets revenue skills. Operations gets ops skills. Each team gets exactly what they need."</p><p><strong>Say:</strong> "The entire platform runs on your infrastructure. PostgreSQL. Single Rust binary. You own the codebase under enterprise license for one year. No vendor can pull the rug. Your data never leaves your boundary."</p></div>
-    <div class="note-section"><h4>LIVE DEMO</h4><p class="cmd">$ systemprompt core skills create</p><p>Create a "Foodles Booking Policy" skill live.</p></div>
+    <div class="note-section"><h4>TIMING: 16:45 &mdash; Personalization (4 min)</h4><p><strong>Say:</strong> "This is where {{default branding.display_name "Foodles"}} IP lives. Your brand guidelines, your SOPs, your operational knowledge &mdash; uploaded as skills that your AI agents use. Create a skill in 30 seconds through a guided interview. No YAML, no config files."</p><p><strong>Say:</strong> "Customize per department. Revenue gets revenue skills. Operations gets ops skills. Each team gets exactly what they need."</p><p><strong>Say:</strong> "The entire platform runs on your infrastructure. PostgreSQL. Single Rust binary. You own the codebase under enterprise license for one year. No vendor can pull the rug. Your data never leaves your boundary."</p></div>
+    <div class="note-section"><h4>LIVE DEMO</h4><p class="cmd">$ systemprompt core skills create</p><p>Create a "{{default branding.display_name "Foodles"}} Booking Policy" skill live.</p></div>
   </div>
 </section>

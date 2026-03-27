@@ -42,6 +42,21 @@ footer:
 
 # Docs sidebar - rendered dynamically via site.docs_sidebar in templates
 docs_sidebar:
+  - title: "Introduction & Integration"
+    links:
+      - label: "Introduction to the Platform"
+        href: "/documentation/introduction"
+      - label: "Platform Overview"
+        href: "/documentation/platform-overview"
+      - label: "Anthropic Partnership"
+        href: "/documentation/anthropic-partnership"
+      - label: "Integration: Claude Code"
+        href: "/documentation/integration-claude-code"
+      - label: "Integration: Claude Cowork"
+        href: "/documentation/integration-claude-cowork"
+      - label: "Integration: Claude AI"
+        href: "/documentation/integration-claude-ai"
+
   - title: "Proposal"
     links:
       - label: "Capability Brief"

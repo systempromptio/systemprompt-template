@@ -2,14 +2,24 @@
 # Colors, typography, spacing, and design tokens
 
 branding:
-  # ===== CUSTOMIZE THESE =====
-  name: "foodles"
+  # ===== CUSTOMIZE THESE FOR EACH DEMO CLIENT =====
+  name: "Foodles"
+  domain: "foodles.com"
+  display_name: "Foodles"
   title: "Foodles — Smart Corporate Catering"
   description: "One platform to secure, distribute, and observe AI agents across your entire organization. Role-based access, audit trails, and cost visibility from day one."
   copyright: "2026 Foodles"
   themeColor: "#ed6841"
-  display_sitename: true
+  platform_name: "systemprompt.io"
+  support_email: "support@foodles.com"
+  logo_light: "/files/images/logo.svg"
+  logo_dark: "/files/images/logo-white.svg"
+  favicon: "/files/images/favicon.ico"
   twitter_handle: "@foodaborad"
+  password_hash: "88afe7f16a24c14b041bd33f3ee3dcee8df4c2be58f37958ff310765b40057de"
+  session_storage_key: "foodlesDemoUnlocked"
+  # Legacy fields (used by public site pipeline)
+  display_sitename: true
   image: "/files/images/logo.png"
   logo:
     primary:
@@ -20,7 +30,6 @@ branding:
       png: "/files/images/logo.png"
     small:
       png: "/files/images/logo.png"
-  favicon: "/files/images/favicon.ico"
 
 fonts:
   body:

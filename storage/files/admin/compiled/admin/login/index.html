@@ -4,26 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <title>Foodles Admin - Sign In</title>
-    <link rel="stylesheet" href="/css/admin-bundle.css">
+    <title>foodles.com Admin - Sign In</title>
+    <link rel="stylesheet" href="/css/core/fonts.css?v=0">
+    <link rel="stylesheet" href="/css/admin-bundle.css?v=0">
+    <script>(function(){var t;try{t=localStorage.getItem('sp-admin-theme')}catch(e){}if(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)t='dark';if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}})();</script>
+    <style>html,body{margin:0;background:oklch(0.96 0.004 70);color:#1c1917;font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}[data-theme="dark"],[data-theme="dark"] body{background:oklch(0.16 0.01 45);color:#fafaf9}</style>
 </head>
 <body>
-    <div class="login-container">
-        <h1 class="login-title">Foodles Admin</h1>
-        <p class="login-subtitle">Redirecting to sign in...</p>
+    <main class="login-container">
+        <div class="card">
+            <div class="login-logo">
+                <img src="/files/images/logo.svg" alt="foodles.com" height="40" class="logo-light">
+                <img src="/files/images/logo-white.svg" alt="foodles.com" height="40" class="logo-dark">
+            </div>
+            <p class="login-subtitle">Sign in with your passkey</p>
 
-        <div id="error" class="login-error"></div>
+            <div id="error" class="login-error" role="alert" aria-live="polite"></div>
 
-        <div id="loading" class="login-loading">
-            <div class="login-spinner"></div>
-            <p>Processing...</p>
+            <div id="login-form" hidden>
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input class="form-input" type="email" id="login-email" placeholder="you@company.com" required autocomplete="email" aria-describedby="error">
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="sign-in-btn" class="btn btn-primary w-full">Sign in with Passkey</button>
+                </div>
+                <p class="text-center mt-3 text-sm">
+                    <a href="#" id="magic-link-trigger" class="text-tertiary">Don't have a passkey?</a>
+                </p>
+            </div>
+
+            <div id="magic-link-form" hidden>
+                <p class="text-sm text-tertiary mb-3 text-center">
+                    Enter your email and we'll send you a link to create a passkey on this device.
+                </p>
+                <div class="form-group">
+                    <label for="magic-email">Email</label>
+                    <input class="form-input" type="email" id="magic-email" placeholder="you@company.com" required autocomplete="email">
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="send-magic-btn" class="btn btn-primary w-full">Send Magic Link</button>
+                </div>
+                <p class="text-center mt-2">
+                    <a href="#" id="back-to-passkey" class="text-tertiary text-sm">Back to passkey sign in</a>
+                </p>
+            </div>
+
+            <div id="magic-link-sent" class="text-center p-4" hidden>
+                <p class="text-base text-primary mb-2">Check your email</p>
+                <p class="text-sm text-tertiary">
+                    If an account exists for that email, we've sent a link to create a passkey on this device.
+                </p>
+                <p class="mt-3">
+                    <a href="/admin/login" class="text-tertiary text-sm">Back to sign in</a>
+                </p>
+            </div>
+
+            <div id="loading" class="login-loading" hidden aria-live="polite">
+                <div class="login-spinner" role="status" aria-label="Loading"></div>
+                <p id="loading-text">Processing...</p>
+            </div>
+
+            <div id="retry" class="login-retry">
+                <a href="/admin/login">Try again</a>
+            </div>
+
+            <p class="text-center mt-4 text-tertiary text-sm">
+                Don't have an account? <a href="/admin/register" class="text-accent">Register</a>
+            </p>
         </div>
+    </main>
 
-        <div id="retry" class="login-retry">
-            <a href="/admin/login">Try again</a>
-        </div>
-    </div>
-
-    <script src="/js/admin/login.js"></script>
+    <script data-cfasync="false" src="/js/services/webauthn-login.js" type="module"></script>
 </body>
 </html>

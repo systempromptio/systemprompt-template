@@ -25,6 +25,17 @@ Welcome to the Foodles AI Governance Platform documentation. This platform provi
 
 - [Presentation](/documentation/presentation) — Interactive slide deck covering the full platform story
 
+## Introduction & Integration
+
+*Understand what this platform is, what it does, and how it integrates with Claude.*
+
+- [Introduction to the Platform](/documentation/introduction) — What this site is and how the demo becomes your production deployment
+- [Platform Overview](/documentation/platform-overview) — The three pillars: insight, governance, and integration
+- [Anthropic Partnership](/documentation/anthropic-partnership) — How we work with the Claude ecosystem
+- [Integration: Claude Code](/documentation/integration-claude-code) — Plugin system and marketplace distribution for the CLI
+- [Integration: Claude Cowork](/documentation/integration-claude-cowork) — Governance for collaborative AI sessions (Research Preview)
+- [Integration: Claude AI](/documentation/integration-claude-ai) — Extending governance to claude.ai via MCP
+
 ## Proposal
 
 - [Partnership Proposal](/documentation/proposal) — What the platform does, licensing, and how to engage
