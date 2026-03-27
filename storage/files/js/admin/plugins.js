@@ -6,7 +6,7 @@
     function updateGenerateButtons(pluginId) {
         const btns = document.querySelectorAll('[data-generate-plugin="' + pluginId + '"]');
         const envReady = pluginEnvValid[pluginId] === true;
-        btns.forEach(function(btn) {
+        btns.forEach((btn) => {
             if (!envReady) {
                 btn.disabled = true;
                 btn.title = pluginEnvValid[pluginId] === false
@@ -37,7 +37,7 @@
             '</div>' +
         '</div>';
         document.body.append(overlay);
-        overlay.addEventListener('click', async function(e) {
+        overlay.addEventListener('click', async (e) => {
             if (e.target === overlay || e.target.closest('[data-confirm-cancel]')) {
                 overlay.remove();
                 return;
@@ -76,9 +76,9 @@
             const JSZip = await app.shared.loadJSZip();
             const zip = new JSZip();
             const items = data.plugins || data.bundles || [];
-            const bundle = items.find(function(b) { return b.id === pluginId || b.plugin_id === pluginId; });
+            const bundle = items.find((b) => b.id === pluginId || b.plugin_id === pluginId);
             if (!bundle || !bundle.files) throw new Error('No files found in export');
-            bundle.files.forEach(function(f) {
+            bundle.files.forEach((f) => {
                 const opts = f.executable ? { unixPermissions: '755' } : {};
                 zip.file(f.path, f.content, opts);
             });
@@ -180,7 +180,7 @@
             try {
                 const data = JSON.parse(details[i].textContent);
                 if (data.skills) {
-                    const found = data.skills.find(function(s) { return s.id === skillId; });
+                    const found = data.skills.find((s) => s.id === skillId);
                     if (found) return found;
                 }
             } catch (e) {}
@@ -230,7 +230,7 @@
 
         const isVisible = detailRow.classList.contains('visible');
 
-        document.querySelectorAll('tr.detail-row.visible').forEach(function(r) {
+        document.querySelectorAll('tr.detail-row.visible').forEach((r) => {
             if (r !== detailRow) {
                 r.classList.remove('visible');
                 const otherId = r.getAttribute('data-detail-for');
@@ -245,7 +245,7 @@
             detailRow.classList.add('visible');
             if (indicator) indicator.classList.add('expanded');
             if (section) {
-                detailRow.querySelectorAll('.detail-section').forEach(function(s) {
+                detailRow.querySelectorAll('.detail-section').forEach((s) => {
                     s.classList.remove('active');
                 });
                 const target = detailRow.querySelector('[data-section="' + section + '"]');
@@ -264,7 +264,7 @@
         const searchVal = (document.getElementById('plugin-search').value || '').toLowerCase();
         const categoryVal = document.getElementById('category-filter').value.toLowerCase();
         const rows = document.querySelectorAll('#plugins-table tr.clickable-row');
-        rows.forEach(function(row) {
+        rows.forEach((row) => {
             const name = row.getAttribute('data-name') || '';
             const category = (row.getAttribute('data-category') || '').toLowerCase();
             const matchSearch = !searchVal || name.includes(searchVal);
@@ -280,29 +280,29 @@
         });
     }
 
-    app.initPluginsConfig = function() {
+    app.initPluginsConfig = () => {
         const bulkActions = app.OrgCommon ? app.OrgCommon.initBulkActions('#plugins-table', 'bulk-actions-btn') : null;
 
         const pluginRows = document.querySelectorAll('#plugins-table tr[data-entity-type="plugin"]');
-        pluginRows.forEach(function(row) {
+        pluginRows.forEach((row) => {
             const pid = row.getAttribute('data-entity-id');
             if (!pid || pid === 'custom') return;
             updateGenerateButtons(pid);
-            app.api('/plugins/' + encodeURIComponent(pid) + '/env').then(function(envData) {
+            app.api('/plugins/' + encodeURIComponent(pid) + '/env').then((envData) => {
                 pluginEnvValid[pid] = envData.valid !== false;
                 updateGenerateButtons(pid);
-            }).catch(function() {});
+            }).catch(() => {});
         });
 
-        app.shared.createDebouncedSearch(document, 'plugin-search', function() {
+        app.shared.createDebouncedSearch(document, 'plugin-search', () => {
             applyFilters();
         });
 
-        document.getElementById('category-filter').addEventListener('change', function() {
+        document.getElementById('category-filter').addEventListener('change', () => {
             applyFilters();
         });
 
-        app.events.on('click', '[data-remove-from-plugin]', function(e, btn) {
+        app.events.on('click', '[data-remove-from-plugin]', (e, btn) => {
             e.stopPropagation();
             const itemId = btn.getAttribute('data-remove-from-plugin');
             const resourceType = btn.getAttribute('data-resource-type');
@@ -317,18 +317,18 @@
             const apiField = resourceType === 'mcp_servers' ? 'mcp_servers' : resourceType;
             let currentIds;
             if (resourceType === 'skills') {
-                currentIds = (data.skills || []).map(function(s) { return s.id; });
+                currentIds = (data.skills || []).map((s) => s.id);
             } else if (resourceType === 'agents') {
-                currentIds = (data.agents || []).map(function(a) { return a.id; });
+                currentIds = (data.agents || []).map((a) => a.id);
             } else if (resourceType === 'mcp_servers') {
                 currentIds = data.mcp_servers || [];
             } else if (resourceType === 'hooks') {
-                currentIds = (data.hooks || []).map(function(h) { return h.id; });
+                currentIds = (data.hooks || []).map((h) => h.id);
             } else {
                 return;
             }
 
-            const updatedIds = currentIds.filter(function(id) { return id !== itemId; });
+            const updatedIds = currentIds.filter((id) => id !== itemId);
             const body = {};
             body[apiField] = updatedIds;
 
@@ -336,29 +336,29 @@
             app.api('/plugins/' + encodeURIComponent(pluginId), {
                 method: 'PUT',
                 body: JSON.stringify(body)
-            }).then(function() {
+            }).then(() => {
                 const row = btn.closest('tr');
                 if (row) row.remove();
                 const countEl = document.querySelector('[data-count="' + resourceType + '"][data-for-plugin="' + pluginId + '"]');
                 if (countEl) countEl.textContent = updatedIds.length;
                 if (resourceType === 'skills') {
-                    data.skills = data.skills.filter(function(s) { return s.id !== itemId; });
+                    data.skills = data.skills.filter((s) => s.id !== itemId);
                 } else if (resourceType === 'agents') {
-                    data.agents = data.agents.filter(function(a) { return a.id !== itemId; });
+                    data.agents = data.agents.filter((a) => a.id !== itemId);
                 } else if (resourceType === 'mcp_servers') {
                     data.mcp_servers = updatedIds;
                 } else if (resourceType === 'hooks') {
-                    data.hooks = data.hooks.filter(function(h) { return h.id !== itemId; });
+                    data.hooks = data.hooks.filter((h) => h.id !== itemId);
                 }
                 detailEl.textContent = JSON.stringify(data);
                 app.Toast.show('Removed from plugin', 'success');
-            }).catch(function(err) {
+            }).catch((err) => {
                 btn.disabled = false;
                 app.Toast.show(err.message || 'Failed to remove', 'error');
             });
         });
 
-        app.events.on('click', '[data-add-to-plugin]', function(e, btn) {
+        app.events.on('click', '[data-add-to-plugin]', (e, btn) => {
             e.stopPropagation();
             const resourceType = btn.getAttribute('data-add-to-plugin');
             const pluginId = btn.getAttribute('data-plugin-id');
@@ -375,24 +375,24 @@
 
             let currentIds;
             if (resourceType === 'skills') {
-                currentIds = (data.skills || []).map(function(s) { return s.id; });
+                currentIds = (data.skills || []).map((s) => s.id);
             } else if (resourceType === 'agents') {
-                currentIds = (data.agents || []).map(function(a) { return a.id; });
+                currentIds = (data.agents || []).map((a) => a.id);
             } else if (resourceType === 'mcp_servers') {
                 currentIds = data.mcp_servers || [];
             } else if (resourceType === 'hooks') {
-                currentIds = (data.hooks || []).map(function(h) { return h.id; });
+                currentIds = (data.hooks || []).map((h) => h.id);
             }
             const currentSet = {};
-            currentIds.forEach(function(id) { currentSet[id] = true; });
+            currentIds.forEach((id) => { currentSet[id] = true; });
 
             btn.disabled = true;
             btn.textContent = 'Loading...';
-            app.api(apiPath).then(function(allItems) {
+            app.api(apiPath).then((allItems) => {
                 btn.disabled = false;
                 btn.textContent = '+ Add ' + resourceType.charAt(0).toUpperCase() + resourceType.slice(1).replace('_', ' ');
                 const items = Array.isArray(allItems) ? allItems : (allItems.items || allItems.data || []);
-                const available = items.filter(function(item) {
+                const available = items.filter((item) => {
                     const id = typeof item === 'string' ? item : (item.id || item.skill_id || item.agent_id);
                     return id && !currentSet[id];
                 });
@@ -405,7 +405,7 @@
                 const overlay = document.createElement('div');
                 overlay.className = 'confirm-overlay';
                 let checklistHtml = '<div class="add-checklist">';
-                available.forEach(function(item) {
+                available.forEach((item) => {
                     const id = typeof item === 'string' ? item : (item.id || item.skill_id || item.agent_id);
                     const name = typeof item === 'string' ? item : (item.name || item.id || item.skill_id);
                     checklistHtml += '<label><input type="checkbox" value="' + app.escapeHtml(id) + '"> ' + app.escapeHtml(name) + '</label>';
@@ -422,7 +422,7 @@
                 '</div>';
                 document.body.append(overlay);
 
-                overlay.addEventListener('click', function(ev) {
+                overlay.addEventListener('click', (ev) => {
                     if (ev.target === overlay || ev.target.closest('[data-add-cancel]')) {
                         overlay.remove();
                         return;
@@ -436,7 +436,7 @@
                         return;
                     }
                     const newIds = [];
-                    checked.forEach(function(cb) { newIds.push(cb.value); });
+                    checked.forEach((cb) => { newIds.push(cb.value); });
                     const mergedIds = currentIds.concat(newIds);
 
                     const body = {};
@@ -448,31 +448,31 @@
                     app.api('/plugins/' + encodeURIComponent(pluginId), {
                         method: 'PUT',
                         body: JSON.stringify(body)
-                    }).then(function() {
+                    }).then(() => {
                         overlay.remove();
                         app.Toast.show('Added to plugin', 'success');
                         window.location.reload();
-                    }).catch(function(err) {
+                    }).catch((err) => {
                         confirmBtn.disabled = false;
                         confirmBtn.textContent = 'Add Selected';
                         app.Toast.show(err.message || 'Failed to add', 'error');
                     });
                 });
-            }).catch(function(err) {
+            }).catch((err) => {
                 btn.disabled = false;
                 btn.textContent = '+ Add ' + resourceType.charAt(0).toUpperCase() + resourceType.slice(1).replace('_', ' ');
                 app.Toast.show(err.message || 'Failed to load available items', 'error');
             });
         });
 
-        app.events.on('click', '[data-expand-section]', function(e, expandBadge) {
+        app.events.on('click', '[data-expand-section]', (e, expandBadge) => {
             e.stopPropagation();
             const section = expandBadge.getAttribute('data-expand-section');
             const pluginId = expandBadge.getAttribute('data-plugin-id');
             toggleDetailRow(pluginId, section);
         });
 
-        app.events.on('click', '[data-browse-skill]', function(e, el) {
+        app.events.on('click', '[data-browse-skill]', (e, el) => {
             e.stopPropagation();
             e.preventDefault();
             const skillId = el.getAttribute('data-browse-skill');
@@ -480,7 +480,7 @@
             if (app.skillFiles) app.skillFiles.open(skillId, skillName);
         });
 
-        app.events.on('click', '[data-toggle-json]', function(e, jsonToggle) {
+        app.events.on('click', '[data-toggle-json]', (e, jsonToggle) => {
             e.stopPropagation();
             const pid = jsonToggle.getAttribute('data-toggle-json');
             const jsonView = document.querySelector('[data-json-for="' + pid + '"]');
@@ -504,26 +504,26 @@
             }
         });
 
-        app.events.on('click', 'tr.clickable-row', function(e, row) {
+        app.events.on('click', 'tr.clickable-row', (e, row) => {
             if (e.target.closest('[data-no-row-click]') || e.target.closest('[data-action="toggle"]') || e.target.closest('.actions-menu') || e.target.closest('.btn') || e.target.closest('a') || e.target.closest('input')) return;
             const entityId = row.getAttribute('data-entity-id');
             toggleDetailRow(entityId);
         });
 
-        app.events.on('click', '[data-open-env]', function(e, envBtn) {
+        app.events.on('click', '[data-open-env]', (e, envBtn) => {
             e.stopPropagation();
             const envPluginId = envBtn.getAttribute('data-open-env');
             const pluginName = envBtn.getAttribute('data-plugin-name') || envPluginId;
             if (app.pluginEnv) app.pluginEnv.open(envPluginId, pluginName);
         });
 
-        app.events.on('click', '[data-generate-plugin]', function(e, generateBtn) {
+        app.events.on('click', '[data-generate-plugin]', (e, generateBtn) => {
             e.stopPropagation();
             const platform = generateBtn.getAttribute('data-platform') || 'unix';
             handleExport(generateBtn.getAttribute('data-generate-plugin'), generateBtn, platform);
         });
 
-        app.events.on('click', '[data-delete-plugin]', function(e, deletePluginBtn) {
+        app.events.on('click', '[data-delete-plugin]', (e, deletePluginBtn) => {
             e.stopPropagation();
             app.shared.closeAllMenus();
             showDeleteConfirm(deletePluginBtn.getAttribute('data-delete-plugin'));
@@ -532,7 +532,7 @@
         document.getElementById('panel-close').addEventListener('click', closePanel);
         document.getElementById('config-overlay').addEventListener('click', closePanel);
 
-        app.events.on('click', '#export-marketplace-btn', async function(e, btn) {
+        app.events.on('click', '#export-marketplace-btn', async (e, btn) => {
             btn.disabled = true;
             btn.textContent = 'Generating...';
             try {
@@ -565,13 +565,13 @@
             }
         });
 
-        window.addEventListener('env-saved', function(e) {
+        window.addEventListener('env-saved', (e) => {
             const pid = e.detail && e.detail.pluginId;
             if (!pid) return;
-            app.api('/plugins/' + encodeURIComponent(pid) + '/env').then(function(envData) {
+            app.api('/plugins/' + encodeURIComponent(pid) + '/env').then((envData) => {
                 pluginEnvValid[pid] = envData.valid !== false;
                 updateGenerateButtons(pid);
-            }).catch(function() {});
+            }).catch(() => {});
         });
     };
 
@@ -579,7 +579,7 @@
 
     function loadEnvStatus(pluginId, container) {
         container.innerHTML = '<div style="padding:var(--space-4);color:var(--text-tertiary);font-size:var(--text-sm)">Loading variables...</div>';
-        app.api('/plugins/' + encodeURIComponent(pluginId) + '/env').then(function(data) {
+        app.api('/plugins/' + encodeURIComponent(pluginId) + '/env').then((data) => {
             const defs = data.definitions || [];
             const stored = data.stored || [];
             if (!defs.length && !stored.length) {
@@ -587,9 +587,9 @@
                 return;
             }
             const storedMap = {};
-            stored.forEach(function(v) { storedMap[v.var_name] = v; });
+            stored.forEach((v) => { storedMap[v.var_name] = v; });
             let html = '';
-            defs.forEach(function(def) {
+            defs.forEach((def) => {
                 const s = storedMap[def.name];
                 const hasValue = s && s.var_value && s.var_value !== '';
                 const valueBadge = hasValue
@@ -618,7 +618,7 @@
                 '<button class="btn btn-primary btn-sm" data-open-env="' + app.escapeHtml(pluginId) + '" data-plugin-name="' + app.escapeHtml(pluginId) + '">Configure</button>' +
             '</div>';
             container.innerHTML = html;
-        }).catch(function() {
+        }).catch(() => {
             container.innerHTML = '<div class="empty-state"><p>Failed to load environment variables.</p></div>';
         });
     }

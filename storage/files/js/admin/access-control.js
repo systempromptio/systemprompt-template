@@ -5,7 +5,7 @@
     let selectedEntities = {};
     let currentPanelEntity = null;
 
-    app.initAccessControl = function() {
+    app.initAccessControl = () => {
         initTabs();
         initSearch();
         initFilters();
@@ -19,14 +19,14 @@
     function initTabs() {
         const tabBar = document.getElementById('acl-tabs');
         if (!tabBar) return;
-        tabBar.addEventListener('click', function(e) {
+        tabBar.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-acl-tab]');
             if (!btn) return;
             activeTab = btn.getAttribute('data-acl-tab');
-            tabBar.querySelectorAll('.tab-btn').forEach(function(b) {
+            tabBar.querySelectorAll('.tab-btn').forEach((b) => {
                 b.classList.toggle('active', b === btn);
             });
-            document.querySelectorAll('[data-acl-panel]').forEach(function(panel) {
+            document.querySelectorAll('[data-acl-panel]').forEach((panel) => {
                 panel.style.display = panel.getAttribute('data-acl-panel') === activeTab ? '' : 'none';
             });
             clearSelection();
@@ -37,7 +37,7 @@
     function initSearch() {
         const input = document.getElementById('acl-search');
         if (!input) return;
-        input.addEventListener('input', debounce(function() {
+        input.addEventListener('input', debounce(() => {
             filterRows();
         }, 200));
     }
@@ -57,7 +57,7 @@
         const panel = document.querySelector('[data-acl-panel="' + activeTab + '"]');
         if (!panel) return;
 
-        panel.querySelectorAll('.acl-entity-row').forEach(function(row) {
+        panel.querySelectorAll('.acl-entity-row').forEach((row) => {
             const name = row.getAttribute('data-name') || '';
             const matchesSearch = !query || name.includes(query);
 
@@ -70,12 +70,12 @@
                 const data = getEntityData(entityType, entityId);
                 if (data) {
                     if (roleFilter) {
-                        matchesRole = data.roles && data.roles.some(function(r) {
+                        matchesRole = data.roles && data.roles.some((r) => {
                             return r.name === roleFilter && r.assigned;
                         });
                     }
                     if (deptFilter) {
-                        matchesDept = data.departments && data.departments.some(function(d) {
+                        matchesDept = data.departments && data.departments.some((d) => {
                             return d.name === deptFilter && d.assigned;
                         });
                     }
@@ -87,7 +87,7 @@
     }
 
     function initRowClicks() {
-        app.events.on('click', '.acl-entity-row', function(e, row) {
+        app.events.on('click', '.acl-entity-row', (e, row) => {
             if (e.target.closest('[data-no-row-click]') || e.target.tagName === 'INPUT') return;
             const entityType = row.getAttribute('data-entity-type');
             const entityId = row.getAttribute('data-entity-id');
@@ -96,11 +96,11 @@
     }
 
     function initCheckboxes() {
-        app.events.on('change', '.acl-select-all', function(e, selectAll) {
+        app.events.on('change', '.acl-select-all', (e, selectAll) => {
             const tabTarget = selectAll.getAttribute('data-acl-tab-target');
             const panel = document.querySelector('[data-acl-panel="' + tabTarget + '"]');
             if (!panel) return;
-            panel.querySelectorAll('.acl-entity-checkbox').forEach(function(cb) {
+            panel.querySelectorAll('.acl-entity-checkbox').forEach((cb) => {
                 cb.checked = selectAll.checked;
                 const key = cb.getAttribute('data-entity-type') + ':' + cb.getAttribute('data-entity-id');
                 if (cb.checked) {
@@ -112,7 +112,7 @@
             updateSelectionCount();
         });
 
-        app.events.on('change', '.acl-entity-checkbox', function(e, cb) {
+        app.events.on('change', '.acl-entity-checkbox', (e, cb) => {
             const key = cb.getAttribute('data-entity-type') + ':' + cb.getAttribute('data-entity-id');
             if (cb.checked) {
                 selectedEntities[key] = true;
@@ -125,7 +125,7 @@
 
     function clearSelection() {
         selectedEntities = {};
-        document.querySelectorAll('.acl-entity-checkbox, .acl-select-all').forEach(function(cb) {
+        document.querySelectorAll('.acl-entity-checkbox, .acl-select-all').forEach((cb) => {
             cb.checked = false;
         });
         updateSelectionCount();
@@ -164,8 +164,8 @@
         if (body) body.innerHTML = buildPanelContent(data, entityType);
 
         if (body) {
-            body.querySelectorAll('input[name="department"]').forEach(function(cb) {
-                cb.addEventListener('change', function() {
+            body.querySelectorAll('input[name="department"]').forEach((cb) => {
+                cb.addEventListener('change', () => {
                     const row = cb.closest('.acl-dept-row');
                     if (!row) return;
                     const toggle = row.querySelector('.acl-default-toggle');
@@ -206,7 +206,7 @@
         html += '<h3 class="acl-panel-section-title">Roles</h3>';
         html += '<p class="acl-panel-section-desc">Select which roles can access this entity. Empty means accessible to all.</p>';
         if (entity.roles && entity.roles.length) {
-            entity.roles.forEach(function(role) {
+            entity.roles.forEach((role) => {
                 html += '<label class="acl-checkbox-row">' +
                     '<input type="checkbox" name="role" value="' + escapeHtml(role.name) + '"' +
                     (role.assigned ? ' checked' : '') + '>' +
@@ -222,7 +222,7 @@
         html += '<h3 class="acl-panel-section-title">Departments</h3>';
         html += '<p class="acl-panel-section-desc">Assign to departments. "Default" means auto-enabled and enforced for all department members.</p>';
         if (entity.departments && entity.departments.length) {
-            entity.departments.forEach(function(dept) {
+            entity.departments.forEach((dept) => {
                 const assigned = dept.assigned;
                 const defaultIncluded = dept.default_included;
                 html += '<div class="acl-dept-row">' +
@@ -256,7 +256,7 @@
 
         const rules = [];
 
-        body.querySelectorAll('input[name="role"]:checked').forEach(function(cb) {
+        body.querySelectorAll('input[name="role"]:checked').forEach((cb) => {
             rules.push({
                 rule_type: 'role',
                 rule_value: cb.value,
@@ -265,7 +265,7 @@
             });
         });
 
-        body.querySelectorAll('input[name="department"]:checked').forEach(function(cb) {
+        body.querySelectorAll('input[name="department"]:checked').forEach((cb) => {
             const deptName = cb.value;
             const defaultCb = body.querySelector('input[name="default_included"][value="' + deptName + '"]');
             rules.push({
@@ -288,11 +288,11 @@
         app.api('/access-control/entity/' + encodeURIComponent(entityType) + '/' + encodeURIComponent(entityId), {
             method: 'PUT',
             body: JSON.stringify({ rules: rules, sync_yaml: entityType === 'plugin' })
-        }).then(function() {
+        }).then(() => {
             if (app.Toast) app.Toast.show('Access rules updated', 'success');
             closeSidePanel();
             window.location.reload();
-        }).catch(function(err) {
+        }).catch((err) => {
             if (app.Toast) app.Toast.show(err.message || 'Failed to save rules', 'error');
             if (saveBtn) {
                 saveBtn.disabled = false;
@@ -331,7 +331,7 @@
         html += '<div class="acl-panel-section">';
         html += '<h3 class="acl-panel-section-title">Roles</h3>';
         if (data && data.roles) {
-            data.roles.forEach(function(role) {
+            data.roles.forEach((role) => {
                 html += '<label class="acl-checkbox-row">' +
                     '<input type="checkbox" name="role" value="' + escapeHtml(role.name) + '">' +
                     '<span class="acl-checkbox-label">' + escapeHtml(role.name) + '</span>' +
@@ -343,7 +343,7 @@
         html += '<div class="acl-panel-section">';
         html += '<h3 class="acl-panel-section-title">Departments</h3>';
         if (data && data.departments) {
-            data.departments.forEach(function(dept) {
+            data.departments.forEach((dept) => {
                 html += '<div class="acl-dept-row">' +
                     '<label class="acl-checkbox-row" style="flex:1">' +
                     '<input type="checkbox" name="department" value="' + escapeHtml(dept.name) + '">' +
@@ -361,8 +361,8 @@
 
         body.innerHTML = html;
 
-        body.querySelectorAll('input[name="department"]').forEach(function(cb) {
-            cb.addEventListener('change', function() {
+        body.querySelectorAll('input[name="department"]').forEach((cb) => {
+            cb.addEventListener('change', () => {
                 const row = cb.closest('.acl-dept-row');
                 if (!row) return;
                 const toggle = row.querySelector('.acl-default-toggle');
@@ -389,16 +389,16 @@
         if (!body) return;
 
         const entities = [];
-        Object.keys(selectedEntities).forEach(function(key) {
+        Object.keys(selectedEntities).forEach((key) => {
             const parts = key.split(':');
             entities.push({ entity_type: parts[0], entity_id: parts[1] });
         });
 
         const rules = [];
-        body.querySelectorAll('input[name="role"]:checked').forEach(function(cb) {
+        body.querySelectorAll('input[name="role"]:checked').forEach((cb) => {
             rules.push({ rule_type: 'role', rule_value: cb.value, access: 'allow', default_included: false });
         });
-        body.querySelectorAll('input[name="department"]:checked').forEach(function(cb) {
+        body.querySelectorAll('input[name="department"]:checked').forEach((cb) => {
             const deptName = cb.value;
             const defaultCb = body.querySelector('input[name="default_included"][value="' + deptName + '"]');
             rules.push({
@@ -409,7 +409,7 @@
             });
         });
 
-        const hasPlugins = entities.some(function(e) { return e.entity_type === 'plugin'; });
+        const hasPlugins = entities.some((e) => { return e.entity_type === 'plugin'; });
 
         const applyBtn = document.getElementById('acl-bulk-apply');
         if (applyBtn) {
@@ -420,11 +420,11 @@
         app.api('/access-control/bulk', {
             method: 'PUT',
             body: JSON.stringify({ entities: entities, rules: rules, sync_yaml: hasPlugins })
-        }).then(function() {
+        }).then(() => {
             if (app.Toast) app.Toast.show('Bulk assign complete', 'success');
             closeBulkPanel();
             window.location.reload();
-        }).catch(function(err) {
+        }).catch((err) => {
             if (app.Toast) app.Toast.show(err.message || 'Bulk assign failed', 'error');
             if (applyBtn) {
                 applyBtn.disabled = false;
@@ -439,7 +439,7 @@
         const rows = panel.querySelectorAll('.acl-entity-row');
         const total = rows.length;
         let covered = 0;
-        rows.forEach(function(r) {
+        rows.forEach((r) => {
             const indicator = r.querySelector('.acl-coverage-indicator');
             if (indicator) {
                 const parts = indicator.textContent.trim().split('/');
@@ -474,7 +474,7 @@
             clearTimeout(timer);
             const args = arguments;
             const ctx = this;
-            timer = setTimeout(function() { fn.apply(ctx, args); }, ms);
+            timer = setTimeout(() => { fn.apply(ctx, args); }, ms);
         };
     }
 

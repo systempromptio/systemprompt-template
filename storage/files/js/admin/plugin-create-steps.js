@@ -1,7 +1,7 @@
-(function(app) {
+((app) => {
     'use strict';
 
     app.pluginWizardSteps = {
-        renderCurrentStep: function() { return ''; }
+        renderCurrentStep: () => ''
     };
 })(window.AdminApp);

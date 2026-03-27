@@ -1,13 +1,13 @@
-(function(app) {
+((app) => {
     'use strict';
 
     const OrgCommon = {
 
-        initExpandRows: function(tableSelector, renderCallback) {
+        initExpandRows: (tableSelector, renderCallback) => {
             const table = document.querySelector(tableSelector);
             if (!table) return;
 
-            table.addEventListener('click', function(e) {
+            table.addEventListener('click', (e) => {
                 if (e.target.closest('[data-no-row-click]') ||
                     e.target.closest('.actions-menu') ||
                     e.target.closest('.btn') ||
@@ -31,12 +31,12 @@
             });
         },
 
-        handleRowClick: function(row, detailRow) {
+        handleRowClick: (row, detailRow) => {
             const isVisible = detailRow.classList.contains('visible');
 
             const table = row.closest('table');
             if (table) {
-                table.querySelectorAll('tr.detail-row.visible').forEach(function(r) {
+                table.querySelectorAll('tr.detail-row.visible').forEach((r) => {
                     if (r !== detailRow) {
                         r.classList.remove('visible');
                         const prevRow = r.previousElementSibling;
@@ -59,7 +59,7 @@
             }
         },
 
-        initSidePanel: function(panelId) {
+        initSidePanel: (panelId) => {
             const panel = document.getElementById(panelId);
             if (!panel) return null;
 
@@ -68,23 +68,23 @@
             const closeBtn = panel.querySelector('[data-panel-close]');
 
             const api = {
-                open: function() {
+                open: () => {
                     panel.classList.add('open');
                     if (overlay) overlay.classList.add('active');
                 },
-                close: function() {
+                close: () => {
                     panel.classList.remove('open');
                     if (overlay) overlay.classList.remove('active');
                 },
-                setTitle: function(text) {
+                setTitle: (text) => {
                     const title = panel.querySelector('[data-panel-title]');
                     if (title) title.textContent = text;
                 },
-                setBody: function(html) {
+                setBody: (html) => {
                     const body = panel.querySelector('[data-panel-body]');
                     if (body) body.innerHTML = html;
                 },
-                setFooter: function(html) {
+                setFooter: (html) => {
                     const footer = panel.querySelector('[data-panel-footer]');
                     if (footer) footer.innerHTML = html;
                 },
@@ -97,23 +97,23 @@
             return api;
         },
 
-        initAssignPanel: function(config) {
+        initAssignPanel: (config) => {
             const panelApi = OrgCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
 
             return {
-                open: function(entityId, entityName, currentPluginIds) {
+                open: (entityId, entityName, currentPluginIds) => {
                     panelApi.setTitle('Assign ' + (entityName || entityId));
 
                     const allPlugins = config.allPlugins || [];
                     const currentSet = {};
-                    (currentPluginIds || []).forEach(function(id) { currentSet[id] = true; });
+                    (currentPluginIds || []).forEach((id) => { currentSet[id] = true; });
 
                     let html = '<div class="assign-panel-checklist">';
                     if (allPlugins.length === 0) {
                         html += '<p style="color:var(--text-tertiary);font-size:var(--text-sm)">No plugins available.</p>';
                     } else {
-                        allPlugins.forEach(function(p) {
+                        allPlugins.forEach((p) => {
                             const checked = currentSet[p.id] ? ' checked' : '';
                             html += '<label class="acl-checkbox-row">' +
                                 '<input type="checkbox" name="plugin_id" value="' + app.escapeHtml(p.id) + '"' + checked + '>' +
@@ -142,14 +142,14 @@
             };
         },
 
-        initEditPanel: function(config) {
+        initEditPanel: (config) => {
             const panelApi = OrgCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
             let currentEntityId = null;
 
-            function buildForm(entityData) {
+            const buildForm = (entityData) => {
                 let html = '<form class="edit-panel-form">';
-                (config.fields || []).forEach(function(f) {
+                (config.fields || []).forEach((f) => {
                     let val = entityData[f.name] || '';
                     if (Array.isArray(val)) val = val.join(', ');
                     html += '<div class="form-group">';
@@ -163,26 +163,26 @@
                 });
                 html += '</form>';
                 return html;
-            }
+            };
 
-            function collectFormData() {
+            const collectFormData = () => {
                 const form = panelApi.panel.querySelector('.edit-panel-form');
                 if (!form) return {};
                 const body = {};
-                (config.fields || []).forEach(function(f) {
+                (config.fields || []).forEach((f) => {
                     const el = form.querySelector('[name="' + f.name + '"]');
                     if (!el) return;
                     const val = el.value;
                     if (f.name === 'tags') {
-                        body[f.name] = val.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+                        body[f.name] = val.split(',').map((t) => t.trim()).filter(Boolean);
                     } else {
                         body[f.name] = val;
                     }
                 });
                 return body;
-            }
+            };
 
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', (e) => {
                 const btn = e.target.closest('[data-edit-save]');
                 if (!btn) return;
                 btn.disabled = true;
@@ -193,19 +193,19 @@
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
-                }).then(function(res) {
+                }).then((res) => {
                     if (res.ok) {
                         app.Toast.show((config.entityLabel || 'Item') + ' updated', 'success');
                         panelApi.close();
-                        setTimeout(function() { window.location.reload(); }, 500);
+                        setTimeout(() => { window.location.reload(); }, 500);
                     } else {
-                        res.text().then(function(t) {
+                        res.text().then((t) => {
                             app.Toast.show('Failed to save: ' + t, 'error');
                         });
                         btn.disabled = false;
                         btn.textContent = 'Save';
                     }
-                }).catch(function() {
+                }).catch(() => {
                     app.Toast.show('Failed to save', 'error');
                     btn.disabled = false;
                     btn.textContent = 'Save';
@@ -213,7 +213,7 @@
             });
 
             return {
-                open: function(entityId, entityData) {
+                open: (entityId, entityData) => {
                     currentEntityId = entityId;
                     panelApi.setTitle('Edit ' + app.escapeHtml(entityData.name || entityId));
                     panelApi.setBody(buildForm(entityData));
@@ -232,24 +232,24 @@
             };
         },
 
-        initBulkActions: function(tableSelector, barId) {
+        initBulkActions: (tableSelector, barId) => {
             const table = document.querySelector(tableSelector);
             if (!table) return null;
 
             let selected = {};
 
-            function updateCount() {
+            const updateCount = () => {
                 const count = Object.keys(selected).length;
                 const countEl = document.querySelector('[data-bulk-count]');
                 if (countEl) countEl.textContent = count;
                 const bar = document.getElementById(barId);
                 if (bar) bar.style.display = count > 0 ? 'flex' : 'none';
-            }
+            };
 
-            table.addEventListener('change', function(e) {
+            table.addEventListener('change', (e) => {
                 if (e.target.classList.contains('bulk-select-all')) {
                     const checked = e.target.checked;
-                    table.querySelectorAll('.bulk-checkbox').forEach(function(cb) {
+                    table.querySelectorAll('.bulk-checkbox').forEach((cb) => {
                         cb.checked = checked;
                         const id = cb.getAttribute('data-entity-id');
                         if (checked) {
@@ -274,10 +274,10 @@
             });
 
             return {
-                getSelected: function() { return Object.keys(selected); },
-                clear: function() {
+                getSelected: () => Object.keys(selected),
+                clear: () => {
                     selected = {};
-                    table.querySelectorAll('.bulk-checkbox, .bulk-select-all').forEach(function(cb) {
+                    table.querySelectorAll('.bulk-checkbox, .bulk-select-all').forEach((cb) => {
                         cb.checked = false;
                     });
                     updateCount();
@@ -285,69 +285,69 @@
             };
         },
 
-        formatJson: function(data) {
+        formatJson: (data) => {
             if (typeof data === 'string') {
                 try { data = JSON.parse(data); } catch (e) { return app.escapeHtml(data); }
             }
             return '<pre class="json-view">' + app.escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
         },
 
-        renderRoleBadges: function(roles) {
+        renderRoleBadges: (roles) => {
             if (!roles || !roles.length) {
                 return '<span class="badge badge-gray">All</span>';
             }
-            const assigned = roles.filter(function(r) { return r.assigned; });
+            const assigned = roles.filter((r) => r.assigned);
             if (!assigned.length) {
                 return '<span class="badge badge-gray">All</span>';
             }
-            return assigned.map(function(r) {
+            return assigned.map((r) => {
                 return '<span class="badge badge-blue">' + app.escapeHtml(r.name) + '</span>';
             }).join(' ');
         },
 
-        renderDeptBadges: function(departments) {
+        renderDeptBadges: (departments) => {
             if (!departments || !departments.length) {
                 return '<span class="badge badge-gray">None</span>';
             }
-            const assigned = departments.filter(function(d) { return d.assigned; });
+            const assigned = departments.filter((d) => d.assigned);
             if (!assigned.length) {
                 return '<span class="badge badge-gray">None</span>';
             }
-            return assigned.map(function(d) {
+            return assigned.map((d) => {
                 const cls = d.default_included ? 'badge-yellow' : 'badge-green';
                 return '<span class="badge ' + cls + '">' + app.escapeHtml(d.name) + '</span>';
             }).join(' ');
         },
 
-        renderPluginBadges: function(plugins) {
+        renderPluginBadges: (plugins) => {
             if (!plugins || !plugins.length) {
                 return '<span class="badge badge-gray">None</span>';
             }
-            return plugins.map(function(p) {
+            return plugins.map((p) => {
                 const name = typeof p === 'string' ? p : (p.name || p.id || p);
                 return '<span class="badge badge-purple">' + app.escapeHtml(name) + '</span>';
             }).join(' ');
         },
 
-        initFilters: function(searchInputId, tableSelector, filters) {
+        initFilters: (searchInputId, tableSelector, filters) => {
             const table = document.querySelector(tableSelector);
             if (!table) return;
 
-            function applyFilters() {
+            const applyFilters = () => {
                 const searchInput = document.getElementById(searchInputId);
                 const q = (searchInput ? searchInput.value : '').toLowerCase().trim();
-                const filterValues = filters.map(function(f) {
+                const filterValues = filters.map((f) => {
                     const sel = document.getElementById(f.selectId);
                     return { attr: f.dataAttr, value: sel ? sel.value : '' };
                 });
 
-                table.querySelectorAll('tbody tr.clickable-row').forEach(function(row) {
+                table.querySelectorAll('tbody tr.clickable-row').forEach((row) => {
                     const matchSearch = !q ||
                         (row.getAttribute('data-name') || '').includes(q) ||
                         (row.getAttribute('data-skill-id') || row.getAttribute('data-agent-id') || '').toLowerCase().includes(q) ||
                         (row.getAttribute('data-description') || '').includes(q);
 
-                    const matchFilters = filterValues.every(function(fv) {
+                    const matchFilters = filterValues.every((fv) => {
                         if (!fv.value) return true;
                         const rowVal = row.getAttribute(fv.attr) || '';
                         return rowVal.includes(fv.value);
@@ -361,9 +361,9 @@
                         else { detail.style.display = ''; }
                     }
                 });
-            }
+            };
 
-            filters.forEach(function(f) {
+            filters.forEach((f) => {
                 const sel = document.getElementById(f.selectId);
                 if (sel) sel.addEventListener('change', applyFilters);
             });
@@ -371,7 +371,7 @@
             let searchTimer = null;
             const searchInput = document.getElementById(searchInputId);
             if (searchInput) {
-                searchInput.addEventListener('input', function() {
+                searchInput.addEventListener('input', () => {
                     clearTimeout(searchTimer);
                     searchTimer = setTimeout(applyFilters, 200);
                 });
@@ -380,7 +380,7 @@
             return { apply: applyFilters };
         },
 
-        formatTimeAgo: function(isoString) {
+        formatTimeAgo: (isoString) => {
             if (!isoString) return '--';
             const date = new Date(isoString);
             if (isNaN(date.getTime())) return '--';
@@ -393,8 +393,8 @@
             return date.toLocaleDateString();
         },
 
-        initTimeAgo: function() {
-            document.querySelectorAll('.metadata-timestamp').forEach(function(el) {
+        initTimeAgo: () => {
+            document.querySelectorAll('.metadata-timestamp').forEach((el) => {
                 const iso = el.getAttribute('title') || el.textContent.trim();
                 if (iso && iso !== '--') {
                     el.textContent = OrgCommon.formatTimeAgo(iso);

@@ -1,7 +1,7 @@
 (function(app) {
     'use strict';
 
-    app.initOrgMarketplaces = function() {
+    app.initOrgMarketplaces = () => {
         const searchInput = document.getElementById('mkt-search');
         const deptFilter = document.getElementById('mkt-dept-filter');
         const table = document.getElementById('mkt-table');
@@ -11,22 +11,22 @@
         }
 
         const mktDepts = {};
-        document.querySelectorAll('script[data-marketplace-detail]').forEach(function(el) {
+        document.querySelectorAll('script[data-marketplace-detail]').forEach((el) => {
             try {
                 const data = JSON.parse(el.textContent);
                 const id = el.getAttribute('data-marketplace-detail');
                 mktDepts[id] = (data.departments || [])
-                    .filter(function(d) { return d.assigned; })
-                    .map(function(d) { return d.name; });
+                    .filter((d) => d.assigned)
+                    .map((d) => d.name);
             } catch (e) {}
         });
 
-        function filterRows() {
+        const filterRows = () => {
             if (!table) return;
             const query = (searchInput ? searchInput.value : '').toLowerCase();
             const dept = deptFilter ? deptFilter.value : '';
             const rows = table.querySelectorAll('tbody tr.clickable-row');
-            rows.forEach(function(row) {
+            rows.forEach((row) => {
                 const name = row.getAttribute('data-name') || '';
                 const entityId = row.getAttribute('data-entity-id') || '';
                 const matchName = !query || name.includes(query);
@@ -39,11 +39,11 @@
                     detailRow.style.display = 'none';
                 }
             });
-        }
+        };
 
         if (searchInput) {
             let debounceTimer;
-            searchInput.addEventListener('input', function() {
+            searchInput.addEventListener('input', () => {
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(filterRows, 200);
             });
@@ -52,7 +52,7 @@
             deptFilter.addEventListener('change', filterRows);
         }
 
-        app.events.on('click', '[data-toggle-json]', function(e, jsonBtn) {
+        app.events.on('click', '[data-toggle-json]', (e, jsonBtn) => {
             const id = jsonBtn.getAttribute('data-toggle-json');
             const container = document.querySelector('[data-json-container="' + id + '"]');
             if (container) {
@@ -75,7 +75,7 @@
             }
         });
 
-        app.events.on('click', '.actions-trigger', function(e, trigger) {
+        app.events.on('click', '.actions-trigger', (e, trigger) => {
             e.stopPropagation();
             const menu = trigger.closest('.actions-menu');
             const dd = menu ? menu.querySelector('.actions-dropdown') : null;
@@ -86,18 +86,18 @@
             }
         });
 
-        app.events.on('click', '[data-delete-marketplace]', function(e, deleteBtn) {
+        app.events.on('click', '[data-delete-marketplace]', (e, deleteBtn) => {
             const id = deleteBtn.getAttribute('data-delete-marketplace');
             showDeleteConfirm(id);
         });
 
-        app.events.on('click', '[data-copy-install-link]', function(e, btn) {
+        app.events.on('click', '[data-copy-install-link]', (e, btn) => {
             const id = btn.getAttribute('data-copy-install-link');
             const siteUrl = window.location.origin;
             const installUrl = siteUrl + '/api/public/marketplace/org/' + encodeURIComponent(id) + '.git';
-            navigator.clipboard.writeText(installUrl).then(function() {
+            navigator.clipboard.writeText(installUrl).then(() => {
                 app.Toast.show('Install link copied to clipboard', 'success');
-            }).catch(function() {
+            }).catch(() => {
                 const textarea = document.createElement('textarea');
                 textarea.value = installUrl;
                 document.body.append(textarea);
@@ -109,7 +109,7 @@
             app.shared.closeAllMenus();
         });
 
-        app.events.on('click', '[data-sync-marketplace]', function(e, btn) {
+        app.events.on('click', '[data-sync-marketplace]', (e, btn) => {
             const id = btn.getAttribute('data-sync-marketplace');
             btn.disabled = true;
             const origText = btn.textContent;
@@ -119,27 +119,27 @@
                 method: 'POST',
                 credentials: 'include'
             })
-            .then(function(resp) { return resp.json().then(function(data) { return { ok: resp.ok, data: data }; }); })
-            .then(function(result) {
+            .then((resp) => resp.json().then((data) => ({ ok: resp.ok, data: data })))
+            .then((result) => {
                 if (result.ok) {
                     let msg = 'Sync completed: ' + (result.data.plugins_synced || 0) + ' plugins';
                     if (!result.data.changed) msg = 'Already up to date';
                     app.Toast.show(msg, 'success');
-                    if (result.data.changed) setTimeout(function() { window.location.reload(); }, 1000);
+                    if (result.data.changed) setTimeout(() => { window.location.reload(); }, 1000);
                 } else {
                     app.Toast.show(result.data.error || 'Sync failed', 'error');
                 }
                 btn.disabled = false;
                 btn.textContent = origText;
             })
-            .catch(function() {
+            .catch(() => {
                 app.Toast.show('Network error during sync', 'error');
                 btn.disabled = false;
                 btn.textContent = origText;
             });
         });
 
-        app.events.on('click', '[data-publish-marketplace]', function(e, btn) {
+        app.events.on('click', '[data-publish-marketplace]', (e, btn) => {
             const id = btn.getAttribute('data-publish-marketplace');
             app.shared.closeAllMenus();
             const overlay = document.createElement('div');
@@ -153,7 +153,7 @@
                 '</div>' +
             '</div>';
             document.body.append(overlay);
-            overlay.addEventListener('click', function(ev) {
+            overlay.addEventListener('click', (ev) => {
                 if (ev.target === overlay || ev.target.closest('[data-confirm-cancel]')) {
                     overlay.remove();
                     return;
@@ -166,19 +166,19 @@
                         method: 'POST',
                         credentials: 'include'
                     })
-                    .then(function(resp) { return resp.json().then(function(data) { return { ok: resp.ok, data: data }; }); })
-                    .then(function(result) {
+                    .then((resp) => resp.json().then((data) => ({ ok: resp.ok, data: data })))
+                    .then((result) => {
                         overlay.remove();
                         if (result.ok) {
                             let msg = 'Published: ' + (result.data.plugins_synced || 0) + ' plugins';
                             if (!result.data.changed) msg = 'No changes to publish';
                             app.Toast.show(msg, 'success');
-                            if (result.data.changed) setTimeout(function() { window.location.reload(); }, 1000);
+                            if (result.data.changed) setTimeout(() => { window.location.reload(); }, 1000);
                         } else {
                             app.Toast.show(result.data.error || 'Publish failed', 'error');
                         }
                     })
-                    .catch(function() {
+                    .catch(() => {
                         overlay.remove();
                         app.Toast.show('Network error during publish', 'error');
                     });
@@ -204,7 +204,7 @@
         '</div>';
         document.body.append(overlay);
 
-        overlay.addEventListener('click', async function(e) {
+        overlay.addEventListener('click', async (e) => {
             if (e.target === overlay || e.target.closest('[data-confirm-cancel]')) {
                 overlay.remove();
                 return;
@@ -221,9 +221,9 @@
                     });
                     if (resp.ok) {
                         app.Toast.show('Marketplace deleted', 'success');
-                        setTimeout(function() { window.location.reload(); }, 500);
+                        setTimeout(() => { window.location.reload(); }, 500);
                     } else {
-                        const data = await resp.json().catch(function() { return {}; });
+                        const data = await resp.json().catch(() => ({}));
                         app.Toast.show(data.error || 'Failed to delete', 'error');
                     }
                 } catch (err) {
@@ -239,7 +239,7 @@
         const panelApi = AdminApp.OrgCommon.initSidePanel('mkt-panel');
         if (!panelApi) return;
 
-        app.events.on('click', '[data-manage-plugins]', function(e, btn) {
+        app.events.on('click', '[data-manage-plugins]', (e, btn) => {
             const id = btn.getAttribute('data-manage-plugins');
 
             const dataEl = document.querySelector('script[data-marketplace-detail="' + id + '"]');
@@ -250,16 +250,16 @@
             panelApi.setTitle('Manage Plugins - ' + (mktData.name || id));
 
             fetch(app.API_BASE + '/plugins', { credentials: 'include' })
-                .then(function(r) { return r.json(); })
-                .then(function(allPlugins) {
+                .then((r) => r.json())
+                .then((allPlugins) => {
                     const currentIds = {};
-                    (mktData.plugin_ids || []).forEach(function(pid) { currentIds[pid] = true; });
+                    (mktData.plugin_ids || []).forEach((pid) => { currentIds[pid] = true; });
 
                     let html = '<div class="assign-panel-checklist">';
                     if (!allPlugins.length) {
                         html += '<p style="color:var(--text-tertiary);font-size:var(--text-sm)">No plugins available.</p>';
                     } else {
-                        allPlugins.forEach(function(p) {
+                        allPlugins.forEach((p) => {
                             const pid = p.id || p.plugin_id;
                             const pname = p.name || pid;
                             const checked = currentIds[pid] ? ' checked' : '';
@@ -284,10 +284,10 @@
 
                     const saveBtn = document.getElementById('mkt-save-plugins');
                     if (saveBtn) {
-                        saveBtn.addEventListener('click', async function() {
+                        saveBtn.addEventListener('click', async () => {
                             const checked = panelApi.panel.querySelectorAll('input[name="plugin_id"]:checked');
                             const ids = [];
-                            checked.forEach(function(cb) { ids.push(cb.value); });
+                            checked.forEach((cb) => { ids.push(cb.value); });
                             saveBtn.disabled = true;
                             saveBtn.textContent = 'Saving...';
                             try {
@@ -300,9 +300,9 @@
                                 if (resp.ok) {
                                     app.Toast.show('Plugins updated', 'success');
                                     panelApi.close();
-                                    setTimeout(function() { window.location.reload(); }, 500);
+                                    setTimeout(() => { window.location.reload(); }, 500);
                                 } else {
-                                    const data = await resp.json().catch(function() { return {}; });
+                                    const data = await resp.json().catch(() => ({}));
                                     app.Toast.show(data.error || 'Failed to update', 'error');
                                     saveBtn.disabled = false;
                                     saveBtn.textContent = 'Save';
@@ -317,7 +317,7 @@
 
                     panelApi.open();
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to load plugins', 'error');
                 });
         });
@@ -328,16 +328,16 @@
         const panelApi = AdminApp.OrgCommon.initSidePanel('mkt-edit-panel');
         if (!panelApi) return;
 
-        function readJsonEl(id) {
+        const readJsonEl = (id) => {
             const el = document.getElementById(id);
             if (!el) return [];
             try { return JSON.parse(el.textContent); } catch (e) { return []; }
-        }
+        };
 
         const allRoles = readJsonEl('mkt-all-roles');
         const allDepts = readJsonEl('mkt-all-departments');
 
-        function openEdit(marketplaceId) {
+        const openEdit = (marketplaceId) => {
             const isEdit = !!marketplaceId;
             let mktData = {};
 
@@ -351,19 +351,19 @@
             panelApi.setTitle(isEdit ? 'Edit Marketplace' : 'Create Marketplace');
 
             fetch(app.API_BASE + '/plugins', { credentials: 'include' })
-                .then(function(r) { return r.json(); })
-                .then(function(allPlugins) {
+                .then((r) => r.json())
+                .then((allPlugins) => {
                     const currentPluginIds = {};
-                    (mktData.plugin_ids || []).forEach(function(pid) { currentPluginIds[pid] = true; });
+                    (mktData.plugin_ids || []).forEach((pid) => { currentPluginIds[pid] = true; });
 
                     const currentRoles = {};
-                    (mktData.roles || []).forEach(function(r) {
+                    (mktData.roles || []).forEach((r) => {
                         if (r.assigned) currentRoles[r.name] = true;
                     });
 
                     const currentDepts = {};
                     const deptDefaults = {};
-                    (mktData.departments || []).forEach(function(d) {
+                    (mktData.departments || []).forEach((d) => {
                         if (d.assigned) {
                             currentDepts[d.name] = true;
                             deptDefaults[d.name] = d.default_included;
@@ -398,7 +398,7 @@
                     html += '<div class="form-group">' +
                         '<label class="field-label">Roles</label>' +
                         '<div style="display:flex;flex-wrap:wrap;gap:var(--space-1);padding:var(--space-2) 0">';
-                    allRoles.forEach(function(r) {
+                    allRoles.forEach((r) => {
                         const val = r.value || r;
                         const checked = currentRoles[val] ? ' checked' : '';
                         html += '<label style="display:inline-flex;align-items:center;gap:var(--space-2);margin-right:var(--space-3);font-size:var(--text-sm);cursor:pointer">' +
@@ -414,7 +414,7 @@
                         '<input type="checkbox" id="panel-dept-check-all">' +
                         '<label for="panel-dept-check-all" style="flex:1;font-size:var(--text-sm);cursor:pointer;color:var(--text-primary);font-weight:600">Check all</label>' +
                         '</div>';
-                    allDepts.forEach(function(d, i) {
+                    allDepts.forEach((d, i) => {
                         const val = d.value || d.name || d;
                         const checked = currentDepts[val] ? ' checked' : '';
                         const defaultChecked = deptDefaults[val] ? ' checked' : '';
@@ -434,7 +434,7 @@
                         '<label class="field-label">Plugins</label>' +
                         '<input type="text" class="field-input" placeholder="Filter plugins..." id="panel-plugin-filter" style="margin-bottom:var(--space-2)">' +
                         '<div class="checklist-container" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">';
-                    allPlugins.forEach(function(p, i) {
+                    allPlugins.forEach((p, i) => {
                         const pid = p.id || p.plugin_id;
                         const pname = p.name || pid;
                         const checked = currentPluginIds[pid] ? ' checked' : '';
@@ -464,19 +464,19 @@
 
                     const checkAll = document.getElementById('panel-dept-check-all');
                     if (checkAll) {
-                        checkAll.addEventListener('change', function() {
+                        checkAll.addEventListener('change', () => {
                             const boxes = panelApi.panel.querySelectorAll('input[name="departments"]');
-                            boxes.forEach(function(cb) { cb.checked = checkAll.checked; });
+                            boxes.forEach((cb) => { cb.checked = checkAll.checked; });
                         });
                         const boxes = panelApi.panel.querySelectorAll('input[name="departments"]');
                         let allChecked = boxes.length > 0;
-                        boxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
+                        boxes.forEach((cb) => { if (!cb.checked) allChecked = false; });
                         checkAll.checked = allChecked;
-                        panelApi.panel.addEventListener('change', function(e) {
+                        panelApi.panel.addEventListener('change', (e) => {
                             if (e.target.name === 'departments') {
                                 const boxes = panelApi.panel.querySelectorAll('input[name="departments"]');
                                 let all = boxes.length > 0;
-                                boxes.forEach(function(cb) { if (!cb.checked) all = false; });
+                                boxes.forEach((cb) => { if (!cb.checked) all = false; });
                                 checkAll.checked = all;
                             }
                         });
@@ -484,9 +484,9 @@
 
                     const pluginFilter = document.getElementById('panel-plugin-filter');
                     if (pluginFilter) {
-                        pluginFilter.addEventListener('input', function() {
+                        pluginFilter.addEventListener('input', () => {
                             const q = pluginFilter.value.toLowerCase();
-                            panelApi.panel.querySelectorAll('.checklist-item[data-item-name]').forEach(function(item) {
+                            panelApi.panel.querySelectorAll('.checklist-item[data-item-name]').forEach((item) => {
                                 const name = item.getAttribute('data-item-name') || '';
                                 item.style.display = (!q || name.includes(q)) ? '' : 'none';
                             });
@@ -495,14 +495,14 @@
 
                     const saveBtn = document.getElementById('mkt-edit-save');
                     if (saveBtn) {
-                        saveBtn.addEventListener('click', function() {
+                        saveBtn.addEventListener('click', () => {
                             handlePanelSave(isEdit, marketplaceId, saveBtn, panelApi);
                         });
                     }
 
                     const deleteBtn = document.getElementById('mkt-edit-delete');
                     if (deleteBtn) {
-                        deleteBtn.addEventListener('click', function() {
+                        deleteBtn.addEventListener('click', () => {
                             panelApi.close();
                             showDeleteConfirm(marketplaceId);
                         });
@@ -510,16 +510,16 @@
 
                     panelApi.open();
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to load plugins', 'error');
                 });
-        }
+        };
 
-        app.events.on('click', '[data-edit-marketplace]', function(e, btn) {
+        app.events.on('click', '[data-edit-marketplace]', (e, btn) => {
             openEdit(btn.getAttribute('data-edit-marketplace'));
         });
 
-        app.events.on('click', '[data-create-marketplace]', function(e, btn) {
+        app.events.on('click', '[data-create-marketplace]', (e, btn) => {
             e.preventDefault();
             openEdit(null);
         });
@@ -539,13 +539,13 @@
         saveBtn.textContent = 'Saving...';
 
         const pluginIds = [];
-        form.querySelectorAll('input[name="plugin_ids"]:checked').forEach(function(cb) { pluginIds.push(cb.value); });
+        form.querySelectorAll('input[name="plugin_ids"]:checked').forEach((cb) => { pluginIds.push(cb.value); });
 
         const selectedRoles = [];
-        form.querySelectorAll('input[name="roles"]:checked').forEach(function(cb) { selectedRoles.push(cb.value); });
+        form.querySelectorAll('input[name="roles"]:checked').forEach((cb) => { selectedRoles.push(cb.value); });
 
         const deptRules = [];
-        form.querySelectorAll('input[name="departments"]').forEach(function(cb) {
+        form.querySelectorAll('input[name="departments"]').forEach((cb) => {
             if (cb.checked) {
                 const defaultToggle = form.querySelector('input[name="dept_default_' + cb.value + '"]');
                 deptRules.push({
@@ -558,7 +558,7 @@
         });
 
         let aclRules = [];
-        selectedRoles.forEach(function(role) {
+        selectedRoles.forEach((role) => {
             aclRules.push({ rule_type: 'role', rule_value: role, access: 'allow', default_included: false });
         });
         aclRules = aclRules.concat(deptRules);
@@ -589,9 +589,9 @@
                     });
                     app.Toast.show('Marketplace updated', 'success');
                     panelApi.close();
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 } else {
-                    const data = await resp.json().catch(function() { return {}; });
+                    const data = await resp.json().catch(() => ({}));
                     app.Toast.show(data.error || 'Failed to update', 'error');
                 }
             } else {
@@ -609,7 +609,7 @@
                     body: JSON.stringify(body)
                 });
                 if (resp.ok || resp.status === 201) {
-                    const created = await resp.json().catch(function() { return {}; });
+                    const created = await resp.json().catch(() => ({}));
                     const createdId = created.id || body.id;
                     if (aclRules.length > 0 && createdId) {
                         await fetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
@@ -621,9 +621,9 @@
                     }
                     app.Toast.show('Marketplace created', 'success');
                     panelApi.close();
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 } else {
-                    const data = await resp.json().catch(function() { return {}; });
+                    const data = await resp.json().catch(() => ({}));
                     app.Toast.show(data.error || 'Failed to create', 'error');
                 }
             }
@@ -635,13 +635,13 @@
         saveBtn.textContent = isEdit ? 'Save Changes' : 'Create Marketplace';
     }
 
-    app.initMarketplaceEditForm = function() {
+    app.initMarketplaceEditForm = () => {
         const form = document.getElementById('marketplace-edit-form');
         if (!form) return;
 
         const isEdit = !!form.querySelector('input[name="marketplace_id"][readonly]');
 
-        form.addEventListener('submit', async function(e) {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn) {
@@ -661,15 +661,15 @@
 
             const pluginCheckboxes = form.querySelectorAll('input[name="plugin_ids"]:checked');
             const pluginIds = [];
-            pluginCheckboxes.forEach(function(cb) { pluginIds.push(cb.value); });
+            pluginCheckboxes.forEach((cb) => { pluginIds.push(cb.value); });
 
             const roleCheckboxes = form.querySelectorAll('input[name="roles"]:checked');
             const selectedRoles = [];
-            roleCheckboxes.forEach(function(cb) { selectedRoles.push(cb.value); });
+            roleCheckboxes.forEach((cb) => { selectedRoles.push(cb.value); });
 
             const deptCheckboxes = form.querySelectorAll('input[name="departments"]');
             const deptRules = [];
-            deptCheckboxes.forEach(function(cb) {
+            deptCheckboxes.forEach((cb) => {
                 if (cb.checked) {
                     const defaultToggle = form.querySelector('input[name="dept_default_' + cb.value + '"]');
                     deptRules.push({
@@ -682,7 +682,7 @@
             });
 
             let aclRules = [];
-            selectedRoles.forEach(function(role) {
+            selectedRoles.forEach((role) => {
                 aclRules.push({ rule_type: 'role', rule_value: role, access: 'allow', default_included: false });
             });
             aclRules = aclRules.concat(deptRules);
@@ -714,9 +714,9 @@
                             body: JSON.stringify({ rules: aclRules, sync_yaml: false })
                         });
                         app.Toast.show('Marketplace updated', 'success');
-                        setTimeout(function() { window.location.href = '/admin/org/marketplaces/'; }, 500);
+                        setTimeout(() => { window.location.href = '/admin/org/marketplaces/'; }, 500);
                     } else {
-                        const data = await resp.json().catch(function() { return {}; });
+                        const data = await resp.json().catch(() => ({}));
                         app.Toast.show(data.error || 'Failed to update', 'error');
                     }
                 } catch (err) {
@@ -739,7 +739,7 @@
                         body: JSON.stringify(body)
                     });
                     if (resp.ok || resp.status === 201) {
-                        const created = await resp.json().catch(function() { return {}; });
+                        const created = await resp.json().catch(() => ({}));
                         const createdId = created.id || body.id;
                         if (aclRules.length > 0 && createdId) {
                             await fetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
@@ -750,9 +750,9 @@
                             });
                         }
                         app.Toast.show('Marketplace created', 'success');
-                        setTimeout(function() { window.location.href = '/admin/org/marketplaces/'; }, 500);
+                        setTimeout(() => { window.location.href = '/admin/org/marketplaces/'; }, 500);
                     } else {
-                        const data = await resp.json().catch(function() { return {}; });
+                        const data = await resp.json().catch(() => ({}));
                         app.Toast.show(data.error || 'Failed to create', 'error');
                     }
                 } catch (err) {
@@ -768,7 +768,7 @@
 
         const deleteBtn = document.getElementById('btn-delete-marketplace');
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
+            deleteBtn.addEventListener('click', () => {
                 const idInput = form.querySelector('input[name="marketplace_id"]');
                 if (idInput) showDeleteConfirm(idInput.value);
             });
@@ -776,21 +776,21 @@
 
         const checkAllDept = form.querySelector('#dept-check-all');
         if (checkAllDept) {
-            checkAllDept.addEventListener('change', function() {
+            checkAllDept.addEventListener('change', () => {
                 const boxes = form.querySelectorAll('input[name="departments"]');
-                boxes.forEach(function(cb) { cb.checked = checkAllDept.checked; });
+                boxes.forEach((cb) => { cb.checked = checkAllDept.checked; });
             });
-            form.addEventListener('change', function(e) {
+            form.addEventListener('change', (e) => {
                 if (e.target.name === 'departments') {
                     const boxes = form.querySelectorAll('input[name="departments"]');
                     let allChecked = boxes.length > 0;
-                    boxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
+                    boxes.forEach((cb) => { if (!cb.checked) allChecked = false; });
                     checkAllDept.checked = allChecked;
                 }
             });
             const boxes = form.querySelectorAll('input[name="departments"]');
             let allChecked = boxes.length > 0;
-            boxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
+            boxes.forEach((cb) => { if (!cb.checked) allChecked = false; });
             checkAllDept.checked = allChecked;
         }
     };

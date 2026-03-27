@@ -13,7 +13,7 @@
     };
     function groupByCategory(items) {
         const groups = {};
-        items.forEach(function(a) {
+        items.forEach((a) => {
             const cat = a.category || 'Other';
             if (!groups[cat]) groups[cat] = [];
             groups[cat].push(a);
@@ -42,7 +42,7 @@
         const groups = groupByCategory(items);
         const categories = Object.keys(groups);
         let html = '';
-        categories.forEach(function(cat) {
+        categories.forEach((cat) => {
             const cards = groups[cat].map(renderAchievementCard).join('');
             html += '<div style="margin-bottom:var(--space-6)">' +
                 '<div class="section-title">' + escapeHtml(cat) + '</div>' +
@@ -51,13 +51,13 @@
         });
         return html;
     }
-    app.renderAchievements = function() {
+    app.renderAchievements = () => {
         const root = document.getElementById('achievements-content');
         if (!root) return;
         root.innerHTML = '<div class="loading-center"><div class="loading-spinner"></div></div>';
-        app.api('/gamification/achievements').then(function(data) {
+        app.api('/gamification/achievements').then((data) => {
             root.innerHTML = renderAchievementsContent(data);
-        }).catch(function(err) {
+        }).catch((err) => {
             root.innerHTML = '<div class="empty-state"><p>Failed to load achievements.</p></div>';
             app.Toast.show(err.message || 'Failed to load achievements', 'error');
         });
