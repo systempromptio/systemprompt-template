@@ -188,7 +188,7 @@ fn build_org_bundles(
             .unwrap_or_else(|| plugin.base.version.clone());
 
         bundles.push(PluginBundle {
-            id: plugin_id.to_string(),
+            id: plugin_id.clone(),
             name: plugin.base.name.clone(),
             description: plugin.base.description.clone(),
             version,

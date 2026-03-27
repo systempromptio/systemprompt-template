@@ -99,9 +99,9 @@ pub(crate) async fn list_forkable_skills_handler(
     let mut items = Vec::new();
     for plugin in &org_plugins {
         for skill in &plugin.skills {
-            if seen.insert(skill.id.to_string()) {
+            if seen.insert(skill.id.clone()) {
                 items.push(ForkableSkillItem {
-                    id: skill.id.to_string(),
+                    id: skill.id.clone(),
                     name: skill.name.clone(),
                     description: skill.description.clone(),
                     plugin_id: plugin.id.clone(),
@@ -150,9 +150,9 @@ pub(crate) async fn list_forkable_agents_handler(
     let mut items = Vec::new();
     for plugin in &org_plugins {
         for agent in &plugin.agents {
-            if seen.insert(agent.id.to_string()) {
+            if seen.insert(agent.id.clone()) {
                 items.push(ForkableAgentItem {
-                    id: agent.id.to_string(),
+                    id: agent.id.clone(),
                     name: agent.name.clone(),
                     description: agent.description.clone(),
                     plugin_id: plugin.id.clone(),

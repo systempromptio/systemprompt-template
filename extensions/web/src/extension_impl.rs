@@ -129,7 +129,10 @@ impl Extension for WebExtension {
         let pool = db.pool()?;
         let write_pool = db.write_pool_arc().unwrap_or_else(|_| pool.clone());
 
-        let tier_cache = admin::tier_enforcement::TierEnforcementCache::default();
+        let event_hub = admin::event_hub::EventHub::new();
+        let tier_cache = admin::tier_enforcement::TierEnforcementCache::new();
+        let ai_service: Option<Arc<systemprompt::ai::AiService>> = init_ai_service();
+
         let admin_api = admin::admin_router(pool.clone(), write_pool.clone(), tier_cache.clone());
         let webhook_api = admin::hooks_webhook_router(write_pool.clone());
         let secrets_api = admin::secrets_router(write_pool);
@@ -159,9 +162,17 @@ impl Extension for WebExtension {
                 return Some(ExtensionRouter::public(api_router, "/api/public"));
             }
         };
+        let workspace_router = admin::workspace_ssr_router(
+            pool.clone(),
+            engine.clone(),
+            event_hub,
+            ai_service,
+            tier_cache,
+        );
         let ssr_router = admin::admin_ssr_router(pool, engine);
 
         let combined = Router::new()
+            .nest_service("/control-center", workspace_router)
             .nest_service("/admin", ssr_router)
             .nest("/api/public", api_router);
 
@@ -171,7 +182,7 @@ impl Extension for WebExtension {
     fn site_auth(&self) -> Option<SiteAuthConfig> {
         Some(SiteAuthConfig {
             login_path: "/admin/login",
-            protected_prefixes: &["/admin"],
+            protected_prefixes: &["/admin", "/control-center"],
             public_prefixes: &["/admin/login", "/admin/add-passkey"],
             required_scope: "user",
         })

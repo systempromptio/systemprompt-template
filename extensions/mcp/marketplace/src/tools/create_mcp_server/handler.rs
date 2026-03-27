@@ -63,13 +63,13 @@ impl McpToolHandler for CreateMcpServerHandler {
             mcp_server_id: systemprompt::identifiers::McpServerId::new(mcp_server_id.clone()),
             name: input.name.clone(),
             description: input.description.clone(),
-            binary: input.binary.unwrap_or_else(|| String::new()),
-            package_name: input.package_name.unwrap_or_else(|| String::new()),
+            binary: input.binary.unwrap_or_else(String::new),
+            package_name: input.package_name.unwrap_or_else(String::new),
             port: input.port,
             endpoint: input.endpoint.clone(),
             oauth_required: input.oauth_required,
             oauth_scopes: input.oauth_scopes,
-            oauth_audience: input.oauth_audience.unwrap_or_else(|| String::new()),
+            oauth_audience: input.oauth_audience.unwrap_or_else(String::new),
             base_mcp_server_id: input.base_mcp_server_id.map(systemprompt::identifiers::McpServerId::new),
         };
 

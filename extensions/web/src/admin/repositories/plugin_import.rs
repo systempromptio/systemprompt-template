@@ -65,16 +65,16 @@ fn extract_import_metadata(
     manifest: Option<&PluginManifest>,
     bundle: &super::export::PluginBundle,
 ) -> ImportMetadata {
-    let name = manifest.map_or(&bundle.name, |m| &m.name).to_string();
+    let name = manifest.map_or(&bundle.name, |m| &m.name).clone();
     let description = manifest
         .map_or(&bundle.description, |m| &m.description)
-        .to_string();
-    let version = manifest.map_or(&bundle.version, |m| &m.version).to_string();
+        .clone();
+    let version = manifest.map_or(&bundle.version, |m| &m.version).clone();
     let author_name = manifest
         .and_then(|m| m.author.as_ref())
         .map_or("", |a| a.name.as_str())
         .to_string();
-    let keywords = manifest.map(|m| m.keywords.clone()).unwrap_or_else(Vec::new);
+    let keywords = manifest.map_or_else(Vec::new, |m| m.keywords.clone());
 
     ImportMetadata {
         name,

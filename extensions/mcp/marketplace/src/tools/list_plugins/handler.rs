@@ -99,7 +99,7 @@ impl McpToolHandler for ListPluginsHandler {
 
                 let onboarding_value = onboarding
                     .and_then(|o| serde_json::to_string(o).ok())
-                    .unwrap_or_else(|| String::new());
+                    .unwrap_or_else(String::new);
 
                 serde_json::json!({
                     "plugin_id": p.plugin_id,
