@@ -59,6 +59,8 @@ pub mod user_plugins;
 pub mod user_settings;
 pub mod user_skills;
 pub mod users;
+pub mod governance;
+pub mod user_queries;
 pub mod webhook;
 
 pub use agents::{create_agent, delete_agent, find_agent, list_agents, update_agent};
@@ -114,4 +116,5 @@ pub use users::{
     fetch_user_roles, find_user_detail, get_user_event_type_counts, get_user_sessions,
     get_user_top_tools, get_user_usage, list_user_events, list_users, update_user, UserRank,
 };
+pub use user_queries::fetch_department_stats;
 pub use webhook::{insert_plugin_usage_event, UsageEventParams};

@@ -29,7 +29,7 @@ related_docs:
 
 # Scaling Architecture
 
-> **See this in the presentation:** [Slide 8: Stateless Architecture](/documentation/presentation#slide-8)
+> **See this in the presentation:** [Slide 11: Personalization & Ownership](/documentation/presentation#slide-11)
 
 **TL;DR:** The platform is the narrow waist between your client stacks and your backend stacks. It scales horizontally because it is stateless — JWT tokens carry identity, PostgreSQL holds all persistent state, and application instances are interchangeable. It deploys as a sidecar, a standalone service, a centralized multi-tenant gateway, or an embedded library. AI implementations are fragmented and complex. This adapts to whatever architecture exists.
 
@@ -328,14 +328,3 @@ Use this checklist when scaling for enterprise deployments:
 | 7 | Monitor agent port allocation | Ensure port ranges are not exhausted across instances |
 | 8 | Set up log aggregation | JSON logs from all instances to central logging |
 | 9 | Configure alerting | Health check failures, error rate spikes, database connection saturation |
-
-## Troubleshooting at Scale
-
-| Issue | Diagnosis | Solution |
-|-------|-----------|----------|
-| **Request timeouts** | Check `systemprompt infra logs view --level error` | Add application instances or increase database connections |
-| **Rate limit errors (429)** | Check `systemprompt infra logs view --level warn` for rate limit logs | Adjust tier multipliers or per-endpoint limits in profile |
-| **Database connection exhaustion** | PostgreSQL logs show "too many connections" | Increase `max_connections` or reduce pool size per instance |
-| **Uneven load distribution** | Some instances at high CPU while others idle | Switch load balancer to least-connections algorithm |
-| **Slow analytics queries** | Dashboard takes seconds to load | Route analytics to read replicas, add indexes |
-| **MCP server timeouts** | Agent orchestration failing | Check MCP server health, increase MCP rate limits |

@@ -29,7 +29,7 @@ related_docs:
 
 **TL;DR:** MCP (Model Context Protocol) servers expose tools that AI agents use during conversations. When an agent needs to search a database, call an API, or perform any external action, it invokes a tool through an MCP server. The admin dashboard lets you add, configure, and manage MCP server connections -- including binary paths, ports, endpoints, and OAuth authentication settings.
 
-> **See this in the presentation:** [Slide 14: Every Tool Call Governed](/documentation/presentation#slide-14)
+> **See this in the presentation:** [Slide 9: Audit Trail & Access Control](/documentation/presentation#slide-9)
 
 ## What You'll See
 
@@ -165,14 +165,3 @@ MCP servers are discoverable through the platform API:
 | `/api/v1/mcp/registry` | List all available MCP servers |
 | `/api/v1/mcp/{server-id}/mcp` | Individual server MCP endpoint |
 
-## Troubleshooting
-
-**Server not appearing in the list** -- Non-admin users only see servers referenced by their assigned plugins. Verify the server is listed in a plugin you have access to, or ask an admin.
-
-**Tools not available to an agent** -- Check that the MCP server is enabled and that the agent's YAML configuration lists the server under `mcpServers`. Use `systemprompt infra logs view --level error --since 1h` to check for connection errors.
-
-**OAuth authentication errors** -- Verify the client token includes the required scopes and the audience matches the server's `oauth_audience` setting. Check `systemprompt infra logs request list` for failed request details.
-
-**Server binary not found** -- Ensure the binary path is correct and the executable exists on the system. Check that the package is installed.
-
-**Port conflicts** -- If a server fails to start, verify no other process is using the configured port. Each MCP server must use a unique port.

@@ -31,7 +31,7 @@ related_docs:
 
 # Platform Architecture
 
-> **See this in the presentation:** [Slide 7: Single Binary, Zero Dependencies](/documentation/presentation#slide-7)
+> **See this in the presentation:** [Slide 11: Personalization & Ownership](/documentation/presentation#slide-11)
 
 **TL;DR:** The platform is a single Rust binary with PostgreSQL as its only dependency. It acts as the **narrow waist** between client stacks (agents, UIs, tools) and backend stacks (LLMs, APIs, data) — governing every AI interaction without imposing a specific framework on either side. Three layers — Core (library), Extensions (Rust), Services (YAML/Markdown) — compile into one binary that deploys as a sidecar, standalone service, centralized gateway, or embedded library. CLI-first design exposes every operation across 8 domains. Profile-based deployment means the same binary runs in local development and production with different YAML configs.
 
@@ -277,14 +277,3 @@ The production Docker image runs as a non-root user with a health check endpoint
   web/                    # Compiled web assets
   storage/                # Files, CSS, uploads
 ```
-
-## Troubleshooting Architecture Issues
-
-| Issue | Solution |
-|-------|----------|
-| **Service not starting** | Check `systemprompt infra logs view --level error --since 5m` for startup errors |
-| **Database connection failures** | Verify PostgreSQL is running and connection string is correct in the profile |
-| **Extension not loading** | Check that the extension is not in the `extensions.disabled` list in the profile |
-| **Security headers not applied** | Verify `security_headers.enabled: true` in the production profile |
-| **CLI command not found** | Run `systemprompt --help` to see available domains. The command may be in a different domain than expected. |
-| **Profile not loading** | Check that the profile YAML is valid. Run `systemprompt infra logs view --level error` for parsing errors. |

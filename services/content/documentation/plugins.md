@@ -33,7 +33,7 @@ related_docs:
 
 **TL;DR:** The Plugins page is your central configuration dashboard. It shows every installed plugin alongside a unified view of all agents, MCP servers, and skills across your deployment. From here you can enable or disable any resource, drill into plugin details, customize skills, browse skill files, and export plugin configurations for use with Claude Desktop.
 
-> **See this in the presentation:** [Slide 15: Skills, Plugins & Marketplace](/documentation/presentation#slide-15)
+> **See this in the presentation:** [Slide 6: Skills, Plugins & the Marketplace](/documentation/presentation#slide-6)
 
 ## What You'll See
 
@@ -184,16 +184,3 @@ These are the fields stored in each plugin's `config.yaml`:
 | `mcp_servers` | array | no | MCP server IDs included in this plugin |
 | `hooks` | array | no | Event hooks (see [Hooks](/documentation/hooks)) |
 
-## Troubleshooting
-
-**Plugin not appearing in the list** -- Verify that the plugin's `config.yaml` exists under `services/plugins/<id>/` and contains valid YAML. Check `systemprompt infra logs view --level error` for parsing errors.
-
-**Toggle not persisting** -- The toggle calls the API to update the plugin's enabled state. Check your browser's network tab for a failed `PATCH` request. Ensure the user has admin access.
-
-**Skills missing from a plugin** -- Open the plugin edit page and verify the skill IDs are checked in the Skills checklist. Skill IDs must exactly match those defined in `services/skills/`.
-
-**Export button not working** -- The Export button generates configuration for Claude Desktop. Ensure at least one MCP server is configured and enabled across your plugins.
-
-**"Admin access required" error on delete** -- Only users with the `admin` role can delete plugins. Non-admin users will see this error if they attempt deletion via the API.
-
-**Role filtering hiding plugins** -- Non-admin users only see plugins whose `roles` array includes at least one of their assigned roles. To make a plugin visible to everyone, include all roles or ensure the `admin` role is assigned to the user.

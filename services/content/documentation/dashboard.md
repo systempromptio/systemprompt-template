@@ -31,7 +31,7 @@ related_docs:
 
 **TL;DR:** The dashboard is the admin home page. It shows a metric ribbon with today's key numbers, an AI usage chart with selectable time ranges, live activity feed, system health indicators, top users leaderboard, popular skills, event breakdown, model usage, hourly activity, and department activity. Admin access is required — non-admin users are redirected to their profile page.
 
-> **See this in the presentation:** [Slide 16: Cost Visibility & Analytics](/documentation/presentation#slide-16)
+> **See this in the presentation:** [Slide 8: The Admin Dashboard](/documentation/presentation#slide-8)
 
 ## Access Control
 
@@ -132,16 +132,6 @@ The dashboard links to other admin pages:
 - Click **View all events** in the live activity feed to go to the [Events](/documentation/events) page
 - Use the sidebar to navigate to [Users](/documentation/users), [Jobs](/documentation/jobs), and other management pages
 
-## Troubleshooting
-
-**Dashboard shows all zeros** — This typically means no events have been recorded yet. Verify that hooks are configured and tracking events. Check `systemprompt infra logs view --level error` for issues.
-
-**AI Usage chart shows "No activity data for this time range"** — Try a different time range. If all ranges are empty, confirm that usage events are being recorded in the database.
-
-**Redirected to profile page** — You do not have admin access. Contact an administrator to add the `admin` role to your account.
-
-**Live activity not updating** — The SSE connection may have dropped. Refresh the page to reconnect. Check browser developer tools for SSE connection errors.
-
 ## Enterprise Cost & Usage Visibility
 
 The dashboard provides enterprise-scale visibility designed for large organizational deployments. At Foodles scale, cost and usage data must be actionable across organizational boundaries — from individual agents to entire departments.
@@ -168,14 +158,14 @@ The model usage chart (described above) extends to show distribution across agen
 Use the CLI for programmatic access to cost data:
 
 ```bash
-# Summary of total costs across all agents and departments
-systemprompt analytics costs summary
+# Summary overview of analytics
+systemprompt analytics overview
 
-# Break down costs by individual agent
-systemprompt analytics costs breakdown --by agent
+# Analytics for the last 7 days
+systemprompt analytics overview --since 7d
 
-# Break down costs by AI model
-systemprompt analytics costs breakdown --by model
+# Export analytics data
+systemprompt analytics overview --export
 ```
 
 These commands output structured data suitable for scripting, reporting, and integration with existing BI tools.

@@ -31,7 +31,7 @@ related_docs:
 
 **Secrets let you store encrypted environment variables -- such as API keys, tokens, and credentials -- scoped to individual plugins, with runtime resolution through a secure token-based API.**
 
-> **See this in the presentation:** [Slide 12: Enterprise Secrets](/documentation/presentation#slide-12)
+> **See this in the presentation:** [Slide 11: Personalization & Ownership](/documentation/presentation#slide-11)
 
 ## What You'll See
 

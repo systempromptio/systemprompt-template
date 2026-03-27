@@ -24,7 +24,9 @@ mod ssr_dashboard_report;
 mod ssr_dashboard_traffic;
 mod ssr_dashboard_traffic_pages;
 mod ssr_dashboard_types;
+mod ssr_access_control;
 mod ssr_events;
+mod ssr_governance;
 mod ssr_gamification;
 mod ssr_jobs;
 mod ssr_marketplace;
@@ -75,6 +77,8 @@ pub(crate) use ssr_profile::handle_generate_profile_report;
 pub(crate) use ssr_profile::profile_page;
 pub(crate) use ssr_settings::settings_page;
 pub(crate) use ssr_setup::setup_page;
+pub(crate) use ssr_access_control::access_control_page;
+pub(crate) use ssr_governance::governance_page;
 pub(crate) use ssr_users::{user_detail_page, users_page};
 
 fn branding_context(engine: &AdminTemplateEngine) -> serde_json::Value {

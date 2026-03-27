@@ -51,8 +51,8 @@ The login page implements a full OAuth 2.0 Authorization Code flow with Proof Ke
 2. **Authorize** -- The browser redirects to `/api/v1/core/oauth/authorize` with the code challenge, a CSRF state parameter, client ID (`marketplace-admin`), and scope (`user`).
 3. **User authenticates** -- The OAuth provider handles the actual credential verification (this is delegated to the configured identity provider).
 4. **Callback** -- The OAuth provider redirects back to `/admin/login?code=...`. The login page extracts the authorization code from the URL.
-5. **Token exchange** -- The page sends a POST request to `/api/v1/core/oauth/token` with the authorization code and the original PKCE code verifier.
-6. **Session created** -- The returned JWT access token is stored as an `access_token` cookie, and a server-side session is established via `/api/public/auth/session`.
+5. **Token exchange** -- The page sends the authorization code and the original PKCE code verifier to exchange for tokens.
+6. **Session created** -- The returned JWT access token is stored as an `access_token` cookie, and a server-side session is established.
 7. **Redirect** -- The user is sent to the admin dashboard (or to a custom redirect URL if one was specified via the `?redirect=` query parameter).
 
 ### Token Details
@@ -89,19 +89,9 @@ The `UserContext` contains:
 | `department` | User's department |
 | `is_admin` | Whether the user has the `admin` role |
 
-### Current User Endpoint
-
-You can check your current session status by calling:
-
-```
-GET /admin/auth/me
-```
-
-This returns your `UserContext` as JSON if authenticated, or HTTP 401 if your session is invalid.
-
 ### Signing Out
 
-To sign out, clear the `access_token` cookie. The login page does this automatically when starting a new OAuth flow by sending a DELETE request to `/api/public/auth/session` and removing the cookie.
+To sign out, clear the `access_token` cookie. The login page does this automatically when starting a new OAuth flow.
 
 ## Magic Link Authentication
 
@@ -146,14 +136,3 @@ The admin dashboard enforces authentication at the routing level:
 | `/admin/api/*` (write operations) | Requires valid session + admin role for admin-only endpoints |
 
 Pages that require admin privileges (such as Access Control and user management) perform an additional `is_admin` check and return HTTP 403 with an "Admin access required" message if the user lacks the admin role.
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| **Stuck on "Redirecting to sign in..."** | The OAuth provider may be unreachable. Check your network connection and verify the OAuth endpoint is configured correctly in the platform settings. |
-| **"Token exchange failed" error** | The PKCE code verifier in `sessionStorage` may have been cleared (e.g., by closing the tab during auth). Click "Try again" to restart the flow from scratch. |
-| **Session expires frequently** | The default token lifetime is 1 hour. Check your OAuth provider configuration to increase the `expires_in` value, or configure token refresh. |
-| **Magic link never arrives** | Verify that email delivery is configured in your deployment. Check server logs for "Magic link token created (email sending not configured)" which indicates the token was generated but email transport is not set up. |
-| **"Authentication required" on API calls** | Your `access_token` cookie has expired or was cleared. Navigate to `/admin/login` to re-authenticate. |
-| **Redirect loop between login and dashboard** | Clear your browser's `sessionStorage` and cookies for the site, then try again. This can happen if stale PKCE state conflicts with a new flow. |

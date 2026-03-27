@@ -119,12 +119,3 @@ Search by session ID to see all events within a single AI session. This shows th
 
 Search by username to see all events for a specific user. This is useful for understanding usage patterns or investigating specific incidents.
 
-## Troubleshooting
-
-**No events showing** — Verify that hooks are configured to track events. Check `systemprompt infra logs view --level error` for any database issues.
-
-**Search returns no results** — The search matches against user names, tool names, and session IDs. Try a broader search term. Note that search requires pressing Enter to execute.
-
-**Missing event types** — Some event types only appear when specific features are in use. For example, `SubagentStart` events only appear when subagents are configured and spawned.
-
-**Raw metadata is empty** — Some events may have minimal metadata. Tool use events typically have the richest metadata including tool parameters and results.

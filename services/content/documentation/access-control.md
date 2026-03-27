@@ -33,7 +33,7 @@ related_docs:
 
 **TL;DR:** The Access Control page lets administrators assign role-based and department-based permissions to every plugin, agent, and MCP server in the system. Rules determine which users can see and use each resource, and changes can be applied individually or in bulk across multiple entities at once.
 
-> **See this in the presentation:** [Slide 10: RBAC](/documentation/presentation#slide-10)
+> **See this in the presentation:** [Slide 9: Audit Trail & Access Control](/documentation/presentation#slide-9)
 
 ## What You'll See
 
@@ -155,30 +155,6 @@ Access control rules filter what users see across every page of the dashboard:
 - **Browse Plugins** -- Marketplace listings respect access control rules.
 
 Admins always see everything regardless of access rules.
-
-## API Endpoints
-
-The Access Control page interacts with these API endpoints:
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/admin/api/access-control/rules` | List all rules, optionally filtered by `entity_type` and `entity_id` |
-| PUT | `/admin/api/access-control/rules/{entity_type}/{entity_id}` | Set access rules for a specific entity (replaces existing rules) |
-| POST | `/admin/api/access-control/bulk-assign` | Apply rules to multiple entities at once |
-| GET | `/admin/api/access-control/departments` | List all departments with user counts |
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| **"Access Denied" when opening the page** | Only users with the `admin` role can access the Access Control page. Ask an administrator to add the admin role to your account. |
-| **Entity missing from the table** | The entity may not be loaded from disk. Check that the plugin/agent/MCP server configuration exists under `services/` and contains valid YAML. Run `systemprompt infra logs view --level error` to check for parsing errors. |
-| **Role changes not taking effect** | If you updated roles via the Access Control page but users still see the wrong resources, the change may not have synced to the plugin YAML. Re-save the rules and ensure YAML sync is enabled. Users may also need to refresh their session. |
-| **Department filter shows no departments** | Departments are pulled from the `department` field on user records. If no users have departments assigned, the filter will be empty. Assign departments to users from the Users page. |
-| **Bulk assign button stays disabled** | You must select at least one entity checkbox before the Bulk Assign button becomes active. Use the select-all checkbox in the table header to select all visible entities. |
-| **Coverage shows 0 for all entities** | This means no department-level rules have been configured. Open individual entities and assign department access, or use bulk assignment to set department rules across multiple entities. |
-
----
 
 ## Enterprise Governance: Whitelisting & Blacklisting
 
