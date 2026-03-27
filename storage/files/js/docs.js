@@ -16,9 +16,9 @@
     const mobileDetails = document.querySelector('.toc-mobile-details');
     if (!mobileDetails) return;
 
-    mobileDetails.querySelectorAll('a').forEach(function(link) {
-      link.addEventListener('click', function() {
-        setTimeout(function() {
+    mobileDetails.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        setTimeout(() => {
           mobileDetails.removeAttribute('open');
         }, 100);
       });
@@ -191,7 +191,7 @@
     const btn = document.querySelector('.docs-export-btn');
     if (!btn) return;
 
-    btn.addEventListener('click', async function() {
+    btn.addEventListener('click', async () => {
       const title = document.querySelector('.docs-header h1');
       const description = document.querySelector('.docs-description');
       const content = document.querySelector('.docs-content');

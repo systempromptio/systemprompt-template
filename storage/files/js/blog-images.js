@@ -1,15 +1,15 @@
 (function() {
   'use strict';
 
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', () => {
     const containers = document.querySelectorAll('[data-component="featured-image"]');
 
-    containers.forEach(function(container) {
+    containers.forEach((container) => {
       const img = container.querySelector('img');
       const placeholder = container.querySelector('.image-placeholder');
 
       if (img && placeholder) {
-        img.addEventListener('error', function() {
+        img.addEventListener('error', () => {
           img.classList.add('is-hidden');
           placeholder.classList.remove('is-hidden');
         });

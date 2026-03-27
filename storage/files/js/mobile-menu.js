@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = document.querySelector('.mobile-menu-toggle');
     const navLinks = document.querySelector('.nav-links');
     const docsSidebar = document.querySelector('.docs-sidebar');
@@ -26,20 +26,20 @@
     });
 
     if (isDocsPage && docsSidebar) {
-      docsSidebar.querySelectorAll('a').forEach(function(link) {
-        link.addEventListener('click', function() {
+      docsSidebar.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => {
           closeMenu();
         });
       });
     } else if (navLinks) {
-      navLinks.querySelectorAll('a').forEach(function(link) {
-        link.addEventListener('click', function() {
+      navLinks.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => {
           closeMenu();
         });
       });
     }
 
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && document.body.classList.contains('menu-open')) {
         closeMenu();
       }

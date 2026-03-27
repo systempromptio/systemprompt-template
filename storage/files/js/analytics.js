@@ -75,9 +75,7 @@
   function detectRageClick(timestamp) {
     state.clickTimestamps.push(timestamp);
 
-    const recentClicks = state.clickTimestamps.filter(function(t) {
-      return timestamp - t < RAGE_CLICK_WINDOW_MS;
-    });
+    const recentClicks = state.clickTimestamps.filter((t) => timestamp - t < RAGE_CLICK_WINDOW_MS);
 
     state.clickTimestamps = recentClicks;
 
@@ -343,7 +341,7 @@
   let scrollTimeout;
   function throttledScroll() {
     if (!scrollTimeout) {
-      scrollTimeout = setTimeout(function() {
+      scrollTimeout = setTimeout(() => {
         scrollTimeout = null;
         handleScroll();
       }, 100);
@@ -353,7 +351,7 @@
   let mouseMoveTimeout;
   function throttledMouseMove(event) {
     if (!mouseMoveTimeout) {
-      mouseMoveTimeout = setTimeout(function() {
+      mouseMoveTimeout = setTimeout(() => {
         mouseMoveTimeout = null;
       }, 50);
       handleMouseMove(event);

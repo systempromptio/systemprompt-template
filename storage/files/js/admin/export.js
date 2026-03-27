@@ -2,15 +2,15 @@
     'use strict';
 
     function copyToClipboard(text, btn) {
-        navigator.clipboard.writeText(text).then(function() {
+        navigator.clipboard.writeText(text).then(() => {
             const orig = btn.textContent;
             btn.textContent = 'Copied!';
             btn.classList.add('copied');
-            setTimeout(function() {
+            setTimeout(() => {
                 btn.textContent = orig;
                 btn.classList.remove('copied');
             }, 2000);
-        }).catch(function() {
+        }).catch(() => {
             app.Toast.show('Failed to copy to clipboard', 'error');
         });
     }
@@ -84,9 +84,9 @@
             const JSZip = await app.shared.loadJSZip();
             const zip = new JSZip();
             const plugins = data.plugins || [];
-            plugins.forEach(function(plugin) {
+            plugins.forEach((plugin) => {
                 const folder = zip.folder(plugin.id);
-                (plugin.files || []).forEach(function(file) {
+                (plugin.files || []).forEach((file) => {
                     const opts = file.executable ? { unixPermissions: '755' } : {};
                     folder.file(file.path, file.content, opts);
                 });
@@ -113,18 +113,18 @@
         }
     }
 
-    app.exportInteractions = function(exportData) {
+    app.exportInteractions = (exportData) => {
         if (!exportData) return;
 
-        app.events.on('click', '#btn-download-zip', function() {
+        app.events.on('click', '#btn-download-zip', () => {
             downloadZip(exportData);
         });
 
-        app.events.on('click', '[data-action="toggle-bundle"]', function(e, el) {
+        app.events.on('click', '[data-action="toggle-bundle"]', (e, el) => {
             toggleBundle(el.getAttribute('data-idx'));
         });
 
-        app.events.on('click', '[data-action="copy-content"]', function(e, el) {
+        app.events.on('click', '[data-action="copy-content"]', (e, el) => {
             const pluginIdx = parseInt(el.getAttribute('data-plugin-idx'), 10);
             const fileIdx = parseInt(el.getAttribute('data-file-idx'), 10);
             const plugin = (exportData.plugins || [])[pluginIdx];
@@ -134,7 +134,7 @@
             }
         });
 
-        app.events.on('click', '[data-action="copy-script"]', function(e, el) {
+        app.events.on('click', '[data-action="copy-script"]', (e, el) => {
             const script = generateInstallScript(exportData);
             copyToClipboard(script, el);
         });

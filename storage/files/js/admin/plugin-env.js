@@ -11,9 +11,9 @@
     function mergeDefsWithValues(defs, stored) {
         const merged = [];
         const storedMap = {};
-        stored.forEach(function(v) { storedMap[v.var_name] = v; });
+        stored.forEach((v) => { storedMap[v.var_name] = v; });
 
-        defs.forEach(function(def) {
+        defs.forEach((def) => {
             const existing = storedMap[def.name];
             merged.push({
                 name: def.name,
@@ -27,7 +27,7 @@
             delete storedMap[def.name];
         });
 
-        Object.keys(storedMap).forEach(function(key) {
+        Object.keys(storedMap).forEach((key) => {
             const s = storedMap[key];
             merged.push({
                 name: s.var_name,
@@ -48,7 +48,7 @@
             return '<div class="empty-state" style="padding:var(--space-6)"><p>No environment variables defined for this plugin.</p></div>';
         }
         let html = '';
-        vars.forEach(function(v, i) {
+        vars.forEach((v, i) => {
             const inputType = v.secret ? 'password' : 'text';
             const placeholder = v.example ? v.example : '';
             const requiredBadge = v.required ? ' <span class="badge badge-red">required</span>' : '';
@@ -87,7 +87,7 @@
         if (closeBtn) closeBtn.addEventListener('click', close);
 
         const saveBtn = overlay.querySelector('#plugin-env-save');
-        if (saveBtn) saveBtn.addEventListener('click', function() { handleSave(vars); });
+        if (saveBtn) saveBtn.addEventListener('click', () => { handleSave(vars); });
     }
 
     async function handleSave(vars) {
@@ -99,7 +99,7 @@
         try {
             const inputs = overlay.querySelectorAll('.plugin-env-input');
             const payload = [];
-            inputs.forEach(function(input) {
+            inputs.forEach((input) => {
                 const name = input.getAttribute('data-var-name');
                 const isSecret = input.getAttribute('data-is-secret') === '1';
                 const value = input.value;
@@ -118,7 +118,7 @@
                 saveBtn.style.borderColor = 'var(--success)';
             }
             app.Toast.show('Environment variables saved', 'success');
-            setTimeout(function() { close(); }, 600);
+            setTimeout(() => { close(); }, 600);
         } catch (err) {
             app.Toast.show(err.message || 'Save failed', 'error');
             if (saveBtn) {
@@ -166,7 +166,7 @@
         '</div>';
         document.body.append(overlay);
 
-        overlay.addEventListener('click', function(e) {
+        overlay.addEventListener('click', (e) => {
             if (e.target === overlay) close();
         });
 

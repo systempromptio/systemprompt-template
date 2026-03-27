@@ -5,7 +5,7 @@
     let plugins = [];
 
     function showVisibilityModal(pluginId) {
-        const plugin = plugins.find(function(p) { return p.id === pluginId; });
+        const plugin = plugins.find((p) => p.id === pluginId);
         if (!plugin) return;
         const rules = plugin.visibility_rules || [];
 
@@ -48,7 +48,7 @@
             if (container) container.innerHTML = renderRulesList(modalRules);
         }
 
-        overlay.addEventListener('click', async function(e) {
+        overlay.addEventListener('click', async (e) => {
             if (e.target === overlay || e.target.closest('[data-confirm-cancel]')) {
                 overlay.remove();
                 return;
@@ -95,7 +95,7 @@
 
     function renderRulesList(rules) {
         if (!rules.length) return '<p style="font-size:var(--text-sm);color:var(--text-tertiary)">No rules configured</p>';
-        return rules.map(function(rule, idx) {
+        return rules.map((rule, idx) => {
             return '<div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1) 0;font-size:var(--text-sm)">' +
                 '<span class="badge ' + (rule.access === 'allow' ? 'badge-yellow' : 'badge-red') + '">' + escapeHtml(rule.rule_type) + ': ' + escapeHtml(rule.rule_value) + ' (' + escapeHtml(rule.access) + ')</span>' +
                 '<button class="btn btn-danger" style="font-size:var(--text-xs);padding:2px 6px" data-remove-rule="' + idx + '">Remove</button>' +
@@ -103,7 +103,7 @@
         }).join('');
     }
 
-    app.initMarketplace = function(selector, pluginsData) {
+    app.initMarketplace = (selector, pluginsData) => {
         const root = document.querySelector(selector);
         if (!root) return;
         plugins = pluginsData || [];
@@ -111,9 +111,9 @@
         const searchInput = document.getElementById('mkt-search');
         if (searchInput) {
             let debounceTimer = null;
-            searchInput.addEventListener('input', function() {
+            searchInput.addEventListener('input', () => {
                 clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(function() {
+                debounceTimer = setTimeout(() => {
                     const q = searchInput.value.toLowerCase().trim();
                     const cards = root.querySelectorAll('.plugin-card[data-plugin-id]');
                     for (let i = 0; i < cards.length; i++) {
@@ -128,14 +128,14 @@
 
         const sortSelect = document.getElementById('mkt-sort');
         if (sortSelect) {
-            sortSelect.addEventListener('change', function() {
+            sortSelect.addEventListener('change', () => {
                 const url = new URL(window.location.href);
                 url.searchParams.set('sort', sortSelect.value);
                 window.location.href = url.toString();
             });
         }
 
-        root.addEventListener('click', async function(e) {
+        root.addEventListener('click', async (e) => {
             const toggleBtn = e.target.closest('[data-toggle-plugin]');
             if (toggleBtn) {
                 const card = toggleBtn.closest('.plugin-card');
@@ -171,7 +171,7 @@
                             container.innerHTML = '<div style="margin-top:var(--space-2);font-size:var(--text-xs);color:var(--text-tertiary)">No users found</div>';
                         } else {
                             container.innerHTML = '<div style="margin-top:var(--space-2);display:flex;flex-direction:column;gap:var(--space-1)">' +
-                                users.map(function(u) {
+                                users.map((u) => {
                                     return '<div style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-xs);padding:var(--space-1) 0;border-bottom:1px solid var(--border-primary)">' +
                                         '<span style="font-weight:600;color:var(--text-primary)">' + escapeHtml(u.display_name || 'Unknown') + '</span>' +
                                         (u.department ? '<span class="badge badge-blue">' + escapeHtml(u.department) + '</span>' : '') +

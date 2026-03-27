@@ -9,15 +9,15 @@
     let source = null;
     let reconnectDelay = 1000;
 
-    function connect() {
+    const connect = () => {
         source = new EventSource('/admin/api/sse/dashboard');
 
-        source.addEventListener('open', function() {
+        source.addEventListener('open', () => {
             if (indicator) indicator.classList.remove('disconnected');
             reconnectDelay = 1000;
         });
 
-        source.addEventListener('activity', function(e) {
+        source.addEventListener('activity', (e) => {
             try {
                 const events = JSON.parse(e.data);
                 for (let i = events.length - 1; i >= 0; i--) {
@@ -27,22 +27,22 @@
             } catch (_) {}
         });
 
-        source.addEventListener('stats', function(e) {
+        source.addEventListener('stats', (e) => {
             try {
                 const stats = JSON.parse(e.data);
                 updateRibbon(stats);
             } catch (_) {}
         });
 
-        source.addEventListener('error', function() {
+        source.addEventListener('error', () => {
             if (indicator) indicator.classList.add('disconnected');
             source.close();
             setTimeout(connect, reconnectDelay);
             reconnectDelay = Math.min(reconnectDelay * 2, 30000);
         });
-    }
+    };
 
-    function prependFeedItem(evt) {
+    const prependFeedItem = (evt) => {
         if (!feedEl) return;
         const div = document.createElement('div');
         div.className = 'feed-item new-item';
@@ -73,18 +73,18 @@
         } else {
             feedEl.insertBefore(div, feedEl.firstChild);
         }
-    }
+    };
 
-    function trimFeed(max) {
+    const trimFeed = (max) => {
         if (!feedEl) return;
         let items = feedEl.querySelectorAll('.feed-item');
         while (items.length > max) {
             items[items.length - 1].remove();
             items = feedEl.querySelectorAll('.feed-item');
         }
-    }
+    };
 
-    function updateRibbon(stats) {
+    const updateRibbon = (stats) => {
         if (!ribbon) return;
         const keys = ['events_today', 'tool_uses', 'prompts', 'total_sessions', 'subagents_spawned', 'error_count', 'total_tokens', 'total_cost', 'failure_count'];
         for (let i = 0; i < keys.length; i++) {
@@ -103,17 +103,17 @@
                 valEl.classList.add('metric-flash');
             }
         }
-    }
+    };
 
-    function escapeHtml(str) {
+    const escapeHtml = (str) => {
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
-    }
+    };
 
     connect();
 
-    window.addEventListener('beforeunload', function() {
+    window.addEventListener('beforeunload', () => {
         if (source) source.close();
     });
 })();

@@ -69,7 +69,7 @@ window.AdminApp = window.AdminApp || {};
                     if (me.department) {
                         parts.push(app.escapeHtml(me.department));
                     }
-                    (me.roles || []).forEach(function(role) {
+                    (me.roles || []).forEach((role) => {
                         if (role !== 'user') {
                             parts.push(app.escapeHtml(role.charAt(0).toUpperCase() + role.slice(1)));
                         }

@@ -1,7 +1,7 @@
 (function(app) {
     'use strict';
 
-    app.events.on('click', '.install-trigger', function(e, trigger) {
+    app.events.on('click', '.install-trigger', (e, trigger) => {
         const menu = document.getElementById('install-menu');
         if (!menu) return;
         const isOpen = menu.classList.contains('open');
@@ -9,28 +9,28 @@
         trigger.setAttribute('aria-expanded', !isOpen);
     }, { exclusive: true });
 
-    app.events.on('click', '[data-install-tab]', function(e, tabBtn) {
+    app.events.on('click', '[data-install-tab]', (e, tabBtn) => {
         const widget = tabBtn.closest('.install-menu');
         if (!widget) return;
         const tabId = tabBtn.getAttribute('data-install-tab');
-        widget.querySelectorAll('[data-install-tab]').forEach(function(b) {
+        widget.querySelectorAll('[data-install-tab]').forEach((b) => {
             b.classList.toggle('active', b === tabBtn);
         });
-        widget.querySelectorAll('[data-install-panel]').forEach(function(p) {
+        widget.querySelectorAll('[data-install-panel]').forEach((p) => {
             p.style.display = p.getAttribute('data-install-panel') === tabId ? '' : 'none';
         });
     });
 
-    app.events.on('click', '[data-copy]', function(e, copyBtn) {
+    app.events.on('click', '[data-copy]', (e, copyBtn) => {
         const text = copyBtn.getAttribute('data-copy');
-        navigator.clipboard.writeText(text).then(function() {
+        navigator.clipboard.writeText(text).then(() => {
             const orig = copyBtn.innerHTML;
             copyBtn.innerHTML = '<span style="color:var(--success);font-size:16px">&#10003;</span>';
-            setTimeout(function() { copyBtn.innerHTML = orig; }, 2000);
+            setTimeout(() => { copyBtn.innerHTML = orig; }, 2000);
         });
     });
 
-    app.events.on('click', '[data-action="toggle-token"]', function(e, btn) {
+    app.events.on('click', '[data-action="toggle-token"]', (e, btn) => {
         const box = btn.closest('.install-token-box');
         if (!box) return;
         const code = box.querySelector('.install-token-value');
@@ -47,7 +47,7 @@
         }
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
         const tokenEl = document.querySelector('.install-token-value[data-masked="true"]');
         if (tokenEl) tokenEl.style.filter = 'blur(4px)';
     });

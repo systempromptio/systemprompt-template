@@ -9,8 +9,8 @@
     function marketplaceApi(userId, path) {
         const url = '/api/public/marketplace/' + encodeURIComponent(userId) + path;
         return fetch(url, { headers: { 'Content-Type': 'application/json' } })
-            .then(function(resp) {
-                if (!resp.ok) return resp.text().then(function(t) { throw new Error(t || resp.statusText); });
+            .then((resp) => {
+                if (!resp.ok) return resp.text().then((t) => { throw new Error(t || resp.statusText); });
                 return resp.json();
             });
     }
@@ -103,12 +103,12 @@
             try { skills = JSON.parse(detail.skills_snapshot); } catch(e) { skills = []; }
         }
         const skillsHtml = skills.length
-            ? skills.map(function(s) { return renderSkillRow(s, versionId); }).join('')
+            ? skills.map((s) => renderSkillRow(s, versionId)).join('')
             : '<div class="empty-state" style="padding:var(--space-4)"><p>No skills in this snapshot.</p></div>';
 
         let diffHtml = '';
         if (activeDiff && activeDiff.versionId === versionId && diffCache[activeDiff.cacheKey]) {
-            const userSkill = skills.find(function(s) { return s.skill_id === activeDiff.skillId; });
+            const userSkill = skills.find((s) => s.skill_id === activeDiff.skillId);
             if (userSkill) diffHtml = renderDiffPanel(userSkill, diffCache[activeDiff.cacheKey]);
         }
 
@@ -166,20 +166,20 @@
         }
     }
 
-    app.initMarketplaceVersions = function(selector) {
+    app.initMarketplaceVersions = (selector) => {
         const root = document.querySelector(selector);
         if (!root) return;
 
         let activeTab = 'versions';
         const changelogLoaded = {};
 
-        root.addEventListener('click', async function(e) {
+        root.addEventListener('click', async (e) => {
             const tabBtn = e.target.closest('[data-tab]');
             if (tabBtn) {
                 const newTab = tabBtn.getAttribute('data-tab');
                 if (activeTab === newTab) return;
                 activeTab = newTab;
-                root.querySelectorAll('[data-tab]').forEach(function(btn) {
+                root.querySelectorAll('[data-tab]').forEach((btn) => {
                     btn.className = btn.getAttribute('data-tab') === activeTab ? 'btn btn-primary' : 'btn btn-secondary';
                 });
                 document.getElementById('mv-versions-tab').style.display = activeTab === 'versions' ? '' : 'none';
@@ -247,14 +247,14 @@
             }
         });
 
-        root.addEventListener('change', function(e) {
+        root.addEventListener('change', (e) => {
             if (e.target.id === 'mv-user-select') {
                 const userId = e.target.value;
                 const groups = root.querySelectorAll('.version-user-group');
-                groups.forEach(function(group) {
+                groups.forEach((group) => {
                     const versions = group.querySelectorAll('[data-version-user]');
                     let hasMatch = !userId;
-                    versions.forEach(function(v) {
+                    versions.forEach((v) => {
                         if (v.getAttribute('data-version-user') === userId) hasMatch = true;
                     });
                     group.style.display = hasMatch ? '' : 'none';
@@ -280,7 +280,7 @@
                     container.innerHTML = '<div class="empty-state"><p>No changelog entries found for this user.</p></div>';
                     return;
                 }
-                const rows = changelog.map(function(entry) {
+                const rows = changelog.map((entry) => {
                     let actionClass = '';
                     switch(entry.action) {
                         case 'added': actionClass = 'badge-green'; break;

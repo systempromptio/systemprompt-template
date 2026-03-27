@@ -10,7 +10,7 @@
 
   if (total) total.textContent = slides.length;
 
-  slides.forEach(function(slide, i) {
+  slides.forEach((slide, i) => {
     const dot = document.createElement('a');
     dot.href = '#' + slide.id;
     if (i === 0) dot.classList.add('active');
@@ -18,28 +18,28 @@
   });
 
   function showNotesForSlide(index) {
-    document.querySelectorAll('.pres-notes').forEach(function(n) { n.style.display = 'none'; });
+    document.querySelectorAll('.pres-notes').forEach((n) => { n.style.display = 'none'; });
     if (html.classList.contains('notes-visible')) {
       const notes = slides[index].querySelector('.pres-notes');
       if (notes) notes.style.display = 'block';
     }
   }
 
-  const observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
       if (entry.isIntersecting) {
         const index = Array.from(slides).indexOf(entry.target);
         if (counter) counter.textContent = index + 1;
-        nav.querySelectorAll('a').forEach(function(dot, i) { dot.classList.toggle('active', i === index); });
-        entry.target.querySelectorAll('.pres-reveal').forEach(function(el) { el.classList.add('visible'); });
+        nav.querySelectorAll('a').forEach((dot, i) => { dot.classList.toggle('active', i === index); });
+        entry.target.querySelectorAll('.pres-reveal').forEach((el) => { el.classList.add('visible'); });
         showNotesForSlide(index);
       }
     });
   }, { threshold: 0.5 });
 
-  slides.forEach(function(slide) { observer.observe(slide); });
+  slides.forEach((slide) => { observer.observe(slide); });
 
-  document.addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', (e) => {
     const current = Math.round(window.scrollY / window.innerHeight);
 
     if (e.key === 'n' || e.key === 'N') {

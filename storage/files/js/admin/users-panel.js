@@ -1,22 +1,22 @@
 (function(app) {
     'use strict';
 
-    function openCreatePanel() {
+    const openCreatePanel = () => {
         const overlay = document.getElementById('create-user-overlay');
         const panel = document.getElementById('create-user-panel');
         if (!overlay || !panel) return;
         overlay.classList.add('open');
         panel.classList.add('open');
         const first = panel.querySelector('input');
-        if (first) setTimeout(function() { first.focus(); }, 350);
-    }
-    function closeCreatePanel() {
+        if (first) setTimeout(() => { first.focus(); }, 350);
+    };
+    const closeCreatePanel = () => {
         const overlay = document.getElementById('create-user-overlay');
         const panel = document.getElementById('create-user-panel');
         if (panel) panel.classList.remove('open');
         if (overlay) overlay.classList.remove('open');
-    }
-    function resetForm() {
+    };
+    const resetForm = () => {
         const fields = ['new-user-id', 'new-user-name', 'new-user-email'];
         for (let i = 0; i < fields.length; i++) {
             const el = document.getElementById(fields[i]);
@@ -28,9 +28,9 @@
         for (let j = 0; j < boxes.length; j++) {
             boxes[j].checked = false;
         }
-    }
-    function bindCreatePanelEvents(refreshFn) {
-        document.addEventListener('click', async function(e) {
+    };
+    const bindCreatePanelEvents = (refreshFn) => {
+        document.addEventListener('click', async (e) => {
             if (e.target.id === 'create-user-overlay') {
                 closeCreatePanel();
                 return;
@@ -52,7 +52,7 @@
                 const email = document.getElementById('new-user-email').value.trim();
                 const deptVal = document.getElementById('new-user-dept').value;
                 const roleBoxes = document.querySelectorAll('#create-user-panel input[name="roles"]:checked');
-                const roles = Array.from(roleBoxes).map(function(cb) { return cb.value; });
+                const roles = Array.from(roleBoxes).map((cb) => cb.value);
                 if (!userId) {
                     app.Toast.show('User ID is required', 'error');
                     return;
@@ -77,7 +77,7 @@
                 }
             }
         });
-    }
+    };
     app.usersPanel = {
         open: openCreatePanel,
         close: closeCreatePanel,

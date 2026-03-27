@@ -8,19 +8,19 @@
 
     if (!sidebar || !overlay || !toggleBtn) return;
 
-    function openSidebar() {
+    const openSidebar = () => {
         sidebar.classList.add('open');
         overlay.classList.add('open');
         toggleBtn.setAttribute('aria-expanded', 'true');
-    }
+    };
 
-    function closeSidebar() {
+    const closeSidebar = () => {
         sidebar.classList.remove('open');
         overlay.classList.remove('open');
         toggleBtn.setAttribute('aria-expanded', 'false');
-    }
+    };
 
-    toggleBtn.addEventListener('click', function () {
+    toggleBtn.addEventListener('click', () => {
         if (sidebar.classList.contains('open')) {
             closeSidebar();
         } else {
@@ -34,7 +34,7 @@
 
     overlay.addEventListener('click', closeSidebar);
 
-    document.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && sidebar.classList.contains('open')) {
             closeSidebar();
         }

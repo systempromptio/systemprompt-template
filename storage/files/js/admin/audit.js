@@ -1,7 +1,7 @@
 (function(app) {
     'use strict';
 
-    function buildQueryString() {
+    const buildQueryString = () => {
         const params = new URLSearchParams();
         const from = document.getElementById('audit-from').value;
         const to = document.getElementById('audit-to').value;
@@ -16,21 +16,21 @@
         if (skill) params.set('skill', skill);
         if (format) params.set('format', format);
         return params.toString();
-    }
+    };
 
-    app.auditInteractions = function() {
-        app.events.on('click', '#btn-preview', function() {
+    app.auditInteractions = () => {
+        app.events.on('click', '#btn-preview', () => {
             const qs = buildQueryString();
             window.location.href = app.BASE + '/audit/?' + qs;
         });
 
-        app.events.on('click', '#btn-download', function() {
+        app.events.on('click', '#btn-download', () => {
             const format = document.getElementById('audit-format').value;
             const downloadQs = buildQueryString();
             if (format === 'csv') {
-                window.open(app.API_BASE + '/export/usage?' + downloadQs.replace(/from=([^&]+)/, function(m, v) { return 'from=' + v + 'T00:00:00Z'; }).replace(/to=([^&]+)/, function(m, v) { return 'to=' + v + 'T23:59:59Z'; }), '_blank');
+                window.open(app.API_BASE + '/export/usage?' + downloadQs.replace(/from=([^&]+)/, (m, v) => 'from=' + v + 'T00:00:00Z').replace(/to=([^&]+)/, (m, v) => 'to=' + v + 'T23:59:59Z'), '_blank');
             } else {
-                app.api('/export/usage?' + downloadQs.replace(/from=([^&]+)/, function(m, v) { return 'from=' + v + 'T00:00:00Z'; }).replace(/to=([^&]+)/, function(m, v) { return 'to=' + v + 'T23:59:59Z'; })).then(function(rows) {
+                app.api('/export/usage?' + downloadQs.replace(/from=([^&]+)/, (m, v) => 'from=' + v + 'T00:00:00Z').replace(/to=([^&]+)/, (m, v) => 'to=' + v + 'T23:59:59Z')).then((rows) => {
                     const blob = new Blob([JSON.stringify(rows, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -38,7 +38,7 @@
                     a.download = 'usage-export.json';
                     a.click();
                     URL.revokeObjectURL(url);
-                }).catch(function(err) {
+                }).catch((err) => {
                     app.Toast.show(err.message || 'Download failed', 'error');
                 });
             }

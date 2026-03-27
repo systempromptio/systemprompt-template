@@ -4,7 +4,7 @@
     const showConfirmDialog = app.shared.showConfirmDialog;
     let activePopupId = null;
 
-    function closeAllPopups() {
+    const closeAllPopups = () => {
         const portal = document.getElementById('user-actions-popup');
         if (portal) {
             portal.classList.remove('open');
@@ -15,9 +15,9 @@
             triggers[i].classList.remove('active');
             triggers[i].setAttribute('aria-expanded', 'false');
         }
-    }
+    };
 
-    function getOrCreatePortal() {
+    const getOrCreatePortal = () => {
         let portal = document.getElementById('user-actions-popup');
         if (!portal) {
             portal = document.createElement('div');
@@ -27,9 +27,9 @@
             document.body.append(portal);
         }
         return portal;
-    }
+    };
 
-    function positionPopup(portal, trigger) {
+    const positionPopup = (portal, trigger) => {
         const rect = trigger.getBoundingClientRect();
         const popupH = portal.offsetHeight || 120;
         const spaceBelow = window.innerHeight - rect.bottom;
@@ -44,10 +44,10 @@
             portal.style.right = (window.innerWidth - rect.right) + 'px';
             portal.style.left = '';
         }
-    }
+    };
 
-    app.usersInteractions = function() {
-        app.events.on('click', '.btn-actions-trigger', function(e, trigger) {
+    app.usersInteractions = () => {
+        app.events.on('click', '.btn-actions-trigger', (e, trigger) => {
             e.stopPropagation();
             const userId = trigger.dataset.userId;
             const portal = getOrCreatePortal();
@@ -72,8 +72,8 @@
             trigger.setAttribute('aria-expanded', 'true');
             positionPopup(portal, trigger);
 
-            portal.querySelectorAll('.actions-popup-item').forEach(function(item) {
-                item.addEventListener('click', function(ev) {
+            portal.querySelectorAll('.actions-popup-item').forEach((item) => {
+                item.addEventListener('click', (ev) => {
                     ev.stopPropagation();
                     const action = item.dataset.action;
                     const itemUserId = item.dataset.userId;
@@ -87,7 +87,7 @@
                                 'Deactivate User?',
                                 'This will prevent the user from accessing the system. You can reactivate them later.',
                                 'Deactivate',
-                                async function() {
+                                async () => {
                                     try {
                                         await app.api('/users/' + encodeURIComponent(itemUserId), {
                                             method: 'PUT',
@@ -104,10 +104,10 @@
                             app.api('/users/' + encodeURIComponent(itemUserId), {
                                 method: 'PUT',
                                 body: JSON.stringify({ is_active: true })
-                            }).then(function() {
+                            }).then(() => {
                                 app.Toast.show('User activated', 'success');
                                 window.location.reload();
-                            }).catch(function(err) {
+                            }).catch((err) => {
                                 app.Toast.show(err.message || 'Failed to activate user', 'error');
                             });
                         }
@@ -116,7 +116,7 @@
             });
         });
 
-        app.events.on('click', '*', function(e) {
+        app.events.on('click', '*', (e) => {
             if (!e.target.closest('.btn-actions-trigger') && !e.target.closest('#user-actions-popup')) {
                 closeAllPopups();
             }
