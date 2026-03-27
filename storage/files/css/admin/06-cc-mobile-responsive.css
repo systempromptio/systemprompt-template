@@ -71,7 +71,6 @@
 
     .cc-tabs {
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         gap: 0;
     }
@@ -139,7 +138,6 @@
 
     .cc-hourly-chart-tabs {
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         flex-wrap: nowrap;
     }

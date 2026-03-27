@@ -1,6 +1,5 @@
 @layer components {
 
-
 @media (max-width: 768px) {
     .dashboard-grid {
         grid-template-columns: 1fr;
@@ -62,7 +61,6 @@
         padding: 0;
         flex-wrap: nowrap;
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
     }
 

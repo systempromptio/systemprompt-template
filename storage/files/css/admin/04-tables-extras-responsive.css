@@ -70,8 +70,6 @@
         overflow-y: visible;
     }
 
-    /* On mobile, admin-layout is display:block with height:auto,
-       so flex-based table sizing doesn't work. Use max-height fallback. */
     .admin-main > .table-container {
         flex: none;
         min-height: 0;

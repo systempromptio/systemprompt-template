@@ -31,7 +31,6 @@
       color-mix(in oklch, oklch(0.68 0.16 295) 18%, transparent)
     );
 
-    /* Rank tier colors: 10 tiers covering 50 levels (5 levels per tier) */
     --sp-rank-tier-1-color: light-dark(oklch(0.72 0.03 250), oklch(0.82 0.03 250));
     --sp-rank-tier-1-bg:    light-dark(oklch(0.50 0.03 250), oklch(0.55 0.03 250));
     --sp-rank-tier-2-color: light-dark(oklch(0.70 0.14 250), oklch(0.78 0.10 255));

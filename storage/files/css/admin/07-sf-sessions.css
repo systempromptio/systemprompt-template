@@ -300,7 +300,6 @@
         font-size: var(--sp-text-base);
     }
     .cc-session-checkbox {
-        -webkit-appearance: none;
         appearance: none;
         width: 20px;
         height: 20px;

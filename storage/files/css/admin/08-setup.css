@@ -1,5 +1,3 @@
-/* Setup Guide — vertical stepper */
-
 .setup-page {
     max-width: 48rem;
     margin: 0 auto;
@@ -23,21 +21,18 @@
     margin: 0;
 }
 
-/* Stepper container */
 .setup-stepper {
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
-/* Individual phase */
 .setup-phase {
     display: flex;
     gap: var(--sp-space-4);
     position: relative;
 }
 
-/* Left indicator column */
 .setup-phase-indicator {
     display: flex;
     flex-direction: column;
@@ -46,7 +41,6 @@
     width: 2.5rem;
 }
 
-/* Phase number circle */
 .setup-phase-number {
     width: 2.5rem;
     height: 2.5rem;
@@ -75,7 +69,6 @@
     color: var(--sp-text-on-accent);
 }
 
-/* Connector line */
 .setup-phase-connector {
     width: 2px;
     flex: 1;
@@ -88,7 +81,6 @@
     background: var(--sp-success);
 }
 
-/* Right content column */
 .setup-phase-content {
     padding-bottom: var(--sp-space-6);
     flex: 1;
@@ -120,7 +112,6 @@
     font-size: var(--sp-text-sm);
 }
 
-/* Badges */
 .setup-badge {
     font-size: 0.6875rem;
     font-weight: 600;
@@ -141,7 +132,6 @@
     color: var(--sp-accent);
 }
 
-/* Phase actions row */
 .setup-phase-actions {
     display: flex;
     align-items: center;
@@ -149,7 +139,6 @@
     margin-bottom: var(--sp-space-2);
 }
 
-/* Guide link */
 .setup-phase-link {
     display: inline-flex;
     align-items: center;
@@ -166,7 +155,6 @@
     text-decoration: underline;
 }
 
-/* Action link (button-like) */
 .setup-phase-action {
     display: inline-flex;
     align-items: center;
@@ -187,12 +175,10 @@
     gap: 0.5rem;
 }
 
-/* Expanded content for Phase 1 connection tabs */
 .setup-phase-expand {
     margin-top: var(--sp-space-4);
 }
 
-/* Responsive */
 @media (max-width: 640px) {
     .setup-page {
         padding: var(--sp-space-4) var(--sp-space-2);

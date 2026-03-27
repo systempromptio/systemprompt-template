@@ -1,6 +1,5 @@
 @layer components {
 
-/* Legacy bg classes */
 .rank-bg-1  { background: var(--sp-rank-1-bg); }
 .rank-bg-2  { background: var(--sp-rank-2-bg); }
 .rank-bg-3  { background: var(--sp-rank-3-bg); }
@@ -12,17 +11,14 @@
 .rank-bg-9  { background: var(--sp-rank-9-bg); }
 .rank-bg-10 { background: var(--sp-rank-10-bg); }
 
-/* Shrink font for 2-digit levels */
 .user-widget__level.rank-bg-tier-10 { font-size: 0.5rem; }
 
-/* Tier 1-5 are base tiers (no special glow) */
 .user-widget--tier-1,
 .user-widget--tier-2,
 .user-widget--tier-3,
 .user-widget--tier-4,
-.user-widget--tier-5 { /* base tier, no glow */ }
+.user-widget--tier-5 { }
 
-/* Tier 6+ avatar glow effect */
 .user-widget--tier-6 { filter: drop-shadow(0 0 3px color-mix(in oklch, var(--sp-rank-tier-6-color) 25%, transparent)); }
 .user-widget--tier-7 { filter: drop-shadow(0 0 3px color-mix(in oklch, var(--sp-rank-tier-7-color) 25%, transparent)); }
 .user-widget--tier-8 { filter: drop-shadow(0 0 4px color-mix(in oklch, var(--sp-rank-tier-8-color) 30%, transparent)); }

@@ -181,7 +181,6 @@
         background: var(--sp-chart-green);
     }
 
-    
     .traffic-period-selector,
     .content-period-selector {
         display: flex;
@@ -189,7 +188,6 @@
         margin-bottom: var(--sp-space-5);
     }
 
-    
     .traffic-kpi-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -269,7 +267,6 @@
         font-weight: 400;
     }
 
-    /* Top Pages table: match dashboard-two-col table height */
     .section-title + .table-container {
         max-height: 360px;
     }

@@ -1,6 +1,5 @@
 @layer tokens {
 :root {
-    /* Semantic color aliases */
     --sp-error: var(--sp-danger);
     --sp-info: var(--sp-accent);
     --sp-color-primary: var(--sp-accent);
@@ -13,7 +12,6 @@
       color-mix(in oklch, var(--sp-accent) 8%, var(--sp-bg-surface))
     );
 
-    /* Background extras */
     --sp-bg-input: light-dark(oklch(1.0 0 0), oklch(0.19 0.01 47));
     --sp-bg-primary: var(--sp-bg-surface);
     --sp-bg-secondary: var(--sp-bg-surface-raised);
@@ -25,7 +23,6 @@
     --sp-surface-1: var(--sp-bg-surface);
     --sp-surface-2: var(--sp-bg-surface-raised);
 
-    /* Border extras */
     --sp-border: var(--sp-border-default);
     --sp-border-color: var(--sp-border-default);
     --sp-border-hover: var(--sp-border-strong);
@@ -34,17 +31,13 @@
       color-mix(in oklch, var(--sp-accent) 25%, var(--sp-border-default))
     );
 
-    /* Text extras */
     --sp-text-muted: var(--sp-text-tertiary);
 
-    /* Font extras */
     --sp-font-mono: "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
 
-    /* Z-index extras */
     --sp-z-modal-backdrop: 1400;
     --sp-z-tooltip: 3000;
 
-    /* sp-prefixed semantic tokens (used by settings/gamification components) */
     --sp-color-primary: var(--sp-accent);
     --sp-color-success: var(--sp-success);
     --sp-color-border: var(--sp-border-default);

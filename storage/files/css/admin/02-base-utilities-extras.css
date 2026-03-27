@@ -7,11 +7,6 @@
     border-radius: var(--sp-radius-sm);
 }
 
-/* ── Flush-left layout system ──
-   Elements that should touch the sidebar get negative margin to break
-   out of the parent padding, flat left radius, and no left border.
-   --sp-admin-gutter is the current content padding-left value. */
-/* Full-width flush: tables, toolbars, metric ribbons, tabs, charts */
 .admin-main .table-container,
 .admin-main .metric-ribbon,
 .admin-main .cc-tabs,
@@ -23,18 +18,15 @@
     border-left: none;
 }
 
-/* Tabs: flat left, no rounding */
 .admin-main .cc-tabs {
     border-radius: 0 var(--sp-radius-brand-tr) 0 0;
 }
 
-/* Toolbar: search inputs inside should also lose left radius */
 .admin-main .toolbar .search-input,
 .admin-main .toolbar .filter-select {
     border-radius: 0 var(--sp-radius-button) var(--sp-radius-button) 0;
 }
 
-/* Cards, stat cards, alert sections: flush-left radius (no negative margin) */
 .admin-main .card,
 .admin-main .alert-section,
 .admin-main .quick-stat-card,
@@ -44,12 +36,10 @@
     border-radius: 0 0.375rem 1.125rem 0;
 }
 
-/* Card headers match the flush pattern */
 .admin-main .card-header {
     border-radius: 0 var(--sp-radius-brand-tr) 0 0;
 }
 
-/* Stat card grids: flush the whole grid to sidebar */
 .admin-main .dashboard-grid,
 .admin-main .stats-grid-3col,
 .admin-main .quick-stats-grid,
@@ -60,19 +50,16 @@
     padding-left: var(--sp-space-6);
 }
 
-/* Dashboard tabs wrapper: flush to sidebar */
 .admin-main .dashboard-tabs {
     margin-left: calc(-1 * var(--sp-space-6));
 }
 
-/* Two-column grids: flush the grid, children handle themselves */
 .admin-main .dashboard-two-col,
 .admin-main .alerts-row {
     margin-left: calc(-1 * var(--sp-space-6));
     padding-left: var(--sp-space-6);
 }
 
-/* Nested elements inside cards: no extra margin, flat radius */
 .admin-main .card .table-container,
 .admin-main .card-body--flush .table-container {
     margin-left: 0;
@@ -80,7 +67,6 @@
     border-left: none;
 }
 
-/* Right-column items in grids: restore standard brand radius */
 .admin-main .dashboard-two-col > *:nth-child(2n) > .card,
 .admin-main .dashboard-two-col > *:nth-child(2n) > .table-container,
 .admin-main .alerts-row > *:nth-child(2n) {
@@ -89,7 +75,6 @@
     margin-left: 0;
 }
 
-/* Preserve colored left borders on alert variants */
 .admin-main .alert-danger {
     border-left: 4px solid var(--sp-danger);
 }

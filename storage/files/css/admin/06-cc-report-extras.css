@@ -203,7 +203,6 @@
 
 .cc-report-entity-grid { contain: layout style; }
 
-/* Efficiency metrics in suggestion detail */
 .cc-efficiency-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -230,7 +229,6 @@
     letter-spacing: 0.04em;
 }
 
-/* Goal outcome map */
 .cc-goal-outcome-map {
     display: flex;
     flex-direction: column;
@@ -258,7 +256,6 @@
 .cc-goal-text { display: block; font-size: var(--sp-text-sm); font-weight: 600; color: var(--sp-text-primary); }
 .cc-outcome-text { display: block; font-size: var(--sp-text-xs); color: var(--sp-text-secondary); margin-top: 0.125rem; }
 
-/* Best practices checklist */
 .cc-best-practices-list { list-style: none; padding: 0; margin: 0; }
 .cc-bp-item {
     display: flex;
@@ -281,7 +278,6 @@
 .cc-bp-practice { font-size: var(--sp-text-sm); color: var(--sp-text-primary); }
 .cc-bp-note { font-size: var(--sp-text-xs); color: var(--sp-text-tertiary); display: block; margin-top: 0.125rem; }
 
-/* Detail section hints */
 .cc-detail-text--hint { color: var(--sp-accent); font-weight: 500; }
 .cc-detail-section--hints { border-left: 3px solid var(--sp-accent); padding-left: var(--sp-space-3); }
 

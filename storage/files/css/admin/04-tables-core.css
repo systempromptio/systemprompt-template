@@ -15,8 +15,6 @@
     max-height: calc(100vh - 230px);
 }
 
-/* When table-container is a direct child of admin-main, use flex-based sizing
-   so the table fills remaining viewport space and scrolls properly */
 .admin-main > .table-container {
     flex: 1 1 0;
     min-height: 200px;

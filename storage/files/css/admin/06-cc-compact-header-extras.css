@@ -1,7 +1,5 @@
 @layer components {
 
-/* ── Profile section (right column) ── */
-
 .cc-profile-section {
     display: flex;
     flex-direction: column;
@@ -74,8 +72,6 @@
     line-height: 1.2;
 }
 
-/* ── Profile meta (streak + achievements) ── */
-
 .cc-profile-meta {
     display: flex;
     gap: var(--sp-space-3);
@@ -113,8 +109,6 @@
     font-weight: 500;
     line-height: 1;
 }
-
-/* ── Limit warnings ── */
 
 .global-limit-warnings {
     display: flex;

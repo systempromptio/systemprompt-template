@@ -61,7 +61,6 @@
     transition: stroke-dashoffset 0.8s ease-out;
 }
 
-/* Tier-based XP ring stroke colors (10 tiers) */
 .rank-ring-tier-1  { stroke: var(--sp-rank-tier-1-color); }
 .rank-ring-tier-2  { stroke: var(--sp-rank-tier-2-color); }
 .rank-ring-tier-3  { stroke: var(--sp-rank-tier-3-color); }
@@ -73,7 +72,6 @@
 .rank-ring-tier-9  { stroke: var(--sp-rank-tier-9-color); }
 .rank-ring-tier-10 { stroke: var(--sp-rank-tier-10-color); }
 
-/* Legacy ring classes */
 .rank-ring-1  { stroke: var(--sp-rank-1-color); }
 .rank-ring-2  { stroke: var(--sp-rank-2-color); }
 .rank-ring-3  { stroke: var(--sp-rank-3-color); }
@@ -104,7 +102,6 @@
     z-index: var(--sp-z-sticky-header);
 }
 
-/* Tier-based level badge backgrounds */
 .rank-bg-tier-1  { background: var(--sp-rank-tier-1-bg); }
 .rank-bg-tier-2  { background: var(--sp-rank-tier-2-bg); }
 .rank-bg-tier-3  { background: var(--sp-rank-tier-3-bg); }

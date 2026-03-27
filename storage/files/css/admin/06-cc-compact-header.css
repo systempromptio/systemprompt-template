@@ -17,8 +17,6 @@
     contain: layout style;
 }
 
-/* ── Column containers ── */
-
 .cc-compact-col--stats {
     flex: 1;
     min-width: 0;
@@ -33,8 +31,6 @@
     padding-left: var(--sp-space-4);
     border-left: 1px solid var(--sp-border-subtle);
 }
-
-/* ── Stats layout ── */
 
 .cc-compact-stats {
     display: flex;
@@ -51,13 +47,10 @@
     flex-wrap: wrap;
 }
 
-/* Visual separator between groups */
 .cc-stat-group--secondary {
     padding-left: var(--sp-space-2);
     border-left: 1px solid var(--sp-border-subtle);
 }
-
-/* ── Stat pills ── */
 
 .cc-compact-stats .cc-stat-item {
     display: inline-flex;
@@ -96,8 +89,6 @@
     color: var(--sp-text-secondary);
 }
 
-/* ── Stat typography ── */
-
 .cc-compact-stats .cc-stat-value {
     font-size: var(--sp-text-base);
     font-weight: 700;
@@ -119,8 +110,6 @@
     display: none;
 }
 
-/* ── Hero stat (active count) ── */
-
 .cc-compact-stats .cc-stat-item--hero {
     background: linear-gradient(
         135deg,
@@ -139,12 +128,10 @@
     color: var(--sp-success);
 }
 
-/* Live dot inside the hero pill */
 .cc-compact-stats .cc-stat-item--hero .live-dot {
     flex-shrink: 0;
 }
 
-/* Legacy: active_now colour when not using --sp-hero */
 .cc-compact-stats .cc-stat-item[data-stat="active_now"] .cc-stat-value {
     color: var(--sp-success);
 }
