@@ -388,14 +388,7 @@
                     }
                 });
 
-                // Step 4: Store profile data for post-OAuth completion
-                localStorage.setItem('pending_registration', JSON.stringify({
-                    email: email,
-                    display_name: displayName,
-                    role: role
-                }));
-
-                // Step 5: Auto-login with the new passkey
+                // Step 4: Auto-login with the new passkey
                 await autoLogin(email);
 
             } catch (error) {
