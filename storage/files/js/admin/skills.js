@@ -33,7 +33,7 @@
             html += '<div class="detail-section">';
             html += '<strong>Tags</strong><br>';
             html += '<div class="badge-row" style="margin-top:var(--space-1)">';
-            data.tags.forEach(function(tag) {
+            data.tags.forEach((tag) => {
                 html += '<span class="badge badge-gray">' + app.escapeHtml(tag) + '</span>';
             });
             html += '</div></div>';
@@ -48,7 +48,7 @@
     }
 
     function initExpandRows() {
-        app.OrgCommon.initExpandRows('.data-table', function(row, detailRow) {
+        app.OrgCommon.initExpandRows('.data-table', (row, detailRow) => {
             const content = detailRow.querySelector('[data-skill-expand]');
             if (content && !content.hasAttribute('data-loaded')) {
                 const skillId = content.getAttribute('data-skill-expand');
@@ -59,29 +59,29 @@
     }
 
     function initDeleteHandlers() {
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-delete-skill]');
             if (!btn) return;
             const skillId = btn.getAttribute('data-delete-skill');
             if (!confirm('Are you sure you want to delete skill "' + skillId + '"? This cannot be undone.')) return;
 
             fetch('/api/admin/skills/' + encodeURIComponent(skillId), { method: 'DELETE' })
-                .then(function(res) {
+                .then((res) => {
                     if (res.ok) {
                         app.Toast.show('Skill deleted', 'success');
-                        setTimeout(function() { window.location.reload(); }, 500);
+                        setTimeout(() => { window.location.reload(); }, 500);
                     } else {
                         app.Toast.show('Failed to delete skill', 'error');
                     }
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to delete skill', 'error');
                 });
         });
     }
 
     function initForkHandlers() {
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-fork-skill]');
             if (!btn) return;
             const skillId = btn.getAttribute('data-fork-skill');
@@ -101,15 +101,15 @@
                     base_skill_id: skillId
                 })
             })
-            .then(function(res) {
+            .then((res) => {
                 if (res.ok) {
                     app.Toast.show('Skill customized', 'success');
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 } else {
                     app.Toast.show('Failed to customize skill', 'error');
                 }
             })
-            .catch(function() {
+            .catch(() => {
                 app.Toast.show('Failed to customize skill', 'error');
             });
         });
@@ -123,7 +123,7 @@
         });
         if (!assignApi) return;
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-assign-skill]');
             if (!btn) return;
             const skillId = btn.getAttribute('data-assign-skill');
@@ -133,23 +133,23 @@
             assignApi.open(skillId, skillName, currentPluginIds);
         });
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-assign-save]');
             if (!btn) return;
             const entityId = btn.getAttribute('data-entity-id');
             const checkboxes = document.querySelectorAll('#assign-panel input[name="plugin_id"]');
             const selectedPlugins = [];
-            checkboxes.forEach(function(cb) {
+            checkboxes.forEach((cb) => {
                 if (cb.checked) selectedPlugins.push(cb.value);
             });
 
             btn.disabled = true;
             btn.textContent = 'Saving...';
 
-            const promises = allPlugins.map(function(plugin) {
+            const promises = allPlugins.map((plugin) => {
                 return fetch('/api/admin/plugins/' + encodeURIComponent(plugin.id) + '/skills')
-                    .then(function(res) { return res.json(); })
-                    .then(function(currentSkills) {
+                    .then((res) => { return res.json(); })
+                    .then((currentSkills) => {
                         let skillIds = (currentSkills || []).slice();
                         const shouldInclude = selectedPlugins.includes(plugin.id);
                         const hasSkill = skillIds.includes(entityId);
@@ -157,7 +157,7 @@
                         if (shouldInclude && !hasSkill) {
                             skillIds.push(entityId);
                         } else if (!shouldInclude && hasSkill) {
-                            skillIds = skillIds.filter(function(s) { return s !== entityId; });
+                            skillIds = skillIds.filter((s) => { return s !== entityId; });
                         } else {
                             return Promise.resolve();
                         }
@@ -171,12 +171,12 @@
             });
 
             Promise.all(promises)
-                .then(function() {
+                .then(() => {
                     app.Toast.show('Plugin assignments updated', 'success');
                     assignApi.close();
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to update assignments', 'error');
                     btn.disabled = false;
                     btn.textContent = 'Save';
@@ -199,7 +199,7 @@
             ]
         });
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-edit-skill]');
             if (!btn) return;
             const skillId = btn.getAttribute('data-edit-skill');
@@ -220,16 +220,16 @@
 
         const deleteBtn = document.getElementById('bulk-delete-btn');
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
+            deleteBtn.addEventListener('click', () => {
                 const ids = bulk.getSelected();
                 if (!ids.length) return;
                 if (!confirm('Delete ' + ids.length + ' skill(s)? This action cannot be undone.')) return;
-                Promise.all(ids.map(function(id) {
+                Promise.all(ids.map((id) => {
                     return fetch('/api/admin/skills/' + encodeURIComponent(id), { method: 'DELETE' });
-                })).then(function() {
+                })).then(() => {
                     app.Toast.show(ids.length + ' skills deleted', 'success');
-                    setTimeout(function() { window.location.reload(); }, 500);
-                }).catch(function() {
+                    setTimeout(() => { window.location.reload(); }, 500);
+                }).catch(() => {
                     app.Toast.show('Failed to delete some skills', 'error');
                 });
             });
@@ -237,7 +237,7 @@
 
         const assignBtn = document.getElementById('bulk-assign-btn');
         if (assignBtn && assignApi) {
-            assignBtn.addEventListener('click', function() {
+            assignBtn.addEventListener('click', () => {
                 const ids = bulk.getSelected();
                 if (!ids.length) return;
                 assignApi.open(ids.join(','), ids.length + ' skills', []);
@@ -246,21 +246,21 @@
 
         const categoryBtn = document.getElementById('bulk-category-btn');
         if (categoryBtn) {
-            categoryBtn.addEventListener('click', function() {
+            categoryBtn.addEventListener('click', () => {
                 const ids = bulk.getSelected();
                 if (!ids.length) return;
                 const category = prompt('Enter category for ' + ids.length + ' skill(s):');
                 if (category === null) return;
-                Promise.all(ids.map(function(id) {
+                Promise.all(ids.map((id) => {
                     return fetch('/api/public/skills/' + encodeURIComponent(id), {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ category_id: category })
                     });
-                })).then(function() {
+                })).then(() => {
                     app.Toast.show('Category updated for ' + ids.length + ' skills', 'success');
-                    setTimeout(function() { window.location.reload(); }, 500);
-                }).catch(function() {
+                    setTimeout(() => { window.location.reload(); }, 500);
+                }).catch(() => {
                     app.Toast.show('Failed to update category', 'error');
                 });
             });

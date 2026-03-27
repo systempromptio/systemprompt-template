@@ -8,11 +8,11 @@
         const pluginIdInput = form.querySelector('input[name="plugin_id"]');
         const pluginId = pluginIdInput ? pluginIdInput.value : '';
 
-        form.addEventListener('submit', async function(e) {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(form);
             const keywordsRaw = formData.get('keywords') || '';
-            const keywords = keywordsRaw.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+            const keywords = keywordsRaw.split(',').map((t) => t.trim()).filter(Boolean);
             const body = {
                 name: formData.get('name'),
                 description: formData.get('description') || '',
@@ -43,8 +43,8 @@
 
         const deleteBtn = document.getElementById('btn-delete-plugin');
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
-                app.shared.showConfirmDialog('Delete Plugin?', 'Are you sure you want to delete this plugin? This cannot be undone.', 'Delete', async function() {
+            deleteBtn.addEventListener('click', () => {
+                app.shared.showConfirmDialog('Delete Plugin?', 'Are you sure you want to delete this plugin? This cannot be undone.', 'Delete', async () => {
                     deleteBtn.disabled = true;
                     deleteBtn.textContent = 'Deleting...';
                     try {

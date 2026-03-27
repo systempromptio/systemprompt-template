@@ -57,7 +57,7 @@
     }
 
     function initExpandRows() {
-        app.OrgCommon.initExpandRows('.data-table', function(row, detailRow) {
+        app.OrgCommon.initExpandRows('.data-table', (row, detailRow) => {
             const content = detailRow.querySelector('[data-agent-expand]');
             if (content && !content.hasAttribute('data-loaded')) {
                 const agentId = content.getAttribute('data-agent-expand');
@@ -68,29 +68,29 @@
     }
 
     function initDeleteHandlers() {
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-delete-agent]');
             if (!btn) return;
             const agentId = btn.getAttribute('data-delete-agent');
             if (!confirm('Are you sure you want to delete agent "' + agentId + '"? This cannot be undone.')) return;
 
             fetch('/api/admin/agents/' + encodeURIComponent(agentId), { method: 'DELETE' })
-                .then(function(res) {
+                .then((res) => {
                     if (res.ok) {
                         app.Toast.show('Agent deleted', 'success');
-                        setTimeout(function() { window.location.reload(); }, 500);
+                        setTimeout(() => { window.location.reload(); }, 500);
                     } else {
                         app.Toast.show('Failed to delete agent', 'error');
                     }
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to delete agent', 'error');
                 });
         });
     }
 
     function initForkHandlers() {
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-fork-agent]');
             if (!btn) return;
             const agentId = btn.getAttribute('data-fork-agent');
@@ -111,15 +111,15 @@
                     enabled: true
                 })
             })
-            .then(function(res) {
+            .then((res) => {
                 if (res.ok) {
                     app.Toast.show('Agent customized', 'success');
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 } else {
                     app.Toast.show('Failed to customize agent', 'error');
                 }
             })
-            .catch(function() {
+            .catch(() => {
                 app.Toast.show('Failed to customize agent', 'error');
             });
         });
@@ -133,7 +133,7 @@
         });
         if (!assignApi) return;
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-assign-agent]');
             if (!btn) return;
             const agentId = btn.getAttribute('data-assign-agent');
@@ -143,23 +143,23 @@
             assignApi.open(agentId, agentName, currentPluginIds);
         });
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-assign-save]');
             if (!btn) return;
             const entityId = btn.getAttribute('data-entity-id');
             const checkboxes = document.querySelectorAll('#assign-panel input[name="plugin_id"]');
             const selectedPlugins = [];
-            checkboxes.forEach(function(cb) {
+            checkboxes.forEach((cb) => {
                 if (cb.checked) selectedPlugins.push(cb.value);
             });
 
             btn.disabled = true;
             btn.textContent = 'Saving...';
 
-            const promises = allPlugins.map(function(plugin) {
+            const promises = allPlugins.map((plugin) => {
                 return fetch('/api/admin/plugins/' + encodeURIComponent(plugin.id) + '/agents')
-                    .then(function(res) { return res.json(); })
-                    .then(function(currentAgents) {
+                    .then((res) => { return res.json(); })
+                    .then((currentAgents) => {
                         let agentIds = (currentAgents || []).slice();
                         const shouldInclude = selectedPlugins.includes(plugin.id);
                         const hasAgent = agentIds.includes(entityId);
@@ -167,7 +167,7 @@
                         if (shouldInclude && !hasAgent) {
                             agentIds.push(entityId);
                         } else if (!shouldInclude && hasAgent) {
-                            agentIds = agentIds.filter(function(a) { return a !== entityId; });
+                            agentIds = agentIds.filter((a) => { return a !== entityId; });
                         } else {
                             return Promise.resolve();
                         }
@@ -181,12 +181,12 @@
             });
 
             Promise.all(promises)
-                .then(function() {
+                .then(() => {
                     app.Toast.show('Plugin assignments updated', 'success');
                     assignApi.close();
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to update assignments', 'error');
                     btn.disabled = false;
                     btn.textContent = 'Save';
@@ -207,7 +207,7 @@
             ]
         });
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-edit-agent]');
             if (!btn) return;
             const agentId = btn.getAttribute('data-edit-agent');
@@ -228,16 +228,16 @@
 
         const deleteBtn = document.getElementById('bulk-delete-btn');
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
+            deleteBtn.addEventListener('click', () => {
                 const ids = bulk.getSelected();
                 if (!ids.length) return;
                 if (!confirm('Delete ' + ids.length + ' agent(s)? This action cannot be undone.')) return;
-                Promise.all(ids.map(function(id) {
+                Promise.all(ids.map((id) => {
                     return fetch('/api/admin/agents/' + encodeURIComponent(id), { method: 'DELETE' });
-                })).then(function() {
+                })).then(() => {
                     app.Toast.show(ids.length + ' agents deleted', 'success');
-                    setTimeout(function() { window.location.reload(); }, 500);
-                }).catch(function() {
+                    setTimeout(() => { window.location.reload(); }, 500);
+                }).catch(() => {
                     app.Toast.show('Failed to delete some agents', 'error');
                 });
             });
@@ -245,7 +245,7 @@
 
         const assignBtn = document.getElementById('bulk-assign-btn');
         if (assignBtn && assignApi) {
-            assignBtn.addEventListener('click', function() {
+            assignBtn.addEventListener('click', () => {
                 const ids = bulk.getSelected();
                 if (!ids.length) return;
                 assignApi.open(ids.join(','), ids.length + ' agents', []);

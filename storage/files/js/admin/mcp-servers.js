@@ -12,7 +12,7 @@
             searchInput.addEventListener('input', function() {
                 const query = this.value.toLowerCase();
                 const rows = document.querySelectorAll('.data-table tbody tr.clickable-row');
-                rows.forEach(function(row) {
+                rows.forEach((row) => {
                     const name = (row.getAttribute('data-name') || '').toLowerCase();
                     const match = !query || name.includes(query);
                     row.style.display = match ? '' : 'none';
@@ -29,7 +29,7 @@
             });
         }
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const toggle = e.target.closest('[data-mcp-json]');
             if (!toggle) return;
             const mcpId = toggle.getAttribute('data-mcp-json');
@@ -54,7 +54,7 @@
             }
         });
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('[data-action="delete"][data-entity-type="mcp-server"]');
             if (!deleteBtn) return;
             const id = deleteBtn.getAttribute('data-entity-id');
@@ -62,7 +62,7 @@
 
             app.api('/mcp-servers/' + encodeURIComponent(id), {
                 method: 'DELETE'
-            }).then(function() {
+            }).then(() => {
                 app.Toast.show('MCP server deleted', 'success');
                 const row = document.querySelector('tr[data-entity-id="' + id + '"].clickable-row');
                 if (row) {
@@ -72,18 +72,18 @@
                     }
                     row.remove();
                 }
-            }).catch(function(err) {
+            }).catch((err) => {
                 app.Toast.show(err.message || 'Failed to delete MCP server', 'error');
             });
         });
 
-        let allPlugins = [];
-        document.querySelectorAll('script[data-mcp-detail]').forEach(function(script) {
+        const allPlugins = [];
+        document.querySelectorAll('script[data-mcp-detail]').forEach((script) => {
             try {
                 const data = JSON.parse(script.textContent);
                 if (data.assigned_plugins) {
-                    data.assigned_plugins.forEach(function(p) {
-                        if (!allPlugins.some(function(existing) { return existing.id === p.id; })) {
+                    data.assigned_plugins.forEach((p) => {
+                        if (!allPlugins.some((existing) => { return existing.id === p.id; })) {
                             allPlugins.push(p);
                         }
                     });
@@ -96,7 +96,7 @@
             allPlugins: allPlugins
         });
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const assignBtn = e.target.closest('[data-assign-mcp]');
             if (!assignBtn) return;
             const mcpId = assignBtn.getAttribute('data-assign-mcp');
@@ -108,7 +108,7 @@
                 try {
                     const data = JSON.parse(script.textContent);
                     if (data.assigned_plugins) {
-                        currentPluginIds = data.assigned_plugins.map(function(p) { return p.id; });
+                        currentPluginIds = data.assigned_plugins.map((p) => { return p.id; });
                     }
                 } catch (e) {}
             }

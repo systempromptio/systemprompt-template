@@ -20,31 +20,31 @@
 
     const categoryOrder = ['script', 'reference', 'template', 'diagnostic', 'data', 'config', 'asset'];
 
-    function groupByCategory(fileList) {
+    const groupByCategory = (fileList) => {
         const groups = {};
-        fileList.forEach(function(f) {
+        fileList.forEach((f) => {
             const cat = f.category || 'config';
             if (!groups[cat]) groups[cat] = [];
             groups[cat].push(f);
         });
         return groups;
-    }
+    };
 
-    function renderFileList() {
+    const renderFileList = () => {
         if (!files.length) {
             return '<div class="empty-state" style="padding:var(--space-6)"><p>No files found for this skill.</p>' +
                 '<p style="font-size:var(--text-sm);color:var(--text-tertiary);margin-top:var(--space-2)">Click "Sync Files" to scan the filesystem.</p></div>';
         }
         const groups = groupByCategory(files);
         let html = '';
-        categoryOrder.forEach(function(cat) {
+        categoryOrder.forEach((cat) => {
             const group = groups[cat];
             if (!group || !group.length) return;
             html += '<div style="margin-bottom:var(--space-3)">' +
                 '<div class="skill-file-category">' +
                 escapeHtml(categoryLabels[cat] || cat) + ' (' + group.length + ')' +
                 '</div>';
-            group.forEach(function(f) {
+            group.forEach((f) => {
                 const isSelected = selectedFile && selectedFile.id === f.id;
                 html += '<div class="skill-file-item' + (isSelected ? ' selected' : '') + '" data-file-id="' + escapeHtml(f.id) + '">' +
                     '<span class="skill-file-name">' + escapeHtml(f.file_path) + '</span>' +
@@ -54,9 +54,9 @@
             html += '</div>';
         });
         return html;
-    }
+    };
 
-    function validateContent(content, lang) {
+    const validateContent = (content, lang) => {
         if (!content || !lang) return null;
         lang = lang.toLowerCase();
         try {
@@ -85,13 +85,13 @@
             return e.message;
         }
         return null;
-    }
+    };
 
-    function checkBrackets(content, pairs) {
+    const checkBrackets = (content, pairs) => {
         const stack = [];
         const closeMap = {};
         const openSet = {};
-        pairs.forEach(function(p) { closeMap[p[1]] = p[0]; openSet[p[0]] = p[1]; });
+        pairs.forEach((p) => { closeMap[p[1]] = p[0]; openSet[p[0]] = p[1]; });
         let inStr = false;
         let strChar = '';
         let escaped = false;
@@ -127,9 +127,9 @@
             return 'Unclosed \'' + stack[stack.length - 1] + '\'';
         }
         return null;
-    }
+    };
 
-    function renderEditor() {
+    const renderEditor = () => {
         if (!selectedFile) {
             return '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:var(--text-sm)">Select a file to view its contents</div>';
         }
@@ -148,9 +148,9 @@
                 '<button class="btn btn-primary btn-sm" id="skill-file-save" style="font-size:var(--text-xs)">Save</button>' +
             '</div>' +
         '</div>';
-    }
+    };
 
-    function renderModal() {
+    const renderModal = () => {
         return '<div style="display:flex;flex-direction:column;height:100%">' +
             '<div style="display:flex;align-items:center;padding:var(--space-4);border-bottom:1px solid var(--border-subtle);flex-shrink:0">' +
                 '<h2 style="margin:0;font-size:var(--text-lg);font-weight:600;color:var(--text-primary)">' + escapeHtml(currentSkillName) + ' - Files</h2>' +
@@ -168,15 +168,15 @@
                 '</div>' +
             '</div>' +
         '</div>';
-    }
+    };
 
-    function updatePanel() {
+    const updatePanel = () => {
         const panel = overlay && overlay.querySelector('.skill-files-panel');
         if (panel) panel.innerHTML = renderModal();
         bindEvents();
-    }
+    };
 
-    function runValidation() {
+    const runValidation = () => {
         if (!overlay || !selectedFile) return;
         const editor = overlay.querySelector('#skill-file-editor');
         const badge = overlay.querySelector('#skill-file-validation');
@@ -188,21 +188,21 @@
         } else {
             badge.textContent = '';
         }
-    }
+    };
 
-    function bindEditorValidation() {
+    const bindEditorValidation = () => {
         if (!overlay) return;
         const editor = overlay.querySelector('#skill-file-editor');
         if (editor) {
             editor.addEventListener('input', runValidation);
             runValidation();
         }
-    }
+    };
 
-    function handleFileClick(e) {
+    const handleFileClick = (e) => {
         const item = e.currentTarget;
         const fileId = item.getAttribute('data-file-id');
-        selectedFile = files.find(function(f) { return f.id === fileId; }) || null;
+        selectedFile = files.find((f) => f.id === fileId) || null;
         const listEl = overlay.querySelector('#skill-files-list');
         const editorEl = overlay.querySelector('#skill-files-editor');
         if (listEl) listEl.innerHTML = renderFileList();
@@ -211,17 +211,17 @@
         const newSaveBtn = overlay.querySelector('#skill-file-save');
         if (newSaveBtn) newSaveBtn.addEventListener('click', handleSave);
         bindEditorValidation();
-    }
+    };
 
-    function bindFileItems() {
+    const bindFileItems = () => {
         if (!overlay) return;
         const fileItems = overlay.querySelectorAll('.skill-file-item');
-        fileItems.forEach(function(item) {
+        fileItems.forEach((item) => {
             item.addEventListener('click', handleFileClick);
         });
-    }
+    };
 
-    function bindEvents() {
+    const bindEvents = () => {
         if (!overlay) return;
 
         const closeBtn = overlay.querySelector('#skill-files-close');
@@ -235,9 +235,9 @@
 
         bindFileItems();
         bindEditorValidation();
-    }
+    };
 
-    async function handleSync() {
+    const handleSync = async () => {
         const syncBtn = overlay && overlay.querySelector('#skill-files-sync');
         if (syncBtn) {
             syncBtn.disabled = true;
@@ -255,9 +255,9 @@
                 syncBtn.textContent = 'Sync Files';
             }
         }
-    }
+    };
 
-    async function handleSave() {
+    const handleSave = async () => {
         if (!selectedFile) return;
         const editor = overlay && overlay.querySelector('#skill-file-editor');
         if (!editor) return;
@@ -289,9 +289,9 @@
                 saveBtn.textContent = 'Save';
             }
         }
-    }
+    };
 
-    async function loadFiles() {
+    const loadFiles = async () => {
         try {
             files = await app.api('/skills/' + encodeURIComponent(currentSkillId) + '/files');
             if (!Array.isArray(files)) files = [];
@@ -299,9 +299,9 @@
             files = [];
             app.Toast.show(err.message || 'Failed to load files', 'error');
         }
-    }
+    };
 
-    function close() {
+    const close = () => {
         if (overlay) {
             overlay.remove();
             overlay = null;
@@ -310,9 +310,9 @@
         currentSkillName = '';
         files = [];
         selectedFile = null;
-    }
+    };
 
-    async function open(skillId, skillName) {
+    const open = async (skillId, skillName) => {
         close();
         currentSkillId = skillId;
         currentSkillName = skillName || skillId;
@@ -325,13 +325,13 @@
         '</div>';
         document.body.append(overlay);
 
-        overlay.addEventListener('click', function(e) {
+        overlay.addEventListener('click', (e) => {
             if (e.target === overlay) close();
         });
 
         await loadFiles();
         updatePanel();
-    }
+    };
 
     app.skillFiles = {
         open: open,

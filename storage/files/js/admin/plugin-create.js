@@ -51,27 +51,27 @@
     function saveCurrentStepState() {
         if (!root) return;
         if (state.step === 1) {
-            ['plugin_id', 'name', 'description', 'version', 'category'].forEach(function(name) {
+            ['plugin_id', 'name', 'description', 'version', 'category'].forEach((name) => {
                 const input = root.querySelector('[name="' + name + '"]');
                 if (input) state.form[name] = input.tagName === 'TEXTAREA' ? input.value : input.value;
             });
         }
         if (state.step === 2) {
             state.selectedSkills = {};
-            root.querySelectorAll('input[name="wizard-skills"]:checked').forEach(function(cb) { state.selectedSkills[cb.value] = true; });
+            root.querySelectorAll('input[name="wizard-skills"]:checked').forEach((cb) => { state.selectedSkills[cb.value] = true; });
         }
         if (state.step === 3) {
             state.selectedAgents = {};
-            root.querySelectorAll('input[name="wizard-agents"]:checked').forEach(function(cb) { state.selectedAgents[cb.value] = true; });
+            root.querySelectorAll('input[name="wizard-agents"]:checked').forEach((cb) => { state.selectedAgents[cb.value] = true; });
         }
         if (state.step === 4) {
             state.selectedMcpServers = {};
-            root.querySelectorAll('input[name="wizard-mcp"]:checked').forEach(function(cb) { state.selectedMcpServers[cb.value] = true; });
+            root.querySelectorAll('input[name="wizard-mcp"]:checked').forEach((cb) => { state.selectedMcpServers[cb.value] = true; });
         }
         if (state.step === 5) {
             const entries = root.querySelectorAll('.hook-entry');
             state.hooks = [];
-            entries.forEach(function(entry) {
+            entries.forEach((entry) => {
                 state.hooks.push({
                     event: (entry.querySelector('[name="hook_event"]') || {}).value || 'PostToolUse',
                     matcher: (entry.querySelector('[name="hook_matcher"]') || {}).value || '*',
@@ -82,7 +82,7 @@
         }
         if (state.step === 6) {
             state.form.roles = {};
-            root.querySelectorAll('input[name="wizard-roles"]:checked').forEach(function(cb) { state.form.roles[cb.value] = true; });
+            root.querySelectorAll('input[name="wizard-roles"]:checked').forEach((cb) => { state.form.roles[cb.value] = true; });
             const authorInput = root.querySelector('[name="author_name"]');
             if (authorInput) state.form.author_name = authorInput.value;
             const keywordsInput = root.querySelector('[name="keywords"]');
@@ -116,7 +116,7 @@
 
     function restoreStepState() {
         if (state.step === 1) {
-            ['plugin_id', 'name', 'description', 'version', 'category'].forEach(function(name) {
+            ['plugin_id', 'name', 'description', 'version', 'category'].forEach((name) => {
                 const input = root.querySelector('[name="' + name + '"]');
                 if (input && state.form[name]) {
                     if (input.tagName === 'TEXTAREA') input.value = state.form[name];
@@ -125,28 +125,28 @@
             });
         }
         if (state.step === 2) {
-            Object.keys(state.selectedSkills).forEach(function(val) {
+            Object.keys(state.selectedSkills).forEach((val) => {
                 if (!state.selectedSkills[val]) return;
                 const cb = root.querySelector('input[name="wizard-skills"][value="' + val + '"]');
                 if (cb) cb.checked = true;
             });
         }
         if (state.step === 3) {
-            Object.keys(state.selectedAgents).forEach(function(val) {
+            Object.keys(state.selectedAgents).forEach((val) => {
                 if (!state.selectedAgents[val]) return;
                 const cb = root.querySelector('input[name="wizard-agents"][value="' + val + '"]');
                 if (cb) cb.checked = true;
             });
         }
         if (state.step === 4) {
-            Object.keys(state.selectedMcpServers).forEach(function(val) {
+            Object.keys(state.selectedMcpServers).forEach((val) => {
                 if (!state.selectedMcpServers[val]) return;
                 const cb = root.querySelector('input[name="wizard-mcp"][value="' + val + '"]');
                 if (cb) cb.checked = true;
             });
         }
         if (state.step === 6) {
-            Object.keys(state.form.roles).forEach(function(val) {
+            Object.keys(state.form.roles).forEach((val) => {
                 if (!state.form.roles[val]) return;
                 const cb = root.querySelector('input[name="wizard-roles"][value="' + val + '"]');
                 if (cb) cb.checked = true;
@@ -162,7 +162,7 @@
         const list = document.getElementById('hooks-list');
         if (!list) return;
         list.innerHTML = '';
-        state.hooks.forEach(function(hook) {
+        state.hooks.forEach((hook) => {
             const frag = getTemplate('tpl-hook-entry');
             const entry = frag.querySelector('.hook-entry');
             if (entry) {
@@ -183,13 +183,13 @@
         const el = document.getElementById('wizard-review');
         if (!el) return;
         const f = state.form;
-        const selectedSkills = Object.keys(state.selectedSkills).filter(function(k) { return state.selectedSkills[k]; });
-        const selectedAgents = Object.keys(state.selectedAgents).filter(function(k) { return state.selectedAgents[k]; });
-        const selectedMcp = Object.keys(state.selectedMcpServers).filter(function(k) { return state.selectedMcpServers[k]; });
-        const selectedRoles = Object.keys(f.roles).filter(function(k) { return f.roles[k]; });
+        const selectedSkills = Object.keys(state.selectedSkills).filter((k) => state.selectedSkills[k]);
+        const selectedAgents = Object.keys(state.selectedAgents).filter((k) => state.selectedAgents[k]);
+        const selectedMcp = Object.keys(state.selectedMcpServers).filter((k) => state.selectedMcpServers[k]);
+        const selectedRoles = Object.keys(f.roles).filter((k) => f.roles[k]);
         function badgeList(items, emptyMsg) {
             if (!items.length) return '<span style="color:var(--text-tertiary)">' + escapeHtml(emptyMsg) + '</span>';
-            return items.map(function(i) { return '<span class="badge badge-blue" style="margin:var(--space-1)">' + escapeHtml(i) + '</span>'; }).join('');
+            return items.map((i) => '<span class="badge badge-blue" style="margin:var(--space-1)">' + escapeHtml(i) + '</span>').join('');
         }
         el.innerHTML =
             '<strong>Plugin ID:</strong><span>' + escapeHtml(f.plugin_id || '-') + '</span>' +
@@ -203,7 +203,7 @@
             '<strong>Skills (' + selectedSkills.length + '):</strong><div style="display:flex;flex-wrap:wrap">' + badgeList(selectedSkills, 'None selected') + '</div>' +
             '<strong>Agents (' + selectedAgents.length + '):</strong><div style="display:flex;flex-wrap:wrap">' + badgeList(selectedAgents, 'None selected') + '</div>' +
             '<strong>MCP (' + selectedMcp.length + '):</strong><div style="display:flex;flex-wrap:wrap">' + badgeList(selectedMcp, 'None selected') + '</div>' +
-            '<strong>Hooks (' + state.hooks.length + '):</strong><span>' + (state.hooks.length > 0 ? state.hooks.map(function(h) { return escapeHtml(h.event + ': ' + (h.command || '?')); }).join(', ') : 'None') + '</span>';
+            '<strong>Hooks (' + state.hooks.length + '):</strong><span>' + (state.hooks.length > 0 ? state.hooks.map((h) => escapeHtml(h.event + ': ' + (h.command || '?'))).join(', ') : 'None') + '</span>';
     }
 
     function validateStep1() {
@@ -224,13 +224,13 @@
             version: f.version || '0.1.0',
             category: f.category || '',
             enabled: true,
-            keywords: (f.keywords || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean),
+            keywords: (f.keywords || '').split(',').map((t) => t.trim()).filter(Boolean),
             author: { name: f.author_name || '' },
-            roles: Object.keys(f.roles).filter(function(k) { return f.roles[k]; }),
-            skills: Object.keys(state.selectedSkills).filter(function(k) { return state.selectedSkills[k]; }),
-            agents: Object.keys(state.selectedAgents).filter(function(k) { return state.selectedAgents[k]; }),
-            mcp_servers: Object.keys(state.selectedMcpServers).filter(function(k) { return state.selectedMcpServers[k]; }),
-            hooks: state.hooks.filter(function(h) { return h.command; }).map(function(h) {
+            roles: Object.keys(f.roles).filter((k) => f.roles[k]),
+            skills: Object.keys(state.selectedSkills).filter((k) => state.selectedSkills[k]),
+            agents: Object.keys(state.selectedAgents).filter((k) => state.selectedAgents[k]),
+            mcp_servers: Object.keys(state.selectedMcpServers).filter((k) => state.selectedMcpServers[k]),
+            hooks: state.hooks.filter((h) => h.command).map((h) => {
                 return { event: h.event || 'PostToolUse', matcher: h.matcher || '*', command: h.command, async: !!h.async };
             })
         };
@@ -285,7 +285,7 @@
 
         renderStep();
 
-        root.addEventListener('click', function(e) {
+        root.addEventListener('click', (e) => {
             if (e.target.closest('#btn-import-url')) { showImportModal(); return; }
             if (e.target.closest('#import-cancel')) { hideImportModal(); return; }
             if (e.target.closest('#import-submit')) { submitImport(); return; }
@@ -325,19 +325,19 @@
             if (selectAllBtn) {
                 const listId = selectAllBtn.getAttribute('data-select-all');
                 const container = root.querySelector('[data-checklist="' + listId + '"]');
-                if (container) container.querySelectorAll('input[type="checkbox"]').forEach(function(cb) { cb.checked = true; });
+                if (container) container.querySelectorAll('input[type="checkbox"]').forEach((cb) => { cb.checked = true; });
                 return;
             }
             const deselectAllBtn = e.target.closest('[data-deselect-all]');
             if (deselectAllBtn) {
                 const listId2 = deselectAllBtn.getAttribute('data-deselect-all');
                 const container2 = root.querySelector('[data-checklist="' + listId2 + '"]');
-                if (container2) container2.querySelectorAll('input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
+                if (container2) container2.querySelectorAll('input[type="checkbox"]').forEach((cb) => { cb.checked = false; });
                 return;
             }
         });
 
-        root.addEventListener('keydown', function(e) {
+        root.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.target.id === 'import-url') { e.preventDefault(); submitImport(); }
             if (e.key === 'Escape') hideImportModal();
         });

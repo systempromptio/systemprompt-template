@@ -15,7 +15,7 @@
         activeDropdown: null,
         activeTrigger: null,
 
-        init: function() {
+        init: () => {
             let portal = document.getElementById('dropdown-portal');
             if (!portal) {
                 portal = document.createElement('div');
@@ -25,19 +25,19 @@
             }
             DropdownManager.portal = portal;
 
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', (e) => {
                 if (!DropdownManager.activeDropdown) return;
                 if (DropdownManager.activeDropdown.contains(e.target)) return;
                 if (e.target.closest('[data-action="menu"]')) return;
                 DropdownManager.close();
             }, true);
 
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') DropdownManager.close();
             });
         },
 
-        open: function(triggerBtn) {
+        open: (triggerBtn) => {
             DropdownManager.close();
 
             const menu = triggerBtn.closest('.actions-menu');
@@ -65,7 +65,7 @@
             menu.classList.add('open');
         },
 
-        close: function() {
+        close: () => {
             if (DropdownManager.activeDropdown) {
                 DropdownManager.activeDropdown.remove();
                 DropdownManager.activeDropdown = null;

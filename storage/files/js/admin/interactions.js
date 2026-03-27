@@ -70,7 +70,7 @@
             }
         }
 
-        sortableRows.sort(function(a, b) {
+        sortableRows.sort((a, b) => {
             const aCell = a.cells[colIndex];
             const bCell = b.cells[colIndex];
             if (!aCell || !bCell) return 0;
@@ -108,10 +108,10 @@
 
         initTableSort();
 
-        app.events.on('input', '#' + searchInputId, function(e, el) {
+        app.events.on('input', '#' + searchInputId, (e, el) => {
             let debounceTimer = el._debounceTimer || null;
             clearTimeout(debounceTimer);
-            el._debounceTimer = setTimeout(function() {
+            el._debounceTimer = setTimeout(() => {
                 const q = el.value.toLowerCase().trim();
                 const rows = document.querySelectorAll('.data-table tbody tr');
                 for (let i = 0; i < rows.length; i++) {
@@ -121,19 +121,19 @@
             }, 200);
         });
 
-        app.events.on('click', '[data-action="delete"]', function(e, deleteBtn) {
+        app.events.on('click', '[data-action="delete"]', (e, deleteBtn) => {
             shared.closeAllMenus();
             const entityId = deleteBtn.getAttribute('data-entity-id');
             const deleteEntityType = deleteBtn.getAttribute('data-entity-type') || entityType;
             showDeleteDialog(deleteEntityType, entityId, opts);
         }, { exclusive: true });
 
-        app.events.on('click', '[data-confirm-delete]', function(e, confirmBtn) {
+        app.events.on('click', '[data-confirm-delete]', (e, confirmBtn) => {
             const deleteId = confirmBtn.getAttribute('data-confirm-delete');
             performDelete(entityType, deleteId, confirmBtn, opts);
         }, { exclusive: true });
 
-        app.events.on('change', '[data-action="toggle"]', function(e, toggle) {
+        app.events.on('change', '[data-action="toggle"]', (e, toggle) => {
             const id = toggle.getAttribute('data-entity-id');
             const toggleType = toggle.getAttribute('data-entity-type') || entityType;
             const enabled = toggle.checked;
@@ -165,9 +165,9 @@
             app.api(apiPath, {
                 method: 'PUT',
                 body: JSON.stringify({ enabled: enabled })
-            }).then(function() {
+            }).then(() => {
                 app.Toast.show(toggleType + ' ' + (enabled ? 'enabled' : 'disabled'), 'success');
-            }).catch(function(err) {
+            }).catch((err) => {
                 toggle.checked = !enabled;
                 if (row) {
                     row.setAttribute('data-enabled', enabled ? 'disabled' : 'enabled');
@@ -200,11 +200,11 @@
         const apiPath = opts.deleteApiPath
             ? opts.deleteApiPath(entityId)
             : '/' + entityType + 's/' + encodeURIComponent(entityId);
-        app.api(apiPath, { method: 'DELETE' }).then(function() {
+        app.api(apiPath, { method: 'DELETE' }).then(() => {
             app.Toast.show(entityType + ' deleted', 'success');
             shared.closeDeleteConfirm();
             window.location.reload();
-        }).catch(function(err) {
+        }).catch((err) => {
             app.Toast.show(err.message || 'Failed to delete ' + entityType, 'error');
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Delete';
@@ -223,7 +223,7 @@
         const existingId = form.querySelector('[name="' + idField + '"]');
         const isEdit = existingId && existingId.readOnly && existingId.value;
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(form);
             const body = opts.buildBody ? opts.buildBody(form, formData) : formDataToObject(formData);
@@ -241,11 +241,11 @@
             if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
 
             app.api(url, { method: method, body: JSON.stringify(body) })
-                .then(function() {
+                .then(() => {
                     app.Toast.show(entity + ' saved!', 'success');
                     window.location.href = app.BASE + listPath;
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     app.Toast.show(err.message || 'Failed to save ' + entity, 'error');
                     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = isEdit ? 'Save Changes' : 'Create'; }
                 });
@@ -254,9 +254,9 @@
 
     function formDataToObject(formData) {
         const obj = {};
-        formData.forEach(function(value, key) {
+        formData.forEach((value, key) => {
             if (key === 'tags') {
-                obj[key] = value.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+                obj[key] = value.split(',').map((t) => t.trim()).filter(Boolean);
             } else {
                 obj[key] = value;
             }
@@ -264,7 +264,7 @@
         return obj;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
         app.events.init();
         initTableSort();
     });

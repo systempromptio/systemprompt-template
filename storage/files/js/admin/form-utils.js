@@ -56,7 +56,7 @@
             const items = container.querySelectorAll('.checklist-item');
             items.forEach((item) => {
                 const name = item.getAttribute('data-item-name') || '';
-                item.style.display = (q && name.indexOf(q) < 0) ? 'none' : '';
+                item.style.display = (q && !name.includes(q)) ? 'none' : '';
             });
         });
     }

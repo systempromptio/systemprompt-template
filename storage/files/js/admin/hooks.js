@@ -12,7 +12,7 @@
             searchInput.addEventListener('input', function() {
                 const query = this.value.toLowerCase();
                 const rows = document.querySelectorAll('.data-table tbody tr.clickable-row');
-                rows.forEach(function(row) {
+                rows.forEach((row) => {
                     const name = (row.getAttribute('data-name') || '').toLowerCase();
                     const match = !query || name.includes(query);
                     row.style.display = match ? '' : 'none';
@@ -29,7 +29,7 @@
             });
         }
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const toggle = e.target.closest('[data-hook-json]');
             if (!toggle) return;
             const hookId = toggle.getAttribute('data-hook-json');
@@ -54,7 +54,7 @@
             }
         });
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('[data-action="delete"][data-entity-type="hook"]');
             if (!deleteBtn) return;
             const id = deleteBtn.getAttribute('data-entity-id');
@@ -62,7 +62,7 @@
 
             app.api('/hooks/' + encodeURIComponent(id), {
                 method: 'DELETE'
-            }).then(function() {
+            }).then(() => {
                 app.Toast.show('Hook deleted', 'success');
                 const row = document.querySelector('tr[data-entity-id="' + id + '"].clickable-row');
                 if (row) {
@@ -72,12 +72,12 @@
                     }
                     row.remove();
                 }
-            }).catch(function(err) {
+            }).catch((err) => {
                 app.Toast.show(err.message || 'Failed to delete hook', 'error');
             });
         });
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', (e) => {
             const detailsBtn = e.target.closest('[data-hook-details]');
             if (!detailsBtn) return;
             const hookId = detailsBtn.getAttribute('data-hook-details');
