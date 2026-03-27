@@ -1,3 +1,4 @@
+@layer components {
 .profile-comparison-legend {
     display: flex;
     gap: 1rem;
@@ -251,4 +252,5 @@
     .profile-category-label {
         grid-column: 1 / -1;
     }
+}
 }

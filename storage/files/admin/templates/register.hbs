@@ -8,45 +8,127 @@
     <link rel="stylesheet" href="/css/core/fonts.css?v={{css_version}}">
     <link rel="stylesheet" href="/css/admin-bundle.css?v={{css_version}}">
     <script>(function(){var t;try{t=localStorage.getItem('sp-admin-theme')}catch(e){}if(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)t='dark';if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}})();</script>
-    <style>html,body{margin:0;background:oklch(0.96 0.004 70);color:#1c1917;font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}[data-theme="dark"],[data-theme="dark"] body{background:oklch(0.16 0.01 45);color:#fafaf9}</style>
+    <style>
+        html,body{margin:0;background:oklch(0.96 0.004 70);color:#1c1917;font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+        [data-theme="dark"],[data-theme="dark"] body{background:oklch(0.16 0.01 45);color:#fafaf9}
+        .auth-page{display:flex;min-height:100vh;background:radial-gradient(ellipse at 30% 20%,color-mix(in oklch,var(--sp-accent) 6%,transparent) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,color-mix(in oklch,oklch(0.62 0.18 260) 4%,transparent) 0%,transparent 50%),linear-gradient(180deg,var(--sp-bg-canvas) 0%,var(--sp-bg-base) 100%)}
+        .auth-info{flex:1;padding:3rem 3rem 3rem 4rem;display:flex;flex-direction:column;justify-content:center;max-width:640px}
+        .auth-form-col{display:flex;align-items:center;justify-content:center;padding:2rem;min-width:420px}
+        .auth-info h2{font-size:1.1rem;font-weight:700;color:var(--sp-text-primary);margin:1.5rem 0 0.5rem}
+        .auth-info h3{font-size:0.85rem;font-weight:600;color:var(--sp-text-primary);margin:0.75rem 0 0.25rem}
+        .auth-info p{font-size:0.82rem;color:var(--sp-text-secondary);line-height:1.6;margin:0 0 0.5rem}
+        .auth-info .text-muted{color:var(--sp-text-tertiary)}
+        .auth-badge{display:inline-flex;align-items:center;gap:0.4rem;background:oklch(0.92 0.08 85);color:oklch(0.45 0.12 60);font-size:0.75rem;font-weight:600;padding:0.3rem 0.75rem;border-radius:999px;margin-bottom:1rem}
+        [data-theme="dark"] .auth-badge{background:oklch(0.28 0.06 60);color:oklch(0.82 0.12 70)}
+        .auth-divider{border:none;border-top:1px solid var(--sp-border-default);margin:1.25rem 0}
+        .auth-flow-steps{display:flex;flex-direction:column;gap:0.4rem;margin:0.5rem 0}
+        .auth-flow-step{display:flex;align-items:flex-start;gap:0.5rem;font-size:0.78rem;color:var(--sp-text-secondary);line-height:1.5}
+        .auth-flow-step .step-num{display:inline-flex;align-items:center;justify-content:center;min-width:1.4rem;height:1.4rem;border-radius:50%;background:var(--sp-accent);color:#fff;font-size:0.65rem;font-weight:700;flex-shrink:0;margin-top:0.1rem}
+        @media (max-width: 900px){
+            .auth-page{flex-direction:column}
+            .auth-info{max-width:100%;padding:2rem 1.5rem 1rem}
+            .auth-form-col{min-width:0;padding:1rem 1.5rem 2rem}
+        }
+    </style>
 </head>
 <body>
-    <main class="login-container">
-        <div class="card">
-            <div class="login-logo">
-                <img src="/files/images/logo.svg" alt="{{branding.domain}}" height="40" class="logo-light">
-                <img src="/files/images/logo-white.svg" alt="{{branding.domain}}" height="40" class="logo-dark">
-            </div>
-            <p class="login-subtitle">Create your account</p>
+    <main class="auth-page">
+        <div class="auth-info">
+            <div>
+                <div class="auth-badge">Demo Environment</div>
+                <h2>User Registration</h2>
+                <p>
+                    This is an open demo environment. Registration creates a real account with a WebAuthn passkey
+                    bound to your device. <strong>In production, user provisioning would be restricted</strong> to your
+                    organisation's identity provider via SAML 2.0, OpenID Connect, or SCIM directory sync.
+                </p>
 
-            <div id="error" class="login-error" role="alert" aria-live="polite"></div>
+                <hr class="auth-divider">
 
-            <form id="register-form">
-                <div class="form-group">
-                    <label for="reg-email">Email</label>
-                    <input class="form-input" type="email" id="reg-email" placeholder="you@company.com" required autocomplete="email" aria-describedby="error">
+                <h2>How Registration Works</h2>
+                <p>This platform uses <strong>WebAuthn passkeys</strong> for passwordless authentication &mdash; the same
+                    standard used by Apple, Google, and Microsoft for phishing-resistant sign-in.</p>
+                <div class="auth-flow-steps">
+                    <div class="auth-flow-step"><span class="step-num">1</span><span>You provide your name, email, and role below</span></div>
+                    <div class="auth-flow-step"><span class="step-num">2</span><span>Your browser generates a public/private key pair bound to this domain. The private key stays on your device (or in your password manager). No passwords are created or stored.</span></div>
+                    <div class="auth-flow-step"><span class="step-num">3</span><span>The server stores only the public key and issues an OAuth 2.0 session token via PKCE</span></div>
+                    <div class="auth-flow-step"><span class="step-num">4</span><span>You are signed in automatically</span></div>
                 </div>
-                <div class="form-group">
-                    <label for="reg-name">Full Name</label>
-                    <input class="form-input" type="text" id="reg-name" placeholder="Jane Smith" required autocomplete="name">
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary w-full">Create Account</button>
-                </div>
-            </form>
 
-            <div id="loading" class="login-loading" hidden aria-live="polite">
-                <div class="login-spinner" role="status" aria-label="Loading"></div>
-                <p id="loading-text">Setting up your account...</p>
+                <hr class="auth-divider">
+
+                <h2>Production: Enterprise IdP Integration</h2>
+                <h3>SAML 2.0 / OpenID Connect</h3>
+                <p>Your IdP (Okta, Azure AD, Google Workspace) authenticates users. The platform receives a signed assertion with the user's identity and roles. No credentials are entered on this platform.</p>
+
+                <h3>SCIM Directory Sync</h3>
+                <p>Users and groups are automatically provisioned and deprovisioned from your corporate directory. When someone joins, they appear here. When they leave, access is revoked immediately.</p>
+
+                <h3>Just-in-Time (JIT) Provisioning</h3>
+                <p>On first SSO login, accounts are created automatically with roles derived from IdP group memberships. No pre-provisioning required.</p>
+
+                <h3>Passkeys + SSO</h3>
+                <p>WebAuthn passkeys complement SSO as a device-binding factor, adding phishing-resistant MFA on top of your IdP authentication.</p>
+
+                <hr class="auth-divider">
+
+                <h2>MCP Server Integration</h2>
+                <p>
+                    After registration, users can connect MCP (Model Context Protocol) servers that extend Claude's capabilities
+                    with external tools and data sources. MCP servers authenticate via API keys stored in encrypted per-user secrets.
+                    Each server exposes tool endpoints that Claude can call during conversations, enabling integration with
+                    your existing infrastructure &mdash; databases, APIs, internal services &mdash; all governed by
+                    per-user permissions and audit logging.
+                </p>
             </div>
+        </div>
 
-            <div id="retry" class="login-retry" hidden>
-                <a href="/admin/register">Try again</a>
+        <div class="auth-form-col">
+            <div class="login-container" style="min-height:auto;padding:0;background:none">
+                <div class="card">
+                    <div class="login-logo">
+                        <img src="/files/images/logo.svg" alt="{{branding.domain}}" height="40" class="logo-light">
+                        <img src="/files/images/logo-white.svg" alt="{{branding.domain}}" height="40" class="logo-dark">
+                    </div>
+                    <p class="login-subtitle">Create your account</p>
+
+                    <div id="error" class="login-error" role="alert" aria-live="polite"></div>
+
+                    <form id="register-form">
+                        <div class="form-group">
+                            <label for="reg-email">Email</label>
+                            <input class="form-input" type="email" id="reg-email" placeholder="you@company.com" required autocomplete="email" aria-describedby="error">
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-name">Full Name</label>
+                            <input class="form-input" type="text" id="reg-name" placeholder="Jane Smith" required autocomplete="name">
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-role">Role</label>
+                            <select class="form-input" id="reg-role">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary w-full">Create Account</button>
+                        </div>
+                    </form>
+
+                    <div id="loading" class="login-loading" hidden aria-live="polite">
+                        <div class="login-spinner" role="status" aria-label="Loading"></div>
+                        <p id="loading-text">Setting up your account...</p>
+                    </div>
+
+                    <div id="retry" class="login-retry" hidden>
+                        <a href="/admin/register">Try again</a>
+                    </div>
+
+                    <p class="text-center mt-4 text-tertiary text-sm">
+                        Already have an account? <a href="/admin/login" class="text-accent">Sign in</a>
+                    </p>
+                </div>
             </div>
-
-            <p class="text-center mt-4 text-tertiary text-sm">
-                Already have an account? <a href="/admin/login" class="text-accent">Sign in</a>
-            </p>
         </div>
     </main>
 
@@ -180,6 +262,7 @@
 
             const email = document.getElementById('reg-email').value.trim();
             const displayName = document.getElementById('reg-name').value.trim();
+            const role = document.getElementById('reg-role').value;
 
             if (!email || !displayName) {
                 showError('Please fill in all fields.');
@@ -227,7 +310,8 @@
                 // Step 4: Store profile data for post-OAuth completion
                 localStorage.setItem('pending_registration', JSON.stringify({
                     email: email,
-                    display_name: displayName
+                    display_name: displayName,
+                    role: role
                 }));
 
                 // Step 5: Generate PKCE params and complete OAuth flow

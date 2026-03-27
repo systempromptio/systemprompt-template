@@ -97,13 +97,3 @@ Browse Plugins respects the access control rules configured on each org marketpl
 - **System plugin exclusion** -- the internal `systemprompt` system plugin is automatically hidden from the browse list.
 
 If you cannot see a plugin you expect to find, ask your administrator to check the marketplace's role and department assignments in [Organization Management](/documentation/organization).
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| No plugins appear in Browse Plugins | Your role or department may not match any marketplace's access rules. Ask an admin to check your role/department assignments and the marketplace access configuration |
-| A plugin shows "already added" but is not in My Plugins | The plugin was previously added and may have been removed from My Plugins but the base plugin reference still exists. Try re-adding it |
-| Plugin count differs from what admin sees in Marketplace | Browse Plugins only shows plugins from marketplaces matching your role and department. The admin Marketplace page shows all plugins without access filtering |
-| Cannot find a specific plugin by name | Use the search input to filter by name. If the plugin still does not appear, it may not be assigned to any marketplace you have access to, or it may be in a marketplace restricted to other roles/departments |
-| Category filter shows unexpected categories | Categories are pulled from all available plugins across your authorized marketplaces. If a plugin has an incorrect category, an admin can update it in the org plugin configuration |

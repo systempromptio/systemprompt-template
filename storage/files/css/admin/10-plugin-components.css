@@ -1,3 +1,4 @@
+@layer components {
 .plugin-card--accent { border-left: 3px solid var(--sp-accent); }
 .plugin-card--warning { border-left: 3px solid var(--sp-warning); }
 .plugin-card__body { flex: 1; min-width: 0; }
@@ -211,4 +212,5 @@
   .sp-add-items-dialog {
     animation: none;
   }
+}
 }

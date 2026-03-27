@@ -121,27 +121,3 @@ Click **Edit Visibility** on any expanded plugin card to manage access rules. Vi
 
 1. **Roles** — The roles listed in the plugin's `config.yaml` determine baseline access. Users with matching roles receive the plugin automatically.
 2. **Visibility rules** — Additional rules stored in the database that grant or deny access based on rule type and value. These rules supplement the role-based access defined in the plugin configuration.
-
-## Troubleshooting
-
-**No plugins appear** — Verify that plugins exist under `services/plugins/` with valid `config.yaml` files. Check that at least one plugin has `enabled: true`.
-
-**Rank score shows 0** — The plugin has no usage events and no ratings. Rank score increases as users interact with the plugin and submit ratings.
-
-**Star rating seems wrong** — Ratings use a Bayesian average that pulls toward 3.0 with few votes. As more users rate the plugin, the displayed average converges toward the true mean.
-
-**Edit Visibility button does nothing** — You must have admin role to modify visibility rules. Non-admin users can view but not edit visibility settings.
-
-**Load Users shows empty** — No users have recorded usage events for this plugin yet. Usage events are tracked automatically when users interact with plugin capabilities through hooks.
-
----
-
-## Enterprise Marketplace Management
-
-The marketplace extends to enterprise-scale plugin governance. Capabilities available for scoping in the Phase 1 PRD include:
-
-- **Plugin approval workflows** — require admin review before plugins are published to the organisation marketplace. Prevent unapproved plugins from reaching users.
-- **Department-scoped distribution** — control which plugins are visible to which departments. Revenue teams see revenue plugins; engineering teams see development plugins.
-- **Plugin governance policies** — enforce rules on what plugins can contain (e.g., maximum MCP servers, required hooks, mandatory secret encryption).
-- **Marketplace curation** — pin, feature, or hide plugins based on organisational priorities. Promote approved plugins and deprecate outdated ones.
-- **Usage analytics per plugin** — track adoption, engagement, and cost per plugin across the organisation for informed curation decisions.

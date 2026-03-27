@@ -1,5 +1,4 @@
-
-
+@layer components {
 .cc-insights-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
@@ -118,4 +117,5 @@
     color: var(--sp-text-tertiary);
     opacity: 0.7;
     margin-top: var(--sp-space-2);
+}
 }

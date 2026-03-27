@@ -1,6 +1,4 @@
-
-
-
+@layer components {
 .cc-onboarding {
     max-width: 720px;
     margin: 0 auto;
@@ -121,4 +119,5 @@
 }
 .cc-onboarding-notice--warning strong {
     color: var(--sp-warning);
+}
 }

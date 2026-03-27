@@ -1,3 +1,4 @@
+@layer components {
 .sp-onboarding-banner {
     display: flex;
     align-items: center;
@@ -60,4 +61,5 @@
     .sp-onboarding-banner__content {
         flex-wrap: wrap;
     }
+}
 }

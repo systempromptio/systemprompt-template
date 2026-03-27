@@ -8,70 +8,144 @@
     <link rel="stylesheet" href="/css/core/fonts.css?v={{css_version}}">
     <link rel="stylesheet" href="/css/admin-bundle.css?v={{css_version}}">
     <script>(function(){var t;try{t=localStorage.getItem('sp-admin-theme')}catch(e){}if(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)t='dark';if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}})();</script>
-    <style>html,body{margin:0;background:oklch(0.96 0.004 70);color:#1c1917;font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}[data-theme="dark"],[data-theme="dark"] body{background:oklch(0.16 0.01 45);color:#fafaf9}</style>
+    <style>
+        html,body{margin:0;background:oklch(0.96 0.004 70);color:#1c1917;font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+        [data-theme="dark"],[data-theme="dark"] body{background:oklch(0.16 0.01 45);color:#fafaf9}
+        .auth-page{display:flex;min-height:100vh;background:radial-gradient(ellipse at 30% 20%,color-mix(in oklch,var(--sp-accent) 6%,transparent) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,color-mix(in oklch,oklch(0.62 0.18 260) 4%,transparent) 0%,transparent 50%),linear-gradient(180deg,var(--sp-bg-canvas) 0%,var(--sp-bg-base) 100%)}
+        .auth-info{flex:1;padding:3rem 3rem 3rem 4rem;display:flex;flex-direction:column;justify-content:center;max-width:640px}
+        .auth-form-col{display:flex;align-items:center;justify-content:center;padding:2rem;min-width:420px}
+        .auth-info h2{font-size:1.1rem;font-weight:700;color:var(--sp-text-primary);margin:1.5rem 0 0.5rem}
+        .auth-info h3{font-size:0.85rem;font-weight:600;color:var(--sp-text-primary);margin:0.75rem 0 0.25rem}
+        .auth-info p{font-size:0.82rem;color:var(--sp-text-secondary);line-height:1.6;margin:0 0 0.5rem}
+        .auth-info .text-muted{color:var(--sp-text-tertiary)}
+        .auth-badge{display:inline-flex;align-items:center;gap:0.4rem;background:oklch(0.92 0.08 85);color:oklch(0.45 0.12 60);font-size:0.75rem;font-weight:600;padding:0.3rem 0.75rem;border-radius:999px;margin-bottom:1rem}
+        [data-theme="dark"] .auth-badge{background:oklch(0.28 0.06 60);color:oklch(0.82 0.12 70)}
+        .auth-divider{border:none;border-top:1px solid var(--sp-border-default);margin:1.25rem 0}
+        .auth-flow-steps{display:flex;flex-direction:column;gap:0.4rem;margin:0.5rem 0}
+        .auth-flow-step{display:flex;align-items:flex-start;gap:0.5rem;font-size:0.78rem;color:var(--sp-text-secondary);line-height:1.5}
+        .auth-flow-step .step-num{display:inline-flex;align-items:center;justify-content:center;min-width:1.4rem;height:1.4rem;border-radius:50%;background:var(--sp-accent);color:#fff;font-size:0.65rem;font-weight:700;flex-shrink:0;margin-top:0.1rem}
+        @media (max-width: 900px){
+            .auth-page{flex-direction:column}
+            .auth-info{max-width:100%;padding:2rem 1.5rem 1rem}
+            .auth-form-col{min-width:0;padding:1rem 1.5rem 2rem}
+        }
+    </style>
 </head>
 <body>
-    <main class="login-container">
-        <div class="card">
-            <div class="login-logo">
-                <img src="/files/images/logo.svg" alt="{{branding.domain}}" height="40" class="logo-light">
-                <img src="/files/images/logo-white.svg" alt="{{branding.domain}}" height="40" class="logo-dark">
-            </div>
-            <p class="login-subtitle">Sign in with your passkey</p>
+    <main class="auth-page">
+        <div class="auth-info">
+            <div>
+                <div class="auth-badge">Demo Environment</div>
+                <h2>Sign In</h2>
+                <p>
+                    This is an open demo environment. Sign in with a passkey you created during registration.
+                    <strong>In production, this page would redirect to your organisation's SSO provider</strong> &mdash;
+                    users would never see a login form on this platform.
+                </p>
 
-            <div id="error" class="login-error" role="alert" aria-live="polite"></div>
+                <hr class="auth-divider">
 
-            <div id="login-form" hidden>
-                <div class="form-group">
-                    <label for="login-email">Email</label>
-                    <input class="form-input" type="email" id="login-email" placeholder="you@company.com" required autocomplete="email" aria-describedby="error">
+                <h2>How Passkey Login Works</h2>
+                <p>Passkey authentication uses public-key cryptography. No passwords are transmitted or stored.</p>
+                <div class="auth-flow-steps">
+                    <div class="auth-flow-step"><span class="step-num">1</span><span>Enter your email address</span></div>
+                    <div class="auth-flow-step"><span class="step-num">2</span><span>The server sends a random cryptographic challenge</span></div>
+                    <div class="auth-flow-step"><span class="step-num">3</span><span>Your device signs the challenge with the private key stored during registration (biometric or PIN confirmation)</span></div>
+                    <div class="auth-flow-step"><span class="step-num">4</span><span>The server verifies the signature against the stored public key and issues an OAuth 2.0 session token via PKCE</span></div>
                 </div>
-                <div class="form-actions">
-                    <button type="button" id="sign-in-btn" class="btn btn-primary w-full">Sign in with Passkey</button>
+
+                <hr class="auth-divider">
+
+                <h2>Magic Links (Recovery)</h2>
+                <p>
+                    If you have lost access to your passkey (new device, cleared browser data), use "Don't have a passkey?"
+                    to receive a time-limited, single-use link that lets you create a new passkey on this device.
+                    In production, account recovery would be handled through your IdP's self-service portal.
+                </p>
+
+                <hr class="auth-divider">
+
+                <h2>Production: SSO &amp; IdP Integration</h2>
+                <h3>SAML 2.0 / OpenID Connect</h3>
+                <p>The login page redirects to your IdP. After authentication, the IdP sends a signed assertion back with the user's identity, roles, and group memberships. The platform issues a local session without the user entering credentials here.</p>
+
+                <h3>SCIM Directory Sync</h3>
+                <p>User accounts are created and deactivated automatically from your corporate directory (Okta, Azure AD, Google Workspace). No manual provisioning required.</p>
+
+                <h3>MCP Server Authentication</h3>
+                <p>
+                    After login, users access MCP (Model Context Protocol) servers that extend Claude's capabilities.
+                    Each MCP server authenticates via API keys stored in encrypted per-user secrets and exposes
+                    tool endpoints for databases, APIs, and internal services &mdash; governed by per-user
+                    permissions and audit logging.
+                </p>
+            </div>
+        </div>
+
+        <div class="auth-form-col">
+            <div class="login-container" style="min-height:auto;padding:0;background:none">
+                <div class="card">
+                    <div class="login-logo">
+                        <img src="/files/images/logo.svg" alt="{{branding.domain}}" height="40" class="logo-light">
+                        <img src="/files/images/logo-white.svg" alt="{{branding.domain}}" height="40" class="logo-dark">
+                    </div>
+                    <p class="login-subtitle">Sign in with your passkey</p>
+
+                    <div id="error" class="login-error" role="alert" aria-live="polite"></div>
+
+                    <div id="login-form" hidden>
+                        <div class="form-group">
+                            <label for="login-email">Email</label>
+                            <input class="form-input" type="email" id="login-email" placeholder="you@company.com" required autocomplete="email" aria-describedby="error">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="sign-in-btn" class="btn btn-primary w-full">Sign in with Passkey</button>
+                        </div>
+                        <p class="text-center mt-3 text-sm">
+                            <a href="#" id="magic-link-trigger" class="text-tertiary">Don't have a passkey?</a>
+                        </p>
+                    </div>
+
+                    <div id="magic-link-form" hidden>
+                        <p class="text-sm text-tertiary mb-3 text-center">
+                            Enter your email and we'll send you a link to create a passkey on this device.
+                        </p>
+                        <div class="form-group">
+                            <label for="magic-email">Email</label>
+                            <input class="form-input" type="email" id="magic-email" placeholder="you@company.com" required autocomplete="email">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="send-magic-btn" class="btn btn-primary w-full">Send Magic Link</button>
+                        </div>
+                        <p class="text-center mt-2">
+                            <a href="#" id="back-to-passkey" class="text-tertiary text-sm">Back to passkey sign in</a>
+                        </p>
+                    </div>
+
+                    <div id="magic-link-sent" class="text-center p-4" hidden>
+                        <p class="text-base text-primary mb-2">Check your email</p>
+                        <p class="text-sm text-tertiary">
+                            If an account exists for that email, we've sent a link to create a passkey on this device.
+                        </p>
+                        <p class="mt-3">
+                            <a href="/admin/login" class="text-tertiary text-sm">Back to sign in</a>
+                        </p>
+                    </div>
+
+                    <div id="loading" class="login-loading" hidden aria-live="polite">
+                        <div class="login-spinner" role="status" aria-label="Loading"></div>
+                        <p id="loading-text">Processing...</p>
+                    </div>
+
+                    <div id="retry" class="login-retry">
+                        <a href="/admin/login">Try again</a>
+                    </div>
+
+                    <p class="text-center mt-4 text-tertiary text-sm">
+                        Don't have an account? <a href="/admin/register" class="text-accent">Register</a>
+                    </p>
                 </div>
-                <p class="text-center mt-3 text-sm">
-                    <a href="#" id="magic-link-trigger" class="text-tertiary">Don't have a passkey?</a>
-                </p>
             </div>
-
-            <div id="magic-link-form" hidden>
-                <p class="text-sm text-tertiary mb-3 text-center">
-                    Enter your email and we'll send you a link to create a passkey on this device.
-                </p>
-                <div class="form-group">
-                    <label for="magic-email">Email</label>
-                    <input class="form-input" type="email" id="magic-email" placeholder="you@company.com" required autocomplete="email">
-                </div>
-                <div class="form-actions">
-                    <button type="button" id="send-magic-btn" class="btn btn-primary w-full">Send Magic Link</button>
-                </div>
-                <p class="text-center mt-2">
-                    <a href="#" id="back-to-passkey" class="text-tertiary text-sm">Back to passkey sign in</a>
-                </p>
-            </div>
-
-            <div id="magic-link-sent" class="text-center p-4" hidden>
-                <p class="text-base text-primary mb-2">Check your email</p>
-                <p class="text-sm text-tertiary">
-                    If an account exists for that email, we've sent a link to create a passkey on this device.
-                </p>
-                <p class="mt-3">
-                    <a href="/admin/login" class="text-tertiary text-sm">Back to sign in</a>
-                </p>
-            </div>
-
-            <div id="loading" class="login-loading" hidden aria-live="polite">
-                <div class="login-spinner" role="status" aria-label="Loading"></div>
-                <p id="loading-text">Processing...</p>
-            </div>
-
-            <div id="retry" class="login-retry">
-                <a href="/admin/login">Try again</a>
-            </div>
-
-            <p class="text-center mt-4 text-tertiary text-sm">
-                Don't have an account? <a href="/admin/register" class="text-accent">Register</a>
-            </p>
         </div>
     </main>
 

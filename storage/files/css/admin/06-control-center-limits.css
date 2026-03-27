@@ -1,4 +1,4 @@
-
+@layer components {
 .cc-usage-limits-card {
     background: var(--sp-bg-surface-gradient);
     border: 1px solid var(--sp-border-subtle);
@@ -140,4 +140,5 @@
 
 .cc-limit-upgrade-link:hover {
     background: color-mix(in oklch, currentColor 20%, transparent);
+}
 }

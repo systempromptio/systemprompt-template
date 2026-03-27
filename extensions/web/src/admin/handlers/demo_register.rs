@@ -41,17 +41,15 @@ pub(crate) async fn create_demo_user_handler(
         return shared::error_response(StatusCode::BAD_REQUEST, "Invalid email address");
     };
 
-    let user_id_str = email_str
-        .split('@')
-        .next()
-        .unwrap_or("user")
+    let local_part = email_str.split('@').next().unwrap_or("user");
+    let sanitized = local_part
         .replace(|c: char| !c.is_alphanumeric() && c != '-' && c != '_', "-")
         .trim_matches('-')
         .to_string();
-    let user_id = UserId::new(if user_id_str.is_empty() {
+    let user_id = UserId::new(if sanitized.is_empty() {
         "user".to_string()
     } else {
-        user_id_str
+        sanitized
     });
 
     let roles = match body.role.as_str() {

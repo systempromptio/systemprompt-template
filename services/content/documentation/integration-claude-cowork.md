@@ -1,6 +1,6 @@
 ---
 title: "Integration: Claude Cowork"
-description: "How the governance platform extends to Claude Cowork collaborative AI sessions — same governance pipeline, same audit trail, same policies across all Claude surfaces."
+description: "How the governance library extends to Claude Cowork collaborative AI sessions — same governance pipeline, same audit trail, same policies across all Claude surfaces."
 author: "systemprompt.io"
 slug: "integration-claude-cowork"
 keywords: "Claude Cowork, collaborative AI, integration, governance, agents, tools, enterprise"
@@ -10,11 +10,12 @@ tags: ["introduction", "integration", "claude-cowork", "collaborative"]
 published_at: "2026-03-27"
 updated_at: "2026-03-27"
 after_reading_this:
-  - "Understand how the platform governs collaborative AI sessions in Claude Cowork"
+  - "Understand how the library governs collaborative AI sessions in Claude Cowork"
   - "Know that the same governance pipeline applies regardless of which Claude surface is used"
+  - "Know that current restrictions are due to Anthropic's research preview, not systemprompt.io"
   - "See how access control, audit trails, and cost tracking work in collaborative contexts"
 related_docs:
-  - title: "Introduction to the Platform"
+  - title: "Introduction"
     url: "/documentation/introduction"
   - title: "Agents"
     url: "/documentation/agents"
@@ -28,13 +29,17 @@ related_docs:
 
 # Integration: Claude Cowork
 
-**Claude Cowork is Anthropic's collaborative AI environment where teams work alongside Claude on shared tasks. The governance platform integrates with Cowork through the same plugin and MCP infrastructure used by Claude Code — meaning the same governance policies, the same audit trail, and the same cost tracking apply whether a user is working alone in a CLI or collaborating with colleagues in Cowork.**
+**Claude Cowork is Anthropic's collaborative AI environment where teams work alongside Claude on shared tasks. The governance library integrates with Cowork through the same plugin and MCP infrastructure used by Claude Code — meaning the same governance policies, the same audit trail, and the same cost tracking apply whether a user is working alone in a CLI or collaborating with colleagues in Cowork.**
 
 ---
 
-## Current Status — Research Preview
+## Current Status
 
-> **Important:** Claude Cowork is in research preview. Some integration features described below are temporarily unavailable due to Anthropic restricting external marketplace access.
+> **Important:** Claude Cowork is currently in **research preview**. As part of this preview phase, Anthropic has temporarily restricted certain capabilities — including external marketplace access — that affect all third-party integrations globally. This is not a systemprompt.io restriction. It is a side effect of the research preview status and applies to every organisation building on Cowork.
+
+We know that companies are already relying on Claude Cowork in production workflows, and we support that as fully as possible. Our integration was **fully functional** before the research preview restrictions were applied — the governance pipeline, plugin delivery, and MCP connectivity all operated as described below. We have no control over the research preview timeline, but we are actively engaged with Anthropic and expect these restrictions to be lifted as Cowork moves toward general availability.
+
+systemprompt.io is fully compatible with Anthropic's APIs. We have applied to the partner programme, are actively engaging with their team, and aim to be as natively integrated as possible. This is a temporary restriction imposed by the research preview, not a compatibility issue.
 
 | Feature | Status |
 |---------|--------|
@@ -42,13 +47,11 @@ related_docs:
 | Governance model | Working |
 | MCP connector | Working |
 | Claude Code integration | Working — same APIs, fully operational |
-| External marketplace sync | Unavailable — restricted by Anthropic |
-| Analytics in Cowork | Unavailable — dependent on marketplace access |
-| Hooks in Cowork | Unavailable — dependent on marketplace access |
+| External marketplace sync | Temporarily unavailable — restricted by Anthropic's research preview, affects all third parties globally |
+| Analytics in Cowork | Temporarily unavailable — dependent on marketplace access |
+| Hooks in Cowork | Temporarily unavailable — dependent on marketplace access |
 
-systemprompt.io is an Anthropic partner aligned on using official APIs. We expect full Cowork integration to be restored once Anthropic completes their security review of external marketplace access. There is no official timeline.
-
-**Recommended alternative:** [Integration: Claude Code](/documentation/integration-claude-code) provides full governance integration today.
+**Recommended alternative:** [Integration: Claude Code](/documentation/integration-claude-code) provides full governance integration today and is unaffected by the research preview restrictions.
 
 **Anthropic terms:** [Acceptable Use Policy](https://www.anthropic.com/legal/aup) · [Consumer Terms](https://www.anthropic.com/legal/consumer-terms)
 
@@ -56,7 +59,7 @@ systemprompt.io is an Anthropic partner aligned on using official APIs. We expec
 
 ## How It Works
 
-Claude Cowork connects to the governance platform through the same mechanisms as every other Claude surface:
+Claude Cowork connects to the governance library through the same mechanisms as every other Claude surface:
 
 - **Plugins** provide governed skills and agents to Cowork sessions
 - **MCP servers** expose governed tools that Cowork can invoke
@@ -95,7 +98,7 @@ See [Access Control](/documentation/access-control) for role-based permission co
 
 ## Agents in Cowork
 
-Agents configured through the governance platform are available in Cowork sessions. Each agent operates under the same governance rules:
+Agents configured through the governance library are available in Cowork sessions. Each agent operates under the same governance rules:
 
 - Agent capabilities are defined by the skills assigned to them
 - Tool access is governed by the calling user's permissions

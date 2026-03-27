@@ -1,3 +1,4 @@
+@layer tokens {
 :root {
 
   --sp-primitive-orange-50:  oklch(0.96 0.03 60);
@@ -119,4 +120,5 @@
   --sp-shadow-md: 0 4px 6px oklch(0.30 0.02 50 / 0.08), 0 2px 4px oklch(0.30 0.02 50 / 0.06);
   --sp-shadow-lg: 0 10px 15px oklch(0.30 0.02 50 / 0.08), 0 4px 6px oklch(0.30 0.02 50 / 0.04);
   --sp-shadow-xl: 0 20px 25px oklch(0.30 0.02 50 / 0.10), 0 8px 10px oklch(0.30 0.02 50 / 0.05);
+}
 }

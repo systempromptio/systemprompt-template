@@ -1,6 +1,4 @@
-
-
-
+@layer components {
 .cc-skill-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -95,4 +93,5 @@
     color: var(--sp-text-tertiary);
     font-style: italic;
     margin: 0;
+}
 }

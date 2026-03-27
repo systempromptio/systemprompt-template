@@ -69,6 +69,8 @@ pub const SCHEMA_ADMIN_DASHBOARD_COLUMNS: &str =
     include_str!("../schema/048_admin_dashboard_columns.sql");
 pub const SCHEMA_PROFILE_REPORTS_HOOKS_FIX: &str =
     include_str!("../schema/049_profile_reports_and_hooks_fix.sql");
+pub const SCHEMA_FIX_USER_HOOKS_EVENT: &str =
+    include_str!("../schema/050_fix_user_hooks_event_column.sql");
 
 pub fn schema_definitions() -> Vec<SchemaDefinition> {
     vec![
@@ -128,5 +130,6 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::inline("admin_dashboard_views", SCHEMA_ADMIN_DASHBOARD_VIEWS),
         SchemaDefinition::inline("admin_dashboard_columns", SCHEMA_ADMIN_DASHBOARD_COLUMNS),
         SchemaDefinition::inline("profile_reports_hooks_fix", SCHEMA_PROFILE_REPORTS_HOOKS_FIX),
+        SchemaDefinition::inline("fix_user_hooks_event", SCHEMA_FIX_USER_HOOKS_EVENT),
     ]
 }

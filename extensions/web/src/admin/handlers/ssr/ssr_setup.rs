@@ -8,7 +8,7 @@ use serde_json::json;
 #[derive(Serialize)]
 struct SetupPhase {
     number: u8,
-    title: &'static str,
+    title: String,
     description: &'static str,
     guide_url: &'static str,
     action_url: &'static str,
@@ -41,7 +41,7 @@ pub(crate) async fn setup_page(
     let phases = vec![
         SetupPhase {
             number: 1,
-            title: "Connect Claude to systemprompt.io",
+            title: format!("Connect Claude to {}", mkt_ctx.site_url),
             description: "The essential first step. Connect your Claude surface so skills, plugins, and analytics actually work. Without this, nothing else matters.",
             guide_url: "/platform/connecting",
             action_url: "",
@@ -51,7 +51,7 @@ pub(crate) async fn setup_page(
         },
         SetupPhase {
             number: 2,
-            title: "Browse and Fork Plugins",
+            title: String::from("Browse and Fork Plugins"),
             description: "Explore the plugin catalogue. Fork industry-specific plugins to build your personalised skill library with proven defaults.",
             guide_url: "/platform/forking-plugins",
             action_url: "/admin/browse/plugins/",
@@ -61,7 +61,7 @@ pub(crate) async fn setup_page(
         },
         SetupPhase {
             number: 3,
-            title: "Customize Your Skills",
+            title: String::from("Customize Your Skills"),
             description: "Use the Skill Manager MCP server to edit forked skills, create new ones, and build a library that matches how your team works.",
             guide_url: "/platform/skills/editing",
             action_url: "/admin/my/skills/",
@@ -71,7 +71,7 @@ pub(crate) async fn setup_page(
         },
         SetupPhase {
             number: 4,
-            title: "Monitor, Report, and Improve",
+            title: String::from("Monitor, Report, and Improve"),
             description: "Track skill effectiveness with analytics. Identify what is working, retire what is not, and iterate your way to a world-class skill library.",
             guide_url: "/platform/control-center",
             action_url: "/control-center",

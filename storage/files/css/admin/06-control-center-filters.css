@@ -1,6 +1,4 @@
-
-
-
+@layer components {
 .cc-filter-bar {
     display: flex;
     gap: var(--sp-space-1);
@@ -205,4 +203,5 @@
     .cc-star:hover {
         transform: none;
     }
+}
 }

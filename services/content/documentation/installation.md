@@ -161,15 +161,3 @@ just docker-run
 ```
 
 This builds the Docker image and runs it on port 8080.
-
-## Troubleshooting
-
-**Build fails with database errors** — Ensure PostgreSQL is running and the `database_url` in your secrets file is correct. If the database is unavailable, the build falls back to offline mode automatically.
-
-**`just` command not found** — Install just: `cargo install just`
-
-**Assets not appearing** — Run `just publish` after any changes to templates, CSS, or JS files.
-
-**Migrations fail** — Check that the database exists and the user has permissions. Review `extensions/web/schema/` for the migration files.
-
-**Port 8080 already in use** — Stop any other services on port 8080 or configure an alternate port in your environment.

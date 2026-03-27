@@ -93,60 +93,18 @@ To update a variable, submit the new value through the same form. The system per
 
 Plugins resolve their secrets at runtime through a two-step token-based flow:
 
-### Step 1: Request a Resolution Token
-
-The plugin (or its MCP server) sends an authenticated request to create a resolution token:
-
-```
-POST /api/secrets/{plugin_id}/token
-Authorization: Bearer <plugin-jwt>
-```
-
-This returns a single-use token that expires in **300 seconds** (5 minutes):
-
-```json
-{
-  "token": "abc123...",
-  "expires_in": 300
-}
-```
-
-The JWT must have a `plugin` resource audience and be signed with the platform's JWT secret.
-
-### Step 2: Resolve Secrets
-
-The plugin uses the token to fetch its decrypted secrets:
-
-```
-GET /api/secrets/{plugin_id}/resolve?token=abc123...
-```
-
-The system:
-1. Validates and consumes the token (single-use).
-2. Verifies the token's plugin ID matches the request path.
-3. Loads the master key and decrypts the user's DEK.
-4. Decrypts all secret values for the plugin.
-5. Returns the resolved key-value pairs.
+1. **Request a resolution token** -- the plugin (or its MCP server) sends an authenticated request to create a single-use token that expires in 5 minutes. The JWT must have a `plugin` resource audience and be signed with the platform's JWT secret.
+2. **Resolve secrets** -- the plugin uses the token to fetch its decrypted secrets. The system validates and consumes the token, verifies the plugin ID, decrypts the user's DEK with the master key, decrypts all secret values for the plugin, and returns the resolved key-value pairs.
 
 This ensures secrets are only decrypted on demand, tokens cannot be reused, and the plugin ID is verified at every step.
 
 ## Key Rotation
 
-You can rotate your personal Data Encryption Key (DEK) at any time:
-
-```
-POST /api/secrets/{plugin_id}/rotate
-```
-
-Rotation re-encrypts your DEK with the current master key. This is useful if you suspect your encryption key may have been compromised. The rotation event is recorded in the audit log.
+You can rotate your personal Data Encryption Key (DEK) at any time. Rotation re-encrypts your DEK with the current master key. This is useful if you suspect your encryption key may have been compromised. The rotation event is recorded in the audit log.
 
 ## Audit Log
 
-Every secret-related action is logged in the `secret_audit_log` table. You can view the audit log for a specific plugin:
-
-```
-GET /api/secrets/{plugin_id}/audit
-```
+Every secret-related action is logged in the `secret_audit_log` table.
 
 Each audit entry contains:
 
@@ -173,12 +131,3 @@ The audit log returns the most recent 100 entries, ordered newest first.
 | **User isolation** | Each user has their own DEK; one user cannot resolve another's secrets |
 | **Audit trail** | All create, update, resolve, and rotate actions are logged |
 
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| "Invalid or expired token" when resolving secrets | Resolution tokens expire after 5 minutes and are single-use. Request a new token before each resolution attempt. |
-| "Token plugin mismatch" error | The plugin ID in the resolution request path must match the plugin ID used when creating the token. Verify both IDs are identical. |
-| "Internal configuration error" on token creation | The server could not load the master encryption key or JWT secret. Check that environment variables for encryption are configured and the server has restarted after changes. |
-| Missing required variables shown in plugin config | Navigate to My Secrets, select the plugin, and add the missing variables. The API's `missing_required` field lists exactly which variables need to be set. |
-| Audit log shows unexpected "resolved" entries | Another session or MCP server process may be resolving secrets on your behalf. Review the `actor_id` and `ip_address` fields to identify the source. |

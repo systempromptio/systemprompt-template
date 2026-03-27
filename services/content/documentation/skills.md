@@ -166,17 +166,3 @@ Skills are associated with plugins through the plugin's configuration:
 - Through the API, use the update plugin skills endpoint to modify the list.
 
 A skill can belong to multiple plugins simultaneously. Adding or removing a skill from a plugin does not delete the skill itself.
-
-## Troubleshooting
-
-**Skill not appearing in the list** -- Non-admin users only see skills from plugins that match their roles. Ask an admin to verify the skill exists and its parent plugin includes your role.
-
-**Cannot edit a skill** -- If the edit form is not available, the skill is likely a system skill. Use the Customize (fork) feature on the Plugins page to create an editable copy.
-
-**Tags not saving** -- Tags must be entered as a comma-separated list (e.g., `writing, email`). Ensure there are no trailing commas or empty entries.
-
-**Skill toggle not working** -- The toggle requires the skill to exist in the database. System skills that have never been toggled may need an initial sync. Check `systemprompt infra logs view --level error` for API errors.
-
-**Content not appearing for agents** -- Verify the skill is enabled and belongs to a plugin that is also enabled. Both the skill and its parent plugin must be active for agents to receive the skill content.
-
-**"Skill not found" on delete** -- Custom skills are associated with a user ID. If you created the skill under a different account, the delete will fail. Admins can manage skills across all users.

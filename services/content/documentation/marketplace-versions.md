@@ -101,15 +101,3 @@ The restore response includes the restored version number, the new version numbe
 ## Version Retention
 
 The system automatically prunes old versions to conserve storage. Only the **3 most recent versions** per user are retained. When a new version (upload or restore) is created and the user has more than 3 versions, the oldest versions are deleted and their snapshot files are removed from disk.
-
-## Troubleshooting
-
-**No versions appear for a user** — The user has not uploaded any skills through the marketplace API. Versions are only created when content is pushed via the upload or restore endpoints.
-
-**Changelog shows "Select a user to view changelog"** — You need to select a specific user from the dropdown before the changelog loads. The changelog is user-specific.
-
-**Restore fails with "Version not found"** — The target version may have been pruned. Only the 3 most recent versions are retained. If the version was older, it has been automatically deleted.
-
-**Version type shows "restore" instead of "upload"** — This version was created by restoring a previous version rather than uploading new content. The system tracks both types for audit purposes.
-
-**Skills count is 0** — The version snapshot contained no skills. This can happen if the user had no skills at the time of the upload or if the uploaded archive was empty.

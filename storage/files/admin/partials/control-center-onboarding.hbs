@@ -2,65 +2,53 @@
     {{#unless setup_context}}
     <div class="cc-onboarding-header">
         <h2>Welcome to your Control Center</h2>
-        <p>This is where you'll see live conversations, skill usage, and analytics. To get started, connect Claude to systemprompt.io by following the steps below for your preferred client.</p>
+        <p>This is where you'll see live conversations, skill usage, and analytics. To get started, connect Claude to {{marketplace.site_url}} by following the steps below for your preferred client.</p>
         <p class="cc-onboarding-guide-links">For a detailed walkthrough, see the <a href="/platform/connecting" target="_blank" rel="noopener noreferrer">Phase 1: Connect Claude guide</a> or view your complete <a href="/admin/setup">Setup Guide</a>.</p>
     </div>
     {{/unless}}
 
     <div class="cc-onboarding-tabs">
-        <button type="button" class="cc-onboarding-tab cc-onboarding-tab--active" data-onboard="cowork">Cowork (Claude Desktop)</button>
-        <button type="button" class="cc-onboarding-tab" data-onboard="code">Claude Code</button>
+        <button type="button" class="cc-onboarding-tab cc-onboarding-tab--active" data-onboard="code">Claude Code</button>
+        <button type="button" class="cc-onboarding-tab" data-onboard="cowork">Cowork (Claude Desktop)</button>
         <button type="button" class="cc-onboarding-tab" data-onboard="web">claude.ai</button>
     </div>
 
-    <div class="cc-onboarding-panel cc-onboarding-panel--active" id="onboard-cowork">
-        <!-- COWORK-RESEARCH-PREVIEW: Remove when Anthropic restores marketplace access -->
-        <div class="cc-onboarding-notice cc-onboarding-notice--warning">
-            <strong>Research Preview:</strong> Claude Cowork is in research preview. Anthropic has temporarily restricted external marketplace access — plugin export (ZIP download) works, but analytics and hooks are not currently functional within Cowork sessions. <a href="/documentation/integration-claude-code">Claude Code integration</a> is fully operational and uses the same APIs. See <a href="/documentation/integration-claude-cowork" target="_blank" rel="noopener noreferrer">Cowork integration status</a> and <a href="https://www.anthropic.com/legal/aup" target="_blank" rel="noopener noreferrer">Anthropic's terms</a>.
-        </div>
+    <div class="cc-onboarding-panel cc-onboarding-panel--active" id="onboard-code">
         <div class="cc-onboarding-notice">
-            <strong>Note:</strong> Cowork marketplace sync requires an Anthropic Enterprise plan with a GitHub private repo. Individual users should use the plugin ZIP export below.
+            <strong>Recommended:</strong> Claude Code is the fastest way to get started. A single command installs all your plugins, skills, agents, hooks, and MCP servers with your personalized authentication token embedded. No whitelisting or manual connector setup required.
         </div>
         <div class="cc-onboarding-steps">
             <div class="cc-onboarding-step">
                 <span class="cc-step-number">1</span>
                 <div class="cc-step-content">
-                    <h3>Whitelist systemprompt.io</h3>
-                    <p>In Claude Desktop, go to <strong>Settings &rarr; Capabilities &rarr; Code execution and file creation</strong>. Enable <strong>Allow network egress</strong>, set domain allowlist to <strong>Package managers only</strong>, then add these domains:</p>
-                    <table class="cc-onboarding-table">
-                        <tr><th>Domain</th><th>Purpose</th></tr>
-                        <tr><td>systemprompt.io</td><td>Main API and dashboard</td></tr>
-                        <tr><td>*.systemprompt.io</td><td>Tenant subdomains</td></tr>
-                    </table>
+                    <h3>Install your marketplace</h3>
+                    <p>Run this command in Claude Code to install everything in one step:</p>
+                    <div class="cc-onboarding-code">
+                        <code>claude plugin marketplace add {{marketplace.git_url}}</code>
+                        <button type="button" class="btn-copy" data-copy="claude plugin marketplace add {{marketplace.git_url}}">Copy</button>
+                    </div>
+                    <p>This is also available from the <strong>Share &amp; Install</strong> icon in the header. The install URL contains your personalized token, so all hooks, MCP servers, and marketplace configuration are automatically authenticated.</p>
                 </div>
             </div>
 
             <div class="cc-onboarding-step">
                 <span class="cc-step-number">2</span>
                 <div class="cc-step-content">
-                    <h3>Add MCP connector</h3>
-                    <p>In Claude Desktop, go to <strong>Settings &rarr; Connectors</strong>, click <strong>Add custom connector</strong>, enter name <strong>Skill manager</strong> and paste this URL:</p>
-                    <div class="cc-onboarding-code">
-                        <code>{{marketplace.mcp_url}}</code>
-                        <button type="button" class="btn-copy" data-copy="{{marketplace.mcp_url}}">Copy</button>
-                    </div>
+                    <h3>Run /onboarding</h3>
+                    <p>Start a new Claude Code conversation and type <code>/onboarding</code>. The assistant will guide you through creating personalised skills for your business. Events will appear here automatically.</p>
                 </div>
             </div>
+        </div>
+    </div>
 
+    <div class="cc-onboarding-panel" id="onboard-cowork">
+        <!-- COWORK-RESEARCH-PREVIEW: Remove when Anthropic stabilises Cowork -->
+        <div class="cc-onboarding-notice cc-onboarding-notice--warning">
+            <strong>Research Preview:</strong> Claude Cowork is in research preview. While it has been working reliably in recent weeks, the platform has experienced intermittent issues. Even if Cowork is the primary integration point for your business, we recommend evaluating with <a href="/documentation/integration-claude-code">Claude Code</a> while Anthropic stabilises the Cowork platform. See <a href="/documentation/integration-claude-cowork" target="_blank" rel="noopener noreferrer">Cowork integration status</a>.
+        </div>
+        <div class="cc-onboarding-steps">
             <div class="cc-onboarding-step">
-                <span class="cc-step-number">3</span>
-                <div class="cc-step-content">
-                    <h3>Add global instructions</h3>
-                    <p>In Claude Desktop <strong>Settings &rarr; Cowork</strong>, paste this into the <strong>Global instructions</strong> field:</p>
-                    <div class="cc-onboarding-code">
-                        <code>We use systemprompt mcp skills to manage all skills, plugins and agents. Always use the MCP server for CRUD operations to ensure complete consistency.</code>
-                        <button type="button" class="btn-copy" data-copy="We use systemprompt mcp skills to manage all skills, plugins and agents. Always use the MCP server for CRUD operations to ensure complete consistency.">Copy</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="cc-onboarding-step">
-                <span class="cc-step-number">4</span>
+                <span class="cc-step-number">1</span>
                 <div class="cc-step-content">
                     <h3>Export &amp; import plugin</h3>
                     <p>Go to <a href="/admin/my/marketplace">My Marketplace</a> and click <strong>Export for Cowork</strong> to download your merged plugin ZIP. In Claude Desktop, go to <strong>Settings &rarr; Plugins &rarr; Import</strong> and upload the ZIP file. This single plugin contains all your skills, agents, and connectors.</p>
@@ -68,58 +56,19 @@
             </div>
 
             <div class="cc-onboarding-step">
-                <span class="cc-step-number">5</span>
-                <div class="cc-step-content">
-                    <h3>Run /onboarding</h3>
-                    <p>Open Cowork, start a new conversation, and type <code>/onboarding</code>. The assistant will guide you through creating personalised skills for your business.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="cc-onboarding-panel" id="onboard-code">
-        <div class="cc-onboarding-notice">
-            <strong>Note:</strong> Claude Code supports plugin import via ZIP or git-based marketplace sync with any git URL.
-        </div>
-        <div class="cc-onboarding-steps">
-            <div class="cc-onboarding-step">
-                <span class="cc-step-number">1</span>
-                <div class="cc-step-content">
-                    <h3>Whitelist systemprompt.io</h3>
-                    <p>In Claude Desktop, go to <strong>Settings &rarr; Capabilities &rarr; Code execution and file creation</strong>. Enable <strong>Allow network egress</strong>, set domain allowlist to <strong>Package managers only</strong>, then add these domains:</p>
-                    <table class="cc-onboarding-table">
-                        <tr><th>Domain</th><th>Purpose</th></tr>
-                        <tr><td>systemprompt.io</td><td>Main API and dashboard</td></tr>
-                        <tr><td>*.systemprompt.io</td><td>Tenant subdomains</td></tr>
-                    </table>
-                </div>
-            </div>
-
-            <div class="cc-onboarding-step">
                 <span class="cc-step-number">2</span>
                 <div class="cc-step-content">
-                    <h3>Add MCP connector</h3>
-                    <p>In Claude Desktop, go to <strong>Settings &rarr; Connectors</strong>, click <strong>Add custom connector</strong>, enter name <strong>Skill manager</strong> and paste this URL:</p>
-                    <div class="cc-onboarding-code">
-                        <code>{{marketplace.mcp_url}}</code>
-                        <button type="button" class="btn-copy" data-copy="{{marketplace.mcp_url}}">Copy</button>
-                    </div>
+                    <h3>Enterprise plugin sync</h3>
+                    <p>Cowork does not support the one-line install path used by Claude Code due to Anthropic restrictions. For teams, we support enterprise plugins synced through a GitHub repository. You can embed authentication tokens by enforcing the use of settings files through company policy.</p>
+                    <p>Anthropic's <strong>Enterprise plan</strong> provides a managed solution for plugin distribution and settings enforcement. This can also be achieved with corporate device management tools without the Enterprise plan.</p>
                 </div>
             </div>
 
             <div class="cc-onboarding-step">
                 <span class="cc-step-number">3</span>
                 <div class="cc-step-content">
-                    <h3>Export &amp; import plugin</h3>
-                    <p>Go to <a href="/admin/my/marketplace">My Marketplace</a> and click <strong>Export for Cowork</strong> to download your merged plugin ZIP. In Claude Code, run <code>/plugin install /path/to/exported.zip</code> to import the plugin.</p>
-                </div>
-            </div>
-
-            <div class="cc-onboarding-step">
-                <span class="cc-step-number">4</span>
-                <div class="cc-step-content">
-                    <h3>Connect the plugin</h3>
-                    <p>After installing, go to <strong>Customize &rarr; Personal plugins &rarr; Systemprompt &rarr; Connectors</strong>, find the skill manager connector, and click <strong>Connect</strong>. Your skills, agents, and tools will then be available &mdash; events will appear here automatically.</p>
+                    <h3>Run /onboarding</h3>
+                    <p>Open Cowork, start a new conversation, and type <code>/onboarding</code>. The assistant will guide you through creating personalised skills for your business.</p>
                 </div>
             </div>
         </div>

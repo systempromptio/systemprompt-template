@@ -1,6 +1,6 @@
 ---
 title: "Anthropic Partnership"
-description: "systemprompt.io is an Anthropic partner. The platform is built to extend and govern the Claude ecosystem — working with Anthropic's tools and protocols, not against them."
+description: "systemprompt.io is built to extend and govern the Claude ecosystem — working with Anthropic's tools and protocols, not around them. We have applied for the Anthropic partner programme and are actively engaging."
 author: "systemprompt.io"
 slug: "anthropic-partnership"
 keywords: "Anthropic, partnership, Claude, ecosystem, MCP, Model Context Protocol, governance, enterprise"
@@ -10,9 +10,9 @@ tags: ["introduction", "partnership", "anthropic"]
 published_at: "2026-03-27"
 updated_at: "2026-03-27"
 after_reading_this:
-  - "Understand systemprompt.io's relationship with Anthropic"
-  - "Know how the platform works with the Claude ecosystem rather than against it"
-  - "Understand what Anthropic partnership means for enterprise customers"
+  - "Understand systemprompt.io's relationship with Anthropic and the current state of the partnership"
+  - "Know how the platform is built with the Claude ecosystem, not around it"
+  - "Understand what this alignment means for enterprise customers"
 related_docs:
   - title: "Introduction to the Platform"
     url: "/documentation/introduction"
@@ -28,28 +28,34 @@ related_docs:
 
 # Anthropic Partnership
 
-**systemprompt.io is an Anthropic partner. The platform is purpose-built to govern and extend the Claude ecosystem — Claude Code, Claude Cowork, and Claude AI. This is not a third-party tool that wraps or replaces Anthropic's products. It is governance infrastructure that makes Claude deployments enterprise-ready, built in alignment with Anthropic's protocols, plugin systems, and safety goals.**
+**systemprompt.io is purpose-built to govern and extend the Claude ecosystem — Claude Code, Claude Cowork, and Claude AI. This is not a third-party tool that wraps or replaces Anthropic's products. It is governance infrastructure that makes Claude deployments enterprise-ready, built in alignment with Anthropic's protocols, plugin systems, and safety goals.**
 
 ---
 
-## Working With the Ecosystem
+## Our Approach: Build With Anthropic, Not Around It
 
-The platform is designed around a simple principle: **govern, don't replace**.
+We have applied to the Anthropic partner programme and are actively engaging with their team. Our goal is straightforward: build **with** Anthropic, not around them.
 
-Enterprise organisations adopting Claude need governance — access control, audit trails, cost tracking, tool management. But they do not need another AI platform competing with the one they have chosen. The governance layer should extend and strengthen the Claude ecosystem, not create an alternative to it.
+Anthropic is growing extraordinarily fast — they are scaling their team, their products, and their partner ecosystem simultaneously. Formal partnership takes time, and we respect that. In the meantime, we are building on every public protocol and integration point Anthropic provides, ensuring that when the partnership formalises, the platform is already fully aligned.
 
-This is what partnership means in practice:
+This is not a wait-and-see position. We are shipping production governance infrastructure today, built entirely on Anthropic's own standards:
 
 - The platform uses Anthropic's **Model Context Protocol (MCP)** as the standard interface for tool access. MCP servers are first-class citizens, not an afterthought.
 - Plugin distribution uses **Claude Code's native plugin system**. Developers install governed plugins the same way they install any Claude Code plugin — no proprietary client, no custom protocol.
 - The marketplace distributes content through **standard git repositories**, compatible with Claude Code and any git-compatible tooling.
 - Governance policies are enforced **at the protocol level**, so they apply regardless of which Claude surface the user is working in.
 
-## What Partnership Means for Enterprise Customers
+---
+
+## The Principle: Govern, Don't Replace
+
+Enterprise organisations adopting Claude need governance — access control, audit trails, cost tracking, tool management. But they do not need another AI platform competing with the one they have chosen. The governance layer should extend and strengthen the Claude ecosystem, not create an alternative to it.
+
+## What This Means for Enterprise Customers
 
 When you adopt the systemprompt.io governance platform, you are not introducing a competing system alongside Claude. You are adding a governance layer that is:
 
-**Aligned with your AI provider.** The platform is built by an Anthropic partner with direct knowledge of Claude's architecture, protocols, and roadmap. Governance capabilities are designed to complement Claude's own safety features, not duplicate or override them.
+**Aligned with your AI provider.** The platform is built on Anthropic's public protocols and integration points, with deep knowledge of Claude's architecture and roadmap. Governance capabilities are designed to complement Claude's own safety features, not duplicate or override them.
 
 **Protocol-native.** MCP is the tool integration standard used by Claude Code, Claude Cowork, and claude.ai. The platform governs MCP tool calls natively — every tool invocation passes through the governance pipeline with full authentication, authorisation, and audit logging.
 

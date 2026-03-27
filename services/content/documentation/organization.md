@@ -147,14 +147,3 @@ The key difference is scope: these org pages represent the **organization-level 
 | **Purpose** | Direct system configuration | Canonical resources users can fork |
 
 Both sets of pages use the same underlying SSR handlers, so the UI and functionality are identical. The org routes provide a conceptual grouping in the sidebar to distinguish organization-level resource management from system administration.
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| "403 Forbidden" when accessing org pages | Only admin users can access organization management. Check the user's role in the Users page |
-| Marketplace not visible to users in Browse Plugins | Verify the marketplace has at least one role or department assigned that matches the user. Check the Roles and Departments columns in the marketplaces table |
-| Plugins missing from a marketplace | Open the marketplace edit form and verify the plugins are checked in the Plugins checklist. Remember to click "Save Changes" |
-| Duplicate marketplace ID error on create | Marketplace IDs must be unique. Check the existing marketplaces table for conflicts. IDs cannot be changed after creation |
-| Department shows "0 users" in the edit form | The department exists but has no users assigned to it. Use the Users page to assign users to departments |
-| Changes to org resources not reflected in user workspaces | Users fork org resources into their personal workspace. Existing forks are not automatically updated when the org resource changes. Users need to re-fork or manually update their copies |

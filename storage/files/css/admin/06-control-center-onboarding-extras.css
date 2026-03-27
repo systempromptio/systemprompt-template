@@ -1,5 +1,4 @@
-
-
+@layer components {
 .cc-onboarding-code {
     display: flex;
     align-items: center;
@@ -95,4 +94,5 @@
     .cc-onboarding--hiding {
         transition: none;
     }
+}
 }
