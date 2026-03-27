@@ -9,8 +9,6 @@
     const loadingSection = document.getElementById('loading');
     const retrySection = document.getElementById('retry');
 
-    // --- PKCE Helpers ---
-
     const generateRandomString = (length) => {
         const array = new Uint8Array(length);
         crypto.getRandomValues(array);
@@ -25,8 +23,6 @@
             .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     };
 
-    // --- UI Helpers ---
-
     const clearAccessToken = async () => {
         try { await fetch('/api/public/auth/session', { method: 'DELETE' }); } catch {}
         document.cookie = 'access_token=; path=/; max-age=0; SameSite=Lax' +
@@ -40,8 +36,6 @@
         loadingSection.style.display = 'none';
         retrySection.style.display = 'block';
     };
-
-    // --- OAuth Callback Handler ---
 
     const handleCallback = async () => {
         const params = new URLSearchParams(window.location.search);
@@ -114,8 +108,6 @@
         return true;
     };
 
-    // --- Auto-redirect to OAuth authorize ---
-
     const clearStaleState = () => {
         sessionStorage.removeItem('pkce_code_verifier');
         sessionStorage.removeItem('pkce_csrf_state');
@@ -149,8 +141,6 @@
         window.location.href = OAUTH_BASE + '/authorize?' + authParams.toString();
     };
 
-    // --- Token Validation ---
-
     const hasValidAdminToken = () => {
         try {
             const cookie = document.cookie.split('; ').find((c) => c.startsWith('access_token='));
@@ -163,8 +153,6 @@
             return true;
         } catch { return false; }
     };
-
-    // --- Init ---
 
     handleCallback().then(async (wasCallback) => {
         if (wasCallback) return;

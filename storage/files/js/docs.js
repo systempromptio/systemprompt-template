@@ -158,7 +158,7 @@
 
       const article = document.querySelector('.docs-article');
       if (article) {
-        article.appendChild(nav);
+        article.append(nav);
       }
     }
 

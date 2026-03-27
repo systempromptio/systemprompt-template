@@ -47,9 +47,8 @@
         }
     });
 
-    // Apply initial mask on load
     document.addEventListener('DOMContentLoaded', function() {
-        var tokenEl = document.querySelector('.install-token-value[data-masked="true"]');
+        const tokenEl = document.querySelector('.install-token-value[data-masked="true"]');
         if (tokenEl) tokenEl.style.filter = 'blur(4px)';
     });
 })(window.AdminApp);

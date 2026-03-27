@@ -59,7 +59,7 @@
 
         panel.querySelectorAll('.acl-entity-row').forEach(function(row) {
             const name = row.getAttribute('data-name') || '';
-            const matchesSearch = !query || name.indexOf(query) !== -1;
+            const matchesSearch = !query || name.includes(query);
 
             let matchesRole = true;
             let matchesDept = true;

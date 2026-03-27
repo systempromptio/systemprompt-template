@@ -10,7 +10,6 @@
             AdminApp.OrgCommon.initExpandRows('#mkt-table');
         }
 
-        // Build department lookup from embedded JSON data
         const mktDepts = {};
         document.querySelectorAll('script[data-marketplace-detail]').forEach(function(el) {
             try {
@@ -19,7 +18,7 @@
                 mktDepts[id] = (data.departments || [])
                     .filter(function(d) { return d.assigned; })
                     .map(function(d) { return d.name; });
-            } catch (e) { /* skip */ }
+            } catch (e) {}
         });
 
         function filterRows() {
@@ -30,8 +29,8 @@
             rows.forEach(function(row) {
                 const name = row.getAttribute('data-name') || '';
                 const entityId = row.getAttribute('data-entity-id') || '';
-                const matchName = !query || name.indexOf(query) !== -1;
-                const matchDept = !dept || (mktDepts[entityId] && mktDepts[entityId].indexOf(dept) !== -1);
+                const matchName = !query || name.includes(query);
+                const matchDept = !dept || (mktDepts[entityId] && mktDepts[entityId].includes(dept));
                 const visible = matchName && matchDept;
                 row.style.display = visible ? '' : 'none';
                 const detailRow = table.querySelector('tr[data-detail-for="' + entityId + '"]');
@@ -93,27 +92,27 @@
         });
 
         app.events.on('click', '[data-copy-install-link]', function(e, btn) {
-            var id = btn.getAttribute('data-copy-install-link');
-            var siteUrl = window.location.origin;
-            var installUrl = siteUrl + '/api/public/marketplace/org/' + encodeURIComponent(id) + '.git';
+            const id = btn.getAttribute('data-copy-install-link');
+            const siteUrl = window.location.origin;
+            const installUrl = siteUrl + '/api/public/marketplace/org/' + encodeURIComponent(id) + '.git';
             navigator.clipboard.writeText(installUrl).then(function() {
                 app.Toast.show('Install link copied to clipboard', 'success');
             }).catch(function() {
-                var textarea = document.createElement('textarea');
+                const textarea = document.createElement('textarea');
                 textarea.value = installUrl;
-                document.body.appendChild(textarea);
+                document.body.append(textarea);
                 textarea.select();
                 document.execCommand('copy');
-                document.body.removeChild(textarea);
+                textarea.remove();
                 app.Toast.show('Install link copied to clipboard', 'success');
             });
             app.shared.closeAllMenus();
         });
 
         app.events.on('click', '[data-sync-marketplace]', function(e, btn) {
-            var id = btn.getAttribute('data-sync-marketplace');
+            const id = btn.getAttribute('data-sync-marketplace');
             btn.disabled = true;
-            var origText = btn.textContent;
+            const origText = btn.textContent;
             btn.textContent = 'Syncing...';
             app.shared.closeAllMenus();
             fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/sync', {
@@ -123,7 +122,7 @@
             .then(function(resp) { return resp.json().then(function(data) { return { ok: resp.ok, data: data }; }); })
             .then(function(result) {
                 if (result.ok) {
-                    var msg = 'Sync completed: ' + (result.data.plugins_synced || 0) + ' plugins';
+                    let msg = 'Sync completed: ' + (result.data.plugins_synced || 0) + ' plugins';
                     if (!result.data.changed) msg = 'Already up to date';
                     app.Toast.show(msg, 'success');
                     if (result.data.changed) setTimeout(function() { window.location.reload(); }, 1000);
@@ -141,9 +140,9 @@
         });
 
         app.events.on('click', '[data-publish-marketplace]', function(e, btn) {
-            var id = btn.getAttribute('data-publish-marketplace');
+            const id = btn.getAttribute('data-publish-marketplace');
             app.shared.closeAllMenus();
-            var overlay = document.createElement('div');
+            const overlay = document.createElement('div');
             overlay.className = 'confirm-overlay';
             overlay.innerHTML = '<div class="confirm-dialog">' +
                 '<h3 style="margin:0 0 var(--space-3)">Publish to GitHub?</h3>' +
@@ -153,13 +152,13 @@
                     '<button class="btn btn-primary" data-confirm-publish>Publish</button>' +
                 '</div>' +
             '</div>';
-            document.body.appendChild(overlay);
+            document.body.append(overlay);
             overlay.addEventListener('click', function(ev) {
                 if (ev.target === overlay || ev.target.closest('[data-confirm-cancel]')) {
                     overlay.remove();
                     return;
                 }
-                var pubBtn = ev.target.closest('[data-confirm-publish]');
+                const pubBtn = ev.target.closest('[data-confirm-publish]');
                 if (pubBtn) {
                     pubBtn.disabled = true;
                     pubBtn.textContent = 'Publishing...';
@@ -171,7 +170,7 @@
                     .then(function(result) {
                         overlay.remove();
                         if (result.ok) {
-                            var msg = 'Published: ' + (result.data.plugins_synced || 0) + ' plugins';
+                            let msg = 'Published: ' + (result.data.plugins_synced || 0) + ' plugins';
                             if (!result.data.changed) msg = 'No changes to publish';
                             app.Toast.show(msg, 'success');
                             if (result.data.changed) setTimeout(function() { window.location.reload(); }, 1000);
@@ -203,7 +202,7 @@
                 '<button class="btn btn-danger" data-confirm-delete="' + app.escapeHtml(marketplaceId) + '">Delete Marketplace</button>' +
             '</div>' +
         '</div>';
-        document.body.appendChild(overlay);
+        document.body.append(overlay);
 
         overlay.addEventListener('click', async function(e) {
             if (e.target === overlay || e.target.closest('[data-confirm-cancel]')) {
@@ -345,7 +344,7 @@
             if (isEdit) {
                 const dataEl = document.querySelector('script[data-marketplace-detail="' + marketplaceId + '"]');
                 if (dataEl) {
-                    try { mktData = JSON.parse(dataEl.textContent); } catch (e) { /* skip */ }
+                    try { mktData = JSON.parse(dataEl.textContent); } catch (e) {}
                 }
             }
 
@@ -396,7 +395,6 @@
                         '<span class="field-hint">Link to a GitHub repository to enable sync/publish</span>' +
                         '</div>';
 
-                    // Roles
                     html += '<div class="form-group">' +
                         '<label class="field-label">Roles</label>' +
                         '<div style="display:flex;flex-wrap:wrap;gap:var(--space-1);padding:var(--space-2) 0">';
@@ -409,7 +407,6 @@
                     });
                     html += '</div></div>';
 
-                    // Departments
                     html += '<div class="form-group">' +
                         '<label class="field-label">Departments</label>' +
                         '<div class="checklist-container" style="max-height:300px;overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">' +
@@ -433,7 +430,6 @@
                         '<span class="field-hint" style="margin-top:var(--space-2);display:block">At least one department is required.</span>' +
                         '</div>';
 
-                    // Plugins
                     html += '<div class="form-group">' +
                         '<label class="field-label">Plugins</label>' +
                         '<input type="text" class="field-input" placeholder="Filter plugins..." id="panel-plugin-filter" style="margin-bottom:var(--space-2)">' +
@@ -460,14 +456,12 @@
                     }
                     panelApi.setFooter(footerHtml);
 
-                    // Wire up cancel
                     const footer = panelApi.panel.querySelector('[data-panel-footer]');
                     if (footer) {
                         const cancelBtn = footer.querySelector('[data-panel-close]');
                         if (cancelBtn) cancelBtn.addEventListener('click', panelApi.close);
                     }
 
-                    // Wire up check-all
                     const checkAll = document.getElementById('panel-dept-check-all');
                     if (checkAll) {
                         checkAll.addEventListener('change', function() {
@@ -488,19 +482,17 @@
                         });
                     }
 
-                    // Wire up plugin filter
                     const pluginFilter = document.getElementById('panel-plugin-filter');
                     if (pluginFilter) {
                         pluginFilter.addEventListener('input', function() {
                             const q = pluginFilter.value.toLowerCase();
                             panelApi.panel.querySelectorAll('.checklist-item[data-item-name]').forEach(function(item) {
                                 const name = item.getAttribute('data-item-name') || '';
-                                item.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+                                item.style.display = (!q || name.includes(q)) ? '' : 'none';
                             });
                         });
                     }
 
-                    // Wire up save
                     const saveBtn = document.getElementById('mkt-edit-save');
                     if (saveBtn) {
                         saveBtn.addEventListener('click', function() {
@@ -508,7 +500,6 @@
                         });
                     }
 
-                    // Wire up delete
                     const deleteBtn = document.getElementById('mkt-edit-delete');
                     if (deleteBtn) {
                         deleteBtn.addEventListener('click', function() {
@@ -572,8 +563,8 @@
         });
         aclRules = aclRules.concat(deptRules);
 
-        var githubUrlInput = form.querySelector('input[name="github_repo_url"]');
-        var githubUrl = githubUrlInput ? githubUrlInput.value.trim() : '';
+        const githubUrlInput = form.querySelector('input[name="github_repo_url"]');
+        const githubUrl = githubUrlInput ? githubUrlInput.value.trim() : '';
 
         try {
             if (isEdit) {
@@ -696,8 +687,8 @@
             });
             aclRules = aclRules.concat(deptRules);
 
-            var formGithubInput = form.querySelector('input[name="github_repo_url"]');
-            var formGithubUrl = formGithubInput ? formGithubInput.value.trim() : '';
+            const formGithubInput = form.querySelector('input[name="github_repo_url"]');
+            const formGithubUrl = formGithubInput ? formGithubInput.value.trim() : '';
 
             if (isEdit) {
                 const id = form.querySelector('input[name="marketplace_id"]').value;
@@ -797,7 +788,6 @@
                     checkAllDept.checked = allChecked;
                 }
             });
-            // Sync check-all initial state to match current department selections
             const boxes = form.querySelectorAll('input[name="departments"]');
             let allChecked = boxes.length > 0;
             boxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });

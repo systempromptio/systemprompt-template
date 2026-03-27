@@ -143,16 +143,14 @@
         },
 
         initEditPanel: function(config) {
-            // config: { panelId, fields, apiBasePath, idField, entityLabel }
-            // fields: [{name, label, type:'text'|'textarea', rows, required}]
             const panelApi = OrgCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
-            var currentEntityId = null;
+            let currentEntityId = null;
 
             function buildForm(entityData) {
-                var html = '<form class="edit-panel-form">';
+                let html = '<form class="edit-panel-form">';
                 (config.fields || []).forEach(function(f) {
-                    var val = entityData[f.name] || '';
+                    let val = entityData[f.name] || '';
                     if (Array.isArray(val)) val = val.join(', ');
                     html += '<div class="form-group">';
                     html += '<label class="form-label">' + app.escapeHtml(f.label) + '</label>';
@@ -168,13 +166,13 @@
             }
 
             function collectFormData() {
-                var form = panelApi.panel.querySelector('.edit-panel-form');
+                const form = panelApi.panel.querySelector('.edit-panel-form');
                 if (!form) return {};
-                var body = {};
+                const body = {};
                 (config.fields || []).forEach(function(f) {
-                    var el = form.querySelector('[name="' + f.name + '"]');
+                    const el = form.querySelector('[name="' + f.name + '"]');
                     if (!el) return;
-                    var val = el.value;
+                    const val = el.value;
                     if (f.name === 'tags') {
                         body[f.name] = val.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
                     } else {
@@ -184,14 +182,13 @@
                 return body;
             }
 
-            // Wire up save button click (delegated)
             document.addEventListener('click', function(e) {
-                var btn = e.target.closest('[data-edit-save]');
+                const btn = e.target.closest('[data-edit-save]');
                 if (!btn) return;
                 btn.disabled = true;
                 btn.textContent = 'Saving...';
-                var body = collectFormData();
-                var url = config.apiBasePath + encodeURIComponent(currentEntityId);
+                const body = collectFormData();
+                const url = config.apiBasePath + encodeURIComponent(currentEntityId);
                 fetch(url, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -224,9 +221,9 @@
                         '<button class="btn btn-secondary" data-panel-close>Cancel</button> ' +
                         '<button class="btn btn-primary" data-edit-save>Save</button>'
                     );
-                    var footer = panelApi.panel.querySelector('[data-panel-footer]');
+                    const footer = panelApi.panel.querySelector('[data-panel-footer]');
                     if (footer) {
-                        var cancelBtn = footer.querySelector('[data-panel-close]');
+                        const cancelBtn = footer.querySelector('[data-panel-close]');
                         if (cancelBtn) cancelBtn.addEventListener('click', panelApi.close);
                     }
                     panelApi.open();
@@ -242,10 +239,10 @@
             let selected = {};
 
             function updateCount() {
-                var count = Object.keys(selected).length;
-                var countEl = document.querySelector('[data-bulk-count]');
+                const count = Object.keys(selected).length;
+                const countEl = document.querySelector('[data-bulk-count]');
                 if (countEl) countEl.textContent = count;
-                var bar = document.getElementById(barId);
+                const bar = document.getElementById(barId);
                 if (bar) bar.style.display = count > 0 ? 'flex' : 'none';
             }
 
@@ -333,32 +330,32 @@
         },
 
         initFilters: function(searchInputId, tableSelector, filters) {
-            var table = document.querySelector(tableSelector);
+            const table = document.querySelector(tableSelector);
             if (!table) return;
 
             function applyFilters() {
-                var searchInput = document.getElementById(searchInputId);
-                var q = (searchInput ? searchInput.value : '').toLowerCase().trim();
-                var filterValues = filters.map(function(f) {
-                    var sel = document.getElementById(f.selectId);
+                const searchInput = document.getElementById(searchInputId);
+                const q = (searchInput ? searchInput.value : '').toLowerCase().trim();
+                const filterValues = filters.map(function(f) {
+                    const sel = document.getElementById(f.selectId);
                     return { attr: f.dataAttr, value: sel ? sel.value : '' };
                 });
 
                 table.querySelectorAll('tbody tr.clickable-row').forEach(function(row) {
-                    var matchSearch = !q ||
-                        (row.getAttribute('data-name') || '').indexOf(q) !== -1 ||
-                        (row.getAttribute('data-skill-id') || row.getAttribute('data-agent-id') || '').toLowerCase().indexOf(q) !== -1 ||
-                        (row.getAttribute('data-description') || '').indexOf(q) !== -1;
+                    const matchSearch = !q ||
+                        (row.getAttribute('data-name') || '').includes(q) ||
+                        (row.getAttribute('data-skill-id') || row.getAttribute('data-agent-id') || '').toLowerCase().includes(q) ||
+                        (row.getAttribute('data-description') || '').includes(q);
 
-                    var matchFilters = filterValues.every(function(fv) {
+                    const matchFilters = filterValues.every(function(fv) {
                         if (!fv.value) return true;
-                        var rowVal = row.getAttribute(fv.attr) || '';
-                        return rowVal.indexOf(fv.value) !== -1;
+                        const rowVal = row.getAttribute(fv.attr) || '';
+                        return rowVal.includes(fv.value);
                     });
 
-                    var match = matchSearch && matchFilters;
+                    const match = matchSearch && matchFilters;
                     row.style.display = match ? '' : 'none';
-                    var detail = row.nextElementSibling;
+                    const detail = row.nextElementSibling;
                     if (detail && detail.classList.contains('detail-row')) {
                         if (!match) { detail.style.display = 'none'; detail.classList.remove('visible'); }
                         else { detail.style.display = ''; }
@@ -367,12 +364,12 @@
             }
 
             filters.forEach(function(f) {
-                var sel = document.getElementById(f.selectId);
+                const sel = document.getElementById(f.selectId);
                 if (sel) sel.addEventListener('change', applyFilters);
             });
 
-            var searchTimer = null;
-            var searchInput = document.getElementById(searchInputId);
+            let searchTimer = null;
+            const searchInput = document.getElementById(searchInputId);
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
                     clearTimeout(searchTimer);
@@ -385,10 +382,10 @@
 
         formatTimeAgo: function(isoString) {
             if (!isoString) return '--';
-            var date = new Date(isoString);
+            const date = new Date(isoString);
             if (isNaN(date.getTime())) return '--';
-            var now = new Date();
-            var diff = Math.floor((now - date) / 1000);
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
             if (diff < 60) return 'just now';
             if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
             if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
@@ -398,7 +395,7 @@
 
         initTimeAgo: function() {
             document.querySelectorAll('.metadata-timestamp').forEach(function(el) {
-                var iso = el.getAttribute('title') || el.textContent.trim();
+                const iso = el.getAttribute('title') || el.textContent.trim();
                 if (iso && iso !== '--') {
                     el.textContent = OrgCommon.formatTimeAgo(iso);
                     el.setAttribute('title', new Date(iso).toLocaleString());

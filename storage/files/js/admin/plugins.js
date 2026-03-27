@@ -36,7 +36,7 @@
                 '<button class="btn btn-danger" data-confirm-delete="' + app.escapeHtml(pluginId) + '">Delete Plugin</button>' +
             '</div>' +
         '</div>';
-        document.body.appendChild(overlay);
+        document.body.append(overlay);
         overlay.addEventListener('click', async function(e) {
             if (e.target === overlay || e.target.closest('[data-confirm-cancel]')) {
                 overlay.remove();
@@ -267,7 +267,7 @@
         rows.forEach(function(row) {
             const name = row.getAttribute('data-name') || '';
             const category = (row.getAttribute('data-category') || '').toLowerCase();
-            const matchSearch = !searchVal || name.indexOf(searchVal) >= 0;
+            const matchSearch = !searchVal || name.includes(searchVal);
             const matchCategory = !categoryVal || category === categoryVal;
             row.style.display = (matchSearch && matchCategory) ? '' : 'none';
             const detailFor = row.getAttribute('data-entity-id');
@@ -302,7 +302,6 @@
             applyFilters();
         });
 
-        // Remove item from plugin
         app.events.on('click', '[data-remove-from-plugin]', function(e, btn) {
             e.stopPropagation();
             const itemId = btn.getAttribute('data-remove-from-plugin');
@@ -315,7 +314,6 @@
             let data;
             try { data = JSON.parse(detailEl.textContent); } catch (ex) { return; }
 
-            // Build updated array without the removed item
             const apiField = resourceType === 'mcp_servers' ? 'mcp_servers' : resourceType;
             let currentIds;
             if (resourceType === 'skills') {
@@ -339,13 +337,10 @@
                 method: 'PUT',
                 body: JSON.stringify(body)
             }).then(function() {
-                // Remove the row from DOM
                 const row = btn.closest('tr');
                 if (row) row.remove();
-                // Update the count
                 const countEl = document.querySelector('[data-count="' + resourceType + '"][data-for-plugin="' + pluginId + '"]');
                 if (countEl) countEl.textContent = updatedIds.length;
-                // Update embedded JSON
                 if (resourceType === 'skills') {
                     data.skills = data.skills.filter(function(s) { return s.id !== itemId; });
                 } else if (resourceType === 'agents') {
@@ -363,7 +358,6 @@
             });
         });
 
-        // Add item to plugin
         app.events.on('click', '[data-add-to-plugin]', function(e, btn) {
             e.stopPropagation();
             const resourceType = btn.getAttribute('data-add-to-plugin');
@@ -375,12 +369,10 @@
             let data;
             try { data = JSON.parse(detailEl.textContent); } catch (ex) { return; }
 
-            // Map resource type to API path for fetching all available items
             const apiMap = { skills: '/skills', agents: '/agents', mcp_servers: '/mcp-servers', hooks: '/hooks' };
             const apiPath = apiMap[resourceType];
             if (!apiPath) return;
 
-            // Get current IDs
             let currentIds;
             if (resourceType === 'skills') {
                 currentIds = (data.skills || []).map(function(s) { return s.id; });
@@ -410,7 +402,6 @@
                     return;
                 }
 
-                // Build popup
                 const overlay = document.createElement('div');
                 overlay.className = 'confirm-overlay';
                 let checklistHtml = '<div class="add-checklist">';
@@ -429,7 +420,7 @@
                         '<button class="btn btn-primary" data-add-confirm>Add Selected</button>' +
                     '</div>' +
                 '</div>';
-                document.body.appendChild(overlay);
+                document.body.append(overlay);
 
                 overlay.addEventListener('click', function(ev) {
                     if (ev.target === overlay || ev.target.closest('[data-add-cancel]')) {

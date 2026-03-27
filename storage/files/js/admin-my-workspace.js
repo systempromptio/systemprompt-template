@@ -1,10 +1,10 @@
 (function(app) {
     'use strict';
 
-    var MyCommon = {
+    const MyCommon = {
 
         initExpandRows: function(tableSelector, renderCallback) {
-            var table = document.querySelector(tableSelector);
+            const table = document.querySelector(tableSelector);
             if (!table) return;
 
             table.addEventListener('click', function(e) {
@@ -17,10 +17,10 @@
                     return;
                 }
 
-                var row = e.target.closest('tr.clickable-row');
+                const row = e.target.closest('tr.clickable-row');
                 if (!row) return;
 
-                var detailRow = row.nextElementSibling;
+                const detailRow = row.nextElementSibling;
                 if (!detailRow || !detailRow.classList.contains('detail-row')) return;
 
                 MyCommon.handleRowClick(row, detailRow);
@@ -32,16 +32,16 @@
         },
 
         handleRowClick: function(row, detailRow) {
-            var isVisible = detailRow.classList.contains('visible');
+            const isVisible = detailRow.classList.contains('visible');
 
-            var table = row.closest('table');
+            const table = row.closest('table');
             if (table) {
                 table.querySelectorAll('tr.detail-row.visible').forEach(function(r) {
                     if (r !== detailRow) {
                         r.classList.remove('visible');
-                        var prevRow = r.previousElementSibling;
+                        const prevRow = r.previousElementSibling;
                         if (prevRow) {
-                            var indicator = prevRow.querySelector('.expand-indicator');
+                            const indicator = prevRow.querySelector('.expand-indicator');
                             if (indicator) indicator.classList.remove('expanded');
                         }
                     }
@@ -50,24 +50,24 @@
 
             if (!isVisible) {
                 detailRow.classList.add('visible');
-                var expandIndicator = row.querySelector('.expand-indicator');
+                const expandIndicator = row.querySelector('.expand-indicator');
                 if (expandIndicator) expandIndicator.classList.add('expanded');
             } else {
                 detailRow.classList.remove('visible');
-                var collapseIndicator = row.querySelector('.expand-indicator');
+                const collapseIndicator = row.querySelector('.expand-indicator');
                 if (collapseIndicator) collapseIndicator.classList.remove('expanded');
             }
         },
 
         initSidePanel: function(panelId) {
-            var panel = document.getElementById(panelId);
+            const panel = document.getElementById(panelId);
             if (!panel) return null;
 
-            var overlayId = panel.getAttribute('data-overlay') || (panelId + '-overlay');
-            var overlay = document.getElementById(overlayId);
-            var closeBtn = panel.querySelector('[data-panel-close]');
+            const overlayId = panel.getAttribute('data-overlay') || (panelId + '-overlay');
+            const overlay = document.getElementById(overlayId);
+            const closeBtn = panel.querySelector('[data-panel-close]');
 
-            var api = {
+            const api = {
                 open: function() {
                     panel.classList.add('open');
                     if (overlay) overlay.classList.add('active');
@@ -77,15 +77,15 @@
                     if (overlay) overlay.classList.remove('active');
                 },
                 setTitle: function(text) {
-                    var title = panel.querySelector('[data-panel-title]');
+                    const title = panel.querySelector('[data-panel-title]');
                     if (title) title.textContent = text;
                 },
                 setBody: function(html) {
-                    var body = panel.querySelector('[data-panel-body]');
+                    const body = panel.querySelector('[data-panel-body]');
                     if (body) body.innerHTML = html;
                 },
                 setFooter: function(html) {
-                    var footer = panel.querySelector('[data-panel-footer]');
+                    const footer = panel.querySelector('[data-panel-footer]');
                     if (footer) footer.innerHTML = html;
                 },
                 panel: panel
@@ -98,25 +98,25 @@
         },
 
         initBulkActions: function(tableSelector, barId) {
-            var table = document.querySelector(tableSelector);
+            const table = document.querySelector(tableSelector);
             if (!table) return null;
 
-            var selected = {};
+            let selected = {};
 
             function updateCount() {
-                var count = Object.keys(selected).length;
-                var countEl = document.querySelector('[data-bulk-count]');
+                const count = Object.keys(selected).length;
+                const countEl = document.querySelector('[data-bulk-count]');
                 if (countEl) countEl.textContent = count;
-                var bar = document.getElementById(barId);
+                const bar = document.getElementById(barId);
                 if (bar) bar.style.display = count > 0 ? 'flex' : 'none';
             }
 
             table.addEventListener('change', function(e) {
                 if (e.target.classList.contains('bulk-select-all')) {
-                    var checked = e.target.checked;
+                    const checked = e.target.checked;
                     table.querySelectorAll('.bulk-checkbox').forEach(function(cb) {
                         cb.checked = checked;
-                        var id = cb.getAttribute('data-entity-id');
+                        const id = cb.getAttribute('data-entity-id');
                         if (checked) {
                             selected[id] = true;
                         } else {
@@ -128,7 +128,7 @@
                 }
 
                 if (e.target.classList.contains('bulk-checkbox')) {
-                    var id = e.target.getAttribute('data-entity-id');
+                    const id = e.target.getAttribute('data-entity-id');
                     if (e.target.checked) {
                         selected[id] = true;
                     } else {
@@ -151,21 +151,21 @@
         },
 
         initSearch: function(inputId, tableSelector) {
-            var input = document.getElementById(inputId);
-            var table = document.querySelector(tableSelector);
+            const input = document.getElementById(inputId);
+            const table = document.querySelector(tableSelector);
             if (!input || !table) return;
 
-            var timer = null;
+            let timer = null;
             input.addEventListener('input', function() {
                 clearTimeout(timer);
                 timer = setTimeout(function() {
-                    var query = input.value.toLowerCase().trim();
-                    var rows = table.querySelectorAll('tbody tr.clickable-row');
+                    const query = input.value.toLowerCase().trim();
+                    const rows = table.querySelectorAll('tbody tr.clickable-row');
                     rows.forEach(function(row) {
-                        var text = row.textContent.toLowerCase();
-                        var matches = !query || text.indexOf(query) !== -1;
+                        const text = row.textContent.toLowerCase();
+                        const matches = !query || text.includes(query);
                         row.style.display = matches ? '' : 'none';
-                        var detail = row.nextElementSibling;
+                        const detail = row.nextElementSibling;
                         if (detail && detail.classList.contains('detail-row')) {
                             detail.style.display = matches ? '' : 'none';
                         }
@@ -175,18 +175,18 @@
         },
 
         initFilterSelect: function(selectId, tableSelector, dataAttr) {
-            var select = document.getElementById(selectId);
-            var table = document.querySelector(tableSelector);
+            const select = document.getElementById(selectId);
+            const table = document.querySelector(tableSelector);
             if (!select || !table) return;
 
             select.addEventListener('change', function() {
-                var value = select.value;
-                var rows = table.querySelectorAll('tbody tr.clickable-row');
+                const value = select.value;
+                const rows = table.querySelectorAll('tbody tr.clickable-row');
                 rows.forEach(function(row) {
-                    var attrVal = row.getAttribute(dataAttr) || '';
-                    var matches = !value || attrVal === value;
+                    const attrVal = row.getAttribute(dataAttr) || '';
+                    const matches = !value || attrVal === value;
                     row.style.display = matches ? '' : 'none';
-                    var detail = row.nextElementSibling;
+                    const detail = row.nextElementSibling;
                     if (detail && detail.classList.contains('detail-row')) {
                         detail.style.display = matches ? '' : 'none';
                     }
@@ -195,8 +195,7 @@
         },
 
         initForkPanel: function(config) {
-            // config: { panelId, entityType, entityLabel, onForked }
-            var panelApi = MyCommon.initSidePanel(config.panelId);
+            const panelApi = MyCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
 
             return {
@@ -209,16 +208,16 @@
                     fetch(app.API_BASE + '/user/forkable/' + config.entityType)
                         .then(function(res) { return res.json(); })
                         .then(function(data) {
-                            var items = data[config.entityType] || data.plugins || data.skills || data.agents || data.mcp_servers || data.hooks || [];
+                            const items = data[config.entityType] || data.plugins || data.skills || data.agents || data.mcp_servers || data.hooks || [];
                             if (items.length === 0) {
                                 panelApi.setBody('<p style="color:var(--text-tertiary);text-align:center;padding:var(--space-4)">No org entities available to fork.</p>');
                                 return;
                             }
 
-                            var html = '<div class="add-checklist">';
+                            let html = '<div class="add-checklist">';
                             items.forEach(function(item) {
-                                var disabled = item.already_forked ? ' disabled' : '';
-                                var label = item.already_forked ? ' (already forked)' : '';
+                                const disabled = item.already_forked ? ' disabled' : '';
+                                const label = item.already_forked ? ' (already forked)' : '';
                                 html += '<label class="acl-checkbox-row">' +
                                     '<input type="checkbox" name="fork_id" value="' + app.escapeHtml(item.id) + '"' + disabled + '>' +
                                     '<span class="acl-checkbox-label">' + app.escapeHtml(item.name || item.id) + label + '</span>' +
@@ -232,15 +231,15 @@
                                 '<button class="btn btn-primary" data-fork-save>Fork Selected</button>'
                             );
 
-                            var footer = panelApi.panel.querySelector('[data-panel-footer]');
+                            const footer = panelApi.panel.querySelector('[data-panel-footer]');
                             if (footer) {
-                                var cancelBtn = footer.querySelector('[data-panel-close]');
+                                const cancelBtn = footer.querySelector('[data-panel-close]');
                                 if (cancelBtn) cancelBtn.addEventListener('click', panelApi.close);
 
-                                var saveBtn = footer.querySelector('[data-fork-save]');
+                                const saveBtn = footer.querySelector('[data-fork-save]');
                                 if (saveBtn) {
                                     saveBtn.addEventListener('click', function() {
-                                        var checked = panelApi.panel.querySelectorAll('input[name="fork_id"]:checked');
+                                        const checked = panelApi.panel.querySelectorAll('input[name="fork_id"]:checked');
                                         if (checked.length === 0) {
                                             app.Toast.show('Select at least one entity to fork', 'warning');
                                             return;
@@ -248,10 +247,10 @@
                                         saveBtn.disabled = true;
                                         saveBtn.textContent = 'Forking...';
 
-                                        var promises = [];
-                                        var typeKey = config.entityType.replace(/s$/, '');
+                                        const promises = [];
+                                        const typeKey = config.entityType.replace(/s$/, '');
                                         checked.forEach(function(cb) {
-                                            var body = {};
+                                            const body = {};
                                             body['org_' + typeKey + '_id'] = cb.value;
                                             promises.push(
                                                 fetch(app.API_BASE + '/user/fork/' + typeKey.replace('_', '-'), {
@@ -263,7 +262,7 @@
                                         });
 
                                         Promise.all(promises).then(function(results) {
-                                            var ok = results.filter(function(r) { return r.ok; }).length;
+                                            const ok = results.filter(function(r) { return r.ok; }).length;
                                             app.Toast.show('Forked ' + ok + ' ' + config.entityLabel + '(s)', 'success');
                                             panelApi.close();
                                             if (config.onForked) config.onForked();
@@ -305,10 +304,7 @@
         }
     };
 
-    // Expose MyCommon on app
     app.MyCommon = MyCommon;
-
-    // ---- Page initializers ----
 
     app.initMyPlugins = function() {
         MyCommon.initExpandRows('#my-plugins-table');
@@ -316,9 +312,9 @@
         MyCommon.initFilterSelect('my-plugins-category-filter', '#my-plugins-table', 'data-category');
         MyCommon.initBulkActions('#my-plugins-table', 'my-plugins-bulk-bar');
 
-        var forkBtn = document.getElementById('my-plugins-fork-btn');
+        const forkBtn = document.getElementById('my-plugins-fork-btn');
         if (forkBtn) {
-            var forkPanel = MyCommon.initForkPanel({
+            const forkPanel = MyCommon.initForkPanel({
                 panelId: 'fork-panel',
                 entityType: 'plugins',
                 entityLabel: 'plugin'
@@ -335,9 +331,9 @@
         MyCommon.initFilterSelect('my-skills-tag-filter', '#my-skills-table', 'data-tags');
         MyCommon.initBulkActions('#my-skills-table', 'my-skills-bulk-bar');
 
-        var forkBtn = document.getElementById('my-skills-fork-btn');
+        const forkBtn = document.getElementById('my-skills-fork-btn');
         if (forkBtn) {
-            var forkPanel = MyCommon.initForkPanel({
+            const forkPanel = MyCommon.initForkPanel({
                 panelId: 'fork-panel',
                 entityType: 'skills',
                 entityLabel: 'skill'
@@ -353,9 +349,9 @@
         MyCommon.initSearch('my-agents-search', '#my-agents-table');
         MyCommon.initBulkActions('#my-agents-table', 'my-agents-bulk-bar');
 
-        var forkBtn = document.getElementById('my-agents-fork-btn');
+        const forkBtn = document.getElementById('my-agents-fork-btn');
         if (forkBtn) {
-            var forkPanel = MyCommon.initForkPanel({
+            const forkPanel = MyCommon.initForkPanel({
                 panelId: 'fork-panel',
                 entityType: 'agents',
                 entityLabel: 'agent'
@@ -371,9 +367,9 @@
         MyCommon.initSearch('my-mcp-search', '#my-mcp-table');
         MyCommon.initBulkActions('#my-mcp-table', 'my-mcp-bulk-bar');
 
-        var forkBtn = document.getElementById('my-mcp-fork-btn');
+        const forkBtn = document.getElementById('my-mcp-fork-btn');
         if (forkBtn) {
-            var forkPanel = MyCommon.initForkPanel({
+            const forkPanel = MyCommon.initForkPanel({
                 panelId: 'fork-panel',
                 entityType: 'mcp-servers',
                 entityLabel: 'MCP server'
@@ -389,9 +385,9 @@
         MyCommon.initSearch('my-hooks-search', '#my-hooks-table');
         MyCommon.initBulkActions('#my-hooks-table', 'my-hooks-bulk-bar');
 
-        var forkBtn = document.getElementById('my-hooks-fork-btn');
+        const forkBtn = document.getElementById('my-hooks-fork-btn');
         if (forkBtn) {
-            var forkPanel = MyCommon.initForkPanel({
+            const forkPanel = MyCommon.initForkPanel({
                 panelId: 'fork-panel',
                 entityType: 'hooks',
                 entityLabel: 'hook'
@@ -408,11 +404,10 @@
         MyCommon.initFilterSelect('my-marketplace-source-filter', '#my-marketplace-table', 'data-source');
         MyCommon.initFilterSelect('my-marketplace-category-filter', '#my-marketplace-table', 'data-category');
 
-        // Customize button handler
         document.addEventListener('click', function(e) {
-            var btn = e.target.closest('[data-customize-plugin]');
+            const btn = e.target.closest('[data-customize-plugin]');
             if (!btn) return;
-            var pluginId = btn.getAttribute('data-customize-plugin');
+            const pluginId = btn.getAttribute('data-customize-plugin');
             btn.disabled = true;
             btn.textContent = 'Customizing...';
 

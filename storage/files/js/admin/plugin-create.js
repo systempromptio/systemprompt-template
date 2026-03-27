@@ -97,15 +97,15 @@
 
         if (state.step === 7) {
             const frag = getTemplate('tpl-step-7');
-            contentEl.appendChild(frag);
+            contentEl.append(frag);
             renderReview();
         } else if (state.step === 5) {
             const frag5 = getTemplate('tpl-step-5');
-            contentEl.appendChild(frag5);
+            contentEl.append(frag5);
             renderHooks();
         } else {
             const frag2 = getTemplate('tpl-step-' + state.step);
-            contentEl.appendChild(frag2);
+            contentEl.append(frag2);
             restoreStepState();
         }
 
@@ -175,7 +175,7 @@
                 const asyncCb = entry.querySelector('[name="hook_async"]');
                 if (asyncCb) asyncCb.checked = !!hook.async;
             }
-            list.appendChild(frag);
+            list.append(frag);
         });
     }
 

@@ -1,13 +1,13 @@
 (function() {
     'use strict';
 
-    var feedEl = document.getElementById('live-feed');
-    var indicator = document.getElementById('sse-indicator');
-    var ribbon = document.getElementById('metric-ribbon');
+    const feedEl = document.getElementById('live-feed');
+    const indicator = document.getElementById('sse-indicator');
+    const ribbon = document.getElementById('metric-ribbon');
     if (!feedEl && !ribbon) return;
 
-    var source = null;
-    var reconnectDelay = 1000;
+    let source = null;
+    let reconnectDelay = 1000;
 
     function connect() {
         source = new EventSource('/admin/api/sse/dashboard');
@@ -19,8 +19,8 @@
 
         source.addEventListener('activity', function(e) {
             try {
-                var events = JSON.parse(e.data);
-                for (var i = events.length - 1; i >= 0; i--) {
+                const events = JSON.parse(e.data);
+                for (let i = events.length - 1; i >= 0; i--) {
                     prependFeedItem(events[i]);
                 }
                 trimFeed(50);
@@ -29,7 +29,7 @@
 
         source.addEventListener('stats', function(e) {
             try {
-                var stats = JSON.parse(e.data);
+                const stats = JSON.parse(e.data);
                 updateRibbon(stats);
             } catch (_) {}
         });
@@ -44,11 +44,11 @@
 
     function prependFeedItem(evt) {
         if (!feedEl) return;
-        var div = document.createElement('div');
+        const div = document.createElement('div');
         div.className = 'feed-item new-item';
         if (evt.created_at) div.setAttribute('data-ts', evt.created_at);
 
-        var colorClass = 'feed-orange';
+        let colorClass = 'feed-orange';
         if (evt.category === 'login') colorClass = 'feed-blue';
         else if (evt.category === 'marketplace_connect') colorClass = 'feed-purple';
         else if (evt.category === 'marketplace_edit') colorClass = 'feed-green';
@@ -58,8 +58,8 @@
         else if (evt.category === 'notification') colorClass = 'feed-amber';
         else if (evt.category === 'agent_response') colorClass = 'feed-teal';
 
-        var name = escapeHtml(evt.display_name || 'Anonymous');
-        var desc = escapeHtml(evt.description || '');
+        const name = escapeHtml(evt.display_name || 'Anonymous');
+        const desc = escapeHtml(evt.description || '');
 
         div.innerHTML = '<div class="feed-icon ' + colorClass + '"></div>'
             + '<div class="feed-content">'
@@ -67,7 +67,7 @@
             + '<span class="feed-time">just now</span>'
             + '</div>';
 
-        var footer = feedEl.querySelector('.section-footer');
+        const footer = feedEl.querySelector('.section-footer');
         if (footer) {
             feedEl.insertBefore(div, footer);
         } else {
@@ -77,7 +77,7 @@
 
     function trimFeed(max) {
         if (!feedEl) return;
-        var items = feedEl.querySelectorAll('.feed-item');
+        let items = feedEl.querySelectorAll('.feed-item');
         while (items.length > max) {
             items[items.length - 1].remove();
             items = feedEl.querySelectorAll('.feed-item');
@@ -86,16 +86,16 @@
 
     function updateRibbon(stats) {
         if (!ribbon) return;
-        var keys = ['events_today', 'tool_uses', 'prompts', 'total_sessions', 'subagents_spawned', 'error_count', 'total_tokens', 'total_cost', 'failure_count'];
-        for (var i = 0; i < keys.length; i++) {
-            var key = keys[i];
+        const keys = ['events_today', 'tool_uses', 'prompts', 'total_sessions', 'subagents_spawned', 'error_count', 'total_tokens', 'total_cost', 'failure_count'];
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
             if (stats[key] === undefined) continue;
-            var item = ribbon.querySelector('[data-key="' + key + '"]');
+            const item = ribbon.querySelector('[data-key="' + key + '"]');
             if (!item) continue;
-            var valEl = item.querySelector('.metric-ribbon-value');
+            const valEl = item.querySelector('.metric-ribbon-value');
             if (!valEl) continue;
-            var oldVal = parseInt(valEl.textContent, 10);
-            var newVal = stats[key];
+            const oldVal = parseInt(valEl.textContent, 10);
+            const newVal = stats[key];
             if (newVal !== oldVal) {
                 valEl.textContent = newVal;
                 valEl.classList.remove('metric-flash');
@@ -106,7 +106,7 @@
     }
 
     function escapeHtml(str) {
-        var div = document.createElement('div');
+        const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
     }

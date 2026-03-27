@@ -39,7 +39,7 @@
             '</div>' +
         '</div>';
 
-        document.body.appendChild(overlay);
+        document.body.append(overlay);
 
         const modalRules = rules.slice();
 
@@ -110,7 +110,7 @@
 
         const searchInput = document.getElementById('mkt-search');
         if (searchInput) {
-            const debounceTimer = null;
+            let debounceTimer = null;
             searchInput.addEventListener('input', function() {
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(function() {
@@ -120,7 +120,7 @@
                         const name = cards[i].getAttribute('data-search-name') || '';
                         const desc = cards[i].getAttribute('data-search-desc') || '';
                         const cat = cards[i].getAttribute('data-search-cat') || '';
-                        cards[i].style.display = (!q || name.indexOf(q) >= 0 || desc.indexOf(q) >= 0 || cat.indexOf(q) >= 0) ? '' : 'none';
+                        cards[i].style.display = (!q || name.includes(q) || desc.includes(q) || cat.includes(q)) ? '' : 'none';
                     }
                 }, 200);
             });

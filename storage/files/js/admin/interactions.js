@@ -27,7 +27,7 @@
                 const icon = document.createElement('span');
                 icon.className = 'sort-icon';
                 icon.textContent = '\u25B4';
-                th.appendChild(icon);
+                th.append(icon);
             }
             th.setAttribute('data-sort-col', i);
             th.addEventListener('click', handleSortClick);
@@ -87,10 +87,10 @@
         });
 
         for (let j = 0; j < sortableRows.length; j++) {
-            tbody.appendChild(sortableRows[j]);
+            tbody.append(sortableRows[j]);
             const eventId = sortableRows[j].getAttribute('data-event-id');
             if (eventId && detailMap[eventId]) {
-                tbody.appendChild(detailMap[eventId]);
+                tbody.append(detailMap[eventId]);
             }
         }
     }
@@ -116,7 +116,7 @@
                 const rows = document.querySelectorAll('.data-table tbody tr');
                 for (let i = 0; i < rows.length; i++) {
                     const searchVal = rows[i].getAttribute(searchAttr) || rows[i].textContent.toLowerCase();
-                    rows[i].style.display = (!q || searchVal.indexOf(q) !== -1) ? '' : 'none';
+                    rows[i].style.display = (!q || searchVal.includes(q)) ? '' : 'none';
                 }
             }, 200);
         });

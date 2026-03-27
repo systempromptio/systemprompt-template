@@ -18,10 +18,6 @@
     });
   }
 
-  // ============================================
-  // STATUS CARD - Live System Status
-  // ============================================
-
   const STATUS_CONFIG = {
     refreshInterval: 30000,
     retryDelay: 5000,
@@ -234,7 +230,7 @@
     if (status === 'warning' || status === 'degraded') {
       return ' status-card__item-indicator--warning';
     }
-    return ''; // Default green
+    return '';
   };
 
   StatusCardManager.prototype.handleFetchError = function() {
@@ -281,7 +277,6 @@
   };
 
   StatusCardManager.prototype.showConnectModal = function(url, name) {
-    // Remove existing modal if any
     const existing = document.getElementById('mcp-connect-modal');
     if (existing) existing.remove();
 
@@ -307,9 +302,8 @@
         '</div>' +
       '</div>';
 
-    document.body.appendChild(modal);
+    document.body.append(modal);
 
-    // Close handlers
     const closeBtn = modal.querySelector('.mcp-modal__close');
     const backdrop = modal.querySelector('.mcp-modal__backdrop');
     const escHandler = (e) => {
@@ -322,7 +316,6 @@
     closeBtn.addEventListener('click', closeModal);
     backdrop.addEventListener('click', closeModal);
 
-    // Copy button
     const copyBtn = modal.querySelector('.mcp-modal__copy');
     copyBtn.addEventListener('click', () => {
       navigator.clipboard.writeText(url).then(() => {
@@ -331,7 +324,6 @@
       });
     });
 
-    // ESC to close
     document.addEventListener('keydown', escHandler);
   };
 })();

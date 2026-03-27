@@ -9,7 +9,6 @@
         return str.substring(0, max || 60) + '...';
     }
 
-    // Centralized dropdown manager — clone-based portal, no DOM reparenting
     const DropdownManager = {
         portal: null,
         activeMenu: null,
@@ -17,16 +16,15 @@
         activeTrigger: null,
 
         init: function() {
-            var portal = document.getElementById('dropdown-portal');
+            let portal = document.getElementById('dropdown-portal');
             if (!portal) {
                 portal = document.createElement('div');
                 portal.id = 'dropdown-portal';
                 portal.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;z-index:1000;pointer-events:none;';
-                document.body.appendChild(portal);
+                document.body.append(portal);
             }
             DropdownManager.portal = portal;
 
-            // Capture-phase click handler to close dropdown when clicking outside
             document.addEventListener('click', function(e) {
                 if (!DropdownManager.activeDropdown) return;
                 if (DropdownManager.activeDropdown.contains(e.target)) return;
@@ -42,15 +40,14 @@
         open: function(triggerBtn) {
             DropdownManager.close();
 
-            var menu = triggerBtn.closest('.actions-menu');
+            const menu = triggerBtn.closest('.actions-menu');
             if (!menu) return;
-            var dropdown = menu.querySelector('.actions-dropdown');
+            const dropdown = menu.querySelector('.actions-dropdown');
             if (!dropdown) return;
 
-            var rect = triggerBtn.getBoundingClientRect();
+            const rect = triggerBtn.getBoundingClientRect();
 
-            // Clone dropdown into portal — original stays hidden in DOM
-            var clone = dropdown.cloneNode(true);
+            const clone = dropdown.cloneNode(true);
             clone.style.cssText = 'position:fixed;' +
                 'top:' + (rect.bottom + 4) + 'px;' +
                 'right:' + (window.innerWidth - rect.right) + 'px;' +
@@ -61,7 +58,7 @@
                 'min-width:140px;padding:var(--space-1) 0;z-index:1000;';
             clone.setAttribute('data-portal-dropdown', 'true');
 
-            DropdownManager.portal.appendChild(clone);
+            DropdownManager.portal.append(clone);
             DropdownManager.activeMenu = menu;
             DropdownManager.activeDropdown = clone;
             DropdownManager.activeTrigger = triggerBtn;
@@ -83,11 +80,10 @@
 
     function closeAllMenus() {
         DropdownManager.close();
-        // Legacy cleanup: handle any old-style reparented dropdowns
         document.querySelectorAll('body > .actions-dropdown').forEach(dd => {
             if (dd._originalParent) {
                 dd.style.cssText = '';
-                dd._originalParent.appendChild(dd);
+                dd._originalParent.append(dd);
                 dd._originalParent = null;
             }
         });
@@ -128,7 +124,7 @@
         overlay.addEventListener('click', e => {
             if (e.target === overlay) overlay.remove();
         });
-        document.body.appendChild(overlay);
+        document.body.append(overlay);
         return overlay;
     }
 
@@ -144,7 +140,7 @@
                 '<button class="btn btn-danger" data-confirm-delete="' + escapeHtml(itemId) + '">Delete</button>' +
             '</div>' +
         '</div>';
-        document.body.appendChild(overlay);
+        document.body.append(overlay);
         return overlay;
     }
 
@@ -163,12 +159,11 @@
         });
     }
 
-    // Legacy function kept for backward compat — now delegates to DropdownManager
     function handleMenuToggle(e, menuBtn) {
         if (!menuBtn) menuBtn = e.target.closest('[data-action="menu"]');
         if (!menuBtn) return false;
-        var menu = menuBtn.closest('.actions-menu');
-        var wasOpen = menu && menu.classList.contains('open');
+        const menu = menuBtn.closest('.actions-menu');
+        const wasOpen = menu && menu.classList.contains('open');
         DropdownManager.close();
         if (!wasOpen) {
             DropdownManager.open(menuBtn);
@@ -194,11 +189,10 @@
             script.crossOrigin = 'anonymous';
             script.onload = () => resolve(window.JSZip);
             script.onerror = () => reject(new Error('Failed to load JSZip'));
-            document.head.appendChild(script);
+            document.head.append(script);
         });
     }
 
-    // Global menu toggle handler
     app.events.on('click', '[data-action="menu"]', (e, menuBtn) => {
         handleMenuToggle(e, menuBtn);
     }, { exclusive: true });
@@ -212,7 +206,6 @@
     const HOOK_EVENTS = ['PostToolUse', 'SessionStart', 'PreToolUse', 'Notification'];
     app.constants = { ROLES, HOOK_EVENTS };
 
-    // Initialize dropdown manager
     DropdownManager.init();
 
     app.shared = {

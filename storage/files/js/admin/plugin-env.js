@@ -164,7 +164,7 @@
         overlay.innerHTML = '<div class="confirm-dialog" style="width:560px;max-width:90vw">' +
             '<div style="display:flex;align-items:center;justify-content:center;padding:var(--space-6);color:var(--text-tertiary)">Loading...</div>' +
         '</div>';
-        document.body.appendChild(overlay);
+        document.body.append(overlay);
 
         overlay.addEventListener('click', function(e) {
             if (e.target === overlay) close();

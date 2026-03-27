@@ -17,7 +17,7 @@
 
     function renderSkillRow(skill, versionId) {
         const hasBase = skill.base_skill_id && skill.base_skill_id !== 'null';
-        const compareBtn = '';
+        let compareBtn = '';
         if (hasBase) {
             const isActive = activeDiff && activeDiff.versionId === versionId && activeDiff.skillId === skill.skill_id;
             compareBtn = '<button class="btn btn-secondary btn-sm" data-compare-skill="' + escapeHtml(skill.skill_id) +

@@ -49,9 +49,9 @@
 
     function initExpandRows() {
         app.OrgCommon.initExpandRows('.data-table', function(row, detailRow) {
-            var content = detailRow.querySelector('[data-skill-expand]');
+            const content = detailRow.querySelector('[data-skill-expand]');
             if (content && !content.hasAttribute('data-loaded')) {
-                var skillId = content.getAttribute('data-skill-expand');
+                const skillId = content.getAttribute('data-skill-expand');
                 content.innerHTML = renderSkillExpand(skillId);
                 content.setAttribute('data-loaded', 'true');
             }
@@ -151,8 +151,8 @@
                     .then(function(res) { return res.json(); })
                     .then(function(currentSkills) {
                         let skillIds = (currentSkills || []).slice();
-                        const shouldInclude = selectedPlugins.indexOf(plugin.id) !== -1;
-                        const hasSkill = skillIds.indexOf(entityId) !== -1;
+                        const shouldInclude = selectedPlugins.includes(plugin.id);
+                        const hasSkill = skillIds.includes(entityId);
 
                         if (shouldInclude && !hasSkill) {
                             skillIds.push(entityId);
@@ -185,7 +185,7 @@
     }
 
     function initEditPanel() {
-        var editPanel = app.OrgCommon.initEditPanel({
+        const editPanel = app.OrgCommon.initEditPanel({
             panelId: 'edit-panel',
             entityLabel: 'Skill',
             apiBasePath: '/api/public/skills/',
@@ -200,29 +200,28 @@
         });
 
         document.addEventListener('click', function(e) {
-            var btn = e.target.closest('[data-edit-skill]');
+            const btn = e.target.closest('[data-edit-skill]');
             if (!btn) return;
-            var skillId = btn.getAttribute('data-edit-skill');
-            var data = getSkillDetail(skillId);
+            const skillId = btn.getAttribute('data-edit-skill');
+            const data = getSkillDetail(skillId);
             if (data && editPanel) editPanel.open(skillId, data);
         });
     }
 
     function initBulkHandlers() {
-        var bulk = app.OrgCommon.initBulkActions('.data-table', 'bulk-bar');
+        const bulk = app.OrgCommon.initBulkActions('.data-table', 'bulk-bar');
         if (!bulk) return;
 
-        var allPlugins = getAllPlugins();
-        var assignApi = app.OrgCommon.initAssignPanel({
+        const allPlugins = getAllPlugins();
+        const assignApi = app.OrgCommon.initAssignPanel({
             panelId: 'assign-panel',
             allPlugins: allPlugins
         });
 
-        // Bulk delete
-        var deleteBtn = document.getElementById('bulk-delete-btn');
+        const deleteBtn = document.getElementById('bulk-delete-btn');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', function() {
-                var ids = bulk.getSelected();
+                const ids = bulk.getSelected();
                 if (!ids.length) return;
                 if (!confirm('Delete ' + ids.length + ' skill(s)? This action cannot be undone.')) return;
                 Promise.all(ids.map(function(id) {
@@ -236,23 +235,21 @@
             });
         }
 
-        // Bulk assign to plugin
-        var assignBtn = document.getElementById('bulk-assign-btn');
+        const assignBtn = document.getElementById('bulk-assign-btn');
         if (assignBtn && assignApi) {
             assignBtn.addEventListener('click', function() {
-                var ids = bulk.getSelected();
+                const ids = bulk.getSelected();
                 if (!ids.length) return;
                 assignApi.open(ids.join(','), ids.length + ' skills', []);
             });
         }
 
-        // Bulk set category
-        var categoryBtn = document.getElementById('bulk-category-btn');
+        const categoryBtn = document.getElementById('bulk-category-btn');
         if (categoryBtn) {
             categoryBtn.addEventListener('click', function() {
-                var ids = bulk.getSelected();
+                const ids = bulk.getSelected();
                 if (!ids.length) return;
-                var category = prompt('Enter category for ' + ids.length + ' skill(s):');
+                const category = prompt('Enter category for ' + ids.length + ' skill(s):');
                 if (category === null) return;
                 Promise.all(ids.map(function(id) {
                     return fetch('/api/public/skills/' + encodeURIComponent(id), {

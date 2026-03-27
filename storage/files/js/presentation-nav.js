@@ -1,40 +1,34 @@
-/**
- * Presentation navigation — keyboard, scroll-snap, dots, presenter notes toggle
- */
 (function() {
-  var html = document.documentElement;
+  const html = document.documentElement;
   if (!html.classList.contains('presentation')) return;
 
-  var slides = document.querySelectorAll('.pres-slide');
-  var nav = document.querySelector('.pres-nav');
-  var counter = document.getElementById('pres-current');
-  var total = document.getElementById('pres-total');
+  const slides = document.querySelectorAll('.pres-slide');
+  const nav = document.querySelector('.pres-nav');
+  const counter = document.getElementById('pres-current');
+  const total = document.getElementById('pres-total');
   if (!slides.length || !nav) return;
 
   if (total) total.textContent = slides.length;
 
-  // Create nav dots
   slides.forEach(function(slide, i) {
-    var dot = document.createElement('a');
+    const dot = document.createElement('a');
     dot.href = '#' + slide.id;
     if (i === 0) dot.classList.add('active');
-    nav.appendChild(dot);
+    nav.append(dot);
   });
 
-  // Show notes for current slide
   function showNotesForSlide(index) {
     document.querySelectorAll('.pres-notes').forEach(function(n) { n.style.display = 'none'; });
     if (html.classList.contains('notes-visible')) {
-      var notes = slides[index].querySelector('.pres-notes');
+      const notes = slides[index].querySelector('.pres-notes');
       if (notes) notes.style.display = 'block';
     }
   }
 
-  // Intersection Observer — active slide + reveal animations
-  var observer = new IntersectionObserver(function(entries) {
+  const observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
-        var index = Array.from(slides).indexOf(entry.target);
+        const index = Array.from(slides).indexOf(entry.target);
         if (counter) counter.textContent = index + 1;
         nav.querySelectorAll('a').forEach(function(dot, i) { dot.classList.toggle('active', i === index); });
         entry.target.querySelectorAll('.pres-reveal').forEach(function(el) { el.classList.add('visible'); });
@@ -45,9 +39,8 @@
 
   slides.forEach(function(slide) { observer.observe(slide); });
 
-  // Keyboard navigation
   document.addEventListener('keydown', function(e) {
-    var current = Math.round(window.scrollY / window.innerHeight);
+    const current = Math.round(window.scrollY / window.innerHeight);
 
     if (e.key === 'n' || e.key === 'N') {
       e.preventDefault();

@@ -111,7 +111,7 @@
             portal.id = 'user-actions-popup';
             portal.className = 'actions-popup';
             portal.setAttribute('role', 'menu');
-            document.body.appendChild(portal);
+            document.body.append(portal);
         }
         return portal;
     }

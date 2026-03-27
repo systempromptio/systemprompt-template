@@ -58,9 +58,9 @@
 
     function initExpandRows() {
         app.OrgCommon.initExpandRows('.data-table', function(row, detailRow) {
-            var content = detailRow.querySelector('[data-agent-expand]');
+            const content = detailRow.querySelector('[data-agent-expand]');
             if (content && !content.hasAttribute('data-loaded')) {
-                var agentId = content.getAttribute('data-agent-expand');
+                const agentId = content.getAttribute('data-agent-expand');
                 content.innerHTML = renderAgentExpand(agentId);
                 content.setAttribute('data-loaded', 'true');
             }
@@ -161,8 +161,8 @@
                     .then(function(res) { return res.json(); })
                     .then(function(currentAgents) {
                         let agentIds = (currentAgents || []).slice();
-                        const shouldInclude = selectedPlugins.indexOf(plugin.id) !== -1;
-                        const hasAgent = agentIds.indexOf(entityId) !== -1;
+                        const shouldInclude = selectedPlugins.includes(plugin.id);
+                        const hasAgent = agentIds.includes(entityId);
 
                         if (shouldInclude && !hasAgent) {
                             agentIds.push(entityId);
@@ -195,7 +195,7 @@
     }
 
     function initEditPanel() {
-        var editPanel = app.OrgCommon.initEditPanel({
+        const editPanel = app.OrgCommon.initEditPanel({
             panelId: 'edit-panel',
             entityLabel: 'Agent',
             apiBasePath: '/api/public/agents/',
@@ -208,29 +208,28 @@
         });
 
         document.addEventListener('click', function(e) {
-            var btn = e.target.closest('[data-edit-agent]');
+            const btn = e.target.closest('[data-edit-agent]');
             if (!btn) return;
-            var agentId = btn.getAttribute('data-edit-agent');
-            var data = getAgentDetail(agentId);
+            const agentId = btn.getAttribute('data-edit-agent');
+            const data = getAgentDetail(agentId);
             if (data && editPanel) editPanel.open(agentId, data);
         });
     }
 
     function initBulkHandlers() {
-        var bulk = app.OrgCommon.initBulkActions('.data-table', 'bulk-bar');
+        const bulk = app.OrgCommon.initBulkActions('.data-table', 'bulk-bar');
         if (!bulk) return;
 
-        var allPlugins = getAllPlugins();
-        var assignApi = app.OrgCommon.initAssignPanel({
+        const allPlugins = getAllPlugins();
+        const assignApi = app.OrgCommon.initAssignPanel({
             panelId: 'assign-panel',
             allPlugins: allPlugins
         });
 
-        // Bulk delete
-        var deleteBtn = document.getElementById('bulk-delete-btn');
+        const deleteBtn = document.getElementById('bulk-delete-btn');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', function() {
-                var ids = bulk.getSelected();
+                const ids = bulk.getSelected();
                 if (!ids.length) return;
                 if (!confirm('Delete ' + ids.length + ' agent(s)? This action cannot be undone.')) return;
                 Promise.all(ids.map(function(id) {
@@ -244,11 +243,10 @@
             });
         }
 
-        // Bulk assign to plugin
-        var assignBtn = document.getElementById('bulk-assign-btn');
+        const assignBtn = document.getElementById('bulk-assign-btn');
         if (assignBtn && assignApi) {
             assignBtn.addEventListener('click', function() {
-                var ids = bulk.getSelected();
+                const ids = bulk.getSelected();
                 if (!ids.length) return;
                 assignApi.open(ids.join(','), ids.length + ' agents', []);
             });

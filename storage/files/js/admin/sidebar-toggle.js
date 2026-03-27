@@ -1,10 +1,10 @@
 (function () {
     'use strict';
 
-    var sidebar = document.getElementById('admin-sidebar');
-    var overlay = document.getElementById('sidebar-overlay');
-    var toggleBtn = document.querySelector('.sidebar-toggle');
-    var closeBtn = sidebar && sidebar.querySelector('.sidebar-close-btn');
+    const sidebar = document.getElementById('admin-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const toggleBtn = document.querySelector('.sidebar-toggle');
+    const closeBtn = sidebar && sidebar.querySelector('.sidebar-close-btn');
 
     if (!sidebar || !overlay || !toggleBtn) return;
 

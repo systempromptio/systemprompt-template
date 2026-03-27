@@ -12,7 +12,7 @@
             if (container) return;
             container = document.createElement('div');
             container.className = 'toast-container';
-            document.body.appendChild(container);
+            document.body.append(container);
         },
         show(message, type) {
             if (!container) this.init();
@@ -22,7 +22,7 @@
             el.className = 'toast toast-' + type;
             el.innerHTML = '<span class="toast-icon">' + icon + '</span>' +
                 '<span class="toast-message">' + app.escapeHtml(message) + '</span>';
-            container.appendChild(el);
+            container.append(el);
             setTimeout(() => {
                 el.style.opacity = '0';
                 setTimeout(() => { el.remove(); }, 300);

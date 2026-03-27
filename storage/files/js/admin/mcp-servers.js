@@ -14,7 +14,7 @@
                 const rows = document.querySelectorAll('.data-table tbody tr.clickable-row');
                 rows.forEach(function(row) {
                     const name = (row.getAttribute('data-name') || '').toLowerCase();
-                    const match = !query || name.indexOf(query) !== -1;
+                    const match = !query || name.includes(query);
                     row.style.display = match ? '' : 'none';
                     const detail = row.nextElementSibling;
                     if (detail && detail.classList.contains('detail-row')) {

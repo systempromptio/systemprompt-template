@@ -323,7 +323,7 @@
         overlay.innerHTML = '<div class="skill-files-panel" style="background:var(--bg-surface);border-radius:var(--radius-lg);width:90vw;max-width:1100px;height:80vh;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column">' +
             '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary)">Loading files...</div>' +
         '</div>';
-        document.body.appendChild(overlay);
+        document.body.append(overlay);
 
         overlay.addEventListener('click', function(e) {
             if (e.target === overlay) close();

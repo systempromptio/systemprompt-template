@@ -105,7 +105,7 @@ window.AdminApp = window.AdminApp || {};
             if (container) return;
             container = document.createElement('div');
             container.className = 'toast-container';
-            document.body.appendChild(container);
+            document.body.append(container);
         },
         show(message, type) {
             if (!container) this.init();
@@ -115,7 +115,7 @@ window.AdminApp = window.AdminApp || {};
             el.className = 'toast toast-' + type;
             el.innerHTML = '<span class="toast-icon">' + icon + '</span>' +
                 '<span class="toast-message">' + app.escapeHtml(message) + '</span>';
-            container.appendChild(el);
+            container.append(el);
             setTimeout(() => {
                 el.style.opacity = '0';
                 setTimeout(() => { el.remove(); }, 300);
@@ -191,7 +191,6 @@ window.AdminApp = window.AdminApp || {};
         return str.substring(0, max || 60) + '...';
     }
 
-    // Centralized dropdown manager — clone-based portal, no DOM reparenting
     const DropdownManager = {
         portal: null,
         activeMenu: null,
@@ -199,16 +198,15 @@ window.AdminApp = window.AdminApp || {};
         activeTrigger: null,
 
         init: function() {
-            var portal = document.getElementById('dropdown-portal');
+            let portal = document.getElementById('dropdown-portal');
             if (!portal) {
                 portal = document.createElement('div');
                 portal.id = 'dropdown-portal';
                 portal.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;z-index:1000;pointer-events:none;';
-                document.body.appendChild(portal);
+                document.body.append(portal);
             }
             DropdownManager.portal = portal;
 
-            // Capture-phase click handler to close dropdown when clicking outside
             document.addEventListener('click', function(e) {
                 if (!DropdownManager.activeDropdown) return;
                 if (DropdownManager.activeDropdown.contains(e.target)) return;
@@ -224,15 +222,14 @@ window.AdminApp = window.AdminApp || {};
         open: function(triggerBtn) {
             DropdownManager.close();
 
-            var menu = triggerBtn.closest('.actions-menu');
+            const menu = triggerBtn.closest('.actions-menu');
             if (!menu) return;
-            var dropdown = menu.querySelector('.actions-dropdown');
+            const dropdown = menu.querySelector('.actions-dropdown');
             if (!dropdown) return;
 
-            var rect = triggerBtn.getBoundingClientRect();
+            const rect = triggerBtn.getBoundingClientRect();
 
-            // Clone dropdown into portal — original stays hidden in DOM
-            var clone = dropdown.cloneNode(true);
+            const clone = dropdown.cloneNode(true);
             clone.style.cssText = 'position:fixed;' +
                 'top:' + (rect.bottom + 4) + 'px;' +
                 'right:' + (window.innerWidth - rect.right) + 'px;' +
@@ -243,7 +240,7 @@ window.AdminApp = window.AdminApp || {};
                 'min-width:140px;padding:var(--space-1) 0;z-index:1000;';
             clone.setAttribute('data-portal-dropdown', 'true');
 
-            DropdownManager.portal.appendChild(clone);
+            DropdownManager.portal.append(clone);
             DropdownManager.activeMenu = menu;
             DropdownManager.activeDropdown = clone;
             DropdownManager.activeTrigger = triggerBtn;
@@ -265,11 +262,10 @@ window.AdminApp = window.AdminApp || {};
 
     function closeAllMenus() {
         DropdownManager.close();
-        // Legacy cleanup: handle any old-style reparented dropdowns
         document.querySelectorAll('body > .actions-dropdown').forEach(dd => {
             if (dd._originalParent) {
                 dd.style.cssText = '';
-                dd._originalParent.appendChild(dd);
+                dd._originalParent.append(dd);
                 dd._originalParent = null;
             }
         });
@@ -310,7 +306,7 @@ window.AdminApp = window.AdminApp || {};
         overlay.addEventListener('click', e => {
             if (e.target === overlay) overlay.remove();
         });
-        document.body.appendChild(overlay);
+        document.body.append(overlay);
         return overlay;
     }
 
@@ -326,7 +322,7 @@ window.AdminApp = window.AdminApp || {};
                 '<button class="btn btn-danger" data-confirm-delete="' + escapeHtml(itemId) + '">Delete</button>' +
             '</div>' +
         '</div>';
-        document.body.appendChild(overlay);
+        document.body.append(overlay);
         return overlay;
     }
 
@@ -345,12 +341,11 @@ window.AdminApp = window.AdminApp || {};
         });
     }
 
-    // Legacy function kept for backward compat — now delegates to DropdownManager
     function handleMenuToggle(e, menuBtn) {
         if (!menuBtn) menuBtn = e.target.closest('[data-action="menu"]');
         if (!menuBtn) return false;
-        var menu = menuBtn.closest('.actions-menu');
-        var wasOpen = menu && menu.classList.contains('open');
+        const menu = menuBtn.closest('.actions-menu');
+        const wasOpen = menu && menu.classList.contains('open');
         DropdownManager.close();
         if (!wasOpen) {
             DropdownManager.open(menuBtn);
@@ -376,11 +371,10 @@ window.AdminApp = window.AdminApp || {};
             script.crossOrigin = 'anonymous';
             script.onload = () => resolve(window.JSZip);
             script.onerror = () => reject(new Error('Failed to load JSZip'));
-            document.head.appendChild(script);
+            document.head.append(script);
         });
     }
 
-    // Global menu toggle handler
     app.events.on('click', '[data-action="menu"]', (e, menuBtn) => {
         handleMenuToggle(e, menuBtn);
     }, { exclusive: true });
@@ -394,7 +388,6 @@ window.AdminApp = window.AdminApp || {};
     const HOOK_EVENTS = ['PostToolUse', 'SessionStart', 'PreToolUse', 'Notification'];
     app.constants = { ROLES, HOOK_EVENTS };
 
-    // Initialize dropdown manager
     DropdownManager.init();
 
     app.shared = {
@@ -470,7 +463,7 @@ window.AdminApp = window.AdminApp || {};
             const items = container.querySelectorAll('.checklist-item');
             items.forEach((item) => {
                 const name = item.getAttribute('data-item-name') || '';
-                item.style.display = (q && name.indexOf(q) < 0) ? 'none' : '';
+                item.style.display = (q && !name.includes(q)) ? 'none' : '';
             });
         });
     }
@@ -515,7 +508,7 @@ window.AdminApp = window.AdminApp || {};
                 const icon = document.createElement('span');
                 icon.className = 'sort-icon';
                 icon.textContent = '\u25B4';
-                th.appendChild(icon);
+                th.append(icon);
             }
             th.setAttribute('data-sort-col', i);
             th.addEventListener('click', handleSortClick);
@@ -575,10 +568,10 @@ window.AdminApp = window.AdminApp || {};
         });
 
         for (let j = 0; j < sortableRows.length; j++) {
-            tbody.appendChild(sortableRows[j]);
+            tbody.append(sortableRows[j]);
             const eventId = sortableRows[j].getAttribute('data-event-id');
             if (eventId && detailMap[eventId]) {
-                tbody.appendChild(detailMap[eventId]);
+                tbody.append(detailMap[eventId]);
             }
         }
     }
@@ -604,7 +597,7 @@ window.AdminApp = window.AdminApp || {};
                 const rows = document.querySelectorAll('.data-table tbody tr');
                 for (let i = 0; i < rows.length; i++) {
                     const searchVal = rows[i].getAttribute(searchAttr) || rows[i].textContent.toLowerCase();
-                    rows[i].style.display = (!q || searchVal.indexOf(q) !== -1) ? '' : 'none';
+                    rows[i].style.display = (!q || searchVal.includes(q)) ? '' : 'none';
                 }
             }, 200);
         });
@@ -813,9 +806,8 @@ window.AdminApp = window.AdminApp || {};
         }
     });
 
-    // Apply initial mask on load
     document.addEventListener('DOMContentLoaded', function() {
-        var tokenEl = document.querySelector('.install-token-value[data-masked="true"]');
+        const tokenEl = document.querySelector('.install-token-value[data-masked="true"]');
         if (tokenEl) tokenEl.style.filter = 'blur(4px)';
     });
 })(window.AdminApp);
