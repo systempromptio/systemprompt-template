@@ -8,7 +8,7 @@ use super::export::PluginFile;
 use crate::error::MarketplaceError;
 
 pub fn sanitize_for_cowork(
-    files: Vec<PluginFile>,
+    files: &[PluginFile],
     platform_url: &str,
     token: &str,
     hook_description: &str,
@@ -20,9 +20,9 @@ pub fn sanitize_for_cowork(
             Kind::SkillMd => result.push(cowork_frontmatter::sanitize_skill_md(file)),
             Kind::SkillAux => result.push(cowork_frontmatter::sanitize_skill_aux(file)),
             Kind::Agent => result.push(cowork_frontmatter::agent_to_skill(file)),
-            Kind::PluginManifest => result.push(cowork_frontmatter::strip_hooks_from_manifest(file)),
+            Kind::PluginManifest => result.push(cowork_frontmatter::strip_hooks_from_manifest(file.clone())),
             Kind::HooksJson => {}
-            Kind::Passthrough => result.push(file),
+            Kind::Passthrough => result.push(file.clone()),
         }
     }
 

@@ -30,22 +30,16 @@ pub struct SystempromptServer {
 }
 
 impl SystempromptServer {
-    #[must_use]
-    pub fn new(db_pool: DbPool, service_id: McpServerId) -> Self {
-        let tool_usage_repo = Arc::new(
-            ToolUsageRepository::new(&db_pool).expect("Failed to initialize ToolUsageRepository"),
-        );
-        let artifact_repo = Arc::new(
-            McpArtifactRepository::new(&db_pool)
-                .expect("Failed to initialize McpArtifactRepository"),
-        );
+    pub fn new(db_pool: DbPool, service_id: McpServerId) -> anyhow::Result<Self> {
+        let tool_usage_repo = Arc::new(ToolUsageRepository::new(&db_pool)?);
+        let artifact_repo = Arc::new(McpArtifactRepository::new(&db_pool)?);
         let executor = McpToolExecutor::new(tool_usage_repo, artifact_repo, SERVER_NAME);
 
-        Self {
+        Ok(Self {
             service_id,
             db_pool,
             executor,
-        }
+        })
     }
 }
 

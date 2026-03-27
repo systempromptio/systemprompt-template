@@ -17,7 +17,3 @@ pub(crate) fn default_internal() -> String {
 pub(crate) fn default_external() -> String {
     "external".to_string()
 }
-
-pub(crate) fn default_matcher() -> String {
-    "*".to_string()
-}

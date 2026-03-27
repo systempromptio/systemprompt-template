@@ -7,7 +7,7 @@ const RESERVED_BODY_WORDS: &[(&str, &str)] = &[
     ("anthropic", "the provider"),
 ];
 
-pub fn sanitize_skill_md(file: PluginFile) -> PluginFile {
+pub fn sanitize_skill_md(file: &PluginFile) -> PluginFile {
     let path = strip_reserved_from_path(&file.path);
     let content = strip_frontmatter_hooks(&file.content);
     let content = rewrite_frontmatter_name(&content, &path);
@@ -15,15 +15,15 @@ pub fn sanitize_skill_md(file: PluginFile) -> PluginFile {
     PluginFile { path, content, executable: false }
 }
 
-pub fn sanitize_skill_aux(file: PluginFile) -> PluginFile {
+pub fn sanitize_skill_aux(file: &PluginFile) -> PluginFile {
     PluginFile {
         path: strip_reserved_from_path(&file.path),
-        content: file.content,
+        content: file.content.clone(),
         executable: file.executable,
     }
 }
 
-pub fn agent_to_skill(file: PluginFile) -> PluginFile {
+pub fn agent_to_skill(file: &PluginFile) -> PluginFile {
     let stem = file
         .path
         .strip_prefix("agents/")
@@ -39,11 +39,13 @@ pub fn strip_hooks_from_manifest(file: PluginFile) -> PluginFile {
     use super::export::PluginManifest;
 
     let content = serde_json::from_str::<PluginManifest>(&file.content)
-        .map(|mut m| {
-            m.hooks = None;
-            serde_json::to_string_pretty(&m).unwrap_or_else(|_| file.content.clone())
-        })
-        .unwrap_or_else(|_| file.content.clone());
+        .map_or_else(
+            |_| file.content.clone(),
+            |mut m| {
+                m.hooks = None;
+                serde_json::to_string_pretty(&m).unwrap_or_else(|_| file.content.clone())
+            },
+        );
 
     PluginFile { path: file.path, content, executable: false }
 }

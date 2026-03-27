@@ -42,6 +42,7 @@ pub struct EntityLimits {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct FeatureFlags {
     pub ai_session_analysis: bool,
     pub ai_daily_summaries: bool,

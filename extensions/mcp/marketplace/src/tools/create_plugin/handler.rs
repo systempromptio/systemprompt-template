@@ -117,24 +117,8 @@ impl McpToolHandler for CreatePluginHandler {
             })?;
         }
 
-        let (skill_slugs, agent_slugs, mcp_server_slugs) = if let Ok(Some(assoc)) =
-            systemprompt_web_extension::admin::repositories::get_plugin_with_associations(
-                &pool,
-                &user_id,
-                &plugin.plugin_id,
-            )
-            .await
-        {
-            let skill_strs: Vec<String> = assoc.skill_ids.iter().map(|id| id.to_string()).collect();
-            let agent_strs: Vec<String> = assoc.agent_ids.iter().map(|id| id.to_string()).collect();
-            let mcp_strs: Vec<String> = assoc.mcp_server_ids.iter().map(|id| id.to_string()).collect();
-            let skills = shared::resolve_skill_uuids_to_slugs(&pool, &skill_strs).await;
-            let agents = shared::resolve_agent_uuids_to_slugs(&pool, &agent_strs).await;
-            let mcps = shared::resolve_mcp_server_uuids_to_slugs(&pool, &mcp_strs).await;
-            (skills, agents, mcps)
-        } else {
-            (vec![], vec![], vec![])
-        };
+        let (skill_slugs, agent_slugs, mcp_server_slugs) =
+            shared::resolve_association_slugs(&pool, &user_id, &plugin.plugin_id).await;
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 

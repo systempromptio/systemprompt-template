@@ -18,17 +18,10 @@ pub fn send_alert(message: String) {
         } else {
             message
         };
-        if let Err(e) = send_to_slack(&channel_id, &msg).await {
-            tracing::warn!(error = %e, "Failed to send Slack user alert");
-        }
+        send_to_slack(&channel_id, &msg);
     });
 }
 
-async fn send_to_slack(
-    channel_id: &str,
-    message: &str,
-) -> Result<(), crate::error::MarketplaceError> {
-    // TODO: Implement Slack integration for foodles (previously used systemprompt_slack crate)
+fn send_to_slack(channel_id: &str, message: &str) {
     tracing::debug!(channel_id, message, "Slack alert skipped: integration not yet implemented");
-    Ok(())
 }

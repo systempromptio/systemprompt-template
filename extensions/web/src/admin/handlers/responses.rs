@@ -104,7 +104,6 @@ pub(crate) struct BaseSkillContentResponse {
     pub config: String,
 }
 
-list_response!(PlansListResponse, plans);
 list_response!(JobsListResponse, jobs);
 list_response!(UsersListResponse, users);
 list_response!(EventsListResponse, events);

@@ -1,3 +1,4 @@
+#[must_use]
 #[inline]
 #[expect(
     clippy::cast_precision_loss,
@@ -7,6 +8,7 @@ pub fn to_f64(v: i64) -> f64 {
     v as f64
 }
 
+#[must_use]
 #[inline]
 #[expect(
     clippy::cast_possible_truncation,
@@ -16,11 +18,13 @@ pub fn to_f32(v: f64) -> f32 {
     v as f32
 }
 
+#[must_use]
 #[inline]
 pub fn saturating_i32(v: i64) -> i32 {
     i32::try_from(v).unwrap_or(if v > 0 { i32::MAX } else { i32::MIN })
 }
 
+#[must_use]
 #[inline]
 #[expect(
     clippy::cast_precision_loss,
@@ -34,6 +38,7 @@ pub fn to_f32_from_i64(v: i64) -> f32 {
     v as f64 as f32
 }
 
+#[must_use]
 #[inline]
 #[expect(
     clippy::cast_precision_loss,
@@ -43,6 +48,7 @@ pub fn seconds_to_f64(v: i64) -> f64 {
     v as f64
 }
 
+#[must_use]
 #[inline]
 #[expect(
     clippy::cast_possible_truncation,
@@ -56,6 +62,7 @@ pub fn to_usize(v: f64) -> usize {
     v.max(0.0) as usize
 }
 
+#[must_use]
 #[inline]
 #[expect(
     clippy::cast_possible_truncation,
@@ -65,6 +72,7 @@ pub fn to_i64(v: f64) -> i64 {
     v as i64
 }
 
+#[must_use]
 #[inline]
 #[expect(
     clippy::cast_possible_truncation,
@@ -74,6 +82,7 @@ pub fn round_to_i64(v: f64) -> i64 {
     v.round() as i64
 }
 
+#[must_use]
 #[inline]
 #[expect(
     clippy::cast_sign_loss,
@@ -87,11 +96,13 @@ pub fn i64_to_usize(v: i64) -> usize {
     v as usize
 }
 
+#[must_use]
 #[inline]
 pub fn saturating_i16(v: i64) -> i16 {
     i16::try_from(v).unwrap_or(if v > 0 { i16::MAX } else { i16::MIN })
 }
 
+#[must_use]
 #[inline]
 #[expect(
     clippy::cast_possible_truncation,
@@ -101,11 +112,8 @@ pub fn f64_rounded_to_i16(v: f64) -> i16 {
     v.round() as i16
 }
 
+#[must_use]
 #[inline]
-#[expect(
-    clippy::cast_precision_loss,
-    reason = "i64→f64 for percentage math; values are small counts"
-)]
 #[expect(
     clippy::cast_possible_truncation,
     reason = "f64→i64 for percentage values (0-100 range)"
@@ -114,6 +122,7 @@ pub fn pct_i64(numerator: i64, denominator: i64) -> i64 {
     (to_f64(numerator) / to_f64(denominator) * 100.0) as i64
 }
 
+#[must_use]
 #[inline]
 #[expect(
     clippy::cast_possible_wrap,
@@ -123,6 +132,7 @@ pub fn usize_to_i64(v: usize) -> i64 {
     v as i64
 }
 
+#[must_use]
 #[inline]
 #[expect(
     clippy::cast_precision_loss,

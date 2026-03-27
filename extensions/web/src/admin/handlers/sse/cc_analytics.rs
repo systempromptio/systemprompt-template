@@ -20,6 +20,7 @@ pub(super) struct AnalyticsInput<'a> {
 }
 
 #[derive(Serialize)]
+#[allow(clippy::struct_excessive_bools)]
 struct AnalyticsEvent<'a> {
     skill_effectiveness: Vec<crate::admin::types::conversation_analytics::SkillEffectiveness>,
     entity_links: Vec<EntityLinkEntry<'a>>,

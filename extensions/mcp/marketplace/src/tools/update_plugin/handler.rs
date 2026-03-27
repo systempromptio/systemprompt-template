@@ -121,24 +121,8 @@ impl McpToolHandler for UpdatePluginHandler {
             })?;
         }
 
-        let (skill_slugs, agent_slugs, mcp_server_slugs) = if let Ok(Some(assoc)) =
-            systemprompt_web_extension::admin::repositories::get_plugin_with_associations(
-                &pool,
-                &user_id,
-                &input.plugin_id,
-            )
-            .await
-        {
-            let skill_strs: Vec<String> = assoc.skill_ids.iter().map(|id| id.to_string()).collect();
-            let agent_strs: Vec<String> = assoc.agent_ids.iter().map(|id| id.to_string()).collect();
-            let mcp_strs: Vec<String> = assoc.mcp_server_ids.iter().map(|id| id.to_string()).collect();
-            let skills = shared::resolve_skill_uuids_to_slugs(&pool, &skill_strs).await;
-            let agents = shared::resolve_agent_uuids_to_slugs(&pool, &agent_strs).await;
-            let mcps = shared::resolve_mcp_server_uuids_to_slugs(&pool, &mcp_strs).await;
-            (skills, agents, mcps)
-        } else {
-            (vec![], vec![], vec![])
-        };
+        let (skill_slugs, agent_slugs, mcp_server_slugs) =
+            shared::resolve_association_slugs(&pool, &user_id, &input.plugin_id).await;
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 
@@ -158,7 +142,7 @@ impl McpToolHandler for UpdatePluginHandler {
             "created_at": plugin.created_at.to_rfc3339(),
             "updated_at": plugin.updated_at.to_rfc3339(),
         }))
-        .unwrap_or_default();
+        .map_err(|e| McpError::internal_error(format!("Failed to serialize plugin: {e}"), None))?;
 
         let summary = format!("Updated plugin '{}' ({})", plugin.name, plugin.plugin_id);
         let content = format!("{summary}\n\n{plugin_json}");

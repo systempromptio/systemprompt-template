@@ -150,6 +150,7 @@ pub(super) struct TrafficRangeFlags {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[allow(clippy::struct_excessive_bools)]
 pub(super) struct ContentRangeFlags {
     pub content_range_1h: bool,
     pub content_range_24h: bool,

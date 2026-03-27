@@ -105,7 +105,7 @@ pub fn build_cowork_plugin_zip(params: &CoworkExportParams<'_>) -> Result<Vec<u8
 
     let description = format!("{} marketplace hooks", params.username);
     let merged_files = super::cowork_sanitize::sanitize_for_cowork(
-        merged_files,
+        &merged_files,
         params.platform_url,
         &cowork_token,
         &description,

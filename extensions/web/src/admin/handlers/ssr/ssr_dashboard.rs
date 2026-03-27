@@ -155,15 +155,15 @@ pub(crate) async fn dashboard_page(
     .unwrap_or_default();
 
     if let Some(obj) = data.as_object_mut() {
-        let users_val = obj.get("total_users").and_then(|v| v.as_u64()).unwrap_or(0);
+        let users_val = obj.get("total_users").and_then(serde_json::Value::as_u64).unwrap_or(0);
         let active_val = obj
             .get("active_users_24h")
-            .and_then(|v| v.as_i64())
+            .and_then(serde_json::Value::as_i64)
             .unwrap_or(0);
         let events_val = obj
             .get("stats")
             .and_then(|s| s.get("events_today"))
-            .and_then(|v| v.as_i64())
+            .and_then(serde_json::Value::as_i64)
             .unwrap_or(0);
         obj.insert(
             "page_stats".to_string(),

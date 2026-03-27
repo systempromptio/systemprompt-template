@@ -149,8 +149,6 @@ pub async fn marketplace_context_middleware(
     next.run(request).await
 }
 
-/// Middleware that requires a logged-in user (non-empty user_id).
-/// Redirects to login page for SSR routes (unlike require_auth which returns 401 JSON).
 pub async fn require_user_middleware(request: Request, next: Next) -> Response {
     let user_ctx = request.extensions().get::<UserContext>().cloned();
     match user_ctx {

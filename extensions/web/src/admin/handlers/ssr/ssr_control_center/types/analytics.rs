@@ -41,6 +41,7 @@ pub struct MetricRow {
 }
 
 #[derive(Serialize, Clone)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct InsightsFlags {
     pub has_patterns: bool,
     pub has_skill_gaps: bool,
@@ -80,6 +81,7 @@ pub struct CategoryBreakdownEntry {
 }
 
 #[derive(Serialize, Clone)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct StarRating {
     pub star_1: bool,
     pub star_2: bool,
@@ -111,6 +113,7 @@ pub struct EntityCounts {
 }
 
 #[derive(Serialize, Clone)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct AnalysisFlags {
     pub has_outcomes: bool,
     pub has_goal_outcome_map: bool,

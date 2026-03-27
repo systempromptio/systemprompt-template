@@ -91,7 +91,6 @@ pub async fn get_department_leaderboard(
         SELECT
             r.user_id,
             COALESCE(u.display_name, u.full_name, u.name) AS display_name,
-            u.department,
             r.rank_level,
             r.rank_name,
             r.total_xp::BIGINT AS total_xp,
@@ -119,7 +118,6 @@ pub async fn get_user_gamification(
     struct RankRow {
         user_id: String,
         display_name: Option<String>,
-        department: Option<String>,
         rank_level: i32,
         rank_name: String,
         total_xp: i64,
@@ -135,7 +133,6 @@ pub async fn get_user_gamification(
         SELECT
             r.user_id,
             COALESCE(u.display_name, u.full_name, u.name) AS display_name,
-            u.department,
             r.rank_level,
             r.rank_name,
             r.total_xp::BIGINT AS total_xp,

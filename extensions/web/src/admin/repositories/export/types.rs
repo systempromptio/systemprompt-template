@@ -102,7 +102,7 @@ pub struct PluginBundle {
     pub counts: PluginBundleCounts,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PluginFile {
     pub path: String,
     pub content: String,

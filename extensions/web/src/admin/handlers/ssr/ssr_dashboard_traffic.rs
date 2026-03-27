@@ -8,6 +8,16 @@ use super::ssr_dashboard_types::{
 };
 use crate::admin::numeric;
 
+type TrafficBreakdowns = (
+    serde_json::Value,
+    Vec<SourceBar>,
+    Vec<GeoBar>,
+    Vec<DeviceBar>,
+    Vec<TopPageView>,
+    serde_json::Value,
+    Vec<TopPageEnhancedView>,
+);
+
 pub(super) fn format_time_ms(ms: f64) -> String {
     let secs = numeric::round_to_i64(ms / 1000.0);
     if secs >= 60 {
@@ -144,7 +154,7 @@ fn build_horizon(
         "[{}]",
         sparkline_values
             .iter()
-            .map(|v| v.to_string())
+            .map(i64::to_string)
             .collect::<Vec<_>>()
             .join(",")
     );
@@ -190,8 +200,8 @@ fn build_top_pages_enhanced(
             let horizon_1d = build_horizon(&buckets, 1, today);
             let yesterday = today - chrono::Duration::days(1);
             let horizon_yesterday = build_horizon(&buckets, 1, yesterday);
-            let horizon_7d = build_horizon(&buckets, 7, today);
-            let horizon_31d = build_horizon(&buckets, 31, today);
+            let horizon_week = build_horizon(&buckets, 7, today);
+            let horizon_month = build_horizon(&buckets, 31, today);
 
             let page_label = if page_url.len() > 50 {
                 format!("{}...", &page_url[..47])
@@ -204,8 +214,8 @@ fn build_top_pages_enhanced(
                 page_label,
                 horizon_1d,
                 horizon_yesterday,
-                horizon_7d,
-                horizon_31d,
+                horizon_7d: horizon_week,
+                horizon_31d: horizon_month,
             }
         })
         .collect();
@@ -217,15 +227,7 @@ fn build_top_pages_enhanced(
 fn build_traffic_breakdowns(
     t: &crate::admin::types::TrafficData,
     traffic_range_key: &str,
-) -> (
-    serde_json::Value,
-    Vec<SourceBar>,
-    Vec<GeoBar>,
-    Vec<DeviceBar>,
-    Vec<TopPageView>,
-    serde_json::Value,
-    Vec<TopPageEnhancedView>,
-) {
+) -> TrafficBreakdowns {
     // JSON: required by trait contract
     let chart = serde_json::to_value(super::charts::compute_traffic_chart_data(
         &t.timeseries,

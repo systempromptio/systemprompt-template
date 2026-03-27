@@ -1,7 +1,6 @@
 pub mod admin_traffic_reports;
 pub mod agents;
 pub mod apm_metrics;
-mod dashboard_queries_extra;
 pub mod github_sync;
 pub mod control_center;
 pub mod conversation_analytics;

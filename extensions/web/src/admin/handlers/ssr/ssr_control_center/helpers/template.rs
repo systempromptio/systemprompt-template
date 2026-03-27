@@ -20,6 +20,7 @@ pub(in crate::admin) struct AssembleInput<'a> {
 }
 
 #[derive(Serialize)]
+#[allow(clippy::struct_excessive_bools)]
 pub(in crate::admin) struct TemplateData<'a> {
     pub page: &'static str,
     pub title: &'static str,

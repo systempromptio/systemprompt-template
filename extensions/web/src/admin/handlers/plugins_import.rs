@@ -83,7 +83,7 @@ fn import_bundle_for_site(
                 activity::record(
                     &pool,
                     NewActivity::entity_imported(
-                        &systemprompt::identifiers::UserId::new("admin"),
+                        "admin",
                         ActivityEntity::Plugin,
                         &pid,
                         &name,

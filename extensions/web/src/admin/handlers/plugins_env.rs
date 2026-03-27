@@ -30,7 +30,7 @@ pub(crate) async fn list_plugin_env_handler(
         Err(_) => query
             .user_id
             .as_ref()
-            .map_or_else(|| default_user_id.clone(), |s| UserId::new(s)),
+            .map_or_else(|| default_user_id.clone(), UserId::new),
     };
 
     let definitions = load_plugin_variable_defs(&plugin_id).unwrap_or_else(|_| vec![]);
@@ -86,7 +86,7 @@ pub(crate) async fn update_plugin_env_handler(
         Err(_) => query
             .user_id
             .as_ref()
-            .map_or_else(|| default_user_id.clone(), |s| UserId::new(s)),
+            .map_or_else(|| default_user_id.clone(), UserId::new),
     };
 
     for var in &body.variables {

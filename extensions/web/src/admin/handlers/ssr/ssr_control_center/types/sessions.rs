@@ -13,6 +13,7 @@ pub struct ToolGroup {
 }
 
 #[derive(Serialize, Clone, Default)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Turn {
     pub prompt_text: String,
     pub prompt_time: String,
@@ -35,6 +36,7 @@ pub struct EntityEntry {
 }
 
 #[derive(Serialize, Clone, Default)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct SessionGroupFlags {
     pub has_session_title: bool,
     pub is_active: bool,

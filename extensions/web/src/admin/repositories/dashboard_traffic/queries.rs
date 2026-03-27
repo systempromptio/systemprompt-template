@@ -147,7 +147,6 @@ async fn fetch_content_performance_live(
 ) -> Result<Vec<ContentPerformanceRow>, sqlx::Error> {
     let interval = match content_range {
         "1h" => "1 hour",
-        "24h" => "24 hours",
         "yesterday" => "48 hours",
         _ => "24 hours",
     };

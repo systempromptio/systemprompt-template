@@ -16,8 +16,96 @@ pub struct SyncResult {
     pub duration_ms: u64,
 }
 
-/// Sync a marketplace from its GitHub repository.
-/// Clones/pulls the repo, parses marketplace.json, imports plugins, and updates associations.
+struct PluginImportTally {
+    plugin_ids: Vec<String>,
+    success_count: u64,
+    error_count: u64,
+}
+
+fn import_plugins_from_entries(
+    plugins: &[serde_json::Value],
+    base_path: &Path,
+    services_path: &Path,
+    log_context: &str,
+) -> PluginImportTally {
+    let mut tally = PluginImportTally {
+        plugin_ids: Vec::new(),
+        success_count: 0,
+        error_count: 0,
+    };
+
+    for plugin_entry in plugins {
+        let Some(source) = plugin_entry.get("source").and_then(|v| v.as_str()) else {
+            if log_context == "github" {
+                tracing::warn!("Plugin entry missing 'source' field, skipping");
+            }
+            tally.error_count += 1;
+            continue;
+        };
+
+        let source_path = source.strip_prefix("./").unwrap_or(source);
+        let plugin_dir = base_path.join(source_path);
+
+        if !plugin_dir.exists() {
+            if log_context == "github" {
+                tracing::warn!(path = %plugin_dir.display(), "Plugin source directory not found");
+                tally.error_count += 1;
+            } else {
+                tracing::debug!(path = %plugin_dir.display(), "Local plugin directory not found, skipping");
+            }
+            continue;
+        }
+
+        match build_bundle_from_directory(&plugin_dir) {
+            Ok(bundle) => {
+                let plugin_id = bundle.id.clone();
+                match import_or_update_plugin(services_path, &bundle) {
+                    Ok(()) => {
+                        tally.plugin_ids.push(plugin_id.clone());
+                        tally.success_count += 1;
+                        tracing::info!(plugin_id = %plugin_id, "Plugin synced from {log_context}");
+                    }
+                    Err(e) => {
+                        tracing::warn!(plugin_id = %plugin_id, error = %e, "Failed to import plugin");
+                        tally.error_count += 1;
+                    }
+                }
+            }
+            Err(e) => {
+                tracing::warn!(source = %source, error = %e, "Failed to build bundle from directory");
+                tally.error_count += 1;
+            }
+        }
+    }
+
+    tally
+}
+
+async fn finalize_sync(
+    pool: &Arc<PgPool>,
+    marketplace_id: &str,
+    plugin_ids: &[String],
+    error_count: &mut u64,
+) {
+    if !plugin_ids.is_empty() {
+        if let Err(e) =
+            super::org_marketplaces::set_marketplace_plugins(pool, marketplace_id, plugin_ids)
+                .await
+        {
+            tracing::error!(error = %e, "Failed to update marketplace plugin associations");
+            *error_count += 1;
+        }
+
+        if let Err(e) = mark_all_users_dirty(pool).await {
+            tracing::warn!(error = %e, "Failed to mark users dirty after sync");
+        }
+    }
+}
+
+fn elapsed_ms(start: std::time::Instant) -> u64 {
+    u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX)
+}
+
 pub async fn sync_marketplace_from_github(
     pool: &Arc<PgPool>,
     marketplace_id: &str,
@@ -35,7 +123,6 @@ pub async fn sync_marketplace_from_github(
     let local_path = PathBuf::from("storage/github-marketplaces").join(marketplace_id);
     let marker_path = local_path.join(".last-commit");
 
-    // Clone or pull
     if local_path.join(".git").exists() {
         git_pull(&local_path)?;
     } else {
@@ -43,11 +130,10 @@ pub async fn sync_marketplace_from_github(
         git_clone_shallow(repo_url, &local_path)?;
     }
 
-    // Check if content changed
     let current_hash = git_head_hash(&local_path)?;
     let last_hash = std::fs::read_to_string(&marker_path).unwrap_or_default();
     if current_hash.trim() == last_hash.trim() && !last_hash.is_empty() {
-        let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+        let duration_ms = elapsed_ms(start);
         tracing::info!(
             marketplace_id,
             commit = &current_hash[..8.min(current_hash.len())],
@@ -62,7 +148,6 @@ pub async fn sync_marketplace_from_github(
         });
     }
 
-    // Parse marketplace.json
     let marketplace_json_path = local_path.join(".claude-plugin/marketplace.json");
     let marketplace_content = std::fs::read_to_string(&marketplace_json_path)
         .map_err(|e| anyhow::anyhow!("Failed to read marketplace.json: {e}"))?;
@@ -74,80 +159,24 @@ pub async fn sync_marketplace_from_github(
         .and_then(|v| v.as_array())
         .ok_or_else(|| anyhow::anyhow!("marketplace.json missing 'plugins' array"))?;
 
-    let mut plugin_ids = Vec::new();
-    let mut success_count = 0u64;
-    let mut error_count = 0u64;
+    let mut tally = import_plugins_from_entries(plugins, &local_path, &services_path, "github");
 
-    for plugin_entry in plugins {
-        let Some(source) = plugin_entry.get("source").and_then(|v| v.as_str()) else {
-            tracing::warn!("Plugin entry missing 'source' field, skipping");
-            error_count += 1;
-            continue;
-        };
+    finalize_sync(pool, marketplace_id, &tally.plugin_ids, &mut tally.error_count).await;
 
-        let source_path = source.strip_prefix("./").unwrap_or(source);
-        let plugin_dir = local_path.join(source_path);
-
-        if !plugin_dir.exists() {
-            tracing::warn!(path = %plugin_dir.display(), "Plugin source directory not found");
-            error_count += 1;
-            continue;
-        }
-
-        match build_bundle_from_directory(&plugin_dir) {
-            Ok(bundle) => {
-                let plugin_id = bundle.id.clone();
-                match import_or_update_plugin(&services_path, &bundle) {
-                    Ok(()) => {
-                        plugin_ids.push(plugin_id.clone());
-                        success_count += 1;
-                        tracing::info!(plugin_id = %plugin_id, "Plugin synced from GitHub");
-                    }
-                    Err(e) => {
-                        tracing::warn!(plugin_id = %plugin_id, error = %e, "Failed to import plugin");
-                        error_count += 1;
-                    }
-                }
-            }
-            Err(e) => {
-                tracing::warn!(source = %source, error = %e, "Failed to build bundle from directory");
-                error_count += 1;
-            }
-        }
-    }
-
-    // Update org marketplace associations
-    if !plugin_ids.is_empty() {
-        if let Err(e) =
-            super::org_marketplaces::set_marketplace_plugins(pool, marketplace_id, &plugin_ids)
-                .await
-        {
-            tracing::error!(error = %e, "Failed to update marketplace plugin associations");
-            error_count += 1;
-        }
-
-        // Mark all users dirty so their marketplace repos regenerate
-        if let Err(e) = mark_all_users_dirty(pool).await {
-            tracing::warn!(error = %e, "Failed to mark users dirty after sync");
-        }
-    }
-
-    // Save commit hash
     if let Err(e) = std::fs::write(&marker_path, &current_hash) {
         tracing::warn!(error = %e, "Failed to save last commit marker");
     }
 
-    let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+    let duration_ms = elapsed_ms(start);
 
-    // Log the sync operation
     let _ = super::org_marketplaces::insert_sync_log(
         pool,
         marketplace_id,
         "sync",
         "success",
         Some(&current_hash),
-        i64::try_from(success_count).unwrap_or(i64::MAX),
-        i64::try_from(error_count).unwrap_or(i64::MAX),
+        i64::try_from(tally.success_count).unwrap_or(i64::MAX),
+        i64::try_from(tally.error_count).unwrap_or(i64::MAX),
         None,
         triggered_by,
         Some(i64::try_from(duration_ms).unwrap_or(i64::MAX)),
@@ -156,8 +185,8 @@ pub async fn sync_marketplace_from_github(
 
     tracing::info!(
         marketplace_id,
-        plugins = success_count,
-        errors = error_count,
+        plugins = tally.success_count,
+        errors = tally.error_count,
         commit = &current_hash[..std::cmp::min(8, current_hash.len())],
         duration_ms,
         "GitHub marketplace sync completed"
@@ -165,15 +194,47 @@ pub async fn sync_marketplace_from_github(
 
     Ok(SyncResult {
         commit_hash: current_hash,
-        plugins_synced: success_count,
-        errors: error_count,
+        plugins_synced: tally.success_count,
+        errors: tally.error_count,
         changed: true,
         duration_ms,
     })
 }
 
-/// Publish a marketplace to its GitHub repository.
-/// Exports plugin bundles, writes them to the repo directory, commits, and pushes.
+fn write_plugin_bundles_to_repo(
+    bundles: &[PluginBundle],
+    local_path: &Path,
+) -> Result<u64> {
+    let mut plugin_count = 0u64;
+
+    for bundle in bundles {
+        let plugin_dir = local_path.join(&bundle.id);
+
+        if plugin_dir.exists() {
+            std::fs::remove_dir_all(&plugin_dir)?;
+        }
+        std::fs::create_dir_all(&plugin_dir)?;
+
+        for file in &bundle.files {
+            let file_path = plugin_dir.join(&file.path);
+            if let Some(parent) = file_path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            std::fs::write(&file_path, &file.content)?;
+
+            #[cfg(unix)]
+            if file.executable {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(&file_path, std::fs::Permissions::from_mode(0o755))?;
+            }
+        }
+
+        plugin_count += 1;
+    }
+
+    Ok(plugin_count)
+}
+
 pub async fn publish_marketplace_to_github(
     pool: &Arc<PgPool>,
     marketplace_id: &str,
@@ -194,16 +255,14 @@ pub async fn publish_marketplace_to_github(
 
     let local_path = PathBuf::from("storage/github-marketplaces").join(marketplace_id);
 
-    // Ensure repo is cloned
     if local_path.join(".git").exists() {
         git_pull(&local_path)?;
     } else {
         std::fs::create_dir_all(&local_path)?;
-        let push_url = build_authenticated_url(repo_url)?;
+        let push_url = build_authenticated_url(repo_url);
         git_clone_shallow(&push_url, &local_path)?;
     }
 
-    // Generate export bundles
     let export = super::export::generate_org_marketplace_export_bundles(
         &services_path,
         pool,
@@ -212,50 +271,20 @@ pub async fn publish_marketplace_to_github(
     )
     .await?;
 
-    let mut plugin_count = 0u64;
+    let plugin_count = write_plugin_bundles_to_repo(&export.plugins, &local_path)?;
 
-    // Write each plugin bundle to the repo
-    for bundle in &export.plugins {
-        let plugin_dir = local_path.join(&bundle.id);
-
-        // Clean existing plugin directory
-        if plugin_dir.exists() {
-            std::fs::remove_dir_all(&plugin_dir)?;
-        }
-        std::fs::create_dir_all(&plugin_dir)?;
-
-        // Write all files
-        for file in &bundle.files {
-            let file_path = plugin_dir.join(&file.path);
-            if let Some(parent) = file_path.parent() {
-                std::fs::create_dir_all(parent)?;
-            }
-            std::fs::write(&file_path, &file.content)?;
-
-            #[cfg(unix)]
-            if file.executable {
-                use std::os::unix::fs::PermissionsExt;
-                std::fs::set_permissions(&file_path, std::fs::Permissions::from_mode(0o755))?;
-            }
-        }
-
-        plugin_count += 1;
-    }
-
-    // Write marketplace.json
     let marketplace_json_path = local_path.join(".claude-plugin/marketplace.json");
     if let Some(parent) = marketplace_json_path.parent() {
         std::fs::create_dir_all(parent)?;
     }
     std::fs::write(&marketplace_json_path, &export.marketplace.content)?;
 
-    // Commit and push
-    let push_url = build_authenticated_url(repo_url)?;
+    let push_url = build_authenticated_url(repo_url);
     git_add_all(&local_path)?;
 
     let has_changes = git_has_changes(&local_path)?;
     if !has_changes {
-        let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+        let duration_ms = elapsed_ms(start);
         tracing::info!(marketplace_id, "No changes to publish");
         return Ok(SyncResult {
             commit_hash: git_head_hash(&local_path)?,
@@ -268,18 +297,16 @@ pub async fn publish_marketplace_to_github(
 
     git_commit(
         &local_path,
-        &format!("Marketplace update from admin ({})", marketplace_id),
+        &format!("Marketplace update from admin ({marketplace_id})"),
     )?;
     git_push(&local_path, &push_url)?;
 
     let current_hash = git_head_hash(&local_path)?;
-    let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+    let duration_ms = elapsed_ms(start);
 
-    // Save commit hash marker
     let marker_path = local_path.join(".last-commit");
     let _ = std::fs::write(&marker_path, &current_hash);
 
-    // Log the publish operation
     let _ = super::org_marketplaces::insert_sync_log(
         pool,
         marketplace_id,
@@ -381,14 +408,12 @@ pub(crate) fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBun
 
     let mut files = Vec::new();
 
-    // plugin.json
     files.push(PluginFile {
         path: ".claude-plugin/plugin.json".to_string(),
         content: manifest_content,
         executable: false,
     });
 
-    // hooks/hooks.json
     let hooks_path = plugin_dir.join("hooks/hooks.json");
     if hooks_path.exists() {
         let content = std::fs::read_to_string(&hooks_path)?;
@@ -399,19 +424,16 @@ pub(crate) fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBun
         });
     }
 
-    // skills/*/SKILL.md
     let skills_dir = plugin_dir.join("skills");
     if skills_dir.exists() {
         collect_directory_files(&skills_dir, "skills", &mut files)?;
     }
 
-    // agents/*.md
     let agents_dir = plugin_dir.join("agents");
     if agents_dir.exists() {
         collect_directory_files(&agents_dir, "agents", &mut files)?;
     }
 
-    // .mcp.json
     let mcp_path = plugin_dir.join(".mcp.json");
     if mcp_path.exists() {
         let content = std::fs::read_to_string(&mcp_path)?;
@@ -428,7 +450,7 @@ pub(crate) fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBun
     for f in &files {
         if f.path.starts_with("skills/") && f.path.ends_with("SKILL.md") {
             skills_count += 1;
-        } else if f.path.starts_with("agents/") && f.path.ends_with(".md") {
+        } else if f.path.starts_with("agents/") && std::path::Path::new(&f.path).extension().is_some_and(|ext| ext.eq_ignore_ascii_case("md")) {
             agents_count += 1;
         } else if f.path == "hooks/hooks.json" {
             _hooks_count += 1;
@@ -460,7 +482,7 @@ pub(crate) fn collect_directory_files(
     for entry in walkdir::WalkDir::new(dir)
         .min_depth(1)
         .into_iter()
-        .filter_map(|e| e.ok())
+        .filter_map(Result::ok)
         .filter(|e| e.file_type().is_file())
     {
         let rel_path = entry
@@ -490,10 +512,6 @@ pub(crate) fn import_or_update_plugin(services_path: &Path, bundle: &PluginBundl
     Ok(())
 }
 
-/// Sync a marketplace from locally-available plugins.
-/// Reads `storage/files/plugins/.claude-plugin/marketplace.json`, imports each plugin
-/// into `services/plugins/`, and writes the associations to the database.
-/// Always runs on every startup to ensure the marketplace is never empty.
 pub async fn sync_marketplace_from_local(
     pool: &Arc<PgPool>,
     marketplace_id: &str,
@@ -520,73 +538,12 @@ pub async fn sync_marketplace_from_local(
         .and_then(|v| v.as_array())
         .ok_or_else(|| anyhow::anyhow!("Local marketplace.json missing 'plugins' array"))?;
 
-    let mut plugin_ids = Vec::new();
-    let mut success_count = 0u64;
-    let mut error_count = 0u64;
+    let base_path = PathBuf::from(".");
+    let mut tally = import_plugins_from_entries(plugins, &base_path, &services_path, "local");
 
-    for plugin_entry in plugins {
-        let Some(source) = plugin_entry.get("source").and_then(|v| v.as_str()) else {
-            error_count += 1;
-            continue;
-        };
+    finalize_sync(pool, marketplace_id, &tally.plugin_ids, &mut tally.error_count).await;
 
-        let source_path = source.strip_prefix("./").unwrap_or(source);
-        let plugin_dir = PathBuf::from(source_path);
-
-        if !plugin_dir.exists() {
-            tracing::debug!(
-                path = %plugin_dir.display(),
-                "Local plugin directory not found, skipping"
-            );
-            continue;
-        }
-
-        match build_bundle_from_directory(&plugin_dir) {
-            Ok(bundle) => {
-                let plugin_id = bundle.id.clone();
-                match import_or_update_plugin(&services_path, &bundle) {
-                    Ok(()) => {
-                        plugin_ids.push(plugin_id.clone());
-                        success_count += 1;
-                        tracing::info!(plugin_id = %plugin_id, "Plugin synced from local");
-                    }
-                    Err(e) => {
-                        tracing::warn!(
-                            plugin_id = %plugin_id,
-                            error = %e,
-                            "Failed to import local plugin"
-                        );
-                        error_count += 1;
-                    }
-                }
-            }
-            Err(e) => {
-                tracing::warn!(
-                    source = %source,
-                    error = %e,
-                    "Failed to build bundle from local directory"
-                );
-                error_count += 1;
-            }
-        }
-    }
-
-    // Update org marketplace associations
-    if !plugin_ids.is_empty() {
-        if let Err(e) =
-            super::org_marketplaces::set_marketplace_plugins(pool, marketplace_id, &plugin_ids)
-                .await
-        {
-            tracing::error!(error = %e, "Failed to update marketplace plugin associations");
-            error_count += 1;
-        }
-
-        if let Err(e) = mark_all_users_dirty(pool).await {
-            tracing::warn!(error = %e, "Failed to mark users dirty after local sync");
-        }
-    }
-
-    let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+    let duration_ms = elapsed_ms(start);
 
     let _ = super::org_marketplaces::insert_sync_log(
         pool,
@@ -594,8 +551,8 @@ pub async fn sync_marketplace_from_local(
         "sync",
         "success",
         None,
-        i64::try_from(success_count).unwrap_or(i64::MAX),
-        i64::try_from(error_count).unwrap_or(i64::MAX),
+        i64::try_from(tally.success_count).unwrap_or(i64::MAX),
+        i64::try_from(tally.error_count).unwrap_or(i64::MAX),
         None,
         "local",
         Some(i64::try_from(duration_ms).unwrap_or(i64::MAX)),
@@ -604,16 +561,16 @@ pub async fn sync_marketplace_from_local(
 
     tracing::info!(
         marketplace_id,
-        plugins = success_count,
-        errors = error_count,
+        plugins = tally.success_count,
+        errors = tally.error_count,
         duration_ms,
         "Local marketplace sync completed"
     );
 
     Ok(SyncResult {
         commit_hash: String::new(),
-        plugins_synced: success_count,
-        errors: error_count,
+        plugins_synced: tally.success_count,
+        errors: tally.error_count,
         changed: true,
         duration_ms,
     })
@@ -674,16 +631,15 @@ fn git_push(repo_path: &Path, remote_url: &str) -> Result<()> {
     Ok(())
 }
 
-fn build_authenticated_url(repo_url: &str) -> Result<String> {
+fn build_authenticated_url(repo_url: &str) -> String {
     let token = std::env::var("GITHUB_MARKETPLACE_TOKEN").unwrap_or_default();
     if token.is_empty() {
-        return Ok(repo_url.to_string());
+        return repo_url.to_string();
     }
 
-    // Rewrite https://github.com/... to https://{token}@github.com/...
     if let Some(rest) = repo_url.strip_prefix("https://") {
-        Ok(format!("https://{token}@{rest}"))
+        format!("https://{token}@{rest}")
     } else {
-        Ok(repo_url.to_string())
+        repo_url.to_string()
     }
 }

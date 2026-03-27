@@ -56,6 +56,7 @@ pub struct HooksStats {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct MyHooksPageData {
     pub page: &'static str,
     pub title: &'static str,

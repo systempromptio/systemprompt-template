@@ -31,6 +31,24 @@ pub fn generate_slug(name: &str) -> String {
     }
 }
 
+pub async fn resolve_association_slugs(
+    pool: &Arc<PgPool>,
+    user_id: &UserId,
+    plugin_id: &str,
+) -> (Vec<String>, Vec<String>, Vec<String>) {
+    let Ok(Some(assoc)) = repositories::get_plugin_with_associations(pool, user_id, plugin_id).await
+    else {
+        return (vec![], vec![], vec![]);
+    };
+    let skill_strs: Vec<String> = assoc.skill_ids.iter().map(std::string::ToString::to_string).collect();
+    let agent_strs: Vec<String> = assoc.agent_ids.iter().map(std::string::ToString::to_string).collect();
+    let mcp_strs: Vec<String> = assoc.mcp_server_ids.iter().map(std::string::ToString::to_string).collect();
+    let skills = resolve_skill_uuids_to_slugs(pool, &skill_strs).await;
+    let agents = resolve_agent_uuids_to_slugs(pool, &agent_strs).await;
+    let mcps = resolve_mcp_server_uuids_to_slugs(pool, &mcp_strs).await;
+    (skills, agents, mcps)
+}
+
 pub async fn invalidate_marketplace_cache(pool: &Arc<PgPool>, user_id: &UserId) {
     if let Err(e) = repositories::mark_user_dirty(pool, user_id).await {
         tracing::warn!(error = %e, "Failed to mark user dirty after MCP mutation");

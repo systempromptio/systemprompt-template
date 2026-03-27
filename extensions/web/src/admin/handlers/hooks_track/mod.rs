@@ -10,11 +10,11 @@ mod processing;
 pub(crate) mod session_summary;
 
 use crate::admin::event_hub::EventHub;
-use crate::admin::repositories::{conversation_analytics, usage_aggregations, webhook};
-use crate::admin::types::webhook::{HookEvent, HookEventPayload, SkillTrackQuery};
+use crate::admin::repositories::webhook;
+use crate::admin::types::webhook::{HookEvent, HookEventPayload};
 use auth::extract_and_validate_jwt;
 use axum::{
-    extract::{Extension, Query, State},
+    extract::{Extension, State},
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
     Json,
@@ -184,76 +184,3 @@ async fn check_session_limit(
     None
 }
 
-pub(crate) async fn handle_skill_hook_track(
-    Extension(event_hub): Extension<EventHub>,
-    Extension(tier_cache): Extension<crate::admin::tier_enforcement::TierEnforcementCache>,
-    State(pool): State<Arc<PgPool>>,
-    headers: HeaderMap,
-    Query(query): Query<SkillTrackQuery>,
-    Json(raw): Json<serde_json::Value>,
-) -> Response {
-    let (user_id, _plugin_id, _jwt_token) = match extract_and_validate_jwt(&headers) {
-        Ok(ids) => ids,
-        Err(r) => return *r,
-    };
-
-    let (payload, _) = HookEventPayload::from_value(raw);
-
-    if matches!(&payload.event, HookEvent::PreToolUse(_)) {
-        return StatusCode::OK.into_response();
-    }
-
-    if let Some(resp) = check_event_limit(&tier_cache, pool.as_ref(), &user_id).await {
-        return resp;
-    }
-
-    let event_type = payload.event_name();
-    let session_id = SessionId::new(payload.session_id());
-    let tool_name = payload.tool_name();
-    let content_bytes = helpers::compute_content_bytes(&payload);
-    let today = chrono::Utc::now().date_naive();
-
-    if !session_id.as_str().is_empty() {
-        let entity_name = match &query.pid {
-            Some(pid) => format!("{pid}:{}", query.sid),
-            None => query.sid.clone(),
-        };
-        let _ = conversation_analytics::upsert_session_entity_link(
-            pool.as_ref(),
-            &user_id,
-            session_id.as_str(),
-            "skill",
-            &entity_name,
-            Some(&query.sid),
-        )
-        .await;
-
-        if let Some(ref pid) = query.pid {
-            let _ = conversation_analytics::upsert_session_entity_link(
-                pool.as_ref(),
-                &user_id,
-                session_id.as_str(),
-                "plugin",
-                pid,
-                None,
-            )
-            .await;
-        }
-    }
-
-    usage_aggregations::upsert_daily_aggregation(&usage_aggregations::DailyAggregationParams {
-        pool: pool.as_ref(),
-        user_id: &user_id,
-        date: &today,
-        event_type,
-        tool_name,
-        content_input_bytes: content_bytes.input,
-        content_output_bytes: content_bytes.output,
-        is_error: matches!(&payload.event, HookEvent::PostToolUseFailure(_)),
-    })
-    .await;
-
-    event_hub.notify(&user_id).await;
-
-    StatusCode::OK.into_response()
-}

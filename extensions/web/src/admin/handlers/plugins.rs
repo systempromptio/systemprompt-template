@@ -36,7 +36,7 @@ pub(crate) async fn list_plugins_handler(
     };
 
     let default_user_id = UserId::new("admin");
-    let user_id = query.user_id.as_ref().map_or_else(|| default_user_id.clone(), |s| UserId::new(s));
+    let user_id = query.user_id.as_ref().map_or_else(|| default_user_id.clone(), UserId::new);
     if let Ok(custom_skills) = repositories::list_user_skills(&pool, &user_id).await {
         if !custom_skills.is_empty() {
             let skill_infos: Vec<crate::admin::types::SkillInfo> = custom_skills
@@ -124,7 +124,7 @@ pub(crate) async fn create_skill_handler(
     Json(body): Json<CreateSkillRequest>,
 ) -> Response {
     let default_user_id = UserId::new("admin");
-    let user_id = query.user_id.as_ref().map_or_else(|| default_user_id.clone(), |s| UserId::new(s));
+    let user_id = query.user_id.as_ref().map_or_else(|| default_user_id.clone(), UserId::new);
     match repositories::create_user_skill(&pool, &user_id, &body).await {
         Ok(skill) => {
             let name = body.name.clone();

@@ -107,9 +107,6 @@ pub async fn delete_user(pool: &Arc<PgPool>, user_id: &UserId) -> Result<bool, s
     Ok(result.rows_affected() > 0)
 }
 
-/// Delete a user and ALL associated data in a single transaction.
-/// Tables with ON DELETE CASCADE from users(id) are handled automatically.
-/// All other tables with user_id require explicit deletion.
 pub async fn delete_user_complete(
     pool: &Arc<PgPool>,
     user_id: &UserId,
@@ -117,8 +114,6 @@ pub async fn delete_user_complete(
     let mut tx = pool.begin().await?;
     let uid = user_id.as_str();
 
-    // Tables without ON DELETE CASCADE from users(id) — explicit cleanup required.
-    // Uses runtime sqlx::query (not macro) to avoid offline cache requirements.
     let tables_with_user_id = [
         "skill_secrets",
         "user_plugins",
