@@ -85,6 +85,7 @@ pub async fn marketplace_context_middleware(
     next: Next,
 ) -> Response {
     use super::repositories;
+    use super::repositories::plugin_jwt::generate_plugin_token;
     use systemprompt::models::{Config, ProfileBootstrap};
 
     let site_url = Config::get().map_or_else(
@@ -126,11 +127,17 @@ pub async fn marketplace_context_middleware(
         rank_tier: String::from("bronze"),
         total_xp: 0,
         xp_progress_pct: 0.0,
-        has_completed_onboarding: false,
+        has_completed_onboarding: true,
         current_streak: 0,
         longest_streak: 0,
         next_rank_name: String::from("Apprentice"),
         xp_to_next_rank: 100,
+        plugin_token: generate_plugin_token(
+            &user_ctx.user_id,
+            user_ctx.email.as_ref(),
+            "cowork-bundle",
+        )
+        .unwrap_or_default(),
     };
 
     request.extensions_mut().insert(ctx);

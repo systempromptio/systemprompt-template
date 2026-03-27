@@ -286,21 +286,10 @@ Use the CLI to monitor rate limit events:
 systemprompt infra logs view --level warn --since 1h
 
 # View recent requests to identify patterns
-systemprompt infra logs request list --limit 20
+systemprompt infra logs request list -n 20
 
 # Full audit of a specific request
 systemprompt infra logs audit <request-id> --full
 ```
 
 Rate limit events are logged at the `warn` level. If you see sustained 429 errors, investigate whether the traffic is legitimate (increase limits) or abusive (keep limits, investigate source).
-
-## Troubleshooting
-
-| Issue | Diagnosis | Solution |
-|-------|-----------|----------|
-| **Legitimate users getting 429 errors** | Check which tier and endpoint is affected | Increase the relevant per-endpoint limit or tier multiplier |
-| **Agent orchestration failing** | A2A or MCP rate limits too low for orchestration depth | Increase `a2a` and `mcp` tier multipliers |
-| **Dashboard loading slowly** | Content or context endpoints throttled | Increase `content_per_second` and `contexts_per_second` |
-| **OAuth login failures** | OAuth rate limit hit during peak login | This is expected behavior — rate limiting protects against brute force. Users retry after the Retry-After period. |
-| **Burst traffic dropped** | Burst exceeds 3x sustained rate | Increase `burst_multiplier` cautiously, or increase the base rate |
-| **Rate limits not applying** | Check profile has `disabled: false` | Verify the production profile is loaded, not the local profile |

@@ -36,8 +36,17 @@ pub(crate) async fn browse_plugins_page(
         .filter_map(|ep| ep.plugin.base_plugin_id.clone())
         .collect();
 
+    let plugin_ids = if marketplace_groups.is_empty() {
+        discover_included_plugins(&services_path)
+    } else {
+        marketplace_groups
+            .iter()
+            .flat_map(|(_, ids)| ids.clone())
+            .collect()
+    };
+
     let (mut plugins, categories_set, already_added_count) =
-        collect_browse_plugins(&marketplace_groups, &services_path, &added_base_ids);
+        collect_browse_plugins(&plugin_ids, &services_path, &added_base_ids);
 
     plugins.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
@@ -60,11 +69,38 @@ pub(crate) async fn browse_plugins_page(
     super::render_page(&engine, "browse-plugins", &value, &user_ctx, &mkt_ctx)
 }
 
+#[derive(serde::Deserialize)]
+struct PluginsConfig {
+    #[serde(default)]
+    includes: Vec<String>,
+}
+
+fn discover_included_plugins(services_path: &std::path::Path) -> Vec<String> {
+    let config_path = services_path.join("plugins").join("config.yaml");
+    let content = match std::fs::read_to_string(&config_path) {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::error!(path = %config_path.display(), error = %e, "Plugin config not found");
+            return vec![];
+        }
+    };
+    let cfg: PluginsConfig = match serde_yaml::from_str(&content) {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::error!(path = %config_path.display(), error = %e, "Invalid plugin config YAML");
+            return vec![];
+        }
+    };
+    cfg.includes
+        .iter()
+        .filter_map(|s| s.split('/').next())
+        .filter(|id| *id != "systemprompt")
+        .map(String::from)
+        .collect()
+}
+
 fn collect_browse_plugins(
-    marketplace_groups: &[(
-        crate::admin::types::marketplaces::OrgMarketplace,
-        Vec<String>,
-    )],
+    plugin_ids: &[String],
     services_path: &std::path::Path,
     added_base_ids: &HashSet<String>,
 ) -> (Vec<BrowsePluginView>, HashSet<String>, usize) {
@@ -72,33 +108,31 @@ fn collect_browse_plugins(
     let mut plugins: Vec<BrowsePluginView> = Vec::new();
     let mut already_added_count = 0usize;
 
-    for (_mkt, plugin_ids) in marketplace_groups {
-        for pid in plugin_ids {
-            if pid == "systemprompt" {
-                continue;
-            }
-            let Ok(Some(detail)) = repositories::find_plugin_detail(services_path, pid) else {
-                continue;
-            };
-            if !detail.category.is_empty() {
-                categories_set.insert(detail.category.clone());
-            }
-            let already_added = added_base_ids.contains(pid);
-            if already_added {
-                already_added_count += 1;
-            }
-            plugins.push(BrowsePluginView {
-                plugin_id: pid.clone(),
-                name: detail.name,
-                description: detail.description,
-                category: detail.category,
-                version: detail.version,
-                skill_count: detail.skills.len(),
-                agent_count: detail.agents.len(),
-                mcp_count: detail.mcp_servers.len(),
-                already_added,
-            });
+    for pid in plugin_ids {
+        if pid == "systemprompt" {
+            continue;
         }
+        let Ok(Some(detail)) = repositories::find_plugin_detail(services_path, pid) else {
+            continue;
+        };
+        if !detail.category.is_empty() {
+            categories_set.insert(detail.category.clone());
+        }
+        let already_added = added_base_ids.contains(pid);
+        if already_added {
+            already_added_count += 1;
+        }
+        plugins.push(BrowsePluginView {
+            plugin_id: pid.clone(),
+            name: detail.name,
+            description: detail.description,
+            category: detail.category,
+            version: detail.version,
+            skill_count: detail.skills.len(),
+            agent_count: detail.agents.len(),
+            mcp_count: detail.mcp_servers.len(),
+            already_added,
+        });
     }
 
     (plugins, categories_set, already_added_count)

@@ -108,7 +108,7 @@ pub(crate) async fn set_marketplace_plugins_handler(
     Path(id): Path<String>,
     Json(req): Json<SetPluginsRequest>,
 ) -> impl IntoResponse {
-    match repositories::org_marketplaces::get_org_marketplace(&pool, &id).await {
+    match repositories::org_marketplaces::find_org_marketplace(&pool, &id).await {
         Ok(Some(_)) => {}
         Ok(None) => {
             return (
@@ -146,7 +146,7 @@ pub(crate) async fn sync_marketplace_handler(
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> impl IntoResponse {
-    let marketplace = match repositories::org_marketplaces::get_org_marketplace(&pool, &id).await {
+    let marketplace = match repositories::org_marketplaces::find_org_marketplace(&pool, &id).await {
         Ok(Some(m)) => m,
         Ok(None) => {
             return (
@@ -173,7 +173,7 @@ pub(crate) async fn sync_marketplace_handler(
             .into_response();
     };
 
-    match github_sync::sync_marketplace_from_github(&pool, &id, repo_url, &user_ctx.user_id).await {
+    match github_sync::sync_marketplace_from_github(&pool, &id, repo_url, user_ctx.user_id.as_str()).await {
         Ok(result) => (
             StatusCode::OK,
             Json(json!({
@@ -217,7 +217,7 @@ pub(crate) async fn publish_marketplace_handler(
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> impl IntoResponse {
-    let marketplace = match repositories::org_marketplaces::get_org_marketplace(&pool, &id).await {
+    let marketplace = match repositories::org_marketplaces::find_org_marketplace(&pool, &id).await {
         Ok(Some(m)) => m,
         Ok(None) => {
             return (
@@ -244,7 +244,7 @@ pub(crate) async fn publish_marketplace_handler(
             .into_response();
     };
 
-    match github_sync::publish_marketplace_to_github(&pool, &id, repo_url, &user_ctx.user_id).await
+    match github_sync::publish_marketplace_to_github(&pool, &id, repo_url, user_ctx.user_id.as_str()).await
     {
         Ok(result) => (
             StatusCode::OK,

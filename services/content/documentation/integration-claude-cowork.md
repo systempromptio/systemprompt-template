@@ -15,8 +15,10 @@ after_reading_this:
   - "Know that current restrictions are due to Anthropic's research preview, not systemprompt.io"
   - "See how access control, audit trails, and cost tracking work in collaborative contexts"
 related_docs:
-  - title: "Introduction"
-    url: "/documentation/introduction"
+  - title: "Integration: Claude Code"
+    url: "/documentation/integration-claude-code"
+  - title: "Distribution Channels"
+    url: "/documentation/distribution-channels"
   - title: "Agents"
     url: "/documentation/agents"
   - title: "Tool Governance"
@@ -105,6 +107,65 @@ Agents configured through the governance library are available in Cowork session
 - All agent activity is logged and attributed
 
 See [Agents](/documentation/agents) for agent configuration and [Plugins](/documentation/plugins) for how agents are bundled and distributed.
+
+## Installation
+
+Claude Cowork (Claude Desktop) does not currently support the one-line `plugin marketplace add` command used by Claude Code. Instead, the platform provides two installation methods: ZIP export for individual users and GitHub repository sync for enterprise teams.
+
+### Method 1: ZIP Export (Individual Users)
+
+The simplest approach for individual users or small teams. The platform exports all plugins as a single merged ZIP file that can be imported directly into Claude Desktop.
+
+1. Go to [My Marketplace](/admin/my/marketplace) or use the **Share & Install** menu (share icon in the header)
+2. Select the **Cowork** tab
+3. Click **Export for Cowork** to download the ZIP
+4. In Claude Desktop, go to **Settings > Plugins > Import** and upload the ZIP file
+
+The exported plugin contains all your skills, agents, MCP server configurations, and hooks merged into a single plugin bundle. Authentication tokens are embedded in the export, so MCP connections authenticate automatically.
+
+To update after changes, re-export and re-import. The new import replaces the previous version.
+
+### Method 2: GitHub Repository (Enterprise Teams)
+
+For enterprise deployment, the platform supports syncing marketplace content to a GitHub repository. This is the recommended approach for teams because it provides automatic updates, version control, and integration with corporate device management.
+
+**How it works:**
+
+1. The platform exports marketplace content as a git repository
+2. An administrator pushes this to a GitHub repository (public or private)
+3. Cowork is configured to load plugins from that GitHub repository
+4. Updates are distributed by pushing new commits
+
+**Why GitHub URLs only:** Claude Cowork currently requires plugins to be hosted on GitHub. Unlike Claude Code, which supports any git URL (including the platform's internal git server), Cowork validates that the plugin source is a GitHub repository. This is an Anthropic restriction, not a platform limitation.
+
+**Setting up GitHub sync:**
+
+```bash
+# Clone the marketplace locally
+git clone https://your-instance.example.com/api/public/marketplace/{user_id}.git marketplace-export
+
+# Push to your GitHub repository
+cd marketplace-export
+git remote add github https://github.com/your-org/claude-plugins.git
+git push github main
+```
+
+For automated sync, this can be scripted as a CI job that runs on a schedule or triggered by webhook when marketplace content changes.
+
+**Enterprise settings enforcement:** Anthropic's Enterprise plan provides managed plugin distribution and settings enforcement. The same result can be achieved without the Enterprise plan using corporate device management tools (MDM, GPO, etc.) to deploy the Claude Desktop configuration file pointing to the GitHub repository.
+
+### Comparison of Installation Methods
+
+| Feature | ZIP Export | GitHub Repository |
+|---------|-----------|-------------------|
+| Setup complexity | Low — download and import | Medium — requires GitHub repo |
+| Automatic updates | No — manual re-import | Yes — Cowork pulls from GitHub |
+| Team distribution | Per-user | Shared repository |
+| Authentication | Embedded in ZIP | Embedded in repository content |
+| Version control | Via marketplace versions | Git history |
+| Enterprise MDM compatible | No | Yes |
+
+Both methods distribute the same content. The choice depends on team size and update frequency.
 
 ## From Demo to Practice
 

@@ -39,8 +39,9 @@
                 <h2>Sign In</h2>
                 <p>
                     This is an open demo environment. Sign in with a passkey you created during registration.
-                    <strong>In production, this page would redirect to your organisation's SSO provider</strong> &mdash;
-                    users would never see a login form on this platform.
+                    WebAuthn passkeys are the default authentication mechanism &mdash; the library itself can act
+                    as the identity provider. Optionally, enterprise SSO providers can be integrated during implementation.
+                    <strong>Emails are not enabled in this demo environment.</strong>
                 </p>
 
                 <hr class="auth-divider">
@@ -60,17 +61,19 @@
                 <p>
                     If you have lost access to your passkey (new device, cleared browser data), use "Don't have a passkey?"
                     to receive a time-limited, single-use link that lets you create a new passkey on this device.
-                    In production, account recovery would be handled through your IdP's self-service portal.
+                    <strong>Note:</strong> Emails are not enabled in this demo, so magic link recovery is not available here.
                 </p>
 
                 <hr class="auth-divider">
 
-                <h2>Production: SSO &amp; IdP Integration</h2>
+                <h2>Enterprise Integration Options</h2>
+                <p>The library can act as the identity provider using WebAuthn passkeys, or optionally integrate with enterprise identity infrastructure during implementation. There are many options available for proper enterprise integration:</p>
+
                 <h3>SAML 2.0 / OpenID Connect</h3>
-                <p>The login page redirects to your IdP. After authentication, the IdP sends a signed assertion back with the user's identity, roles, and group memberships. The platform issues a local session without the user entering credentials here.</p>
+                <p>Optionally redirect authentication to your IdP (Okta, Azure AD, Google Workspace). After authentication, the IdP sends a signed assertion with the user's identity, roles, and group memberships. The platform issues a local session.</p>
 
                 <h3>SCIM Directory Sync</h3>
-                <p>User accounts are created and deactivated automatically from your corporate directory (Okta, Azure AD, Google Workspace). No manual provisioning required.</p>
+                <p>User accounts can be created and deactivated automatically from your corporate directory. No manual provisioning required.</p>
 
                 <h3>MCP Server Authentication</h3>
                 <p>

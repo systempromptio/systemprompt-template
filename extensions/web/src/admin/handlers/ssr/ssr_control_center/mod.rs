@@ -12,7 +12,7 @@ use crate::admin::templates::AdminTemplateEngine;
 use crate::admin::types::{DashboardQuery, MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, Query, State},
-    response::{IntoResponse, Response},
+    response::Response,
 };
 use serde_json::json;
 use sqlx::PgPool;
@@ -35,10 +35,6 @@ pub(crate) async fn control_center_page(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<DashboardQuery>,
 ) -> Response {
-    if !mkt_ctx.has_completed_onboarding {
-        return axum::response::Redirect::temporary("/admin/setup").into_response();
-    }
-
     let user_id = &user_ctx.user_id;
     let status_filter = query.status.as_str();
 

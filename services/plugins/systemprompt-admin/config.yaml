@@ -44,5 +44,7 @@ plugin:
     - management
   category: general
 
+  license: "proprietary"
   author:
     name: "foodles.com"
+    email: "help@foodles.com"

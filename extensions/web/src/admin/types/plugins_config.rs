@@ -30,7 +30,9 @@ pub struct PlatformPluginConfig {
     #[serde(flatten)]
     pub base: PluginConfig,
 
+    #[serde(default)]
     pub roles: Vec<String>,
+    #[serde(default)]
     pub depends: Vec<String>,
     #[serde(default)]
     pub variables: Vec<PluginVariableDef>,

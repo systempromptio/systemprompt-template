@@ -66,15 +66,17 @@ Because the marketplace is a git repository, it integrates natively with any ser
 
 ## Claude Code Integration
 
-Every plugin in the marketplace includes `.claude-plugin/plugin.json` metadata, making it directly compatible with Claude Code:
+The platform acts as its own git server. Claude Code's `plugin marketplace add` command clones the marketplace repository directly from the platform over HTTP using the standard git smart protocol. No external git hosting (GitHub, GitLab, etc.) is required.
 
 ```bash
-# Run Claude Code with a marketplace plugin
-claude --plugin /path/to/plugin
+# Install all plugins with a single command
+claude plugin marketplace add https://your-instance.example.com/api/public/marketplace/{user_id}.git
 
-# Combine multiple plugins
-claude --plugin plugin-a --plugin plugin-b
+# Or from inside a Claude Code conversation
+/plugin marketplace add https://your-instance.example.com/api/public/marketplace/{user_id}.git
 ```
+
+Every plugin in the marketplace includes `.claude-plugin/plugin.json` metadata, making it directly compatible with Claude Code. See [Integration: Claude Code](/documentation/integration-claude-code) for the full installation guide.
 
 Plugin bundles include:
 - `config.yaml` — Plugin manifest
@@ -83,6 +85,27 @@ Plugin bundles include:
 - `agents/` — Agent system prompt documents
 - `hooks/` — Event hook configurations
 - `scripts/` — Bash and PowerShell scripts
+
+## Claude Cowork Integration
+
+Claude Cowork (Claude Desktop) requires plugins to be hosted on GitHub. The platform supports two approaches:
+
+- **ZIP export** — Download a merged plugin from the admin dashboard and import into Claude Desktop. Best for individual users.
+- **GitHub repository sync** — Push marketplace content to a GitHub repository and configure Cowork to load from it. Best for enterprise teams with automatic updates.
+
+See [Integration: Claude Cowork](/documentation/integration-claude-cowork) for step-by-step instructions for both methods.
+
+## Enterprise Adaptability
+
+Both distribution approaches can be adapted to enterprise requirements:
+
+| Requirement | Claude Code | Claude Cowork |
+|-------------|-------------|---------------|
+| One-line install | Yes — internal git server | No — requires GitHub or ZIP import |
+| Automatic updates | `claude plugin marketplace update` | GitHub sync (automated) or manual re-import |
+| MDM/GPO deployment | Install command in onboarding scripts | GitHub repo URL in managed config files |
+| Air-gapped networks | Platform git server works on internal networks | ZIP export works offline |
+| Audit trail | Full — all tool calls logged | Full — same governance pipeline |
 
 ## Automatic Sync
 

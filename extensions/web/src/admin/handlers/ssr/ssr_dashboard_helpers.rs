@@ -64,7 +64,7 @@ pub(super) fn build_dashboard_template(
         "30d" => "30d",
         _ => "7d",
     };
-    let active_tab = if tab.is_empty() { "traffic" } else { tab };
+    let active_tab = if tab.is_empty() { "governance" } else { tab };
     let (top_pages_today, recent_mcp_errors) = build_page_lists(dash);
 
     DashboardTemplateData {
@@ -120,7 +120,7 @@ pub(super) fn build_dashboard_template(
         tab: active_tab.to_string(),
         tab_flags: TabFlags {
             tab_mcp: active_tab == "mcp",
-            tab_traffic: active_tab == "traffic" || (active_tab != "mcp" && active_tab != "report"),
+            tab_traffic: active_tab == "governance" || (active_tab != "mcp" && active_tab != "report"),
             tab_report: active_tab == "report",
         },
         active_tab: active_tab.to_string(),

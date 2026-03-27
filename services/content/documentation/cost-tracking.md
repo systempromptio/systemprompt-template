@@ -33,7 +33,7 @@ related_docs:
 
 **TL;DR:** The platform tracks every AI request by model, agent, provider, department, and user. Cost data is available through the CLI (`systemprompt analytics costs`) and the admin dashboard. Department-level chargeback, model usage distribution, and CSV export give finance teams the data they need. RBAC controls ensure analysts see only their own department's costs.
 
-> **See this in the presentation:** [Slide 16: Cost Visibility & Analytics](/documentation/presentation#slide-16)
+> **See this in the presentation:** [Slide 8: The Admin Dashboard](/documentation/presentation#slide-8)
 
 ## Why Cost Visibility Matters at Enterprise Scale
 
@@ -217,9 +217,6 @@ Departments are configured on user records. When a user makes an AI request, the
 ```bash
 # List users with departments
 systemprompt admin users list
-
-# Update a user's department
-systemprompt admin users update <user-id> --department "Commerce"
 ```
 
 ### Chargeback Report Example
@@ -339,14 +336,3 @@ Admins see the complete picture. The admin dashboard shows:
 - Cross-department comparison charts
 - Per-user cost data for any user
 - Model and provider spend totals for vendor negotiations
-
-## Troubleshooting
-
-| Issue | Diagnosis | Solution |
-|-------|-----------|----------|
-| **Cost data not appearing** | Analytics may not have processed recent requests | Check `systemprompt infra logs view --level error` for analytics pipeline errors |
-| **Department showing as "Unknown"** | Users without a department assigned | Update user records: `systemprompt admin users update <id> --department "Name"` |
-| **Cost estimates seem wrong** | Model pricing may not be current | Verify model pricing configuration matches your provider's current rates |
-| **Export missing data** | Date range may not cover the full period | Expand the date range and verify the time zone setting |
-| **Analyst sees no data** | RBAC filtering with no department assigned | Assign the analyst to a department in user management |
-| **Agent cost not attributed** | Agent name mismatch between config and requests | Verify agent names in `services/agents/` match the names in request logs |

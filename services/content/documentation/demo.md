@@ -33,6 +33,8 @@ related_docs:
 
 **TL;DR:** This is the presenter's playbook for the Foodles enterprise demo. Seven segments, 30 minutes, covering architecture through analytics. Every segment includes exact CLI commands to run, dashboard routes to navigate, talking points to deliver, and transitions to the next segment. Print this page or keep it on a second screen.
 
+> **Terminal-only user?** Follow the [Terminal Demo: Setup](/documentation/demo-terminal-setup) guide to run every demo using curl and CLI commands — no Cowork required.
+
 ---
 
 ## Before You Start (Pre-Demo Checklist)

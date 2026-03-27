@@ -161,9 +161,6 @@ systemprompt infra logs request list --limit 20
 
 # Full conversation context for a specific request
 systemprompt infra logs audit <request-id> --full
-
-# Agent-specific trace
-systemprompt infra logs trace list --agent customer_agent --status failed
 ```
 
 ### MCP Tool Scoping: Which Tools Each Agent Can Use
@@ -238,15 +235,6 @@ A2A communication supports both synchronous and asynchronous patterns:
 - **Async**: Agent A sends a request and continues processing. Agent B responds when ready. Used for long-running operations like compliance checks.
 - **Timeout controls**: Each cross-agent call has configurable timeouts to prevent cascading failures.
 
-```bash
-# Monitor cross-agent communication
-systemprompt infra logs trace list --status failed --since 1h
-
-# View A2A protocol cards
-systemprompt admin agents show customer_agent --card
-systemprompt admin agents show developer_agent --card
-```
-
 ## Security Boundaries Between Agents
 
 Each agent operates within its own security boundary:
@@ -269,42 +257,6 @@ Each agent operates within its own security boundary:
 - MCP server connections are per-agent, not shared
 - The Platform Agent's access to the `systemprompt` MCP server does not grant the Guest Agent the same access
 - Adding a new MCP server to one agent does not affect others
-
-## Monitoring the Agent Fleet
-
-### Health Checks
-
-```bash
-# Check all agent statuses
-systemprompt infra services status
-
-# Check specific agent
-systemprompt infra services status --agent customer_agent
-
-# View agent logs
-systemprompt infra logs view --agent associate_agent --since 1h
-```
-
-### Performance Metrics
-
-```bash
-# Agent-level analytics
-systemprompt analytics agents overview
-
-# Conversation metrics per agent
-systemprompt analytics conversations --agent developer_agent
-
-# Tool usage per agent
-systemprompt analytics tools stats --agent partner_agent
-```
-
-### Alerting
-
-Configure hooks to fire on agent events:
-
-- `PostSessionStart` -- track new conversations
-- `PostToolUse` / `PostToolUseFailure` -- monitor tool reliability
-- Custom hooks for business-specific events (e.g., escalation to human agent)
 
 ## Next Steps
 

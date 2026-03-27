@@ -1,3 +1,4 @@
+pub mod access_control;
 pub mod admin_traffic_reports;
 pub mod agents;
 pub mod apm_metrics;

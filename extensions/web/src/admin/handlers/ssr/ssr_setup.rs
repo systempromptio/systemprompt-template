@@ -1,7 +1,7 @@
 use crate::admin::templates::AdminTemplateEngine;
 use crate::admin::types::{MarketplaceContext, UserContext};
 use axum::extract::{Extension, Query};
-use axum::response::{IntoResponse, Response};
+use axum::response::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -29,11 +29,7 @@ pub(crate) async fn setup_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     Query(query): Query<SetupQuery>,
 ) -> Response {
-    if mkt_ctx.has_completed_onboarding {
-        return axum::response::Redirect::temporary("/control-center").into_response();
-    }
-
-    let phase1_complete = mkt_ctx.has_completed_onboarding;
+    let phase1_complete = mkt_ctx.total_plugins > 0;
     let phase2_complete = phase1_complete && mkt_ctx.total_plugins > 0;
     let phase3_complete = phase2_complete && mkt_ctx.total_skills > 0;
     let just_verified = query.verified.is_some();
@@ -43,7 +39,7 @@ pub(crate) async fn setup_page(
             number: 1,
             title: format!("Connect Claude to {}", mkt_ctx.site_url),
             description: "The essential first step. Connect your Claude surface so skills, plugins, and analytics actually work. Without this, nothing else matters.",
-            guide_url: "/platform/connecting",
+            guide_url: "/documentation/integration-claude-code",
             action_url: "",
             action_label: "",
             complete: phase1_complete,
@@ -53,7 +49,7 @@ pub(crate) async fn setup_page(
             number: 2,
             title: String::from("Browse and Fork Plugins"),
             description: "Explore the plugin catalogue. Fork industry-specific plugins to build your personalised skill library with proven defaults.",
-            guide_url: "/platform/forking-plugins",
+            guide_url: "/documentation/browse-plugins",
             action_url: "/admin/browse/plugins/",
             action_label: "Browse Plugins",
             complete: phase2_complete,
@@ -63,7 +59,7 @@ pub(crate) async fn setup_page(
             number: 3,
             title: String::from("Customize Your Skills"),
             description: "Use the Skill Manager MCP server to edit forked skills, create new ones, and build a library that matches how your team works.",
-            guide_url: "/platform/skills/editing",
+            guide_url: "/documentation/skills",
             action_url: "/admin/my/skills/",
             action_label: "My Skills",
             complete: phase3_complete,
@@ -73,7 +69,7 @@ pub(crate) async fn setup_page(
             number: 4,
             title: String::from("Monitor, Report, and Improve"),
             description: "Track skill effectiveness with analytics. Identify what is working, retire what is not, and iterate your way to a world-class skill library.",
-            guide_url: "/platform/control-center",
+            guide_url: "/documentation/dashboard",
             action_url: "/control-center",
             action_label: "Control Center",
             complete: false,

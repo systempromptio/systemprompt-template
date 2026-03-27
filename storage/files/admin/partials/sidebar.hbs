@@ -6,12 +6,10 @@
     </a>
     <nav aria-label="Admin navigation">
         <h2 class="nav-label">General</h2>
-        {{#unless marketplace.has_completed_onboarding}}
         <a href="/admin/setup"{{#if (eq page "setup")}} class="active" aria-current="page"{{/if}}>
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8z"/><path d="M11.28 5.72a.75.75 0 010 1.06l-4 4a.75.75 0 01-1.06 0l-2-2a.75.75 0 111.06-1.06L6.75 9.19l3.47-3.47a.75.75 0 011.06 0z"/></svg>
             Setup Guide
         </a>
-        {{/unless}}
         <a href="/control-center"{{#if (eq page "control-center")}} class="active" aria-current="page"{{/if}}>
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM8 4v4l3 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="8" r="1.5"/></svg>
             Control Center
@@ -37,6 +35,14 @@
         <a href="/admin/events/"{{#if (eq page "events")}} class="active" aria-current="page"{{/if}}>
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12M2 6h10M2 9h12M2 12h8"/></svg>
             Events
+        </a>
+        <a href="/admin/access-control"{{#if (eq page "access-control")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L2 4v4c0 3.3 2.6 6.4 6 7 3.4-.6 6-3.7 6-7V4L8 1zm0 2.2L12 5.5v2.8c0 2.4-1.7 4.6-4 5.2-2.3-.6-4-2.8-4-5.2V5.5L8 3.2z"/></svg>
+            Access Control
+        </a>
+        <a href="/admin/governance"{{#if (eq page "governance")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm0 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM8 3a.75.75 0 01.75.75v3.5h2.5a.75.75 0 010 1.5h-3.25A.75.75 0 017.25 8V3.75A.75.75 0 018 3z"/></svg>
+            Governance
         </a>
         {{/if}}
         <h2 class="nav-label">My Workspace</h2>

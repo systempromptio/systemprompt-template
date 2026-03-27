@@ -203,6 +203,7 @@ pub(crate) fn render_page(
                 "longest_streak": mkt_ctx.longest_streak,
                 "next_rank_name": mkt_ctx.next_rank_name,
                 "xp_to_next_rank": mkt_ctx.xp_to_next_rank,
+                "plugin_token": mkt_ctx.plugin_token,
             }),
         );
         obj.entry("page_stats".to_string())

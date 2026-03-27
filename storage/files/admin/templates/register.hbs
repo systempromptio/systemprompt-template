@@ -39,8 +39,9 @@
                 <h2>User Registration</h2>
                 <p>
                     This is an open demo environment. Registration creates a real account with a WebAuthn passkey
-                    bound to your device. <strong>In production, user provisioning would be restricted</strong> to your
-                    organisation's identity provider via SAML 2.0, OpenID Connect, or SCIM directory sync.
+                    bound to your device. WebAuthn passkeys are the default authentication mechanism &mdash; the library
+                    itself can act as the identity provider, or optionally integrate with enterprise SSO providers
+                    during implementation. <strong>Emails are not enabled in this demo environment.</strong>
                 </p>
 
                 <hr class="auth-divider">
@@ -57,12 +58,14 @@
 
                 <hr class="auth-divider">
 
-                <h2>Production: Enterprise IdP Integration</h2>
+                <h2>Enterprise Integration Options</h2>
+                <p>The library can act as the identity provider using WebAuthn passkeys, or optionally integrate with enterprise identity infrastructure during implementation. There are many options available:</p>
+
                 <h3>SAML 2.0 / OpenID Connect</h3>
-                <p>Your IdP (Okta, Azure AD, Google Workspace) authenticates users. The platform receives a signed assertion with the user's identity and roles. No credentials are entered on this platform.</p>
+                <p>Optionally redirect authentication to your IdP (Okta, Azure AD, Google Workspace). The platform receives a signed assertion with the user's identity and roles.</p>
 
                 <h3>SCIM Directory Sync</h3>
-                <p>Users and groups are automatically provisioned and deprovisioned from your corporate directory. When someone joins, they appear here. When they leave, access is revoked immediately.</p>
+                <p>Users and groups can be automatically provisioned and deprovisioned from your corporate directory. When someone joins, they appear here. When they leave, access is revoked immediately.</p>
 
                 <h3>Just-in-Time (JIT) Provisioning</h3>
                 <p>On first SSO login, accounts are created automatically with roles derived from IdP group memberships. No pre-provisioning required.</p>
@@ -191,12 +194,21 @@
             };
         }
 
-        async function makeRequest(url, method, body) {
-            const options = {
-                method,
-                headers: { 'Content-Type': 'application/json' }
+        function preparePublicKeyCredentialRequestOptions(options) {
+            return {
+                ...options,
+                challenge: base64urlToArrayBuffer(options.challenge),
+                allowCredentials: options.allowCredentials?.map(cred => ({
+                    ...cred,
+                    id: base64urlToArrayBuffer(cred.id)
+                }))
             };
+        }
+
+        async function makeRequest(url, method, body) {
+            const options = { method };
             if (body) {
+                options.headers = { 'Content-Type': 'application/json' };
                 options.body = JSON.stringify(body);
             }
             const response = await fetch(url, options);
@@ -255,7 +267,60 @@
             form.querySelector('button[type="submit"]').disabled = true;
         }
 
-        // --- Form Submit: WebAuthn Registration ---
+        // --- Auto-login after passkey creation ---
+
+        async function autoLogin(email) {
+            try {
+                showLoading('Signing you in...');
+                const startResponse = await makeRequest(
+                    WEBAUTHN_BASE + '/auth/start?email=' + encodeURIComponent(email), 'POST'
+                );
+                const publicKeyOptions = preparePublicKeyCredentialRequestOptions(startResponse.data.publicKey);
+                const credential = await navigator.credentials.get({ publicKey: publicKeyOptions });
+                if (!credential) throw new Error('Authentication was cancelled');
+                showLoading('Verifying...');
+                const finishResponse = await makeRequest(WEBAUTHN_BASE + '/auth/finish', 'POST', {
+                    challenge_id: startResponse.data.challenge_id,
+                    credential: {
+                        id: credential.id,
+                        rawId: Array.from(new Uint8Array(credential.rawId)),
+                        response: {
+                            authenticatorData: Array.from(new Uint8Array(credential.response.authenticatorData)),
+                            clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
+                            signature: Array.from(new Uint8Array(credential.response.signature)),
+                            userHandle: credential.response.userHandle
+                                ? Array.from(new Uint8Array(credential.response.userHandle))
+                                : null,
+                        },
+                        type: credential.type,
+                    },
+                });
+
+                // PKCE redirect
+                const codeVerifier = generateRandomString(64);
+                const codeChallenge = await generateCodeChallenge(codeVerifier);
+                const csrfState = generateRandomString(32);
+                localStorage.setItem('pkce_code_verifier', codeVerifier);
+                localStorage.setItem('pkce_csrf_state', csrfState);
+                localStorage.setItem('login_redirect', '/admin/');
+                showLoading('Redirecting...');
+                window.location.href = WEBAUTHN_BASE + '/complete?' + new URLSearchParams({
+                    user_id: finishResponse.data.user_id,
+                    response_type: 'code',
+                    client_id: CLIENT_ID,
+                    redirect_uri: window.location.origin + LOGIN_PATH,
+                    scope: 'user',
+                    state: csrfState,
+                    code_challenge: codeChallenge,
+                    code_challenge_method: 'S256',
+                }).toString();
+            } catch (_error) {
+                showLoading('Passkey created! Redirecting to sign in...');
+                setTimeout(function() { window.location.href = LOGIN_PATH; }, 2000);
+            }
+        }
+
+        // --- Form Submit: Registration via link/start + link/finish ---
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -270,17 +335,31 @@
             }
 
             try {
+                showLoading('Creating your account...');
+
+                // Step 1: Create user and get setup token
+                const regResponse = await fetch('/admin/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: displayName, email: email, role: role }),
+                });
+                const regData = await regResponse.json();
+                if (!regResponse.ok) {
+                    throw new Error(regData.error || regData.message || 'Registration failed');
+                }
+
                 showLoading('Creating your passkey...');
 
-                // Step 1: Start WebAuthn registration
-                const username = email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+                // Step 2: Start credential linking with setup token (GET endpoint)
+                const setupToken = regData.token;
                 const startResponse = await makeRequest(
-                    WEBAUTHN_BASE + '/register/start?username=' + encodeURIComponent(username) + '&email=' + encodeURIComponent(email),
-                    'POST'
+                    WEBAUTHN_BASE + '/link/start?token=' + encodeURIComponent(setupToken),
+                    'GET'
                 );
 
-                // Step 2: Create credential with browser WebAuthn API
-                const publicKeyOptions = preparePublicKeyCredentialCreationOptions(startResponse.data.publicKey);
+                const publicKeyOptions = preparePublicKeyCredentialCreationOptions(
+                    startResponse.data.challenge ? startResponse.data.challenge.publicKey : startResponse.data.publicKey
+                );
                 const credential = await navigator.credentials.create({
                     publicKey: publicKeyOptions
                 });
@@ -291,11 +370,10 @@
 
                 showLoading('Finishing registration...');
 
-                // Step 3: Finish registration
-                const finishResponse = await makeRequest(WEBAUTHN_BASE + '/register/finish', 'POST', {
-                    challenge_id: startResponse.challengeId,
-                    username: username,
-                    email: email,
+                // Step 3: Finish credential linking with setup token
+                await makeRequest(WEBAUTHN_BASE + '/link/finish', 'POST', {
+                    challenge_id: startResponse.data.challenge_id || startResponse.challengeId,
+                    token: setupToken,
                     credential: {
                         id: credential.id,
                         rawId: Array.from(new Uint8Array(credential.rawId)),
@@ -314,29 +392,8 @@
                     role: role
                 }));
 
-                // Step 5: Generate PKCE params and complete OAuth flow
-                const codeVerifier = generateRandomString(64);
-                const codeChallenge = await generateCodeChallenge(codeVerifier);
-                const csrfState = generateRandomString(32);
-
-                localStorage.setItem('pkce_code_verifier', codeVerifier);
-                localStorage.setItem('pkce_csrf_state', csrfState);
-                localStorage.setItem('login_redirect', '/admin/');
-
-                showLoading('Redirecting...');
-
-                const completeParams = new URLSearchParams({
-                    user_id: finishResponse.data.user_id,
-                    response_type: 'code',
-                    client_id: CLIENT_ID,
-                    redirect_uri: window.location.origin + LOGIN_PATH,
-                    scope: 'user',
-                    state: csrfState,
-                    code_challenge: codeChallenge,
-                    code_challenge_method: 'S256'
-                });
-
-                window.location.href = WEBAUTHN_BASE + '/complete?' + completeParams.toString();
+                // Step 5: Auto-login with the new passkey
+                await autoLogin(email);
 
             } catch (error) {
                 if (error.name === 'NotAllowedError') {

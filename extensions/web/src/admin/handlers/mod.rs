@@ -1,4 +1,6 @@
+pub(crate) mod access_control;
 pub(crate) mod demo_register;
+pub(crate) mod public_register;
 pub(crate) mod export_zip;
 pub(crate) mod hooks_track;
 pub(crate) mod magic_link;
@@ -7,6 +9,7 @@ mod marketplace;
 pub(crate) mod marketplace_git;
 pub(crate) mod marketplace_json;
 pub(crate) mod marketplace_upload;
+pub(crate) mod org_marketplaces;
 mod plugins;
 mod plugins_crud;
 mod plugins_env;

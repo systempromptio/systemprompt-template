@@ -74,6 +74,19 @@ docs_sidebar:
       - label: "Questions & Answers"
         href: "/documentation/objections"
 
+  - title: "Terminal Demos"
+    links:
+      - label: "Setup & Authentication"
+        href: "/documentation/demo-terminal-setup"
+      - label: "Agent Messaging"
+        href: "/documentation/demo-terminal-agents"
+      - label: "Audit Trails & Costs"
+        href: "/documentation/demo-terminal-audit"
+      - label: "Governance API"
+        href: "/documentation/demo-terminal-governance"
+      - label: "MCP Access Tracking"
+        href: "/documentation/demo-terminal-mcp"
+
   - title: "DevOps & Deployment"
     links:
       - label: "Architecture Overview"

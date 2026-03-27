@@ -28,6 +28,8 @@ related_docs:
 
 This demo uses Cowork (Claude Code) with the **enterprise-demo** plugin installed. The `use-dangerous-secret` skill instructs Claude to write a file containing a plaintext API key (`sk-ant-demo-FAKE12345678901234567890`). The PreToolUse governance hook detects the secret pattern and **blocks the tool call before it executes**. The denial is fully logged.
 
+> **Terminal alternative:** [Agent Messaging](/documentation/demo-terminal-agents) covers this same path using CLI commands.
+
 **Cost:** This makes one real AI inference call (the model still processes the message, but the tool call is blocked by the governance hook).
 
 ---

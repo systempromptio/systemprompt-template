@@ -28,6 +28,8 @@ related_docs:
 
 This demo uses Cowork (Claude Code) with the **enterprise-demo** plugin installed. The `example-web-search` skill instructs Claude to use the WebSearch tool. The PreToolUse governance hook evaluates the tool input, finds no policy violations, and allows the call. The full request is governed, traced, and logged.
 
+> **Terminal alternative:** [Agent Messaging](/documentation/demo-terminal-agents) covers this same path using CLI commands.
+
 **Cost:** This makes one real AI inference call plus one web search.
 
 ---

@@ -123,9 +123,6 @@ The build pipeline is deterministic — given the same source, it produces the s
 After deployment, verify the platform is running:
 
 ```bash
-# Quick health check
-curl http://localhost:3000/health/live
-
 # Error check
 systemprompt infra logs view --level error --since 5m
 ```

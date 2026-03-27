@@ -162,25 +162,3 @@ unlock_percentage = (users_who_unlocked / total_ranked_users) * 100
 Where `total_ranked_users` is the count of users in the `employee_ranks` table (users who have at least one recorded usage event). This gives administrators insight into which achievements are common versus rare, helping identify engagement gaps.
 
 For example, if "First Spark" shows 95% but "Week Warrior" shows 8%, it indicates most users try the platform but few maintain daily usage habits.
-
-## Troubleshooting
-
-**No achievements appear** — The achievements data loads asynchronously. If nothing renders, check the browser console for JavaScript errors. The data endpoint may not be returning results if no users have any recorded events.
-
-**Unlock percentages are all 0%** — The gamification data needs to be recalculated. Visit the Leaderboard page (which triggers recalculation) or use the `POST /admin/gamification/recalculate` API endpoint.
-
-**An achievement should be unlocked but isn't** — Achievement checks run during gamification recalculation. Visit the Leaderboard page to trigger a full recalculation, then return to Achievements. Also verify the user's events are being recorded under the correct user ID.
-
-**Time-based achievements (Early Bird, Night Owl, Weekend Warrior) not unlocking** — These achievements check the `created_at` timestamp of usage events. The time zone used is the database server's UTC time, not the user's local time. A user working at 8 AM local time might qualify for "Early Bird" if their time zone offset places them before 7 AM UTC.
-
----
-
-## Enterprise Achievement Analytics
-
-The achievement system extends to enterprise-scale engagement tracking. Capabilities available for scoping in the Phase 1 PRD include:
-
-- **Department-scoped achievement analysis** — track engagement patterns by department and identify teams with high or low AI adoption
-- **Custom achievement definitions** — define achievements aligned to organisational goals (e.g., "completed first revenue forecast", "used 5 different skills this week")
-- **Internal data integration** — trigger achievements based on events from Foodles's existing systems, not just platform usage
-- **Engagement dashboards** — visualise achievement unlock rates, streaks, and adoption curves across the organisation
-- **Export and reporting** — achievement data available via CSV export for integration with HR and engagement tools

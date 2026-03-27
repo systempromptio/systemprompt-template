@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     middleware as axum_middleware,
-    routing::{get, post, put},
+    routing::{delete, get, post, put},
     Router,
 };
 use sqlx::PgPool;
@@ -21,6 +21,18 @@ pub(crate) fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<
         .route("/users/{user_id}/usage", get(handlers::user_usage_handler))
         .route("/events", get(handlers::list_events_handler))
         .route("/jobs", get(handlers::list_jobs_handler))
+        .route(
+            "/access-control",
+            get(handlers::access_control::list_access_rules_handler),
+        )
+        .route(
+            "/access-control/departments",
+            get(handlers::access_control::access_control_departments_handler),
+        )
+        .route(
+            "/org-marketplaces",
+            get(handlers::org_marketplaces::list_org_marketplaces_handler),
+        )
         .with_state(read_pool.clone());
 
     let writes = Router::new()
@@ -40,6 +52,35 @@ pub(crate) fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<
         .route(
             "/demo-register",
             post(handlers::demo_register::create_demo_user_handler),
+        )
+        .route(
+            "/access-control/entity/{entity_type}/{entity_id}",
+            put(handlers::access_control::update_entity_rules_handler),
+        )
+        .route(
+            "/access-control/bulk",
+            put(handlers::access_control::bulk_assign_handler),
+        )
+        .route(
+            "/org-marketplaces",
+            post(handlers::org_marketplaces::create_org_marketplace_handler),
+        )
+        .route(
+            "/org-marketplaces/{id}",
+            put(handlers::org_marketplaces::update_org_marketplace_handler)
+                .delete(handlers::org_marketplaces::delete_org_marketplace_handler),
+        )
+        .route(
+            "/org-marketplaces/{id}/plugins",
+            put(handlers::org_marketplaces::set_marketplace_plugins_handler),
+        )
+        .route(
+            "/org-marketplaces/{id}/sync",
+            post(handlers::org_marketplaces::sync_marketplace_handler),
+        )
+        .route(
+            "/org-marketplaces/{id}/publish",
+            post(handlers::org_marketplaces::publish_marketplace_handler),
         )
         .with_state(write_pool.clone());
 

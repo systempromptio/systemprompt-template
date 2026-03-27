@@ -28,6 +28,8 @@ related_docs:
 
 This page walks through exactly what happens in the governance pipeline for both demo paths, with CLI commands to inspect every layer. Run the allowed path and blocked path demos first, then use the commands below to examine the results.
 
+> **Running from the terminal?** The [Governance API](/documentation/demo-terminal-governance) page shows the same governance pipeline using direct curl calls — no Cowork required.
+
 ---
 
 ## Setup: The two skills

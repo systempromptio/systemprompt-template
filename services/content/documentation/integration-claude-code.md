@@ -14,16 +14,18 @@ after_reading_this:
   - "Know how personalised marketplaces distribute governed capabilities to developers"
   - "See how governance is applied at the tool call level without disrupting developer workflow"
 related_docs:
-  - title: "Introduction to the Platform"
-    url: "/documentation/introduction"
-  - title: "Plugins"
-    url: "/documentation/plugins"
+  - title: "Integration: Claude Cowork"
+    url: "/documentation/integration-claude-cowork"
   - title: "Distribution Channels"
     url: "/documentation/distribution-channels"
+  - title: "Plugins"
+    url: "/documentation/plugins"
   - title: "Marketplace"
     url: "/documentation/marketplace"
   - title: "Tool Governance"
     url: "/documentation/tool-governance"
+  - title: "Introduction to the Platform"
+    url: "/documentation/introduction"
 ---
 
 # Integration: Claude Code (CLI)
@@ -95,13 +97,70 @@ This governance is transparent to the developer. They use Claude Code normally �
 
 See [Tool Governance](/documentation/tool-governance) for access control configuration and [Hooks](/documentation/hooks) for event-driven automation.
 
+## Installation
+
+The platform serves each user's marketplace as a git repository over HTTP. Claude Code's native `plugin marketplace add` command clones this repository and registers the plugins automatically.
+
+### One-Line Install
+
+Every user gets a personalised install URL. Find it in the **Share & Install** menu (the share icon in the header of any admin page) or on the [Control Center](/admin/) onboarding panel.
+
+**From your terminal:**
+
+```bash
+claude plugin marketplace add https://your-instance.example.com/api/public/marketplace/{user_id}.git
+```
+
+**From inside a Claude Code conversation:**
+
+```
+/plugin marketplace add https://your-instance.example.com/api/public/marketplace/{user_id}.git
+```
+
+Both commands do the same thing. The URL contains the user's ID, so the marketplace content is personalised to that user's role, department, and plugin selections.
+
+### How the Internal Git Server Works
+
+The platform acts as its own git server. When Claude Code runs `plugin marketplace add`, it performs a standard `git clone` against the platform's HTTP endpoint. The platform generates a bare git repository on the fly from the user's current marketplace state:
+
+1. The endpoint receives a git smart protocol request (`info/refs` + `upload-pack`)
+2. The platform assembles the user's plugins, skills, agents, hooks, and scripts from the database and file system
+3. A temporary bare git repository is created with the assembled content
+4. Git serves the repository to the client using the standard upload-pack protocol
+
+This means the install URL works with any git client, not just Claude Code. You can `git clone` the URL directly to inspect the contents.
+
+### Updating
+
+To pull the latest changes after an administrator updates plugins or skills:
+
+```bash
+claude plugin marketplace update
+```
+
+Or clone the URL again to get a fresh copy.
+
+### Enterprise Deployment
+
+For rolling out to a team, administrators can distribute the install command through any internal channel — Slack, email, onboarding docs, or device management. Each user's URL is unique and contains their personalised marketplace.
+
+For automated deployment, the install URL can be included in developer onboarding scripts or dotfile repositories. The platform's git endpoint requires no authentication beyond the user ID in the URL.
+
 ## What Developers Experience
 
 From a developer's perspective, the integration is straightforward:
 
-1. **Install the plugin** provided by their organisation
+1. **Run the install command** provided by their organisation (one line)
 2. **Use Claude Code as normal** — governed skills and tools are available alongside standard capabilities
 3. **No manual authentication** — the shared identity system handles auth transparently
 4. **No configuration required** — governance policies are applied by the organisation, not by the developer
 
 The developer gets the AI capabilities they need. The organisation gets visibility, control, and audit trails. Neither side has to compromise.
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `Failed to clone marketplace repository` | Server error during export | Check the platform logs with `systemprompt infra logs view --level error --since 1h` |
+| Empty plugin list after install | User has no plugins selected | Go to [My Plugins](/admin/my/plugins/) and select plugins |
+| `The requested URL returned error: 500` | Plugin configuration error | Check that all plugin `config.yaml` files have required fields (`author.email`, `license`) |

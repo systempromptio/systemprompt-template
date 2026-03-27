@@ -208,6 +208,8 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
             get(handlers::ssr::marketplace_versions_page),
         )
         .route("/my/activity", get(handlers::ssr::my_activity_page))
+        .route("/governance", get(handlers::ssr::governance_page))
+        .route("/access-control", get(handlers::ssr::access_control_page))
         .route("/setup", get(handlers::ssr::setup_page))
         .route("/demo-register", get(handlers::ssr::demo_register_page))
         .route("/auth/me", get(middleware::auth_me_handler))
@@ -237,6 +239,10 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
         .route(
             "/api/magic-link/validate",
             post(handlers::magic_link::validate_magic_link),
+        )
+        .route(
+            "/api/register",
+            post(handlers::public_register::public_register_handler),
         )
         .layer(Extension(engine))
         .with_state(pool)

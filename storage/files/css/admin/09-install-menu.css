@@ -150,5 +150,66 @@
     padding: var(--sp-space-1) var(--sp-space-3);
     font-size: var(--sp-text-xs);
 }
+.install-token-label {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-text-secondary);
+    margin-bottom: var(--sp-space-1);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.install-token-box {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-sm);
+    padding: var(--sp-space-2) var(--sp-space-3);
+}
+.install-token-box .btn {
+    white-space: nowrap;
+    padding: var(--sp-space-1) var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+}
+.install-token-box .btn-icon {
+    background: none;
+    border: none;
+    padding: var(--sp-space-1);
+    cursor: pointer;
+    color: var(--sp-text-secondary);
+    display: flex;
+    align-items: center;
+}
+.install-token-box .btn-icon:hover {
+    color: var(--sp-text-primary);
+}
+.install-code-block {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-sm);
+    padding: var(--sp-space-2) var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+    font-family: var(--sp-font-mono);
+    color: var(--sp-text-primary);
+    overflow-x: auto;
+    margin: 0;
+    white-space: pre;
+}
+.install-code-block code {
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+}
+.install-learn-more {
+    display: inline-block;
+    margin-top: var(--sp-space-2);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-primary);
+    text-decoration: none;
+}
+.install-learn-more:hover {
+    text-decoration: underline;
+}
 
 }

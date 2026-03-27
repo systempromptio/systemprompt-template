@@ -1,7 +1,7 @@
 plugin:
   id: enterprise-demo
-  name: "enterprise-demo"
-  description: "Enterprise governance demo — web search and secret detection policies with HTTP hooks"
+  name: "Enterprise Governance Demo"
+  description: "Governance examples — a dangerous skill blocked by policy hooks, and a simple web search skill demonstrating tool governance"
   version: "2.0.0"
   enabled: true
 
@@ -29,7 +29,9 @@ plugin:
 
   keywords:
     []
-  category: general
+  category: governance
 
+  license: "proprietary"
   author:
     name: "Foodles"
+    email: "help@foodles.com"

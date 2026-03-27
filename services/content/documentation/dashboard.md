@@ -23,6 +23,10 @@ related_docs:
     url: "/documentation/jobs"
   - title: "Plugins"
     url: "/documentation/plugins"
+  - title: "Integration: Claude Code"
+    url: "/documentation/integration-claude-code"
+  - title: "Integration: Claude Cowork"
+    url: "/documentation/integration-claude-cowork"
   - title: "Presentation"
     url: "/documentation/presentation"
 ---
@@ -131,6 +135,8 @@ The dashboard links to other admin pages:
 
 - Click **View all events** in the live activity feed to go to the [Events](/documentation/events) page
 - Use the sidebar to navigate to [Users](/documentation/users), [Jobs](/documentation/jobs), and other management pages
+- The **Share & Install** menu (share icon in the header) provides install commands for [Claude Code](/documentation/integration-claude-code) and export options for [Claude Cowork](/documentation/integration-claude-cowork)
+- New users see an onboarding panel with step-by-step installation guides for all three Claude surfaces (Claude Code, Cowork, and claude.ai)
 
 ## Enterprise Cost & Usage Visibility
 

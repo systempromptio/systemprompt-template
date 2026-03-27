@@ -134,7 +134,12 @@ fn load_all_plugin_configs(
         })?;
         let plugin_file: PlatformPluginConfigFile = match serde_yaml::from_str(&content) {
             Ok(p) => p,
-            Err(_) => continue,
+            Err(e) => {
+                return Err(MarketplaceError::Internal(format!(
+                    "Failed to parse {}: {e}",
+                    config_path.display()
+                )));
+            }
         };
         let dir_name = entry.file_name().to_string_lossy().to_string();
         plugins.push((dir_name, plugin_file.plugin));

@@ -31,7 +31,7 @@ related_docs:
 
 **TL;DR:** Every MCP tool call in the platform is governed, logged, and auditable. OAuth scoping controls which agents can use which tools. Execution logging captures every invocation with status, timing, and context. Event hooks fire on tool success and failure, enabling real-time alerts and compliance checks. Rate limiting prevents abuse. This page covers the full governance lifecycle of a tool call from authorization to audit.
 
-> **See this in the presentation:** [Slide 14: Every Tool Call Governed](/documentation/presentation#slide-14)
+> **See this in the presentation:** [Slide 9: Audit Trail & Access Control](/documentation/presentation#slide-9)
 
 ## Overview
 
@@ -184,11 +184,8 @@ systemprompt infra logs tools list --status error
 # Filter by MCP server
 systemprompt infra logs tools list --server systemprompt
 
-# Filter by agent
-systemprompt infra logs tools list --agent <agent-name>
-
 # Combine filters
-systemprompt infra logs tools list --agent <agent-name> --status error --since 1h
+systemprompt infra logs tools list --status error --since 1h
 
 # View detailed log for a specific request
 systemprompt infra logs audit <request-id> --full
@@ -210,12 +207,6 @@ Tool execution logs are retained according to the platform's log retention polic
 ```bash
 # List all tools available to a specific agent
 systemprompt admin agents tools <agent-name> --detailed
-
-# List all tools across all agents
-systemprompt admin agents tools --all
-
-# Show which agents can access a specific tool
-systemprompt admin agents tools --tool list_agents
 ```
 
 ### How Agent-Tool Mapping Works
@@ -330,14 +321,13 @@ Hooks never block the tool call response. A slow hook does not delay the agent's
 
 ```bash
 # View hook execution history
-systemprompt infra logs view --source hooks --since 1h
+systemprompt infra logs view --since 1h
 
 # Check for hook failures
-systemprompt infra logs view --source hooks --level error --since 1h
+systemprompt infra logs view --level error --since 1h
 
 # View hook configuration
 systemprompt core hooks list
-systemprompt core hooks show <hook-id>
 ```
 
 ## Tool Usage Analytics
@@ -377,16 +367,6 @@ This shows:
 | Top callers | Which agents use this tool most |
 | Error patterns | Common error messages and their frequency |
 | Usage trend | Invocations over time (hourly, daily) |
-
-### Cross-Agent Tool Comparison
-
-```bash
-# Compare tool usage across agents
-systemprompt analytics tools stats --compare-agents
-
-# Tool usage by agent
-systemprompt analytics tools stats --agent <agent-name>
-```
 
 ### Usage Patterns to Watch
 
@@ -444,8 +424,8 @@ Each MCP server supports configurable timeout and retry behavior:
 | Circuit breaker recovery | 30s | Time before trying again after circuit opens |
 
 ```bash
-# View MCP server configuration including timeouts
-systemprompt plugins mcp show systemprompt --detailed
+# View MCP server status including configuration
+systemprompt plugins mcp status systemprompt
 ```
 
 ## Rate Limiting for Tools
@@ -487,13 +467,10 @@ X-RateLimit-Reset: 1710849600
 
 ```bash
 # Check current rate limit status
-systemprompt infra services rate-limits
+systemprompt admin config rate-limits
 
 # View rate-limited requests
-systemprompt infra logs view --level warn --source rate-limiter --since 1h
-
-# Adjust rate limits (admin only)
-systemprompt admin config set rate_limit.mcp.base 300
+systemprompt infra logs view --level warn --since 1h
 ```
 
 ## Compliance Patterns
@@ -525,13 +502,13 @@ For regulated industries, tool governance provides:
 
 ```bash
 # Generate a tool usage report for a date range
-systemprompt analytics tools stats --since 30d --format json > tool_usage_report.json
+systemprompt analytics tools stats --since 30d --export tool_usage_report.csv
 
 # List all tool calls with compliance-relevant details
-systemprompt infra logs tools list --since 30d --format json > tool_audit_log.json
+systemprompt infra logs tools list --since 30d --json > tool_audit_log.json
 
 # List all failed tool calls (potential security events)
-systemprompt infra logs tools list --status error --since 30d --format json > tool_failures.json
+systemprompt infra logs tools list --status error --since 30d --json > tool_failures.json
 ```
 
 ## Best Practices

@@ -3,7 +3,7 @@
     <div class="cc-onboarding-header">
         <h2>Welcome to your Control Center</h2>
         <p>This is where you'll see live conversations, skill usage, and analytics. To get started, connect Claude to {{marketplace.site_url}} by following the steps below for your preferred client.</p>
-        <p class="cc-onboarding-guide-links">For a detailed walkthrough, see the <a href="/platform/connecting" target="_blank" rel="noopener noreferrer">Phase 1: Connect Claude guide</a> or view your complete <a href="/admin/setup">Setup Guide</a>.</p>
+        <p class="cc-onboarding-guide-links">For a detailed walkthrough, see <a href="/documentation/integration-claude-code" target="_blank" rel="noopener noreferrer">Claude Code installation</a>, <a href="/documentation/integration-claude-cowork" target="_blank" rel="noopener noreferrer">Cowork installation</a>, or view your complete <a href="/admin/setup">Setup Guide</a>.</p>
     </div>
     {{/unless}}
 
@@ -22,10 +22,16 @@
                 <span class="cc-step-number">1</span>
                 <div class="cc-step-content">
                     <h3>Install your marketplace</h3>
-                    <p>Run this command in Claude Code to install everything in one step:</p>
+                    <p>A single command installs everything. Use whichever method suits you:</p>
+                    <p><strong>From your terminal:</strong></p>
                     <div class="cc-onboarding-code">
                         <code>claude plugin marketplace add {{marketplace.git_url}}</code>
                         <button type="button" class="btn-copy" data-copy="claude plugin marketplace add {{marketplace.git_url}}">Copy</button>
+                    </div>
+                    <p><strong>From inside a Claude Code conversation:</strong></p>
+                    <div class="cc-onboarding-code">
+                        <code>/plugin marketplace add {{marketplace.git_url}}</code>
+                        <button type="button" class="btn-copy" data-copy="/plugin marketplace add {{marketplace.git_url}}">Copy</button>
                     </div>
                     <p>This is also available from the <strong>Share &amp; Install</strong> icon in the header. The install URL contains your personalized token, so all hooks, MCP servers, and marketplace configuration are automatically authenticated.</p>
                 </div>
@@ -61,6 +67,7 @@
                     <h3>Enterprise plugin sync</h3>
                     <p>Cowork does not support the one-line install path used by Claude Code due to Anthropic restrictions. For teams, we support enterprise plugins synced through a GitHub repository. You can embed authentication tokens by enforcing the use of settings files through company policy.</p>
                     <p>Anthropic's <strong>Enterprise plan</strong> provides a managed solution for plugin distribution and settings enforcement. This can also be achieved with corporate device management tools without the Enterprise plan.</p>
+                    <p>See the <a href="/documentation/integration-claude-cowork" target="_blank" rel="noopener noreferrer">full Cowork installation guide</a> for step-by-step instructions.</p>
                 </div>
             </div>
 

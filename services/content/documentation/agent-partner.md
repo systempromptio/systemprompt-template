@@ -283,22 +283,6 @@ Every partner interaction generates audit records:
 | Communication | All messages exchanged, including agent responses |
 | Escalation | When and why an interaction was escalated to a human |
 
-Query the audit trail:
-
-```bash
-# View distribution agent audit logs
-systemprompt infra logs view --agent partner_agent --since 24h
-
-# Trace specific partner interactions
-systemprompt infra logs trace list --agent partner_agent
-
-# Full audit for a specific request
-systemprompt infra logs audit <request-id> --full
-
-# Filter by error status
-systemprompt infra logs trace list --agent partner_agent --status failed
-```
-
 ### Fair Practices
 
 The agent applies consistent rules to all partners:
@@ -390,43 +374,3 @@ This audit trail supports:
 - **Dispute resolution**: Complete record of partner communications
 - **Internal audits**: Verifying fair practices across all partners
 
-## Monitoring
-
-```bash
-# Distribution Agent health
-systemprompt infra services status --agent partner_agent
-
-# Error monitoring
-systemprompt infra logs view --agent partner_agent --level error --since 1h
-
-# Partner interaction analytics
-systemprompt analytics conversations --agent partner_agent
-
-# Compliance check failures
-systemprompt infra logs trace list --agent partner_agent --status failed
-
-# Tool usage (OTA integration, compliance checks)
-systemprompt analytics tools stats --agent partner_agent
-```
-
-### Key Metrics
-
-| Metric | Target | Why |
-|--------|--------|-----|
-| Compliance check pass rate | > 95% | Low pass rates indicate partner onboarding issues |
-| Data isolation violations | 0 | Any non-zero value is a critical incident |
-| Rate distribution latency | < 2s | Partners expect real-time rate data |
-| Onboarding completion rate | > 80% | Measures the effectiveness of guided onboarding |
-| Audit log completeness | 100% | Every interaction must be logged |
-
-## Troubleshooting
-
-**Partner cannot access the agent** -- Verify the OAuth token includes `admin` scope and valid partner identity claims. Check that the `enterprise-demo` plugin is active.
-
-**Data from wrong partner showing** -- This is a critical data isolation failure. Immediately check the OAuth token's partner claims. Review audit logs with `systemprompt infra logs audit <request-id> --full` to determine the scope of the leak. Escalate to the security team.
-
-**Compliance checks timing out** -- External compliance verification services may be slow. Check MCP tool logs with `systemprompt infra logs tools list --agent partner_agent --status error`. Consider caching compliance status with a reasonable TTL.
-
-**Rate distribution data stale** -- Channel integrations may have delayed updates. Check the rate distribution tracking sub-agent's MCP server connection status.
-
-**Agent not appearing in admin dashboard** -- Verify the `enterprise-demo` plugin includes `partner_agent` in its agents list and that the user has the `admin` role.

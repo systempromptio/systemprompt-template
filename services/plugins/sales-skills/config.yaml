@@ -38,5 +38,7 @@ plugin:
     - email
   category: general
 
+  license: "proprietary"
   author:
     name: "Foodles"
+    email: "help@foodles.com"

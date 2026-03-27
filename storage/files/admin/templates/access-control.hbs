@@ -230,12 +230,10 @@
 
     {{/inline}}
     {{#*inline "scripts"}}
-    <script src="/js/admin-access.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AdminApp.Toast.init();
-            AdminApp.initAccessControl();
-        });
+    <script data-cfasync="false" type="module" src="/js/pages/admin-access.js" defer></script>
+    <script data-cfasync="false" type="module">
+        import { initAccessPage } from '/js/pages/admin-access.js';
+        initAccessPage();
     </script>
     {{/inline}}
 {{/layout}}

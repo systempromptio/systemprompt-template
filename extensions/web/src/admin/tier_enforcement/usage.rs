@@ -23,8 +23,8 @@ pub async fn fetch_usage_from_db(pool: &PgPool, user_id: &UserId) -> UsageSnapsh
 
     let daily: Option<DailyUsageRow> = sqlx::query_as(
         r"SELECT
-            COALESCE(SUM(event_count), 0) AS events,
-            COALESCE(SUM(content_input_bytes + content_output_bytes), 0) AS bytes
+            COALESCE(SUM(event_count), 0)::BIGINT AS events,
+            COALESCE(SUM(content_input_bytes + content_output_bytes), 0)::BIGINT AS bytes
            FROM plugin_usage_daily
            WHERE user_id = $1 AND date = CURRENT_DATE",
     )

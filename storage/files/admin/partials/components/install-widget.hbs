@@ -31,16 +31,34 @@
                 <a href="/admin/my/plugins/" class="btn btn-primary btn-sm">Go to My Plugins</a>
             </div>
             <div class="install-tab-content" data-install-panel="claude-code" id="install-panel-claude-code" role="tabpanel">
-                <p class="install-tab-hint">Install your marketplace in Claude Code from the CLI:</p>
+                <p class="install-tab-hint">From your terminal:</p>
                 <div class="install-copybox">
                     <code class="install-code">claude plugin marketplace add {{marketplace.git_url}}</code>
                     <button type="button" class="btn btn-secondary" data-copy="claude plugin marketplace add {{marketplace.git_url}}">Copy</button>
                 </div>
+                <p class="install-tab-hint">Or from inside a Claude Code conversation:</p>
+                <div class="install-copybox">
+                    <code class="install-code">/plugin marketplace add {{marketplace.git_url}}</code>
+                    <button type="button" class="btn btn-secondary" data-copy="/plugin marketplace add {{marketplace.git_url}}">Copy</button>
+                </div>
             </div>
             <div class="install-tab-content" data-install-panel="cowork" id="install-panel-cowork" role="tabpanel" hidden>
-                <p class="install-tab-hint">Export your marketplace as a single plugin for Cowork:</p>
-                <a href="/api/public/marketplace/{{marketplace.user_id}}/export/cowork.zip" class="btn btn-primary btn-sm" download>Export for Cowork</a>
-                <a href="/admin/my/marketplace" class="btn btn-secondary btn-sm">My Marketplace</a>
+                <p class="install-tab-hint">Add this token to your Claude settings. Enterprise Marketplace URLs will authenticate automatically.</p>
+                <div class="install-token-label">SYSTEMPROMPT_TOKEN</div>
+                <div class="install-token-box">
+                    <code class="install-code install-token-value" data-masked="true">{{marketplace.plugin_token}}</code>
+                    <button type="button" class="btn btn-icon" data-action="toggle-token" title="Show token" aria-label="Toggle token visibility">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-copy="{{marketplace.plugin_token}}">Copy</button>
+                </div>
+                <p class="install-tab-hint" style="margin-top:8px">Add to <code>~/.claude/settings.json</code> &rarr; <code>env</code></p>
+                <pre class="install-code-block"><code>{
+  "env": {
+    "SYSTEMPROMPT_TOKEN": "&lt;your-token&gt;"
+  }
+}</code></pre>
+                <a href="/documentation/integration-claude-cowork" class="install-learn-more">Learn more about Cowork integration &rarr;</a>
             </div>
         </div>
     </div>

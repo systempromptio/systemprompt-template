@@ -167,13 +167,3 @@ Once your plugin is created:
 2. **Assign roles** -- if you skipped roles during creation, edit the plugin to add them.
 3. **Test** -- verify the plugin's skills and agents appear for users with the assigned roles.
 4. **Export** -- use the Generate button on the Plugins page to create a Claude Desktop configuration if needed.
-
-## Troubleshooting
-
-**Wizard won't advance past Step 1** -- Plugin ID and Name are required fields. Ensure the Plugin ID uses kebab-case (lowercase letters, numbers, hyphens only).
-
-**No skills/agents/MCP servers in the checklists** -- These lists are populated from existing resources in `services/skills/`, `services/agents/`, and MCP server configurations. If the lists are empty, no resources have been configured yet.
-
-**Import fails with parse error** -- The URL must point to a raw JSON file in the plugin bundle format. If the URL returns HTML (e.g., a GitHub page instead of raw content), the import will fail.
-
-**Plugin created but not visible** -- Check that the plugin has at least one role that matches the current user's roles. Admins can see all plugins regardless of role assignment.
