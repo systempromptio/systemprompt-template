@@ -48,7 +48,7 @@ This demo uses the plugin token (not the CLI auth token). The plugin token authe
 An admin agent reading a source file. No secrets, valid scope:
 
 ```bash
-curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -71,7 +71,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
 The same admin agent, but the tool input contains an AWS access key:
 
 ```bash
-curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -127,7 +127,7 @@ This shows the MCP tool call from Part 3, along with the OAuth authentication ev
 
 ## Dashboard
 
-Open [http://localhost:8080/admin/](http://localhost:8080/admin/) and look for:
+Open [https://abc3dd581f80.systemprompt.io/admin/](https://abc3dd581f80.systemprompt.io/admin/) and look for:
 
 | Section | What You See |
 |---------|-------------|
@@ -163,4 +163,4 @@ If you ran all terminal demos in sequence, you have now exercised:
 | [Governance API](/documentation/demo-terminal-governance) | 6 curl calls | 6 governance decisions (4 deny, 2 allow) |
 | [MCP Access Tracking](/documentation/demo-terminal-mcp) | 2 curl + 1 MCP + 2 DB queries | 2 governance decisions + 1 MCP access event |
 
-All events are visible on the [admin dashboard](http://localhost:8080/admin/).
+All events are visible on the [admin dashboard](https://abc3dd581f80.systemprompt.io/admin/).

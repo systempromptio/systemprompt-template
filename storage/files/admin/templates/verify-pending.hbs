@@ -7,8 +7,15 @@
     <title>{{branding.domain}} - Verify Your Email</title>
     <link rel="stylesheet" href="/css/core/fonts.css?v={{css_version}}">
     <link rel="stylesheet" href="/css/admin-bundle.css?v={{css_version}}">
-    <script>(function(){var t;try{t=localStorage.getItem('sp-admin-theme')}catch(e){}if(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)t='dark';if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}})();</script>
-    <style>html,body{margin:0;background:oklch(0.96 0.004 70);color:#1c1917;font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}[data-theme="dark"],[data-theme="dark"] body{background:oklch(0.16 0.01 45);color:#fafaf9}</style>
+    <script>(function(){document.documentElement.style.colorScheme='light';})();</script>
+    <style>
+        html,body{margin:0;background:oklch(0.96 0.004 70);color:#1c1917;font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+        /* Force light mode regardless of OS dark-mode preference */
+        .login-logo .logo-light{display:block !important}
+        .login-logo .logo-dark{display:none !important}
+        .login-container .card{background:oklch(1.0 0 0) !important;backdrop-filter:none !important;border:1px solid oklch(0.20 0.01 50 / 0.06) !important}
+        .card{background:linear-gradient(180deg,oklch(1.0 0 0) 0%,oklch(0.98 0.004 70) 60%,oklch(0.96 0.005 70) 100%) !important}
+    </style>
 </head>
 <body>
     <div class="login-container">

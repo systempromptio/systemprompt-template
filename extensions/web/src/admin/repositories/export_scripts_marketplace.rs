@@ -91,6 +91,7 @@ pub(super) fn build_marketplace(
 
     let mut marketplace = serde_json::json!({
         "name": identity.name,
+        "description": format!("{}'s plugin marketplace", identity.owner_name),
         "owner": {
             "name": identity.owner_name,
         },

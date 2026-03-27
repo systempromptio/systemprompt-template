@@ -72,7 +72,7 @@ systemprompt core artifacts show "$ARTIFACT_ID" --full
 
 ### Dashboard
 
-Open [/admin/events](http://localhost:8080/admin/events). You should see the agent message event with:
+Open [/admin/events](https://abc3dd581f80.systemprompt.io/admin/events). You should see the agent message event with:
 
 - Agent name: `developer_agent`
 - Tool calls: 1 MCP call (`list_agents`)
@@ -104,7 +104,7 @@ systemprompt admin agents message associate_agent \
 
 ### Dashboard
 
-Open [/admin/events](http://localhost:8080/admin/events). This trace shows:
+Open [/admin/events](https://abc3dd581f80.systemprompt.io/admin/events). This trace shows:
 
 - Agent name: `associate_agent`
 - AI requests: 1

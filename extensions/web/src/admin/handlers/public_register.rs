@@ -60,20 +60,11 @@ pub(crate) async fn public_register_handler(
         );
     }
 
-    let local_part = email_str.split('@').next().unwrap_or("user");
-    let sanitized = local_part
-        .replace(|c: char| !c.is_alphanumeric() && c != '-' && c != '_', "-")
-        .trim_matches('-')
-        .to_string();
-    let user_id = UserId::new(if sanitized.is_empty() {
-        "user".to_string()
-    } else {
-        sanitized
-    });
+    let user_id = UserId::new(uuid::Uuid::new_v4().to_string());
 
     let roles = match body.role.as_str() {
-        "admin" => vec!["admin".to_string()],
-        _ => vec![],
+        "admin" => vec!["user".to_string(), "admin".to_string()],
+        _ => vec!["user".to_string()],
     };
 
     let create_req = CreateUserRequest {

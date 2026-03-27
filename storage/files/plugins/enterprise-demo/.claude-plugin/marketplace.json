@@ -1,5 +1,6 @@
 {
   "name": "enterprise-demo-marketplace",
+  "description": "Enterprise governance demo marketplace from foodles.com",
   "owner": {
     "name": "Foodles",
     "email": "help@foodles.com"

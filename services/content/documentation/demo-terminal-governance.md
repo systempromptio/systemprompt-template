@@ -68,7 +68,7 @@ The response contains the governance decision, reason, and the list of rules eva
 An admin-scope agent calling an MCP tool it has access to:
 
 ```bash
-curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -88,7 +88,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
 The same tool, but requested by a user-scope agent:
 
 ```bash
-curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -103,7 +103,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
 
 ### Dashboard
 
-Open [/admin/governance](http://localhost:8080/admin/governance). Both decisions appear with timestamps, the tool name, agent ID, and the full evaluation trace.
+Open [/admin/governance](https://abc3dd581f80.systemprompt.io/admin/governance). Both decisions appear with timestamps, the tool name, agent ID, and the full evaluation trace.
 
 ---
 
@@ -114,7 +114,7 @@ The governance layer scans every `tool_input` field for plaintext secrets. If a 
 ### Test 1: AWS Access Key
 
 ```bash
-curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -134,7 +134,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
 ### Test 2: GitHub Personal Access Token
 
 ```bash
-curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -154,7 +154,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
 ### Test 3: RSA Private Key
 
 ```bash
-curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -174,7 +174,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
 ### Test 4: Clean Input — Passes
 
 ```bash
-curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -205,7 +205,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
 
 ### Dashboard
 
-Open [/admin/governance](http://localhost:8080/admin/governance). All 6 decisions are visible with:
+Open [/admin/governance](https://abc3dd581f80.systemprompt.io/admin/governance). All 6 decisions are visible with:
 
 - Timestamp
 - Tool name and agent ID
@@ -237,7 +237,7 @@ Copy this entire block into Claude Code (or any terminal) to run all six governa
 ```bash
 # ── Set your token ──────────────────────────────────────────────
 TOKEN="YOUR_TOKEN_HERE"
-API="http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo"
+API="https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo"
 
 # ── Test 1: Admin scope → ALLOW ─────────────────────────────────
 # The developer_agent has admin scope, so it can call any MCP tool.
@@ -345,7 +345,7 @@ curl -s -X POST "$API" \
 # ── Check the dashboard ─────────────────────────────────────────
 echo ""
 echo "All 6 decisions are now visible at:"
-echo "  http://localhost:8080/admin/governance"
+echo "  https://abc3dd581f80.systemprompt.io/admin/governance"
 echo ""
 echo "Expected results:"
 echo "  Test 1: ALLOWED  (admin scope, clean input)"
@@ -358,7 +358,7 @@ echo "  Test 6: ALLOWED  (admin scope, clean input)"
 
 ### What to show the audience
 
-After running the script, open the [Governance Dashboard](http://localhost:8080/admin/governance). The metric ribbon updates immediately:
+After running the script, open the [Governance Dashboard](https://abc3dd581f80.systemprompt.io/admin/governance). The metric ribbon updates immediately:
 
 - **Total Decisions** increases by 6
 - **Denied** increases by 4 (scope + 3 secrets)

@@ -464,11 +464,12 @@
   font-size: 0.9em;
   padding: 0.2em 0.4em;
   background: var(--sp-color-surface-variant);
+  border: 1px solid var(--sp-color-border);
   border-radius: var(--sp-radius-sm);
 }
 
 .docs-content pre {
-  background: var(--sp-color-surface-dark);
+  background: var(--sp-syntax-bg);
   border: 1px solid var(--sp-color-border);
   border-radius: var(--sp-radius-md);
   padding: var(--sp-spacing-md);
@@ -480,6 +481,7 @@
   padding: 0;
   background: none;
   font-size: var(--sp-font-size-sm);
+  color: var(--sp-syntax-fg);
 }
 
 
@@ -795,7 +797,7 @@
   margin: 0;
   position: relative;
   padding-left: 16px;
-  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  border-left: 1px solid var(--sp-color-border);
 }
 
 .toc-content .toc-item::before {
@@ -805,7 +807,7 @@
   top: 1.1em;
   width: 10px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--sp-color-border);
 }
 
 .toc-content .toc-item:last-child {
@@ -819,7 +821,7 @@
   top: 0;
   height: 1.1em;
   width: 1px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--sp-color-border);
 }
 
 .toc-content .toc-link {
@@ -1108,10 +1110,6 @@
       radial-gradient(ellipse 40vw 80vh at 0% 50%, var(--sp-brand-800) 0%, transparent 70%),
       radial-gradient(ellipse 40vw 80vh at 100% 50%, var(--sp-brand-800) 0%, transparent 70%);
     opacity: 0.5;
-  }
-
-  .docs-content pre {
-    background: #001845;
   }
 
   .docs-content blockquote {

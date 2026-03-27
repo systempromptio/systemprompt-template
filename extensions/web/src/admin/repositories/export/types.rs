@@ -47,6 +47,8 @@ pub struct McpServerEntry {
 #[derive(Debug, Serialize)]
 pub struct MarketplaceManifest {
     pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     pub owner: ManifestAuthor,
     pub plugins: Vec<MarketplacePluginEntry>,
 }

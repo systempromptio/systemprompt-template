@@ -11,6 +11,7 @@ pub async fn create_user(
 ) -> Result<UserSummary, sqlx::Error> {
     let user_id_str = req.user_id.as_str().to_string();
     let status = req.status.clone().unwrap_or_else(|| "active".to_string());
+    let username = req.email.as_str();
     sqlx::query_as!(
         UserSummary,
         r#"
@@ -38,7 +39,7 @@ pub async fn create_user(
             0::BIGINT AS "logins!"
         "#,
         &user_id_str,
-        &user_id_str,
+        username,
         req.email.as_str(),
         &req.display_name,
         &req.roles as &[String],

@@ -105,7 +105,7 @@ This shows token consumption and cost attribution per agent. The developer_agent
 
 ## Dashboard
 
-Open [http://localhost:8080/admin/](http://localhost:8080/admin/) and observe:
+Open [https://abc3dd581f80.systemprompt.io/admin/](https://abc3dd581f80.systemprompt.io/admin/) and observe:
 
 - **Metric ribbon** — events, tool uses, prompts, sessions, errors
 - **AI usage chart** — token consumption with 24h/7d/14d toggle

@@ -29,7 +29,7 @@ related_docs:
 
 These terminal demos let you exercise every governance feature using only a terminal. No Cowork session or Claude Code required. Each demo produces data that is immediately visible on the admin dashboard.
 
-All commands assume `http://localhost:8080` and that the platform is built and running.
+All commands assume `https://abc3dd581f80.systemprompt.io` and that the platform is built and running.
 
 ---
 
@@ -57,7 +57,7 @@ systemprompt infra services start --kill-port-process
 
 ## Step 2: Access the Admin Dashboard
 
-Navigate to [http://localhost:8080/admin/login](http://localhost:8080/admin/login) in your browser. Enter your email to receive a magic link. After authentication, the dashboard shows real-time metrics for every action you run from the terminal.
+Navigate to [https://abc3dd581f80.systemprompt.io/admin/login](https://abc3dd581f80.systemprompt.io/admin/login) in your browser. Enter your email to receive a magic link. After authentication, the dashboard shows real-time metrics for every action you run from the terminal.
 
 Key pages to keep open during demos:
 
@@ -73,7 +73,7 @@ Key pages to keep open during demos:
 
 The governance and MCP demos require a bearer token. To get it:
 
-1. Open [http://localhost:8080/admin/](http://localhost:8080/admin/)
+1. Open [https://abc3dd581f80.systemprompt.io/admin/](https://abc3dd581f80.systemprompt.io/admin/)
 2. Click the **Share & Install** icon (connected dots) in the top-right corner
 3. Select the **Cowork** tab
 4. Click the **eye icon** to reveal the token, then click **Copy**

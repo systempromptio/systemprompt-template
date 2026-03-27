@@ -43,6 +43,7 @@ pub(super) fn build_marketplace(
 
     let marketplace = MarketplaceManifest {
         name: format!("{slug}-marketplace"),
+        description: Some(format!("{username}'s plugin marketplace")),
         owner: ManifestAuthor {
             name: username.to_string(),
             email: email.to_string(),
