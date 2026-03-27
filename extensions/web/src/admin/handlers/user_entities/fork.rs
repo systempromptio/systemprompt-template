@@ -85,7 +85,7 @@ fn read_skill_config(
                 .filter_map(|v| v.as_str().map(String::from))
                 .collect()
         })
-        .unwrap_or_default();
+        .unwrap_or_else(|| Vec::new());
     (name, desc, tags)
 }
 

@@ -69,7 +69,7 @@ pub async fn fetch_today_summary(pool: &PgPool, user_id: &UserId) -> TodaySummar
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default();
+    .unwrap_or_else(|_| Vec::new());
 
     let top_rec = sqlx::query_scalar!(
         r"SELECT recommendations FROM session_analyses
@@ -83,7 +83,7 @@ pub async fn fetch_today_summary(pool: &PgPool, user_id: &UserId) -> TodaySummar
     .ok()
     .flatten()
     .flatten()
-    .unwrap_or_default();
+    .unwrap_or_else(|| String::new());
 
     TodaySummary {
         sessions_count: session_row.count,

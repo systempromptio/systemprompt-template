@@ -45,8 +45,6 @@ window.AdminApp = window.AdminApp || {};
         if (!str) return '';
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     };
-    // Client-side only: extract username for display. NOT used for authorization decisions.
-    // Server-side auth is handled via site_auth() cookie validation.
     (() => {
         try {
             const cookie = document.cookie.split(';').find((c) => c.trim().startsWith('access_token='));
@@ -102,32 +100,19 @@ window.AdminApp = window.AdminApp || {};
 
 (function(app) {
     const escapeHtml = app.escapeHtml;
-    /**
-     * Truncate a string to a maximum length with ellipsis.
-     */
     function truncate(str, max) {
         if (!str) return '';
         if (str.length <= (max || 60)) return str;
         return str.substring(0, max || 60) + '...';
     }
-    /**
-     * Close all open three-dot action menus.
-     */
     function closeAllMenus() {
         const openMenus = document.querySelectorAll('.actions-menu.open');
         openMenus.forEach((m) => { m.classList.remove('open'); });
     }
-    /**
-     * Close a delete confirmation overlay by its ID.
-     */
     function closeDeleteConfirm(overlayId) {
         const overlay = document.getElementById(overlayId || 'delete-confirm');
         if (overlay) overlay.remove();
     }
-    /**
-     * Show a generic confirmation dialog.
-     * Returns nothing; calls onConfirm() when the user clicks confirm.
-     */
     function showConfirmDialog(title, message, confirmLabel, onConfirm, opts) {
         const btnClass = (opts && opts.btnClass) || 'btn-danger';
         const overlay = document.createElement('div');
@@ -154,10 +139,6 @@ window.AdminApp = window.AdminApp || {};
         document.body.appendChild(overlay);
         return overlay;
     }
-    /**
-     * Show a delete confirmation dialog used by list pages (agents, hooks, skills, mcp-servers).
-     * The confirm button includes a data-confirm-delete attribute for delegation.
-     */
     function showDeleteConfirmDialog(title, itemId) {
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
@@ -173,13 +154,6 @@ window.AdminApp = window.AdminApp || {};
         document.body.appendChild(overlay);
         return overlay;
     }
-    /**
-     * Set up debounced search with focus restore after re-render.
-     * - inputId: the ID of the search input element
-     * - onSearch: callback receiving the search value
-     * - delay: debounce delay in ms (default 200)
-     * Returns a cleanup-friendly handler to attach via addEventListener.
-     */
     function createDebouncedSearch(root, inputId, onSearch, delay) {
         let searchTimer = null;
         root.addEventListener('input', (e) => {
@@ -196,16 +170,6 @@ window.AdminApp = window.AdminApp || {};
             }
         });
     }
-    /**
-     * Register standard document-level listeners for list pages:
-     * - Outside click to close menus
-     * - Outside click / cancel to close delete confirm
-     * - Escape key to close menus and delete confirm
-     * - Confirm-delete button delegation
-     *
-     * onDelete(itemId, confirmBtn): called when user clicks the confirm-delete button.
-     * Returns nothing. Safe to call multiple times (uses a guard flag internally).
-     */
     const _registeredPages = {};
     function registerListPageListeners(pageKey, opts) {
         if (_registeredPages[pageKey]) return;
@@ -234,10 +198,6 @@ window.AdminApp = window.AdminApp || {};
             }
         });
     }
-    /**
-     * Handle three-dot menu toggle click (delegated).
-     * Call from a root click handler: if it returns true, the event was handled.
-     */
     function handleMenuToggle(e) {
         const menuBtn = e.target.closest('[data-action="menu"]');
         if (!menuBtn) return false;
@@ -258,7 +218,7 @@ window.AdminApp = window.AdminApp || {};
     function loadJSZip() {
         return new Promise((resolve, reject) => {
             if (window.JSZip) return resolve(window.JSZip);
-            var script = document.createElement('script');
+            const script = document.createElement('script');
             script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
             script.integrity = 'sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG';
             script.crossOrigin = 'anonymous';
@@ -352,31 +312,6 @@ window.AdminApp = window.AdminApp || {};
 (function(app) {
     const escapeHtml = app.escapeHtml;
     const shared = app.shared;
-    /**
-     * Generic list page factory. Creates a fully wired list page from config.
-     *
-     * config = {
-     *   entityName:        'skill',
-     *   pageKey:           'skills',
-     *   searchInputId:     'skill-search',
-     *   searchPlaceholder: 'Search skills...',
-     *   newHref:           app.BASE + '/skills/edit/',
-     *   newLabel:          '+ New Skill',
-     *   apiPath:           '/skills',
-     *   apiResponseKey:    'skills',           // key in response object, or null for array
-     *   columns:           ['Name', 'Skill ID', 'Description', 'Status', ''],
-     *   idAttr:            'skill-id',         // data attribute for delete/toggle
-     *   filterFn:          (item, q) => bool,
-     *   renderRow:         (item) => '<tr>...</tr>',
-     *   hasToggle:         true,
-     *   toggleApiPath:     (id) => '/skills/' + encodeURIComponent(id),
-     *   toggleBody:        (enabled) => ({ enabled }),
-     *   toggleSuccessMsg:  (enabled) => 'Skill ' + (enabled ? 'enabled' : 'disabled'),
-     *   deleteDialogTitle: 'Delete Skill?',
-     *   deleteApiPath:     (id) => '/skills/' + encodeURIComponent(id),
-     *   deleteSuccessMsg:  'Skill deleted',
-     * }
-     */
     function createListPage(selector, config) {
         const root = document.querySelector(selector);
         if (!root) return;
@@ -479,15 +414,6 @@ window.AdminApp = window.AdminApp || {};
 
 (function(app) {
     const escapeHtml = app.escapeHtml;
-    /**
-     * Render a filterable checklist with checkboxes.
-     *
-     * @param {string} id - Unique identifier for the checklist (used as input name)
-     * @param {Array} items - Items to render (strings or objects with name/id)
-     * @param {Array|Object} selected - Selected values as array or { val: true } map
-     * @param {string} label - Label text
-     * @param {Object} opts - Options: { hasSelectAll: bool }
-     */
     function renderChecklist(id, items, selected, label, opts) {
         const options = opts || {};
         const selectedSet = {};
@@ -529,10 +455,6 @@ window.AdminApp = window.AdminApp || {};
             '</div>' +
         '</div>';
     }
-    /**
-     * Attach filter input handlers for [data-filter-list] inputs.
-     * Shows/hides .checklist-item elements based on data-item-name match.
-     */
     function attachFilterHandlers(root) {
         root.addEventListener('input', (e) => {
             const filterInput = e.target.closest('[data-filter-list]');
@@ -548,9 +470,6 @@ window.AdminApp = window.AdminApp || {};
             });
         });
     }
-    /**
-     * Get checked checkbox values from a form by input name.
-     */
     function getCheckedValues(form, name) {
         const checked = form.querySelectorAll('input[name="' + name + '"]:checked');
         return Array.from(checked).map((cb) => cb.value);
@@ -563,34 +482,18 @@ window.AdminApp = window.AdminApp || {};
 })(window.AdminApp);
 
 (function(app) {
-    var escapeHtml = app.escapeHtml;
-    var shared = app.shared;
-    /**
-     * Generic edit/create page factory.
-     *
-     * config = {
-     *   entityName:  'skill',
-     *   listPath:    '/skills/',
-     *   apiPath:     '/skills/',
-     *   idParam:     'id',              // URL search param
-     *   idField:     'skill_id',        // body field name for create
-     *   formId:      'skill-form',
-     *   renderForm:  (entity, extra) => '<form>...</form>',
-     *   buildBody:   (form, formData) => ({...}),
-     *   successMsg:  'Skill saved!',
-     *   preload:     async () => data,  // optional: load prerequisite data
-     * }
-     */
+    const escapeHtml = app.escapeHtml;
+    const shared = app.shared;
     function createEditPage(selector, config) {
-        var root = document.querySelector(selector);
+        const root = document.querySelector(selector);
         if (!root) return;
-        var entityId = new URLSearchParams(window.location.search).get(config.idParam || 'id');
-        var isEdit = !!entityId;
+        const entityId = new URLSearchParams(window.location.search).get(config.idParam || 'id');
+        const isEdit = !!entityId;
         async function load() {
             shared.showLoading(root, 'Loading ' + config.entityName + '...');
             try {
-                var extra = config.preload ? await config.preload() : null;
-                var entity = null;
+                const extra = config.preload ? await config.preload() : null;
+                let entity = null;
                 if (isEdit) {
                     entity = await app.api(config.apiPath + encodeURIComponent(entityId));
                     if (!entity) {
@@ -607,13 +510,13 @@ window.AdminApp = window.AdminApp || {};
             }
         }
         function attachFormHandler(formRoot) {
-            var form = formRoot.querySelector('#' + config.formId);
+            const form = formRoot.querySelector('#' + config.formId);
             if (!form) return;
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                var formData = new FormData(form);
-                var body = config.buildBody(form, formData);
-                var url, method;
+                const formData = new FormData(form);
+                const body = config.buildBody(form, formData);
+                let url, method;
                 if (isEdit) {
                     url = config.apiPath + encodeURIComponent(entityId);
                     method = 'PUT';
@@ -1013,7 +916,6 @@ window.AdminApp = window.AdminApp || {};
                 '<div class="stat-card"><div class="label">Unique Skills</div><div class="value">' + (gData.unique_skills || 0) + '</div></div>' +
                 '<div class="stat-card"><div class="label">Leaderboard</div><div class="value">#' + (gData.leaderboard_position || '-') + '</div></div>' +
             '</div>';
-        // Achievement grid
         const userAchievements = gData.achievements || {};
         const cards = Object.keys(app.constants.ACHIEVEMENT_DEFS).map((key) => {
             const def = app.constants.ACHIEVEMENT_DEFS[key];
@@ -1391,7 +1293,6 @@ window.AdminApp = window.AdminApp || {};
                 app.Toast.show(err.message || 'Failed to load users', 'error');
             }
         }
-        // Register event listeners ONCE via delegation on root
         root.addEventListener('input', (e) => {
             if (e.target.id === 'user-search') {
                 filterTable(e.target.value);
@@ -1665,11 +1566,9 @@ window.AdminApp = window.AdminApp || {};
         }
         root.addEventListener('click', (e) => {
             if (app.shared.handleMenuToggle(e)) return;
-            // Dropdown item clicks should not toggle expand
             if (e.target.closest('.actions-dropdown')) {
                 e.stopPropagation();
             }
-            // Generate plugin (export)
             const generateBtn = e.target.closest('[data-generate-plugin]');
             if (generateBtn) {
                 e.stopPropagation();
@@ -1677,7 +1576,6 @@ window.AdminApp = window.AdminApp || {};
                 handleExport(generateBtn.getAttribute('data-generate-plugin'), generateBtn, platform);
                 return;
             }
-            // Delete plugin
             const deletePluginBtn = e.target.closest('[data-delete-plugin]');
             if (deletePluginBtn) {
                 e.stopPropagation();
@@ -1685,7 +1583,6 @@ window.AdminApp = window.AdminApp || {};
                 showDeleteConfirm(deletePluginBtn.getAttribute('data-delete-plugin'));
                 return;
             }
-            // Toggle plugin expand/collapse
             const toggleBtn = e.target.closest('[data-toggle-plugin]');
             if (toggleBtn && !e.target.closest('.actions-menu') && !e.target.closest('[data-tab]')) {
                 const id = toggleBtn.getAttribute('data-toggle-plugin');
@@ -1699,7 +1596,6 @@ window.AdminApp = window.AdminApp || {};
                 restoreSearchFocus();
                 return;
             }
-            // Tab switching
             const tab = e.target.closest('[data-tab]');
             if (tab) {
                 const newTab = tab.getAttribute('data-tab');
@@ -1898,13 +1794,13 @@ window.AdminApp = window.AdminApp || {};
     const escapeHtml = app.escapeHtml;
     const ROLES = app.constants.ROLES;
     const HOOK_EVENTS = app.constants.HOOK_EVENTS;
-    var CHECKLIST_STEPS = {
+    const CHECKLIST_STEPS = {
         2: { title: 'Select Skills', id: 'wizard-skills', dataKey: 'allSkills', selectedKey: 'selectedSkills', label: 'Available Skills' },
         3: { title: 'Select Agents', id: 'wizard-agents', dataKey: 'allAgents', selectedKey: 'selectedAgents', label: 'Available Agents' },
         4: { title: 'MCP Servers', id: 'wizard-mcp', dataKey: 'allMcpServers', selectedKey: 'selectedMcpServers', label: 'Available MCP Servers' },
     };
     function renderChecklistStep(state, stepNum) {
-        var cfg = CHECKLIST_STEPS[stepNum];
+        const cfg = CHECKLIST_STEPS[stepNum];
         return '<h3 style="margin:0 0 var(--space-4);font-size:var(--text-lg);font-weight:600">' + escapeHtml(cfg.title) + '</h3>' +
             app.formUtils.renderChecklist(cfg.id, state[cfg.dataKey], state[cfg.selectedKey], cfg.label, { hasSelectAll: true });
     }
@@ -2306,9 +2202,9 @@ window.AdminApp = window.AdminApp || {};
 })(window.AdminApp);
 
 (function(app) {
-    var escapeHtml = app.escapeHtml;
-    var truncate = app.shared.truncate;
-    app.renderSkills = function(selector) {
+    const escapeHtml = app.escapeHtml;
+    const truncate = app.shared.truncate;
+    app.renderSkills = (selector) => {
         app.shared.createListPage(selector, {
             entityName:        'skill',
             pageKey:           'skills',
@@ -2320,13 +2216,13 @@ window.AdminApp = window.AdminApp || {};
             apiResponseKey:    'skills',
             columns:           ['Name', 'Skill ID', 'Description', 'Status', ''],
             idAttr:            'skill-id',
-            filterFn: function(s, q) {
-                return (s.name || '').toLowerCase().indexOf(q) >= 0 ||
-                       (s.skill_id || '').toLowerCase().indexOf(q) >= 0 ||
-                       (s.description || '').toLowerCase().indexOf(q) >= 0;
+            filterFn: (s, q) => {
+                return (s.name || '').toLowerCase().includes(q) ||
+                       (s.skill_id || '').toLowerCase().includes(q) ||
+                       (s.description || '').toLowerCase().includes(q);
             },
-            renderRow: function(s) {
-                var checked = s.enabled ? ' checked' : '';
+            renderRow: (s) => {
+                const checked = s.enabled ? ' checked' : '';
                 return '<tr>' +
                     '<td style="font-weight:500">' + escapeHtml(s.name) + '</td>' +
                     '<td><code style="background:var(--bg-surface-raised);padding:2px 8px;border-radius:var(--radius-xs);font-size:var(--text-xs)">' + escapeHtml(s.skill_id) + '</code></td>' +
@@ -2341,21 +2237,21 @@ window.AdminApp = window.AdminApp || {};
                 '</tr>';
             },
             hasToggle:         true,
-            toggleApiPath:     function(id) { return '/skills/' + encodeURIComponent(id); },
-            toggleBody:        function(enabled) { return { enabled: enabled }; },
-            toggleSuccessMsg:  function(enabled) { return 'Skill ' + (enabled ? 'enabled' : 'disabled'); },
+            toggleApiPath:     (id) => '/skills/' + encodeURIComponent(id),
+            toggleBody:        (enabled) => ({ enabled: enabled }),
+            toggleSuccessMsg:  (enabled) => 'Skill ' + (enabled ? 'enabled' : 'disabled'),
             deleteDialogTitle: 'Delete Skill?',
-            deleteApiPath:     function(id) { return '/skills/' + encodeURIComponent(id); },
+            deleteApiPath:     (id) => '/skills/' + encodeURIComponent(id),
             deleteSuccessMsg:  'Skill deleted'
         });
     };
 })(window.AdminApp);
 
 (function(app) {
-    var escapeHtml = app.escapeHtml;
+    const escapeHtml = app.escapeHtml;
     function renderForm(skill) {
-        var isEdit = !!skill;
-        var title = isEdit ? 'Edit Skill' : 'Create Skill';
+        const isEdit = !!skill;
+        const title = isEdit ? 'Edit Skill' : 'Create Skill';
         return '<div class="detail-header">' +
             '<a href="' + app.BASE + '/skills/" class="btn btn-secondary btn-sm">&larr; Back to Skills</a>' +
         '</div>' +
@@ -2396,8 +2292,8 @@ window.AdminApp = window.AdminApp || {};
         '</div>';
     }
     function buildBody(form, formData) {
-        var tagsRaw = formData.get('tags') || '';
-        var tags = tagsRaw.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+        const tagsRaw = formData.get('tags') || '';
+        const tags = tagsRaw.split(',').map((t) => t.trim()).filter(Boolean);
         return {
             name: formData.get('name'),
             description: formData.get('description') || '',
@@ -2405,7 +2301,7 @@ window.AdminApp = window.AdminApp || {};
             tags: tags
         };
     }
-    app.renderSkillEditor = function(selector) {
+    app.renderSkillEditor = (selector) => {
         app.shared.createEditPage(selector, {
             entityName: 'skill',
             listPath:   '/skills/',
@@ -2421,9 +2317,9 @@ window.AdminApp = window.AdminApp || {};
 })(window.AdminApp);
 
 (function(app) {
-    var escapeHtml = app.escapeHtml;
-    var truncate = app.shared.truncate;
-    app.renderAgents = function(selector) {
+    const escapeHtml = app.escapeHtml;
+    const truncate = app.shared.truncate;
+    app.renderAgents = (selector) => {
         app.shared.createListPage(selector, {
             entityName:        'agent',
             pageKey:           'agents',
@@ -2435,14 +2331,14 @@ window.AdminApp = window.AdminApp || {};
             apiResponseKey:    'agents',
             columns:           ['Name', 'Agent ID', 'Description', 'Primary', 'Status', ''],
             idAttr:            'agent-id',
-            filterFn: function(a, q) {
-                return (a.name || '').toLowerCase().indexOf(q) >= 0 ||
-                       (a.id || '').toLowerCase().indexOf(q) >= 0 ||
-                       (a.description || '').toLowerCase().indexOf(q) >= 0;
+            filterFn: (a, q) => {
+                return (a.name || '').toLowerCase().includes(q) ||
+                       (a.id || '').toLowerCase().includes(q) ||
+                       (a.description || '').toLowerCase().includes(q);
             },
-            renderRow: function(a) {
-                var checked = a.enabled ? ' checked' : '';
-                var primaryBadge = a.is_primary
+            renderRow: (a) => {
+                const checked = a.enabled ? ' checked' : '';
+                const primaryBadge = a.is_primary
                     ? '<span style="background:var(--bg-surface-raised);padding:2px 8px;border-radius:var(--radius-xs);font-size:var(--text-xs);color:var(--text-secondary)">Primary</span>'
                     : '';
                 return '<tr>' +
@@ -2460,21 +2356,21 @@ window.AdminApp = window.AdminApp || {};
                 '</tr>';
             },
             hasToggle:         true,
-            toggleApiPath:     function(id) { return '/agents/' + encodeURIComponent(id); },
-            toggleBody:        function(enabled) { return { enabled: enabled }; },
-            toggleSuccessMsg:  function(enabled) { return 'Agent ' + (enabled ? 'enabled' : 'disabled'); },
+            toggleApiPath:     (id) => '/agents/' + encodeURIComponent(id),
+            toggleBody:        (enabled) => ({ enabled: enabled }),
+            toggleSuccessMsg:  (enabled) => 'Agent ' + (enabled ? 'enabled' : 'disabled'),
             deleteDialogTitle: 'Delete Agent?',
-            deleteApiPath:     function(id) { return '/agents/' + encodeURIComponent(id); },
+            deleteApiPath:     (id) => '/agents/' + encodeURIComponent(id),
             deleteSuccessMsg:  'Agent deleted'
         });
     };
 })(window.AdminApp);
 
 (function(app) {
-    var escapeHtml = app.escapeHtml;
+    const escapeHtml = app.escapeHtml;
     function renderForm(agent) {
-        var isEdit = !!agent;
-        var title = isEdit ? 'Edit Agent' : 'Create Agent';
+        const isEdit = !!agent;
+        const title = isEdit ? 'Edit Agent' : 'Create Agent';
         return '<div class="detail-header">' +
             '<a href="' + app.BASE + '/agents/" class="btn btn-secondary btn-sm">&larr; Back to Agents</a>' +
         '</div>' +
@@ -2524,7 +2420,7 @@ window.AdminApp = window.AdminApp || {};
             enabled: form.querySelector('[name="enabled"]').checked
         };
     }
-    app.renderAgentEditor = function(selector) {
+    app.renderAgentEditor = (selector) => {
         app.shared.createEditPage(selector, {
             entityName: 'agent',
             listPath:   '/agents/',
@@ -2540,9 +2436,9 @@ window.AdminApp = window.AdminApp || {};
 })(window.AdminApp);
 
 (function(app) {
-    var escapeHtml = app.escapeHtml;
-    var truncate = app.shared.truncate;
-    app.renderMcpServers = function(selector) {
+    const escapeHtml = app.escapeHtml;
+    const truncate = app.shared.truncate;
+    app.renderMcpServers = (selector) => {
         app.shared.createListPage(selector, {
             entityName:        'MCP server',
             pageKey:           'mcp-servers',
@@ -2554,13 +2450,13 @@ window.AdminApp = window.AdminApp || {};
             apiResponseKey:    'mcp_servers',
             columns:           ['Name', 'Server ID', 'Binary', 'Port', 'Description', 'Status', ''],
             idAttr:            'server-id',
-            filterFn: function(s, q) {
-                return (s.id || '').toLowerCase().indexOf(q) >= 0 ||
-                       (s.description || '').toLowerCase().indexOf(q) >= 0 ||
-                       (s.binary || '').toLowerCase().indexOf(q) >= 0;
+            filterFn: (s, q) => {
+                return (s.id || '').toLowerCase().includes(q) ||
+                       (s.description || '').toLowerCase().includes(q) ||
+                       (s.binary || '').toLowerCase().includes(q);
             },
-            renderRow: function(s) {
-                var checked = s.enabled ? ' checked' : '';
+            renderRow: (s) => {
+                const checked = s.enabled ? ' checked' : '';
                 return '<tr>' +
                     '<td style="font-weight:500">' + escapeHtml(s.id) + '</td>' +
                     '<td><code style="background:var(--bg-surface-raised);padding:2px 8px;border-radius:var(--radius-xs);font-size:var(--text-xs)">' + escapeHtml(s.id) + '</code></td>' +
@@ -2577,21 +2473,21 @@ window.AdminApp = window.AdminApp || {};
                 '</tr>';
             },
             hasToggle:         true,
-            toggleApiPath:     function(id) { return '/mcp-servers/' + encodeURIComponent(id); },
-            toggleBody:        function(enabled) { return { enabled: enabled }; },
-            toggleSuccessMsg:  function(enabled) { return 'MCP server ' + (enabled ? 'enabled' : 'disabled'); },
+            toggleApiPath:     (id) => '/mcp-servers/' + encodeURIComponent(id),
+            toggleBody:        (enabled) => ({ enabled: enabled }),
+            toggleSuccessMsg:  (enabled) => 'MCP server ' + (enabled ? 'enabled' : 'disabled'),
             deleteDialogTitle: 'Delete MCP Server?',
-            deleteApiPath:     function(id) { return '/mcp-servers/' + encodeURIComponent(id); },
+            deleteApiPath:     (id) => '/mcp-servers/' + encodeURIComponent(id),
             deleteSuccessMsg:  'MCP server deleted'
         });
     };
 })(window.AdminApp);
 
 (function(app) {
-    var escapeHtml = app.escapeHtml;
+    const escapeHtml = app.escapeHtml;
     function renderForm(server) {
-        var isEdit = !!server;
-        var title = isEdit ? 'Edit MCP Server' : 'Create MCP Server';
+        const isEdit = !!server;
+        const title = isEdit ? 'Edit MCP Server' : 'Create MCP Server';
         return '<div class="detail-header">' +
             '<a href="' + app.BASE + '/mcp-servers/" class="btn btn-secondary btn-sm">&larr; Back to MCP Servers</a>' +
         '</div>' +
@@ -2662,7 +2558,7 @@ window.AdminApp = window.AdminApp || {};
         '</div>';
     }
     function buildBody(form, formData) {
-        var portVal = formData.get('port');
+        const portVal = formData.get('port');
         return {
             binary: formData.get('binary') || '',
             package_name: formData.get('package_name') || '',
@@ -2675,7 +2571,7 @@ window.AdminApp = window.AdminApp || {};
             oauth_audience: formData.get('oauth_audience') || ''
         };
     }
-    app.renderMcpEditor = function(selector) {
+    app.renderMcpEditor = (selector) => {
         app.shared.createEditPage(selector, {
             entityName: 'MCP server',
             listPath:   '/mcp-servers/',
@@ -2691,9 +2587,9 @@ window.AdminApp = window.AdminApp || {};
 })(window.AdminApp);
 
 (function(app) {
-    var escapeHtml = app.escapeHtml;
-    var truncate = app.shared.truncate;
-    app.renderHooks = function(selector) {
+    const escapeHtml = app.escapeHtml;
+    const truncate = app.shared.truncate;
+    app.renderHooks = (selector) => {
         app.shared.createListPage(selector, {
             entityName:        'hook',
             pageKey:           'hooks',
@@ -2705,13 +2601,13 @@ window.AdminApp = window.AdminApp || {};
             apiResponseKey:    'hooks',
             columns:           ['Plugin', 'Event', 'Matcher', 'Command', 'Async', ''],
             idAttr:            'hook-id',
-            filterFn: function(h, q) {
-                return (h.plugin_id || '').toLowerCase().indexOf(q) >= 0 ||
-                       (h.event || '').toLowerCase().indexOf(q) >= 0 ||
-                       (h.command || '').toLowerCase().indexOf(q) >= 0;
+            filterFn: (h, q) => {
+                return (h.plugin_id || '').toLowerCase().includes(q) ||
+                       (h.event || '').toLowerCase().includes(q) ||
+                       (h.command || '').toLowerCase().includes(q);
             },
-            renderRow: function(h) {
-                var asyncBadge = h.is_async
+            renderRow: (h) => {
+                const asyncBadge = h.is_async
                     ? '<span class="badge badge-info">Async</span>'
                     : '<span class="badge badge-secondary">Sync</span>';
                 return '<tr>' +
@@ -2730,27 +2626,27 @@ window.AdminApp = window.AdminApp || {};
             },
             hasToggle:         false,
             deleteDialogTitle: 'Delete Hook?',
-            deleteApiPath:     function(id) { return '/hooks/' + encodeURIComponent(id); },
+            deleteApiPath:     (id) => '/hooks/' + encodeURIComponent(id),
             deleteSuccessMsg:  'Hook deleted'
         });
     };
 })(window.AdminApp);
 
 (function(app) {
-    var escapeHtml = app.escapeHtml;
+    const escapeHtml = app.escapeHtml;
     function renderPluginOptions(plugins, selectedId) {
-        var options = '<option value="">-- Select Plugin --</option>';
-        plugins.forEach(function(p) {
-            var id = p.id || p.plugin_id || '';
-            var name = p.name || id;
-            var selected = (id === selectedId) ? ' selected' : '';
+        let options = '<option value="">-- Select Plugin --</option>';
+        plugins.forEach((p) => {
+            const id = p.id || p.plugin_id || '';
+            const name = p.name || id;
+            const selected = (id === selectedId) ? ' selected' : '';
             options += '<option value="' + escapeHtml(id) + '"' + selected + '>' + escapeHtml(name) + '</option>';
         });
         return options;
     }
     function renderEventOptions(selectedEvent) {
-        return app.constants.HOOK_EVENTS.map(function(evt) {
-            var selected = (evt === selectedEvent) ? ' selected' : '';
+        return app.constants.HOOK_EVENTS.map((evt) => {
+            const selected = (evt === selectedEvent) ? ' selected' : '';
             return '<option value="' + escapeHtml(evt) + '"' + selected + '>' + escapeHtml(evt) + '</option>';
         }).join('');
     }
@@ -2829,7 +2725,6 @@ window.AdminApp = window.AdminApp || {};
 (function(app) {
     const escapeHtml = app.escapeHtml;
     let exportData = null;
-    // --- Helpers ---
     function copyToClipboard(text, btn) {
         navigator.clipboard.writeText(text).then(() => {
             const orig = btn.textContent;
@@ -2889,7 +2784,6 @@ window.AdminApp = window.AdminApp || {};
         lines.push('echo "All plugins installed successfully."');
         return lines.join('\n');
     }
-    // --- Toggle ---
     function toggleBundle(idx) {
         const details = document.getElementById('bundle-details-' + idx);
         const icon = document.getElementById('bundle-icon-' + idx);
@@ -2911,7 +2805,6 @@ window.AdminApp = window.AdminApp || {};
         const script = generateInstallScript(exportData);
         copyToClipboard(script, btn);
     }
-    // --- Rendering ---
     function renderSummary(data) {
         const t = data.totals || {};
         const plugins = data.plugins || [];
@@ -2949,7 +2842,6 @@ window.AdminApp = window.AdminApp || {};
             '</div>' +
         '</div>';
     }
-    // --- Zip download ---
     async function downloadZip(data) {
         const btn = document.getElementById('btn-download-zip');
         const origHtml = btn.innerHTML;
@@ -2986,7 +2878,6 @@ window.AdminApp = window.AdminApp || {};
             app.Toast.show('Failed to generate ZIP: ' + err.message, 'error');
         }
     }
-    // --- Main render ---
     app.renderExport = async (selector) => {
         const root = document.querySelector(selector);
         if (!root) return;
@@ -3000,24 +2891,18 @@ window.AdminApp = window.AdminApp || {};
                 return;
             }
             let html = '';
-            // Instructions card
             html += '<div class="alert-section" style="border-left-color:var(--accent);margin-bottom:var(--space-6)">' +
                 '<h3 style="color:var(--accent);margin:0">Export to Claude</h3>' +
                 '<p style="color:var(--text-secondary);margin:var(--space-2) 0 0;font-size:var(--text-sm)">' +
                     'Generate installation files for your plugins. Copy the install script below to set up Claude with your configuration.' +
                 '</p>' +
             '</div>';
-            // Summary stats
             html += renderSummary(data);
-            // Actions
             html += '<div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-6)">' +
                 '<button class="btn btn-primary" id="btn-download-zip">Download Plugin ZIP</button>' +
             '</div>';
-            // Section title
             html += '<div class="section-title">Plugin Bundles</div>';
-            // Bundle cards
             html += plugins.map((plugin, idx) => renderBundleCard(plugin, idx)).join('');
-            // Marketplace entry
             if (data.marketplace) {
                 html += '<div class="card" style="border-left:3px solid var(--accent);margin-bottom:var(--space-4);padding:0;overflow:hidden">' +
                     '<div class="plugin-header" data-action="toggle-bundle" data-idx="mkt" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:var(--space-4)">' +
@@ -3035,7 +2920,6 @@ window.AdminApp = window.AdminApp || {};
                     '</div>' +
                 '</div>';
             }
-            // Install script section
             const installScript = generateInstallScript(data);
             html += '<div class="section-title" style="margin-top:var(--space-8)">Install Script</div>';
             html += '<div class="card" style="padding:0;overflow:hidden">' +
@@ -3047,7 +2931,6 @@ window.AdminApp = window.AdminApp || {};
             '</div>';
             root.innerHTML = html;
             exportData = data;
-            // Event delegation
             root.addEventListener('click', (e) => {
                 if (e.target.closest('#btn-download-zip')) {
                     downloadZip(exportData);

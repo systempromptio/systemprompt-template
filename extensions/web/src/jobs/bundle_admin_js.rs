@@ -37,7 +37,7 @@ impl BundleAdminJsJob {
                 let manifest_path = entry.path();
                 let bundle_name = manifest_path
                     .file_stem()
-                    .unwrap_or_default()
+                    .unwrap_or(std::ffi::OsStr::new(""))
                     .to_string_lossy()
                     .to_string();
 

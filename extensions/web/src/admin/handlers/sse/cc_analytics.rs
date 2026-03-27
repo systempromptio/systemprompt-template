@@ -127,10 +127,10 @@ async fn fetch_analytics_data(
     FetchedAnalytics {
         skill_eff_res,
         health_metrics,
-        unused_skills: unused_skills_res.unwrap_or_default(),
+        unused_skills: unused_skills_res.unwrap_or_else(|_| Vec::new()),
         today_summary,
         apm_correlation,
-        achievements_today: achievements_today.unwrap_or_default(),
+        achievements_today: achievements_today.unwrap_or_else(|_| Vec::new()),
         hourly_breakdown,
         perf_summary,
     }
@@ -156,7 +156,7 @@ async fn build_entity_data(
             pool, user_id,
         )
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| Vec::new());
 
     let skills_usage: Vec<_> = entity_usage
         .iter()

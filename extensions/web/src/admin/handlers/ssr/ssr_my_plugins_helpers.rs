@@ -197,14 +197,14 @@ pub(super) async fn build_association_lists(
 ) {
     let user_skills = repositories::list_user_skills(pool, &user_ctx.user_id)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| vec![]);
     let user_agents = repositories::list_user_agents(pool, &user_ctx.user_id)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| vec![]);
     let user_mcp_servers =
         repositories::user_mcp_servers::list_user_mcp_servers(pool, &user_ctx.user_id)
             .await
-            .unwrap_or_default();
+            .unwrap_or_else(|_| vec![]);
 
     let selected_skills: Vec<String> = plugin_with_assoc.map_or(vec![], |p| {
         p.skill_ids

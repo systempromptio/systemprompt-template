@@ -5,7 +5,7 @@ pub(super) fn build_comparison_grid(
     user: &profile_reports::UserAggregateMetrics,
     global: &crate::admin::repositories::daily_summaries::GlobalAverages,
 ) -> Vec<serde_json::Value> {
-    // JSON: protocol boundary — template rendering
+
     let row =
         |label: &str, user_val: f64, global_val: f64, positive_up: bool| -> serde_json::Value {
             let diff = user_val - global_val;
@@ -99,7 +99,7 @@ fn bar_percentage(user_val: f64, global_val: f64) -> f64 {
 pub(super) fn build_category_breakdown(
     analyses: &[session_analyses::SessionAnalysisRow],
 ) -> Vec<serde_json::Value> {
-    // JSON: protocol boundary — template rendering
+
     if analyses.is_empty() {
         return Vec::new();
     }
@@ -148,7 +148,7 @@ fn format_category(cat: &str) -> &str {
 pub(super) fn build_gamification_data(
     gam: Option<&crate::admin::types::UserGamificationProfile>,
 ) -> serde_json::Value {
-    // JSON: protocol boundary — template rendering
+
     let Some(g) = gam else { return json!(null) };
     let xp_pct = if g.xp_to_next_rank > 0 {
         let current_xp_in_level = g.total_xp % g.xp_to_next_rank;
@@ -176,7 +176,7 @@ pub(super) fn build_gamification_data(
 pub(super) fn build_ai_report_data(
     report: Option<&profile_reports::ProfileReportRow>,
 ) -> serde_json::Value {
-    // JSON: protocol boundary — template rendering
+
     let Some(r) = report else { return json!(null) };
     json!({
         "narrative": r.ai_narrative,

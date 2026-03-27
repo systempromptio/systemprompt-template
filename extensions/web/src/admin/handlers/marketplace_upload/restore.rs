@@ -83,7 +83,6 @@ async fn load_target_version(
     }
 }
 
-// JSON: required by trait contract (DB JSONB column)
 async fn snapshot_current(
     pool: &Arc<PgPool>,
     user_id: &UserId,

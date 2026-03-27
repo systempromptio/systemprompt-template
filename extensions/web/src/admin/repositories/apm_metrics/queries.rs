@@ -70,7 +70,7 @@ async fn compute_active_session_apm(pool: &PgPool, user_id: &str) -> (f32, i32, 
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default();
+    .unwrap_or_else(|_| Vec::new());
 
     let now = chrono::Utc::now();
     let mut current_apm = 0.0f32;
@@ -140,7 +140,7 @@ pub async fn fetch_apm_success_correlation(pool: &PgPool, user_id: &str) -> ApmC
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default();
+    .unwrap_or_else(|_| Vec::new());
 
     let mut result = ApmCorrelation::default();
     for r in &rows {

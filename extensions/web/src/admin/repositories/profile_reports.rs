@@ -256,7 +256,7 @@ async fn fetch_category_distribution(
     .bind(days)
     .fetch_all(pool)
     .await
-    .unwrap_or_default();
+    .unwrap_or_else(|_| Vec::new());
 
     rows.into_iter()
         .filter_map(|r| Some((r.category?, r.total.unwrap_or(0))))

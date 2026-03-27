@@ -127,7 +127,7 @@ pub(crate) async fn handle_analyse_session(
 
     match ai_summary::run_analysis_for_session(&pool, ai, user_id, &session_id, "", None).await {
         Some(analysis) => {
-            // JSON: protocol boundary
+
             let goal_outcome_map_json = analysis
                 .goal_outcome_map
                 .as_ref()
@@ -163,7 +163,7 @@ pub(crate) async fn handle_analyse_session(
             .into_response()
         }
         None => {
-            // JSON: protocol boundary
+
             (
                 StatusCode::UNPROCESSABLE_ENTITY,
                 Json(json!({
@@ -190,7 +190,6 @@ pub(crate) async fn handle_generate_report(
     )
     .await;
     if !check.allowed {
-        // JSON: protocol boundary
         return (
             StatusCode::FORBIDDEN,
             Json(json!({
@@ -214,11 +213,10 @@ pub(crate) async fn handle_generate_report(
     )
     .await
     {
-        // JSON: protocol boundary
         Ok(()) => Json(json!({"status": "ok"})).into_response(),
         Err(e) => {
             tracing::warn!(error = %e, "Failed to generate daily report");
-            // JSON: protocol boundary
+
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({"error": "generation_failed", "message": e.to_string()})),

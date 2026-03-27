@@ -20,7 +20,7 @@ pub struct MarketplaceVersion {
     pub version_number: i32,
     pub version_type: String,
     pub snapshot_path: String,
-    pub skills_snapshot: serde_json::Value, // JSON: DB JSONB column
+    pub skills_snapshot: serde_json::Value,
     pub created_at: DateTime<Utc>,
 }
 
@@ -32,7 +32,7 @@ pub struct MarketplaceVersionSummary {
     pub version_type: String,
     pub snapshot_path: String,
     pub skills_count: i32,
-    pub skill_names: serde_json::Value, // JSON: DB JSONB column
+    pub skill_names: serde_json::Value,
     pub created_at: DateTime<Utc>,
 }
 
@@ -80,7 +80,7 @@ pub struct AllVersionsSummaryRow {
     pub version_number: i32,
     pub version_type: String,
     pub skills_count: i32,
-    pub skill_names: serde_json::Value, // JSON: DB JSONB column
+    pub skill_names: serde_json::Value,
     pub created_at: DateTime<Utc>,
 }
 

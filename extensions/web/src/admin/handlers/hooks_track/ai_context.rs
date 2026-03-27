@@ -117,7 +117,7 @@ pub async fn gather_analysis_context(
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default();
+    .unwrap_or_else(|_| Vec::new());
 
     if let Some(msg_part) = format_user_messages(&user_messages) {
         parts.push(msg_part);
@@ -126,7 +126,7 @@ pub async fn gather_analysis_context(
     let entity_links =
         conversation_analytics::fetch_session_entity_links(pool, session_id.as_str())
             .await
-            .unwrap_or_default();
+            .unwrap_or_else(|_| Vec::new());
 
     let skills: Vec<&str> = entity_links
         .iter()
@@ -227,5 +227,5 @@ pub async fn resolve_last_message(
     .await
     .ok()
     .flatten()
-    .unwrap_or_default()
+    .unwrap_or_else(|| String::new())
 }

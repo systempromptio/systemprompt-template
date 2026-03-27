@@ -29,7 +29,7 @@
 }
 
 .content-card .card-title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: var(--font-size-xl);
   margin: 0 0 var(--spacing-sm);
   line-height: 1.3;
@@ -371,7 +371,7 @@
 }
 
 .content-list-header h1 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: clamp(2.5rem, 6vw, 3.5rem);
   font-weight: 400;
   text-transform: uppercase;

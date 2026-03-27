@@ -118,7 +118,7 @@ pub(crate) async fn my_hooks_page(
             avg_session_quality: format!("{avg_session_quality:.1}"),
         },
         event_breakdown: event_breakdown_views,
-        chart: serde_json::to_value(chart).unwrap_or_default(),
+        chart: serde_json::to_value(chart).unwrap_or_else(|_| serde_json::Value::Null),
         range: range.to_string(),
         range_24h: range == "24h",
         range_7d: range == "7d",

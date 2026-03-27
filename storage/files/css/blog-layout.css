@@ -12,7 +12,7 @@ body {
   padding: 0;
   background: var(--color-background);
   color: var(--color-text-primary);
-  font-family: var(--font-body);
+  font-family: var(--sp-font-body);
 }
 
 
@@ -79,7 +79,7 @@ body {
 }
 
 .blog-article__title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 3rem;
   line-height: 1.2;
   margin-bottom: var(--spacing-md);
@@ -212,7 +212,7 @@ body {
 }
 
 .blog-card__title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: var(--font-size-xl);
   margin-bottom: var(--spacing-sm);
   line-height: 1.3;

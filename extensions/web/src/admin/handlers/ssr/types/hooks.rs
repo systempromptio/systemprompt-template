@@ -15,7 +15,7 @@ pub struct HookCodeHook {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub headers: Option<serde_json::Value>, // JSON: protocol boundary
+    pub headers: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub command: Option<String>,
     #[serde(rename = "async", skip_serializing_if = "Option::is_none")]
@@ -34,7 +34,7 @@ pub struct HookView {
     pub matcher: String,
     pub url: String,
     pub command: String,
-    pub headers: serde_json::Value, // JSON: protocol boundary
+    pub headers: serde_json::Value,
     pub timeout: i32,
     pub is_async: bool,
     pub enabled: bool,
@@ -65,7 +65,7 @@ pub struct MyHooksPageData {
     pub plugins: Vec<NamedEntity>,
     pub stats: HooksStats,
     pub event_breakdown: Vec<EventBreakdownView>,
-    pub chart: serde_json::Value, // JSON: protocol boundary
+    pub chart: serde_json::Value,
     pub range: String,
     pub range_24h: bool,
     pub range_7d: bool,

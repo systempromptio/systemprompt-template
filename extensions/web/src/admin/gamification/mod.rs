@@ -1,6 +1,7 @@
 mod achievements;
 pub mod constants;
 pub mod queries;
+mod queries_leaderboard;
 mod recalculate;
 mod recalculate_helpers;
 

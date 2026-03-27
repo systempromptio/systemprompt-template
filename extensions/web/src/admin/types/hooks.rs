@@ -13,7 +13,7 @@ pub struct UserHook {
     pub hook_type: String,
     pub url: String,
     pub command: String,
-    pub headers: serde_json::Value, // JSON: DB JSONB column
+    pub headers: serde_json::Value,
     pub timeout: i32,
     pub is_async: bool,
     pub enabled: bool,
@@ -38,7 +38,7 @@ pub struct CreateUserHookRequest {
     #[serde(default)]
     pub command: String,
     #[serde(default = "default_headers")]
-    pub headers: serde_json::Value, // JSON: DB JSONB column
+    pub headers: serde_json::Value,
     #[serde(default = "default_timeout")]
     pub timeout: i32,
     #[serde(default)]
@@ -66,7 +66,7 @@ pub struct UpdateUserHookRequest {
     pub matcher: Option<String>,
     pub url: Option<String>,
     pub command: Option<String>,
-    pub headers: Option<serde_json::Value>, // JSON: DB JSONB column
+    pub headers: Option<serde_json::Value>,
     pub timeout: Option<i32>,
     pub is_async: Option<bool>,
     pub enabled: Option<bool>,

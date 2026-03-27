@@ -27,7 +27,7 @@ pub(crate) async fn my_marketplace_page(
 
     let user_plugins = repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| vec![]);
 
     let platform_plugin = build_platform_plugin(&services_path);
     let platform_hook_count = platform_plugin.as_ref().map_or(0, |p| p.hook_count);
@@ -38,7 +38,7 @@ pub(crate) async fn my_marketplace_page(
     let data = MyMarketplacePageData {
         page: "my-marketplace",
         title: "My Marketplace",
-        platform_plugin: serde_json::to_value(&platform_plugin).unwrap_or_default(),
+        platform_plugin: serde_json::to_value(&platform_plugin).unwrap_or_else(|_| serde_json::Value::Null),
         has_plugins: !plugins.is_empty(),
         stats: MarketplaceStats {
             plugin_count: plugins.len(),
@@ -49,7 +49,7 @@ pub(crate) async fn my_marketplace_page(
         },
         plugins,
     };
-    let data_value = serde_json::to_value(&data).unwrap_or_default();
+    let data_value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
     super::render_page(&engine, "my-marketplace", &data_value, &user_ctx, &mkt_ctx)
 }
 

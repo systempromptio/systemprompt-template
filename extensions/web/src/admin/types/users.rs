@@ -241,8 +241,6 @@ pub struct UpsertSkillSecretRequest {
     pub var_value: String,
 }
 
-// --- Enterprise / foodles-specific types ---
-
 #[derive(Debug, Deserialize)]
 pub struct UpdateSkillRequest {
     pub name: Option<String>,

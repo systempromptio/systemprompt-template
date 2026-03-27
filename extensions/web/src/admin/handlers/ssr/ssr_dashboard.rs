@@ -152,7 +152,7 @@ pub(crate) async fn dashboard_page(
         content_range_key,
         tab,
     ))
-    .unwrap_or_default();
+    .unwrap_or_else(|_| serde_json::Value::Null);
 
     if let Some(obj) = data.as_object_mut() {
         let users_val = obj.get("total_users").and_then(serde_json::Value::as_u64).unwrap_or(0);
@@ -181,9 +181,7 @@ pub(crate) async fn dashboard_page(
         {
             let report = super::ssr_dashboard_report::build_dashboard_report(&report_row);
             if let Some(obj) = data.as_object_mut() {
-                // JSON: protocol boundary
                 obj.insert("has_dashboard_report".to_string(), json!(true));
-                // JSON: protocol boundary
                 obj.insert("dashboard_report".to_string(), report);
             }
         }
@@ -250,9 +248,9 @@ fn build_dashboard_template(
     DashboardTemplateData {
         page: "dashboard",
         title: "Dashboard",
-        stats: serde_json::to_value(&dash.stats).unwrap_or_default(),
-        timeline: serde_json::to_value(&dash.timeline).unwrap_or_default(),
-        top_users: serde_json::to_value(&dash.top_users).unwrap_or_default(),
+        stats: serde_json::to_value(&dash.stats).unwrap_or_else(|_| serde_json::Value::Null),
+        timeline: serde_json::to_value(&dash.timeline).unwrap_or_else(|_| serde_json::Value::Null),
+        top_users: serde_json::to_value(&dash.top_users).unwrap_or_else(|_| serde_json::Value::Null),
         popular_skills: activity.skills,
         hourly_activity: activity.hourly,
         total_users: counts.total_users,

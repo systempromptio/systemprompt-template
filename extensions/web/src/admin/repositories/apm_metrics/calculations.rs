@@ -69,7 +69,7 @@ pub async fn calculate_daily_concurrency(
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default();
+    .unwrap_or_else(|_| Vec::new());
 
     if rows.is_empty() {
         return (0, 0.0);

@@ -290,7 +290,7 @@ pub(super) fn build_activity_data(dash: &types::DashboardData, range_key: &str) 
         &dash.usage_timeseries,
         range_key,
     ))
-    .unwrap_or_default();
+    .unwrap_or_else(|_| serde_json::Value::Null);
     ActivityData {
         hourly,
         skills,

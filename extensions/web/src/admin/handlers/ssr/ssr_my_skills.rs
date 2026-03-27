@@ -253,7 +253,7 @@ async fn build_required_secrets(
     };
     let req_secrets = super::get_services_path()
         .map(|sp| repositories::read_skill_required_secrets(&sp.join("skills"), sid))
-        .unwrap_or_else(|| vec![]);
+        .unwrap_or_else(|_| vec![]);
 
     let stored = repositories::list_skill_secrets(pool, &user_ctx.user_id, &SkillId::new(sid))
         .await

@@ -30,7 +30,7 @@ pub(crate) async fn my_plugin_view_page(
 
     let enriched = repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| vec![]);
 
     let plugin_data = enriched.iter().find(|ep| ep.plugin.plugin_id == *plugin_id);
 
@@ -67,7 +67,7 @@ pub(crate) async fn my_plugin_view_page(
         plugin: plugin_view,
     };
 
-    let value = serde_json::to_value(&data).unwrap_or_default();
+    let value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
     super::render_page(&engine, "my-plugin-view", &value, &user_ctx, &mkt_ctx)
 }
 
@@ -124,6 +124,6 @@ fn render_platform_plugin_view(
         plugin: plugin_view,
     };
 
-    let value = serde_json::to_value(&data).unwrap_or_default();
+    let value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
     super::render_page(engine, "my-plugin-view", &value, user_ctx, mkt_ctx)
 }

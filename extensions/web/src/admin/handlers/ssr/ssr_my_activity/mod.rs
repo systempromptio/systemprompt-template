@@ -84,7 +84,7 @@ pub(crate) async fn my_activity_page(
         total_count,
         stats: &stats,
     });
-    let mut value = serde_json::to_value(&data).unwrap_or_default();
+    let mut value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
     if let Some(obj) = value.as_object_mut() {
         obj.insert(
             "page_stats".to_string(),
@@ -115,7 +115,7 @@ fn build_lookups<'a>(
                 .map(|ua| ua.achievement_id.as_str())
                 .collect()
         })
-        .unwrap_or_default();
+        .unwrap_or_else(|| std::collections::HashSet::new());
 
     let unlocked_at = gamification
         .map(|g| {
@@ -124,7 +124,7 @@ fn build_lookups<'a>(
                 .map(|ua| (ua.achievement_id.as_str(), &ua.unlocked_at))
                 .collect()
         })
-        .unwrap_or_default();
+        .unwrap_or_else(|| std::collections::HashMap::new());
 
     let stats_map = stats.iter().map(|s| (s.id.as_str(), s)).collect();
 

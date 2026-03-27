@@ -28,8 +28,8 @@ pub(crate) async fn browse_plugins_page(
         repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id),
     );
 
-    let marketplace_groups = marketplace_groups.unwrap_or_default();
-    let user_plugins = user_plugins_result.unwrap_or_default();
+    let marketplace_groups = marketplace_groups.unwrap_or_else(|_| vec![]);
+    let user_plugins = user_plugins_result.unwrap_or_else(|_| vec![]);
 
     let added_base_ids: HashSet<String> = user_plugins
         .iter()
@@ -56,7 +56,7 @@ pub(crate) async fn browse_plugins_page(
         },
     };
 
-    let value = serde_json::to_value(&data).unwrap_or_default();
+    let value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
     super::render_page(&engine, "browse-plugins", &value, &user_ctx, &mkt_ctx)
 }
 

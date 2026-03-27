@@ -114,13 +114,11 @@ pub(crate) async fn process_inserted_event(params: &ProcessInsertedEventParams<'
 
     handle_prompt_title(pool, event_type, session_id, payload).await;
 
-    // Run AI analysis on Stop (per-turn) — does NOT close the session
     if event_type == "Stop" && !session_id.as_str().is_empty() {
         handle_session_analysis(params).await;
         handle_apm_and_concurrent(params).await;
     }
 
-    // Only close the session on SessionEnd (actual session termination)
     if event_type == "SessionEnd" && !session_id.as_str().is_empty() {
         handle_session_end(params).await;
     }

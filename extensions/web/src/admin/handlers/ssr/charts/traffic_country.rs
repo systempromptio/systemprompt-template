@@ -260,6 +260,6 @@ pub(crate) fn compute_country_traffic_chart(
         x_labels,
         y_labels,
         peak,
-        buckets_json: serde_json::to_string(&tooltips).unwrap_or_default(),
+        buckets_json: serde_json::to_string(&tooltips).unwrap_or_else(|_| String::new()),
     }
 }

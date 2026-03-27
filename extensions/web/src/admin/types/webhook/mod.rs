@@ -172,8 +172,6 @@ pub struct SkillTrackQuery {
     pub pid: Option<String>,
 }
 
-// --- foodles-specific types ---
-
 #[derive(Debug, Deserialize)]
 pub struct GovernQuery {
     pub plugin_id: Option<String>,

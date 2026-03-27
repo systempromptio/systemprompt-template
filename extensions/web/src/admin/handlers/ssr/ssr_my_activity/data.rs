@@ -72,7 +72,7 @@ pub(super) fn enrich_achievements(
                 })
                 .collect()
         })
-        .unwrap_or_default()
+        .unwrap_or_else(|| vec![])
 }
 
 pub(super) struct ActivityStats {

@@ -69,7 +69,7 @@ window.AdminApp = window.AdminApp || {};
                     if (me.department) {
                         parts.push(app.escapeHtml(me.department));
                     }
-                    (me.roles || []).forEach(function(role) {
+                    (me.roles || []).forEach((role) => {
                         if (role !== 'user') {
                             parts.push(app.escapeHtml(role.charAt(0).toUpperCase() + role.slice(1)));
                         }
@@ -191,7 +191,6 @@ window.AdminApp = window.AdminApp || {};
         return str.substring(0, max || 60) + '...';
     }
 
-    // Centralized dropdown manager — clone-based portal, no DOM reparenting
     const DropdownManager = {
         portal: null,
         activeMenu: null,
@@ -199,24 +198,23 @@ window.AdminApp = window.AdminApp || {};
         activeTrigger: null,
 
         init: function() {
-            var portal = document.getElementById('dropdown-portal');
+            let portal = document.getElementById('dropdown-portal');
             if (!portal) {
                 portal = document.createElement('div');
                 portal.id = 'dropdown-portal';
                 portal.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;z-index:1000;pointer-events:none;';
-                document.body.appendChild(portal);
+                document.body.append(portal);
             }
             DropdownManager.portal = portal;
 
-            // Capture-phase click handler to close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', (e) => {
                 if (!DropdownManager.activeDropdown) return;
                 if (DropdownManager.activeDropdown.contains(e.target)) return;
                 if (e.target.closest('[data-action="menu"]')) return;
                 DropdownManager.close();
             }, true);
 
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') DropdownManager.close();
             });
         },
@@ -224,15 +222,14 @@ window.AdminApp = window.AdminApp || {};
         open: function(triggerBtn) {
             DropdownManager.close();
 
-            var menu = triggerBtn.closest('.actions-menu');
+            const menu = triggerBtn.closest('.actions-menu');
             if (!menu) return;
-            var dropdown = menu.querySelector('.actions-dropdown');
+            const dropdown = menu.querySelector('.actions-dropdown');
             if (!dropdown) return;
 
-            var rect = triggerBtn.getBoundingClientRect();
+            const rect = triggerBtn.getBoundingClientRect();
 
-            // Clone dropdown into portal — original stays hidden in DOM
-            var clone = dropdown.cloneNode(true);
+            const clone = dropdown.cloneNode(true);
             clone.style.cssText = 'position:fixed;' +
                 'top:' + (rect.bottom + 4) + 'px;' +
                 'right:' + (window.innerWidth - rect.right) + 'px;' +
@@ -243,7 +240,7 @@ window.AdminApp = window.AdminApp || {};
                 'min-width:140px;padding:var(--space-1) 0;z-index:1000;';
             clone.setAttribute('data-portal-dropdown', 'true');
 
-            DropdownManager.portal.appendChild(clone);
+            DropdownManager.portal.append(clone);
             DropdownManager.activeMenu = menu;
             DropdownManager.activeDropdown = clone;
             DropdownManager.activeTrigger = triggerBtn;
@@ -265,11 +262,10 @@ window.AdminApp = window.AdminApp || {};
 
     function closeAllMenus() {
         DropdownManager.close();
-        // Legacy cleanup: handle any old-style reparented dropdowns
         document.querySelectorAll('body > .actions-dropdown').forEach(dd => {
             if (dd._originalParent) {
                 dd.style.cssText = '';
-                dd._originalParent.appendChild(dd);
+                dd._originalParent.append(dd);
                 dd._originalParent = null;
             }
         });
@@ -310,7 +306,7 @@ window.AdminApp = window.AdminApp || {};
         overlay.addEventListener('click', e => {
             if (e.target === overlay) overlay.remove();
         });
-        document.body.appendChild(overlay);
+        document.body.append(overlay);
         return overlay;
     }
 
@@ -326,7 +322,7 @@ window.AdminApp = window.AdminApp || {};
                 '<button class="btn btn-danger" data-confirm-delete="' + escapeHtml(itemId) + '">Delete</button>' +
             '</div>' +
         '</div>';
-        document.body.appendChild(overlay);
+        document.body.append(overlay);
         return overlay;
     }
 
@@ -345,12 +341,11 @@ window.AdminApp = window.AdminApp || {};
         });
     }
 
-    // Legacy function kept for backward compat — now delegates to DropdownManager
     function handleMenuToggle(e, menuBtn) {
         if (!menuBtn) menuBtn = e.target.closest('[data-action="menu"]');
         if (!menuBtn) return false;
-        var menu = menuBtn.closest('.actions-menu');
-        var wasOpen = menu && menu.classList.contains('open');
+        const menu = menuBtn.closest('.actions-menu');
+        const wasOpen = menu && menu.classList.contains('open');
         DropdownManager.close();
         if (!wasOpen) {
             DropdownManager.open(menuBtn);
@@ -376,11 +371,10 @@ window.AdminApp = window.AdminApp || {};
             script.crossOrigin = 'anonymous';
             script.onload = () => resolve(window.JSZip);
             script.onerror = () => reject(new Error('Failed to load JSZip'));
-            document.head.appendChild(script);
+            document.head.append(script);
         });
     }
 
-    // Global menu toggle handler
     app.events.on('click', '[data-action="menu"]', (e, menuBtn) => {
         handleMenuToggle(e, menuBtn);
     }, { exclusive: true });
@@ -394,7 +388,6 @@ window.AdminApp = window.AdminApp || {};
     const HOOK_EVENTS = ['PostToolUse', 'SessionStart', 'PreToolUse', 'Notification'];
     app.constants = { ROLES, HOOK_EVENTS };
 
-    // Initialize dropdown manager
     DropdownManager.init();
 
     app.shared = {
@@ -470,7 +463,7 @@ window.AdminApp = window.AdminApp || {};
             const items = container.querySelectorAll('.checklist-item');
             items.forEach((item) => {
                 const name = item.getAttribute('data-item-name') || '';
-                item.style.display = (q && name.indexOf(q) < 0) ? 'none' : '';
+                item.style.display = (q && !name.includes(q)) ? 'none' : '';
             });
         });
     }
@@ -515,7 +508,7 @@ window.AdminApp = window.AdminApp || {};
                 const icon = document.createElement('span');
                 icon.className = 'sort-icon';
                 icon.textContent = '\u25B4';
-                th.appendChild(icon);
+                th.append(icon);
             }
             th.setAttribute('data-sort-col', i);
             th.addEventListener('click', handleSortClick);
@@ -558,7 +551,7 @@ window.AdminApp = window.AdminApp || {};
             }
         }
 
-        sortableRows.sort(function(a, b) {
+        sortableRows.sort((a, b) => {
             const aCell = a.cells[colIndex];
             const bCell = b.cells[colIndex];
             if (!aCell || !bCell) return 0;
@@ -575,10 +568,10 @@ window.AdminApp = window.AdminApp || {};
         });
 
         for (let j = 0; j < sortableRows.length; j++) {
-            tbody.appendChild(sortableRows[j]);
+            tbody.append(sortableRows[j]);
             const eventId = sortableRows[j].getAttribute('data-event-id');
             if (eventId && detailMap[eventId]) {
-                tbody.appendChild(detailMap[eventId]);
+                tbody.append(detailMap[eventId]);
             }
         }
     }
@@ -596,32 +589,32 @@ window.AdminApp = window.AdminApp || {};
 
         initTableSort();
 
-        app.events.on('input', '#' + searchInputId, function(e, el) {
+        app.events.on('input', '#' + searchInputId, (e, el) => {
             let debounceTimer = el._debounceTimer || null;
             clearTimeout(debounceTimer);
-            el._debounceTimer = setTimeout(function() {
+            el._debounceTimer = setTimeout(() => {
                 const q = el.value.toLowerCase().trim();
                 const rows = document.querySelectorAll('.data-table tbody tr');
                 for (let i = 0; i < rows.length; i++) {
                     const searchVal = rows[i].getAttribute(searchAttr) || rows[i].textContent.toLowerCase();
-                    rows[i].style.display = (!q || searchVal.indexOf(q) !== -1) ? '' : 'none';
+                    rows[i].style.display = (!q || searchVal.includes(q)) ? '' : 'none';
                 }
             }, 200);
         });
 
-        app.events.on('click', '[data-action="delete"]', function(e, deleteBtn) {
+        app.events.on('click', '[data-action="delete"]', (e, deleteBtn) => {
             shared.closeAllMenus();
             const entityId = deleteBtn.getAttribute('data-entity-id');
             const deleteEntityType = deleteBtn.getAttribute('data-entity-type') || entityType;
             showDeleteDialog(deleteEntityType, entityId, opts);
         }, { exclusive: true });
 
-        app.events.on('click', '[data-confirm-delete]', function(e, confirmBtn) {
+        app.events.on('click', '[data-confirm-delete]', (e, confirmBtn) => {
             const deleteId = confirmBtn.getAttribute('data-confirm-delete');
             performDelete(entityType, deleteId, confirmBtn, opts);
         }, { exclusive: true });
 
-        app.events.on('change', '[data-action="toggle"]', function(e, toggle) {
+        app.events.on('change', '[data-action="toggle"]', (e, toggle) => {
             const id = toggle.getAttribute('data-entity-id');
             const toggleType = toggle.getAttribute('data-entity-type') || entityType;
             const enabled = toggle.checked;
@@ -653,9 +646,9 @@ window.AdminApp = window.AdminApp || {};
             app.api(apiPath, {
                 method: 'PUT',
                 body: JSON.stringify({ enabled: enabled })
-            }).then(function() {
+            }).then(() => {
                 app.Toast.show(toggleType + ' ' + (enabled ? 'enabled' : 'disabled'), 'success');
-            }).catch(function(err) {
+            }).catch((err) => {
                 toggle.checked = !enabled;
                 if (row) {
                     row.setAttribute('data-enabled', enabled ? 'disabled' : 'enabled');
@@ -688,11 +681,11 @@ window.AdminApp = window.AdminApp || {};
         const apiPath = opts.deleteApiPath
             ? opts.deleteApiPath(entityId)
             : '/' + entityType + 's/' + encodeURIComponent(entityId);
-        app.api(apiPath, { method: 'DELETE' }).then(function() {
+        app.api(apiPath, { method: 'DELETE' }).then(() => {
             app.Toast.show(entityType + ' deleted', 'success');
             shared.closeDeleteConfirm();
             window.location.reload();
-        }).catch(function(err) {
+        }).catch((err) => {
             app.Toast.show(err.message || 'Failed to delete ' + entityType, 'error');
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Delete';
@@ -711,7 +704,7 @@ window.AdminApp = window.AdminApp || {};
         const existingId = form.querySelector('[name="' + idField + '"]');
         const isEdit = existingId && existingId.readOnly && existingId.value;
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(form);
             const body = opts.buildBody ? opts.buildBody(form, formData) : formDataToObject(formData);
@@ -729,11 +722,11 @@ window.AdminApp = window.AdminApp || {};
             if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
 
             app.api(url, { method: method, body: JSON.stringify(body) })
-                .then(function() {
+                .then(() => {
                     app.Toast.show(entity + ' saved!', 'success');
                     window.location.href = app.BASE + listPath;
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     app.Toast.show(err.message || 'Failed to save ' + entity, 'error');
                     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = isEdit ? 'Save Changes' : 'Create'; }
                 });
@@ -742,9 +735,9 @@ window.AdminApp = window.AdminApp || {};
 
     function formDataToObject(formData) {
         const obj = {};
-        formData.forEach(function(value, key) {
+        formData.forEach((value, key) => {
             if (key === 'tags') {
-                obj[key] = value.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+                obj[key] = value.split(',').map((t) => t.trim()).filter(Boolean);
             } else {
                 obj[key] = value;
             }
@@ -752,7 +745,7 @@ window.AdminApp = window.AdminApp || {};
         return obj;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
         app.events.init();
         initTableSort();
     });
@@ -767,7 +760,7 @@ window.AdminApp = window.AdminApp || {};
 (function(app) {
     'use strict';
 
-    app.events.on('click', '.install-trigger', function(e, trigger) {
+    app.events.on('click', '.install-trigger', (e, trigger) => {
         const menu = document.getElementById('install-menu');
         if (!menu) return;
         const isOpen = menu.classList.contains('open');
@@ -775,28 +768,28 @@ window.AdminApp = window.AdminApp || {};
         trigger.setAttribute('aria-expanded', !isOpen);
     }, { exclusive: true });
 
-    app.events.on('click', '[data-install-tab]', function(e, tabBtn) {
+    app.events.on('click', '[data-install-tab]', (e, tabBtn) => {
         const widget = tabBtn.closest('.install-menu');
         if (!widget) return;
         const tabId = tabBtn.getAttribute('data-install-tab');
-        widget.querySelectorAll('[data-install-tab]').forEach(function(b) {
+        widget.querySelectorAll('[data-install-tab]').forEach((b) => {
             b.classList.toggle('active', b === tabBtn);
         });
-        widget.querySelectorAll('[data-install-panel]').forEach(function(p) {
+        widget.querySelectorAll('[data-install-panel]').forEach((p) => {
             p.style.display = p.getAttribute('data-install-panel') === tabId ? '' : 'none';
         });
     });
 
-    app.events.on('click', '[data-copy]', function(e, copyBtn) {
+    app.events.on('click', '[data-copy]', (e, copyBtn) => {
         const text = copyBtn.getAttribute('data-copy');
-        navigator.clipboard.writeText(text).then(function() {
+        navigator.clipboard.writeText(text).then(() => {
             const orig = copyBtn.innerHTML;
             copyBtn.innerHTML = '<span style="color:var(--success);font-size:16px">&#10003;</span>';
-            setTimeout(function() { copyBtn.innerHTML = orig; }, 2000);
+            setTimeout(() => { copyBtn.innerHTML = orig; }, 2000);
         });
     });
 
-    app.events.on('click', '[data-action="toggle-token"]', function(e, btn) {
+    app.events.on('click', '[data-action="toggle-token"]', (e, btn) => {
         const box = btn.closest('.install-token-box');
         if (!box) return;
         const code = box.querySelector('.install-token-value');
@@ -813,9 +806,8 @@ window.AdminApp = window.AdminApp || {};
         }
     });
 
-    // Apply initial mask on load
-    document.addEventListener('DOMContentLoaded', function() {
-        var tokenEl = document.querySelector('.install-token-value[data-masked="true"]');
+    document.addEventListener('DOMContentLoaded', () => {
+        const tokenEl = document.querySelector('.install-token-value[data-masked="true"]');
         if (tokenEl) tokenEl.style.filter = 'blur(4px)';
     });
 })(window.AdminApp);
@@ -829,7 +821,7 @@ window.AdminApp = window.AdminApp || {};
             const table = document.querySelector(tableSelector);
             if (!table) return;
 
-            table.addEventListener('click', function(e) {
+            table.addEventListener('click', (e) => {
                 if (e.target.closest('[data-no-row-click]') ||
                     e.target.closest('.actions-menu') ||
                     e.target.closest('.btn') ||
@@ -858,7 +850,7 @@ window.AdminApp = window.AdminApp || {};
 
             const table = row.closest('table');
             if (table) {
-                table.querySelectorAll('tr.detail-row.visible').forEach(function(r) {
+                table.querySelectorAll('tr.detail-row.visible').forEach((r) => {
                     if (r !== detailRow) {
                         r.classList.remove('visible');
                         const prevRow = r.previousElementSibling;
@@ -929,13 +921,13 @@ window.AdminApp = window.AdminApp || {};
 
                     const allPlugins = config.allPlugins || [];
                     const currentSet = {};
-                    (currentPluginIds || []).forEach(function(id) { currentSet[id] = true; });
+                    (currentPluginIds || []).forEach((id) => { currentSet[id] = true; });
 
                     let html = '<div class="assign-panel-checklist">';
                     if (allPlugins.length === 0) {
                         html += '<p style="color:var(--text-tertiary);font-size:var(--text-sm)">No plugins available.</p>';
                     } else {
-                        allPlugins.forEach(function(p) {
+                        allPlugins.forEach((p) => {
                             const checked = currentSet[p.id] ? ' checked' : '';
                             html += '<label class="acl-checkbox-row">' +
                                 '<input type="checkbox" name="plugin_id" value="' + app.escapeHtml(p.id) + '"' + checked + '>' +
@@ -965,16 +957,14 @@ window.AdminApp = window.AdminApp || {};
         },
 
         initEditPanel: function(config) {
-            // config: { panelId, fields, apiBasePath, idField, entityLabel }
-            // fields: [{name, label, type:'text'|'textarea', rows, required}]
             const panelApi = OrgCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
-            var currentEntityId = null;
+            let currentEntityId = null;
 
             function buildForm(entityData) {
-                var html = '<form class="edit-panel-form">';
-                (config.fields || []).forEach(function(f) {
-                    var val = entityData[f.name] || '';
+                let html = '<form class="edit-panel-form">';
+                (config.fields || []).forEach((f) => {
+                    let val = entityData[f.name] || '';
                     if (Array.isArray(val)) val = val.join(', ');
                     html += '<div class="form-group">';
                     html += '<label class="form-label">' + app.escapeHtml(f.label) + '</label>';

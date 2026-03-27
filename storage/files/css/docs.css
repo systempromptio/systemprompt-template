@@ -4,7 +4,7 @@
   padding: 0;
   background: var(--color-background);
   color: var(--color-text-primary);
-  font-family: var(--font-body);
+  font-family: var(--sp-font-body);
 }
 
 .docs-background {
@@ -184,7 +184,7 @@
 }
 
 .docs-nav-title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
@@ -329,7 +329,7 @@
 }
 
 .docs-title-row h1 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 2.5rem;
   line-height: 1.2;
   margin: 0;
@@ -339,7 +339,7 @@
 }
 
 .docs-header h1 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 2.5rem;
   line-height: 1.2;
   margin: 0 0 var(--spacing-sm) 0;
@@ -412,7 +412,7 @@
 }
 
 .docs-content h2 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 1.75rem;
   margin: var(--spacing-xxl) 0 var(--spacing-md) 0;
   padding-top: var(--spacing-lg);
@@ -428,7 +428,7 @@
 }
 
 .docs-content h3 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 1.25rem;
   margin: var(--spacing-xl) 0 var(--spacing-sm) 0;
   letter-spacing: 0.02em;
@@ -589,7 +589,7 @@
 }
 
 .docs-learning-objectives h2 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 1rem;
   font-weight: var(--font-weight-semibold);
   margin: 0 0 var(--spacing-xs) 0;
@@ -641,7 +641,7 @@
 }
 
 .docs-related-title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
@@ -792,7 +792,7 @@
 }
 
 .toc-title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
@@ -902,7 +902,7 @@
 }
 
 .toc-mobile-label {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
@@ -1011,7 +1011,7 @@
 }
 
 .docs-card__title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: var(--font-size-lg);
   margin: 0 0 var(--spacing-sm) 0;
 }

@@ -37,7 +37,7 @@ pub(super) async fn build_activity_event(
         .collect();
     let activity_feed = control_center::fetch_session_events(pool, user_id, &session_ids)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| Vec::new());
 
     let active_session_ids: HashSet<String> = recent_sessions
         .iter()
@@ -69,8 +69,8 @@ pub(super) async fn build_activity_event(
 
     enrich_with_ai_summaries(&mut session_groups, &ai_summaries_res, recent_sessions);
 
-    let entity_links = entity_links_res.unwrap_or_default();
-    let session_ratings = session_ratings_res.unwrap_or_default();
+    let entity_links = entity_links_res.unwrap_or_else(|_| Vec::new());
+    let session_ratings = session_ratings_res.unwrap_or_else(|_| Vec::new());
     enrichment::enrich_session_groups(&mut session_groups, &session_ratings, &entity_links);
 
     let analysed_list: Vec<_> = analysed_ids.into_iter().collect();

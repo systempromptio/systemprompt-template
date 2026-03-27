@@ -60,7 +60,7 @@ fn read_agent_from_fs(agents_path: &std::path::Path, agent_id: &str) -> (String,
 
     let md_path = agents_path.join(format!("{agent_id}.md"));
     let system_prompt = if md_path.exists() {
-        std::fs::read_to_string(&md_path).unwrap_or_default()
+        std::fs::read_to_string(&md_path).unwrap_or_else(|_| String::new())
     } else {
         String::new()
     };

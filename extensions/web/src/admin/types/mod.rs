@@ -2,6 +2,7 @@ pub mod access_control;
 pub mod control_center;
 pub mod conversation_analytics;
 mod dashboard;
+mod dashboard_enterprise;
 pub mod hooks;
 pub mod hooks_export;
 mod jobs;

@@ -47,7 +47,7 @@ pub(crate) async fn select_and_fork_plugins_handler(
 
     let authorized = repositories::org_marketplaces::resolve_authorized_org_plugin_ids(&pool)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| std::collections::HashSet::new());
 
     let valid_ids: Vec<String> = req
         .plugin_ids
@@ -114,7 +114,7 @@ async fn fork_valid_plugins(
 
     let existing_plugins = repositories::list_user_plugins(pool, &user_ctx.user_id)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|_| Vec::new());
     let existing_base_ids: std::collections::HashSet<String> = existing_plugins
         .iter()
         .filter_map(|p| p.base_plugin_id.clone())

@@ -107,7 +107,6 @@ pub(crate) async fn get_base_skill_content_handler(
         }
     };
 
-    // JSON: protocol boundary (skill config YAML has user-defined schema)
     let config: serde_json::Value = match serde_yaml::from_str(&config_str) {
         Ok(v) => v,
         Err(e) => {

@@ -161,7 +161,7 @@ fn spawn_audit_recording(params: &AuditParams<'_>) {
         decision: params.evaluation.decision.to_string(),
         policy: params.evaluation.policy.clone(),
         reason: params.evaluation.reason.clone(),
-        evaluated_rules: serde_json::to_value(&params.evaluation.rules).unwrap_or_default(),
+        evaluated_rules: serde_json::to_value(&params.evaluation.rules).unwrap_or_else(|_| serde_json::Value::Null),
         plugin_id: params.plugin_id.map(str::to_string),
     };
 

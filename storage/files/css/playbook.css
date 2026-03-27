@@ -70,7 +70,7 @@
 }
 
 .playbook-hero__title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: clamp(2.5rem, 6vw, 4rem);
   font-weight: 400;
   text-transform: uppercase;
@@ -121,7 +121,7 @@
 }
 
 .playbook-category__title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 1.5rem;
   font-weight: 400;
   text-transform: uppercase;
@@ -188,7 +188,7 @@
 }
 
 .playbook-list .page-header h1 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: clamp(2.5rem, 6vw, 3.5rem);
   font-weight: 400;
   text-transform: uppercase;
@@ -269,7 +269,7 @@
 }
 
 .playbook-post .post-header h1 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 2rem;
   text-transform: uppercase;
   color: var(--color-text-primary);
@@ -395,7 +395,7 @@
 .playbook-post .post-content h4,
 .playbook-post .post-content h5,
 .playbook-post .post-content h6 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   color: var(--color-text-primary);
   margin-top: var(--spacing-xxl);
   margin-bottom: var(--spacing-md);
@@ -832,7 +832,7 @@
 }
 
 .playbook-related-title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 1.25rem;
   font-weight: 400;
   text-transform: uppercase;
@@ -891,7 +891,7 @@
 }
 
 .playbook-category-title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 1.125rem;
   font-weight: 400;
   text-transform: uppercase;

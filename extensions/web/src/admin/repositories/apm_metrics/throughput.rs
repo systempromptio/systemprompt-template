@@ -59,7 +59,7 @@ async fn calculate_peak_throughput(pool: &PgPool, user_id: &str, date: NaiveDate
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default();
+    .unwrap_or_else(|_| Vec::new());
 
     session_rows
         .iter()

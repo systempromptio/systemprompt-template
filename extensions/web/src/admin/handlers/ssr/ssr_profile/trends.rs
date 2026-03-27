@@ -5,7 +5,6 @@ pub fn build_trend_data(
     daily_summaries: &[DailySummaryRow],
     global: &GlobalAverages,
 ) -> serde_json::Value {
-    // JSON: protocol boundary — template rendering
     if daily_summaries.is_empty() {
         return json!({ "has_trends": false });
     }

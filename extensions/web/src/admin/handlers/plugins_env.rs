@@ -119,7 +119,6 @@ pub(crate) async fn update_plugin_env_handler(
     StatusCode::NO_CONTENT.into_response()
 }
 
-// JSON: protocol boundary (plugin variable definitions have user-defined schema)
 fn load_plugin_variable_defs(
     plugin_id: &str,
 ) -> Result<Vec<serde_json::Value>, crate::error::MarketplaceError> {

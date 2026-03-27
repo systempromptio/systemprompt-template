@@ -28,7 +28,6 @@ pub(crate) async fn marketplace_json_handler(
         .join("marketplace.json");
     if persistent_path.is_file() {
         match std::fs::read_to_string(&persistent_path) {
-            // JSON: protocol boundary (marketplace export has user-defined schema)
             Ok(content) => match serde_json::from_str::<serde_json::Value>(&content) {
                 Ok(json) => return Json(json).into_response(),
                 Err(e) => {
@@ -77,7 +76,6 @@ pub(crate) async fn marketplace_json_handler(
         }
     };
 
-    // JSON: protocol boundary (marketplace export has user-defined schema)
     let marketplace_json: serde_json::Value =
         match serde_json::from_str(&response.marketplace.content) {
             Ok(v) => v,

@@ -232,7 +232,7 @@ pub(crate) async fn achievements_page(
         total_count,
     };
 
-    let mut value = serde_json::to_value(&data).unwrap_or_default();
+    let mut value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
     if let Some(obj) = value.as_object_mut() {
         obj.insert(
             "page_stats".to_string(),
@@ -261,11 +261,11 @@ pub(crate) async fn leaderboard_page(
         crate::admin::gamification::queries::get_leaderboard(&pool, 50, 0, None),
         crate::admin::gamification::queries::get_leaderboard_averages(&pool),
     );
-    let entries = entries.unwrap_or_default();
+    let entries = entries.unwrap_or_else(|_| vec![]);
     let averages = averages.ok();
 
     let current_user_id = user_ctx.user_id.to_string();
     let data = build_leaderboard_data(&entries, averages.as_ref(), &current_user_id, sort);
-    let value = serde_json::to_value(&data).unwrap_or_default();
+    let value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
     super::render_page(&engine, "leaderboard", &value, &user_ctx, &mkt_ctx)
 }

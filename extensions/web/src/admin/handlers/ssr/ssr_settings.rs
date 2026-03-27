@@ -65,7 +65,7 @@ pub(crate) async fn settings_page(
         usage_items,
     };
 
-    let value = serde_json::to_value(&data).unwrap_or_default();
+    let value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
     super::render_page(&engine, "settings", &value, &user_ctx, &mkt_ctx)
 }
 

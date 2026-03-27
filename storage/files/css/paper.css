@@ -104,7 +104,7 @@
 }
 
 .paper-toc__title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
@@ -183,7 +183,7 @@
 }
 
 .paper-hero__title {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 2.5rem;
   font-weight: var(--font-weight-bold);
   line-height: 1.2;
@@ -217,7 +217,7 @@
 }
 
 .paper-header h1 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 2.5rem;
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
@@ -283,7 +283,7 @@
 }
 
 .paper-section__text h2 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 2rem;
   font-weight: var(--font-weight-bold);
   line-height: 1.3;
@@ -297,7 +297,7 @@
 }
 
 .paper-section__text h3 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 1.5rem;
   font-weight: var(--font-weight-bold);
   line-height: 1.3;
@@ -309,7 +309,7 @@
 }
 
 .paper-section__text h4 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 1.25rem;
   font-weight: var(--font-weight-bold);
   line-height: 1.3;
@@ -473,7 +473,7 @@
 }
 
 .banner-text h3 {
-  font-family: var(--font-heading);
+  font-family: var(--sp-font-heading);
   font-size: 1.25rem;
   font-weight: var(--font-weight-bold);
   margin-bottom: var(--spacing-xs);

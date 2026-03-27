@@ -173,12 +173,12 @@ body { margin: 0; }
     margin: 0;
     color: var(--text-primary);
     letter-spacing: -0.01em;
-    font-family: var(--font-heading);
+    font-family: var(--sp-font-heading);
     flex: 1;
 }
 
 .admin-layout h1, .admin-layout h2, .admin-layout h3 {
-    font-family: var(--font-heading);
+    font-family: var(--sp-font-heading);
 }
 
 .admin-layout a {
@@ -4233,7 +4233,7 @@ tr.top-3 {
     }
     .edit-panel-form textarea.form-control {
         min-height: 200px;
-        font-family: var(--font-mono);
+        font-family: var(--sp-font-mono);
         resize: vertical;
     }
 

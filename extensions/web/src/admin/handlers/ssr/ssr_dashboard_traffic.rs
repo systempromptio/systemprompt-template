@@ -232,12 +232,12 @@ fn build_traffic_breakdowns(
         &t.timeseries,
         traffic_range_key,
     ))
-    .unwrap_or_default();
+    .unwrap_or_else(|_| serde_json::Value::Null);
     let country_chart = serde_json::to_value(super::charts::compute_country_traffic_chart(
         &t.country_timeseries,
         traffic_range_key,
     ))
-    .unwrap_or_default();
+    .unwrap_or_else(|_| serde_json::Value::Null);
 
     let max_source = t.sources.first().map_or(1, |s| s.sessions).max(1);
     let sources: Vec<SourceBar> = t

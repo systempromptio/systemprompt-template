@@ -35,7 +35,7 @@ pub async fn fetch_analysed_session_ids(
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default();
+    .unwrap_or_else(|_| Vec::new());
     rows.into_iter().collect()
 }
 
@@ -60,7 +60,7 @@ pub async fn fetch_session_analyses_batch(
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default()
+    .unwrap_or_else(|_| Vec::new())
 }
 
 pub async fn fetch_recent_analyses(
@@ -85,5 +85,5 @@ pub async fn fetch_recent_analyses(
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_default()
+    .unwrap_or_else(|_| Vec::new())
 }

@@ -76,7 +76,7 @@ pub(crate) async fn profile_page(
     let gamification_profile = gamification.ok().flatten();
     let has_gamification = gamification_profile.is_some();
 
-    let data = json!({ // JSON: protocol boundary — template rendering
+    let data = json!({
         "page": "profile",
         "title": "Profile & Insights",
         "archetype": {

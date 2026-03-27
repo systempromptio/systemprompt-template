@@ -49,14 +49,14 @@ pub(crate) async fn list_hooks_handler(
     }
 
     let plugins =
-        repositories::list_plugins_for_roles(&services_path, &user_ctx.roles).unwrap_or_default();
+        repositories::list_plugins_for_roles(&services_path, &user_ctx.roles).unwrap_or_else(|_| Vec::new());
     let visible_ids: std::collections::HashSet<String> =
         plugins.iter().map(|p| p.id.clone()).collect();
 
     let filtered: Vec<_> = hooks
         .into_iter()
         .filter(|h| {
-            h.plugin_id.is_empty() // system hooks with no specific plugin
+            h.plugin_id.is_empty()
                 || visible_ids.contains(&h.plugin_id)
         })
         .collect();

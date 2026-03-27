@@ -257,7 +257,7 @@ pub fn load_plugin_onboarding_configs() -> HashMap<String, PluginOnboardingConfi
     let plugins_path = if let Ok(profile) = ProfileBootstrap::get() {
         std::path::PathBuf::from(&profile.paths.services).join("plugins")
     } else {
-        let cwd = std::env::current_dir().unwrap_or_default();
+        let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
         cwd.join("services").join("plugins")
     };
     let mut configs = HashMap::new();

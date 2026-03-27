@@ -107,7 +107,7 @@ fn parse_agent_skills(val: &serde_yaml::Value) -> Vec<AgentSkillInfo> {
                 })
                 .collect()
         })
-        .unwrap_or_default()
+        .unwrap_or_else(|| Vec::new())
 }
 
 pub fn find_agent(

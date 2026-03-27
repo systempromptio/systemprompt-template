@@ -110,7 +110,7 @@ pub(super) fn build_dashboard_report(
         breakdown_visibility,
     };
 
-    serde_json::to_value(&view).unwrap_or_default()
+    serde_json::to_value(&view).unwrap_or_else(|_| serde_json::Value::Null)
 }
 
 pub(crate) async fn handle_generate_traffic_report(

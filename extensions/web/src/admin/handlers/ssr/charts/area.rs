@@ -4,7 +4,6 @@ use serde::Serialize;
 
 use super::svg::{build_svg_line, build_y_labels, svg_x, AxisLabel};
 
-// JSON: protocol boundary — callers construct template-ready values via callback
 pub(crate) fn compute_bar_chart<T, F, G>(
     items: &[T],
     get_count: F,

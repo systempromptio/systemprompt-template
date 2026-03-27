@@ -80,10 +80,10 @@ fn flush_turn(turns: &mut Vec<Turn>, state: &mut FlushTurnState) {
         let error_list: Vec<ToolError> = std::mem::take(&mut state.errors);
 
         turns.push(Turn {
-            prompt_text: state.prompt.take().unwrap_or_default(),
-            prompt_time: state.prompt_time.take().unwrap_or_default(),
-            response_text: state.response.take().unwrap_or_default(),
-            response_time: state.response_time.take().unwrap_or_default(),
+            prompt_text: state.prompt.take().unwrap_or_else(|| String::new()),
+            prompt_time: state.prompt_time.take().unwrap_or_else(|| String::new()),
+            response_text: state.response.take().unwrap_or_else(|| String::new()),
+            response_time: state.response_time.take().unwrap_or_else(|| String::new()),
             tool_groups: tool_groups_typed,
             total_tools,
             has_tools: total_tools > 0,

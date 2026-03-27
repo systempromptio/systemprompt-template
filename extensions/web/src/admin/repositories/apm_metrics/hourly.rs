@@ -105,8 +105,6 @@ fn build_hourly_buckets(
     buckets
 }
 
-// --- Daily breakdown for 7d / 30d ---
-
 pub async fn fetch_daily_breakdown(pool: &PgPool, user_id: &str, days: i32) -> Vec<DailyApmBucket> {
     let (event_rows, session_rows) = tokio::join!(
         fetch_daily_events(pool, user_id, days),
