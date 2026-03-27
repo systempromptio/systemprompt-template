@@ -55,7 +55,7 @@ pub(super) fn enrich_achievements(
     gamification: Option<&crate::admin::types::UserGamificationProfile>,
 ) -> Vec<EnrichedAchievementView> {
     gamification
-        .map(|g| {
+        .map_or_else(Vec::new, |g| {
             let defs = crate::admin::gamification::ACHIEVEMENTS;
             g.achievements
                 .iter()
@@ -72,7 +72,6 @@ pub(super) fn enrich_achievements(
                 })
                 .collect()
         })
-        .unwrap_or_else(|| vec![])
 }
 
 pub(super) struct ActivityStats {

@@ -28,9 +28,9 @@
         const bar = '<div class="unlock-bar"><div class="unlock-bar-fill" style="width:' + pct + '%"></div></div>';
         return '<div class="' + cls + '">' +
             '<div class="achievement-icon">' + icon + '</div>' +
-            '<div style="font-weight:600;font-size:var(--text-sm);color:var(--text-primary)">' + escapeHtml(a.name) + '</div>' +
-            '<div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1)">' + escapeHtml(a.description) + '</div>' +
-            '<div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1)">' + a.total_unlocked + ' unlocked</div>' +
+            '<div style="font-weight:600;font-size:var(--sp-text-sm);color:var(--sp-text-primary)">' + escapeHtml(a.name) + '</div>' +
+            '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:var(--sp-space-1)">' + escapeHtml(a.description) + '</div>' +
+            '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:var(--sp-space-1)">' + a.total_unlocked + ' unlocked</div>' +
             bar +
         '</div>';
     }
@@ -44,7 +44,7 @@
         let html = '';
         categories.forEach((cat) => {
             const cards = groups[cat].map(renderAchievementCard).join('');
-            html += '<div style="margin-bottom:var(--space-6)">' +
+            html += '<div style="margin-bottom:var(--sp-space-6)">' +
                 '<div class="section-title">' + escapeHtml(cat) + '</div>' +
                 '<div class="achievement-grid">' + cards + '</div>' +
             '</div>';

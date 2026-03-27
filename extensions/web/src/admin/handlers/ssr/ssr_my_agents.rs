@@ -124,7 +124,7 @@ fn build_single_agent_json(
     let plugins = plugin_assignments
         .get(a.agent_id.as_str())
         .cloned()
-        .unwrap_or_else(|| vec![]);
+        .unwrap_or_else(Vec::new);
     let trend_direction = trend.map_or("flat", |t| {
         if t.recent_avg > t.previous_avg + 0.2 {
             "up"

@@ -8,7 +8,7 @@
         const container = document.getElementById(containerId);
         if (container) {
             container.removeAttribute('data-loaded');
-            container.innerHTML = '<div style="padding:var(--space-4);color:var(--text-tertiary);font-size:var(--text-sm)">Refreshing...</div>';
+            container.innerHTML = '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Refreshing...</div>';
         }
     });
     app.pluginDetails = { render: () => '' };

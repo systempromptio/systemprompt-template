@@ -144,9 +144,9 @@
             const overlay = document.createElement('div');
             overlay.className = 'confirm-overlay';
             overlay.innerHTML = '<div class="confirm-dialog">' +
-                '<h3 style="margin:0 0 var(--space-3)">Publish to GitHub?</h3>' +
-                '<p style="margin:0 0 var(--space-4);color:var(--text-secondary);font-size:var(--text-sm)">This will push the current marketplace plugins to the linked GitHub repository. Any remote changes will be overwritten.</p>' +
-                '<div style="display:flex;gap:var(--space-3);justify-content:flex-end">' +
+                '<h3 style="margin:0 0 var(--sp-space-3)">Publish to GitHub?</h3>' +
+                '<p style="margin:0 0 var(--sp-space-4);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">This will push the current marketplace plugins to the linked GitHub repository. Any remote changes will be overwritten.</p>' +
+                '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end">' +
                     '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                     '<button class="btn btn-primary" data-confirm-publish>Publish</button>' +
                 '</div>' +
@@ -193,10 +193,10 @@
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3 style="margin:0 0 var(--space-3)">Delete Marketplace?</h3>' +
-            '<p style="margin:0 0 var(--space-2);color:var(--text-secondary);font-size:var(--text-sm)">You are about to delete <strong>' + app.escapeHtml(marketplaceId) + '</strong>.</p>' +
-            '<p style="margin:0 0 var(--space-5);color:var(--text-secondary);font-size:var(--text-sm)">This will remove the marketplace and all plugin associations. This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end">' +
+            '<h3 style="margin:0 0 var(--sp-space-3)">Delete Marketplace?</h3>' +
+            '<p style="margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">You are about to delete <strong>' + app.escapeHtml(marketplaceId) + '</strong>.</p>' +
+            '<p style="margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">This will remove the marketplace and all plugin associations. This action cannot be undone.</p>' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end">' +
                 '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                 '<button class="btn btn-danger" data-confirm-delete="' + app.escapeHtml(marketplaceId) + '">Delete Marketplace</button>' +
             '</div>' +
@@ -256,13 +256,13 @@
 
                     let html = '<div class="assign-panel-checklist">';
                     if (!allPlugins.length) {
-                        html += '<p style="color:var(--text-tertiary);font-size:var(--text-sm)">No plugins available.</p>';
+                        html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No plugins available.</p>';
                     } else {
                         allPlugins.forEach((p) => {
                             const pid = p.id || p.plugin_id;
                             const pname = p.name || pid;
                             const checked = currentIds[pid] ? ' checked' : '';
-                            html += '<label class="acl-checkbox-row" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1) 0;cursor:pointer">' +
+                            html += '<label class="acl-checkbox-row" style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;cursor:pointer">' +
                                 '<input type="checkbox" name="plugin_id" value="' + app.escapeHtml(pid) + '"' + checked + '>' +
                                 '<span>' + app.escapeHtml(pname) + '</span>' +
                                 '</label>';
@@ -396,11 +396,11 @@
 
                     html += '<div class="form-group">' +
                         '<label class="field-label">Roles</label>' +
-                        '<div style="display:flex;flex-wrap:wrap;gap:var(--space-1);padding:var(--space-2) 0">';
+                        '<div style="display:flex;flex-wrap:wrap;gap:var(--sp-space-1);padding:var(--sp-space-2) 0">';
                     allRoles.forEach((r) => {
                         const val = r.value || r;
                         const checked = currentRoles[val] ? ' checked' : '';
-                        html += '<label style="display:inline-flex;align-items:center;gap:var(--space-2);margin-right:var(--space-3);font-size:var(--text-sm);cursor:pointer">' +
+                        html += '<label style="display:inline-flex;align-items:center;gap:var(--sp-space-2);margin-right:var(--sp-space-3);font-size:var(--sp-text-sm);cursor:pointer">' +
                             '<input type="checkbox" name="roles" value="' + app.escapeHtml(val) + '"' + checked + '> ' +
                             app.escapeHtml(val) + '</label>';
                     });
@@ -408,31 +408,31 @@
 
                     html += '<div class="form-group">' +
                         '<label class="field-label">Departments</label>' +
-                        '<div class="checklist-container" style="max-height:300px;overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">' +
-                        '<div class="checklist-item" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2);border-bottom:1px solid var(--border-subtle)">' +
+                        '<div class="checklist-container" style="max-height:300px;overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">' +
+                        '<div class="checklist-item" style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2);border-bottom:1px solid var(--sp-border-subtle)">' +
                         '<input type="checkbox" id="panel-dept-check-all">' +
-                        '<label for="panel-dept-check-all" style="flex:1;font-size:var(--text-sm);cursor:pointer;color:var(--text-primary);font-weight:600">Check all</label>' +
+                        '<label for="panel-dept-check-all" style="flex:1;font-size:var(--sp-text-sm);cursor:pointer;color:var(--sp-text-primary);font-weight:600">Check all</label>' +
                         '</div>';
                     allDepts.forEach((d, i) => {
                         const val = d.value || d.name || d;
                         const checked = currentDepts[val] ? ' checked' : '';
                         const defaultChecked = deptDefaults[val] ? ' checked' : '';
-                        html += '<div class="checklist-item" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2)">' +
+                        html += '<div class="checklist-item" style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2)">' +
                             '<input type="checkbox" name="departments" value="' + app.escapeHtml(val) + '"' + checked + ' id="panel-dept-' + i + '">' +
-                            '<label for="panel-dept-' + i + '" style="flex:1;font-size:var(--text-sm);cursor:pointer;color:var(--text-primary)">' + app.escapeHtml(val) + '</label>' +
-                            '<span class="badge badge-gray" style="font-size:var(--text-xs)">' + (d.user_count || 0) + ' users</span>' +
-                            '<label style="display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);color:var(--text-secondary);cursor:pointer;white-space:nowrap">' +
+                            '<label for="panel-dept-' + i + '" style="flex:1;font-size:var(--sp-text-sm);cursor:pointer;color:var(--sp-text-primary)">' + app.escapeHtml(val) + '</label>' +
+                            '<span class="badge badge-gray" style="font-size:var(--sp-text-xs)">' + (d.user_count || 0) + ' users</span>' +
+                            '<label style="display:inline-flex;align-items:center;gap:4px;font-size:var(--sp-text-xs);color:var(--sp-text-secondary);cursor:pointer;white-space:nowrap">' +
                             '<input type="checkbox" name="dept_default_' + val + '"' + defaultChecked + '> Default</label>' +
                             '</div>';
                     });
                     html += '</div>' +
-                        '<span class="field-hint" style="margin-top:var(--space-2);display:block">At least one department is required.</span>' +
+                        '<span class="field-hint" style="margin-top:var(--sp-space-2);display:block">At least one department is required.</span>' +
                         '</div>';
 
                     html += '<div class="form-group">' +
                         '<label class="field-label">Plugins</label>' +
-                        '<input type="text" class="field-input" placeholder="Filter plugins..." id="panel-plugin-filter" style="margin-bottom:var(--space-2)">' +
-                        '<div class="checklist-container" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">';
+                        '<input type="text" class="field-input" placeholder="Filter plugins..." id="panel-plugin-filter" style="margin-bottom:var(--sp-space-2)">' +
+                        '<div class="checklist-container" style="max-height:200px;overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">';
                     allPlugins.forEach((p, i) => {
                         const pid = p.id || p.plugin_id;
                         const pname = p.name || pid;

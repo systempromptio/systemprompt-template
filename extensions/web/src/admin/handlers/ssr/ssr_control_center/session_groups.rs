@@ -55,8 +55,8 @@ fn build_single_group(
 
     let start_time = chronological.first().map(|e| e.created_at);
     let end_time = chronological.last().map(|e| e.created_at);
-    let started_at = start_time.map(|t| t.to_rfc3339()).unwrap_or_else(|| String::new());
-    let last_activity_at = end_time.map(|t| t.to_rfc3339()).unwrap_or_else(|| String::new());
+    let started_at = start_time.map_or_else(String::new, |t| t.to_rfc3339());
+    let last_activity_at = end_time.map_or_else(String::new, |t| t.to_rfc3339());
     let duration_display = match (start_time, end_time) {
         (Some(s), Some(e)) => format_duration(e - s),
         _ => String::new(),
@@ -131,7 +131,7 @@ fn extract_turn_details(turn_list: &[Turn]) -> (String, String, Vec<ToolError>) 
                 Some(t.prompt_text.clone())
             }
         })
-        .unwrap_or_else(|| String::new());
+        .unwrap_or_else(String::new);
 
     let last_response = turn_list
         .iter()
@@ -143,7 +143,7 @@ fn extract_turn_details(turn_list: &[Turn]) -> (String, String, Vec<ToolError>) 
                 Some(t.response_text.clone())
             }
         })
-        .unwrap_or_else(|| String::new());
+        .unwrap_or_else(String::new);
 
     let all_errors: Vec<ToolError> = turn_list.iter().flat_map(|t| t.errors.clone()).collect();
 
@@ -219,5 +219,5 @@ fn extract_session_title(chronological: &[&&ActivityFeedEvent]) -> String {
             }
         })
         .find(|s| s.len() >= 10 && !is_noise_title(s))
-        .unwrap_or_else(|| String::new())
+        .unwrap_or_else(String::new)
 }

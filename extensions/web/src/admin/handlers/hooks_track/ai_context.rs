@@ -227,5 +227,5 @@ pub async fn resolve_last_message(
     .await
     .ok()
     .flatten()
-    .unwrap_or_else(|| String::new())
+    .unwrap_or_else(String::new)
 }

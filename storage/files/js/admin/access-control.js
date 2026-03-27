@@ -197,7 +197,7 @@
         if (entity.description) {
             html += '<div class="cell-secondary">' + escapeHtml(entity.description) + '</div>';
         }
-        html += '<div style="margin-top:var(--space-2)">';
+        html += '<div style="margin-top:var(--sp-space-2)">';
         html += '<span class="badge badge-blue">' + escapeHtml(entityType.replace('_', ' ')) + '</span> ';
         html += entity.enabled ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-gray">Disabled</span>';
         html += '</div></div>';
@@ -214,7 +214,7 @@
                     '</label>';
             });
         } else {
-            html += '<p style="color:var(--text-tertiary);font-size:var(--text-sm)">No roles defined.</p>';
+            html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No roles defined.</p>';
         }
         html += '</div>';
 
@@ -241,7 +241,7 @@
                     '</div>';
             });
         } else {
-            html += '<p style="color:var(--text-tertiary);font-size:var(--text-sm)">No departments found. Create users with departments first.</p>';
+            html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No departments found. Create users with departments first.</p>';
         }
         html += '</div>';
 
@@ -326,7 +326,7 @@
         const body = document.getElementById('acl-bulk-body');
         if (!body) return;
 
-        let html = '<p style="margin-bottom:var(--space-4);color:var(--text-secondary);font-size:var(--text-sm)">Applying to <strong>' + count + '</strong> selected entities. This will replace existing rules.</p>';
+        let html = '<p style="margin-bottom:var(--sp-space-4);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">Applying to <strong>' + count + '</strong> selected entities. This will replace existing rules.</p>';
 
         html += '<div class="acl-panel-section">';
         html += '<h3 class="acl-panel-section-title">Roles</h3>';

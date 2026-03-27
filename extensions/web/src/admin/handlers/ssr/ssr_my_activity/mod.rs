@@ -109,22 +109,20 @@ fn build_lookups<'a>(
     stats: &'a [crate::admin::types::AchievementInfo],
 ) -> AchievementLookups<'a> {
     let unlocked_ids = gamification
-        .map(|g| {
+        .map_or_else(std::collections::HashSet::new, |g| {
             g.achievements
                 .iter()
                 .map(|ua| ua.achievement_id.as_str())
                 .collect()
-        })
-        .unwrap_or_else(|| std::collections::HashSet::new());
+        });
 
     let unlocked_at = gamification
-        .map(|g| {
+        .map_or_else(std::collections::HashMap::new, |g| {
             g.achievements
                 .iter()
                 .map(|ua| (ua.achievement_id.as_str(), &ua.unlocked_at))
                 .collect()
-        })
-        .unwrap_or_else(|| std::collections::HashMap::new());
+        });
 
     let stats_map = stats.iter().map(|s| (s.id.as_str(), s)).collect();
 

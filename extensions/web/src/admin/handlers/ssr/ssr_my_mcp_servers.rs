@@ -80,7 +80,7 @@ pub(crate) async fn my_mcp_servers_page(
                 description: s.description.clone(),
                 endpoint: s.endpoint.clone(),
                 enabled: s.enabled,
-                plugin_names: mcp_plugin_map.get(&s.id).cloned().unwrap_or_else(|| vec![]),
+                plugin_names: mcp_plugin_map.get(&s.id).cloned().unwrap_or_else(Vec::new),
                 base_mcp_server_id: s
                     .base_mcp_server_id
                     .as_ref()

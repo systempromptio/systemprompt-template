@@ -121,7 +121,7 @@ window.AdminApp = window.AdminApp || {};
         overlay.innerHTML = '<div class="confirm-dialog">' +
             '<h3>' + escapeHtml(title) + '</h3>' +
             '<p>' + escapeHtml(message) + '</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5)">' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
                 '<button class="btn btn-secondary" data-action="cancel">Cancel</button>' +
                 '<button class="btn ' + btnClass + '" data-action="confirm">' + escapeHtml(confirmLabel) + '</button>' +
             '</div>' +
@@ -146,7 +146,7 @@ window.AdminApp = window.AdminApp || {};
         overlay.innerHTML = '<div class="confirm-dialog">' +
             '<h3>' + escapeHtml(title) + '</h3>' +
             '<p>This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5)">' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
                 '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                 '<button class="btn btn-danger" data-confirm-delete="' + escapeHtml(itemId) + '">Delete</button>' +
             '</div>' +
@@ -437,10 +437,10 @@ window.AdminApp = window.AdminApp || {};
                 '<input type="checkbox" name="' + escapeHtml(id) + '" value="' + escapeHtml(val) + '"' + checked + ' id="' + escapeHtml(itemId) + '">' +
                 '<label for="' + escapeHtml(itemId) + '">' + escapeHtml(displayName) + '</label>' +
             '</div>';
-        }).join('') : '<div class="empty-state" style="padding:var(--space-4)"><p>None available.</p></div>';
-        let filterRow = '<input type="text" class="field-input" placeholder="Filter..." data-filter-list="' + escapeHtml(id) + '" style="margin-bottom:var(--space-2)">';
+        }).join('') : '<div class="empty-state" style="padding:var(--sp-space-4)"><p>None available.</p></div>';
+        let filterRow = '<input type="text" class="field-input" placeholder="Filter..." data-filter-list="' + escapeHtml(id) + '" style="margin-bottom:var(--sp-space-2)">';
         if (options.hasSelectAll) {
-            filterRow = '<div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-2)">' +
+            filterRow = '<div style="display:flex;gap:var(--sp-space-2);margin-bottom:var(--sp-space-2)">' +
                 '<input type="text" class="field-input" placeholder="Search..." data-filter-list="' + escapeHtml(id) + '" style="flex:1">' +
                 '<button type="button" class="btn btn-secondary btn-sm" data-select-all="' + escapeHtml(id) + '">Select All</button>' +
                 '<button type="button" class="btn btn-secondary btn-sm" data-deselect-all="' + escapeHtml(id) + '">Deselect All</button>' +
@@ -450,7 +450,7 @@ window.AdminApp = window.AdminApp || {};
         return '<div class="form-group">' +
             '<label class="field-label">' + escapeHtml(label) + '</label>' +
             filterRow +
-            '<div class="checklist-container" data-checklist="' + escapeHtml(id) + '" style="max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">' +
+            '<div class="checklist-container" data-checklist="' + escapeHtml(id) + '" style="max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">' +
                 listItems +
             '</div>' +
         '</div>';
@@ -788,10 +788,10 @@ window.AdminApp = window.AdminApp || {};
         return '<div class="detail-header">' +
             '<a href="' + app.BASE + '/users/" class="btn btn-secondary btn-sm">&larr; Back</a>' +
         '</div>' +
-        '<div class="dashboard-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--space-6)">' +
+        '<div class="dashboard-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--sp-space-6)">' +
             '<div class="stat-card">' +
                 '<div class="label">User</div>' +
-                '<div class="value" style="font-size:var(--text-lg)">' + escapeHtml(name) + '</div>' +
+                '<div class="value" style="font-size:var(--sp-text-lg)">' + escapeHtml(name) + '</div>' +
                 '<div class="kpi-subtitle">' + escapeHtml(user.user_id) + '</div>' +
             '</div>' +
             '<div class="stat-card">' +
@@ -800,7 +800,7 @@ window.AdminApp = window.AdminApp || {};
             '</div>' +
             '<div class="stat-card">' +
                 '<div class="label">Last Active</div>' +
-                '<div class="value" style="font-size:var(--text-lg)">' + escapeHtml(relTime) + '</div>' +
+                '<div class="value" style="font-size:var(--sp-text-lg)">' + escapeHtml(relTime) + '</div>' +
             '</div>' +
         '</div>';
     }
@@ -827,14 +827,14 @@ window.AdminApp = window.AdminApp || {};
             rows.push('<tr><td><strong>Status</strong></td><td>' + statusBadge + '</td></tr>');
         }
         rows.push('<tr><td><strong>Member Since</strong></td><td>' + escapeHtml(app.formatDate(user.created_at)) + '</td></tr>');
-        return '<div class="card" style="margin-bottom:var(--space-6)">' +
+        return '<div class="card" style="margin-bottom:var(--sp-space-6)">' +
             '<h3>Profile</h3>' +
             '<table class="data-table"><tbody>' + rows.join('') + '</tbody></table>' +
         '</div>';
     }
     function renderSkillsTable(skills) {
         if (!skills || !skills.length) {
-            return '<div class="card" style="margin-bottom:var(--space-6)">' +
+            return '<div class="card" style="margin-bottom:var(--sp-space-6)">' +
                 '<h3>Custom Skills</h3>' +
                 '<div class="empty-state"><p>No custom skills.</p></div>' +
             '</div>';
@@ -852,7 +852,7 @@ window.AdminApp = window.AdminApp || {};
                 '<td>' + escapeHtml(app.formatRelativeTime(s.updated_at)) + '</td>' +
             '</tr>';
         }).join('');
-        return '<div class="card" style="margin-bottom:var(--space-6)">' +
+        return '<div class="card" style="margin-bottom:var(--sp-space-6)">' +
             '<h3>Custom Skills</h3>' +
             '<div class="table-container"><div class="table-scroll">' +
                 '<table class="data-table">' +
@@ -874,10 +874,10 @@ window.AdminApp = window.AdminApp || {};
             const fullDate = app.formatDate(ev.created_at || ev.timestamp);
             return '<tr>' +
                 '<td><span class="badge badge-blue">' + escapeHtml(ev.event_type || '-') + '</span></td>' +
-                '<td>' + (ev.tool_name ? '<code style="font-size:var(--text-xs);background:var(--bg-surface-raised);padding:2px 6px;border-radius:var(--radius-xs)">' + escapeHtml(ev.tool_name) + '</code>' : '-') + '</td>' +
+                '<td>' + (ev.tool_name ? '<code style="font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:2px 6px;border-radius:var(--sp-radius-xs)">' + escapeHtml(ev.tool_name) + '</code>' : '-') + '</td>' +
                 '<td>' + escapeHtml(ev.plugin_id || '-') + '</td>' +
                 '<td><span title="' + escapeHtml(fullDate) + '">' + escapeHtml(relTime) + '</span></td>' +
-                '<td class="metadata-cell" style="font-family:monospace;font-size:var(--text-xs)">' + truncateJson(ev.metadata) + '</td>' +
+                '<td class="metadata-cell" style="font-family:monospace;font-size:var(--sp-text-xs)">' + truncateJson(ev.metadata) + '</td>' +
             '</tr>';
         }).join('');
         return '<div class="card">' +
@@ -902,15 +902,15 @@ window.AdminApp = window.AdminApp || {};
         const nextLabel = nextRank ? nextRank.xp : 'MAX';
         let html = '<div class="gamification-profile">' +
             '<h3>Gamification</h3>' +
-            '<div class="card" style="margin-bottom:var(--space-4);padding:var(--space-5)">' +
-                '<div style="display:flex;align-items:center;gap:var(--space-4);margin-bottom:var(--space-3)">' +
-                    '<span class="rank-badge rank-' + rank.level + '" style="font-size:var(--text-sm);padding:var(--space-1) var(--space-3)">' + escapeHtml(rank.name) + '</span>' +
-                    '<span style="font-size:var(--text-xs);color:var(--text-tertiary)">Level ' + rank.level + '</span>' +
+            '<div class="card" style="margin-bottom:var(--sp-space-4);padding:var(--sp-space-5)">' +
+                '<div style="display:flex;align-items:center;gap:var(--sp-space-4);margin-bottom:var(--sp-space-3)">' +
+                    '<span class="rank-badge rank-' + rank.level + '" style="font-size:var(--sp-text-sm);padding:var(--sp-space-1) var(--sp-space-3)">' + escapeHtml(rank.name) + '</span>' +
+                    '<span style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">Level ' + rank.level + '</span>' +
                 '</div>' +
-                '<div style="font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:var(--space-1)">' + xp + ' / ' + nextLabel + ' XP</div>' +
+                '<div style="font-size:var(--sp-text-sm);color:var(--sp-text-secondary);margin-bottom:var(--sp-space-1)">' + xp + ' / ' + nextLabel + ' XP</div>' +
                 '<div class="xp-progress"><div class="xp-progress-fill" style="width:' + progressPct + '%;background:' + rank.color + '"></div></div>' +
             '</div>' +
-            '<div class="gamification-stats" style="margin-bottom:var(--space-6)">' +
+            '<div class="gamification-stats" style="margin-bottom:var(--sp-space-6)">' +
                 '<div class="stat-card"><div class="label">Total XP</div><div class="value">' + xp + '</div></div>' +
                 '<div class="stat-card"><div class="label">Current Streak</div><div class="value">' + (gData.current_streak || 0) + 'd</div></div>' +
                 '<div class="stat-card"><div class="label">Unique Skills</div><div class="value">' + (gData.unique_skills || 0) + '</div></div>' +
@@ -923,11 +923,11 @@ window.AdminApp = window.AdminApp || {};
             const cls = unlocked ? 'achievement-card unlocked' : 'achievement-card locked';
             return '<div class="' + cls + '">' +
                 '<div class="achievement-icon">' + def.icon + '</div>' +
-                '<div style="font-weight:600;font-size:var(--text-xs);color:var(--text-primary)">' + escapeHtml(def.name) + '</div>' +
-                '<div style="font-size:var(--text-xs);color:var(--text-tertiary)">' + escapeHtml(def.description) + '</div>' +
+                '<div style="font-weight:600;font-size:var(--sp-text-xs);color:var(--sp-text-primary)">' + escapeHtml(def.name) + '</div>' +
+                '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">' + escapeHtml(def.description) + '</div>' +
             '</div>';
         }).join('');
-        html += '<div style="margin-bottom:var(--space-6)">' +
+        html += '<div style="margin-bottom:var(--sp-space-6)">' +
             '<div class="section-title">Achievements</div>' +
             '<div class="achievement-grid">' + cards + '</div>' +
         '</div></div>';
@@ -1322,9 +1322,9 @@ window.AdminApp = window.AdminApp || {};
                     '<div class="detail-item-name">' + escapeHtml(s.name) +
                         ' <span class="badge ' + sourceClass + '">' + escapeHtml(s.source || 'system') + '</span>' +
                     '</div>' +
-                    (s.description ? '<div class="detail-item-desc" style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:var(--space-1)">' + escapeHtml(s.description) + '</div>' : '') +
+                    (s.description ? '<div class="detail-item-desc" style="font-size:var(--sp-text-sm);color:var(--sp-text-secondary);margin-top:var(--sp-space-1)">' + escapeHtml(s.description) + '</div>' : '') +
                 '</div>' +
-                (s.command ? '<span style="font-size:var(--text-xs);color:var(--text-tertiary)">' + escapeHtml(s.command) + '</span>' : '') +
+                (s.command ? '<span style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">' + escapeHtml(s.command) + '</span>' : '') +
             '</div>';
         }).join('');
     }
@@ -1336,7 +1336,7 @@ window.AdminApp = window.AdminApp || {};
         return agents.map((a) => '<div class="detail-item">' +
                 '<div class="detail-item-info">' +
                     '<div class="detail-item-name">' + escapeHtml(a.name) + '</div>' +
-                    (a.description ? '<div class="detail-item-desc" style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:var(--space-1)">' + escapeHtml(a.description) + '</div>' : '') +
+                    (a.description ? '<div class="detail-item-desc" style="font-size:var(--sp-text-sm);color:var(--sp-text-secondary);margin-top:var(--sp-space-1)">' + escapeHtml(a.description) + '</div>' : '') +
                 '</div>' +
             '</div>').join('');
     }
@@ -1362,11 +1362,11 @@ window.AdminApp = window.AdminApp || {};
                 '<div class="detail-item-info">' +
                     '<div class="detail-item-name">' +
                         '<span class="badge badge-blue">' + escapeHtml(h.event) + '</span>' +
-                        ' <span style="color:var(--text-secondary);font-size:var(--text-sm)">matcher:</span> ' +
-                        '<code style="background:var(--bg-surface-raised);padding:2px 6px;border-radius:var(--radius-xs);font-size:var(--text-xs)">' + escapeHtml(h.matcher) + '</code>' +
+                        ' <span style="color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">matcher:</span> ' +
+                        '<code style="background:var(--sp-bg-surface-raised);padding:2px 6px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)">' + escapeHtml(h.matcher) + '</code>' +
                         asyncBadge +
                     '</div>' +
-                    '<div class="detail-item-desc" style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1);font-family:monospace">' + escapeHtml(h.command) + '</div>' +
+                    '<div class="detail-item-desc" style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:var(--sp-space-1);font-family:monospace">' + escapeHtml(h.command) + '</div>' +
                 '</div>' +
             '</div>';
         }).join('');
@@ -1386,8 +1386,8 @@ window.AdminApp = window.AdminApp || {};
         else if (activeTab === 'agents') content = renderAgentsTab(plugin);
         else if (activeTab === 'hooks') content = renderHooksTab(plugin);
         else content = renderMcpTab(plugin);
-        return '<div style="border-top:1px solid var(--border-subtle);padding:var(--space-4)">' +
-            '<div class="plugin-tabs" style="display:flex;gap:var(--space-2);margin-bottom:var(--space-4)">' + tabs + '</div>' +
+        return '<div style="border-top:1px solid var(--sp-border-subtle);padding:var(--sp-space-4)">' +
+            '<div class="plugin-tabs" style="display:flex;gap:var(--sp-space-2);margin-bottom:var(--sp-space-4)">' + tabs + '</div>' +
             '<div class="plugin-tab-content">' + content + '</div>' +
         '</div>';
     }
@@ -1436,21 +1436,21 @@ window.AdminApp = window.AdminApp || {};
                 '</div>' +
             '</div>';
         }
-        return '<div class="plugin-card" style="border-left:3px solid var(--accent)" data-plugin-id="' + escapeHtml(plugin.id) + '">' +
+        return '<div class="plugin-card" style="border-left:3px solid var(--sp-accent)" data-plugin-id="' + escapeHtml(plugin.id) + '">' +
             '<div class="plugin-header" data-toggle-plugin="' + escapeHtml(plugin.id) + '">' +
                 '<div style="flex:1;min-width:0">' +
-                    '<h3 style="margin:0;font-size:var(--text-base);font-weight:600;color:var(--text-primary)">' + escapeHtml(plugin.name) + '</h3>' +
-                    (plugin.description ? '<p style="margin:var(--space-1) 0 0;font-size:var(--text-sm);color:var(--text-secondary)">' + escapeHtml(plugin.description) + '</p>' : '') +
-                    '<div class="plugin-meta" style="display:flex;gap:var(--space-2);margin-top:var(--space-2)">' +
+                    '<h3 style="margin:0;font-size:var(--sp-text-base);font-weight:600;color:var(--sp-text-primary)">' + escapeHtml(plugin.name) + '</h3>' +
+                    (plugin.description ? '<p style="margin:var(--sp-space-1) 0 0;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">' + escapeHtml(plugin.description) + '</p>' : '') +
+                    '<div class="plugin-meta" style="display:flex;gap:var(--sp-space-2);margin-top:var(--sp-space-2)">' +
                         '<span class="badge badge-blue">' + skillCount + ' skill' + (skillCount !== 1 ? 's' : '') + '</span>' +
                         '<span class="badge badge-gray">' + agentCount + ' agent' + (agentCount !== 1 ? 's' : '') + '</span>' +
                         (mcpCount > 0 ? '<span class="badge badge-yellow">' + mcpCount + ' MCP</span>' : '') +
                         (hookCount > 0 ? '<span class="badge badge-green">' + hookCount + ' hook' + (hookCount !== 1 ? 's' : '') + '</span>' : '') +
                     '</div>' +
                 '</div>' +
-                '<div class="plugin-actions" style="display:flex;align-items:center;gap:var(--space-2)">' +
+                '<div class="plugin-actions" style="display:flex;align-items:center;gap:var(--sp-space-2)">' +
                     actionsHtml +
-                    '<span class="expand-icon" style="font-size:var(--text-sm);color:var(--text-tertiary);transition:transform var(--duration-fast) var(--ease-out);display:inline-block;' + (isExpanded ? 'transform:rotate(180deg)' : '') + '">&#9660;</span>' +
+                    '<span class="expand-icon" style="font-size:var(--sp-text-sm);color:var(--sp-text-tertiary);transition:transform var(--sp-duration-fast) var(--sp-ease-out);display:inline-block;' + (isExpanded ? 'transform:rotate(180deg)' : '') + '">&#9660;</span>' +
                 '</div>' +
             '</div>' +
             detailsHtml +
@@ -1468,7 +1468,7 @@ window.AdminApp = window.AdminApp || {};
             ? filtered.map(renderPluginCard).join('')
             : '<div class="empty-state"><p>No plugins match your search.</p></div>';
         root.innerHTML = renderToolbar() +
-            '<div class="plugins-list" style="display:flex;flex-direction:column;gap:var(--space-3)">' + listHtml + '</div>';
+            '<div class="plugins-list" style="display:flex;flex-direction:column;gap:var(--sp-space-3)">' + listHtml + '</div>';
     }
     const closeAllMenus = app.shared.closeAllMenus;
     function showDeleteConfirm(pluginId) {
@@ -1476,10 +1476,10 @@ window.AdminApp = window.AdminApp || {};
         overlay.className = 'confirm-overlay';
         overlay.id = 'delete-confirm';
         overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3 style="margin:0 0 var(--space-3)">Delete Plugin?</h3>' +
-            '<p style="margin:0 0 var(--space-2);color:var(--text-secondary);font-size:var(--text-sm)">You are about to delete <strong>' + escapeHtml(pluginId) + '</strong>.</p>' +
-            '<p style="margin:0 0 var(--space-5);color:var(--text-secondary);font-size:var(--text-sm)">This will remove the plugin directory and all its configuration. This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end">' +
+            '<h3 style="margin:0 0 var(--sp-space-3)">Delete Plugin?</h3>' +
+            '<p style="margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">You are about to delete <strong>' + escapeHtml(pluginId) + '</strong>.</p>' +
+            '<p style="margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">This will remove the plugin directory and all its configuration. This action cannot be undone.</p>' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end">' +
                 '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                 '<button class="btn btn-danger" data-confirm-delete="' + escapeHtml(pluginId) + '">Delete Plugin</button>' +
             '</div>' +
@@ -1631,7 +1631,7 @@ window.AdminApp = window.AdminApp || {};
         const authorName = (plugin.author && plugin.author.name) ? plugin.author.name : '';
         const rolesHtml = ROLES.map((r) => {
             const checked = roles.indexOf(r) >= 0 ? ' checked' : '';
-            return '<label style="display:inline-flex;align-items:center;gap:var(--space-1);margin-right:var(--space-3);font-size:var(--text-sm);cursor:pointer">' +
+            return '<label style="display:inline-flex;align-items:center;gap:var(--sp-space-1);margin-right:var(--sp-space-3);font-size:var(--sp-text-sm);cursor:pointer">' +
                 '<input type="checkbox" name="roles" value="' + escapeHtml(r) + '"' + checked + '>' +
                 escapeHtml(r) +
             '</label>';
@@ -1653,7 +1653,7 @@ window.AdminApp = window.AdminApp || {};
                     '<label class="field-label">Description</label>' +
                     '<textarea class="field-input" name="description" rows="3">' + escapeHtml(plugin.description || '') + '</textarea>' +
                 '</div>' +
-                '<div style="display:flex;gap:var(--space-3)">' +
+                '<div style="display:flex;gap:var(--sp-space-3)">' +
                     '<div class="form-group" style="flex:1">' +
                         '<label class="field-label">Version</label>' +
                         '<input class="field-input" name="version" value="' + escapeHtml(plugin.version || '0.1.0') + '">' +
@@ -1664,13 +1664,13 @@ window.AdminApp = window.AdminApp || {};
                     '</div>' +
                 '</div>' +
                 '<div class="form-group">' +
-                    '<label style="display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--text-sm);cursor:pointer">' +
+                    '<label style="display:inline-flex;align-items:center;gap:var(--sp-space-2);font-size:var(--sp-text-sm);cursor:pointer">' +
                         '<input type="checkbox" name="enabled"' + (plugin.enabled !== false ? ' checked' : '') + '>' +
                         'Enabled' +
                     '</label>' +
                 '</div>' +
                 '<div class="form-group">' +
-                    '<label class="field-label">Keywords <span style="font-weight:400;color:var(--text-tertiary)">(comma-separated)</span></label>' +
+                    '<label class="field-label">Keywords <span style="font-weight:400;color:var(--sp-text-tertiary)">(comma-separated)</span></label>' +
                     '<input class="field-input" name="keywords" value="' + escapeHtml(keywords) + '">' +
                 '</div>' +
                 '<div class="form-group">' +
@@ -1679,12 +1679,12 @@ window.AdminApp = window.AdminApp || {};
                 '</div>' +
                 '<div class="form-group">' +
                     '<label class="field-label">Roles</label>' +
-                    '<div style="display:flex;flex-wrap:wrap;gap:var(--space-1);padding:var(--space-2) 0">' + rolesHtml + '</div>' +
+                    '<div style="display:flex;flex-wrap:wrap;gap:var(--sp-space-1);padding:var(--sp-space-2) 0">' + rolesHtml + '</div>' +
                 '</div>' +
                 app.formUtils.renderChecklist('skills', allSkills, plugin.skills || [], 'Skills') +
                 app.formUtils.renderChecklist('agents', allAgents, plugin.agents || [], 'Agents') +
                 app.formUtils.renderChecklist('mcp_servers', allMcpServers, plugin.mcp_servers || [], 'MCP Servers') +
-                '<div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">' +
+                '<div style="display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)">' +
                     '<button type="submit" class="btn btn-primary">Save</button>' +
                     '<a href="' + app.BASE + '/plugins/" class="btn btn-secondary">Cancel</a>' +
                     '<button type="button" class="btn btn-danger" id="btn-delete-plugin" style="margin-left:auto">Delete</button>' +
@@ -1801,14 +1801,14 @@ window.AdminApp = window.AdminApp || {};
     };
     function renderChecklistStep(state, stepNum) {
         const cfg = CHECKLIST_STEPS[stepNum];
-        return '<h3 style="margin:0 0 var(--space-4);font-size:var(--text-lg);font-weight:600">' + escapeHtml(cfg.title) + '</h3>' +
+        return '<h3 style="margin:0 0 var(--sp-space-4);font-size:var(--sp-text-lg);font-weight:600">' + escapeHtml(cfg.title) + '</h3>' +
             app.formUtils.renderChecklist(cfg.id, state[cfg.dataKey], state[cfg.selectedKey], cfg.label, { hasSelectAll: true });
     }
     function renderStep1(state) {
         const f = state.form;
-        return '<h3 style="margin:0 0 var(--space-4);font-size:var(--text-lg);font-weight:600">Basic Info</h3>' +
+        return '<h3 style="margin:0 0 var(--sp-space-4);font-size:var(--sp-text-lg);font-weight:600">Basic Info</h3>' +
             '<div class="form-group">' +
-                '<label class="field-label">Plugin ID <span style="font-weight:400;color:var(--text-tertiary)">(kebab-case)</span></label>' +
+                '<label class="field-label">Plugin ID <span style="font-weight:400;color:var(--sp-text-tertiary)">(kebab-case)</span></label>' +
                 '<input class="field-input" name="plugin_id" placeholder="my-plugin" required value="' + escapeHtml(f.plugin_id) + '">' +
             '</div>' +
             '<div class="form-group">' +
@@ -1819,7 +1819,7 @@ window.AdminApp = window.AdminApp || {};
                 '<label class="field-label">Description</label>' +
                 '<textarea class="field-input" name="description" rows="3" placeholder="What this plugin does...">' + escapeHtml(f.description) + '</textarea>' +
             '</div>' +
-            '<div style="display:flex;gap:var(--space-3)">' +
+            '<div style="display:flex;gap:var(--sp-space-3)">' +
                 '<div class="form-group" style="flex:1">' +
                     '<label class="field-label">Version</label>' +
                     '<input class="field-input" name="version" value="' + escapeHtml(f.version) + '">' +
@@ -1836,8 +1836,8 @@ window.AdminApp = window.AdminApp || {};
                 const selected = hook.event === evt ? ' selected' : '';
                 return '<option value="' + escapeHtml(evt) + '"' + selected + '>' + escapeHtml(evt) + '</option>';
             }).join('');
-            return '<div class="hook-entry card" style="padding:var(--space-3);margin-bottom:var(--space-3)" data-hook-index="' + idx + '">' +
-                '<div style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:flex-start">' +
+            return '<div class="hook-entry card" style="padding:var(--sp-space-3);margin-bottom:var(--sp-space-3)" data-hook-index="' + idx + '">' +
+                '<div style="display:flex;gap:var(--sp-space-3);flex-wrap:wrap;align-items:flex-start">' +
                     '<div class="form-group" style="flex:1;min-width:150px">' +
                         '<label class="field-label">Event</label>' +
                         '<select class="field-input" name="hook_event" data-hook-idx="' + idx + '">' + eventOptions + '</select>' +
@@ -1852,16 +1852,16 @@ window.AdminApp = window.AdminApp || {};
                     '</div>' +
                     '<div class="form-group" style="display:flex;flex-direction:column;align-items:center">' +
                         '<label class="field-label">Async</label>' +
-                        '<input type="checkbox" name="hook_async" data-hook-idx="' + idx + '"' + (hook.async ? ' checked' : '') + ' style="margin-top:var(--space-2)">' +
+                        '<input type="checkbox" name="hook_async" data-hook-idx="' + idx + '"' + (hook.async ? ' checked' : '') + ' style="margin-top:var(--sp-space-2)">' +
                     '</div>' +
-                    '<div style="display:flex;align-items:flex-end;padding-bottom:var(--space-1)">' +
+                    '<div style="display:flex;align-items:flex-end;padding-bottom:var(--sp-space-1)">' +
                         '<button type="button" class="btn btn-danger btn-sm" data-remove-hook="' + idx + '">Remove</button>' +
                     '</div>' +
                 '</div>' +
             '</div>';
         }).join('');
-        return '<h3 style="margin:0 0 var(--space-4);font-size:var(--text-lg);font-weight:600">Hooks</h3>' +
-            '<p style="font-size:var(--text-sm);color:var(--text-secondary);margin:0 0 var(--space-4)">Configure event hooks that trigger commands during plugin lifecycle.</p>' +
+        return '<h3 style="margin:0 0 var(--sp-space-4);font-size:var(--sp-text-lg);font-weight:600">Hooks</h3>' +
+            '<p style="font-size:var(--sp-text-sm);color:var(--sp-text-secondary);margin:0 0 var(--sp-space-4)">Configure event hooks that trigger commands during plugin lifecycle.</p>' +
             '<div id="hooks-list">' + hooksHtml + '</div>' +
             '<button type="button" class="btn btn-secondary btn-sm" id="btn-add-hook">+ Add Hook</button>';
     }
@@ -1869,22 +1869,22 @@ window.AdminApp = window.AdminApp || {};
         const f = state.form;
         const rolesHtml = ROLES.map((r) => {
             const checked = state.form.roles[r] ? ' checked' : '';
-            return '<label style="display:inline-flex;align-items:center;gap:var(--space-1);margin-right:var(--space-3);font-size:var(--text-sm);cursor:pointer">' +
+            return '<label style="display:inline-flex;align-items:center;gap:var(--sp-space-1);margin-right:var(--sp-space-3);font-size:var(--sp-text-sm);cursor:pointer">' +
                 '<input type="checkbox" name="wizard-roles" value="' + escapeHtml(r) + '"' + checked + '>' +
                 escapeHtml(r) +
             '</label>';
         }).join('');
-        return '<h3 style="margin:0 0 var(--space-4);font-size:var(--text-lg);font-weight:600">Roles & Access</h3>' +
+        return '<h3 style="margin:0 0 var(--sp-space-4);font-size:var(--sp-text-lg);font-weight:600">Roles & Access</h3>' +
             '<div class="form-group">' +
                 '<label class="field-label">Roles</label>' +
-                '<div style="display:flex;flex-wrap:wrap;gap:var(--space-1);padding:var(--space-2) 0">' + rolesHtml + '</div>' +
+                '<div style="display:flex;flex-wrap:wrap;gap:var(--sp-space-1);padding:var(--sp-space-2) 0">' + rolesHtml + '</div>' +
             '</div>' +
             '<div class="form-group">' +
                 '<label class="field-label">Author Name</label>' +
                 '<input class="field-input" name="author_name" placeholder="Your name" value="' + escapeHtml(f.author_name) + '">' +
             '</div>' +
             '<div class="form-group">' +
-                '<label class="field-label">Keywords <span style="font-weight:400;color:var(--text-tertiary)">(comma-separated)</span></label>' +
+                '<label class="field-label">Keywords <span style="font-weight:400;color:var(--sp-text-tertiary)">(comma-separated)</span></label>' +
                 '<input class="field-input" name="keywords" placeholder="automation, workflow" value="' + escapeHtml(f.keywords) + '">' +
             '</div>';
     }
@@ -1895,12 +1895,12 @@ window.AdminApp = window.AdminApp || {};
         const selectedMcpList = Object.keys(state.selectedMcpServers).filter((k) => state.selectedMcpServers[k]);
         const selectedRoles = Object.keys(state.form.roles).filter((k) => state.form.roles[k]);
         function renderList(items, emptyMsg) {
-            if (!items.length) return '<span style="color:var(--text-tertiary)">' + escapeHtml(emptyMsg) + '</span>';
-            return items.map((i) => '<span class="badge badge-blue" style="margin:var(--space-1)">' + escapeHtml(i) + '</span>').join('');
+            if (!items.length) return '<span style="color:var(--sp-text-tertiary)">' + escapeHtml(emptyMsg) + '</span>';
+            return items.map((i) => '<span class="badge badge-blue" style="margin:var(--sp-space-1)">' + escapeHtml(i) + '</span>').join('');
         }
-        return '<h3 style="margin:0 0 var(--space-4);font-size:var(--text-lg);font-weight:600">Review & Create</h3>' +
-            '<div class="card" style="padding:var(--space-4)">' +
-                '<div style="display:grid;grid-template-columns:140px 1fr;gap:var(--space-3);font-size:var(--text-sm)">' +
+        return '<h3 style="margin:0 0 var(--sp-space-4);font-size:var(--sp-text-lg);font-weight:600">Review & Create</h3>' +
+            '<div class="card" style="padding:var(--sp-space-4)">' +
+                '<div style="display:grid;grid-template-columns:140px 1fr;gap:var(--sp-space-3);font-size:var(--sp-text-sm)">' +
                     '<strong>Plugin ID:</strong><span>' + escapeHtml(f.plugin_id || '-') + '</span>' +
                     '<strong>Name:</strong><span>' + escapeHtml(f.name || '-') + '</span>' +
                     '<strong>Description:</strong><span>' + escapeHtml(f.description || '-') + '</span>' +
@@ -1960,15 +1960,15 @@ window.AdminApp = window.AdminApp || {};
     let root = null;
     function renderStepIndicator() {
         const labels = ['Basic Info', 'Skills', 'Agents', 'MCP Servers', 'Hooks', 'Roles & Access', 'Review'];
-        let html = '<div class="wizard-steps" style="display:flex;gap:var(--space-1);margin-bottom:var(--space-6);flex-wrap:wrap">';
+        let html = '<div class="wizard-steps" style="display:flex;gap:var(--sp-space-1);margin-bottom:var(--sp-space-6);flex-wrap:wrap">';
         for (let i = 1; i <= TOTAL_STEPS; i++) {
             const isActive = i === state.step;
             const isDone = i < state.step;
             const cls = isActive ? 'wizard-step active' : (isDone ? 'wizard-step done' : 'wizard-step');
-            const bgColor = isActive ? 'var(--accent)' : (isDone ? 'var(--success)' : 'var(--bg-tertiary)');
-            const textColor = (isActive || isDone) ? '#fff' : 'var(--text-tertiary)';
-            html += '<div class="' + cls + '" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:' + bgColor + ';color:' + textColor + ';font-size:var(--text-sm);font-weight:' + (isActive ? '600' : '400') + '">' +
-                '<span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--text-xs)">' + i + '</span>' +
+            const bgColor = isActive ? 'var(--sp-accent)' : (isDone ? 'var(--sp-success)' : 'var(--sp-bg-tertiary)');
+            const textColor = (isActive || isDone) ? '#fff' : 'var(--sp-text-tertiary)';
+            html += '<div class="' + cls + '" style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-radius:var(--sp-radius-md);background:' + bgColor + ';color:' + textColor + ';font-size:var(--sp-text-sm);font-weight:' + (isActive ? '600' : '400') + '">' +
+                '<span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--sp-text-xs)">' + i + '</span>' +
                 '<span>' + escapeHtml(labels[i - 1]) + '</span>' +
             '</div>';
         }
@@ -1976,7 +1976,7 @@ window.AdminApp = window.AdminApp || {};
         return html;
     }
     function renderNavButtons() {
-        let html = '<div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">';
+        let html = '<div style="display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)">';
         if (state.step > 1) {
             html += '<button type="button" class="btn btn-secondary" id="wizard-prev">Previous</button>';
         }
@@ -2041,9 +2041,9 @@ window.AdminApp = window.AdminApp || {};
         const content = '<div class="detail-header">' +
             '<a href="' + app.BASE + '/plugins/" class="btn btn-secondary btn-sm">&larr; Back to Plugins</a>' +
         '</div>' +
-        '<h2 style="margin:var(--space-4) 0 var(--space-5);font-size:var(--text-xl);font-weight:600">Create Plugin</h2>' +
+        '<h2 style="margin:var(--sp-space-4) 0 var(--sp-space-5);font-size:var(--sp-text-xl);font-weight:600">Create Plugin</h2>' +
         renderStepIndicator() +
-        '<div class="card" style="max-width:800px;padding:var(--space-5)">' +
+        '<div class="card" style="max-width:800px;padding:var(--sp-space-5)">' +
             app.pluginWizardSteps.renderCurrentStep(state) +
             renderNavButtons() +
         '</div>';
@@ -2225,8 +2225,8 @@ window.AdminApp = window.AdminApp || {};
                 const checked = s.enabled ? ' checked' : '';
                 return '<tr>' +
                     '<td style="font-weight:500">' + escapeHtml(s.name) + '</td>' +
-                    '<td><code style="background:var(--bg-surface-raised);padding:2px 8px;border-radius:var(--radius-xs);font-size:var(--text-xs)">' + escapeHtml(s.skill_id) + '</code></td>' +
-                    '<td title="' + escapeHtml(s.description || '') + '" style="color:var(--text-secondary)">' + escapeHtml(truncate(s.description)) + '</td>' +
+                    '<td><code style="background:var(--sp-bg-surface-raised);padding:2px 8px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)">' + escapeHtml(s.skill_id) + '</code></td>' +
+                    '<td title="' + escapeHtml(s.description || '') + '" style="color:var(--sp-text-secondary)">' + escapeHtml(truncate(s.description)) + '</td>' +
                     '<td><label class="toggle-switch"><input type="checkbox"' + checked + ' data-skill-id="' + escapeHtml(s.skill_id) + '" data-action="toggle"><span class="toggle-slider"></span></label></td>' +
                     '<td class="col-actions"><div class="actions-menu" data-actions-for="' + escapeHtml(s.skill_id) + '">' +
                         '<button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>' +
@@ -2255,11 +2255,11 @@ window.AdminApp = window.AdminApp || {};
         return '<div class="detail-header">' +
             '<a href="' + app.BASE + '/skills/" class="btn btn-secondary btn-sm">&larr; Back to Skills</a>' +
         '</div>' +
-        '<h2 style="margin:var(--space-4) 0 var(--space-5);font-size:var(--text-xl);font-weight:600">' + escapeHtml(title) + '</h2>' +
+        '<h2 style="margin:var(--sp-space-4) 0 var(--sp-space-5);font-size:var(--sp-text-xl);font-weight:600">' + escapeHtml(title) + '</h2>' +
         '<div class="card" style="max-width:800px">' +
             '<form id="skill-form">' +
                 '<div class="form-group">' +
-                    '<label class="field-label">Skill ID <span style="font-weight:400;color:var(--text-tertiary)">(kebab-case)</span></label>' +
+                    '<label class="field-label">Skill ID <span style="font-weight:400;color:var(--sp-text-tertiary)">(kebab-case)</span></label>' +
                     '<input class="field-input" name="skill_id" placeholder="my-custom-skill" required' +
                         (isEdit ? ' readonly value="' + escapeHtml(skill.skill_id) + '"' : '') + '>' +
                 '</div>' +
@@ -2284,7 +2284,7 @@ window.AdminApp = window.AdminApp || {};
                     '<input class="field-input" name="tags" placeholder="writing, content, marketing"' +
                         (isEdit && skill.tags ? ' value="' + escapeHtml(skill.tags.join(', ')) + '"' : '') + '>' +
                 '</div>' +
-                '<div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">' +
+                '<div style="display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)">' +
                     '<button type="submit" class="btn btn-primary">Save</button>' +
                     '<a href="' + app.BASE + '/skills/" class="btn btn-secondary">Cancel</a>' +
                 '</div>' +
@@ -2339,12 +2339,12 @@ window.AdminApp = window.AdminApp || {};
             renderRow: (a) => {
                 const checked = a.enabled ? ' checked' : '';
                 const primaryBadge = a.is_primary
-                    ? '<span style="background:var(--bg-surface-raised);padding:2px 8px;border-radius:var(--radius-xs);font-size:var(--text-xs);color:var(--text-secondary)">Primary</span>'
+                    ? '<span style="background:var(--sp-bg-surface-raised);padding:2px 8px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs);color:var(--sp-text-secondary)">Primary</span>'
                     : '';
                 return '<tr>' +
                     '<td style="font-weight:500">' + escapeHtml(a.name) + '</td>' +
-                    '<td><code style="background:var(--bg-surface-raised);padding:2px 8px;border-radius:var(--radius-xs);font-size:var(--text-xs)">' + escapeHtml(a.id) + '</code></td>' +
-                    '<td title="' + escapeHtml(a.description || '') + '" style="color:var(--text-secondary)">' + escapeHtml(truncate(a.description)) + '</td>' +
+                    '<td><code style="background:var(--sp-bg-surface-raised);padding:2px 8px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)">' + escapeHtml(a.id) + '</code></td>' +
+                    '<td title="' + escapeHtml(a.description || '') + '" style="color:var(--sp-text-secondary)">' + escapeHtml(truncate(a.description)) + '</td>' +
                     '<td>' + primaryBadge + '</td>' +
                     '<td><label class="toggle-switch"><input type="checkbox"' + checked + ' data-agent-id="' + escapeHtml(a.id) + '" data-action="toggle"><span class="toggle-slider"></span></label></td>' +
                     '<td class="col-actions"><div class="actions-menu" data-actions-for="' + escapeHtml(a.id) + '">' +
@@ -2374,11 +2374,11 @@ window.AdminApp = window.AdminApp || {};
         return '<div class="detail-header">' +
             '<a href="' + app.BASE + '/agents/" class="btn btn-secondary btn-sm">&larr; Back to Agents</a>' +
         '</div>' +
-        '<h2 style="margin:var(--space-4) 0 var(--space-5);font-size:var(--text-xl);font-weight:600">' + escapeHtml(title) + '</h2>' +
+        '<h2 style="margin:var(--sp-space-4) 0 var(--sp-space-5);font-size:var(--sp-text-xl);font-weight:600">' + escapeHtml(title) + '</h2>' +
         '<div class="card" style="max-width:800px">' +
             '<form id="agent-form">' +
                 '<div class="form-group">' +
-                    '<label class="field-label">Agent ID <span style="font-weight:400;color:var(--text-tertiary)">(kebab-case)</span></label>' +
+                    '<label class="field-label">Agent ID <span style="font-weight:400;color:var(--sp-text-tertiary)">(kebab-case)</span></label>' +
                     '<input class="field-input" name="id" placeholder="my-custom-agent" required' +
                         (isEdit ? ' readonly value="' + escapeHtml(agent.id) + '"' : '') + '>' +
                 '</div>' +
@@ -2399,13 +2399,13 @@ window.AdminApp = window.AdminApp || {};
                     '</textarea>' +
                 '</div>' +
                 '<div class="form-group">' +
-                    '<label class="toggle-switch" style="display:inline-flex;align-items:center;gap:var(--space-3)">' +
+                    '<label class="toggle-switch" style="display:inline-flex;align-items:center;gap:var(--sp-space-3)">' +
                         '<input type="checkbox" name="enabled"' + (isEdit ? (agent.enabled ? ' checked' : '') : ' checked') + '>' +
                         '<span class="toggle-slider"></span>' +
                         '<span class="field-label" style="margin:0">Enabled</span>' +
                     '</label>' +
                 '</div>' +
-                '<div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">' +
+                '<div style="display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)">' +
                     '<button type="submit" class="btn btn-primary">Save</button>' +
                     '<a href="' + app.BASE + '/agents/" class="btn btn-secondary">Cancel</a>' +
                 '</div>' +
@@ -2459,10 +2459,10 @@ window.AdminApp = window.AdminApp || {};
                 const checked = s.enabled ? ' checked' : '';
                 return '<tr>' +
                     '<td style="font-weight:500">' + escapeHtml(s.id) + '</td>' +
-                    '<td><code style="background:var(--bg-surface-raised);padding:2px 8px;border-radius:var(--radius-xs);font-size:var(--text-xs)">' + escapeHtml(s.id) + '</code></td>' +
-                    '<td><code style="background:var(--bg-surface-raised);padding:2px 8px;border-radius:var(--radius-xs);font-size:var(--text-xs)">' + escapeHtml(s.binary || '') + '</code></td>' +
+                    '<td><code style="background:var(--sp-bg-surface-raised);padding:2px 8px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)">' + escapeHtml(s.id) + '</code></td>' +
+                    '<td><code style="background:var(--sp-bg-surface-raised);padding:2px 8px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)">' + escapeHtml(s.binary || '') + '</code></td>' +
                     '<td>' + escapeHtml(String(s.port || '')) + '</td>' +
-                    '<td title="' + escapeHtml(s.description || '') + '" style="color:var(--text-secondary)">' + escapeHtml(truncate(s.description)) + '</td>' +
+                    '<td title="' + escapeHtml(s.description || '') + '" style="color:var(--sp-text-secondary)">' + escapeHtml(truncate(s.description)) + '</td>' +
                     '<td><label class="toggle-switch"><input type="checkbox"' + checked + ' data-server-id="' + escapeHtml(s.id) + '" data-action="toggle"><span class="toggle-slider"></span></label></td>' +
                     '<td class="col-actions"><div class="actions-menu" data-actions-for="' + escapeHtml(s.id) + '">' +
                         '<button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>' +
@@ -2491,11 +2491,11 @@ window.AdminApp = window.AdminApp || {};
         return '<div class="detail-header">' +
             '<a href="' + app.BASE + '/mcp-servers/" class="btn btn-secondary btn-sm">&larr; Back to MCP Servers</a>' +
         '</div>' +
-        '<h2 style="margin:var(--space-4) 0 var(--space-5);font-size:var(--text-xl);font-weight:600">' + escapeHtml(title) + '</h2>' +
+        '<h2 style="margin:var(--sp-space-4) 0 var(--sp-space-5);font-size:var(--sp-text-xl);font-weight:600">' + escapeHtml(title) + '</h2>' +
         '<div class="card" style="max-width:800px">' +
             '<form id="mcp-form">' +
                 '<div class="form-group">' +
-                    '<label class="field-label">Server ID <span style="font-weight:400;color:var(--text-tertiary)">(kebab-case)</span></label>' +
+                    '<label class="field-label">Server ID <span style="font-weight:400;color:var(--sp-text-tertiary)">(kebab-case)</span></label>' +
                     '<input class="field-input" name="id" placeholder="my-mcp-server" required' +
                         (isEdit ? ' readonly value="' + escapeHtml(server.id) + '"' : '') + '>' +
                 '</div>' +
@@ -2525,23 +2525,23 @@ window.AdminApp = window.AdminApp || {};
                         (isEdit ? ' value="' + escapeHtml(server.description || '') + '"' : '') + '>' +
                 '</div>' +
                 '<div class="form-group">' +
-                    '<label class="toggle-switch" style="display:inline-flex;align-items:center;gap:var(--space-2)">' +
+                    '<label class="toggle-switch" style="display:inline-flex;align-items:center;gap:var(--sp-space-2)">' +
                         '<input type="checkbox" name="enabled"' + (isEdit && server.enabled ? ' checked' : (!isEdit ? ' checked' : '')) + '>' +
                         '<span class="toggle-slider"></span>' +
                         '<span class="field-label" style="margin:0">Enabled</span>' +
                     '</label>' +
                 '</div>' +
-                '<hr style="border:none;border-top:1px solid var(--border-subtle);margin:var(--space-5) 0">' +
-                '<h3 style="font-size:var(--text-base);font-weight:600;margin:0 0 var(--space-4)">OAuth Settings</h3>' +
+                '<hr style="border:none;border-top:1px solid var(--sp-border-subtle);margin:var(--sp-space-5) 0">' +
+                '<h3 style="font-size:var(--sp-text-base);font-weight:600;margin:0 0 var(--sp-space-4)">OAuth Settings</h3>' +
                 '<div class="form-group">' +
-                    '<label class="toggle-switch" style="display:inline-flex;align-items:center;gap:var(--space-2)">' +
+                    '<label class="toggle-switch" style="display:inline-flex;align-items:center;gap:var(--sp-space-2)">' +
                         '<input type="checkbox" name="oauth_required"' + (isEdit && server.oauth_required ? ' checked' : '') + '>' +
                         '<span class="toggle-slider"></span>' +
                         '<span class="field-label" style="margin:0">OAuth Required</span>' +
                     '</label>' +
                 '</div>' +
                 '<div class="form-group">' +
-                    '<label class="field-label">OAuth Scopes <span style="font-weight:400;color:var(--text-tertiary)">(comma-separated)</span></label>' +
+                    '<label class="field-label">OAuth Scopes <span style="font-weight:400;color:var(--sp-text-tertiary)">(comma-separated)</span></label>' +
                     '<input class="field-input" name="oauth_scopes" placeholder="read, write, admin"' +
                         (isEdit && server.oauth_scopes ? ' value="' + escapeHtml(server.oauth_scopes) + '"' : '') + '>' +
                 '</div>' +
@@ -2550,7 +2550,7 @@ window.AdminApp = window.AdminApp || {};
                     '<input class="field-input" name="oauth_audience" placeholder="https://api.example.com"' +
                         (isEdit ? ' value="' + escapeHtml(server.oauth_audience || '') + '"' : '') + '>' +
                 '</div>' +
-                '<div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">' +
+                '<div style="display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)">' +
                     '<button type="submit" class="btn btn-primary">Save</button>' +
                     '<a href="' + app.BASE + '/mcp-servers/" class="btn btn-secondary">Cancel</a>' +
                 '</div>' +
@@ -2612,9 +2612,9 @@ window.AdminApp = window.AdminApp || {};
                     : '<span class="badge badge-secondary">Sync</span>';
                 return '<tr>' +
                     '<td style="font-weight:500">' + escapeHtml(h.plugin_id) + '</td>' +
-                    '<td><code style="background:var(--bg-surface-raised);padding:2px 8px;border-radius:var(--radius-xs);font-size:var(--text-xs)">' + escapeHtml(h.event) + '</code></td>' +
+                    '<td><code style="background:var(--sp-bg-surface-raised);padding:2px 8px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)">' + escapeHtml(h.event) + '</code></td>' +
                     '<td>' + escapeHtml(h.matcher || '') + '</td>' +
-                    '<td title="' + escapeHtml(h.command || '') + '" style="color:var(--text-secondary)">' + escapeHtml(truncate(h.command)) + '</td>' +
+                    '<td title="' + escapeHtml(h.command || '') + '" style="color:var(--sp-text-secondary)">' + escapeHtml(truncate(h.command)) + '</td>' +
                     '<td>' + asyncBadge + '</td>' +
                     '<td class="col-actions"><div class="actions-menu" data-actions-for="' + escapeHtml(h.id) + '">' +
                         '<button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>' +
@@ -2658,7 +2658,7 @@ window.AdminApp = window.AdminApp || {};
         return '<div class="detail-header">' +
             '<a href="' + app.BASE + '/hooks/" class="btn btn-secondary btn-sm">&larr; Back to Hooks</a>' +
         '</div>' +
-        '<h2 style="margin:var(--space-4) 0 var(--space-5);font-size:var(--text-xl);font-weight:600">' + escapeHtml(title) + '</h2>' +
+        '<h2 style="margin:var(--sp-space-4) 0 var(--sp-space-5);font-size:var(--sp-text-xl);font-weight:600">' + escapeHtml(title) + '</h2>' +
         '<div class="card" style="max-width:800px">' +
             '<form id="hook-form">' +
                 '<div class="form-group">' +
@@ -2685,12 +2685,12 @@ window.AdminApp = window.AdminApp || {};
                     '</textarea>' +
                 '</div>' +
                 '<div class="form-group">' +
-                    '<label class="field-label" style="display:flex;align-items:center;gap:var(--space-2)">' +
+                    '<label class="field-label" style="display:flex;align-items:center;gap:var(--sp-space-2)">' +
                         '<input type="checkbox" name="is_async"' + (isEdit && hook.is_async ? ' checked' : '') + '>' +
                         ' Run Async' +
                     '</label>' +
                 '</div>' +
-                '<div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">' +
+                '<div style="display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)">' +
                     '<button type="submit" class="btn btn-primary">Save</button>' +
                     '<a href="' + app.BASE + '/hooks/" class="btn btn-secondary">Cancel</a>' +
                 '</div>' +
@@ -2815,7 +2815,7 @@ window.AdminApp = window.AdminApp || {};
             { label: 'Skills', value: t.skills || 0 },
             { label: 'Agents', value: t.agents || 0 }
         ];
-        return '<div class="stats-grid" style="margin-bottom:var(--space-6)">' +
+        return '<div class="stats-grid" style="margin-bottom:var(--sp-space-6)">' +
             stats.map((s) => '<div class="stat-card">' +
                     '<div class="stat-value">' + s.value + '</div>' +
                     '<div class="stat-label">' + s.label + '</div>' +
@@ -2825,17 +2825,17 @@ window.AdminApp = window.AdminApp || {};
     function renderBundleCard(plugin, idx) {
         const files = plugin.files || [];
         const fileCount = files.length;
-        const fileEntries = files.map((file, fileIdx) => '<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) var(--space-4);border-bottom:1px solid var(--border-subtle)">' +
-                '<code style="font-size:var(--text-sm);color:var(--text-secondary)">' + escapeHtml(file.path) + '</code>' +
+        const fileEntries = files.map((file, fileIdx) => '<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-space-2) var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle)">' +
+                '<code style="font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">' + escapeHtml(file.path) + '</code>' +
                 '<button class="btn btn-sm btn-secondary" id="copy-btn-' + idx + '-' + fileIdx + '" data-action="copy-content" data-plugin-idx="' + idx + '" data-file-idx="' + fileIdx + '">Copy</button>' +
             '</div>').join('');
-        return '<div class="card" style="border-left:3px solid var(--accent);margin-bottom:var(--space-4);padding:0;overflow:hidden">' +
-            '<div class="plugin-header" data-action="toggle-bundle" data-idx="' + idx + '" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:var(--space-4)">' +
+        return '<div class="card" style="border-left:3px solid var(--sp-accent);margin-bottom:var(--sp-space-4);padding:0;overflow:hidden">' +
+            '<div class="plugin-header" data-action="toggle-bundle" data-idx="' + idx + '" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:var(--sp-space-4)">' +
                 '<div>' +
-                    '<h3 style="margin:0;font-size:var(--text-base)">' + escapeHtml(plugin.name || plugin.id) + '</h3>' +
-                    '<span class="badge badge-gray" style="margin-top:var(--space-1)">' + fileCount + ' file' + (fileCount !== 1 ? 's' : '') + '</span>' +
+                    '<h3 style="margin:0;font-size:var(--sp-text-base)">' + escapeHtml(plugin.name || plugin.id) + '</h3>' +
+                    '<span class="badge badge-gray" style="margin-top:var(--sp-space-1)">' + fileCount + ' file' + (fileCount !== 1 ? 's' : '') + '</span>' +
                 '</div>' +
-                '<span class="expand-icon" id="bundle-icon-' + idx + '" style="color:var(--text-tertiary);font-size:var(--text-sm)">&#9654;</span>' +
+                '<span class="expand-icon" id="bundle-icon-' + idx + '" style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">&#9654;</span>' +
             '</div>' +
             '<div class="plugin-details" id="bundle-details-' + idx + '" style="display:none">' +
                 fileEntries +
@@ -2891,43 +2891,43 @@ window.AdminApp = window.AdminApp || {};
                 return;
             }
             let html = '';
-            html += '<div class="alert-section" style="border-left-color:var(--accent);margin-bottom:var(--space-6)">' +
-                '<h3 style="color:var(--accent);margin:0">Export to Claude</h3>' +
-                '<p style="color:var(--text-secondary);margin:var(--space-2) 0 0;font-size:var(--text-sm)">' +
+            html += '<div class="alert-section" style="border-left-color:var(--sp-accent);margin-bottom:var(--sp-space-6)">' +
+                '<h3 style="color:var(--sp-accent);margin:0">Export to Claude</h3>' +
+                '<p style="color:var(--sp-text-secondary);margin:var(--sp-space-2) 0 0;font-size:var(--sp-text-sm)">' +
                     'Generate installation files for your plugins. Copy the install script below to set up Claude with your configuration.' +
                 '</p>' +
             '</div>';
             html += renderSummary(data);
-            html += '<div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-6)">' +
+            html += '<div style="display:flex;gap:var(--sp-space-3);margin-bottom:var(--sp-space-6)">' +
                 '<button class="btn btn-primary" id="btn-download-zip">Download Plugin ZIP</button>' +
             '</div>';
             html += '<div class="section-title">Plugin Bundles</div>';
             html += plugins.map((plugin, idx) => renderBundleCard(plugin, idx)).join('');
             if (data.marketplace) {
-                html += '<div class="card" style="border-left:3px solid var(--accent);margin-bottom:var(--space-4);padding:0;overflow:hidden">' +
-                    '<div class="plugin-header" data-action="toggle-bundle" data-idx="mkt" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:var(--space-4)">' +
+                html += '<div class="card" style="border-left:3px solid var(--sp-accent);margin-bottom:var(--sp-space-4);padding:0;overflow:hidden">' +
+                    '<div class="plugin-header" data-action="toggle-bundle" data-idx="mkt" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:var(--sp-space-4)">' +
                         '<div>' +
-                            '<h3 style="margin:0;font-size:var(--text-base)">Marketplace Manifest</h3>' +
-                            '<span class="badge badge-gray" style="margin-top:var(--space-1)">1 file</span>' +
+                            '<h3 style="margin:0;font-size:var(--sp-text-base)">Marketplace Manifest</h3>' +
+                            '<span class="badge badge-gray" style="margin-top:var(--sp-space-1)">1 file</span>' +
                         '</div>' +
-                        '<span class="expand-icon" id="bundle-icon-mkt" style="color:var(--text-tertiary);font-size:var(--text-sm)">&#9654;</span>' +
+                        '<span class="expand-icon" id="bundle-icon-mkt" style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">&#9654;</span>' +
                     '</div>' +
                     '<div class="plugin-details" id="bundle-details-mkt" style="display:none">' +
-                        '<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) var(--space-4);border-bottom:1px solid var(--border-subtle)">' +
-                            '<code style="font-size:var(--text-sm);color:var(--text-secondary)">' + escapeHtml(data.marketplace.path) + '</code>' +
+                        '<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-space-2) var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle)">' +
+                            '<code style="font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">' + escapeHtml(data.marketplace.path) + '</code>' +
                         '</div>' +
-                        '<pre style="background:var(--bg-surface-raised);border-top:1px solid var(--border-subtle);padding:var(--space-4);font-size:var(--text-xs);overflow:auto;max-height:300px;margin:0">' + escapeHtml(data.marketplace.content) + '</pre>' +
+                        '<pre style="background:var(--sp-bg-surface-raised);border-top:1px solid var(--sp-border-subtle);padding:var(--sp-space-4);font-size:var(--sp-text-xs);overflow:auto;max-height:300px;margin:0">' + escapeHtml(data.marketplace.content) + '</pre>' +
                     '</div>' +
                 '</div>';
             }
             const installScript = generateInstallScript(data);
-            html += '<div class="section-title" style="margin-top:var(--space-8)">Install Script</div>';
+            html += '<div class="section-title" style="margin-top:var(--sp-space-8)">Install Script</div>';
             html += '<div class="card" style="padding:0;overflow:hidden">' +
-                '<div style="padding:var(--space-4);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-subtle)">' +
-                    '<span style="font-weight:600;font-size:var(--text-sm)">Bash Install Script</span>' +
+                '<div style="padding:var(--sp-space-4);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--sp-border-subtle)">' +
+                    '<span style="font-weight:600;font-size:var(--sp-text-sm)">Bash Install Script</span>' +
                     '<button class="btn btn-sm btn-primary" id="copy-script-btn" data-action="copy-script">Copy Script</button>' +
                 '</div>' +
-                '<pre style="background:var(--bg-surface-raised);padding:var(--space-4);font-size:var(--text-xs);overflow:auto;max-height:400px;margin:0;border:none">' + escapeHtml(installScript) + '</pre>' +
+                '<pre style="background:var(--sp-bg-surface-raised);padding:var(--sp-space-4);font-size:var(--sp-text-xs);overflow:auto;max-height:400px;margin:0;border:none">' + escapeHtml(installScript) + '</pre>' +
             '</div>';
             root.innerHTML = html;
             exportData = data;
@@ -3009,9 +3009,9 @@ window.AdminApp = window.AdminApp || {};
             const errorTitle = j.last_error ? ' title="' + escapeHtml(j.last_error) + '"' : '';
             return '<tr>' +
                 '<td style="font-weight:500">' + escapeHtml(formatJobName(j.job_name)) +
-                    '<div style="color:var(--text-secondary);font-size:var(--text-xs);font-weight:400">' + escapeHtml(j.job_name) + '</div>' +
+                    '<div style="color:var(--sp-text-secondary);font-size:var(--sp-text-xs);font-weight:400">' + escapeHtml(j.job_name) + '</div>' +
                 '</td>' +
-                '<td><code style="background:var(--bg-surface-raised);padding:2px 8px;border-radius:var(--radius-xs);font-size:var(--text-xs)">' + escapeHtml(j.schedule) + '</code></td>' +
+                '<td><code style="background:var(--sp-bg-surface-raised);padding:2px 8px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)">' + escapeHtml(j.schedule) + '</code></td>' +
                 '<td>' + renderEnabledBadge(j.enabled) + '</td>' +
                 '<td>' + escapeHtml(lastRun) + '</td>' +
                 '<td' + errorTitle + '>' + renderStatusBadge(j.last_status) + '</td>' +
@@ -3136,14 +3136,14 @@ window.AdminApp = window.AdminApp || {};
                 '<td>' + escapeHtml(r.display_name || r.user_id) + '</td>' +
                 '<td>' + escapeHtml(r.department || '-') + '</td>' +
                 '<td><span class="badge ' + eventBadgeClass(r.event_type) + '">' + escapeHtml(r.event_type) + '</span></td>' +
-                '<td><code style="font-size:var(--text-xs);background:var(--bg-surface-raised);padding:2px 6px;border-radius:var(--radius-xs)">' + escapeHtml(r.tool_name || '-') + '</code></td>' +
+                '<td><code style="font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:2px 6px;border-radius:var(--sp-radius-xs)">' + escapeHtml(r.tool_name || '-') + '</code></td>' +
                 '<td>' + escapeHtml(r.plugin_id || '-') + '</td>' +
             '</tr>').join('');
-        const info = '<div style="margin-top:var(--space-3);font-size:var(--text-sm);color:var(--text-tertiary)">' +
+        const info = '<div style="margin-top:var(--sp-space-3);font-size:var(--sp-text-sm);color:var(--sp-text-tertiary)">' +
             rows.length + ' event' + (rows.length !== 1 ? 's' : '') + ' found' +
             (rows.length > 100 ? ' &mdash; showing first 100. Download for full data.' : '') +
         '</div>';
-        return '<div class="table-container" style="margin-top:var(--space-4)"><div class="table-scroll">' +
+        return '<div class="table-container" style="margin-top:var(--sp-space-4)"><div class="table-scroll">' +
             '<table class="data-table">' +
                 '<thead><tr>' +
                     '<th>Timestamp</th><th>User</th><th>Department</th><th>Event Type</th><th>Tool</th><th>Plugin</th>' +
@@ -3388,8 +3388,8 @@ window.AdminApp = window.AdminApp || {};
         const bar = '<div class="unlock-bar"><div class="unlock-bar-fill" style="width:' + pct + '%"></div></div>';
         return '<div class="' + cls + '">' +
             '<div class="achievement-icon">' + item.icon + '</div>' +
-            '<div style="font-weight:600;font-size:var(--text-sm);color:var(--text-primary)">' + escapeHtml(item.name) + '</div>' +
-            '<div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1)">' + escapeHtml(item.description) + '</div>' +
+            '<div style="font-weight:600;font-size:var(--sp-text-sm);color:var(--sp-text-primary)">' + escapeHtml(item.name) + '</div>' +
+            '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:var(--sp-space-1)">' + escapeHtml(item.description) + '</div>' +
             bar +
         '</div>';
     }
@@ -3401,7 +3401,7 @@ window.AdminApp = window.AdminApp || {};
             const items = groups[cat];
             if (!items || !items.length) return;
             const cards = items.map(renderAchievementCard).join('');
-            html += '<div style="margin-bottom:var(--space-6)">' +
+            html += '<div style="margin-bottom:var(--sp-space-6)">' +
                 '<div class="section-title">' + escapeHtml(cat) + '</div>' +
                 '<div class="achievement-grid">' + cards + '</div>' +
             '</div>';

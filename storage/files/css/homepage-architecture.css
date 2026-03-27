@@ -1,7 +1,6 @@
-/* Architecture Diagram Section */
 
 .architecture-section {
-    padding: var(--space-3xl) 0 var(--space-4xl);
+    padding: var(--sp-space-3xl) 0 var(--sp-space-4xl);
     position: relative;
 }
 
@@ -10,28 +9,26 @@
     font-family: var(--sp-font-heading);
     font-size: clamp(1.5rem, 3vw, 2rem);
     font-weight: 700;
-    color: var(--color-text);
-    margin-bottom: var(--space-sm);
+    color: var(--sp-color-text);
+    margin-bottom: var(--sp-space-sm);
     letter-spacing: -0.01em;
 }
 
 .architecture-subtitle {
     text-align: center;
     font-family: var(--sp-font-body);
-    font-size: var(--font-size-md);
-    color: var(--color-text-secondary);
+    font-size: var(--sp-font-size-md);
+    color: var(--sp-color-text-secondary);
     max-width: 680px;
-    margin: 0 auto var(--space-xl);
+    margin: 0 auto var(--sp-space-xl);
     line-height: 1.6;
 }
 
-/* SVG diagram containers - constrained within .container */
 .arch-diagram svg {
     width: 100%;
     height: auto;
 }
 
-/* Responsive: show desktop, hide mobile by default */
 .arch-diagram--desktop {
     display: block;
 }
@@ -40,12 +37,11 @@
     display: none;
 }
 
-/* Scroll hint arrow below hero feature cards */
 a.hero-scroll-hint {
     display: flex;
     justify-content: center;
-    margin-top: var(--space-xl);
-    color: var(--color-text-secondary);
+    margin-top: var(--sp-space-xl);
+    color: var(--sp-color-text-secondary);
     text-decoration: none;
     cursor: pointer;
     pointer-events: auto;
@@ -78,10 +74,10 @@ html {
     }
 
     .architecture-section {
-        padding: var(--space-2xl) 0 var(--space-3xl);
+        padding: var(--sp-space-2xl) 0 var(--sp-space-3xl);
     }
 
     .architecture-subtitle {
-        padding: 0 var(--space-md);
+        padding: 0 var(--sp-space-md);
     }
 }

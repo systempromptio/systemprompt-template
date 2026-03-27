@@ -198,6 +198,33 @@ impl HelperDef for ToLowerCaseHelper {
     }
 }
 
+pub(crate) struct CssVersionHelper;
+impl HelperDef for CssVersionHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        _h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        use std::sync::OnceLock;
+        static VERSION: OnceLock<String> = OnceLock::new();
+        let v = VERSION.get_or_init(|| {
+            let path = std::env::current_dir()
+                .unwrap_or_default()
+                .join("storage/files/css/css-manifest.json");
+            std::fs::read_to_string(&path)
+                .ok()
+                .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+                .and_then(|j| j.get("version")?.as_str().map(String::from))
+                .unwrap_or_else(|| "0".to_string())
+        });
+        out.write(v)?;
+        Ok(())
+    }
+}
+
 pub(crate) struct DefaultHelper;
 impl HelperDef for DefaultHelper {
     fn call<'reg: 'rc, 'rc>(

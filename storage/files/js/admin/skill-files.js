@@ -32,15 +32,15 @@
 
     const renderFileList = () => {
         if (!files.length) {
-            return '<div class="empty-state" style="padding:var(--space-6)"><p>No files found for this skill.</p>' +
-                '<p style="font-size:var(--text-sm);color:var(--text-tertiary);margin-top:var(--space-2)">Click "Sync Files" to scan the filesystem.</p></div>';
+            return '<div class="empty-state" style="padding:var(--sp-space-6)"><p>No files found for this skill.</p>' +
+                '<p style="font-size:var(--sp-text-sm);color:var(--sp-text-tertiary);margin-top:var(--sp-space-2)">Click "Sync Files" to scan the filesystem.</p></div>';
         }
         const groups = groupByCategory(files);
         let html = '';
         categoryOrder.forEach((cat) => {
             const group = groups[cat];
             if (!group || !group.length) return;
-            html += '<div style="margin-bottom:var(--space-3)">' +
+            html += '<div style="margin-bottom:var(--sp-space-3)">' +
                 '<div class="skill-file-category">' +
                 escapeHtml(categoryLabels[cat] || cat) + ' (' + group.length + ')' +
                 '</div>';
@@ -131,36 +131,36 @@
 
     const renderEditor = () => {
         if (!selectedFile) {
-            return '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:var(--text-sm)">Select a file to view its contents</div>';
+            return '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Select a file to view its contents</div>';
         }
         return '<div style="display:flex;flex-direction:column;height:100%">' +
-            '<div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--border-subtle);flex-shrink:0">' +
-                '<span style="font-family:monospace;font-size:var(--text-sm);font-weight:600">' + escapeHtml(selectedFile.file_path) + '</span>' +
-                '<span class="badge badge-blue" style="font-size:var(--text-xs)">' + escapeHtml(selectedFile.language || 'text') + '</span>' +
-                (selectedFile.executable ? '<span class="badge badge-green" style="font-size:var(--text-xs)">executable</span>' : '') +
-                '<span style="margin-left:auto;font-size:var(--text-xs);color:var(--text-tertiary)">' + selectedFile.size_bytes + ' bytes</span>' +
+            '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0">' +
+                '<span style="font-family:monospace;font-size:var(--sp-text-sm);font-weight:600">' + escapeHtml(selectedFile.file_path) + '</span>' +
+                '<span class="badge badge-blue" style="font-size:var(--sp-text-xs)">' + escapeHtml(selectedFile.language || 'text') + '</span>' +
+                (selectedFile.executable ? '<span class="badge badge-green" style="font-size:var(--sp-text-xs)">executable</span>' : '') +
+                '<span style="margin-left:auto;font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">' + selectedFile.size_bytes + ' bytes</span>' +
             '</div>' +
-            '<textarea id="skill-file-editor" style="flex:1;width:100%;border:none;padding:var(--space-3);font-family:monospace;font-size:var(--text-sm);line-height:1.5;resize:none;background:var(--bg-surface);color:var(--text-primary);outline:none;box-sizing:border-box">' +
+            '<textarea id="skill-file-editor" style="flex:1;width:100%;border:none;padding:var(--sp-space-3);font-family:monospace;font-size:var(--sp-text-sm);line-height:1.5;resize:none;background:var(--sp-bg-surface);color:var(--sp-text-primary);outline:none;box-sizing:border-box">' +
                 escapeHtml(selectedFile.content || '') +
             '</textarea>' +
-            '<div style="display:flex;align-items:center;padding:var(--space-2) var(--space-3);border-top:1px solid var(--border-subtle);flex-shrink:0">' +
-                '<span id="skill-file-validation" style="font-size:var(--text-xs);flex:1"></span>' +
-                '<button class="btn btn-primary btn-sm" id="skill-file-save" style="font-size:var(--text-xs)">Save</button>' +
+            '<div style="display:flex;align-items:center;padding:var(--sp-space-2) var(--sp-space-3);border-top:1px solid var(--sp-border-subtle);flex-shrink:0">' +
+                '<span id="skill-file-validation" style="font-size:var(--sp-text-xs);flex:1"></span>' +
+                '<button class="btn btn-primary btn-sm" id="skill-file-save" style="font-size:var(--sp-text-xs)">Save</button>' +
             '</div>' +
         '</div>';
     };
 
     const renderModal = () => {
         return '<div style="display:flex;flex-direction:column;height:100%">' +
-            '<div style="display:flex;align-items:center;padding:var(--space-4);border-bottom:1px solid var(--border-subtle);flex-shrink:0">' +
-                '<h2 style="margin:0;font-size:var(--text-lg);font-weight:600;color:var(--text-primary)">' + escapeHtml(currentSkillName) + ' - Files</h2>' +
-                '<div style="margin-left:auto;display:flex;gap:var(--space-2)">' +
-                    '<button class="btn btn-secondary btn-sm" id="skill-files-sync" style="font-size:var(--text-xs)">Sync Files</button>' +
-                    '<button class="btn btn-secondary btn-sm" id="skill-files-close" style="font-size:var(--text-xs)">Close</button>' +
+            '<div style="display:flex;align-items:center;padding:var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0">' +
+                '<h2 style="margin:0;font-size:var(--sp-text-lg);font-weight:600;color:var(--sp-text-primary)">' + escapeHtml(currentSkillName) + ' - Files</h2>' +
+                '<div style="margin-left:auto;display:flex;gap:var(--sp-space-2)">' +
+                    '<button class="btn btn-secondary btn-sm" id="skill-files-sync" style="font-size:var(--sp-text-xs)">Sync Files</button>' +
+                    '<button class="btn btn-secondary btn-sm" id="skill-files-close" style="font-size:var(--sp-text-xs)">Close</button>' +
                 '</div>' +
             '</div>' +
             '<div style="display:flex;flex:1;min-height:0">' +
-                '<div id="skill-files-list" style="width:280px;overflow-y:auto;border-right:1px solid var(--border-subtle);padding:var(--space-2) 0">' +
+                '<div id="skill-files-list" style="width:280px;overflow-y:auto;border-right:1px solid var(--sp-border-subtle);padding:var(--sp-space-2) 0">' +
                     renderFileList() +
                 '</div>' +
                 '<div id="skill-files-editor" style="flex:1;min-width:0;overflow:hidden">' +
@@ -184,7 +184,7 @@
         const err = validateContent(editor.value, selectedFile.language);
         if (err) {
             badge.textContent = err;
-            badge.style.color = 'var(--danger)';
+            badge.style.color = 'var(--sp-danger)';
         } else {
             badge.textContent = '';
         }
@@ -320,8 +320,8 @@
         overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;z-index:1000';
-        overlay.innerHTML = '<div class="skill-files-panel" style="background:var(--bg-surface);border-radius:var(--radius-lg);width:90vw;max-width:1100px;height:80vh;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column">' +
-            '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary)">Loading files...</div>' +
+        overlay.innerHTML = '<div class="skill-files-panel" style="background:var(--sp-bg-surface);border-radius:var(--sp-radius-lg);width:90vw;max-width:1100px;height:80vh;overflow:hidden;box-shadow:var(--sp-shadow-lg);display:flex;flex-direction:column">' +
+            '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary)">Loading files...</div>' +
         '</div>';
         document.body.append(overlay);
 

@@ -7,7 +7,7 @@
   background: rgba(180, 75, 20, 0.9);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  padding: var(--space-sm) 0;
+  padding: var(--sp-space-sm) 0;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
+  gap: var(--sp-space-sm);
 }
 
 .site-footer .footer-logo-icon {
@@ -32,7 +32,7 @@
 .site-footer .footer-bottom a {
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: color var(--sp-transition-fast);
 }
 
 .site-footer .footer-bottom a:hover {

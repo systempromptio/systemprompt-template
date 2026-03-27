@@ -28,10 +28,10 @@
         overlay.className = 'confirm-overlay';
         overlay.id = 'delete-confirm';
         overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3 style="margin:0 0 var(--space-3)">Delete Plugin?</h3>' +
-            '<p style="margin:0 0 var(--space-2);color:var(--text-secondary);font-size:var(--text-sm)">You are about to delete <strong>' + app.escapeHtml(pluginId) + '</strong>.</p>' +
-            '<p style="margin:0 0 var(--space-5);color:var(--text-secondary);font-size:var(--text-sm)">This will remove the plugin directory and all its configuration. This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end">' +
+            '<h3 style="margin:0 0 var(--sp-space-3)">Delete Plugin?</h3>' +
+            '<p style="margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">You are about to delete <strong>' + app.escapeHtml(pluginId) + '</strong>.</p>' +
+            '<p style="margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">This will remove the plugin directory and all its configuration. This action cannot be undone.</p>' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end">' +
                 '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                 '<button class="btn btn-danger" data-confirm-delete="' + app.escapeHtml(pluginId) + '">Delete Plugin</button>' +
             '</div>' +
@@ -411,9 +411,9 @@
                 checklistHtml += '</div>';
 
                 overlay.innerHTML = '<div class="confirm-dialog">' +
-                    '<h3 style="margin:0 0 var(--space-3)">Add ' + resourceType.replace('_', ' ') + '</h3>' +
+                    '<h3 style="margin:0 0 var(--sp-space-3)">Add ' + resourceType.replace('_', ' ') + '</h3>' +
                     checklistHtml +
-                    '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-3)">' +
+                    '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-3)">' +
                         '<button class="btn btn-secondary" data-add-cancel>Cancel</button>' +
                         '<button class="btn btn-primary" data-add-confirm>Add Selected</button>' +
                     '</div>' +
@@ -570,7 +570,7 @@
     app.initPluginsList = app.initPluginsConfig;
 
     function loadEnvStatus(pluginId, container) {
-        container.innerHTML = '<div style="padding:var(--space-4);color:var(--text-tertiary);font-size:var(--text-sm)">Loading variables...</div>';
+        container.innerHTML = '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Loading variables...</div>';
         app.api('/plugins/' + encodeURIComponent(pluginId) + '/env').then((data) => {
             const defs = data.definitions || [];
             const stored = data.stored || [];
@@ -596,17 +596,17 @@
                 html += '<div class="detail-item">' +
                     '<div class="detail-item-info">' +
                         '<div class="detail-item-name">' +
-                            '<code style="background:var(--bg-surface-raised);padding:1px 6px;border-radius:var(--radius-xs);font-size:var(--text-sm)">' + app.escapeHtml(def.name) + '</code> ' +
+                            '<code style="background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-sm)">' + app.escapeHtml(def.name) + '</code> ' +
                             valueBadge + requiredBadge + secretBadge +
                         '</div>' +
-                        '<div class="detail-item-desc" style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:var(--space-1)">' +
+                        '<div class="detail-item-desc" style="font-size:var(--sp-text-sm);color:var(--sp-text-secondary);margin-top:var(--sp-space-1)">' +
                             (def.description ? app.escapeHtml(def.description) : '') +
-                            (maskedVal ? ' <span style="font-family:monospace;color:var(--text-tertiary)">' + maskedVal + '</span>' : '') +
+                            (maskedVal ? ' <span style="font-family:monospace;color:var(--sp-text-tertiary)">' + maskedVal + '</span>' : '') +
                         '</div>' +
                     '</div>' +
                 '</div>';
             });
-            html += '<div style="padding:var(--space-3) 0">' +
+            html += '<div style="padding:var(--sp-space-3) 0">' +
                 '<button class="btn btn-primary btn-sm" data-open-env="' + app.escapeHtml(pluginId) + '" data-plugin-name="' + app.escapeHtml(pluginId) + '">Configure</button>' +
             '</div>';
             container.innerHTML = html;

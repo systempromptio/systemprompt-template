@@ -5,9 +5,9 @@ use anyhow::Result;
 use sqlx::PgPool;
 use systemprompt::models::ProfileBootstrap;
 
-use super::export::{PluginBundle, PluginFile};
+use super::export::PluginBundle;
 pub(crate) use super::github_sync_bundle::{
-    build_bundle_from_directory, collect_directory_files, import_or_update_plugin,
+    build_bundle_from_directory, import_or_update_plugin,
 };
 pub(crate) use super::github_sync_git::{git_clone_shallow, git_head_hash, git_pull};
 use super::github_sync_git::{

@@ -6,37 +6,37 @@
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 0.9em;
   padding: 0.2em 0.4em;
-  background: var(--color-surface-variant);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xs);
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-medium);
+  background: var(--sp-color-surface-variant);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-xs);
+  color: var(--sp-color-text-primary);
+  font-weight: var(--sp-font-weight-medium);
 }
 
 .blog-content a code {
-  color: var(--color-primary);
+  color: var(--sp-color-primary);
 }
 
 
 
 .blog-content pre {
   margin: 2em 0;
-  border-radius: var(--radius-md);
-  background: var(--syntax-bg);
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-syntax-bg);
   overflow-x: auto;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--sp-shadow-md);
   position: relative;
 }
 
 .blog-content pre code {
   display: block;
-  padding: var(--spacing-lg);
+  padding: var(--sp-spacing-lg);
   font-size: 14px;
   line-height: 1.6;
   background: none;
   border: none;
-  color: var(--syntax-fg);
-  font-weight: var(--font-weight-regular);
+  color: var(--sp-syntax-fg);
+  font-weight: var(--sp-font-weight-regular);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -44,41 +44,41 @@
 
 
 .blog-content pre code .keyword {
-  color: var(--syntax-keyword);
-  font-weight: var(--font-weight-semibold);
+  color: var(--sp-syntax-keyword);
+  font-weight: var(--sp-font-weight-semibold);
 }
 
 .blog-content pre code .string {
-  color: var(--syntax-string);
+  color: var(--sp-syntax-string);
 }
 
 .blog-content pre code .function {
-  color: var(--syntax-function);
+  color: var(--sp-syntax-function);
 }
 
 .blog-content pre code .comment {
-  color: var(--syntax-comment);
+  color: var(--sp-syntax-comment);
   font-style: italic;
 }
 
 .blog-content pre code .number {
-  color: var(--syntax-number);
+  color: var(--sp-syntax-number);
 }
 
 .blog-content pre code .operator {
-  color: var(--syntax-operator);
+  color: var(--sp-syntax-operator);
 }
 
 .blog-content pre code .variable {
-  color: var(--syntax-variable);
+  color: var(--sp-syntax-variable);
 }
 
 .blog-content pre code .class-name {
-  color: var(--syntax-class);
+  color: var(--sp-syntax-class);
 }
 
 .blog-content pre code .punctuation {
-  color: var(--syntax-fg);
+  color: var(--sp-syntax-fg);
 }
 
 
@@ -94,9 +94,9 @@
   letter-spacing: 0.05em;
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.6);
-  border-bottom-left-radius: var(--radius-sm);
+  border-bottom-left-radius: var(--sp-radius-sm);
   font-family: var(--sp-font-body);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--sp-font-weight-semibold);
 }
 
 
@@ -107,18 +107,18 @@
 
 .blog-content .code-copy-button {
   position: absolute;
-  top: var(--spacing-sm);
-  right: var(--spacing-sm);
+  top: var(--sp-spacing-sm);
+  right: var(--sp-spacing-sm);
   padding: 0.5em 1em;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-sm);
+  border-radius: var(--sp-radius-sm);
   color: rgba(255, 255, 255, 0.8);
   font-size: 12px;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--sp-font-weight-semibold);
   cursor: pointer;
   opacity: 0;
-  transition: all var(--animation-fast) ease;
+  transition: all var(--sp-animation-fast) ease;
   font-family: var(--sp-font-body);
 }
 
@@ -136,17 +136,17 @@
 }
 
 .blog-content .code-copy-button.copied {
-  background: var(--syntax-string);
-  border-color: var(--syntax-string);
-  color: var(--syntax-bg);
+  background: var(--sp-syntax-string);
+  border-color: var(--sp-syntax-string);
+  color: var(--sp-syntax-bg);
 }
 
 
 
 @media (max-width: 768px) {
   .blog-content pre {
-    margin-left: calc(var(--spacing-md) * -1);
-    margin-right: calc(var(--spacing-md) * -1);
+    margin-left: calc(var(--sp-spacing-md) * -1);
+    margin-right: calc(var(--sp-spacing-md) * -1);
     border-radius: 0;
   }
 

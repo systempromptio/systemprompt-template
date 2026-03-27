@@ -111,7 +111,7 @@
 
                     let html = '<div class="assign-panel-checklist">';
                     if (allPlugins.length === 0) {
-                        html += '<p style="color:var(--text-tertiary);font-size:var(--text-sm)">No plugins available.</p>';
+                        html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No plugins available.</p>';
                     } else {
                         allPlugins.forEach((p) => {
                             const checked = currentSet[p.id] ? ' checked' : '';

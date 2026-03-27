@@ -23,7 +23,7 @@
             compareBtn = '<button class="btn btn-secondary btn-sm" data-compare-skill="' + escapeHtml(skill.skill_id) +
                 '" data-compare-version="' + escapeHtml(versionId) +
                 '" data-base-skill="' + escapeHtml(skill.base_skill_id) +
-                '" style="font-size:var(--text-xs);padding:2px 8px;white-space:nowrap"' +
+                '" style="font-size:var(--sp-text-xs);padding:2px 8px;white-space:nowrap"' +
                 (isActive ? ' disabled' : '') + '>' +
                 (isActive ? 'Viewing Diff' : 'Compare to Core') + '</button>';
         }
@@ -40,8 +40,8 @@
                     escapeHtml(skill.name || skill.skill_id) +
                     ' ' + baseBadge + ' ' + enabledBadge +
                 '</div>' +
-                '<div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:2px">' +
-                    '<code style="background:var(--bg-surface-raised);padding:1px 6px;border-radius:var(--radius-xs)">' + escapeHtml(skill.skill_id) + '</code>' +
+                '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:2px">' +
+                    '<code style="background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs)">' + escapeHtml(skill.skill_id) + '</code>' +
                     (skill.version ? ' <span>v' + escapeHtml(skill.version) + '</span>' : '') +
                     (skill.description ? ' &mdash; ' + escapeHtml(app.shared.truncate(skill.description, 80)) : '') +
                 '</div>' +
@@ -69,23 +69,23 @@
 
         let metaDiff = '';
         if ((userSkill.name || '') !== (coreSkill.name || '')) {
-            metaDiff += '<div style="margin-bottom:var(--space-2)"><strong>Name:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.name || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.name || '') + '</span></div>';
+            metaDiff += '<div style="margin-bottom:var(--sp-space-2)"><strong>Name:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.name || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.name || '') + '</span></div>';
         }
         if ((userSkill.description || '') !== (coreSkill.description || '')) {
-            metaDiff += '<div style="margin-bottom:var(--space-2)"><strong>Description:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.description || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.description || '') + '</span></div>';
+            metaDiff += '<div style="margin-bottom:var(--sp-space-2)"><strong>Description:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.description || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.description || '') + '</span></div>';
         }
 
         return '<div class="diff-panel">' +
             '<div class="diff-panel-header">' +
-                '<h4 style="margin:0;font-size:var(--text-sm);font-weight:600">Diff: ' + escapeHtml(userSkill.skill_id) + '</h4>' +
-                '<div style="display:flex;gap:var(--space-3);font-size:var(--text-xs)">' +
+                '<h4 style="margin:0;font-size:var(--sp-text-sm);font-weight:600">Diff: ' + escapeHtml(userSkill.skill_id) + '</h4>' +
+                '<div style="display:flex;gap:var(--sp-space-3);font-size:var(--sp-text-xs)">' +
                     '<span><span class="badge badge-blue">core</span> Base skill</span>' +
                     '<span><span class="badge badge-green">user</span> User version</span>' +
                 '</div>' +
-                '<button class="btn btn-secondary btn-sm" data-close-diff style="margin-left:auto;font-size:var(--text-xs);padding:2px 8px">Close</button>' +
+                '<button class="btn btn-secondary btn-sm" data-close-diff style="margin-left:auto;font-size:var(--sp-text-xs);padding:2px 8px">Close</button>' +
             '</div>' +
-            (metaDiff ? '<div style="padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border-subtle);font-size:var(--text-sm)">' + metaDiff + '</div>' : '') +
-            '<div class="diff-content">' + (diffHtml || '<div style="padding:var(--space-4);color:var(--text-tertiary);text-align:center">Content is identical</div>') + '</div>' +
+            (metaDiff ? '<div style="padding:var(--sp-space-3) var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);font-size:var(--sp-text-sm)">' + metaDiff + '</div>' : '') +
+            '<div class="diff-content">' + (diffHtml || '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);text-align:center">Content is identical</div>') + '</div>' +
         '</div>';
     }
 
@@ -93,7 +93,7 @@
         const detail = versionDetails[versionId];
         if (!detail || detail === 'loading') return;
         if (detail === 'error') {
-            detailsContainer.innerHTML = '<div style="padding:var(--space-4)"><div class="empty-state"><p>Failed to load version details.</p></div></div>';
+            detailsContainer.innerHTML = '<div style="padding:var(--sp-space-4)"><div class="empty-state"><p>Failed to load version details.</p></div></div>';
             return;
         }
         let skills = [];
@@ -104,7 +104,7 @@
         }
         const skillsHtml = skills.length
             ? skills.map((s) => renderSkillRow(s, versionId)).join('')
-            : '<div class="empty-state" style="padding:var(--space-4)"><p>No skills in this snapshot.</p></div>';
+            : '<div class="empty-state" style="padding:var(--sp-space-4)"><p>No skills in this snapshot.</p></div>';
 
         let diffHtml = '';
         if (activeDiff && activeDiff.versionId === versionId && diffCache[activeDiff.cacheKey]) {
@@ -113,8 +113,8 @@
         }
 
         detailsContainer.innerHTML =
-            '<div style="padding:var(--space-4)">' +
-                '<div style="font-size:var(--text-sm);font-weight:600;margin-bottom:var(--space-2);color:var(--text-secondary)">Skills Snapshot (' + skills.length + ')</div>' +
+            '<div style="padding:var(--sp-space-4)">' +
+                '<div style="font-size:var(--sp-text-sm);font-weight:600;margin-bottom:var(--sp-space-2);color:var(--sp-text-secondary)">Skills Snapshot (' + skills.length + ')</div>' +
                 skillsHtml +
             '</div>' +
             diffHtml;
@@ -288,9 +288,9 @@
                     }
                     return '<tr>' +
                         '<td><span class="badge ' + actionClass + '">' + escapeHtml(entry.action) + '</span></td>' +
-                        '<td><code style="background:var(--bg-surface-raised);padding:1px 4px;border-radius:var(--radius-xs);font-size:var(--text-xs)">' + escapeHtml(entry.skill_id) + '</code></td>' +
+                        '<td><code style="background:var(--sp-bg-surface-raised);padding:1px 4px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)">' + escapeHtml(entry.skill_id) + '</code></td>' +
                         '<td>' + escapeHtml(entry.skill_name) + '</td>' +
-                        '<td style="color:var(--text-secondary)">' + escapeHtml(entry.detail) + '</td>' +
+                        '<td style="color:var(--sp-text-secondary)">' + escapeHtml(entry.detail) + '</td>' +
                         '<td><span title="' + escapeHtml(app.formatDate(entry.created_at)) + '">' + escapeHtml(app.formatRelativeTime(entry.created_at)) + '</span></td>' +
                     '</tr>';
                 }).join('');

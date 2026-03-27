@@ -1,21 +1,20 @@
 
 
 
-/* Header uses dark brand background — override text colors for contrast */
 .site-header {
-  --color-text: #ffffff;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: rgba(255, 255, 255, 0.85);
-  --color-text-muted: rgba(255, 255, 255, 0.6);
-  --color-border: rgba(255, 255, 255, 0.1);
+  --sp-color-text: #ffffff;
+  --sp-color-text-primary: #ffffff;
+  --sp-color-text-secondary: rgba(255, 255, 255, 0.85);
+  --sp-color-text-muted: rgba(255, 255, 255, 0.6);
+  --sp-color-border: rgba(255, 255, 255, 0.1);
 
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: var(--header-height);
-  background: var(--color-primary);
-  z-index: var(--z-navigation);
+  height: var(--sp-header-height);
+  background: var(--sp-color-primary);
+  z-index: var(--sp-z-navigation);
 }
 
 .site-nav {
@@ -25,7 +24,7 @@
   height: 100%;
   max-width: 1600px;
   margin: 0 auto;
-  padding: 0 var(--space-lg);
+  padding: 0 var(--sp-space-lg);
 }
 
 
@@ -65,7 +64,7 @@
   letter-spacing: 0.05em;
   text-decoration: none;
   border-radius: 3px;
-  transition: opacity var(--transition-fast);
+  transition: opacity var(--sp-transition-fast);
 }
 
 .badge-version {
@@ -86,7 +85,7 @@
   background: rgba(255, 255, 255, 0.15);
   color: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  font-family: var(--font-brand);
+  font-family: var(--sp-font-brand);
   font-weight: 400;
 }
 
@@ -94,23 +93,23 @@
 .nav-links {
   display: flex;
   align-items: center;
-  gap: var(--space-xl);
+  gap: var(--sp-space-xl);
 }
 
 .nav-links a {
-  color: var(--color-text-secondary);
+  color: var(--sp-color-text-secondary);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.95rem;
-  transition: color var(--transition-fast);
+  transition: color var(--sp-transition-fast);
 }
 
 .nav-links a:hover {
-  color: var(--color-text);
+  color: var(--sp-color-text);
 }
 
 .nav-links a.nav-link--active {
-  color: var(--color-text);
+  color: var(--sp-color-text);
 }
 
 
@@ -120,22 +119,22 @@ button.cta-button {
   align-items: center;
   justify-content: center;
   padding: 10px 20px;
-  background: var(--brand-green);
-  color: var(--color-text-on-primary);
-  font-family: var(--font-brand);
+  background: var(--sp-brand-green);
+  color: var(--sp-color-text-on-primary);
+  font-family: var(--sp-font-brand);
   font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   text-decoration: none;
   border-radius: 6px;
-  transition: all var(--transition-fast);
+  transition: all var(--sp-transition-fast);
 }
 
 a.cta-button:hover,
 button.cta-button:hover {
-  background: var(--foodles-orange, #FF8555);
-  color: var(--color-text-on-primary);
+  background: var(--sp-foodles-orange, #FF8555);
+  color: var(--sp-color-text-on-primary);
   transform: translateY(-1px);
 }
 
@@ -148,11 +147,11 @@ button.cta-button:hover {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: var(--color-text-secondary);
+  color: var(--sp-color-text-secondary);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.95rem;
-  transition: color var(--transition-fast);
+  transition: color var(--sp-transition-fast);
   cursor: pointer;
   background: none;
   border: none;
@@ -161,17 +160,17 @@ button.cta-button:hover {
 }
 
 .nav-dropdown-trigger:hover {
-  color: var(--color-text);
+  color: var(--sp-color-text);
 }
 
 .nav-dropdown-trigger.nav-link--active {
-  color: var(--color-text);
+  color: var(--sp-color-text);
 }
 
 .dropdown-arrow {
   width: 12px;
   height: 12px;
-  transition: transform var(--transition-fast);
+  transition: transform var(--sp-transition-fast);
   stroke: currentColor;
   fill: none;
 }
@@ -181,27 +180,26 @@ button.cta-button:hover {
 }
 
 .nav-dropdown-menu {
-  /* Reset text colors back to page defaults for dropdown on light bg */
-  --color-text: #252526;
-  --color-text-primary: #252526;
-  --color-text-secondary: #464E5D;
-  --color-text-muted: #A2AAB9;
-  --color-border: #D6DCE8;
+  --sp-color-text: #252526;
+  --sp-color-text-primary: #252526;
+  --sp-color-text-secondary: #464E5D;
+  --sp-color-text-muted: #A2AAB9;
+  --sp-color-border: #D6DCE8;
 
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
   min-width: 220px;
-  padding: var(--space-md);
-  margin-top: var(--space-sm);
-  background: var(--color-surface-elevated);
-  border: 1px solid var(--color-border);
+  padding: var(--sp-space-md);
+  margin-top: var(--sp-space-sm);
+  background: var(--sp-color-surface-elevated);
+  border: 1px solid var(--sp-color-border);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   opacity: 0;
   visibility: hidden;
-  transition: opacity var(--transition-fast), visibility var(--transition-fast);
+  transition: opacity var(--sp-transition-fast), visibility var(--sp-transition-fast);
   z-index: 200;
 }
 
@@ -211,7 +209,7 @@ button.cta-button:hover {
 }
 
 .dropdown-section {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--sp-space-md);
 }
 
 .dropdown-section:last-child {
@@ -222,24 +220,24 @@ button.cta-button:hover {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-sm);
-  font-family: var(--font-brand);
+  color: var(--sp-color-text-muted);
+  margin-bottom: var(--sp-space-sm);
+  font-family: var(--sp-font-brand);
 }
 
 .dropdown-section a,
 .nav-dropdown-menu > a {
   display: block;
-  padding: var(--space-xs) 0;
-  color: var(--color-text-secondary);
+  padding: var(--sp-space-xs) 0;
+  color: var(--sp-color-text-secondary);
   text-decoration: none;
   font-size: 0.9rem;
-  transition: color var(--transition-fast);
+  transition: color var(--sp-transition-fast);
 }
 
 .dropdown-section a:hover,
 .nav-dropdown-menu > a:hover {
-  color: var(--color-primary);
+  color: var(--sp-color-primary);
 }
 
 .nav-dropdown-menu--narrow {
@@ -248,10 +246,10 @@ button.cta-button:hover {
 
 a.dropdown-view-all {
   display: block;
-  padding-top: var(--space-md);
-  margin-top: var(--space-md);
-  border-top: 1px solid var(--color-border);
-  color: var(--color-primary);
+  padding-top: var(--sp-space-md);
+  margin-top: var(--sp-space-md);
+  border-top: 1px solid var(--sp-color-border);
+  color: var(--sp-color-primary);
   font-weight: 500;
   font-size: 0.85rem;
 }

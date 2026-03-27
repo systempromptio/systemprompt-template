@@ -201,7 +201,7 @@
             return {
                 open: () => {
                     panelApi.setTitle('Fork from Org: ' + (config.entityLabel || config.entityType));
-                    panelApi.setBody('<p style="color:var(--text-tertiary);text-align:center;padding:var(--space-4)">Loading...</p>');
+                    panelApi.setBody('<p style="color:var(--sp-text-tertiary);text-align:center;padding:var(--sp-space-4)">Loading...</p>');
                     panelApi.setFooter('');
                     panelApi.open();
 
@@ -210,7 +210,7 @@
                         .then((data) => {
                             const items = data[config.entityType] || data.plugins || data.skills || data.agents || data.mcp_servers || data.hooks || [];
                             if (items.length === 0) {
-                                panelApi.setBody('<p style="color:var(--text-tertiary);text-align:center;padding:var(--space-4)">No org entities available to fork.</p>');
+                                panelApi.setBody('<p style="color:var(--sp-text-tertiary);text-align:center;padding:var(--sp-space-4)">No org entities available to fork.</p>');
                                 return;
                             }
 
@@ -277,7 +277,7 @@
                             }
                         })
                         .catch(() => {
-                            panelApi.setBody('<p style="color:var(--danger);text-align:center;padding:var(--space-4)">Failed to load forkable entities.</p>');
+                            panelApi.setBody('<p style="color:var(--sp-danger);text-align:center;padding:var(--sp-space-4)">Failed to load forkable entities.</p>');
                         });
                 },
                 close: panelApi.close,

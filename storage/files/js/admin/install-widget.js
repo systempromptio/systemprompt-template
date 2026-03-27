@@ -25,7 +25,7 @@
         const text = copyBtn.getAttribute('data-copy');
         navigator.clipboard.writeText(text).then(() => {
             const orig = copyBtn.innerHTML;
-            copyBtn.innerHTML = '<span style="color:var(--success);font-size:16px">&#10003;</span>';
+            copyBtn.innerHTML = '<span style="color:var(--sp-success);font-size:16px">&#10003;</span>';
             setTimeout(() => { copyBtn.innerHTML = orig; }, 2000);
         });
     });

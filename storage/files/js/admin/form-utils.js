@@ -26,10 +26,10 @@
                 '<input type="checkbox" name="' + escapeHtml(id) + '" value="' + escapeHtml(val) + '"' + checked + ' id="' + escapeHtml(itemId) + '">' +
                 '<label for="' + escapeHtml(itemId) + '">' + escapeHtml(displayName) + '</label>' +
             '</div>';
-        }).join('') : '<div class="empty-state" style="padding:var(--space-4)"><p>None available.</p></div>';
-        let filterRow = '<input type="text" class="field-input" placeholder="Filter..." data-filter-list="' + escapeHtml(id) + '" style="margin-bottom:var(--space-2)">';
+        }).join('') : '<div class="empty-state" style="padding:var(--sp-space-4)"><p>None available.</p></div>';
+        let filterRow = '<input type="text" class="field-input" placeholder="Filter..." data-filter-list="' + escapeHtml(id) + '" style="margin-bottom:var(--sp-space-2)">';
         if (options.hasSelectAll) {
-            filterRow = '<div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-2)">' +
+            filterRow = '<div style="display:flex;gap:var(--sp-space-2);margin-bottom:var(--sp-space-2)">' +
                 '<input type="text" class="field-input" placeholder="Search..." data-filter-list="' + escapeHtml(id) + '" style="flex:1">' +
                 '<button type="button" class="btn btn-secondary btn-sm" data-select-all="' + escapeHtml(id) + '">Select All</button>' +
                 '<button type="button" class="btn btn-secondary btn-sm" data-deselect-all="' + escapeHtml(id) + '">Deselect All</button>' +
@@ -39,7 +39,7 @@
         return '<div class="form-group">' +
             '<label class="field-label">' + escapeHtml(label) + '</label>' +
             filterRow +
-            '<div class="checklist-container" data-checklist="' + escapeHtml(id) + '" style="max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">' +
+            '<div class="checklist-container" data-checklist="' + escapeHtml(id) + '" style="max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">' +
                 listItems +
             '</div>' +
         '</div>';

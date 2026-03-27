@@ -52,7 +52,7 @@
 
 .cc-xp-bar--compact .cc-xp-fill {
     height: 100%;
-    width: var(--xp-pct);
+    width: var(--sp-xp-pct);
     background: linear-gradient(90deg, var(--sp-accent), var(--sp-primary-400));
     border-radius: var(--sp-radius-full);
     transition: width 600ms var(--sp-ease-out);

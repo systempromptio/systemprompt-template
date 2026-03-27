@@ -22,14 +22,14 @@
         const labels = ['Basic Info', 'Skills', 'Agents', 'MCP Servers', 'Hooks', 'Roles & Access', 'Review'];
         const container = document.getElementById('wizard-step-indicator');
         if (!container) return;
-        let html = '<div class="wizard-steps" style="display:flex;gap:var(--space-1);margin-bottom:var(--space-6);flex-wrap:wrap">';
+        let html = '<div class="wizard-steps" style="display:flex;gap:var(--sp-space-1);margin-bottom:var(--sp-space-6);flex-wrap:wrap">';
         for (let i = 1; i <= TOTAL_STEPS; i++) {
             const isActive = i === state.step;
             const isDone = i < state.step;
-            const bgColor = isActive ? 'var(--accent)' : (isDone ? 'var(--success)' : 'var(--bg-tertiary)');
-            const textColor = (isActive || isDone) ? '#fff' : 'var(--text-tertiary)';
-            html += '<div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:' + bgColor + ';color:' + textColor + ';font-size:var(--text-sm);font-weight:' + (isActive ? '600' : '400') + '">' +
-                '<span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--text-xs)">' + i + '</span>' +
+            const bgColor = isActive ? 'var(--sp-accent)' : (isDone ? 'var(--sp-success)' : 'var(--sp-bg-tertiary)');
+            const textColor = (isActive || isDone) ? '#fff' : 'var(--sp-text-tertiary)';
+            html += '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-radius:var(--sp-radius-md);background:' + bgColor + ';color:' + textColor + ';font-size:var(--sp-text-sm);font-weight:' + (isActive ? '600' : '400') + '">' +
+                '<span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--sp-text-xs)">' + i + '</span>' +
                 '<span>' + escapeHtml(labels[i - 1]) + '</span>' +
             '</div>';
         }
@@ -40,7 +40,7 @@
     function renderNav() {
         const nav = document.getElementById('wizard-nav');
         if (!nav) return;
-        let html = '<div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">';
+        let html = '<div style="display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)">';
         if (state.step > 1) html += '<button type="button" class="btn btn-secondary" id="wizard-prev">Previous</button>';
         if (state.step < TOTAL_STEPS) html += '<button type="button" class="btn btn-primary" id="wizard-next">Next</button>';
         if (state.step === TOTAL_STEPS) html += '<button type="button" class="btn btn-primary" id="wizard-create">Create Plugin</button>';
@@ -188,8 +188,8 @@
         const selectedMcp = Object.keys(state.selectedMcpServers).filter((k) => state.selectedMcpServers[k]);
         const selectedRoles = Object.keys(f.roles).filter((k) => f.roles[k]);
         function badgeList(items, emptyMsg) {
-            if (!items.length) return '<span style="color:var(--text-tertiary)">' + escapeHtml(emptyMsg) + '</span>';
-            return items.map((i) => '<span class="badge badge-blue" style="margin:var(--space-1)">' + escapeHtml(i) + '</span>').join('');
+            if (!items.length) return '<span style="color:var(--sp-text-tertiary)">' + escapeHtml(emptyMsg) + '</span>';
+            return items.map((i) => '<span class="badge badge-blue" style="margin:var(--sp-space-1)">' + escapeHtml(i) + '</span>').join('');
         }
         el.innerHTML =
             '<strong>Plugin ID:</strong><span>' + escapeHtml(f.plugin_id || '-') + '</span>' +

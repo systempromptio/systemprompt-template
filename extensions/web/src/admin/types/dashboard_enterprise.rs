@@ -1,10 +1,7 @@
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-use super::dashboard::{
-    AchievementInfo, LeaderboardEntry, UnlockedAchievement, UserGamificationProfile,
-};
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct DepartmentActivity {

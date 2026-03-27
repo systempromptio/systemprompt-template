@@ -16,24 +16,24 @@
         const rulesListHtml = renderRulesList(rules);
 
         overlay.innerHTML = '<div class="confirm-dialog" style="max-width:500px">' +
-            '<h3 style="margin:0 0 var(--space-3)">Edit Visibility - ' + escapeHtml(plugin.name) + '</h3>' +
+            '<h3 style="margin:0 0 var(--sp-space-3)">Edit Visibility - ' + escapeHtml(plugin.name) + '</h3>' +
             '<div id="visibility-rules-list">' + rulesListHtml + '</div>' +
-            '<div style="margin-top:var(--space-4);padding-top:var(--space-3);border-top:1px solid var(--border-primary)">' +
-                '<strong style="font-size:var(--text-sm)">Add Rule</strong>' +
-                '<div style="display:flex;gap:var(--space-2);margin-top:var(--space-2);flex-wrap:wrap">' +
-                    '<select id="vis-rule-type" class="btn btn-secondary" style="cursor:pointer;font-size:var(--text-sm)">' +
+            '<div style="margin-top:var(--sp-space-4);padding-top:var(--sp-space-3);border-top:1px solid var(--sp-border-primary)">' +
+                '<strong style="font-size:var(--sp-text-sm)">Add Rule</strong>' +
+                '<div style="display:flex;gap:var(--sp-space-2);margin-top:var(--sp-space-2);flex-wrap:wrap">' +
+                    '<select id="vis-rule-type" class="btn btn-secondary" style="cursor:pointer;font-size:var(--sp-text-sm)">' +
                         '<option value="department">Department</option>' +
                         '<option value="user">User</option>' +
                     '</select>' +
-                    '<input type="text" id="vis-rule-value" class="search-input" placeholder="Value..." style="flex:1;min-width:120px;font-size:var(--text-sm)">' +
-                    '<select id="vis-rule-access" class="btn btn-secondary" style="cursor:pointer;font-size:var(--text-sm)">' +
+                    '<input type="text" id="vis-rule-value" class="search-input" placeholder="Value..." style="flex:1;min-width:120px;font-size:var(--sp-text-sm)">' +
+                    '<select id="vis-rule-access" class="btn btn-secondary" style="cursor:pointer;font-size:var(--sp-text-sm)">' +
                         '<option value="allow">Allow</option>' +
                         '<option value="deny">Deny</option>' +
                     '</select>' +
-                    '<button class="btn btn-secondary" id="vis-add-rule" style="font-size:var(--text-sm)">Add</button>' +
+                    '<button class="btn btn-secondary" id="vis-add-rule" style="font-size:var(--sp-text-sm)">Add</button>' +
                 '</div>' +
             '</div>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-4)">' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)">' +
                 '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                 '<button class="btn btn-primary" id="vis-save">Save</button>' +
             '</div>' +
@@ -94,11 +94,11 @@
     }
 
     function renderRulesList(rules) {
-        if (!rules.length) return '<p style="font-size:var(--text-sm);color:var(--text-tertiary)">No rules configured</p>';
+        if (!rules.length) return '<p style="font-size:var(--sp-text-sm);color:var(--sp-text-tertiary)">No rules configured</p>';
         return rules.map((rule, idx) => {
-            return '<div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1) 0;font-size:var(--text-sm)">' +
+            return '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;font-size:var(--sp-text-sm)">' +
                 '<span class="badge ' + (rule.access === 'allow' ? 'badge-yellow' : 'badge-red') + '">' + escapeHtml(rule.rule_type) + ': ' + escapeHtml(rule.rule_value) + ' (' + escapeHtml(rule.access) + ')</span>' +
-                '<button class="btn btn-danger" style="font-size:var(--text-xs);padding:2px 6px" data-remove-rule="' + idx + '">Remove</button>' +
+                '<button class="btn btn-danger" style="font-size:var(--sp-text-xs);padding:2px 6px" data-remove-rule="' + idx + '">Remove</button>' +
             '</div>';
         }).join('');
     }
@@ -166,15 +166,15 @@
                     const container = root.querySelector('[data-users-for="' + pluginId + '"]');
                     if (container) {
                         if (users.length === 0) {
-                            container.innerHTML = '<div style="margin-top:var(--space-2);font-size:var(--text-xs);color:var(--text-tertiary)">No users found</div>';
+                            container.innerHTML = '<div style="margin-top:var(--sp-space-2);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">No users found</div>';
                         } else {
-                            container.innerHTML = '<div style="margin-top:var(--space-2);display:flex;flex-direction:column;gap:var(--space-1)">' +
+                            container.innerHTML = '<div style="margin-top:var(--sp-space-2);display:flex;flex-direction:column;gap:var(--sp-space-1)">' +
                                 users.map((u) => {
-                                    return '<div style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-xs);padding:var(--space-1) 0;border-bottom:1px solid var(--border-primary)">' +
-                                        '<span style="font-weight:600;color:var(--text-primary)">' + escapeHtml(u.display_name || 'Unknown') + '</span>' +
+                                    return '<div style="display:flex;align-items:center;gap:var(--sp-space-2);font-size:var(--sp-text-xs);padding:var(--sp-space-1) 0;border-bottom:1px solid var(--sp-border-primary)">' +
+                                        '<span style="font-weight:600;color:var(--sp-text-primary)">' + escapeHtml(u.display_name || 'Unknown') + '</span>' +
                                         (u.department ? '<span class="badge badge-blue">' + escapeHtml(u.department) + '</span>' : '') +
                                         '<span class="badge badge-gray">' + (u.event_count || 0) + ' events</span>' +
-                                        (u.last_used ? '<span style="color:var(--text-tertiary)">' + new Date(u.last_used).toLocaleDateString() + '</span>' : '') +
+                                        (u.last_used ? '<span style="color:var(--sp-text-tertiary)">' + new Date(u.last_used).toLocaleDateString() + '</span>' : '') +
                                     '</div>';
                                 }).join('') +
                             '</div>';

@@ -19,20 +19,20 @@
 
         let html = '<div class="detail-section">';
         html += '<strong>Description</strong>';
-        html += '<p style="margin:var(--space-1) 0;color:var(--text-secondary);font-size:var(--text-sm)">' + app.escapeHtml(data.description || 'No description') + '</p>';
+        html += '<p style="margin:var(--sp-space-1) 0;color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">' + app.escapeHtml(data.description || 'No description') + '</p>';
         html += '</div>';
 
         if (data.command) {
             html += '<div class="detail-section">';
             html += '<strong>Command</strong>';
-            html += '<pre style="margin:var(--space-1) 0;font-size:var(--text-xs);background:var(--bg-surface-raised);padding:var(--space-2);border-radius:var(--radius-sm);overflow-x:auto">' + app.escapeHtml(data.command) + '</pre>';
+            html += '<pre style="margin:var(--sp-space-1) 0;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);overflow-x:auto">' + app.escapeHtml(data.command) + '</pre>';
             html += '</div>';
         }
 
         if (data.tags && data.tags.length) {
             html += '<div class="detail-section">';
             html += '<strong>Tags</strong><br>';
-            html += '<div class="badge-row" style="margin-top:var(--space-1)">';
+            html += '<div class="badge-row" style="margin-top:var(--sp-space-1)">';
             data.tags.forEach((tag) => {
                 html += '<span class="badge badge-gray">' + app.escapeHtml(tag) + '</span>';
             });
@@ -40,7 +40,7 @@
         }
 
         html += '<div class="detail-section">';
-        html += '<details><summary style="cursor:pointer;font-size:var(--text-sm);color:var(--text-secondary)">JSON Config</summary>';
+        html += '<details><summary style="cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">JSON Config</summary>';
         html += app.OrgCommon.formatJson(data);
         html += '</details></div>';
 

@@ -10,7 +10,7 @@ html {
   overflow-x: hidden;
   overflow-y: visible;
   max-width: 100vw;
-  scrollbar-color: var(--color-text-muted) var(--color-background);
+  scrollbar-color: var(--sp-color-text-muted) var(--sp-color-background);
   scrollbar-width: thin;
 }
 
@@ -18,8 +18,8 @@ body {
   font-family: var(--sp-font-body);
   font-size: 1rem;
   line-height: 1.6;
-  color: var(--color-text);
-  background-color: var(--color-background);
+  color: var(--sp-color-text);
+  background-color: var(--sp-color-background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -45,43 +45,43 @@ a:hover {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-background);
+  background: var(--sp-color-background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-text-muted);
+  background: var(--sp-color-text-muted);
   border-radius: 6px;
-  border: 3px solid var(--color-background);
+  border: 3px solid var(--sp-color-background);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary);
+  background: var(--sp-color-text-secondary);
 }
 
 ::selection {
-  background: var(--brand-600);
-  color: var(--color-text-on-primary);
+  background: var(--sp-brand-600);
+  color: var(--sp-color-text-on-primary);
 }
 
 .container {
   width: 100%;
-  max-width: var(--container-max);
+  max-width: var(--sp-container-max);
   margin: 0 auto;
-  padding: 0 var(--space-lg);
+  padding: 0 var(--sp-space-lg);
 }
 
 main {
-  padding-top: var(--header-height);
+  padding-top: var(--sp-header-height);
   overflow-x: hidden;
   overflow-y: visible;
 }
 
 @media (max-width: 768px) {
   :root {
-    --header-height: 64px;
+    --sp-header-height: 64px;
   }
 
   .container {
-    padding: 0 var(--space-md);
+    padding: 0 var(--sp-space-md);
   }
 }

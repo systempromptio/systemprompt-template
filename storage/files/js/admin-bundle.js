@@ -235,9 +235,9 @@ window.AdminApp = window.AdminApp || {};
                 'right:' + (window.innerWidth - rect.right) + 'px;' +
                 'left:auto;' +
                 'opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto;' +
-                'background:var(--bg-surface-overlay);border:1px solid var(--border-default);' +
-                'border-radius:var(--radius-md);box-shadow:var(--shadow-lg);' +
-                'min-width:140px;padding:var(--space-1) 0;z-index:1000;';
+                'background:var(--sp-bg-surface-overlay);border:1px solid var(--sp-border-default);' +
+                'border-radius:var(--sp-radius-md);box-shadow:var(--sp-shadow-lg);' +
+                'min-width:140px;padding:var(--sp-space-1) 0;z-index:1000;';
             clone.setAttribute('data-portal-dropdown', 'true');
 
             DropdownManager.portal.append(clone);
@@ -293,7 +293,7 @@ window.AdminApp = window.AdminApp || {};
         overlay.innerHTML = '<div class="confirm-dialog">' +
             '<h3>' + escapeHtml(title) + '</h3>' +
             '<p>' + escapeHtml(message) + '</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5)">' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
                 '<button class="btn btn-secondary" data-action="cancel">Cancel</button>' +
                 '<button class="btn ' + btnClass + '" data-action="confirm">' + escapeHtml(confirmLabel) + '</button>' +
             '</div>' +
@@ -317,7 +317,7 @@ window.AdminApp = window.AdminApp || {};
         overlay.innerHTML = '<div class="confirm-dialog">' +
             '<h3>' + escapeHtml(title) + '</h3>' +
             '<p>This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5)">' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
                 '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                 '<button class="btn btn-danger" data-confirm-delete="' + escapeHtml(itemId) + '">Delete</button>' +
             '</div>' +
@@ -433,10 +433,10 @@ window.AdminApp = window.AdminApp || {};
                 '<input type="checkbox" name="' + escapeHtml(id) + '" value="' + escapeHtml(val) + '"' + checked + ' id="' + escapeHtml(itemId) + '">' +
                 '<label for="' + escapeHtml(itemId) + '">' + escapeHtml(displayName) + '</label>' +
             '</div>';
-        }).join('') : '<div class="empty-state" style="padding:var(--space-4)"><p>None available.</p></div>';
-        let filterRow = '<input type="text" class="field-input" placeholder="Filter..." data-filter-list="' + escapeHtml(id) + '" style="margin-bottom:var(--space-2)">';
+        }).join('') : '<div class="empty-state" style="padding:var(--sp-space-4)"><p>None available.</p></div>';
+        let filterRow = '<input type="text" class="field-input" placeholder="Filter..." data-filter-list="' + escapeHtml(id) + '" style="margin-bottom:var(--sp-space-2)">';
         if (options.hasSelectAll) {
-            filterRow = '<div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-2)">' +
+            filterRow = '<div style="display:flex;gap:var(--sp-space-2);margin-bottom:var(--sp-space-2)">' +
                 '<input type="text" class="field-input" placeholder="Search..." data-filter-list="' + escapeHtml(id) + '" style="flex:1">' +
                 '<button type="button" class="btn btn-secondary btn-sm" data-select-all="' + escapeHtml(id) + '">Select All</button>' +
                 '<button type="button" class="btn btn-secondary btn-sm" data-deselect-all="' + escapeHtml(id) + '">Deselect All</button>' +
@@ -446,7 +446,7 @@ window.AdminApp = window.AdminApp || {};
         return '<div class="form-group">' +
             '<label class="field-label">' + escapeHtml(label) + '</label>' +
             filterRow +
-            '<div class="checklist-container" data-checklist="' + escapeHtml(id) + '" style="max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">' +
+            '<div class="checklist-container" data-checklist="' + escapeHtml(id) + '" style="max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">' +
                 listItems +
             '</div>' +
         '</div>';
@@ -784,7 +784,7 @@ window.AdminApp = window.AdminApp || {};
         const text = copyBtn.getAttribute('data-copy');
         navigator.clipboard.writeText(text).then(() => {
             const orig = copyBtn.innerHTML;
-            copyBtn.innerHTML = '<span style="color:var(--success);font-size:16px">&#10003;</span>';
+            copyBtn.innerHTML = '<span style="color:var(--sp-success);font-size:16px">&#10003;</span>';
             setTimeout(() => { copyBtn.innerHTML = orig; }, 2000);
         });
     });
@@ -925,7 +925,7 @@ window.AdminApp = window.AdminApp || {};
 
                     let html = '<div class="assign-panel-checklist">';
                     if (allPlugins.length === 0) {
-                        html += '<p style="color:var(--text-tertiary);font-size:var(--text-sm)">No plugins available.</p>';
+                        html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No plugins available.</p>';
                     } else {
                         allPlugins.forEach((p) => {
                             const checked = currentSet[p.id] ? ' checked' : '';
@@ -1450,7 +1450,7 @@ window.AdminApp = window.AdminApp || {};
         const container = document.getElementById(containerId);
         if (container) {
             container.removeAttribute('data-loaded');
-            container.innerHTML = '<div style="padding:var(--space-4);color:var(--text-tertiary);font-size:var(--text-sm)">Refreshing...</div>';
+            container.innerHTML = '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Refreshing...</div>';
         }
     });
     app.pluginDetails = { render: function() { return ''; } };
@@ -1490,15 +1490,15 @@ window.AdminApp = window.AdminApp || {};
 
     function renderFileList() {
         if (!files.length) {
-            return '<div class="empty-state" style="padding:var(--space-6)"><p>No files found for this skill.</p>' +
-                '<p style="font-size:var(--text-sm);color:var(--text-tertiary);margin-top:var(--space-2)">Click "Sync Files" to scan the filesystem.</p></div>';
+            return '<div class="empty-state" style="padding:var(--sp-space-6)"><p>No files found for this skill.</p>' +
+                '<p style="font-size:var(--sp-text-sm);color:var(--sp-text-tertiary);margin-top:var(--sp-space-2)">Click "Sync Files" to scan the filesystem.</p></div>';
         }
         const groups = groupByCategory(files);
         let html = '';
         categoryOrder.forEach(function(cat) {
             const group = groups[cat];
             if (!group || !group.length) return;
-            html += '<div style="margin-bottom:var(--space-3)">' +
+            html += '<div style="margin-bottom:var(--sp-space-3)">' +
                 '<div class="skill-file-category">' +
                 escapeHtml(categoryLabels[cat] || cat) + ' (' + group.length + ')' +
                 '</div>';
@@ -1589,36 +1589,36 @@ window.AdminApp = window.AdminApp || {};
 
     function renderEditor() {
         if (!selectedFile) {
-            return '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:var(--text-sm)">Select a file to view its contents</div>';
+            return '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Select a file to view its contents</div>';
         }
         return '<div style="display:flex;flex-direction:column;height:100%">' +
-            '<div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--border-subtle);flex-shrink:0">' +
-                '<span style="font-family:monospace;font-size:var(--text-sm);font-weight:600">' + escapeHtml(selectedFile.file_path) + '</span>' +
-                '<span class="badge badge-blue" style="font-size:var(--text-xs)">' + escapeHtml(selectedFile.language || 'text') + '</span>' +
-                (selectedFile.executable ? '<span class="badge badge-green" style="font-size:var(--text-xs)">executable</span>' : '') +
-                '<span style="margin-left:auto;font-size:var(--text-xs);color:var(--text-tertiary)">' + selectedFile.size_bytes + ' bytes</span>' +
+            '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0">' +
+                '<span style="font-family:monospace;font-size:var(--sp-text-sm);font-weight:600">' + escapeHtml(selectedFile.file_path) + '</span>' +
+                '<span class="badge badge-blue" style="font-size:var(--sp-text-xs)">' + escapeHtml(selectedFile.language || 'text') + '</span>' +
+                (selectedFile.executable ? '<span class="badge badge-green" style="font-size:var(--sp-text-xs)">executable</span>' : '') +
+                '<span style="margin-left:auto;font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">' + selectedFile.size_bytes + ' bytes</span>' +
             '</div>' +
-            '<textarea id="skill-file-editor" style="flex:1;width:100%;border:none;padding:var(--space-3);font-family:monospace;font-size:var(--text-sm);line-height:1.5;resize:none;background:var(--bg-surface);color:var(--text-primary);outline:none;box-sizing:border-box">' +
+            '<textarea id="skill-file-editor" style="flex:1;width:100%;border:none;padding:var(--sp-space-3);font-family:monospace;font-size:var(--sp-text-sm);line-height:1.5;resize:none;background:var(--sp-bg-surface);color:var(--sp-text-primary);outline:none;box-sizing:border-box">' +
                 escapeHtml(selectedFile.content || '') +
             '</textarea>' +
-            '<div style="display:flex;align-items:center;padding:var(--space-2) var(--space-3);border-top:1px solid var(--border-subtle);flex-shrink:0">' +
-                '<span id="skill-file-validation" style="font-size:var(--text-xs);flex:1"></span>' +
-                '<button class="btn btn-primary btn-sm" id="skill-file-save" style="font-size:var(--text-xs)">Save</button>' +
+            '<div style="display:flex;align-items:center;padding:var(--sp-space-2) var(--sp-space-3);border-top:1px solid var(--sp-border-subtle);flex-shrink:0">' +
+                '<span id="skill-file-validation" style="font-size:var(--sp-text-xs);flex:1"></span>' +
+                '<button class="btn btn-primary btn-sm" id="skill-file-save" style="font-size:var(--sp-text-xs)">Save</button>' +
             '</div>' +
         '</div>';
     }
 
     function renderModal() {
         return '<div style="display:flex;flex-direction:column;height:100%">' +
-            '<div style="display:flex;align-items:center;padding:var(--space-4);border-bottom:1px solid var(--border-subtle);flex-shrink:0">' +
-                '<h2 style="margin:0;font-size:var(--text-lg);font-weight:600;color:var(--text-primary)">' + escapeHtml(currentSkillName) + ' - Files</h2>' +
-                '<div style="margin-left:auto;display:flex;gap:var(--space-2)">' +
-                    '<button class="btn btn-secondary btn-sm" id="skill-files-sync" style="font-size:var(--text-xs)">Sync Files</button>' +
-                    '<button class="btn btn-secondary btn-sm" id="skill-files-close" style="font-size:var(--text-xs)">Close</button>' +
+            '<div style="display:flex;align-items:center;padding:var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0">' +
+                '<h2 style="margin:0;font-size:var(--sp-text-lg);font-weight:600;color:var(--sp-text-primary)">' + escapeHtml(currentSkillName) + ' - Files</h2>' +
+                '<div style="margin-left:auto;display:flex;gap:var(--sp-space-2)">' +
+                    '<button class="btn btn-secondary btn-sm" id="skill-files-sync" style="font-size:var(--sp-text-xs)">Sync Files</button>' +
+                    '<button class="btn btn-secondary btn-sm" id="skill-files-close" style="font-size:var(--sp-text-xs)">Close</button>' +
                 '</div>' +
             '</div>' +
             '<div style="display:flex;flex:1;min-height:0">' +
-                '<div id="skill-files-list" style="width:280px;overflow-y:auto;border-right:1px solid var(--border-subtle);padding:var(--space-2) 0">' +
+                '<div id="skill-files-list" style="width:280px;overflow-y:auto;border-right:1px solid var(--sp-border-subtle);padding:var(--sp-space-2) 0">' +
                     renderFileList() +
                 '</div>' +
                 '<div id="skill-files-editor" style="flex:1;min-width:0;overflow:hidden">' +
@@ -1642,7 +1642,7 @@ window.AdminApp = window.AdminApp || {};
         const err = validateContent(editor.value, selectedFile.language);
         if (err) {
             badge.textContent = err;
-            badge.style.color = 'var(--danger)';
+            badge.style.color = 'var(--sp-danger)';
         } else {
             badge.textContent = '';
         }
@@ -1778,8 +1778,8 @@ window.AdminApp = window.AdminApp || {};
         overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;z-index:1000';
-        overlay.innerHTML = '<div class="skill-files-panel" style="background:var(--bg-surface);border-radius:var(--radius-lg);width:90vw;max-width:1100px;height:80vh;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column">' +
-            '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary)">Loading files...</div>' +
+        overlay.innerHTML = '<div class="skill-files-panel" style="background:var(--sp-bg-surface);border-radius:var(--sp-radius-lg);width:90vw;max-width:1100px;height:80vh;overflow:hidden;box-shadow:var(--sp-shadow-lg);display:flex;flex-direction:column">' +
+            '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary)">Loading files...</div>' +
         '</div>';
         document.body.appendChild(overlay);
 
@@ -1844,7 +1844,7 @@ window.AdminApp = window.AdminApp || {};
 
     function renderVarList(vars) {
         if (!vars.length) {
-            return '<div class="empty-state" style="padding:var(--space-6)"><p>No environment variables defined for this plugin.</p></div>';
+            return '<div class="empty-state" style="padding:var(--sp-space-6)"><p>No environment variables defined for this plugin.</p></div>';
         }
         let html = '';
         vars.forEach(function(v, i) {
@@ -1854,7 +1854,7 @@ window.AdminApp = window.AdminApp || {};
             const secretBadge = v.secret ? ' <span class="badge badge-gray">secret</span>' : '';
             html += '<div class="form-group">' +
                 '<label>' + escapeHtml(v.name) + requiredBadge + secretBadge + '</label>' +
-                (v.description ? '<p style="margin:0 0 var(--space-1);font-size:var(--text-xs);color:var(--text-tertiary)">' + escapeHtml(v.description) + '</p>' : '') +
+                (v.description ? '<p style="margin:0 0 var(--sp-space-1);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">' + escapeHtml(v.description) + '</p>' : '') +
                 '<input type="' + inputType + '" class="plugin-env-input" data-var-index="' + i + '" data-var-name="' + escapeHtml(v.name) + '" data-is-secret="' + (v.secret ? '1' : '0') + '" ' +
                     'value="' + escapeHtml(v.value) + '" placeholder="' + escapeHtml(placeholder) + '">' +
             '</div>';
@@ -1863,11 +1863,11 @@ window.AdminApp = window.AdminApp || {};
     }
 
     function renderModal(vars) {
-        return '<h3 style="margin:0 0 var(--space-4)">' + escapeHtml(currentPluginName) + ' — Environment Variables</h3>' +
+        return '<h3 style="margin:0 0 var(--sp-space-4)">' + escapeHtml(currentPluginName) + ' — Environment Variables</h3>' +
             '<div style="max-height:60vh;overflow-y:auto">' +
                 renderVarList(vars) +
             '</div>' +
-            '<div class="form-actions" style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-4)">' +
+            '<div class="form-actions" style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)">' +
                 '<button class="btn btn-secondary" id="plugin-env-close">Close</button>' +
                 '<button class="btn btn-primary" id="plugin-env-save">Save</button>' +
             '</div>';
@@ -1913,8 +1913,8 @@ window.AdminApp = window.AdminApp || {};
             window.dispatchEvent(new CustomEvent('env-saved', { detail: { pluginId: currentPluginId } }));
             if (saveBtn) {
                 saveBtn.textContent = 'Saved';
-                saveBtn.style.background = 'var(--success)';
-                saveBtn.style.borderColor = 'var(--success)';
+                saveBtn.style.background = 'var(--sp-success)';
+                saveBtn.style.borderColor = 'var(--sp-success)';
             }
             app.Toast.show('Environment variables saved', 'success');
             setTimeout(function() { close(); }, 600);
@@ -1961,7 +1961,7 @@ window.AdminApp = window.AdminApp || {};
         overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.innerHTML = '<div class="confirm-dialog" style="width:560px;max-width:90vw">' +
-            '<div style="display:flex;align-items:center;justify-content:center;padding:var(--space-6);color:var(--text-tertiary)">Loading...</div>' +
+            '<div style="display:flex;align-items:center;justify-content:center;padding:var(--sp-space-6);color:var(--sp-text-tertiary)">Loading...</div>' +
         '</div>';
         document.body.appendChild(overlay);
 
@@ -2008,10 +2008,10 @@ window.AdminApp = window.AdminApp || {};
         overlay.className = 'confirm-overlay';
         overlay.id = 'delete-confirm';
         overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3 style="margin:0 0 var(--space-3)">Delete Plugin?</h3>' +
-            '<p style="margin:0 0 var(--space-2);color:var(--text-secondary);font-size:var(--text-sm)">You are about to delete <strong>' + app.escapeHtml(pluginId) + '</strong>.</p>' +
-            '<p style="margin:0 0 var(--space-5);color:var(--text-secondary);font-size:var(--text-sm)">This will remove the plugin directory and all its configuration. This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end">' +
+            '<h3 style="margin:0 0 var(--sp-space-3)">Delete Plugin?</h3>' +
+            '<p style="margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">You are about to delete <strong>' + app.escapeHtml(pluginId) + '</strong>.</p>' +
+            '<p style="margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">This will remove the plugin directory and all its configuration. This action cannot be undone.</p>' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end">' +
                 '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                 '<button class="btn btn-danger" data-confirm-delete="' + app.escapeHtml(pluginId) + '">Delete Plugin</button>' +
             '</div>' +
@@ -2402,9 +2402,9 @@ window.AdminApp = window.AdminApp || {};
                 checklistHtml += '</div>';
 
                 overlay.innerHTML = '<div class="confirm-dialog">' +
-                    '<h3 style="margin:0 0 var(--space-3)">Add ' + resourceType.replace('_', ' ') + '</h3>' +
+                    '<h3 style="margin:0 0 var(--sp-space-3)">Add ' + resourceType.replace('_', ' ') + '</h3>' +
                     checklistHtml +
-                    '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-3)">' +
+                    '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-3)">' +
                         '<button class="btn btn-secondary" data-add-cancel>Cancel</button>' +
                         '<button class="btn btn-primary" data-add-confirm>Add Selected</button>' +
                     '</div>' +
@@ -2567,7 +2567,7 @@ window.AdminApp = window.AdminApp || {};
     app.initPluginsList = app.initPluginsConfig;
 
     function loadEnvStatus(pluginId, container) {
-        container.innerHTML = '<div style="padding:var(--space-4);color:var(--text-tertiary);font-size:var(--text-sm)">Loading variables...</div>';
+        container.innerHTML = '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Loading variables...</div>';
         app.api('/plugins/' + encodeURIComponent(pluginId) + '/env').then(function(data) {
             const defs = data.definitions || [];
             const stored = data.stored || [];
@@ -2593,17 +2593,17 @@ window.AdminApp = window.AdminApp || {};
                 html += '<div class="detail-item">' +
                     '<div class="detail-item-info">' +
                         '<div class="detail-item-name">' +
-                            '<code style="background:var(--bg-surface-raised);padding:1px 6px;border-radius:var(--radius-xs);font-size:var(--text-sm)">' + app.escapeHtml(def.name) + '</code> ' +
+                            '<code style="background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-sm)">' + app.escapeHtml(def.name) + '</code> ' +
                             valueBadge + requiredBadge + secretBadge +
                         '</div>' +
-                        '<div class="detail-item-desc" style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:var(--space-1)">' +
+                        '<div class="detail-item-desc" style="font-size:var(--sp-text-sm);color:var(--sp-text-secondary);margin-top:var(--sp-space-1)">' +
                             (def.description ? app.escapeHtml(def.description) : '') +
-                            (maskedVal ? ' <span style="font-family:monospace;color:var(--text-tertiary)">' + maskedVal + '</span>' : '') +
+                            (maskedVal ? ' <span style="font-family:monospace;color:var(--sp-text-tertiary)">' + maskedVal + '</span>' : '') +
                         '</div>' +
                     '</div>' +
                 '</div>';
             });
-            html += '<div style="padding:var(--space-3) 0">' +
+            html += '<div style="padding:var(--sp-space-3) 0">' +
                 '<button class="btn btn-primary btn-sm" data-open-env="' + app.escapeHtml(pluginId) + '" data-plugin-name="' + app.escapeHtml(pluginId) + '">Configure</button>' +
             '</div>';
             container.innerHTML = html;
@@ -2631,24 +2631,24 @@ window.AdminApp = window.AdminApp || {};
         const rulesListHtml = renderRulesList(rules);
 
         overlay.innerHTML = '<div class="confirm-dialog" style="max-width:500px">' +
-            '<h3 style="margin:0 0 var(--space-3)">Edit Visibility - ' + escapeHtml(plugin.name) + '</h3>' +
+            '<h3 style="margin:0 0 var(--sp-space-3)">Edit Visibility - ' + escapeHtml(plugin.name) + '</h3>' +
             '<div id="visibility-rules-list">' + rulesListHtml + '</div>' +
-            '<div style="margin-top:var(--space-4);padding-top:var(--space-3);border-top:1px solid var(--border-primary)">' +
-                '<strong style="font-size:var(--text-sm)">Add Rule</strong>' +
-                '<div style="display:flex;gap:var(--space-2);margin-top:var(--space-2);flex-wrap:wrap">' +
-                    '<select id="vis-rule-type" class="btn btn-secondary" style="cursor:pointer;font-size:var(--text-sm)">' +
+            '<div style="margin-top:var(--sp-space-4);padding-top:var(--sp-space-3);border-top:1px solid var(--sp-border-primary)">' +
+                '<strong style="font-size:var(--sp-text-sm)">Add Rule</strong>' +
+                '<div style="display:flex;gap:var(--sp-space-2);margin-top:var(--sp-space-2);flex-wrap:wrap">' +
+                    '<select id="vis-rule-type" class="btn btn-secondary" style="cursor:pointer;font-size:var(--sp-text-sm)">' +
                         '<option value="department">Department</option>' +
                         '<option value="user">User</option>' +
                     '</select>' +
-                    '<input type="text" id="vis-rule-value" class="search-input" placeholder="Value..." style="flex:1;min-width:120px;font-size:var(--text-sm)">' +
-                    '<select id="vis-rule-access" class="btn btn-secondary" style="cursor:pointer;font-size:var(--text-sm)">' +
+                    '<input type="text" id="vis-rule-value" class="search-input" placeholder="Value..." style="flex:1;min-width:120px;font-size:var(--sp-text-sm)">' +
+                    '<select id="vis-rule-access" class="btn btn-secondary" style="cursor:pointer;font-size:var(--sp-text-sm)">' +
                         '<option value="allow">Allow</option>' +
                         '<option value="deny">Deny</option>' +
                     '</select>' +
-                    '<button class="btn btn-secondary" id="vis-add-rule" style="font-size:var(--text-sm)">Add</button>' +
+                    '<button class="btn btn-secondary" id="vis-add-rule" style="font-size:var(--sp-text-sm)">Add</button>' +
                 '</div>' +
             '</div>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-4)">' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)">' +
                 '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                 '<button class="btn btn-primary" id="vis-save">Save</button>' +
             '</div>' +
@@ -2709,11 +2709,11 @@ window.AdminApp = window.AdminApp || {};
     }
 
     function renderRulesList(rules) {
-        if (!rules.length) return '<p style="font-size:var(--text-sm);color:var(--text-tertiary)">No rules configured</p>';
+        if (!rules.length) return '<p style="font-size:var(--sp-text-sm);color:var(--sp-text-tertiary)">No rules configured</p>';
         return rules.map(function(rule, idx) {
-            return '<div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1) 0;font-size:var(--text-sm)">' +
+            return '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;font-size:var(--sp-text-sm)">' +
                 '<span class="badge ' + (rule.access === 'allow' ? 'badge-yellow' : 'badge-red') + '">' + escapeHtml(rule.rule_type) + ': ' + escapeHtml(rule.rule_value) + ' (' + escapeHtml(rule.access) + ')</span>' +
-                '<button class="btn btn-danger" style="font-size:var(--text-xs);padding:2px 6px" data-remove-rule="' + idx + '">Remove</button>' +
+                '<button class="btn btn-danger" style="font-size:var(--sp-text-xs);padding:2px 6px" data-remove-rule="' + idx + '">Remove</button>' +
             '</div>';
         }).join('');
     }
@@ -2783,15 +2783,15 @@ window.AdminApp = window.AdminApp || {};
                     const container = root.querySelector('[data-users-for="' + pluginId + '"]');
                     if (container) {
                         if (users.length === 0) {
-                            container.innerHTML = '<div style="margin-top:var(--space-2);font-size:var(--text-xs);color:var(--text-tertiary)">No users found</div>';
+                            container.innerHTML = '<div style="margin-top:var(--sp-space-2);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">No users found</div>';
                         } else {
-                            container.innerHTML = '<div style="margin-top:var(--space-2);display:flex;flex-direction:column;gap:var(--space-1)">' +
+                            container.innerHTML = '<div style="margin-top:var(--sp-space-2);display:flex;flex-direction:column;gap:var(--sp-space-1)">' +
                                 users.map(function(u) {
-                                    return '<div style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-xs);padding:var(--space-1) 0;border-bottom:1px solid var(--border-primary)">' +
-                                        '<span style="font-weight:600;color:var(--text-primary)">' + escapeHtml(u.display_name || 'Unknown') + '</span>' +
+                                    return '<div style="display:flex;align-items:center;gap:var(--sp-space-2);font-size:var(--sp-text-xs);padding:var(--sp-space-1) 0;border-bottom:1px solid var(--sp-border-primary)">' +
+                                        '<span style="font-weight:600;color:var(--sp-text-primary)">' + escapeHtml(u.display_name || 'Unknown') + '</span>' +
                                         (u.department ? '<span class="badge badge-blue">' + escapeHtml(u.department) + '</span>' : '') +
                                         '<span class="badge badge-gray">' + (u.event_count || 0) + ' events</span>' +
-                                        (u.last_used ? '<span style="color:var(--text-tertiary)">' + new Date(u.last_used).toLocaleDateString() + '</span>' : '') +
+                                        (u.last_used ? '<span style="color:var(--sp-text-tertiary)">' + new Date(u.last_used).toLocaleDateString() + '</span>' : '') +
                                     '</div>';
                                 }).join('') +
                             '</div>';
@@ -2834,7 +2834,7 @@ window.AdminApp = window.AdminApp || {};
             compareBtn = '<button class="btn btn-secondary btn-sm" data-compare-skill="' + escapeHtml(skill.skill_id) +
                 '" data-compare-version="' + escapeHtml(versionId) +
                 '" data-base-skill="' + escapeHtml(skill.base_skill_id) +
-                '" style="font-size:var(--text-xs);padding:2px 8px;white-space:nowrap"' +
+                '" style="font-size:var(--sp-text-xs);padding:2px 8px;white-space:nowrap"' +
                 (isActive ? ' disabled' : '') + '>' +
                 (isActive ? 'Viewing Diff' : 'Compare to Core') + '</button>';
         }
@@ -2851,8 +2851,8 @@ window.AdminApp = window.AdminApp || {};
                     escapeHtml(skill.name || skill.skill_id) +
                     ' ' + baseBadge + ' ' + enabledBadge +
                 '</div>' +
-                '<div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:2px">' +
-                    '<code style="background:var(--bg-surface-raised);padding:1px 6px;border-radius:var(--radius-xs)">' + escapeHtml(skill.skill_id) + '</code>' +
+                '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:2px">' +
+                    '<code style="background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs)">' + escapeHtml(skill.skill_id) + '</code>' +
                     (skill.version ? ' <span>v' + escapeHtml(skill.version) + '</span>' : '') +
                     (skill.description ? ' &mdash; ' + escapeHtml(app.shared.truncate(skill.description, 80)) : '') +
                 '</div>' +
@@ -2880,23 +2880,23 @@ window.AdminApp = window.AdminApp || {};
 
         let metaDiff = '';
         if ((userSkill.name || '') !== (coreSkill.name || '')) {
-            metaDiff += '<div style="margin-bottom:var(--space-2)"><strong>Name:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.name || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.name || '') + '</span></div>';
+            metaDiff += '<div style="margin-bottom:var(--sp-space-2)"><strong>Name:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.name || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.name || '') + '</span></div>';
         }
         if ((userSkill.description || '') !== (coreSkill.description || '')) {
-            metaDiff += '<div style="margin-bottom:var(--space-2)"><strong>Description:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.description || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.description || '') + '</span></div>';
+            metaDiff += '<div style="margin-bottom:var(--sp-space-2)"><strong>Description:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.description || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.description || '') + '</span></div>';
         }
 
         return '<div class="diff-panel">' +
             '<div class="diff-panel-header">' +
-                '<h4 style="margin:0;font-size:var(--text-sm);font-weight:600">Diff: ' + escapeHtml(userSkill.skill_id) + '</h4>' +
-                '<div style="display:flex;gap:var(--space-3);font-size:var(--text-xs)">' +
+                '<h4 style="margin:0;font-size:var(--sp-text-sm);font-weight:600">Diff: ' + escapeHtml(userSkill.skill_id) + '</h4>' +
+                '<div style="display:flex;gap:var(--sp-space-3);font-size:var(--sp-text-xs)">' +
                     '<span><span class="badge badge-blue">core</span> Base skill</span>' +
                     '<span><span class="badge badge-green">user</span> User version</span>' +
                 '</div>' +
-                '<button class="btn btn-secondary btn-sm" data-close-diff style="margin-left:auto;font-size:var(--text-xs);padding:2px 8px">Close</button>' +
+                '<button class="btn btn-secondary btn-sm" data-close-diff style="margin-left:auto;font-size:var(--sp-text-xs);padding:2px 8px">Close</button>' +
             '</div>' +
-            (metaDiff ? '<div style="padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border-subtle);font-size:var(--text-sm)">' + metaDiff + '</div>' : '') +
-            '<div class="diff-content">' + (diffHtml || '<div style="padding:var(--space-4);color:var(--text-tertiary);text-align:center">Content is identical</div>') + '</div>' +
+            (metaDiff ? '<div style="padding:var(--sp-space-3) var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);font-size:var(--sp-text-sm)">' + metaDiff + '</div>' : '') +
+            '<div class="diff-content">' + (diffHtml || '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);text-align:center">Content is identical</div>') + '</div>' +
         '</div>';
     }
 
@@ -2904,7 +2904,7 @@ window.AdminApp = window.AdminApp || {};
         const detail = versionDetails[versionId];
         if (!detail || detail === 'loading') return;
         if (detail === 'error') {
-            detailsContainer.innerHTML = '<div style="padding:var(--space-4)"><div class="empty-state"><p>Failed to load version details.</p></div></div>';
+            detailsContainer.innerHTML = '<div style="padding:var(--sp-space-4)"><div class="empty-state"><p>Failed to load version details.</p></div></div>';
             return;
         }
         let skills = [];
@@ -2915,7 +2915,7 @@ window.AdminApp = window.AdminApp || {};
         }
         const skillsHtml = skills.length
             ? skills.map(function(s) { return renderSkillRow(s, versionId); }).join('')
-            : '<div class="empty-state" style="padding:var(--space-4)"><p>No skills in this snapshot.</p></div>';
+            : '<div class="empty-state" style="padding:var(--sp-space-4)"><p>No skills in this snapshot.</p></div>';
 
         let diffHtml = '';
         if (activeDiff && activeDiff.versionId === versionId && diffCache[activeDiff.cacheKey]) {
@@ -2924,8 +2924,8 @@ window.AdminApp = window.AdminApp || {};
         }
 
         detailsContainer.innerHTML =
-            '<div style="padding:var(--space-4)">' +
-                '<div style="font-size:var(--text-sm);font-weight:600;margin-bottom:var(--space-2);color:var(--text-secondary)">Skills Snapshot (' + skills.length + ')</div>' +
+            '<div style="padding:var(--sp-space-4)">' +
+                '<div style="font-size:var(--sp-text-sm);font-weight:600;margin-bottom:var(--sp-space-2);color:var(--sp-text-secondary)">Skills Snapshot (' + skills.length + ')</div>' +
                 skillsHtml +
             '</div>' +
             diffHtml;
@@ -3102,9 +3102,9 @@ window.AdminApp = window.AdminApp || {};
                     }
                     return '<tr>' +
                         '<td><span class="badge ' + actionClass + '">' + escapeHtml(entry.action) + '</span></td>' +
-                        '<td><code style="background:var(--bg-surface-raised);padding:1px 4px;border-radius:var(--radius-xs);font-size:var(--text-xs)">' + escapeHtml(entry.skill_id) + '</code></td>' +
+                        '<td><code style="background:var(--sp-bg-surface-raised);padding:1px 4px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)">' + escapeHtml(entry.skill_id) + '</code></td>' +
                         '<td>' + escapeHtml(entry.skill_name) + '</td>' +
-                        '<td style="color:var(--text-secondary)">' + escapeHtml(entry.detail) + '</td>' +
+                        '<td style="color:var(--sp-text-secondary)">' + escapeHtml(entry.detail) + '</td>' +
                         '<td><span title="' + escapeHtml(app.formatDate(entry.created_at)) + '">' + escapeHtml(app.formatRelativeTime(entry.created_at)) + '</span></td>' +
                     '</tr>';
                 }).join('');
@@ -3228,14 +3228,14 @@ window.AdminApp = window.AdminApp || {};
         const labels = ['Basic Info', 'Skills', 'Agents', 'MCP Servers', 'Hooks', 'Roles & Access', 'Review'];
         const container = document.getElementById('wizard-step-indicator');
         if (!container) return;
-        let html = '<div class="wizard-steps" style="display:flex;gap:var(--space-1);margin-bottom:var(--space-6);flex-wrap:wrap">';
+        let html = '<div class="wizard-steps" style="display:flex;gap:var(--sp-space-1);margin-bottom:var(--sp-space-6);flex-wrap:wrap">';
         for (let i = 1; i <= TOTAL_STEPS; i++) {
             const isActive = i === state.step;
             const isDone = i < state.step;
-            const bgColor = isActive ? 'var(--accent)' : (isDone ? 'var(--success)' : 'var(--bg-tertiary)');
-            const textColor = (isActive || isDone) ? '#fff' : 'var(--text-tertiary)';
-            html += '<div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:' + bgColor + ';color:' + textColor + ';font-size:var(--text-sm);font-weight:' + (isActive ? '600' : '400') + '">' +
-                '<span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--text-xs)">' + i + '</span>' +
+            const bgColor = isActive ? 'var(--sp-accent)' : (isDone ? 'var(--sp-success)' : 'var(--sp-bg-tertiary)');
+            const textColor = (isActive || isDone) ? '#fff' : 'var(--sp-text-tertiary)';
+            html += '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-radius:var(--sp-radius-md);background:' + bgColor + ';color:' + textColor + ';font-size:var(--sp-text-sm);font-weight:' + (isActive ? '600' : '400') + '">' +
+                '<span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--sp-text-xs)">' + i + '</span>' +
                 '<span>' + escapeHtml(labels[i - 1]) + '</span>' +
             '</div>';
         }
@@ -3246,7 +3246,7 @@ window.AdminApp = window.AdminApp || {};
     function renderNav() {
         const nav = document.getElementById('wizard-nav');
         if (!nav) return;
-        let html = '<div style="display:flex;gap:var(--space-3);margin-top:var(--space-6)">';
+        let html = '<div style="display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)">';
         if (state.step > 1) html += '<button type="button" class="btn btn-secondary" id="wizard-prev">Previous</button>';
         if (state.step < TOTAL_STEPS) html += '<button type="button" class="btn btn-primary" id="wizard-next">Next</button>';
         if (state.step === TOTAL_STEPS) html += '<button type="button" class="btn btn-primary" id="wizard-create">Create Plugin</button>';
@@ -3394,8 +3394,8 @@ window.AdminApp = window.AdminApp || {};
         const selectedMcp = Object.keys(state.selectedMcpServers).filter(function(k) { return state.selectedMcpServers[k]; });
         const selectedRoles = Object.keys(f.roles).filter(function(k) { return f.roles[k]; });
         function badgeList(items, emptyMsg) {
-            if (!items.length) return '<span style="color:var(--text-tertiary)">' + escapeHtml(emptyMsg) + '</span>';
-            return items.map(function(i) { return '<span class="badge badge-blue" style="margin:var(--space-1)">' + escapeHtml(i) + '</span>'; }).join('');
+            if (!items.length) return '<span style="color:var(--sp-text-tertiary)">' + escapeHtml(emptyMsg) + '</span>';
+            return items.map(function(i) { return '<span class="badge badge-blue" style="margin:var(--sp-space-1)">' + escapeHtml(i) + '</span>'; }).join('');
         }
         el.innerHTML =
             '<strong>Plugin ID:</strong><span>' + escapeHtml(f.plugin_id || '-') + '</span>' +
@@ -3771,9 +3771,9 @@ window.AdminApp = window.AdminApp || {};
         const bar = '<div class="unlock-bar"><div class="unlock-bar-fill" style="width:' + pct + '%"></div></div>';
         return '<div class="' + cls + '">' +
             '<div class="achievement-icon">' + icon + '</div>' +
-            '<div style="font-weight:600;font-size:var(--text-sm);color:var(--text-primary)">' + escapeHtml(a.name) + '</div>' +
-            '<div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1)">' + escapeHtml(a.description) + '</div>' +
-            '<div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-1)">' + a.total_unlocked + ' unlocked</div>' +
+            '<div style="font-weight:600;font-size:var(--sp-text-sm);color:var(--sp-text-primary)">' + escapeHtml(a.name) + '</div>' +
+            '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:var(--sp-space-1)">' + escapeHtml(a.description) + '</div>' +
+            '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:var(--sp-space-1)">' + a.total_unlocked + ' unlocked</div>' +
             bar +
         '</div>';
     }
@@ -3787,7 +3787,7 @@ window.AdminApp = window.AdminApp || {};
         let html = '';
         categories.forEach(function(cat) {
             const cards = groups[cat].map(renderAchievementCard).join('');
-            html += '<div style="margin-bottom:var(--space-6)">' +
+            html += '<div style="margin-bottom:var(--sp-space-6)">' +
                 '<div class="section-title">' + escapeHtml(cat) + '</div>' +
                 '<div class="achievement-grid">' + cards + '</div>' +
             '</div>';
@@ -3828,20 +3828,20 @@ window.AdminApp = window.AdminApp || {};
 
         let html = '<div class="detail-section">';
         html += '<strong>Description</strong>';
-        html += '<p style="margin:var(--space-1) 0;color:var(--text-secondary);font-size:var(--text-sm)">' + app.escapeHtml(data.description || 'No description') + '</p>';
+        html += '<p style="margin:var(--sp-space-1) 0;color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">' + app.escapeHtml(data.description || 'No description') + '</p>';
         html += '</div>';
 
         if (data.command) {
             html += '<div class="detail-section">';
             html += '<strong>Command</strong>';
-            html += '<pre style="margin:var(--space-1) 0;font-size:var(--text-xs);background:var(--bg-surface-raised);padding:var(--space-2);border-radius:var(--radius-sm);overflow-x:auto">' + app.escapeHtml(data.command) + '</pre>';
+            html += '<pre style="margin:var(--sp-space-1) 0;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);overflow-x:auto">' + app.escapeHtml(data.command) + '</pre>';
             html += '</div>';
         }
 
         if (data.tags && data.tags.length) {
             html += '<div class="detail-section">';
             html += '<strong>Tags</strong><br>';
-            html += '<div class="badge-row" style="margin-top:var(--space-1)">';
+            html += '<div class="badge-row" style="margin-top:var(--sp-space-1)">';
             data.tags.forEach(function(tag) {
                 html += '<span class="badge badge-gray">' + app.escapeHtml(tag) + '</span>';
             });
@@ -3849,7 +3849,7 @@ window.AdminApp = window.AdminApp || {};
         }
 
         html += '<div class="detail-section">';
-        html += '<details><summary style="cursor:pointer;font-size:var(--text-sm);color:var(--text-secondary)">JSON Config</summary>';
+        html += '<details><summary style="cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">JSON Config</summary>';
         html += app.OrgCommon.formatJson(data);
         html += '</details></div>';
 
@@ -4120,14 +4120,14 @@ window.AdminApp = window.AdminApp || {};
         if (data.system_prompt) {
             html += '<div class="detail-section">';
             html += '<strong>System Prompt</strong>';
-            html += '<pre style="margin:var(--space-1) 0;max-height:200px;overflow:auto;font-size:var(--text-xs);background:var(--bg-surface-raised);padding:var(--space-2);border-radius:var(--radius-sm);white-space:pre-wrap;word-break:break-word">' + app.escapeHtml(data.system_prompt) + '</pre>';
+            html += '<pre style="margin:var(--sp-space-1) 0;max-height:200px;overflow:auto;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);white-space:pre-wrap;word-break:break-word">' + app.escapeHtml(data.system_prompt) + '</pre>';
             html += '</div>';
         }
 
         if (data.port || data.endpoint) {
             html += '<div class="detail-section">';
             html += '<strong>Connection</strong>';
-            html += '<div style="margin:var(--space-1) 0;font-size:var(--text-sm);color:var(--text-secondary)">';
+            html += '<div style="margin:var(--sp-space-1) 0;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">';
             if (data.port) html += '<div>Port: <code class="code-inline">' + app.escapeHtml(String(data.port)) + '</code></div>';
             if (data.endpoint) html += '<div>Endpoint: <code class="code-inline">' + app.escapeHtml(data.endpoint) + '</code></div>';
             html += '</div></div>';
@@ -4136,7 +4136,7 @@ window.AdminApp = window.AdminApp || {};
         if ((data.skill_count && data.skill_count > 0) || (data.mcp_count && data.mcp_count > 0)) {
             html += '<div class="detail-section">';
             html += '<strong>Capabilities</strong>';
-            html += '<div class="badge-row" style="margin-top:var(--space-1)">';
+            html += '<div class="badge-row" style="margin-top:var(--sp-space-1)">';
             if (data.skill_count > 0) {
                 html += '<span class="badge badge-green">' + data.skill_count + ' skill' + (data.skill_count !== 1 ? 's' : '') + '</span>';
             }
@@ -4147,7 +4147,7 @@ window.AdminApp = window.AdminApp || {};
         }
 
         html += '<div class="detail-section">';
-        html += '<details><summary style="cursor:pointer;font-size:var(--text-sm);color:var(--text-secondary)">JSON Config</summary>';
+        html += '<details><summary style="cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">JSON Config</summary>';
         html += app.OrgCommon.formatJson(data);
         html += '</details></div>';
 
@@ -4783,7 +4783,7 @@ window.AdminApp = window.AdminApp || {};
         if (entity.description) {
             html += '<div class="cell-secondary">' + escapeHtml(entity.description) + '</div>';
         }
-        html += '<div style="margin-top:var(--space-2)">';
+        html += '<div style="margin-top:var(--sp-space-2)">';
         html += '<span class="badge badge-blue">' + escapeHtml(entityType.replace('_', ' ')) + '</span> ';
         html += entity.enabled ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-gray">Disabled</span>';
         html += '</div></div>';
@@ -4800,7 +4800,7 @@ window.AdminApp = window.AdminApp || {};
                     '</label>';
             });
         } else {
-            html += '<p style="color:var(--text-tertiary);font-size:var(--text-sm)">No roles defined.</p>';
+            html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No roles defined.</p>';
         }
         html += '</div>';
 
@@ -4827,7 +4827,7 @@ window.AdminApp = window.AdminApp || {};
                     '</div>';
             });
         } else {
-            html += '<p style="color:var(--text-tertiary);font-size:var(--text-sm)">No departments found. Create users with departments first.</p>';
+            html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No departments found. Create users with departments first.</p>';
         }
         html += '</div>';
 
@@ -4912,7 +4912,7 @@ window.AdminApp = window.AdminApp || {};
         const body = document.getElementById('acl-bulk-body');
         if (!body) return;
 
-        let html = '<p style="margin-bottom:var(--space-4);color:var(--text-secondary);font-size:var(--text-sm)">Applying to <strong>' + count + '</strong> selected entities. This will replace existing rules.</p>';
+        let html = '<p style="margin-bottom:var(--sp-space-4);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">Applying to <strong>' + count + '</strong> selected entities. This will replace existing rules.</p>';
 
         html += '<div class="acl-panel-section">';
         html += '<h3 class="acl-panel-section-title">Roles</h3>';
@@ -5214,9 +5214,9 @@ window.AdminApp = window.AdminApp || {};
             var overlay = document.createElement('div');
             overlay.className = 'confirm-overlay';
             overlay.innerHTML = '<div class="confirm-dialog">' +
-                '<h3 style="margin:0 0 var(--space-3)">Publish to GitHub?</h3>' +
-                '<p style="margin:0 0 var(--space-4);color:var(--text-secondary);font-size:var(--text-sm)">This will push the current marketplace plugins to the linked GitHub repository. Any remote changes will be overwritten.</p>' +
-                '<div style="display:flex;gap:var(--space-3);justify-content:flex-end">' +
+                '<h3 style="margin:0 0 var(--sp-space-3)">Publish to GitHub?</h3>' +
+                '<p style="margin:0 0 var(--sp-space-4);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">This will push the current marketplace plugins to the linked GitHub repository. Any remote changes will be overwritten.</p>' +
+                '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end">' +
                     '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                     '<button class="btn btn-primary" data-confirm-publish>Publish</button>' +
                 '</div>' +
@@ -5263,10 +5263,10 @@ window.AdminApp = window.AdminApp || {};
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3 style="margin:0 0 var(--space-3)">Delete Marketplace?</h3>' +
-            '<p style="margin:0 0 var(--space-2);color:var(--text-secondary);font-size:var(--text-sm)">You are about to delete <strong>' + app.escapeHtml(marketplaceId) + '</strong>.</p>' +
-            '<p style="margin:0 0 var(--space-5);color:var(--text-secondary);font-size:var(--text-sm)">This will remove the marketplace and all plugin associations. This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end">' +
+            '<h3 style="margin:0 0 var(--sp-space-3)">Delete Marketplace?</h3>' +
+            '<p style="margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">You are about to delete <strong>' + app.escapeHtml(marketplaceId) + '</strong>.</p>' +
+            '<p style="margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">This will remove the marketplace and all plugin associations. This action cannot be undone.</p>' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end">' +
                 '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                 '<button class="btn btn-danger" data-confirm-delete="' + app.escapeHtml(marketplaceId) + '">Delete Marketplace</button>' +
             '</div>' +
@@ -5326,13 +5326,13 @@ window.AdminApp = window.AdminApp || {};
 
                     let html = '<div class="assign-panel-checklist">';
                     if (!allPlugins.length) {
-                        html += '<p style="color:var(--text-tertiary);font-size:var(--text-sm)">No plugins available.</p>';
+                        html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No plugins available.</p>';
                     } else {
                         allPlugins.forEach(function(p) {
                             const pid = p.id || p.plugin_id;
                             const pname = p.name || pid;
                             const checked = currentIds[pid] ? ' checked' : '';
-                            html += '<label class="acl-checkbox-row" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1) 0;cursor:pointer">' +
+                            html += '<label class="acl-checkbox-row" style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;cursor:pointer">' +
                                 '<input type="checkbox" name="plugin_id" value="' + app.escapeHtml(pid) + '"' + checked + '>' +
                                 '<span>' + app.escapeHtml(pname) + '</span>' +
                                 '</label>';
@@ -5467,11 +5467,11 @@ window.AdminApp = window.AdminApp || {};
                     // Roles
                     html += '<div class="form-group">' +
                         '<label class="field-label">Roles</label>' +
-                        '<div style="display:flex;flex-wrap:wrap;gap:var(--space-1);padding:var(--space-2) 0">';
+                        '<div style="display:flex;flex-wrap:wrap;gap:var(--sp-space-1);padding:var(--sp-space-2) 0">';
                     allRoles.forEach(function(r) {
                         const val = r.value || r;
                         const checked = currentRoles[val] ? ' checked' : '';
-                        html += '<label style="display:inline-flex;align-items:center;gap:var(--space-2);margin-right:var(--space-3);font-size:var(--text-sm);cursor:pointer">' +
+                        html += '<label style="display:inline-flex;align-items:center;gap:var(--sp-space-2);margin-right:var(--sp-space-3);font-size:var(--sp-text-sm);cursor:pointer">' +
                             '<input type="checkbox" name="roles" value="' + app.escapeHtml(val) + '"' + checked + '> ' +
                             app.escapeHtml(val) + '</label>';
                     });
@@ -5480,32 +5480,32 @@ window.AdminApp = window.AdminApp || {};
                     // Departments
                     html += '<div class="form-group">' +
                         '<label class="field-label">Departments</label>' +
-                        '<div class="checklist-container" style="max-height:300px;overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">' +
-                        '<div class="checklist-item" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2);border-bottom:1px solid var(--border-subtle)">' +
+                        '<div class="checklist-container" style="max-height:300px;overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">' +
+                        '<div class="checklist-item" style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2);border-bottom:1px solid var(--sp-border-subtle)">' +
                         '<input type="checkbox" id="panel-dept-check-all">' +
-                        '<label for="panel-dept-check-all" style="flex:1;font-size:var(--text-sm);cursor:pointer;color:var(--text-primary);font-weight:600">Check all</label>' +
+                        '<label for="panel-dept-check-all" style="flex:1;font-size:var(--sp-text-sm);cursor:pointer;color:var(--sp-text-primary);font-weight:600">Check all</label>' +
                         '</div>';
                     allDepts.forEach(function(d, i) {
                         const val = d.value || d.name || d;
                         const checked = currentDepts[val] ? ' checked' : '';
                         const defaultChecked = deptDefaults[val] ? ' checked' : '';
-                        html += '<div class="checklist-item" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2)">' +
+                        html += '<div class="checklist-item" style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2)">' +
                             '<input type="checkbox" name="departments" value="' + app.escapeHtml(val) + '"' + checked + ' id="panel-dept-' + i + '">' +
-                            '<label for="panel-dept-' + i + '" style="flex:1;font-size:var(--text-sm);cursor:pointer;color:var(--text-primary)">' + app.escapeHtml(val) + '</label>' +
-                            '<span class="badge badge-gray" style="font-size:var(--text-xs)">' + (d.user_count || 0) + ' users</span>' +
-                            '<label style="display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);color:var(--text-secondary);cursor:pointer;white-space:nowrap">' +
+                            '<label for="panel-dept-' + i + '" style="flex:1;font-size:var(--sp-text-sm);cursor:pointer;color:var(--sp-text-primary)">' + app.escapeHtml(val) + '</label>' +
+                            '<span class="badge badge-gray" style="font-size:var(--sp-text-xs)">' + (d.user_count || 0) + ' users</span>' +
+                            '<label style="display:inline-flex;align-items:center;gap:4px;font-size:var(--sp-text-xs);color:var(--sp-text-secondary);cursor:pointer;white-space:nowrap">' +
                             '<input type="checkbox" name="dept_default_' + val + '"' + defaultChecked + '> Default</label>' +
                             '</div>';
                     });
                     html += '</div>' +
-                        '<span class="field-hint" style="margin-top:var(--space-2);display:block">At least one department is required.</span>' +
+                        '<span class="field-hint" style="margin-top:var(--sp-space-2);display:block">At least one department is required.</span>' +
                         '</div>';
 
                     // Plugins
                     html += '<div class="form-group">' +
                         '<label class="field-label">Plugins</label>' +
-                        '<input type="text" class="field-input" placeholder="Filter plugins..." id="panel-plugin-filter" style="margin-bottom:var(--space-2)">' +
-                        '<div class="checklist-container" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">';
+                        '<input type="text" class="field-input" placeholder="Filter plugins..." id="panel-plugin-filter" style="margin-bottom:var(--sp-space-2)">' +
+                        '<div class="checklist-container" style="max-height:200px;overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">';
                     allPlugins.forEach(function(p, i) {
                         const pid = p.id || p.plugin_id;
                         const pname = p.name || pid;
@@ -6079,7 +6079,7 @@ window.AdminApp = window.AdminApp || {};
             return {
                 open: function() {
                     panelApi.setTitle('Fork from Org: ' + (config.entityLabel || config.entityType));
-                    panelApi.setBody('<p style="color:var(--text-tertiary);text-align:center;padding:var(--space-4)">Loading...</p>');
+                    panelApi.setBody('<p style="color:var(--sp-text-tertiary);text-align:center;padding:var(--sp-space-4)">Loading...</p>');
                     panelApi.setFooter('');
                     panelApi.open();
 
@@ -6088,7 +6088,7 @@ window.AdminApp = window.AdminApp || {};
                         .then(function(data) {
                             var items = data[config.entityType] || data.plugins || data.skills || data.agents || data.mcp_servers || data.hooks || [];
                             if (items.length === 0) {
-                                panelApi.setBody('<p style="color:var(--text-tertiary);text-align:center;padding:var(--space-4)">No org entities available to fork.</p>');
+                                panelApi.setBody('<p style="color:var(--sp-text-tertiary);text-align:center;padding:var(--sp-space-4)">No org entities available to fork.</p>');
                                 return;
                             }
 
@@ -6155,7 +6155,7 @@ window.AdminApp = window.AdminApp || {};
                             }
                         })
                         .catch(function() {
-                            panelApi.setBody('<p style="color:var(--danger);text-align:center;padding:var(--space-4)">Failed to load forkable entities.</p>');
+                            panelApi.setBody('<p style="color:var(--sp-danger);text-align:center;padding:var(--sp-space-4)">Failed to load forkable entities.</p>');
                         });
                 },
                 close: panelApi.close,

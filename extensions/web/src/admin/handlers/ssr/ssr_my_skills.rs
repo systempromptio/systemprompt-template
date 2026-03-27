@@ -147,7 +147,7 @@ fn build_skills_json(
                 plugin_names: skill_plugin_map
                     .get(s.skill_id.as_str())
                     .cloned()
-                    .unwrap_or_else(|| vec![]),
+                    .unwrap_or_else(Vec::new),
                 total_uses: eff.map_or(0, |e| e.total_uses),
                 sessions_used_in: eff.map_or(0, |e| e.sessions_used_in),
                 avg_effectiveness: format!("{avg_eff:.1}"),
@@ -252,8 +252,7 @@ async fn build_required_secrets(
         return vec![];
     };
     let req_secrets = super::get_services_path()
-        .map(|sp| repositories::read_skill_required_secrets(&sp.join("skills"), sid))
-        .unwrap_or_else(|_| vec![]);
+        .map_or_else(|_| vec![], |sp| repositories::read_skill_required_secrets(&sp.join("skills"), sid));
 
     let stored = repositories::list_skill_secrets(pool, &user_ctx.user_id, &SkillId::new(sid))
         .await

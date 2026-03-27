@@ -53,9 +53,9 @@
                 'right:' + (window.innerWidth - rect.right) + 'px;' +
                 'left:auto;' +
                 'opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto;' +
-                'background:var(--bg-surface-overlay);border:1px solid var(--border-default);' +
-                'border-radius:var(--radius-md);box-shadow:var(--shadow-lg);' +
-                'min-width:140px;padding:var(--space-1) 0;z-index:1000;';
+                'background:var(--sp-bg-surface-overlay);border:1px solid var(--sp-border-default);' +
+                'border-radius:var(--sp-radius-md);box-shadow:var(--sp-shadow-lg);' +
+                'min-width:140px;padding:var(--sp-space-1) 0;z-index:1000;';
             clone.setAttribute('data-portal-dropdown', 'true');
 
             DropdownManager.portal.append(clone);
@@ -111,7 +111,7 @@
         overlay.innerHTML = '<div class="confirm-dialog">' +
             '<h3>' + escapeHtml(title) + '</h3>' +
             '<p>' + escapeHtml(message) + '</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5)">' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
                 '<button class="btn btn-secondary" data-action="cancel">Cancel</button>' +
                 '<button class="btn ' + btnClass + '" data-action="confirm">' + escapeHtml(confirmLabel) + '</button>' +
             '</div>' +
@@ -135,7 +135,7 @@
         overlay.innerHTML = '<div class="confirm-dialog">' +
             '<h3>' + escapeHtml(title) + '</h3>' +
             '<p>This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5)">' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
                 '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                 '<button class="btn btn-danger" data-confirm-delete="' + escapeHtml(itemId) + '">Delete</button>' +
             '</div>' +

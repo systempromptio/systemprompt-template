@@ -45,7 +45,7 @@
 
     function renderVarList(vars) {
         if (!vars.length) {
-            return '<div class="empty-state" style="padding:var(--space-6)"><p>No environment variables defined for this plugin.</p></div>';
+            return '<div class="empty-state" style="padding:var(--sp-space-6)"><p>No environment variables defined for this plugin.</p></div>';
         }
         let html = '';
         vars.forEach((v, i) => {
@@ -55,7 +55,7 @@
             const secretBadge = v.secret ? ' <span class="badge badge-gray">secret</span>' : '';
             html += '<div class="form-group">' +
                 '<label>' + escapeHtml(v.name) + requiredBadge + secretBadge + '</label>' +
-                (v.description ? '<p style="margin:0 0 var(--space-1);font-size:var(--text-xs);color:var(--text-tertiary)">' + escapeHtml(v.description) + '</p>' : '') +
+                (v.description ? '<p style="margin:0 0 var(--sp-space-1);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">' + escapeHtml(v.description) + '</p>' : '') +
                 '<input type="' + inputType + '" class="plugin-env-input" data-var-index="' + i + '" data-var-name="' + escapeHtml(v.name) + '" data-is-secret="' + (v.secret ? '1' : '0') + '" ' +
                     'value="' + escapeHtml(v.value) + '" placeholder="' + escapeHtml(placeholder) + '">' +
             '</div>';
@@ -64,11 +64,11 @@
     }
 
     function renderModal(vars) {
-        return '<h3 style="margin:0 0 var(--space-4)">' + escapeHtml(currentPluginName) + ' — Environment Variables</h3>' +
+        return '<h3 style="margin:0 0 var(--sp-space-4)">' + escapeHtml(currentPluginName) + ' — Environment Variables</h3>' +
             '<div style="max-height:60vh;overflow-y:auto">' +
                 renderVarList(vars) +
             '</div>' +
-            '<div class="form-actions" style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-4)">' +
+            '<div class="form-actions" style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)">' +
                 '<button class="btn btn-secondary" id="plugin-env-close">Close</button>' +
                 '<button class="btn btn-primary" id="plugin-env-save">Save</button>' +
             '</div>';
@@ -114,8 +114,8 @@
             window.dispatchEvent(new CustomEvent('env-saved', { detail: { pluginId: currentPluginId } }));
             if (saveBtn) {
                 saveBtn.textContent = 'Saved';
-                saveBtn.style.background = 'var(--success)';
-                saveBtn.style.borderColor = 'var(--success)';
+                saveBtn.style.background = 'var(--sp-success)';
+                saveBtn.style.borderColor = 'var(--sp-success)';
             }
             app.Toast.show('Environment variables saved', 'success');
             setTimeout(() => { close(); }, 600);
@@ -162,7 +162,7 @@
         overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.innerHTML = '<div class="confirm-dialog" style="width:560px;max-width:90vw">' +
-            '<div style="display:flex;align-items:center;justify-content:center;padding:var(--space-6);color:var(--text-tertiary)">Loading...</div>' +
+            '<div style="display:flex;align-items:center;justify-content:center;padding:var(--sp-space-6);color:var(--sp-text-tertiary)">Loading...</div>' +
         '</div>';
         document.body.append(overlay);
 

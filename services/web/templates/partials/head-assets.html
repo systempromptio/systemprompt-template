@@ -1,4 +1,3 @@
-<!-- Password Gate - Confidential Presentation -->
 <style>
   body.gate-locked > *:not(#password-gate) { display: none !important; }
   #password-gate {
@@ -98,35 +97,31 @@
 <link rel="preload" href="/files/fonts/Dosis/Dosis-Latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/files/fonts/Roboto/Roboto-Latin.woff2" as="font" type="font/woff2" crossorigin>
 
-<!-- Critical CSS - Inlined to prevent FOUC -->
 <style>
-/* Prevent flash of unstyled content */
 :root {
-  --color-bg: #FFFDF5;
-  --color-surface: #F5F2ED;
-  --color-text: #252526;
-  --color-text-secondary: #A2AAB9;
-  --brand-500: #ed6841;
-  --brand-600: #d45c3a;
+  --sp-color-bg: #FFFDF5;
+  --sp-color-surface: #F5F2ED;
+  --sp-color-text: #252526;
+  --sp-color-text-secondary: #A2AAB9;
+  --sp-brand-500: #ed6841;
+  --sp-brand-600: #d45c3a;
 }
 html {
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: var(--sp-color-bg);
+  color: var(--sp-color-text);
 }
 body {
   margin: 0;
   font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: var(--color-bg);
+  background-color: var(--sp-color-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-/* Hide content until styles load to prevent layout shift */
 .header, .site-header {
   min-height: 64px;
 }
 </style>
 
-<!-- Core Styles -->
 <link rel="stylesheet" href="{{CSS_BASE_PATH}}/core/variables.css">
 <link rel="stylesheet" href="{{CSS_BASE_PATH}}/core/fonts.css">
 <link rel="stylesheet" href="{{CSS_BASE_PATH}}/core/reset.css">

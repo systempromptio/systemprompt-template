@@ -2,17 +2,17 @@
 
 
 .demo {
-  padding: var(--space-4xl) 0 var(--space-2xl);
-  border-top: 1px solid var(--color-border);
+  padding: var(--sp-space-4xl) 0 var(--sp-space-2xl);
+  border-top: 1px solid var(--sp-color-border);
   overflow: hidden;
 }
 
 .demo-subtitle {
   text-align: center;
-  color: var(--color-text-secondary);
+  color: var(--sp-color-text-secondary);
   font-size: 1rem;
-  margin-top: calc(-1 * var(--space-2xl));
-  margin-bottom: var(--space-2xl);
+  margin-top: calc(-1 * var(--sp-space-2xl));
+  margin-bottom: var(--sp-space-2xl);
   line-height: 1.6;
 }
 
@@ -28,8 +28,8 @@
   left: 0;
   right: 0;
   top: 0;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--sp-color-surface);
+  border: 1px solid var(--sp-color-border);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
@@ -42,17 +42,17 @@
 .terminal.active {
   opacity: 1;
   visibility: visible;
-  border-color: var(--brand-700);
+  border-color: var(--sp-brand-700);
   box-shadow: 0 8px 40px rgba(0, 113, 206, 0.15), 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
 .terminal-header {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--color-surface-elevated);
-  border-bottom: 1px solid var(--color-border);
+  gap: var(--sp-space-md);
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  background: var(--sp-color-surface-elevated);
+  border-bottom: 1px solid var(--sp-color-border);
 }
 
 .terminal-dots {
@@ -64,7 +64,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--color-text-muted);
+  background: var(--sp-color-text-muted);
   opacity: 0.3;
   transition: all 0.3s ease;
 }
@@ -74,21 +74,21 @@
 }
 
 .terminal.active .terminal-dots span:nth-child(1) {
-  background: var(--terminal-dot-close);
+  background: var(--sp-terminal-dot-close);
 }
 
 .terminal.active .terminal-dots span:nth-child(2) {
-  background: var(--terminal-dot-minimize);
+  background: var(--sp-terminal-dot-minimize);
 }
 
 .terminal.active .terminal-dots span:nth-child(3) {
-  background: var(--terminal-dot-maximize);
+  background: var(--sp-terminal-dot-maximize);
 }
 
 .terminal-title {
   font-family: "SF Mono", "Fira Code", monospace;
   font-size: 0.7rem;
-  color: var(--color-text-muted);
+  color: var(--sp-color-text-muted);
   flex: 1;
   text-align: center;
   text-transform: uppercase;
@@ -97,13 +97,13 @@
 }
 
 .terminal.active .terminal-title {
-  color: var(--color-text);
+  color: var(--sp-color-text);
 }
 
 .terminal-branding {
   display: flex;
   align-items: center;
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--sp-space-xs);
 }
 
 .terminal-logo {
@@ -114,18 +114,18 @@
 }
 
 .terminal-body {
-  padding: var(--space-lg) var(--space-xl);
+  padding: var(--sp-space-lg) var(--sp-space-xl);
   font-family: "SF Mono", "Fira Code", monospace;
   font-size: 0.85rem;
   line-height: 1.75;
   min-height: 340px;
-  background: linear-gradient(180deg, var(--color-surface) 0%, rgba(10, 10, 10, 0.95) 100%);
+  background: linear-gradient(180deg, var(--sp-color-surface) 0%, rgba(10, 10, 10, 0.95) 100%);
 }
 
 .terminal-line {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-sm);
+  gap: var(--sp-space-sm);
   margin-bottom: 1px;
 }
 
@@ -141,16 +141,16 @@
 }
 
 .prompt {
-  color: var(--color-primary);
+  color: var(--sp-color-primary);
   font-weight: 600;
 }
 
 .command {
-  color: var(--color-text);
+  color: var(--sp-color-text);
 }
 
 .cursor {
-  color: var(--color-primary);
+  color: var(--sp-color-primary);
   animation: blink-caret 0.75s step-end infinite;
   margin-left: -2px;
 }
@@ -160,46 +160,46 @@
 }
 
 .output-bullet {
-  color: var(--color-primary);
+  color: var(--sp-color-primary);
 }
 
 .output {
-  color: var(--color-text-secondary);
+  color: var(--sp-color-text-secondary);
 }
 
 .output-dim {
-  color: var(--color-text-muted);
+  color: var(--sp-color-text-muted);
   font-size: 0.72rem;
 }
 
 .output-agent {
-  color: var(--brand-400);
+  color: var(--sp-brand-400);
   font-weight: 600;
 }
 
 .output-user {
-  color: var(--color-text);
+  color: var(--sp-color-text);
   font-weight: 600;
 }
 
 .output-warn {
-  color: var(--color-warning);
+  color: var(--sp-color-warning);
 }
 
 .success-check {
-  color: var(--color-success);
+  color: var(--sp-color-success);
 }
 
 .success {
-  color: var(--color-success);
+  color: var(--sp-color-success);
 }
 
 .terminal-controls {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-md);
-  margin-top: var(--space-sm);
+  gap: var(--sp-space-md);
+  margin-top: var(--sp-space-sm);
 }
 
 .terminal-btn {
@@ -209,26 +209,26 @@
   width: 40px;
   height: 40px;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--sp-color-border);
   border-radius: 8px;
-  color: var(--color-text-muted);
+  color: var(--sp-color-text-muted);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--sp-transition-fast);
 }
 
 .terminal-btn:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+  color: var(--sp-color-primary);
+  border-color: var(--sp-color-primary);
 }
 
 .terminal-btn-replay {
-  margin-left: var(--space-md);
+  margin-left: var(--sp-space-md);
 }
 
 .terminal-indicator {
   font-family: "SF Mono", "Fira Code", monospace;
   font-size: 0.85rem;
-  color: var(--color-text-secondary);
+  color: var(--sp-color-text-secondary);
   min-width: 50px;
   text-align: center;
 }
@@ -257,7 +257,7 @@
   }
 
   .terminal-body {
-    padding: var(--space-sm) var(--space-md);
+    padding: var(--sp-space-sm) var(--sp-space-md);
     font-size: 0.68rem;
     min-height: auto;
   }
@@ -274,17 +274,17 @@
     display: flex !important;
     position: relative;
     z-index: 10;
-    margin-top: var(--space-lg);
+    margin-top: var(--sp-space-lg);
   }
 
   .terminal-btn {
-    color: var(--color-text);
+    color: var(--sp-color-text);
     border-color: rgba(255, 255, 255, 0.4);
     background: rgba(255, 255, 255, 0.1);
   }
 }
 
 .terminal-tab:focus-visible {
-    outline: 2px solid var(--color-primary);
+    outline: 2px solid var(--sp-color-primary);
     outline-offset: 2px;
 }

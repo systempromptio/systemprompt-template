@@ -24,22 +24,20 @@ fn build_achievement_maps<'a>(
     stats: &'a [crate::admin::types::AchievementInfo],
 ) -> AchievementMaps<'a> {
     let unlocked_ids = profile
-        .map(|g| {
+        .map_or_else(std::collections::HashSet::new, |g| {
             g.achievements
                 .iter()
                 .map(|ua| ua.achievement_id.as_str())
                 .collect()
-        })
-        .unwrap_or_else(std::collections::HashSet::new);
+        });
 
     let unlocked_at = profile
-        .map(|g| {
+        .map_or_else(std::collections::HashMap::new, |g| {
             g.achievements
                 .iter()
                 .map(|ua| (ua.achievement_id.as_str(), &ua.unlocked_at))
                 .collect()
-        })
-        .unwrap_or_else(std::collections::HashMap::new);
+        });
 
     let stats_map = stats.iter().map(|s| (s.id.as_str(), s)).collect();
 
@@ -137,8 +135,7 @@ fn compute_xp_progress(profile: Option<&crate::admin::types::UserGamificationPro
         if p.xp_to_next_rank > 0 {
             let current_rank_xp = crate::admin::gamification::constants::RANKS
                 .iter()
-                .filter(|&&(_, _, threshold)| threshold <= p.total_xp)
-                .next_back()
+                .rfind(|&&(_, _, threshold)| threshold <= p.total_xp)
                 .map_or(0, |&(_, _, threshold)| threshold);
             let numerator = p.total_xp - current_rank_xp;
             let range = p.xp_to_next_rank + numerator;

@@ -235,9 +235,9 @@ window.AdminApp = window.AdminApp || {};
                 'right:' + (window.innerWidth - rect.right) + 'px;' +
                 'left:auto;' +
                 'opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto;' +
-                'background:var(--bg-surface-overlay);border:1px solid var(--border-default);' +
-                'border-radius:var(--radius-md);box-shadow:var(--shadow-lg);' +
-                'min-width:140px;padding:var(--space-1) 0;z-index:1000;';
+                'background:var(--sp-bg-surface-overlay);border:1px solid var(--sp-border-default);' +
+                'border-radius:var(--sp-radius-md);box-shadow:var(--sp-shadow-lg);' +
+                'min-width:140px;padding:var(--sp-space-1) 0;z-index:1000;';
             clone.setAttribute('data-portal-dropdown', 'true');
 
             DropdownManager.portal.append(clone);
@@ -293,7 +293,7 @@ window.AdminApp = window.AdminApp || {};
         overlay.innerHTML = '<div class="confirm-dialog">' +
             '<h3>' + escapeHtml(title) + '</h3>' +
             '<p>' + escapeHtml(message) + '</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5)">' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
                 '<button class="btn btn-secondary" data-action="cancel">Cancel</button>' +
                 '<button class="btn ' + btnClass + '" data-action="confirm">' + escapeHtml(confirmLabel) + '</button>' +
             '</div>' +
@@ -317,7 +317,7 @@ window.AdminApp = window.AdminApp || {};
         overlay.innerHTML = '<div class="confirm-dialog">' +
             '<h3>' + escapeHtml(title) + '</h3>' +
             '<p>This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5)">' +
+            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
                 '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
                 '<button class="btn btn-danger" data-confirm-delete="' + escapeHtml(itemId) + '">Delete</button>' +
             '</div>' +
@@ -433,10 +433,10 @@ window.AdminApp = window.AdminApp || {};
                 '<input type="checkbox" name="' + escapeHtml(id) + '" value="' + escapeHtml(val) + '"' + checked + ' id="' + escapeHtml(itemId) + '">' +
                 '<label for="' + escapeHtml(itemId) + '">' + escapeHtml(displayName) + '</label>' +
             '</div>';
-        }).join('') : '<div class="empty-state" style="padding:var(--space-4)"><p>None available.</p></div>';
-        let filterRow = '<input type="text" class="field-input" placeholder="Filter..." data-filter-list="' + escapeHtml(id) + '" style="margin-bottom:var(--space-2)">';
+        }).join('') : '<div class="empty-state" style="padding:var(--sp-space-4)"><p>None available.</p></div>';
+        let filterRow = '<input type="text" class="field-input" placeholder="Filter..." data-filter-list="' + escapeHtml(id) + '" style="margin-bottom:var(--sp-space-2)">';
         if (options.hasSelectAll) {
-            filterRow = '<div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-2)">' +
+            filterRow = '<div style="display:flex;gap:var(--sp-space-2);margin-bottom:var(--sp-space-2)">' +
                 '<input type="text" class="field-input" placeholder="Search..." data-filter-list="' + escapeHtml(id) + '" style="flex:1">' +
                 '<button type="button" class="btn btn-secondary btn-sm" data-select-all="' + escapeHtml(id) + '">Select All</button>' +
                 '<button type="button" class="btn btn-secondary btn-sm" data-deselect-all="' + escapeHtml(id) + '">Deselect All</button>' +
@@ -446,7 +446,7 @@ window.AdminApp = window.AdminApp || {};
         return '<div class="form-group">' +
             '<label class="field-label">' + escapeHtml(label) + '</label>' +
             filterRow +
-            '<div class="checklist-container" data-checklist="' + escapeHtml(id) + '" style="max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2)">' +
+            '<div class="checklist-container" data-checklist="' + escapeHtml(id) + '" style="max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">' +
                 listItems +
             '</div>' +
         '</div>';
@@ -784,7 +784,7 @@ window.AdminApp = window.AdminApp || {};
         const text = copyBtn.getAttribute('data-copy');
         navigator.clipboard.writeText(text).then(function() {
             const orig = copyBtn.innerHTML;
-            copyBtn.innerHTML = '<span style="color:var(--success);font-size:16px">&#10003;</span>';
+            copyBtn.innerHTML = '<span style="color:var(--sp-success);font-size:16px">&#10003;</span>';
             setTimeout(function() { copyBtn.innerHTML = orig; }, 2000);
         });
     });

@@ -22,14 +22,14 @@
         if (data.system_prompt) {
             html += '<div class="detail-section">';
             html += '<strong>System Prompt</strong>';
-            html += '<pre style="margin:var(--space-1) 0;max-height:200px;overflow:auto;font-size:var(--text-xs);background:var(--bg-surface-raised);padding:var(--space-2);border-radius:var(--radius-sm);white-space:pre-wrap;word-break:break-word">' + app.escapeHtml(data.system_prompt) + '</pre>';
+            html += '<pre style="margin:var(--sp-space-1) 0;max-height:200px;overflow:auto;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);white-space:pre-wrap;word-break:break-word">' + app.escapeHtml(data.system_prompt) + '</pre>';
             html += '</div>';
         }
 
         if (data.port || data.endpoint) {
             html += '<div class="detail-section">';
             html += '<strong>Connection</strong>';
-            html += '<div style="margin:var(--space-1) 0;font-size:var(--text-sm);color:var(--text-secondary)">';
+            html += '<div style="margin:var(--sp-space-1) 0;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">';
             if (data.port) html += '<div>Port: <code class="code-inline">' + app.escapeHtml(String(data.port)) + '</code></div>';
             if (data.endpoint) html += '<div>Endpoint: <code class="code-inline">' + app.escapeHtml(data.endpoint) + '</code></div>';
             html += '</div></div>';
@@ -38,7 +38,7 @@
         if ((data.skill_count && data.skill_count > 0) || (data.mcp_count && data.mcp_count > 0)) {
             html += '<div class="detail-section">';
             html += '<strong>Capabilities</strong>';
-            html += '<div class="badge-row" style="margin-top:var(--space-1)">';
+            html += '<div class="badge-row" style="margin-top:var(--sp-space-1)">';
             if (data.skill_count > 0) {
                 html += '<span class="badge badge-green">' + data.skill_count + ' skill' + (data.skill_count !== 1 ? 's' : '') + '</span>';
             }
@@ -49,7 +49,7 @@
         }
 
         html += '<div class="detail-section">';
-        html += '<details><summary style="cursor:pointer;font-size:var(--text-sm);color:var(--text-secondary)">JSON Config</summary>';
+        html += '<details><summary style="cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">JSON Config</summary>';
         html += app.OrgCommon.formatJson(data);
         html += '</details></div>';
 

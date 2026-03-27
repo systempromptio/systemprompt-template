@@ -1,18 +1,17 @@
-/* CTA Buttons — canonical definitions */
 
 .primary-cta {
   display: inline-block;
   padding: 14px 32px;
-  background: linear-gradient(135deg, var(--brand-600), var(--brand-500));
-  color: var(--color-text-on-primary);
-  font-family: var(--font-brand);
+  background: linear-gradient(135deg, var(--sp-brand-600), var(--sp-brand-500));
+  color: var(--sp-color-text-on-primary);
+  font-family: var(--sp-font-brand);
   font-size: 0.9rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   text-decoration: none;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-normal);
+  border-radius: var(--sp-radius-md);
+  transition: all var(--sp-transition-normal);
   box-shadow: 0 4px 20px rgba(0, 113, 206, 0.3);
 }
 
@@ -26,16 +25,16 @@
   display: inline-block;
   padding: 14px 32px;
   background: transparent;
-  color: var(--color-primary);
-  font-family: var(--font-brand);
+  color: var(--sp-color-primary);
+  font-family: var(--sp-font-brand);
   font-size: 0.9rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   text-decoration: none;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-normal);
+  border: 1px solid var(--sp-color-primary);
+  border-radius: var(--sp-radius-md);
+  transition: all var(--sp-transition-normal);
 }
 
 .secondary-cta:hover {

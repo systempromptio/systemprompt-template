@@ -1,26 +1,23 @@
-/* Presentation slide deck — full-screen scroll-snap slides with presenter notes */
 
-/* === Tokens (Foodles brand) === */
 :root {
-  --pres-blue-900: #252526;
-  --pres-blue-700: #d45c3a;
-  --pres-blue-500: #ed6841;
-  --pres-blue-300: #f5a288;
-  --pres-blue-100: #fce0d5;
-  --pres-blue-50: #fef0eb;
-  --pres-yellow: #FF8555;
-  --pres-navy: #252526;
-  --pres-gray-50: #f8fafc;
-  --pres-gray-200: #e2e8f0;
-  --pres-gray-400: #94a3b8;
-  --pres-gray-600: #475569;
-  --pres-gray-800: #1e293b;
-  --pres-green: #2d8a4e;
-  --pres-red: #dc2626;
-  --pres-font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  --sp-pres-blue-900: #252526;
+  --sp-pres-blue-700: #d45c3a;
+  --sp-pres-blue-500: #ed6841;
+  --sp-pres-blue-300: #f5a288;
+  --sp-pres-blue-100: #fce0d5;
+  --sp-pres-blue-50: #fef0eb;
+  --sp-pres-yellow: #FF8555;
+  --sp-pres-navy: #252526;
+  --sp-pres-gray-50: #f8fafc;
+  --sp-pres-gray-200: #e2e8f0;
+  --sp-pres-gray-400: #94a3b8;
+  --sp-pres-gray-600: #475569;
+  --sp-pres-gray-800: #1e293b;
+  --sp-pres-green: #2d8a4e;
+  --sp-pres-red: #dc2626;
+  --sp-pres-font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
 }
 
-/* === Base layout === */
 html.presentation { scroll-snap-type: y mandatory; scroll-behavior: smooth; overflow-y: scroll; }
 html.presentation body { margin: 0; padding: 0; }
 .pres-container { width: 100%; }
@@ -29,98 +26,83 @@ html.presentation body { margin: 0; padding: 0; }
   display: flex; align-items: center; justify-content: center;
   padding: 4rem; position: relative; overflow: hidden;
   box-sizing: border-box;
-  font-family: var(--font-body, 'Roboto', system-ui, sans-serif);
-  color: var(--pres-navy); line-height: 1.6;
+  font-family: var(--sp-font-body, 'Roboto', system-ui, sans-serif);
+  color: var(--sp-pres-navy); line-height: 1.6;
 }
 .pres-slide-content { max-width: 1100px; width: 100%; z-index: 1; }
 
-/* === Typography === */
 .pres-overline { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-bottom: 0.75rem; }
 .pres-slide h2 { font-size: 2.25rem; font-weight: 700; line-height: 1.2; margin-bottom: 1rem; }
 .pres-slide h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
 .pres-subtitle { font-size: 1.25rem; opacity: 0.85; line-height: 1.5; }
 .pres-body-lg { font-size: 1.125rem; line-height: 1.7; }
 
-/* === Grid === */
 .pres-row { display: flex; gap: 3rem; align-items: flex-start; }
 .pres-col-half { flex: 1; min-width: 0; }
 .pres-col-third { flex: 1; min-width: 0; }
 .pres-text-center { text-align: center; }
 
-/* === Cards === */
-.pres-card { background: #fff; border: 1px solid var(--pres-gray-200); border-radius: 12px; padding: 1.5rem; transition: transform 0.2s, box-shadow 0.2s; }
+.pres-card { background: #fff; border: 1px solid var(--sp-pres-gray-200); border-radius: 12px; padding: 1.5rem; transition: transform 0.2s, box-shadow 0.2s; }
 .pres-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-.pres-card-accent { border-left: 4px solid var(--pres-blue-500); }
+.pres-card-accent { border-left: 4px solid var(--sp-pres-blue-500); }
 
-/* === KPI grid === */
 .pres-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin: 2rem 0; }
-.pres-kpi { text-align: center; padding: 1.5rem 1rem; background: var(--pres-gray-50); border-radius: 12px; }
-.pres-kpi-value { display: block; font-size: 2rem; font-weight: 700; color: var(--pres-blue-500); }
-.pres-kpi-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--pres-gray-600); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.pres-kpi { text-align: center; padding: 1.5rem 1rem; background: var(--sp-pres-gray-50); border-radius: 12px; }
+.pres-kpi-value { display: block; font-size: 2rem; font-weight: 700; color: var(--sp-pres-blue-500); }
+.pres-kpi-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--sp-pres-gray-600); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
 
-/* === Tables === */
 .pres-slide table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-.pres-slide th { background: var(--pres-blue-50); color: var(--pres-blue-700); font-weight: 600; text-align: left; padding: 0.75rem 1rem; border-bottom: 2px solid var(--pres-blue-100); }
-.pres-slide td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--pres-gray-200); }
+.pres-slide th { background: var(--sp-pres-blue-50); color: var(--sp-pres-blue-700); font-weight: 600; text-align: left; padding: 0.75rem 1rem; border-bottom: 2px solid var(--sp-pres-blue-100); }
+.pres-slide td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--sp-pres-gray-200); }
 .pres-slide tr:last-child td { border-bottom: none; }
 
-/* === Terminal === */
-.pres-terminal { background: var(--pres-gray-800); color: #e2e8f0; border-radius: 8px; padding: 1.25rem 1.5rem; font-family: var(--pres-font-mono); font-size: 0.8rem; line-height: 1.6; overflow-x: auto; margin: 1rem 0; }
-.pres-terminal .prompt { color: var(--pres-yellow); }
-.pres-terminal .output { color: var(--pres-gray-400); }
+.pres-terminal { background: var(--sp-pres-gray-800); color: #e2e8f0; border-radius: 8px; padding: 1.25rem 1.5rem; font-family: var(--sp-pres-font-mono); font-size: 0.8rem; line-height: 1.6; overflow-x: auto; margin: 1rem 0; }
+.pres-terminal .prompt { color: var(--sp-pres-yellow); }
+.pres-terminal .output { color: var(--sp-pres-gray-400); }
 .pres-terminal .highlight { color: #4ade80; }
 .pres-terminal .dim { color: #64748b; }
 
-/* === Feature list === */
 .pres-features { list-style: none; padding: 0; }
 .pres-features li { padding: 0.5rem 0 0.5rem 2rem; position: relative; font-size: 1rem; line-height: 1.6; }
-.pres-features li::before { content: '\2713'; position: absolute; left: 0; color: var(--pres-green); font-weight: 700; font-size: 1.1rem; }
+.pres-features li::before { content: '\2713'; position: absolute; left: 0; color: var(--sp-pres-green); font-weight: 700; font-size: 1.1rem; }
 
-/* === Architecture boxes === */
-.pres-arch-box { background: #fff; border: 2px solid var(--pres-blue-300); border-radius: 10px; padding: 1rem 1.25rem; text-align: center; font-weight: 600; font-size: 0.85rem; }
-.pres-arch-box.primary { background: var(--pres-blue-500); color: #fff; border-color: var(--pres-blue-500); }
-.pres-arch-box.accent { background: var(--pres-yellow); color: var(--pres-navy); border-color: var(--pres-yellow); }
-.pres-arch-connector { text-align: center; font-size: 1.5rem; color: var(--pres-blue-300); padding: 0.25rem 0; }
+.pres-arch-box { background: #fff; border: 2px solid var(--sp-pres-blue-300); border-radius: 10px; padding: 1rem 1.25rem; text-align: center; font-weight: 600; font-size: 0.85rem; }
+.pres-arch-box.primary { background: var(--sp-pres-blue-500); color: #fff; border-color: var(--sp-pres-blue-500); }
+.pres-arch-box.accent { background: var(--sp-pres-yellow); color: var(--sp-pres-navy); border-color: var(--sp-pres-yellow); }
+.pres-arch-connector { text-align: center; font-size: 1.5rem; color: var(--sp-pres-blue-300); padding: 0.25rem 0; }
 
-/* === Badges === */
 .pres-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 .pres-badge-green { background: #dcfce7; color: #166534; }
-.pres-badge-blue { background: var(--pres-blue-50); color: var(--pres-blue-700); }
+.pres-badge-blue { background: var(--sp-pres-blue-50); color: var(--sp-pres-blue-700); }
 .pres-badge-red { background: #fecaca; color: #991b1b; }
 
-/* === Divider === */
-.pres-divider { width: 60px; height: 4px; background: var(--pres-yellow); border-radius: 2px; margin: 1rem 0; }
+.pres-divider { width: 60px; height: 4px; background: var(--sp-pres-yellow); border-radius: 2px; margin: 1rem 0; }
 .pres-divider-center { margin: 1rem auto; }
 
-/* === Source ref === */
-.pres-source-ref { display: inline-block; background: var(--pres-gray-50); border: 1px solid var(--pres-gray-200); border-radius: 4px; padding: 0.15rem 0.5rem; font-family: var(--pres-font-mono); font-size: 0.7rem; color: var(--pres-gray-600); margin: 0.25rem 0.25rem 0.25rem 0; }
+.pres-source-ref { display: inline-block; background: var(--sp-pres-gray-50); border: 1px solid var(--sp-pres-gray-200); border-radius: 4px; padding: 0.15rem 0.5rem; font-family: var(--sp-pres-font-mono); font-size: 0.7rem; color: var(--sp-pres-gray-600); margin: 0.25rem 0.25rem 0.25rem 0; }
 
-/* === Presenter notes (hidden by default, toggled with N) === */
-.pres-notes { display: none; position: fixed; bottom: 0; left: 0; right: 0; max-height: 40vh; overflow-y: auto; background: rgba(15, 23, 42, 0.97); color: #e2e8f0; padding: 1.5rem 2rem; font-size: 0.8rem; line-height: 1.6; z-index: 200; border-top: 3px solid var(--pres-yellow); font-family: var(--pres-font-mono); }
-.pres-notes h4 { color: var(--pres-yellow); margin-bottom: 0.5rem; font-size: 0.85rem; }
+.pres-notes { display: none; position: fixed; bottom: 0; left: 0; right: 0; max-height: 40vh; overflow-y: auto; background: rgba(15, 23, 42, 0.97); color: #e2e8f0; padding: 1.5rem 2rem; font-size: 0.8rem; line-height: 1.6; z-index: 200; border-top: 3px solid var(--sp-pres-yellow); font-family: var(--sp-pres-font-mono); }
+.pres-notes h4 { color: var(--sp-pres-yellow); margin-bottom: 0.5rem; font-size: 0.85rem; }
 .pres-notes .note-section { margin-bottom: 1rem; }
 .pres-notes code { background: rgba(255,255,255,0.1); padding: 0.1rem 0.4rem; border-radius: 3px; }
 .pres-notes .cmd { color: #4ade80; }
-.pres-notes .ref { color: var(--pres-blue-300); }
+.pres-notes .ref { color: var(--sp-pres-blue-300); }
 html.presentation.notes-visible .pres-notes { display: block; }
 html.presentation.notes-visible .pres-slide { min-height: 60vh; }
 
-/* === Navigation === */
 .pres-nav { position: fixed; right: 1.5rem; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 0.5rem; z-index: 100; }
 .pres-nav a { width: 10px; height: 10px; border-radius: 50%; background: rgba(28, 38, 93, 0.2); transition: background 0.3s, transform 0.3s; display: block; }
-.pres-nav a.active { background: var(--pres-blue-500); transform: scale(1.4); }
-.pres-counter { position: fixed; top: 1.5rem; right: 1.5rem; background: rgba(0,0,0,0.05); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: var(--pres-gray-400); z-index: 100; }
+.pres-nav a.active { background: var(--sp-pres-blue-500); transform: scale(1.4); }
+.pres-counter { position: fixed; top: 1.5rem; right: 1.5rem; background: rgba(0,0,0,0.05); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: var(--sp-pres-gray-400); z-index: 100; }
 .pres-notes-indicator { position: fixed; bottom: 1rem; left: 1rem; background: rgba(0,0,0,0.3); color: rgba(255,255,255,0.5); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.65rem; z-index: 300; font-family: monospace; }
-html.presentation.notes-visible .pres-notes-indicator { background: var(--pres-yellow); color: var(--pres-navy); }
+html.presentation.notes-visible .pres-notes-indicator { background: var(--sp-pres-yellow); color: var(--sp-pres-navy); }
 
-/* === Reveal animations === */
 .pres-reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
 .pres-reveal.visible { opacity: 1; transform: translateY(0); }
 .pres-reveal-delay-1 { transition-delay: 0.15s; }
 .pres-reveal-delay-2 { transition-delay: 0.3s; }
 .pres-reveal-delay-3 { transition-delay: 0.45s; }
 
-/* === Responsive === */
 @media (max-width: 900px) {
   .pres-slide { padding: 2rem; }
   .pres-slide h2 { font-size: 1.75rem; }
