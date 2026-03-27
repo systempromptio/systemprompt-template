@@ -8,13 +8,10 @@ use sqlx::PgPool;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use super::types::{
-    CheckableEntity, NamedEntity, PlatformPluginView, PluginEditData, PluginView, SkillWithStats,
-};
+use super::types::{CheckableEntity, NamedEntity, PluginEditData, PluginView, SkillWithStats};
 
 pub(super) fn collect_my_plugins(
     enriched: &[crate::admin::repositories::user_plugins::UserPluginEnriched],
-    platform_plugin: Option<PlatformPluginView>,
     skill_usage_map: &HashMap<&str, &EntityUsageSummary>,
     skill_eff_map: &HashMap<&str, &SkillEffectiveness>,
     agent_eff_map: &HashMap<&str, &EntityEffectiveness>,
@@ -22,17 +19,8 @@ pub(super) fn collect_my_plugins(
     let mut categories_set: HashSet<String> = HashSet::new();
     let mut plugins_json: Vec<serde_json::Value> = Vec::new();
 
-    if let Some(pp) = platform_plugin {
-        if let Ok(v) = serde_json::to_value(&pp) {
-            plugins_json.push(v);
-        }
-    }
-
     for ep in enriched {
         let p = &ep.plugin;
-        if p.plugin_id == "systemprompt" {
-            continue;
-        }
         if !p.category.is_empty() {
             categories_set.insert(p.category.clone());
         }
@@ -143,47 +131,6 @@ fn enriched_plugin_to_view(
         agents,
         mcp_servers,
     }
-}
-
-pub(super) fn build_platform_plugin(services_path: &std::path::Path) -> Option<PlatformPluginView> {
-    let detail = repositories::find_plugin_detail(services_path, "systemprompt")
-        .map_err(|e| {
-            tracing::warn!(error = ?e, "Failed to load systemprompt plugin detail for My Plugins");
-        })
-        .ok()
-        .flatten()?;
-
-    let skills: Vec<NamedEntity> = detail
-        .skills
-        .iter()
-        .map(|s| NamedEntity::from_str_pair(s))
-        .collect();
-    let agents: Vec<NamedEntity> = detail
-        .agents
-        .iter()
-        .map(|a| NamedEntity::from_str_pair(a))
-        .collect();
-    let mcp_servers: Vec<NamedEntity> = detail
-        .mcp_servers
-        .iter()
-        .map(|m| NamedEntity::from_str_pair(m))
-        .collect();
-
-    Some(PlatformPluginView {
-        plugin_id: "systemprompt".to_string(),
-        name: detail.name,
-        description: detail.description,
-        category: detail.category,
-        version: detail.version,
-        is_platform: true,
-        skill_count: skills.len(),
-        agent_count: agents.len(),
-        mcp_count: mcp_servers.len(),
-        hook_count: 14,
-        skills,
-        agents,
-        mcp_servers,
-    })
 }
 
 pub(super) async fn build_association_lists(

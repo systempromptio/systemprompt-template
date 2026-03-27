@@ -31,10 +31,10 @@ related_docs:
 
 These demos call the governance endpoint directly with curl. No agent session required. Each call evaluates the same governance pipeline that runs during live Claude Code sessions and returns an allow or deny decision with the evaluation trace.
 
-**Prerequisites:** Get an auth token from [Setup & Authentication](/documentation/demo-terminal-setup):
+**Prerequisites:** Get your plugin token from [Setup & Authentication — Step 3](/documentation/demo-terminal-setup):
 
 ```bash
-TOKEN=$(systemprompt cloud auth token)
+TOKEN="<paste-your-plugin-token-here>"
 ```
 
 ---
@@ -227,6 +227,146 @@ Every tool call passes through these rules in order. Any failure short-circuits 
 | rate_limit | Call frequency per agent | Yes — immediate deny |
 
 Secret detection runs first. Even an admin-scope agent is blocked if tool input contains a plaintext secret.
+
+---
+
+## Quick Demo: Copy-Paste Script
+
+Copy this entire block into Claude Code (or any terminal) to run all six governance tests in sequence. Replace `YOUR_TOKEN_HERE` with the plugin token from [Setup — Step 3](/documentation/demo-terminal-setup).
+
+```bash
+# ── Set your token ──────────────────────────────────────────────
+TOKEN="YOUR_TOKEN_HERE"
+API="http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo"
+
+# ── Test 1: Admin scope → ALLOW ─────────────────────────────────
+# The developer_agent has admin scope, so it can call any MCP tool.
+echo "── Test 1: Admin agent calls admin MCP tool ──"
+curl -s -X POST "$API" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "mcp__systemprompt__list_agents",
+    "agent_id": "developer_agent",
+    "session_id": "demo-governance"
+  }' | python3 -m json.tool
+echo ""
+
+# ── Test 2: User scope → DENY (scope_restriction) ──────────────
+# The associate_agent has user scope — admin-only tools are blocked.
+echo "── Test 2: User agent calls admin MCP tool ──"
+curl -s -X POST "$API" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "mcp__systemprompt__list_agents",
+    "agent_id": "associate_agent",
+    "session_id": "demo-governance"
+  }' | python3 -m json.tool
+echo ""
+
+# ── Test 3: AWS key in tool input → DENY (secret_injection) ────
+# The governance layer scans every field in tool_input for secrets.
+# An AWS access key (AKIA...) is detected and the call is blocked
+# before the tool ever executes.
+echo "── Test 3: Bash command contains AWS access key ──"
+curl -s -X POST "$API" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "agent_id": "developer_agent",
+    "session_id": "demo-governance",
+    "tool_input": {
+      "command": "curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://s3.amazonaws.com/bucket",
+      "description": "Fetch S3 object"
+    }
+  }' | python3 -m json.tool
+echo ""
+
+# ── Test 4: GitHub PAT in file content → DENY (secret_injection)
+# A Write tool call attempts to create a .env file containing a
+# GitHub personal access token (ghp_...). Blocked immediately.
+echo "── Test 4: Write .env file containing GitHub PAT ──"
+curl -s -X POST "$API" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Write",
+    "agent_id": "developer_agent",
+    "session_id": "demo-governance",
+    "tool_input": {
+      "file_path": "/home/user/.env",
+      "content": "GITHUB_TOKEN=ghp_ABCDEFghijklmnop1234567890abcdef\nDATABASE_URL=postgres://localhost/db"
+    }
+  }' | python3 -m json.tool
+echo ""
+
+# ── Test 5: RSA private key → DENY (secret_injection) ──────────
+# Even an admin-scope agent is blocked. Secret detection runs first
+# and overrides all other rules.
+echo "── Test 5: Write SSH private key file ──"
+curl -s -X POST "$API" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Write",
+    "agent_id": "developer_agent",
+    "session_id": "demo-governance",
+    "tool_input": {
+      "file_path": "/home/user/.ssh/id_rsa",
+      "content": "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA..."
+    }
+  }' | python3 -m json.tool
+echo ""
+
+# ── Test 6: Clean input → ALLOW ─────────────────────────────────
+# A normal Read call with no secrets in the input. All four rules
+# pass and the tool is allowed to execute.
+echo "── Test 6: Read a source file (clean input) ──"
+curl -s -X POST "$API" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "agent_id": "developer_agent",
+    "session_id": "demo-governance",
+    "tool_input": {
+      "file_path": "/home/user/project/src/main.rs"
+    }
+  }' | python3 -m json.tool
+
+# ── Check the dashboard ─────────────────────────────────────────
+echo ""
+echo "All 6 decisions are now visible at:"
+echo "  http://localhost:8080/admin/governance"
+echo ""
+echo "Expected results:"
+echo "  Test 1: ALLOWED  (admin scope, clean input)"
+echo "  Test 2: DENIED   (user scope → scope_restriction)"
+echo "  Test 3: DENIED   (AWS key → secret_injection)"
+echo "  Test 4: DENIED   (GitHub PAT → secret_injection)"
+echo "  Test 5: DENIED   (RSA key → secret_injection)"
+echo "  Test 6: ALLOWED  (admin scope, clean input)"
+```
+
+### What to show the audience
+
+After running the script, open the [Governance Dashboard](http://localhost:8080/admin/governance). The metric ribbon updates immediately:
+
+- **Total Decisions** increases by 6
+- **Denied** increases by 4 (scope + 3 secrets)
+- **Secret Breaches** increases by 3
+
+Scroll the table to show the decision trail. Each row shows the tool name, the agent that requested it, the decision badge (ALLOWED / DENIED / SECRET BREACH), the policy that triggered the denial, and the timestamp. Click any user ID to see their full activity history.
+
+The key takeaway: **the same governance pipeline that blocked these curl calls runs on every tool call in a live Claude Code session.** Policies evaluate content in real time, secrets are caught before the tool executes, and every decision is auditable.
 
 ---
 

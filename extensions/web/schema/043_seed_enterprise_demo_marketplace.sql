@@ -5,6 +5,11 @@ INSERT INTO org_marketplaces (id, name, description, enabled)
 VALUES (
     'enterprise-demo',
     'Enterprise Demo',
-    'Default marketplace with HTTP hooks, security review, compliance checks, and developer tools. Synced from github.com/systempromptio/systemprompt-enterprise-demo-marketplace.',
+    'Enterprise governance demo — a dangerous secret skill blocked by policy hooks, and a simple web search skill demonstrating tool governance.',
     true
 ) ON CONFLICT (id) DO NOTHING;
+
+-- Add the enterprise-demo plugin to the marketplace
+INSERT INTO org_marketplace_plugins (marketplace_id, plugin_id, position)
+VALUES ('enterprise-demo', 'enterprise-demo', 0)
+ON CONFLICT DO NOTHING;

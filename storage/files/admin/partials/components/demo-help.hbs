@@ -1,182 +1,19 @@
-{{!-- Demo/evaluation help box. Renders page-specific guidance based on the `page` variable. --}}
-{{#if (eq page "control-center")}}
+{{!-- Demo/evaluation help box. Text injected by render_page() based on page value. --}}
+{{#if demo_help}}
 <div class="demo-help-box">
     <div class="demo-help-box__header">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         <strong>Demo Environment</strong>
     </div>
-    <p>The <strong>Control Center</strong> is your real-time operations hub. It shows live Claude sessions, APM (Actions Per Minute) metrics, conversation history, skill effectiveness ratings, and session health analytics. In a production deployment, this page streams live updates via SSE as your team uses Claude, giving you instant visibility into AI usage patterns and performance.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "profile")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>Profile &amp; Insights</strong> analyses your usage patterns to identify your user archetype, strengths, and areas for improvement. It aggregates 30 days of Claude session data into behavioral analytics, comparing your usage against global averages. This helps teams understand how individuals interact with AI and where additional training or skills could help.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "dashboard")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p>The <strong>Admin Dashboard</strong> provides system-wide analytics for platform administrators. It shows web traffic metrics, MCP tool call success rates, user activity timelines, and content performance data. This is the admin-only overview of the entire platform's health and usage.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "my-plugins")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>My Plugins</strong> shows all plugins installed in your workspace. Plugins are the core building block &mdash; each bundles skills (prompt templates), agents (specialized Claude configurations), and MCP server connections. You can customize any plugin's components, fork official plugins, or create your own. Enterprise deployments can control which plugins are available to users.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "browse-plugins")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p>The <strong>Plugin Directory</strong> is where you discover and install plugins from the marketplace. Each plugin is a curated bundle of skills, agents, and integrations that extends Claude's capabilities. Once installed, plugins appear in My Plugins where you can customize them for your workflow.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "my-skills")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>My Skills</strong> manages the prompt templates and instructions that guide Claude's behavior. Skills are the most granular customization unit &mdash; each defines how Claude should handle a specific type of task. Skills can be shared across plugins and are tracked for usage and effectiveness.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "my-agents")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>My Agents</strong> shows specialized Claude configurations with defined roles and capabilities. Agents have dedicated system prompts that shape how Claude responds in specific contexts. Each agent tracks effectiveness ratings and usage patterns over time.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "my-mcp-servers")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>My MCP Servers</strong> displays the Model Context Protocol server connections in your workspace. These MCP servers run on this host and extend Claude's capabilities by providing external tools and data sources. Each server exposes API endpoints that Claude can call during conversations. Authentication is handled via API keys configured in My Secrets.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "my-secrets")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>My Secrets</strong> manages API keys and environment variables used by your plugins and MCP servers. Secrets are encrypted at rest and scoped per plugin, ensuring that each integration only accesses its own credentials. This is where you configure authentication for external services.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "my-hooks")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>My Hooks</strong> manages event handlers that fire during Claude Code sessions. Hooks intercept events like PreToolUse, PostToolUse, SessionStart, and PermissionRequest, enabling custom behavior at each stage. In production, hooks power analytics tracking, compliance logging, and automated workflows.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "my-marketplace")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>My Marketplace</strong> shows your published plugin collection. This is the installable link that can be shared with all Claude services &mdash; Claude Code, Claude Desktop (Cowork), and claude.ai. When others install your marketplace, they get your entire curated set of plugins, skills, agents, and connectors.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "my-activity")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>My Activity</strong> tracks your platform engagement &mdash; recent actions, achievement progress, and gamification metrics. The activity log shows every interaction with the platform, while achievements provide milestone-based goals that reward consistent usage and feature exploration.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "achievements")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>Achievements</strong> displays all available milestones and their unlock status. Achievements are earned by using platform features, maintaining usage streaks, and reaching performance targets. Each achievement shows its rarity &mdash; how many users across the platform have unlocked it.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "leaderboard")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p>The <strong>Leaderboard</strong> ranks users by XP, sessions, streaks, and other engagement metrics. It provides a community view of platform adoption and can be used to identify power users and encourage healthy competition. Users can opt out of leaderboard visibility in Settings.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "settings")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>Settings</strong> manages your account profile, notification preferences, and tier information. It shows your current usage against plan limits (plugins, skills, agents, MCP servers, hooks, secrets). Enterprise integrations can customize which settings are available and enforce organization-wide defaults.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "users")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>Users</strong> is the admin user management console. It shows all registered users with their activity metrics, XP rankings, session counts, and last active timestamps. Admins can create users, manage roles, and monitor adoption across the organization.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "events")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>Events</strong> displays the system-wide event log showing Claude tool usage, hook executions, session lifecycle events, and platform activity across all users. Events can be filtered by type and searched, providing a full audit trail for compliance and debugging.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "jobs")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>Jobs</strong> monitors the background job queue &mdash; scheduled tasks like template compilation, analytics aggregation, content pre-rendering, and marketplace sync. Each job shows its schedule, last run status, and next execution time.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "marketplace")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p>The <strong>Marketplace</strong> is the public plugin browser where anyone can discover and install community plugins. Plugins are ranked by usage, ratings, and quality scores. This is where enterprise teams publish internal plugins for their organization.</p>
-    <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
-</div>
-{{else if (eq page "getting-started")}}
-<div class="demo-help-box">
-    <div class="demo-help-box__header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <strong>Demo Environment</strong>
-    </div>
-    <p><strong>Getting Started</strong> helps new users select their initial plugins and set up their workspace. Choose from curated plugin sets based on your role and needs, then customize from there.</p>
+    <p>{{{demo_help}}}</p>
+    {{#if demo_help_url}}
+    <p class="demo-help-box__docs">
+        <a href="{{demo_help_url}}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Read the full documentation for this feature
+        </a>
+    </p>
+    {{/if}}
     <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
 </div>
 {{/if}}

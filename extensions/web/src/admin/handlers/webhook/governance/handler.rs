@@ -9,7 +9,8 @@ use axum::{
 use sqlx::PgPool;
 use systemprompt::models::auth::JwtAudience;
 
-use crate::admin::types::{GovernQuery, HookEventPayload};
+use crate::admin::types::webhook::GovernQuery;
+use crate::admin::types::webhook::HookEventPayload;
 
 use super::audit;
 use super::rules;
@@ -36,11 +37,13 @@ pub(crate) async fn govern_tool_use(
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
     Query(query): Query<GovernQuery>,
-    Json(payload): Json<HookEventPayload>,
+    Json(raw): Json<serde_json::Value>,
 ) -> Response {
-    let tool_name = payload.tool_name.as_deref().unwrap_or("unknown");
-    let session_id = payload.session_id.as_deref().unwrap_or("unknown");
-    let agent_id = payload.agent_id.as_deref();
+    let (payload, _warnings) = HookEventPayload::from_value(raw);
+
+    let tool_name = payload.tool_name().unwrap_or("unknown");
+    let session_id = payload.session_id();
+    let agent_id = payload.common.agent_id.as_deref();
     let plugin_id = query.plugin_id.as_deref();
 
     let denial_params = AuthDenialParams {
@@ -74,6 +77,7 @@ pub(crate) async fn govern_tool_use(
         &[
             JwtAudience::Resource("hook".to_string()),
             JwtAudience::Resource("plugin".to_string()),
+            JwtAudience::Api,
         ],
     ) {
         Ok(c) => c,
@@ -97,7 +101,7 @@ pub(crate) async fn govern_tool_use(
         agent_scope: &agent_scope,
         session_id,
         user_id,
-        tool_input: payload.tool_input.as_ref(),
+        tool_input: payload.tool_input(),
     };
 
     let evaluation = rules::evaluate(&pool, &ctx).await;

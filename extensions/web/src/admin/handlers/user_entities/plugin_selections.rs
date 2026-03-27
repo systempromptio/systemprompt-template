@@ -66,9 +66,6 @@ pub(crate) async fn list_available_plugins_handler(
     let mut plugins: Vec<AvailablePlugin> = Vec::new();
 
     for plugin_id in &authorized {
-        if plugin_id == "systemprompt" {
-            continue;
-        }
         let detail = repositories::find_plugin_detail(&services_path, plugin_id)
             .map_err(|e| {
                 tracing::warn!(error = ?e, plugin_id = %plugin_id, "Failed to load plugin detail for selection page");
@@ -146,7 +143,7 @@ pub(crate) async fn set_selected_plugins_handler(
     let valid_ids: Vec<String> = req
         .plugin_ids
         .into_iter()
-        .filter(|id| id != "systemprompt" && authorized.contains(id))
+        .filter(|id| authorized.contains(id))
         .collect();
 
     match repositories::user_plugin_selections::set_selected_org_plugins(

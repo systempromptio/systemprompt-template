@@ -1,5 +1,5 @@
 use super::export::{
-    ManifestAuthor, MarketplaceManifest, MarketplaceMetadata, MarketplacePluginEntry,
+    ManifestAuthor, MarketplaceManifest, MarketplacePluginEntry,
 };
 use crate::error::MarketplaceError;
 
@@ -42,14 +42,7 @@ pub(super) fn build_marketplace(
         .join("-");
 
     let marketplace = MarketplaceManifest {
-        schema: "https://anthropic.com/claude-code/marketplace.schema.json".to_string(),
         name: format!("{slug}-marketplace"),
-        description: format!("{username}'s plugin marketplace"),
-        metadata: MarketplaceMetadata {
-            description: "Plugin marketplace exported from systemprompt.io".to_string(),
-            version: "1.0.0".to_string(),
-            plugin_root: "./plugins".to_string(),
-        },
         owner: ManifestAuthor {
             name: username.to_string(),
             email: email.to_string(),

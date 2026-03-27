@@ -94,7 +94,6 @@ fn discover_included_plugins(services_path: &std::path::Path) -> Vec<String> {
     cfg.includes
         .iter()
         .filter_map(|s| s.split('/').next())
-        .filter(|id| *id != "systemprompt")
         .map(String::from)
         .collect()
 }
@@ -109,9 +108,6 @@ fn collect_browse_plugins(
     let mut already_added_count = 0usize;
 
     for pid in plugin_ids {
-        if pid == "systemprompt" {
-            continue;
-        }
         let Ok(Some(detail)) = repositories::find_plugin_detail(services_path, pid) else {
             continue;
         };

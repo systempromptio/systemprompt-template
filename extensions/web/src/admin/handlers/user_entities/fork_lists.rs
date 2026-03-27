@@ -49,7 +49,7 @@ pub(crate) async fn list_forkable_plugins_handler(
 
     let items: Vec<ForkablePluginItem> = org_plugins
         .iter()
-        .filter(|p| p.id != "systemprompt")
+        .filter(|p| !p.id.is_empty())
         .map(|p| ForkablePluginItem {
             id: p.id.clone(),
             name: p.name.clone(),

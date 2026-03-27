@@ -143,28 +143,46 @@ pub async fn set_marketplace_plugins(
 pub async fn resolve_authorized_org_plugin_ids(
     pool: &Arc<PgPool>,
 ) -> Result<HashSet<String>, sqlx::Error> {
-    let marketplaces = list_org_marketplaces(pool).await?;
-    let mut org_plugin_ids: HashSet<String> = HashSet::new();
-    for mkt in &marketplaces {
-        if let Ok(plugin_ids) = list_marketplace_plugin_ids(pool, &mkt.id).await {
-            for pid in plugin_ids {
-                org_plugin_ids.insert(pid);
-            }
-        }
-    }
-    org_plugin_ids.insert("systemprompt".to_string());
-    Ok(org_plugin_ids)
+    let rows = sqlx::query!(
+        "SELECT DISTINCT mp.plugin_id
+         FROM org_marketplace_plugins mp
+         JOIN org_marketplaces m ON m.id = mp.marketplace_id",
+    )
+    .fetch_all(pool.as_ref())
+    .await?;
+    Ok(rows.into_iter().map(|r| r.plugin_id).collect())
 }
 
 pub async fn resolve_authorized_marketplace_groups(
     pool: &Arc<PgPool>,
 ) -> Result<Vec<(OrgMarketplace, Vec<String>)>, sqlx::Error> {
-    let marketplaces = list_org_marketplaces(pool).await?;
-    let mut result: Vec<(OrgMarketplace, Vec<String>)> = Vec::new();
-    for mkt in marketplaces {
-        let plugin_ids = list_marketplace_plugin_ids(pool, &mkt.id).await?;
-        result.push((mkt, plugin_ids));
+    let (marketplaces, assoc_rows) = tokio::join!(
+        list_org_marketplaces(pool),
+        sqlx::query!(
+            "SELECT marketplace_id, plugin_id
+             FROM org_marketplace_plugins
+             ORDER BY marketplace_id, position, created_at",
+        )
+        .fetch_all(pool.as_ref()),
+    );
+    let marketplaces = marketplaces?;
+    let assoc_rows = assoc_rows?;
+
+    let mut plugin_map: HashMap<String, Vec<String>> = HashMap::new();
+    for row in assoc_rows {
+        plugin_map
+            .entry(row.marketplace_id)
+            .or_default()
+            .push(row.plugin_id);
     }
+
+    let result = marketplaces
+        .into_iter()
+        .map(|mkt| {
+            let plugins = plugin_map.remove(&mkt.id).unwrap_or_default();
+            (mkt, plugins)
+        })
+        .collect();
     Ok(result)
 }
 

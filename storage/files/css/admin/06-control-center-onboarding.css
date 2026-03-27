@@ -83,6 +83,14 @@
     justify-content: center;
     line-height: 1;
 }
+.cc-onboarding-step--alt {
+    margin-top: var(--sp-space-2);
+    border-style: dashed;
+    opacity: 0.85;
+}
+.cc-onboarding-step--alt .cc-step-content h3 {
+    line-height: 1.4;
+}
 .cc-step-content {
     flex: 1;
     min-width: 0;
@@ -102,6 +110,13 @@
 }
 .cc-step-content p:last-child {
     margin-bottom: 0;
+}
+.cc-step-content ol {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+    margin: 0 0 var(--sp-space-2) 0;
+    padding-left: var(--sp-space-5);
+    line-height: 1.5;
 }
 .cc-onboarding-notice {
     background: var(--sp-accent-dim);

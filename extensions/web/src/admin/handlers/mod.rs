@@ -23,6 +23,9 @@ pub(crate) mod sse;
 pub(crate) mod ssr;
 pub(crate) mod user_entities;
 mod users;
+mod webhook;
+
+pub(crate) use webhook::{govern_tool_use, track_statusline_event, track_transcript_event};
 
 pub(crate) use jobs::list_jobs_handler;
 pub(crate) use marketplace::{

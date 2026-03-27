@@ -35,23 +35,6 @@ pub struct PluginView {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct PlatformPluginView {
-    pub plugin_id: String,
-    pub name: String,
-    pub description: String,
-    pub category: String,
-    pub version: String,
-    pub is_platform: bool,
-    pub skill_count: usize,
-    pub agent_count: usize,
-    pub mcp_count: usize,
-    pub hook_count: usize,
-    pub skills: Vec<NamedEntity>,
-    pub agents: Vec<NamedEntity>,
-    pub mcp_servers: Vec<NamedEntity>,
-}
-
-#[derive(Debug, Clone, Serialize)]
 pub struct PluginStats {
     pub plugin_count: usize,
 }

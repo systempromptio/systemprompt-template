@@ -16,15 +16,6 @@ impl From<&AssociatedEntity> for NamedEntity {
     }
 }
 
-impl NamedEntity {
-    pub fn from_str_pair(s: &str) -> Self {
-        Self {
-            id: s.to_string(),
-            name: s.to_string(),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Serialize)]
 pub struct CheckableEntity {
     pub value: String,

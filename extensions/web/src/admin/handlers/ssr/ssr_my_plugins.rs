@@ -7,14 +7,14 @@ use crate::admin::types::conversation_analytics::{
 use crate::admin::types::{MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, Query, State},
-    response::{IntoResponse, Redirect, Response},
+    response::Response,
 };
 use sqlx::PgPool;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::ssr_my_plugins_helpers::{
-    build_association_lists, build_platform_plugin, build_plugin_edit_data, collect_my_plugins,
+    build_association_lists, build_plugin_edit_data, collect_my_plugins,
 };
 use super::types::{MyPluginEditPageData, MyPluginsPageData, PluginStats};
 
@@ -58,15 +58,8 @@ pub(crate) async fn my_plugins_page(
         .iter()
         .map(|a| (a.entity_name.as_str(), a))
         .collect();
-    let platform_plugin = super::get_services_path()
-        .map_err(|_| {
-            tracing::warn!("Failed to get services path for My Plugins page");
-        })
-        .ok()
-        .and_then(|p| build_platform_plugin(&p));
     let (plugins_json, categories) = collect_my_plugins(
         &enriched,
-        platform_plugin,
         &skill_usage_map,
         &skill_eff_map,
         &agent_eff_map,
@@ -105,14 +98,6 @@ pub(crate) async fn my_plugin_edit_page(
     } else {
         None
     };
-
-    if let Some(ref pwa) = plugin_with_assoc {
-        if pwa.plugin.base_plugin_id.as_deref() == Some("systemprompt") {
-            if let Some(id) = plugin_id {
-                return Redirect::to(&format!("/admin/my/plugins/view?id={id}")).into_response();
-            }
-        }
-    }
 
     let (skills_list, agents_list, mcp_list) =
         build_association_lists(&pool, &user_ctx, plugin_with_assoc.as_ref()).await;

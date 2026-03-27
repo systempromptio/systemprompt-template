@@ -55,22 +55,7 @@ systemprompt infra services start --kill-port-process
 
 ---
 
-## Step 2: Get an Authentication Token
-
-The governance API requires a bearer token. Generate one from the CLI:
-
-```bash
-TOKEN=$(systemprompt cloud auth token)
-echo "$TOKEN"
-```
-
-This token is short-lived. If you get a 401 response on any curl call, re-run the command above.
-
-You will use this token for the [Governance API](/documentation/demo-terminal-governance) demos (04, 05, 06).
-
----
-
-## Step 3: Access the Admin Dashboard
+## Step 2: Access the Admin Dashboard
 
 Navigate to [http://localhost:8080/admin/login](http://localhost:8080/admin/login) in your browser. Enter your email to receive a magic link. After authentication, the dashboard shows real-time metrics for every action you run from the terminal.
 
@@ -84,19 +69,22 @@ Key pages to keep open during demos:
 
 ---
 
-## Step 4: Get the Plugin Token (for Demo 07)
+## Step 3: Get the Plugin Token
 
-The [MCP Access Tracking](/documentation/demo-terminal-mcp) demo uses a **plugin token** instead of the CLI auth token. To get it:
+The governance and MCP demos require a bearer token. To get it:
 
 1. Open [http://localhost:8080/admin/](http://localhost:8080/admin/)
-2. Click the **key icon** in the top-right corner
-3. Reveal and copy the plugin token
+2. Click the **Share & Install** icon (connected dots) in the top-right corner
+3. Select the **Cowork** tab
+4. Click the **eye icon** to reveal the token, then click **Copy**
 
-Save it for later:
+Save it as an environment variable:
 
 ```bash
-PLUGIN_TOKEN="<paste-your-plugin-token-here>"
+TOKEN="<paste-your-plugin-token-here>"
 ```
+
+You will use this token for the [Governance API](/documentation/demo-terminal-governance) demos (04-06) and the [MCP Access Tracking](/documentation/demo-terminal-mcp) demo (07).
 
 ---
 

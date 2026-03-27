@@ -56,16 +56,22 @@ fn build_command_hooks_file(
     token: &str,
     description: &str,
 ) -> Result<PluginFile, MarketplaceError> {
+    let govern_url = format!("{platform_url}/api/public/hooks/govern");
     let track_url = format!("{platform_url}/api/public/hooks/track");
-    let curl = format!(
+    let govern_curl = format!(
+        "cat | curl -s -X POST '{govern_url}' \
+         -H 'Authorization: Bearer {token}' \
+         -H 'Content-Type: application/json' \
+         -d @-"
+    );
+    let track_curl = format!(
         "cat | curl -s -X POST '{track_url}' \
          -H 'Authorization: Bearer {token}' \
          -H 'Content-Type: application/json' \
          -d @- > /dev/null 2>&1 || true"
     );
 
-    let events = [
-        HookEventType::PreToolUse,
+    let tracking_events = [
         HookEventType::PostToolUse,
         HookEventType::PostToolUseFailure,
         HookEventType::PermissionRequest,
@@ -80,20 +86,31 @@ fn build_command_hooks_file(
         HookEventType::TeammateIdle,
     ];
 
-    let hooks: HashMap<HookEventType, Vec<MatcherGroup>> = events
-        .into_iter()
-        .map(|event| {
-            let group = MatcherGroup {
-                matcher: "*".to_string(),
-                hooks: vec![HookHandler::Command(CommandHook {
-                    command: curl.clone(),
-                    is_async: None,
-                    timeout: None,
-                })],
-            };
-            (event, vec![group])
-        })
-        .collect();
+    let mut hooks = HashMap::new();
+
+    // PreToolUse → governance endpoint (synchronous)
+    let govern_group = MatcherGroup {
+        matcher: "*".to_string(),
+        hooks: vec![HookHandler::Command(CommandHook {
+            command: govern_curl,
+            is_async: None,
+            timeout: Some(10),
+        })],
+    };
+    hooks.insert(HookEventType::PreToolUse, vec![govern_group]);
+
+    // All other events → tracking endpoint (async)
+    for event in tracking_events {
+        let group = MatcherGroup {
+            matcher: "*".to_string(),
+            hooks: vec![HookHandler::Command(CommandHook {
+                command: track_curl.clone(),
+                is_async: Some(true),
+                timeout: Some(30),
+            })],
+        };
+        hooks.insert(event, vec![group]);
+    }
 
     let hooks_file = HooksFile {
         description: Some(description.to_string()),

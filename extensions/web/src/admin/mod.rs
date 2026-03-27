@@ -32,6 +32,18 @@ pub fn hooks_webhook_router(pool: Arc<PgPool>) -> Router {
             "/hooks/track",
             post(handlers::hooks_track::handle_hook_track),
         )
+        .route(
+            "/hooks/govern",
+            post(handlers::govern_tool_use),
+        )
+        .route(
+            "/hooks/statusline",
+            post(handlers::track_statusline_event),
+        )
+        .route(
+            "/hooks/transcript",
+            post(handlers::track_transcript_event),
+        )
         .layer(Extension(event_hub::EventHub::default()))
         .layer(Extension(None::<Arc<systemprompt::ai::AiService>>))
         .layer(Extension(tier_enforcement::TierEnforcementCache::default()))
@@ -210,6 +222,29 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
         .route("/my/activity", get(handlers::ssr::my_activity_page))
         .route("/governance", get(handlers::ssr::governance_page))
         .route("/access-control", get(handlers::ssr::access_control_page))
+        .route("/skills", get(handlers::ssr::skills_page))
+        .route("/skills/edit", get(handlers::ssr::skill_edit_page))
+        .route("/agents", get(handlers::ssr::agents_page))
+        .route("/agents/edit", get(handlers::ssr::agent_edit_page))
+        .route("/hooks", get(handlers::ssr::hooks_page))
+        .route("/hooks/edit", get(handlers::ssr::hook_edit_page))
+        .route("/mcp-servers", get(handlers::ssr::mcp_servers_page))
+        .route("/mcp-servers/edit", get(handlers::ssr::mcp_edit_page))
+        .route("/plugins", get(handlers::ssr::plugins_page))
+        .route("/marketplace", get(handlers::ssr::marketplace_versions_page))
+        .route("/org/plugins", get(handlers::ssr::plugins_page))
+        .route("/org/skills", get(handlers::ssr::skills_page))
+        .route("/org/skills/edit", get(handlers::ssr::skill_edit_page))
+        .route("/org/agents", get(handlers::ssr::agents_page))
+        .route("/org/agents/edit", get(handlers::ssr::agent_edit_page))
+        .route("/org/mcp-servers", get(handlers::ssr::mcp_servers_page))
+        .route("/org/mcp-servers/edit", get(handlers::ssr::mcp_edit_page))
+        .route("/org/hooks", get(handlers::ssr::hooks_page))
+        .route("/org/hooks/edit", get(handlers::ssr::hook_edit_page))
+        .route(
+            "/org-marketplace",
+            get(handlers::ssr::org_marketplace_page),
+        )
         .route("/setup", get(handlers::ssr::setup_page))
         .route("/demo-register", get(handlers::ssr::demo_register_page))
         .route("/auth/me", get(middleware::auth_me_handler))

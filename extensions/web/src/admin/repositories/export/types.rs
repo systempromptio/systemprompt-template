@@ -46,21 +46,9 @@ pub struct McpServerEntry {
 
 #[derive(Debug, Serialize)]
 pub struct MarketplaceManifest {
-    #[serde(rename = "$schema")]
-    pub schema: String,
     pub name: String,
-    pub description: String,
-    pub metadata: MarketplaceMetadata,
     pub owner: ManifestAuthor,
     pub plugins: Vec<MarketplacePluginEntry>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct MarketplaceMetadata {
-    pub description: String,
-    pub version: String,
-    #[serde(rename = "pluginRoot")]
-    pub plugin_root: String,
 }
 
 #[derive(Debug, Serialize)]

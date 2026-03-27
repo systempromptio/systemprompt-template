@@ -48,8 +48,12 @@ pub struct HttpHook {
     pub url: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub headers: Option<HashMap<String, String>>,
+    #[serde(rename = "allowedEnvVars", skip_serializing_if = "Option::is_none")]
+    pub allowed_env_vars: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeout: Option<u32>,
+    #[serde(rename = "async", skip_serializing_if = "Option::is_none")]
+    pub is_async: Option<bool>,
 }
 
 #[derive(Debug, Serialize)]

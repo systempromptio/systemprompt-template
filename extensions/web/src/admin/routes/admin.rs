@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     middleware as axum_middleware,
-    routing::{delete, get, post, put},
+    routing::{get, post, put},
     Router,
 };
 use sqlx::PgPool;
@@ -30,7 +30,7 @@ pub(crate) fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<
             get(handlers::access_control::access_control_departments_handler),
         )
         .route(
-            "/org-marketplaces",
+            "/org/marketplaces",
             get(handlers::org_marketplaces::list_org_marketplaces_handler),
         )
         .with_state(read_pool.clone());
@@ -62,24 +62,24 @@ pub(crate) fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<
             put(handlers::access_control::bulk_assign_handler),
         )
         .route(
-            "/org-marketplaces",
+            "/org/marketplaces",
             post(handlers::org_marketplaces::create_org_marketplace_handler),
         )
         .route(
-            "/org-marketplaces/{id}",
+            "/org/marketplaces/{id}",
             put(handlers::org_marketplaces::update_org_marketplace_handler)
                 .delete(handlers::org_marketplaces::delete_org_marketplace_handler),
         )
         .route(
-            "/org-marketplaces/{id}/plugins",
+            "/org/marketplaces/{id}/plugins",
             put(handlers::org_marketplaces::set_marketplace_plugins_handler),
         )
         .route(
-            "/org-marketplaces/{id}/sync",
+            "/org/marketplaces/{id}/sync",
             post(handlers::org_marketplaces::sync_marketplace_handler),
         )
         .route(
-            "/org-marketplaces/{id}/publish",
+            "/org/marketplaces/{id}/publish",
             post(handlers::org_marketplaces::publish_marketplace_handler),
         )
         .with_state(write_pool.clone());

@@ -15,14 +15,46 @@
 
     <div class="cc-onboarding-panel cc-onboarding-panel--active" id="onboard-code">
         <div class="cc-onboarding-notice">
-            <strong>Recommended:</strong> Claude Code is the fastest way to get started. A single command installs all your plugins, skills, agents, hooks, and MCP servers with your personalized authentication token embedded. No whitelisting or manual connector setup required.
+            <strong>Recommended:</strong> Claude Code is the fastest way to get started. Your marketplace URL contains your personalized authentication token, so all plugins, skills, agents, hooks, and MCP servers are automatically authenticated. No whitelisting or manual connector setup required.
         </div>
         <div class="cc-onboarding-steps">
             <div class="cc-onboarding-step">
                 <span class="cc-step-number">1</span>
                 <div class="cc-step-content">
-                    <h3>Install your marketplace</h3>
-                    <p>A single command installs everything. Use whichever method suits you:</p>
+                    <h3>Add your marketplace (recommended)</h3>
+                    <p>This is the preferred method — it permanently registers the marketplace so plugins stay up to date across sessions.</p>
+                    <ol>
+                        <li>In a Claude Code conversation, type <code>/plugins</code></li>
+                        <li>Go to <strong>Marketplaces</strong> and click <strong>Add marketplace</strong></li>
+                        <li>Paste your marketplace URL:</li>
+                    </ol>
+                    <div class="cc-onboarding-code">
+                        <code>{{marketplace.git_url}}</code>
+                        <button type="button" class="btn-copy" data-copy="{{marketplace.git_url}}">Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cc-onboarding-step">
+                <span class="cc-step-number">2</span>
+                <div class="cc-step-content">
+                    <h3>Enable and install the plugin</h3>
+                    <p>Once the marketplace is added, browse it in the <strong>Marketplaces</strong> tab, enable the plugin you want, and choose <strong>Install globally</strong> so it's available in every conversation.</p>
+                </div>
+            </div>
+
+            <div class="cc-onboarding-step">
+                <span class="cc-step-number">3</span>
+                <div class="cc-step-content">
+                    <h3>Reload plugins</h3>
+                    <p>Type <code>/reload plugins</code> to activate your newly installed plugins. Events will appear here automatically.</p>
+                </div>
+            </div>
+
+            <div class="cc-onboarding-step cc-onboarding-step--alt">
+                <div class="cc-step-content">
+                    <h3>Alternative: command-line install</h3>
+                    <p>You can also install directly from your terminal or a Claude Code conversation:</p>
                     <p><strong>From your terminal:</strong></p>
                     <div class="cc-onboarding-code">
                         <code>claude plugin marketplace add {{marketplace.git_url}}</code>
@@ -33,15 +65,7 @@
                         <code>/plugin marketplace add {{marketplace.git_url}}</code>
                         <button type="button" class="btn-copy" data-copy="/plugin marketplace add {{marketplace.git_url}}">Copy</button>
                     </div>
-                    <p>This is also available from the <strong>Share &amp; Install</strong> icon in the header. The install URL contains your personalized token, so all hooks, MCP servers, and marketplace configuration are automatically authenticated.</p>
-                </div>
-            </div>
-
-            <div class="cc-onboarding-step">
-                <span class="cc-step-number">2</span>
-                <div class="cc-step-content">
-                    <h3>Run /onboarding</h3>
-                    <p>Start a new Claude Code conversation and type <code>/onboarding</code>. The assistant will guide you through creating personalised skills for your business. Events will appear here automatically.</p>
+                    <p>This is also available from the <strong>Share &amp; Install</strong> icon in the header.</p>
                 </div>
             </div>
         </div>
@@ -71,13 +95,6 @@
                 </div>
             </div>
 
-            <div class="cc-onboarding-step">
-                <span class="cc-step-number">3</span>
-                <div class="cc-step-content">
-                    <h3>Run /onboarding</h3>
-                    <p>Open Cowork, start a new conversation, and type <code>/onboarding</code>. The assistant will guide you through creating personalised skills for your business.</p>
-                </div>
-            </div>
         </div>
     </div>
 

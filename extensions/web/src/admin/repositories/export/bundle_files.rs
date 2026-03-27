@@ -22,23 +22,10 @@ pub async fn build_skill_files(
     ctx: &BundleContext<'_>,
 ) {
     let kebab_name = skill.skill_id.as_str().replace('_', "-");
-    let hooks_section = ctx
-        .token
-        .filter(|t| !t.is_empty() && !ctx.platform_url.is_empty())
-        .map_or_else(String::new, |t| {
-            let yaml = super::super::export_builders::build_skill_hooks_yaml_public(
-                ctx.platform_url,
-                t,
-                &kebab_name,
-                ctx.plugin_id,
-            );
-            format!("{yaml}\n")
-        });
     let skill_md = format!(
-        "---\nname: {}\ndescription: \"{}\"\n{}---\n\n{}\n",
+        "---\nname: {}\ndescription: \"{}\"\n---\n\n{}\n",
         kebab_name,
         skill.description.replace('"', "\\\""),
-        hooks_section,
         skill.content.trim()
     );
     files.push(PluginFile {

@@ -61,6 +61,7 @@ impl HookEventPayload {
     #[must_use]
     pub fn tool_input(&self) -> Option<&serde_json::Value> {
         match &self.event {
+            HookEvent::PreToolUse(d) => Some(&d.tool_input),
             HookEvent::PostToolUse(d) => Some(&d.tool_input),
             HookEvent::PostToolUseFailure(d) => Some(&d.tool_input),
             _ => None,

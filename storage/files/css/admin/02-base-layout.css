@@ -66,7 +66,7 @@ header.admin-header,
     content: '';
     position: fixed;
     pointer-events: none;
-    z-index: var(--sp-z-sticky);
+    z-index: 0;
 }
 
 .admin-main::before {

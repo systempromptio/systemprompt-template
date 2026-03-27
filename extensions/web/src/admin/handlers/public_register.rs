@@ -41,7 +41,6 @@ pub(crate) async fn public_register_handler(
         return shared::error_response(StatusCode::BAD_REQUEST, "Invalid email address");
     };
 
-    // Rate limit: max 5 registration attempts per email per 15 minutes
     let rate_count = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM webauthn_setup_tokens
          WHERE user_id IN (SELECT id FROM users WHERE email = $1)
@@ -85,7 +84,6 @@ pub(crate) async fn public_register_handler(
         status: Some("active".to_string()),
     };
 
-    // ON CONFLICT (email) DO UPDATE — handles both new users and re-registration
     let user = match repositories::create_user(&pool, &create_req).await {
         Ok(u) => u,
         Err(e) => {
@@ -97,7 +95,6 @@ pub(crate) async fn public_register_handler(
         }
     };
 
-    // Generate a WebAuthn setup token (same format as core)
     let bytes: [u8; 32] = rand::thread_rng().gen();
     let raw_token = format!("{}{}", TOKEN_PREFIX, URL_SAFE_NO_PAD.encode(bytes));
     let token_hash = {
@@ -112,7 +109,7 @@ pub(crate) async fn public_register_handler(
         "INSERT INTO webauthn_setup_tokens (id, user_id, token_hash, purpose, expires_at)
          VALUES ($1, $2, $3, 'credential_link', NOW() + INTERVAL '15 minutes')",
         &token_id,
-        &user.user_id,
+        user.user_id.as_str(),
         &token_hash,
     )
     .execute(pool.as_ref())

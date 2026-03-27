@@ -52,7 +52,7 @@ pub(crate) async fn select_and_fork_plugins_handler(
     let valid_ids: Vec<String> = req
         .plugin_ids
         .into_iter()
-        .filter(|id| id != "systemprompt" && authorized.contains(id))
+        .filter(|id| authorized.contains(id))
         .collect();
 
     if valid_ids.is_empty() {

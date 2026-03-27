@@ -9,10 +9,9 @@ use axum::{
 };
 use sqlx::PgPool;
 
-use super::types::{
-    MarketplacePluginView, MarketplaceStats, MyMarketplacePageData, NamedEntity,
-    PlatformMarketplacePlugin,
-};
+use super::types::{MarketplacePluginView, MarketplaceStats, MyMarketplacePageData, NamedEntity};
+
+const DEFAULT_HOOK_COUNT: usize = 14;
 
 pub(crate) async fn my_marketplace_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -20,25 +19,17 @@ pub(crate) async fn my_marketplace_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
-    let services_path = match super::get_services_path() {
-        Ok(p) => p,
-        Err(r) => return *r,
-    };
-
     let user_plugins = repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id)
         .await
         .unwrap_or_else(|_| vec![]);
 
-    let platform_plugin = build_platform_plugin(&services_path);
-    let platform_hook_count = platform_plugin.as_ref().map_or(0, |p| p.hook_count);
     let (plugins, total_skills, total_agents, total_mcp) =
         collect_marketplace_plugins(&user_plugins);
-    let total_hooks = platform_hook_count + plugins.len() * DEFAULT_HOOK_COUNT;
+    let total_hooks = plugins.len() * DEFAULT_HOOK_COUNT;
 
     let data = MyMarketplacePageData {
         page: "my-marketplace",
         title: "My Marketplace",
-        platform_plugin: serde_json::to_value(&platform_plugin).unwrap_or_else(|_| serde_json::Value::Null),
         has_plugins: !plugins.is_empty(),
         stats: MarketplaceStats {
             plugin_count: plugins.len(),
@@ -89,48 +80,4 @@ fn collect_marketplace_plugins(
     }
 
     (plugins, total_skills, total_agents, total_mcp)
-}
-
-const DEFAULT_HOOK_COUNT: usize = 14;
-
-fn build_platform_plugin(services_path: &std::path::Path) -> Option<PlatformMarketplacePlugin> {
-    let detail = match repositories::find_plugin_detail(services_path, "systemprompt") {
-        Ok(d) => d,
-        Err(e) => {
-            tracing::warn!(error = ?e, "Failed to load systemprompt plugin detail");
-            None
-        }
-    };
-
-    let d = detail?;
-    let skills: Vec<NamedEntity> = d
-        .skills
-        .iter()
-        .map(|s| NamedEntity::from_str_pair(s))
-        .collect();
-    let agents: Vec<NamedEntity> = d
-        .agents
-        .iter()
-        .map(|a| NamedEntity::from_str_pair(a))
-        .collect();
-    let mcp_servers: Vec<NamedEntity> = d
-        .mcp_servers
-        .iter()
-        .map(|m| NamedEntity::from_str_pair(m))
-        .collect();
-
-    Some(PlatformMarketplacePlugin {
-        plugin_id: "systemprompt".to_string(),
-        name: d.name,
-        description: d.description,
-        category: d.category,
-        version: d.version,
-        skill_count: skills.len(),
-        agent_count: agents.len(),
-        mcp_count: mcp_servers.len(),
-        hook_count: DEFAULT_HOOK_COUNT,
-        skills,
-        agents,
-        mcp_servers,
-    })
 }

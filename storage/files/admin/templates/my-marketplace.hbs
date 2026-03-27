@@ -5,18 +5,6 @@
 
     <p class="text-muted mb-4">Your configured collection of plugins, skills, agents, and connectors. This is what gets shared when others install your marketplace.</p>
 
-    <div class="platform-info-bar">
-        <span class="badge badge-gray">Platform</span>
-        <strong>systemprompt.io</strong> — always included
-        {{#if platform_plugin}}
-        {{#if (gt platform_plugin.skill_count 0)}}<span class="badge badge-success">{{platform_plugin.skill_count}} skills</span>{{/if}}
-        {{#if (gt platform_plugin.agent_count 0)}}<span class="badge badge-info">{{platform_plugin.agent_count}} agents</span>{{/if}}
-        {{#if (gt platform_plugin.mcp_count 0)}}<span class="badge badge-warning">{{platform_plugin.mcp_count}} MCP</span>{{/if}}
-        {{#if (gt platform_plugin.hook_count 0)}}<span class="badge badge-purple">{{platform_plugin.hook_count}} hooks</span>{{/if}}
-        <a href="/admin/my/plugins/view?id={{platform_plugin.plugin_id}}" class="btn btn-secondary btn-sm ml-auto">View</a>
-        {{/if}}
-    </div>
-
     <section aria-label="Marketplace statistics">
     <div class="marketplace-stats-ribbon">
         <div class="marketplace-stat-card">

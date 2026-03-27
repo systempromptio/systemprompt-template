@@ -1,5 +1,3 @@
-@layer tokens, reset, base, components, utilities, responsive;
-
 @layer tokens {
 :root {
     color-scheme: light dark;

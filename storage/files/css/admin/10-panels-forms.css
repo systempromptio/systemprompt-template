@@ -192,6 +192,7 @@
     border-radius: var(--sp-radius-sm);
 }
 
+/* Form actions row */
 .form-actions {
     display: flex;
     align-items: center;
@@ -201,6 +202,7 @@
     border-top: 1px solid var(--sp-border-subtle);
 }
 
+/* Submit button loading state */
 .btn[aria-busy="true"] {
     position: relative;
     color: transparent;
@@ -226,6 +228,7 @@
     cursor: not-allowed;
 }
 
+/* Entity checklist touch targets */
 .checklist-item {
     display: flex;
     align-items: center;
@@ -245,12 +248,14 @@
     flex-shrink: 0;
 }
 
+/* Form hint styling */
 .form-hint {
     font-weight: 400;
     color: var(--sp-text-tertiary);
     font-size: var(--sp-text-xs);
 }
 
+/* Error message (hidden until populated) */
 .error-msg:empty {
     display: none;
 }
@@ -305,3 +310,5 @@
 }
 
 }
+
+

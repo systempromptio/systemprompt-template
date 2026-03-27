@@ -1,27 +1,36 @@
 plugin:
   id: systemprompt
-  name: "Foodles"
-  description: "Your AI consultant for building custom skills, agents, and secrets through guided Socratic interviews"
-  version: "2.1.0"
+  name: Foodles
+  description: Your AI consultant for building custom skills, agents, and secrets through guided Socratic interviews
+  version: 2.1.0
   enabled: true
   skills:
     source: explicit
     include:
-      - marketplace_onboarding
-      - skill_creator
-      - agent_creator
-      - secrets_creator
+    - marketplace_onboarding
+    - skill_creator
+    - agent_creator
+    - secrets_creator
   agents:
     source: explicit
     include: []
   mcp_servers:
-    - skill-manager
+  - skill-manager
   scripts: []
-  keywords: [marketplace, socratic, skills, agents, secrets, builder, onboarding]
+  keywords:
+  - marketplace
+  - socratic
+  - skills
+  - agents
+  - secrets
+  - builder
+  - onboarding
   category: platform
   author:
-    name: "Foodles"
-    email: "help@foodles.com"
-  license: "proprietary"
-  roles: []
-  depends: [common-skills]
+    name: Foodles
+    email: help@foodles.com
+  license: proprietary
+  roles:
+  - viewer
+  depends:
+  - common-skills

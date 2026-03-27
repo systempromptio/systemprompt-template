@@ -14,7 +14,8 @@
     backdrop-filter: blur(0px);
 }
 
-.panel-overlay.open {
+.panel-overlay.open,
+.panel-overlay.active {
     opacity: 1;
     visibility: visible;
     background: var(--sp-overlay-light);

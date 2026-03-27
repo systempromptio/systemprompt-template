@@ -73,18 +73,13 @@
                         {{/if}}
                     </td>
                     <td>
-                        {{#if is_platform}}
-                        <span class="badge badge-gray">Platform</span>
-                        {{else if base_plugin_id}}
+                        {{#if base_plugin_id}}
                         <span class="badge badge-purple">Official</span>
                         {{else}}
                         <span class="badge badge-success">Custom</span>
                         {{/if}}
                     </td>
                     <td class="col-actions" data-no-row-click>
-                        {{#if is_platform}}
-                        <span class="badge badge-gray" title="Platform plugin — always included, read-only">Read-only</span>
-                        {{else}}
                         <div class="actions-menu" data-actions-for="{{plugin_id}}">
                             <button type="button" class="actions-trigger" data-action="menu" title="Actions" aria-label="Actions menu">&#8942;</button>
                             <div class="actions-dropdown">
@@ -93,7 +88,6 @@
                                 <button type="button" class="actions-item actions-item-danger" data-delete-plugin="{{plugin_id}}">Delete</button>
                             </div>
                         </div>
-                        {{/if}}
                     </td>
                 </tr>
                 <tr class="detail-row" data-detail-for="{{plugin_id}}">

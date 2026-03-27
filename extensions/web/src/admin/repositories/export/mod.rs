@@ -106,11 +106,9 @@ async fn resolve_org_plugin_ids(
     let selected = super::user_plugin_selections::list_selected_org_plugins(pool, user_id)
         .await
         .unwrap_or_else(|_| Vec::new());
-    if selected.is_empty() {
-        ids.retain(|id| id == "systemprompt");
-    } else {
+    if !selected.is_empty() {
         let selected_set: std::collections::HashSet<String> = selected.into_iter().collect();
-        ids.retain(|id| id == "systemprompt" || selected_set.contains(id));
+        ids.retain(|id| selected_set.contains(id));
     }
     ids.into_iter().collect()
 }
@@ -125,7 +123,7 @@ fn filter_forked_plugins(
         .collect();
     all_configs
         .into_iter()
-        .filter(|(id, _)| id == "systemprompt" || !forked_base_ids.contains(id.as_str()))
+        .filter(|(id, _)| !forked_base_ids.contains(id.as_str()))
         .collect()
 }
 

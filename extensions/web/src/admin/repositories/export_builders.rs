@@ -1,4 +1,3 @@
-use std::fmt::Write;
 use std::path::Path;
 
 use super::export::PluginFile;
@@ -58,17 +57,14 @@ pub(super) fn build_plugin_files(
 
 fn build_skill_files(
     skill_ids: &[(String, std::path::PathBuf)],
-    platform_url: &str,
-    token: Option<&str>,
-    plugin_id: &str,
+    _platform_url: &str,
+    _token: Option<&str>,
+    _plugin_id: &str,
     files: &mut Vec<PluginFile>,
 ) -> Result<(), MarketplaceError> {
     for (skill_id, skill_dir) in skill_ids {
         let kebab_name = skill_id.replace('_', "-");
-        let hooks_yaml = token
-            .filter(|t| !t.is_empty() && !platform_url.is_empty())
-            .map(|t| build_skill_hooks_yaml_public(platform_url, t, &kebab_name, plugin_id));
-        let content = build_skill_md(skill_id, skill_dir, hooks_yaml.as_deref())?;
+        let content = build_skill_md(skill_id, skill_dir, None)?;
         files.push(PluginFile {
             path: format!("skills/{kebab_name}/SKILL.md"),
             content,
@@ -184,11 +180,11 @@ pub(super) fn build_hook_files(
         return Ok(());
     }
 
+    let govern_url = format!("{platform_url}/api/public/hooks/govern");
     let track_url = format!("{platform_url}/api/public/hooks/track");
     let auth_header = format!("Bearer {token}");
 
-    let events = [
-        HookEventType::PreToolUse,
+    let tracking_events = [
         HookEventType::PostToolUse,
         HookEventType::PostToolUseFailure,
         HookEventType::PermissionRequest,
@@ -204,7 +200,25 @@ pub(super) fn build_hook_files(
     ];
 
     let mut hooks = HashMap::new();
-    for event in events {
+
+    // PreToolUse → governance endpoint (synchronous, short timeout)
+    let govern_group = MatcherGroup {
+        matcher: "*".to_string(),
+        hooks: vec![HookHandler::Http(HttpHook {
+            url: govern_url,
+            headers: Some(HashMap::from([(
+                "Authorization".to_string(),
+                auth_header.clone(),
+            )])),
+            allowed_env_vars: None,
+            timeout: Some(10),
+            is_async: None,
+        })],
+    };
+    hooks.insert(HookEventType::PreToolUse, vec![govern_group]);
+
+    // All other events → tracking endpoint (async, longer timeout)
+    for event in tracking_events {
         let matcher_group = MatcherGroup {
             matcher: "*".to_string(),
             hooks: vec![HookHandler::Http(HttpHook {
@@ -213,7 +227,9 @@ pub(super) fn build_hook_files(
                     "Authorization".to_string(),
                     auth_header.clone(),
                 )])),
+                allowed_env_vars: None,
                 timeout: Some(30),
+                is_async: Some(true),
             })],
         };
         hooks.insert(event, vec![matcher_group]);
@@ -229,39 +245,3 @@ pub(super) fn build_hook_files(
     Ok(())
 }
 
-pub(crate) fn build_skill_hooks_yaml_public(
-    platform_url: &str,
-    token: &str,
-    skill_name: &str,
-    plugin_id: &str,
-) -> String {
-    let track_url =
-        format!("{platform_url}/api/public/hooks/skill-track?sid={skill_name}&pid={plugin_id}");
-    let auth = format!("Bearer {token}");
-
-    let events = [
-        "UserPromptSubmit",
-        "PreToolUse",
-        "PostToolUse",
-        "PostToolUseFailure",
-        "PermissionRequest",
-        "Stop",
-        "SubagentStart",
-        "SubagentStop",
-        "TaskCompleted",
-        "SessionStart",
-        "SessionEnd",
-        "Notification",
-        "TeammateIdle",
-        "InstructionsLoaded",
-    ];
-
-    let mut yaml = String::from("hooks:\n");
-    for event in events {
-        let _ = write!(
-            yaml,
-            "  {event}:\n    - matcher: \"*\"\n      hooks:\n        - type: http\n          url: \"{track_url}\"\n          headers:\n            Authorization: \"{auth}\"\n          timeout: 30\n"
-        );
-    }
-    yaml
-}
