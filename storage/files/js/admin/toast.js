@@ -20,10 +20,10 @@
             const icon = icons[type] || icons.info;
             const el = document.createElement('div');
             el.className = 'toast toast-' + type;
-            var iconSpan = document.createElement('span');
+            const iconSpan = document.createElement('span');
             iconSpan.className = 'toast-icon';
             iconSpan.textContent = icon;
-            var msgSpan = document.createElement('span');
+            const msgSpan = document.createElement('span');
             msgSpan.className = 'toast-message';
             msgSpan.textContent = message;
             el.append(iconSpan, msgSpan);

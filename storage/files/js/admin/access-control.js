@@ -195,25 +195,25 @@
     function buildPanelContent(entity, entityType) {
         const frag = document.createDocumentFragment();
 
-        var infoDiv = document.createElement('div');
+        const infoDiv = document.createElement('div');
         infoDiv.className = 'acl-entity-info';
-        var primaryDiv = document.createElement('div');
+        const primaryDiv = document.createElement('div');
         primaryDiv.className = 'cell-primary';
         primaryDiv.textContent = entity.name || entity.id;
         infoDiv.append(primaryDiv);
         if (entity.description) {
-            var secondaryDiv = document.createElement('div');
+            const secondaryDiv = document.createElement('div');
             secondaryDiv.className = 'cell-secondary';
             secondaryDiv.textContent = entity.description;
             infoDiv.append(secondaryDiv);
         }
-        var badgeWrap = document.createElement('div');
+        const badgeWrap = document.createElement('div');
         badgeWrap.style.marginTop = 'var(--sp-space-2)';
-        var typeBadge = document.createElement('span');
+        const typeBadge = document.createElement('span');
         typeBadge.className = 'badge badge-blue';
         typeBadge.textContent = entityType.replace('_', ' ');
         badgeWrap.append(typeBadge, document.createTextNode(' '));
-        var statusBadge = document.createElement('span');
+        const statusBadge = document.createElement('span');
         if (entity.enabled) {
             statusBadge.className = 'badge badge-green';
             statusBadge.textContent = 'Active';
@@ -225,76 +225,76 @@
         infoDiv.append(badgeWrap);
         frag.append(infoDiv);
 
-        var rolesSection = document.createElement('div');
+        const rolesSection = document.createElement('div');
         rolesSection.className = 'acl-panel-section';
-        var rolesTitle = document.createElement('h3');
+        const rolesTitle = document.createElement('h3');
         rolesTitle.className = 'acl-panel-section-title';
         rolesTitle.textContent = 'Roles';
-        var rolesDesc = document.createElement('p');
+        const rolesDesc = document.createElement('p');
         rolesDesc.className = 'acl-panel-section-desc';
         rolesDesc.textContent = 'Select which roles can access this entity. Empty means accessible to all.';
         rolesSection.append(rolesTitle, rolesDesc);
         if (entity.roles && entity.roles.length) {
             entity.roles.forEach((role) => {
-                var label = document.createElement('label');
+                const label = document.createElement('label');
                 label.className = 'acl-checkbox-row';
-                var input = document.createElement('input');
+                const input = document.createElement('input');
                 input.type = 'checkbox';
                 input.name = 'role';
                 input.value = role.name;
                 if (role.assigned) input.checked = true;
-                var span = document.createElement('span');
+                const span = document.createElement('span');
                 span.className = 'acl-checkbox-label';
                 span.textContent = role.name;
                 label.append(input, span);
                 rolesSection.append(label);
             });
         } else {
-            var noRoles = document.createElement('p');
+            const noRoles = document.createElement('p');
             noRoles.style.cssText = 'color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
             noRoles.textContent = 'No roles defined.';
             rolesSection.append(noRoles);
         }
         frag.append(rolesSection);
 
-        var deptSection = document.createElement('div');
+        const deptSection = document.createElement('div');
         deptSection.className = 'acl-panel-section';
-        var deptTitle = document.createElement('h3');
+        const deptTitle = document.createElement('h3');
         deptTitle.className = 'acl-panel-section-title';
         deptTitle.textContent = 'Departments';
-        var deptDesc = document.createElement('p');
+        const deptDesc = document.createElement('p');
         deptDesc.className = 'acl-panel-section-desc';
         deptDesc.textContent = 'Assign to departments. "Default" means auto-enabled and enforced for all department members.';
         deptSection.append(deptTitle, deptDesc);
         if (entity.departments && entity.departments.length) {
             entity.departments.forEach((dept) => {
-                var row = document.createElement('div');
+                const row = document.createElement('div');
                 row.className = 'acl-dept-row';
-                var label = document.createElement('label');
+                const label = document.createElement('label');
                 label.className = 'acl-checkbox-row';
                 label.style.flex = '1';
-                var input = document.createElement('input');
+                const input = document.createElement('input');
                 input.type = 'checkbox';
                 input.name = 'department';
                 input.value = dept.name;
                 if (dept.assigned) input.checked = true;
-                var span = document.createElement('span');
+                const span = document.createElement('span');
                 span.className = 'acl-checkbox-label';
                 span.textContent = dept.name + ' ';
-                var countSpan = document.createElement('span');
+                const countSpan = document.createElement('span');
                 countSpan.className = 'acl-dept-count';
                 countSpan.textContent = '(' + dept.user_count + ' members)';
                 span.append(countSpan);
                 label.append(input, span);
-                var toggleLabel = document.createElement('label');
+                const toggleLabel = document.createElement('label');
                 toggleLabel.className = 'acl-default-toggle' + (dept.assigned ? '' : ' disabled');
-                var defaultInput = document.createElement('input');
+                const defaultInput = document.createElement('input');
                 defaultInput.type = 'checkbox';
                 defaultInput.name = 'default_included';
                 defaultInput.value = dept.name;
                 if (dept.default_included) defaultInput.checked = true;
                 if (!dept.assigned) defaultInput.disabled = true;
-                var toggleSpan = document.createElement('span');
+                const toggleSpan = document.createElement('span');
                 toggleSpan.className = 'acl-toggle-label';
                 toggleSpan.textContent = 'Default';
                 toggleLabel.append(defaultInput, toggleSpan);
@@ -302,7 +302,7 @@
                 deptSection.append(row);
             });
         } else {
-            var noDepts = document.createElement('p');
+            const noDepts = document.createElement('p');
             noDepts.style.cssText = 'color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
             noDepts.textContent = 'No departments found. Create users with departments first.';
             deptSection.append(noDepts);
@@ -392,28 +392,28 @@
 
         body.replaceChildren();
 
-        var intro = document.createElement('p');
+        const intro = document.createElement('p');
         intro.style.cssText = 'margin-bottom:var(--sp-space-4);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
-        var strong = document.createElement('strong');
+        const strong = document.createElement('strong');
         strong.textContent = count;
         intro.append('Applying to ', strong, ' selected entities. This will replace existing rules.');
         body.append(intro);
 
-        var rolesSection = document.createElement('div');
+        const rolesSection = document.createElement('div');
         rolesSection.className = 'acl-panel-section';
-        var rolesTitle = document.createElement('h3');
+        const rolesTitle = document.createElement('h3');
         rolesTitle.className = 'acl-panel-section-title';
         rolesTitle.textContent = 'Roles';
         rolesSection.append(rolesTitle);
         if (data && data.roles) {
             data.roles.forEach((role) => {
-                var label = document.createElement('label');
+                const label = document.createElement('label');
                 label.className = 'acl-checkbox-row';
-                var input = document.createElement('input');
+                const input = document.createElement('input');
                 input.type = 'checkbox';
                 input.name = 'role';
                 input.value = role.name;
-                var span = document.createElement('span');
+                const span = document.createElement('span');
                 span.className = 'acl-checkbox-label';
                 span.textContent = role.name;
                 label.append(input, span);
@@ -422,39 +422,39 @@
         }
         body.append(rolesSection);
 
-        var deptSection = document.createElement('div');
+        const deptSection = document.createElement('div');
         deptSection.className = 'acl-panel-section';
-        var deptSectionTitle = document.createElement('h3');
+        const deptSectionTitle = document.createElement('h3');
         deptSectionTitle.className = 'acl-panel-section-title';
         deptSectionTitle.textContent = 'Departments';
         deptSection.append(deptSectionTitle);
         if (data && data.departments) {
             data.departments.forEach((dept) => {
-                var row = document.createElement('div');
+                const row = document.createElement('div');
                 row.className = 'acl-dept-row';
-                var label = document.createElement('label');
+                const label = document.createElement('label');
                 label.className = 'acl-checkbox-row';
                 label.style.flex = '1';
-                var input = document.createElement('input');
+                const input = document.createElement('input');
                 input.type = 'checkbox';
                 input.name = 'department';
                 input.value = dept.name;
-                var span = document.createElement('span');
+                const span = document.createElement('span');
                 span.className = 'acl-checkbox-label';
                 span.textContent = dept.name + ' ';
-                var countSpan = document.createElement('span');
+                const countSpan = document.createElement('span');
                 countSpan.className = 'acl-dept-count';
                 countSpan.textContent = '(' + dept.user_count + ' members)';
                 span.append(countSpan);
                 label.append(input, span);
-                var toggleLabel = document.createElement('label');
+                const toggleLabel = document.createElement('label');
                 toggleLabel.className = 'acl-default-toggle disabled';
-                var defaultInput = document.createElement('input');
+                const defaultInput = document.createElement('input');
                 defaultInput.type = 'checkbox';
                 defaultInput.name = 'default_included';
                 defaultInput.value = dept.name;
                 defaultInput.disabled = true;
-                var toggleSpan = document.createElement('span');
+                const toggleSpan = document.createElement('span');
                 toggleSpan.className = 'acl-toggle-label';
                 toggleSpan.textContent = 'Default';
                 toggleLabel.append(defaultInput, toggleSpan);

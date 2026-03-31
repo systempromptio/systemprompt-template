@@ -144,11 +144,11 @@
   };
 
   StatusCardManager.prototype.createStatusItem = function(indicatorClass, text) {
-    var li = document.createElement('li');
+    const li = document.createElement('li');
     li.className = 'status-card__item';
-    var indicator = document.createElement('span');
+    const indicator = document.createElement('span');
     indicator.className = 'status-card__item-indicator' + indicatorClass;
-    var nameSpan = document.createElement('span');
+    const nameSpan = document.createElement('span');
     nameSpan.className = 'status-card__item-name';
     nameSpan.textContent = text;
     li.append(indicator, nameSpan);
@@ -158,7 +158,7 @@
   StatusCardManager.prototype.renderMcpServices = function(data) {
     if (!this.mcpList) return;
 
-    var services = Array.isArray(data) ? data : (data.data || data.servers || data.services || []);
+    const services = Array.isArray(data) ? data : (data.data || data.servers || data.services || []);
 
     if (services.length === 0) {
       this.mcpList.replaceChildren(
@@ -168,32 +168,32 @@
       return;
     }
 
-    var frag = document.createDocumentFragment();
-    var baseUrl = window.location.origin;
-    for (var i = 0; i < services.length; i++) {
-      var service = services[i];
-      var statusClass = this.getStatusClass(service);
-      var name = service.name || service.id || 'Unknown';
-      var scopes = service.oauth_scopes || service.scopes || [];
-      var scopeText = scopes.length ? ' [' + scopes.join(', ') + ']' : '';
-      var endpoint = service.endpoint || '';
-      var fullUrl = endpoint ? baseUrl + endpoint : '';
+    const frag = document.createDocumentFragment();
+    const baseUrl = window.location.origin;
+    for (let i = 0; i < services.length; i++) {
+      const service = services[i];
+      const statusClass = this.getStatusClass(service);
+      const name = service.name || service.id || 'Unknown';
+      const scopes = service.oauth_scopes || service.scopes || [];
+      const scopeText = scopes.length ? ' [' + scopes.join(', ') + ']' : '';
+      const endpoint = service.endpoint || '';
+      const fullUrl = endpoint ? baseUrl + endpoint : '';
 
-      var li = document.createElement('li');
+      const li = document.createElement('li');
       li.className = 'status-card__item';
-      var ind = document.createElement('span');
+      const ind = document.createElement('span');
       ind.className = 'status-card__item-indicator' + statusClass;
-      var nameSpan = document.createElement('span');
+      const nameSpan = document.createElement('span');
       nameSpan.className = 'status-card__item-name';
       nameSpan.textContent = name;
-      var scopeSpan = document.createElement('span');
+      const scopeSpan = document.createElement('span');
       scopeSpan.className = 'status-card__item-scope';
       scopeSpan.textContent = scopeText;
       nameSpan.append(scopeSpan);
       li.append(ind, nameSpan);
 
       if (endpoint) {
-        var btn = document.createElement('button');
+        const btn = document.createElement('button');
         btn.className = 'status-card__connect-btn';
         btn.setAttribute('data-url', fullUrl);
         btn.setAttribute('data-name', name);
@@ -215,7 +215,7 @@
   StatusCardManager.prototype.renderAgents = function(data) {
     if (!this.agentsList) return;
 
-    var agents = Array.isArray(data) ? data : (data.data || data.agents || []);
+    const agents = Array.isArray(data) ? data : (data.data || data.agents || []);
 
     if (agents.length === 0) {
       this.agentsList.replaceChildren(
@@ -225,25 +225,25 @@
       return;
     }
 
-    var frag = document.createDocumentFragment();
-    for (var i = 0; i < agents.length; i++) {
-      var agent = agents[i];
-      var statusClass = this.getStatusClass(agent);
-      var name = agent.name || agent.id || 'Unknown';
-      var scopes = agent.oauth_scopes || agent.scopes || [];
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < agents.length; i++) {
+      const agent = agents[i];
+      const statusClass = this.getStatusClass(agent);
+      const name = agent.name || agent.id || 'Unknown';
+      const scopes = agent.oauth_scopes || agent.scopes || [];
       if (!scopes.length && agent.security && agent.security[0] && agent.security[0].oauth2) {
         scopes = agent.security[0].oauth2;
       }
-      var scopeText = scopes.length ? ' [' + scopes.join(', ') + ']' : '';
+      const scopeText = scopes.length ? ' [' + scopes.join(', ') + ']' : '';
 
-      var li = document.createElement('li');
+      const li = document.createElement('li');
       li.className = 'status-card__item';
-      var ind = document.createElement('span');
+      const ind = document.createElement('span');
       ind.className = 'status-card__item-indicator' + statusClass;
-      var nameSpan = document.createElement('span');
+      const nameSpan = document.createElement('span');
       nameSpan.className = 'status-card__item-name';
       nameSpan.textContent = name;
-      var scopeSpan = document.createElement('span');
+      const scopeSpan = document.createElement('span');
       scopeSpan.className = 'status-card__item-scope';
       scopeSpan.textContent = scopeText;
       nameSpan.append(scopeSpan);
@@ -305,64 +305,64 @@
     const existing = document.getElementById('mcp-connect-modal');
     if (existing) existing.remove();
 
-    var modal = document.createElement('div');
+    const modal = document.createElement('div');
     modal.id = 'mcp-connect-modal';
     modal.className = 'mcp-modal';
 
-    var backdrop = document.createElement('div');
+    const backdrop = document.createElement('div');
     backdrop.className = 'mcp-modal__backdrop';
 
-    var content = document.createElement('div');
+    const content = document.createElement('div');
     content.className = 'mcp-modal__content';
 
-    var closeBtn = document.createElement('button');
+    const closeBtn = document.createElement('button');
     closeBtn.className = 'mcp-modal__close';
     closeBtn.setAttribute('aria-label', 'Close');
     closeBtn.textContent = '\u00d7';
 
-    var title = document.createElement('h3');
+    const title = document.createElement('h3');
     title.className = 'mcp-modal__title';
     title.textContent = 'Connect to ' + name;
 
-    var desc = document.createElement('p');
+    const desc = document.createElement('p');
     desc.className = 'mcp-modal__desc';
     desc.textContent = 'Add this MCP server to your AI coding assistant using HTTP transport.';
 
-    var urlRow = document.createElement('div');
+    const urlRow = document.createElement('div');
     urlRow.className = 'mcp-modal__url-row';
-    var urlCode = document.createElement('code');
+    const urlCode = document.createElement('code');
     urlCode.className = 'mcp-modal__url';
     urlCode.textContent = url;
-    var copyBtn = document.createElement('button');
+    const copyBtn = document.createElement('button');
     copyBtn.className = 'mcp-modal__copy';
     copyBtn.setAttribute('data-url', url);
     copyBtn.textContent = 'Copy';
     urlRow.append(urlCode, copyBtn);
 
-    var instructions = document.createElement('div');
+    const instructions = document.createElement('div');
     instructions.className = 'mcp-modal__instructions';
 
-    var h4Claude = document.createElement('h4');
+    const h4Claude = document.createElement('h4');
     h4Claude.textContent = 'Claude Code';
-    var preClaude = document.createElement('pre');
-    var codeClaude = document.createElement('code');
+    const preClaude = document.createElement('pre');
+    const codeClaude = document.createElement('code');
     codeClaude.textContent = 'claude mcp add ' + name + ' ' + url + ' --transport http';
     preClaude.append(codeClaude);
 
-    var h4Cursor = document.createElement('h4');
+    const h4Cursor = document.createElement('h4');
     h4Cursor.textContent = 'Cursor / VS Code';
-    var pCursor = document.createElement('p');
+    const pCursor = document.createElement('p');
     pCursor.textContent = 'Add to your ';
-    var codeCursor1 = document.createElement('code');
+    const codeCursor1 = document.createElement('code');
     codeCursor1.textContent = '.cursor/mcp.json';
-    var codeCursor2 = document.createElement('code');
+    const codeCursor2 = document.createElement('code');
     codeCursor2.textContent = '.vscode/mcp.json';
     pCursor.append(codeCursor1);
     pCursor.append(document.createTextNode(' or '));
     pCursor.append(codeCursor2);
     pCursor.append(document.createTextNode(':'));
-    var preCursorJson = document.createElement('pre');
-    var codeCursorJson = document.createElement('code');
+    const preCursorJson = document.createElement('pre');
+    const codeCursorJson = document.createElement('code');
     codeCursorJson.textContent = '{\n  "mcpServers": {\n    "' + name + '": {\n      "url": "' + url + '"\n    }\n  }\n}';
     preCursorJson.append(codeCursorJson);
 

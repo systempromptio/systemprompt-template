@@ -16,20 +16,20 @@
     function renderAgentExpand(agentId) {
         const data = getAgentDetail(agentId);
         if (!data) {
-            var noData = document.createElement('p');
+            const noData = document.createElement('p');
             noData.className = 'text-muted';
             noData.textContent = 'No detail data available.';
             return noData;
         }
 
-        var frag = document.createDocumentFragment();
+        const frag = document.createDocumentFragment();
 
         if (data.system_prompt) {
-            var promptSection = document.createElement('div');
+            const promptSection = document.createElement('div');
             promptSection.className = 'detail-section';
-            var promptLabel = document.createElement('strong');
+            const promptLabel = document.createElement('strong');
             promptLabel.textContent = 'System Prompt';
-            var promptPre = document.createElement('pre');
+            const promptPre = document.createElement('pre');
             promptPre.style.cssText = 'margin:var(--sp-space-1) 0;max-height:200px;overflow:auto;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);white-space:pre-wrap;word-break:break-word';
             promptPre.textContent = data.system_prompt;
             promptSection.append(promptLabel, promptPre);
@@ -37,25 +37,25 @@
         }
 
         if (data.port || data.endpoint) {
-            var connSection = document.createElement('div');
+            const connSection = document.createElement('div');
             connSection.className = 'detail-section';
-            var connLabel = document.createElement('strong');
+            const connLabel = document.createElement('strong');
             connLabel.textContent = 'Connection';
-            var connDiv = document.createElement('div');
+            const connDiv = document.createElement('div');
             connDiv.style.cssText = 'margin:var(--sp-space-1) 0;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)';
             if (data.port) {
-                var portRow = document.createElement('div');
+                const portRow = document.createElement('div');
                 portRow.append('Port: ');
-                var portCode = document.createElement('code');
+                const portCode = document.createElement('code');
                 portCode.className = 'code-inline';
                 portCode.textContent = String(data.port);
                 portRow.append(portCode);
                 connDiv.append(portRow);
             }
             if (data.endpoint) {
-                var endpointRow = document.createElement('div');
+                const endpointRow = document.createElement('div');
                 endpointRow.append('Endpoint: ');
-                var endpointCode = document.createElement('code');
+                const endpointCode = document.createElement('code');
                 endpointCode.className = 'code-inline';
                 endpointCode.textContent = data.endpoint;
                 endpointRow.append(endpointCode);
@@ -66,21 +66,21 @@
         }
 
         if ((data.skill_count && data.skill_count > 0) || (data.mcp_count && data.mcp_count > 0)) {
-            var capSection = document.createElement('div');
+            const capSection = document.createElement('div');
             capSection.className = 'detail-section';
-            var capLabel = document.createElement('strong');
+            const capLabel = document.createElement('strong');
             capLabel.textContent = 'Capabilities';
-            var badgeRow = document.createElement('div');
+            const badgeRow = document.createElement('div');
             badgeRow.className = 'badge-row';
             badgeRow.style.marginTop = 'var(--sp-space-1)';
             if (data.skill_count > 0) {
-                var skillBadge = document.createElement('span');
+                const skillBadge = document.createElement('span');
                 skillBadge.className = 'badge badge-green';
                 skillBadge.textContent = data.skill_count + ' skill' + (data.skill_count !== 1 ? 's' : '');
                 badgeRow.append(skillBadge);
             }
             if (data.mcp_count > 0) {
-                var mcpBadge = document.createElement('span');
+                const mcpBadge = document.createElement('span');
                 mcpBadge.className = 'badge badge-yellow';
                 mcpBadge.textContent = data.mcp_count + ' MCP server' + (data.mcp_count !== 1 ? 's' : '');
                 badgeRow.append(mcpBadge);
@@ -89,10 +89,10 @@
             frag.append(capSection);
         }
 
-        var jsonSection = document.createElement('div');
+        const jsonSection = document.createElement('div');
         jsonSection.className = 'detail-section';
-        var details = document.createElement('details');
-        var summary = document.createElement('summary');
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
         summary.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)';
         summary.textContent = 'JSON Config';
         details.append(summary);

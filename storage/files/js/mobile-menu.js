@@ -44,7 +44,7 @@ function initMobileMenu() {
     window._overlayEscapeInit = true;
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        for (var i = window._overlays.length - 1; i >= 0; i--) {
+        for (let i = window._overlays.length - 1; i >= 0; i--) {
           if (window._overlays[i]()) break;
         }
       }

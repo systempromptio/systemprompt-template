@@ -8,7 +8,11 @@
         const container = document.getElementById(containerId);
         if (container) {
             container.removeAttribute('data-loaded');
-            container.innerHTML = '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Refreshing...</div>';
+            container.replaceChildren();
+            const refreshDiv = document.createElement('div');
+            refreshDiv.style.cssText = 'padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
+            refreshDiv.textContent = 'Refreshing...';
+            container.append(refreshDiv);
         }
     });
     app.pluginDetails = { render: () => '' };

@@ -67,13 +67,13 @@
                             if (AdminApp.OrgCommon) {
                                 container.append(AdminApp.OrgCommon.formatJson(data));
                             } else {
-                                var pre = document.createElement('pre');
+                                const pre = document.createElement('pre');
                                 pre.textContent = JSON.stringify(data, null, 2);
                                 container.append(pre);
                             }
                         } catch (err) {
                             container.replaceChildren();
-                            var errP = document.createElement('p');
+                            const errP = document.createElement('p');
                             errP.textContent = 'Error parsing JSON';
                             container.append(errP);
                         }
@@ -154,21 +154,21 @@
             app.shared.closeAllMenus();
             const overlay = document.createElement('div');
             overlay.className = 'confirm-overlay';
-            var pubDialog = document.createElement('div');
+            const pubDialog = document.createElement('div');
             pubDialog.className = 'confirm-dialog';
-            var pubH3 = document.createElement('h3');
+            const pubH3 = document.createElement('h3');
             pubH3.style.margin = '0 0 var(--sp-space-3)';
             pubH3.textContent = 'Publish to GitHub?';
-            var pubP = document.createElement('p');
+            const pubP = document.createElement('p');
             pubP.style.cssText = 'margin:0 0 var(--sp-space-4);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
             pubP.textContent = 'This will push the current marketplace plugins to the linked GitHub repository. Any remote changes will be overwritten.';
-            var pubBtnRow = document.createElement('div');
+            const pubBtnRow = document.createElement('div');
             pubBtnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end';
-            var pubCancelBtn = document.createElement('button');
+            const pubCancelBtn = document.createElement('button');
             pubCancelBtn.className = 'btn btn-secondary';
             pubCancelBtn.setAttribute('data-confirm-cancel', '');
             pubCancelBtn.textContent = 'Cancel';
-            var pubConfirmBtn = document.createElement('button');
+            const pubConfirmBtn = document.createElement('button');
             pubConfirmBtn.className = 'btn btn-primary';
             pubConfirmBtn.setAttribute('data-confirm-publish', '');
             pubConfirmBtn.textContent = 'Publish';
@@ -215,27 +215,27 @@
     function showDeleteConfirm(marketplaceId) {
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
-        var delDialog = document.createElement('div');
+        const delDialog = document.createElement('div');
         delDialog.className = 'confirm-dialog';
-        var delH3 = document.createElement('h3');
+        const delH3 = document.createElement('h3');
         delH3.style.margin = '0 0 var(--sp-space-3)';
         delH3.textContent = 'Delete Marketplace?';
-        var delP1 = document.createElement('p');
+        const delP1 = document.createElement('p');
         delP1.style.cssText = 'margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
         delP1.append(document.createTextNode('You are about to delete '));
-        var delStrong = document.createElement('strong');
+        const delStrong = document.createElement('strong');
         delStrong.textContent = marketplaceId;
         delP1.append(delStrong, document.createTextNode('.'));
-        var delP2 = document.createElement('p');
+        const delP2 = document.createElement('p');
         delP2.style.cssText = 'margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
         delP2.textContent = 'This will remove the marketplace and all plugin associations. This action cannot be undone.';
-        var delBtnRow = document.createElement('div');
+        const delBtnRow = document.createElement('div');
         delBtnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end';
-        var delCancelBtn = document.createElement('button');
+        const delCancelBtn = document.createElement('button');
         delCancelBtn.className = 'btn btn-secondary';
         delCancelBtn.setAttribute('data-confirm-cancel', '');
         delCancelBtn.textContent = 'Cancel';
-        var delConfirmBtn = document.createElement('button');
+        const delConfirmBtn = document.createElement('button');
         delConfirmBtn.className = 'btn btn-danger';
         delConfirmBtn.setAttribute('data-confirm-delete', marketplaceId);
         delConfirmBtn.textContent = 'Delete Marketplace';
@@ -294,26 +294,26 @@
                     const currentIds = {};
                     (mktData.plugin_ids || []).forEach((pid) => { currentIds[pid] = true; });
 
-                    var checklist = document.createElement('div');
+                    const checklist = document.createElement('div');
                     checklist.className = 'assign-panel-checklist';
                     if (!allPlugins.length) {
-                        var noPlugins = document.createElement('p');
+                        const noPlugins = document.createElement('p');
                         noPlugins.style.cssText = 'color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
                         noPlugins.textContent = 'No plugins available.';
                         checklist.append(noPlugins);
                     } else {
                         allPlugins.forEach(function(p) {
-                            var pid = p.id || p.plugin_id;
-                            var pname = p.name || pid;
-                            var label = document.createElement('label');
+                            const pid = p.id || p.plugin_id;
+                            const pname = p.name || pid;
+                            const label = document.createElement('label');
                             label.className = 'acl-checkbox-row';
                             label.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;cursor:pointer';
-                            var cb = document.createElement('input');
+                            const cb = document.createElement('input');
                             cb.type = 'checkbox';
                             cb.name = 'plugin_id';
                             cb.value = pid;
                             if (currentIds[pid]) cb.checked = true;
-                            var nameSpan = document.createElement('span');
+                            const nameSpan = document.createElement('span');
                             nameSpan.textContent = pname;
                             label.append(cb, nameSpan);
                             checklist.append(label);
@@ -321,12 +321,12 @@
                     }
                     panelApi.setBodyDom(checklist);
 
-                    var footerFrag = document.createDocumentFragment();
-                    var panelCancelBtn = document.createElement('button');
+                    const footerFrag = document.createDocumentFragment();
+                    const panelCancelBtn = document.createElement('button');
                     panelCancelBtn.className = 'btn btn-secondary';
                     panelCancelBtn.setAttribute('data-panel-close', '');
                     panelCancelBtn.textContent = 'Cancel';
-                    var panelSaveBtn = document.createElement('button');
+                    const panelSaveBtn = document.createElement('button');
                     panelSaveBtn.className = 'btn btn-primary';
                     panelSaveBtn.id = 'mkt-save-plugins';
                     panelSaveBtn.textContent = 'Save';
@@ -426,13 +426,13 @@
                         }
                     });
 
-                    var form = document.createElement('form');
+                    const form = document.createElement('form');
                     form.id = 'panel-edit-form';
 
                     function makeFormGroup(labelText, inputEl) {
-                        var group = document.createElement('div');
+                        const group = document.createElement('div');
                         group.className = 'form-group';
-                        var lbl = document.createElement('label');
+                        const lbl = document.createElement('label');
                         lbl.className = 'field-label';
                         lbl.textContent = labelText;
                         group.append(lbl, inputEl);
@@ -440,7 +440,7 @@
                     }
 
                     if (!isEdit) {
-                        var idInput = document.createElement('input');
+                        const idInput = document.createElement('input');
                         idInput.type = 'text';
                         idInput.className = 'field-input';
                         idInput.name = 'marketplace_id';
@@ -449,7 +449,7 @@
                         form.append(makeFormGroup('Marketplace ID', idInput));
                     }
 
-                    var nameInput = document.createElement('input');
+                    const nameInput = document.createElement('input');
                     nameInput.type = 'text';
                     nameInput.className = 'field-input';
                     nameInput.name = 'name';
@@ -457,42 +457,42 @@
                     nameInput.value = mktData.name || '';
                     form.append(makeFormGroup('Name', nameInput));
 
-                    var descTextarea = document.createElement('textarea');
+                    const descTextarea = document.createElement('textarea');
                     descTextarea.className = 'field-input';
                     descTextarea.name = 'description';
                     descTextarea.rows = 3;
                     descTextarea.textContent = mktData.description || '';
                     form.append(makeFormGroup('Description', descTextarea));
 
-                    var ghGroup = document.createElement('div');
+                    const ghGroup = document.createElement('div');
                     ghGroup.className = 'form-group';
-                    var ghLabel = document.createElement('label');
+                    const ghLabel = document.createElement('label');
                     ghLabel.className = 'field-label';
                     ghLabel.textContent = 'GitHub Repository URL';
-                    var ghInput = document.createElement('input');
+                    const ghInput = document.createElement('input');
                     ghInput.type = 'url';
                     ghInput.className = 'field-input';
                     ghInput.name = 'github_repo_url';
                     ghInput.placeholder = 'https://github.com/org/repo';
                     ghInput.value = mktData.github_repo_url || '';
-                    var ghHint = document.createElement('span');
+                    const ghHint = document.createElement('span');
                     ghHint.className = 'field-hint';
                     ghHint.textContent = 'Link to a GitHub repository to enable sync/publish';
                     ghGroup.append(ghLabel, ghInput, ghHint);
                     form.append(ghGroup);
 
-                    var rolesGroup = document.createElement('div');
+                    const rolesGroup = document.createElement('div');
                     rolesGroup.className = 'form-group';
-                    var rolesLabel = document.createElement('label');
+                    const rolesLabel = document.createElement('label');
                     rolesLabel.className = 'field-label';
                     rolesLabel.textContent = 'Roles';
-                    var rolesWrap = document.createElement('div');
+                    const rolesWrap = document.createElement('div');
                     rolesWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:var(--sp-space-1);padding:var(--sp-space-2) 0';
                     allRoles.forEach(function(r) {
-                        var val = r.value || r;
-                        var rLabel = document.createElement('label');
+                        const val = r.value || r;
+                        const rLabel = document.createElement('label');
                         rLabel.style.cssText = 'display:inline-flex;align-items:center;gap:var(--sp-space-2);margin-right:var(--sp-space-3);font-size:var(--sp-text-sm);cursor:pointer';
-                        var rCb = document.createElement('input');
+                        const rCb = document.createElement('input');
                         rCb.type = 'checkbox';
                         rCb.name = 'roles';
                         rCb.value = val;
@@ -503,22 +503,22 @@
                     rolesGroup.append(rolesLabel, rolesWrap);
                     form.append(rolesGroup);
 
-                    var deptGroup = document.createElement('div');
+                    const deptGroup = document.createElement('div');
                     deptGroup.className = 'form-group';
-                    var deptLabel = document.createElement('label');
+                    const deptLabel = document.createElement('label');
                     deptLabel.className = 'field-label';
                     deptLabel.textContent = 'Departments';
-                    var deptContainer = document.createElement('div');
+                    const deptContainer = document.createElement('div');
                     deptContainer.className = 'checklist-container';
                     deptContainer.style.cssText = 'max-height:300px;overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)';
 
-                    var checkAllItem = document.createElement('div');
+                    const checkAllItem = document.createElement('div');
                     checkAllItem.className = 'checklist-item';
                     checkAllItem.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2);border-bottom:1px solid var(--sp-border-subtle)';
-                    var checkAllCb = document.createElement('input');
+                    const checkAllCb = document.createElement('input');
                     checkAllCb.type = 'checkbox';
                     checkAllCb.id = 'panel-dept-check-all';
-                    var checkAllLabel = document.createElement('label');
+                    const checkAllLabel = document.createElement('label');
                     checkAllLabel.htmlFor = 'panel-dept-check-all';
                     checkAllLabel.style.cssText = 'flex:1;font-size:var(--sp-text-sm);cursor:pointer;color:var(--sp-text-primary);font-weight:600';
                     checkAllLabel.textContent = 'Check all';
@@ -526,27 +526,27 @@
                     deptContainer.append(checkAllItem);
 
                     allDepts.forEach(function(d, i) {
-                        var val = d.value || d.name || d;
-                        var dItem = document.createElement('div');
+                        const val = d.value || d.name || d;
+                        const dItem = document.createElement('div');
                         dItem.className = 'checklist-item';
                         dItem.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2)';
-                        var dCb = document.createElement('input');
+                        const dCb = document.createElement('input');
                         dCb.type = 'checkbox';
                         dCb.name = 'departments';
                         dCb.value = val;
                         if (currentDepts[val]) dCb.checked = true;
                         dCb.id = 'panel-dept-' + i;
-                        var dLabel = document.createElement('label');
+                        const dLabel = document.createElement('label');
                         dLabel.htmlFor = 'panel-dept-' + i;
                         dLabel.style.cssText = 'flex:1;font-size:var(--sp-text-sm);cursor:pointer;color:var(--sp-text-primary)';
                         dLabel.textContent = val;
-                        var countBadge = document.createElement('span');
+                        const countBadge = document.createElement('span');
                         countBadge.className = 'badge badge-gray';
                         countBadge.style.fontSize = 'var(--sp-text-xs)';
                         countBadge.textContent = (d.user_count || 0) + ' users';
-                        var defaultLabel = document.createElement('label');
+                        const defaultLabel = document.createElement('label');
                         defaultLabel.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:var(--sp-text-xs);color:var(--sp-text-secondary);cursor:pointer;white-space:nowrap';
-                        var defaultCb = document.createElement('input');
+                        const defaultCb = document.createElement('input');
                         defaultCb.type = 'checkbox';
                         defaultCb.name = 'dept_default_' + val;
                         if (deptDefaults[val]) defaultCb.checked = true;
@@ -555,40 +555,40 @@
                         deptContainer.append(dItem);
                     });
 
-                    var deptHint = document.createElement('span');
+                    const deptHint = document.createElement('span');
                     deptHint.className = 'field-hint';
                     deptHint.style.cssText = 'margin-top:var(--sp-space-2);display:block';
                     deptHint.textContent = 'At least one department is required.';
                     deptGroup.append(deptLabel, deptContainer, deptHint);
                     form.append(deptGroup);
 
-                    var pluginGroup = document.createElement('div');
+                    const pluginGroup = document.createElement('div');
                     pluginGroup.className = 'form-group';
-                    var pluginLabel = document.createElement('label');
+                    const pluginLabel = document.createElement('label');
                     pluginLabel.className = 'field-label';
                     pluginLabel.textContent = 'Plugins';
-                    var pluginFilterInput = document.createElement('input');
+                    const pluginFilterInput = document.createElement('input');
                     pluginFilterInput.type = 'text';
                     pluginFilterInput.className = 'field-input';
                     pluginFilterInput.placeholder = 'Filter plugins...';
                     pluginFilterInput.id = 'panel-plugin-filter';
                     pluginFilterInput.style.marginBottom = 'var(--sp-space-2)';
-                    var pluginContainer = document.createElement('div');
+                    const pluginContainer = document.createElement('div');
                     pluginContainer.className = 'checklist-container';
                     pluginContainer.style.cssText = 'max-height:200px;overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)';
                     allPlugins.forEach(function(p, i) {
-                        var pid = p.id || p.plugin_id;
-                        var pname = p.name || pid;
-                        var pItem = document.createElement('div');
+                        const pid = p.id || p.plugin_id;
+                        const pname = p.name || pid;
+                        const pItem = document.createElement('div');
                         pItem.className = 'checklist-item';
                         pItem.setAttribute('data-item-name', pname.toLowerCase());
-                        var pCb = document.createElement('input');
+                        const pCb = document.createElement('input');
                         pCb.type = 'checkbox';
                         pCb.name = 'plugin_ids';
                         pCb.value = pid;
                         if (currentPluginIds[pid]) pCb.checked = true;
                         pCb.id = 'panel-plugin-' + i;
-                        var pLabel = document.createElement('label');
+                        const pLabel = document.createElement('label');
                         pLabel.htmlFor = 'panel-plugin-' + i;
                         pLabel.textContent = pname;
                         pItem.append(pCb, pLabel);
@@ -599,20 +599,20 @@
 
                     panelApi.setBodyDom(form);
 
-                    var editFooter = document.createDocumentFragment();
+                    const editFooter = document.createDocumentFragment();
                     if (isEdit) {
-                        var editDelBtn = document.createElement('button');
+                        const editDelBtn = document.createElement('button');
                         editDelBtn.className = 'btn btn-danger';
                         editDelBtn.id = 'mkt-edit-delete';
                         editDelBtn.style.marginRight = 'auto';
                         editDelBtn.textContent = 'Delete';
                         editFooter.append(editDelBtn, document.createTextNode(' '));
                     }
-                    var editCancelBtn = document.createElement('button');
+                    const editCancelBtn = document.createElement('button');
                     editCancelBtn.className = 'btn btn-secondary';
                     editCancelBtn.setAttribute('data-panel-close', '');
                     editCancelBtn.textContent = 'Cancel';
-                    var editSaveBtn = document.createElement('button');
+                    const editSaveBtn = document.createElement('button');
                     editSaveBtn.className = 'btn btn-primary';
                     editSaveBtn.id = 'mkt-edit-save';
                     editSaveBtn.textContent = isEdit ? 'Save Changes' : 'Create Marketplace';

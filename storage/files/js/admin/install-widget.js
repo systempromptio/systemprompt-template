@@ -24,9 +24,9 @@
     app.events.on('click', '[data-copy]', (e, copyBtn) => {
         const text = copyBtn.getAttribute('data-copy');
         navigator.clipboard.writeText(text).then(() => {
-            var savedNodes = Array.from(copyBtn.childNodes).map((n) => n.cloneNode(true));
+            const savedNodes = Array.from(copyBtn.childNodes).map((n) => n.cloneNode(true));
             copyBtn.replaceChildren();
-            var checkSpan = document.createElement('span');
+            const checkSpan = document.createElement('span');
             checkSpan.style.cssText = 'color:var(--sp-success);font-size:16px';
             checkSpan.textContent = '\u2713';
             copyBtn.append(checkSpan);

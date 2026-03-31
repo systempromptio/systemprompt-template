@@ -518,6 +518,8 @@
 (function(app) {
     'use strict';
 
+    const mktFetch = (url, opts = {}) => fetch(url, { credentials: 'include', ...opts });
+
     app.initOrgMarketplaces = function() {
         const searchInput = document.getElementById('mkt-search');
         const deptFilter = document.getElementById('mkt-dept-filter');
@@ -632,9 +634,8 @@
             const origText = btn.textContent;
             btn.textContent = 'Syncing...';
             app.shared.closeAllMenus();
-            fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/sync', {
-                method: 'POST',
-                credentials: 'include'
+            mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/sync', {
+                method: 'POST'
             })
             .then(function(resp) { return resp.json().then(function(data) { return { ok: resp.ok, data: data }; }); })
             .then(function(result) {
@@ -679,9 +680,8 @@
                 if (pubBtn) {
                     pubBtn.disabled = true;
                     pubBtn.textContent = 'Publishing...';
-                    fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/publish', {
-                        method: 'POST',
-                        credentials: 'include'
+                    mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/publish', {
+                        method: 'POST'
                     })
                     .then(function(resp) { return resp.json().then(function(data) { return { ok: resp.ok, data: data }; }); })
                     .then(function(result) {
@@ -732,9 +732,8 @@
                 confirmBtn.disabled = true;
                 confirmBtn.textContent = 'Deleting...';
                 try {
-                    const resp = await fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id), {
-                        method: 'DELETE',
-                        credentials: 'include'
+                    const resp = await mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id), {
+                        method: 'DELETE'
                     });
                     if (resp.ok) {
                         app.Toast.show('Marketplace deleted', 'success');
@@ -766,7 +765,7 @@
 
             panelApi.setTitle('Manage Plugins - ' + (mktData.name || id));
 
-            fetch(app.API_BASE + '/plugins', { credentials: 'include' })
+            mktFetch(app.API_BASE + '/plugins')
                 .then(function(r) { return r.json(); })
                 .then(function(allPlugins) {
                     const currentIds = {};
@@ -808,9 +807,8 @@
                             saveBtn.disabled = true;
                             saveBtn.textContent = 'Saving...';
                             try {
-                                const resp = await fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/plugins', {
+                                const resp = await mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/plugins', {
                                     method: 'PUT',
-                                    credentials: 'include',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ plugin_ids: ids })
                                 });
@@ -867,7 +865,7 @@
 
             panelApi.setTitle(isEdit ? 'Edit Marketplace' : 'Create Marketplace');
 
-            fetch(app.API_BASE + '/plugins', { credentials: 'include' })
+            mktFetch(app.API_BASE + '/plugins')
                 .then(function(r) { return r.json(); })
                 .then(function(allPlugins) {
                     const currentPluginIds = {};
@@ -1091,16 +1089,14 @@
                     github_repo_url: githubUrl || null,
                     plugin_ids: pluginIds
                 };
-                const resp = await fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(marketplaceId), {
+                const resp = await mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(marketplaceId), {
                     method: 'PUT',
-                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 });
                 if (resp.ok) {
-                    await fetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(marketplaceId), {
+                    await mktFetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(marketplaceId), {
                         method: 'PUT',
-                        credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ rules: aclRules, sync_yaml: false })
                     });
@@ -1119,9 +1115,8 @@
                     github_repo_url: githubUrl || null,
                     plugin_ids: pluginIds
                 };
-                const resp = await fetch(app.API_BASE + '/org/marketplaces', {
+                const resp = await mktFetch(app.API_BASE + '/org/marketplaces', {
                     method: 'POST',
-                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 });
@@ -1129,9 +1124,8 @@
                     const created = await resp.json().catch(function() { return {}; });
                     const createdId = created.id || body.id;
                     if (aclRules.length > 0 && createdId) {
-                        await fetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
+                        await mktFetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
                             method: 'PUT',
-                            credentials: 'include',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ rules: aclRules, sync_yaml: false })
                         });
@@ -1217,16 +1211,14 @@
                 };
 
                 try {
-                    const resp = await fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id), {
+                    const resp = await mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id), {
                         method: 'PUT',
-                        credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(body)
                     });
                     if (resp.ok) {
-                        await fetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(id), {
+                        await mktFetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(id), {
                             method: 'PUT',
-                            credentials: 'include',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ rules: aclRules, sync_yaml: false })
                         });
@@ -1249,9 +1241,8 @@
                 };
 
                 try {
-                    const resp = await fetch(app.API_BASE + '/org/marketplaces', {
+                    const resp = await mktFetch(app.API_BASE + '/org/marketplaces', {
                         method: 'POST',
-                        credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(body)
                     });
@@ -1259,9 +1250,8 @@
                         const created = await resp.json().catch(function() { return {}; });
                         const createdId = created.id || body.id;
                         if (aclRules.length > 0 && createdId) {
-                            await fetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
+                            await mktFetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
                                 method: 'PUT',
-                                credentials: 'include',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ rules: aclRules, sync_yaml: false })
                             });

@@ -39,9 +39,16 @@
                 if (script) {
                     try {
                         const data = JSON.parse(script.textContent);
-                        container.innerHTML = OrgCommon.formatJson(data);
+                        container.replaceChildren();
+                        const formatted = document.createElement('div');
+                        formatted.innerHTML = OrgCommon.formatJson(data);
+                        container.append(...formatted.childNodes);
                     } catch (err) {
-                        container.innerHTML = '<span class="text-muted">Failed to parse JSON</span>';
+                        container.replaceChildren();
+                        const span = document.createElement('span');
+                        span.className = 'text-muted';
+                        span.textContent = 'Failed to parse JSON';
+                        container.append(span);
                     }
                 }
                 container.style.display = 'block';

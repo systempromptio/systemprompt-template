@@ -1,7 +1,6 @@
 (function(app) {
     'use strict';
 
-    const escapeHtml = app.escapeHtml;
     const CATEGORY_ICONS = {
         'First Steps': '\u26A1',
         'Milestones': '\uD83D\uDCCA',
@@ -22,43 +21,89 @@
     }
     function renderAchievementCard(a) {
         const unlocked = a.total_unlocked > 0;
-        const cls = unlocked ? 'achievement-card unlocked' : 'achievement-card locked';
+        const card = document.createElement('div');
+        card.className = unlocked ? 'achievement-card unlocked' : 'achievement-card locked';
         const pct = unlocked ? 100 : (a.unlock_percentage || 0);
         const icon = CATEGORY_ICONS[a.category] || '\u2B50';
-        const bar = '<div class="unlock-bar"><div class="unlock-bar-fill" style="width:' + pct + '%"></div></div>';
-        return '<div class="' + cls + '">' +
-            '<div class="achievement-icon">' + icon + '</div>' +
-            '<div style="font-weight:600;font-size:var(--sp-text-sm);color:var(--sp-text-primary)">' + escapeHtml(a.name) + '</div>' +
-            '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:var(--sp-space-1)">' + escapeHtml(a.description) + '</div>' +
-            '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:var(--sp-space-1)">' + a.total_unlocked + ' unlocked</div>' +
-            bar +
-        '</div>';
+
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'achievement-icon';
+        iconDiv.textContent = icon;
+
+        const nameDiv = document.createElement('div');
+        nameDiv.style.cssText = 'font-weight:600;font-size:var(--sp-text-sm);color:var(--sp-text-primary)';
+        nameDiv.textContent = a.name;
+
+        const descDiv = document.createElement('div');
+        descDiv.style.cssText = 'font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:var(--sp-space-1)';
+        descDiv.textContent = a.description;
+
+        const countDiv = document.createElement('div');
+        countDiv.style.cssText = 'font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:var(--sp-space-1)';
+        countDiv.textContent = a.total_unlocked + ' unlocked';
+
+        const bar = document.createElement('div');
+        bar.className = 'unlock-bar';
+        const barFill = document.createElement('div');
+        barFill.className = 'unlock-bar-fill';
+        barFill.style.width = pct + '%';
+        bar.append(barFill);
+
+        card.append(iconDiv, nameDiv, descDiv, countDiv, bar);
+        return card;
     }
-    function renderAchievementsContent(data) {
+    function renderAchievementsContent(data, root) {
         const items = Array.isArray(data) ? data : (data.achievements || []);
+        root.replaceChildren();
         if (!items.length) {
-            return '<div class="empty-state"><p>No achievements defined.</p></div>';
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            const p = document.createElement('p');
+            p.textContent = 'No achievements defined.';
+            empty.append(p);
+            root.append(empty);
+            return;
         }
         const groups = groupByCategory(items);
         const categories = Object.keys(groups);
-        let html = '';
         categories.forEach((cat) => {
-            const cards = groups[cat].map(renderAchievementCard).join('');
-            html += '<div style="margin-bottom:var(--sp-space-6)">' +
-                '<div class="section-title">' + escapeHtml(cat) + '</div>' +
-                '<div class="achievement-grid">' + cards + '</div>' +
-            '</div>';
+            const section = document.createElement('div');
+            section.style.marginBottom = 'var(--sp-space-6)';
+
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.textContent = cat;
+
+            const grid = document.createElement('div');
+            grid.className = 'achievement-grid';
+            groups[cat].forEach((a) => {
+                grid.append(renderAchievementCard(a));
+            });
+
+            section.append(title, grid);
+            root.append(section);
         });
-        return html;
     }
     app.renderAchievements = () => {
         const root = document.getElementById('achievements-content');
         if (!root) return;
-        root.innerHTML = '<div class="loading-center"><div class="loading-spinner"></div></div>';
+        root.replaceChildren();
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'loading-center';
+        const spinner = document.createElement('div');
+        spinner.className = 'loading-spinner';
+        loadingDiv.append(spinner);
+        root.append(loadingDiv);
         app.api('/gamification/achievements').then((data) => {
-            root.innerHTML = renderAchievementsContent(data);
+            renderAchievementsContent(data, root);
         }).catch((err) => {
-            root.innerHTML = '<div class="empty-state"><p>Failed to load achievements.</p></div>';
+            root.replaceChildren();
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            const p = document.createElement('p');
+            p.textContent = 'Failed to load achievements.';
+            empty.append(p);
+            root.append(empty);
             app.Toast.show(err.message || 'Failed to load achievements', 'error');
         });
     };

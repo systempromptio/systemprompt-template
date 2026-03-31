@@ -61,24 +61,24 @@
 
             portal.replaceChildren();
 
-            var editBtn = document.createElement('button');
+            const editBtn = document.createElement('button');
             editBtn.className = 'actions-popup-item';
             editBtn.setAttribute('data-action', 'edit');
             editBtn.setAttribute('data-user-id', userId);
-            var editIcon = document.createElement('span');
+            const editIcon = document.createElement('span');
             editIcon.className = 'popup-icon';
             editIcon.textContent = '\u270E';
             editBtn.append(editIcon, document.createTextNode(' Edit User'));
 
-            var separator = document.createElement('div');
+            const separator = document.createElement('div');
             separator.className = 'actions-popup-separator';
 
-            var toggleBtn = document.createElement('button');
+            const toggleBtn = document.createElement('button');
             toggleBtn.className = 'actions-popup-item' + toggleClass;
             toggleBtn.setAttribute('data-action', 'toggle');
             toggleBtn.setAttribute('data-user-id', userId);
             toggleBtn.setAttribute('data-is-active', String(isActive));
-            var toggleIcon = document.createElement('span');
+            const toggleIcon = document.createElement('span');
             toggleIcon.className = 'popup-icon';
             toggleIcon.textContent = isActive ? '\u2716' : '\u2714';
             toggleBtn.append(toggleIcon, document.createTextNode(' ' + toggleLabel));

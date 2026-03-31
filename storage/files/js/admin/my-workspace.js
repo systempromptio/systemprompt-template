@@ -84,7 +84,7 @@
                     const body = panel.querySelector('[data-panel-body]');
                     if (!body) return;
                     body.replaceChildren();
-                    var p = document.createElement('p');
+                    const p = document.createElement('p');
                     p.style.cssText = 'color:var(--sp-text-tertiary);text-align:center;padding:var(--sp-space-4)';
                     p.textContent = text;
                     body.append(p);
@@ -227,17 +227,17 @@
                                 return;
                             }
 
-                            var checklist = document.createElement('div');
+                            const checklist = document.createElement('div');
                             checklist.className = 'add-checklist';
                             items.forEach((item) => {
-                                var label = document.createElement('label');
+                                const label = document.createElement('label');
                                 label.className = 'acl-checkbox-row';
-                                var input = document.createElement('input');
+                                const input = document.createElement('input');
                                 input.type = 'checkbox';
                                 input.name = 'fork_id';
                                 input.value = item.id;
                                 if (item.already_forked) input.disabled = true;
-                                var span = document.createElement('span');
+                                const span = document.createElement('span');
                                 span.className = 'acl-checkbox-label';
                                 span.textContent = (item.name || item.id) + (item.already_forked ? ' (already forked)' : '');
                                 label.append(input, span);
@@ -245,12 +245,12 @@
                             });
                             panelApi.setBodyDom(checklist);
 
-                            var footerFrag = document.createDocumentFragment();
-                            var cancelBtn = document.createElement('button');
+                            const footerFrag = document.createDocumentFragment();
+                            const cancelBtn = document.createElement('button');
                             cancelBtn.className = 'btn btn-secondary';
                             cancelBtn.setAttribute('data-panel-close', '');
                             cancelBtn.textContent = 'Cancel';
-                            var saveBtn = document.createElement('button');
+                            const saveBtn = document.createElement('button');
                             saveBtn.className = 'btn btn-primary';
                             saveBtn.setAttribute('data-fork-save', '');
                             saveBtn.textContent = 'Fork Selected';
@@ -296,7 +296,7 @@
                             });
                         })
                         .catch(() => {
-                            var errP = document.createElement('p');
+                            const errP = document.createElement('p');
                             errP.style.cssText = 'color:var(--sp-danger);text-align:center;padding:var(--sp-space-4)';
                             errP.textContent = 'Failed to load forkable entities.';
                             panelApi.setBodyDom(errP);
@@ -310,24 +310,24 @@
         formatJson: (data) => {
             if (typeof data === 'string') {
                 try { data = JSON.parse(data); } catch (e) {
-                    var span = document.createElement('span');
+                    const span = document.createElement('span');
                     span.textContent = data;
                     return span;
                 }
             }
-            var pre = document.createElement('pre');
+            const pre = document.createElement('pre');
             pre.className = 'json-view';
             pre.textContent = JSON.stringify(data, null, 2);
             return pre;
         },
 
         renderSourceBadge: (baseId) => {
-            var container = document.createElement('span');
-            var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            const container = document.createElement('span');
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('class', 'fork-icon');
             svg.setAttribute('viewBox', '0 0 16 16');
             svg.setAttribute('fill', 'currentColor');
-            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             if (baseId) {
                 container.className = 'fork-indicator forked';
                 path.setAttribute('d', 'M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878z');

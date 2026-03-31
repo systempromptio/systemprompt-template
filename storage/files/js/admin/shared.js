@@ -94,7 +94,6 @@
             const trig = installMenu.querySelector('.install-trigger');
             if (trig) trig.setAttribute('aria-expanded', 'false');
         }
-        // Close admin sidebar (registered by sidebar-toggle.js)
         if (app._closeSidebar) {
             app._closeSidebar();
         }
@@ -110,19 +109,19 @@
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         if (opts && opts.id) overlay.id = opts.id;
-        var dialog = document.createElement('div');
+        const dialog = document.createElement('div');
         dialog.className = 'confirm-dialog';
-        var h3 = document.createElement('h3');
+        const h3 = document.createElement('h3');
         h3.textContent = title;
-        var p = document.createElement('p');
+        const p = document.createElement('p');
         p.textContent = message;
-        var btnRow = document.createElement('div');
+        const btnRow = document.createElement('div');
         btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)';
-        var cancelBtn = document.createElement('button');
+        const cancelBtn = document.createElement('button');
         cancelBtn.className = 'btn btn-secondary';
         cancelBtn.setAttribute('data-action', 'cancel');
         cancelBtn.textContent = 'Cancel';
-        var confirmBtn = document.createElement('button');
+        const confirmBtn = document.createElement('button');
         confirmBtn.className = 'btn ' + btnClass;
         confirmBtn.setAttribute('data-action', 'confirm');
         confirmBtn.textContent = confirmLabel;
@@ -145,19 +144,19 @@
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.id = 'delete-confirm';
-        var dialog = document.createElement('div');
+        const dialog = document.createElement('div');
         dialog.className = 'confirm-dialog';
-        var h3 = document.createElement('h3');
+        const h3 = document.createElement('h3');
         h3.textContent = title;
-        var p = document.createElement('p');
+        const p = document.createElement('p');
         p.textContent = 'This action cannot be undone.';
-        var btnRow = document.createElement('div');
+        const btnRow = document.createElement('div');
         btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)';
-        var cancelBtn = document.createElement('button');
+        const cancelBtn = document.createElement('button');
         cancelBtn.className = 'btn btn-secondary';
         cancelBtn.setAttribute('data-confirm-cancel', '');
         cancelBtn.textContent = 'Cancel';
-        var deleteBtn = document.createElement('button');
+        const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
         deleteBtn.setAttribute('data-confirm-delete', itemId);
         deleteBtn.textContent = 'Delete';
@@ -197,11 +196,11 @@
 
     function showLoading(el, msg) {
         el.replaceChildren();
-        var wrapper = document.createElement('div');
+        const wrapper = document.createElement('div');
         wrapper.className = 'loading-spinner';
-        var spinner = document.createElement('div');
+        const spinner = document.createElement('div');
         spinner.className = 'spinner';
-        var p = document.createElement('p');
+        const p = document.createElement('p');
         p.textContent = msg || 'Loading...';
         wrapper.append(spinner, p);
         el.append(wrapper);
@@ -209,9 +208,9 @@
 
     function showEmpty(el, msg) {
         el.replaceChildren();
-        var wrapper = document.createElement('div');
+        const wrapper = document.createElement('div');
         wrapper.className = 'empty-state';
-        var p = document.createElement('p');
+        const p = document.createElement('p');
         p.textContent = msg;
         wrapper.append(p);
         el.append(wrapper);

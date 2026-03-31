@@ -192,14 +192,14 @@
     }
 
     function createRoleCheckbox(role) {
-        var label = document.createElement('label');
+        const label = document.createElement('label');
         label.className = 'acl-checkbox-row';
-        var input = document.createElement('input');
+        const input = document.createElement('input');
         input.type = 'checkbox';
         input.name = 'role';
         input.value = role.name;
         if (role.assigned) input.checked = true;
-        var span = document.createElement('span');
+        const span = document.createElement('span');
         span.className = 'acl-checkbox-label';
         span.textContent = role.name;
         label.append(input, span);
@@ -207,35 +207,35 @@
     }
 
     function createDeptRow(dept) {
-        var row = document.createElement('div');
+        const row = document.createElement('div');
         row.className = 'acl-dept-row';
 
-        var label = document.createElement('label');
+        const label = document.createElement('label');
         label.className = 'acl-checkbox-row';
         label.style.flex = '1';
-        var input = document.createElement('input');
+        const input = document.createElement('input');
         input.type = 'checkbox';
         input.name = 'department';
         input.value = dept.name;
         if (dept.assigned) input.checked = true;
-        var span = document.createElement('span');
+        const span = document.createElement('span');
         span.className = 'acl-checkbox-label';
         span.textContent = dept.name + ' ';
-        var countSpan = document.createElement('span');
+        const countSpan = document.createElement('span');
         countSpan.className = 'acl-dept-count';
         countSpan.textContent = '(' + dept.user_count + ' members)';
         span.append(countSpan);
         label.append(input, span);
 
-        var toggleLabel = document.createElement('label');
+        const toggleLabel = document.createElement('label');
         toggleLabel.className = 'acl-default-toggle' + (dept.assigned ? '' : ' disabled');
-        var defaultInput = document.createElement('input');
+        const defaultInput = document.createElement('input');
         defaultInput.type = 'checkbox';
         defaultInput.name = 'default_included';
         defaultInput.value = dept.name;
         if (dept.default_included) defaultInput.checked = true;
         if (!dept.assigned) defaultInput.disabled = true;
-        var toggleSpan = document.createElement('span');
+        const toggleSpan = document.createElement('span');
         toggleSpan.className = 'acl-toggle-label';
         toggleSpan.textContent = 'Default';
         toggleLabel.append(defaultInput, toggleSpan);
@@ -245,40 +245,40 @@
     }
 
     function buildPanelContent(entity, entityType) {
-        var frag = document.createDocumentFragment();
+        const frag = document.createDocumentFragment();
 
-        var info = document.createElement('div');
+        const info = document.createElement('div');
         info.className = 'acl-entity-info';
-        var primary = document.createElement('div');
+        const primary = document.createElement('div');
         primary.className = 'cell-primary';
         primary.textContent = entity.name || entity.id;
         info.append(primary);
         if (entity.description) {
-            var secondary = document.createElement('div');
+            const secondary = document.createElement('div');
             secondary.className = 'cell-secondary';
             secondary.textContent = entity.description;
             info.append(secondary);
         }
-        var badgeRow = document.createElement('div');
+        const badgeRow = document.createElement('div');
         badgeRow.style.marginTop = 'var(--sp-space-2)';
-        var typeBadge = document.createElement('span');
+        const typeBadge = document.createElement('span');
         typeBadge.className = 'badge badge-blue';
         typeBadge.textContent = entityType.replace('_', ' ');
         badgeRow.append(typeBadge);
         badgeRow.append(document.createTextNode(' '));
-        var statusBadge = document.createElement('span');
+        const statusBadge = document.createElement('span');
         statusBadge.className = entity.enabled ? 'badge badge-green' : 'badge badge-gray';
         statusBadge.textContent = entity.enabled ? 'Active' : 'Disabled';
         badgeRow.append(statusBadge);
         info.append(badgeRow);
         frag.append(info);
 
-        var rolesSection = document.createElement('div');
+        const rolesSection = document.createElement('div');
         rolesSection.className = 'acl-panel-section';
-        var rolesTitle = document.createElement('h3');
+        const rolesTitle = document.createElement('h3');
         rolesTitle.className = 'acl-panel-section-title';
         rolesTitle.textContent = 'Roles';
-        var rolesDesc = document.createElement('p');
+        const rolesDesc = document.createElement('p');
         rolesDesc.className = 'acl-panel-section-desc';
         rolesDesc.textContent = 'Select which roles can access this entity. Empty means accessible to all.';
         rolesSection.append(rolesTitle, rolesDesc);
@@ -287,19 +287,19 @@
                 rolesSection.append(createRoleCheckbox(role));
             });
         } else {
-            var noRoles = document.createElement('p');
+            const noRoles = document.createElement('p');
             noRoles.style.cssText = 'color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
             noRoles.textContent = 'No roles defined.';
             rolesSection.append(noRoles);
         }
         frag.append(rolesSection);
 
-        var deptSection = document.createElement('div');
+        const deptSection = document.createElement('div');
         deptSection.className = 'acl-panel-section';
-        var deptTitle = document.createElement('h3');
+        const deptTitle = document.createElement('h3');
         deptTitle.className = 'acl-panel-section-title';
         deptTitle.textContent = 'Departments';
-        var deptDesc = document.createElement('p');
+        const deptDesc = document.createElement('p');
         deptDesc.className = 'acl-panel-section-desc';
         deptDesc.textContent = 'Assign to departments. "Default" means auto-enabled and enforced for all department members.';
         deptSection.append(deptTitle, deptDesc);
@@ -308,7 +308,7 @@
                 deptSection.append(createDeptRow(dept));
             });
         } else {
-            var noDepts = document.createElement('p');
+            const noDepts = document.createElement('p');
             noDepts.style.cssText = 'color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
             noDepts.textContent = 'No departments found. Create users with departments first.';
             deptSection.append(noDepts);
@@ -396,20 +396,20 @@
         const body = document.getElementById('acl-bulk-body');
         if (!body) return;
 
-        var frag = document.createDocumentFragment();
+        const frag = document.createDocumentFragment();
 
-        var intro = document.createElement('p');
+        const intro = document.createElement('p');
         intro.style.cssText = 'margin-bottom:var(--sp-space-4);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
-        var introStrong = document.createElement('strong');
+        const introStrong = document.createElement('strong');
         introStrong.textContent = count;
         intro.append(document.createTextNode('Applying to '));
         intro.append(introStrong);
         intro.append(document.createTextNode(' selected entities. This will replace existing rules.'));
         frag.append(intro);
 
-        var rolesSection = document.createElement('div');
+        const rolesSection = document.createElement('div');
         rolesSection.className = 'acl-panel-section';
-        var rolesTitle = document.createElement('h3');
+        const rolesTitle = document.createElement('h3');
         rolesTitle.className = 'acl-panel-section-title';
         rolesTitle.textContent = 'Roles';
         rolesSection.append(rolesTitle);
@@ -420,15 +420,15 @@
         }
         frag.append(rolesSection);
 
-        var deptSection = document.createElement('div');
+        const deptSection = document.createElement('div');
         deptSection.className = 'acl-panel-section';
-        var deptTitle = document.createElement('h3');
+        const deptTitle = document.createElement('h3');
         deptTitle.className = 'acl-panel-section-title';
         deptTitle.textContent = 'Departments';
         deptSection.append(deptTitle);
         if (data && data.departments) {
             data.departments.forEach(function(dept) {
-                var deptCopy = { name: dept.name, user_count: dept.user_count, assigned: false, default_included: false };
+                const deptCopy = { name: dept.name, user_count: dept.user_count, assigned: false, default_included: false };
                 deptSection.append(createDeptRow(deptCopy));
             });
         }

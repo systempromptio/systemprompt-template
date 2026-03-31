@@ -71,14 +71,14 @@
         if (!details) return;
         const open = details.style.display !== 'none';
         details.style.display = open ? 'none' : 'block';
-        if (icon) icon.innerHTML = open ? '&#9654;' : '&#9660;';
+        if (icon) icon.textContent = open ? '\u25B6' : '\u25BC';
     }
 
     async function downloadZip(data) {
         const btn = document.getElementById('btn-download-zip');
         if (!btn) return;
-        const origHtml = btn.innerHTML;
-        btn.innerHTML = 'Generating...';
+        const origText = btn.textContent;
+        btn.textContent = 'Generating...';
         btn.disabled = true;
         try {
             const JSZip = await app.shared.loadJSZip();
@@ -103,11 +103,11 @@
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
-            btn.innerHTML = origHtml;
+            btn.textContent = origText;
             btn.disabled = false;
             app.Toast.show('ZIP downloaded successfully', 'success');
         } catch (err) {
-            btn.innerHTML = origHtml;
+            btn.textContent = origText;
             btn.disabled = false;
             app.Toast.show('Failed to generate ZIP: ' + err.message, 'error');
         }

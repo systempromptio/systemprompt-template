@@ -81,11 +81,11 @@
                     if (title) title.textContent = text;
                 },
                 setBody: function(content) {
-                    var body = panel.querySelector('[data-panel-body]');
+                    const body = panel.querySelector('[data-panel-body]');
                     if (body) body.replaceChildren(content);
                 },
                 setFooter: function(content) {
-                    var footer = panel.querySelector('[data-panel-footer]');
+                    const footer = panel.querySelector('[data-panel-footer]');
                     if (footer) footer.replaceChildren(content);
                 },
                 panel: panel
@@ -98,34 +98,34 @@
         },
 
         initAssignPanel: function(config) {
-            var panelApi = OrgCommon.initSidePanel(config.panelId);
+            const panelApi = OrgCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
 
             return {
                 open: function(entityId, entityName, currentPluginIds) {
                     panelApi.setTitle('Assign ' + (entityName || entityId));
 
-                    var allPlugins = config.allPlugins || [];
-                    var currentSet = {};
+                    const allPlugins = config.allPlugins || [];
+                    const currentSet = {};
                     (currentPluginIds || []).forEach(function(id) { currentSet[id] = true; });
 
-                    var checklist = document.createElement('div');
+                    const checklist = document.createElement('div');
                     checklist.className = 'assign-panel-checklist';
                     if (allPlugins.length === 0) {
-                        var noPlugins = document.createElement('p');
+                        const noPlugins = document.createElement('p');
                         noPlugins.style.cssText = 'color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
                         noPlugins.textContent = 'No plugins available.';
                         checklist.append(noPlugins);
                     } else {
                         allPlugins.forEach(function(p) {
-                            var label = document.createElement('label');
+                            const label = document.createElement('label');
                             label.className = 'acl-checkbox-row';
-                            var input = document.createElement('input');
+                            const input = document.createElement('input');
                             input.type = 'checkbox';
                             input.name = 'plugin_id';
                             input.value = p.id;
                             if (currentSet[p.id]) input.checked = true;
-                            var span = document.createElement('span');
+                            const span = document.createElement('span');
                             span.className = 'acl-checkbox-label';
                             span.textContent = p.name || p.id;
                             label.append(input, span);
@@ -134,13 +134,13 @@
                     }
                     panelApi.setBody(checklist);
 
-                    var footerFrag = document.createDocumentFragment();
-                    var cancelBtn = document.createElement('button');
+                    const footerFrag = document.createDocumentFragment();
+                    const cancelBtn = document.createElement('button');
                     cancelBtn.className = 'btn btn-secondary';
                     cancelBtn.setAttribute('data-panel-close', '');
                     cancelBtn.textContent = 'Cancel';
                     cancelBtn.addEventListener('click', panelApi.close);
-                    var saveBtn = document.createElement('button');
+                    const saveBtn = document.createElement('button');
                     saveBtn.className = 'btn btn-primary';
                     saveBtn.setAttribute('data-assign-save', '');
                     saveBtn.setAttribute('data-entity-id', entityId);
@@ -156,31 +156,31 @@
         },
 
         initEditPanel: function(config) {
-            var panelApi = OrgCommon.initSidePanel(config.panelId);
+            const panelApi = OrgCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
-            var currentEntityId = null;
+            let currentEntityId = null;
 
             function buildForm(entityData) {
-                var form = document.createElement('form');
+                const form = document.createElement('form');
                 form.className = 'edit-panel-form';
                 (config.fields || []).forEach(function(f) {
-                    var val = entityData[f.name] || '';
+                    let val = entityData[f.name] || '';
                     if (Array.isArray(val)) val = val.join(', ');
-                    var group = document.createElement('div');
+                    const group = document.createElement('div');
                     group.className = 'form-group';
-                    var label = document.createElement('label');
+                    const label = document.createElement('label');
                     label.className = 'form-label';
                     label.textContent = f.label;
                     group.append(label);
                     if (f.type === 'textarea') {
-                        var textarea = document.createElement('textarea');
+                        const textarea = document.createElement('textarea');
                         textarea.className = 'form-control';
                         textarea.name = f.name;
                         textarea.rows = f.rows || 10;
                         textarea.value = val;
                         group.append(textarea);
                     } else {
-                        var input = document.createElement('input');
+                        const input = document.createElement('input');
                         input.type = 'text';
                         input.className = 'form-control';
                         input.name = f.name;
@@ -245,13 +245,13 @@
                     currentEntityId = entityId;
                     panelApi.setTitle('Edit ' + (entityData.name || entityId));
                     panelApi.setBody(buildForm(entityData));
-                    var footerFrag = document.createDocumentFragment();
-                    var cancelBtn = document.createElement('button');
+                    const footerFrag = document.createDocumentFragment();
+                    const cancelBtn = document.createElement('button');
                     cancelBtn.className = 'btn btn-secondary';
                     cancelBtn.setAttribute('data-panel-close', '');
                     cancelBtn.textContent = 'Cancel';
                     cancelBtn.addEventListener('click', panelApi.close);
-                    var saveBtn = document.createElement('button');
+                    const saveBtn = document.createElement('button');
                     saveBtn.className = 'btn btn-primary';
                     saveBtn.setAttribute('data-edit-save', '');
                     saveBtn.textContent = 'Save';
@@ -319,37 +319,37 @@
         formatJson: function(data) {
             if (typeof data === 'string') {
                 try { data = JSON.parse(data); } catch (e) {
-                    var fallback = document.createElement('pre');
+                    const fallback = document.createElement('pre');
                     fallback.className = 'json-view';
                     fallback.textContent = data;
                     return fallback;
                 }
             }
-            var pre = document.createElement('pre');
+            const pre = document.createElement('pre');
             pre.className = 'json-view';
             pre.textContent = JSON.stringify(data, null, 2);
             return pre;
         },
 
         renderRoleBadges: function(roles) {
-            var frag = document.createDocumentFragment();
+            const frag = document.createDocumentFragment();
             if (!roles || !roles.length) {
-                var b = document.createElement('span');
+                const b = document.createElement('span');
                 b.className = 'badge badge-gray';
                 b.textContent = 'All';
                 frag.append(b);
                 return frag;
             }
-            var assigned = roles.filter(function(r) { return r.assigned; });
+            const assigned = roles.filter(function(r) { return r.assigned; });
             if (!assigned.length) {
-                var b2 = document.createElement('span');
+                const b2 = document.createElement('span');
                 b2.className = 'badge badge-gray';
                 b2.textContent = 'All';
                 frag.append(b2);
                 return frag;
             }
             assigned.forEach(function(r) {
-                var badge = document.createElement('span');
+                const badge = document.createElement('span');
                 badge.className = 'badge badge-blue';
                 badge.textContent = r.name;
                 frag.append(badge, document.createTextNode(' '));
@@ -358,24 +358,24 @@
         },
 
         renderDeptBadges: function(departments) {
-            var frag = document.createDocumentFragment();
+            const frag = document.createDocumentFragment();
             if (!departments || !departments.length) {
-                var b = document.createElement('span');
+                const b = document.createElement('span');
                 b.className = 'badge badge-gray';
                 b.textContent = 'None';
                 frag.append(b);
                 return frag;
             }
-            var assigned = departments.filter(function(d) { return d.assigned; });
+            const assigned = departments.filter(function(d) { return d.assigned; });
             if (!assigned.length) {
-                var b2 = document.createElement('span');
+                const b2 = document.createElement('span');
                 b2.className = 'badge badge-gray';
                 b2.textContent = 'None';
                 frag.append(b2);
                 return frag;
             }
             assigned.forEach(function(d) {
-                var badge = document.createElement('span');
+                const badge = document.createElement('span');
                 badge.className = 'badge ' + (d.default_included ? 'badge-yellow' : 'badge-green');
                 badge.textContent = d.name;
                 frag.append(badge, document.createTextNode(' '));
@@ -384,17 +384,17 @@
         },
 
         renderPluginBadges: function(plugins) {
-            var frag = document.createDocumentFragment();
+            const frag = document.createDocumentFragment();
             if (!plugins || !plugins.length) {
-                var b = document.createElement('span');
+                const b = document.createElement('span');
                 b.className = 'badge badge-gray';
                 b.textContent = 'None';
                 frag.append(b);
                 return frag;
             }
             plugins.forEach(function(p) {
-                var name = typeof p === 'string' ? p : (p.name || p.id || p);
-                var badge = document.createElement('span');
+                const name = typeof p === 'string' ? p : (p.name || p.id || p);
+                const badge = document.createElement('span');
                 badge.className = 'badge badge-purple';
                 badge.textContent = name;
                 frag.append(badge, document.createTextNode(' '));
@@ -510,28 +510,28 @@
         overlay.className = 'confirm-overlay';
         overlay.id = 'delete-confirm';
 
-        var dialog = document.createElement('div');
+        const dialog = document.createElement('div');
         dialog.className = 'confirm-dialog';
-        var h3 = document.createElement('h3');
+        const h3 = document.createElement('h3');
         h3.style.cssText = 'margin:0 0 var(--sp-space-3)';
         h3.textContent = 'Delete Plugin?';
-        var p1 = document.createElement('p');
+        const p1 = document.createElement('p');
         p1.style.cssText = 'margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
         p1.append(document.createTextNode('You are about to delete '));
-        var strong = document.createElement('strong');
+        const strong = document.createElement('strong');
         strong.textContent = pluginId;
         p1.append(strong);
         p1.append(document.createTextNode('.'));
-        var p2 = document.createElement('p');
+        const p2 = document.createElement('p');
         p2.style.cssText = 'margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
         p2.textContent = 'This will remove the plugin directory and all its configuration. This action cannot be undone.';
-        var btnRow = document.createElement('div');
+        const btnRow = document.createElement('div');
         btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end';
-        var cancelBtn = document.createElement('button');
+        const cancelBtn = document.createElement('button');
         cancelBtn.className = 'btn btn-secondary';
         cancelBtn.setAttribute('data-confirm-cancel', '');
         cancelBtn.textContent = 'Cancel';
-        var deleteBtn = document.createElement('button');
+        const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
         deleteBtn.setAttribute('data-confirm-delete', pluginId);
         deleteBtn.textContent = 'Delete Plugin';
@@ -616,20 +616,20 @@
 
         document.getElementById('panel-title').textContent = data.name || pluginId;
 
-        var panelBody = document.createDocumentFragment();
+        const panelBody = document.createDocumentFragment();
 
-        var overviewSection = document.createElement('div');
+        const overviewSection = document.createElement('div');
         overviewSection.className = 'config-panel-section';
-        var overviewH4 = document.createElement('h4');
+        const overviewH4 = document.createElement('h4');
         overviewH4.textContent = 'Overview';
-        var grid = document.createElement('div');
+        const grid = document.createElement('div');
         grid.className = 'config-overview-grid';
 
         function addGridRow(labelText, valueContent) {
-            var label = document.createElement('span');
+            const label = document.createElement('span');
             label.className = 'config-overview-label';
             label.textContent = labelText;
-            var value = document.createElement('span');
+            const value = document.createElement('span');
             value.className = 'config-overview-value';
             if (typeof valueContent === 'string') {
                 value.textContent = valueContent;
@@ -639,10 +639,10 @@
             grid.append(label, value);
         }
 
-        var idCode = document.createElement('code');
+        const idCode = document.createElement('code');
         idCode.textContent = data.id;
         addGridRow('ID', idCode);
-        var statusBadge = document.createElement('span');
+        const statusBadge = document.createElement('span');
         statusBadge.className = data.enabled ? 'badge badge-green' : 'badge badge-gray';
         statusBadge.textContent = data.enabled ? 'Enabled' : 'Disabled';
         addGridRow('Status', statusBadge);
@@ -654,11 +654,11 @@
         overviewSection.append(overviewH4, grid);
         panelBody.append(overviewSection);
 
-        var envSection = document.createElement('div');
+        const envSection = document.createElement('div');
         envSection.className = 'config-panel-section';
-        var envH4 = document.createElement('h4');
+        const envH4 = document.createElement('h4');
         envH4.textContent = 'Environment';
-        var envStatus = document.createElement('div');
+        const envStatus = document.createElement('div');
         envStatus.id = 'panel-env-status';
         envStatus.textContent = 'Loading...';
         envSection.append(envH4, envStatus);
@@ -666,14 +666,14 @@
 
         document.getElementById('panel-body').replaceChildren(panelBody);
 
-        var panelFooter = document.getElementById('panel-footer');
+        const panelFooter = document.getElementById('panel-footer');
         panelFooter.replaceChildren();
         if (data.id !== 'custom') {
-            var editLink = document.createElement('a');
+            const editLink = document.createElement('a');
             editLink.href = '/admin/org/plugins/edit/?id=' + encodeURIComponent(data.id);
             editLink.className = 'btn btn-primary';
             editLink.textContent = 'Edit Plugin';
-            var envBtn = document.createElement('button');
+            const envBtn = document.createElement('button');
             envBtn.className = 'btn btn-secondary';
             envBtn.setAttribute('data-open-env', data.id);
             envBtn.setAttribute('data-plugin-name', data.name);
@@ -686,9 +686,9 @@
         if (data.id !== 'custom') {
             loadEnvStatus(data.id, document.getElementById('panel-env-status'));
         } else {
-            var emptyDiv = document.createElement('div');
+            const emptyDiv = document.createElement('div');
             emptyDiv.className = 'empty-state';
-            var emptyP = document.createElement('p');
+            const emptyP = document.createElement('p');
             emptyP.textContent = 'N/A';
             emptyDiv.append(emptyP);
             document.getElementById('panel-env-status').replaceChildren(emptyDiv);
@@ -948,35 +948,35 @@
                     return;
                 }
 
-                var overlay = document.createElement('div');
+                const overlay = document.createElement('div');
                 overlay.className = 'confirm-overlay';
 
-                var addDialog = document.createElement('div');
+                const addDialog = document.createElement('div');
                 addDialog.className = 'confirm-dialog';
-                var addH3 = document.createElement('h3');
+                const addH3 = document.createElement('h3');
                 addH3.style.cssText = 'margin:0 0 var(--sp-space-3)';
                 addH3.textContent = 'Add ' + resourceType.replace('_', ' ');
 
-                var checklist = document.createElement('div');
+                const checklist = document.createElement('div');
                 checklist.className = 'add-checklist';
                 available.forEach(function(item) {
-                    var id = typeof item === 'string' ? item : (item.id || item.skill_id || item.agent_id);
-                    var itemName = typeof item === 'string' ? item : (item.name || item.id || item.skill_id);
-                    var lbl = document.createElement('label');
-                    var cb = document.createElement('input');
+                    const id = typeof item === 'string' ? item : (item.id || item.skill_id || item.agent_id);
+                    const itemName = typeof item === 'string' ? item : (item.name || item.id || item.skill_id);
+                    const lbl = document.createElement('label');
+                    const cb = document.createElement('input');
                     cb.type = 'checkbox';
                     cb.value = id;
                     lbl.append(cb, document.createTextNode(' ' + itemName));
                     checklist.append(lbl);
                 });
 
-                var addBtnRow = document.createElement('div');
+                const addBtnRow = document.createElement('div');
                 addBtnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-3)';
-                var addCancelBtn = document.createElement('button');
+                const addCancelBtn = document.createElement('button');
                 addCancelBtn.className = 'btn btn-secondary';
                 addCancelBtn.setAttribute('data-add-cancel', '');
                 addCancelBtn.textContent = 'Cancel';
-                var addConfirmBtn = document.createElement('button');
+                const addConfirmBtn = document.createElement('button');
                 addConfirmBtn.className = 'btn btn-primary';
                 addConfirmBtn.setAttribute('data-add-confirm', '');
                 addConfirmBtn.textContent = 'Add Selected';
@@ -1142,66 +1142,66 @@
     app.initPluginsList = app.initPluginsConfig;
 
     function createEmptyState(text) {
-        var div = document.createElement('div');
+        const div = document.createElement('div');
         div.className = 'empty-state';
-        var p = document.createElement('p');
+        const p = document.createElement('p');
         p.textContent = text;
         div.append(p);
         return div;
     }
 
     function loadEnvStatus(pluginId, container) {
-        var loadingDiv = document.createElement('div');
+        const loadingDiv = document.createElement('div');
         loadingDiv.style.cssText = 'padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
         loadingDiv.textContent = 'Loading variables...';
         container.replaceChildren(loadingDiv);
 
         app.api('/plugins/' + encodeURIComponent(pluginId) + '/env').then(function(data) {
-            var defs = data.definitions || [];
-            var stored = data.stored || [];
+            const defs = data.definitions || [];
+            const stored = data.stored || [];
             if (!defs.length && !stored.length) {
                 container.replaceChildren(createEmptyState('No environment variables defined for this plugin.'));
                 return;
             }
-            var storedMap = {};
+            const storedMap = {};
             stored.forEach(function(v) { storedMap[v.var_name] = v; });
-            var frag = document.createDocumentFragment();
+            const frag = document.createDocumentFragment();
             defs.forEach(function(def) {
-                var s = storedMap[def.name];
-                var hasValue = s && s.var_value && s.var_value !== '';
+                const s = storedMap[def.name];
+                const hasValue = s && s.var_value && s.var_value !== '';
 
-                var item = document.createElement('div');
+                const item = document.createElement('div');
                 item.className = 'detail-item';
-                var info = document.createElement('div');
+                const info = document.createElement('div');
                 info.className = 'detail-item-info';
-                var nameDiv = document.createElement('div');
+                const nameDiv = document.createElement('div');
                 nameDiv.className = 'detail-item-name';
-                var code = document.createElement('code');
+                const code = document.createElement('code');
                 code.style.cssText = 'background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-sm)';
                 code.textContent = def.name;
                 nameDiv.append(code, document.createTextNode(' '));
-                var valBadge = document.createElement('span');
+                const valBadge = document.createElement('span');
                 valBadge.className = hasValue ? 'badge badge-green' : 'badge badge-red';
                 valBadge.textContent = hasValue ? 'configured' : 'not set';
                 nameDiv.append(valBadge);
                 if (def.required !== false && !hasValue) {
-                    var reqBadge = document.createElement('span');
+                    const reqBadge = document.createElement('span');
                     reqBadge.className = 'badge badge-yellow';
                     reqBadge.textContent = 'required';
                     nameDiv.append(document.createTextNode(' '), reqBadge);
                 }
                 if (def.secret) {
-                    var secBadge = document.createElement('span');
+                    const secBadge = document.createElement('span');
                     secBadge.className = 'badge badge-gray';
                     secBadge.textContent = 'secret';
                     nameDiv.append(document.createTextNode(' '), secBadge);
                 }
-                var descDiv = document.createElement('div');
+                const descDiv = document.createElement('div');
                 descDiv.className = 'detail-item-desc';
                 descDiv.style.cssText = 'font-size:var(--sp-text-sm);color:var(--sp-text-secondary);margin-top:var(--sp-space-1)';
                 if (def.description) descDiv.textContent = def.description;
                 if (hasValue) {
-                    var maskedSpan = document.createElement('span');
+                    const maskedSpan = document.createElement('span');
                     maskedSpan.style.cssText = 'font-family:monospace;color:var(--sp-text-tertiary)';
                     maskedSpan.textContent = s.is_secret ? '--------' : s.var_value;
                     descDiv.append(document.createTextNode(' '), maskedSpan);
@@ -1210,9 +1210,9 @@
                 item.append(info);
                 frag.append(item);
             });
-            var btnWrap = document.createElement('div');
+            const btnWrap = document.createElement('div');
             btnWrap.style.cssText = 'padding:var(--sp-space-3) 0';
-            var configBtn = document.createElement('button');
+            const configBtn = document.createElement('button');
             configBtn.className = 'btn btn-primary btn-sm';
             configBtn.setAttribute('data-open-env', pluginId);
             configBtn.setAttribute('data-plugin-name', pluginId);
@@ -1272,42 +1272,42 @@
     }
 
     function renderVarList(vars) {
-        var frag = document.createDocumentFragment();
+        const frag = document.createDocumentFragment();
         if (!vars.length) {
-            var empty = document.createElement('div');
+            const empty = document.createElement('div');
             empty.className = 'empty-state';
             empty.style.padding = 'var(--sp-space-6)';
-            var emptyP = document.createElement('p');
+            const emptyP = document.createElement('p');
             emptyP.textContent = 'No environment variables defined for this plugin.';
             empty.append(emptyP);
             frag.append(empty);
             return frag;
         }
         vars.forEach(function(v, i) {
-            var group = document.createElement('div');
+            const group = document.createElement('div');
             group.className = 'form-group';
-            var label = document.createElement('label');
+            const label = document.createElement('label');
             label.textContent = v.name;
             if (v.required) {
-                var reqBadge = document.createElement('span');
+                const reqBadge = document.createElement('span');
                 reqBadge.className = 'badge badge-red';
                 reqBadge.textContent = 'required';
                 label.append(document.createTextNode(' '), reqBadge);
             }
             if (v.secret) {
-                var secBadge = document.createElement('span');
+                const secBadge = document.createElement('span');
                 secBadge.className = 'badge badge-gray';
                 secBadge.textContent = 'secret';
                 label.append(document.createTextNode(' '), secBadge);
             }
             group.append(label);
             if (v.description) {
-                var desc = document.createElement('p');
+                const desc = document.createElement('p');
                 desc.style.cssText = 'margin:0 0 var(--sp-space-1);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)';
                 desc.textContent = v.description;
                 group.append(desc);
             }
-            var input = document.createElement('input');
+            const input = document.createElement('input');
             input.type = v.secret ? 'password' : 'text';
             input.className = 'plugin-env-input';
             input.setAttribute('data-var-index', i);
@@ -1322,21 +1322,21 @@
     }
 
     function renderModal(vars) {
-        var frag = document.createDocumentFragment();
-        var h3 = document.createElement('h3');
+        const frag = document.createDocumentFragment();
+        const h3 = document.createElement('h3');
         h3.style.cssText = 'margin:0 0 var(--sp-space-4)';
         h3.textContent = currentPluginName + ' \u2014 Environment Variables';
-        var scrollDiv = document.createElement('div');
+        const scrollDiv = document.createElement('div');
         scrollDiv.style.cssText = 'max-height:60vh;overflow-y:auto';
         scrollDiv.append(renderVarList(vars));
-        var actions = document.createElement('div');
+        const actions = document.createElement('div');
         actions.className = 'form-actions';
         actions.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)';
-        var closeBtn = document.createElement('button');
+        const closeBtn = document.createElement('button');
         closeBtn.className = 'btn btn-secondary';
         closeBtn.id = 'plugin-env-close';
         closeBtn.textContent = 'Close';
-        var saveBtn = document.createElement('button');
+        const saveBtn = document.createElement('button');
         saveBtn.className = 'btn btn-primary';
         saveBtn.id = 'plugin-env-save';
         saveBtn.textContent = 'Save';
@@ -1346,7 +1346,7 @@
     }
 
     function updatePanel(vars) {
-        var panel = overlay && overlay.querySelector('.confirm-dialog');
+        const panel = overlay && overlay.querySelector('.confirm-dialog');
         if (panel) panel.replaceChildren(renderModal(vars));
         bindEvents(vars);
     }
@@ -1432,10 +1432,10 @@
 
         overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
-        var envDialog = document.createElement('div');
+        const envDialog = document.createElement('div');
         envDialog.className = 'confirm-dialog';
         envDialog.style.cssText = 'width:560px;max-width:90vw';
-        var envLoading = document.createElement('div');
+        const envLoading = document.createElement('div');
         envLoading.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:var(--sp-space-6);color:var(--sp-text-tertiary)';
         envLoading.textContent = 'Loading...';
         envDialog.append(envLoading);
@@ -1488,40 +1488,40 @@
     }
 
     function renderFileList() {
-        var frag = document.createDocumentFragment();
+        const frag = document.createDocumentFragment();
         if (!files.length) {
-            var empty = document.createElement('div');
+            const empty = document.createElement('div');
             empty.className = 'empty-state';
             empty.style.padding = 'var(--sp-space-6)';
-            var p1 = document.createElement('p');
+            const p1 = document.createElement('p');
             p1.textContent = 'No files found for this skill.';
-            var p2 = document.createElement('p');
+            const p2 = document.createElement('p');
             p2.style.cssText = 'font-size:var(--sp-text-sm);color:var(--sp-text-tertiary);margin-top:var(--sp-space-2)';
             p2.textContent = 'Click "Sync Files" to scan the filesystem.';
             empty.append(p1, p2);
             frag.append(empty);
             return frag;
         }
-        var groups = groupByCategory(files);
+        const groups = groupByCategory(files);
         categoryOrder.forEach(function(cat) {
-            var group = groups[cat];
+            const group = groups[cat];
             if (!group || !group.length) return;
-            var wrapper = document.createElement('div');
+            const wrapper = document.createElement('div');
             wrapper.style.marginBottom = 'var(--sp-space-3)';
-            var catDiv = document.createElement('div');
+            const catDiv = document.createElement('div');
             catDiv.className = 'skill-file-category';
             catDiv.textContent = (categoryLabels[cat] || cat) + ' (' + group.length + ')';
             wrapper.append(catDiv);
             group.forEach(function(f) {
-                var item = document.createElement('div');
+                const item = document.createElement('div');
                 item.className = 'skill-file-item' + (selectedFile && selectedFile.id === f.id ? ' selected' : '');
                 item.setAttribute('data-file-id', f.id);
-                var nameSpan = document.createElement('span');
+                const nameSpan = document.createElement('span');
                 nameSpan.className = 'skill-file-name';
                 nameSpan.textContent = f.file_path;
                 item.append(nameSpan);
                 if (f.language) {
-                    var langSpan = document.createElement('span');
+                    const langSpan = document.createElement('span');
                     langSpan.className = 'skill-file-lang';
                     langSpan.textContent = f.language;
                     item.append(langSpan);
@@ -1607,50 +1607,50 @@
     }
 
     function renderEditor() {
-        var frag = document.createDocumentFragment();
+        const frag = document.createDocumentFragment();
         if (!selectedFile) {
-            var placeholder = document.createElement('div');
+            const placeholder = document.createElement('div');
             placeholder.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
             placeholder.textContent = 'Select a file to view its contents';
             frag.append(placeholder);
             return frag;
         }
-        var wrapper = document.createElement('div');
+        const wrapper = document.createElement('div');
         wrapper.style.cssText = 'display:flex;flex-direction:column;height:100%';
 
-        var header = document.createElement('div');
+        const header = document.createElement('div');
         header.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0';
-        var pathSpan = document.createElement('span');
+        const pathSpan = document.createElement('span');
         pathSpan.style.cssText = 'font-family:monospace;font-size:var(--sp-text-sm);font-weight:600';
         pathSpan.textContent = selectedFile.file_path;
-        var langBadge = document.createElement('span');
+        const langBadge = document.createElement('span');
         langBadge.className = 'badge badge-blue';
         langBadge.style.fontSize = 'var(--sp-text-xs)';
         langBadge.textContent = selectedFile.language || 'text';
         header.append(pathSpan, langBadge);
         if (selectedFile.executable) {
-            var execBadge = document.createElement('span');
+            const execBadge = document.createElement('span');
             execBadge.className = 'badge badge-green';
             execBadge.style.fontSize = 'var(--sp-text-xs)';
             execBadge.textContent = 'executable';
             header.append(execBadge);
         }
-        var sizeSpan = document.createElement('span');
+        const sizeSpan = document.createElement('span');
         sizeSpan.style.cssText = 'margin-left:auto;font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)';
         sizeSpan.textContent = selectedFile.size_bytes + ' bytes';
         header.append(sizeSpan);
 
-        var textarea = document.createElement('textarea');
+        const textarea = document.createElement('textarea');
         textarea.id = 'skill-file-editor';
         textarea.style.cssText = 'flex:1;width:100%;border:none;padding:var(--sp-space-3);font-family:monospace;font-size:var(--sp-text-sm);line-height:1.5;resize:none;background:var(--sp-bg-surface);color:var(--sp-text-primary);outline:none;box-sizing:border-box';
         textarea.value = selectedFile.content || '';
 
-        var footer = document.createElement('div');
+        const footer = document.createElement('div');
         footer.style.cssText = 'display:flex;align-items:center;padding:var(--sp-space-2) var(--sp-space-3);border-top:1px solid var(--sp-border-subtle);flex-shrink:0';
-        var validationSpan = document.createElement('span');
+        const validationSpan = document.createElement('span');
         validationSpan.id = 'skill-file-validation';
         validationSpan.style.cssText = 'font-size:var(--sp-text-xs);flex:1';
-        var saveBtn = document.createElement('button');
+        const saveBtn = document.createElement('button');
         saveBtn.className = 'btn btn-primary btn-sm';
         saveBtn.id = 'skill-file-save';
         saveBtn.style.fontSize = 'var(--sp-text-xs)';
@@ -1663,22 +1663,22 @@
     }
 
     function renderModal() {
-        var outer = document.createElement('div');
+        const outer = document.createElement('div');
         outer.style.cssText = 'display:flex;flex-direction:column;height:100%';
 
-        var topBar = document.createElement('div');
+        const topBar = document.createElement('div');
         topBar.style.cssText = 'display:flex;align-items:center;padding:var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0';
-        var h2 = document.createElement('h2');
+        const h2 = document.createElement('h2');
         h2.style.cssText = 'margin:0;font-size:var(--sp-text-lg);font-weight:600;color:var(--sp-text-primary)';
         h2.textContent = currentSkillName + ' - Files';
-        var btnGroup = document.createElement('div');
+        const btnGroup = document.createElement('div');
         btnGroup.style.cssText = 'margin-left:auto;display:flex;gap:var(--sp-space-2)';
-        var syncBtn = document.createElement('button');
+        const syncBtn = document.createElement('button');
         syncBtn.className = 'btn btn-secondary btn-sm';
         syncBtn.id = 'skill-files-sync';
         syncBtn.style.fontSize = 'var(--sp-text-xs)';
         syncBtn.textContent = 'Sync Files';
-        var closeBtn = document.createElement('button');
+        const closeBtn = document.createElement('button');
         closeBtn.className = 'btn btn-secondary btn-sm';
         closeBtn.id = 'skill-files-close';
         closeBtn.style.fontSize = 'var(--sp-text-xs)';
@@ -1686,13 +1686,13 @@
         btnGroup.append(syncBtn, closeBtn);
         topBar.append(h2, btnGroup);
 
-        var body = document.createElement('div');
+        const body = document.createElement('div');
         body.style.cssText = 'display:flex;flex:1;min-height:0';
-        var listDiv = document.createElement('div');
+        const listDiv = document.createElement('div');
         listDiv.id = 'skill-files-list';
         listDiv.style.cssText = 'width:280px;overflow-y:auto;border-right:1px solid var(--sp-border-subtle);padding:var(--sp-space-2) 0';
         listDiv.append(renderFileList());
-        var editorDiv = document.createElement('div');
+        const editorDiv = document.createElement('div');
         editorDiv.id = 'skill-files-editor';
         editorDiv.style.cssText = 'flex:1;min-width:0;overflow:hidden';
         editorDiv.append(renderEditor());
@@ -1703,7 +1703,7 @@
     }
 
     function updatePanel() {
-        var panel = overlay && overlay.querySelector('.skill-files-panel');
+        const panel = overlay && overlay.querySelector('.skill-files-panel');
         if (panel) panel.replaceChildren(renderModal());
         bindEvents();
     }
@@ -1735,8 +1735,8 @@
         const item = e.currentTarget;
         const fileId = item.getAttribute('data-file-id');
         selectedFile = files.find(function(f) { return f.id === fileId; }) || null;
-        var listEl = overlay.querySelector('#skill-files-list');
-        var editorEl = overlay.querySelector('#skill-files-editor');
+        const listEl = overlay.querySelector('#skill-files-list');
+        const editorEl = overlay.querySelector('#skill-files-editor');
         if (listEl) listEl.replaceChildren(renderFileList());
         if (editorEl) editorEl.replaceChildren(renderEditor());
         bindFileItems();
@@ -1852,10 +1852,10 @@
         overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;z-index:1000';
-        var sfPanel = document.createElement('div');
+        const sfPanel = document.createElement('div');
         sfPanel.className = 'skill-files-panel';
         sfPanel.style.cssText = 'background:var(--sp-bg-surface);border-radius:var(--sp-radius-lg);width:90vw;max-width:1100px;height:80vh;overflow:hidden;box-shadow:var(--sp-shadow-lg);display:flex;flex-direction:column';
-        var sfLoading = document.createElement('div');
+        const sfLoading = document.createElement('div');
         sfLoading.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary)';
         sfLoading.textContent = 'Loading files...';
         sfPanel.append(sfLoading);
@@ -1971,26 +1971,26 @@
     }
 
     function renderStepIndicator() {
-        var labels = ['Basic Info', 'Skills', 'Agents', 'MCP Servers', 'Hooks', 'Roles & Access', 'Review'];
-        var container = document.getElementById('wizard-step-indicator');
+        const labels = ['Basic Info', 'Skills', 'Agents', 'MCP Servers', 'Hooks', 'Roles & Access', 'Review'];
+        const container = document.getElementById('wizard-step-indicator');
         if (!container) return;
-        var steps = document.createElement('div');
+        const steps = document.createElement('div');
         steps.className = 'wizard-steps';
         steps.style.cssText = 'display:flex;gap:var(--sp-space-1);margin-bottom:var(--sp-space-6);flex-wrap:wrap';
-        for (var i = 1; i <= TOTAL_STEPS; i++) {
-            var isActive = i === state.step;
-            var isDone = i < state.step;
-            var bgColor = isActive ? 'var(--sp-accent)' : (isDone ? 'var(--sp-success)' : 'var(--sp-bg-tertiary)');
-            var textColor = (isActive || isDone) ? '#fff' : 'var(--sp-text-tertiary)';
-            var stepDiv = document.createElement('div');
+        for (let i = 1; i <= TOTAL_STEPS; i++) {
+            const isActive = i === state.step;
+            const isDone = i < state.step;
+            const bgColor = isActive ? 'var(--sp-accent)' : (isDone ? 'var(--sp-success)' : 'var(--sp-bg-tertiary)');
+            const textColor = (isActive || isDone) ? '#fff' : 'var(--sp-text-tertiary)';
+            const stepDiv = document.createElement('div');
             stepDiv.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-radius:var(--sp-radius-md);font-size:var(--sp-text-sm)';
             stepDiv.style.background = bgColor;
             stepDiv.style.color = textColor;
             stepDiv.style.fontWeight = isActive ? '600' : '400';
-            var numSpan = document.createElement('span');
+            const numSpan = document.createElement('span');
             numSpan.style.cssText = 'width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--sp-text-xs)';
             numSpan.textContent = i;
-            var labelSpan = document.createElement('span');
+            const labelSpan = document.createElement('span');
             labelSpan.textContent = labels[i - 1];
             stepDiv.append(numSpan, labelSpan);
             steps.append(stepDiv);
@@ -1999,12 +1999,12 @@
     }
 
     function renderNav() {
-        var nav = document.getElementById('wizard-nav');
+        const nav = document.getElementById('wizard-nav');
         if (!nav) return;
-        var wrapper = document.createElement('div');
+        const wrapper = document.createElement('div');
         wrapper.style.cssText = 'display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)';
         if (state.step > 1) {
-            var prevBtn = document.createElement('button');
+            const prevBtn = document.createElement('button');
             prevBtn.type = 'button';
             prevBtn.className = 'btn btn-secondary';
             prevBtn.id = 'wizard-prev';
@@ -2012,7 +2012,7 @@
             wrapper.append(prevBtn);
         }
         if (state.step < TOTAL_STEPS) {
-            var nextBtn = document.createElement('button');
+            const nextBtn = document.createElement('button');
             nextBtn.type = 'button';
             nextBtn.className = 'btn btn-primary';
             nextBtn.id = 'wizard-next';
@@ -2020,7 +2020,7 @@
             wrapper.append(nextBtn);
         }
         if (state.step === TOTAL_STEPS) {
-            var createBtn = document.createElement('button');
+            const createBtn = document.createElement('button');
             createBtn.type = 'button';
             createBtn.className = 'btn btn-primary';
             createBtn.id = 'wizard-create';
@@ -2162,25 +2162,25 @@
     }
 
     function renderReview() {
-        var el = document.getElementById('wizard-review');
+        const el = document.getElementById('wizard-review');
         if (!el) return;
-        var f = state.form;
-        var selectedSkills = Object.keys(state.selectedSkills).filter(function(k) { return state.selectedSkills[k]; });
-        var selectedAgents = Object.keys(state.selectedAgents).filter(function(k) { return state.selectedAgents[k]; });
-        var selectedMcp = Object.keys(state.selectedMcpServers).filter(function(k) { return state.selectedMcpServers[k]; });
-        var selectedRoles = Object.keys(f.roles).filter(function(k) { return f.roles[k]; });
+        const f = state.form;
+        const selectedSkills = Object.keys(state.selectedSkills).filter(function(k) { return state.selectedSkills[k]; });
+        const selectedAgents = Object.keys(state.selectedAgents).filter(function(k) { return state.selectedAgents[k]; });
+        const selectedMcp = Object.keys(state.selectedMcpServers).filter(function(k) { return state.selectedMcpServers[k]; });
+        const selectedRoles = Object.keys(f.roles).filter(function(k) { return f.roles[k]; });
 
         function buildBadgeList(items, emptyMsg) {
-            var container = document.createElement('div');
+            const container = document.createElement('div');
             container.style.cssText = 'display:flex;flex-wrap:wrap';
             if (!items.length) {
-                var empty = document.createElement('span');
+                const empty = document.createElement('span');
                 empty.style.color = 'var(--sp-text-tertiary)';
                 empty.textContent = emptyMsg;
                 container.append(empty);
             } else {
                 items.forEach(function(item) {
-                    var badge = document.createElement('span');
+                    const badge = document.createElement('span');
                     badge.className = 'badge badge-blue';
                     badge.style.margin = 'var(--sp-space-1)';
                     badge.textContent = item;
@@ -2191,14 +2191,14 @@
         }
 
         function addRow(frag, labelText, valueText) {
-            var strong = document.createElement('strong');
+            const strong = document.createElement('strong');
             strong.textContent = labelText;
-            var span = document.createElement('span');
+            const span = document.createElement('span');
             span.textContent = valueText;
             frag.append(strong, span);
         }
 
-        var frag = document.createDocumentFragment();
+        const frag = document.createDocumentFragment();
         addRow(frag, 'Plugin ID:', f.plugin_id || '-');
         addRow(frag, 'Name:', f.name || '-');
         addRow(frag, 'Description:', f.description || '-');
@@ -2207,25 +2207,25 @@
         addRow(frag, 'Author:', f.author_name || '-');
         addRow(frag, 'Keywords:', f.keywords || '-');
 
-        var rolesLabel = document.createElement('strong');
+        const rolesLabel = document.createElement('strong');
         rolesLabel.textContent = 'Roles:';
         frag.append(rolesLabel, buildBadgeList(selectedRoles, 'None selected'));
 
-        var skillsLabel = document.createElement('strong');
+        const skillsLabel = document.createElement('strong');
         skillsLabel.textContent = 'Skills (' + selectedSkills.length + '):';
         frag.append(skillsLabel, buildBadgeList(selectedSkills, 'None selected'));
 
-        var agentsLabel = document.createElement('strong');
+        const agentsLabel = document.createElement('strong');
         agentsLabel.textContent = 'Agents (' + selectedAgents.length + '):';
         frag.append(agentsLabel, buildBadgeList(selectedAgents, 'None selected'));
 
-        var mcpLabel = document.createElement('strong');
+        const mcpLabel = document.createElement('strong');
         mcpLabel.textContent = 'MCP (' + selectedMcp.length + '):';
         frag.append(mcpLabel, buildBadgeList(selectedMcp, 'None selected'));
 
-        var hooksLabel = document.createElement('strong');
+        const hooksLabel = document.createElement('strong');
         hooksLabel.textContent = 'Hooks (' + state.hooks.length + '):';
-        var hooksSpan = document.createElement('span');
+        const hooksSpan = document.createElement('span');
         hooksSpan.textContent = state.hooks.length > 0
             ? state.hooks.map(function(h) { return h.event + ': ' + (h.command || '?'); }).join(', ')
             : 'None';
@@ -2525,7 +2525,7 @@
         const container = document.getElementById(containerId);
         if (container) {
             container.removeAttribute('data-loaded');
-            var refreshDiv = document.createElement('div');
+            const refreshDiv = document.createElement('div');
             refreshDiv.style.cssText = 'padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
             refreshDiv.textContent = 'Refreshing...';
             container.replaceChildren(refreshDiv);

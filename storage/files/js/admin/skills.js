@@ -16,30 +16,30 @@
     function renderSkillExpand(skillId) {
         const data = getSkillDetail(skillId);
         if (!data) {
-            var noData = document.createElement('p');
+            const noData = document.createElement('p');
             noData.className = 'text-muted';
             noData.textContent = 'No detail data available.';
             return noData;
         }
 
-        var frag = document.createDocumentFragment();
+        const frag = document.createDocumentFragment();
 
-        var descSection = document.createElement('div');
+        const descSection = document.createElement('div');
         descSection.className = 'detail-section';
-        var descLabel = document.createElement('strong');
+        const descLabel = document.createElement('strong');
         descLabel.textContent = 'Description';
-        var descP = document.createElement('p');
+        const descP = document.createElement('p');
         descP.style.cssText = 'margin:var(--sp-space-1) 0;color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
         descP.textContent = data.description || 'No description';
         descSection.append(descLabel, descP);
         frag.append(descSection);
 
         if (data.command) {
-            var cmdSection = document.createElement('div');
+            const cmdSection = document.createElement('div');
             cmdSection.className = 'detail-section';
-            var cmdLabel = document.createElement('strong');
+            const cmdLabel = document.createElement('strong');
             cmdLabel.textContent = 'Command';
-            var cmdPre = document.createElement('pre');
+            const cmdPre = document.createElement('pre');
             cmdPre.style.cssText = 'margin:var(--sp-space-1) 0;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);overflow-x:auto';
             cmdPre.textContent = data.command;
             cmdSection.append(cmdLabel, cmdPre);
@@ -47,16 +47,16 @@
         }
 
         if (data.tags && data.tags.length) {
-            var tagSection = document.createElement('div');
+            const tagSection = document.createElement('div');
             tagSection.className = 'detail-section';
-            var tagLabel = document.createElement('strong');
+            const tagLabel = document.createElement('strong');
             tagLabel.textContent = 'Tags';
             tagSection.append(tagLabel, document.createElement('br'));
-            var badgeRow = document.createElement('div');
+            const badgeRow = document.createElement('div');
             badgeRow.className = 'badge-row';
             badgeRow.style.marginTop = 'var(--sp-space-1)';
             data.tags.forEach((tag) => {
-                var badge = document.createElement('span');
+                const badge = document.createElement('span');
                 badge.className = 'badge badge-gray';
                 badge.textContent = tag;
                 badgeRow.append(badge);
@@ -65,10 +65,10 @@
             frag.append(tagSection);
         }
 
-        var jsonSection = document.createElement('div');
+        const jsonSection = document.createElement('div');
         jsonSection.className = 'detail-section';
-        var details = document.createElement('details');
-        var summary = document.createElement('summary');
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
         summary.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)';
         summary.textContent = 'JSON Config';
         details.append(summary);

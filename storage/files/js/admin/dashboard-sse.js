@@ -58,14 +58,27 @@
         else if (evt.category === 'notification') colorClass = 'feed-amber';
         else if (evt.category === 'agent_response') colorClass = 'feed-teal';
 
-        const name = escapeHtml(evt.display_name || 'Anonymous');
-        const desc = escapeHtml(evt.description || '');
+        const name = evt.display_name || 'Anonymous';
+        const desc = evt.description || '';
 
-        div.innerHTML = '<div class="feed-icon ' + colorClass + '"></div>'
-            + '<div class="feed-content">'
-            + '<span class="feed-text"><strong>' + name + '</strong> ' + desc + '</span>'
-            + '<span class="feed-time">just now</span>'
-            + '</div>';
+        const iconEl = document.createElement('div');
+        iconEl.className = 'feed-icon ' + colorClass;
+
+        const contentEl = document.createElement('div');
+        contentEl.className = 'feed-content';
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'feed-text';
+        const strong = document.createElement('strong');
+        strong.textContent = name;
+        textSpan.append(strong, ' ' + desc);
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'feed-time';
+        timeSpan.textContent = 'just now';
+
+        contentEl.append(textSpan, timeSpan);
+        div.append(iconEl, contentEl);
 
         const footer = feedEl.querySelector('.section-footer');
         if (footer) {
@@ -103,12 +116,6 @@
                 valEl.classList.add('metric-flash');
             }
         }
-    };
-
-    const escapeHtml = (str) => {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
     };
 
     connect();

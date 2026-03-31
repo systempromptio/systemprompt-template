@@ -43,7 +43,7 @@
                         container.append(OrgCommon.formatJson(data));
                     } catch (err) {
                         container.replaceChildren();
-                        var errSpan = document.createElement('span');
+                        const errSpan = document.createElement('span');
                         errSpan.className = 'text-muted';
                         errSpan.textContent = 'Failed to parse JSON';
                         container.append(errSpan);

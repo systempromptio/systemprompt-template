@@ -15,15 +15,15 @@
             });
         }
 
-        var group = document.createElement('div');
+        const group = document.createElement('div');
         group.className = 'form-group';
 
-        var labelEl = document.createElement('label');
+        const labelEl = document.createElement('label');
         labelEl.className = 'field-label';
         labelEl.textContent = label;
         group.append(labelEl);
 
-        var filterInput = document.createElement('input');
+        const filterInput = document.createElement('input');
         filterInput.type = 'text';
         filterInput.className = 'field-input';
         filterInput.setAttribute('data-filter-list', id);
@@ -31,14 +31,14 @@
         if (options.hasSelectAll) {
             filterInput.placeholder = 'Search...';
             filterInput.style.flex = '1';
-            var filterRow = document.createElement('div');
+            const filterRow = document.createElement('div');
             filterRow.style.cssText = 'display:flex;gap:var(--sp-space-2);margin-bottom:var(--sp-space-2)';
-            var selectAllBtn = document.createElement('button');
+            const selectAllBtn = document.createElement('button');
             selectAllBtn.type = 'button';
             selectAllBtn.className = 'btn btn-secondary btn-sm';
             selectAllBtn.setAttribute('data-select-all', id);
             selectAllBtn.textContent = 'Select All';
-            var deselectAllBtn = document.createElement('button');
+            const deselectAllBtn = document.createElement('button');
             deselectAllBtn.type = 'button';
             deselectAllBtn.className = 'btn btn-secondary btn-sm';
             deselectAllBtn.setAttribute('data-deselect-all', id);
@@ -51,38 +51,38 @@
             group.append(filterInput);
         }
 
-        var maxHeight = options.hasSelectAll ? '300px' : '200px';
-        var container = document.createElement('div');
+        const maxHeight = options.hasSelectAll ? '300px' : '200px';
+        const container = document.createElement('div');
         container.className = 'checklist-container';
         container.setAttribute('data-checklist', id);
         container.style.cssText = 'max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)';
 
-        var hasItems = items && items.length > 0;
+        const hasItems = items && items.length > 0;
         if (hasItems) {
             items.forEach(function(item) {
-                var val = typeof item === 'string' ? item : (item.name || item.id || item);
-                var displayName = typeof item === 'string' ? item : (item.name || item.id || String(item));
-                var itemId = id + '-chk-' + val.replace(/[^a-zA-Z0-9_-]/g, '_');
-                var itemDiv = document.createElement('div');
+                const val = typeof item === 'string' ? item : (item.name || item.id || item);
+                const displayName = typeof item === 'string' ? item : (item.name || item.id || String(item));
+                const itemId = id + '-chk-' + val.replace(/[^a-zA-Z0-9_-]/g, '_');
+                const itemDiv = document.createElement('div');
                 itemDiv.className = 'checklist-item';
                 itemDiv.setAttribute('data-item-name', val.toLowerCase());
-                var checkbox = document.createElement('input');
+                const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.name = id;
                 checkbox.value = val;
                 checkbox.id = itemId;
                 if (selectedSet[val]) checkbox.checked = true;
-                var itemLabel = document.createElement('label');
+                const itemLabel = document.createElement('label');
                 itemLabel.setAttribute('for', itemId);
                 itemLabel.textContent = displayName;
                 itemDiv.append(checkbox, itemLabel);
                 container.append(itemDiv);
             });
         } else {
-            var emptyDiv = document.createElement('div');
+            const emptyDiv = document.createElement('div');
             emptyDiv.className = 'empty-state';
             emptyDiv.style.padding = 'var(--sp-space-4)';
-            var emptyP = document.createElement('p');
+            const emptyP = document.createElement('p');
             emptyP.textContent = 'None available.';
             emptyDiv.append(emptyP);
             container.append(emptyDiv);

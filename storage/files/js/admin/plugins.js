@@ -720,7 +720,7 @@
     }
 
     function loadEnvStatus(pluginId, container) {
-        var loadingDiv = document.createElement('div');
+        const loadingDiv = document.createElement('div');
         loadingDiv.style.cssText = 'padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
         loadingDiv.textContent = 'Loading variables...';
         container.replaceChildren(loadingDiv);

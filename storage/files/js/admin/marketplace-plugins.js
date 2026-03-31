@@ -38,10 +38,10 @@
         ruleTypeSelect.id = 'vis-rule-type';
         ruleTypeSelect.className = 'btn btn-secondary';
         ruleTypeSelect.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm)';
-        var opt1 = document.createElement('option');
+        const opt1 = document.createElement('option');
         opt1.value = 'department';
         opt1.textContent = 'Department';
-        var opt2 = document.createElement('option');
+        const opt2 = document.createElement('option');
         opt2.value = 'user';
         opt2.textContent = 'User';
         ruleTypeSelect.append(opt1, opt2);
@@ -57,10 +57,10 @@
         ruleAccessSelect.id = 'vis-rule-access';
         ruleAccessSelect.className = 'btn btn-secondary';
         ruleAccessSelect.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm)';
-        var optAllow = document.createElement('option');
+        const optAllow = document.createElement('option');
         optAllow.value = 'allow';
         optAllow.textContent = 'Allow';
-        var optDeny = document.createElement('option');
+        const optDeny = document.createElement('option');
         optDeny.value = 'deny';
         optDeny.textContent = 'Deny';
         ruleAccessSelect.append(optAllow, optDeny);
@@ -148,19 +148,19 @@
     function renderRulesListDOM(container, rules) {
         container.replaceChildren();
         if (!rules.length) {
-            var emptyP = document.createElement('p');
+            const emptyP = document.createElement('p');
             emptyP.style.cssText = 'font-size:var(--sp-text-sm);color:var(--sp-text-tertiary)';
             emptyP.textContent = 'No rules configured';
             container.append(emptyP);
             return;
         }
         rules.forEach(function(rule, idx) {
-            var row = document.createElement('div');
+            const row = document.createElement('div');
             row.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;font-size:var(--sp-text-sm)';
-            var badge = document.createElement('span');
+            const badge = document.createElement('span');
             badge.className = 'badge ' + (rule.access === 'allow' ? 'badge-yellow' : 'badge-red');
             badge.textContent = rule.rule_type + ': ' + rule.rule_value + ' (' + rule.access + ')';
-            var removeBtn = document.createElement('button');
+            const removeBtn = document.createElement('button');
             removeBtn.className = 'btn btn-danger';
             removeBtn.style.cssText = 'font-size:var(--sp-text-xs);padding:2px 6px';
             removeBtn.setAttribute('data-remove-rule', idx);
@@ -234,32 +234,32 @@
                     if (container) {
                         container.replaceChildren();
                         if (users.length === 0) {
-                            var noUsers = document.createElement('div');
+                            const noUsers = document.createElement('div');
                             noUsers.style.cssText = 'margin-top:var(--sp-space-2);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)';
                             noUsers.textContent = 'No users found';
                             container.append(noUsers);
                         } else {
-                            var userList = document.createElement('div');
+                            const userList = document.createElement('div');
                             userList.style.cssText = 'margin-top:var(--sp-space-2);display:flex;flex-direction:column;gap:var(--sp-space-1)';
                             users.forEach(function(u) {
-                                var userRow = document.createElement('div');
+                                const userRow = document.createElement('div');
                                 userRow.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);font-size:var(--sp-text-xs);padding:var(--sp-space-1) 0;border-bottom:1px solid var(--sp-border-primary)';
-                                var nameSpan = document.createElement('span');
+                                const nameSpan = document.createElement('span');
                                 nameSpan.style.cssText = 'font-weight:600;color:var(--sp-text-primary)';
                                 nameSpan.textContent = u.display_name || 'Unknown';
                                 userRow.append(nameSpan);
                                 if (u.department) {
-                                    var deptBadge = document.createElement('span');
+                                    const deptBadge = document.createElement('span');
                                     deptBadge.className = 'badge badge-blue';
                                     deptBadge.textContent = u.department;
                                     userRow.append(deptBadge);
                                 }
-                                var eventBadge = document.createElement('span');
+                                const eventBadge = document.createElement('span');
                                 eventBadge.className = 'badge badge-gray';
                                 eventBadge.textContent = (u.event_count || 0) + ' events';
                                 userRow.append(eventBadge);
                                 if (u.last_used) {
-                                    var dateSpan = document.createElement('span');
+                                    const dateSpan = document.createElement('span');
                                     dateSpan.style.color = 'var(--sp-text-tertiary)';
                                     dateSpan.textContent = new Date(u.last_used).toLocaleDateString();
                                     userRow.append(dateSpan);

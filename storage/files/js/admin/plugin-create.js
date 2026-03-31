@@ -24,17 +24,17 @@
         const steps = document.createElement('div');
         steps.className = 'wizard-steps';
         steps.style.cssText = 'display:flex;gap:var(--sp-space-1);margin-bottom:var(--sp-space-6);flex-wrap:wrap';
-        for (var i = 1; i <= TOTAL_STEPS; i++) {
-            var isActive = i === state.step;
-            var isDone = i < state.step;
-            var bgColor = isActive ? 'var(--sp-accent)' : (isDone ? 'var(--sp-success)' : 'var(--sp-bg-tertiary)');
-            var textColor = (isActive || isDone) ? '#fff' : 'var(--sp-text-tertiary)';
-            var stepDiv = document.createElement('div');
+        for (let i = 1; i <= TOTAL_STEPS; i++) {
+            const isActive = i === state.step;
+            const isDone = i < state.step;
+            const bgColor = isActive ? 'var(--sp-accent)' : (isDone ? 'var(--sp-success)' : 'var(--sp-bg-tertiary)');
+            const textColor = (isActive || isDone) ? '#fff' : 'var(--sp-text-tertiary)';
+            const stepDiv = document.createElement('div');
             stepDiv.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-radius:var(--sp-radius-md);font-size:var(--sp-text-sm);background:' + bgColor + ';color:' + textColor + ';font-weight:' + (isActive ? '600' : '400');
-            var numSpan = document.createElement('span');
+            const numSpan = document.createElement('span');
             numSpan.style.cssText = 'width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--sp-text-xs)';
             numSpan.textContent = i;
-            var labelSpan = document.createElement('span');
+            const labelSpan = document.createElement('span');
             labelSpan.textContent = labels[i - 1];
             stepDiv.append(numSpan, labelSpan);
             steps.append(stepDiv);
@@ -48,7 +48,7 @@
         const wrapper = document.createElement('div');
         wrapper.style.cssText = 'display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)';
         if (state.step > 1) {
-            var prevBtn = document.createElement('button');
+            const prevBtn = document.createElement('button');
             prevBtn.type = 'button';
             prevBtn.className = 'btn btn-secondary';
             prevBtn.id = 'wizard-prev';
@@ -56,7 +56,7 @@
             wrapper.append(prevBtn);
         }
         if (state.step < TOTAL_STEPS) {
-            var nextBtn = document.createElement('button');
+            const nextBtn = document.createElement('button');
             nextBtn.type = 'button';
             nextBtn.className = 'btn btn-primary';
             nextBtn.id = 'wizard-next';
@@ -64,7 +64,7 @@
             wrapper.append(nextBtn);
         }
         if (state.step === TOTAL_STEPS) {
-            var createBtn = document.createElement('button');
+            const createBtn = document.createElement('button');
             createBtn.type = 'button';
             createBtn.className = 'btn btn-primary';
             createBtn.id = 'wizard-create';
@@ -217,14 +217,14 @@
         function buildBadgeList(items, emptyMsg) {
             const container = document.createDocumentFragment();
             if (!items.length) {
-                var empty = document.createElement('span');
+                const empty = document.createElement('span');
                 empty.style.cssText = 'color:var(--sp-text-tertiary)';
                 empty.textContent = emptyMsg;
                 container.append(empty);
                 return container;
             }
             items.forEach(function(item) {
-                var badge = document.createElement('span');
+                const badge = document.createElement('span');
                 badge.className = 'badge badge-blue';
                 badge.style.cssText = 'margin:var(--sp-space-1)';
                 badge.textContent = item;
@@ -234,23 +234,23 @@
         }
 
         function addRow(frag, labelText, valueText) {
-            var strong = document.createElement('strong');
+            const strong = document.createElement('strong');
             strong.textContent = labelText;
-            var span = document.createElement('span');
+            const span = document.createElement('span');
             span.textContent = valueText;
             frag.append(strong, span);
         }
 
         function addBadgeRow(frag, labelText, items, emptyMsg, wrap) {
-            var strong = document.createElement('strong');
+            const strong = document.createElement('strong');
             strong.textContent = labelText;
-            var div = document.createElement('div');
+            const div = document.createElement('div');
             if (wrap) div.style.cssText = 'display:flex;flex-wrap:wrap';
             div.append(buildBadgeList(items, emptyMsg));
             frag.append(strong, div);
         }
 
-        var frag = document.createDocumentFragment();
+        const frag = document.createDocumentFragment();
         addRow(frag, 'Plugin ID:', f.plugin_id || '-');
         addRow(frag, 'Name:', f.name || '-');
         addRow(frag, 'Description:', f.description || '-');
@@ -263,9 +263,9 @@
         addBadgeRow(frag, 'Agents (' + selectedAgents.length + '):', selectedAgents, 'None selected', true);
         addBadgeRow(frag, 'MCP (' + selectedMcp.length + '):', selectedMcp, 'None selected', true);
 
-        var hooksStrong = document.createElement('strong');
+        const hooksStrong = document.createElement('strong');
         hooksStrong.textContent = 'Hooks (' + state.hooks.length + '):';
-        var hooksSpan = document.createElement('span');
+        const hooksSpan = document.createElement('span');
         hooksSpan.textContent = state.hooks.length > 0
             ? state.hooks.map(function(h) { return h.event + ': ' + (h.command || '?'); }).join(', ')
             : 'None';
