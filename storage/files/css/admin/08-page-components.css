@@ -1,6 +1,4 @@
 @layer components {
-
-/* Usage Limits */
 .usage-limits-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -66,21 +64,18 @@
     background: var(--sp-danger);
 }
 
-/* Rank Tier Badges (named) */
 .rank-tier-1 { background: var(--sp-rank-tier-1-bg); color: var(--sp-text-on-accent); }
 .rank-tier-2 { background: var(--sp-rank-tier-2-bg); color: var(--sp-text-on-accent); }
 .rank-tier-3 { background: var(--sp-rank-tier-3-bg); color: var(--sp-text-on-accent); }
 .rank-tier-4 { background: var(--sp-rank-tier-4-bg); color: var(--sp-text-on-accent); }
 .rank-tier-5 { background: var(--sp-rank-tier-5-bg); color: var(--sp-text-on-accent); }
 
-/* Named tier modifiers for user widget */
 .user-widget--tier-bronze  { }
 .user-widget--tier-silver  { }
 .user-widget--tier-gold    { }
 .user-widget--tier-platinum { }
 .user-widget--tier-diamond { }
 
-/* XP Guide */
 .xp-guide {
     padding: var(--sp-space-4);
     background: var(--sp-surface-1);
@@ -126,7 +121,6 @@
     color: var(--sp-success);
 }
 
-/* Rank Ladder */
 .rank-ladder {
     margin-bottom: var(--sp-space-4);
 }
@@ -204,7 +198,6 @@
     margin-left: auto;
 }
 
-/* Achievements */
 .achievement-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -307,7 +300,6 @@
     color: var(--sp-warning);
 }
 
-/* Onboarding notice warning variant */
 .cc-onboarding-notice--warning {
     background: color-mix(in oklch, var(--sp-warning) 8%, transparent);
     border: 1px solid color-mix(in oklch, var(--sp-warning) 25%, transparent);

@@ -9,10 +9,8 @@
     <meta name="keywords" content="{{feature.title}}, foodles, AI platform, {{#if feature.keywords}}{{feature.keywords}}{{else}}AI agents, MCP hosting{{/if}}">
     <link rel="canonical" href="{{ORG_URL}}/features/{{feature.slug}}">
 
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{FAVICON_PATH}}">
 
-    <!-- Open Graph -->
     <meta property="og:title" content="{{feature.title}} - {{site.branding.name}}">
     <meta property="og:description" content="{{#if feature.description}}{{feature.description}}{{else}}{{feature.subtitle}}{{/if}}">
     <meta property="og:type" content="website">
@@ -20,14 +18,12 @@
     <meta property="og:site_name" content="{{site.branding.name}}">
     <meta property="og:image" content="{{#if feature.image}}{{feature.image}}{{else}}{{DEFAULT_IMAGE}}{{/if}}">
 
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="{{TWITTER_HANDLE}}">
     <meta name="twitter:title" content="{{feature.title}}">
     <meta name="twitter:description" content="{{#if feature.description}}{{feature.description}}{{else}}{{feature.subtitle}}{{/if}}">
     <meta name="twitter:image" content="{{#if feature.image}}{{feature.image}}{{else}}{{DEFAULT_IMAGE}}{{/if}}">
 
-    <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -47,7 +43,6 @@
     }
     </script>
 
-    <!-- BreadcrumbList Structured Data -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -60,14 +55,13 @@
     }
     </script>
 
-    <!-- Styles -->
     <link rel="stylesheet" href="{{CSS_BASE_PATH}}/feature-page.css">
 </head>
 <body>
     {{{HEADER}}}
 
     <main>
-        <!-- Hero Section -->
+        
         <section class="feature-hero">
             <div class="container">
                 <h1 class="feature-headline">

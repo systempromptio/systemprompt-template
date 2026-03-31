@@ -168,9 +168,9 @@
 }
 
 
-.content-card--playbook .card-image,
-.content-card--playbook .card-image--placeholder {
-  display: none !important;
+.content-card.content-card--playbook .card-image,
+.content-card.content-card--playbook .card-image--placeholder {
+  display: none;
 }
 
 

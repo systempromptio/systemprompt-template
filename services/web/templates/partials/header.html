@@ -3,7 +3,7 @@
     <a href="/" class="logo-link">
       <img src="/files/images/logo-white.svg" alt="{{ORG_NAME}}" class="logo-svg" />
     </a>
-    <button class="mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+    <button type="button" class="mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
       <span class="hamburger-line"></span>
       <span class="hamburger-line"></span>
       <span class="hamburger-line"></span>
@@ -42,7 +42,7 @@
         </div>
       </div>
       {{else}}
-      <a href="{{this.href}}"{{#if this.external}} target="_blank" rel="noopener"{{/if}}>{{this.label}}</a>
+      <a href="{{this.href}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
       {{/if}}
       {{/each}}
     </div>

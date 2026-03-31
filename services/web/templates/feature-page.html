@@ -7,10 +7,8 @@
     <title>{{TITLE}}</title>
     <meta name="description" content="{{DESCRIPTION}}">
 
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{FAVICON_PATH}}">
 
-    <!-- Open Graph -->
     <meta property="og:title" content="{{TITLE}}">
     <meta property="og:description" content="{{DESCRIPTION}}">
     <meta property="og:image" content="{{#if IMAGE}}{{IMAGE}}{{else}}{{DEFAULT_IMAGE}}{{/if}}">
@@ -18,24 +16,19 @@
     <meta property="og:url" content="{{CANONICAL_URL}}">
     <meta property="og:site_name" content="{{ORG_NAME}}">
 
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="{{TWITTER_HANDLE}}">
     <meta name="twitter:title" content="{{TITLE}}">
     <meta name="twitter:description" content="{{DESCRIPTION}}">
     <meta name="twitter:image" content="{{#if IMAGE}}{{IMAGE}}{{else}}{{DEFAULT_IMAGE}}{{/if}}">
 
-    <!-- Theme Color -->
     <meta name="theme-color" content="{{site.branding.themeColor}}">
 
-    <!-- Canonical -->
     <link rel="canonical" href="{{CANONICAL_URL}}">
 
-    <!-- Styles -->
     <link rel="stylesheet" href="{{CSS_BASE_PATH}}/feature-page.css">
     <link rel="stylesheet" href="{{CSS_BASE_PATH}}/feature-base.css">
 
-    <!-- Structured Data -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -51,7 +44,6 @@
     }
     </script>
 
-    <!-- BreadcrumbList Structured Data -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -65,13 +57,13 @@
     </script>
 </head>
 <body>
-    <!-- Background -->
+    
     <div class="feature-background"></div>
 
     {{{HEADER}}}
 
     <main class="feature-page">
-        <!-- Hero Section -->
+        
         <section class="feature-hero">
             <div class="feature-hero-content">
                 <div class="feature-icon">
@@ -153,10 +145,8 @@
             </div>
         </section>
 
-        <!-- Full-width Hero Divider -->
         <div class="hero-divider"></div>
 
-        <!-- Highlights Grid -->
         <section class="feature-highlights">
             <div class="container">
                 <ul class="highlights-grid">
@@ -172,7 +162,6 @@
             </div>
         </section>
 
-        <!-- Detail Sections -->
         {{#if feature.sections}}
         {{#each feature.sections}}
         <section id="{{this.id}}" class="detail-section{{#if this.visual_desktop}} detail-section--with-visual{{/if}}{{#if (eq this.visual_position "left")}} detail-section--visual-left{{/if}}">
@@ -205,7 +194,6 @@
         {{/each}}
         {{/if}}
 
-        <!-- Related Features -->
         {{#if feature.related}}
         <section class="related-features">
             <div class="container">
@@ -223,7 +211,6 @@
         </section>
         {{/if}}
 
-        <!-- Final CTA -->
         <section class="feature-final-cta">
             <div class="container">
                 <h2>Ready to build?</h2>

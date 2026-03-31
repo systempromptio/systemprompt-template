@@ -270,8 +270,8 @@
     font-size: 0.62rem;
   }
 
-  .terminal-controls {
-    display: flex !important;
+  .terminal-controls.terminal-controls {
+    display: flex;
     position: relative;
     z-index: 10;
     margin-top: var(--sp-space-lg);

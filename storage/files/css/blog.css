@@ -3453,15 +3453,15 @@ body:has(.provenance-toggle:checked) {
 
 
 
-.hero-cta-primary {
-  background: var(--sp-color-text-primary) !important;
-  color: var(--sp-color-background) !important;
+.hero-cta-primary.hero-cta-primary {
+  background: var(--sp-color-text-primary);
+  color: var(--sp-color-background);
   font-weight: var(--sp-font-weight-bold);
 }
 
-.hero-cta-secondary {
-  color: var(--sp-color-text-primary) !important;
-  border-color: var(--sp-color-text-primary) !important;
+.hero-cta-secondary.hero-cta-secondary {
+  color: var(--sp-color-text-primary);
+  border-color: var(--sp-color-text-primary);
 }
 
 

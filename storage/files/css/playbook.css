@@ -719,11 +719,11 @@
 
 
 
-.playbook-list .content-card--has-image .card-image,
-.playbook-list .card-image--placeholder,
-.playbook-grid .card-image,
-.playbook-grid .card-image--placeholder {
-  display: none !important;
+.playbook-list .content-card.content-card--has-image .card-image,
+.playbook-list .content-card .card-image--placeholder,
+.playbook-grid .content-card .card-image,
+.playbook-grid .content-card .card-image--placeholder {
+  display: none;
 }
 
 .playbook-list .content-card,
@@ -841,8 +841,8 @@
   margin-bottom: var(--sp-spacing-lg);
 }
 
-.playbook-related-grid {
-  display: flex !important;
+.playbook-related-grid.playbook-related-grid {
+  display: flex;
   flex-wrap: wrap;
   gap: var(--sp-spacing-sm);
   list-style: none;
@@ -850,8 +850,8 @@
   margin: 0;
 }
 
-.playbook-related-card {
-  display: inline-flex !important;
+.playbook-related-card.playbook-related-card {
+  display: inline-flex;
   align-items: center;
   gap: var(--sp-spacing-xs);
   padding: var(--sp-spacing-sm) var(--sp-spacing-md);
@@ -900,17 +900,17 @@
   margin-bottom: var(--sp-spacing-lg);
 }
 
-.playbook-category-grid {
-  display: flex !important;
-  flex-direction: column !important;
+.playbook-category-grid.playbook-category-grid {
+  display: flex;
+  flex-direction: column;
   gap: var(--sp-spacing-sm);
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.playbook-category-link {
-  display: block !important;
+.playbook-category-link.playbook-category-link {
+  display: block;
   padding: var(--sp-spacing-md);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--sp-color-border);
@@ -925,16 +925,16 @@
   background: rgba(var(--sp-color-primary-rgb), 0.08);
 }
 
-.playbook-category-link-title {
-  display: block !important;
+.playbook-category-link-title.playbook-category-link-title {
+  display: block;
   font-weight: 500;
   font-size: var(--sp-font-size-md);
   color: var(--sp-color-text-primary);
   margin-bottom: 4px;
 }
 
-.playbook-category-link-desc {
-  display: block !important;
+.playbook-category-link-desc.playbook-category-link-desc {
+  display: block;
   font-size: var(--sp-font-size-sm);
   color: var(--sp-color-text-secondary);
   line-height: 1.5;
