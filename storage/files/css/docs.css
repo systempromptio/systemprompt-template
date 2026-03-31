@@ -826,7 +826,7 @@
 
 .toc-content .toc-link {
   display: block;
-  padding: 6px 0;
+  padding: var(--sp-space-2) 0;
   color: var(--sp-color-text-secondary);
   text-decoration: none;
   font-size: var(--sp-font-size-sm);

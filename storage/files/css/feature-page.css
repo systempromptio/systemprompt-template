@@ -271,7 +271,7 @@ body {
   background: var(--sp-color-surface);
   border: 1px solid var(--sp-color-border);
   border-radius: var(--sp-radius-sm);
-  padding: 2px 6px;
+  padding: var(--sp-space-1) var(--sp-space-2);
   font-size: 0.875em;
   color: var(--sp-color-primary);
 }
@@ -413,7 +413,7 @@ body {
 
 .primary-cta {
   display: inline-block;
-  padding: 14px 32px;
+  padding: var(--sp-space-4) var(--sp-space-8);
   background: linear-gradient(135deg, var(--sp-brand-600), var(--sp-brand-500));
   color: var(--sp-color-text-on-primary);
   font-family: var(--sp-font-brand);
@@ -435,7 +435,7 @@ body {
 
 .secondary-cta {
   display: inline-block;
-  padding: 14px 32px;
+  padding: var(--sp-space-4) var(--sp-space-8);
   background: transparent;
   color: var(--sp-color-primary);
   font-family: var(--sp-font-brand);

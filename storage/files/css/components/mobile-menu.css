@@ -5,10 +5,10 @@
   display: none;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
+  gap: var(--sp-space-1);
   width: 24px;
   height: 24px;
-  padding: 2px;
+  padding: var(--sp-space-1);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -82,7 +82,7 @@
 
   .nav-links > a:hover,
   .nav-links > .nav-dropdown > .nav-dropdown-trigger:hover {
-    color: #ffffff;
+    color: var(--sp-color-text-on-primary);
   }
 
   

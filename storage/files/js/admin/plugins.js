@@ -291,7 +291,10 @@
             app.api('/plugins/' + encodeURIComponent(pid) + '/env').then((envData) => {
                 pluginEnvValid[pid] = envData.valid !== false;
                 updateGenerateButtons(pid);
-            }).catch(() => {});
+            }).catch((err) => {
+                pluginEnvValid[pid] = false;
+                updateGenerateButtons(pid);
+            });
         });
 
         app.shared.createDebouncedSearch(document, 'plugin-search', () => {
@@ -563,7 +566,10 @@
             app.api('/plugins/' + encodeURIComponent(pid) + '/env').then((envData) => {
                 pluginEnvValid[pid] = envData.valid !== false;
                 updateGenerateButtons(pid);
-            }).catch(() => {});
+            }).catch((err) => {
+                pluginEnvValid[pid] = false;
+                updateGenerateButtons(pid);
+            });
         });
     };
 

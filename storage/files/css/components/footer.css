@@ -36,5 +36,5 @@
 }
 
 .site-footer .footer-bottom a:hover {
-  color: #fff;
+  color: var(--sp-color-text-on-primary);
 }

@@ -127,7 +127,7 @@
 }
 
 .diagonal-features li {
-  padding: 5px 0;
+  padding: var(--sp-space-1) 0;
   padding-left: var(--sp-space-md);
   position: relative;
   color: var(--sp-color-text-secondary);
@@ -779,7 +779,7 @@
 .trait-learn-more {
   display: inline-block;
   margin-top: var(--sp-space-md);
-  padding: 10px 20px;
+  padding: var(--sp-space-3) var(--sp-space-5);
   background: transparent;
   color: var(--sp-color-primary);
   font-family: var(--sp-font-brand);

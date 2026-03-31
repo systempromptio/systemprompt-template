@@ -1,7 +1,7 @@
 
 .primary-cta {
   display: inline-block;
-  padding: 14px 32px;
+  padding: var(--sp-space-4) var(--sp-space-8);
   background: linear-gradient(135deg, var(--sp-brand-600), var(--sp-brand-500));
   color: var(--sp-color-text-on-primary);
   font-family: var(--sp-font-brand);
@@ -23,7 +23,7 @@
 
 .secondary-cta {
   display: inline-block;
-  padding: 14px 32px;
+  padding: var(--sp-space-4) var(--sp-space-8);
   background: transparent;
   color: var(--sp-color-primary);
   font-family: var(--sp-font-brand);

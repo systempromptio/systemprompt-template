@@ -57,7 +57,7 @@
 
 .terminal-dots {
   display: flex;
-  gap: 6px;
+  gap: var(--sp-space-2);
 }
 
 .terminal-dots span {

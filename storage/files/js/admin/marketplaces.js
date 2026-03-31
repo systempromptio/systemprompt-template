@@ -1,6 +1,8 @@
 (function(app) {
     'use strict';
 
+    const mktFetch = (url, opts = {}) => fetch(url, { credentials: 'include', ...opts });
+
     app.initOrgMarketplaces = () => {
         const searchInput = document.getElementById('mkt-search');
         const deptFilter = document.getElementById('mkt-dept-filter');
@@ -114,9 +116,8 @@
             const origText = btn.textContent;
             btn.textContent = 'Syncing...';
             app.shared.closeAllMenus();
-            fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/sync', {
-                method: 'POST',
-                credentials: 'include'
+            mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/sync', {
+                method: 'POST'
             })
             .then((resp) => resp.json().then((data) => ({ ok: resp.ok, data: data })))
             .then((result) => {
@@ -161,9 +162,8 @@
                 if (pubBtn) {
                     pubBtn.disabled = true;
                     pubBtn.textContent = 'Publishing...';
-                    fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/publish', {
-                        method: 'POST',
-                        credentials: 'include'
+                    mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/publish', {
+                        method: 'POST'
                     })
                     .then((resp) => resp.json().then((data) => ({ ok: resp.ok, data: data })))
                     .then((result) => {
@@ -214,15 +214,14 @@
                 confirmBtn.disabled = true;
                 confirmBtn.textContent = 'Deleting...';
                 try {
-                    const resp = await fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id), {
-                        method: 'DELETE',
-                        credentials: 'include'
+                    const resp = await mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id), {
+                        method: 'DELETE'
                     });
                     if (resp.ok) {
                         app.Toast.show('Marketplace deleted', 'success');
                         setTimeout(() => { window.location.reload(); }, 500);
                     } else {
-                        const data = await resp.json().catch(() => ({}));
+                        const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                         app.Toast.show(data.error || 'Failed to delete', 'error');
                     }
                 } catch (err) {
@@ -248,7 +247,7 @@
 
             panelApi.setTitle('Manage Plugins - ' + (mktData.name || id));
 
-            fetch(app.API_BASE + '/plugins', { credentials: 'include' })
+            mktFetch(app.API_BASE + '/plugins')
                 .then((r) => r.json())
                 .then((allPlugins) => {
                     const currentIds = {};
@@ -290,9 +289,8 @@
                             saveBtn.disabled = true;
                             saveBtn.textContent = 'Saving...';
                             try {
-                                const resp = await fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/plugins', {
+                                const resp = await mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/plugins', {
                                     method: 'PUT',
-                                    credentials: 'include',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ plugin_ids: ids })
                                 });
@@ -301,7 +299,7 @@
                                     panelApi.close();
                                     setTimeout(() => { window.location.reload(); }, 500);
                                 } else {
-                                    const data = await resp.json().catch(() => ({}));
+                                    const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                                     app.Toast.show(data.error || 'Failed to update', 'error');
                                     saveBtn.disabled = false;
                                     saveBtn.textContent = 'Save';
@@ -349,7 +347,7 @@
 
             panelApi.setTitle(isEdit ? 'Edit Marketplace' : 'Create Marketplace');
 
-            fetch(app.API_BASE + '/plugins', { credentials: 'include' })
+            mktFetch(app.API_BASE + '/plugins')
                 .then((r) => r.json())
                 .then((allPlugins) => {
                     const currentPluginIds = {};
@@ -573,16 +571,14 @@
                     github_repo_url: githubUrl || null,
                     plugin_ids: pluginIds
                 };
-                const resp = await fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(marketplaceId), {
+                const resp = await mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(marketplaceId), {
                     method: 'PUT',
-                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 });
                 if (resp.ok) {
-                    await fetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(marketplaceId), {
+                    await mktFetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(marketplaceId), {
                         method: 'PUT',
-                        credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ rules: aclRules, sync_yaml: false })
                     });
@@ -590,7 +586,7 @@
                     panelApi.close();
                     setTimeout(() => { window.location.reload(); }, 500);
                 } else {
-                    const data = await resp.json().catch(() => ({}));
+                    const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                     app.Toast.show(data.error || 'Failed to update', 'error');
                 }
             } else {
@@ -601,19 +597,17 @@
                     github_repo_url: githubUrl || null,
                     plugin_ids: pluginIds
                 };
-                const resp = await fetch(app.API_BASE + '/org/marketplaces', {
+                const resp = await mktFetch(app.API_BASE + '/org/marketplaces', {
                     method: 'POST',
-                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 });
                 if (resp.ok || resp.status === 201) {
-                    const created = await resp.json().catch(() => ({}));
+                    const created = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                     const createdId = created.id || body.id;
                     if (aclRules.length > 0 && createdId) {
-                        await fetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
+                        await mktFetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
                             method: 'PUT',
-                            credentials: 'include',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ rules: aclRules, sync_yaml: false })
                         });
@@ -622,7 +616,7 @@
                     panelApi.close();
                     setTimeout(() => { window.location.reload(); }, 500);
                 } else {
-                    const data = await resp.json().catch(() => ({}));
+                    const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                     app.Toast.show(data.error || 'Failed to create', 'error');
                 }
             }
@@ -699,23 +693,21 @@
                 };
 
                 try {
-                    const resp = await fetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id), {
+                    const resp = await mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id), {
                         method: 'PUT',
-                        credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(body)
                     });
                     if (resp.ok) {
-                        await fetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(id), {
+                        await mktFetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(id), {
                             method: 'PUT',
-                            credentials: 'include',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ rules: aclRules, sync_yaml: false })
                         });
                         app.Toast.show('Marketplace updated', 'success');
                         setTimeout(() => { window.location.href = '/admin/org/marketplaces/'; }, 500);
                     } else {
-                        const data = await resp.json().catch(() => ({}));
+                        const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                         app.Toast.show(data.error || 'Failed to update', 'error');
                     }
                 } catch (err) {
@@ -731,19 +723,17 @@
                 };
 
                 try {
-                    const resp = await fetch(app.API_BASE + '/org/marketplaces', {
+                    const resp = await mktFetch(app.API_BASE + '/org/marketplaces', {
                         method: 'POST',
-                        credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(body)
                     });
                     if (resp.ok || resp.status === 201) {
-                        const created = await resp.json().catch(() => ({}));
+                        const created = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                         const createdId = created.id || body.id;
                         if (aclRules.length > 0 && createdId) {
-                            await fetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
+                            await mktFetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
                                 method: 'PUT',
-                                credentials: 'include',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ rules: aclRules, sync_yaml: false })
                             });
@@ -751,7 +741,7 @@
                         app.Toast.show('Marketplace created', 'success');
                         setTimeout(() => { window.location.href = '/admin/org/marketplaces/'; }, 500);
                     } else {
-                        const data = await resp.json().catch(() => ({}));
+                        const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                         app.Toast.show(data.error || 'Failed to create', 'error');
                     }
                 } catch (err) {

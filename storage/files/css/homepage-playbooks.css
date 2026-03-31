@@ -205,7 +205,7 @@
   background: transparent;
   border: 1px solid var(--sp-color-border);
   border-radius: var(--sp-radius-sm);
-  padding: 6px 8px;
+  padding: var(--sp-space-2) var(--sp-space-2);
   cursor: pointer;
   color: var(--sp-color-text-secondary);
   transition: all var(--sp-transition-fast);
@@ -327,7 +327,7 @@
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  padding: 6px 8px;
+  padding: var(--sp-space-2) var(--sp-space-2);
 }
 
 .quick-action-card__desc {
@@ -382,7 +382,7 @@
 .quick-action-card__traits li {
   font-size: 0.7rem;
   color: var(--sp-color-text-muted);
-  padding: 2px 0 2px 12px;
+  padding: var(--sp-space-1) 0 var(--sp-space-1) var(--sp-space-3);
   position: relative;
 }
 
@@ -964,7 +964,7 @@
   font-size: 0.875rem;
   color: var(--sp-color-success);
   background: rgba(34, 197, 94, 0.1);
-  padding: 2px 8px;
+  padding: var(--sp-space-1) var(--sp-space-2);
   border-radius: var(--sp-radius-sm);
 }
 

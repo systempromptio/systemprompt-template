@@ -114,7 +114,7 @@
   font-size: var(--sp-font-size-xs);
   font-weight: var(--sp-font-weight-semibold);
   text-transform: uppercase;
-  padding: 4px 8px;
+  padding: var(--sp-space-1) var(--sp-space-2);
   border-radius: var(--sp-radius-sm);
   margin-bottom: var(--sp-spacing-sm);
   letter-spacing: 0.5px;
@@ -149,7 +149,7 @@
 
 .content-card__tag {
   font-size: var(--sp-font-size-xs);
-  padding: 2px 8px;
+  padding: var(--sp-space-1) var(--sp-space-2);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--sp-color-border);
   border-radius: var(--sp-radius-sm);
@@ -237,12 +237,12 @@
 .card-category {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-space-2);
   font-size: var(--sp-font-size-xs);
   font-weight: var(--sp-font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 4px 10px;
+  padding: var(--sp-space-1) var(--sp-space-3);
   border-radius: var(--sp-radius-sm);
   margin-bottom: var(--sp-spacing-sm);
   background: rgba(255, 255, 255, 0.05);
