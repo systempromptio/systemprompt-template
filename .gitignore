@@ -165,3 +165,4 @@ storage/marketplace-versions/
 .systemprompt/profiles/*/secrets.json
 .systemprompt/sessions/
 storage/github-marketplaces/
+.claude/worktrees/
