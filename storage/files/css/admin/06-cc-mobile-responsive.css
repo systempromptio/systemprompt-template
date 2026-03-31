@@ -9,7 +9,7 @@
     .cc-batch-bar {
         position: sticky;
         bottom: 0;
-        z-index: 10;
+        z-index: var(--sp-z-sticky-header);
         border-top: 1px solid var(--sp-border-default);
         box-shadow: 0 -2px 8px color-mix(in oklch, #000 8%, transparent);
     }

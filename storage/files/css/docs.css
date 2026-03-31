@@ -26,15 +26,15 @@
 
 .docs-layout {
   display: grid;
-  grid-template-columns: var(--sp-sidebar-left-width, 280px) 1fr var(--sp-sidebar-right-width, 220px);
-  min-height: calc(100vh - var(--sp-header-height, 72px));
+  grid-template-columns: var(--sp-sidebar-left-width) 1fr var(--sp-sidebar-right-width);
+  min-height: calc(100vh - var(--sp-header-height));
   max-width: 1600px;
   margin: 0 auto;
-  padding-top: var(--sp-header-height, 72px);
+  padding-top: var(--sp-header-height);
 }
 
 .docs-layout--list {
-  grid-template-columns: var(--sp-sidebar-left-width, 280px) 1fr;
+  grid-template-columns: var(--sp-sidebar-left-width) 1fr;
 }
 
 
@@ -48,8 +48,8 @@
 
 .docs-nav {
   position: sticky;
-  top: var(--sp-header-height, 72px);
-  max-height: calc(100vh - var(--sp-header-height, 72px));
+  top: var(--sp-header-height);
+  max-height: calc(100vh - var(--sp-header-height));
   overflow-y: auto;
   padding-bottom: var(--sp-spacing-xxl);
   scrollbar-width: none;
@@ -375,7 +375,7 @@
 }
 
 .docs-export-btn.copied {
-  color: var(--sp-color-success, #22c55e);
+  color: var(--sp-color-success);
 }
 
 .docs-export-btn svg {
@@ -574,7 +574,7 @@
 .docs-learning-objectives {
   margin: 0 0 var(--sp-spacing-xl) 0;
   padding: var(--sp-spacing-lg);
-  border-left: 4px solid var(--sp-color-success, #22c55e);
+  border-left: 4px solid var(--sp-color-success);
   background: rgba(34, 197, 94, 0.05);
   border-radius: 0 var(--sp-radius-md) var(--sp-radius-md) 0;
 }
@@ -614,7 +614,7 @@
   content: '✓';
   position: absolute;
   left: 0;
-  color: var(--sp-color-success, #22c55e);
+  color: var(--sp-color-success);
   font-weight: var(--sp-font-weight-bold);
 }
 
@@ -772,8 +772,8 @@
 
 .toc-nav {
   position: sticky;
-  top: var(--sp-header-height, 72px);
-  max-height: calc(100vh - var(--sp-header-height, 72px));
+  top: var(--sp-header-height);
+  max-height: calc(100vh - var(--sp-header-height));
   overflow-y: auto;
 }
 
@@ -1021,7 +1021,7 @@
 
 @media (max-width: 1200px) {
   .docs-layout {
-    grid-template-columns: var(--sp-sidebar-left-width, 260px) 1fr;
+    grid-template-columns: var(--sp-sidebar-left-width) 1fr;
   }
 
   .docs-toc {
@@ -1038,18 +1038,18 @@
   
   .docs-sidebar {
     position: fixed;
-    top: var(--sp-header-height, 72px);
+    top: var(--sp-header-height);
     left: 0;
     right: 0;
     bottom: 0;
     height: auto;
-    max-height: calc(100vh - var(--sp-header-height, 72px));
+    max-height: calc(100vh - var(--sp-header-height));
     border-right: none;
     border-bottom: none;
     background: var(--sp-color-surface);
     transform: translateX(-100%);
     transition: transform 0.3s ease;
-    z-index: var(--sp-z-sidebar, 50);
+    z-index: var(--sp-z-sidebar);
     overflow-y: auto;
   }
 

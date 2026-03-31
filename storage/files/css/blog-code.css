@@ -31,7 +31,7 @@
 .blog-content pre code {
   display: block;
   padding: var(--sp-spacing-lg);
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.6;
   background: none;
   border: none;
@@ -89,7 +89,7 @@
   top: 0;
   right: 0;
   padding: 0.25em 0.75em;
-  font-size: 12px;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background: rgba(255, 255, 255, 0.1);
@@ -114,7 +114,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--sp-radius-sm);
   color: rgba(255, 255, 255, 0.8);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: var(--sp-font-weight-semibold);
   cursor: pointer;
   opacity: 0;
@@ -151,7 +151,7 @@
   }
 
   .blog-content pre code {
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 
   .blog-content .code-copy-button {

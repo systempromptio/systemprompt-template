@@ -140,8 +140,8 @@ html .sf-session-actions {
     background: color-mix(in oklch, var(--sp-warning) 12%, transparent);
 }
 .sf-quality-badge--low {
-    color: var(--sp-error);
-    background: color-mix(in oklch, var(--sp-error) 12%, transparent);
+    color: var(--sp-danger);
+    background: color-mix(in oklch, var(--sp-danger) 12%, transparent);
 }
 
 .sf-goal-badge {
@@ -153,7 +153,7 @@ html .sf-session-actions {
 }
 .sf-goal-badge--yes { color: var(--sp-success); }
 .sf-goal-badge--partial { color: var(--sp-warning); }
-.sf-goal-badge--no { color: var(--sp-error); }
+.sf-goal-badge--no { color: var(--sp-danger); }
 .sf-goal-badge--unknown { color: var(--sp-text-tertiary); }
 
 .cc-analysis-preview {

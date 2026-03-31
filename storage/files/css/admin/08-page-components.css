@@ -11,8 +11,8 @@
     flex-direction: column;
     gap: var(--sp-space-1);
     padding: var(--sp-space-3);
-    background: var(--sp-surface-1);
-    border: 1px solid var(--sp-border-color);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
     border-radius: var(--sp-radius-md);
 }
 
@@ -48,7 +48,7 @@
 
 .usage-limit-bar {
     height: 6px;
-    background: var(--sp-surface-2);
+    background: var(--sp-bg-surface-raised);
     border-radius: var(--sp-radius-xs);
     overflow: hidden;
 }
@@ -78,8 +78,8 @@
 
 .xp-guide {
     padding: var(--sp-space-4);
-    background: var(--sp-surface-1);
-    border: 1px solid var(--sp-border-color);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
     border-radius: var(--sp-radius-md);
     margin-bottom: var(--sp-space-4);
 }
@@ -106,7 +106,7 @@
     justify-content: space-between;
     align-items: center;
     padding: var(--sp-space-2) var(--sp-space-3);
-    background: var(--sp-surface-2);
+    background: var(--sp-bg-surface-raised);
     border-radius: var(--sp-radius-sm);
 }
 
@@ -164,14 +164,14 @@
     gap: var(--sp-space-2);
     padding: var(--sp-space-2) var(--sp-space-3);
     border-radius: var(--sp-radius-sm);
-    background: var(--sp-surface-1);
-    border: 1px solid var(--sp-border-color);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
     font-size: var(--sp-text-sm);
 }
 
 .rank-ladder__step--current {
     border-color: var(--sp-accent);
-    background: color-mix(in oklch, var(--sp-accent) 8%, var(--sp-surface-1));
+    background: color-mix(in oklch, var(--sp-accent) 8%, var(--sp-bg-surface));
 }
 
 .rank-ladder__step-badge {
@@ -206,8 +206,8 @@
 }
 
 .achievement-category {
-    background: var(--sp-surface-1);
-    border: 1px solid var(--sp-border-color);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
     border-radius: var(--sp-radius-md);
     overflow: hidden;
 }
@@ -245,7 +245,7 @@
 
 .achievement-category__bar {
     height: 3px;
-    background: var(--sp-surface-2);
+    background: var(--sp-bg-surface-raised);
 }
 
 .achievement-category__bar-fill {
@@ -258,7 +258,7 @@
     display: flex;
     gap: var(--sp-space-3);
     padding: var(--sp-space-3) var(--sp-space-4);
-    border-top: 1px solid var(--sp-border-color);
+    border-top: 1px solid var(--sp-border-default);
     align-items: flex-start;
 }
 

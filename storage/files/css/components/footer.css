@@ -3,7 +3,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: var(--sp-z-sidebar);
   background: rgba(180, 75, 20, 0.9);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);

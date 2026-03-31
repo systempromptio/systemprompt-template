@@ -8,7 +8,7 @@
 
 .bar-track {
   flex: 1;
-  background: var(--sp-bg-secondary);
+  background: var(--sp-bg-surface-raised);
   border-radius: var(--sp-radius-xs);
   height: 20px;
   overflow: hidden;
@@ -62,7 +62,7 @@
   overflow: hidden;
 }
 .progress-fill-primary {
-  background: var(--sp-color-primary);
+  background: var(--sp-accent);
   height: 100%;
   border-radius: var(--sp-radius-sm);
 }
@@ -101,8 +101,8 @@
 }
 
 .login-error--success {
-  color: var(--sp-color-success);
-  border-color: var(--sp-color-success);
+  color: var(--sp-success);
+  border-color: var(--sp-success);
 }
 
 .card-footer {

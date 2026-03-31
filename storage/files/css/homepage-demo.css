@@ -30,7 +30,7 @@
   top: 0;
   background: var(--sp-color-surface);
   border: 1px solid var(--sp-color-border);
-  border-radius: 12px;
+  border-radius: var(--sp-radius-lg);
   overflow: hidden;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   transition: opacity 0.4s ease, visibility 0.4s ease;
@@ -63,7 +63,7 @@
 .terminal-dots span {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
+  border-radius: var(--sp-radius-full);
   background: var(--sp-color-text-muted);
   opacity: 0.3;
   transition: all 0.3s ease;
@@ -210,7 +210,7 @@
   height: 40px;
   background: transparent;
   border: 1px solid var(--sp-color-border);
-  border-radius: 8px;
+  border-radius: var(--sp-radius-button);
   color: var(--sp-color-text-muted);
   cursor: pointer;
   transition: all var(--sp-transition-fast);
@@ -273,7 +273,7 @@
   .terminal-controls.terminal-controls {
     display: flex;
     position: relative;
-    z-index: 10;
+    z-index: var(--sp-z-sticky-header);
     margin-top: var(--sp-space-lg);
   }
 

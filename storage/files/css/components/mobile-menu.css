@@ -12,7 +12,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  z-index: 110;
+  z-index: var(--sp-z-sidebar-drawer);
 }
 
 .hamburger-line {
@@ -21,7 +21,7 @@
   height: 2px;
   background: var(--sp-color-text);
   transition: all 0.3s ease;
-  border-radius: 1px;
+  border-radius: var(--sp-radius-xs);
 }
 
 
@@ -93,7 +93,7 @@
     padding: var(--sp-space-sm) var(--sp-space-md);
     font-size: 0.85rem;
     border-bottom: none;
-    border-radius: 6px;
+    border-radius: var(--sp-radius-sm);
   }
 
   

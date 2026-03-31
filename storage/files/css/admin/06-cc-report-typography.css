@@ -69,7 +69,7 @@
 .cc-legend--actions { color: var(--sp-accent); }
 .cc-legend--apm { color: var(--sp-success); }
 .cc-legend--concurrency { color: var(--sp-warning); }
-.cc-legend--throughput { color: var(--sp-info); }
+.cc-legend--throughput { color: var(--sp-accent); }
 .cc-legend--tools { color: var(--sp-text-secondary); }
 
 .cc-quality-gauge {

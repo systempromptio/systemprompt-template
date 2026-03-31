@@ -263,7 +263,7 @@
 
     .kpi-period {
         font-size: var(--sp-text-xs);
-        color: var(--sp-text-muted, var(--sp-text-tertiary));
+        color: var(--sp-text-tertiary);
         font-weight: 400;
     }
 

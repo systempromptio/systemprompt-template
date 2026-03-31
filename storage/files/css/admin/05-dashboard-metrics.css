@@ -74,7 +74,7 @@
 
 .metric-ribbon-period {
     font-size: var(--sp-text-xs);
-    color: var(--sp-text-muted, var(--sp-text-tertiary));
+    color: var(--sp-text-tertiary);
     font-weight: 400;
     margin-top: 0.0625rem;
 }

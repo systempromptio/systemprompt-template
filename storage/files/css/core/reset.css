@@ -5,7 +5,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 1rem;
   scroll-behavior: smooth;
   overflow-x: hidden;
   overflow-y: visible;
@@ -50,7 +50,7 @@ a:hover {
 
 ::-webkit-scrollbar-thumb {
   background: var(--sp-color-text-muted);
-  border-radius: 6px;
+  border-radius: var(--sp-radius-sm);
   border: 3px solid var(--sp-color-background);
 }
 

@@ -302,13 +302,13 @@
   flex: 1;
   max-width: 220px;
   position: relative;
-  z-index: 1;
+  z-index: var(--sp-z-sticky);
 }
 
 .step-number {
   width: 64px;
   height: 64px;
-  border-radius: 50%;
+  border-radius: var(--sp-radius-full);
   background: linear-gradient(135deg, var(--sp-brand-700), var(--sp-brand-500));
   color: var(--sp-color-text-on-primary);
   font-family: var(--sp-font-brand);
@@ -320,7 +320,7 @@
   margin: 0 auto var(--sp-space-lg);
   box-shadow: 0 4px 20px rgba(0, 113, 206, 0.3);
   position: relative;
-  z-index: 2;
+  z-index: var(--sp-z-sticky-header);
 }
 
 .step h3 {
@@ -342,7 +342,7 @@
   display: inline-block;
   background: var(--sp-color-surface-elevated);
   border: 1px solid var(--sp-color-border);
-  border-radius: 6px;
+  border-radius: var(--sp-radius-sm);
   padding: var(--sp-space-xs) var(--sp-space-sm);
   font-family: "SF Mono", "Fira Code", monospace;
   font-size: 0.75rem;
@@ -423,7 +423,7 @@
 .use-case-code {
   background: var(--sp-color-surface);
   border: 1px solid var(--sp-color-border);
-  border-radius: 8px;
+  border-radius: var(--sp-radius-button);
   padding: var(--sp-space-md);
   overflow-x: auto;
   margin: 0;
@@ -694,7 +694,7 @@
   gap: var(--sp-space-lg);
   background: var(--sp-card-bg-gradient);
   border: 1px solid var(--sp-color-primary);
-  border-radius: 12px;
+  border-radius: var(--sp-radius-lg);
   padding: var(--sp-space-xl);
   margin-bottom: var(--sp-space-2xl);
 }
@@ -716,7 +716,7 @@
 .extension-traits {
   background: var(--sp-color-surface);
   border: 1px solid var(--sp-color-border);
-  border-radius: 12px;
+  border-radius: var(--sp-radius-lg);
   overflow: hidden;
 }
 
@@ -789,7 +789,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border: 1px solid var(--sp-color-primary);
-  border-radius: 6px;
+  border-radius: var(--sp-radius-sm);
   transition: all var(--sp-transition-fast);
 }
 
@@ -801,7 +801,7 @@
 .trait-code pre {
   background: var(--sp-color-background);
   border: 1px solid var(--sp-color-border);
-  border-radius: 8px;
+  border-radius: var(--sp-radius-button);
   padding: var(--sp-space-lg);
   overflow-x: auto;
   margin: 0;
@@ -819,7 +819,7 @@
   text-align: center;
   padding: var(--sp-space-xl);
   background: rgba(0, 113, 206, 0.05);
-  border-radius: 8px;
+  border-radius: var(--sp-radius-button);
   margin-top: var(--sp-space-xl);
 }
 

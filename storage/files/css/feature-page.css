@@ -20,7 +20,7 @@ body {
   right: -150px;
   width: 600px;
   height: 600px;
-  border-radius: 50%;
+  border-radius: var(--sp-radius-full);
   background: radial-gradient(circle,
     rgba(0, 113, 206, 0.35) 0%,
     rgba(0, 113, 206, 0.06) 70%,

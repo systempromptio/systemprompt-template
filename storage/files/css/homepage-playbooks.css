@@ -558,7 +558,7 @@
   margin: 0 auto var(--sp-space-md);
   color: var(--sp-color-primary);
   background: rgba(0, 113, 206, 0.1);
-  border-radius: 50%;
+  border-radius: var(--sp-radius-full);
 }
 
 .playbooks-diff-card__icon svg {
@@ -874,7 +874,7 @@
 .status-card__indicator {
   width: 12px;
   height: 12px;
-  border-radius: 50%;
+  border-radius: var(--sp-radius-full);
   background: var(--sp-color-success);
   box-shadow: 0 0 12px var(--sp-color-success), 0 0 24px rgba(34, 197, 94, 0.5);
   animation: status-pulse 2s ease-in-out infinite;
@@ -986,7 +986,7 @@
 
 .status-card__list::-webkit-scrollbar-thumb {
   background: var(--sp-color-border);
-  border-radius: 2px;
+  border-radius: var(--sp-radius-xs);
 }
 
 .status-card__item {
@@ -1007,7 +1007,7 @@
 .status-card__item-indicator {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: var(--sp-radius-full);
   background: var(--sp-color-success);
   flex-shrink: 0;
 }
@@ -1098,7 +1098,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1000;
+  z-index: var(--sp-z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1112,14 +1112,14 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.92);
-  z-index: 1;
+  z-index: var(--sp-z-sticky);
 }
 
 .mcp-modal__content {
   position: relative;
-  z-index: 2;
+  z-index: var(--sp-z-sticky-header);
   background: #001433;
-  background: var(--sp-color-bg-elevated, #001433);
+  background: var(--sp-color-bg-elevated);
   border: 1px solid var(--sp-color-border);
   border-radius: var(--sp-radius-lg);
   padding: var(--sp-space-xl);
@@ -1234,13 +1234,13 @@
 .mcp-modal__instructions pre::-webkit-scrollbar-track,
 .mcp-modal__url::-webkit-scrollbar-track {
   background: var(--sp-color-bg-primary);
-  border-radius: 3px;
+  border-radius: var(--sp-radius-xs);
 }
 
 .mcp-modal__instructions pre::-webkit-scrollbar-thumb,
 .mcp-modal__url::-webkit-scrollbar-thumb {
   background: var(--sp-color-border);
-  border-radius: 3px;
+  border-radius: var(--sp-radius-xs);
 }
 
 .status-card__docs {

@@ -92,7 +92,7 @@
   background: var(--sp-color-surface-elevated);
   color: var(--sp-color-text);
   padding: 0.2em 0.4em;
-  border-radius: 3px;
+  border-radius: var(--sp-radius-xs);
   font-size: 0.9em;
   border: 1px solid var(--sp-color-border);
 }

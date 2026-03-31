@@ -15,7 +15,7 @@
     display: inline-block;
     width: 12px;
     height: 12px;
-    border-radius: 2px;
+    border-radius: var(--sp-radius-xs);
 }
 .profile-comparison-legend-swatch--user {
     background: var(--sp-accent);
@@ -46,7 +46,7 @@
 .profile-bar-track {
     position: relative;
     height: 20px;
-    background: var(--sp-surface-2);
+    background: var(--sp-bg-surface-raised);
     border-radius: var(--sp-radius-xs);
     overflow: hidden;
 }
@@ -60,7 +60,7 @@
 .profile-bar--user {
     background: var(--sp-accent);
     opacity: 0.85;
-    z-index: 2;
+    z-index: var(--sp-z-sticky-header);
 }
 .profile-bar--global {
     background: repeating-linear-gradient(
@@ -71,7 +71,7 @@
         transparent 5px
     );
     opacity: 0.4;
-    z-index: 1;
+    z-index: var(--sp-z-sticky);
 }
 .profile-comparison-values {
     display: flex;
@@ -102,7 +102,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0;
-    border-bottom: 1px solid var(--sp-border-color);
+    border-bottom: 1px solid var(--sp-border-default);
 }
 .profile-sw-item:last-child { border-bottom: none; }
 .profile-sw-label { flex: 1; font-size: 0.85rem; font-weight: 500; }
@@ -147,7 +147,7 @@
 .profile-category-label { font-weight: 500; }
 .profile-category-bar-track {
     height: 14px;
-    background: var(--sp-surface-2);
+    background: var(--sp-bg-surface-raised);
     border-radius: var(--sp-radius-xs);
     overflow: hidden;
 }
@@ -167,8 +167,8 @@
 }
 .profile-entity-card {
     padding: 0.75rem;
-    border-radius: var(--sp-radius-card-brand, var(--sp-radius-md));
-    background: var(--sp-surface-2);
+    border-radius: var(--sp-radius-card-brand);
+    background: var(--sp-bg-surface-raised);
 }
 .profile-entity-value {
     display: block;
@@ -188,7 +188,7 @@
 .profile-ai-block {
     padding: 1rem;
     border-radius: var(--sp-radius-md);
-    background: var(--sp-surface-1);
+    background: var(--sp-bg-surface);
 }
 .profile-ai-block--highlight {
     background: var(--sp-accent-surface);

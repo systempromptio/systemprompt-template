@@ -97,7 +97,7 @@
 .toggle-slider {
     position: absolute;
     inset: 0;
-    background: var(--sp-border);
+    background: var(--sp-border-default);
     border-radius: var(--sp-radius-full);
     transition: background var(--sp-duration-normal);
 }

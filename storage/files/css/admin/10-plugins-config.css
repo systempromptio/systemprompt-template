@@ -168,7 +168,7 @@
     .wizard-step-num {
         width: 20px;
         height: 20px;
-        border-radius: 50%;
+        border-radius: var(--sp-radius-full);
         background: rgba(255, 255, 255, 0.2);
         display: inline-flex;
         align-items: center;

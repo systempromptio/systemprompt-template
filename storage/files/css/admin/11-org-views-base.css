@@ -72,7 +72,7 @@
     .detail-sub-table th {
         font-size: var(--sp-text-xs);
         text-transform: uppercase;
-        color: var(--sp-text-muted);
+        color: var(--sp-text-tertiary);
         padding: var(--sp-space-1) var(--sp-space-2);
     }
     .detail-sub-table td {

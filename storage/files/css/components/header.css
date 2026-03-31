@@ -63,7 +63,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   text-decoration: none;
-  border-radius: 3px;
+  border-radius: var(--sp-radius-xs);
   transition: opacity var(--sp-transition-fast);
 }
 
@@ -127,13 +127,13 @@ button.cta-button {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: var(--sp-radius-sm);
   transition: all var(--sp-transition-fast);
 }
 
 a.cta-button:hover,
 button.cta-button:hover {
-  background: var(--sp-client-orange, #FF8555);
+  background: var(--sp-client-orange);
   color: var(--sp-color-text-on-primary);
   transform: translateY(-1px);
 }
@@ -195,12 +195,12 @@ button.cta-button:hover {
   margin-top: var(--sp-space-sm);
   background: var(--sp-color-surface-elevated);
   border: 1px solid var(--sp-color-border);
-  border-radius: 12px;
+  border-radius: var(--sp-radius-lg);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   opacity: 0;
   visibility: hidden;
   transition: opacity var(--sp-transition-fast), visibility var(--sp-transition-fast);
-  z-index: 200;
+  z-index: var(--sp-z-dropdown);
 }
 
 .nav-dropdown:hover .nav-dropdown-menu {

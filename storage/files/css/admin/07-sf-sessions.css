@@ -135,7 +135,7 @@
     position: absolute;
     top: var(--sp-space-3);
     left: var(--sp-space-4);
-    z-index: 2;
+    z-index: var(--sp-z-sticky-header);
     display: flex;
     align-items: center;
     line-height: 1;
