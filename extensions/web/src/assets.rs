@@ -8,6 +8,7 @@ pub fn web_assets(paths: &dyn systemprompt::extension::AssetPaths) -> Vec<AssetD
 
     let mut assets = css_assets(&storage_css);
     assets.extend(public_js_assets(&storage_js));
+    assets.extend(service_js_assets(&storage_js));
     assets.extend(admin_assets(&storage_css, &storage_js));
     assets.extend(admin_html_assets(&storage_admin));
     assets
@@ -118,6 +119,68 @@ fn public_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
         AssetDefinition::js(storage_js.join("blog-images.js"), "js/blog-images.js"),
         AssetDefinition::js(storage_js.join("homepage.js"), "js/homepage.js"),
         AssetDefinition::js(storage_js.join("presentation-nav.js"), "js/presentation-nav.js"),
+    ]
+}
+
+fn service_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
+    vec![
+        AssetDefinition::js(storage_js.join("services/api.js"), "js/services/api.js"),
+        AssetDefinition::js(storage_js.join("services/auth.js"), "js/services/auth.js"),
+        AssetDefinition::js(storage_js.join("services/bootstrap.js"), "js/services/bootstrap.js"),
+        AssetDefinition::js(storage_js.join("services/cc-cards-helpers.js"), "js/services/cc-cards-helpers.js"),
+        AssetDefinition::js(storage_js.join("services/cc-cards-render-metrics.js"), "js/services/cc-cards-render-metrics.js"),
+        AssetDefinition::js(storage_js.join("services/cc-cards-render-sections.js"), "js/services/cc-cards-render-sections.js"),
+        AssetDefinition::js(storage_js.join("services/cc-cards-render-session.js"), "js/services/cc-cards-render-session.js"),
+        AssetDefinition::js(storage_js.join("services/cc-charts-render.js"), "js/services/cc-charts-render.js"),
+        AssetDefinition::js(storage_js.join("services/cc-charts-setup.js"), "js/services/cc-charts-setup.js"),
+        AssetDefinition::js(storage_js.join("services/cc-charts-tooltip.js"), "js/services/cc-charts-tooltip.js"),
+        AssetDefinition::js(storage_js.join("services/cc-feed-reorder.js"), "js/services/cc-feed-reorder.js"),
+        AssetDefinition::js(storage_js.join("services/cc-stats-api.js"), "js/services/cc-stats-api.js"),
+        AssetDefinition::js(storage_js.join("services/cc-stats-charts.js"), "js/services/cc-stats-charts.js"),
+        AssetDefinition::js(storage_js.join("services/cc-stats-daily.js"), "js/services/cc-stats-daily.js"),
+        AssetDefinition::js(storage_js.join("services/cc-stats-header.js"), "js/services/cc-stats-header.js"),
+        AssetDefinition::js(storage_js.join("services/cc-stats-suggestions.js"), "js/services/cc-stats-suggestions.js"),
+        AssetDefinition::js(storage_js.join("services/cc-stats-ui.js"), "js/services/cc-stats-ui.js"),
+        AssetDefinition::js(storage_js.join("services/confirm.js"), "js/services/confirm.js"),
+        AssetDefinition::js(storage_js.join("services/control-center-batch.js"), "js/services/control-center-batch.js"),
+        AssetDefinition::js(storage_js.join("services/control-center-cards-render.js"), "js/services/control-center-cards-render.js"),
+        AssetDefinition::js(storage_js.join("services/control-center-cards.js"), "js/services/control-center-cards.js"),
+        AssetDefinition::js(storage_js.join("services/control-center-feed.js"), "js/services/control-center-feed.js"),
+        AssetDefinition::js(storage_js.join("services/control-center-limits.js"), "js/services/control-center-limits.js"),
+        AssetDefinition::js(storage_js.join("services/control-center-stats.js"), "js/services/control-center-stats.js"),
+        AssetDefinition::js(storage_js.join("services/control-center-turns.js"), "js/services/control-center-turns.js"),
+        AssetDefinition::js(storage_js.join("services/dropdown.js"), "js/services/dropdown.js"),
+        AssetDefinition::js(storage_js.join("services/engagement-state.js"), "js/services/engagement-state.js"),
+        AssetDefinition::js(storage_js.join("services/engagement-tracker.js"), "js/services/engagement-tracker.js"),
+        AssetDefinition::js(storage_js.join("services/entity-batch-ops.js"), "js/services/entity-batch-ops.js"),
+        AssetDefinition::js(storage_js.join("services/entity-batch.js"), "js/services/entity-batch.js"),
+        AssetDefinition::js(storage_js.join("services/entity-common.js"), "js/services/entity-common.js"),
+        AssetDefinition::js(storage_js.join("services/events.js"), "js/services/events.js"),
+        AssetDefinition::js(storage_js.join("services/header-actions.js"), "js/services/header-actions.js"),
+        AssetDefinition::js(storage_js.join("services/install-widget.js"), "js/services/install-widget.js"),
+        AssetDefinition::js(storage_js.join("services/list-page.js"), "js/services/list-page.js"),
+        AssetDefinition::js(storage_js.join("services/onboarding-banner.js"), "js/services/onboarding-banner.js"),
+        AssetDefinition::js(storage_js.join("services/plugin-details-ui.js"), "js/services/plugin-details-ui.js"),
+        AssetDefinition::js(storage_js.join("services/plugin-details.js"), "js/services/plugin-details.js"),
+        AssetDefinition::js(storage_js.join("services/plugin-env-ui.js"), "js/services/plugin-env-ui.js"),
+        AssetDefinition::js(storage_js.join("services/plugin-env.js"), "js/services/plugin-env.js"),
+        AssetDefinition::js(storage_js.join("services/plugin-resources-helpers.js"), "js/services/plugin-resources-helpers.js"),
+        AssetDefinition::js(storage_js.join("services/plugin-resources.js"), "js/services/plugin-resources.js"),
+        AssetDefinition::js(storage_js.join("services/sidebar.js"), "js/services/sidebar.js"),
+        AssetDefinition::js(storage_js.join("services/skill-files-editor.js"), "js/services/skill-files-editor.js"),
+        AssetDefinition::js(storage_js.join("services/skill-files-modal.js"), "js/services/skill-files-modal.js"),
+        AssetDefinition::js(storage_js.join("services/skill-files.js"), "js/services/skill-files.js"),
+        AssetDefinition::js(storage_js.join("services/sse-client.js"), "js/services/sse-client.js"),
+        AssetDefinition::js(storage_js.join("services/table-sort.js"), "js/services/table-sort.js"),
+        AssetDefinition::js(storage_js.join("services/theme.js"), "js/services/theme.js"),
+        AssetDefinition::js(storage_js.join("services/toast.js"), "js/services/toast.js"),
+        AssetDefinition::js(storage_js.join("services/toc-highlight.js"), "js/services/toc-highlight.js"),
+        AssetDefinition::js(storage_js.join("services/webauthn-helpers.js"), "js/services/webauthn-helpers.js"),
+        AssetDefinition::js(storage_js.join("services/webauthn-login.js"), "js/services/webauthn-login.js"),
+        AssetDefinition::js(storage_js.join("services/webauthn-login-ui.js"), "js/services/webauthn-login-ui.js"),
+        AssetDefinition::js(storage_js.join("services/webauthn-passkey.js"), "js/services/webauthn-passkey.js"),
+        AssetDefinition::js(storage_js.join("services/webauthn-passkey-helpers.js"), "js/services/webauthn-passkey-helpers.js"),
+        AssetDefinition::js(storage_js.join("services/webauthn-utils.js"), "js/services/webauthn-utils.js"),
     ]
 }
 
