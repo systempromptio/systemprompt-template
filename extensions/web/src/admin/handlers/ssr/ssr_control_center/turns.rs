@@ -44,11 +44,6 @@ pub fn build_turns(chronological: &[&&ActivityFeedEvent]) -> Vec<Turn> {
 
     flush_turn(&mut turns, &mut state);
 
-    for turn in &mut turns {
-        turn.has_prompt = !turn.prompt_text.is_empty();
-        turn.has_response = !turn.response_text.is_empty();
-    }
-
     turns
 }
 
@@ -86,17 +81,13 @@ fn flush_turn(turns: &mut Vec<Turn>, state: &mut FlushTurnState) {
             response_time: state.response_time.take().unwrap_or_else(String::new),
             tool_groups: tool_groups_typed,
             total_tools,
-            has_tools: total_tools > 0,
-            has_errors: !error_list.is_empty(),
             errors: error_list,
-            has_prompt: false,
-            has_response: false,
         });
     }
 }
 
 pub fn count_prompts(turns: &[Turn]) -> usize {
-    turns.iter().filter(|t| t.has_prompt).count()
+    turns.iter().filter(|t| !t.prompt_text.is_empty()).count()
 }
 
 pub fn sum_tools(turns: &[Turn]) -> usize {

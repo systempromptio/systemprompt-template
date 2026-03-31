@@ -43,7 +43,6 @@ fn enrich_single_group(
         .filter(|(k, _)| **k == group.session_id)
         .flat_map(|(_, v)| v.clone())
         .collect();
-    let has_entities = !entities.is_empty();
     let entity_count = entities.len();
     let entities_preview: Vec<EntityEntry> = entities.iter().take(3).cloned().collect();
     let overflow = entity_count.saturating_sub(3);
@@ -51,17 +50,13 @@ fn enrich_single_group(
     group.entities = entities;
     group.entities_preview = entities_preview;
     group.entities_overflow_count = overflow;
-    group.flags.has_entities_overflow = overflow > 0;
-    group.flags.has_entities = has_entities;
 
     let rating = ratings_map.get(&group.session_id).copied();
     if let Some(r) = rating {
         group.rating = r.rating;
         group.outcome = r.outcome.clone();
-        group.flags.has_rating = true;
     } else {
         group.rating = 0;
         group.outcome = String::new();
-        group.flags.has_rating = false;
     }
 }

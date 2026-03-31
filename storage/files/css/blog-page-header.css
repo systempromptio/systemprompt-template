@@ -1,0 +1,20 @@
+.page-header {
+  margin-bottom: var(--sp-spacing-xxl);
+}
+
+.page-header h1 {
+  font-family: var(--sp-font-heading);
+  font-size: 3rem;
+  font-weight: var(--sp-font-weight-bold);
+  letter-spacing: -0.03em;
+  color: var(--sp-color-text-primary);
+  margin-bottom: var(--sp-spacing-sm);
+  text-transform: uppercase;
+}
+
+.page-header .subtitle {
+  font-size: var(--sp-font-size-lg);
+  color: var(--sp-color-text-secondary);
+  line-height: 1.6;
+  max-width: 600px;
+}

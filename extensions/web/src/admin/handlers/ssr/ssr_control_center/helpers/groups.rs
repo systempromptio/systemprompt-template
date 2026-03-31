@@ -60,7 +60,6 @@ fn inject_analysis_data(
                 group.ai_title = Some(analysis.title.clone());
             }
             group.quality_score = analysis.quality_score;
-            group.flags.has_quality_score = analysis.quality_score > 0;
             group.goal_achieved = analysis.goal_achieved.clone();
             group.quality_class = match analysis.quality_score {
                 4..=5 => "high",
@@ -82,7 +81,6 @@ fn inject_analysis_data(
                 .recommendations
                 .as_ref()
                 .is_some_and(|r| !r.is_empty());
-            group.flags.has_recommendations = has_recs;
             if has_recs {
                 group.recommendations = analysis.recommendations.clone();
             }
@@ -98,22 +96,18 @@ fn inject_analysis_data(
 
             let source = &session.client_source;
             group.client_source = source.clone();
-            group.flags.has_client_source = !source.is_empty();
             group.client_source_label = format_client_source(source).to_string();
             group.client_source_class = client_source_class(source).to_string();
 
             let mode = &session.permission_mode;
             group.permission_mode = mode.clone();
-            group.flags.has_permission_mode = !mode.is_empty();
             group.flags.is_plan_mode = mode == "plan";
 
             group.model = session.model.clone();
-            group.flags.has_model = !session.model.is_empty();
             group.model_short = format_model_short(&session.model);
 
             group.user_prompts = session.user_prompts;
             group.automated_actions = session.automated_actions;
-            group.flags.has_automated = session.automated_actions > 0;
         }
     }
 }

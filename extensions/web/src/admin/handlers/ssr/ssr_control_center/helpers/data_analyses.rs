@@ -1,6 +1,6 @@
 use crate::admin::repositories::session_analyses::SessionAnalysisRow;
 
-use super::super::types::{AnalysisEntry, AnalysisFlags};
+use super::super::types::AnalysisEntry;
 use super::metrics::parse_summary_parts;
 
 pub(in crate::admin) struct AnalysesData {
@@ -20,7 +20,6 @@ pub(in crate::admin) fn build_analyses_data(
                 _ => "low",
             };
             let (goal_summary, outcomes) = parse_summary_parts(&a.summary);
-            let outcomes_empty = outcomes.is_empty();
             let tags_list: Vec<String> = a
                 .tags
                 .split(',')
@@ -51,18 +50,6 @@ pub(in crate::admin) fn build_analyses_data(
                 corrections_count: a.corrections_count,
                 total_turns: a.total_turns,
                 session_duration_minutes: a.session_duration_minutes,
-                flags: AnalysisFlags {
-                    has_outcomes: !outcomes_empty,
-                    has_goal_outcome_map: a.goal_outcome_map.as_ref().is_some_and(|v| !v.is_null()),
-                    has_efficiency_metrics: a
-                        .efficiency_metrics
-                        .as_ref()
-                        .is_some_and(|v| !v.is_null()),
-                    has_best_practices: a
-                        .best_practices_checklist
-                        .as_ref()
-                        .is_some_and(|v| !v.is_null()),
-                },
             }
         })
         .collect();

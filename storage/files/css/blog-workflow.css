@@ -1,0 +1,108 @@
+.workflow-progress {
+  display: block;
+  position: relative;
+  padding: var(--sp-spacing-md) var(--sp-spacing-sm);
+  margin: var(--sp-spacing-md) 0 var(--sp-spacing-lg);
+  cursor: pointer;
+  border-radius: var(--sp-radius-md);
+  transition: background var(--sp-animation-fast) ease;
+}
+
+.workflow-progress:hover {
+  background: color-mix(in srgb, var(--sp-color-primary) 5%, transparent);
+}
+
+.workflow-progress__hint {
+  display: block;
+  text-align: center;
+  font-size: var(--sp-font-size-xs);
+  color: var(--sp-color-text-secondary);
+  margin-top: var(--sp-spacing-sm);
+  opacity: 0;
+  transition: opacity var(--sp-animation-fast) ease;
+}
+
+.workflow-progress:hover .workflow-progress__hint {
+  opacity: 1;
+}
+
+.workflow-progress__bar {
+  position: absolute;
+  top: calc(var(--sp-spacing-md) + 8px);
+  left: var(--sp-spacing-sm);
+  right: var(--sp-spacing-sm);
+  height: 4px;
+  background: var(--sp-color-border);
+  border-radius: var(--sp-radius-full);
+  z-index: 0;
+}
+
+.workflow-progress__bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--sp-progress, 0%);
+  height: 100%;
+  background: linear-gradient(90deg, var(--sp-color-primary), var(--sp-color-success));
+  border-radius: var(--sp-radius-full);
+  transition: width var(--sp-animation-normal) ease;
+}
+
+.workflow-progress__states {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: var(--sp-z-sticky);
+}
+
+.workflow-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-spacing-xs);
+}
+
+.workflow-state__dot {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--sp-radius-full);
+  background: var(--sp-color-surface);
+  border: 3px solid var(--sp-color-border);
+  transition: all var(--sp-animation-fast) ease;
+}
+
+.workflow-state--completed .workflow-state__dot {
+  background: var(--sp-color-success);
+  border-color: var(--sp-color-success);
+}
+
+.workflow-state--current .workflow-state__dot {
+  background: var(--sp-color-primary);
+  border-color: var(--sp-color-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--sp-color-primary) 20%, transparent);
+}
+
+.workflow-state__name {
+  font-size: var(--sp-font-size-xs);
+  color: var(--sp-color-text-secondary);
+  white-space: nowrap;
+}
+
+.workflow-state--completed .workflow-state__name {
+  color: var(--sp-color-success);
+}
+
+.workflow-state--current .workflow-state__name {
+  color: var(--sp-color-primary);
+  font-weight: var(--sp-font-weight-semibold);
+}
+
+@media (max-width: 640px) {
+  .workflow-state__name {
+    font-size: 0.625rem;
+    max-width: 50px;
+    text-align: center;
+    line-height: 1.2;
+  }
+}

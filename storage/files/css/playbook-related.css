@@ -1,0 +1,123 @@
+
+.playbook-related {
+  margin-top: var(--sp-spacing-3xl);
+  padding-top: var(--sp-spacing-xxl);
+  border-top: 1px solid var(--sp-color-border);
+}
+
+.playbook-related-title {
+  font-family: var(--sp-font-heading);
+  font-size: 1.25rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--sp-color-text-primary);
+  margin-bottom: var(--sp-spacing-lg);
+}
+
+.playbook-related-grid.playbook-related-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-spacing-sm);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.playbook-related-card.playbook-related-card {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-spacing-xs);
+  padding: var(--sp-spacing-sm) var(--sp-spacing-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+  font-size: var(--sp-font-size-sm);
+}
+
+.playbook-related-card:hover {
+  border-color: var(--sp-color-primary);
+  background: rgba(var(--sp-color-primary-rgb), 0.1);
+  color: var(--sp-color-primary);
+}
+
+.playbook-related-card-title {
+  font-size: var(--sp-font-size-sm);
+  font-weight: 500;
+  color: var(--sp-color-text-primary);
+}
+
+.playbook-related-card:hover .playbook-related-card-title {
+  color: var(--sp-color-primary);
+}
+
+.playbook-category-nav {
+  margin-top: var(--sp-spacing-xxl);
+  padding: var(--sp-spacing-xl);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-lg);
+}
+
+.playbook-category-title {
+  font-family: var(--sp-font-heading);
+  font-size: 1.125rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--sp-color-text-primary);
+  margin-bottom: var(--sp-spacing-lg);
+}
+
+.playbook-category-grid.playbook-category-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-spacing-sm);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.playbook-category-link.playbook-category-link {
+  display: block;
+  padding: var(--sp-spacing-md);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.playbook-category-link:hover {
+  border-color: var(--sp-color-primary);
+  background: rgba(var(--sp-color-primary-rgb), 0.08);
+}
+
+.playbook-category-link-title.playbook-category-link-title {
+  display: block;
+  font-weight: 500;
+  font-size: var(--sp-font-size-md);
+  color: var(--sp-color-text-primary);
+  margin-bottom: 4px;
+}
+
+.playbook-category-link-desc.playbook-category-link-desc {
+  display: block;
+  font-size: var(--sp-font-size-sm);
+  color: var(--sp-color-text-secondary);
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .playbook-related-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .playbook-category-nav {
+    padding: var(--sp-spacing-lg);
+  }
+}

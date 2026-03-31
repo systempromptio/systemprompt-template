@@ -85,23 +85,13 @@ pub struct LeaderboardAveragesView {
 }
 
 #[derive(Debug, Clone, Serialize)]
-#[allow(clippy::struct_excessive_bools)]
 pub struct LeaderboardPageData {
     pub page: &'static str,
     pub title: &'static str,
     pub entries: Vec<LeaderboardEntryView>,
     pub podium: Vec<LeaderboardEntryView>,
-    pub has_podium: bool,
     pub current_sort: String,
-    pub sort_xp: bool,
-    pub sort_sessions: bool,
-    pub sort_prompts: bool,
-    pub sort_tools: bool,
-    pub sort_subagents: bool,
-    pub sort_streak: bool,
-    pub sort_achievements: bool,
     pub averages: Option<LeaderboardAveragesView>,
-    pub has_averages: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]

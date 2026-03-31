@@ -13,7 +13,6 @@ pub struct ToolGroup {
 }
 
 #[derive(Serialize, Clone, Default)]
-#[allow(clippy::struct_excessive_bools)]
 pub struct Turn {
     pub prompt_text: String,
     pub prompt_time: String,
@@ -21,11 +20,7 @@ pub struct Turn {
     pub response_time: String,
     pub tool_groups: Vec<ToolGroup>,
     pub total_tools: usize,
-    pub has_tools: bool,
     pub errors: Vec<ToolError>,
-    pub has_errors: bool,
-    pub has_prompt: bool,
-    pub has_response: bool,
 }
 
 #[derive(Serialize, Clone, Default)]
@@ -36,26 +31,10 @@ pub struct EntityEntry {
 }
 
 #[derive(Serialize, Clone, Default)]
-#[allow(clippy::struct_excessive_bools)]
 pub struct SessionGroupFlags {
-    pub has_session_title: bool,
     pub is_active: bool,
-    pub has_errors: bool,
-    pub has_duration: bool,
-    pub has_turns: bool,
-    pub has_first_prompt: bool,
-    pub has_last_response: bool,
     pub is_analysed: bool,
-    pub has_quality_score: bool,
-    pub has_recommendations: bool,
-    pub has_client_source: bool,
-    pub has_permission_mode: bool,
     pub is_plan_mode: bool,
-    pub has_model: bool,
-    pub has_automated: bool,
-    pub has_entities_overflow: bool,
-    pub has_entities: bool,
-    pub has_rating: bool,
 }
 
 #[derive(Serialize, Clone, Default)]

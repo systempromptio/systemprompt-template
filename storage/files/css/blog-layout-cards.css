@@ -1,0 +1,117 @@
+
+
+.blog-list {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--sp-spacing-xxl) var(--sp-spacing-lg);
+}
+
+.blog-list__header {
+  margin-bottom: var(--sp-spacing-xxl);
+}
+
+.blog-list__title {
+  font-family: var(--sp-font-brand);
+  font-size: 4rem;
+  margin-bottom: var(--sp-spacing-sm);
+  letter-spacing: -0.03em;
+}
+
+.blog-list__subtitle {
+  font-size: var(--sp-font-size-xl);
+  color: var(--sp-color-text-secondary);
+}
+
+.blog-list__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--sp-spacing-xl);
+}
+
+
+
+.blog-card {
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-lg);
+  padding: var(--sp-spacing-lg);
+  transition: all var(--sp-animation-fast) ease;
+  background: var(--sp-color-surface);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.blog-card:hover {
+  box-shadow: var(--sp-shadow-md);
+  border-color: var(--sp-color-primary);
+  transform: translateY(-2px);
+}
+
+.blog-card__title {
+  font-family: var(--sp-font-heading);
+  font-size: var(--sp-font-size-xl);
+  margin-bottom: var(--sp-spacing-sm);
+  line-height: 1.3;
+}
+
+.blog-card__title a {
+  color: var(--sp-color-text-primary);
+  text-decoration: none;
+}
+
+.blog-card__title a:hover {
+  color: var(--sp-color-primary);
+}
+
+.blog-card__excerpt {
+  color: var(--sp-color-text-secondary);
+  margin-bottom: var(--sp-spacing-md);
+  line-height: 1.6;
+  flex-grow: 1;
+}
+
+.blog-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-spacing-sm);
+  font-size: var(--sp-font-size-sm);
+  color: var(--sp-color-text-disabled);
+  padding-top: var(--sp-spacing-md);
+  border-top: 1px solid var(--sp-color-border);
+}
+
+
+
+.blog-footer {
+  border-top: 1px solid var(--sp-color-border);
+  padding: var(--sp-spacing-xxl) var(--sp-spacing-lg);
+  text-align: center;
+  color: var(--sp-color-text-secondary);
+  font-size: var(--sp-font-size-sm);
+  margin-top: var(--sp-spacing-xxl);
+}
+
+
+
+@media (max-width: 768px) {
+  .blog-nav {
+    flex-direction: column;
+    gap: var(--sp-spacing-md);
+  }
+
+  .blog-nav__links {
+    margin-left: 0;
+  }
+
+  .blog-article__title {
+    font-size: 2rem;
+  }
+
+  .blog-list__title {
+    font-size: 2.5rem;
+  }
+
+  .blog-list__grid {
+    grid-template-columns: 1fr;
+  }
+}

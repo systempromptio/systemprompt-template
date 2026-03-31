@@ -1,7 +1,6 @@
 use super::ssr_dashboard_activity::{build_activity_data, build_mcp_health};
 use super::ssr_dashboard_types::{
-    ContentRangeFlags, DashboardTemplateData, McpErrorView, RangeFlags, TabFlags, TopPageView,
-    TrafficRangeFlags,
+    DashboardTemplateData, McpErrorView, RangeFlags, TabFlags, TopPageView, TrafficRangeFlags,
 };
 
 pub(super) struct DashboardCounts {
@@ -109,13 +108,6 @@ pub(super) fn build_dashboard_template(
         realtime_pulse: traffic_result.realtime_pulse,
         content_performance: traffic_result.content_performance,
         content_range: content_range_key.to_string(),
-        content_range_flags: ContentRangeFlags {
-            content_range_1h: content_range_key == "1h",
-            content_range_24h: content_range_key == "24h",
-            content_range_yesterday: content_range_key == "yesterday",
-            content_range_7d: content_range_key == "7d",
-            content_range_30d: content_range_key == "30d",
-        },
         content_period_label,
         tab: active_tab.to_string(),
         tab_flags: TabFlags {

@@ -1,0 +1,114 @@
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-1);
+  color: var(--sp-color-text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color var(--sp-transition-fast);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+}
+
+.nav-dropdown-trigger:hover {
+  color: var(--sp-color-text);
+}
+
+.nav-dropdown-trigger.nav-link--active {
+  color: var(--sp-color-text);
+}
+
+.dropdown-arrow {
+  width: 12px;
+  height: 12px;
+  transition: transform var(--sp-transition-fast);
+  stroke: currentColor;
+  fill: none;
+}
+
+.nav-dropdown:hover .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+  --sp-color-text: #252526;
+  --sp-color-text-primary: #252526;
+  --sp-color-text-secondary: #464E5D;
+  --sp-color-text-muted: #A2AAB9;
+  --sp-color-border: #D6DCE8;
+
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 220px;
+  padding: var(--sp-space-md);
+  margin-top: var(--sp-space-sm);
+  background: var(--sp-color-surface-elevated);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--sp-transition-fast), visibility var(--sp-transition-fast);
+  z-index: var(--sp-z-dropdown);
+}
+
+.nav-dropdown:hover .nav-dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+}
+
+.dropdown-section {
+  margin-bottom: var(--sp-space-md);
+}
+
+.dropdown-section:last-child {
+  margin-bottom: 0;
+}
+
+.dropdown-section h4 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--sp-color-text-muted);
+  margin-bottom: var(--sp-space-sm);
+  font-family: var(--sp-font-brand);
+}
+
+.dropdown-section a,
+.nav-dropdown-menu > a {
+  display: block;
+  padding: var(--sp-space-xs) 0;
+  color: var(--sp-color-text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color var(--sp-transition-fast);
+}
+
+.dropdown-section a:hover,
+.nav-dropdown-menu > a:hover {
+  color: var(--sp-color-primary);
+}
+
+.nav-dropdown-menu--narrow {
+  min-width: 140px;
+}
+
+a.dropdown-view-all {
+  display: block;
+  padding-top: var(--sp-space-md);
+  margin-top: var(--sp-space-md);
+  border-top: 1px solid var(--sp-color-border);
+  color: var(--sp-color-primary);
+  font-weight: 500;
+  font-size: 0.85rem;
+}

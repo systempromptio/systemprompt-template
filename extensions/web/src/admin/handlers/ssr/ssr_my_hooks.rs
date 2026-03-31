@@ -105,7 +105,6 @@ pub(crate) async fn my_hooks_page(
     let data = MyHooksPageData {
         page: "my-hooks",
         title: "My Hooks",
-        has_hooks: !hooks_views.is_empty(),
         hooks: hooks_views,
         plugins,
         stats: HooksStats {
@@ -120,9 +119,6 @@ pub(crate) async fn my_hooks_page(
         event_breakdown: event_breakdown_views,
         chart: serde_json::to_value(chart).unwrap_or_else(|_| serde_json::Value::Null),
         range: range.to_string(),
-        range_24h: range == "24h",
-        range_7d: range == "7d",
-        range_14d: range == "14d",
         hook_event_types: HOOK_EVENT_TYPES.to_vec(),
     };
 

@@ -18,7 +18,7 @@
         <button type="button" class="cc-batch-btn cc-batch-btn--danger" data-batch-action="deleted">Delete</button>
     </div>
 
-    {{#if has_session_groups}}
+    {{#if session_groups}}
     <div class="sf-feed" id="activity-feed" aria-live="polite">
         {{#each session_groups}}
         <details class="sf-session" data-session-id="{{session_id}}" data-is-active="{{is_active}}" data-status="{{status}}" data-is-analysed="{{is_analysed}}"{{#if @first}} open{{/if}}>
@@ -27,11 +27,11 @@
             </span>
             <summary class="sf-session-header">
                 <span class="sf-session-header-row1">
-                    <span class="sf-session-title">{{#if ai_title}}{{ai_title}}{{else}}{{#if has_session_title}}{{session_title}}{{else}}{{project_name}}{{/if}}{{/if}}</span>
+                    <span class="sf-session-title">{{#if ai_title}}{{ai_title}}{{else}}{{#if session_title}}{{session_title}}{{else}}{{project_name}}{{/if}}{{/if}}</span>
                     <span class="sf-session-right">
                         <span class="sf-session-time">{{relativeTime last_activity_at}}</span>
                         {{#if is_active}}<span class="sf-session-active-label">active</span>{{/if}}
-                        {{#if has_quality_score}}<span class="sf-quality-badge sf-quality-badge--{{quality_class}}" title="Quality: {{quality_score}}/5">Q{{quality_score}}</span>{{/if}}
+                        {{#if quality_score}}<span class="sf-quality-badge sf-quality-badge--{{quality_class}}" title="Quality: {{quality_score}}/5">Q{{quality_score}}</span>{{/if}}
                         {{#if goal_achieved}}<span class="sf-goal-badge sf-goal-badge--{{goal_achieved}}" title="Goal: {{goal_achieved}}">{{{goal_icon}}}</span>{{/if}}
                         {{#if is_analysed}}<span class="sf-session-status-label sf-session-status-label--analysed">analysed</span>{{/if}}
                         {{#if (eq status "completed")}}<span class="sf-session-status-label sf-session-status-label--completed">completed</span>{{/if}}
@@ -39,13 +39,13 @@
                 </span>
                 <span class="sf-session-header-row2">
                     <span class="sf-metric-chips">
-                        {{#if has_client_source}}<span class="sf-metric-chip sf-chip--source sf-chip--source-{{client_source_class}}" title="Client: {{client_source}}">{{client_source_label}}</span><span class="sf-metric-sep">&middot;</span>{{/if}}
+                        {{#if client_source}}<span class="sf-metric-chip sf-chip--source sf-chip--source-{{client_source_class}}" title="Client: {{client_source}}">{{client_source_label}}</span><span class="sf-metric-sep">&middot;</span>{{/if}}
                         {{#if is_plan_mode}}<span class="sf-metric-chip sf-chip--mode" title="Plan mode">plan</span><span class="sf-metric-sep">&middot;</span>{{/if}}
-                        {{#if has_model}}<span class="sf-metric-chip sf-chip--model" title="Model: {{model}}">{{model_short}}</span><span class="sf-metric-sep">&middot;</span>{{/if}}
-                        {{#if has_automated}}<span class="sf-metric-chip" title="{{user_prompts}} user prompts, {{automated_actions}} automated actions">{{user_prompts}} user / {{automated_actions}} auto</span><span class="sf-metric-sep">&middot;</span>{{else}}{{#if total_prompts}}<span class="sf-metric-chip">{{total_prompts}} prompts</span><span class="sf-metric-sep">&middot;</span>{{/if}}{{/if}}
+                        {{#if model}}<span class="sf-metric-chip sf-chip--model" title="Model: {{model}}">{{model_short}}</span><span class="sf-metric-sep">&middot;</span>{{/if}}
+                        {{#if automated_actions}}<span class="sf-metric-chip" title="{{user_prompts}} user prompts, {{automated_actions}} automated actions">{{user_prompts}} user / {{automated_actions}} auto</span><span class="sf-metric-sep">&middot;</span>{{else}}{{#if total_prompts}}<span class="sf-metric-chip">{{total_prompts}} prompts</span><span class="sf-metric-sep">&middot;</span>{{/if}}{{/if}}
                         {{#if entity_count}}<span class="sf-metric-chip">{{entity_count}} skills</span><span class="sf-metric-sep">&middot;</span>{{/if}}
                         {{#if total_tools}}<span class="sf-metric-chip">{{total_tools}} tools</span><span class="sf-metric-sep">&middot;</span>{{/if}}
-                        {{#if has_duration}}<span class="sf-metric-chip">{{duration_display}}</span>{{/if}}
+                        {{#if duration_display}}<span class="sf-metric-chip">{{duration_display}}</span>{{/if}}
                     </span>
                     <span class="sf-session-project">{{project_name}}</span>
                 </span>
@@ -63,13 +63,13 @@
             {{#if is_analysed}}
             <div class="cc-analysis-preview">
                 {{#if description}}<span class="cc-analysis-desc">{{description}}</span>{{/if}}
-                {{#if has_recommendations}}<span class="cc-analysis-rec">{{recommendations}}</span>{{/if}}
+                {{#if recommendations}}<span class="cc-analysis-rec">{{recommendations}}</span>{{/if}}
             </div>
             {{else if ai_summary}}
             <div class="cc-ai-summary">{{ai_summary}}</div>
             {{/if}}
 
-            {{#if has_entities}}
+            {{#if entities}}
             <div class="cc-card-entities-inline">
                 {{#each entities}}
                 <span class="cc-entity-pill cc-entity-pill--{{entity_type}}" title="{{entity_name}} ({{usage_count}}x)">{{entity_name}}</span>
@@ -80,32 +80,32 @@
             <details class="cc-card-section">
                 <summary class="cc-card-section-title">Conversation ({{turn_count}} turns)</summary>
                 <div class="cc-card-section-body">
-                    {{#if has_first_prompt}}
+                    {{#if first_prompt}}
                     <div class="sf-prompt">
                         <span class="sf-speaker sf-speaker--you">You</span>
                         <span class="sf-prompt-text">{{first_prompt}}</span>
                     </div>
                     {{/if}}
-                    {{#if has_last_response}}
+                    {{#if last_response}}
                     <div class="sf-response">
                         <span class="sf-speaker sf-speaker--ai">AI</span>
                         <span class="sf-response-text">{{last_response}}</span>
                     </div>
                     {{/if}}
-                    {{#if has_turns}}
+                    {{#if turns}}
                     {{#if (gt turn_count 1)}}
                     <details class="cc-turns-expand">
                         <summary>View all {{turn_count}} turns</summary>
                         <div class="sf-turns">
                             {{#each turns}}
                             <div class="sf-turn">
-                                {{#if has_prompt}}
+                                {{#if prompt_text}}
                                 <div class="sf-prompt">
                                     <span class="sf-speaker sf-speaker--you">You</span>
                                     <span class="sf-prompt-text">{{prompt_text}}</span>
                                 </div>
                                 {{/if}}
-                                {{#if has_tools}}
+                                {{#if tool_groups}}
                                 <details class="sf-tools-summary">
                                     <summary class="sf-tools-toggle">
                                         <span class="sf-tools-arrow">&#9656;</span>
@@ -125,7 +125,7 @@
                                     <span class="sf-error-desc">{{description}}</span>
                                 </div>
                                 {{/each}}
-                                {{#if has_response}}
+                                {{#if response_text}}
                                 <div class="sf-response">
                                     <span class="sf-speaker sf-speaker--ai">AI</span>
                                     <span class="sf-response-text">{{response_text}}</span>
@@ -140,7 +140,7 @@
                 </div>
             </details>
 
-            {{#if has_errors}}
+            {{#if all_errors}}
             <details class="cc-card-section">
                 <summary class="cc-card-section-title cc-card-section-title--error">Errors ({{total_errors}})</summary>
                 <div class="cc-card-section-body">

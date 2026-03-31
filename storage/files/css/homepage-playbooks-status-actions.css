@@ -1,0 +1,145 @@
+
+.status-card__actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-space-lg);
+  padding-top: var(--sp-space-md);
+  border-top: 1px solid var(--sp-color-border);
+}
+
+.status-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-xs);
+  color: var(--sp-color-primary);
+  font-family: var(--sp-font-brand);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  border: 1px solid var(--sp-color-primary);
+  border-radius: var(--sp-radius-sm);
+  transition: all var(--sp-transition-fast);
+}
+
+.status-card__link:hover {
+  background: rgba(0, 113, 206, 0.1);
+  transform: translateY(-1px);
+}
+
+.status-card__link svg {
+  opacity: 0.7;
+  transition: opacity var(--sp-transition-fast);
+}
+
+.status-card__link:hover svg {
+  opacity: 1;
+}
+
+.status-card__item-scope {
+  color: var(--sp-color-text-muted);
+  font-size: 0.7rem;
+}
+
+.status-card__connect-btn {
+  background: none;
+  border: none;
+  color: var(--sp-color-primary);
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.7rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--sp-transition-fast);
+  margin-left: auto;
+  padding: 0 var(--sp-space-xs);
+}
+
+.status-card__connect-btn:hover {
+  opacity: 1;
+}
+
+.status-card__docs {
+  text-align: center;
+  padding-top: var(--sp-space-md);
+  margin-top: var(--sp-space-sm);
+  font-size: 0.75rem;
+  color: var(--sp-color-text-muted);
+}
+
+.status-card__docs-label {
+  margin-right: var(--sp-space-xs);
+}
+
+.status-card__doc-link {
+  color: var(--sp-color-text-secondary);
+  text-decoration: none;
+  transition: color var(--sp-transition-fast);
+}
+
+.status-card__doc-link:hover {
+  color: var(--sp-color-primary);
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .status-card {
+    padding: var(--sp-space-lg);
+  }
+
+  .status-card__table {
+    grid-template-columns: 1fr;
+  }
+
+  .status-card__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .status-card__link {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .status-card__header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .status-card__title {
+    font-size: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-card::before {
+    animation: none;
+  }
+
+  .status-card__indicator {
+    animation: none;
+  }
+
+  .playbooks-flow .playbook-connection {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .playbooks-flow .playbook-particles {
+    display: none;
+  }
+
+  .playbooks-flow .playbook-awareness-ring {
+    animation: none !important;
+  }
+
+  .playbooks-flow .playbook-hub-glow {
+    animation: none;
+  }
+
+  .playbooks-flow .playbook-node,
+  .playbooks-flow .playbook-hub {
+    transition: none;
+  }
+}

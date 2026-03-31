@@ -20,22 +20,17 @@ pub(super) struct AnalyticsInput<'a> {
 }
 
 #[derive(Serialize)]
-#[allow(clippy::struct_excessive_bools)]
 struct AnalyticsEvent<'a> {
     skill_effectiveness: Vec<crate::admin::types::conversation_analytics::SkillEffectiveness>,
     entity_links: Vec<EntityLinkEntry<'a>>,
     session_ratings: &'a [SessionRating],
     health: Option<cc_types::HealthEntry>,
     unused_skills: Vec<String>,
-    has_unused_skills: bool,
     skill_adoption_pct: usize,
     total_skills_available: usize,
     total_skills_used: usize,
-    has_skill_adoption: bool,
     today_summary: cc_types::TodaySummaryEntry,
-    has_today_summary: bool,
     achievement_progress: Vec<AchievementProgressEntry>,
-    has_achievement_progress: bool,
     hourly_breakdown: Vec<cc_types::HourlyEntry>,
     performance_summary: cc_types::PerformanceEntry,
 }
@@ -76,15 +71,11 @@ pub(super) async fn build_analytics_event(
         entity_links,
         session_ratings: input.session_ratings,
         health,
-        has_unused_skills: !entity_data.unused_skills_empty,
         unused_skills: fetched.unused_skills,
         skill_adoption_pct: entity_data.adoption_pct,
         total_skills_available: entity_data.total_skills_available,
         total_skills_used: entity_data.total_skills_used,
-        has_skill_adoption: entity_data.total_skills_available > 0,
-        has_today_summary: fetched.today_summary.sessions_count > 0,
         today_summary,
-        has_achievement_progress: !entity_data.achievement_progress_empty,
         achievement_progress: entity_data.achievement_progress,
         hourly_breakdown,
         performance_summary,
@@ -141,8 +132,6 @@ struct EntityData {
     total_skills_available: usize,
     total_skills_used: usize,
     achievement_progress: Vec<AchievementProgressEntry>,
-    achievement_progress_empty: bool,
-    unused_skills_empty: bool,
 }
 
 async fn build_entity_data(
@@ -176,15 +165,12 @@ async fn build_entity_data(
     };
 
     let achievement_progress = build_achievement_progress(gam, &skills_usage, &mcp_usage);
-    let achievement_progress_empty = achievement_progress.is_empty();
 
     EntityData {
         adoption_pct,
         total_skills_available,
         total_skills_used,
         achievement_progress,
-        achievement_progress_empty,
-        unused_skills_empty: unused_skills.is_empty(),
     }
 }
 

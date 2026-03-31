@@ -1,5 +1,5 @@
 <div class="cc-tab-panel" id="tab-suggestions" role="tabpanel" aria-label="AI Suggestions">
-    {{#if has_recent_analyses}}
+    {{#if recent_analyses}}
     <div class="cc-suggestions-section">
         <h3 class="cc-suggestions-section-title">Session Analysis</h3>
         {{#> components/data-table}}
@@ -50,7 +50,7 @@
             <p class="cc-detail-text">{{goal_summary}}</p>
         </div>
         {{/if}}
-        {{#if has_goal_outcome_map}}
+        {{#if goal_outcome_map}}
         <div class="cc-detail-section">
             <h4 class="cc-detail-section-label">Goal vs Outcome</h4>
             <div class="cc-goal-outcome-map">
@@ -66,7 +66,7 @@
             </div>
         </div>
         {{/if}}
-        {{#if has_outcomes}}
+        {{#if outcomes}}
         <div class="cc-detail-section">
             <h4 class="cc-detail-section-label">Outcomes</h4>
             <ul class="cc-detail-outcomes">
@@ -74,7 +74,7 @@
             </ul>
         </div>
         {{/if}}
-        {{#if has_efficiency_metrics}}
+        {{#if efficiency_metrics}}
         <div class="cc-detail-section">
             <h4 class="cc-detail-section-label">Efficiency</h4>
             <div class="cc-efficiency-grid">
@@ -97,7 +97,7 @@
             </div>
         </div>
         {{/if}}
-        {{#if has_best_practices}}
+        {{#if best_practices_checklist}}
         <div class="cc-detail-section">
             <h4 class="cc-detail-section-label">Best Practices</h4>
             <ul class="cc-best-practices-list">

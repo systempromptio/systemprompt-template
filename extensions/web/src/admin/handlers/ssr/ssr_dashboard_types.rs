@@ -146,16 +146,6 @@ pub(super) struct TrafficRangeFlags {
 }
 
 #[derive(Debug, Clone, Serialize)]
-#[allow(clippy::struct_excessive_bools)]
-pub(super) struct ContentRangeFlags {
-    pub content_range_1h: bool,
-    pub content_range_24h: bool,
-    pub content_range_yesterday: bool,
-    pub content_range_7d: bool,
-    pub content_range_30d: bool,
-}
-
-#[derive(Debug, Clone, Serialize)]
 pub(super) struct TabFlags {
     pub tab_mcp: bool,
     pub tab_traffic: bool,
@@ -199,8 +189,6 @@ pub(super) struct DashboardTemplateData {
     pub realtime_pulse: Option<RealtimePulseView>,
     pub content_performance: Vec<ContentPerformanceView>,
     pub content_range: String,
-    #[serde(flatten)]
-    pub content_range_flags: ContentRangeFlags,
     pub content_period_label: &'static str,
     pub tab: String,
     #[serde(flatten)]

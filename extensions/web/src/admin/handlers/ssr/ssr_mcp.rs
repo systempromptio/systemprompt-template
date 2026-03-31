@@ -3,7 +3,8 @@ use std::sync::Arc;
 
 use crate::admin::repositories;
 use crate::admin::templates::AdminTemplateEngine;
-use crate::admin::types::{MarketplaceContext, UserContext};
+use crate::admin::types::access_control::AccessControlRule;
+use crate::admin::types::{DepartmentStats, MarketplaceContext, McpServerDetail, UserContext};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -11,7 +12,111 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
-#[allow(clippy::too_many_lines)]
+fn build_mcp_rules_map(all_rules: &[AccessControlRule]) -> HashMap<String, Vec<&AccessControlRule>> {
+    let mut rules_map: HashMap<String, Vec<&AccessControlRule>> = HashMap::new();
+    for rule in all_rules {
+        if rule.entity_type == "mcp_server" {
+            rules_map
+                .entry(rule.entity_id.clone())
+                .or_default()
+                .push(rule);
+        }
+    }
+    rules_map
+}
+
+fn build_role_badges(
+    entity_rules: Option<&Vec<&AccessControlRule>>,
+    known_roles: &[&str],
+) -> Vec<serde_json::Value> {
+    known_roles
+        .iter()
+        .filter_map(|role_name| {
+            let assigned = entity_rules.is_some_and(|rules| {
+                rules.iter().any(|r| {
+                    r.rule_type == "role"
+                        && r.rule_value == *role_name
+                        && r.access == "allow"
+                })
+            });
+            if assigned {
+                Some(json!({"name": role_name, "assigned": true}))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn build_dept_badges(
+    entity_rules: Option<&Vec<&AccessControlRule>>,
+    departments: &[DepartmentStats],
+) -> Vec<serde_json::Value> {
+    departments
+        .iter()
+        .filter_map(|d| {
+            let rule = entity_rules.and_then(|rules| {
+                rules
+                    .iter()
+                    .find(|r| r.rule_type == "department" && r.rule_value == d.department)
+            });
+            let assigned = rule.is_some_and(|r| r.access == "allow");
+            if assigned {
+                let default_included = rule.is_some_and(|r| r.default_included);
+                Some(json!({
+                    "name": d.department,
+                    "assigned": true,
+                    "default_included": default_included,
+                }))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn build_mcp_server_json(
+    m: &McpServerDetail,
+    mcp_plugin_map: &HashMap<String, Vec<(String, String)>>,
+    rules_map: &HashMap<String, Vec<&AccessControlRule>>,
+    departments: &[DepartmentStats],
+    known_roles: &[&str],
+) -> serde_json::Value {
+    let assigned_plugins: Vec<serde_json::Value> = mcp_plugin_map
+        .get(&m.id)
+        .map(|plugins| {
+            plugins
+                .iter()
+                .map(|(pid, pname)| json!({"id": pid, "name": pname}))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let entity_rules = rules_map.get(&m.id);
+    let roles = build_role_badges(entity_rules, known_roles);
+    let dept_badges = build_dept_badges(entity_rules, departments);
+    let is_internal = m.server_type == "internal";
+
+    json!({
+        "id": m.id,
+        "server_type": m.server_type,
+        "is_internal": is_internal,
+        "is_external": !is_internal,
+        "binary": m.binary,
+        "package_name": m.package_name,
+        "port": m.port,
+        "endpoint": m.endpoint,
+        "description": m.description,
+        "enabled": m.enabled,
+        "oauth_required": m.oauth_required,
+        "oauth_scopes": m.oauth_scopes,
+        "oauth_audience": m.oauth_audience,
+        "assigned_plugins": assigned_plugins,
+        "roles": roles,
+        "departments": dept_badges,
+    })
+}
+
 pub(crate) async fn mcp_servers_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
@@ -65,97 +170,12 @@ pub(crate) async fn mcp_servers_page(
         vec![]
     });
 
-    let mut rules_map: HashMap<
-        String,
-        Vec<&crate::admin::types::access_control::AccessControlRule>,
-    > = HashMap::new();
-    for rule in &all_rules {
-        if rule.entity_type == "mcp_server" {
-            rules_map
-                .entry(rule.entity_id.clone())
-                .or_default()
-                .push(rule);
-        }
-    }
-
+    let rules_map = build_mcp_rules_map(&all_rules);
     let known_roles = ["admin", "developer", "analyst", "viewer"];
 
     let mcp_json: Vec<serde_json::Value> = mcp_servers
         .iter()
-        .map(|m| {
-            let assigned_plugins: Vec<serde_json::Value> = mcp_plugin_map
-                .get(&m.id)
-                .map(|plugins| {
-                    plugins
-                        .iter()
-                        .map(|(pid, pname)| json!({"id": pid, "name": pname}))
-                        .collect()
-                })
-                .unwrap_or_default();
-
-            let entity_rules = rules_map.get(&m.id);
-
-            let roles: Vec<serde_json::Value> = known_roles
-                .iter()
-                .filter_map(|role_name| {
-                    let assigned = entity_rules.is_some_and(|rules| {
-                        rules.iter().any(|r| {
-                            r.rule_type == "role"
-                                && r.rule_value == *role_name
-                                && r.access == "allow"
-                        })
-                    });
-                    if assigned {
-                        Some(json!({"name": role_name, "assigned": true}))
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            let dept_badges: Vec<serde_json::Value> = departments
-                .iter()
-                .filter_map(|d| {
-                    let rule = entity_rules.and_then(|rules| {
-                        rules
-                            .iter()
-                            .find(|r| r.rule_type == "department" && r.rule_value == d.department)
-                    });
-                    let assigned = rule.is_some_and(|r| r.access == "allow");
-                    if assigned {
-                        let default_included = rule.is_some_and(|r| r.default_included);
-                        Some(json!({
-                            "name": d.department,
-                            "assigned": true,
-                            "default_included": default_included,
-                        }))
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            let is_internal = m.server_type == "internal";
-
-            json!({
-                "id": m.id,
-                "server_type": m.server_type,
-                "is_internal": is_internal,
-                "is_external": !is_internal,
-                "binary": m.binary,
-                "package_name": m.package_name,
-                "port": m.port,
-                "endpoint": m.endpoint,
-                "description": m.description,
-                "enabled": m.enabled,
-                "oauth_required": m.oauth_required,
-                "oauth_scopes": m.oauth_scopes,
-                "oauth_audience": m.oauth_audience,
-                "assigned_plugins": assigned_plugins,
-                "roles": roles,
-                "departments": dept_badges,
-            })
-        })
+        .map(|m| build_mcp_server_json(m, &mcp_plugin_map, &rules_map, &departments, &known_roles))
         .collect();
 
     let data = json!({

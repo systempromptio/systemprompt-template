@@ -1,0 +1,144 @@
+
+.feature-final-cta {
+  padding: var(--sp-space-4xl) 0;
+  text-align: center;
+  border-top: 1px solid var(--sp-color-border);
+}
+
+.feature-final-cta h2 {
+  font-family: var(--sp-font-brand);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: var(--sp-space-md);
+}
+
+.feature-final-cta p {
+  font-size: 1.25rem;
+  color: var(--sp-color-text-secondary);
+  margin-bottom: var(--sp-space-xl);
+}
+
+.cta-group {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-space-lg);
+  flex-wrap: wrap;
+}
+
+
+@media (max-width: 1024px) {
+  .feature-hero {
+    padding: var(--sp-space-2xl) var(--sp-space-lg);
+  }
+
+  .feature-hero-animation {
+    max-width: 700px;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .feature-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .feature-headline {
+    font-size: 1.75rem;
+  }
+
+  .feature-highlights {
+    padding: var(--sp-space-2xl) 0;
+  }
+
+  .highlights-grid {
+    grid-template-columns: 1fr;
+    gap: var(--sp-space-md);
+  }
+
+  .highlight-item {
+    padding: var(--sp-space-md);
+  }
+
+  .feature-section {
+    padding: var(--sp-space-2xl) 0;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .section-items {
+    grid-template-columns: 1fr;
+    gap: var(--sp-space-lg);
+  }
+
+  .section-item {
+    flex-direction: column;
+    gap: var(--sp-space-md);
+    padding: var(--sp-space-lg);
+  }
+
+  .item-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .related-features {
+    padding: var(--sp-space-2xl) 0;
+  }
+
+  .related-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-final-cta {
+    padding: var(--sp-space-2xl) 0;
+  }
+
+  .cta-group {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .feature-hero-animation {
+    min-height: 300px;
+  }
+
+  .feature-hero-animation::before {
+    width: 350px;
+    height: 350px;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 var(--sp-space-md);
+  }
+
+  .feature-hero {
+    padding: var(--sp-space-xl) var(--sp-space-md);
+  }
+
+  .feature-subtitle {
+    font-size: 1rem;
+  }
+}
+
+
+.highlight-link {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-md);
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+  height: 100%;
+}
+
+.highlight-link:hover {
+  text-decoration: none;
+}

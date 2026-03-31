@@ -3,7 +3,7 @@ use crate::admin::repositories;
 use crate::admin::repositories::apm_metrics::TodayPerformanceSummary;
 use crate::admin::repositories::daily_summaries::DailySummaryRow;
 
-use super::super::types::{HistoryEntry, InsightsData, InsightsFlags, MetricRow};
+use super::super::types::{HistoryEntry, InsightsData, MetricRow};
 use super::metrics::{avg_field, make_metric_row, MetricRowInput};
 
 pub(in crate::admin) fn build_performance_section(
@@ -161,13 +161,6 @@ pub(in crate::admin) fn build_insights(yesterday: &DailySummaryRow) -> InsightsD
             .to_string(),
         highlights: yesterday.highlights.as_deref().unwrap_or("").to_string(),
         trends: yesterday.trends.as_deref().unwrap_or("").to_string(),
-        flags: InsightsFlags {
-            has_patterns: yesterday.patterns.is_some(),
-            has_skill_gaps: yesterday.skill_gaps.is_some(),
-            has_recommendation: yesterday.top_recommendation.is_some(),
-            has_highlights: yesterday.highlights.is_some(),
-            has_trends: yesterday.trends.is_some(),
-        },
     }
 }
 

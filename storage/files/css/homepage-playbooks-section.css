@@ -1,0 +1,132 @@
+
+.playbooks-section {
+  padding: var(--sp-space-4xl) 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 113, 206, 0.02) 50%, transparent 100%);
+}
+
+.playbooks-section .section-title {
+  text-align: center;
+  margin-bottom: var(--sp-space-sm);
+}
+
+.playbooks-section .section-title .highlight {
+  color: var(--sp-color-primary);
+  display: inline;
+  font-size: 1em;
+  margin-top: 0;
+  letter-spacing: 0.1em;
+}
+
+.playbooks-section .section-subtitle {
+  text-align: center;
+  color: var(--sp-color-text-secondary);
+  max-width: 700px;
+  margin: 0 auto var(--sp-space-3xl);
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+
+.playbooks-flow {
+  max-width: 800px;
+  margin: 0 auto var(--sp-space-3xl);
+  padding: var(--sp-space-lg) 0;
+}
+
+.playbooks-flow svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.playbooks-flow text {
+  font-family: var(--sp-font-brand);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+
+.playbooks-flow-desktop {
+  display: block;
+}
+
+.playbooks-flow-mobile {
+  display: none;
+}
+
+
+.playbooks-flow .playbook-connection {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: playbook-draw-line 1.2s ease-out forwards;
+}
+
+.playbooks-flow .playbook-conn-in {
+  animation-delay: 0s;
+}
+
+.playbooks-flow .playbook-conn-out-left {
+  animation-delay: 0.6s;
+}
+
+.playbooks-flow .playbook-conn-out-right {
+  animation-delay: 0.8s;
+}
+
+@keyframes playbook-draw-line {
+  to { stroke-dashoffset: 0; }
+}
+
+
+.playbooks-flow .playbook-hub-glow {
+  animation: playbook-hub-pulse 6s ease-in-out infinite;
+}
+
+@keyframes playbook-hub-pulse {
+  0%, 100% {
+    opacity: 0.06;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.1;
+    transform: scale(1.03);
+  }
+}
+
+
+.playbooks-flow .playbook-node {
+  transition: transform 0.3s ease;
+  cursor: default;
+}
+
+.playbooks-flow .playbook-node:hover {
+  transform: scale(1.08);
+}
+
+.playbooks-flow .playbook-node:hover circle:first-of-type {
+  stroke: var(--sp-brand-400);
+  stroke-width: 2;
+}
+
+
+.playbooks-flow .playbook-hub {
+  transition: transform 0.3s ease;
+}
+
+.playbooks-flow .playbook-hub:hover {
+  transform: scale(1.03);
+}
+
+
+.playbooks-flow .playbook-particles circle {
+  will-change: transform;
+}
+
+
+.playbooks-flow .playbook-flow-labels {
+  transition: opacity 0.3s ease;
+}
+
+.playbooks-flow:hover .playbook-flow-labels {
+  opacity: 0.8;
+}

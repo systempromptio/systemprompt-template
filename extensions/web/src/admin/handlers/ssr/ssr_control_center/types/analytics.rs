@@ -41,16 +41,6 @@ pub struct MetricRow {
 }
 
 #[derive(Serialize, Clone)]
-#[allow(clippy::struct_excessive_bools)]
-pub struct InsightsFlags {
-    pub has_patterns: bool,
-    pub has_skill_gaps: bool,
-    pub has_recommendation: bool,
-    pub has_highlights: bool,
-    pub has_trends: bool,
-}
-
-#[derive(Serialize, Clone)]
 pub struct InsightsData {
     pub summary: String,
     pub patterns: String,
@@ -58,8 +48,6 @@ pub struct InsightsData {
     pub top_recommendation: String,
     pub highlights: String,
     pub trends: String,
-    #[serde(flatten)]
-    pub flags: InsightsFlags,
 }
 
 #[derive(Serialize, Clone)]
@@ -81,13 +69,8 @@ pub struct CategoryBreakdownEntry {
 }
 
 #[derive(Serialize, Clone)]
-#[allow(clippy::struct_excessive_bools)]
 pub struct StarRating {
-    pub star_1: bool,
-    pub star_2: bool,
-    pub star_3: bool,
-    pub star_4: bool,
-    pub star_5: bool,
+    pub rating: u8,
 }
 
 #[derive(Serialize, Clone)]
@@ -110,15 +93,6 @@ pub struct EntityCounts {
     pub agents: i64,
     pub mcp_servers: i64,
     pub hooks: i64,
-}
-
-#[derive(Serialize, Clone)]
-#[allow(clippy::struct_excessive_bools)]
-pub struct AnalysisFlags {
-    pub has_outcomes: bool,
-    pub has_goal_outcome_map: bool,
-    pub has_efficiency_metrics: bool,
-    pub has_best_practices: bool,
 }
 
 #[derive(Serialize, Clone)]
@@ -145,6 +119,4 @@ pub struct AnalysisEntry {
     pub corrections_count: i32,
     pub total_turns: Option<i32>,
     pub session_duration_minutes: Option<i32>,
-    #[serde(flatten)]
-    pub flags: AnalysisFlags,
 }

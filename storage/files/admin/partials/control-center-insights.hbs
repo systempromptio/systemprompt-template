@@ -70,7 +70,7 @@
                     </div>
                     <span class="cc-adoption-label">{{total_skills_used}}/{{total_skills_available}} skills used</span>
                 </div>
-                {{#if has_unused_skills}}
+                {{#if unused_skills}}
                 <div class="cc-unused-skills">
                     <span class="cc-unused-label">Not yet tried:</span>
                     {{#each unused_skills}}
@@ -82,7 +82,7 @@
         </div>
         {{/if}}
 
-        {{#if has_achievement_progress}}
+        {{#if achievement_progress}}
         <div class="cc-insight-card" id="cc-achievement-progress">
             <h3 class="cc-insight-title">Next Achievements</h3>
             <div class="cc-achievement-progress-list">
@@ -101,7 +101,7 @@
         </div>
         {{/if}}
 
-        {{#if has_skill_effectiveness}}
+        {{#if skill_effectiveness}}
         <div class="cc-insight-card">
             <h3 class="cc-insight-title">Skill Effectiveness</h3>
             {{#> components/data-table}}
@@ -120,11 +120,11 @@
                         <td>
                             <span class="cc-entity-pill cc-entity-pill--skill">{{skill_name}}</span>
                             <div class="cc-rating cc-rating--readonly cc-rating--small" role="img" aria-label="Rating: {{avg_effectiveness}} out of 5 stars">
-                                <span class="cc-star {{#if star_1}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
-                                <span class="cc-star {{#if star_2}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
-                                <span class="cc-star {{#if star_3}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
-                                <span class="cc-star {{#if star_4}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
-                                <span class="cc-star {{#if star_5}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
+                                <span class="cc-star {{#if (gt rating 0)}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
+                                <span class="cc-star {{#if (gt rating 1)}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
+                                <span class="cc-star {{#if (gt rating 2)}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
+                                <span class="cc-star {{#if (gt rating 3)}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
+                                <span class="cc-star {{#if (gt rating 4)}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
                             </div>
                         </td>
                         <td>{{total_uses}}</td>
@@ -138,7 +138,7 @@
         </div>
         {{/if}}
 
-        {{#if has_agents_usage}}
+        {{#if agents_usage}}
         <div class="cc-insight-card">
             <h3 class="cc-insight-title">Agents</h3>
             <div class="cc-component-list">
@@ -152,7 +152,7 @@
         </div>
         {{/if}}
 
-        {{#if has_mcp_usage}}
+        {{#if mcp_usage}}
         <div class="cc-insight-card">
             <h3 class="cc-insight-title">MCP Tools</h3>
             <div class="cc-component-list">
@@ -166,7 +166,7 @@
         </div>
         {{/if}}
 
-        {{#if has_top_tools}}
+        {{#if top_tools}}
         <div class="cc-insight-card">
             <h3 class="cc-insight-title">Top Tools</h3>
             <div class="cc-insight-bars">
@@ -186,7 +186,7 @@
         <div class="cc-insight-card">
             <h3 class="cc-insight-title">Session Summary</h3>
             <p class="cc-insight-text">
-                {{#if has_session_groups}}
+                {{#if session_groups}}
                 Rate your sessions to build effectiveness data for your skills and workflows.
                 {{else}}
                 No sessions tracked yet. Start using Claude Code to see analytics here.

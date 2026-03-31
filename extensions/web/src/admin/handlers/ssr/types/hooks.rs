@@ -56,19 +56,14 @@ pub struct HooksStats {
 }
 
 #[derive(Debug, Clone, Serialize)]
-#[allow(clippy::struct_excessive_bools)]
 pub struct MyHooksPageData {
     pub page: &'static str,
     pub title: &'static str,
     pub hooks: Vec<HookView>,
-    pub has_hooks: bool,
     pub plugins: Vec<NamedEntity>,
     pub stats: HooksStats,
     pub event_breakdown: Vec<EventBreakdownView>,
     pub chart: serde_json::Value,
     pub range: String,
-    pub range_24h: bool,
-    pub range_7d: bool,
-    pub range_14d: bool,
     pub hook_event_types: Vec<&'static str>,
 }

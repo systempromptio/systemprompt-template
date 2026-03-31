@@ -1,0 +1,92 @@
+
+
+.blog-content blockquote {
+  margin: 2em 0;
+  padding: var(--sp-spacing-lg) var(--sp-spacing-xl);
+  border-left: 4px solid var(--sp-color-primary);
+  background: var(--sp-color-surface-variant);
+  border-radius: var(--sp-radius-sm);
+  font-style: italic;
+  color: var(--sp-color-text-secondary);
+}
+
+.blog-content blockquote p {
+  margin-bottom: 0.75em;
+}
+
+.blog-content blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.blog-content blockquote cite {
+  display: block;
+  font-style: normal;
+  font-size: 0.9em;
+  color: var(--sp-color-text-disabled);
+  margin-top: 0.5em;
+}
+
+.blog-content blockquote cite::before {
+  content: "\2014 ";
+}
+
+
+
+.blog-content hr {
+  border: none;
+  border-top: 2px solid var(--sp-color-border);
+  margin: 3em 0;
+  opacity: 0.5;
+}
+
+
+.blog-content hr.decorative {
+  border: none;
+  text-align: center;
+  margin: 3em 0;
+}
+
+.blog-content hr.decorative::after {
+  content: "* * *";
+  color: var(--sp-color-text-disabled);
+  letter-spacing: 1em;
+}
+
+
+
+@media (max-width: 768px) {
+  .blog-content {
+    font-size: 1.0625rem;
+  }
+
+  .blog-content h1 {
+    font-size: 2rem;
+  }
+
+  .blog-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .blog-content h3 {
+    font-size: 1.25rem;
+  }
+
+  .blog-content .lead,
+  .blog-content > p:first-of-type {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .blog-content {
+    font-size: 1rem;
+  }
+
+  .blog-content h1 {
+    font-size: 1.75rem;
+  }
+
+  .blog-content h2 {
+    font-size: 1.375rem;
+  }
+}

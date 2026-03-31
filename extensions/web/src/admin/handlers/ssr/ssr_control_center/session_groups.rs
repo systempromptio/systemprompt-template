@@ -71,13 +71,7 @@ fn build_single_group(
     };
 
     let flags = SessionGroupFlags {
-        has_session_title: !session_title.is_empty(),
         is_active,
-        has_errors: total_errors > 0,
-        has_duration: !duration_display.is_empty(),
-        has_turns: !turn_list.is_empty(),
-        has_first_prompt: !first_prompt.is_empty(),
-        has_last_response: !last_response.is_empty(),
         ..SessionGroupFlags::default()
     };
 

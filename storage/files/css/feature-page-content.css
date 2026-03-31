@@ -1,0 +1,200 @@
+.feature-content {
+  padding: var(--sp-space-4xl) 0;
+}
+
+.feature-article {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.feature-article h2 {
+  font-family: var(--sp-font-brand);
+  font-size: 1.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-top: var(--sp-space-3xl);
+  margin-bottom: var(--sp-space-lg);
+  color: var(--sp-color-primary);
+}
+
+.feature-article h2:first-child {
+  margin-top: 0;
+}
+
+.feature-article h3 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin-top: var(--sp-space-2xl);
+  margin-bottom: var(--sp-space-md);
+  color: var(--sp-color-text);
+}
+
+.feature-article h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: var(--sp-space-xl);
+  margin-bottom: var(--sp-space-sm);
+  color: var(--sp-color-text);
+}
+
+.feature-article p {
+  color: var(--sp-color-text-secondary);
+  line-height: 1.8;
+  margin-bottom: var(--sp-space-lg);
+}
+
+.feature-article ul,
+.feature-article ol {
+  color: var(--sp-color-text-secondary);
+  line-height: 1.8;
+  margin-bottom: var(--sp-space-lg);
+  padding-left: var(--sp-space-xl);
+}
+
+.feature-article li {
+  margin-bottom: var(--sp-space-sm);
+}
+.feature-article a {
+  color: var(--sp-color-primary);
+  text-decoration: none;
+  transition: color var(--sp-transition-fast);
+}
+.feature-article a:hover {
+  color: var(--sp-color-primary-hover);
+  text-decoration: underline;
+}
+
+.feature-article blockquote {
+  border-left: 3px solid var(--sp-color-primary);
+  padding-left: var(--sp-space-lg);
+  margin: var(--sp-space-xl) 0;
+  font-style: italic;
+  color: var(--sp-color-text-secondary);
+}
+
+.feature-article pre {
+  background: var(--sp-color-surface);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-md);
+  padding: var(--sp-space-lg);
+  overflow-x: auto;
+  margin: var(--sp-space-xl) 0;
+}
+
+.feature-article code {
+  font-family: "SF Mono", "Fira Code", Consolas, monospace;
+  font-size: 0.875rem;
+}
+.feature-article pre code {
+  color: var(--sp-color-text-secondary);
+  line-height: 1.5;
+}
+.feature-article p code,
+.feature-article li code {
+  background: var(--sp-color-surface);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  padding: var(--sp-space-1) var(--sp-space-2);
+  font-size: 0.875em;
+  color: var(--sp-color-primary);
+}
+
+.feature-article img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--sp-radius-md);
+  margin: var(--sp-space-xl) 0;
+}
+.feature-article hr {
+  border: none;
+  border-top: 1px solid var(--sp-color-border);
+  margin: var(--sp-space-3xl) 0;
+}
+.feature-article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--sp-space-xl) 0;
+}
+
+.feature-article th,
+.feature-article td {
+  border: 1px solid var(--sp-color-border);
+  padding: var(--sp-space-md);
+  text-align: left;
+}
+.feature-article th {
+  background: var(--sp-color-surface);
+  color: var(--sp-color-text);
+  font-weight: 600;
+}
+.feature-article td {
+  color: var(--sp-color-text-secondary);
+}
+.related-features {
+  padding: var(--sp-space-4xl) 0;
+  border-top: 1px solid var(--sp-color-border);
+}
+
+.related-features h2 {
+  font-family: var(--sp-font-brand);
+  font-size: 1.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-align: center;
+  margin-bottom: var(--sp-space-2xl);
+}
+
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--sp-space-lg);
+}
+
+.related-card {
+  display: block;
+  text-decoration: none;
+  padding: var(--sp-space-xl);
+  background: var(--sp-card-bg-glass);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-card-radius);
+  transition: all var(--sp-transition-normal);
+  position: relative;
+}
+
+.related-card:hover {
+  text-decoration: none;
+  border-color: var(--sp-brand-600);
+  transform: translateY(-4px);
+  box-shadow: var(--sp-card-shadow-hover);
+}
+
+.related-card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: var(--sp-space-sm);
+  color: var(--sp-color-text);
+}
+
+.related-card p {
+  color: var(--sp-color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: var(--sp-space-md);
+}
+
+.related-arrow {
+  color: var(--sp-color-primary);
+  font-size: 1.25rem;
+  opacity: 0;
+  transition: all var(--sp-transition-normal);
+  position: absolute;
+  bottom: var(--sp-space-lg);
+  right: var(--sp-space-lg);
+}
+
+.related-card:hover .related-arrow {
+  opacity: 1;
+  transform: translateX(4px);
+}

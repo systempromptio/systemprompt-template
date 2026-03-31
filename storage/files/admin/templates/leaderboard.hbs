@@ -6,16 +6,16 @@
 
     <section aria-label="Leaderboard">
     <div class="leaderboard-tabs" role="tablist" aria-label="Sort leaderboard by">
-        <a href="?sort=xp" class="leaderboard-tab{{#if sort_xp}} leaderboard-tab--active{{/if}}">XP</a>
-        <a href="?sort=sessions" class="leaderboard-tab{{#if sort_sessions}} leaderboard-tab--active{{/if}}">Sessions</a>
-        <a href="?sort=prompts" class="leaderboard-tab{{#if sort_prompts}} leaderboard-tab--active{{/if}}">Prompts</a>
-        <a href="?sort=tools" class="leaderboard-tab{{#if sort_tools}} leaderboard-tab--active{{/if}}">Tools</a>
-        <a href="?sort=subagents" class="leaderboard-tab{{#if sort_subagents}} leaderboard-tab--active{{/if}}">Subagents</a>
-        <a href="?sort=streak" class="leaderboard-tab{{#if sort_streak}} leaderboard-tab--active{{/if}}">Streak</a>
-        <a href="?sort=achievements" class="leaderboard-tab{{#if sort_achievements}} leaderboard-tab--active{{/if}}">Achievements</a>
+        <a href="?sort=xp" class="leaderboard-tab{{#if (eq current_sort "xp")}} leaderboard-tab--active{{/if}}">XP</a>
+        <a href="?sort=sessions" class="leaderboard-tab{{#if (eq current_sort "sessions")}} leaderboard-tab--active{{/if}}">Sessions</a>
+        <a href="?sort=prompts" class="leaderboard-tab{{#if (eq current_sort "prompts")}} leaderboard-tab--active{{/if}}">Prompts</a>
+        <a href="?sort=tools" class="leaderboard-tab{{#if (eq current_sort "tools")}} leaderboard-tab--active{{/if}}">Tools</a>
+        <a href="?sort=subagents" class="leaderboard-tab{{#if (eq current_sort "subagents")}} leaderboard-tab--active{{/if}}">Subagents</a>
+        <a href="?sort=streak" class="leaderboard-tab{{#if (eq current_sort "streak")}} leaderboard-tab--active{{/if}}">Streak</a>
+        <a href="?sort=achievements" class="leaderboard-tab{{#if (eq current_sort "achievements")}} leaderboard-tab--active{{/if}}">Achievements</a>
     </div>
 
-    {{#if has_podium}}
+    {{#if podium}}
     <div class="leaderboard-podium" role="list" aria-label="Top 3 users">
         {{#each podium}}
         <div class="leaderboard-podium__card leaderboard-podium__card--{{medal}}" role="listitem">
@@ -92,7 +92,7 @@
             </tr>
             {{/each}}
             </tbody>
-            {{#if ../has_averages}}
+            {{#if ../averages}}
             <tfoot>
             <tr class="leaderboard-table__averages">
                 <td></td>

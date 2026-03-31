@@ -20,7 +20,13 @@ pub(in crate::admin) struct AssembleInput<'a> {
 }
 
 #[derive(Serialize)]
-#[allow(clippy::struct_excessive_bools)]
+pub(in crate::admin) struct SectionFlags {
+    pub has_skill_adoption: bool,
+    pub has_today_summary: bool,
+    pub has_report: bool,
+}
+
+#[derive(Serialize)]
 pub(in crate::admin) struct TemplateData<'a> {
     pub page: &'static str,
     pub title: &'static str,
@@ -46,39 +52,27 @@ pub(in crate::admin) struct TemplateData<'a> {
     pub xp_progress_pct: i64,
     pub today: &'a super::super::types::TodayObj,
     pub session_groups: &'a [SessionGroup],
-    pub has_session_groups: bool,
     pub top_tools: &'a [serde_json::Value],
-    pub has_top_tools: bool,
     pub skill_effectiveness: Vec<SkillEffectivenessEntry>,
-    pub has_skill_effectiveness: bool,
     pub skills_usage: &'a [&'a crate::admin::types::conversation_analytics::EntityUsageSummary],
-    pub has_skills_usage: bool,
     pub agents_usage: &'a [&'a crate::admin::types::conversation_analytics::EntityUsageSummary],
-    pub has_agents_usage: bool,
     pub mcp_usage: &'a [&'a crate::admin::types::conversation_analytics::EntityUsageSummary],
-    pub has_mcp_usage: bool,
     pub skill_ratings: &'a [crate::admin::types::conversation_analytics::SkillRating],
-    pub has_skill_ratings: bool,
     pub has_health: bool,
     pub health: &'a super::super::types::HealthObj,
     pub recent_analyses: &'a [super::super::types::AnalysisEntry],
-    pub has_recent_analyses: bool,
     pub recommendations: &'a [super::super::types::AnalysisEntry],
-    pub has_recommendations: bool,
     pub unused_skills: &'a [String],
-    pub has_unused_skills: bool,
     pub skill_adoption_pct: usize,
     pub total_skills_available: usize,
     pub total_skills_used: usize,
-    pub has_skill_adoption: bool,
     pub achievement_progress: &'a [super::super::types::AchievementProgress],
-    pub has_achievement_progress: bool,
     pub today_summary: &'a super::super::types::TodaySummaryObj,
-    pub has_today_summary: bool,
     pub hourly_breakdown: &'a [super::super::types::HourlyEntry],
     pub performance_summary: &'a super::super::types::PerfSummaryObj,
     pub report: &'a super::super::types::ReportData,
-    pub has_report: bool,
+    #[serde(flatten)]
+    pub section_flags: SectionFlags,
 }
 
 pub(in crate::admin) fn assemble_template<'a>(input: &'a AssembleInput<'a>) -> TemplateData<'a> {
@@ -105,11 +99,7 @@ pub(in crate::admin) fn assemble_template<'a>(input: &'a AssembleInput<'a>) -> T
             goal_achievement_pct: format!("{:.0}", s.goal_achievement_pct),
             has_score: s.scored_sessions > 0,
             stars: StarRating {
-                star_1: s.avg_effectiveness.round() >= 1.0,
-                star_2: s.avg_effectiveness.round() >= 2.0,
-                star_3: s.avg_effectiveness.round() >= 3.0,
-                star_4: s.avg_effectiveness.round() >= 4.0,
-                star_5: s.avg_effectiveness.round() >= 5.0,
+                rating: u8::try_from(s.avg_effectiveness.round() as i64).unwrap_or(0),
             },
         })
         .collect();
@@ -139,38 +129,29 @@ pub(in crate::admin) fn assemble_template<'a>(input: &'a AssembleInput<'a>) -> T
         xp_progress_pct: gam.xp_progress_pct,
         today: &apm.today_obj,
         session_groups: params.session_groups,
-        has_session_groups: !params.session_groups.is_empty(),
         top_tools: params.tools_with_pct,
-        has_top_tools: !params.tools_with_pct.is_empty(),
-        has_skill_effectiveness: !params.skill_effectiveness.is_empty(),
         skill_effectiveness,
         skills_usage: params.skills_usage,
-        has_skills_usage: !params.skills_usage.is_empty(),
         agents_usage: params.agents_usage,
-        has_agents_usage: !params.agents_usage.is_empty(),
         mcp_usage: params.mcp_usage,
-        has_mcp_usage: !params.mcp_usage.is_empty(),
         skill_ratings: params.skill_ratings,
-        has_skill_ratings: !params.skill_ratings.is_empty(),
         has_health: health.has_health,
         health: &health.health_obj,
         recent_analyses: &analyses.recent_analyses_json,
-        has_recent_analyses: !params.recent_analyses.is_empty(),
         recommendations: &analyses.recommendations_json,
-        has_recommendations: !analyses.recommendations_json.is_empty(),
         unused_skills: params.unused_skills,
-        has_unused_skills: !params.unused_skills.is_empty(),
         skill_adoption_pct: adoption.adoption_pct,
         total_skills_available: adoption.total_available,
         total_skills_used: adoption.total_used,
-        has_skill_adoption: adoption.total_available > 0,
         achievement_progress: &gam.achievement_progress,
-        has_achievement_progress: !gam.achievement_progress.is_empty(),
         today_summary: &apm.today_summary_obj,
-        has_today_summary: params.today_summary.sessions_count > 0,
         hourly_breakdown: &apm.hourly_json,
         performance_summary: &apm.perf_json,
         report,
-        has_report: !params.daily_summaries.is_empty(),
+        section_flags: SectionFlags {
+            has_skill_adoption: adoption.total_available > 0,
+            has_today_summary: params.today_summary.sessions_count > 0,
+            has_report: !params.daily_summaries.is_empty(),
+        },
     }
 }

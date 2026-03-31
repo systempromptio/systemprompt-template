@@ -144,7 +144,7 @@
     {{> components/empty-state message="No hooks configured. Hooks are created automatically when you install plugins, or create custom hooks."}}
     {{/if}}
 
-    {{#if has_hooks}}
+    {{#if hooks}}
     <div class="mt-8">
         <div class="metric-ribbon" id="metric-ribbon">
             <div class="metric-ribbon-item" data-key="total_events">
@@ -175,9 +175,9 @@
             <div class="usage-chart-header">
                 <div class="usage-chart-title">Hook Activity</div>
                 <div class="chart-range-tabs">
-                    <a href="?range=24h" class="chart-range-tab {{#if range_24h}}active{{/if}}">24h</a>
-                    <a href="?range=7d" class="chart-range-tab {{#if range_7d}}active{{/if}}">7d</a>
-                    <a href="?range=14d" class="chart-range-tab {{#if range_14d}}active{{/if}}">14d</a>
+                    <a href="?range=24h" class="chart-range-tab {{#if (eq range "24h")}}active{{/if}}">24h</a>
+                    <a href="?range=7d" class="chart-range-tab {{#if (eq range "7d")}}active{{/if}}">7d</a>
+                    <a href="?range=14d" class="chart-range-tab {{#if (eq range "14d")}}active{{/if}}">14d</a>
                 </div>
                 <div class="usage-chart-legend">
                     <span class="legend-item legend-tools">Events</span>

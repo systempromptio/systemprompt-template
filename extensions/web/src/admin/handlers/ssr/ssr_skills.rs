@@ -5,7 +5,7 @@ use systemprompt::identifiers::SkillId;
 
 use crate::admin::repositories;
 use crate::admin::templates::AdminTemplateEngine;
-use crate::admin::types::{MarketplaceContext, UserContext};
+use crate::admin::types::{AgentSkill, MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -13,7 +13,96 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
-#[allow(clippy::too_many_lines)]
+fn count_entities_via_plugins(
+    entity_id: &str,
+    entity_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
+    target_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
+) -> usize {
+    if let Some(plugins) = entity_plugin_map.get(entity_id) {
+        let mut ids: HashSet<String> = HashSet::new();
+        for (plugin_id, _) in plugins {
+            for (target_id, target_plugins) in target_plugin_map {
+                if target_plugins.iter().any(|(pid, _)| pid == plugin_id) {
+                    ids.insert(target_id.clone());
+                }
+            }
+        }
+        ids.len()
+    } else {
+        0
+    }
+}
+
+struct SkillFilters {
+    sources: HashSet<String>,
+    plugins: HashSet<String>,
+    tags: HashSet<String>,
+}
+
+fn build_skill_json(
+    skill: &AgentSkill,
+    skill_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
+    agent_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
+    usage_counts: &std::collections::HashMap<String, i64>,
+    avg_ratings: &std::collections::HashMap<String, (f64, i64)>,
+    filters: &mut SkillFilters,
+) -> serde_json::Value {
+    let skill_id_str = skill.skill_id.as_str();
+    let assigned_plugins: Vec<serde_json::Value> = skill_plugin_map
+        .get(skill_id_str)
+        .map(|plugins| {
+            plugins
+                .iter()
+                .map(|(pid, pname)| json!({"id": pid, "name": pname}))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let agent_count = count_entities_via_plugins(skill_id_str, skill_plugin_map, agent_plugin_map);
+
+    let source = if skill.source_id.as_str() == "custom" || skill.source_id.as_str() == "user" {
+        "custom"
+    } else {
+        "system"
+    };
+
+    filters.sources.insert(source.to_string());
+    for p in &assigned_plugins {
+        if let Some(name) = p.get("name").and_then(|v| v.as_str()) {
+            filters.plugins.insert(name.to_string());
+        }
+    }
+    if let Some(tags) = &skill.tags {
+        for tag in tags {
+            filters.tags.insert(tag.clone());
+        }
+    }
+
+    let usage_count = usage_counts.get(skill_id_str).copied().unwrap_or(0);
+    let (avg_rating, rating_count) = avg_ratings
+        .get(skill_id_str)
+        .copied()
+        .unwrap_or((0.0, 0));
+
+    json!({
+        "skill_id": skill_id_str,
+        "name": skill.name,
+        "description": skill.description,
+        "tags": skill.tags,
+        "category_id": skill.category_id,
+        "source": source,
+        "assigned_plugins": assigned_plugins,
+        "assigned_plugin_ids": assigned_plugins.iter().filter_map(|p| p.get("id").and_then(|v| v.as_str())).collect::<Vec<_>>(),
+        "plugin_count": assigned_plugins.len(),
+        "agent_count": agent_count,
+        "created_at": skill.created_at.to_rfc3339(),
+        "updated_at": skill.updated_at.to_rfc3339(),
+        "usage_count": usage_count,
+        "avg_rating": avg_rating,
+        "rating_count": rating_count,
+    })
+}
+
 pub(crate) async fn skills_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
@@ -68,87 +157,31 @@ pub(crate) async fn skills_page(
     let usage_counts = repositories::fetch_skill_usage_counts(&pool, &skill_ids).await;
     let avg_ratings = repositories::fetch_skill_avg_ratings(&pool, &skill_ids).await;
 
-    let mut filter_sources: HashSet<String> = HashSet::new();
-    let mut filter_plugins: HashSet<String> = HashSet::new();
-    let mut filter_tags: HashSet<String> = HashSet::new();
+    let mut filters = SkillFilters {
+        sources: HashSet::new(),
+        plugins: HashSet::new(),
+        tags: HashSet::new(),
+    };
 
     let skills_data: Vec<serde_json::Value> = skills
         .iter()
         .map(|skill| {
-            let skill_id_str = skill.skill_id.as_str();
-            let assigned_plugins: Vec<serde_json::Value> = skill_plugin_map
-                .get(skill_id_str)
-                .map(|plugins| {
-                    plugins
-                        .iter()
-                        .map(|(pid, pname)| json!({"id": pid, "name": pname}))
-                        .collect()
-                })
-                .unwrap_or_default();
-
-            let agent_count = if let Some(plugins) = skill_plugin_map.get(skill_id_str) {
-                let mut agent_ids: HashSet<String> = HashSet::new();
-                for (plugin_id, _) in plugins {
-                    for (agent_id, agent_plugins) in &agent_plugin_map {
-                        if agent_plugins.iter().any(|(pid, _)| pid == plugin_id) {
-                            agent_ids.insert(agent_id.clone());
-                        }
-                    }
-                }
-                agent_ids.len()
-            } else {
-                0
-            };
-
-            let source = if skill.source_id.as_str() == "custom" || skill.source_id.as_str() == "user" {
-                "custom"
-            } else {
-                "system"
-            };
-
-            filter_sources.insert(source.to_string());
-            for p in &assigned_plugins {
-                if let Some(name) = p.get("name").and_then(|v| v.as_str()) {
-                    filter_plugins.insert(name.to_string());
-                }
-            }
-            if let Some(tags) = &skill.tags {
-                for tag in tags {
-                    filter_tags.insert(tag.clone());
-                }
-            }
-
-            let usage_count = usage_counts.get(skill_id_str).copied().unwrap_or(0);
-            let (avg_rating, rating_count) = avg_ratings
-                .get(skill_id_str)
-                .copied()
-                .unwrap_or((0.0, 0));
-
-            json!({
-                "skill_id": skill_id_str,
-                "name": skill.name,
-                "description": skill.description,
-                "tags": skill.tags,
-                "category_id": skill.category_id,
-                "source": source,
-                "assigned_plugins": assigned_plugins,
-                "assigned_plugin_ids": assigned_plugins.iter().filter_map(|p| p.get("id").and_then(|v| v.as_str())).collect::<Vec<_>>(),
-                "plugin_count": assigned_plugins.len(),
-                "agent_count": agent_count,
-                "created_at": skill.created_at.to_rfc3339(),
-                "updated_at": skill.updated_at.to_rfc3339(),
-                "usage_count": usage_count,
-                "avg_rating": avg_rating,
-                "rating_count": rating_count,
-            })
+            build_skill_json(
+                skill,
+                &skill_plugin_map,
+                &agent_plugin_map,
+                &usage_counts,
+                &avg_ratings,
+                &mut filters,
+            )
         })
         .collect();
 
-    let mut sorted_sources: Vec<String> = filter_sources.into_iter().collect();
+    let mut sorted_sources: Vec<String> = filters.sources.into_iter().collect();
     sorted_sources.sort();
-    let mut sorted_plugins: Vec<String> = filter_plugins.into_iter().collect();
+    let mut sorted_plugins: Vec<String> = filters.plugins.into_iter().collect();
     sorted_plugins.sort();
-    let mut sorted_tags: Vec<String> = filter_tags.into_iter().collect();
+    let mut sorted_tags: Vec<String> = filters.tags.into_iter().collect();
     sorted_tags.sort();
 
     let data = json!({

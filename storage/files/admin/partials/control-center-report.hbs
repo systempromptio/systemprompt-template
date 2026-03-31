@@ -210,7 +210,7 @@
       {{/components/data-table}}
     </div>
 
-    {{#if has_recent_analyses}}
+    {{#if recent_analyses}}
     <div class="cc-report-section">
       <h3 class="cc-report-section-title">Session Breakdown</h3>
       {{#> components/data-table}}
@@ -266,31 +266,31 @@
           <p class="cc-report-insight-text">{{report.insights.summary}}</p>
         </div>
         {{/if}}
-        {{#if report.insights.has_patterns}}
+        {{#if report.insights.patterns}}
         <div class="cc-report-insight">
           <span class="cc-report-insight-label">Patterns</span>
           <p class="cc-report-insight-text">{{report.insights.patterns}}</p>
         </div>
         {{/if}}
-        {{#if report.insights.has_highlights}}
+        {{#if report.insights.highlights}}
         <div class="cc-report-insight cc-report-insight--highlight">
           <span class="cc-report-insight-label">Highlights</span>
           <p class="cc-report-insight-text">{{report.insights.highlights}}</p>
         </div>
         {{/if}}
-        {{#if report.insights.has_trends}}
+        {{#if report.insights.trends}}
         <div class="cc-report-insight">
           <span class="cc-report-insight-label">Trends</span>
           <p class="cc-report-insight-text">{{report.insights.trends}}</p>
         </div>
         {{/if}}
-        {{#if report.insights.has_skill_gaps}}
+        {{#if report.insights.skill_gaps}}
         <div class="cc-report-insight">
           <span class="cc-report-insight-label">Skill Gaps</span>
           <p class="cc-report-insight-text">{{report.insights.skill_gaps}}</p>
         </div>
         {{/if}}
-        {{#if report.insights.has_recommendation}}
+        {{#if report.insights.top_recommendation}}
         <div class="cc-report-insight cc-report-insight--highlight">
           <span class="cc-report-insight-label">Recommendation</span>
           <p class="cc-report-insight-text">{{report.insights.top_recommendation}}</p>

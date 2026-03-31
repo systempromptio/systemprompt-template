@@ -1,0 +1,170 @@
+
+.extension-traits {
+  background: var(--sp-color-surface);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-lg);
+  overflow: hidden;
+}
+
+.trait-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--sp-color-border);
+  overflow-x: auto;
+}
+
+.trait-tab {
+  flex: 1;
+  padding: var(--sp-space-md) var(--sp-space-lg);
+  background: transparent;
+  border: none;
+  color: var(--sp-color-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--sp-transition-fast);
+  white-space: nowrap;
+}
+
+.trait-tab:hover {
+  color: var(--sp-color-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.trait-tab.active {
+  color: var(--sp-color-primary);
+  background: rgba(0, 113, 206, 0.1);
+  border-bottom: 2px solid var(--sp-color-primary);
+}
+
+.trait-panels {
+  padding: var(--sp-space-xl);
+}
+
+.trait-panel {
+  display: none;
+}
+
+.trait-panel.active {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--sp-space-xl);
+  align-items: start;
+}
+
+.trait-info h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: var(--sp-space-sm);
+}
+
+.trait-info p {
+  color: var(--sp-color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.trait-learn-more {
+  display: inline-block;
+  margin-top: var(--sp-space-md);
+  padding: var(--sp-space-3) var(--sp-space-5);
+  background: transparent;
+  color: var(--sp-color-primary);
+  font-family: var(--sp-font-brand);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--sp-color-primary);
+  border-radius: var(--sp-radius-sm);
+  transition: all var(--sp-transition-fast);
+}
+
+.trait-learn-more:hover {
+  background: var(--sp-color-primary);
+  color: var(--sp-color-text-on-primary);
+}
+
+.trait-code pre {
+  background: var(--sp-color-background);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-button);
+  padding: var(--sp-space-lg);
+  overflow-x: auto;
+  margin: 0;
+}
+
+.trait-code code {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.8rem;
+  color: var(--sp-color-text-secondary);
+  white-space: pre;
+}
+
+
+.architecture-note {
+  text-align: center;
+  padding: var(--sp-space-xl);
+  background: rgba(0, 113, 206, 0.05);
+  border-radius: var(--sp-radius-button);
+  margin-top: var(--sp-space-xl);
+}
+
+.architecture-note h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--sp-space-sm);
+  color: var(--sp-color-primary);
+}
+
+.architecture-note p {
+  color: var(--sp-color-text-secondary);
+  font-size: 0.9rem;
+}
+
+
+.differentiator-section {
+  margin-bottom: var(--sp-space-3xl);
+}
+
+.differentiator-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--sp-space-2xl);
+}
+
+.differentiator-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--sp-space-lg);
+}
+
+.differentiator-card {
+  text-align: center;
+  padding: var(--sp-space-lg);
+}
+
+.differentiator-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--sp-space-md);
+  color: var(--sp-color-primary);
+}
+
+.differentiator-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--sp-space-xs);
+}
+
+.differentiator-card p {
+  font-size: 0.875rem;
+  color: var(--sp-color-text-secondary);
+}
+
+
+.technical-ctas {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-space-lg);
+}

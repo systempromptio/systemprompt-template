@@ -1,0 +1,118 @@
+.live-dashboard {
+  background: var(--sp-color-surface);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-lg);
+  padding: var(--sp-spacing-lg);
+  margin: var(--sp-spacing-xl) 0;
+  max-width: 600px;
+}
+
+.live-dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-spacing-sm);
+  margin-bottom: var(--sp-spacing-md);
+  font-size: var(--sp-font-size-sm);
+  color: var(--sp-color-text-secondary);
+}
+
+.live-indicator {
+  width: 8px;
+  height: 8px;
+  background: var(--sp-color-success);
+  border-radius: var(--sp-radius-full);
+  animation: pulse-live 2s ease-in-out infinite;
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.9); }
+}
+
+.live-label {
+  font-weight: var(--sp-font-weight-semibold);
+  color: var(--sp-color-text-primary);
+}
+
+.live-updated {
+  margin-left: auto;
+  font-size: var(--sp-font-size-xs);
+}
+
+.live-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-spacing-md);
+}
+
+@media (min-width: 480px) {
+  .live-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.live-stat {
+  text-align: center;
+}
+
+.live-stat-value {
+  display: block;
+  font-family: var(--sp-font-brand);
+  font-size: var(--sp-font-size-xxl);
+  font-weight: var(--sp-font-weight-bold);
+  color: var(--sp-color-text-primary);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.live-stat-label {
+  display: block;
+  font-size: var(--sp-font-size-xs);
+  color: var(--sp-color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: var(--sp-spacing-xs);
+}
+
+.live-insight {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-spacing-sm);
+  margin-top: var(--sp-spacing-md);
+  padding-top: var(--sp-spacing-md);
+  border-top: 1px solid var(--sp-color-border);
+  font-size: var(--sp-font-size-sm);
+  color: var(--sp-color-text-secondary);
+}
+
+.insight-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.trend-arrow {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: var(--sp-spacing-xs);
+  vertical-align: middle;
+}
+
+.trend-arrow.trend-up {
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 6px solid var(--sp-color-success);
+}
+
+.trend-arrow.trend-down {
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--sp-color-error);
+}
+
+.trend-arrow.trend-flat {
+  width: 10px;
+  height: 2px;
+  background: var(--sp-color-text-secondary);
+  border: none;
+}

@@ -42,10 +42,14 @@ pub struct EntityLimits {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[allow(clippy::struct_excessive_bools)]
+pub struct AiFeatures {
+    pub session_analysis: bool,
+    pub daily_summaries: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeatureFlags {
-    pub ai_session_analysis: bool,
-    pub ai_daily_summaries: bool,
+    pub ai: AiFeatures,
     pub apm_metrics: bool,
     pub gamification: bool,
     pub export_zip: bool,
@@ -94,8 +98,10 @@ impl FeatureFlags {
     #[must_use]
     pub fn free_default() -> Self {
         Self {
-            ai_session_analysis: false,
-            ai_daily_summaries: false,
+            ai: AiFeatures {
+                session_analysis: false,
+                daily_summaries: false,
+            },
             apm_metrics: false,
             gamification: true,
             export_zip: false,

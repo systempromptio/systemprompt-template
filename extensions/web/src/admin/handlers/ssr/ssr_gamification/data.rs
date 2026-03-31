@@ -146,17 +146,8 @@ pub(super) fn build_leaderboard_data(
         page: "leaderboard",
         title: "Leaderboard",
         entries: enriched,
-        has_podium: !podium.is_empty(),
         podium,
         current_sort: sort.to_string(),
-        sort_xp: sort == "xp",
-        sort_sessions: sort == "sessions",
-        sort_prompts: sort == "prompts",
-        sort_tools: sort == "tools",
-        sort_subagents: sort == "subagents",
-        sort_streak: sort == "streak",
-        sort_achievements: sort == "achievements",
         averages: build_averages_view(averages),
-        has_averages: averages.is_some(),
     }
 }

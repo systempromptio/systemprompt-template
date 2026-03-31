@@ -48,8 +48,8 @@ pub async fn get_usage_summary(
 
 fn check_feature(limits: &TierLimits, feature: Feature) -> LimitCheckResult {
     let allowed = match feature {
-        Feature::AiSessionAnalysis => limits.features.ai_session_analysis,
-        Feature::AiDailySummaries => limits.features.ai_daily_summaries,
+        Feature::AiSessionAnalysis => limits.features.ai.session_analysis,
+        Feature::AiDailySummaries => limits.features.ai.daily_summaries,
         Feature::ApmMetrics => limits.features.apm_metrics,
         Feature::ExportZip => limits.features.export_zip,
     };
