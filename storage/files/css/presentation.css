@@ -1,13 +1,13 @@
 
 :root {
-  --sp-pres-blue-900: #252526;
-  --sp-pres-blue-700: #d45c3a;
-  --sp-pres-blue-500: #ed6841;
-  --sp-pres-blue-300: #f5a288;
-  --sp-pres-blue-100: #fce0d5;
-  --sp-pres-blue-50: #fef0eb;
-  --sp-pres-yellow: #FF8555;
-  --sp-pres-navy: #252526;
+  --sp-pres-blue-900: var(--sp-primitive-warm-900, #252526);
+  --sp-pres-blue-700: var(--sp-primitive-brand-700, #1d4ed8);
+  --sp-pres-blue-500: var(--sp-primitive-brand-500, #2563eb);
+  --sp-pres-blue-300: var(--sp-primitive-brand-300, #93c5fd);
+  --sp-pres-blue-100: var(--sp-primitive-brand-100, #dbeafe);
+  --sp-pres-blue-50:  var(--sp-primitive-brand-50, #eff6ff);
+  --sp-pres-yellow:   var(--sp-primitive-brand-400, #3b82f6);
+  --sp-pres-navy:     var(--sp-primitive-warm-900, #252526);
   --sp-pres-gray-50: #f8fafc;
   --sp-pres-gray-200: #e2e8f0;
   --sp-pres-gray-400: #94a3b8;

@@ -3,9 +3,9 @@
     {{#*inline "content"}}
 
     <section aria-label="Demo environment notice" class="mb-6">
-        <div class="card" style="border-left: 4px solid oklch(0.75 0.18 55);">
+        <div class="card" style="border-left: 4px solid var(--sp-warning);">
             <div class="card-body">
-                <h2 class="card-title" style="color: oklch(0.75 0.18 55);">Demo Environment — User Provisioning</h2>
+                <h2 class="card-title" style="color: var(--sp-warning);">Demo Environment — User Provisioning</h2>
                 <p class="text-sm text-secondary mb-2">
                     This page allows administrators to create user accounts and generate one-time registration links for this demo environment.
                     Recipients click the link to register a passkey on their device, which becomes their login credential.
@@ -112,7 +112,7 @@
                 <div id="demo-error" class="login-error mt-4" style="display:none;" role="alert"></div>
 
                 <div id="demo-result" class="mt-4" style="display:none;">
-                    <div class="card" style="border-left: 4px solid oklch(0.72 0.17 155);">
+                    <div class="card" style="border-left: 4px solid var(--sp-success);">
                         <div class="card-body">
                             <p class="text-sm text-primary mb-2"><strong>User created successfully.</strong> Share this one-time registration link:</p>
                             <div style="display:flex; gap:0.5rem; align-items:center;">

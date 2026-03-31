@@ -190,12 +190,12 @@
                 <svg viewBox="0 0 960 280" preserveAspectRatio="none" class="usage-svg" aria-label="Hook activity chart">
                     <defs>
                         <linearGradient id="grad-events" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#6B68FA" stop-opacity="0.7"/>
-                            <stop offset="100%" stop-color="#6B68FA" stop-opacity="0.08"/>
+                            <stop offset="0%" stop-color="var(--sp-chart-indigo, #6B68FA)" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="var(--sp-chart-indigo, #6B68FA)" stop-opacity="0.08"/>
                         </linearGradient>
                         <linearGradient id="grad-errors" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#EF4444" stop-opacity="0.7"/>
-                            <stop offset="100%" stop-color="#EF4444" stop-opacity="0.08"/>
+                            <stop offset="0%" stop-color="var(--sp-chart-red, #EF4444)" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="var(--sp-chart-red, #EF4444)" stop-opacity="0.08"/>
                         </linearGradient>
                         <filter id="glow">
                             <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -208,7 +208,7 @@
                     {{/each}}
                     {{#if chart.paths.events}}<path d="{{chart.paths.events}}" fill="url(#grad-events)" class="area-path"/>{{/if}}
                     {{#if chart.paths.errors}}<path d="{{chart.paths.errors}}" fill="url(#grad-errors)" class="area-path"/>{{/if}}
-                    {{#if chart.paths.top_line}}<path d="{{chart.paths.top_line}}" fill="none" stroke="#6B68FA" stroke-width="2" filter="url(#glow)" class="line-path"/>{{/if}}
+                    {{#if chart.paths.top_line}}<path d="{{chart.paths.top_line}}" fill="none" stroke="var(--sp-chart-indigo, #6B68FA)" stroke-width="2" filter="url(#glow)" class="line-path"/>{{/if}}
                 </svg>
                 <div class="usage-chart-x-axis">
                     {{#each chart.x_labels}}

@@ -160,5 +160,11 @@
       color-mix(in oklch, var(--sp-section-audit) 14%, transparent),
       color-mix(in oklch, var(--sp-section-audit) 16%, transparent)
     );
+
+    --sp-chart-purple:  var(--sp-section-users);
+    --sp-chart-green:   var(--sp-section-skills);
+    --sp-chart-blue:    var(--sp-section-plugins);
+    --sp-chart-indigo:  light-dark(oklch(0.55 0.20 275), oklch(0.65 0.18 275));
+    --sp-chart-red:     var(--sp-danger);
 }
 }
