@@ -10,31 +10,23 @@ pub struct SetSessionRequest {
     pub refresh_token: Option<String>,
 }
 
-fn is_secure_request(headers: &HeaderMap) -> bool {
-    if let Some(proto) = headers
-        .get("x-forwarded-proto")
-        .and_then(|v| v.to_str().ok())
-    {
-        return proto == "https";
-    }
-    if let Some(origin) = headers.get("origin").and_then(|v| v.to_str().ok()) {
-        return origin.starts_with("https://");
-    }
-    false
+fn is_secure_context() -> bool {
+    // Default to true (secure) in production. Set FORCE_HTTPS=false only for local dev.
+    std::env::var("FORCE_HTTPS").map_or(true, |v| v != "false")
 }
 
 pub async fn set_session(
-    req_headers: HeaderMap,
+    _req_headers: HeaderMap,
     Json(body): Json<SetSessionRequest>,
 ) -> (HeaderMap, Json<serde_json::Value>) {
     let max_age = body.expires_in.unwrap_or(3600);
-    let secure_flag = if is_secure_request(&req_headers) {
+    let secure_flag = if is_secure_context() {
         "; Secure"
     } else {
         ""
     };
     let access_cookie = format!(
-        "access_token={}; Path=/; SameSite=Lax; Max-Age={}{}",
+        "access_token={}; Path=/; HttpOnly; SameSite=Lax; Max-Age={}{}",
         body.access_token, max_age, secure_flag
     );
 
@@ -57,8 +49,9 @@ pub async fn set_session(
 }
 
 pub async fn clear_session() -> (HeaderMap, Json<serde_json::Value>) {
-    let access_cookie = "access_token=; Path=/; SameSite=Lax; Max-Age=0";
-    let refresh_cookie = "refresh_token=; Path=/api/public/auth; HttpOnly; SameSite=Lax; Max-Age=0";
+    let secure_flag = if is_secure_context() { "; Secure" } else { "" };
+    let access_cookie = format!("access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}");
+    let refresh_cookie = format!("refresh_token=; Path=/api/public/auth; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}");
 
     let mut headers = HeaderMap::new();
     if let Ok(val) = access_cookie.parse() {

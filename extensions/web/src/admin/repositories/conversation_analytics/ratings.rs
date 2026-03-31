@@ -60,7 +60,8 @@ pub async fn fetch_all_session_ratings(
         r"SELECT session_id, rating, outcome, notes, updated_at
         FROM session_ratings
         WHERE user_id = $1
-        ORDER BY updated_at DESC",
+        ORDER BY updated_at DESC
+        LIMIT 200",
         user_id.as_str(),
     )
     .fetch_all(pool.as_ref())
@@ -76,7 +77,8 @@ pub async fn fetch_all_skill_ratings(
         r"SELECT skill_name, rating, notes, updated_at
         FROM skill_ratings
         WHERE user_id = $1
-        ORDER BY updated_at DESC",
+        ORDER BY updated_at DESC
+        LIMIT 200",
         user_id.as_str(),
     )
     .fetch_all(pool.as_ref())

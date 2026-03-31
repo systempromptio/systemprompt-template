@@ -1,4 +1,5 @@
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
+use std::time::{Duration, Instant};
 
 use axum::{
     extract::{Request, State},
@@ -8,10 +9,21 @@ use axum::{
     Extension,
 };
 use sqlx::PgPool;
+use tokio::sync::RwLock;
 
-use super::activity;
 use super::handlers::extract_user_from_cookie;
+use super::repositories::plugins::MarketplaceCounts;
 use super::types::{MarketplaceContext, UserContext};
+
+struct CachedMarketplace {
+    counts: MarketplaceCounts,
+    site_url: String,
+    fetched_at: Instant,
+}
+
+static MARKETPLACE_CACHE: LazyLock<RwLock<Option<CachedMarketplace>>> =
+    LazyLock::new(|| RwLock::new(None));
+const MARKETPLACE_CACHE_TTL: Duration = Duration::from_secs(300);
 
 pub async fn user_context_middleware(
     State(pool): State<Arc<PgPool>>,
@@ -41,17 +53,6 @@ pub async fn user_context_middleware(
         is_admin,
         email_verified: false,
     };
-
-    let login_pool = pool.clone();
-    let login_uid = ctx.user_id.as_str().to_string();
-    let login_name = ctx.username.clone();
-    tokio::spawn(async move {
-        activity::record(
-            &login_pool,
-            activity::NewActivity::login(&login_uid, &login_name),
-        )
-        .await;
-    });
 
     request.extensions_mut().insert(ctx);
     next.run(request).await
@@ -84,34 +85,9 @@ pub async fn marketplace_context_middleware(
     mut request: Request,
     next: Next,
 ) -> Response {
-    use super::repositories;
     use super::repositories::plugin_jwt::generate_plugin_token;
-    use systemprompt::models::{Config, ProfileBootstrap};
 
-    let site_url = Config::get().map_or_else(
-        |_| String::new(),
-        |c| c.api_external_url.trim_end_matches('/').to_string(),
-    );
-
-    let counts = ProfileBootstrap::get()
-        .map(|p| std::path::PathBuf::from(&p.paths.services))
-        .map_err(|e| {
-            tracing::warn!(error = %e, "Failed to get profile bootstrap for marketplace counts");
-        })
-        .ok()
-        .and_then(|p| {
-            repositories::count_marketplace_items(&p, &user_ctx.roles)
-                .map_err(|e| {
-                    tracing::warn!(error = %e, "Failed to count marketplace items");
-                })
-                .ok()
-        })
-        .unwrap_or(repositories::MarketplaceCounts {
-            total_plugins: 0,
-            total_skills: 0,
-            agents_count: 0,
-            mcp_count: 0,
-        });
+    let (counts, site_url) = get_cached_marketplace(&user_ctx.roles).await;
 
     let ctx = MarketplaceContext {
         user_id: user_ctx.user_id.to_string(),
@@ -142,6 +118,87 @@ pub async fn marketplace_context_middleware(
 
     request.extensions_mut().insert(ctx);
     next.run(request).await
+}
+
+async fn get_cached_marketplace(roles: &[String]) -> (MarketplaceCounts, String) {
+    use super::repositories;
+    use systemprompt::models::{Config, ProfileBootstrap};
+
+    {
+        let cache = MARKETPLACE_CACHE.read().await;
+        if let Some(ref cached) = *cache {
+            if cached.fetched_at.elapsed() < MARKETPLACE_CACHE_TTL {
+                return (
+                    MarketplaceCounts {
+                        total_plugins: cached.counts.total_plugins,
+                        total_skills: cached.counts.total_skills,
+                        agents_count: cached.counts.agents_count,
+                        mcp_count: cached.counts.mcp_count,
+                    },
+                    cached.site_url.clone(),
+                );
+            }
+        }
+    }
+
+    let roles = roles.to_vec();
+    let (counts, site_url) = tokio::task::spawn_blocking(move || {
+        let site_url = Config::get().map_or_else(
+            |_| String::new(),
+            |c| c.api_external_url.trim_end_matches('/').to_string(),
+        );
+
+        let counts = ProfileBootstrap::get()
+            .map(|p| std::path::PathBuf::from(&p.paths.services))
+            .map_err(|e| {
+                tracing::warn!(error = %e, "Failed to get profile bootstrap for marketplace counts");
+            })
+            .ok()
+            .and_then(|p| {
+                repositories::count_marketplace_items(&p, &roles)
+                    .map_err(|e| {
+                        tracing::warn!(error = %e, "Failed to count marketplace items");
+                    })
+                    .ok()
+            })
+            .unwrap_or(MarketplaceCounts {
+                total_plugins: 0,
+                total_skills: 0,
+                agents_count: 0,
+                mcp_count: 0,
+            });
+
+        (counts, site_url)
+    })
+    .await
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "spawn_blocking for marketplace counts failed");
+        (
+            MarketplaceCounts {
+                total_plugins: 0,
+                total_skills: 0,
+                agents_count: 0,
+                mcp_count: 0,
+            },
+            String::new(),
+        )
+    });
+
+    {
+        let mut cache = MARKETPLACE_CACHE.write().await;
+        *cache = Some(CachedMarketplace {
+            counts: MarketplaceCounts {
+                total_plugins: counts.total_plugins,
+                total_skills: counts.total_skills,
+                agents_count: counts.agents_count,
+                mcp_count: counts.mcp_count,
+            },
+            site_url: site_url.clone(),
+            fetched_at: Instant::now(),
+        });
+    }
+
+    (counts, site_url)
 }
 
 pub async fn require_user_middleware(request: Request, next: Next) -> Response {

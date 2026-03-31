@@ -56,7 +56,8 @@ pub async fn fetch_all_session_entity_links(
         r"SELECT session_id, entity_type, entity_name, usage_count
         FROM session_entity_links
         WHERE user_id = $1
-        ORDER BY session_id, usage_count DESC",
+        ORDER BY session_id, usage_count DESC
+        LIMIT 200",
         user_id.as_str(),
     )
     .fetch_all(pool.as_ref())
@@ -92,7 +93,8 @@ pub async fn fetch_entity_usage_summary(
         FROM session_entity_links
         WHERE user_id = $1
         GROUP BY entity_type, entity_name, entity_id
-        ORDER BY 4 DESC"#,
+        ORDER BY 4 DESC
+        LIMIT 200"#,
         user_id.as_str(),
     )
     .fetch_all(pool.as_ref())

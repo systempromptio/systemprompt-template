@@ -8,8 +8,8 @@ pub async fn create_magic_link_token(
     ip_address: Option<&str>,
 ) -> Result<String, anyhow::Error> {
     let (raw_token, token_hash) = {
-        let mut rng = rand::thread_rng();
-        let raw_bytes: [u8; 32] = rng.gen();
+        let mut rng = rand::rng();
+        let raw_bytes: [u8; 32] = rng.random();
         let raw_token = hex::encode(raw_bytes);
         let mut hasher = Sha256::new();
         hasher.update(raw_token.as_bytes());
@@ -61,6 +61,18 @@ pub async fn count_recent_tokens(pool: &PgPool, email: &str) -> Result<i64, anyh
         "SELECT COUNT(*) FROM marketplace.magic_link_tokens
          WHERE email = $1 AND created_at > NOW() - INTERVAL '15 minutes'",
         email,
+    )
+    .fetch_one(pool)
+    .await?;
+
+    Ok(count.unwrap_or(0))
+}
+
+pub async fn count_recent_tokens_by_ip(pool: &PgPool, ip: &str) -> Result<i64, anyhow::Error> {
+    let count = sqlx::query_scalar!(
+        "SELECT COUNT(*) FROM marketplace.magic_link_tokens
+         WHERE ip_address = $1 AND created_at > NOW() - INTERVAL '15 minutes'",
+        ip,
     )
     .fetch_one(pool)
     .await?;

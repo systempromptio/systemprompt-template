@@ -86,7 +86,7 @@ pub(crate) async fn public_register_handler(
         }
     };
 
-    let bytes: [u8; 32] = rand::thread_rng().gen();
+    let bytes: [u8; 32] = rand::rng().random();
     let raw_token = format!("{}{}", TOKEN_PREFIX, URL_SAFE_NO_PAD.encode(bytes));
     let token_hash = {
         let mut hasher = Sha256::new();

@@ -8,6 +8,7 @@ use axum::{
 };
 use chrono::Utc;
 use sqlx::PgPool;
+use url::Url;
 use systemprompt::identifiers::{LinkClickId, SessionId};
 
 const DEFAULT_CLICK_LIMIT: i64 = 100;
@@ -20,10 +21,22 @@ use crate::models::RecordClickParams;
 use crate::repository::{LinkAnalyticsRepository, LinkRepository};
 use crate::services::{LinkAnalyticsService, LinkGenerationService, LinkService};
 
+fn validate_url_protocol(target_url: &str) -> Result<(), &'static str> {
+    let parsed = Url::parse(target_url).map_err(|_| "Invalid URL")?;
+    match parsed.scheme() {
+        "http" | "https" => Ok(()),
+        _ => Err("Only http and https URLs are allowed"),
+    }
+}
+
 pub async fn generate_link_handler(
     State(state): State<BlogState>,
     Json(request): Json<GenerateLinkRequest>,
 ) -> Response {
+    if let Err(msg) = validate_url_protocol(&request.target_url) {
+        return error_response(StatusCode::BAD_REQUEST, msg);
+    }
+
     let service = LinkGenerationService::new(state.pool.clone());
 
     match service
@@ -166,7 +179,12 @@ pub async fn redirect_handler(
         .process_redirect(&short_code, &session_id, None, None)
         .await
     {
-        Ok(target_url) => Redirect::temporary(&target_url).into_response(),
+        Ok(target_url) => {
+            if validate_url_protocol(&target_url).is_err() {
+                return error_response(StatusCode::BAD_REQUEST, "Invalid redirect target");
+            }
+            Redirect::temporary(&target_url).into_response()
+        }
         Err(e) => {
             tracing::warn!(short_code = %short_code, error = %e, "Redirect failed");
             error_response(StatusCode::NOT_FOUND, "Link not found")
