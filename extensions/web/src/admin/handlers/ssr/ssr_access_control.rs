@@ -3,7 +3,8 @@ use std::sync::Arc;
 
 use crate::admin::repositories;
 use crate::admin::templates::AdminTemplateEngine;
-use crate::admin::types::{MarketplaceContext, UserContext};
+use crate::admin::types::access_control::AccessControlRule;
+use crate::admin::types::{DepartmentStats, MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, State},
     http::StatusCode,
@@ -14,7 +15,94 @@ use sqlx::PgPool;
 
 use super::ACCESS_DENIED_HTML;
 
-#[allow(clippy::too_many_lines)]
+struct EntityJsonParams<'a> {
+    id: &'a str,
+    name: &'a str,
+    description: &'a str,
+    enabled: bool,
+    entity_type: &'a str,
+    yaml_roles: Option<&'a [String]>,
+}
+
+struct AccessControlData {
+    all_rules: Vec<AccessControlRule>,
+    departments: Vec<DepartmentStats>,
+}
+
+fn load_filesystem_entities(
+    services_path: &std::path::Path,
+) -> (
+    Vec<crate::admin::types::PluginOverview>,
+    Vec<crate::admin::types::AgentDetail>,
+    Vec<crate::admin::types::McpServerDetail>,
+) {
+    let admin_roles = vec!["admin".to_string()];
+    let plugins = repositories::list_plugins_for_roles(services_path, &admin_roles)
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list plugins");
+            vec![]
+        });
+
+    let agents = repositories::list_agents(services_path).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to list agents");
+        vec![]
+    });
+
+    let mcp_servers =
+        repositories::mcp_servers::list_mcp_servers(services_path).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list MCP servers");
+            vec![]
+        });
+
+    (plugins, agents, mcp_servers)
+}
+
+async fn load_access_control_data(pool: &Arc<PgPool>) -> AccessControlData {
+    let (rules_res, dept_res) = tokio::join!(
+        repositories::access_control::list_all_rules(pool),
+        repositories::fetch_department_stats(pool),
+    );
+
+    let all_rules = rules_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch access control rules");
+        vec![]
+    });
+
+    let departments = dept_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch department stats");
+        vec![]
+    });
+
+    AccessControlData {
+        all_rules,
+        departments,
+    }
+}
+
+fn build_rules_map(all_rules: &[AccessControlRule]) -> HashMap<(String, String), Vec<&AccessControlRule>> {
+    let mut rules_map: HashMap<(String, String), Vec<&AccessControlRule>> = HashMap::new();
+    for rule in all_rules {
+        rules_map
+            .entry((rule.entity_type.clone(), rule.entity_id.clone()))
+            .or_default()
+            .push(rule);
+    }
+    rules_map
+}
+
+fn build_departments_json(departments: &[DepartmentStats]) -> Vec<serde_json::Value> {
+    departments
+        .iter()
+        .map(|d| {
+            json!({
+                "department": d.department,
+                "user_count": d.user_count,
+                "active_count": d.active_count,
+            })
+        })
+        .collect()
+}
+
 pub(crate) async fn access_control_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
@@ -30,159 +118,149 @@ pub(crate) async fn access_control_page(
         Err(r) => return *r,
     };
 
-    let admin_roles = vec!["admin".to_string()];
-    let plugins = repositories::list_plugins_for_roles(&services_path, &admin_roles)
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list plugins");
-            vec![]
-        });
+    let (plugins, agents, mcp_servers) = load_filesystem_entities(&services_path);
+    let ac_data = load_access_control_data(&pool).await;
+    let data = assemble_page_data(&services_path, &plugins, &agents, &mcp_servers, &ac_data);
 
-    let agents = repositories::list_agents(&services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to list agents");
-        vec![]
-    });
+    super::render_page(&engine, "access-control", &data, &user_ctx, &mkt_ctx)
+}
 
-    let mcp_servers =
-        repositories::mcp_servers::list_mcp_servers(&services_path).unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list MCP servers");
-            vec![]
-        });
-
-    let (rules_res, dept_res) = tokio::join!(
-        repositories::access_control::list_all_rules(&pool),
-        repositories::fetch_department_stats(&pool),
-    );
-
-    let all_rules = rules_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch access control rules");
-        vec![]
-    });
-
-    let departments = dept_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch department stats");
-        vec![]
-    });
-
-    let mut rules_map: HashMap<
-        (String, String),
-        Vec<&crate::admin::types::access_control::AccessControlRule>,
-    > = HashMap::new();
-    for rule in &all_rules {
-        rules_map
-            .entry((rule.entity_type.clone(), rule.entity_id.clone()))
-            .or_default()
-            .push(rule);
-    }
-
+fn assemble_page_data(
+    services_path: &std::path::Path,
+    plugins: &[crate::admin::types::PluginOverview],
+    agents: &[crate::admin::types::AgentDetail],
+    mcp_servers: &[crate::admin::types::McpServerDetail],
+    ac_data: &AccessControlData,
+) -> serde_json::Value {
+    let rules_map = build_rules_map(&ac_data.all_rules);
     let known_roles = vec!["admin", "developer", "analyst", "viewer"];
-    let dept_names: Vec<&str> = departments.iter().map(|d| d.department.as_str()).collect();
+    let dept_names: Vec<&str> = ac_data.departments.iter().map(|d| d.department.as_str()).collect();
 
-    let plugins_json: Vec<serde_json::Value> = plugins
-        .iter()
-        .map(|p| {
-            let detail = repositories::find_plugin_detail(&services_path, &p.id);
-            let yaml_roles: Vec<String> = detail.ok().flatten().map_or_else(Vec::new, |d| d.roles);
+    let plugins_json = build_plugins_json(services_path, plugins, &rules_map, &known_roles, &dept_names, &ac_data.departments);
+    let agents_json = build_agents_json(agents, &rules_map, &known_roles, &dept_names, &ac_data.departments);
+    let mcp_json = build_mcp_json(mcp_servers, &rules_map, &known_roles, &dept_names, &ac_data.departments);
 
-            build_entity_json(
-                &p.id,
-                &p.name,
-                &p.description,
-                p.enabled,
-                "plugin",
-                &rules_map,
-                &known_roles,
-                &dept_names,
-                &departments,
-                Some(&yaml_roles),
-            )
-        })
-        .collect();
-
-    let agents_json: Vec<serde_json::Value> = agents
-        .iter()
-        .map(|a| {
-            build_entity_json(
-                &a.id,
-                &a.name,
-                &a.description,
-                a.enabled,
-                "agent",
-                &rules_map,
-                &known_roles,
-                &dept_names,
-                &departments,
-                None,
-            )
-        })
-        .collect();
-
-    let mcp_json: Vec<serde_json::Value> = mcp_servers
-        .iter()
-        .map(|m| {
-            build_entity_json(
-                &m.id,
-                &m.id,
-                &m.description,
-                m.enabled,
-                "mcp_server",
-                &rules_map,
-                &known_roles,
-                &dept_names,
-                &departments,
-                None,
-            )
-        })
-        .collect();
-
-    let dept_json: Vec<serde_json::Value> = departments
-        .iter()
-        .map(|d| {
-            json!({
-                "department": d.department,
-                "user_count": d.user_count,
-                "active_count": d.active_count,
-            })
-        })
-        .collect();
-
-    let data = json!({
+    json!({
         "page": "access-control",
         "title": "Access Control",
         "plugins": plugins_json,
         "agents": agents_json,
         "mcp_servers": mcp_json,
-        "departments": dept_json,
+        "departments": build_departments_json(&ac_data.departments),
         "known_roles": known_roles,
         "stats": {
             "plugin_count": plugins.len(),
             "agent_count": agents.len(),
             "mcp_count": mcp_servers.len(),
-            "department_count": departments.len(),
+            "department_count": ac_data.departments.len(),
         },
-    });
-
-    super::render_page(&engine, "access-control", &data, &user_ctx, &mkt_ctx)
+    })
 }
 
-#[allow(clippy::too_many_arguments)]
-fn build_entity_json(
-    id: &str,
-    name: &str,
-    description: &str,
-    enabled: bool,
-    entity_type: &str,
-    rules_map: &HashMap<
-        (String, String),
-        Vec<&crate::admin::types::access_control::AccessControlRule>,
-    >,
+fn build_plugins_json(
+    services_path: &std::path::Path,
+    plugins: &[crate::admin::types::PluginOverview],
+    rules_map: &HashMap<(String, String), Vec<&AccessControlRule>>,
     known_roles: &[&str],
     dept_names: &[&str],
-    departments: &[crate::admin::types::DepartmentStats],
-    yaml_roles: Option<&[String]>,
+    departments: &[DepartmentStats],
+) -> Vec<serde_json::Value> {
+    plugins
+        .iter()
+        .map(|p| {
+            let detail = repositories::find_plugin_detail(services_path, &p.id);
+            let yaml_roles: Vec<String> = detail.ok().flatten().map_or_else(Vec::new, |d| d.roles);
+            let params = EntityJsonParams {
+                id: &p.id,
+                name: &p.name,
+                description: &p.description,
+                enabled: p.enabled,
+                entity_type: "plugin",
+                yaml_roles: Some(&yaml_roles),
+            };
+            build_entity_json(&params, rules_map, known_roles, dept_names, departments)
+        })
+        .collect()
+}
+
+fn build_agents_json(
+    agents: &[crate::admin::types::AgentDetail],
+    rules_map: &HashMap<(String, String), Vec<&AccessControlRule>>,
+    known_roles: &[&str],
+    dept_names: &[&str],
+    departments: &[DepartmentStats],
+) -> Vec<serde_json::Value> {
+    agents
+        .iter()
+        .map(|a| {
+            let params = EntityJsonParams {
+                id: &a.id,
+                name: &a.name,
+                description: &a.description,
+                enabled: a.enabled,
+                entity_type: "agent",
+                yaml_roles: None,
+            };
+            build_entity_json(&params, rules_map, known_roles, dept_names, departments)
+        })
+        .collect()
+}
+
+fn build_mcp_json(
+    mcp_servers: &[crate::admin::types::McpServerDetail],
+    rules_map: &HashMap<(String, String), Vec<&AccessControlRule>>,
+    known_roles: &[&str],
+    dept_names: &[&str],
+    departments: &[DepartmentStats],
+) -> Vec<serde_json::Value> {
+    mcp_servers
+        .iter()
+        .map(|m| {
+            let params = EntityJsonParams {
+                id: &m.id,
+                name: &m.id,
+                description: &m.description,
+                enabled: m.enabled,
+                entity_type: "mcp_server",
+                yaml_roles: None,
+            };
+            build_entity_json(&params, rules_map, known_roles, dept_names, departments)
+        })
+        .collect()
+}
+
+fn build_entity_json(
+    params: &EntityJsonParams<'_>,
+    rules_map: &HashMap<(String, String), Vec<&AccessControlRule>>,
+    known_roles: &[&str],
+    dept_names: &[&str],
+    departments: &[DepartmentStats],
 ) -> serde_json::Value {
-    let key = (entity_type.to_string(), id.to_string());
+    let key = (params.entity_type.to_string(), params.id.to_string());
     let entity_rules = rules_map.get(&key);
 
+    let (roles, role_count) = build_roles_json(entity_rules, known_roles, params.yaml_roles);
+    let (dept_assignments, dept_count) = build_dept_json(entity_rules, dept_names, departments);
+
+    json!({
+        "id": params.id,
+        "name": params.name,
+        "description": params.description,
+        "enabled": params.enabled,
+        "entity_type": params.entity_type,
+        "roles": roles,
+        "departments": dept_assignments,
+        "role_count": role_count,
+        "department_count": dept_count,
+        "total_departments": dept_names.len(),
+    })
+}
+
+fn build_roles_json(
+    entity_rules: Option<&Vec<&AccessControlRule>>,
+    known_roles: &[&str],
+    yaml_roles: Option<&[String]>,
+) -> (Vec<serde_json::Value>, usize) {
     let mut role_count = 0;
     let roles: Vec<serde_json::Value> = known_roles
         .iter()
@@ -203,9 +281,15 @@ fn build_entity_json(
             })
         })
         .collect();
+    (roles, role_count)
+}
 
+fn build_dept_json(
+    entity_rules: Option<&Vec<&AccessControlRule>>,
+    dept_names: &[&str],
+    departments: &[DepartmentStats],
+) -> (Vec<serde_json::Value>, usize) {
     let mut dept_count = 0;
-    let total_departments = dept_names.len();
     let dept_assignments: Vec<serde_json::Value> = dept_names
         .iter()
         .map(|dept_name| {
@@ -231,17 +315,5 @@ fn build_entity_json(
             })
         })
         .collect();
-
-    json!({
-        "id": id,
-        "name": name,
-        "description": description,
-        "enabled": enabled,
-        "entity_type": entity_type,
-        "roles": roles,
-        "departments": dept_assignments,
-        "role_count": role_count,
-        "department_count": dept_count,
-        "total_departments": total_departments,
-    })
+    (dept_assignments, dept_count)
 }

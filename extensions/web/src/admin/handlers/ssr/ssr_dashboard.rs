@@ -85,7 +85,6 @@ async fn fetch_dashboard_data(
     (dash, counts)
 }
 
-#[allow(clippy::cast_possible_wrap)]
 async fn inject_governance_data(pool: &Arc<PgPool>, data: &mut serde_json::Value) {
     let gov_events = repositories::governance::fetch_governance_events(pool)
         .await
@@ -93,13 +92,13 @@ async fn inject_governance_data(pool: &Arc<PgPool>, data: &mut serde_json::Value
             tracing::warn!(error = %e, "Failed to fetch governance events for dashboard");
             vec![]
         });
-    let gov_total = gov_events.len() as i64;
-    let gov_denied: i64 = gov_events.iter().filter(|r| r.decision == "deny").count() as i64;
+    let gov_total = i64::try_from(gov_events.len()).unwrap_or(0);
+    let gov_denied: i64 = i64::try_from(gov_events.iter().filter(|r| r.decision == "deny").count()).unwrap_or(0);
     let gov_allowed = gov_total - gov_denied;
-    let gov_secret_breaches: i64 = gov_events
+    let gov_secret_breaches: i64 = i64::try_from(gov_events
         .iter()
         .filter(|r| r.reason.contains("secret") || r.reason.contains("Secret"))
-        .count() as i64;
+        .count()).unwrap_or(0);
     let gov_json: Vec<serde_json::Value> = gov_events
         .iter()
         .map(|r| {

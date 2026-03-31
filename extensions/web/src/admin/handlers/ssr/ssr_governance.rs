@@ -20,7 +20,6 @@ pub struct GovernanceQuery {
     pub q: Option<String>,
 }
 
-#[allow(clippy::cast_possible_wrap)]
 pub(crate) async fn governance_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
@@ -40,13 +39,13 @@ pub(crate) async fn governance_page(
             vec![]
         });
 
-    let total = rows.len() as i64;
-    let denied: i64 = rows.iter().filter(|r| r.decision == "deny").count() as i64;
+    let total = i64::try_from(rows.len()).unwrap_or(0);
+    let denied: i64 = i64::try_from(rows.iter().filter(|r| r.decision == "deny").count()).unwrap_or(0);
     let allowed = total - denied;
-    let secret_breaches: i64 = rows
+    let secret_breaches: i64 = i64::try_from(rows
         .iter()
         .filter(|r| r.policy == "secret_injection")
-        .count() as i64;
+        .count()).unwrap_or(0);
 
     let decisions_json: Vec<serde_json::Value> = rows
         .iter()

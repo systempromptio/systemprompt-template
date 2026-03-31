@@ -18,8 +18,7 @@ pub async fn set_plugin_skills(
         .await?;
 
     for (i, skill_id) in skill_ids.iter().enumerate() {
-        #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
-        let sort_order = i as i32;
+        let sort_order = i32::try_from(i).unwrap_or(0);
         sqlx::query(
             "INSERT INTO user_plugin_skills (user_plugin_id, user_skill_id, sort_order) VALUES ($1, $2, $3)",
         )
@@ -47,8 +46,7 @@ pub async fn set_plugin_agents(
         .await?;
 
     for (i, agent_id) in agent_ids.iter().enumerate() {
-        #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
-        let sort_order = i as i32;
+        let sort_order = i32::try_from(i).unwrap_or(0);
         sqlx::query(
             "INSERT INTO user_plugin_agents (user_plugin_id, user_agent_id, sort_order) VALUES ($1, $2, $3)",
         )
@@ -76,8 +74,7 @@ pub async fn set_plugin_mcp_servers(
         .await?;
 
     for (i, mcp_server_id) in mcp_server_ids.iter().enumerate() {
-        #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
-        let sort_order = i as i32;
+        let sort_order = i32::try_from(i).unwrap_or(0);
         sqlx::query(
             "INSERT INTO user_plugin_mcp_servers (user_plugin_id, user_mcp_server_id, sort_order) VALUES ($1, $2, $3)",
         )
@@ -105,8 +102,7 @@ pub async fn set_plugin_hooks(
         .await?;
 
     for (i, hook_id) in hook_ids.iter().enumerate() {
-        #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
-        let sort_order = i as i32;
+        let sort_order = i32::try_from(i).unwrap_or(0);
         sqlx::query(
             "INSERT INTO user_plugin_hooks (user_plugin_id, user_hook_id, sort_order) VALUES ($1, $2, $3)",
         )

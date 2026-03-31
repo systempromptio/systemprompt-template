@@ -88,7 +88,6 @@ fn build_command_hooks_file(
 
     let mut hooks = HashMap::new();
 
-    // PreToolUse → governance endpoint (synchronous)
     let govern_group = MatcherGroup {
         matcher: "*".to_string(),
         hooks: vec![HookHandler::Command(CommandHook {
@@ -99,7 +98,6 @@ fn build_command_hooks_file(
     };
     hooks.insert(HookEventType::PreToolUse, vec![govern_group]);
 
-    // All other events → tracking endpoint (async)
     for event in tracking_events {
         let group = MatcherGroup {
             matcher: "*".to_string(),

@@ -201,7 +201,6 @@ pub(super) fn build_hook_files(
 
     let mut hooks = HashMap::new();
 
-    // PreToolUse → governance endpoint (synchronous, short timeout)
     let govern_group = MatcherGroup {
         matcher: "*".to_string(),
         hooks: vec![HookHandler::Http(HttpHook {
@@ -217,7 +216,6 @@ pub(super) fn build_hook_files(
     };
     hooks.insert(HookEventType::PreToolUse, vec![govern_group]);
 
-    // All other events → tracking endpoint (async, longer timeout)
     for event in tracking_events {
         let matcher_group = MatcherGroup {
             matcher: "*".to_string(),

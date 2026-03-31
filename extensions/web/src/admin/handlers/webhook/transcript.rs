@@ -57,7 +57,5 @@ pub(crate) async fn track_transcript_event(
             .into_response();
     }
 
-    // Accepted - transcript processing is handled elsewhere in the pipeline.
-    // This endpoint accepts and acknowledges the request for backwards compatibility.
     StatusCode::NO_CONTENT.into_response()
 }
