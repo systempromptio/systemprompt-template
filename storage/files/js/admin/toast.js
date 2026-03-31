@@ -20,8 +20,13 @@
             const icon = icons[type] || icons.info;
             const el = document.createElement('div');
             el.className = 'toast toast-' + type;
-            el.innerHTML = '<span class="toast-icon">' + icon + '</span>' +
-                '<span class="toast-message">' + app.escapeHtml(message) + '</span>';
+            var iconSpan = document.createElement('span');
+            iconSpan.className = 'toast-icon';
+            iconSpan.textContent = icon;
+            var msgSpan = document.createElement('span');
+            msgSpan.className = 'toast-message';
+            msgSpan.textContent = message;
+            el.append(iconSpan, msgSpan);
             container.append(el);
             setTimeout(() => {
                 el.style.opacity = '0';

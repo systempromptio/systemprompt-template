@@ -1,5 +1,4 @@
-(function() {
-
+function initAnalytics() {
   const ENDPOINT = '/track/engagement';
   const BATCH_ENDPOINT = '/track/engagement/batch';
   const MIN_TIME_MS = 5000;
@@ -372,4 +371,6 @@
   window.addEventListener('beforeunload', sendPageExit);
 
   handleScroll();
-})();
+}
+
+document.addEventListener('DOMContentLoaded', initAnalytics);

@@ -1,4 +1,4 @@
-(function () {
+function initSidebarToggle() {
     'use strict';
 
     const sidebar = document.getElementById('admin-sidebar');
@@ -34,9 +34,8 @@
 
     overlay.addEventListener('click', closeSidebar);
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && sidebar.classList.contains('open')) {
-            closeSidebar();
-        }
-    });
-})();
+    window.AdminApp = window.AdminApp || {};
+    window.AdminApp._closeSidebar = closeSidebar;
+}
+
+document.addEventListener('DOMContentLoaded', initSidebarToggle);

@@ -1,8 +1,6 @@
 (function(app) {
     'use strict';
 
-    const escapeHtml = app.escapeHtml;
-
     function renderChecklist(id, items, selected, label, opts) {
         const options = opts || {};
         const selectedSet = {};
@@ -16,33 +14,82 @@
                 if (selected[k]) selectedSet[k] = true;
             });
         }
-        const hasItems = items && items.length > 0;
-        const listItems = hasItems ? items.map((item) => {
-            const val = typeof item === 'string' ? item : (item.name || item.id || item);
-            const displayName = typeof item === 'string' ? item : (item.name || item.id || String(item));
-            const checked = selectedSet[val] ? ' checked' : '';
-            const itemId = id + '-chk-' + val.replace(/[^a-zA-Z0-9_-]/g, '_');
-            return '<div class="checklist-item" data-item-name="' + escapeHtml(val.toLowerCase()) + '">' +
-                '<input type="checkbox" name="' + escapeHtml(id) + '" value="' + escapeHtml(val) + '"' + checked + ' id="' + escapeHtml(itemId) + '">' +
-                '<label for="' + escapeHtml(itemId) + '">' + escapeHtml(displayName) + '</label>' +
-            '</div>';
-        }).join('') : '<div class="empty-state" style="padding:var(--sp-space-4)"><p>None available.</p></div>';
-        let filterRow = '<input type="text" class="field-input" placeholder="Filter..." data-filter-list="' + escapeHtml(id) + '" style="margin-bottom:var(--sp-space-2)">';
+
+        var group = document.createElement('div');
+        group.className = 'form-group';
+
+        var labelEl = document.createElement('label');
+        labelEl.className = 'field-label';
+        labelEl.textContent = label;
+        group.append(labelEl);
+
+        var filterInput = document.createElement('input');
+        filterInput.type = 'text';
+        filterInput.className = 'field-input';
+        filterInput.setAttribute('data-filter-list', id);
+
         if (options.hasSelectAll) {
-            filterRow = '<div style="display:flex;gap:var(--sp-space-2);margin-bottom:var(--sp-space-2)">' +
-                '<input type="text" class="field-input" placeholder="Search..." data-filter-list="' + escapeHtml(id) + '" style="flex:1">' +
-                '<button type="button" class="btn btn-secondary btn-sm" data-select-all="' + escapeHtml(id) + '">Select All</button>' +
-                '<button type="button" class="btn btn-secondary btn-sm" data-deselect-all="' + escapeHtml(id) + '">Deselect All</button>' +
-            '</div>';
+            filterInput.placeholder = 'Search...';
+            filterInput.style.flex = '1';
+            var filterRow = document.createElement('div');
+            filterRow.style.cssText = 'display:flex;gap:var(--sp-space-2);margin-bottom:var(--sp-space-2)';
+            var selectAllBtn = document.createElement('button');
+            selectAllBtn.type = 'button';
+            selectAllBtn.className = 'btn btn-secondary btn-sm';
+            selectAllBtn.setAttribute('data-select-all', id);
+            selectAllBtn.textContent = 'Select All';
+            var deselectAllBtn = document.createElement('button');
+            deselectAllBtn.type = 'button';
+            deselectAllBtn.className = 'btn btn-secondary btn-sm';
+            deselectAllBtn.setAttribute('data-deselect-all', id);
+            deselectAllBtn.textContent = 'Deselect All';
+            filterRow.append(filterInput, selectAllBtn, deselectAllBtn);
+            group.append(filterRow);
+        } else {
+            filterInput.placeholder = 'Filter...';
+            filterInput.style.marginBottom = 'var(--sp-space-2)';
+            group.append(filterInput);
         }
-        const maxHeight = options.hasSelectAll ? '300px' : '200px';
-        return '<div class="form-group">' +
-            '<label class="field-label">' + escapeHtml(label) + '</label>' +
-            filterRow +
-            '<div class="checklist-container" data-checklist="' + escapeHtml(id) + '" style="max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">' +
-                listItems +
-            '</div>' +
-        '</div>';
+
+        var maxHeight = options.hasSelectAll ? '300px' : '200px';
+        var container = document.createElement('div');
+        container.className = 'checklist-container';
+        container.setAttribute('data-checklist', id);
+        container.style.cssText = 'max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)';
+
+        var hasItems = items && items.length > 0;
+        if (hasItems) {
+            items.forEach(function(item) {
+                var val = typeof item === 'string' ? item : (item.name || item.id || item);
+                var displayName = typeof item === 'string' ? item : (item.name || item.id || String(item));
+                var itemId = id + '-chk-' + val.replace(/[^a-zA-Z0-9_-]/g, '_');
+                var itemDiv = document.createElement('div');
+                itemDiv.className = 'checklist-item';
+                itemDiv.setAttribute('data-item-name', val.toLowerCase());
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = id;
+                checkbox.value = val;
+                checkbox.id = itemId;
+                if (selectedSet[val]) checkbox.checked = true;
+                var itemLabel = document.createElement('label');
+                itemLabel.setAttribute('for', itemId);
+                itemLabel.textContent = displayName;
+                itemDiv.append(checkbox, itemLabel);
+                container.append(itemDiv);
+            });
+        } else {
+            var emptyDiv = document.createElement('div');
+            emptyDiv.className = 'empty-state';
+            emptyDiv.style.padding = 'var(--sp-space-4)';
+            var emptyP = document.createElement('p');
+            emptyP.textContent = 'None available.';
+            emptyDiv.append(emptyP);
+            container.append(emptyDiv);
+        }
+
+        group.append(container);
+        return group;
     }
 
     function attachFilterHandlers(root) {

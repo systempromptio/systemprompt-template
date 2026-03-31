@@ -1,4 +1,4 @@
-(function() {
+function initPresentationNav() {
   const html = document.documentElement;
   if (!html.classList.contains('presentation')) return;
 
@@ -59,4 +59,6 @@
     if (e.key === 'Home') { e.preventDefault(); slides[0].scrollIntoView({ behavior: 'smooth' }); }
     if (e.key === 'End') { e.preventDefault(); slides[slides.length - 1].scrollIntoView({ behavior: 'smooth' }); }
   });
-})();
+}
+
+document.addEventListener('DOMContentLoaded', initPresentationNav);

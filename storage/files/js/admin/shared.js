@@ -1,8 +1,6 @@
 (function(app) {
     'use strict';
 
-    const escapeHtml = app.escapeHtml;
-
     function truncate(str, max) {
         if (!str) return '';
         if (str.length <= (max || 60)) return str;
@@ -96,6 +94,10 @@
             const trig = installMenu.querySelector('.install-trigger');
             if (trig) trig.setAttribute('aria-expanded', 'false');
         }
+        // Close admin sidebar (registered by sidebar-toggle.js)
+        if (app._closeSidebar) {
+            app._closeSidebar();
+        }
     }
 
     function closeDeleteConfirm(overlayId) {
@@ -108,16 +110,27 @@
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         if (opts && opts.id) overlay.id = opts.id;
-        overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3>' + escapeHtml(title) + '</h3>' +
-            '<p>' + escapeHtml(message) + '</p>' +
-            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
-                '<button class="btn btn-secondary" data-action="cancel">Cancel</button>' +
-                '<button class="btn ' + btnClass + '" data-action="confirm">' + escapeHtml(confirmLabel) + '</button>' +
-            '</div>' +
-        '</div>';
-        overlay.querySelector('[data-action="cancel"]').addEventListener('click', () => overlay.remove());
-        overlay.querySelector('[data-action="confirm"]').addEventListener('click', () => {
+        var dialog = document.createElement('div');
+        dialog.className = 'confirm-dialog';
+        var h3 = document.createElement('h3');
+        h3.textContent = title;
+        var p = document.createElement('p');
+        p.textContent = message;
+        var btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)';
+        var cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.setAttribute('data-action', 'cancel');
+        cancelBtn.textContent = 'Cancel';
+        var confirmBtn = document.createElement('button');
+        confirmBtn.className = 'btn ' + btnClass;
+        confirmBtn.setAttribute('data-action', 'confirm');
+        confirmBtn.textContent = confirmLabel;
+        btnRow.append(cancelBtn, confirmBtn);
+        dialog.append(h3, p, btnRow);
+        overlay.append(dialog);
+        cancelBtn.addEventListener('click', () => overlay.remove());
+        confirmBtn.addEventListener('click', () => {
             overlay.remove();
             onConfirm();
         });
@@ -132,14 +145,25 @@
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.id = 'delete-confirm';
-        overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3>' + escapeHtml(title) + '</h3>' +
-            '<p>This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
-                '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
-                '<button class="btn btn-danger" data-confirm-delete="' + escapeHtml(itemId) + '">Delete</button>' +
-            '</div>' +
-        '</div>';
+        var dialog = document.createElement('div');
+        dialog.className = 'confirm-dialog';
+        var h3 = document.createElement('h3');
+        h3.textContent = title;
+        var p = document.createElement('p');
+        p.textContent = 'This action cannot be undone.';
+        var btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)';
+        var cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.setAttribute('data-confirm-cancel', '');
+        cancelBtn.textContent = 'Cancel';
+        var deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.setAttribute('data-confirm-delete', itemId);
+        deleteBtn.textContent = 'Delete';
+        btnRow.append(cancelBtn, deleteBtn);
+        dialog.append(h3, p, btnRow);
+        overlay.append(dialog);
         document.body.append(overlay);
         return overlay;
     }
@@ -172,12 +196,25 @@
     }
 
     function showLoading(el, msg) {
-        el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>' +
-            escapeHtml(msg || 'Loading...') + '</p></div>';
+        el.replaceChildren();
+        var wrapper = document.createElement('div');
+        wrapper.className = 'loading-spinner';
+        var spinner = document.createElement('div');
+        spinner.className = 'spinner';
+        var p = document.createElement('p');
+        p.textContent = msg || 'Loading...';
+        wrapper.append(spinner, p);
+        el.append(wrapper);
     }
 
     function showEmpty(el, msg) {
-        el.innerHTML = '<div class="empty-state"><p>' + escapeHtml(msg) + '</p></div>';
+        el.replaceChildren();
+        var wrapper = document.createElement('div');
+        wrapper.className = 'empty-state';
+        var p = document.createElement('p');
+        p.textContent = msg;
+        wrapper.append(p);
+        el.append(wrapper);
     }
 
     function loadJSZip() {
