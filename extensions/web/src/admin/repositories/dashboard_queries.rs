@@ -4,7 +4,10 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
 use super::super::activity;
-use super::super::types::{ActivityStats, HourlyActivity, SkillCount, ToolSuccessRate, TopUser};
+use super::super::types::{
+    ActivityStats, HourlyActivity, McpAccessEvent, SkillCount, TokenUsageRow, ToolSuccessRate,
+    TopUser,
+};
 
 pub async fn fetch_timeline(
     pool: &Arc<PgPool>,
@@ -161,6 +164,47 @@ pub async fn fetch_recent_mcp_errors(
 struct McpErrorRow {
     tool_name: String,
     created_at: chrono::DateTime<chrono::Utc>,
+}
+
+pub async fn fetch_mcp_access_events(
+    pool: &Arc<PgPool>,
+) -> Result<Vec<McpAccessEvent>, sqlx::Error> {
+    sqlx::query_as!(
+        McpAccessEvent,
+        r#"SELECT
+            COALESCE(entity_name, 'unknown') AS "server_name!",
+            COALESCE(action, 'unknown') AS "action!",
+            COALESCE(description, '') AS "description!",
+            created_at AS "created_at!"
+        FROM user_activity
+        WHERE category = 'mcp_access'
+        ORDER BY created_at DESC
+        LIMIT 20"#,
+    )
+    .fetch_all(pool.as_ref())
+    .await
+}
+
+pub async fn fetch_token_usage_by_user(
+    pool: &Arc<PgPool>,
+) -> Result<Vec<TokenUsageRow>, sqlx::Error> {
+    sqlx::query_as!(
+        TokenUsageRow,
+        r#"SELECT
+            COALESCE(u.display_name, u.full_name, u.name, u.email, p.user_id) AS "label!",
+            COALESCE(SUM(p.total_input_tokens), 0)::BIGINT AS "input_tokens!",
+            COALESCE(SUM(p.total_output_tokens), 0)::BIGINT AS "output_tokens!",
+            COALESCE(SUM(p.event_count), 0)::BIGINT AS "event_count!"
+        FROM plugin_usage_daily p
+        LEFT JOIN users u ON u.id = p.user_id
+        WHERE p.date >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY p.user_id, u.display_name, u.full_name, u.name, u.email
+        HAVING SUM(p.total_input_tokens) + SUM(p.total_output_tokens) > 0
+        ORDER BY SUM(p.total_input_tokens) + SUM(p.total_output_tokens) DESC
+        LIMIT 10"#,
+    )
+    .fetch_all(pool.as_ref())
+    .await
 }
 
 pub async fn fetch_tool_success_rates(

@@ -4,6 +4,8 @@
   padding: var(--sp-spacing-lg);
   border-left: 1px solid var(--sp-color-border);
   background: var(--sp-color-surface);
+  overflow: hidden;
+  min-width: 0;
 }
 
 .toc-nav {

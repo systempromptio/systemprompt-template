@@ -65,7 +65,7 @@
 
 @media (max-width: 1200px) {
   .docs-layout {
-    grid-template-columns: var(--sp-sidebar-left-width) 1fr;
+    grid-template-columns: var(--sp-sidebar-left-width) minmax(0, 1fr);
   }
 
   .docs-toc {

@@ -8,7 +8,7 @@ kind: "guide"
 public: true
 tags: ["demo", "terminal", "audit", "traces", "cost-tracking"]
 published_at: "2026-03-27"
-updated_at: "2026-03-27"
+updated_at: "2026-03-31"
 after_reading_this:
   - "List and inspect execution traces from the CLI"
   - "Compare trace depth between allowed and denied agent paths"
@@ -22,6 +22,8 @@ related_docs:
     url: "/documentation/cost-tracking"
   - title: "Events"
     url: "/documentation/events"
+  - title: "Request Tracing Demo"
+    url: "/documentation/demo-terminal-tracing"
 ---
 
 ## Overview
@@ -72,6 +74,8 @@ The allowed path trace (developer_agent) should show:
 
 Every layer is captured: identity, governance evaluation, tool execution, response.
 
+> **Why trace everything:** Every AI interaction is traced, costed, and attributed — regardless of outcome. The trace uses typed IDs (TraceId, SessionId, UserId) that are newtypes in Rust. The compiler prevents mixing them up, which means every trace event is guaranteed to carry the correct IDs. No audit-linking bugs possible.
+
 ---
 
 ## Step 3: Inspect the Refused Path Trace
@@ -91,6 +95,8 @@ The refused path trace (associate_agent) should show:
 
 The contrast is the point: the user-scope agent generates a minimal trace because governance prevented tool access entirely.
 
+> **Why the contrast matters:** The refused path proves that access denial is not a failure mode — it's a designed outcome with its own complete audit trail. The system traces denials with the same fidelity as approvals.
+
 ---
 
 ## Step 4: Cost Breakdown
@@ -105,12 +111,12 @@ This shows token consumption and cost attribution per agent. The developer_agent
 
 ## Dashboard
 
-Open [https://abc3dd581f80.systemprompt.io/admin/](https://abc3dd581f80.systemprompt.io/admin/) and observe:
+Open the dashboard and observe:
 
-- **Metric ribbon** — events, tool uses, prompts, sessions, errors
-- **AI usage chart** — token consumption with 24h/7d/14d toggle
-- **Activity feed** — real-time event stream showing both agent interactions
-- **Cost breakdown** — department and agent attribution
+- [/admin/](/admin/) **Governance tab** — metric ribbon (Total Decisions, Allowed, Denied, Secret Breaches), policy violations, recent governance events
+- [/admin/](/admin/) **MCP & Usage tab** — AI usage chart with 24h/7d/14d toggle, live activity feed, MCP server access events, cost breakdown by agent
+- [/admin/governance](/admin/governance) — full governance decision log with search
+- [/admin/events](/admin/events) — complete audit trail of all platform activity
 
 All data visible on the dashboard is the same data you queried from the terminal. The dashboard is a live view of the same database.
 
@@ -127,6 +133,8 @@ All data visible on the dashboard is the same data you queried from the terminal
 | Governance | Evaluated and passed | Enforced at mapping level |
 
 Every AI interaction is traced, costed, and attributed — regardless of outcome.
+
+> **Why cost attribution matters:** Cost breakdown by agent answers the CTO question: "which teams are spending how much on AI?" Typed `CostBreakdown { agent: AgentName, total_cost: Decimal, request_count: i64 }` structs — not raw tuples — ensure accurate attribution.
 
 ---
 

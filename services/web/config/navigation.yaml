@@ -86,6 +86,8 @@ docs_sidebar:
         href: "/documentation/demo-terminal-governance"
       - label: "MCP Access Tracking"
         href: "/documentation/demo-terminal-mcp"
+      - label: "Request Tracing & Benchmark"
+        href: "/documentation/demo-terminal-tracing"
 
   - title: "DevOps & Deployment"
     links:

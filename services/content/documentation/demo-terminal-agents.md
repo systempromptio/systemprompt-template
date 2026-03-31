@@ -8,11 +8,12 @@ kind: "guide"
 public: true
 tags: ["demo", "terminal", "agents", "governance", "mcp"]
 published_at: "2026-03-27"
-updated_at: "2026-03-27"
+updated_at: "2026-03-31"
 after_reading_this:
   - "Send messages to agents via the CLI"
   - "See how admin-scope agents can use MCP tools while user-scope agents cannot"
   - "Retrieve structured artifacts from agent responses"
+  - "Audit the execution trace and verify event counts"
 related_docs:
   - title: "Setup & Authentication"
     url: "/documentation/demo-terminal-setup"
@@ -22,6 +23,8 @@ related_docs:
     url: "/documentation/agents"
   - title: "Access Control"
     url: "/documentation/access-control"
+  - title: "Request Tracing Demo"
+    url: "/documentation/demo-terminal-tracing"
 ---
 
 ## Overview
@@ -59,6 +62,10 @@ systemprompt admin agents message developer_agent \
 4. The PreToolUse governance hook evaluates the call and **allows** it
 5. The tool executes and returns a real list of running agents
 
+> **Why context isolation?** Every agent conversation gets its own ContextId. This prevents cross-contamination between sessions and enables per-context artifact retrieval, cost tracking, and trace linking. The ContextId is a Rust newtype — the compiler prevents confusing it with other IDs.
+
+> **Why governance is synchronous:** The PreToolUse hook blocks tool execution until the backend returns allow/deny. This is the enforcement point. If governance were async, tools could execute before the decision arrives.
+
 ### Retrieve the Artifact
 
 The agent produces a structured artifact — typed data that any surface (dashboard, mobile app, CLI) can render:
@@ -72,7 +79,7 @@ systemprompt core artifacts show "$ARTIFACT_ID" --full
 
 ### Dashboard
 
-Open [/admin/events](https://abc3dd581f80.systemprompt.io/admin/events). You should see the agent message event with:
+Open [/admin/events](/admin/events). You should see the agent message event with:
 
 - Agent name: `developer_agent`
 - Tool calls: 1 MCP call (`list_agents`)
@@ -102,9 +109,11 @@ systemprompt admin agents message associate_agent \
 3. The agent cannot see any admin tools
 4. It responds: *"I do not have access to that tool. This operation requires elevated permissions that have not been granted to this agent."*
 
+> **Why two layers of defense:** Demo 2 denies at the *mapping* level (no tools available). Demo 5 denies at the *rule* level (governance blocks the call). These are independent — even if tool mappings were misconfigured, governance would still catch unauthorized access.
+
 ### Dashboard
 
-Open [/admin/events](https://abc3dd581f80.systemprompt.io/admin/events). This trace shows:
+Open [/admin/events](/admin/events). This trace shows:
 
 - Agent name: `associate_agent`
 - AI requests: 1
@@ -125,6 +134,36 @@ Open [/admin/events](https://abc3dd581f80.systemprompt.io/admin/events). This tr
 | **AI requests** | ~3 | 1 |
 
 The governance enforcement happens at the mapping level. The user-scope agent never sees admin tools — it cannot attempt a call that would be denied, because the tools are not available to it in the first place.
+
+---
+
+## Audit
+
+Verify both traces exist with expected event counts:
+
+```bash
+# List the two most recent traces
+systemprompt infra logs trace list --limit 2
+
+# Inspect the happy path trace (should show ~11 events, 3 AI requests, 1 MCP call)
+TRACE_ID=$(systemprompt infra logs trace list --limit 1 2>&1 | grep -oP '"trace_id":\s*"\K[0-9a-f-]+' | head -1)
+systemprompt infra logs trace show "$TRACE_ID" --all
+
+# Cost breakdown by agent
+systemprompt analytics costs breakdown --by agent
+
+# Governance log (most recent decision)
+tail -5 /tmp/systemprompt-governance-*.log
+```
+
+**Expected results:**
+
+| | developer_agent | associate_agent |
+|---|---|---|
+| Trace events | ~11 | ~4 |
+| AI requests | ~3 | 1 |
+| MCP tool calls | 1 | 0 |
+| Governance decisions | 1 (allow) | 0 |
 
 ---
 

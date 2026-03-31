@@ -37,44 +37,75 @@
         </div>
         </section>
 
-        <section aria-label="Recent governance events">
-        {{#if has_governance_events}}
-        {{#> components/data-table}}
-            <thead><tr>
-                <th>User</th>
-                <th>Tool</th>
-                <th>Decision</th>
-                <th>Reason</th>
-                <th>Time</th>
-            </tr></thead>
-            <tbody>
-            {{#each governance_events}}
-            <tr>
-                <td>
-                    <div class="cell-primary">
-                        <a href="/admin/user?id={{user_id}}">{{truncate user_id 12}}</a>
-                    </div>
-                    {{#if agent_id}}<div class="cell-secondary">via {{agent_id}}</div>{{/if}}
-                </td>
-                <td><code class="code-inline">{{tool_name}}</code></td>
-                <td>
+        <div class="dashboard-two-col">
+            <div>
+                <section aria-label="Policy violations">
+                <div class="section-title">Policy Violations</div>
+                {{#if has_governance_events}}
+                <div class="card p-5">
+                    {{#each governance_events}}
                     {{#if is_denied}}
-                        <span class="mcp-badge mcp-badge-danger">DENIED</span>
-                    {{else}}
-                        <span class="mcp-badge mcp-badge-success">ALLOWED</span>
+                    <div class="feed-item">
+                        <div class="feed-icon feed-orange"></div>
+                        <div class="feed-content">
+                            <span class="feed-text"><strong>{{tool_name}}</strong> blocked for <code class="code-inline">{{agent_id}}</code></span>
+                            <span class="feed-time">{{created_at}}</span>
+                            <div class="text-sm text-tertiary">{{truncate reason 80}}</div>
+                        </div>
+                    </div>
                     {{/if}}
-                </td>
-                <td title="{{reason}}">{{truncate reason 50}}</td>
-                <td class="text-sm text-tertiary">{{created_at}}</td>
-            </tr>
-            {{/each}}
-            </tbody>
-        {{/components/data-table}}
-        <div class="section-footer"><a href="/admin/governance" class="text-sm">View all governance decisions &rarr;</a></div>
-        {{else}}
-        {{> components/empty-state message="No governance decisions recorded yet."}}
-        {{/if}}
-        </section>
+                    {{/each}}
+                    {{#unless governance_denied}}
+                    <div class="text-sm text-tertiary">No policy violations recorded.</div>
+                    {{/unless}}
+                </div>
+                {{else}}
+                {{> components/empty-state message="No governance decisions recorded yet."}}
+                {{/if}}
+                </section>
+            </div>
+            <div>
+                <section aria-label="Recent governance events">
+                <div class="section-title">Recent Governance Events</div>
+                {{#if has_governance_events}}
+                {{#> components/data-table}}
+                    <thead><tr>
+                        <th>User</th>
+                        <th>Tool</th>
+                        <th>Decision</th>
+                        <th>Reason</th>
+                        <th>Time</th>
+                    </tr></thead>
+                    <tbody>
+                    {{#each governance_events}}
+                    <tr>
+                        <td>
+                            <div class="cell-primary">
+                                <a href="/admin/user?id={{user_id}}">{{truncate user_id 12}}</a>
+                            </div>
+                            {{#if agent_id}}<div class="cell-secondary">via {{agent_id}}</div>{{/if}}
+                        </td>
+                        <td><code class="code-inline">{{tool_name}}</code></td>
+                        <td>
+                            {{#if is_denied}}
+                                <span class="mcp-badge mcp-badge-danger">DENIED</span>
+                            {{else}}
+                                <span class="mcp-badge mcp-badge-success">ALLOWED</span>
+                            {{/if}}
+                        </td>
+                        <td title="{{reason}}">{{truncate reason 50}}</td>
+                        <td class="text-sm text-tertiary">{{created_at}}</td>
+                    </tr>
+                    {{/each}}
+                    </tbody>
+                {{/components/data-table}}
+                <div class="section-footer"><a href="/admin/governance" class="text-sm">View all governance decisions &rarr;</a></div>
+                {{else}}
+                {{> components/empty-state message="No governance decisions recorded yet."}}
+                {{/if}}
+                </section>
+            </div>
+        </div>
     </div>
 
     <div class="cc-tab-panel {{#if tab_mcp}}cc-tab-panel--active{{/if}}" id="tab-mcp">
@@ -290,6 +321,54 @@
             </div>
         </div>
 
+        </section>
+
+        <section aria-label="MCP server access and cost breakdown">
+        <div class="dashboard-two-col">
+            <div>
+                <div class="section-title">MCP Server Access</div>
+                {{#if has_mcp_access_events}}
+                <div class="card p-5">
+                    {{#each mcp_access_events}}
+                    <div class="feed-item">
+                        <div class="feed-icon {{#if is_granted}}feed-green{{else}}feed-orange{{/if}}"></div>
+                        <div class="feed-content">
+                            <span class="feed-text"><strong>{{server_name}}</strong>
+                                {{#if is_granted}}
+                                    <span class="mcp-badge mcp-badge-success">Granted</span>
+                                {{else}}
+                                    <span class="mcp-badge mcp-badge-danger">Rejected</span>
+                                {{/if}}
+                            </span>
+                            <span class="feed-time">{{created_at}}</span>
+                            {{#if description}}<div class="text-sm text-tertiary">{{truncate description 60}}</div>{{/if}}
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+                {{else}}
+                {{> components/empty-state message="No MCP access events recorded yet."}}
+                {{/if}}
+            </div>
+            <div>
+                <div class="section-title">Token Usage (30d)</div>
+                {{#if has_token_usage}}
+                <div class="card p-5">
+                    {{#each token_usage}}
+                    <div class="skill-bar-row">
+                        <div class="skill-bar-label" title="{{label}}">{{truncate label 20}}</div>
+                        <div class="skill-bar-track">
+                            <div class="progress-bar"><div class="progress-fill progress-blue" style="--fill: {{pct}}%"></div></div>
+                        </div>
+                        <div class="skill-bar-count" title="{{input_tokens}} in / {{output_tokens}} out">{{total_tokens}}</div>
+                    </div>
+                    {{/each}}
+                </div>
+                {{else}}
+                {{> components/empty-state message="No token usage data yet."}}
+                {{/if}}
+            </div>
+        </div>
         </section>
 
         {{#if recent_mcp_errors}}

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use systemprompt::database::DbPool;
-use systemprompt::generator::sitemap::generate_sitemap;
+use systemprompt::generator::generate_sitemap;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 #[derive(Debug, Clone, Copy, Default)]

@@ -7,7 +7,8 @@ use super::super::activity;
 
 pub use super::dashboard_enterprise::{
     DepartmentActivity, DepartmentQuery, DepartmentScore, EventTypeBreakdown,
-    GovernanceDecisionRow, GovernanceEvent, McpAccessSummary, ModelUsage, ProjectActivity,
+    GovernanceDecisionRow, GovernanceEvent, McpAccessEvent, McpAccessSummary, ModelUsage,
+    ProjectActivity, TokenUsageRow,
 };
 pub use super::dashboard_traffic::{
     ContentPerformanceRow, RealtimePulse, RecentMcpError, TopPageDailyBucket, TrafficCountryBucket,

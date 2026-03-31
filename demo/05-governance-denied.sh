@@ -44,7 +44,7 @@ fi
 echo ""
 echo "=========================================="
 echo "  DEMO 5: GOVERNANCE — DENIED PATH"
-echo "  associate_agent — user scope, has MCP"
+echo "  associate_agent — user scope, governance blocks MCP"
 echo ""
 echo "  Flow:"
 echo "    1. Agent calls MCP tool"

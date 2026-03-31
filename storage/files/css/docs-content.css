@@ -81,6 +81,8 @@
 .docs-content pre code {
   padding: 0;
   background: none;
+  border: none;
+  border-radius: 0;
   font-size: var(--sp-font-size-sm);
   color: var(--sp-syntax-fg);
 }

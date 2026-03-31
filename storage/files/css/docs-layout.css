@@ -24,7 +24,7 @@
 
 .docs-layout {
   display: grid;
-  grid-template-columns: var(--sp-sidebar-left-width) 1fr var(--sp-sidebar-right-width);
+  grid-template-columns: var(--sp-sidebar-left-width) minmax(0, 1fr) var(--sp-sidebar-right-width);
   min-height: calc(100vh - var(--sp-header-height));
   max-width: 1600px;
   margin: 0 auto;
@@ -32,7 +32,7 @@
 }
 
 .docs-layout--list {
-  grid-template-columns: var(--sp-sidebar-left-width) 1fr;
+  grid-template-columns: var(--sp-sidebar-left-width) minmax(0, 1fr);
 }
 
 .docs-sidebar {

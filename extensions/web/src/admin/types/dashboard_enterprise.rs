@@ -71,6 +71,22 @@ pub struct DepartmentScore {
     pub top_user_xp: i64,
 }
 
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct McpAccessEvent {
+    pub server_name: String,
+    pub action: String,
+    pub description: String,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct TokenUsageRow {
+    pub label: String,
+    pub input_tokens: i64,
+    pub output_tokens: i64,
+    pub event_count: i64,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct DepartmentQuery {
     pub dept: Option<String>,

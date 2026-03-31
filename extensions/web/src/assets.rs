@@ -86,6 +86,7 @@ fn css_assets(storage_css: &Path) -> Vec<AssetDefinition> {
         AssetDefinition::css(storage_css.join("docs-pagination.css"), "css/docs-pagination.css"),
         AssetDefinition::css(storage_css.join("docs-toc.css"), "css/docs-toc.css"),
         AssetDefinition::css(storage_css.join("docs-responsive.css"), "css/docs-responsive.css"),
+        AssetDefinition::css(storage_css.join("docs-sidebar-links.css"), "css/docs-sidebar-links.css"),
         AssetDefinition::css(storage_css.join("paper-layout.css"), "css/paper-layout.css"),
         AssetDefinition::css(storage_css.join("paper-content.css"), "css/paper-content.css"),
         AssetDefinition::css(storage_css.join("paper-components.css"), "css/paper-components.css"),

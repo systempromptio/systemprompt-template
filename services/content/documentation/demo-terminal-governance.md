@@ -8,7 +8,7 @@ kind: "guide"
 public: true
 tags: ["demo", "terminal", "governance", "api", "secrets", "curl"]
 published_at: "2026-03-27"
-updated_at: "2026-03-27"
+updated_at: "2026-03-31"
 after_reading_this:
   - "Call the governance endpoint directly with curl"
   - "See how scope-based rules allow or deny tool calls"
@@ -23,9 +23,9 @@ related_docs:
     url: "/documentation/tool-governance"
   - title: "Secrets"
     url: "/documentation/secrets"
+  - title: "Request Tracing Demo"
+    url: "/documentation/demo-terminal-tracing"
 ---
-
-> **See this in the presentation:** [Slide 9: Audit Trail & Access Control](/documentation/presentation#slide-9)
 
 ## Overview
 
@@ -35,6 +35,7 @@ These demos call the governance endpoint directly with curl. No agent session re
 
 ```bash
 TOKEN="<paste-your-plugin-token-here>"
+URL="http://localhost:8080"  # or your deployed instance URL
 ```
 
 ---
@@ -68,7 +69,7 @@ The response contains the governance decision, reason, and the list of rules eva
 An admin-scope agent calling an MCP tool it has access to:
 
 ```bash
-curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "$URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -81,6 +82,10 @@ curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?pl
 
 **Expected:** `decision: allow` — all governance rules passed. The developer_agent has admin scope and the systemprompt MCP server is in its configuration.
 
+> **Why three independent rules:** The rule engine evaluates scope_check, secret_injection, and rate_limit independently. Even if scope allows access, secret injection still blocks leaked credentials. Rate limiting prevents runaway agents. Rules return typed `Vec<RuleEvaluation>` structs, not loose JSON.
+
+> **Why async audit:** `tokio::spawn` fires the database write without blocking the HTTP response. The governance decision returns in ~12ms while the audit record writes asynchronously. This keeps the hot path fast — the caller never waits for the audit INSERT.
+
 ---
 
 ## Part 2: Governance Denies — Scope Check
@@ -88,7 +93,7 @@ curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?pl
 The same tool, but requested by a user-scope agent:
 
 ```bash
-curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "$URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -101,9 +106,13 @@ curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?pl
 
 **Expected:** `decision: deny` — the scope_check rule failed. The associate_agent has user scope, which does not grant access to admin-only MCP tools.
 
+> **Why short-circuit evaluation:** The first rule failure stops evaluation. No point checking secrets or rate limits if scope already denies. This keeps governance fast and avoids unnecessary work.
+
+> **Why denials are audited:** Denied calls are audited with the same fidelity as approvals. The `evaluated_rules` JSONB column stores exactly which rule failed and why. This is critical for compliance — you need to prove that denials happen correctly.
+
 ### Dashboard
 
-Open [/admin/governance](https://abc3dd581f80.systemprompt.io/admin/governance). Both decisions appear with timestamps, the tool name, agent ID, and the full evaluation trace.
+Open [/admin/governance](/admin/governance). Both decisions appear with timestamps, the tool name, agent ID, and the full evaluation trace.
 
 ---
 
@@ -114,7 +123,7 @@ The governance layer scans every `tool_input` field for plaintext secrets. If a 
 ### Test 1: AWS Access Key
 
 ```bash
-curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "$URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -134,7 +143,7 @@ curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?pl
 ### Test 2: GitHub Personal Access Token
 
 ```bash
-curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "$URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -154,7 +163,7 @@ curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?pl
 ### Test 3: RSA Private Key
 
 ```bash
-curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "$URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -174,7 +183,7 @@ curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?pl
 ### Test 4: Clean Input — Passes
 
 ```bash
-curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "$URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -189,6 +198,10 @@ curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?pl
 ```
 
 **Expected:** `decision: allow` — no secrets detected, all rules passed.
+
+> **Why recursive scanning:** The secret scanner traverses `serde_json::Value` recursively — ALL nested strings in tool_input are checked, not just top-level fields. An attacker can't hide a key in a nested JSON object.
+
+> **Why audit without leaking:** The audit record stores the secret TYPE ("AWS access key") but NOT the actual secret value. Typed Rust structs enforce this separation at compile time.
 
 ---
 
@@ -205,7 +218,7 @@ curl -s -X POST "https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?pl
 
 ### Dashboard
 
-Open [/admin/governance](https://abc3dd581f80.systemprompt.io/admin/governance). All 6 decisions are visible with:
+Open [/admin/governance](/admin/governance). All 6 decisions are visible with:
 
 - Timestamp
 - Tool name and agent ID
@@ -221,12 +234,12 @@ Every tool call passes through these rules in order. Any failure short-circuits 
 
 | Rule | What It Checks | Short-circuits? |
 |------|---------------|-----------------|
-| secret_detection | Scans `tool_input` for 37 secret patterns (AWS keys, GitHub tokens, Stripe keys, database connection strings, private keys, JWT tokens) | Yes — immediate deny |
-| scope_check | Agent scope vs tool requirements (admin tools require admin scope) | Yes — immediate deny |
-| tool_blocklist | Destructive operation patterns | Yes — immediate deny |
-| rate_limit | Call frequency per agent | Yes — immediate deny |
+| secret_detection | Scans `tool_input` for 37 secret patterns (AWS keys, GitHub tokens, Stripe keys, database connection strings, private keys, JWT tokens). Policy: `secret_injection` | Yes — immediate deny |
+| scope_check | Agent scope vs tool requirements (admin tools require admin scope). Policy: `scope_restriction` | Yes — immediate deny |
+| tool_blocklist | Destructive operation patterns (delete/drop/destroy) for non-admin scopes. Policy: `tool_blocklist` | Yes — immediate deny |
+| rate_limit | Call frequency per session (300 calls/min). Policy: `rate_limit` | Yes — immediate deny |
 
-Secret detection runs first. Even an admin-scope agent is blocked if tool input contains a plaintext secret.
+Secret detection runs first. Even an admin-scope agent is blocked if tool input contains a plaintext secret. All four rules are evaluated independently; the first failure short-circuits evaluation.
 
 ---
 
@@ -235,9 +248,10 @@ Secret detection runs first. Even an admin-scope agent is blocked if tool input 
 Copy this entire block into Claude Code (or any terminal) to run all six governance tests in sequence. Replace `YOUR_TOKEN_HERE` with the plugin token from [Setup — Step 3](/documentation/demo-terminal-setup).
 
 ```bash
-# ── Set your token ──────────────────────────────────────────────
+# ── Set your token and URL ──────────────────────────────────────
 TOKEN="YOUR_TOKEN_HERE"
-API="https://abc3dd581f80.systemprompt.io/api/public/hooks/govern?plugin_id=enterprise-demo"
+URL="http://localhost:8080"  # or your deployed instance URL
+API="$URL/api/public/hooks/govern?plugin_id=enterprise-demo"
 
 # ── Test 1: Admin scope → ALLOW ─────────────────────────────────
 # The developer_agent has admin scope, so it can call any MCP tool.
@@ -345,7 +359,7 @@ curl -s -X POST "$API" \
 # ── Check the dashboard ─────────────────────────────────────────
 echo ""
 echo "All 6 decisions are now visible at:"
-echo "  https://abc3dd581f80.systemprompt.io/admin/governance"
+echo "  /admin/governance"
 echo ""
 echo "Expected results:"
 echo "  Test 1: ALLOWED  (admin scope, clean input)"
@@ -358,7 +372,7 @@ echo "  Test 6: ALLOWED  (admin scope, clean input)"
 
 ### What to show the audience
 
-After running the script, open the [Governance Dashboard](https://abc3dd581f80.systemprompt.io/admin/governance). The metric ribbon updates immediately:
+After running the script, open [/admin/governance](/admin/governance). The metric ribbon updates immediately:
 
 - **Total Decisions** increases by 6
 - **Denied** increases by 4 (scope + 3 secrets)
@@ -367,6 +381,35 @@ After running the script, open the [Governance Dashboard](https://abc3dd581f80.s
 Scroll the table to show the decision trail. Each row shows the tool name, the agent that requested it, the decision badge (ALLOWED / DENIED / SECRET BREACH), the policy that triggered the denial, and the timestamp. Click any user ID to see their full activity history.
 
 The key takeaway: **the same governance pipeline that blocked these curl calls runs on every tool call in a live Claude Code session.** Policies evaluate content in real time, secrets are caught before the tool executes, and every decision is auditable.
+
+---
+
+## Audit
+
+Verify governance decisions were recorded correctly:
+
+```bash
+# Demo 04-05: Check most recent allow/deny decisions
+systemprompt infra db query \
+  "SELECT decision, tool_name, policy, reason FROM governance_decisions ORDER BY created_at DESC LIMIT 5"
+
+# Demo 06: Verify secret breach counts (should be 3 deny + 1 allow)
+systemprompt infra db query \
+  "SELECT decision, COUNT(*) as count FROM governance_decisions WHERE session_id = 'demo-secret-breach' GROUP BY decision ORDER BY decision"
+
+# Full detail for secret breach tests
+systemprompt infra db query \
+  "SELECT decision, tool_name, policy, reason FROM governance_decisions WHERE session_id = 'demo-secret-breach' ORDER BY created_at"
+```
+
+**Expected results:**
+
+| Demo | Decision | Policy | Reason |
+|------|----------|--------|--------|
+| 04 | allow | default_allow | admin scope, all rules passed |
+| 05 | deny | scope_restriction | user scope cannot access admin tools |
+| 06 (tests 1-3) | deny | secret_injection | AWS key / GitHub PAT / PEM key detected |
+| 06 (test 4) | allow | default_allow | clean input, no secrets found |
 
 ---
 

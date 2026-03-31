@@ -313,7 +313,6 @@ publish:
 # Build web assets only (templates + CSS + JS + copy to dist)
 web-build:
     {{CLI}} infra jobs run bundle_admin_css
-    {{CLI}} infra jobs run bundle_css
     {{CLI}} infra jobs run copy_extension_assets
 
 # ══════════════════════════════════════════════════════════════════════════════

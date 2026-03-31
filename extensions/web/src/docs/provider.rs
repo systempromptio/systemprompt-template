@@ -1,5 +1,6 @@
 use anyhow::Result;
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use serde_json::Value;
 use systemprompt::extension::prelude::*;
 
@@ -95,6 +96,42 @@ impl PageDataProvider for DocsPageDataProvider {
             }
             if let Some(image) = item.get("image").and_then(|v| v.as_str()) {
                 obj.insert("IMAGE".to_string(), Value::String(image.to_string()));
+            }
+
+            if let Some(updated) = item.get("updated_at").and_then(|v| v.as_str()) {
+                obj.insert(
+                    "DATE_MODIFIED_ISO".to_string(),
+                    Value::String(updated.to_string()),
+                );
+                if let Ok(dt) = DateTime::parse_from_rfc3339(updated) {
+                    obj.insert(
+                        "DATE_MODIFIED".to_string(),
+                        Value::String(dt.format("%B %d, %Y").to_string()),
+                    );
+                } else if let Ok(dt) = updated.parse::<DateTime<Utc>>() {
+                    obj.insert(
+                        "DATE_MODIFIED".to_string(),
+                        Value::String(dt.format("%B %d, %Y").to_string()),
+                    );
+                }
+            }
+
+            if let Some(published) = item.get("published_at").and_then(|v| v.as_str()) {
+                obj.insert(
+                    "DATE_ISO".to_string(),
+                    Value::String(published.to_string()),
+                );
+                if let Ok(dt) = DateTime::parse_from_rfc3339(published) {
+                    obj.insert(
+                        "DATE".to_string(),
+                        Value::String(dt.format("%B %d, %Y").to_string()),
+                    );
+                } else if let Ok(dt) = published.parse::<DateTime<Utc>>() {
+                    obj.insert(
+                        "DATE".to_string(),
+                        Value::String(dt.format("%B %d, %Y").to_string()),
+                    );
+                }
             }
         }
 
