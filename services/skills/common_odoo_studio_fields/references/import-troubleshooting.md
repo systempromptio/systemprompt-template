@@ -146,7 +146,7 @@ ModuleNotFoundError: No module named 'odoo.addons.account_budget'
 ```
 Or the import simply fails to find required models/fields.
 
-**Root cause:** The `__manifest__.py` declares dependencies that are not installed on the target instance (e.g., `account_budget`, `marketing_automation`, custom modules like `foodles_contact_update`).
+**Root cause:** The `__manifest__.py` declares dependencies that are not installed on the target instance (e.g., `account_budget`, `marketing_automation`, custom modules like `enterprise-demo_contact_update`).
 
 **Fix:** Install missing dependencies before importing:
 ```python

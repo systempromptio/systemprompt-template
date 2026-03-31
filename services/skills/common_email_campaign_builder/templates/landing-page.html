@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{PAGE_TITLE}} | Foodles</title>
+  <title>{{PAGE_TITLE}} | Enterprise Demo</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,18 +22,18 @@
       height: 36px;
     }
     
-    .navbar-foodles {
+    .navbar-enterprise-demo {
       background: transparent;
       padding: 1.5rem 0;
       transition: background var(--transition-normal);
     }
     
-    .navbar-foodles.scrolled {
+    .navbar-enterprise-demo.scrolled {
       background: var(--bg-secondary);
       box-shadow: 0 2px 20px rgba(0, 33, 90, 0.1);
     }
     
-    [data-theme="dark"] .navbar-foodles.scrolled {
+    [data-theme="dark"] .navbar-enterprise-demo.scrolled {
       box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
     }
   </style>
@@ -47,10 +47,10 @@
   </button>
 
   <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-foodles fixed-top">
+  <nav class="navbar navbar-expand-lg navbar-enterprise-demo fixed-top">
     <div class="container">
       <a class="navbar-brand" href="#">
-        <img src="{{LOGO_PATH}}" alt="Foodles">
+        <img src="{{LOGO_PATH}}" alt="Enterprise Demo">
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
@@ -67,7 +67,7 @@
             <a class="nav-link" href="#testimonios">Testimonios</a>
           </li>
           <li class="nav-item">
-            <a class="btn-primary-foodles btn-sm" href="#contacto">Solicitar demo</a>
+            <a class="btn-primary-enterprise-demo btn-sm" href="#contacto">Solicitar demo</a>
           </li>
         </ul>
       </div>
@@ -83,8 +83,8 @@
           <h1 class="hero-title">{{HERO_TITLE}}</h1>
           <p class="hero-description">{{HERO_DESCRIPTION}}</p>
           <div class="d-flex gap-3 flex-wrap">
-            <a href="#contacto" class="btn-primary-foodles">{{CTA_PRIMARY}}</a>
-            <a href="#como-funciona" class="btn-secondary-foodles">Saber mas</a>
+            <a href="#contacto" class="btn-primary-enterprise-demo">{{CTA_PRIMARY}}</a>
+            <a href="#como-funciona" class="btn-secondary-enterprise-demo">Saber mas</a>
           </div>
         </div>
         <div class="col-lg-6 d-none d-lg-block" data-animate>
@@ -277,37 +277,37 @@
             <form data-validate>
               <div class="row g-3">
                 <div class="col-md-6">
-                  <div class="form-floating-foodles">
+                  <div class="form-floating-enterprise-demo">
                     <input type="text" id="nombre" name="nombre" placeholder=" " required>
                     <label for="nombre">Nombre completo</label>
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="form-floating-foodles">
+                  <div class="form-floating-enterprise-demo">
                     <input type="text" id="empresa" name="empresa" placeholder=" ">
                     <label for="empresa">Empresa</label>
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="form-floating-foodles">
+                  <div class="form-floating-enterprise-demo">
                     <input type="email" id="email" name="email" placeholder=" " required>
                     <label for="email">Email profesional</label>
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="form-floating-foodles">
+                  <div class="form-floating-enterprise-demo">
                     <input type="tel" id="telefono" name="telefono" placeholder=" ">
                     <label for="telefono">Telefono</label>
                   </div>
                 </div>
                 <div class="col-12">
-                  <div class="form-floating-foodles">
+                  <div class="form-floating-enterprise-demo">
                     <textarea id="mensaje" name="mensaje" rows="4" placeholder=" " style="min-height: 120px;"></textarea>
                     <label for="mensaje">Cuentanos tu proyecto</label>
                   </div>
                 </div>
                 <div class="col-12 text-center">
-                  <button type="submit" class="btn-primary-foodles">{{FORM_CTA}}</button>
+                  <button type="submit" class="btn-primary-enterprise-demo">{{FORM_CTA}}</button>
                 </div>
               </div>
             </form>
@@ -322,7 +322,7 @@
     <div class="container">
       <div class="row g-4">
         <div class="col-lg-4">
-          <img src="{{LOGO_WHITE_PATH}}" alt="Foodles" style="height: 40px; margin-bottom: 1.5rem;">
+          <img src="{{LOGO_WHITE_PATH}}" alt="Enterprise Demo" style="height: 40px; margin-bottom: 1.5rem;">
           <p>{{FOOTER_DESCRIPTION}}</p>
         </div>
         <div class="col-lg-2 col-md-4">
@@ -351,7 +351,7 @@
       </div>
       
       <div class="footer-bottom">
-        &copy; {{YEAR}} Foodles. Todos los derechos reservados.
+        &copy; {{YEAR}} Enterprise Demo. Todos los derechos reservados.
       </div>
     </div>
   </footer>
@@ -365,7 +365,7 @@
   <script>
     // Navbar scroll effect
     window.addEventListener('scroll', function() {
-      const navbar = document.querySelector('.navbar-foodles');
+      const navbar = document.querySelector('.navbar-enterprise-demo');
       if (window.scrollY > 50) {
         navbar.classList.add('scrolled');
       } else {

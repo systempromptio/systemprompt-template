@@ -1,6 +1,6 @@
 ---
 name: "Extension: Infrastructure"
-description: "Jobs, Schemas, Router, Assets, Storage Paths, Site Auth, and Config Validation trait implementations for foodles.com extensions"
+description: "Jobs, Schemas, Router, Assets, Storage Paths, Site Auth, and Config Validation trait implementations for demo.systemprompt.io extensions"
 ---
 
 # Extension: Infrastructure

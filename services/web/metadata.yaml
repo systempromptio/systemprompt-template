@@ -3,19 +3,19 @@
 # ===== CUSTOMIZE THESE =====
 
 site:
-  name: "Foodles"
-  title: "Foodles — Smart Corporate Catering"
+  name: "Enterprise Demo"
+  title: "Enterprise Demo — AI Agent Platform"
   description: "One platform to deploy, secure, distribute, and observe AI usage across your entire organization. Role-based access, audit trails, and cost visibility from day one."
-  author: "Foodles"
-  baseUrl: "https://www.foodles.com"
+  author: "Enterprise Demo"
+  baseUrl: "https://demo.systemprompt.io"
 
 seo:
   defaultImage: "/files/images/logo.png"
-  twitterHandle: "@foodaborad"
-  keywords: "foodles, AI governance, AI usage governance, enterprise security, MCP, Claude Code, AI management, audit trails, RBAC"
+  twitterHandle: "@systempromptio"
+  keywords: "enterprise demo, AI governance, AI usage governance, enterprise security, MCP, Claude Code, AI management, audit trails, RBAC"
 
 copyright:
-  holder: "Foodles"
+  holder: "Enterprise Demo"
   year: 2026
-  link: "https://www.foodles.com"
-  notice: "2026 Foodles"
+  link: "https://demo.systemprompt.io"
+  notice: "2026 systemprompt.io"

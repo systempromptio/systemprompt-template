@@ -1,14 +1,14 @@
 # Blog Creation Guide
 
-Reference for generating SEO-optimized, AI-consumable blog articles for the Foodles website (Odoo). All blogs follow the BLUF + Body + FAQs + Schema structure.
+Reference for generating SEO-optimized, AI-consumable blog articles for the Enterprise Demo website (Odoo). All blogs follow the BLUF + Body + FAQs + Schema structure.
 
 ## Prerequisites
 
 Before creating a blog, load these skills:
-- **`foodles-brand`** -- Read `references/verbal-identity.md` for tone, vocabulary, and writing style. Read `references/visual-identity.md` for color and typography rules. Key constraints: professional "tu", zero emojis, value vocabulary (inversion not gasto, reto not problema), long-form explanatory paragraphs, argue every recommendation.
+- **`enterprise-demo-brand`** -- Read `references/verbal-identity.md` for tone, vocabulary, and writing style. Read `references/visual-identity.md` for color and typography rules. Key constraints: professional "tu", zero emojis, value vocabulary (inversion not gasto, reto not problema), long-form explanatory paragraphs, argue every recommendation.
 - **`content-collection`** -- Read `references/sitemap-index.md` for interlinking URLs. Load `data/videos.json` for YouTube embeds. Load `data/cases.json` for case study references.
 
-**Image handling:** Read `image-workflow.md` for the complete image system. Always ask the user about images in Phase 1 (AskUserQuestion with options: user-provided, Unsplash, or placeholders). Never use generic placeholder URLs -- use inline SVG placeholders with Foodles brand colors.
+**Image handling:** Read `image-workflow.md` for the complete image system. Always ask the user about images in Phase 1 (AskUserQuestion with options: user-provided, Unsplash, or placeholders). Never use generic placeholder URLs -- use inline SVG placeholders with Enterprise Demo brand colors.
 
 ## Table of Contents
 1. [Blog Structure (BLUF)](#blog-structure)
@@ -106,7 +106,7 @@ The blog MUST follow a strict heading hierarchy for both Google and LLM indexabi
 
 ### Content Quality Rules
 
-Per foodles-brand voice:
+Per enterprise-demo-brand voice:
 - Write in **long-form explanatory paragraphs** (never bullet-only)
 - Use **professional "tu"** address
 - Use **value vocabulary** (inversion, not gasto; reto, not problema)
@@ -129,7 +129,7 @@ Follow `image-workflow.md` > "Image Sources & Discovery":
 1. **Ask user** via AskUserQuestion (already done in Phase 1): "Do you have images?"
    - If YES: use user-provided URLs or file paths
    - If "Use Unsplash": search Unsplash API with blog topic keywords, present top 3, get user selection
-   - If "Placeholders": generate inline SVG placeholders with Foodles brand colors
+   - If "Placeholders": generate inline SVG placeholders with Enterprise Demo brand colors
 
 2. **Never use** generic placeholder services (placeholder.com, lorempixel, etc.)
 
@@ -170,7 +170,7 @@ After generating the blog, create an Image Manifest (see `image-workflow.md` > "
 
 ## Visual Design Blocks
 
-Blogs are not just text. Break visual monotony by inserting **at least 2 design blocks** per article from the list below. These use `iw-*` classes from `assets/css/foodles-frontend.css` and Bootstrap 5 grid -- fully compatible with Odoo Editor.
+Blogs are not just text. Break visual monotony by inserting **at least 2 design blocks** per article from the list below. These use `iw-*` classes from `assets/css/enterprise-demo-frontend.css` and Bootstrap 5 grid -- fully compatible with Odoo Editor.
 
 ### When to Use Each Block
 
@@ -440,8 +440,8 @@ Use the `content-collection` skill data for internal links:
 | Type | When to Use | Example |
 |------|-------------|---------|
 | **Service page** | When mentioning a functionality | `<a href="/odoo-crm">gestion de relaciones con clientes</a>` |
-| **Related blog** | When referencing a related topic | `<a href="/blog/blog-foodles-1/articulo-456">como configurar tu CRM</a>` |
-| **Case study** | When citing a real example | `<a href="/blog/referencias-foodles-16/cliente-789">caso de exito de [Cliente]</a>` |
+| **Related blog** | When referencing a related topic | `<a href="/blog/blog-enterprise-demo-1/articulo-456">como configurar tu CRM</a>` |
+| **Case study** | When citing a real example | `<a href="/blog/referencias-enterprise-demo-16/cliente-789">caso de exito de [Cliente]</a>` |
 | **Landing page** | When mentioning a broad concept | `<a href="/que-es-odoo">plataforma ERP integral</a>` |
 
 ### Link Anchor Text Rules
@@ -551,25 +551,25 @@ Place this as the LAST element in the blog body:
       "description": "Meta description (max 160 chars)",
       "author": {
         "@type": "Organization",
-        "name": "Foodles Business Solutions",
-        "url": "https://www.foodles.es"
+        "name": "Enterprise Demo Business Solutions",
+        "url": "https://www.enterprise-demo.es"
       },
       "publisher": {
         "@type": "Organization",
-        "name": "Foodles Business Solutions",
-        "url": "https://www.foodles.es",
+        "name": "Enterprise Demo Business Solutions",
+        "url": "https://www.enterprise-demo.es",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://www.foodles.es/web/image/website/1/logo"
+          "url": "https://www.enterprise-demo.es/web/image/website/1/logo"
         }
       },
       "datePublished": "YYYY-MM-DD",
       "dateModified": "YYYY-MM-DD",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.foodles.es/blog/blog-foodles-1/SLUG"
+        "@id": "https://www.enterprise-demo.es/blog/blog-enterprise-demo-1/SLUG"
       },
-      "image": "https://www.foodles.es/web/image/blog.post/ID/cover_properties",
+      "image": "https://www.enterprise-demo.es/web/image/blog.post/ID/cover_properties",
       "articleSection": "Tecnologia",
       "inLanguage": "es"
     },
@@ -644,7 +644,7 @@ This is the full HTML structure to paste into Odoo Editor. Replace all placehold
   </p>
   <p class="iw-body mb-3">
     Segundo parrafo con mas profundidad. Argumentar cada punto con razonamiento.
-    Referenciar <a href="/blog/blog-foodles-1/articulo-relacionado-123">articulos relacionados</a>
+    Referenciar <a href="/blog/blog-enterprise-demo-1/articulo-relacionado-123">articulos relacionados</a>
     cuando sea pertinente.
   </p>
   <p class="iw-body mb-3">
@@ -657,7 +657,7 @@ This is the full HTML structure to paste into Odoo Editor. Replace all placehold
   <h2 class="iw-heading-md mb-3">Titulo de la seccion 2</h2>
   <p class="iw-body mb-3">
     Contenido de la seccion con enlaces internos y keywords secundarias.
-    Mencionar un <a href="/blog/referencias-foodles-16/caso-cliente-456">caso de exito</a>
+    Mencionar un <a href="/blog/referencias-enterprise-demo-16/caso-cliente-456">caso de exito</a>
     para dar credibilidad.
   </p>
   <p class="iw-body mb-3">
@@ -690,7 +690,7 @@ This is the full HTML structure to paste into Odoo Editor. Replace all placehold
   </p>
   <p class="iw-body mb-3">
     Parrafo de cierre enlazando a la
-    <a href="/contacto-foodles">pagina de contacto</a> o a una
+    <a href="/contacto-enterprise-demo">pagina de contacto</a> o a una
     <a href="/casos-de-exito">pagina de conversion</a>.
   </p>
 </section>
@@ -732,23 +732,23 @@ This is the full HTML structure to paste into Odoo Editor. Replace all placehold
       "description": "Meta description 150-160 chars",
       "author": {
         "@type": "Organization",
-        "name": "Foodles Business Solutions",
-        "url": "https://www.foodles.es"
+        "name": "Enterprise Demo Business Solutions",
+        "url": "https://www.enterprise-demo.es"
       },
       "publisher": {
         "@type": "Organization",
-        "name": "Foodles Business Solutions",
-        "url": "https://www.foodles.es",
+        "name": "Enterprise Demo Business Solutions",
+        "url": "https://www.enterprise-demo.es",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://www.foodles.es/web/image/website/1/logo"
+          "url": "https://www.enterprise-demo.es/web/image/website/1/logo"
         }
       },
       "datePublished": "YYYY-MM-DD",
       "dateModified": "YYYY-MM-DD",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.foodles.es/blog/blog-foodles-1/SLUG"
+        "@id": "https://www.enterprise-demo.es/blog/blog-enterprise-demo-1/SLUG"
       },
       "articleSection": "Tecnologia",
       "inLanguage": "es"
@@ -797,7 +797,7 @@ After generating the blog HTML, use the **`odoo-pilot`** skill to create the blo
 
 - The `odoo-pilot` skill must be available
 - Odoo connection credentials configured (URL, DB, API key)
-- The target blog must exist in Odoo (default: `blog-foodles-1`, blog_id = 1)
+- The target blog must exist in Odoo (default: `blog-enterprise-demo-1`, blog_id = 1)
 
 ### Step-by-Step Workflow
 
@@ -819,7 +819,7 @@ If unsure of the blog_id, search for it:
 ./scripts/search_records.sh blog.blog '[]' '["id", "name"]'
 ```
 
-The main Foodles blog (`blog-foodles-1`) has `blog_id = 1`.
+The main Enterprise Demo blog (`blog-enterprise-demo-1`) has `blog_id = 1`.
 
 #### 3. Prepare Blog Data
 
@@ -860,7 +860,7 @@ After successful creation, provide:
 Blog creado como borrador en Odoo:
 - ID: [record_id]
 - URL de edicion: [ODOO_URL]/web#id=[record_id]&model=blog.post&view_type=form
-- URL de preview: [ODOO_URL]/blog/blog-foodles-1/[slug]-[record_id]
+- URL de preview: [ODOO_URL]/blog/blog-enterprise-demo-1/[slug]-[record_id]
 - Estado: No publicado (borrador para revision)
 ```
 

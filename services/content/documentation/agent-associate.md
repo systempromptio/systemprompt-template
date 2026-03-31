@@ -23,7 +23,7 @@ related_docs:
 
 # Revenue Agent — Reference Architecture
 
-> **Note:** This is a reference architecture document. It demonstrates how a domain-specific agent would be configured in a Foodles deployment. The specific agent configuration, skills, data sources, and department scoping would be defined collaboratively during the Phase 1 PRD.
+> **Note:** This is a reference architecture document. It demonstrates how a domain-specific agent would be configured in a Enterprise Demo deployment. The specific agent configuration, skills, data sources, and department scoping would be defined collaboratively during the Phase 1 PRD.
 
 **TL;DR:** The Revenue Agent shows a revenue-manager-facing agent for hospitality. It consolidates pricing optimization, occupancy analytics, competitive intelligence, and rate management into a single interface for revenue managers. This reference uses `user`-scoped OAuth (not admin scope) and is designed for high-concurrency usage patterns during rate update cycles.
 
@@ -40,7 +40,7 @@ This is the highest-scale agent in the deployment. With revenue managers across 
 | Property | Value |
 |----------|-------|
 | Agent ID | `associate_agent` |
-| Foodles Name | Revenue Agent |
+| Enterprise Demo Name | Revenue Agent |
 | Port | 9028 |
 | Endpoint | `http://localhost:8080/api/v1/agents/associate_agent` |
 | Protocol | A2A v0.3.0, JSONRPC |
@@ -55,7 +55,7 @@ This is the highest-scale agent in the deployment. With revenue managers across 
 The Revenue Agent is defined in `services/agents/associate_agent.yaml`:
 
 ```yaml
-# Revenue Agent Configuration (Foodles Demo)
+# Revenue Agent Configuration (Enterprise Demo Demo)
 # Revenue-manager-facing agent for pricing and occupancy optimization
 
 agents:

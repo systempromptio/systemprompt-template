@@ -17,7 +17,7 @@ description: "SEO management and audit tool with keyword analysis, meta tag gene
 
 ## Diseño
 
-El skill sigue el sistema de diseño Foodles:
+El skill sigue el sistema de diseño Enterprise Demo:
 
 - **Colores**: Warm Yellow (#E5B92B), Blue Lilac (#0071ce), Blue Space (#1A0030), Light Sky (#8AC2DB)
 - **Tipografía**: Dosis (Google Fonts)

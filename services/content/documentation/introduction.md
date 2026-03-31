@@ -59,7 +59,7 @@ The demo you are looking at runs in the cloud because that is the most practical
 
 ## What You Are Looking At
 
-This site is a white-label implementation of the systemprompt.io governance library, configured and branded for Foodles. The software is running. The governance pipeline is active. The documentation you are reading is served by the same content system that manages skills, plugins, and agent configurations.
+This site is a white-label implementation of the systemprompt.io governance library, configured and branded for Enterprise Demo. The software is running. The governance pipeline is active. The documentation you are reading is served by the same content system that manages skills, plugins, and agent configurations.
 
 This is how the library works in practice — not a demo environment with synthetic data, but the actual software operating as it would inside your organisation.
 

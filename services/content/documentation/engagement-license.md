@@ -36,7 +36,7 @@ The platform license is priced on an annual basis with preferential reference pa
 
 ## What the License Covers
 
-The platform license grants Foodles 12 months of production use of the core systemprompt platform — the AI governance engine. This includes:
+The platform license grants Enterprise Demo 12 months of production use of the core systemprompt platform — the AI governance engine. This includes:
 
 | Feature | Included |
 |---------|----------|
@@ -60,8 +60,8 @@ The license covers unlimited users, unlimited agents, unlimited skills, unlimite
 | Item | Notes |
 |------|-------|
 | **AI provider API costs** | Billed directly by Anthropic, OpenAI, or other providers |
-| **Infrastructure costs** | Hosting on Foodles infrastructure is Foodles's responsibility |
-| **Extension codebase** | The Control Center is owned by Foodles — it is not part of the platform license |
+| **Infrastructure costs** | Hosting on Enterprise Demo infrastructure is Enterprise Demo's responsibility |
+| **Extension codebase** | The Control Center is owned by Enterprise Demo — it is not part of the platform license |
 
 ---
 
@@ -69,7 +69,7 @@ The license covers unlimited users, unlimited agents, unlimited skills, unlimite
 
 The platform license is enforced by the CLI. The systemprompt binary validates the license against the systemprompt API at startup and operates within the licensed term.
 
-The core platform is licensed under the **Business Source License 1.1 (BSL-1.1)** — the source code is fully available for auditing. Foodles can inspect every line of the licence enforcement logic. Source-available means full transparency with no obfuscation.
+The core platform is licensed under the **Business Source License 1.1 (BSL-1.1)** — the source code is fully available for auditing. Enterprise Demo can inspect every line of the licence enforcement logic. Source-available means full transparency with no obfuscation.
 
 ---
 
@@ -77,7 +77,7 @@ The core platform is licensed under the **Business Source License 1.1 (BSL-1.1)*
 
 The platform license covers the **core systemprompt intellectual property** — the governance engine, the CLI, the MCP integration layer, the analytics system, and all core platform code.
 
-It does **not** cover the Control Center extension codebase. That code is [owned by Foodles](/documentation/engagement-implementation) and is not subject to the platform license. Foodles retains the Control Center regardless of whether the platform license is renewed.
+It does **not** cover the Control Center extension codebase. That code is [owned by Enterprise Demo](/documentation/engagement-implementation) and is not subject to the platform license. Enterprise Demo retains the Control Center regardless of whether the platform license is renewed.
 
 ---
 
@@ -87,8 +87,8 @@ At the end of the 12-month term:
 
 - The platform license can be renewed at the then-current rate
 - Reference partner pricing may be extended based on the relationship
-- The Control Center extension code remains Foodles's property regardless of renewal
-- All skills, agents, configurations, and data created during the term remain with Foodles
+- The Control Center extension code remains Enterprise Demo's property regardless of renewal
+- All skills, agents, configurations, and data created during the term remain with Enterprise Demo
 
 ---
 

@@ -4,9 +4,9 @@ description: "Generate the weekly CRM report from Odoo. Fetches opportunities, c
 ---
 
 |---|
-| `ODOO_URL` | Odoo instance URL | `https://www.foodles.com/` |
+| `ODOO_URL` | Odoo instance URL | `https://www.demo.systemprompt.io/` |
 | `ODOO_DB` | Odoo database name | `master` |
-| `ODOO_USER` | Odoo API username | `user@foodles.com` |
+| `ODOO_USER` | Odoo API username | `user@demo.systemprompt.io` |
 | `ODOO_KEY` | Odoo API key | (API key) |
 | `EMAIL_SMTP_PASSWORD` | SMTP password for Gmail | (app password) |
 
@@ -17,8 +17,8 @@ description: "Generate the weekly CRM report from Odoo. Fetches opportunities, c
 | `EMAIL_SMTP_SERVER` | `smtp.gmail.com` | SMTP server |
 | `EMAIL_SMTP_PORT` | `587` | SMTP port |
 | `EMAIL_USE_TLS` | `true` | Enable STARTTLS |
-| `EMAIL_FROM` | `victor@foodles.com` | Sender address |
-| `EMAIL_USERNAME` | `victor@foodles.com` | SMTP login |
+| `EMAIL_FROM` | `victor@demo.systemprompt.io` | Sender address |
+| `EMAIL_USERNAME` | `victor@demo.systemprompt.io` | SMTP login |
 
 ## Workflow (Mandatory Sequence)
 
@@ -100,7 +100,7 @@ Edit `skills/sales-crm-report/scripts/config.py` to update:
 
 ## Brand Compliance
 
-This report follows the Foodles brand guidelines:
+This report follows the Enterprise Demo brand guidelines:
 
 - **Font**: Dosis (no other fonts)
 - **Colors**: Blue Lilac #0071ce, Blue Space #1A0030, Warm Yellow #E5B92B, Light Sky #8AC2DB

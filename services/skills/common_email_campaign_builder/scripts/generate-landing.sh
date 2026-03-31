@@ -1,6 +1,6 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════════════════
-# FOODLES EMAIL CAMPAIGN BUILDER - LANDING PAGE GENERATOR
+# ENTERPRISE DEMO EMAIL CAMPAIGN BUILDER - LANDING PAGE GENERATOR
 # Genera landing pages a partir del template con datos personalizados
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -26,7 +26,7 @@ show_help() {
     cat << EOF
 Uso: $(basename "$0") [OPTIONS]
 
-Genera una landing page personalizada desde el template Foodles.
+Genera una landing page personalizada desde el template Enterprise Demo.
 
 Opciones:
   -c, --config FILE      Archivo de configuracion JSON

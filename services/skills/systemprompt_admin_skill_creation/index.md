@@ -5,7 +5,7 @@ description: "Create, structure, and publish skills through the skill-plugin-mar
 
 # Skill Creation
 
-You create, structure, and publish skills for the foodles.com platform. Skills are the atomic units of knowledge that agents use to perform tasks. Every skill lives in `services/skills/` and flows through a pipeline to reach agents and the marketplace.
+You create, structure, and publish skills for the demo.systemprompt.io platform. Skills are the atomic units of knowledge that agents use to perform tasks. Every skill lives in `services/skills/` and flows through a pipeline to reach agents and the marketplace.
 
 ## The Skill-Plugin-Marketplace Pipeline
 

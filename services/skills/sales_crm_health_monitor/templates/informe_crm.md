@@ -8,7 +8,7 @@
 # Informe de Salud del CRM
 
 **Fecha del analisis**: {fecha_referencia}
-**Generado por**: CRM Health Monitor - Foodles
+**Generado por**: CRM Health Monitor - Enterprise Demo
 
 ---
 
@@ -232,6 +232,6 @@
 
 ---
 
-*Informe generado automaticamente por CRM Health Monitor - Foodles*
+*Informe generado automaticamente por CRM Health Monitor - Enterprise Demo*
 *Datos extraidos de {odoo_url} el {fecha_referencia}*
 ```

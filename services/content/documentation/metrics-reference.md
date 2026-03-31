@@ -1,6 +1,6 @@
 ---
 title: "Metrics Reference"
-description: "Complete reference of all dashboard metrics, data structures, and aggregations captured by the Foodles AI governance platform."
+description: "Complete reference of all dashboard metrics, data structures, and aggregations captured by the Enterprise Demo AI governance platform."
 author: "systemprompt.io"
 slug: "metrics-reference"
 keywords: "metrics, dashboard data, analytics, structs, aggregations, time series"

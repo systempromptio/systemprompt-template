@@ -68,12 +68,12 @@ Edit `skills/sales-crm-report/scripts/config.py`:
 
 ```python
 EMAIL_RECIPIENTS = [
-    "user1@foodles.es",
-    "user2@foodles.es",
+    "user1@enterprise-demo.es",
+    "user2@enterprise-demo.es",
 ]
 
 SALESPEOPLE_EMAILS = {
-    "Salesperson Name": "email@foodles.es",
+    "Salesperson Name": "email@enterprise-demo.es",
 }
 ```
 
@@ -84,8 +84,8 @@ SALESPEOPLE_EMAILS = {
 | `EMAIL_SMTP_SERVER` | `smtp.gmail.com` | SMTP server |
 | `EMAIL_SMTP_PORT` | `587` | SMTP port |
 | `EMAIL_USE_TLS` | `true` | Enable STARTTLS |
-| `EMAIL_FROM` | `victor@foodles.es` | Sender address |
-| `EMAIL_USERNAME` | `victor@foodles.es` | SMTP login |
+| `EMAIL_FROM` | `victor@enterprise-demo.es` | Sender address |
+| `EMAIL_USERNAME` | `victor@enterprise-demo.es` | SMTP login |
 | `EMAIL_SMTP_PASSWORD` | (required) | SMTP password |
 
 ### Gmail App Password

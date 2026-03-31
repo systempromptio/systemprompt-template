@@ -1,6 +1,6 @@
 ---
 name: "Extension: Rendering"
-description: "ComponentRenderer, TemplateProvider, TemplateDataExtender, and PagePrerenderer trait implementations for foodles.com extensions"
+description: "ComponentRenderer, TemplateProvider, TemplateDataExtender, and PagePrerenderer trait implementations for demo.systemprompt.io extensions"
 ---
 
 # Extension: Rendering

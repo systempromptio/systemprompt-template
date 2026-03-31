@@ -1,10 +1,10 @@
 {
   "name": "systemprompt-marketplace",
   "owner": {
-    "name": "Foodles"
+    "name": "Enterprise Demo"
   },
   "metadata": {
-    "description": "Foodles plugin marketplace",
+    "description": "Enterprise Demo plugin marketplace",
     "version": "0.1.0"
   },
   "plugins": [

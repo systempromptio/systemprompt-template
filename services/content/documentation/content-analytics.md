@@ -1,6 +1,6 @@
 ---
 title: "Content Analytics"
-description: "Link performance, campaign tracking, and content journey analytics for the Foodles AI governance platform."
+description: "Link performance, campaign tracking, and content journey analytics for the Enterprise Demo AI governance platform."
 author: "systemprompt.io"
 slug: "content-analytics"
 keywords: "content analytics, link tracking, campaign performance, content journey, conversion"

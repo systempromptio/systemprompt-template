@@ -2,12 +2,13 @@
 
 ## What it does
 
-User-scope agent tries to call an admin-only MCP tool. The governance hook fires and DENIES the call.
+Two denial scenarios via direct governance API calls. Part 1: scope restriction. Part 2: blocklist + scope restriction.
 
-## Flow
+## Flow (Part 1: Scope Restriction)
 
 ```
-  associate_agent calls mcp__systemprompt__list_agents
+  curl: POST /api/public/hooks/govern
+  agent_id=associate_agent, tool=mcp__systemprompt__list_agents
     │
     ▼
   ┌─────────────────────────────────────────────────────────┐
@@ -59,8 +60,22 @@ User-scope agent tries to call an admin-only MCP tool. The governance hook fires
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
-  Claude Code receives "deny" → tool call BLOCKED
-  Agent reports: "I cannot execute this operation"
+  Hook receives "deny" → Claude Code BLOCKS the tool call
+  In Claude Code: [GOVERNANCE] <reason> — tool never executes
+```
+
+## Flow (Part 2: Blocklist + Scope)
+
+```
+  curl: POST /api/public/hooks/govern
+  agent_id=associate_agent, tool=mcp__systemprompt__delete_agent
+    │
+    ▼
+  scope_check: FAIL (user scope + mcp__systemprompt__*)
+  blocklist: FAIL (delete_* is a destructive operation)
+    │
+    ▼
+  decision = "deny" — two rules triggered
 ```
 
 ## Contrast: Demo 04 vs Demo 05

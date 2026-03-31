@@ -1,12 +1,12 @@
 ---
 name: "Content Collection"
-description: "Foodles content catalog with case studies, modules, YouTube videos, and website sitemap for content creation reference"
+description: "Enterprise Demo content catalog with case studies, modules, YouTube videos, and website sitemap for content creation reference"
 ---
 
 --|---------|-----------|
-| YouTube Channel | @foodles-odoo videos + thumbnails | `data/videos.json` |
+| YouTube Channel | @enterprise-demo-odoo videos + thumbnails | `data/videos.json` |
 | Odoo Blog | Client case studies / references | `data/cases.json` |
-| Odoo Products | Foodles Core module specifications | `data/modules.json` |
+| Odoo Products | Enterprise Demo Core module specifications | `data/modules.json` |
 | Website Sitemap | All public URLs categorized by type | `data/sitemap.json` |
 
 Data is collected by running `scripts/collect_all.py` and stored in the skill package.
@@ -40,7 +40,7 @@ grep -i "manufacturing" data/cases.json
 Find all content related to a specific module:
 ```bash
 # Cases using the module
-grep "foodles_inventory" data/cases.json
+grep "enterprise-demo_inventory" data/cases.json
 
 # Videos about the topic
 grep -i "inventory" data/videos.json
@@ -80,11 +80,11 @@ grep -i "client_name" data/cases.json
   "title": "Client Name - Project Title",
   "client": "Client Name",
   "industry": "Manufacturing",
-  "url": "https://foodles.com/blog/...",
+  "url": "https://demo.systemprompt.io/blog/...",
   "publish_date": "2024-02-20",
   "summary": "Brief summary...",
   "content": "Full blog post content...",
-  "modules_used": ["foodles_inventory", "foodles_mrp"]
+  "modules_used": ["enterprise-demo_inventory", "enterprise-demo_mrp"]
 }
 ```
 
@@ -93,13 +93,13 @@ grep -i "client_name" data/cases.json
 ```json
 {
   "id": 456,
-  "name": "Foodles Inventory",
-  "technical_name": "foodles_inventory",
+  "name": "Enterprise Demo Inventory",
+  "technical_name": "enterprise-demo_inventory",
   "code": "IND-INV",
   "description": "Extended inventory management...",
   "features": ["Feature 1", "Feature 2"],
   "price": 1500.00,
-  "url": "https://foodles.com/shop/...",
+  "url": "https://demo.systemprompt.io/shop/...",
   "related_cases": [123, 125],
   "related_videos": ["VIDEO_ID_1", "VIDEO_ID_2"]
 }
@@ -109,7 +109,7 @@ grep -i "client_name" data/cases.json
 
 ```json
 {
-  "url": "https://www.foodles.com/blog/blog-foodles-1/articulo-ejemplo-123",
+  "url": "https://www.demo.systemprompt.io/blog/blog-enterprise-demo-1/articulo-ejemplo-123",
   "category": "blog",
   "title_hint": "Articulo Ejemplo",
   "lastmod": "2026-01-15",
@@ -130,8 +130,8 @@ The `build_indexes.py` script automatically creates cross-references:
 - Links are built by matching module names/keywords in case content and video topics
 - Use these to find all content about a specific module
 
-Example: To find all content about Foodles Inventory:
-1. Read module from `data/modules.json` where `technical_name = "foodles_inventory"`
+Example: To find all content about Enterprise Demo Inventory:
+1. Read module from `data/modules.json` where `technical_name = "enterprise-demo_inventory"`
 2. Use `related_cases` array to fetch case studies
 3. Use `related_videos` array to fetch video details
 
@@ -144,8 +144,8 @@ To update the content collection:
 ```bash
 # Set environment variables
 export YOUTUBE_API_KEY="your_youtube_api_key"
-export ODOO_URL="https://foodles.com"
-export ODOO_DB="foodles_production"
+export ODOO_URL="https://demo.systemprompt.io"
+export ODOO_DB="enterprise-demo_production"
 export ODOO_KEY="your_odoo_api_key"
 
 # Run collection (from skill directory)
@@ -190,12 +190,12 @@ Reference this skill in your SKILL.md:
   - Load full records from `data/*.json` as needed
 ```
 
-### With foodles-brand
+### With enterprise-demo-brand
 
 When generating content that references this collection:
 1. Find relevant content using indexes
 2. Load full records from JSON
-3. Apply foodles-brand voice and visual guidelines
+3. Apply enterprise-demo-brand voice and visual guidelines
 
 ---
 

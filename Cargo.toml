@@ -16,7 +16,7 @@ strip = true
 [workspace.package]
 edition = "2021"
 version = "0.1.3"
-authors = ["Foodles <help@foodles.com>"]
+authors = ["systemprompt.io <support@systemprompt.io>"]
 license = "MIT"
 
 [workspace.dependencies]
@@ -99,6 +99,8 @@ missing_docs_in_private_items = "allow"
 module_name_repetitions = "allow"
 missing_errors_doc = "allow"
 unwrap_or_default = "allow"
+cast_possible_truncation = "allow"
+cast_precision_loss = "allow"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
@@ -110,7 +112,7 @@ unsafe_code = "forbid"
 name = "systemprompt-template"
 version.workspace = true
 edition.workspace = true
-description = "SystemPrompt Template - Example project with blog extension"
+description = "systemprompt-template — Production AI agent platform built on systemprompt-core"
 license = "MIT"
 
 [lib]

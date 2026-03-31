@@ -1,23 +1,26 @@
 #!/bin/bash
-# DEMO 1: HAPPY PATH
+# DEMO 1: HAPPY PATH — GOVERNANCE ALLOW + MCP TOOL CALL
 # platform agent / developer_agent (admin scope, systemprompt MCP)
-# Expected: Returns a real list of agents via MCP tool call + artifact
+# Expected: Governance ALLOWS the tool call, then MCP returns real data
+#
+# This simulates a Claude Code PreToolUse hook workflow.
+# Part 1 shows the governance check (ALLOW).
+# Part 2 shows the tool execution that follows.
 #
 # What this does:
-#   1. Creates an isolated execution context (ContextId) via `core contexts create`
-#   2. Sends a message to developer_agent asking it to list agents
-#      - developer_agent has admin scope → all MCP tools available
-#      - The agent calls the systemprompt MCP server's list_agents tool
-#   3. Waits synchronously (--blocking --timeout 60) for the AI response
-#   4. Retrieves the structured artifact the agent produced
-#      - Artifacts are typed data (JSON) that any surface can render
+#   1. Loads auth token from demo/.token
+#   2. POSTs to /api/public/hooks/govern simulating a PreToolUse hook
+#      - agent_id=developer_agent (admin scope, allowed to use MCP tools)
+#      - tool_name=mcp__systemprompt__list_agents (clean tool input)
+#      - Governance evaluates all rules → ALLOW
+#   3. Calls the actual MCP tool via CLI to show what executes after ALLOW
+#   4. Audits the governance_decisions table for the allow record
 #
 # Flow:
-#   CLI → create context → message agent → AI processes → MCP tool call
-#   → systemprompt CLI executes → result returned → artifact stored → displayed
+#   Claude Code hook fires → POST /hooks/govern → JWT auth → rules evaluate
+#   → ALLOW → Claude Code proceeds → MCP tool executes → result returned
 #
-# IDs created: ContextId, TraceId (per AI request), SessionId
-# Cost: ~$0.01 (one AI call on Gemini Flash, multi-turn tool use)
+# Cost: Free (no AI call)
 
 set -e
 
@@ -36,94 +39,93 @@ fi
 echo ""
 echo "=========================================="
 echo "  DEMO 1: HAPPY PATH"
-echo "  platform agent — admin scope, has MCP"
+echo "  governance ALLOW + MCP tool execution"
 echo "=========================================="
 echo ""
 
-# Create a fresh isolated context
-CONTEXT_OUTPUT=$("$CLI" core contexts create --name "Demo 1 - Happy Path $(date +%H:%M:%S)" 2>&1)
-CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep "^ID:" | awk '{print $2}')
+TOKEN_FILE="$SCRIPT_DIR/.token"
+TOKEN="${1:-}"
+if [[ -z "$TOKEN" && -f "$TOKEN_FILE" ]]; then
+  TOKEN=$(cat "$TOKEN_FILE")
+fi
 
-if [[ -z "$CONTEXT_ID" ]]; then
-  echo "WARNING: Could not create context, running without isolation"
-  "$CLI" admin agents message developer_agent \
-    -m "List all agents running on this platform" \
-    --blocking --timeout 60
-else
-  echo "Context: $CONTEXT_ID"
+if [[ -z "$TOKEN" ]]; then
   echo ""
-  "$CLI" admin agents message developer_agent \
-    -m "List all agents running on this platform" \
-    --context-id "$CONTEXT_ID" \
-    --blocking --timeout 60
-
-  # Retrieve and display the artifact
+  echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument:"
+  echo "  ./demo/01-happy-path.sh <TOKEN>"
   echo ""
-  echo "=========================================="
-  echo "  ARTIFACT — structured data from MCP tool"
-  echo "=========================================="
-  echo ""
-  echo "The agent produced a typed artifact. This is"
-  echo "structured data that can be rendered by any"
-  echo "agent surface — web dashboard, mobile app,"
-  echo "Slack bot, or CLI."
-  echo ""
-
-  ARTIFACT_ID=$("$CLI" core artifacts list --context-id "$CONTEXT_ID" 2>&1 | grep -oP '"id":\s*"\K[^"]+' | head -1)
-
-  if [[ -n "$ARTIFACT_ID" ]]; then
-    "$CLI" core artifacts show "$ARTIFACT_ID" --full
-  else
-    echo "(No artifact found — the agent may have returned inline text)"
-  fi
+  exit 1
 fi
 
 # ──────────────────────────────────────────────
-#  AUDIT: Verify what just happened
+#  PART 1: Governance check (PreToolUse hook)
+# ──────────────────────────────────────────────
+echo "------------------------------------------"
+echo "  PART 1: Governance check (PreToolUse)"
+echo ""
+echo "  Simulating Claude Code PreToolUse hook:"
+echo "    agent_id:   developer_agent"
+echo "    tool_name:  mcp__systemprompt__list_agents"
+echo "    tool_input: {}"
+echo ""
+echo "  developer_agent has admin scope — this"
+echo "  tool is allowed. Expecting: ALLOW"
+echo "------------------------------------------"
+echo ""
+
+curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "mcp__systemprompt__list_agents",
+    "agent_id": "developer_agent",
+    "session_id": "demo-happy-path",
+    "tool_input": {}
+  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+
+# ──────────────────────────────────────────────
+#  PART 2: MCP tool execution (what happens after ALLOW)
+# ──────────────────────────────────────────────
+echo ""
+echo "------------------------------------------"
+echo "  PART 2: MCP tool execution"
+echo ""
+echo "  Governance returned ALLOW, so Claude Code"
+echo "  proceeds to execute the tool. Running:"
+echo "    plugins mcp call systemprompt list_agents"
+echo "------------------------------------------"
+echo ""
+
+"$CLI" plugins mcp call systemprompt list_agents 2>&1
+
+# ──────────────────────────────────────────────
+#  AUDIT: Verify governance decision
 # ──────────────────────────────────────────────
 echo ""
 echo "=========================================="
-echo "  AUDIT: Verifying trace"
+echo "  AUDIT: Governance decisions for this session"
 echo "=========================================="
 echo ""
 
-TRACE_ID=$("$CLI" infra logs trace list --limit 1 2>&1 | grep -oP '"trace_id":\s*"\K[0-9a-f-]+' | head -1)
-
-if [[ -n "$TRACE_ID" ]]; then
-  echo "  Trace: $TRACE_ID"
-  echo ""
-  "$CLI" infra logs trace show "$TRACE_ID" --all 2>&1 | head -40
-  echo ""
-  echo "  Expected: ~11 events, 3 AI requests, 1 MCP tool call"
-else
-  echo "  (No trace found)"
-fi
+echo "  Decision counts (session=demo-happy-path):"
+"$CLI" infra db query \
+  "SELECT decision, COUNT(*) as count FROM governance_decisions WHERE session_id = 'demo-happy-path' GROUP BY decision ORDER BY decision" \
+  2>&1 | grep -v "^\[profile"
 
 echo ""
-echo "------------------------------------------"
-echo "  Cost breakdown:"
-echo "------------------------------------------"
-echo ""
-"$CLI" analytics costs breakdown --by agent 2>&1 | head -10
-
-echo ""
-echo "------------------------------------------"
-echo "  Governance log (most recent):"
-echo "------------------------------------------"
-echo ""
-LOGFILE=$(ls -t /tmp/systemprompt-governance-*.log 2>/dev/null | head -1)
-if [[ -n "$LOGFILE" ]]; then
-  tail -5 "$LOGFILE"
-else
-  echo "  (No governance log found)"
-fi
+echo "  Detailed decisions:"
+"$CLI" infra db query \
+  "SELECT decision, tool_name, policy, reason FROM governance_decisions WHERE session_id = 'demo-happy-path' ORDER BY created_at" \
+  2>&1 | grep -v "^\[profile"
 
 echo ""
 echo "=========================================="
 echo "  AUDIT COMMANDS (run manually):"
-echo "  infra logs trace show $TRACE_ID --all"
-echo "  analytics costs breakdown --by agent"
-echo "  core artifacts list --context-id $CONTEXT_ID"
+echo "  infra db query \"SELECT * FROM governance_decisions WHERE session_id = 'demo-happy-path' ORDER BY created_at\""
+echo ""
+echo "  Part 1: ALLOWED (admin scope, clean input)"
+echo "  Part 2: MCP tool returned real agent data"
 echo ""
 echo "  Now run: ./demo/02-refused-path.sh"
 echo "=========================================="

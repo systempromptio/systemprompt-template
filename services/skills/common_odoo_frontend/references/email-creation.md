@@ -1,11 +1,11 @@
 # Email Creation Guide
 
-Reference for creating email marketing content (newsletters, promotions, event invites) compatible with Odoo Mass Mailing and major email clients. All emails use inline styles, table-based layout, and follow foodles-brand guidelines.
+Reference for creating email marketing content (newsletters, promotions, event invites) compatible with Odoo Mass Mailing and major email clients. All emails use inline styles, table-based layout, and follow enterprise-demo-brand guidelines.
 
 ## Prerequisites
 
 Before creating an email, load these skills:
-- **`foodles-brand`** -- Read `references/verbal-identity.md` for tone, vocabulary, and writing style. Read `references/visual-identity.md` for color and typography rules. Key constraints: professional "tu", zero emojis, value vocabulary (inversion not gasto, reto not problema).
+- **`enterprise-demo-brand`** -- Read `references/verbal-identity.md` for tone, vocabulary, and writing style. Read `references/visual-identity.md` for color and typography rules. Key constraints: professional "tu", zero emojis, value vocabulary (inversion not gasto, reto not problema).
 - **`content-collection`** -- Load `data/cases.json` for case study social proof. Load `data/videos.json` for video thumbnail links.
 
 ## Table of Contents
@@ -276,7 +276,7 @@ Every email starts with this outer shell:
         <td width="4%">&nbsp;</td>
         <td width="48%" valign="top" style="padding-left:12px;">
           <!-- Right column content -->
-          <img src="https://www.foodles.es/web/image/..." alt="Descripcion" width="260" style="display:block;max-width:100%;height:auto;border-radius:8px;">
+          <img src="https://www.enterprise-demo.es/web/image/..." alt="Descripcion" width="260" style="display:block;max-width:100%;height:auto;border-radius:8px;">
         </td>
       </tr>
     </table>
@@ -345,7 +345,7 @@ Gmail strips all `<style>` blocks entirely. Yahoo and Outlook.com partially stri
 
 **Link:**
 ```html
-<a href="https://www.foodles.es/..." style="color:#6B68FA;text-decoration:underline;">texto del enlace</a>
+<a href="https://www.enterprise-demo.es/..." style="color:#6B68FA;text-decoration:underline;">texto del enlace</a>
 ```
 
 **Divider:**
@@ -365,7 +365,7 @@ Gmail strips all `<style>` blocks entirely. Yahoo and Outlook.com partially stri
 
 | Rule | Value |
 |------|-------|
-| URLs | Always absolute (`https://www.foodles.es/web/image/...`) |
+| URLs | Always absolute (`https://www.enterprise-demo.es/web/image/...`) |
 | Width attribute | Always set explicit `width` attribute on `<img>` |
 | Max image width | 560px (600px container - 2x20px padding) |
 | Inline style | `display:block;max-width:100%;height:auto;` |
@@ -380,7 +380,7 @@ Gmail strips all `<style>` blocks entirely. Yahoo and Outlook.com partially stri
 <tr>
   <td style="padding:0;" bgcolor="#f7f8fc">
     <img
-      src="https://www.foodles.es/web/image/ir.attachment/123/datas"
+      src="https://www.enterprise-demo.es/web/image/ir.attachment/123/datas"
       alt="Dashboard de Odoo mostrando metricas en tiempo real"
       width="600"
       style="display:block;max-width:100%;height:auto;border:0;"
@@ -395,8 +395,8 @@ Gmail strips all `<style>` blocks entirely. Yahoo and Outlook.com partially stri
 <tr>
   <td align="center" style="background-color:#1C265D;padding:24px 32px;">
     <img
-      src="https://www.foodles.es/web/image/website/1/logo"
-      alt="Foodles"
+      src="https://www.enterprise-demo.es/web/image/website/1/logo"
+      alt="Enterprise Demo"
       width="140"
       style="display:block;max-width:140px;height:auto;border:0;"
     >
@@ -419,7 +419,7 @@ This pattern works in all email clients including Outlook desktop. Uses VML (Vec
       <!--[if mso]>
       <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml"
         xmlns:w="urn:schemas-microsoft-com:office:word"
-        href="https://www.foodles.es/contacto-foodles"
+        href="https://www.enterprise-demo.es/contacto-enterprise-demo"
         style="height:44px;v-text-anchor:middle;width:220px;"
         arcsize="50%"
         strokecolor="#E5B92B"
@@ -431,7 +431,7 @@ This pattern works in all email clients including Outlook desktop. Uses VML (Vec
       </v:roundrect>
       <![endif]-->
       <!--[if !mso]><!-->
-      <a href="https://www.foodles.es/contacto-foodles"
+      <a href="https://www.enterprise-demo.es/contacto-enterprise-demo"
         style="display:inline-block;background-color:#E5B92B;color:#1C265D;font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;text-decoration:none;padding:12px 28px;border-radius:100px;line-height:1;mso-hide:all;">
         Solicitar demo
       </a>
@@ -448,7 +448,7 @@ For environments where Outlook is not a concern (e.g., B2C audiences):
 ```html
 <tr>
   <td align="center" style="padding:24px 32px;">
-    <a href="https://www.foodles.es/contacto-foodles"
+    <a href="https://www.enterprise-demo.es/contacto-enterprise-demo"
       style="display:inline-block;background-color:#E5B92B;color:#1C265D;font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;text-decoration:none;padding:12px 28px;border-radius:100px;">
       Solicitar demo
     </a>
@@ -466,7 +466,7 @@ Uses table cell padding for reliable rendering across all clients:
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
       <tr>
         <td style="background-color:#E5B92B;border-radius:100px;">
-          <a href="https://www.foodles.es/contacto-foodles"
+          <a href="https://www.enterprise-demo.es/contacto-enterprise-demo"
             style="display:block;padding:12px 28px;font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:700;color:#1C265D;text-transform:uppercase;text-decoration:none;text-align:center;">
             Solicitar demo
           </a>
@@ -508,7 +508,7 @@ All commercial emails in Spain must include:
       <tr>
         <td align="center" style="padding-bottom:16px;">
           <p style="font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:600;color:#1C265D;margin:0;">
-            Foodles Business Solutions S.L.
+            Enterprise Demo Business Solutions S.L.
           </p>
           <p style="font-family:'Dosis',Verdana,sans-serif;font-size:12px;color:#64748b;margin:4px 0 0 0;">
             Tu partner Odoo de confianza
@@ -518,11 +518,11 @@ All commercial emails in Spain must include:
       <!-- Social links -->
       <tr>
         <td align="center" style="padding-bottom:16px;">
-          <a href="https://www.linkedin.com/company/foodles" style="text-decoration:none;margin:0 8px;">
-            <img src="https://www.foodles.es/web/image/linkedin-icon" alt="LinkedIn" width="24" height="24" style="display:inline-block;border:0;">
+          <a href="https://www.linkedin.com/company/enterprise-demo" style="text-decoration:none;margin:0 8px;">
+            <img src="https://www.enterprise-demo.es/web/image/linkedin-icon" alt="LinkedIn" width="24" height="24" style="display:inline-block;border:0;">
           </a>
-          <a href="https://www.youtube.com/@foodles-odoo" style="text-decoration:none;margin:0 8px;">
-            <img src="https://www.foodles.es/web/image/youtube-icon" alt="YouTube" width="24" height="24" style="display:inline-block;border:0;">
+          <a href="https://www.youtube.com/@enterprise-demo-odoo" style="text-decoration:none;margin:0 8px;">
+            <img src="https://www.enterprise-demo.es/web/image/youtube-icon" alt="YouTube" width="24" height="24" style="display:inline-block;border:0;">
           </a>
         </td>
       </tr>
@@ -534,7 +534,7 @@ All commercial emails in Spain must include:
             <br>
             <a href="${unsubscribe_url}" style="color:#6B68FA;text-decoration:underline;">Darme de baja</a>
             &nbsp;|&nbsp;
-            <a href="https://www.foodles.es/politica-de-privacidad" style="color:#6B68FA;text-decoration:underline;">Politica de privacidad</a>
+            <a href="https://www.enterprise-demo.es/politica-de-privacidad" style="color:#6B68FA;text-decoration:underline;">Politica de privacidad</a>
           </p>
         </td>
       </tr>
@@ -549,7 +549,7 @@ All commercial emails in Spain must include:
 
 ## Brand Compliance
 
-All emails must follow `foodles-brand` guidelines. Quick reference for email context:
+All emails must follow `enterprise-demo-brand` guidelines. Quick reference for email context:
 
 ### Colors (Solid Only)
 
@@ -592,7 +592,7 @@ Load `data/cases.json` from `content-collection` to add real client references:
 <tr>
   <td style="padding:24px 32px;background-color:#f7f8fc;">
     <p style="font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-style:italic;color:#334155;margin:0 0 8px 0;">
-      "Gracias a Odoo e Foodles, hemos reducido un 40% el tiempo de procesamiento de pedidos."
+      "Gracias a Odoo e Enterprise Demo, hemos reducido un 40% el tiempo de procesamiento de pedidos."
     </p>
     <p style="font-family:'Dosis',Verdana,sans-serif;font-size:12px;font-weight:600;color:#1C265D;margin:0 0 4px 0;">
       Maria Lopez
@@ -600,7 +600,7 @@ Load `data/cases.json` from `content-collection` to add real client references:
     <p style="font-family:'Dosis',Verdana,sans-serif;font-size:12px;color:#64748b;margin:0 0 12px 0;">
       Directora de Operaciones, Empresa XYZ
     </p>
-    <a href="https://www.foodles.es/blog/referencias-foodles-16/caso-empresa-xyz-456"
+    <a href="https://www.enterprise-demo.es/blog/referencias-enterprise-demo-16/caso-empresa-xyz-456"
       style="font-family:'Dosis',Verdana,sans-serif;font-size:13px;color:#6B68FA;text-decoration:underline;">
       Ver caso de exito completo
     </a>
@@ -648,7 +648,7 @@ Full HTML for a monthly newsletter with header, hero, two content blocks, CTA, a
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
-  <title>Newsletter Foodles -- Enero 2026</title>
+  <title>Newsletter Enterprise Demo -- Enero 2026</title>
   <!--[if mso]>
   <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
   <![endif]-->
@@ -672,7 +672,7 @@ Full HTML for a monthly newsletter with header, hero, two content blocks, CTA, a
         <!-- Header -->
         <tr>
           <td align="center" style="background-color:#1C265D;padding:24px 32px;">
-            <img src="https://www.foodles.es/web/image/website/1/logo" alt="Foodles" width="140" style="display:block;max-width:140px;height:auto;border:0;">
+            <img src="https://www.enterprise-demo.es/web/image/website/1/logo" alt="Enterprise Demo" width="140" style="display:block;max-width:140px;height:auto;border:0;">
           </td>
         </tr>
 
@@ -707,7 +707,7 @@ Full HTML for a monthly newsletter with header, hero, two content blocks, CTA, a
             <p style="font-family:'Dosis',Verdana,sans-serif;font-size:15px;line-height:1.6;color:#334155;margin:0 0 16px 0;">
               Resumen breve del articulo o novedad. Dos o tres frases que capten la atencion del lector y le motiven a leer mas sobre el tema.
             </p>
-            <a href="https://www.foodles.es/blog/blog-foodles-1/articulo-1" style="font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:600;color:#6B68FA;text-decoration:underline;">
+            <a href="https://www.enterprise-demo.es/blog/blog-enterprise-demo-1/articulo-1" style="font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:600;color:#6B68FA;text-decoration:underline;">
               Leer articulo completo
             </a>
           </td>
@@ -729,7 +729,7 @@ Full HTML for a monthly newsletter with header, hero, two content blocks, CTA, a
             <p style="font-family:'Dosis',Verdana,sans-serif;font-size:15px;line-height:1.6;color:#334155;margin:0 0 16px 0;">
               Segundo bloque de contenido. Puede ser un caso de exito, una guia practica o una novedad de producto.
             </p>
-            <a href="https://www.foodles.es/blog/blog-foodles-1/articulo-2" style="font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:600;color:#6B68FA;text-decoration:underline;">
+            <a href="https://www.enterprise-demo.es/blog/blog-enterprise-demo-1/articulo-2" style="font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:600;color:#6B68FA;text-decoration:underline;">
               Descubrir mas
             </a>
           </td>
@@ -741,7 +741,7 @@ Full HTML for a monthly newsletter with header, hero, two content blocks, CTA, a
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
               <tr>
                 <td style="background-color:#E5B92B;border-radius:100px;">
-                  <a href="https://www.foodles.es/contacto-foodles"
+                  <a href="https://www.enterprise-demo.es/contacto-enterprise-demo"
                     style="display:block;padding:12px 28px;font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:700;color:#1C265D;text-transform:uppercase;text-decoration:none;text-align:center;">
                     Hablar con un consultor
                   </a>
@@ -758,7 +758,7 @@ Full HTML for a monthly newsletter with header, hero, two content blocks, CTA, a
               <tr>
                 <td align="center" style="padding-bottom:12px;">
                   <p style="font-family:'Dosis',Verdana,sans-serif;font-size:13px;font-weight:600;color:#1C265D;margin:0;">
-                    Foodles Business Solutions S.L.
+                    Enterprise Demo Business Solutions S.L.
                   </p>
                 </td>
               </tr>
@@ -769,7 +769,7 @@ Full HTML for a monthly newsletter with header, hero, two content blocks, CTA, a
                     <br>
                     <a href="${unsubscribe_url}" style="color:#6B68FA;text-decoration:underline;">Darme de baja</a>
                     &nbsp;|&nbsp;
-                    <a href="https://www.foodles.es/politica-de-privacidad" style="color:#6B68FA;text-decoration:underline;">Politica de privacidad</a>
+                    <a href="https://www.enterprise-demo.es/politica-de-privacidad" style="color:#6B68FA;text-decoration:underline;">Politica de privacidad</a>
                   </p>
                 </td>
               </tr>
@@ -819,14 +819,14 @@ Full HTML for a single-offer promotional email.
         <!-- Header -->
         <tr>
           <td align="center" style="background-color:#1C265D;padding:24px 32px;">
-            <img src="https://www.foodles.es/web/image/website/1/logo" alt="Foodles" width="140" style="display:block;max-width:140px;height:auto;border:0;">
+            <img src="https://www.enterprise-demo.es/web/image/website/1/logo" alt="Enterprise Demo" width="140" style="display:block;max-width:140px;height:auto;border:0;">
           </td>
         </tr>
 
         <!-- Hero Image -->
         <tr>
           <td style="padding:0;">
-            <img src="https://www.foodles.es/web/image/ir.attachment/hero-almacen" alt="Almacen automatizado con Odoo" width="600" style="display:block;max-width:100%;height:auto;border:0;">
+            <img src="https://www.enterprise-demo.es/web/image/ir.attachment/hero-almacen" alt="Almacen automatizado con Odoo" width="600" style="display:block;max-width:100%;height:auto;border:0;">
           </td>
         </tr>
 
@@ -871,7 +871,7 @@ Full HTML for a single-offer promotional email.
           <td align="center" style="padding:8px 32px 32px 32px;">
             <!--[if mso]>
             <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
-              href="https://www.foodles.es/contacto-foodles" style="height:44px;v-text-anchor:middle;width:220px;"
+              href="https://www.enterprise-demo.es/contacto-enterprise-demo" style="height:44px;v-text-anchor:middle;width:220px;"
               arcsize="50%" strokecolor="#E5B92B" fillcolor="#E5B92B">
               <w:anchorlock/>
               <center style="color:#1C265D;font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:bold;text-transform:uppercase;">
@@ -880,7 +880,7 @@ Full HTML for a single-offer promotional email.
             </v:roundrect>
             <![endif]-->
             <!--[if !mso]><!-->
-            <a href="https://www.foodles.es/contacto-foodles"
+            <a href="https://www.enterprise-demo.es/contacto-enterprise-demo"
               style="display:inline-block;background-color:#E5B92B;color:#1C265D;font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;text-decoration:none;padding:12px 28px;border-radius:100px;line-height:1;">
               Solicitar demo
             </a>
@@ -895,7 +895,7 @@ Full HTML for a single-offer promotional email.
               <tr>
                 <td align="center" style="padding-bottom:12px;">
                   <p style="font-family:'Dosis',Verdana,sans-serif;font-size:13px;font-weight:600;color:#1C265D;margin:0;">
-                    Foodles Business Solutions S.L.
+                    Enterprise Demo Business Solutions S.L.
                   </p>
                 </td>
               </tr>
@@ -904,7 +904,7 @@ Full HTML for a single-offer promotional email.
                   <p style="font-family:'Dosis',Verdana,sans-serif;font-size:11px;color:#94a3b8;margin:0;line-height:1.6;">
                     <a href="${unsubscribe_url}" style="color:#6B68FA;text-decoration:underline;">Darme de baja</a>
                     &nbsp;|&nbsp;
-                    <a href="https://www.foodles.es/politica-de-privacidad" style="color:#6B68FA;text-decoration:underline;">Politica de privacidad</a>
+                    <a href="https://www.enterprise-demo.es/politica-de-privacidad" style="color:#6B68FA;text-decoration:underline;">Politica de privacidad</a>
                   </p>
                 </td>
               </tr>

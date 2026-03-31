@@ -264,7 +264,7 @@ eval $(./scripts/auth_json2.sh)
 
 ### Contributors
 
-- David Gómez (FOODLES)
+- David Gómez (ENTERPRISE DEMO)
 - Claude Sonnet 4.5 (AI Assistant)
 
 ### License

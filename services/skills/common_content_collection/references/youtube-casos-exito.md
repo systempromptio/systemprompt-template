@@ -1,9 +1,9 @@
-# Casos de Éxito Foodles — YouTube
+# Casos de Éxito Enterprise Demo — YouTube
 
 ## Playlist Principal
 - **URL:** https://www.youtube.com/playlist?list=PL9KT1AOP2NPTdVMjx813ZQGTVo8XiSWu5
-- **Nombre:** Casos de éxito FOODLES
-- **Canal:** https://www.youtube.com/@foodles_es
+- **Nombre:** Casos de éxito ENTERPRISE DEMO
+- **Canal:** https://www.youtube.com/@enterprise-demo_es
 
 ## Videos de la Playlist
 
@@ -46,7 +46,7 @@ curl -s "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=VIDEO_ID&k
 ### Para redes sociales
 - Link directo al video
 - Mencionar empresa y sector
-- Hashtags: #OdooCasosDeÉxito #Foodles #Odoo
+- Hashtags: #OdooCasosDeÉxito #Enterprise Demo #Odoo
 
 ## Thumbnails
 

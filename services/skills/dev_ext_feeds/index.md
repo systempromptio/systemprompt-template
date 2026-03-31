@@ -1,6 +1,6 @@
 ---
 name: "Extension: Content Feeds"
-description: "RssFeedProvider and SitemapProvider trait implementations for foodles.com extensions"
+description: "RssFeedProvider and SitemapProvider trait implementations for demo.systemprompt.io extensions"
 ---
 
 # Extension: Content Feeds

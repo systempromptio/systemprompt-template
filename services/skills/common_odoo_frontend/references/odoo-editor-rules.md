@@ -115,7 +115,7 @@ Rules:
 
 ## Class Preservation
 
-Odoo Editor preserves custom CSS classes on elements. This means `iw-*` classes from the Foodles Frontend CSS will persist through editing sessions.
+Odoo Editor preserves custom CSS classes on elements. This means `iw-*` classes from the Enterprise Demo Frontend CSS will persist through editing sessions.
 
 **Safe to use:** Any `iw-*` class on `<section>`, `<div>`, `<p>`, `<h*>`, `<span>`, `<a>`, `<img>`, `<table>`, `<ul>`, `<li>`, `<blockquote>`
 

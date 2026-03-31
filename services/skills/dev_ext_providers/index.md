@@ -1,6 +1,6 @@
 ---
 name: "Extension: AI & Tool Providers"
-description: "LlmProvider, ToolProvider trait implementations and MCP server integration for foodles.com extensions"
+description: "LlmProvider, ToolProvider trait implementations and MCP server integration for demo.systemprompt.io extensions"
 ---
 
 # Extension: AI & Tool Providers

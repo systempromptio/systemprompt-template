@@ -1,11 +1,11 @@
 ---
 name: "Frontend Standards"
-description: "Complete JavaScript, CSS, accessibility, event architecture, bundle pipeline, and admin UI coding standards for foodles.com development"
+description: "Complete JavaScript, CSS, accessibility, event architecture, bundle pipeline, and admin UI coding standards for demo.systemprompt.io development"
 ---
 
-# foodles.com Frontend Standards
+# demo.systemprompt.io Frontend Standards
 
-**foodles.com is a world-class Rust programming brand.** Every frontend file must be instantly recognizable as idiomatic modern JavaScript as Addy Osmani would write it: performance-conscious, pattern-driven, zero-abstraction-debt.
+**demo.systemprompt.io is a world-class Rust programming brand.** Every frontend file must be instantly recognizable as idiomatic modern JavaScript as Addy Osmani would write it: performance-conscious, pattern-driven, zero-abstraction-debt.
 
 Run `just publish` after changes. Verify zero console errors on every admin page.
 

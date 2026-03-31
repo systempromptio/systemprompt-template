@@ -1,5 +1,5 @@
 /**
- * FOODLES EMAIL CAMPAIGN BUILDER - SCRIPTS
+ * ENTERPRISE DEMO EMAIL CAMPAIGN BUILDER - SCRIPTS
  * Theme toggle, form validation, and animations
  */
 
@@ -11,7 +11,7 @@
   // ═══════════════════════════════════════════════════════════════════════════
   
   const ThemeManager = {
-    STORAGE_KEY: 'foodles-theme',
+    STORAGE_KEY: 'enterprise-demo-theme',
     DARK: 'dark',
     LIGHT: 'light',
     
@@ -307,7 +307,7 @@
   });
 
   // Expose for external use if needed
-  window.FoodlesCampaign = {
+  window.Enterprise DemoCampaign = {
     ThemeManager,
     FormValidator
   };

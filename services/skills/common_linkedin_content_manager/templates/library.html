@@ -13,8 +13,8 @@
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   
-  <!-- Foodles UI -->
-  <link rel="stylesheet" href="../assets/css/foodles-ui.css">
+  <!-- Enterprise Demo UI -->
+  <link rel="stylesheet" href="../assets/css/enterprise-demo-ui.css">
   
   <style>
     .filter-bar {
@@ -55,7 +55,7 @@
       width: 80px;
       height: 80px;
       border-radius: var(--radius-sm);
-      background: var(--foodles-gradient-blue);
+      background: var(--enterprise-demo-gradient-blue);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -83,7 +83,7 @@
       display: none;
       gap: var(--spacing-md);
       padding: var(--spacing-md) var(--spacing-lg);
-      background: var(--foodles-blue-space);
+      background: var(--enterprise-demo-blue-space);
       color: white;
       border-radius: var(--radius-sm);
       margin-bottom: var(--spacing-lg);
@@ -124,7 +124,7 @@
       color: var(--text-primary);
     }
     .tab-pill.active {
-      background: var(--foodles-blue-lilac);
+      background: var(--enterprise-demo-blue-lilac);
       color: white;
     }
     .empty-state {
@@ -171,7 +171,7 @@
         <h1 class="mb-0">Biblioteca de Contenido</h1>
         <p class="text-muted mb-0">Gestiona todas tus publicaciones de LinkedIn</p>
       </div>
-      <a href="editor.html" class="btn-foodles btn-primary">
+      <a href="editor.html" class="btn-enterprise-demo btn-primary">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/>
         </svg>
@@ -228,10 +228,10 @@
     <!-- Bulk Actions Bar -->
     <div class="bulk-actions" id="bulkActions">
       <span><strong id="selectedCount">0</strong> seleccionados</span>
-      <button class="btn-foodles btn-outline btn-sm" style="border-color: white; color: white;">Archivar</button>
-      <button class="btn-foodles btn-outline btn-sm" style="border-color: white; color: white;">Duplicar</button>
-      <button class="btn-foodles btn-outline btn-sm" style="border-color: #ef4444; color: #ef4444;">Eliminar</button>
-      <button class="btn-foodles btn-ghost btn-sm" style="color: white; margin-left: auto;" id="clearSelection">Cancelar</button>
+      <button class="btn-enterprise-demo btn-outline btn-sm" style="border-color: white; color: white;">Archivar</button>
+      <button class="btn-enterprise-demo btn-outline btn-sm" style="border-color: white; color: white;">Duplicar</button>
+      <button class="btn-enterprise-demo btn-outline btn-sm" style="border-color: #ef4444; color: #ef4444;">Eliminar</button>
+      <button class="btn-enterprise-demo btn-ghost btn-sm" style="color: white; margin-left: auto;" id="clearSelection">Cancelar</button>
     </div>
 
     <!-- Content List -->
@@ -245,7 +245,7 @@
           <div class="flex-grow-1">
             <div class="d-flex align-center gap-sm">
               <strong>Como optimizar tu ERP para escalabilidad</strong>
-              <span class="badge-foodles badge--scheduled">Programado</span>
+              <span class="badge-enterprise-demo badge--scheduled">Programado</span>
             </div>
             <p class="content-preview">
               En el camino hacia la transformacion digital, elegir el sistema de gestion empresarial adecuado es solo el primer paso. La verdadera diferencia esta en como lo configuras para crecer contigo...
@@ -257,19 +257,19 @@
             </div>
           </div>
           <div class="post-actions">
-            <button class="btn-foodles btn-ghost btn-sm">Editar</button>
-            <button class="btn-foodles btn-ghost btn-sm">Duplicar</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Editar</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Duplicar</button>
           </div>
         </div>
 
         <!-- Post Item -->
         <div class="post-card">
           <input type="checkbox" class="post-checkbox" style="margin-top: 4px;">
-          <div class="post-thumbnail" style="background: var(--foodles-gradient-yellow);">CAR</div>
+          <div class="post-thumbnail" style="background: var(--enterprise-demo-gradient-yellow);">CAR</div>
           <div class="flex-grow-1">
             <div class="d-flex align-center gap-sm">
               <strong>Caso de exito: Fabricacion conectada en Industria 4.0</strong>
-              <span class="badge-foodles badge--scheduled">Programado</span>
+              <span class="badge-enterprise-demo badge--scheduled">Programado</span>
             </div>
             <p class="content-preview">
               Cuando nuestro cliente del sector manufacturero nos contacto, tenia un reto claro: conectar todas sus lineas de produccion en tiempo real. Hoy, su planta opera con visibilidad completa...
@@ -281,8 +281,8 @@
             </div>
           </div>
           <div class="post-actions">
-            <button class="btn-foodles btn-ghost btn-sm">Editar</button>
-            <button class="btn-foodles btn-ghost btn-sm">Duplicar</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Editar</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Duplicar</button>
           </div>
         </div>
 
@@ -293,7 +293,7 @@
           <div class="flex-grow-1">
             <div class="d-flex align-center gap-sm">
               <strong>5 metricas clave para optimizar tu inventario</strong>
-              <span class="badge-foodles badge--draft">Borrador</span>
+              <span class="badge-enterprise-demo badge--draft">Borrador</span>
             </div>
             <p class="content-preview">
               Gestionar el inventario sin datos es como conducir con los ojos cerrados. Estas son las cinco metricas que todo responsable de almacen deberia monitorizar diariamente...
@@ -305,8 +305,8 @@
             </div>
           </div>
           <div class="post-actions">
-            <button class="btn-foodles btn-ghost btn-sm">Editar</button>
-            <button class="btn-foodles btn-ghost btn-sm">Duplicar</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Editar</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Duplicar</button>
           </div>
         </div>
 
@@ -317,7 +317,7 @@
           <div class="flex-grow-1">
             <div class="d-flex align-center gap-sm">
               <strong>Transformacion digital en PYMES: por donde empezar</strong>
-              <span class="badge-foodles badge--published">Publicado</span>
+              <span class="badge-enterprise-demo badge--published">Publicado</span>
             </div>
             <p class="content-preview">
               La digitalizacion no es solo para grandes empresas. De hecho, las PYMES tienen una ventaja: la agilidad para adaptarse rapidamente. Aqui te explico los primeros pasos fundamentales...
@@ -329,19 +329,19 @@
             </div>
           </div>
           <div class="post-actions">
-            <button class="btn-foodles btn-ghost btn-sm">Ver metricas</button>
-            <button class="btn-foodles btn-ghost btn-sm">Duplicar</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Ver metricas</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Duplicar</button>
           </div>
         </div>
 
         <!-- Post Item Published -->
         <div class="post-card">
           <input type="checkbox" class="post-checkbox" style="margin-top: 4px;">
-          <div class="post-thumbnail" style="background: var(--foodles-gradient-yellow);">VID</div>
+          <div class="post-thumbnail" style="background: var(--enterprise-demo-gradient-yellow);">VID</div>
           <div class="flex-grow-1">
             <div class="d-flex align-center gap-sm">
               <strong>Tutorial: Configuracion inicial de Odoo Inventory</strong>
-              <span class="badge-foodles badge--published">Publicado</span>
+              <span class="badge-enterprise-demo badge--published">Publicado</span>
             </div>
             <p class="content-preview">
               En este video te muestro paso a paso como configurar el modulo de Inventario de Odoo desde cero. Cubrimos ubicaciones, reglas de reposicion y lotes...
@@ -353,8 +353,8 @@
             </div>
           </div>
           <div class="post-actions">
-            <button class="btn-foodles btn-ghost btn-sm">Ver metricas</button>
-            <button class="btn-foodles btn-ghost btn-sm">Duplicar</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Ver metricas</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Duplicar</button>
           </div>
         </div>
 
@@ -365,7 +365,7 @@
           <div class="flex-grow-1">
             <div class="d-flex align-center gap-sm">
               <strong>Por que el mantenimiento reactivo te sale mas caro</strong>
-              <span class="badge-foodles badge--published">Publicado</span>
+              <span class="badge-enterprise-demo badge--published">Publicado</span>
             </div>
             <p class="content-preview">
               Esperar a que algo se rompa parece la opcion mas economica, pero los numeros cuentan otra historia. Te explico por que invertir en mantenimiento preventivo es una decision estrategica...
@@ -377,8 +377,8 @@
             </div>
           </div>
           <div class="post-actions">
-            <button class="btn-foodles btn-ghost btn-sm">Ver metricas</button>
-            <button class="btn-foodles btn-ghost btn-sm">Duplicar</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Ver metricas</button>
+            <button class="btn-enterprise-demo btn-ghost btn-sm">Duplicar</button>
           </div>
         </div>
 
@@ -388,13 +388,13 @@
       <div class="d-flex justify-between align-center p-4" style="border-top: 1px solid var(--border-color);">
         <span class="text-muted">Mostrando 1-6 de 45 publicaciones</span>
         <div class="d-flex gap-sm">
-          <button class="btn-foodles btn-ghost btn-sm" disabled>Anterior</button>
-          <button class="btn-foodles btn-ghost btn-sm">1</button>
-          <button class="btn-foodles btn-secondary btn-sm">2</button>
-          <button class="btn-foodles btn-ghost btn-sm">3</button>
-          <button class="btn-foodles btn-ghost btn-sm">...</button>
-          <button class="btn-foodles btn-ghost btn-sm">8</button>
-          <button class="btn-foodles btn-ghost btn-sm">Siguiente</button>
+          <button class="btn-enterprise-demo btn-ghost btn-sm" disabled>Anterior</button>
+          <button class="btn-enterprise-demo btn-ghost btn-sm">1</button>
+          <button class="btn-enterprise-demo btn-secondary btn-sm">2</button>
+          <button class="btn-enterprise-demo btn-ghost btn-sm">3</button>
+          <button class="btn-enterprise-demo btn-ghost btn-sm">...</button>
+          <button class="btn-enterprise-demo btn-ghost btn-sm">8</button>
+          <button class="btn-enterprise-demo btn-ghost btn-sm">Siguiente</button>
         </div>
       </div>
     </div>
@@ -403,7 +403,7 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../assets/js/foodles-ui.js"></script>
+  <script src="../assets/js/enterprise-demo-ui.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const checkboxes = document.querySelectorAll('.post-checkbox');

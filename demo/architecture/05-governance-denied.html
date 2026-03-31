@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo 05: Governance Deny — foodles.com</title>
+    <title>Demo 05: Governance Deny — demo.systemprompt.io</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@600;700&family=Roboto:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -236,7 +236,7 @@
 
     <div class="content">
         <p class="intro">
-            User-scope agent tries to call an admin-only MCP tool. The governance hook fires and <strong>denies</strong> the call. The tool never executes.
+            Two denial scenarios via direct governance API calls. Part 1: <strong>scope restriction</strong> &mdash; user-scope agent blocked from admin tools. Part 2: <strong>blocklist</strong> &mdash; destructive tool blocked regardless of scope. Cost: <strong>free</strong>.
         </p>
 
         <!-- ═══ Step 1: Direct API Call ═══ -->

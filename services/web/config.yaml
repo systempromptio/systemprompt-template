@@ -10,13 +10,13 @@
 # Branding (required for validation, also in config/theme.yaml for runtime)
 # ===== CUSTOMIZE THESE =====
 branding:
-  name: "foodles"
-  title: "Foodles — Smart Corporate Catering"
+  name: "enterprise-demo"
+  title: "Enterprise Demo — AI Agent Platform"
   description: "One platform to secure, distribute, and observe AI agents across your entire organization. Role-based access, audit trails, and cost visibility from day one."
-  copyright: "2026 Foodles"
-  themeColor: "#ed6841"
+  copyright: "2026 systemprompt.io"
+  themeColor: "#2563eb"
   display_sitename: true
-  twitter_handle: "@foodaborad"
+  twitter_handle: "@systempromptio"
   image: "/files/images/logo.png"
   logo:
     primary:

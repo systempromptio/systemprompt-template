@@ -103,7 +103,7 @@ async fn inject_mcp_access_and_costs(pool: &Arc<PgPool>, data: &mut serde_json::
                 "action": r.action,
                 "is_granted": r.action == "granted",
                 "description": r.description,
-                "created_at": r.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+                "created_at": r.created_at.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string(),
             })
         })
         .collect();
@@ -117,13 +117,14 @@ async fn inject_mcp_access_and_costs(pool: &Arc<PgPool>, data: &mut serde_json::
         .iter()
         .map(|r| {
             let total = r.input_tokens + r.output_tokens;
+            let pct = total.saturating_mul(100) / max_tokens;
             json!({
                 "label": r.label,
                 "input_tokens": r.input_tokens,
                 "output_tokens": r.output_tokens,
                 "total_tokens": total,
                 "event_count": r.event_count,
-                "pct": (total as f64 / max_tokens as f64 * 100.0) as i64,
+                "pct": pct,
             })
         })
         .collect();
@@ -137,19 +138,23 @@ async fn inject_mcp_access_and_costs(pool: &Arc<PgPool>, data: &mut serde_json::
 }
 
 async fn inject_governance_data(pool: &Arc<PgPool>, data: &mut serde_json::Value) {
-    let gov_events = repositories::governance::fetch_governance_events(pool)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to fetch governance events for dashboard");
-            vec![]
-        });
-    let gov_total = i64::try_from(gov_events.len()).unwrap_or(0);
-    let gov_denied: i64 = i64::try_from(gov_events.iter().filter(|r| r.decision == "deny").count()).unwrap_or(0);
-    let gov_allowed = gov_total - gov_denied;
-    let gov_secret_breaches: i64 = i64::try_from(gov_events
-        .iter()
-        .filter(|r| r.reason.contains("secret") || r.reason.contains("Secret"))
-        .count()).unwrap_or(0);
+    let (gov_events, gov_counts) = tokio::join!(
+        repositories::governance::fetch_governance_events(pool),
+        repositories::governance::fetch_governance_counts(pool),
+    );
+    let gov_events = gov_events.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch governance events for dashboard");
+        vec![]
+    });
+    let counts = gov_counts.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch governance counts for dashboard");
+        repositories::governance::GovernanceCounts {
+            total: 0,
+            allowed: 0,
+            denied: 0,
+            secret_breaches: 0,
+        }
+    });
     let gov_json: Vec<serde_json::Value> = gov_events
         .iter()
         .map(|r| {
@@ -160,16 +165,16 @@ async fn inject_governance_data(pool: &Arc<PgPool>, data: &mut serde_json::Value
                 "decision": r.decision,
                 "is_denied": r.decision == "deny",
                 "reason": r.reason,
-                "created_at": r.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+                "created_at": r.created_at.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string(),
             })
         })
         .collect();
 
     if let Some(obj) = data.as_object_mut() {
-        obj.insert("governance_total".to_string(), json!(gov_total));
-        obj.insert("governance_allowed".to_string(), json!(gov_allowed));
-        obj.insert("governance_denied".to_string(), json!(gov_denied));
-        obj.insert("governance_secret_breaches".to_string(), json!(gov_secret_breaches));
+        obj.insert("governance_total".to_string(), json!(counts.total));
+        obj.insert("governance_allowed".to_string(), json!(counts.allowed));
+        obj.insert("governance_denied".to_string(), json!(counts.denied));
+        obj.insert("governance_secret_breaches".to_string(), json!(counts.secret_breaches));
         obj.insert("governance_events".to_string(), json!(gov_json));
         obj.insert("has_governance_events".to_string(), json!(!gov_json.is_empty()));
     }

@@ -1,6 +1,6 @@
 plugin:
   id: systemprompt
-  name: Foodles
+  name: systemprompt
   description: Your AI consultant for building custom skills, agents, and secrets through guided Socratic interviews
   version: 2.1.0
   enabled: true
@@ -27,8 +27,8 @@ plugin:
   - onboarding
   category: platform
   author:
-    name: Foodles
-    email: help@foodles.com
+    name: systemprompt.io
+    email: support@systemprompt.io
   license: proprietary
   roles:
   - viewer

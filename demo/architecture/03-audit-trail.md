@@ -2,59 +2,59 @@
 
 ## What it does
 
-Queries the trace and cost systems to show what happened in Demos 01 and 02.
+Queries the governance_decisions table to show what happened in Demos 01 and 02 — the ALLOW and DENY decisions.
 
 ## Flow
 
 ```
-  CLI: infra logs trace list --limit 2
+  CLI: infra db query "SELECT ... FROM governance_decisions"
     │
     ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  Trace Store (PostgreSQL)                               │
-  │  SELECT trace_id, agent, status, event_count            │
-  │  FROM execution_traces                                  │
-  │  ORDER BY created_at DESC LIMIT 2                       │
-  │  (compile-time checked SQL via sqlx::query!{})          │
+  │  Governance Store (PostgreSQL)                          │
+  │  SELECT decision, tool_name, agent_id, agent_scope,     │
+  │         policy, reason                                  │
+  │  FROM governance_decisions                              │
+  │  ORDER BY created_at DESC LIMIT 5                       │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  Trace Detail: infra logs trace show <id> --all         │
+  │  Expected Results                                       │
   │                                                         │
-  │  Per trace shows:                                       │
-  │  ├── AI requests (count, model, tokens, cost)           │
-  │  ├── MCP tool calls (tool_name, server, duration)       │
-  │  ├── Execution steps (step_type, timing)                │
-  │  ├── Skills loaded (skill_id, source)                   │
-  │  └── Governance decisions (allow/deny, rules)           │
+  │  Demo 01 (developer_agent):                             │
+  │    decision=allow, scope=admin, policy=default_allow    │
+  │                                                         │
+  │  Demo 02 (associate_agent):                             │
+  │    decision=deny, scope=user, policy=scope_restriction  │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
   │  Cost Breakdown: analytics costs breakdown --by agent   │
-  │                                                         │
-  │  Aggregates across traces:                              │
-  │  ├── developer_agent: $X.XX (3 AI requests)             │
-  │  └── associate_agent: $X.XX (1 AI request)              │
+  │  Aggregates across all agent activity                   │
   └─────────────────────────────────────────────────────────┘
 ```
 
 ## Data Model
 
 ```
-  execution_traces
-  ├── trace_id     : TraceId (UUID, primary key)
-  ├── agent        : AgentName (newtype)
-  ├── user_id      : UserId (newtype)
-  ├── session_id   : SessionId (newtype)
-  ├── status       : TraceStatus (enum)
-  ├── events       : Vec<TraceEvent> (JSONB)
-  └── created_at   : DateTime<Utc>
+  governance_decisions
+  ├── id             : String (UUID, primary key)
+  ├── user_id        : UserId (from JWT)
+  ├── session_id     : SessionId (from hook payload)
+  ├── tool_name      : String
+  ├── agent_id       : AgentName (newtype)
+  ├── agent_scope    : String ("admin" | "user")
+  ├── decision       : String ("allow" | "deny")
+  ├── policy         : String ("default_allow" | "scope_restriction" | ...)
+  ├── reason         : String
+  ├── evaluated_rules: JSONB (Vec<RuleEvaluation>)
+  └── created_at     : DateTime<Utc>
 ```
 
 ## Why Rust
 
-- **Compile-time SQL**: Every trace query uses `sqlx::query_as!{}` — the column names, types, and return struct are all verified at build time against the database schema
-- **Typed aggregation**: Cost breakdown returns typed `CostBreakdown { agent: AgentName, total_cost: Decimal, request_count: i64 }` — not raw tuples
-- **No audit gaps**: Because all IDs are newtypes, every event is guaranteed to carry the correct `TraceId` and `UserId` — you can't accidentally log with the wrong ID
+- **Compile-time SQL**: Every governance query uses `sqlx::query_as!{}` — column names, types, and return struct verified at build time
+- **Typed decisions**: `permissionDecision` is serialized from a Rust enum with exactly two variants: `Allow` and `Deny` — no free-form strings
+- **Audit fidelity**: The deny reason, policy name, and full rule evaluation chain are stored as typed JSONB — queryable and verifiable

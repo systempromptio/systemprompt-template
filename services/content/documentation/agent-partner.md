@@ -38,7 +38,7 @@ The defining characteristic of this agent is **data confidentiality**. The Distr
 | Property | Value |
 |----------|-------|
 | Agent ID | `partner_agent` |
-| Foodles Name | Distribution Agent |
+| Enterprise Demo Name | Distribution Agent |
 | Port | 9027 |
 | Endpoint | `http://localhost:8080/api/v1/agents/partner_agent` |
 | Protocol | A2A v0.3.0, JSONRPC |
@@ -53,7 +53,7 @@ The defining characteristic of this agent is **data confidentiality**. The Distr
 The Distribution Agent is defined in `services/agents/partner_agent.yaml`:
 
 ```yaml
-# Distribution Agent Configuration (Foodles Demo)
+# Distribution Agent Configuration (Enterprise Demo Demo)
 # Channel-partner-facing agent for OTA and distribution management
 
 agents:
@@ -188,7 +188,7 @@ Covers operational distribution workflows:
 
 - **Rate distribution**: Real-time visibility into rate pushes from PMS to all connected channels
 - **Parity monitoring**: Automated rate parity checking across all distribution channels
-- **Availability optimization**: Collaborative availability planning between Foodles and channel partners
+- **Availability optimization**: Collaborative availability planning between Enterprise Demo and channel partners
 - **Booking management**: Reservation flow tracking, modification handling, and cancellation processing
 
 ## Security Configuration
@@ -241,11 +241,11 @@ The Distribution Agent enforces strict data isolation:
 | Data Type | Visibility Rule |
 |-----------|----------------|
 | Commission rates | Visible only to the partner who owns the distribution agreement |
-| Performance metrics | Visible to the partner and to Foodles revenue management |
-| Booking details | Visible to the partner, the property, and Foodles operations |
-| Contract terms | Visible only to the partner and authorized Foodles staff |
+| Performance metrics | Visible to the partner and to Enterprise Demo revenue management |
+| Booking details | Visible to the partner, the property, and Enterprise Demo operations |
+| Contract terms | Visible only to the partner and authorized Enterprise Demo staff |
 | Rate data | Visible to the partner; aggregated anonymously for market trends |
-| Compliance status | Visible to the partner and Foodles compliance team |
+| Compliance status | Visible to the partner and Enterprise Demo compliance team |
 
 The agent never:
 

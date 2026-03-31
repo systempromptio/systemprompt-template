@@ -1,124 +1,133 @@
 ---
-title: "Terminal Demo: Agent Messaging — Allowed vs Refused"
-description: "Send messages to two agents with different scopes. The admin-scope agent executes MCP tools; the user-scope agent cannot. See both results on the dashboard."
+title: "Terminal Demo: Governance Decisions — Allowed vs Denied"
+description: "Call the governance API directly with curl to simulate Claude Code's PreToolUse hook. An admin-scope agent is allowed; a user-scope agent is denied. See both decisions on the dashboard."
 author: "systemprompt.io"
 slug: "demo-terminal-agents"
-keywords: "demo, terminal, agents, messaging, governance, scope, mcp"
+keywords: "demo, terminal, governance, curl, PreToolUse, scope, allow, deny"
 kind: "guide"
 public: true
-tags: ["demo", "terminal", "agents", "governance", "mcp"]
+tags: ["demo", "terminal", "governance", "curl", "scope"]
 published_at: "2026-03-27"
 updated_at: "2026-03-31"
 after_reading_this:
-  - "Send messages to agents via the CLI"
-  - "See how admin-scope agents can use MCP tools while user-scope agents cannot"
-  - "Retrieve structured artifacts from agent responses"
-  - "Audit the execution trace and verify event counts"
+  - "Call the governance endpoint with curl to simulate a PreToolUse hook"
+  - "See how admin-scope agents receive ALLOW while user-scope agents receive DENY"
+  - "Understand the two independent layers of defense (mapping vs rules)"
+  - "Query governance decisions from the database"
 related_docs:
   - title: "Setup & Authentication"
     url: "/documentation/demo-terminal-setup"
   - title: "Audit Trail Demo"
     url: "/documentation/demo-terminal-audit"
+  - title: "Agent Tracing Demo"
+    url: "/documentation/demo-terminal-agent-tracing"
   - title: "Agents"
     url: "/documentation/agents"
   - title: "Access Control"
     url: "/documentation/access-control"
-  - title: "Request Tracing Demo"
-    url: "/documentation/demo-terminal-tracing"
 ---
 
 ## Overview
 
-This demo sends the same request to two agents with different scopes. The `developer_agent` (admin scope, MCP access) returns a real list of agents. The `associate_agent` (user scope, no MCP) refuses because it has no tool access.
+These demos call the governance endpoint directly with curl — simulating Claude Code's PreToolUse hook. No agent session required.
 
-**Prerequisites:** Complete [Setup & Authentication](/documentation/demo-terminal-setup) first.
+The `developer_agent` (admin scope) is allowed to call MCP tools. The `associate_agent` (user scope) is denied. Both decisions are logged and visible on the dashboard.
+
+**Prerequisites:** Complete [Setup & Authentication](/documentation/demo-terminal-setup) first. You need a valid token in `demo/.token`.
 
 ---
 
 ## Demo 1: Allowed Path — Admin Scope
 
-### Create an Isolated Context
+### Governance Check
 
 ```bash
-CONTEXT_OUTPUT=$(systemprompt core contexts create --name "Demo 1 - Happy Path $(date +%H:%M:%S)" 2>&1)
-CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep "^ID:" | awk '{print $2}')
-echo "Context: $CONTEXT_ID"
+curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "mcp__systemprompt__list_agents",
+    "agent_id": "developer_agent",
+    "session_id": "demo-happy-path",
+    "tool_input": {}
+  }' | python3 -m json.tool
 ```
 
-### Send the Message
+The response contains `"decision": "allow"` — governance permits this tool call.
+
+### MCP Tool Result
+
+After governance returns ALLOW, Claude Code proceeds to execute the tool. You can run it manually:
 
 ```bash
-systemprompt admin agents message developer_agent \
-  -m "List all agents running on this platform" \
-  --context-id "$CONTEXT_ID" \
-  --blocking --timeout 60
+systemprompt plugins mcp call systemprompt list_agents
 ```
+
+This returns a real list of running agents from the platform.
 
 ### What Happens
 
-1. `developer_agent` receives the message
-2. It has **admin scope** and the **systemprompt MCP server** configured
-3. The agent calls the `list_agents` MCP tool
-4. The PreToolUse governance hook evaluates the call and **allows** it
-5. The tool executes and returns a real list of running agents
-
-> **Why context isolation?** Every agent conversation gets its own ContextId. This prevents cross-contamination between sessions and enables per-context artifact retrieval, cost tracking, and trace linking. The ContextId is a Rust newtype — the compiler prevents confusing it with other IDs.
+1. The curl request simulates a Claude Code PreToolUse hook firing
+2. The governance engine receives the request with JWT authentication
+3. It evaluates all rules for `developer_agent` (admin scope)
+4. `developer_agent` has admin scope and the `systemprompt` MCP server configured — the tool is allowed
+5. The response returns `"decision": "allow"` with the matched policy
+6. In a real deployment, Claude Code would then execute the MCP tool
 
 > **Why governance is synchronous:** The PreToolUse hook blocks tool execution until the backend returns allow/deny. This is the enforcement point. If governance were async, tools could execute before the decision arrives.
 
-### Retrieve the Artifact
-
-The agent produces a structured artifact — typed data that any surface (dashboard, mobile app, CLI) can render:
-
-```bash
-ARTIFACT_ID=$(systemprompt core artifacts list --context-id "$CONTEXT_ID" 2>&1 \
-  | grep -oP '"id":\s*"\K[^"]+' | head -1)
-
-systemprompt core artifacts show "$ARTIFACT_ID" --full
-```
-
 ### Dashboard
 
-Open [/admin/events](/admin/events). You should see the agent message event with:
+Open [/admin/governance](/admin/governance). You should see the allow decision with:
 
-- Agent name: `developer_agent`
-- Tool calls: 1 MCP call (`list_agents`)
-- Status: completed
+- Agent: `developer_agent`
+- Tool: `mcp__systemprompt__list_agents`
+- Decision: **allow**
+- Policy: the matched governance policy name
 
 ---
 
 ## Demo 2: Refused Path — User Scope
 
-### Create Context and Send Message
+### Governance Check
 
 ```bash
-CONTEXT_OUTPUT=$(systemprompt core contexts create --name "Demo 2 - Refused Path $(date +%H:%M:%S)" 2>&1)
-CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep "^ID:" | awk '{print $2}')
-echo "Context: $CONTEXT_ID"
-
-systemprompt admin agents message associate_agent \
-  -m "List all agents running on this platform using the CLI tools" \
-  --context-id "$CONTEXT_ID" \
-  --blocking --timeout 60
+curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "mcp__systemprompt__list_agents",
+    "agent_id": "associate_agent",
+    "session_id": "demo-refused-path",
+    "tool_input": {}
+  }' | python3 -m json.tool
 ```
+
+The response contains `"decision": "deny"` — governance blocks this tool call.
 
 ### What Happens
 
-1. `associate_agent` receives the message
-2. It has **user scope** and **no MCP servers** configured
-3. The agent cannot see any admin tools
-4. It responds: *"I do not have access to that tool. This operation requires elevated permissions that have not been granted to this agent."*
+1. The curl request simulates a PreToolUse hook for `associate_agent`
+2. The governance engine evaluates the `scope_restriction` rule
+3. `associate_agent` has **user scope** — admin-only tools are denied
+4. The response returns `"decision": "deny"` with the reason
 
-> **Why two layers of defense:** Demo 2 denies at the *mapping* level (no tools available). Demo 5 denies at the *rule* level (governance blocks the call). These are independent — even if tool mappings were misconfigured, governance would still catch unauthorized access.
+> **Defense-in-depth — two independent layers:**
+>
+> **Layer 1 — Mapping (preventive).** In a real Claude Code deployment, user-scope agents never even see admin tools. The MCP server mapping excludes them entirely — the tool does not appear in the agent's tool list.
+>
+> **Layer 2 — Governance rules (enforcement).** Even if mapping were misconfigured, the `scope_restriction` rule evaluates every PreToolUse hook call. A user-scope agent calling an admin tool is denied and logged. Neither layer depends on the other.
 
 ### Dashboard
 
-Open [/admin/events](/admin/events). This trace shows:
+Open [/admin/governance](/admin/governance). You should see the deny decision with:
 
-- Agent name: `associate_agent`
-- AI requests: 1
-- MCP tool calls: 0
-- The agent responded without attempting any tool use
+- Agent: `associate_agent`
+- Tool: `mcp__systemprompt__list_agents`
+- Decision: **deny**
+- Policy: `scope_restriction`
 
 ---
 
@@ -127,46 +136,34 @@ Open [/admin/events](/admin/events). This trace shows:
 | | developer_agent | associate_agent |
 |---|---|---|
 | **Scope** | admin | user |
-| **MCP servers** | systemprompt | none |
-| **Tool calls** | 1 (list_agents) | 0 |
-| **Artifact** | Structured agent list | None |
-| **Traced events** | ~11 | ~4 |
-| **AI requests** | ~3 | 1 |
+| **Governance decision** | allow | deny |
+| **Policy matched** | admin tool access | scope_restriction |
+| **Tool executes** | Yes (MCP call proceeds) | No (blocked by governance) |
+| **Defense layer** | Passes both mapping and rules | Blocked at mapping level; denied at rules level |
+| **AI cost** | Free (no AI call) | Free (no AI call) |
 
-The governance enforcement happens at the mapping level. The user-scope agent never sees admin tools — it cannot attempt a call that would be denied, because the tools are not available to it in the first place.
+Both decisions are logged in `governance_decisions` and visible on the governance dashboard.
 
 ---
 
 ## Audit
 
-Verify both traces exist with expected event counts:
+Verify both governance decisions exist in the database:
 
 ```bash
-# List the two most recent traces
-systemprompt infra logs trace list --limit 2
-
-# Inspect the happy path trace (should show ~11 events, 3 AI requests, 1 MCP call)
-TRACE_ID=$(systemprompt infra logs trace list --limit 1 2>&1 | grep -oP '"trace_id":\s*"\K[0-9a-f-]+' | head -1)
-systemprompt infra logs trace show "$TRACE_ID" --all
-
-# Cost breakdown by agent
-systemprompt analytics costs breakdown --by agent
-
-# Governance log (most recent decision)
-tail -5 /tmp/systemprompt-governance-*.log
+systemprompt infra db query \
+  "SELECT decision, tool_name, agent_id, agent_scope, policy FROM governance_decisions ORDER BY created_at DESC LIMIT 5"
 ```
 
 **Expected results:**
 
-| | developer_agent | associate_agent |
-|---|---|---|
-| Trace events | ~11 | ~4 |
-| AI requests | ~3 | 1 |
-| MCP tool calls | 1 | 0 |
-| Governance decisions | 1 (allow) | 0 |
+| decision | tool_name | agent_id | agent_scope | policy |
+|---|---|---|---|---|
+| deny | mcp__systemprompt__list_agents | associate_agent | user | scope_restriction |
+| allow | mcp__systemprompt__list_agents | developer_agent | admin | admin tool access |
 
 ---
 
 ## Next
 
-Run [Audit Trails & Costs](/documentation/demo-terminal-audit) to inspect the traces generated by these two demos.
+Run [Audit Trails & Costs](/documentation/demo-terminal-audit) to inspect the governance trail and cost breakdown from these two demos.

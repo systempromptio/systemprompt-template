@@ -24,7 +24,7 @@ Every presentation is a single HTML file with embedded CSS and JS. No external d
   <title>Presentation Title</title>
   <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;600;700&display=swap" rel="stylesheet"/>
   <style>
-    /* Design tokens from foodles-frontend.css (embed relevant subset) */
+    /* Design tokens from enterprise-demo-frontend.css (embed relevant subset) */
     /* Slide layout CSS */
     /* Animation CSS */
   </style>
@@ -121,7 +121,7 @@ Dark gradient background, centered content, logo optional.
 ```html
 <section class="slide" style="background: linear-gradient(160deg, #1C265D 0%, #6B68FA 50%, #8AC2DB 100%); color: #fff;">
   <div class="slide-content text-center">
-    <p class="iw-overline mb-3" style="color: #E5B92B;">FOODLES BUSINESS SOLUTIONS</p>
+    <p class="iw-overline mb-3" style="color: #E5B92B;">ENTERPRISE DEMO BUSINESS SOLUTIONS</p>
     <h1 class="iw-heading-xl mb-4" style="color: #fff;">Titulo de la presentacion</h1>
     <p class="iw-body-lg" style="color: rgba(255,255,255,0.8);">Subtitulo o contexto</p>
   </div>
@@ -203,8 +203,8 @@ Marks a new section/topic within the presentation.
     <h2 class="iw-heading-lg mb-4" style="color: #fff;">Siguiente paso</h2>
     <p class="iw-body-lg mb-4" style="color: rgba(255,255,255,0.85);">Contacta con nuestro equipo para una demo personalizada.</p>
     <div class="d-flex gap-3 justify-content-center flex-wrap">
-      <a href="mailto:info@foodles.es" class="iw-btn iw-btn-primary iw-btn-lg">Contactar</a>
-      <a href="https://www.foodles.es" class="iw-btn iw-btn-ghost-light iw-btn-lg">foodles.es</a>
+      <a href="mailto:info@enterprise-demo.es" class="iw-btn iw-btn-primary iw-btn-lg">Contactar</a>
+      <a href="https://www.enterprise-demo.es" class="iw-btn iw-btn-ghost-light iw-btn-lg">enterprise-demo.es</a>
     </div>
   </div>
 </section>
@@ -273,7 +273,7 @@ When the user wants a presentation, generate 3 style previews as mini HTML files
 | Calm/Focused | "Swiss Minimal" (lots of whitespace, thin type), "Soft Muted" (light sky tones, subtle), "Paper Clean" (off-white, minimal accents) |
 | Inspired/Moved | "Cinematic Dark" (Blue Space, large images, fade reveals), "Warm Editorial" (yellow accents, serif quotes), "Atmospheric" (gradient overlays, depth) |
 
-All styles use exclusively Foodles brand colors and Dosis font.
+All styles use exclusively Enterprise Demo brand colors and Dosis font.
 
 ## PPT Conversion
 

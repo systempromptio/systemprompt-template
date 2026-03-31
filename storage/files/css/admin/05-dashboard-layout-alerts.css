@@ -100,12 +100,17 @@
 .dashboard-two-col {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--sp-space-6);
+    gap: var(--sp-space-8);
     margin-bottom: var(--sp-space-6);
 }
 
 .dashboard-two-col > div {
     min-width: 0;
+}
+
+.dashboard-two-col > div + div {
+    padding-left: var(--sp-space-4);
+    border-left: 1px solid var(--sp-border-subtle);
 }
 
 .dashboard-two-col > div > .table-container {

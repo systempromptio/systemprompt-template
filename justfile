@@ -1,4 +1,4 @@
-# foodles.com
+# systemprompt-template
 set dotenv-load
 
 CLI_RELEASE := "target/release/systemprompt"

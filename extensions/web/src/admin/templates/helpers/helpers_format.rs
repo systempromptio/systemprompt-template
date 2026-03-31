@@ -20,7 +20,8 @@ impl HelperDef for FormatDateHelper {
                 .map(|dt| dt.and_utc().fixed_offset())
         }) {
             Ok(dt) => {
-                let formatted = dt.format("%b %d, %Y %I:%M %p").to_string();
+                let local_dt = dt.with_timezone(&chrono::Local);
+                let formatted = local_dt.format("%b %d, %Y %I:%M %p").to_string();
                 out.write(&formatted)?;
             }
             Err(_) => {
@@ -67,7 +68,7 @@ impl HelperDef for RelativeTimeHelper {
                         if days < 30 {
                             format!("{days}d ago")
                         } else {
-                            dt.format("%b %d, %Y %I:%M %p").to_string()
+                            dt.with_timezone(&chrono::Local).format("%b %d, %Y %I:%M %p").to_string()
                         }
                     }
                 };

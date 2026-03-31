@@ -1,6 +1,6 @@
-# Foodles
+# Enterprise Demo
 
-Forked from Foodles. See below for historical changelog.
+Forked from Enterprise Demo. See below for historical changelog.
 
 ---
 
@@ -9,4 +9,4 @@ Forked from Foodles. See below for historical changelog.
 ## 1.0.0 - Enterprise Demo
 
 Initial enterprise demo release based on the systemprompt platform.
-All proprietary content replaced with Foodles placeholder branding.
+All proprietary content replaced with Enterprise Demo placeholder branding.

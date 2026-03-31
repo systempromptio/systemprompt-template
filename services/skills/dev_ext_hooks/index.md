@@ -1,6 +1,6 @@
 ---
 name: "Extension: Hooks & Events"
-description: "Hook catalog, lifecycle events, hook scripts, and event-driven automation for foodles.com extensions"
+description: "Hook catalog, lifecycle events, hook scripts, and event-driven automation for demo.systemprompt.io extensions"
 ---
 
 # Extension: Hooks & Events

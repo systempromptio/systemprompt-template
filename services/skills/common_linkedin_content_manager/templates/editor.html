@@ -13,8 +13,8 @@
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   
-  <!-- Foodles UI -->
-  <link rel="stylesheet" href="../assets/css/foodles-ui.css">
+  <!-- Enterprise Demo UI -->
+  <link rel="stylesheet" href="../assets/css/enterprise-demo-ui.css">
   
   <style>
     .editor-layout {
@@ -38,7 +38,7 @@
       text-align: right;
       margin-top: var(--spacing-xs);
     }
-    .char-count--warning { color: var(--foodles-warm-yellow); }
+    .char-count--warning { color: var(--enterprise-demo-warm-yellow); }
     .char-count--error { color: #ef4444; }
     .preview-card {
       background: white;
@@ -59,7 +59,7 @@
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      background: var(--foodles-gradient-blue);
+      background: var(--enterprise-demo-gradient-blue);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -93,7 +93,7 @@
       transition: all var(--transition-fast);
     }
     .media-dropzone:hover {
-      border-color: var(--foodles-blue-lilac);
+      border-color: var(--enterprise-demo-blue-lilac);
       background: rgba(107, 79, 187, 0.05);
     }
     .hashtag-input-container {
@@ -112,7 +112,7 @@
       gap: 4px;
       padding: 2px 8px;
       background: rgba(107, 79, 187, 0.15);
-      color: var(--foodles-blue-lilac);
+      color: var(--enterprise-demo-blue-lilac);
       border-radius: 4px;
       font-size: 0.875rem;
     }
@@ -193,11 +193,11 @@
     <div class="d-flex justify-between align-center mb-lg">
       <div>
         <h1 class="mb-0">Nueva Publicacion</h1>
-        <p class="text-muted mb-0">Crea contenido siguiendo las directrices de marca Foodles</p>
+        <p class="text-muted mb-0">Crea contenido siguiendo las directrices de marca Enterprise Demo</p>
       </div>
       <div class="d-flex gap-sm">
-        <button class="btn-foodles btn-outline" id="saveDraft">Guardar borrador</button>
-        <button class="btn-foodles btn-primary" id="schedulePost">Programar</button>
+        <button class="btn-enterprise-demo btn-outline" id="saveDraft">Guardar borrador</button>
+        <button class="btn-enterprise-demo btn-primary" id="schedulePost">Programar</button>
       </div>
     </div>
 
@@ -262,11 +262,11 @@
           <div class="mt-md">
             <small class="text-muted">Sugeridos basados en tu contenido:</small>
             <div class="d-flex flex-wrap gap-sm mt-sm" id="suggestedHashtags">
-              <button class="btn-foodles btn-ghost btn-sm">#Odoo</button>
-              <button class="btn-foodles btn-ghost btn-sm">#ERP</button>
-              <button class="btn-foodles btn-ghost btn-sm">#TransformacionDigital</button>
-              <button class="btn-foodles btn-ghost btn-sm">#Foodles</button>
-              <button class="btn-foodles btn-ghost btn-sm">#GestionEmpresarial</button>
+              <button class="btn-enterprise-demo btn-ghost btn-sm">#Odoo</button>
+              <button class="btn-enterprise-demo btn-ghost btn-sm">#ERP</button>
+              <button class="btn-enterprise-demo btn-ghost btn-sm">#TransformacionDigital</button>
+              <button class="btn-enterprise-demo btn-ghost btn-sm">#Enterprise Demo</button>
+              <button class="btn-enterprise-demo btn-ghost btn-sm">#GestionEmpresarial</button>
             </div>
           </div>
         </div>
@@ -291,9 +291,9 @@
           <div class="mt-md p-3" style="background: rgba(107, 79, 187, 0.1); border-radius: var(--radius-sm);">
             <strong class="d-block mb-sm">Horarios optimos sugeridos:</strong>
             <div class="d-flex gap-md flex-wrap">
-              <button class="btn-foodles btn-ghost btn-sm" data-time="10:00">Mar 10:00</button>
-              <button class="btn-foodles btn-ghost btn-sm" data-time="12:00">Mie 12:00</button>
-              <button class="btn-foodles btn-ghost btn-sm" data-time="09:00">Jue 09:00</button>
+              <button class="btn-enterprise-demo btn-ghost btn-sm" data-time="10:00">Mar 10:00</button>
+              <button class="btn-enterprise-demo btn-ghost btn-sm" data-time="12:00">Mie 12:00</button>
+              <button class="btn-enterprise-demo btn-ghost btn-sm" data-time="09:00">Jue 09:00</button>
             </div>
           </div>
         </div>
@@ -310,7 +310,7 @@
             <div class="preview-header">
               <div class="preview-avatar">IN</div>
               <div>
-                <strong>Foodles</strong>
+                <strong>Enterprise Demo</strong>
                 <div class="preview-meta">Partner Odoo Gold | Ahora</div>
               </div>
             </div>
@@ -353,7 +353,7 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../assets/js/foodles-ui.js"></script>
+  <script src="../assets/js/enterprise-demo-ui.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const postContent = document.getElementById('postContent');
@@ -459,7 +459,7 @@
       
       // Save and schedule buttons
       document.getElementById('saveDraft').addEventListener('click', () => {
-        FoodlesUI.Toast.show('Borrador guardado correctamente', 'success');
+        Enterprise DemoUI.Toast.show('Borrador guardado correctamente', 'success');
       });
       
       document.getElementById('schedulePost').addEventListener('click', () => {
@@ -467,18 +467,18 @@
         const time = document.getElementById('scheduleTime').value;
         
         if (!date) {
-          FoodlesUI.Toast.show('Selecciona una fecha de programacion', 'warning');
+          Enterprise DemoUI.Toast.show('Selecciona una fecha de programacion', 'warning');
           return;
         }
         
-        FoodlesUI.Modal.show(
+        Enterprise DemoUI.Modal.show(
           'Confirmar programacion',
           `<p>La publicacion se programara para:</p>
            <p><strong>${date} a las ${time}</strong></p>
            <p>Una vez programada, podras editarla desde el calendario.</p>`,
           [
             { label: 'Programar', action: 'confirm', class: 'btn-primary', handler: () => {
-              FoodlesUI.Toast.show('Publicacion programada correctamente', 'success');
+              Enterprise DemoUI.Toast.show('Publicacion programada correctamente', 'success');
             }},
             { label: 'Cancelar', action: 'cancel', class: 'btn-outline' }
           ]

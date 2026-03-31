@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FOODLES FRONTEND DESIGN SYSTEM
+   ENTERPRISE DEMO FRONTEND DESIGN SYSTEM
    Additive layer on Odoo's Bootstrap 5. Does NOT override Bootstrap defaults.
    All classes prefixed with .iw- to avoid collisions.
 
@@ -17,7 +17,7 @@
 
 /* --------------------------------------------------------------------------
    1. DESIGN TOKENS (CSS Custom Properties)
-   Foodles brand palette + extended design tokens for spacing, radius, shadows.
+   Enterprise Demo brand palette + extended design tokens for spacing, radius, shadows.
    -------------------------------------------------------------------------- */
 :root {
   /* Brand colors */

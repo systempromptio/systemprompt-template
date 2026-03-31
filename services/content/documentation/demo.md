@@ -1,6 +1,6 @@
 ---
 title: "Demo Guide — 30-Minute Walkthrough"
-description: "Step-by-step presenter's guide for the Foodles enterprise demo. Covers platform architecture, tool governance, MCP integration, skills, plugins, and analytics."
+description: "Step-by-step presenter's guide for the Enterprise Demo enterprise demo. Covers platform architecture, tool governance, MCP integration, skills, plugins, and analytics."
 author: "systemprompt.io"
 slug: "demo"
 keywords: "demo, walkthrough, presentation, enterprise, governance"
@@ -31,7 +31,7 @@ related_docs:
 
 # Demo Guide — 30-Minute Walkthrough
 
-**TL;DR:** This is the presenter's playbook for the Foodles enterprise demo. Seven segments, 30 minutes, covering architecture through analytics. Every segment includes exact CLI commands to run, dashboard routes to navigate, talking points to deliver, and transitions to the next segment. Print this page or keep it on a second screen.
+**TL;DR:** This is the presenter's playbook for the Enterprise Demo enterprise demo. Seven segments, 30 minutes, covering architecture through analytics. Every segment includes exact CLI commands to run, dashboard routes to navigate, talking points to deliver, and transitions to the next segment. Print this page or keep it on a second screen.
 
 > **Terminal-only user?** Follow the [Terminal Demo: Setup](/documentation/demo-terminal-setup) guide to run every demo using curl and CLI commands — no Cowork required.
 
@@ -58,7 +58,7 @@ Complete every item before the meeting starts. Do not skip any of these.
 
 ## Segment 1: Opening Alignment (3 min)
 
-**Purpose:** Show that you understand Foodles's AI direction, then confirm before going deeper.
+**Purpose:** Show that you understand Enterprise Demo's AI direction, then confirm before going deeper.
 
 ### What to Show
 
@@ -66,7 +66,7 @@ Navigate to `/documentation/proposal` in the browser. This page introduces the p
 
 ### What to Say
 
-> "We built this governance layer for exactly the kind of AI deployment Foodles is planning — the back-end infrastructure that sits between your agents and your users. Role-based access, audit trails, cost tracking."
+> "We built this governance layer for exactly the kind of AI deployment Enterprise Demo is planning — the back-end infrastructure that sits between your agents and your users. Role-based access, audit trails, cost tracking."
 
 > "Before I go deeper — does this match your current direction, or has the strategy evolved?"
 
@@ -273,7 +273,7 @@ Per-endpoint limits with a **3x burst multiplier** for traffic spikes.
 
 ## Segment 4: MCP Integration (5 min)
 
-**Purpose:** Demonstrate that the platform is MCP-native, not MCP-bolted-on. This matters because Foodles has committed to MCP as their agent interoperability protocol.
+**Purpose:** Demonstrate that the platform is MCP-native, not MCP-bolted-on. This matters because Enterprise Demo has committed to MCP as their agent interoperability protocol.
 
 ### What to Show
 
@@ -330,7 +330,7 @@ systemprompt core plugins list
 ### Demo: Create a Custom Skill
 
 1. Navigate to the skills creation interface
-2. Create a skill like "Foodles Rate Parity Policy" — a simple knowledge skill
+2. Create a skill like "Enterprise Demo Rate Parity Policy" — a simple knowledge skill
 3. Show how it immediately becomes available in the plugin
 4. Point out that no YAML editing was required — the platform handles it
 

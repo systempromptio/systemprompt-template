@@ -140,7 +140,7 @@ impl ServerHandler for SystempromptServer {
         _request: InitializeRequestParams,
         _ctx: RequestContext<RoleServer>,
     ) -> Result<InitializeResult, McpError> {
-        tracing::info!("Foodles MCP server initialized");
+        tracing::info!("Enterprise Demo MCP server initialized");
         Ok(self.get_info())
     }
 
@@ -245,8 +245,8 @@ impl ServerHandler for SystempromptServer {
     ) -> Result<ListResourcesResult, McpError> {
         Ok(build_artifact_viewer_resource(&ArtifactViewerConfig {
             server_name: SERVER_NAME,
-            title: "Foodles Artifact Viewer",
-            description: "Interactive UI viewer for Foodles artifacts. Renders playbooks, lists, \
+            title: "Enterprise Demo Artifact Viewer",
+            description: "Interactive UI viewer for Enterprise Demo artifacts. Renders playbooks, lists, \
                          and text content with syntax highlighting. Template receives artifact data \
                          dynamically via MCP Apps ui/notifications/tool-result protocol.",
             template: ARTIFACT_VIEWER_TEMPLATE,

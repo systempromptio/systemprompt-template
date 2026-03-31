@@ -3,17 +3,17 @@
     color-scheme: light dark;
 
 
-    --sp-primitive-orange-50:  oklch(0.96 0.03 60);
-    --sp-primitive-orange-100: oklch(0.93 0.06 58);
-    --sp-primitive-orange-200: oklch(0.85 0.12 55);
-    --sp-primitive-orange-300: oklch(0.78 0.15 53);
-    --sp-primitive-orange-400: oklch(0.75 0.16 52);
-    --sp-primitive-orange-500: oklch(0.72 0.17 52);
-    --sp-primitive-orange-600: oklch(0.67 0.18 50);
-    --sp-primitive-orange-700: oklch(0.57 0.16 48);
-    --sp-primitive-orange-800: oklch(0.47 0.13 47);
-    --sp-primitive-orange-900: oklch(0.37 0.09 46);
-    --sp-primitive-orange-950: oklch(0.25 0.05 45);
+    --sp-primitive-brand-50:  oklch(0.96 0.03 60);
+    --sp-primitive-brand-100: oklch(0.93 0.06 58);
+    --sp-primitive-brand-200: oklch(0.85 0.12 55);
+    --sp-primitive-brand-300: oklch(0.78 0.15 53);
+    --sp-primitive-brand-400: oklch(0.75 0.16 52);
+    --sp-primitive-brand-500: oklch(0.72 0.17 52);
+    --sp-primitive-brand-600: oklch(0.67 0.18 50);
+    --sp-primitive-brand-700: oklch(0.57 0.16 48);
+    --sp-primitive-brand-800: oklch(0.47 0.13 47);
+    --sp-primitive-brand-900: oklch(0.37 0.09 46);
+    --sp-primitive-brand-950: oklch(0.25 0.05 45);
     --sp-primitive-warm-50:  oklch(0.98 0.004 70);
     --sp-primitive-warm-100: oklch(0.96 0.005 70);
     --sp-primitive-warm-200: oklch(0.92 0.008 65);
@@ -38,17 +38,17 @@
     --sp-text-xl: 1.5rem;
     --sp-text-2xl: 2rem;
 
-    --sp-primary-50:  light-dark(var(--sp-primitive-orange-50),  var(--sp-primitive-orange-950));
-    --sp-primary-100: light-dark(var(--sp-primitive-orange-100), oklch(0.31 0.07 46));
-    --sp-primary-200: light-dark(var(--sp-primitive-orange-200), oklch(0.42 0.11 47));
-    --sp-primary-300: light-dark(var(--sp-primitive-orange-300), oklch(0.52 0.14 48));
-    --sp-primary-400: light-dark(var(--sp-primitive-orange-400), var(--sp-primitive-orange-600));
-    --sp-primary-500: light-dark(var(--sp-primitive-orange-500), var(--sp-primitive-orange-500));
-    --sp-primary-600: light-dark(var(--sp-primitive-orange-600), var(--sp-primitive-orange-400));
-    --sp-primary-700: light-dark(var(--sp-primitive-orange-700), var(--sp-primitive-orange-300));
-    --sp-primary-800: light-dark(var(--sp-primitive-orange-800), var(--sp-primitive-orange-200));
-    --sp-primary-900: light-dark(var(--sp-primitive-orange-900), var(--sp-primitive-orange-100));
-    --sp-primary-950: light-dark(var(--sp-primitive-orange-950), var(--sp-primitive-orange-50));
+    --sp-primary-50:  light-dark(var(--sp-primitive-brand-50),  var(--sp-primitive-brand-950));
+    --sp-primary-100: light-dark(var(--sp-primitive-brand-100), oklch(0.31 0.07 46));
+    --sp-primary-200: light-dark(var(--sp-primitive-brand-200), oklch(0.42 0.11 47));
+    --sp-primary-300: light-dark(var(--sp-primitive-brand-300), oklch(0.52 0.14 48));
+    --sp-primary-400: light-dark(var(--sp-primitive-brand-400), var(--sp-primitive-brand-600));
+    --sp-primary-500: light-dark(var(--sp-primitive-brand-500), var(--sp-primitive-brand-500));
+    --sp-primary-600: light-dark(var(--sp-primitive-brand-600), var(--sp-primitive-brand-400));
+    --sp-primary-700: light-dark(var(--sp-primitive-brand-700), var(--sp-primitive-brand-300));
+    --sp-primary-800: light-dark(var(--sp-primitive-brand-800), var(--sp-primitive-brand-200));
+    --sp-primary-900: light-dark(var(--sp-primitive-brand-900), var(--sp-primitive-brand-100));
+    --sp-primary-950: light-dark(var(--sp-primitive-brand-950), var(--sp-primitive-brand-50));
 
     --sp-warm-50:  light-dark(var(--sp-primitive-warm-50),  var(--sp-primitive-warm-950));
     --sp-warm-100: light-dark(var(--sp-primitive-warm-100), var(--sp-primitive-warm-900));
@@ -79,9 +79,9 @@
     --sp-text-on-accent: var(--sp-primitive-white);
     --sp-text-on-dark:   var(--sp-primitive-white);
 
-    --sp-interactive:    light-dark(oklch(0.62 0.17 48), oklch(0.70 0.17 51));
-    --sp-accent:         light-dark(oklch(0.62 0.17 48), oklch(0.70 0.17 51));
-    --sp-accent-hover:   light-dark(oklch(0.55 0.16 47), oklch(0.72 0.17 52));
+    --sp-interactive:    light-dark(var(--sp-primitive-brand-600), var(--sp-primitive-brand-400));
+    --sp-accent:         light-dark(var(--sp-primitive-brand-600), var(--sp-primitive-brand-400));
+    --sp-accent-hover:   light-dark(var(--sp-primitive-brand-700), var(--sp-primitive-brand-300));
     --sp-accent-dim:     light-dark(
       color-mix(in oklch, var(--sp-accent) 10%, transparent),
       color-mix(in oklch, var(--sp-accent) 15%, transparent)
@@ -97,8 +97,8 @@
     --sp-sidebar-text-muted: light-dark(var(--sp-primitive-warm-500), oklch(1.00 0 0 / 0.45));
     --sp-sidebar-text-hover: light-dark(var(--sp-primitive-warm-900), var(--sp-primitive-white));
     --sp-sidebar-hover-bg: light-dark(var(--sp-primitive-warm-100), oklch(1.00 0 0 / 0.06));
-    --sp-sidebar-active-bg: light-dark(oklch(0.95 0.015 55), oklch(0.62 0.17 48 / 0.15));
-    --sp-sidebar-active-color: light-dark(var(--sp-primitive-orange-600), oklch(0.75 0.16 52));
+    --sp-sidebar-active-bg: light-dark(oklch(0.95 0.015 55), color-mix(in oklch, var(--sp-primitive-brand-500) 15%, transparent));
+    --sp-sidebar-active-color: light-dark(var(--sp-primitive-brand-600), var(--sp-primitive-brand-400));
 
     --sp-success: light-dark(oklch(0.69 0.17 165), oklch(0.78 0.16 165));
     --sp-success-dim: light-dark(
@@ -130,7 +130,7 @@
       color-mix(in oklch, var(--sp-danger) 20%, transparent)
     );
 
-    --sp-section-dashboard: light-dark(oklch(0.67 0.18 50), oklch(0.70 0.17 51));
+    --sp-section-dashboard: light-dark(var(--sp-primitive-brand-600), var(--sp-primitive-brand-400));
     --sp-section-users:     light-dark(oklch(0.55 0.22 295), oklch(0.68 0.16 295));
     --sp-section-plugins:   light-dark(oklch(0.62 0.18 260), oklch(0.70 0.14 250));
     --sp-section-skills:    light-dark(oklch(0.69 0.17 165), oklch(0.78 0.16 165));

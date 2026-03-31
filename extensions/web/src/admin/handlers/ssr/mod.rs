@@ -50,6 +50,7 @@ mod ssr_hooks;
 mod ssr_mcp;
 mod ssr_plugins;
 mod ssr_skills;
+mod ssr_traces;
 pub(crate) mod types;
 
 pub(crate) use ssr_agents::{agents_page, agent_edit_page};
@@ -91,6 +92,7 @@ pub(crate) use ssr_settings::settings_page;
 pub(crate) use ssr_setup::setup_page;
 pub(crate) use ssr_access_control::access_control_page;
 pub(crate) use ssr_governance::governance_page;
+pub(crate) use ssr_traces::traces_page;
 pub(crate) use ssr_users::{user_detail_page, users_page};
 
 fn demo_help_text(page: &str) -> Option<(&'static str, &'static str)> {
@@ -174,6 +176,10 @@ fn demo_help_text(page: &str) -> Option<(&'static str, &'static str)> {
         "getting-started" => Some((
             "<strong>Getting Started</strong> helps new users select their initial plugins and configure their workspace. Choose from curated plugin sets based on your role &mdash; developer, analyst, manager, or custom &mdash; then refine your selection. Each plugin set bundles the skills, agents, and integrations most relevant to your workflow. Start by installing the <strong>Claude Code</strong> plugin &mdash; it is the recommended integration for evaluation while Cowork (research preview) stabilises.",
             "getting-started",
+        )),
+        "traces" => Some((
+            "<strong>Trace Detail</strong> shows a timeline of every event in a single session &mdash; tool calls, governance decisions, MCP server interactions, and prompt submissions. Use the <code>session_id</code> query parameter to view a specific session. Events are ordered chronologically with delta timing between each step, giving you a waterfall view of the full execution pipeline. Connect via <strong>Claude Code</strong> to generate traced sessions, then inspect them here.",
+            "events",
         )),
         "governance" => Some((
             "<strong>Governance</strong> provides oversight and policy management for AI usage across your organisation. Review every tool call decision (allowed, denied, or modified), configure usage policies per role and department, and set guardrails for how Claude is used by your team. Governance tracks compliance rates, policy violations, and cost allocation in real time. In production, governance policies are enforced automatically at the tool call level. Connect via <strong>Claude Code</strong> for the best evaluation experience &mdash; it is the recommended integration while Cowork (research preview) stabilises.",

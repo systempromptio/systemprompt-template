@@ -78,7 +78,7 @@ docs_sidebar:
     links:
       - label: "Setup & Authentication"
         href: "/documentation/demo-terminal-setup"
-      - label: "Agent Messaging"
+      - label: "Governance Decisions"
         href: "/documentation/demo-terminal-agents"
       - label: "Audit Trails & Costs"
         href: "/documentation/demo-terminal-audit"
@@ -88,6 +88,8 @@ docs_sidebar:
         href: "/documentation/demo-terminal-mcp"
       - label: "Request Tracing & Benchmark"
         href: "/documentation/demo-terminal-tracing"
+      - label: "Agent Tracing"
+        href: "/documentation/demo-terminal-agent-tracing"
 
   - title: "DevOps & Deployment"
     links:

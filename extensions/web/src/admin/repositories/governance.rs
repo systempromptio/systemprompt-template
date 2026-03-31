@@ -36,15 +36,41 @@ pub async fn list_governance_decisions(
     }
 }
 
+pub struct GovernanceCounts {
+    pub total: i64,
+    pub allowed: i64,
+    pub denied: i64,
+    pub secret_breaches: i64,
+}
+
+pub async fn fetch_governance_counts(
+    pool: &Arc<PgPool>,
+) -> Result<GovernanceCounts, sqlx::Error> {
+    let row = sqlx::query_as::<_, (i64, i64, i64, i64)>(
+        r"SELECT
+            COUNT(*)::bigint,
+            COUNT(*) FILTER (WHERE decision = 'allow')::bigint,
+            COUNT(*) FILTER (WHERE decision = 'deny')::bigint,
+            COUNT(*) FILTER (WHERE reason ILIKE '%secret%')::bigint
+        FROM governance_decisions",
+    )
+    .fetch_one(pool.as_ref())
+    .await?;
+    Ok(GovernanceCounts {
+        total: row.0,
+        allowed: row.1,
+        denied: row.2,
+        secret_breaches: row.3,
+    })
+}
+
 pub async fn fetch_governance_events(
     pool: &Arc<PgPool>,
 ) -> Result<Vec<GovernanceEvent>, sqlx::Error> {
     sqlx::query_as::<_, GovernanceEvent>(
         r"SELECT id, user_id, tool_name, agent_id, decision, reason, created_at
         FROM governance_decisions
-        ORDER BY
-            CASE WHEN decision = 'deny' THEN 0 ELSE 1 END,
-            created_at DESC
+        ORDER BY created_at DESC
         LIMIT 50",
     )
     .fetch_all(pool.as_ref())

@@ -1,9 +1,9 @@
 
 # Odoo Frontend
 
-Create HTML content for Odoo using Bootstrap 5 and the Foodles design system (`iw-*` classes). All output must be compatible with Odoo Editor and follow the foodles-brand guidelines.
+Create HTML content for Odoo using Bootstrap 5 and the Enterprise Demo design system (`iw-*` classes). All output must be compatible with Odoo Editor and follow the enterprise-demo-brand guidelines.
 
-**Before starting any task, read the `foodles-brand` skill** to load brand colors, typography, voice rules, and the zero-emoji policy.
+**Before starting any task, read the `enterprise-demo-brand` skill** to load brand colors, typography, voice rules, and the zero-emoji policy.
 
 ## Quick Reference
 
@@ -14,7 +14,7 @@ Create HTML content for Odoo using Bootstrap 5 and the Foodles design system (`i
 | Blue Lilac | `#6B68FA` |
 | Blue Space | `#1C265D` |
 | Light Sky | `#8AC2DB` |
-| CSS file | `assets/css/foodles-frontend.css` |
+| CSS file | `assets/css/enterprise-demo-frontend.css` |
 | Reveal JS | `assets/js/iw-reveal.js` |
 
 ## Phase 0: Detect Mode
@@ -67,7 +67,7 @@ Based on the user's image choice:
 - **"Use free stock photos (Unsplash)"**: Read `references/image-workflow.md` > "Unsplash API" section, search for 3-5 content-relevant keywords, present top 3 results to user
 - **"Generate descriptive placeholders"**: Use inline SVG placeholders with brand colors (see `references/image-workflow.md` > "Descriptive Placeholders")
 
-**IMPORTANT:** Never use generic placeholder URLs (placeholder.com, lorempixel). Always use semantic inline SVG placeholders with Foodles brand colors and descriptive labels.
+**IMPORTANT:** Never use generic placeholder URLs (placeholder.com, lorempixel). Always use semantic inline SVG placeholders with Enterprise Demo brand colors and descriptive labels.
 
 ### For Presentations Only
 
@@ -95,7 +95,7 @@ For presentations, generate 3 mini HTML previews in `/tmp/iw-preview/slide-previ
 | Calm/Focused | Swiss Minimal | Soft Muted | Paper Clean |
 | Inspired/Moved | Cinematic Dark | Warm Editorial | Atmospheric |
 
-All styles use exclusively Foodles brand colors and Dosis font.
+All styles use exclusively Enterprise Demo brand colors and Dosis font.
 
 Present the previews, then ask user to pick via AskUserQuestion:
 - Header: "Style"
@@ -111,7 +111,7 @@ See `references/presentations.md` for slide type templates, navigation JS, and f
 Read `references/odoo-editor-rules.md` for the complete compatibility reference. Key rules:
 
 1. **Use Bootstrap 5 grid** (`container`, `row`, `col-*`) for all layouts
-2. **Use `iw-*` classes** from `assets/css/foodles-frontend.css` for styling
+2. **Use `iw-*` classes** from `assets/css/enterprise-demo-frontend.css` for styling
 3. **Wrap in `<section>` tags** with Odoo snippet classes (`s_text_block`, etc.)
 4. **No `<script>` tags** in Odoo page/blog/email content (JS stripped by editor)
 5. **No inline `<style>` blocks** in email content (use inline styles instead)
@@ -150,7 +150,7 @@ All website pages and landing pages MUST be generated as **self-contained HTML**
 <!-- Instructions for pasting into QWeb template -->
 
 <style>
-/* Full contents of assets/css/foodles-frontend.css inlined here */
+/* Full contents of assets/css/enterprise-demo-frontend.css inlined here */
 @import url('https://fonts.googleapis.com/css2?family=Dosis:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;display=swap');
 /* ... all iw-* class definitions ... */
 </style>
@@ -163,7 +163,7 @@ All website pages and landing pages MUST be generated as **self-contained HTML**
 
 **Rules for self-contained pages:**
 
-1. **Inline the full CSS** from `assets/css/foodles-frontend.css` inside a `<style>` block at the top of the file. Do NOT reference external CSS files.
+1. **Inline the full CSS** from `assets/css/enterprise-demo-frontend.css` inside a `<style>` block at the top of the file. Do NOT reference external CSS files.
 2. **No `<!DOCTYPE>`, `<html>`, `<head>`, `<body>` wrappers** -- Odoo's `website.layout` provides those.
 3. **No `<script>` tags** -- Odoo Editor strips them from website pages.
 4. **No `iw-reveal` animation classes** -- They require JS that cannot be included. Do not use `iw-reveal`, `iw-reveal-left`, `iw-reveal-right`, or `iw-reveal-scale`.
@@ -181,7 +181,7 @@ All website pages and landing pages MUST be generated as **self-contained HTML**
 
 ### Building an Email
 
-**Brand compliance**: Before writing any email, read the `foodles-brand` skill -- specifically `references/verbal-identity.md` (tone, vocabulary, writing style) and `references/visual-identity.md` (colors, typography). All email content must follow brand voice rules.
+**Brand compliance**: Before writing any email, read the `enterprise-demo-brand` skill -- specifically `references/verbal-identity.md` (tone, vocabulary, writing style) and `references/visual-identity.md` (colors, typography). All email content must follow brand voice rules.
 
 Read `references/email-creation.md` for the complete email workflow. Emails follow this structure:
 
@@ -197,7 +197,7 @@ Key constraints: inline styles only (Gmail strips `<style>` blocks), table-based
 
 ### Building a Blog Post
 
-**Brand compliance**: Before writing any blog, read the `foodles-brand` skill -- specifically `references/verbal-identity.md` (tone, vocabulary, writing style) and `references/visual-identity.md` (colors, typography). All blog content must follow brand voice rules.
+**Brand compliance**: Before writing any blog, read the `enterprise-demo-brand` skill -- specifically `references/verbal-identity.md` (tone, vocabulary, writing style) and `references/visual-identity.md` (colors, typography). All blog content must follow brand voice rules.
 
 Read `references/blog-creation.md` for the complete blog workflow. Blogs follow the BLUF structure:
 
@@ -213,7 +213,7 @@ Read `references/blog-creation.md` for the complete blog workflow. Blogs follow 
 
 **YouTube embed**: Load `data/videos.json` from `content-collection` skill. Find the most relevant video by topic matching and embed it contextually within the body.
 
-**Minimum 1500 words** in the body (excluding BLUF, FAQs, schema). Spanish language, professional "tu" address, zero emojis, value vocabulary per foodles-brand.
+**Minimum 1500 words** in the body (excluding BLUF, FAQs, schema). Spanish language, professional "tu" address, zero emojis, value vocabulary per enterprise-demo-brand.
 
 ### Building a Presentation
 
@@ -245,7 +245,7 @@ After generating content, always preview in the browser before delivering.
 Read `references/preview-workflow.md` for the complete preview system. Summary:
 
 1. Create the preview directory: `mkdir -p /tmp/iw-preview`
-2. **Blogs / Landing pages** (HTML fragments): wrap in the preview template -- read `assets/css/foodles-frontend.css` and `assets/js/iw-reveal.js`, embed them in a full HTML document with Bootstrap 5 CDN, paste the content fragment in `<body>`
+2. **Blogs / Landing pages** (HTML fragments): wrap in the preview template -- read `assets/css/enterprise-demo-frontend.css` and `assets/js/iw-reveal.js`, embed them in a full HTML document with Bootstrap 5 CDN, paste the content fragment in `<body>`
 3. **Emails** (full HTML documents): save the generated HTML directly (already has inline styles and document structure)
 4. **Presentations** (self-contained files): save as-is (already has embedded CSS/JS)
 5. Write to `/tmp/iw-preview/[type]-preview.html`
@@ -326,14 +326,14 @@ For **website pages**: the CSS is always inlined in the `<style>` block of the g
 For **blog posts, email templates, and other content types** where a `<style>` block is not practical, the `iw-*` classes must be loaded in Odoo via one of these methods:
 
 **Method 1: Website Customization Panel**
-Odoo > Website > Customize > scroll to bottom > Custom CSS > paste contents of `assets/css/foodles-frontend.css`
+Odoo > Website > Customize > scroll to bottom > Custom CSS > paste contents of `assets/css/enterprise-demo-frontend.css`
 
 **Method 2: Custom Odoo Module**
 Add to a module's `assets.xml`:
 ```xml
 <template id="assets_frontend" inherit_id="website.assets_frontend">
   <xpath expr="." position="inside">
-    <link rel="stylesheet" href="/your_module/static/src/css/foodles-frontend.css"/>
+    <link rel="stylesheet" href="/your_module/static/src/css/enterprise-demo-frontend.css"/>
   </xpath>
 </template>
 ```
@@ -343,7 +343,7 @@ Add to a module's `assets.xml`:
 ## Resources
 
 ### assets/css/
-- `foodles-frontend.css` -- Complete design system. 24 sections: tokens, typography, colors, sections, cards, buttons, badges, features, stats, testimonials, tables, pricing, timeline, dividers, callouts, images, animations, email utilities, bento grid, comparison table, pros/cons, key figures, summary box, responsive breakpoints.
+- `enterprise-demo-frontend.css` -- Complete design system. 24 sections: tokens, typography, colors, sections, cards, buttons, badges, features, stats, testimonials, tables, pricing, timeline, dividers, callouts, images, animations, email utilities, bento grid, comparison table, pros/cons, key figures, summary box, responsive breakpoints.
 
 ### assets/js/
 - `iw-reveal.js` -- Intersection Observer script for scroll-triggered entrance animations. Add `iw-reveal`, `iw-reveal-left`, `iw-reveal-right`, or `iw-reveal-scale` classes to elements.

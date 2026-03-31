@@ -43,7 +43,7 @@
   "delivery": {
     "primary": "email",
     "secondary": "telegram",
-    "supervisor_email": "support@foodles.com"
+    "supervisor_email": "support@demo.systemprompt.io"
   },
   "internal_project_patterns": ["^Interno"]
 }

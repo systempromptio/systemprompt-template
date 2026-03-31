@@ -1,5 +1,5 @@
 
-# FOODLES CRM Weekly Report
+# ENTERPRISE DEMO CRM Weekly Report
 
 **CONFIDENTIAL - SALES TEAM ONLY**
 **Document ID:** SALES-SKILL-001
@@ -7,7 +7,7 @@
 
 ## Overview
 
-This skill generates the weekly commercial control report for the FOODLES sales team. It connects to the Odoo CRM via XML-RPC, calculates over 21 KPIs, and produces a brand-compliant HTML report. The report can be published to the Odoo website, sent as a team email, and delivered as personalized summaries to each salesperson.
+This skill generates the weekly commercial control report for the ENTERPRISE DEMO sales team. It connects to the Odoo CRM via XML-RPC, calculates over 21 KPIs, and produces a brand-compliant HTML report. The report can be published to the Odoo website, sent as a team email, and delivered as personalized summaries to each salesperson.
 
 ## When to Use This Skill
 
@@ -22,9 +22,9 @@ This skill generates the weekly commercial control report for the FOODLES sales 
 
 | Variable | Description | Example |
 |---|---|---|
-| `ODOO_URL` | Odoo instance URL | `https://www.foodles.es/` |
+| `ODOO_URL` | Odoo instance URL | `https://www.enterprise-demo.es/` |
 | `ODOO_DB` | Odoo database name | `master` |
-| `ODOO_USER` | Odoo API username | `user@foodles.es` |
+| `ODOO_USER` | Odoo API username | `user@enterprise-demo.es` |
 | `ODOO_KEY` | Odoo API key | (API key) |
 | `EMAIL_SMTP_PASSWORD` | SMTP password for Gmail | (app password) |
 
@@ -35,8 +35,8 @@ This skill generates the weekly commercial control report for the FOODLES sales 
 | `EMAIL_SMTP_SERVER` | `smtp.gmail.com` | SMTP server |
 | `EMAIL_SMTP_PORT` | `587` | SMTP port |
 | `EMAIL_USE_TLS` | `true` | Enable STARTTLS |
-| `EMAIL_FROM` | `victor@foodles.es` | Sender address |
-| `EMAIL_USERNAME` | `victor@foodles.es` | SMTP login |
+| `EMAIL_FROM` | `victor@enterprise-demo.es` | Sender address |
+| `EMAIL_USERNAME` | `victor@enterprise-demo.es` | SMTP login |
 
 ## Workflow (Mandatory Sequence)
 
@@ -118,7 +118,7 @@ Edit `skills/sales-crm-report/scripts/config.py` to update:
 
 ## Brand Compliance
 
-This report follows the Foodles brand guidelines:
+This report follows the Enterprise Demo brand guidelines:
 
 - **Font**: Dosis (no other fonts)
 - **Colors**: Blue Lilac #6B68FA, Blue Space #1C265D, Warm Yellow #E5B92B, Light Sky #8AC2DB

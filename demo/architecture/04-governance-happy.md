@@ -2,18 +2,18 @@
 
 ## What it does
 
-Admin-scope agent calls an MCP tool. The governance hook fires, evaluates rules, and ALLOWS the call.
+Direct call to the governance API simulating a Claude Code PreToolUse hook. Admin-scope agent with clean tool input — all 3 rules pass.
 
 ## Flow
 
 ```
-  developer_agent calls MCP tool
+  curl: POST /api/public/hooks/govern
+  agent_id=developer_agent, tool_name=Read, tool_input={file_path}
     │
     ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  Claude Code: PreToolUse Hook                           │
-  │  Fires SYNCHRONOUSLY before tool execution              │
-  │  Constructs HookEventPayload (typed Rust struct)        │
+  │  PreToolUse Hook Simulation                             │
+  │  Payload deserialized into HookEventPayload (typed)     │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
@@ -87,12 +87,16 @@ Admin-scope agent calls an MCP tool. The governance hook fires, evaluates rules,
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
-  Claude Code receives "allow" → tool executes
+  Hook receives "allow" → Claude Code proceeds with tool execution
 ```
+
+## Key difference from Demo 01
+
+Demo 01 uses `mcp__systemprompt__list_agents` (admin MCP tool). Demo 04 uses `Read` with a file path — a general tool that any scope can use. This exercises all 3 rules cleanly rather than relying on scope alone.
 
 ## Why Rust
 
 - **Typed boundary**: JSON → `HookEventPayload` (serde) → typed processing → `GovernanceResponse` (serde) → JSON. Untyped only at the two HTTP boundaries
 - **Newtype enforcement**: `GovernanceContext` carries `UserId` and `SessionId` as distinct types — cannot be swapped
-- **Async audit**: `tokio::spawn` fires the DB write without blocking the response — the governance decision returns immediately while the audit record writes asynchronously
+- **Async audit**: `tokio::spawn` fires the DB write without blocking the response
 - **Compile-time SQL**: The `INSERT INTO governance_decisions` uses `sqlx::query!{}` — if the schema changes, the code won't compile

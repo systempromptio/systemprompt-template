@@ -1,6 +1,6 @@
 ---
 title: "Configuration & Profiles"
-description: "Profile-based configuration for the Foodles AI governance platform. Manage environment-specific settings for local development, staging, and production deployments."
+description: "Profile-based configuration for the Enterprise Demo AI governance platform. Manage environment-specific settings for local development, staging, and production deployments."
 author: "systemprompt.io"
 slug: "configuration"
 keywords: "configuration, profiles, environment variables, config.yaml, secrets, settings"
@@ -65,7 +65,7 @@ Settings are resolved in order, with later sources overriding earlier ones:
 
 ```yaml
 database:
-  url: "postgresql://user:pass@localhost:5432/foodles"
+  url: "postgresql://user:pass@localhost:5432/enterprise-demo"
   max_connections: 20
   min_connections: 5
   connect_timeout_secs: 30

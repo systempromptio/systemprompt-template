@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo 04 — Governance: Allow — foodles.com</title>
+    <title>Demo 04 — Governance: Allow — demo.systemprompt.io</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@600;700&family=Roboto:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -233,7 +233,7 @@
 
     <div class="content">
         <p class="intro">
-            Admin-scope agent calls an MCP tool. The governance hook fires <strong>synchronously</strong>, evaluates three rules, and <strong>allows</strong> the call. Cost: <strong>free</strong> (governance overhead only, the AI call is in Demo 01).
+            Direct call to the governance API simulating a Claude Code PreToolUse hook. Admin-scope agent with clean tool input &mdash; all <strong>3 rules pass</strong>. Uses <code>Read</code> tool (not MCP) to exercise scope_check, secret_injection, and rate_limit. Cost: <strong>free</strong>.
         </p>
 
         <!-- ═══ Step 1: Agent Calls MCP Tool ═══ -->

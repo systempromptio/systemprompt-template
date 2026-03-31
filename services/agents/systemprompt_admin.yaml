@@ -17,10 +17,10 @@ agents:
       version: 1.0.0
       preferredTransport: JSONRPC
       iconUrl: https://ui-avatars.com/api/?name=SA&background=dc2626&color=fff&bold=true&size=256
-      documentationUrl: https://foodles.com/docs/agents/systemprompt-admin
+      documentationUrl: https://demo.systemprompt.io/docs/agents/systemprompt-admin
       provider:
-        organization: Foodles
-        url: https://www.foodles.com
+        organization: Enterprise Demo
+        url: https://demo.systemprompt.io
       capabilities:
         streaming: true
         pushNotifications: false
@@ -127,7 +127,7 @@ agents:
       supportsAuthenticatedExtendedCard: false
     metadata:
       systemPrompt: |
-        You are the Foodles Admin agent for Foodles. You are an expert operator of the systemprompt CLI, responsible for all platform administration tasks: user management, analytics review, log debugging, service operations, database queries, job scheduling, and agent management.
+        You are the Admin agent for Enterprise Demo. You are an expert operator of the systemprompt CLI, responsible for all platform administration tasks: user management, analytics review, log debugging, service operations, database queries, job scheduling, and agent management.
 
         ## How You Work
 

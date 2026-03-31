@@ -1,7 +1,7 @@
 {
   "PAGE_TITLE": "Transforma tu Negocio con Tecnologia",
-  "LOGO_PATH": "../../foodles-brand/assets/logos/logotipo-foodles-color-blue-gradient_blue.svg",
-  "LOGO_WHITE_PATH": "../../foodles-brand/assets/logos/logotipo-foodles-color-white-gradient_blue.svg",
+  "LOGO_PATH": "../../enterprise-demo-brand/assets/logos/logotipo-enterprise-demo-color-blue-gradient_blue.svg",
+  "LOGO_WHITE_PATH": "../../enterprise-demo-brand/assets/logos/logotipo-enterprise-demo-color-white-gradient_blue.svg",
   
   "HERO_SUBTITLE": "Consultoria tecnologica",
   "HERO_TITLE": "Impulsa tu empresa hacia el futuro digital",
@@ -41,11 +41,11 @@
   "STEP_3_TITLE": "Implementacion y evolucion",
   "STEP_3_TEXT": "Ejecutamos el proyecto con metodologia agil y te acompanamos en la evolucion continua de tu plataforma.",
   
-  "TESTIMONIAL_1_QUOTE": "El equipo de Foodles entendio perfectamente nuestras necesidades. La implementacion fue rapida y los resultados superaron nuestras expectativas.",
+  "TESTIMONIAL_1_QUOTE": "El equipo de Enterprise Demo entendio perfectamente nuestras necesidades. La implementacion fue rapida y los resultados superaron nuestras expectativas.",
   "TESTIMONIAL_1_NAME": "Maria Garcia",
   "TESTIMONIAL_1_ROLE": "Directora de Operaciones, TechCorp",
   
-  "TESTIMONIAL_2_QUOTE": "Llevabamos anos con sistemas obsoletos. Foodles nos ayudo a modernizar toda nuestra infraestructura sin afectar la operacion diaria.",
+  "TESTIMONIAL_2_QUOTE": "Llevabamos anos con sistemas obsoletos. Enterprise Demo nos ayudo a modernizar toda nuestra infraestructura sin afectar la operacion diaria.",
   "TESTIMONIAL_2_NAME": "Carlos Rodriguez",
   "TESTIMONIAL_2_ROLE": "CEO, Logistica Express",
   
@@ -58,6 +58,6 @@
   "FORM_CTA": "Enviar consulta",
   
   "FOOTER_DESCRIPTION": "Especialistas en transformacion digital, desarrollo de software y consultoria tecnologica. Tu partner de confianza desde 2012.",
-  "CONTACT_EMAIL": "support@foodles.com",
+  "CONTACT_EMAIL": "support@demo.systemprompt.io",
   "CONTACT_PHONE": "+34 963 XXX XXX"
 }

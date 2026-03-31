@@ -66,7 +66,7 @@ Genera:
 
 ## Diseño
 
-El skill sigue el sistema de diseño Foodles:
+El skill sigue el sistema de diseño Enterprise Demo:
 
 - **Colores**: Warm Yellow (#E5B92B), Blue Lilac (#6B68FA), Blue Space (#1C265D), Light Sky (#8AC2DB)
 - **Tipografía**: Dosis (Google Fonts)

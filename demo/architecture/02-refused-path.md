@@ -2,57 +2,78 @@
 
 ## What it does
 
-User-scope agent receives the same message but has no MCP tools available. Access is denied at the mapping level.
+User-scope agent tries to call an admin-only MCP tool. Governance DENIES it at the rule level.
 
 ## Flow
 
 ```
-  CLI: admin agents message associate_agent
+  curl: POST /api/public/hooks/govern
     │
     ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  Context Creation                                       │
-  │  core contexts create → ContextId (UUID)                │
+  │  PreToolUse Hook Simulation                             │
+  │  Payload: {                                             │
+  │    agent_id: "associate_agent",                         │
+  │    tool_name: "mcp__systemprompt__list_agents",         │
+  │    session_id: "demo-refused-path"                      │
+  │  }                                                      │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  Agent Process (associate_agent)                        │
-  │  Scope: user                                            │
-  │  MCP servers: NONE                                      │
-  │  Tool list: EMPTY                                       │
+  │  Scope Resolution                                       │
+  │  resolve_agent_scope("associate_agent") → "user"        │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  AI Request #1                                          │
-  │  Model receives message + EMPTY tool list               │
-  │  No tools to call → refuses naturally                   │
-  │  "I do not have access to that tool"                    │
+  │  Rule Engine: rules::evaluate()                         │
+  │                                                         │
+  │  Rule 1: scope_check                                    │
+  │    tool starts with "mcp__systemprompt__"               │
+  │    requires admin scope                                 │
+  │    agent scope = "user"                                 │
+  │    → FAIL                                               │
+  │                                                         │
+  │  decision = "deny", policy = "scope_restriction"        │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  NO governance hook fires                               │
-  │  NO MCP tool calls                                      │
-  │  Access denied at MAPPING level, not RULE level         │
+  │  Audit: INSERT governance_decisions                     │
+  │  decision="deny", policy="scope_restriction"            │
+  └──────────────────────┬──────────────────────────────────┘
+                         │
+                         ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │  Response: HTTP 200                                     │
+  │  { permissionDecision: "deny",                          │
+  │    permissionDecisionReason: "[GOVERNANCE] ..." }       │
   └─────────────────────────────────────────────────────────┘
 ```
 
-## Contrast with Demo 01
+## Defense-in-Depth
+
+Two independent layers prevent unauthorized tool access:
 
 ```
-  Demo 01 (admin scope)          Demo 02 (user scope)
-  ─────────────────────          ─────────────────────
-  MCP servers: 2                 MCP servers: 0
-  Tool list: populated           Tool list: EMPTY
-  AI calls tools → governance    AI sees no tools → refuses
-  Result: structured artifact    Result: polite refusal
-  Trace: ~11 events              Trace: ~4 events
+  Layer 1: MAPPING (preventive)
+  ─────────────────────────────
+  In Claude Code, user-scope agents have no admin
+  MCP servers in their tool list. The tool doesn't
+  appear — no call is possible.
+
+  Layer 2: GOVERNANCE RULES (enforcement)
+  ───────────────────────────────────────
+  Even if mapping were misconfigured, the scope_check
+  rule evaluates every PreToolUse hook call. User scope
+  calling admin tools → DENY.
+
+  Neither layer depends on the other.
 ```
 
 ## Why Rust
 
-- **Type-safe agent config**: Agent scope and MCP server mappings are typed enums in the agent configuration — not string comparisons at runtime
-- **Defense in depth**: Even if the mapping were bypassed, the governance layer (Demo 05) would still catch it at the rule level
-- **Audit completeness**: The refusal is still traced — 4 events recorded with typed IDs, even though no tool was called
+- **Type-safe scope resolution**: Agent scope is resolved from a static `HashMap` initialized at startup — not a runtime string comparison
+- **Defense in depth**: Even if the mapping were bypassed, the governance layer catches it at the rule level
+- **Audit completeness**: The denial is recorded with typed IDs — policy, reason, and evaluated rules stored as JSONB

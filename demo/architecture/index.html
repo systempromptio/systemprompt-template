@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Architecture Diagrams — foodles.com</title>
+    <title>Architecture Diagrams — demo.systemprompt.io</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
@@ -198,7 +198,7 @@
 <body>
     <header class="header">
         <h1>Architecture Diagrams</h1>
-        <p>Interactive visual walkthroughs of the foodles.com governance platform</p>
+        <p>Interactive visual walkthroughs of the demo.systemprompt.io governance platform</p>
         <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
             <span class="theme-icon">&#9790;</span> Theme
         </button>
@@ -208,7 +208,7 @@
         <a href="01-happy-path.html" class="card">
             <div class="card-num">Demo 01</div>
             <div class="card-title">Happy Path</div>
-            <div class="card-desc">Admin-scope agent receives a message, calls an MCP tool through governance, and returns a structured artifact. Full pipeline with typed IDs and trace.</div>
+            <div class="card-desc">Governance ALLOWS admin-scope tool call, then MCP tool executes. Simulates Claude Code PreToolUse hook workflow via direct API calls.</div>
             <span class="card-badge badge-medium">Pipeline</span>
             <div class="card-accent accent-happy"></div>
         </a>
@@ -252,10 +252,18 @@
             <span class="card-badge badge-complex">Performance</span>
             <div class="card-accent accent-trace"></div>
         </a>
+
+        <a href="09-agent-tracing.html" class="card">
+            <div class="card-num">Demo 09</div>
+            <div class="card-title">Agent Tracing</div>
+            <div class="card-desc">Live agent pipeline &mdash; AI reasoning, MCP tool calls, artifact creation, full execution tracing. The only demo with a live AI agent (~$0.01).</div>
+            <span class="card-badge badge-complex">Pipeline</span>
+            <div class="card-accent accent-happy"></div>
+        </a>
     </main>
 
     <footer class="footer">
-        foodles.com &mdash; AI Governance Infrastructure
+        demo.systemprompt.io &mdash; AI Governance Infrastructure
     </footer>
 
     <script>

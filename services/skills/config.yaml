@@ -22,7 +22,7 @@ includes:
   - common_content_collection/config.yaml
   - common_email_campaign_builder/config.yaml
   - common_event_planner/config.yaml
-  - common_foodles_brand/config.yaml
+  - common_enterprise-demo_brand/config.yaml
   - common_linkedin_content_manager/config.yaml
   - common_odoo_frontend/config.yaml
   - common_odoo_importation/config.yaml

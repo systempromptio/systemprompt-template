@@ -2,86 +2,82 @@
 
 ## What it does
 
-Admin-scope agent receives a message, calls an MCP tool, and returns a structured artifact.
+Simulates a Claude Code PreToolUse hook workflow. Governance ALLOWS an admin-scope tool call, then the MCP tool executes and returns real data.
 
 ## Flow
 
 ```
-  CLI: admin agents message developer_agent
+  curl: POST /api/public/hooks/govern
     │
     ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  Context Creation                                       │
-  │  core contexts create → ContextId (UUID)                │
-  │  Isolates this conversation from all others             │
+  │  PreToolUse Hook Simulation                             │
+  │  Payload: {                                             │
+  │    agent_id: "developer_agent",                         │
+  │    tool_name: "mcp__systemprompt__list_agents",         │
+  │    tool_input: {},                                      │
+  │    session_id: "demo-happy-path"                        │
+  │  }                                                      │
+  │  ── JSON boundary (only untyped moment) ──              │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  Agent Process (developer_agent)                        │
-  │  Scope: admin                                           │
-  │  MCP servers: systemprompt, skill-manager                │
-  │  Skills: loaded from agent config                       │
+  │  Axum Handler: govern_tool_use()                        │
+  │  1. extract_bearer_token() → &str                       │
+  │  2. validate_jwt_token() → JwtClaims { sub: UserId }    │
+  │  3. serde::from_value() → HookEventPayload (typed)      │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  AI Request #1                                          │
-  │  Model receives message + tool list                     │
-  │  Decides to call: mcp__systemprompt__list_agents        │
-  │  TraceId generated (UUID v4)                            │
+  │  Scope Resolution                                       │
+  │  resolve_agent_scope("developer_agent") → "admin"       │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  PreToolUse Hook (governance)                           │
-  │  POST /api/public/hooks/govern                          │
-  │  agent_id=developer_agent → scope=admin → ALLOW         │
+  │  Rule Engine: rules::evaluate()                         │
+  │  scope_check: admin → PASS                              │
+  │  secret_injection: clean input → PASS                   │
+  │  rate_limit: within limits → PASS                       │
+  │  decision = "allow"                                     │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  MCP Tool Execution                                     │
-  │  systemprompt MCP server receives tool call              │
-  │  Executes: systemprompt admin agents list                │
-  │  Returns: JSON agent list                               │
+  │  Audit: INSERT governance_decisions (async)             │
+  │  decision="allow", policy="default_allow"               │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  AI Request #2                                          │
-  │  Model processes tool output                            │
-  │  Formats response + creates artifact                    │
+  │  Response: HTTP 200                                     │
+  │  { permissionDecision: "allow" }                        │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
-  │  PostToolUse Hook (tracking)                            │
-  │  POST /api/public/hooks/track                           │
-  │  Records: tool_name, timing, input/output bytes         │
-  │  INSERT INTO plugin_usage (compile-time checked SQL)    │
-  └──────────────────────┬──────────────────────────────────┘
-                         │
-                         ▼
-  ┌─────────────────────────────────────────────────────────┐
-  │  Artifact Storage                                       │
-  │  Typed artifact (JSON) stored with ContextId            │
-  │  Retrievable by any surface: web, CLI, mobile           │
+  │  MCP Tool Execution (Part 2)                            │
+  │  plugins mcp call systemprompt list_agents              │
+  │  OAuth authentication → tool executes → JSON result     │
   └─────────────────────────────────────────────────────────┘
 ```
 
-## Typed IDs Created
+## Contrast with Demo 02
 
-| ID | Type | When |
-|----|------|------|
-| ContextId | `ContextId(String)` | Context creation |
-| TraceId | `TraceId(String)` | Per AI request |
-| SessionId | `SessionId(String)` | Agent session |
-| UserId | `UserId(String)` | JWT authentication |
+```
+  Demo 01 (admin scope)          Demo 02 (user scope)
+  ─────────────────────          ─────────────────────
+  agent: developer_agent         agent: associate_agent
+  scope: admin                   scope: user
+  decision: ALLOW                decision: DENY
+  policy: default_allow          policy: scope_restriction
+  tool executes: YES             tool blocked: YES
+```
 
 ## Why Rust
 
-- **Newtype IDs**: `ContextId`, `TraceId`, `SessionId` are distinct types — the compiler prevents passing a `SessionId` where a `TraceId` is expected
-- **Compile-time SQL**: Every `INSERT INTO plugin_usage` and `SELECT` uses `sqlx::query!{}` — validated against the live schema at build time
-- **Zero-cost abstractions**: The newtype wrappers compile to bare strings at runtime, no boxing or indirection
-- **Serde boundary**: MCP tool results arrive as JSON, immediately deserialized into typed Rust structs
+- **Typed boundary**: JSON → `HookEventPayload` (serde) → typed processing → `GovernanceResponse` → JSON. Untyped only at HTTP boundaries
+- **Compile-time SQL**: `INSERT INTO governance_decisions` uses `sqlx::query!{}` — validated at build time
+- **Async audit**: `tokio::spawn` writes the audit record without blocking the governance response

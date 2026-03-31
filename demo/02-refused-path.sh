@@ -1,25 +1,24 @@
 #!/bin/bash
-# DEMO 2: REFUSED PATH
-# revenue agent / associate_agent (user scope, no MCP servers)
-# Expected: Agent refuses — does not have tool access
+# DEMO 2: REFUSED PATH — GOVERNANCE DENIES ADMIN TOOL
+# This simulates what happens when a user-scope agent tries to call an
+# admin-only tool. The governance API denies it.
 #
 # What this does:
-#   1. Creates an isolated execution context (same as demo 01)
-#   2. Sends the SAME message to associate_agent (not developer_agent)
-#      - associate_agent has user scope → no MCP servers mapped
-#      - The agent sees zero tools in its tool list
-#   3. The AI responds: "I do not have access to that tool"
-#      - No governance hook fires because there's no tool call to govern
-#      - Access is denied at the mapping level, not the rule level
+#   1. Calls POST /api/public/hooks/govern simulating a Claude Code
+#      PreToolUse hook for associate_agent calling mcp__systemprompt__list_agents
+#   2. Governance evaluates scope_restriction rule:
+#      associate_agent has user scope → admin tool is denied
+#   3. Prints commentary on defense-in-depth (mapping + rules)
+#   4. Queries governance_decisions table for the deny record
 #
 # Flow:
-#   CLI → create context → message agent → AI sees no tools → refuses
+#   curl → POST /hooks/govern → JWT auth → scope_restriction check → DENY
 #
-# Contrast with Demo 01:
-#   Demo 01: admin scope → MCP tools available → tool executes → result
-#   Demo 02: user scope → no MCP tools mapped → AI refuses naturally
+# This is the second layer of defense. In a real Claude Code deployment,
+# user-scope agents would never even see admin tools (mapping level).
+# Governance provides backup enforcement at the rule level.
 #
-# Cost: ~$0.01 (one AI call, no tool use)
+# Cost: Free (no AI call)
 
 set -e
 
@@ -38,62 +37,102 @@ fi
 echo ""
 echo "=========================================="
 echo "  DEMO 2: REFUSED PATH"
-echo "  revenue agent — user scope, no MCP"
+echo "  associate_agent tries an admin-only tool"
 echo "=========================================="
 echo ""
 
-# Create a fresh isolated context
-CONTEXT_OUTPUT=$("$CLI" core contexts create --name "Demo 2 - Refused Path $(date +%H:%M:%S)" 2>&1)
-CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep "^ID:" | awk '{print $2}')
+# ──────────────────────────────────────────────
+#  Load auth token
+# ──────────────────────────────────────────────
+TOKEN_FILE="$SCRIPT_DIR/.token"
+TOKEN="${1:-}"
+if [[ -z "$TOKEN" && -f "$TOKEN_FILE" ]]; then
+  TOKEN=$(cat "$TOKEN_FILE")
+fi
 
-if [[ -z "$CONTEXT_ID" ]]; then
-  echo "WARNING: Could not create context, running without isolation"
-  "$CLI" admin agents message associate_agent \
-    -m "List all agents running on this platform using the CLI tools" \
-    --blocking --timeout 60
-else
-  echo "Context: $CONTEXT_ID"
+if [[ -z "$TOKEN" ]]; then
   echo ""
-  "$CLI" admin agents message associate_agent \
-    -m "List all agents running on this platform using the CLI tools" \
-    --context-id "$CONTEXT_ID" \
-    --blocking --timeout 60
+  echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument:"
+  echo "  ./demo/02-refused-path.sh <TOKEN>"
+  echo ""
+  exit 1
 fi
 
 # ──────────────────────────────────────────────
-#  AUDIT: Verify what just happened
+#  PART 1: Governance denies admin tool for user-scope agent
+# ──────────────────────────────────────────────
+echo "------------------------------------------"
+echo "  Simulating PreToolUse hook:"
+echo "  agent=associate_agent (user scope)"
+echo "  tool=mcp__systemprompt__list_agents"
+echo "------------------------------------------"
+echo ""
+
+curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "mcp__systemprompt__list_agents",
+    "agent_id": "associate_agent",
+    "session_id": "demo-refused-path",
+    "tool_input": {}
+  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+
+# ──────────────────────────────────────────────
+#  PART 2: Defense-in-depth commentary
 # ──────────────────────────────────────────────
 echo ""
 echo "=========================================="
-echo "  AUDIT: Verifying trace"
+echo "  DEFENSE-IN-DEPTH"
+echo "=========================================="
+echo ""
+echo "  Two independent layers prevent unauthorized access:"
+echo ""
+echo "  Layer 1 — MAPPING (preventive)"
+echo "    In a real Claude Code deployment, user-scope agents"
+echo "    never even see admin tools. The MCP server mapping"
+echo "    excludes them entirely — the tool does not appear"
+echo "    in the agent's tool list."
+echo ""
+echo "  Layer 2 — GOVERNANCE RULES (detective + enforcement)"
+echo "    Even if mapping were misconfigured, the scope_restriction"
+echo "    rule evaluates every PreToolUse hook call. A user-scope"
+echo "    agent calling an admin tool is denied and logged."
+echo ""
+echo "  Result: Two independent layers. Mapping prevents exposure."
+echo "  Governance enforces policy. Neither depends on the other."
+echo ""
+
+# ──────────────────────────────────────────────
+#  AUDIT: Query governance_decisions for the deny record
+# ──────────────────────────────────────────────
+echo "=========================================="
+echo "  AUDIT: Governance decisions for this session"
 echo "=========================================="
 echo ""
 
-TRACE_ID=$("$CLI" infra logs trace list --limit 1 2>&1 | grep -oP '"trace_id":\s*"\K[0-9a-f-]+' | head -1)
-
-if [[ -n "$TRACE_ID" ]]; then
-  echo "  Trace: $TRACE_ID"
-  echo ""
-  "$CLI" infra logs trace show "$TRACE_ID" --all 2>&1 | head -20
-  echo ""
-  echo "  Expected: ~4 events, 1 AI request, 0 MCP calls, 0 governance decisions"
-  echo "  Access denied at MAPPING level — no tools available, no hooks fired."
-else
-  echo "  (No trace found)"
-fi
+echo "  Decision counts (session=demo-refused-path):"
+"$CLI" infra db query \
+  "SELECT decision, COUNT(*) as count FROM governance_decisions WHERE session_id = 'demo-refused-path' GROUP BY decision ORDER BY decision" \
+  2>&1 | grep -v "^\[profile"
 
 echo ""
-echo "------------------------------------------"
-echo "  Cost breakdown:"
-echo "------------------------------------------"
+echo "  Expected: 1 deny (scope_restriction)"
 echo ""
-"$CLI" analytics costs breakdown --by agent 2>&1 | head -10
+
+echo "  Detailed decisions:"
+"$CLI" infra db query \
+  "SELECT decision, tool_name, policy, reason FROM governance_decisions WHERE session_id = 'demo-refused-path' ORDER BY created_at" \
+  2>&1 | grep -v "^\[profile"
 
 echo ""
 echo "=========================================="
 echo "  AUDIT COMMANDS (run manually):"
-echo "  infra logs trace show $TRACE_ID --all"
-echo "  analytics costs breakdown --by agent"
+echo "  infra db query \"SELECT * FROM governance_decisions WHERE session_id = 'demo-refused-path' ORDER BY created_at\""
+echo ""
+echo "  associate_agent (user scope) was DENIED access to"
+echo "  mcp__systemprompt__list_agents by scope_restriction rule."
 echo ""
 echo "  Now run: ./demo/03-audit-trail.sh"
 echo "=========================================="

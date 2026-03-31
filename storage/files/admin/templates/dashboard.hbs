@@ -42,7 +42,7 @@
                 <section aria-label="Policy violations">
                 <div class="section-title">Policy Violations</div>
                 {{#if has_governance_events}}
-                <div class="card p-5">
+                <div class="card p-5" style="max-height:420px;overflow-y:auto">
                     {{#each governance_events}}
                     {{#if is_denied}}
                     <div class="feed-item">

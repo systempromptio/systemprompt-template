@@ -1,4 +1,4 @@
-# foodles.com
+# Enterprise Demo
 
 **Use the CLI to discover commands.** `systemprompt --help` is your starting point.
 
@@ -117,7 +117,7 @@ Generate plugin output: `systemprompt core plugins generate --id systemprompt-de
 2. **Rust code -> `extensions/`** — All `.rs` files live here.
 3. **Config only -> `services/`** — YAML/Markdown only. No Rust code.
 4. **CSS files -> `storage/files/css/`** — NEVER put CSS in `extensions/*/assets/css/`.
-5. **Brand name is `foodles.com`** — Always lowercase. NEVER "Foodles.Com" (caps).
+5. **Brand name is `Enterprise Demo`** — Use "Enterprise Demo" for display, "demo.systemprompt.io" for URLs.
 6. **It's a library, not a framework** — Embedded code you own and extend. NEVER call it a "framework".
 
 ---

@@ -1,11 +1,11 @@
 # Landing Page Creation Guide
 
-Reference for creating conversion-focused and informational landing pages for the Foodles website (Odoo). All pages use Bootstrap 5 grid, `iw-*` classes from the design system, and follow foodles-brand guidelines.
+Reference for creating conversion-focused and informational landing pages for the Enterprise Demo website (Odoo). All pages use Bootstrap 5 grid, `iw-*` classes from the design system, and follow enterprise-demo-brand guidelines.
 
 ## Prerequisites
 
 Before creating a landing page, load these skills:
-- **`foodles-brand`** -- Read `references/verbal-identity.md` for tone, vocabulary, and writing style. Read `references/visual-identity.md` for color and typography rules. Key constraints: professional "tu", zero emojis, value vocabulary.
+- **`enterprise-demo-brand`** -- Read `references/verbal-identity.md` for tone, vocabulary, and writing style. Read `references/visual-identity.md` for color and typography rules. Key constraints: professional "tu", zero emojis, value vocabulary.
 - **`content-collection`** -- Read `references/sitemap-index.md` for interlinking URLs. Load `data/cases.json` for testimonials and social proof. Load `data/videos.json` for contextual video embeds.
 - **`components-catalog.md`** -- All section components are copy-paste ready. This guide tells you which ones to use and in what order.
 
@@ -36,28 +36,28 @@ Before creating a landing page, load these skills:
 ### Conversion Page
 
 Goal: get the visitor to request a demo, contact sales, or fill a form. Every element builds toward one action.
-- Example pages: "Solicitar demo", "Contacto Foodles", "Evaluacion gratuita"
+- Example pages: "Solicitar demo", "Contacto Enterprise Demo", "Evaluacion gratuita"
 - Tone: confident, value-focused, results-oriented
 - CTA: appears in hero AND as final section
 
 ### Informational Page
 
-Goal: educate and position Foodles as an authority. Longer content, more detail.
+Goal: educate and position Enterprise Demo as an authority. Longer content, more detail.
 - Example pages: "Que es Odoo", "ERP para fabricacion", "Implantacion Odoo"
 - Tone: explanatory, authoritative, helpful
 - May include FAQ section for SEO
 
 ### Product Showcase
 
-Goal: present a specific Foodles Core module or Odoo service with features and pricing.
-- Example pages: "Foodles Inventory", "Foodles MRP", "Odoo CRM"
+Goal: present a specific Enterprise Demo Core module or Odoo service with features and pricing.
+- Example pages: "Enterprise Demo Inventory", "Enterprise Demo MRP", "Odoo CRM"
 - Tone: technical but accessible, feature-benefit oriented
 - Includes comparison (before/after or vs competitors) and pricing
 
 ### Event Page
 
 Goal: drive registrations for a specific event.
-- Example pages: "Webinar Odoo", "Open Day Foodles", "Demo en vivo"
+- Example pages: "Webinar Odoo", "Open Day Enterprise Demo", "Demo en vivo"
 - Tone: exciting, time-sensitive, clear logistics
 - Date/time prominent, agenda visible, single CTA (registration)
 
@@ -201,7 +201,7 @@ Primary CTA in the hero section. Captures high-intent visitors who already know 
 
 ```html
 <div class="d-flex flex-wrap gap-3">
-  <a href="/contacto-foodles" class="iw-btn iw-btn-primary iw-btn-lg">Solicitar demo</a>
+  <a href="/contacto-enterprise-demo" class="iw-btn iw-btn-primary iw-btn-lg">Solicitar demo</a>
   <a href="#funcionalidades" class="iw-btn iw-btn-ghost-light">Ver funcionalidades</a>
 </div>
 ```
@@ -218,7 +218,7 @@ Callout box after a section that builds strong interest (e.g., after stats or te
 <div class="iw-callout my-4">
   <p class="iw-heading-xs mb-2">Quieres ver estos resultados en tu empresa?</p>
   <p class="iw-body mb-3">Nuestros consultores analizan tu caso y te proponen un plan personalizado.</p>
-  <a href="/contacto-foodles" class="iw-btn iw-btn-secondary">Hablar con un consultor</a>
+  <a href="/contacto-enterprise-demo" class="iw-btn iw-btn-secondary">Hablar con un consultor</a>
 </div>
 ```
 
@@ -240,7 +240,7 @@ Full-width gradient section. Last chance to convert. High contrast, clear messag
           Solicita una demo personalizada y descubre como Odoo puede optimizar tus procesos.
         </p>
         <div class="d-flex flex-wrap gap-3 justify-content-center">
-          <a href="/contacto-foodles" class="iw-btn iw-btn-primary iw-btn-lg">Solicitar demo gratuita</a>
+          <a href="/contacto-enterprise-demo" class="iw-btn iw-btn-primary iw-btn-lg">Solicitar demo gratuita</a>
           <a href="tel:+34XXXXXXXXX" class="iw-btn iw-btn-ghost-light">Llamar ahora</a>
         </div>
       </div>
@@ -258,7 +258,7 @@ Full-width gradient section. Last chance to convert. High contrast, clear messag
 
 - **Action verbs**: "Solicitar demo", "Ver modulos", "Hablar con un consultor", "Registrarse"
 - **Never generic**: avoid "Haz clic aqui", "Enviar", "Leer mas"
-- **Value vocabulary** per foodles-brand: "Iniciar tu transformacion", not "Comprar ahora"
+- **Value vocabulary** per enterprise-demo-brand: "Iniciar tu transformacion", not "Comprar ahora"
 - **Max 4 words** on buttons
 - **Primary**: yellow button (`iw-btn-primary`). **Secondary**: ghost/outline (`iw-btn-ghost`, `iw-btn-secondary`)
 
@@ -278,7 +278,7 @@ Full-width gradient section. Last chance to convert. High contrast, clear messag
 - **H2s are benefit-oriented**, not feature-oriented ("Reduce errores un 60%" not "Modulo de inventario")
 - **H3s support H2 claims** with specific features or details
 
-### Writing Rules (per foodles-brand)
+### Writing Rules (per enterprise-demo-brand)
 
 - **Professional "tu"** throughout (never "usted", never "vosotros")
 - **Zero emojis** -- no exceptions
@@ -299,7 +299,7 @@ For each section, answer:
 
 ## Brand Compliance
 
-All landing pages follow `foodles-brand` guidelines. Quick reference:
+All landing pages follow `enterprise-demo-brand` guidelines. Quick reference:
 
 ### Colors
 
@@ -321,13 +321,13 @@ Use `iw-*` CSS classes (not inline styles -- landing pages use the full CSS desi
 ### Logo
 
 - Logo is handled by Odoo's header/footer -- **do not place the logo in page content**
-- If a standalone page requires branding, use `iw-overline` text ("FOODLES") instead of an image
+- If a standalone page requires branding, use `iw-overline` text ("ENTERPRISE DEMO") instead of an image
 
 ### Voice
 
 - Professional "tu" address
 - Zero emojis
-- Value vocabulary per foodles-brand
+- Value vocabulary per enterprise-demo-brand
 
 ---
 
@@ -346,13 +346,13 @@ Load `data/cases.json` from `content-collection`. Select 1-2 relevant cases base
       <div class="col-lg-8">
         <div class="iw-testimonial">
           <p class="iw-testimonial-text">
-            "Gracias a la implantacion de Odoo con Foodles, hemos reducido un 40% el tiempo de procesamiento de pedidos y eliminado los errores de datos duplicados."
+            "Gracias a la implantacion de Odoo con Enterprise Demo, hemos reducido un 40% el tiempo de procesamiento de pedidos y eliminado los errores de datos duplicados."
           </p>
           <p class="iw-testimonial-author">Maria Lopez</p>
           <p class="iw-testimonial-role">Directora de Operaciones, Empresa XYZ</p>
         </div>
         <div class="text-center mt-4">
-          <a href="/blog/referencias-foodles-16/caso-empresa-xyz-456" class="iw-btn iw-btn-ghost iw-btn-sm">
+          <a href="/blog/referencias-enterprise-demo-16/caso-empresa-xyz-456" class="iw-btn iw-btn-ghost iw-btn-sm">
             Ver caso de exito completo
           </a>
         </div>
@@ -394,8 +394,8 @@ Load `data/videos.json` from `content-collection`. Find the most relevant video 
 Load `data/sitemap.json` from `content-collection`. Link to related services in feature descriptions and text blocks.
 
 - Link to service pages when mentioning functionalities: `<a href="/odoo-crm">gestion de clientes</a>`
-- Link to blog articles for deeper explanations: `<a href="/blog/blog-foodles-1/articulo-123">como funciona</a>`
-- Link to case studies for real examples: `<a href="/blog/referencias-foodles-16/caso-456">caso de exito</a>`
+- Link to blog articles for deeper explanations: `<a href="/blog/blog-enterprise-demo-1/articulo-123">como funciona</a>`
+- Link to case studies for real examples: `<a href="/blog/referencias-enterprise-demo-16/caso-456">caso de exito</a>`
 
 **Distribution**: 3-6 internal links per landing page, naturally distributed across text sections.
 
@@ -407,8 +407,8 @@ Load `data/sitemap.json` from `content-collection`. Link to related services in 
 
 - **Max 60 characters** (Google truncates beyond this)
 - **Primary keyword first** + brand name
-- Pattern: `[Keyword principal] | Foodles`
-- Example: `Implantacion Odoo para Fabricacion | Foodles`
+- Pattern: `[Keyword principal] | Enterprise Demo`
+- Example: `Implantacion Odoo para Fabricacion | Enterprise Demo`
 
 ### Meta Description
 
@@ -447,14 +447,14 @@ For landing pages, use `WebPage` schema (simpler than blog's Article+FAQ):
   "@type": "WebPage",
   "name": "Implantacion Odoo para Fabricacion",
   "description": "Meta description aqui (150-160 chars)",
-  "url": "https://www.foodles.es/implantacion-odoo-fabricacion",
+  "url": "https://www.enterprise-demo.es/implantacion-odoo-fabricacion",
   "publisher": {
     "@type": "Organization",
-    "name": "Foodles Business Solutions",
-    "url": "https://www.foodles.es",
+    "name": "Enterprise Demo Business Solutions",
+    "url": "https://www.enterprise-demo.es",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://www.foodles.es/web/image/website/1/logo"
+      "url": "https://www.enterprise-demo.es/web/image/website/1/logo"
     }
   },
   "inLanguage": "es"
@@ -514,7 +514,7 @@ Full conversion-focused landing page ready to paste into Odoo Website Builder. R
   <div class="container">
     <div class="row align-items-center" style="min-height: 50vh;">
       <div class="col-lg-7">
-        <p class="iw-overline mb-3" style="color: #E5B92B;">FOODLES BUSINESS SOLUTIONS</p>
+        <p class="iw-overline mb-3" style="color: #E5B92B;">ENTERPRISE DEMO BUSINESS SOLUTIONS</p>
         <h1 class="iw-heading-xl text-white mb-4">
           Titulo principal con keyword (max 60 chars)
         </h1>
@@ -523,7 +523,7 @@ Full conversion-focused landing page ready to paste into Odoo Website Builder. R
           principal y por que el visitante deberia actuar ahora.
         </p>
         <div class="d-flex flex-wrap gap-3">
-          <a href="/contacto-foodles" class="iw-btn iw-btn-primary iw-btn-lg">Solicitar demo</a>
+          <a href="/contacto-enterprise-demo" class="iw-btn iw-btn-primary iw-btn-lg">Solicitar demo</a>
           <a href="#funcionalidades" class="iw-btn iw-btn-ghost-light">Ver funcionalidades</a>
         </div>
       </div>
@@ -602,7 +602,7 @@ Full conversion-focused landing page ready to paste into Odoo Website Builder. R
           <li>Tercer beneficio diferenciador</li>
           <li>Cuarto beneficio relevante para el publico</li>
         </ul>
-        <a href="/contacto-foodles" class="iw-btn iw-btn-secondary mt-3">Saber mas</a>
+        <a href="/contacto-enterprise-demo" class="iw-btn iw-btn-secondary mt-3">Saber mas</a>
       </div>
       <div class="col-lg-6">
         <div class="iw-img-accent">
@@ -621,7 +621,7 @@ Full conversion-focused landing page ready to paste into Odoo Website Builder. R
       <div class="col-lg-8 text-center">
         <h2 class="iw-heading-md mb-3">Resultados medibles</h2>
         <p class="iw-body">
-          Datos reales de empresas que han implantado Odoo con Foodles.
+          Datos reales de empresas que han implantado Odoo con Enterprise Demo.
         </p>
       </div>
     </div>
@@ -668,7 +668,7 @@ Full conversion-focused landing page ready to paste into Odoo Website Builder. R
           <p class="iw-testimonial-role">Cargo, Empresa</p>
         </div>
         <div class="text-center mt-4">
-          <a href="/blog/referencias-foodles-16/caso-cliente-123" class="iw-btn iw-btn-ghost iw-btn-sm">
+          <a href="/blog/referencias-enterprise-demo-16/caso-cliente-123" class="iw-btn iw-btn-ghost iw-btn-sm">
             Ver caso de exito completo
           </a>
         </div>
@@ -688,7 +688,7 @@ Full conversion-focused landing page ready to paste into Odoo Website Builder. R
           Nuestros consultores analizan tu caso y te proponen un plan a medida.
         </p>
         <div class="d-flex flex-wrap gap-3 justify-content-center">
-          <a href="/contacto-foodles" class="iw-btn iw-btn-primary iw-btn-lg">Solicitar demo gratuita</a>
+          <a href="/contacto-enterprise-demo" class="iw-btn iw-btn-primary iw-btn-lg">Solicitar demo gratuita</a>
           <a href="tel:+34XXXXXXXXX" class="iw-btn iw-btn-ghost-light">Llamar ahora</a>
         </div>
       </div>
@@ -732,7 +732,7 @@ Odoo website pages are stored as `website.page` records linked to `ir.ui.view` r
   "name": "Titulo de la pagina",
   "url": "/page-slug",
   "is_published": false,
-  "website_meta_title": "Titulo SEO | Foodles",
+  "website_meta_title": "Titulo SEO | Enterprise Demo",
   "website_meta_description": "Meta description con keyword principal y propuesta de valor (150-160 chars)"
 }'
 ```
@@ -766,6 +766,6 @@ Pagina creada como borrador en Odoo:
 
 - **Always create as unpublished** -- the page must be reviewed by a human before publishing
 - **Images**: Upload to Odoo first, then reference via `/web/image/` URLs in the HTML
-- **CSS**: Ensure `foodles-frontend.css` is loaded in the Odoo website (see SKILL.md > CSS Installation)
+- **CSS**: Ensure `enterprise-demo-frontend.css` is loaded in the Odoo website (see SKILL.md > CSS Installation)
 - **Odoo theme**: The page inherits the Odoo website theme's header, footer, and base styles. The `iw-*` classes are additive
 - **Paste-first is safer** -- programmatic creation via `website.page` is useful for batch operations but the Website Builder gives immediate visual feedback

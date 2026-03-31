@@ -1,4 +1,4 @@
-# Revenue Agent Configuration (Foodles)
+# Revenue Agent Configuration (Enterprise Demo)
 # Revenue manager-facing agent for pricing optimization, rate intelligence, and demand forecasting
 
 agents:
@@ -18,10 +18,10 @@ agents:
       version: 1.0.0
       preferredTransport: JSONRPC
       iconUrl: https://ui-avatars.com/api/?name=AA&background=00B67A&color=fff&bold=true&size=256
-      documentationUrl: https://foodles.com/docs/agents/associate-agent
+      documentationUrl: https://demo.systemprompt.io/docs/agents/associate-agent
       provider:
-        organization: Foodles
-        url: https://www.foodles.com
+        organization: Enterprise Demo
+        url: https://demo.systemprompt.io
       capabilities:
         streaming: true
         pushNotifications: false

@@ -237,6 +237,7 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
         )
         .route("/my/activity", get(handlers::ssr::my_activity_page))
         .route("/governance", get(handlers::ssr::governance_page))
+        .route("/traces", get(handlers::ssr::traces_page))
         .route("/access-control", get(handlers::ssr::access_control_page))
         .route("/skills", get(handlers::ssr::skills_page))
         .route("/skills/edit", get(handlers::ssr::skill_edit_page))

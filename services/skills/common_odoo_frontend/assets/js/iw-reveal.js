@@ -1,5 +1,5 @@
 /**
- * Foodles Scroll Reveal - Intersection Observer for iw-reveal animations.
+ * Enterprise Demo Scroll Reveal - Intersection Observer for iw-reveal animations.
  * Drop this script at the end of any page using iw-reveal classes.
  * No dependencies. Works with Odoo website frontend.
  *

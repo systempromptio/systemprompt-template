@@ -73,15 +73,15 @@ metadata:
 
   structured_data:
     organization:
-      name: "Foodles"
-      url: "https://www.foodles.com"
-      logo: "https://www.foodles.com/logo.png"
-      description: "Save Money. Live Better."
+      name: "Enterprise Demo"
+      url: "https://demo.systemprompt.io"
+      logo: "https://demo.systemprompt.io/logo.png"
+      description: "AI Agent Platform"
 
     blog:
       type: "Blog"
       name: "Blog"
-      url: "https://www.foodles.com/blog"
+      url: "https://demo.systemprompt.io/blog"
       description: "Articles and updates"
       article_section: "Technology"
       language: "en-US"

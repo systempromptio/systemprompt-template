@@ -26,7 +26,7 @@ Content types fall into two categories:
 
 Fragments need wrapping in a full HTML document with:
 - Bootstrap 5 CSS (via CDN -- Odoo provides this natively, but preview needs it explicitly)
-- Foodles design system CSS (embedded from `assets/css/foodles-frontend.css`)
+- Enterprise Demo design system CSS (embedded from `assets/css/enterprise-demo-frontend.css`)
 - Scroll reveal JS (embedded from `assets/js/iw-reveal.js`)
 - Google Fonts (Dosis)
 
@@ -59,11 +59,11 @@ Use this template to wrap blog and landing page HTML fragments. Read the CSS and
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Preview -- Foodles</title>
+  <title>Preview -- Enterprise Demo</title>
   <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;600;700&display=swap" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
-    /* === Foodles Frontend CSS (embedded from assets/css/foodles-frontend.css) === */
+    /* === Enterprise Demo Frontend CSS (embedded from assets/css/enterprise-demo-frontend.css) === */
     /* READ the file and paste its entire contents here */
   </style>
 </head>
@@ -82,7 +82,7 @@ Use this template to wrap blog and landing page HTML fragments. Read the CSS and
 
 ### How to build the preview file
 
-1. Read `assets/css/foodles-frontend.css` -- copy entire contents
+1. Read `assets/css/enterprise-demo-frontend.css` -- copy entire contents
 2. Read `assets/js/iw-reveal.js` -- copy entire contents
 3. Replace the CSS placeholder comment with the CSS contents
 4. Replace the JS placeholder comment with the JS contents

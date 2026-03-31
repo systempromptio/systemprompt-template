@@ -1,5 +1,5 @@
 /**
- * FOODLES UI - LinkedIn Content Manager
+ * ENTERPRISE DEMO UI - LinkedIn Content Manager
  * Interactive functionality for the UI components
  */
 
@@ -11,7 +11,7 @@
   // ===========================================================================
   
   const ThemeManager = {
-    STORAGE_KEY: 'foodles-theme',
+    STORAGE_KEY: 'enterprise-demo-theme',
     
     init() {
       const savedTheme = localStorage.getItem(this.STORAGE_KEY);
@@ -94,9 +94,9 @@
       
       let html = `
         <div class="calendar-nav d-flex justify-between align-center mb-md">
-          <button class="btn-foodles btn-ghost btn-sm" data-action="prev">Anterior</button>
+          <button class="btn-enterprise-demo btn-ghost btn-sm" data-action="prev">Anterior</button>
           <h3 class="mb-0">${monthNames[month]} ${year}</h3>
-          <button class="btn-foodles btn-ghost btn-sm" data-action="next">Siguiente</button>
+          <button class="btn-enterprise-demo btn-ghost btn-sm" data-action="next">Siguiente</button>
         </div>
         <div class="calendar-grid">
           ${dayNames.map(d => `<div class="calendar-header-cell">${d}</div>`).join('')}
@@ -350,12 +350,12 @@
       modal.innerHTML = `
         <div class="card-header">
           <h3 class="card-title">${title}</h3>
-          <button class="btn-foodles btn-ghost btn-sm modal-close" aria-label="Cerrar">X</button>
+          <button class="btn-enterprise-demo btn-ghost btn-sm modal-close" aria-label="Cerrar">X</button>
         </div>
         <div class="modal-content mb-lg">${content}</div>
         <div class="modal-actions d-flex justify-between gap-md">
           ${actions.map(a => `
-            <button class="btn-foodles ${a.class || 'btn-secondary'}" data-action="${a.action}">
+            <button class="btn-enterprise-demo ${a.class || 'btn-secondary'}" data-action="${a.action}">
               ${a.label}
             </button>
           `).join('')}
@@ -456,7 +456,7 @@
   });
 
   // Expose to global scope
-  window.FoodlesUI = {
+  window.Enterprise DemoUI = {
     Theme: ThemeManager,
     Calendar,
     StatsAnimator,

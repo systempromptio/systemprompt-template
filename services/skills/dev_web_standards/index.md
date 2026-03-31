@@ -1,11 +1,11 @@
 ---
 name: "Web Standards"
-description: "Extension system, content templates, page prerendering, and CSS management standards for foodles.com web development"
+description: "Extension system, content templates, page prerendering, and CSS management standards for demo.systemprompt.io web development"
 ---
 
 # Extension System Guide
 
-Technical guide for extending foodles.com with custom templates, components, and data providers.
+Technical guide for extending demo.systemprompt.io with custom templates, components, and data providers.
 
 ---
 

@@ -32,20 +32,27 @@ pub(crate) async fn governance_page(
     }
 
     let search = query.q.as_deref();
-    let rows = repositories::governance::list_governance_decisions(&pool, search)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to fetch governance decisions");
-            vec![]
-        });
-
-    let total = i64::try_from(rows.len()).unwrap_or(0);
-    let denied: i64 = i64::try_from(rows.iter().filter(|r| r.decision == "deny").count()).unwrap_or(0);
-    let allowed = total - denied;
-    let secret_breaches: i64 = i64::try_from(rows
-        .iter()
-        .filter(|r| r.policy == "secret_injection")
-        .count()).unwrap_or(0);
+    let (rows, counts) = tokio::join!(
+        repositories::governance::list_governance_decisions(&pool, search),
+        repositories::governance::fetch_governance_counts(&pool),
+    );
+    let rows = rows.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch governance decisions");
+        vec![]
+    });
+    let counts = counts.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch governance counts");
+        repositories::governance::GovernanceCounts {
+            total: 0,
+            allowed: 0,
+            denied: 0,
+            secret_breaches: 0,
+        }
+    });
+    let total = counts.total;
+    let denied = counts.denied;
+    let allowed = counts.allowed;
+    let secret_breaches = counts.secret_breaches;
 
     let decisions_json: Vec<serde_json::Value> = rows
         .iter()
@@ -61,7 +68,7 @@ pub(crate) async fn governance_page(
                 "is_secret_breach": r.policy == "secret_injection",
                 "policy": r.policy,
                 "reason": r.reason,
-                "created_at": r.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+                "created_at": r.created_at.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string(),
             })
         })
         .collect();

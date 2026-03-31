@@ -161,7 +161,7 @@ WON_COUNT=$(node -e "
 log_ok "Oportunidades ganadas: $WON_COUNT"
 
 # --- 3. Oportunidades perdidas/congeladas (ultimos N meses) ---
-# En Foodles, las perdidas estan en la etapa "Congelado" (id=5).
+# En Enterprise Demo, las perdidas estan en la etapa "Congelado" (id=5).
 # Si se configura otro lost_stage_id, se puede cambiar aqui.
 log_info "Buscando oportunidades perdidas/congeladas (ultimos $MONTHS meses)..."
 

@@ -1,6 +1,6 @@
 ---
-name: "Foodles Brand"
-description: "Foodles brand guidelines for all documents. Enforces brand colors, Dosis typography, logo usage, and Spanish brand voice"
+name: "Enterprise Demo Brand"
+description: "Enterprise Demo brand guidelines for all documents. Enforces brand colors, Dosis typography, logo usage, and Spanish brand voice"
 ---
 
 |---|
@@ -28,10 +28,10 @@ For most tasks, read **verbal-identity.md** (for copy) AND the format-specific r
 
 **CSS Custom Properties**:
 ```css
---foodles-warm-yellow: #E5B92B;
---foodles-blue-lilac: #0071ce;
---foodles-blue-space: #1A0030;
---foodles-light-sky: #8AC2DB;
+--enterprise-demo-warm-yellow: #E5B92B;
+--enterprise-demo-blue-lilac: #0071ce;
+--enterprise-demo-blue-space: #1A0030;
+--enterprise-demo-light-sky: #8AC2DB;
 ```
 
 **Gradient rule**: Always dark to light. Never light-to-dark.
@@ -67,7 +67,7 @@ For most tasks, read **verbal-identity.md** (for copy) AND the format-specific r
 
 ### Archetype: The Wise Companion
 
-Expert authority with approachability. Foodles is a technology partner, not a vendor.
+Expert authority with approachability. Enterprise Demo is a technology partner, not a vendor.
 
 ### Address: Professional "Tu"
 
@@ -77,7 +77,7 @@ Always use "tu" (informal Spanish). Never "usted."
 
 ### Writing Style
 
-**Long explanatory paragraphs**: Foodles does not give "tips" or "quick tricks." Every recommendation is argued with reasoning. Take the space needed to explain the "why" behind technical decisions. Depth conveys authority.
+**Long explanatory paragraphs**: Enterprise Demo does not give "tips" or "quick tricks." Every recommendation is argued with reasoning. Take the space needed to explain the "why" behind technical decisions. Depth conveys authority.
 
 ### Value Vocabulary
 
@@ -113,28 +113,28 @@ Example: Instead of "We don't work with WordPress," say: "Para garantizar la esc
 
 | File | Use |
 |---|---|
-| `logotipo-foodles-color-blue-gradient_blue.svg` | Light backgrounds (primary) |
-| `logotipo-foodles-color-white-gradient_blue.svg` | Dark backgrounds (primary) |
-| `logotipo-foodles-color-white-gradient_yellow.svg` | Dark backgrounds (warm variant) |
-| `logotipo-foodles-monocolor-black.svg` | B&W / monochrome |
-| `logotipo-foodles-monocolor-white.svg` | Dark bg / monochrome |
+| `logotipo-enterprise-demo-color-blue-gradient_blue.svg` | Light backgrounds (primary) |
+| `logotipo-enterprise-demo-color-white-gradient_blue.svg` | Dark backgrounds (primary) |
+| `logotipo-enterprise-demo-color-white-gradient_yellow.svg` | Dark backgrounds (warm variant) |
+| `logotipo-enterprise-demo-monocolor-black.svg` | B&W / monochrome |
+| `logotipo-enterprise-demo-monocolor-white.svg` | Dark bg / monochrome |
 
 ### Isotypes (`assets/isotype/`)
 
 | File | Use |
 |---|---|
-| `isotipo-foodles-bluelilac.svg` | Light backgrounds, avatars |
-| `isotipo-foodles-gradient_blue.svg` | Digital, app icons |
-| `isotipo-foodles-gradient_yellow.svg` | Warm accent variant |
-| `isotipo-foodles-yellow.svg` | Accent contexts |
+| `isotipo-enterprise-demo-bluelilac.svg` | Light backgrounds, avatars |
+| `isotipo-enterprise-demo-gradient_blue.svg` | Digital, app icons |
+| `isotipo-enterprise-demo-gradient_yellow.svg` | Warm accent variant |
+| `isotipo-enterprise-demo-yellow.svg` | Accent contexts |
 
 ### Favicons (`assets/favicons/`)
 
 | File | Use |
 |---|---|
-| `foodles-mosca-bg_bluelilac.png` | Default favicon |
-| `foodles-mosca-bg_bluespace.png` | Formal contexts |
-| `foodles-mosca-bg_white.png` | Light interfaces |
+| `enterprise-demo-mosca-bg_bluelilac.png` | Default favicon |
+| `enterprise-demo-mosca-bg_bluespace.png` | Formal contexts |
+| `enterprise-demo-mosca-bg_white.png` | Light interfaces |
 
 ### Fonts (`assets/fonts/`)
 
@@ -159,7 +159,7 @@ Example: Instead of "We don't work with WordPress," say: "Para garantizar la esc
 
 ## Content Review Checklist
 
-Before delivering any Foodles content, verify:
+Before delivering any Enterprise Demo content, verify:
 
 ### Voice Compliance
 - [ ] Professional "tu" address (never "usted")

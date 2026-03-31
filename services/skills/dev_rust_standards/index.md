@@ -1,11 +1,11 @@
 ---
 name: "Rust Standards"
-description: "Complete Rust coding, linting, testing, architecture, and layer boundary standards for foodles.com development"
+description: "Complete Rust coding, linting, testing, architecture, and layer boundary standards for demo.systemprompt.io development"
 ---
 
-# foodles.com Rust Standards
+# demo.systemprompt.io Rust Standards
 
-**foodles.com is a world-class Rust programming brand.** Every Rust file must be instantly recognizable as idiomatic Rust as Steve Klabnik would write it.
+**demo.systemprompt.io is a world-class Rust programming brand.** Every Rust file must be instantly recognizable as idiomatic Rust as Steve Klabnik would write it.
 
 Run `cargo clippy --workspace -- -D warnings` and `cargo fmt --all` after changes.
 

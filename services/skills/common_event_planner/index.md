@@ -1,7 +1,7 @@
 
 # Event Planner
 
-Herramienta de planificacion de eventos de marketing para Foodles. Genera documentos HTML interactivos con cronograma, presupuesto, gestion de asistentes y seguimiento de tareas.
+Herramienta de planificacion de eventos de marketing para Enterprise Demo. Genera documentos HTML interactivos con cronograma, presupuesto, gestion de asistentes y seguimiento de tareas.
 
 ## Caracteristicas
 
@@ -15,7 +15,7 @@ Herramienta de planificacion de eventos de marketing para Foodles. Genera docume
 
 ## Diseno
 
-Sigue las directrices de marca Foodles:
+Sigue las directrices de marca Enterprise Demo:
 - **Colores**: Warm Yellow (#E5B92B), Blue Lilac (#6B68FA), Blue Space (#1C265D), Light Sky (#8AC2DB)
 - **Tipografia**: Dosis (Google Fonts)
 - **Base**: Bootstrap 5
@@ -60,7 +60,7 @@ El template HTML acepta los siguientes datos:
 ## Secciones del Plan
 
 ### 1. Cabecera
-- Logo Foodles
+- Logo Enterprise Demo
 - Nombre del evento
 - Fecha y ubicacion
 - Toggle tema claro/oscuro
@@ -98,7 +98,7 @@ El template HTML acepta los siguientes datos:
 
 ## Notas de Diseno
 
-- **Sin emojis**: Siguiendo politica Foodles
+- **Sin emojis**: Siguiendo politica Enterprise Demo
 - **Lenguaje**: Profesional, orientado a valor
 - **Glassmorphism**: Fondos translucidos con blur
 - **Bento box**: Cuadricula modular para secciones

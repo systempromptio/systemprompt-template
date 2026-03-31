@@ -16,7 +16,7 @@ description: "Marketing event planning with timeline, budget breakdown, attendee
 ## Secciones del Plan
 
 ### 1. Cabecera
-- Logo Foodles
+- Logo Enterprise Demo
 - Nombre del evento
 - Fecha y ubicacion
 - Toggle tema claro/oscuro
@@ -54,7 +54,7 @@ description: "Marketing event planning with timeline, budget breakdown, attendee
 
 ## Notas de Diseno
 
-- **Sin emojis**: Siguiendo politica Foodles
+- **Sin emojis**: Siguiendo politica Enterprise Demo
 - **Lenguaje**: Profesional, orientado a valor
 - **Glassmorphism**: Fondos translucidos con blur
 - **Bento box**: Cuadricula modular para secciones

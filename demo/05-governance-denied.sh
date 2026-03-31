@@ -1,9 +1,9 @@
 #!/bin/bash
 # DEMO 5: GOVERNANCE DENIED PATH
-# Shows the backend rejecting a tool call for a user-scope agent
+# Shows the backend rejecting tool calls for a user-scope agent
 #
 # What this does:
-#   Part 1 — Direct API call:
+#   Part 1 — Scope restriction denial:
 #     1. Gets auth token from demo/.token (set by 00-preflight.sh)
 #     2. POSTs directly to /api/public/hooks/govern with:
 #        - tool_name: mcp__systemprompt__list_agents (admin-only MCP tool)
@@ -11,21 +11,27 @@
 #     3. Shows raw JSON response: permissionDecision: "deny"
 #        - scope_check rule fails: user scope cannot access mcp__systemprompt__* tools
 #
-#   Part 2 — Live agent attempt:
-#     1. Creates isolated context, messages associate_agent
-#     2. Agent tries to call MCP tool → PreToolUse hook fires
-#     3. Governance returns DENY → Claude Code blocks the tool call
-#     4. Agent reports it cannot execute the operation
+#   Part 2 — Blocklist denial:
+#     1. POSTs directly to /api/public/hooks/govern with:
+#        - tool_name: mcp__systemprompt__delete_agent (destructive MCP tool)
+#        - agent_id: associate_agent (user scope)
+#        - tool_input: {"agent_id":"test"}
+#     2. Shows raw JSON response: permissionDecision: "deny"
+#        - Both scope_check AND blocklist rules trigger on this call
+#        - Blocklist catches destructive operations (delete_*) regardless of scope
+#
+# What Claude Code does with a deny response:
+#   1. The PreToolUse hook returns permissionDecision: "deny" with a reason
+#   2. Claude Code prints: [GOVERNANCE] <reason> — visible in the terminal
+#   3. Claude Code BLOCKS the tool call — it never executes
+#   4. The agent receives the denial reason and must explain it to the user
+#   5. The denial is logged to governance_decisions for audit
 #
 # Flow:
 #   Agent → MCP tool call → PreToolUse hook → POST /hooks/govern
 #   → JWT auth → scope=user → scope_check FAILS → DENY → tool blocked
 #
-# Contrast with Demo 04:
-#   Demo 04: admin scope → rules pass → ALLOW
-#   Demo 05: user scope → scope_check fails → DENY
-#
-# Cost: ~$0.01 (one AI call + one direct API call, no tool execution)
+# Cost: Free (two direct API calls, no AI usage)
 
 set -e
 
@@ -57,14 +63,7 @@ echo "    7. Claude Code BLOCKS the tool call"
 echo "=========================================="
 echo ""
 
-# Part 1: Show raw governance response
-echo "------------------------------------------"
-echo "  PART 1: Raw governance API response"
-echo "  (calling /api/public/hooks/govern directly)"
-echo "------------------------------------------"
-echo ""
-
-# Get a token: argument, demo/.token (set by 00-preflight.sh), or fail
+# Load token from demo/.token (set by 00-preflight.sh)
 TOKEN="${1:-}"
 TOKEN_FILE="$SCRIPT_DIR/.token"
 if [[ -z "$TOKEN" && -f "$TOKEN_FILE" ]]; then
@@ -76,47 +75,64 @@ if [[ -z "$TOKEN" ]]; then
   exit 1
 fi
 
-if [[ -n "$TOKEN" ]]; then
-  curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d '{
-      "hook_event_name": "PreToolUse",
-      "tool_name": "mcp__systemprompt__list_agents",
-      "agent_id": "associate_agent",
-      "session_id": "demo-governance-denied"
-    }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
-else
-  echo "(Skipping direct API call — no auth token available)"
-fi
-
-echo ""
+# ──────────────────────────────────────────────
+#  PART 1: Scope restriction — user cannot access admin tools
+# ──────────────────────────────────────────────
 echo "------------------------------------------"
-echo "  PART 2: Live agent attempt"
-echo "  associate_agent tries to use admin tools"
+echo "  PART 1: Scope restriction denial"
+echo "  tool: mcp__systemprompt__list_agents"
+echo "  agent: associate_agent (user scope)"
+echo "  rule: scope_check — user scope cannot access mcp__systemprompt__* tools"
 echo "------------------------------------------"
 echo ""
 
-# Create a fresh isolated context
-CONTEXT_OUTPUT=$("$CLI" core contexts create --name "Demo 5 - Governance Denied $(date +%H:%M:%S)" 2>&1)
-CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep "^ID:" | awk '{print $2}')
+curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "mcp__systemprompt__list_agents",
+    "agent_id": "associate_agent",
+    "session_id": "demo-governance-denied"
+  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
 
-if [[ -z "$CONTEXT_ID" ]]; then
-  echo "WARNING: Could not create context, running without isolation"
-  "$CLI" admin agents message associate_agent \
-    -m "List all agents running on this platform using the CLI tools" \
-    --blocking --timeout 60
-else
-  echo "Context: $CONTEXT_ID"
-  echo ""
-  "$CLI" admin agents message associate_agent \
-    -m "List all agents running on this platform using the CLI tools" \
-    --context-id "$CONTEXT_ID" \
-    --blocking --timeout 60
-fi
-
-# Show governance log
 echo ""
+echo "  ^ scope_check DENIED: user scope cannot call mcp__systemprompt__* tools"
+echo ""
+
+# ──────────────────────────────────────────────
+#  PART 2: Blocklist — destructive tool blocked
+# ──────────────────────────────────────────────
+echo "------------------------------------------"
+echo "  PART 2: Blocklist denial"
+echo "  tool: mcp__systemprompt__delete_agent"
+echo "  agent: associate_agent (user scope)"
+echo "  rule: blocklist — destructive operations (delete_*) are always blocked"
+echo "  Also triggers: scope_check (user scope + mcp__systemprompt__* tool)"
+echo "------------------------------------------"
+echo ""
+
+curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook_event_name": "PreToolUse",
+    "tool_name": "mcp__systemprompt__delete_agent",
+    "tool_input": {"agent_id": "test"},
+    "agent_id": "associate_agent",
+    "session_id": "demo-governance-denied-blocklist"
+  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+
+echo ""
+echo "  ^ Blocked by BOTH scope_check and blocklist rules."
+echo "  In Claude Code, the agent would see:"
+echo "    [GOVERNANCE] Tool blocked: <reason>"
+echo "    The tool call never executes. The agent must explain the denial."
+echo ""
+
+# ──────────────────────────────────────────────
+#  GOVERNANCE LOG
+# ──────────────────────────────────────────────
 echo "=========================================="
 echo "  GOVERNANCE LOG"
 echo "=========================================="
@@ -129,7 +145,7 @@ else
 fi
 
 # ──────────────────────────────────────────────
-#  AUDIT: Verify governance denial
+#  AUDIT: Verify governance denials
 # ──────────────────────────────────────────────
 echo ""
 echo "=========================================="
@@ -139,32 +155,15 @@ echo ""
 
 echo "  Most recent governance decisions:"
 "$CLI" infra db query \
-  "SELECT decision, tool_name, policy, reason FROM governance_decisions ORDER BY created_at DESC LIMIT 3" \
+  "SELECT decision, tool_name, policy, reason FROM governance_decisions ORDER BY created_at DESC LIMIT 5" \
   2>&1 | grep -v "^\[profile"
 
 echo ""
-echo "  Expected: decision=deny, policy=scope_restriction"
-echo "  scope_check FAILED: user scope cannot access mcp__systemprompt__* tools"
-
-echo ""
-echo "------------------------------------------"
-echo "  Trace:"
-echo "------------------------------------------"
-echo ""
-TRACE_ID=$("$CLI" infra logs trace list --limit 1 2>&1 | grep -oP '"trace_id":\s*"\K[0-9a-f-]+' | head -1)
-if [[ -n "$TRACE_ID" ]]; then
-  echo "  $TRACE_ID"
-  "$CLI" infra logs trace show "$TRACE_ID" --all 2>&1 | head -20
-fi
+echo "  Expected: two deny records"
+echo "    1. scope_check: user scope cannot access mcp__systemprompt__list_agents"
+echo "    2. blocklist/scope_check: destructive tool mcp__systemprompt__delete_agent blocked"
 
 echo ""
 echo "=========================================="
-echo "  AUDIT COMMANDS (run manually):"
-echo "  infra logs trace show $TRACE_ID --all"
-echo "  infra db query \"SELECT * FROM governance_decisions ORDER BY created_at DESC LIMIT 5\""
-echo ""
-echo "  The governance endpoint DENIED the call."
-echo "  user scope → scope_check failed → tool blocked."
-echo ""
 echo "  Now run: ./demo/06-governance-secret-breach.sh"
 echo "=========================================="

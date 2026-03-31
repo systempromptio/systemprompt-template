@@ -1,6 +1,6 @@
 ---
 title: "Build & CI/CD Pipeline"
-description: "Build pipeline, asset compilation, and deployment workflow for the Foodles AI governance platform. From source to production with just build and just publish."
+description: "Build pipeline, asset compilation, and deployment workflow for the Enterprise Demo AI governance platform. From source to production with just build and just publish."
 author: "systemprompt.io"
 slug: "ci-cd"
 keywords: "build, CI/CD, pipeline, deployment, assets, compilation, Docker"

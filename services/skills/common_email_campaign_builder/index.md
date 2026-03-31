@@ -14,10 +14,10 @@ Este skill genera activos de marketing por email:
 ### Colores (variables CSS)
 
 ```css
---foodles-warm-yellow: #E5B92B;   /* CTAs, acentos, highlights */
---foodles-blue-lilac: #6B68FA;    /* Títulos, elementos digitales */
---foodles-blue-space: #1C265D;    /* Fondos oscuros, texto principal */
---foodles-light-sky: #8AC2DB;     /* Fondos claros, soporte */
+--enterprise-demo-warm-yellow: #E5B92B;   /* CTAs, acentos, highlights */
+--enterprise-demo-blue-lilac: #6B68FA;    /* Títulos, elementos digitales */
+--enterprise-demo-blue-space: #1C265D;    /* Fondos oscuros, texto principal */
+--enterprise-demo-light-sky: #8AC2DB;     /* Fondos claros, soporte */
 ```
 
 ### Tipografía
@@ -111,12 +111,12 @@ email-campaign-builder/
 3. No usar "problema" - usar "reto" o "oportunidad"
 4. No CTAs genéricos ("click aquí") - usar acción específica
 
-## Integración con Foodles Brand
+## Integración con Enterprise Demo Brand
 
-Este skill extiende `foodles-brand`. Antes de modificar:
-1. Lee `/skills/foodles-brand/SKILL.md`
-2. Consulta `/skills/foodles-brand/references/html-documents.md`
-3. Usa los assets de `/skills/foodles-brand/assets/`
+Este skill extiende `enterprise-demo-brand`. Antes de modificar:
+1. Lee `/skills/enterprise-demo-brand/SKILL.md`
+2. Consulta `/skills/enterprise-demo-brand/references/html-documents.md`
+3. Usa los assets de `/skills/enterprise-demo-brand/assets/`
 
 ## Ejemplos
 

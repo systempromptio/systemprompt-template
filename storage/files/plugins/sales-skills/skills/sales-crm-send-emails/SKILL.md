@@ -7,8 +7,8 @@ description: "Send CRM reports via email. Delivers full team report and personal
 | `EMAIL_SMTP_SERVER` | `smtp.gmail.com` | SMTP server |
 | `EMAIL_SMTP_PORT` | `587` | SMTP port |
 | `EMAIL_USE_TLS` | `true` | Enable STARTTLS |
-| `EMAIL_FROM` | `victor@foodles.com` | Sender address |
-| `EMAIL_USERNAME` | `victor@foodles.com` | SMTP login |
+| `EMAIL_FROM` | `victor@demo.systemprompt.io` | Sender address |
+| `EMAIL_USERNAME` | `victor@demo.systemprompt.io` | SMTP login |
 | `EMAIL_SMTP_PASSWORD` | (required) | SMTP password |
 
 ### Gmail App Password

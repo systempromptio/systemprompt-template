@@ -1,6 +1,6 @@
 ---
 title: "Deployment Models"
-description: "Four deployment models for the Foodles AI governance platform: sidecar, gateway, embedded, and multi-tenant. Choose the model that fits your infrastructure."
+description: "Four deployment models for the Enterprise Demo AI governance platform: sidecar, gateway, embedded, and multi-tenant. Choose the model that fits your infrastructure."
 author: "systemprompt.io"
 slug: "deployment-models"
 keywords: "deployment, sidecar, gateway, embedded, multi-tenant, Docker, infrastructure"

@@ -1,7 +1,7 @@
 
 # Timesheet Report
 
-Automated timesheet reporting system for Foodles. Generates weekly summaries with billable/internal split, anomaly detection, quality flags, and trend comparison.
+Automated timesheet reporting system for Enterprise Demo. Generates weekly summaries with billable/internal split, anomaly detection, quality flags, and trend comparison.
 
 ## Overview
 

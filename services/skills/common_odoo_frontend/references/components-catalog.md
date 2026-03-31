@@ -1,4 +1,4 @@
-# Foodles Frontend Components Catalog
+# Enterprise Demo Frontend Components Catalog
 
 Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system classes. Copy-paste ready for Odoo Editor.
 
@@ -26,7 +26,7 @@ Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system cla
   <div class="container">
     <div class="row align-items-center">
       <div class="col-lg-7">
-        <span class="iw-overline mb-3 d-block">SOLUCIONES FOODLES</span>
+        <span class="iw-overline mb-3 d-block">SOLUCIONES ENTERPRISE DEMO</span>
         <h1 class="iw-heading-xl mb-4">Transforma tu negocio con Odoo</h1>
         <p class="iw-body-lg" style="color: rgba(255,255,255,0.85);">
           Te acompanamos en cada paso de la digitalizacion de tu empresa
@@ -82,7 +82,7 @@ Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system cla
   <div class="container">
     <div class="text-center mb-5">
       <span class="iw-overline d-block mb-2">FUNCIONALIDADES</span>
-      <h2 class="iw-heading-md">Por que elegir Foodles</h2>
+      <h2 class="iw-heading-md">Por que elegir Enterprise Demo</h2>
       <div class="iw-divider-accent iw-divider-accent-center mt-3"></div>
     </div>
     <div class="row g-4 iw-stagger">
@@ -161,7 +161,7 @@ Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system cla
       <div class="col-lg-4 col-md-6">
         <div class="iw-card iw-card-accent h-100">
           <span class="iw-badge iw-badge-lilac mb-3">INVENTARIO</span>
-          <h3 class="iw-heading-xs mb-2">Foodles Inventory</h3>
+          <h3 class="iw-heading-xs mb-2">Enterprise Demo Inventory</h3>
           <p class="iw-body mb-3">Control completo del stock con trazabilidad avanzada y rutas configurables.</p>
           <a href="#" class="iw-btn iw-btn-ghost iw-btn-sm mt-auto">Saber mas</a>
         </div>
@@ -169,7 +169,7 @@ Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system cla
       <div class="col-lg-4 col-md-6">
         <div class="iw-card iw-card-accent h-100">
           <span class="iw-badge iw-badge-yellow mb-3">FABRICACION</span>
-          <h3 class="iw-heading-xs mb-2">Foodles MRP</h3>
+          <h3 class="iw-heading-xs mb-2">Enterprise Demo MRP</h3>
           <p class="iw-body mb-3">Planificacion y control de produccion con MRP avanzado y OEE integrado.</p>
           <a href="#" class="iw-btn iw-btn-ghost iw-btn-sm mt-auto">Saber mas</a>
         </div>
@@ -177,7 +177,7 @@ Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system cla
       <div class="col-lg-4 col-md-6">
         <div class="iw-card iw-card-accent h-100">
           <span class="iw-badge iw-badge-sky mb-3">CALIDAD</span>
-          <h3 class="iw-heading-xs mb-2">Foodles Quality</h3>
+          <h3 class="iw-heading-xs mb-2">Enterprise Demo Quality</h3>
           <p class="iw-body mb-3">Gestion de calidad integrada con produccion, compras e inventario.</p>
           <a href="#" class="iw-btn iw-btn-ghost iw-btn-sm mt-auto">Saber mas</a>
         </div>
@@ -254,7 +254,7 @@ Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system cla
       <div class="col-lg-8">
         <div class="iw-testimonial">
           <p class="iw-testimonial-text">
-            La implementacion de Odoo con Foodles transformo completamente nuestra
+            La implementacion de Odoo con Enterprise Demo transformo completamente nuestra
             gestion de almacen. En tres meses redujimos los errores de picking un 85%.
           </p>
           <p class="iw-testimonial-author">Maria Garcia</p>
@@ -484,17 +484,17 @@ Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system cla
     </thead>
     <tbody>
       <tr>
-        <td><strong>Foodles Inventory</strong></td>
+        <td><strong>Enterprise Demo Inventory</strong></td>
         <td>Control de stock multi-almacen</td>
         <td>Desde 150/mes</td>
       </tr>
       <tr>
-        <td><strong>Foodles MRP</strong></td>
+        <td><strong>Enterprise Demo MRP</strong></td>
         <td>Planificacion de produccion</td>
         <td>Desde 200/mes</td>
       </tr>
       <tr>
-        <td><strong>Foodles Quality</strong></td>
+        <td><strong>Enterprise Demo Quality</strong></td>
         <td>Gestion de calidad integrada</td>
         <td>Desde 120/mes</td>
       </tr>
@@ -674,7 +674,7 @@ Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system cla
 <!-- Email-safe: all inline styles, table layout -->
 <div class="iw-email-container" style="max-width:600px;margin:0 auto;font-family:'Dosis',Verdana,Arial,sans-serif;color:#1C265D;">
   <div class="iw-email-header" style="background-color:#1C265D;padding:24px 32px;text-align:center;">
-    <img src="https://www.foodles.es/logo-white.png" alt="Foodles" width="120" style="height:auto;"/>
+    <img src="https://www.enterprise-demo.es/logo-white.png" alt="Enterprise Demo" width="120" style="height:auto;"/>
   </div>
   <div class="iw-email-body" style="padding:32px;background-color:#FFFFFF;">
     <h1 style="font-family:'Dosis',Verdana,sans-serif;font-weight:700;font-size:24px;color:#1C265D;margin:0 0 16px;">
@@ -688,7 +688,7 @@ Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system cla
     </a>
   </div>
   <div class="iw-email-footer" style="background-color:#f7f8fc;padding:24px 32px;text-align:center;font-size:12px;color:#4a5568;font-family:'Dosis',Verdana,sans-serif;">
-    <p style="margin:0;">Foodles Business Solutions S.L. | foodles.es</p>
+    <p style="margin:0;">Enterprise Demo Business Solutions S.L. | enterprise-demo.es</p>
   </div>
 </div>
 ```
@@ -742,7 +742,7 @@ Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system cla
       <!--[if mso]>
       <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml"
         xmlns:w="urn:schemas-microsoft-com:office:word"
-        href="https://www.foodles.es/contacto-foodles"
+        href="https://www.enterprise-demo.es/contacto-enterprise-demo"
         style="height:44px;v-text-anchor:middle;width:220px;"
         arcsize="50%"
         strokecolor="#E5B92B"
@@ -754,7 +754,7 @@ Complete catalog of HTML components using Bootstrap 5 + `iw-*` design system cla
       </v:roundrect>
       <![endif]-->
       <!--[if !mso]><!-->
-      <a href="https://www.foodles.es/contacto-foodles"
+      <a href="https://www.enterprise-demo.es/contacto-enterprise-demo"
         style="display:inline-block;background-color:#E5B92B;color:#1C265D;font-family:'Dosis',Verdana,sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;text-decoration:none;padding:12px 28px;border-radius:100px;line-height:1;">
         Solicitar demo
       </a>

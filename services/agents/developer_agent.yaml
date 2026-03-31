@@ -1,4 +1,4 @@
-# Platform Agent Configuration (Foodles)
+# Platform Agent Configuration (Enterprise Demo)
 # Engineering-facing agent for API integration, channel management, and data pipelines
 
 agents:
@@ -14,14 +14,14 @@ agents:
       protocolVersion: 0.3.0
       name: Developer Agent
       displayName: Developer Agent
-      description: Engineering-facing AI agent that supports API integration, channel management, data pipeline orchestration, and platform development across the Foodles ecosystem
+      description: Engineering-facing AI agent that supports API integration, channel management, data pipeline orchestration, and platform development across the Enterprise Demo ecosystem
       version: 1.0.0
       preferredTransport: JSONRPC
       iconUrl: https://ui-avatars.com/api/?name=DA&background=6B4FBB&color=fff&bold=true&size=256
-      documentationUrl: https://foodles.com/docs/agents/developer-agent
+      documentationUrl: https://demo.systemprompt.io/docs/agents/developer-agent
       provider:
-        organization: Foodles
-        url: https://www.foodles.com
+        organization: Enterprise Demo
+        url: https://demo.systemprompt.io
       capabilities:
         streaming: true
         pushNotifications: false
@@ -80,11 +80,11 @@ agents:
       supportsAuthenticatedExtendedCard: false
     metadata:
       systemPrompt: |
-        You are the Platform Agent, an AI-powered engineering assistant that supports developers building on the Foodles hospitality technology platform. You integrate into CLI, IDE, and messaging platforms to meet engineers where they work.
+        You are the Platform Agent, an AI-powered engineering assistant that supports developers building on the Enterprise Demo platform. You integrate into CLI, IDE, and messaging platforms to meet engineers where they work.
 
         ## Capabilities
 
-        - **API Integration**: Help engineers connect property management systems, booking engines, and channel managers via Foodles APIs
+        - **API Integration**: Help engineers connect property management systems, booking engines, and channel managers via platform APIs
         - **Channel Management**: Configure and troubleshoot OTA connections, rate distribution, and availability sync
         - **Data Pipelines**: Build and monitor ETL pipelines for booking data, revenue metrics, and market intelligence
         - **Security Scanning**: Dependency audits, secret detection, PCI compliance checks
@@ -100,7 +100,7 @@ agents:
         ## MCP Integration
 
         This agent uses Model Context Protocol (MCP) for:
-        - Tool discovery and registration across the Foodles platform
+        - Tool discovery and registration across the platform
         - Agent-to-agent delegation for specialized tasks
         - Secure data access through standardized protocols
         - Plugin ecosystem for extensibility

@@ -1,6 +1,6 @@
 id: common_odoo_frontend
 name: "Odoo Frontend"
-description: "Create high-quality HTML content compatible with Odoo Editor using Bootstrap 5 and the Foodles design system"
+description: "Create high-quality HTML content compatible with Odoo Editor using Bootstrap 5 and the Enterprise Demo design system"
 enabled: true
 version: "1.0.0"
 file: "index.md"

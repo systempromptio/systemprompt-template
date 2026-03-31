@@ -1,26 +1,28 @@
 :root {
-  --sp-brand-50: hsl(14, 95%, 96%);
-  --sp-brand-100: hsl(14, 90%, 91%);
-  --sp-brand-200: hsl(14, 85%, 82%);
-  --sp-brand-300: hsl(14, 80%, 70%);
-  --sp-brand-400: hsl(14, 80%, 58%);
-  --sp-brand-500: hsl(14, 83%, 53%);
-  --sp-brand-600: hsl(14, 70%, 47%);
-  --sp-brand-700: hsl(14, 65%, 41%);
-  --sp-brand-800: hsl(14, 60%, 35%);
-  --sp-brand-900: hsl(14, 55%, 25%);
-  --sp-brand-950: hsl(14, 50%, 15%);
+  /* Brand hue — change this single value to shift the entire brand palette */
+  --sp-brand-hue: 220;
+  --sp-brand-50: hsl(var(--sp-brand-hue), 95%, 96%);
+  --sp-brand-100: hsl(var(--sp-brand-hue), 90%, 91%);
+  --sp-brand-200: hsl(var(--sp-brand-hue), 85%, 82%);
+  --sp-brand-300: hsl(var(--sp-brand-hue), 80%, 70%);
+  --sp-brand-400: hsl(var(--sp-brand-hue), 80%, 58%);
+  --sp-brand-500: hsl(var(--sp-brand-hue), 83%, 53%);
+  --sp-brand-600: hsl(var(--sp-brand-hue), 70%, 47%);
+  --sp-brand-700: hsl(var(--sp-brand-hue), 65%, 41%);
+  --sp-brand-800: hsl(var(--sp-brand-hue), 60%, 35%);
+  --sp-brand-900: hsl(var(--sp-brand-hue), 55%, 25%);
+  --sp-brand-950: hsl(var(--sp-brand-hue), 50%, 15%);
 
-  --sp-color-primary: #ed6841;
-  --sp-color-primary-hover: #d45c3a;
-  --sp-color-primary-dark: #bc5133;
-  --sp-color-primary-rgb: 237, 104, 65;
+  --sp-color-primary: #2563eb;
+  --sp-color-primary-hover: #1d4ed8;
+  --sp-color-primary-dark: #1e40af;
+  --sp-color-primary-rgb: 37, 99, 235;
   --sp-color-text-on-primary: #ffffff;
-  --sp-color-background: #FFFDF5;
-  --sp-color-surface: #F5F2ED;
-  --sp-color-surface-elevated: #F9F6F1;
+  --sp-color-background: #F8FAFC;
+  --sp-color-surface: #F1F5F9;
+  --sp-color-surface-elevated: #F8FAFC;
   --sp-color-surface-variant: #FFFFFF;
-  --sp-color-surface-dark: #E8E4DE;
+  --sp-color-surface-dark: #E2E8F0;
   --sp-color-text: #252526;
   --sp-color-text-primary: #252526;
   --sp-color-text-secondary: #3a3a3b;
@@ -31,7 +33,7 @@
   --sp-color-success: #22c55e;
   --sp-color-warning: #fbbf24;
   --sp-color-error: #ef4444;
-  --sp-color-info: #ed6841;
+  --sp-color-info: #2563eb;
 
   --sp-terminal-dot-close: #ff5f57;
   --sp-terminal-dot-minimize: #febc2e;
@@ -40,12 +42,12 @@
   --sp-syntax-bg: #1A2025;
   --sp-syntax-fg: #abb2bf;
   --sp-syntax-comment: #5c6370;
-  --sp-syntax-keyword: #ed6841;
+  --sp-syntax-keyword: #2563eb;
   --sp-syntax-string: #22c55e;
-  --sp-syntax-number: #FF6B35;
-  --sp-syntax-function: #ed6841;
+  --sp-syntax-number: #3b82f6;
+  --sp-syntax-function: #2563eb;
   --sp-syntax-variable: #e06c75;
-  --sp-syntax-operator: #ed6841;
+  --sp-syntax-operator: #2563eb;
   --sp-syntax-class: #FFC55B;
 
   --sp-font-brand: "Dosis", system-ui, sans-serif;
@@ -114,28 +116,28 @@
   --sp-card-radius-notch: 6px;
   --sp-card-radius: 18px 6px 18px 18px;
   --sp-card-border-width: 1px;
-  --sp-card-bg-glass: hsla(45, 82%, 98%, 0.6);
+  --sp-card-bg-glass: hsla(214, 32%, 98%, 0.6);
   --sp-card-bg-gradient: linear-gradient(135deg,
-    rgba(255, 133, 85, 0.06) 0%,
-    rgba(255, 220, 200, 0.08) 50%,
-    rgba(255, 253, 245, 0.04) 100%);
+    rgba(37, 99, 235, 0.06) 0%,
+    rgba(147, 197, 253, 0.08) 50%,
+    rgba(248, 250, 252, 0.04) 100%);
   --sp-card-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   --sp-card-shadow-hover: 0 8px 32px rgba(37, 37, 38, 0.12);
-  --sp-card-shadow-highlight: 0 0 20px rgba(237, 104, 65, 0.15);
-  --sp-brand-green: #FF6B35;
-  --sp-brand-gradient: linear-gradient(135deg, #ffdcc8, #fffdf5);
-  --sp-brand-gradient-reverse: linear-gradient(135deg, #fffdf5, #ffdcc8);
+  --sp-card-shadow-highlight: 0 0 20px rgba(37, 99, 235, 0.15);
+  --sp-brand-green: #3b82f6;
+  --sp-brand-gradient: linear-gradient(135deg, #bfdbfe, #F8FAFC);
+  --sp-brand-gradient-reverse: linear-gradient(135deg, #F8FAFC, #bfdbfe);
 
   --sp-client-black: #252526;
-  --sp-client-orange: #FF6B35;
-  --sp-client-tints-cta-orange: #FF6B35;
-  --sp-client-tints-orange-3: #ffdcc8;
-  --sp-client-sand: #FFFDF5;
-  --sp-client-sand-60: hsla(45, 82%, 98%, 0.6);
+  --sp-client-orange: #3b82f6;
+  --sp-client-tints-cta-orange: #3b82f6;
+  --sp-client-tints-orange-3: #bfdbfe;
+  --sp-client-sand: #F8FAFC;
+  --sp-client-sand-60: hsla(214, 32%, 98%, 0.6);
   --sp-client-yellow: #FFF4C1;
   --sp-client-teal: #006463;
-  --sp-client-grey: #F5F2ED;
-  --sp-client-cards-card-bg: #F5F2ED;
+  --sp-client-grey: #F1F5F9;
+  --sp-client-cards-card-bg: #F1F5F9;
 }
 
 h1, h2, h3, h4, h5, h6 { letter-spacing: -0.03em; }

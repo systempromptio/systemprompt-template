@@ -1,6 +1,6 @@
 # Live Demo Script
 
-Nine scripts. Run them in order.
+Ten scripts. Run them in order.
 
 ```
 ./demo/00-preflight.sh
@@ -12,6 +12,7 @@ Nine scripts. Run them in order.
 ./demo/06-governance-secret-breach.sh
 ./demo/07-mcp-access-tracking.sh
 ./demo/08-request-tracing.sh
+./demo/09-agent-tracing.sh
 ```
 
 ---
@@ -21,14 +22,19 @@ Nine scripts. Run them in order.
 | Demo | What it proves | Cost |
 |------|---------------|------|
 | 00 | Services are running | Free |
-| 01 | Admin agent can call MCP tools and return structured artifacts | ~$0.01 |
-| 02 | User agent is denied tools at the mapping level (no tools available) | ~$0.01 |
-| 03 | Every AI request is traced with typed IDs and cost tracking | Free |
-| 04 | Governance hook evaluates rules and ALLOWS admin-scope tool calls | ~$0.01 |
-| 05 | Governance hook evaluates rules and DENIES user-scope tool calls | ~$0.01 |
+| 01 | Governance ALLOWS admin-scope tool call, then MCP tool executes | Free |
+| 02 | Governance DENIES user-scope agent calling admin tool (scope restriction) | Free |
+| 03 | Governance audit trail — both decisions queryable | Free |
+| 04 | Detailed rule evaluation — all 3 rules pass for admin agent | Free |
+| 05 | Detailed rule evaluation — scope check + blocklist deny for user agent | Free |
 | 06 | Secret detection blocks leaked credentials in tool inputs | Free |
 | 07 | MCP tool calls are OAuth-authenticated and audit-logged | Free |
 | 08 | End-to-end request tracing, typed IDs, flow maps, 100-request benchmark | Free |
+| 09 | Full agent pipeline — AI reasoning, MCP tool calls, artifacts, tracing | ~$0.01 |
+
+Demos 01-08 call the governance API directly with curl — simulating Claude Code's PreToolUse hook workflow. No AI calls, deterministic, instant.
+
+Demo 09 is the only demo that runs a live agent. It shows the platform agent runtime with full tracing, artifacts, and MCP tool calls.
 
 ---
 
@@ -40,12 +46,6 @@ Nine scripts. Run them in order.
 
 You should see services running: 3 agents + 2 MCP servers.
 
-If anything is wrong:
-
-```
-./demo/00-preflight.sh
-```
-
 If services are down, it tells you the fix commands.
 
 ---
@@ -56,9 +56,9 @@ If services are down, it tells you the fix commands.
 ./demo/01-happy-path.sh
 ```
 
-SAY: "This is the platform agent. Admin scope. It has access to the systemprompt MCP server — the CLI executor. It calls the tool, gets the real agent list, returns it. Fully governed, fully traced."
+SAY: "This simulates what Claude Code does under the hood. When the admin agent calls a tool, the PreToolUse hook fires and POSTs to the governance endpoint. Admin scope — all rules pass — ALLOW. Then the MCP tool executes and returns real data."
 
-EXPECT: A real list of agents. Takes ~5 seconds.
+EXPECT: Part 1 shows ALLOW JSON. Part 2 shows the actual agent list from MCP.
 
 ---
 
@@ -68,9 +68,9 @@ EXPECT: A real list of agents. Takes ~5 seconds.
 ./demo/02-refused-path.sh
 ```
 
-SAY: "Same question. Revenue agent. User scope. This agent has no MCP server access. The CLI tool does not exist for this agent. Governance enforces it at the mapping level."
+SAY: "Same tool, different agent. User scope. Governance denies it — scope_restriction rule fails. In production, this agent would never even see the tool because MCP mappings filter it. But governance provides a second enforcement layer."
 
-EXPECT: "I do not have access to that tool. This operation requires elevated permissions that have not been granted to this agent."
+EXPECT: DENY JSON with scope_restriction policy.
 
 ---
 
@@ -80,15 +80,9 @@ EXPECT: "I do not have access to that tool. This operation requires elevated per
 ./demo/03-audit-trail.sh
 ```
 
-This shows the two traces. Then copy-paste the trace IDs to dig deeper:
+SAY: "Both decisions are in the database. The ALLOW from demo 01, the DENY from demo 02. Every governance decision is queryable — decision, tool, agent, scope, policy, reason."
 
-```
-systemprompt infra logs trace show PASTE_TRACE_ID --all
-```
-
-SAY for happy path trace: "11 events. 3 AI requests, 1 MCP tool call, 7 execution steps. Skills loaded, tool executed in 300ms, cost tracked."
-
-SAY for refused path trace: "4 events. 1 AI request, zero MCP calls, 3 steps. No tools available. That is governance enforcement."
+EXPECT: Table showing ALLOW for developer_agent and DENY for associate_agent.
 
 Optional — cost breakdown:
 
@@ -104,9 +98,9 @@ systemprompt analytics costs breakdown --by agent
 ./demo/04-governance-happy.sh
 ```
 
-SAY: "When the admin agent calls an MCP tool, the PreToolUse hook fires. It POSTs to the governance endpoint. Backend validates the JWT, resolves the agent scope to admin, evaluates three rules — scope check, secret detection, rate limit. All pass. Tool executes."
+SAY: "Now let's see the rule evaluation in detail. Admin agent, clean tool input. Three rules evaluated: scope check passes for admin, secret detection finds nothing, rate limit is fine. All pass. ALLOW."
 
-EXPECT: Agent successfully lists agents, governance log shows ALLOW.
+EXPECT: ALLOW JSON. Audit shows evaluated_rules with all 3 rules passed.
 
 ---
 
@@ -116,9 +110,9 @@ EXPECT: Agent successfully lists agents, governance log shows ALLOW.
 ./demo/05-governance-denied.sh
 ```
 
-SAY: "Same flow. User-scope agent tries an admin-only MCP tool. The scope check fails. Tool is blocked before it executes. The agent gets the denial and tells the user."
+SAY: "Two denial scenarios. First: user-scope agent tries an admin tool — scope check fails. Second: user-scope agent tries a destructive tool — both scope check and blocklist trigger. When Claude Code receives DENY, it blocks the tool and shows the governance reason to the user."
 
-EXPECT: Part 1 shows raw deny JSON. Part 2 shows agent refusing.
+EXPECT: Two DENY responses with different policies.
 
 ---
 
@@ -164,15 +158,25 @@ EXPECT: Typed payloads, ID table, 4 CLI log commands, ASCII flow map, benchmark 
 
 ---
 
-## WHY 3 AI REQUESTS FOR THE PLATFORM AGENT?
+## STEP 9: AGENT TRACING
 
-Lee may ask. The answer:
+```
+./demo/09-agent-tracing.sh
+```
+
+SAY: "This is the live agent. Admin scope, MCP tools available. It calls the systemprompt MCP server, gets real data, produces a structured artifact. Every step is traced — AI requests, MCP tool calls, execution timing, cost attribution."
+
+EXPECT: Agent response with real agent list. Artifact retrieval. Full trace showing ~11 events, 3 AI requests, 1 MCP tool call. Takes ~5 seconds.
+
+WHY 3 AI REQUESTS?
 
 1. AI receives the message, sees MCP tools, decides to call `systemprompt`
 2. MCP tool returns result, AI processes the tool output
 3. AI formats the final response
 
 Normal multi-turn tool use. Each step traced and costed separately.
+
+Dashboard: http://localhost:8080/admin/traces
 
 ---
 
@@ -189,4 +193,4 @@ Wait for "All services started successfully" then retry from step 1.
 
 ## COST
 
-Steps 1, 2, 4, 5 each cost one AI call (~$0.01 on Gemini Flash). Steps 0, 3, 6, 7, 8 are free (read-only or direct API calls, no AI).
+Steps 0-8 are free (direct API calls, CLI commands, no AI). Step 9 costs one AI call (~$0.01 on Gemini Flash).
