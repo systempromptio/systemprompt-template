@@ -143,40 +143,68 @@
     });
   };
 
+  StatusCardManager.prototype.createStatusItem = function(indicatorClass, text) {
+    var li = document.createElement('li');
+    li.className = 'status-card__item';
+    var indicator = document.createElement('span');
+    indicator.className = 'status-card__item-indicator' + indicatorClass;
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'status-card__item-name';
+    nameSpan.textContent = text;
+    li.append(indicator, nameSpan);
+    return li;
+  };
+
   StatusCardManager.prototype.renderMcpServices = function(data) {
     if (!this.mcpList) return;
 
-    const services = Array.isArray(data) ? data : (data.data || data.servers || data.services || []);
+    var services = Array.isArray(data) ? data : (data.data || data.servers || data.services || []);
 
     if (services.length === 0) {
-      this.mcpList.innerHTML =
-        '<li class="status-card__item">' +
-          '<span class="status-card__item-indicator status-card__item-indicator--warning"></span>' +
-          '<span class="status-card__item-name">No services registered</span>' +
-        '</li>';
+      this.mcpList.replaceChildren(
+        this.createStatusItem(' status-card__item-indicator--warning', 'No services registered')
+      );
       if (this.mcpCount) this.mcpCount.textContent = '0';
       return;
     }
 
-    let html = '';
-    const baseUrl = window.location.origin;
-    for (let i = 0; i < services.length; i++) {
-      const service = services[i];
-      const statusClass = this.getStatusClass(service);
-      const name = this.escapeHtml(service.name || service.id || 'Unknown');
-      const scopes = service.oauth_scopes || service.scopes || [];
-      const scopeText = scopes.length ? ' [' + scopes.join(', ') + ']' : '';
-      const endpoint = service.endpoint || '';
-      const fullUrl = endpoint ? baseUrl + endpoint : '';
-      const connectBtn = endpoint ? '<button class="status-card__connect-btn" data-url="' + this.escapeHtml(fullUrl) + '" data-name="' + this.escapeHtml(name) + '" title="Copy MCP connection URL">[connect]</button>' : '';
-      html +=
-        '<li class="status-card__item">' +
-          '<span class="status-card__item-indicator' + statusClass + '"></span>' +
-          '<span class="status-card__item-name">' + name + '<span class="status-card__item-scope">' + scopeText + '</span></span>' +
-          connectBtn +
-        '</li>';
+    var frag = document.createDocumentFragment();
+    var baseUrl = window.location.origin;
+    for (var i = 0; i < services.length; i++) {
+      var service = services[i];
+      var statusClass = this.getStatusClass(service);
+      var name = service.name || service.id || 'Unknown';
+      var scopes = service.oauth_scopes || service.scopes || [];
+      var scopeText = scopes.length ? ' [' + scopes.join(', ') + ']' : '';
+      var endpoint = service.endpoint || '';
+      var fullUrl = endpoint ? baseUrl + endpoint : '';
+
+      var li = document.createElement('li');
+      li.className = 'status-card__item';
+      var ind = document.createElement('span');
+      ind.className = 'status-card__item-indicator' + statusClass;
+      var nameSpan = document.createElement('span');
+      nameSpan.className = 'status-card__item-name';
+      nameSpan.textContent = name;
+      var scopeSpan = document.createElement('span');
+      scopeSpan.className = 'status-card__item-scope';
+      scopeSpan.textContent = scopeText;
+      nameSpan.append(scopeSpan);
+      li.append(ind, nameSpan);
+
+      if (endpoint) {
+        var btn = document.createElement('button');
+        btn.className = 'status-card__connect-btn';
+        btn.setAttribute('data-url', fullUrl);
+        btn.setAttribute('data-name', name);
+        btn.title = 'Copy MCP connection URL';
+        btn.textContent = '[connect]';
+        li.append(btn);
+      }
+
+      frag.append(li);
     }
-    this.mcpList.innerHTML = html;
+    this.mcpList.replaceChildren(frag);
     this.initConnectButtons();
 
     if (this.mcpCount) {
@@ -187,35 +215,42 @@
   StatusCardManager.prototype.renderAgents = function(data) {
     if (!this.agentsList) return;
 
-    const agents = Array.isArray(data) ? data : (data.data || data.agents || []);
+    var agents = Array.isArray(data) ? data : (data.data || data.agents || []);
 
     if (agents.length === 0) {
-      this.agentsList.innerHTML =
-        '<li class="status-card__item">' +
-          '<span class="status-card__item-indicator status-card__item-indicator--warning"></span>' +
-          '<span class="status-card__item-name">No agents active</span>' +
-        '</li>';
+      this.agentsList.replaceChildren(
+        this.createStatusItem(' status-card__item-indicator--warning', 'No agents active')
+      );
       if (this.agentsCount) this.agentsCount.textContent = '0';
       return;
     }
 
-    let html = '';
-    for (let i = 0; i < agents.length; i++) {
-      const agent = agents[i];
-      const statusClass = this.getStatusClass(agent);
-      const name = this.escapeHtml(agent.name || agent.id || 'Unknown');
-      let scopes = agent.oauth_scopes || agent.scopes || [];
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < agents.length; i++) {
+      var agent = agents[i];
+      var statusClass = this.getStatusClass(agent);
+      var name = agent.name || agent.id || 'Unknown';
+      var scopes = agent.oauth_scopes || agent.scopes || [];
       if (!scopes.length && agent.security && agent.security[0] && agent.security[0].oauth2) {
         scopes = agent.security[0].oauth2;
       }
-      const scopeText = scopes.length ? ' [' + scopes.join(', ') + ']' : '';
-      html +=
-        '<li class="status-card__item">' +
-          '<span class="status-card__item-indicator' + statusClass + '"></span>' +
-          '<span class="status-card__item-name">' + name + '<span class="status-card__item-scope">' + scopeText + '</span></span>' +
-        '</li>';
+      var scopeText = scopes.length ? ' [' + scopes.join(', ') + ']' : '';
+
+      var li = document.createElement('li');
+      li.className = 'status-card__item';
+      var ind = document.createElement('span');
+      ind.className = 'status-card__item-indicator' + statusClass;
+      var nameSpan = document.createElement('span');
+      nameSpan.className = 'status-card__item-name';
+      nameSpan.textContent = name;
+      var scopeSpan = document.createElement('span');
+      scopeSpan.className = 'status-card__item-scope';
+      scopeSpan.textContent = scopeText;
+      nameSpan.append(scopeSpan);
+      li.append(ind, nameSpan);
+      frag.append(li);
     }
-    this.agentsList.innerHTML = html;
+    this.agentsList.replaceChildren(frag);
 
     if (this.agentsCount) {
       this.agentsCount.textContent = agents.length.toString();
@@ -240,27 +275,17 @@
       this.setOfflineState();
 
       if (this.mcpList) {
-        this.mcpList.innerHTML =
-          '<li class="status-card__item">' +
-            '<span class="status-card__item-indicator status-card__item-indicator--error"></span>' +
-            '<span class="status-card__item-name">Connection failed</span>' +
-          '</li>';
+        this.mcpList.replaceChildren(
+          this.createStatusItem(' status-card__item-indicator--error', 'Connection failed')
+        );
       }
 
       if (this.agentsList) {
-        this.agentsList.innerHTML =
-          '<li class="status-card__item">' +
-            '<span class="status-card__item-indicator status-card__item-indicator--error"></span>' +
-            '<span class="status-card__item-name">Connection failed</span>' +
-          '</li>';
+        this.agentsList.replaceChildren(
+          this.createStatusItem(' status-card__item-indicator--error', 'Connection failed')
+        );
       }
     }
-  };
-
-  StatusCardManager.prototype.escapeHtml = function(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   };
 
   StatusCardManager.prototype.initConnectButtons = function() {
@@ -280,32 +305,72 @@
     const existing = document.getElementById('mcp-connect-modal');
     if (existing) existing.remove();
 
-    const modal = document.createElement('div');
+    var modal = document.createElement('div');
     modal.id = 'mcp-connect-modal';
     modal.className = 'mcp-modal';
-    modal.innerHTML =
-      '<div class="mcp-modal__backdrop"></div>' +
-      '<div class="mcp-modal__content">' +
-        '<button class="mcp-modal__close" aria-label="Close">&times;</button>' +
-        '<h3 class="mcp-modal__title">Connect to ' + this.escapeHtml(name) + '</h3>' +
-        '<p class="mcp-modal__desc">Add this MCP server to your AI coding assistant using HTTP transport.</p>' +
-        '<div class="mcp-modal__url-row">' +
-          '<code class="mcp-modal__url">' + this.escapeHtml(url) + '</code>' +
-          '<button class="mcp-modal__copy" data-url="' + this.escapeHtml(url) + '">Copy</button>' +
-        '</div>' +
-        '<div class="mcp-modal__instructions">' +
-          '<h4>Claude Code</h4>' +
-          '<pre><code>claude mcp add ' + this.escapeHtml(name) + ' ' + this.escapeHtml(url) + ' --transport http</code></pre>' +
-          '<h4>Cursor / VS Code</h4>' +
-          '<p>Add to your <code>.cursor/mcp.json</code> or <code>.vscode/mcp.json</code>:</p>' +
-          '<pre><code>{\n  "mcpServers": {\n    "' + this.escapeHtml(name) + '": {\n      "url": "' + this.escapeHtml(url) + '"\n    }\n  }\n}</code></pre>' +
-        '</div>' +
-      '</div>';
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'mcp-modal__backdrop';
+
+    var content = document.createElement('div');
+    content.className = 'mcp-modal__content';
+
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'mcp-modal__close';
+    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.textContent = '\u00d7';
+
+    var title = document.createElement('h3');
+    title.className = 'mcp-modal__title';
+    title.textContent = 'Connect to ' + name;
+
+    var desc = document.createElement('p');
+    desc.className = 'mcp-modal__desc';
+    desc.textContent = 'Add this MCP server to your AI coding assistant using HTTP transport.';
+
+    var urlRow = document.createElement('div');
+    urlRow.className = 'mcp-modal__url-row';
+    var urlCode = document.createElement('code');
+    urlCode.className = 'mcp-modal__url';
+    urlCode.textContent = url;
+    var copyBtn = document.createElement('button');
+    copyBtn.className = 'mcp-modal__copy';
+    copyBtn.setAttribute('data-url', url);
+    copyBtn.textContent = 'Copy';
+    urlRow.append(urlCode, copyBtn);
+
+    var instructions = document.createElement('div');
+    instructions.className = 'mcp-modal__instructions';
+
+    var h4Claude = document.createElement('h4');
+    h4Claude.textContent = 'Claude Code';
+    var preClaude = document.createElement('pre');
+    var codeClaude = document.createElement('code');
+    codeClaude.textContent = 'claude mcp add ' + name + ' ' + url + ' --transport http';
+    preClaude.append(codeClaude);
+
+    var h4Cursor = document.createElement('h4');
+    h4Cursor.textContent = 'Cursor / VS Code';
+    var pCursor = document.createElement('p');
+    pCursor.textContent = 'Add to your ';
+    var codeCursor1 = document.createElement('code');
+    codeCursor1.textContent = '.cursor/mcp.json';
+    var codeCursor2 = document.createElement('code');
+    codeCursor2.textContent = '.vscode/mcp.json';
+    pCursor.append(codeCursor1);
+    pCursor.append(document.createTextNode(' or '));
+    pCursor.append(codeCursor2);
+    pCursor.append(document.createTextNode(':'));
+    var preCursorJson = document.createElement('pre');
+    var codeCursorJson = document.createElement('code');
+    codeCursorJson.textContent = '{\n  "mcpServers": {\n    "' + name + '": {\n      "url": "' + url + '"\n    }\n  }\n}';
+    preCursorJson.append(codeCursorJson);
+
+    instructions.append(h4Claude, preClaude, h4Cursor, pCursor, preCursorJson);
+    content.append(closeBtn, title, desc, urlRow, instructions);
+    modal.append(backdrop, content);
 
     document.body.append(modal);
-
-    const closeBtn = modal.querySelector('.mcp-modal__close');
-    const backdrop = modal.querySelector('.mcp-modal__backdrop');
     const escHandler = (e) => {
       if (e.key === 'Escape') closeModal();
     };
@@ -316,7 +381,6 @@
     closeBtn.addEventListener('click', closeModal);
     backdrop.addEventListener('click', closeModal);
 
-    const copyBtn = modal.querySelector('.mcp-modal__copy');
     copyBtn.addEventListener('click', () => {
       navigator.clipboard.writeText(url).then(() => {
         copyBtn.textContent = 'Copied!';

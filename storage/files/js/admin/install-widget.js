@@ -24,9 +24,16 @@
     app.events.on('click', '[data-copy]', (e, copyBtn) => {
         const text = copyBtn.getAttribute('data-copy');
         navigator.clipboard.writeText(text).then(() => {
-            const orig = copyBtn.innerHTML;
-            copyBtn.innerHTML = '<span style="color:var(--sp-success);font-size:16px">&#10003;</span>';
-            setTimeout(() => { copyBtn.innerHTML = orig; }, 2000);
+            var savedNodes = Array.from(copyBtn.childNodes).map((n) => n.cloneNode(true));
+            copyBtn.replaceChildren();
+            var checkSpan = document.createElement('span');
+            checkSpan.style.cssText = 'color:var(--sp-success);font-size:16px';
+            checkSpan.textContent = '\u2713';
+            copyBtn.append(checkSpan);
+            setTimeout(() => {
+                copyBtn.replaceChildren();
+                savedNodes.forEach((n) => { copyBtn.append(n); });
+            }, 2000);
         });
     });
 

@@ -1,6 +1,6 @@
 @layer components {
 
-    
+
     .filter-toolbar {
         display: flex;
         flex-wrap: wrap;
@@ -13,14 +13,14 @@
         min-width: 140px;
     }
 
-    
+
     .metadata-timestamp {
         font-size: var(--sp-text-xs);
         color: var(--sp-text-tertiary);
         white-space: nowrap;
     }
 
-    
+
     .rating-display {
         font-size: var(--sp-text-sm);
         color: var(--sp-text-secondary);
@@ -32,7 +32,7 @@
         letter-spacing: -1px;
     }
 
-    
+
     .edit-panel {
         position: fixed;
         right: -600px;
@@ -93,7 +93,7 @@
         resize: vertical;
     }
 
-    
+
     .usage-badge {
         display: inline-flex;
         align-items: center;
@@ -103,116 +103,6 @@
         background: var(--sp-bg-surface-raised);
         border-radius: var(--sp-radius-full);
         color: var(--sp-text-secondary);
-    }
-
-    .acl-coverage-bar {
-        padding: var(--sp-space-2) var(--sp-space-4);
-        background: var(--sp-bg-surface);
-        border: 1px solid var(--sp-border-subtle);
-        border-radius: var(--sp-radius-sm);
-        margin-bottom: var(--sp-space-4);
-    }
-
-    .acl-coverage-indicator {
-        font-size: var(--sp-text-sm);
-        font-weight: 600;
-        color: var(--sp-text-secondary);
-        font-variant-numeric: tabular-nums;
-    }
-
-    .acl-entity-info {
-        padding: var(--sp-space-4) 0;
-        border-bottom: 1px solid var(--sp-border-subtle);
-        margin-bottom: var(--sp-space-3);
-    }
-
-    .acl-entity-info .cell-primary {
-        font-size: var(--sp-text-lg);
-        font-weight: 600;
-        color: var(--sp-text-primary);
-    }
-
-    .acl-entity-info .cell-secondary {
-        font-size: var(--sp-text-sm);
-        color: var(--sp-text-secondary);
-        margin-top: var(--sp-space-1);
-        line-height: 1.5;
-    }
-
-    .acl-entity-info .badge {
-        margin-top: var(--sp-space-3);
-    }
-
-    .acl-panel-section {
-        padding: var(--sp-space-5) 0;
-        border-bottom: 1px solid var(--sp-border-subtle);
-    }
-
-    .acl-panel-section:last-child {
-        border-bottom: none;
-    }
-
-    .acl-panel-section-title {
-        font-size: var(--sp-text-base);
-        font-weight: 600;
-        margin: 0 0 var(--sp-space-1);
-        color: var(--sp-text-primary);
-    }
-
-    .acl-panel-section-desc {
-        font-size: var(--sp-text-sm);
-        color: var(--sp-text-tertiary);
-        margin: 0 0 var(--sp-space-4);
-        line-height: 1.5;
-    }
-
-    .acl-checkbox-row {
-        display: flex;
-        align-items: center;
-        gap: var(--sp-space-3);
-        padding: var(--sp-space-2) var(--sp-space-3);
-        border-radius: var(--sp-radius-sm);
-        cursor: pointer;
-        transition: background var(--sp-duration-fast);
-    }
-
-    .acl-checkbox-row:hover {
-        background: var(--sp-bg-surface-raised);
-    }
-
-    .acl-checkbox-row input[type="checkbox"] {
-        width: 1.125rem;
-        height: 1.125rem;
-        flex-shrink: 0;
-        accent-color: var(--sp-accent);
-    }
-
-    .acl-checkbox-label {
-        font-size: var(--sp-text-sm);
-        color: var(--sp-text-primary);
-        font-weight: 500;
-    }
-
-    .acl-entity-checkbox,
-    .acl-select-all {
-        width: var(--sp-space-4);
-        height: var(--sp-space-4);
-        cursor: pointer;
-        accent-color: var(--sp-accent);
-    }
-
-    .sp-acl-badge-row {
-        margin-top: var(--sp-space-2);
-    }
-
-    .sp-acl-no-roles {
-        color: var(--sp-text-tertiary);
-        font-size: var(--sp-text-sm);
-    }
-
-    .checklist-empty {
-        color: var(--sp-text-tertiary);
-        font-size: var(--sp-text-sm);
     }
 
     .detail-description {
@@ -238,12 +128,6 @@
         cursor: pointer;
         font-size: var(--sp-text-sm);
         color: var(--sp-text-secondary);
-    }
-
-    .acl-bulk-intro {
-        margin-bottom: var(--sp-space-4);
-        color: var(--sp-text-secondary);
-        font-size: var(--sp-text-sm);
     }
 
 }

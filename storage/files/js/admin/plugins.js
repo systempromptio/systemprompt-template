@@ -27,15 +27,42 @@
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.id = 'delete-confirm';
-        overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3 style="margin:0 0 var(--sp-space-3)">Delete Plugin?</h3>' +
-            '<p style="margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">You are about to delete <strong>' + app.escapeHtml(pluginId) + '</strong>.</p>' +
-            '<p style="margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">This will remove the plugin directory and all its configuration. This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end">' +
-                '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
-                '<button class="btn btn-danger" data-confirm-delete="' + app.escapeHtml(pluginId) + '">Delete Plugin</button>' +
-            '</div>' +
-        '</div>';
+
+        const dialog = document.createElement('div');
+        dialog.className = 'confirm-dialog';
+
+        const heading = document.createElement('h3');
+        heading.style.cssText = 'margin:0 0 var(--sp-space-3)';
+        heading.textContent = 'Delete Plugin?';
+
+        const p1 = document.createElement('p');
+        p1.style.cssText = 'margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
+        const p1Text1 = document.createTextNode('You are about to delete ');
+        const p1Strong = document.createElement('strong');
+        p1Strong.textContent = pluginId;
+        const p1Text2 = document.createTextNode('.');
+        p1.append(p1Text1, p1Strong, p1Text2);
+
+        const p2 = document.createElement('p');
+        p2.style.cssText = 'margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
+        p2.textContent = 'This will remove the plugin directory and all its configuration. This action cannot be undone.';
+
+        const btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.setAttribute('data-confirm-cancel', '');
+        cancelBtn.textContent = 'Cancel';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.setAttribute('data-confirm-delete', pluginId);
+        deleteBtn.textContent = 'Delete Plugin';
+
+        btnRow.append(cancelBtn, deleteBtn);
+        dialog.append(heading, p1, p2, btnRow);
+        overlay.append(dialog);
         document.body.append(overlay);
         overlay.addEventListener('click', async (e) => {
             if (e.target === overlay || e.target.closest('[data-confirm-cancel]')) {
@@ -113,39 +140,83 @@
 
         document.getElementById('panel-title').textContent = data.name || pluginId;
 
-        let html = '<div class="config-panel-section">' +
-            '<h4>Overview</h4>' +
-            '<div class="config-overview-grid">' +
-                '<span class="config-overview-label">ID</span><span class="config-overview-value"><code>' + app.escapeHtml(data.id) + '</code></span>' +
-                '<span class="config-overview-label">Status</span><span class="config-overview-value">' +
-                    (data.enabled ? '<span class="badge badge-green">Enabled</span>' : '<span class="badge badge-gray">Disabled</span>') + '</span>' +
-                '<span class="config-overview-label">Version</span><span class="config-overview-value">' + app.escapeHtml(data.version || '—') + '</span>' +
-                '<span class="config-overview-label">Category</span><span class="config-overview-value">' + app.escapeHtml(data.category || '—') + '</span>' +
-                '<span class="config-overview-label">Author</span><span class="config-overview-value">' + app.escapeHtml(data.author_name || '—') + '</span>' +
-                '<span class="config-overview-label">Description</span><span class="config-overview-value">' + app.escapeHtml(data.description || '—') + '</span>' +
-            '</div>' +
-        '</div>';
-
-        html += '<div class="config-panel-section">' +
-            '<h4>Environment</h4>' +
-            '<div id="panel-env-status">Loading...</div>' +
-        '</div>';
-
-        document.getElementById('panel-body').innerHTML = html;
-
-        let footer = '';
-        if (data.id !== 'custom') {
-            footer = '<a href="/admin/org/plugins/edit/?id=' + encodeURIComponent(data.id) + '" class="btn btn-primary">Edit Plugin</a>' +
-                ' <button class="btn btn-secondary" data-open-env="' + app.escapeHtml(data.id) + '" data-plugin-name="' + app.escapeHtml(data.name) + '">Configure Env</button>';
+        function createOverviewRow(label, valueContent) {
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'config-overview-label';
+            labelSpan.textContent = label;
+            const valueSpan = document.createElement('span');
+            valueSpan.className = 'config-overview-value';
+            if (typeof valueContent === 'string') {
+                valueSpan.textContent = valueContent;
+            } else {
+                valueSpan.append(valueContent);
+            }
+            return [labelSpan, valueSpan];
         }
-        document.getElementById('panel-footer').innerHTML = footer;
+
+        const overviewSection = document.createElement('div');
+        overviewSection.className = 'config-panel-section';
+        const overviewH4 = document.createElement('h4');
+        overviewH4.textContent = 'Overview';
+        const overviewGrid = document.createElement('div');
+        overviewGrid.className = 'config-overview-grid';
+
+        const idCode = document.createElement('code');
+        idCode.textContent = data.id;
+        overviewGrid.append.apply(overviewGrid, createOverviewRow('ID', idCode));
+
+        const statusBadge = document.createElement('span');
+        statusBadge.className = data.enabled ? 'badge badge-green' : 'badge badge-gray';
+        statusBadge.textContent = data.enabled ? 'Enabled' : 'Disabled';
+        overviewGrid.append.apply(overviewGrid, createOverviewRow('Status', statusBadge));
+
+        overviewGrid.append.apply(overviewGrid, createOverviewRow('Version', data.version || '\u2014'));
+        overviewGrid.append.apply(overviewGrid, createOverviewRow('Category', data.category || '\u2014'));
+        overviewGrid.append.apply(overviewGrid, createOverviewRow('Author', data.author_name || '\u2014'));
+        overviewGrid.append.apply(overviewGrid, createOverviewRow('Description', data.description || '\u2014'));
+
+        overviewSection.append(overviewH4, overviewGrid);
+
+        const envSection = document.createElement('div');
+        envSection.className = 'config-panel-section';
+        const envH4 = document.createElement('h4');
+        envH4.textContent = 'Environment';
+        const envStatus = document.createElement('div');
+        envStatus.id = 'panel-env-status';
+        envStatus.textContent = 'Loading...';
+        envSection.append(envH4, envStatus);
+
+        const panelBody = document.getElementById('panel-body');
+        panelBody.replaceChildren(overviewSection, envSection);
+
+        const panelFooter = document.getElementById('panel-footer');
+        panelFooter.replaceChildren();
+        if (data.id !== 'custom') {
+            const editLink = document.createElement('a');
+            editLink.href = '/admin/org/plugins/edit/?id=' + encodeURIComponent(data.id);
+            editLink.className = 'btn btn-primary';
+            editLink.textContent = 'Edit Plugin';
+
+            const envBtn = document.createElement('button');
+            envBtn.className = 'btn btn-secondary';
+            envBtn.setAttribute('data-open-env', data.id);
+            envBtn.setAttribute('data-plugin-name', data.name);
+            envBtn.textContent = 'Configure Env';
+
+            panelFooter.append(editLink, document.createTextNode(' '), envBtn);
+        }
 
         openPanel();
 
         if (data.id !== 'custom') {
             loadEnvStatus(data.id, document.getElementById('panel-env-status'));
         } else {
-            document.getElementById('panel-env-status').innerHTML = '<div class="empty-state"><p>N/A</p></div>';
+            const naDiv = document.createElement('div');
+            naDiv.className = 'empty-state';
+            const naP = document.createElement('p');
+            naP.textContent = 'N/A';
+            naDiv.append(naP);
+            document.getElementById('panel-env-status').replaceChildren(naDiv);
         }
     }
 
@@ -405,22 +476,41 @@
 
                 const overlay = document.createElement('div');
                 overlay.className = 'confirm-overlay';
-                let checklistHtml = '<div class="add-checklist">';
+
+                const dialog = document.createElement('div');
+                dialog.className = 'confirm-dialog';
+
+                const heading = document.createElement('h3');
+                heading.style.cssText = 'margin:0 0 var(--sp-space-3)';
+                heading.textContent = 'Add ' + resourceType.replace('_', ' ');
+
+                const checklist = document.createElement('div');
+                checklist.className = 'add-checklist';
                 available.forEach((item) => {
                     const id = typeof item === 'string' ? item : (item.id || item.skill_id || item.agent_id);
                     const name = typeof item === 'string' ? item : (item.name || item.id || item.skill_id);
-                    checklistHtml += '<label><input type="checkbox" value="' + app.escapeHtml(id) + '"> ' + app.escapeHtml(name) + '</label>';
+                    const label = document.createElement('label');
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.value = id;
+                    label.append(cb, document.createTextNode(' ' + name));
+                    checklist.append(label);
                 });
-                checklistHtml += '</div>';
 
-                overlay.innerHTML = '<div class="confirm-dialog">' +
-                    '<h3 style="margin:0 0 var(--sp-space-3)">Add ' + resourceType.replace('_', ' ') + '</h3>' +
-                    checklistHtml +
-                    '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-3)">' +
-                        '<button class="btn btn-secondary" data-add-cancel>Cancel</button>' +
-                        '<button class="btn btn-primary" data-add-confirm>Add Selected</button>' +
-                    '</div>' +
-                '</div>';
+                const btnRow = document.createElement('div');
+                btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-3)';
+                const addCancelBtn = document.createElement('button');
+                addCancelBtn.className = 'btn btn-secondary';
+                addCancelBtn.setAttribute('data-add-cancel', '');
+                addCancelBtn.textContent = 'Cancel';
+                const addConfirmBtn = document.createElement('button');
+                addConfirmBtn.className = 'btn btn-primary';
+                addConfirmBtn.setAttribute('data-add-confirm', '');
+                addConfirmBtn.textContent = 'Add Selected';
+                btnRow.append(addCancelBtn, addConfirmBtn);
+
+                dialog.append(heading, checklist, btnRow);
+                overlay.append(dialog);
                 document.body.append(overlay);
 
                 overlay.addEventListener('click', (ev) => {
@@ -575,49 +665,100 @@
 
     app.initPluginsList = app.initPluginsConfig;
 
+    function buildEnvDefItem(def, storedMap) {
+        const s = storedMap[def.name];
+        const hasValue = s && s.var_value && s.var_value !== '';
+
+        const item = document.createElement('div');
+        item.className = 'detail-item';
+
+        const info = document.createElement('div');
+        info.className = 'detail-item-info';
+
+        const nameRow = document.createElement('div');
+        nameRow.className = 'detail-item-name';
+
+        const code = document.createElement('code');
+        code.style.cssText = 'background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-sm)';
+        code.textContent = def.name;
+        nameRow.append(code, document.createTextNode(' '));
+
+        const valBadge = document.createElement('span');
+        valBadge.className = hasValue ? 'badge badge-green' : 'badge badge-red';
+        valBadge.textContent = hasValue ? 'configured' : 'not set';
+        nameRow.append(valBadge);
+
+        if (def.required !== false && !hasValue) {
+            const reqBadge = document.createElement('span');
+            reqBadge.className = 'badge badge-yellow';
+            reqBadge.textContent = 'required';
+            nameRow.append(document.createTextNode(' '), reqBadge);
+        }
+        if (def.secret) {
+            const secBadge = document.createElement('span');
+            secBadge.className = 'badge badge-gray';
+            secBadge.textContent = 'secret';
+            nameRow.append(document.createTextNode(' '), secBadge);
+        }
+
+        const descRow = document.createElement('div');
+        descRow.className = 'detail-item-desc';
+        descRow.style.cssText = 'font-size:var(--sp-text-sm);color:var(--sp-text-secondary);margin-top:var(--sp-space-1)';
+        if (def.description) {
+            descRow.textContent = def.description;
+        }
+        if (hasValue) {
+            const maskedSpan = document.createElement('span');
+            maskedSpan.style.cssText = 'font-family:monospace;color:var(--sp-text-tertiary)';
+            maskedSpan.textContent = s.is_secret ? '--------' : s.var_value;
+            descRow.append(document.createTextNode(' '), maskedSpan);
+        }
+
+        info.append(nameRow, descRow);
+        item.append(info);
+        return item;
+    }
+
     function loadEnvStatus(pluginId, container) {
-        container.innerHTML = '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Loading variables...</div>';
+        var loadingDiv = document.createElement('div');
+        loadingDiv.style.cssText = 'padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
+        loadingDiv.textContent = 'Loading variables...';
+        container.replaceChildren(loadingDiv);
         app.api('/plugins/' + encodeURIComponent(pluginId) + '/env').then((data) => {
             const defs = data.definitions || [];
             const stored = data.stored || [];
             if (!defs.length && !stored.length) {
-                container.innerHTML = '<div class="empty-state"><p>No environment variables defined for this plugin.</p></div>';
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'empty-state';
+                const emptyP = document.createElement('p');
+                emptyP.textContent = 'No environment variables defined for this plugin.';
+                emptyDiv.append(emptyP);
+                container.replaceChildren(emptyDiv);
                 return;
             }
             const storedMap = {};
             stored.forEach((v) => { storedMap[v.var_name] = v; });
-            let html = '';
+            const frag = document.createDocumentFragment();
             defs.forEach((def) => {
-                const s = storedMap[def.name];
-                const hasValue = s && s.var_value && s.var_value !== '';
-                const valueBadge = hasValue
-                    ? '<span class="badge badge-green">configured</span>'
-                    : '<span class="badge badge-red">not set</span>';
-                let maskedVal = '';
-                if (hasValue) {
-                    maskedVal = s.is_secret ? '--------' : app.escapeHtml(s.var_value);
-                }
-                const requiredBadge = (def.required !== false && !hasValue) ? ' <span class="badge badge-yellow">required</span>' : '';
-                const secretBadge = def.secret ? ' <span class="badge badge-gray">secret</span>' : '';
-                html += '<div class="detail-item">' +
-                    '<div class="detail-item-info">' +
-                        '<div class="detail-item-name">' +
-                            '<code style="background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-sm)">' + app.escapeHtml(def.name) + '</code> ' +
-                            valueBadge + requiredBadge + secretBadge +
-                        '</div>' +
-                        '<div class="detail-item-desc" style="font-size:var(--sp-text-sm);color:var(--sp-text-secondary);margin-top:var(--sp-space-1)">' +
-                            (def.description ? app.escapeHtml(def.description) : '') +
-                            (maskedVal ? ' <span style="font-family:monospace;color:var(--sp-text-tertiary)">' + maskedVal + '</span>' : '') +
-                        '</div>' +
-                    '</div>' +
-                '</div>';
+                frag.append(buildEnvDefItem(def, storedMap));
             });
-            html += '<div style="padding:var(--sp-space-3) 0">' +
-                '<button class="btn btn-primary btn-sm" data-open-env="' + app.escapeHtml(pluginId) + '" data-plugin-name="' + app.escapeHtml(pluginId) + '">Configure</button>' +
-            '</div>';
-            container.innerHTML = html;
+            const btnWrap = document.createElement('div');
+            btnWrap.style.cssText = 'padding:var(--sp-space-3) 0';
+            const configBtn = document.createElement('button');
+            configBtn.className = 'btn btn-primary btn-sm';
+            configBtn.setAttribute('data-open-env', pluginId);
+            configBtn.setAttribute('data-plugin-name', pluginId);
+            configBtn.textContent = 'Configure';
+            btnWrap.append(configBtn);
+            frag.append(btnWrap);
+            container.replaceChildren(frag);
         }).catch(() => {
-            container.innerHTML = '<div class="empty-state"><p>Failed to load environment variables.</p></div>';
+            const errDiv = document.createElement('div');
+            errDiv.className = 'empty-state';
+            const errP = document.createElement('p');
+            errP.textContent = 'Failed to load environment variables.';
+            errDiv.append(errP);
+            container.replaceChildren(errDiv);
         });
     }
 })(window.AdminApp);

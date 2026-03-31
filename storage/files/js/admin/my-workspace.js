@@ -80,13 +80,26 @@
                     const title = panel.querySelector('[data-panel-title]');
                     if (title) title.textContent = text;
                 },
-                setBody: (html) => {
+                setBodyText: (text) => {
                     const body = panel.querySelector('[data-panel-body]');
-                    if (body) body.innerHTML = html;
+                    if (!body) return;
+                    body.replaceChildren();
+                    var p = document.createElement('p');
+                    p.style.cssText = 'color:var(--sp-text-tertiary);text-align:center;padding:var(--sp-space-4)';
+                    p.textContent = text;
+                    body.append(p);
                 },
-                setFooter: (html) => {
+                setBodyDom: (el) => {
+                    const body = panel.querySelector('[data-panel-body]');
+                    if (!body) return;
+                    body.replaceChildren();
+                    body.append(el);
+                },
+                setFooterDom: (el) => {
                     const footer = panel.querySelector('[data-panel-footer]');
-                    if (footer) footer.innerHTML = html;
+                    if (!footer) return;
+                    footer.replaceChildren();
+                    if (el) footer.append(el);
                 },
                 panel: panel
             };
@@ -201,8 +214,8 @@
             return {
                 open: () => {
                     panelApi.setTitle('Fork from Org: ' + (config.entityLabel || config.entityType));
-                    panelApi.setBody('<p style="color:var(--sp-text-tertiary);text-align:center;padding:var(--sp-space-4)">Loading...</p>');
-                    panelApi.setFooter('');
+                    panelApi.setBodyText('Loading...');
+                    panelApi.setFooterDom(null);
                     panelApi.open();
 
                     fetch(app.API_BASE + '/user/forkable/' + config.entityType)
@@ -210,74 +223,83 @@
                         .then((data) => {
                             const items = data[config.entityType] || data.plugins || data.skills || data.agents || data.mcp_servers || data.hooks || [];
                             if (items.length === 0) {
-                                panelApi.setBody('<p style="color:var(--sp-text-tertiary);text-align:center;padding:var(--sp-space-4)">No org entities available to fork.</p>');
+                                panelApi.setBodyText('No org entities available to fork.');
                                 return;
                             }
 
-                            let html = '<div class="add-checklist">';
+                            var checklist = document.createElement('div');
+                            checklist.className = 'add-checklist';
                             items.forEach((item) => {
-                                const disabled = item.already_forked ? ' disabled' : '';
-                                const label = item.already_forked ? ' (already forked)' : '';
-                                html += '<label class="acl-checkbox-row">' +
-                                    '<input type="checkbox" name="fork_id" value="' + app.escapeHtml(item.id) + '"' + disabled + '>' +
-                                    '<span class="acl-checkbox-label">' + app.escapeHtml(item.name || item.id) + label + '</span>' +
-                                    '</label>';
+                                var label = document.createElement('label');
+                                label.className = 'acl-checkbox-row';
+                                var input = document.createElement('input');
+                                input.type = 'checkbox';
+                                input.name = 'fork_id';
+                                input.value = item.id;
+                                if (item.already_forked) input.disabled = true;
+                                var span = document.createElement('span');
+                                span.className = 'acl-checkbox-label';
+                                span.textContent = (item.name || item.id) + (item.already_forked ? ' (already forked)' : '');
+                                label.append(input, span);
+                                checklist.append(label);
                             });
-                            html += '</div>';
-                            panelApi.setBody(html);
+                            panelApi.setBodyDom(checklist);
 
-                            panelApi.setFooter(
-                                '<button class="btn btn-secondary" data-panel-close>Cancel</button> ' +
-                                '<button class="btn btn-primary" data-fork-save>Fork Selected</button>'
-                            );
+                            var footerFrag = document.createDocumentFragment();
+                            var cancelBtn = document.createElement('button');
+                            cancelBtn.className = 'btn btn-secondary';
+                            cancelBtn.setAttribute('data-panel-close', '');
+                            cancelBtn.textContent = 'Cancel';
+                            var saveBtn = document.createElement('button');
+                            saveBtn.className = 'btn btn-primary';
+                            saveBtn.setAttribute('data-fork-save', '');
+                            saveBtn.textContent = 'Fork Selected';
+                            footerFrag.append(cancelBtn, document.createTextNode(' '), saveBtn);
+                            panelApi.setFooterDom(footerFrag);
 
-                            const footer = panelApi.panel.querySelector('[data-panel-footer]');
-                            if (footer) {
-                                const cancelBtn = footer.querySelector('[data-panel-close]');
-                                if (cancelBtn) cancelBtn.addEventListener('click', panelApi.close);
+                            cancelBtn.addEventListener('click', panelApi.close);
 
-                                const saveBtn = footer.querySelector('[data-fork-save]');
-                                if (saveBtn) {
-                                    saveBtn.addEventListener('click', () => {
-                                        const checked = panelApi.panel.querySelectorAll('input[name="fork_id"]:checked');
-                                        if (checked.length === 0) {
-                                            app.Toast.show('Select at least one entity to fork', 'warning');
-                                            return;
-                                        }
-                                        saveBtn.disabled = true;
-                                        saveBtn.textContent = 'Forking...';
-
-                                        const promises = [];
-                                        const typeKey = config.entityType.replace(/s$/, '');
-                                        checked.forEach((cb) => {
-                                            const body = {};
-                                            body['org_' + typeKey + '_id'] = cb.value;
-                                            promises.push(
-                                                fetch(app.API_BASE + '/user/fork/' + typeKey.replace('_', '-'), {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify(body)
-                                                })
-                                            );
-                                        });
-
-                                        Promise.all(promises).then((results) => {
-                                            const ok = results.filter((r) => { return r.ok; }).length;
-                                            app.Toast.show('Forked ' + ok + ' ' + config.entityLabel + '(s)', 'success');
-                                            panelApi.close();
-                                            if (config.onForked) config.onForked();
-                                            else setTimeout(() => { window.location.reload(); }, 500);
-                                        }).catch(() => {
-                                            app.Toast.show('Fork failed', 'error');
-                                            saveBtn.disabled = false;
-                                            saveBtn.textContent = 'Fork Selected';
-                                        });
-                                    });
+                            saveBtn.addEventListener('click', () => {
+                                const checked = panelApi.panel.querySelectorAll('input[name="fork_id"]:checked');
+                                if (checked.length === 0) {
+                                    app.Toast.show('Select at least one entity to fork', 'warning');
+                                    return;
                                 }
-                            }
+                                saveBtn.disabled = true;
+                                saveBtn.textContent = 'Forking...';
+
+                                const promises = [];
+                                const typeKey = config.entityType.replace(/s$/, '');
+                                checked.forEach((cb) => {
+                                    const body = {};
+                                    body['org_' + typeKey + '_id'] = cb.value;
+                                    promises.push(
+                                        fetch(app.API_BASE + '/user/fork/' + typeKey.replace('_', '-'), {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify(body)
+                                        })
+                                    );
+                                });
+
+                                Promise.all(promises).then((results) => {
+                                    const ok = results.filter((r) => { return r.ok; }).length;
+                                    app.Toast.show('Forked ' + ok + ' ' + config.entityLabel + '(s)', 'success');
+                                    panelApi.close();
+                                    if (config.onForked) config.onForked();
+                                    else setTimeout(() => { window.location.reload(); }, 500);
+                                }).catch(() => {
+                                    app.Toast.show('Fork failed', 'error');
+                                    saveBtn.disabled = false;
+                                    saveBtn.textContent = 'Fork Selected';
+                                });
+                            });
                         })
                         .catch(() => {
-                            panelApi.setBody('<p style="color:var(--sp-danger);text-align:center;padding:var(--sp-space-4)">Failed to load forkable entities.</p>');
+                            var errP = document.createElement('p');
+                            errP.style.cssText = 'color:var(--sp-danger);text-align:center;padding:var(--sp-space-4)';
+                            errP.textContent = 'Failed to load forkable entities.';
+                            panelApi.setBodyDom(errP);
                         });
                 },
                 close: panelApi.close,
@@ -287,20 +309,37 @@
 
         formatJson: (data) => {
             if (typeof data === 'string') {
-                try { data = JSON.parse(data); } catch (e) { return app.escapeHtml(data); }
+                try { data = JSON.parse(data); } catch (e) {
+                    var span = document.createElement('span');
+                    span.textContent = data;
+                    return span;
+                }
             }
-            return '<pre class="json-view">' + app.escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
+            var pre = document.createElement('pre');
+            pre.className = 'json-view';
+            pre.textContent = JSON.stringify(data, null, 2);
+            return pre;
         },
 
         renderSourceBadge: (baseId) => {
+            var container = document.createElement('span');
+            var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'fork-icon');
+            svg.setAttribute('viewBox', '0 0 16 16');
+            svg.setAttribute('fill', 'currentColor');
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             if (baseId) {
-                return '<span class="fork-indicator forked">' +
-                    '<svg class="fork-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878z"/></svg>' +
-                    'forked</span>';
+                container.className = 'fork-indicator forked';
+                path.setAttribute('d', 'M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878z');
+                svg.append(path);
+                container.append(svg, 'forked');
+            } else {
+                container.className = 'fork-indicator custom';
+                path.setAttribute('d', 'M8 2a6 6 0 100 12A6 6 0 008 2zm.75 3.75v2.5h2.5v1.5h-2.5v2.5h-1.5v-2.5h-2.5v-1.5h2.5v-2.5h1.5z');
+                svg.append(path);
+                container.append(svg, 'custom');
             }
-            return '<span class="fork-indicator custom">' +
-                '<svg class="fork-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zm.75 3.75v2.5h2.5v1.5h-2.5v2.5h-1.5v-2.5h-2.5v-1.5h2.5v-2.5h1.5z"/></svg>' +
-                'custom</span>';
+            return container;
         }
     };
 

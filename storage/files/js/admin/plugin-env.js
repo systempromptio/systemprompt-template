@@ -1,7 +1,6 @@
 (function(app) {
     'use strict';
 
-    const escapeHtml = app.escapeHtml;
     let overlay = null;
     let currentPluginId = null;
     let currentPluginName = '';
@@ -43,40 +42,95 @@
         return merged;
     }
 
-    function renderVarList(vars) {
+    function buildVarList(vars) {
+        const frag = document.createDocumentFragment();
         if (!vars.length) {
-            return '<div class="empty-state" style="padding:var(--sp-space-6)"><p>No environment variables defined for this plugin.</p></div>';
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.style.cssText = 'padding:var(--sp-space-6)';
+            const p = document.createElement('p');
+            p.textContent = 'No environment variables defined for this plugin.';
+            empty.append(p);
+            frag.append(empty);
+            return frag;
         }
-        let html = '';
         vars.forEach((v, i) => {
-            const inputType = v.secret ? 'password' : 'text';
-            const placeholder = v.example ? v.example : '';
-            const requiredBadge = v.required ? ' <span class="badge badge-red">required</span>' : '';
-            const secretBadge = v.secret ? ' <span class="badge badge-gray">secret</span>' : '';
-            html += '<div class="form-group">' +
-                '<label>' + escapeHtml(v.name) + requiredBadge + secretBadge + '</label>' +
-                (v.description ? '<p style="margin:0 0 var(--sp-space-1);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">' + escapeHtml(v.description) + '</p>' : '') +
-                '<input type="' + inputType + '" class="plugin-env-input" data-var-index="' + i + '" data-var-name="' + escapeHtml(v.name) + '" data-is-secret="' + (v.secret ? '1' : '0') + '" ' +
-                    'value="' + escapeHtml(v.value) + '" placeholder="' + escapeHtml(placeholder) + '">' +
-            '</div>';
+            const group = document.createElement('div');
+            group.className = 'form-group';
+
+            const label = document.createElement('label');
+            label.textContent = v.name;
+            if (v.required) {
+                const reqBadge = document.createElement('span');
+                reqBadge.className = 'badge badge-red';
+                reqBadge.textContent = 'required';
+                label.append(document.createTextNode(' '), reqBadge);
+            }
+            if (v.secret) {
+                const secBadge = document.createElement('span');
+                secBadge.className = 'badge badge-gray';
+                secBadge.textContent = 'secret';
+                label.append(document.createTextNode(' '), secBadge);
+            }
+            group.append(label);
+
+            if (v.description) {
+                const desc = document.createElement('p');
+                desc.style.cssText = 'margin:0 0 var(--sp-space-1);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)';
+                desc.textContent = v.description;
+                group.append(desc);
+            }
+
+            const input = document.createElement('input');
+            input.type = v.secret ? 'password' : 'text';
+            input.className = 'plugin-env-input';
+            input.setAttribute('data-var-index', i);
+            input.setAttribute('data-var-name', v.name);
+            input.setAttribute('data-is-secret', v.secret ? '1' : '0');
+            input.value = v.value;
+            if (v.example) input.placeholder = v.example;
+            group.append(input);
+
+            frag.append(group);
         });
-        return html;
+        return frag;
     }
 
-    function renderModal(vars) {
-        return '<h3 style="margin:0 0 var(--sp-space-4)">' + escapeHtml(currentPluginName) + ' — Environment Variables</h3>' +
-            '<div style="max-height:60vh;overflow-y:auto">' +
-                renderVarList(vars) +
-            '</div>' +
-            '<div class="form-actions" style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)">' +
-                '<button class="btn btn-secondary" id="plugin-env-close">Close</button>' +
-                '<button class="btn btn-primary" id="plugin-env-save">Save</button>' +
-            '</div>';
+    function buildModal(vars) {
+        const frag = document.createDocumentFragment();
+
+        const heading = document.createElement('h3');
+        heading.style.cssText = 'margin:0 0 var(--sp-space-4)';
+        heading.textContent = currentPluginName + ' \u2014 Environment Variables';
+
+        const scrollArea = document.createElement('div');
+        scrollArea.style.cssText = 'max-height:60vh;overflow-y:auto';
+        scrollArea.append(buildVarList(vars));
+
+        const actions = document.createElement('div');
+        actions.className = 'form-actions';
+        actions.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'btn btn-secondary';
+        closeBtn.id = 'plugin-env-close';
+        closeBtn.textContent = 'Close';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-primary';
+        saveBtn.id = 'plugin-env-save';
+        saveBtn.textContent = 'Save';
+
+        actions.append(closeBtn, saveBtn);
+        frag.append(heading, scrollArea, actions);
+        return frag;
     }
 
     function updatePanel(vars) {
         const panel = overlay && overlay.querySelector('.confirm-dialog');
-        if (panel) panel.innerHTML = renderModal(vars);
+        if (panel) {
+            panel.replaceChildren(buildModal(vars));
+        }
         bindEvents(vars);
     }
 
@@ -161,9 +215,17 @@
 
         overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
-        overlay.innerHTML = '<div class="confirm-dialog" style="width:560px;max-width:90vw">' +
-            '<div style="display:flex;align-items:center;justify-content:center;padding:var(--sp-space-6);color:var(--sp-text-tertiary)">Loading...</div>' +
-        '</div>';
+
+        const dialog = document.createElement('div');
+        dialog.className = 'confirm-dialog';
+        dialog.style.cssText = 'width:560px;max-width:90vw';
+
+        const loadingDiv = document.createElement('div');
+        loadingDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:var(--sp-space-6);color:var(--sp-text-tertiary)';
+        loadingDiv.textContent = 'Loading...';
+
+        dialog.append(loadingDiv);
+        overlay.append(dialog);
         document.body.append(overlay);
 
         overlay.addEventListener('click', (e) => {

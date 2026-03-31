@@ -15,36 +15,68 @@
 
     function renderSkillExpand(skillId) {
         const data = getSkillDetail(skillId);
-        if (!data) return '<p class="text-muted">No detail data available.</p>';
+        if (!data) {
+            var noData = document.createElement('p');
+            noData.className = 'text-muted';
+            noData.textContent = 'No detail data available.';
+            return noData;
+        }
 
-        let html = '<div class="detail-section">';
-        html += '<strong>Description</strong>';
-        html += '<p style="margin:var(--sp-space-1) 0;color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">' + app.escapeHtml(data.description || 'No description') + '</p>';
-        html += '</div>';
+        var frag = document.createDocumentFragment();
+
+        var descSection = document.createElement('div');
+        descSection.className = 'detail-section';
+        var descLabel = document.createElement('strong');
+        descLabel.textContent = 'Description';
+        var descP = document.createElement('p');
+        descP.style.cssText = 'margin:var(--sp-space-1) 0;color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
+        descP.textContent = data.description || 'No description';
+        descSection.append(descLabel, descP);
+        frag.append(descSection);
 
         if (data.command) {
-            html += '<div class="detail-section">';
-            html += '<strong>Command</strong>';
-            html += '<pre style="margin:var(--sp-space-1) 0;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);overflow-x:auto">' + app.escapeHtml(data.command) + '</pre>';
-            html += '</div>';
+            var cmdSection = document.createElement('div');
+            cmdSection.className = 'detail-section';
+            var cmdLabel = document.createElement('strong');
+            cmdLabel.textContent = 'Command';
+            var cmdPre = document.createElement('pre');
+            cmdPre.style.cssText = 'margin:var(--sp-space-1) 0;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);overflow-x:auto';
+            cmdPre.textContent = data.command;
+            cmdSection.append(cmdLabel, cmdPre);
+            frag.append(cmdSection);
         }
 
         if (data.tags && data.tags.length) {
-            html += '<div class="detail-section">';
-            html += '<strong>Tags</strong><br>';
-            html += '<div class="badge-row" style="margin-top:var(--sp-space-1)">';
+            var tagSection = document.createElement('div');
+            tagSection.className = 'detail-section';
+            var tagLabel = document.createElement('strong');
+            tagLabel.textContent = 'Tags';
+            tagSection.append(tagLabel, document.createElement('br'));
+            var badgeRow = document.createElement('div');
+            badgeRow.className = 'badge-row';
+            badgeRow.style.marginTop = 'var(--sp-space-1)';
             data.tags.forEach((tag) => {
-                html += '<span class="badge badge-gray">' + app.escapeHtml(tag) + '</span>';
+                var badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = tag;
+                badgeRow.append(badge);
             });
-            html += '</div></div>';
+            tagSection.append(badgeRow);
+            frag.append(tagSection);
         }
 
-        html += '<div class="detail-section">';
-        html += '<details><summary style="cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">JSON Config</summary>';
-        html += app.OrgCommon.formatJson(data);
-        html += '</details></div>';
+        var jsonSection = document.createElement('div');
+        jsonSection.className = 'detail-section';
+        var details = document.createElement('details');
+        var summary = document.createElement('summary');
+        summary.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)';
+        summary.textContent = 'JSON Config';
+        details.append(summary);
+        details.append(app.OrgCommon.formatJson(data));
+        jsonSection.append(details);
+        frag.append(jsonSection);
 
-        return html;
+        return frag;
     }
 
     function initExpandRows() {
@@ -52,7 +84,8 @@
             const content = detailRow.querySelector('[data-skill-expand]');
             if (content && !content.hasAttribute('data-loaded')) {
                 const skillId = content.getAttribute('data-skill-expand');
-                content.innerHTML = renderSkillExpand(skillId);
+                content.replaceChildren();
+                content.append(renderSkillExpand(skillId));
                 content.setAttribute('data-loaded', 'true');
             }
         });

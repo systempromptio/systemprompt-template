@@ -80,13 +80,27 @@
                     const title = panel.querySelector('[data-panel-title]');
                     if (title) title.textContent = text;
                 },
-                setBody: (html) => {
+                setBody: (content) => {
                     const body = panel.querySelector('[data-panel-body]');
-                    if (body) body.innerHTML = html;
+                    if (!body) return;
+                    body.replaceChildren();
+                    if (typeof content === 'string') {
+                        body.textContent = content;
+                    } else if (content instanceof Node) {
+                        body.append(content);
+                    }
                 },
-                setFooter: (html) => {
+                setBodyDom: (el) => {
+                    const body = panel.querySelector('[data-panel-body]');
+                    if (!body) return;
+                    body.replaceChildren();
+                    body.append(el);
+                },
+                setFooterDom: (el) => {
                     const footer = panel.querySelector('[data-panel-footer]');
-                    if (footer) footer.innerHTML = html;
+                    if (!footer) return;
+                    footer.replaceChildren();
+                    footer.append(el);
                 },
                 panel: panel
             };
@@ -109,31 +123,47 @@
                     const currentSet = {};
                     (currentPluginIds || []).forEach((id) => { currentSet[id] = true; });
 
-                    let html = '<div class="assign-panel-checklist">';
+                    const checklist = document.createElement('div');
+                    checklist.className = 'assign-panel-checklist';
+
                     if (allPlugins.length === 0) {
-                        html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No plugins available.</p>';
+                        const p = document.createElement('p');
+                        p.style.cssText = 'color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
+                        p.textContent = 'No plugins available.';
+                        checklist.append(p);
                     } else {
                         allPlugins.forEach((p) => {
-                            const checked = currentSet[p.id] ? ' checked' : '';
-                            html += '<label class="acl-checkbox-row">' +
-                                '<input type="checkbox" name="plugin_id" value="' + app.escapeHtml(p.id) + '"' + checked + '>' +
-                                '<span class="acl-checkbox-label">' + app.escapeHtml(p.name || p.id) + '</span>' +
-                                '</label>';
+                            const label = document.createElement('label');
+                            label.className = 'acl-checkbox-row';
+                            const input = document.createElement('input');
+                            input.type = 'checkbox';
+                            input.name = 'plugin_id';
+                            input.value = p.id;
+                            if (currentSet[p.id]) input.checked = true;
+                            const span = document.createElement('span');
+                            span.className = 'acl-checkbox-label';
+                            span.textContent = p.name || p.id;
+                            label.append(input, span);
+                            checklist.append(label);
                         });
                     }
-                    html += '</div>';
-                    panelApi.setBody(html);
 
-                    panelApi.setFooter(
-                        '<button class="btn btn-secondary" data-panel-close>Cancel</button> ' +
-                        '<button class="btn btn-primary" data-assign-save data-entity-id="' + app.escapeHtml(entityId) + '">Save</button>'
-                    );
+                    panelApi.setBodyDom(checklist);
 
-                    const footer = panelApi.panel.querySelector('[data-panel-footer]');
-                    if (footer) {
-                        const cancelBtn = footer.querySelector('[data-panel-close]');
-                        if (cancelBtn) cancelBtn.addEventListener('click', panelApi.close);
-                    }
+                    const footerFrag = document.createDocumentFragment();
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn btn-secondary';
+                    cancelBtn.setAttribute('data-panel-close', '');
+                    cancelBtn.textContent = 'Cancel';
+                    const saveBtn = document.createElement('button');
+                    saveBtn.className = 'btn btn-primary';
+                    saveBtn.setAttribute('data-assign-save', '');
+                    saveBtn.setAttribute('data-entity-id', entityId);
+                    saveBtn.textContent = 'Save';
+                    footerFrag.append(cancelBtn, document.createTextNode(' '), saveBtn);
+                    panelApi.setFooterDom(footerFrag);
+
+                    cancelBtn.addEventListener('click', panelApi.close);
 
                     panelApi.open();
                 },
@@ -148,21 +178,36 @@
             let currentEntityId = null;
 
             const buildForm = (entityData) => {
-                let html = '<form class="edit-panel-form">';
+                const form = document.createElement('form');
+                form.className = 'edit-panel-form';
                 (config.fields || []).forEach((f) => {
                     let val = entityData[f.name] || '';
                     if (Array.isArray(val)) val = val.join(', ');
-                    html += '<div class="form-group">';
-                    html += '<label class="form-label">' + app.escapeHtml(f.label) + '</label>';
+                    const group = document.createElement('div');
+                    group.className = 'form-group';
+                    const label = document.createElement('label');
+                    label.className = 'form-label';
+                    label.textContent = f.label;
+                    group.append(label);
                     if (f.type === 'textarea') {
-                        html += '<textarea class="form-control" name="' + f.name + '" rows="' + (f.rows || 10) + '">' + app.escapeHtml(val) + '</textarea>';
+                        const textarea = document.createElement('textarea');
+                        textarea.className = 'form-control';
+                        textarea.name = f.name;
+                        textarea.rows = f.rows || 10;
+                        textarea.textContent = val;
+                        group.append(textarea);
                     } else {
-                        html += '<input type="text" class="form-control" name="' + f.name + '" value="' + app.escapeHtml(val) + '"' + (f.required ? ' required' : '') + '>';
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'form-control';
+                        input.name = f.name;
+                        input.value = val;
+                        if (f.required) input.required = true;
+                        group.append(input);
                     }
-                    html += '</div>';
+                    form.append(group);
                 });
-                html += '</form>';
-                return html;
+                return form;
             };
 
             const collectFormData = () => {
@@ -213,17 +258,22 @@
             return {
                 open: (entityId, entityData) => {
                     currentEntityId = entityId;
-                    panelApi.setTitle('Edit ' + app.escapeHtml(entityData.name || entityId));
-                    panelApi.setBody(buildForm(entityData));
-                    panelApi.setFooter(
-                        '<button class="btn btn-secondary" data-panel-close>Cancel</button> ' +
-                        '<button class="btn btn-primary" data-edit-save>Save</button>'
-                    );
-                    const footer = panelApi.panel.querySelector('[data-panel-footer]');
-                    if (footer) {
-                        const cancelBtn = footer.querySelector('[data-panel-close]');
-                        if (cancelBtn) cancelBtn.addEventListener('click', panelApi.close);
-                    }
+                    panelApi.setTitle('Edit ' + (entityData.name || entityId));
+                    panelApi.setBodyDom(buildForm(entityData));
+
+                    const footerFrag = document.createDocumentFragment();
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn btn-secondary';
+                    cancelBtn.setAttribute('data-panel-close', '');
+                    cancelBtn.textContent = 'Cancel';
+                    const saveBtn = document.createElement('button');
+                    saveBtn.className = 'btn btn-primary';
+                    saveBtn.setAttribute('data-edit-save', '');
+                    saveBtn.textContent = 'Save';
+                    footerFrag.append(cancelBtn, document.createTextNode(' '), saveBtn);
+                    panelApi.setFooterDom(footerFrag);
+
+                    cancelBtn.addEventListener('click', panelApi.close);
                     panelApi.open();
                 },
                 close: panelApi.close
@@ -285,46 +335,91 @@
 
         formatJson: (data) => {
             if (typeof data === 'string') {
-                try { data = JSON.parse(data); } catch (e) { return app.escapeHtml(data); }
+                try { data = JSON.parse(data); } catch (e) {
+                    const span = document.createElement('span');
+                    span.textContent = data;
+                    return span;
+                }
             }
-            return '<pre class="json-view">' + app.escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
+            const pre = document.createElement('pre');
+            pre.className = 'json-view';
+            pre.textContent = JSON.stringify(data, null, 2);
+            return pre;
         },
 
         renderRoleBadges: (roles) => {
+            const frag = document.createDocumentFragment();
             if (!roles || !roles.length) {
-                return '<span class="badge badge-gray">All</span>';
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = 'All';
+                frag.append(badge);
+                return frag;
             }
             const assigned = roles.filter((r) => r.assigned);
             if (!assigned.length) {
-                return '<span class="badge badge-gray">All</span>';
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = 'All';
+                frag.append(badge);
+                return frag;
             }
-            return assigned.map((r) => {
-                return '<span class="badge badge-blue">' + app.escapeHtml(r.name) + '</span>';
-            }).join(' ');
+            assigned.forEach((r, i) => {
+                if (i > 0) frag.append(document.createTextNode(' '));
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-blue';
+                badge.textContent = r.name;
+                frag.append(badge);
+            });
+            return frag;
         },
 
         renderDeptBadges: (departments) => {
+            const frag = document.createDocumentFragment();
             if (!departments || !departments.length) {
-                return '<span class="badge badge-gray">None</span>';
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = 'None';
+                frag.append(badge);
+                return frag;
             }
             const assigned = departments.filter((d) => d.assigned);
             if (!assigned.length) {
-                return '<span class="badge badge-gray">None</span>';
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = 'None';
+                frag.append(badge);
+                return frag;
             }
-            return assigned.map((d) => {
+            assigned.forEach((d, i) => {
+                if (i > 0) frag.append(document.createTextNode(' '));
                 const cls = d.default_included ? 'badge-yellow' : 'badge-green';
-                return '<span class="badge ' + cls + '">' + app.escapeHtml(d.name) + '</span>';
-            }).join(' ');
+                const badge = document.createElement('span');
+                badge.className = 'badge ' + cls;
+                badge.textContent = d.name;
+                frag.append(badge);
+            });
+            return frag;
         },
 
         renderPluginBadges: (plugins) => {
+            const frag = document.createDocumentFragment();
             if (!plugins || !plugins.length) {
-                return '<span class="badge badge-gray">None</span>';
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = 'None';
+                frag.append(badge);
+                return frag;
             }
-            return plugins.map((p) => {
+            plugins.forEach((p, i) => {
+                if (i > 0) frag.append(document.createTextNode(' '));
                 const name = typeof p === 'string' ? p : (p.name || p.id || p);
-                return '<span class="badge badge-purple">' + app.escapeHtml(name) + '</span>';
-            }).join(' ');
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-purple';
+                badge.textContent = name;
+                frag.append(badge);
+            });
+            return frag;
         },
 
         initFilters: (searchInputId, tableSelector, filters) => {

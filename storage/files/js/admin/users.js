@@ -57,13 +57,33 @@
             const row = trigger.closest('tr');
             const isActive = row && row.querySelector('.badge-green') !== null;
             const toggleLabel = isActive ? 'Deactivate' : 'Activate';
-            const toggleIcon = isActive ? '&#10006;' : '&#10004;';
             const toggleClass = isActive ? ' actions-popup-item--danger' : '';
 
-            portal.innerHTML =
-                '<button class="actions-popup-item" data-action="edit" data-user-id="' + userId + '"><span class="popup-icon">&#9998;</span> Edit User</button>' +
-                '<div class="actions-popup-separator"></div>' +
-                '<button class="actions-popup-item' + toggleClass + '" data-action="toggle" data-user-id="' + userId + '" data-is-active="' + isActive + '"><span class="popup-icon">' + toggleIcon + '</span> ' + toggleLabel + '</button>';
+            portal.replaceChildren();
+
+            var editBtn = document.createElement('button');
+            editBtn.className = 'actions-popup-item';
+            editBtn.setAttribute('data-action', 'edit');
+            editBtn.setAttribute('data-user-id', userId);
+            var editIcon = document.createElement('span');
+            editIcon.className = 'popup-icon';
+            editIcon.textContent = '\u270E';
+            editBtn.append(editIcon, document.createTextNode(' Edit User'));
+
+            var separator = document.createElement('div');
+            separator.className = 'actions-popup-separator';
+
+            var toggleBtn = document.createElement('button');
+            toggleBtn.className = 'actions-popup-item' + toggleClass;
+            toggleBtn.setAttribute('data-action', 'toggle');
+            toggleBtn.setAttribute('data-user-id', userId);
+            toggleBtn.setAttribute('data-is-active', String(isActive));
+            var toggleIcon = document.createElement('span');
+            toggleIcon.className = 'popup-icon';
+            toggleIcon.textContent = isActive ? '\u2716' : '\u2714';
+            toggleBtn.append(toggleIcon, document.createTextNode(' ' + toggleLabel));
+
+            portal.append(editBtn, separator, toggleBtn);
 
             activePopupId = userId;
             portal.classList.add('open');

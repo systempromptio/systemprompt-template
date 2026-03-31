@@ -15,45 +15,92 @@
 
     function renderAgentExpand(agentId) {
         const data = getAgentDetail(agentId);
-        if (!data) return '<p class="text-muted">No detail data available.</p>';
+        if (!data) {
+            var noData = document.createElement('p');
+            noData.className = 'text-muted';
+            noData.textContent = 'No detail data available.';
+            return noData;
+        }
 
-        let html = '';
+        var frag = document.createDocumentFragment();
 
         if (data.system_prompt) {
-            html += '<div class="detail-section">';
-            html += '<strong>System Prompt</strong>';
-            html += '<pre style="margin:var(--sp-space-1) 0;max-height:200px;overflow:auto;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);white-space:pre-wrap;word-break:break-word">' + app.escapeHtml(data.system_prompt) + '</pre>';
-            html += '</div>';
+            var promptSection = document.createElement('div');
+            promptSection.className = 'detail-section';
+            var promptLabel = document.createElement('strong');
+            promptLabel.textContent = 'System Prompt';
+            var promptPre = document.createElement('pre');
+            promptPre.style.cssText = 'margin:var(--sp-space-1) 0;max-height:200px;overflow:auto;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);white-space:pre-wrap;word-break:break-word';
+            promptPre.textContent = data.system_prompt;
+            promptSection.append(promptLabel, promptPre);
+            frag.append(promptSection);
         }
 
         if (data.port || data.endpoint) {
-            html += '<div class="detail-section">';
-            html += '<strong>Connection</strong>';
-            html += '<div style="margin:var(--sp-space-1) 0;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">';
-            if (data.port) html += '<div>Port: <code class="code-inline">' + app.escapeHtml(String(data.port)) + '</code></div>';
-            if (data.endpoint) html += '<div>Endpoint: <code class="code-inline">' + app.escapeHtml(data.endpoint) + '</code></div>';
-            html += '</div></div>';
+            var connSection = document.createElement('div');
+            connSection.className = 'detail-section';
+            var connLabel = document.createElement('strong');
+            connLabel.textContent = 'Connection';
+            var connDiv = document.createElement('div');
+            connDiv.style.cssText = 'margin:var(--sp-space-1) 0;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)';
+            if (data.port) {
+                var portRow = document.createElement('div');
+                portRow.append('Port: ');
+                var portCode = document.createElement('code');
+                portCode.className = 'code-inline';
+                portCode.textContent = String(data.port);
+                portRow.append(portCode);
+                connDiv.append(portRow);
+            }
+            if (data.endpoint) {
+                var endpointRow = document.createElement('div');
+                endpointRow.append('Endpoint: ');
+                var endpointCode = document.createElement('code');
+                endpointCode.className = 'code-inline';
+                endpointCode.textContent = data.endpoint;
+                endpointRow.append(endpointCode);
+                connDiv.append(endpointRow);
+            }
+            connSection.append(connLabel, connDiv);
+            frag.append(connSection);
         }
 
         if ((data.skill_count && data.skill_count > 0) || (data.mcp_count && data.mcp_count > 0)) {
-            html += '<div class="detail-section">';
-            html += '<strong>Capabilities</strong>';
-            html += '<div class="badge-row" style="margin-top:var(--sp-space-1)">';
+            var capSection = document.createElement('div');
+            capSection.className = 'detail-section';
+            var capLabel = document.createElement('strong');
+            capLabel.textContent = 'Capabilities';
+            var badgeRow = document.createElement('div');
+            badgeRow.className = 'badge-row';
+            badgeRow.style.marginTop = 'var(--sp-space-1)';
             if (data.skill_count > 0) {
-                html += '<span class="badge badge-green">' + data.skill_count + ' skill' + (data.skill_count !== 1 ? 's' : '') + '</span>';
+                var skillBadge = document.createElement('span');
+                skillBadge.className = 'badge badge-green';
+                skillBadge.textContent = data.skill_count + ' skill' + (data.skill_count !== 1 ? 's' : '');
+                badgeRow.append(skillBadge);
             }
             if (data.mcp_count > 0) {
-                html += '<span class="badge badge-yellow">' + data.mcp_count + ' MCP server' + (data.mcp_count !== 1 ? 's' : '') + '</span>';
+                var mcpBadge = document.createElement('span');
+                mcpBadge.className = 'badge badge-yellow';
+                mcpBadge.textContent = data.mcp_count + ' MCP server' + (data.mcp_count !== 1 ? 's' : '');
+                badgeRow.append(mcpBadge);
             }
-            html += '</div></div>';
+            capSection.append(capLabel, badgeRow);
+            frag.append(capSection);
         }
 
-        html += '<div class="detail-section">';
-        html += '<details><summary style="cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">JSON Config</summary>';
-        html += app.OrgCommon.formatJson(data);
-        html += '</details></div>';
+        var jsonSection = document.createElement('div');
+        jsonSection.className = 'detail-section';
+        var details = document.createElement('details');
+        var summary = document.createElement('summary');
+        summary.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)';
+        summary.textContent = 'JSON Config';
+        details.append(summary);
+        details.append(app.OrgCommon.formatJson(data));
+        jsonSection.append(details);
+        frag.append(jsonSection);
 
-        return html;
+        return frag;
     }
 
     function initExpandRows() {
@@ -61,7 +108,8 @@
             const content = detailRow.querySelector('[data-agent-expand]');
             if (content && !content.hasAttribute('data-loaded')) {
                 const agentId = content.getAttribute('data-agent-expand');
-                content.innerHTML = renderAgentExpand(agentId);
+                content.replaceChildren();
+                content.append(renderAgentExpand(agentId));
                 content.setAttribute('data-loaded', 'true');
             }
         });

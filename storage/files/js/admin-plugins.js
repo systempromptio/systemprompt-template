@@ -80,13 +80,13 @@
                     const title = panel.querySelector('[data-panel-title]');
                     if (title) title.textContent = text;
                 },
-                setBody: function(html) {
-                    const body = panel.querySelector('[data-panel-body]');
-                    if (body) body.innerHTML = html;
+                setBody: function(content) {
+                    var body = panel.querySelector('[data-panel-body]');
+                    if (body) body.replaceChildren(content);
                 },
-                setFooter: function(html) {
-                    const footer = panel.querySelector('[data-panel-footer]');
-                    if (footer) footer.innerHTML = html;
+                setFooter: function(content) {
+                    var footer = panel.querySelector('[data-panel-footer]');
+                    if (footer) footer.replaceChildren(content);
                 },
                 panel: panel
             };
@@ -98,42 +98,55 @@
         },
 
         initAssignPanel: function(config) {
-            const panelApi = OrgCommon.initSidePanel(config.panelId);
+            var panelApi = OrgCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
 
             return {
                 open: function(entityId, entityName, currentPluginIds) {
                     panelApi.setTitle('Assign ' + (entityName || entityId));
 
-                    const allPlugins = config.allPlugins || [];
-                    const currentSet = {};
+                    var allPlugins = config.allPlugins || [];
+                    var currentSet = {};
                     (currentPluginIds || []).forEach(function(id) { currentSet[id] = true; });
 
-                    let html = '<div class="assign-panel-checklist">';
+                    var checklist = document.createElement('div');
+                    checklist.className = 'assign-panel-checklist';
                     if (allPlugins.length === 0) {
-                        html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No plugins available.</p>';
+                        var noPlugins = document.createElement('p');
+                        noPlugins.style.cssText = 'color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
+                        noPlugins.textContent = 'No plugins available.';
+                        checklist.append(noPlugins);
                     } else {
                         allPlugins.forEach(function(p) {
-                            const checked = currentSet[p.id] ? ' checked' : '';
-                            html += '<label class="acl-checkbox-row">' +
-                                '<input type="checkbox" name="plugin_id" value="' + app.escapeHtml(p.id) + '"' + checked + '>' +
-                                '<span class="acl-checkbox-label">' + app.escapeHtml(p.name || p.id) + '</span>' +
-                                '</label>';
+                            var label = document.createElement('label');
+                            label.className = 'acl-checkbox-row';
+                            var input = document.createElement('input');
+                            input.type = 'checkbox';
+                            input.name = 'plugin_id';
+                            input.value = p.id;
+                            if (currentSet[p.id]) input.checked = true;
+                            var span = document.createElement('span');
+                            span.className = 'acl-checkbox-label';
+                            span.textContent = p.name || p.id;
+                            label.append(input, span);
+                            checklist.append(label);
                         });
                     }
-                    html += '</div>';
-                    panelApi.setBody(html);
+                    panelApi.setBody(checklist);
 
-                    panelApi.setFooter(
-                        '<button class="btn btn-secondary" data-panel-close>Cancel</button> ' +
-                        '<button class="btn btn-primary" data-assign-save data-entity-id="' + app.escapeHtml(entityId) + '">Save</button>'
-                    );
-
-                    const footer = panelApi.panel.querySelector('[data-panel-footer]');
-                    if (footer) {
-                        const cancelBtn = footer.querySelector('[data-panel-close]');
-                        if (cancelBtn) cancelBtn.addEventListener('click', panelApi.close);
-                    }
+                    var footerFrag = document.createDocumentFragment();
+                    var cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn btn-secondary';
+                    cancelBtn.setAttribute('data-panel-close', '');
+                    cancelBtn.textContent = 'Cancel';
+                    cancelBtn.addEventListener('click', panelApi.close);
+                    var saveBtn = document.createElement('button');
+                    saveBtn.className = 'btn btn-primary';
+                    saveBtn.setAttribute('data-assign-save', '');
+                    saveBtn.setAttribute('data-entity-id', entityId);
+                    saveBtn.textContent = 'Save';
+                    footerFrag.append(cancelBtn, document.createTextNode(' '), saveBtn);
+                    panelApi.setFooter(footerFrag);
 
                     panelApi.open();
                 },
@@ -143,26 +156,41 @@
         },
 
         initEditPanel: function(config) {
-            const panelApi = OrgCommon.initSidePanel(config.panelId);
+            var panelApi = OrgCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
-            let currentEntityId = null;
+            var currentEntityId = null;
 
             function buildForm(entityData) {
-                let html = '<form class="edit-panel-form">';
+                var form = document.createElement('form');
+                form.className = 'edit-panel-form';
                 (config.fields || []).forEach(function(f) {
-                    let val = entityData[f.name] || '';
+                    var val = entityData[f.name] || '';
                     if (Array.isArray(val)) val = val.join(', ');
-                    html += '<div class="form-group">';
-                    html += '<label class="form-label">' + app.escapeHtml(f.label) + '</label>';
+                    var group = document.createElement('div');
+                    group.className = 'form-group';
+                    var label = document.createElement('label');
+                    label.className = 'form-label';
+                    label.textContent = f.label;
+                    group.append(label);
                     if (f.type === 'textarea') {
-                        html += '<textarea class="form-control" name="' + f.name + '" rows="' + (f.rows || 10) + '">' + app.escapeHtml(val) + '</textarea>';
+                        var textarea = document.createElement('textarea');
+                        textarea.className = 'form-control';
+                        textarea.name = f.name;
+                        textarea.rows = f.rows || 10;
+                        textarea.value = val;
+                        group.append(textarea);
                     } else {
-                        html += '<input type="text" class="form-control" name="' + f.name + '" value="' + app.escapeHtml(val) + '"' + (f.required ? ' required' : '') + '>';
+                        var input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'form-control';
+                        input.name = f.name;
+                        input.value = val;
+                        if (f.required) input.required = true;
+                        group.append(input);
                     }
-                    html += '</div>';
+                    form.append(group);
                 });
-                html += '</form>';
-                return html;
+                return form;
             }
 
             function collectFormData() {
@@ -215,17 +243,20 @@
             return {
                 open: function(entityId, entityData) {
                     currentEntityId = entityId;
-                    panelApi.setTitle('Edit ' + app.escapeHtml(entityData.name || entityId));
+                    panelApi.setTitle('Edit ' + (entityData.name || entityId));
                     panelApi.setBody(buildForm(entityData));
-                    panelApi.setFooter(
-                        '<button class="btn btn-secondary" data-panel-close>Cancel</button> ' +
-                        '<button class="btn btn-primary" data-edit-save>Save</button>'
-                    );
-                    const footer = panelApi.panel.querySelector('[data-panel-footer]');
-                    if (footer) {
-                        const cancelBtn = footer.querySelector('[data-panel-close]');
-                        if (cancelBtn) cancelBtn.addEventListener('click', panelApi.close);
-                    }
+                    var footerFrag = document.createDocumentFragment();
+                    var cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn btn-secondary';
+                    cancelBtn.setAttribute('data-panel-close', '');
+                    cancelBtn.textContent = 'Cancel';
+                    cancelBtn.addEventListener('click', panelApi.close);
+                    var saveBtn = document.createElement('button');
+                    saveBtn.className = 'btn btn-primary';
+                    saveBtn.setAttribute('data-edit-save', '');
+                    saveBtn.textContent = 'Save';
+                    footerFrag.append(cancelBtn, document.createTextNode(' '), saveBtn);
+                    panelApi.setFooter(footerFrag);
                     panelApi.open();
                 },
                 close: panelApi.close
@@ -287,46 +318,88 @@
 
         formatJson: function(data) {
             if (typeof data === 'string') {
-                try { data = JSON.parse(data); } catch (e) { return app.escapeHtml(data); }
+                try { data = JSON.parse(data); } catch (e) {
+                    var fallback = document.createElement('pre');
+                    fallback.className = 'json-view';
+                    fallback.textContent = data;
+                    return fallback;
+                }
             }
-            return '<pre class="json-view">' + app.escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
+            var pre = document.createElement('pre');
+            pre.className = 'json-view';
+            pre.textContent = JSON.stringify(data, null, 2);
+            return pre;
         },
 
         renderRoleBadges: function(roles) {
+            var frag = document.createDocumentFragment();
             if (!roles || !roles.length) {
-                return '<span class="badge badge-gray">All</span>';
+                var b = document.createElement('span');
+                b.className = 'badge badge-gray';
+                b.textContent = 'All';
+                frag.append(b);
+                return frag;
             }
-            const assigned = roles.filter(function(r) { return r.assigned; });
+            var assigned = roles.filter(function(r) { return r.assigned; });
             if (!assigned.length) {
-                return '<span class="badge badge-gray">All</span>';
+                var b2 = document.createElement('span');
+                b2.className = 'badge badge-gray';
+                b2.textContent = 'All';
+                frag.append(b2);
+                return frag;
             }
-            return assigned.map(function(r) {
-                return '<span class="badge badge-blue">' + app.escapeHtml(r.name) + '</span>';
-            }).join(' ');
+            assigned.forEach(function(r) {
+                var badge = document.createElement('span');
+                badge.className = 'badge badge-blue';
+                badge.textContent = r.name;
+                frag.append(badge, document.createTextNode(' '));
+            });
+            return frag;
         },
 
         renderDeptBadges: function(departments) {
+            var frag = document.createDocumentFragment();
             if (!departments || !departments.length) {
-                return '<span class="badge badge-gray">None</span>';
+                var b = document.createElement('span');
+                b.className = 'badge badge-gray';
+                b.textContent = 'None';
+                frag.append(b);
+                return frag;
             }
-            const assigned = departments.filter(function(d) { return d.assigned; });
+            var assigned = departments.filter(function(d) { return d.assigned; });
             if (!assigned.length) {
-                return '<span class="badge badge-gray">None</span>';
+                var b2 = document.createElement('span');
+                b2.className = 'badge badge-gray';
+                b2.textContent = 'None';
+                frag.append(b2);
+                return frag;
             }
-            return assigned.map(function(d) {
-                const cls = d.default_included ? 'badge-yellow' : 'badge-green';
-                return '<span class="badge ' + cls + '">' + app.escapeHtml(d.name) + '</span>';
-            }).join(' ');
+            assigned.forEach(function(d) {
+                var badge = document.createElement('span');
+                badge.className = 'badge ' + (d.default_included ? 'badge-yellow' : 'badge-green');
+                badge.textContent = d.name;
+                frag.append(badge, document.createTextNode(' '));
+            });
+            return frag;
         },
 
         renderPluginBadges: function(plugins) {
+            var frag = document.createDocumentFragment();
             if (!plugins || !plugins.length) {
-                return '<span class="badge badge-gray">None</span>';
+                var b = document.createElement('span');
+                b.className = 'badge badge-gray';
+                b.textContent = 'None';
+                frag.append(b);
+                return frag;
             }
-            return plugins.map(function(p) {
-                const name = typeof p === 'string' ? p : (p.name || p.id || p);
-                return '<span class="badge badge-purple">' + app.escapeHtml(name) + '</span>';
-            }).join(' ');
+            plugins.forEach(function(p) {
+                var name = typeof p === 'string' ? p : (p.name || p.id || p);
+                var badge = document.createElement('span');
+                badge.className = 'badge badge-purple';
+                badge.textContent = name;
+                frag.append(badge, document.createTextNode(' '));
+            });
+            return frag;
         },
 
         initFilters: function(searchInputId, tableSelector, filters) {
@@ -436,15 +509,36 @@
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.id = 'delete-confirm';
-        overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3 style="margin:0 0 var(--sp-space-3)">Delete Plugin?</h3>' +
-            '<p style="margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">You are about to delete <strong>' + app.escapeHtml(pluginId) + '</strong>.</p>' +
-            '<p style="margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">This will remove the plugin directory and all its configuration. This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end">' +
-                '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
-                '<button class="btn btn-danger" data-confirm-delete="' + app.escapeHtml(pluginId) + '">Delete Plugin</button>' +
-            '</div>' +
-        '</div>';
+
+        var dialog = document.createElement('div');
+        dialog.className = 'confirm-dialog';
+        var h3 = document.createElement('h3');
+        h3.style.cssText = 'margin:0 0 var(--sp-space-3)';
+        h3.textContent = 'Delete Plugin?';
+        var p1 = document.createElement('p');
+        p1.style.cssText = 'margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
+        p1.append(document.createTextNode('You are about to delete '));
+        var strong = document.createElement('strong');
+        strong.textContent = pluginId;
+        p1.append(strong);
+        p1.append(document.createTextNode('.'));
+        var p2 = document.createElement('p');
+        p2.style.cssText = 'margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
+        p2.textContent = 'This will remove the plugin directory and all its configuration. This action cannot be undone.';
+        var btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end';
+        var cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.setAttribute('data-confirm-cancel', '');
+        cancelBtn.textContent = 'Cancel';
+        var deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.setAttribute('data-confirm-delete', pluginId);
+        deleteBtn.textContent = 'Delete Plugin';
+        btnRow.append(cancelBtn, deleteBtn);
+        dialog.append(h3, p1, p2, btnRow);
+        overlay.append(dialog);
+
         document.body.append(overlay);
         overlay.addEventListener('click', async function(e) {
             if (e.target === overlay || e.target.closest('[data-confirm-cancel]')) {
@@ -522,39 +616,82 @@
 
         document.getElementById('panel-title').textContent = data.name || pluginId;
 
-        let html = '<div class="config-panel-section">' +
-            '<h4>Overview</h4>' +
-            '<div class="config-overview-grid">' +
-                '<span class="config-overview-label">ID</span><span class="config-overview-value"><code>' + app.escapeHtml(data.id) + '</code></span>' +
-                '<span class="config-overview-label">Status</span><span class="config-overview-value">' +
-                    (data.enabled ? '<span class="badge badge-green">Enabled</span>' : '<span class="badge badge-gray">Disabled</span>') + '</span>' +
-                '<span class="config-overview-label">Version</span><span class="config-overview-value">' + app.escapeHtml(data.version || '—') + '</span>' +
-                '<span class="config-overview-label">Category</span><span class="config-overview-value">' + app.escapeHtml(data.category || '—') + '</span>' +
-                '<span class="config-overview-label">Author</span><span class="config-overview-value">' + app.escapeHtml(data.author_name || '—') + '</span>' +
-                '<span class="config-overview-label">Description</span><span class="config-overview-value">' + app.escapeHtml(data.description || '—') + '</span>' +
-            '</div>' +
-        '</div>';
+        var panelBody = document.createDocumentFragment();
 
-        html += '<div class="config-panel-section">' +
-            '<h4>Environment</h4>' +
-            '<div id="panel-env-status">Loading...</div>' +
-        '</div>';
+        var overviewSection = document.createElement('div');
+        overviewSection.className = 'config-panel-section';
+        var overviewH4 = document.createElement('h4');
+        overviewH4.textContent = 'Overview';
+        var grid = document.createElement('div');
+        grid.className = 'config-overview-grid';
 
-        document.getElementById('panel-body').innerHTML = html;
-
-        let footer = '';
-        if (data.id !== 'custom') {
-            footer = '<a href="/admin/org/plugins/edit/?id=' + encodeURIComponent(data.id) + '" class="btn btn-primary">Edit Plugin</a>' +
-                ' <button class="btn btn-secondary" data-open-env="' + app.escapeHtml(data.id) + '" data-plugin-name="' + app.escapeHtml(data.name) + '">Configure Env</button>';
+        function addGridRow(labelText, valueContent) {
+            var label = document.createElement('span');
+            label.className = 'config-overview-label';
+            label.textContent = labelText;
+            var value = document.createElement('span');
+            value.className = 'config-overview-value';
+            if (typeof valueContent === 'string') {
+                value.textContent = valueContent;
+            } else {
+                value.append(valueContent);
+            }
+            grid.append(label, value);
         }
-        document.getElementById('panel-footer').innerHTML = footer;
+
+        var idCode = document.createElement('code');
+        idCode.textContent = data.id;
+        addGridRow('ID', idCode);
+        var statusBadge = document.createElement('span');
+        statusBadge.className = data.enabled ? 'badge badge-green' : 'badge badge-gray';
+        statusBadge.textContent = data.enabled ? 'Enabled' : 'Disabled';
+        addGridRow('Status', statusBadge);
+        addGridRow('Version', data.version || '\u2014');
+        addGridRow('Category', data.category || '\u2014');
+        addGridRow('Author', data.author_name || '\u2014');
+        addGridRow('Description', data.description || '\u2014');
+
+        overviewSection.append(overviewH4, grid);
+        panelBody.append(overviewSection);
+
+        var envSection = document.createElement('div');
+        envSection.className = 'config-panel-section';
+        var envH4 = document.createElement('h4');
+        envH4.textContent = 'Environment';
+        var envStatus = document.createElement('div');
+        envStatus.id = 'panel-env-status';
+        envStatus.textContent = 'Loading...';
+        envSection.append(envH4, envStatus);
+        panelBody.append(envSection);
+
+        document.getElementById('panel-body').replaceChildren(panelBody);
+
+        var panelFooter = document.getElementById('panel-footer');
+        panelFooter.replaceChildren();
+        if (data.id !== 'custom') {
+            var editLink = document.createElement('a');
+            editLink.href = '/admin/org/plugins/edit/?id=' + encodeURIComponent(data.id);
+            editLink.className = 'btn btn-primary';
+            editLink.textContent = 'Edit Plugin';
+            var envBtn = document.createElement('button');
+            envBtn.className = 'btn btn-secondary';
+            envBtn.setAttribute('data-open-env', data.id);
+            envBtn.setAttribute('data-plugin-name', data.name);
+            envBtn.textContent = 'Configure Env';
+            panelFooter.append(editLink, document.createTextNode(' '), envBtn);
+        }
 
         openPanel();
 
         if (data.id !== 'custom') {
             loadEnvStatus(data.id, document.getElementById('panel-env-status'));
         } else {
-            document.getElementById('panel-env-status').innerHTML = '<div class="empty-state"><p>N/A</p></div>';
+            var emptyDiv = document.createElement('div');
+            emptyDiv.className = 'empty-state';
+            var emptyP = document.createElement('p');
+            emptyP.textContent = 'N/A';
+            emptyDiv.append(emptyP);
+            document.getElementById('panel-env-status').replaceChildren(emptyDiv);
         }
     }
 
@@ -811,24 +948,42 @@
                     return;
                 }
 
-                const overlay = document.createElement('div');
+                var overlay = document.createElement('div');
                 overlay.className = 'confirm-overlay';
-                let checklistHtml = '<div class="add-checklist">';
-                available.forEach(function(item) {
-                    const id = typeof item === 'string' ? item : (item.id || item.skill_id || item.agent_id);
-                    const name = typeof item === 'string' ? item : (item.name || item.id || item.skill_id);
-                    checklistHtml += '<label><input type="checkbox" value="' + app.escapeHtml(id) + '"> ' + app.escapeHtml(name) + '</label>';
-                });
-                checklistHtml += '</div>';
 
-                overlay.innerHTML = '<div class="confirm-dialog">' +
-                    '<h3 style="margin:0 0 var(--sp-space-3)">Add ' + resourceType.replace('_', ' ') + '</h3>' +
-                    checklistHtml +
-                    '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-3)">' +
-                        '<button class="btn btn-secondary" data-add-cancel>Cancel</button>' +
-                        '<button class="btn btn-primary" data-add-confirm>Add Selected</button>' +
-                    '</div>' +
-                '</div>';
+                var addDialog = document.createElement('div');
+                addDialog.className = 'confirm-dialog';
+                var addH3 = document.createElement('h3');
+                addH3.style.cssText = 'margin:0 0 var(--sp-space-3)';
+                addH3.textContent = 'Add ' + resourceType.replace('_', ' ');
+
+                var checklist = document.createElement('div');
+                checklist.className = 'add-checklist';
+                available.forEach(function(item) {
+                    var id = typeof item === 'string' ? item : (item.id || item.skill_id || item.agent_id);
+                    var itemName = typeof item === 'string' ? item : (item.name || item.id || item.skill_id);
+                    var lbl = document.createElement('label');
+                    var cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.value = id;
+                    lbl.append(cb, document.createTextNode(' ' + itemName));
+                    checklist.append(lbl);
+                });
+
+                var addBtnRow = document.createElement('div');
+                addBtnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-3)';
+                var addCancelBtn = document.createElement('button');
+                addCancelBtn.className = 'btn btn-secondary';
+                addCancelBtn.setAttribute('data-add-cancel', '');
+                addCancelBtn.textContent = 'Cancel';
+                var addConfirmBtn = document.createElement('button');
+                addConfirmBtn.className = 'btn btn-primary';
+                addConfirmBtn.setAttribute('data-add-confirm', '');
+                addConfirmBtn.textContent = 'Add Selected';
+                addBtnRow.append(addCancelBtn, addConfirmBtn);
+                addDialog.append(addH3, checklist, addBtnRow);
+                overlay.append(addDialog);
+
                 document.body.append(overlay);
 
                 overlay.addEventListener('click', function(ev) {
@@ -986,49 +1141,87 @@
 
     app.initPluginsList = app.initPluginsConfig;
 
+    function createEmptyState(text) {
+        var div = document.createElement('div');
+        div.className = 'empty-state';
+        var p = document.createElement('p');
+        p.textContent = text;
+        div.append(p);
+        return div;
+    }
+
     function loadEnvStatus(pluginId, container) {
-        container.innerHTML = '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Loading variables...</div>';
+        var loadingDiv = document.createElement('div');
+        loadingDiv.style.cssText = 'padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
+        loadingDiv.textContent = 'Loading variables...';
+        container.replaceChildren(loadingDiv);
+
         app.api('/plugins/' + encodeURIComponent(pluginId) + '/env').then(function(data) {
-            const defs = data.definitions || [];
-            const stored = data.stored || [];
+            var defs = data.definitions || [];
+            var stored = data.stored || [];
             if (!defs.length && !stored.length) {
-                container.innerHTML = '<div class="empty-state"><p>No environment variables defined for this plugin.</p></div>';
+                container.replaceChildren(createEmptyState('No environment variables defined for this plugin.'));
                 return;
             }
-            const storedMap = {};
+            var storedMap = {};
             stored.forEach(function(v) { storedMap[v.var_name] = v; });
-            let html = '';
+            var frag = document.createDocumentFragment();
             defs.forEach(function(def) {
-                const s = storedMap[def.name];
-                const hasValue = s && s.var_value && s.var_value !== '';
-                const valueBadge = hasValue
-                    ? '<span class="badge badge-green">configured</span>'
-                    : '<span class="badge badge-red">not set</span>';
-                let maskedVal = '';
-                if (hasValue) {
-                    maskedVal = s.is_secret ? '--------' : app.escapeHtml(s.var_value);
+                var s = storedMap[def.name];
+                var hasValue = s && s.var_value && s.var_value !== '';
+
+                var item = document.createElement('div');
+                item.className = 'detail-item';
+                var info = document.createElement('div');
+                info.className = 'detail-item-info';
+                var nameDiv = document.createElement('div');
+                nameDiv.className = 'detail-item-name';
+                var code = document.createElement('code');
+                code.style.cssText = 'background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-sm)';
+                code.textContent = def.name;
+                nameDiv.append(code, document.createTextNode(' '));
+                var valBadge = document.createElement('span');
+                valBadge.className = hasValue ? 'badge badge-green' : 'badge badge-red';
+                valBadge.textContent = hasValue ? 'configured' : 'not set';
+                nameDiv.append(valBadge);
+                if (def.required !== false && !hasValue) {
+                    var reqBadge = document.createElement('span');
+                    reqBadge.className = 'badge badge-yellow';
+                    reqBadge.textContent = 'required';
+                    nameDiv.append(document.createTextNode(' '), reqBadge);
                 }
-                const requiredBadge = (def.required !== false && !hasValue) ? ' <span class="badge badge-yellow">required</span>' : '';
-                const secretBadge = def.secret ? ' <span class="badge badge-gray">secret</span>' : '';
-                html += '<div class="detail-item">' +
-                    '<div class="detail-item-info">' +
-                        '<div class="detail-item-name">' +
-                            '<code style="background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-sm)">' + app.escapeHtml(def.name) + '</code> ' +
-                            valueBadge + requiredBadge + secretBadge +
-                        '</div>' +
-                        '<div class="detail-item-desc" style="font-size:var(--sp-text-sm);color:var(--sp-text-secondary);margin-top:var(--sp-space-1)">' +
-                            (def.description ? app.escapeHtml(def.description) : '') +
-                            (maskedVal ? ' <span style="font-family:monospace;color:var(--sp-text-tertiary)">' + maskedVal + '</span>' : '') +
-                        '</div>' +
-                    '</div>' +
-                '</div>';
+                if (def.secret) {
+                    var secBadge = document.createElement('span');
+                    secBadge.className = 'badge badge-gray';
+                    secBadge.textContent = 'secret';
+                    nameDiv.append(document.createTextNode(' '), secBadge);
+                }
+                var descDiv = document.createElement('div');
+                descDiv.className = 'detail-item-desc';
+                descDiv.style.cssText = 'font-size:var(--sp-text-sm);color:var(--sp-text-secondary);margin-top:var(--sp-space-1)';
+                if (def.description) descDiv.textContent = def.description;
+                if (hasValue) {
+                    var maskedSpan = document.createElement('span');
+                    maskedSpan.style.cssText = 'font-family:monospace;color:var(--sp-text-tertiary)';
+                    maskedSpan.textContent = s.is_secret ? '--------' : s.var_value;
+                    descDiv.append(document.createTextNode(' '), maskedSpan);
+                }
+                info.append(nameDiv, descDiv);
+                item.append(info);
+                frag.append(item);
             });
-            html += '<div style="padding:var(--sp-space-3) 0">' +
-                '<button class="btn btn-primary btn-sm" data-open-env="' + app.escapeHtml(pluginId) + '" data-plugin-name="' + app.escapeHtml(pluginId) + '">Configure</button>' +
-            '</div>';
-            container.innerHTML = html;
+            var btnWrap = document.createElement('div');
+            btnWrap.style.cssText = 'padding:var(--sp-space-3) 0';
+            var configBtn = document.createElement('button');
+            configBtn.className = 'btn btn-primary btn-sm';
+            configBtn.setAttribute('data-open-env', pluginId);
+            configBtn.setAttribute('data-plugin-name', pluginId);
+            configBtn.textContent = 'Configure';
+            btnWrap.append(configBtn);
+            frag.append(btnWrap);
+            container.replaceChildren(frag);
         }).catch(function() {
-            container.innerHTML = '<div class="empty-state"><p>Failed to load environment variables.</p></div>';
+            container.replaceChildren(createEmptyState('Failed to load environment variables.'));
         });
     }
 })(window.AdminApp);
@@ -1079,39 +1272,82 @@
     }
 
     function renderVarList(vars) {
+        var frag = document.createDocumentFragment();
         if (!vars.length) {
-            return '<div class="empty-state" style="padding:var(--sp-space-6)"><p>No environment variables defined for this plugin.</p></div>';
+            var empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.style.padding = 'var(--sp-space-6)';
+            var emptyP = document.createElement('p');
+            emptyP.textContent = 'No environment variables defined for this plugin.';
+            empty.append(emptyP);
+            frag.append(empty);
+            return frag;
         }
-        let html = '';
         vars.forEach(function(v, i) {
-            const inputType = v.secret ? 'password' : 'text';
-            const placeholder = v.example ? v.example : '';
-            const requiredBadge = v.required ? ' <span class="badge badge-red">required</span>' : '';
-            const secretBadge = v.secret ? ' <span class="badge badge-gray">secret</span>' : '';
-            html += '<div class="form-group">' +
-                '<label>' + escapeHtml(v.name) + requiredBadge + secretBadge + '</label>' +
-                (v.description ? '<p style="margin:0 0 var(--sp-space-1);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">' + escapeHtml(v.description) + '</p>' : '') +
-                '<input type="' + inputType + '" class="plugin-env-input" data-var-index="' + i + '" data-var-name="' + escapeHtml(v.name) + '" data-is-secret="' + (v.secret ? '1' : '0') + '" ' +
-                    'value="' + escapeHtml(v.value) + '" placeholder="' + escapeHtml(placeholder) + '">' +
-            '</div>';
+            var group = document.createElement('div');
+            group.className = 'form-group';
+            var label = document.createElement('label');
+            label.textContent = v.name;
+            if (v.required) {
+                var reqBadge = document.createElement('span');
+                reqBadge.className = 'badge badge-red';
+                reqBadge.textContent = 'required';
+                label.append(document.createTextNode(' '), reqBadge);
+            }
+            if (v.secret) {
+                var secBadge = document.createElement('span');
+                secBadge.className = 'badge badge-gray';
+                secBadge.textContent = 'secret';
+                label.append(document.createTextNode(' '), secBadge);
+            }
+            group.append(label);
+            if (v.description) {
+                var desc = document.createElement('p');
+                desc.style.cssText = 'margin:0 0 var(--sp-space-1);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)';
+                desc.textContent = v.description;
+                group.append(desc);
+            }
+            var input = document.createElement('input');
+            input.type = v.secret ? 'password' : 'text';
+            input.className = 'plugin-env-input';
+            input.setAttribute('data-var-index', i);
+            input.setAttribute('data-var-name', v.name);
+            input.setAttribute('data-is-secret', v.secret ? '1' : '0');
+            input.value = v.value;
+            if (v.example) input.placeholder = v.example;
+            group.append(input);
+            frag.append(group);
         });
-        return html;
+        return frag;
     }
 
     function renderModal(vars) {
-        return '<h3 style="margin:0 0 var(--sp-space-4)">' + escapeHtml(currentPluginName) + ' — Environment Variables</h3>' +
-            '<div style="max-height:60vh;overflow-y:auto">' +
-                renderVarList(vars) +
-            '</div>' +
-            '<div class="form-actions" style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)">' +
-                '<button class="btn btn-secondary" id="plugin-env-close">Close</button>' +
-                '<button class="btn btn-primary" id="plugin-env-save">Save</button>' +
-            '</div>';
+        var frag = document.createDocumentFragment();
+        var h3 = document.createElement('h3');
+        h3.style.cssText = 'margin:0 0 var(--sp-space-4)';
+        h3.textContent = currentPluginName + ' \u2014 Environment Variables';
+        var scrollDiv = document.createElement('div');
+        scrollDiv.style.cssText = 'max-height:60vh;overflow-y:auto';
+        scrollDiv.append(renderVarList(vars));
+        var actions = document.createElement('div');
+        actions.className = 'form-actions';
+        actions.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)';
+        var closeBtn = document.createElement('button');
+        closeBtn.className = 'btn btn-secondary';
+        closeBtn.id = 'plugin-env-close';
+        closeBtn.textContent = 'Close';
+        var saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-primary';
+        saveBtn.id = 'plugin-env-save';
+        saveBtn.textContent = 'Save';
+        actions.append(closeBtn, saveBtn);
+        frag.append(h3, scrollDiv, actions);
+        return frag;
     }
 
     function updatePanel(vars) {
-        const panel = overlay && overlay.querySelector('.confirm-dialog');
-        if (panel) panel.innerHTML = renderModal(vars);
+        var panel = overlay && overlay.querySelector('.confirm-dialog');
+        if (panel) panel.replaceChildren(renderModal(vars));
         bindEvents(vars);
     }
 
@@ -1196,9 +1432,14 @@
 
         overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
-        overlay.innerHTML = '<div class="confirm-dialog" style="width:560px;max-width:90vw">' +
-            '<div style="display:flex;align-items:center;justify-content:center;padding:var(--sp-space-6);color:var(--sp-text-tertiary)">Loading...</div>' +
-        '</div>';
+        var envDialog = document.createElement('div');
+        envDialog.className = 'confirm-dialog';
+        envDialog.style.cssText = 'width:560px;max-width:90vw';
+        var envLoading = document.createElement('div');
+        envLoading.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:var(--sp-space-6);color:var(--sp-text-tertiary)';
+        envLoading.textContent = 'Loading...';
+        envDialog.append(envLoading);
+        overlay.append(envDialog);
         document.body.append(overlay);
 
         overlay.addEventListener('click', function(e) {
@@ -1247,29 +1488,49 @@
     }
 
     function renderFileList() {
+        var frag = document.createDocumentFragment();
         if (!files.length) {
-            return '<div class="empty-state" style="padding:var(--sp-space-6)"><p>No files found for this skill.</p>' +
-                '<p style="font-size:var(--sp-text-sm);color:var(--sp-text-tertiary);margin-top:var(--sp-space-2)">Click "Sync Files" to scan the filesystem.</p></div>';
+            var empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.style.padding = 'var(--sp-space-6)';
+            var p1 = document.createElement('p');
+            p1.textContent = 'No files found for this skill.';
+            var p2 = document.createElement('p');
+            p2.style.cssText = 'font-size:var(--sp-text-sm);color:var(--sp-text-tertiary);margin-top:var(--sp-space-2)';
+            p2.textContent = 'Click "Sync Files" to scan the filesystem.';
+            empty.append(p1, p2);
+            frag.append(empty);
+            return frag;
         }
-        const groups = groupByCategory(files);
-        let html = '';
+        var groups = groupByCategory(files);
         categoryOrder.forEach(function(cat) {
-            const group = groups[cat];
+            var group = groups[cat];
             if (!group || !group.length) return;
-            html += '<div style="margin-bottom:var(--sp-space-3)">' +
-                '<div class="skill-file-category">' +
-                escapeHtml(categoryLabels[cat] || cat) + ' (' + group.length + ')' +
-                '</div>';
+            var wrapper = document.createElement('div');
+            wrapper.style.marginBottom = 'var(--sp-space-3)';
+            var catDiv = document.createElement('div');
+            catDiv.className = 'skill-file-category';
+            catDiv.textContent = (categoryLabels[cat] || cat) + ' (' + group.length + ')';
+            wrapper.append(catDiv);
             group.forEach(function(f) {
-                const isSelected = selectedFile && selectedFile.id === f.id;
-                html += '<div class="skill-file-item' + (isSelected ? ' selected' : '') + '" data-file-id="' + escapeHtml(f.id) + '">' +
-                    '<span class="skill-file-name">' + escapeHtml(f.file_path) + '</span>' +
-                    (f.language ? '<span class="skill-file-lang">' + escapeHtml(f.language) + '</span>' : '') +
-                '</div>';
+                var item = document.createElement('div');
+                item.className = 'skill-file-item' + (selectedFile && selectedFile.id === f.id ? ' selected' : '');
+                item.setAttribute('data-file-id', f.id);
+                var nameSpan = document.createElement('span');
+                nameSpan.className = 'skill-file-name';
+                nameSpan.textContent = f.file_path;
+                item.append(nameSpan);
+                if (f.language) {
+                    var langSpan = document.createElement('span');
+                    langSpan.className = 'skill-file-lang';
+                    langSpan.textContent = f.language;
+                    item.append(langSpan);
+                }
+                wrapper.append(item);
             });
-            html += '</div>';
+            frag.append(wrapper);
         });
-        return html;
+        return frag;
     }
 
     function validateContent(content, lang) {
@@ -1346,49 +1607,104 @@
     }
 
     function renderEditor() {
+        var frag = document.createDocumentFragment();
         if (!selectedFile) {
-            return '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Select a file to view its contents</div>';
+            var placeholder = document.createElement('div');
+            placeholder.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
+            placeholder.textContent = 'Select a file to view its contents';
+            frag.append(placeholder);
+            return frag;
         }
-        return '<div style="display:flex;flex-direction:column;height:100%">' +
-            '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0">' +
-                '<span style="font-family:monospace;font-size:var(--sp-text-sm);font-weight:600">' + escapeHtml(selectedFile.file_path) + '</span>' +
-                '<span class="badge badge-blue" style="font-size:var(--sp-text-xs)">' + escapeHtml(selectedFile.language || 'text') + '</span>' +
-                (selectedFile.executable ? '<span class="badge badge-green" style="font-size:var(--sp-text-xs)">executable</span>' : '') +
-                '<span style="margin-left:auto;font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">' + selectedFile.size_bytes + ' bytes</span>' +
-            '</div>' +
-            '<textarea id="skill-file-editor" style="flex:1;width:100%;border:none;padding:var(--sp-space-3);font-family:monospace;font-size:var(--sp-text-sm);line-height:1.5;resize:none;background:var(--sp-bg-surface);color:var(--sp-text-primary);outline:none;box-sizing:border-box">' +
-                escapeHtml(selectedFile.content || '') +
-            '</textarea>' +
-            '<div style="display:flex;align-items:center;padding:var(--sp-space-2) var(--sp-space-3);border-top:1px solid var(--sp-border-subtle);flex-shrink:0">' +
-                '<span id="skill-file-validation" style="font-size:var(--sp-text-xs);flex:1"></span>' +
-                '<button class="btn btn-primary btn-sm" id="skill-file-save" style="font-size:var(--sp-text-xs)">Save</button>' +
-            '</div>' +
-        '</div>';
+        var wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:flex;flex-direction:column;height:100%';
+
+        var header = document.createElement('div');
+        header.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0';
+        var pathSpan = document.createElement('span');
+        pathSpan.style.cssText = 'font-family:monospace;font-size:var(--sp-text-sm);font-weight:600';
+        pathSpan.textContent = selectedFile.file_path;
+        var langBadge = document.createElement('span');
+        langBadge.className = 'badge badge-blue';
+        langBadge.style.fontSize = 'var(--sp-text-xs)';
+        langBadge.textContent = selectedFile.language || 'text';
+        header.append(pathSpan, langBadge);
+        if (selectedFile.executable) {
+            var execBadge = document.createElement('span');
+            execBadge.className = 'badge badge-green';
+            execBadge.style.fontSize = 'var(--sp-text-xs)';
+            execBadge.textContent = 'executable';
+            header.append(execBadge);
+        }
+        var sizeSpan = document.createElement('span');
+        sizeSpan.style.cssText = 'margin-left:auto;font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)';
+        sizeSpan.textContent = selectedFile.size_bytes + ' bytes';
+        header.append(sizeSpan);
+
+        var textarea = document.createElement('textarea');
+        textarea.id = 'skill-file-editor';
+        textarea.style.cssText = 'flex:1;width:100%;border:none;padding:var(--sp-space-3);font-family:monospace;font-size:var(--sp-text-sm);line-height:1.5;resize:none;background:var(--sp-bg-surface);color:var(--sp-text-primary);outline:none;box-sizing:border-box';
+        textarea.value = selectedFile.content || '';
+
+        var footer = document.createElement('div');
+        footer.style.cssText = 'display:flex;align-items:center;padding:var(--sp-space-2) var(--sp-space-3);border-top:1px solid var(--sp-border-subtle);flex-shrink:0';
+        var validationSpan = document.createElement('span');
+        validationSpan.id = 'skill-file-validation';
+        validationSpan.style.cssText = 'font-size:var(--sp-text-xs);flex:1';
+        var saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-primary btn-sm';
+        saveBtn.id = 'skill-file-save';
+        saveBtn.style.fontSize = 'var(--sp-text-xs)';
+        saveBtn.textContent = 'Save';
+        footer.append(validationSpan, saveBtn);
+
+        wrapper.append(header, textarea, footer);
+        frag.append(wrapper);
+        return frag;
     }
 
     function renderModal() {
-        return '<div style="display:flex;flex-direction:column;height:100%">' +
-            '<div style="display:flex;align-items:center;padding:var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0">' +
-                '<h2 style="margin:0;font-size:var(--sp-text-lg);font-weight:600;color:var(--sp-text-primary)">' + escapeHtml(currentSkillName) + ' - Files</h2>' +
-                '<div style="margin-left:auto;display:flex;gap:var(--sp-space-2)">' +
-                    '<button class="btn btn-secondary btn-sm" id="skill-files-sync" style="font-size:var(--sp-text-xs)">Sync Files</button>' +
-                    '<button class="btn btn-secondary btn-sm" id="skill-files-close" style="font-size:var(--sp-text-xs)">Close</button>' +
-                '</div>' +
-            '</div>' +
-            '<div style="display:flex;flex:1;min-height:0">' +
-                '<div id="skill-files-list" style="width:280px;overflow-y:auto;border-right:1px solid var(--sp-border-subtle);padding:var(--sp-space-2) 0">' +
-                    renderFileList() +
-                '</div>' +
-                '<div id="skill-files-editor" style="flex:1;min-width:0;overflow:hidden">' +
-                    renderEditor() +
-                '</div>' +
-            '</div>' +
-        '</div>';
+        var outer = document.createElement('div');
+        outer.style.cssText = 'display:flex;flex-direction:column;height:100%';
+
+        var topBar = document.createElement('div');
+        topBar.style.cssText = 'display:flex;align-items:center;padding:var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0';
+        var h2 = document.createElement('h2');
+        h2.style.cssText = 'margin:0;font-size:var(--sp-text-lg);font-weight:600;color:var(--sp-text-primary)';
+        h2.textContent = currentSkillName + ' - Files';
+        var btnGroup = document.createElement('div');
+        btnGroup.style.cssText = 'margin-left:auto;display:flex;gap:var(--sp-space-2)';
+        var syncBtn = document.createElement('button');
+        syncBtn.className = 'btn btn-secondary btn-sm';
+        syncBtn.id = 'skill-files-sync';
+        syncBtn.style.fontSize = 'var(--sp-text-xs)';
+        syncBtn.textContent = 'Sync Files';
+        var closeBtn = document.createElement('button');
+        closeBtn.className = 'btn btn-secondary btn-sm';
+        closeBtn.id = 'skill-files-close';
+        closeBtn.style.fontSize = 'var(--sp-text-xs)';
+        closeBtn.textContent = 'Close';
+        btnGroup.append(syncBtn, closeBtn);
+        topBar.append(h2, btnGroup);
+
+        var body = document.createElement('div');
+        body.style.cssText = 'display:flex;flex:1;min-height:0';
+        var listDiv = document.createElement('div');
+        listDiv.id = 'skill-files-list';
+        listDiv.style.cssText = 'width:280px;overflow-y:auto;border-right:1px solid var(--sp-border-subtle);padding:var(--sp-space-2) 0';
+        listDiv.append(renderFileList());
+        var editorDiv = document.createElement('div');
+        editorDiv.id = 'skill-files-editor';
+        editorDiv.style.cssText = 'flex:1;min-width:0;overflow:hidden';
+        editorDiv.append(renderEditor());
+        body.append(listDiv, editorDiv);
+
+        outer.append(topBar, body);
+        return outer;
     }
 
     function updatePanel() {
-        const panel = overlay && overlay.querySelector('.skill-files-panel');
-        if (panel) panel.innerHTML = renderModal();
+        var panel = overlay && overlay.querySelector('.skill-files-panel');
+        if (panel) panel.replaceChildren(renderModal());
         bindEvents();
     }
 
@@ -1419,10 +1735,10 @@
         const item = e.currentTarget;
         const fileId = item.getAttribute('data-file-id');
         selectedFile = files.find(function(f) { return f.id === fileId; }) || null;
-        const listEl = overlay.querySelector('#skill-files-list');
-        const editorEl = overlay.querySelector('#skill-files-editor');
-        if (listEl) listEl.innerHTML = renderFileList();
-        if (editorEl) editorEl.innerHTML = renderEditor();
+        var listEl = overlay.querySelector('#skill-files-list');
+        var editorEl = overlay.querySelector('#skill-files-editor');
+        if (listEl) listEl.replaceChildren(renderFileList());
+        if (editorEl) editorEl.replaceChildren(renderEditor());
         bindFileItems();
         const newSaveBtn = overlay.querySelector('#skill-file-save');
         if (newSaveBtn) newSaveBtn.addEventListener('click', handleSave);
@@ -1536,9 +1852,14 @@
         overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;z-index:1000';
-        overlay.innerHTML = '<div class="skill-files-panel" style="background:var(--sp-bg-surface);border-radius:var(--sp-radius-lg);width:90vw;max-width:1100px;height:80vh;overflow:hidden;box-shadow:var(--sp-shadow-lg);display:flex;flex-direction:column">' +
-            '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary)">Loading files...</div>' +
-        '</div>';
+        var sfPanel = document.createElement('div');
+        sfPanel.className = 'skill-files-panel';
+        sfPanel.style.cssText = 'background:var(--sp-bg-surface);border-radius:var(--sp-radius-lg);width:90vw;max-width:1100px;height:80vh;overflow:hidden;box-shadow:var(--sp-shadow-lg);display:flex;flex-direction:column';
+        var sfLoading = document.createElement('div');
+        sfLoading.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary)';
+        sfLoading.textContent = 'Loading files...';
+        sfPanel.append(sfLoading);
+        overlay.append(sfPanel);
         document.body.append(overlay);
 
         overlay.addEventListener('click', function(e) {
@@ -1650,33 +1971,63 @@
     }
 
     function renderStepIndicator() {
-        const labels = ['Basic Info', 'Skills', 'Agents', 'MCP Servers', 'Hooks', 'Roles & Access', 'Review'];
-        const container = document.getElementById('wizard-step-indicator');
+        var labels = ['Basic Info', 'Skills', 'Agents', 'MCP Servers', 'Hooks', 'Roles & Access', 'Review'];
+        var container = document.getElementById('wizard-step-indicator');
         if (!container) return;
-        let html = '<div class="wizard-steps" style="display:flex;gap:var(--sp-space-1);margin-bottom:var(--sp-space-6);flex-wrap:wrap">';
-        for (let i = 1; i <= TOTAL_STEPS; i++) {
-            const isActive = i === state.step;
-            const isDone = i < state.step;
-            const bgColor = isActive ? 'var(--sp-accent)' : (isDone ? 'var(--sp-success)' : 'var(--sp-bg-tertiary)');
-            const textColor = (isActive || isDone) ? '#fff' : 'var(--sp-text-tertiary)';
-            html += '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-radius:var(--sp-radius-md);background:' + bgColor + ';color:' + textColor + ';font-size:var(--sp-text-sm);font-weight:' + (isActive ? '600' : '400') + '">' +
-                '<span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--sp-text-xs)">' + i + '</span>' +
-                '<span>' + escapeHtml(labels[i - 1]) + '</span>' +
-            '</div>';
+        var steps = document.createElement('div');
+        steps.className = 'wizard-steps';
+        steps.style.cssText = 'display:flex;gap:var(--sp-space-1);margin-bottom:var(--sp-space-6);flex-wrap:wrap';
+        for (var i = 1; i <= TOTAL_STEPS; i++) {
+            var isActive = i === state.step;
+            var isDone = i < state.step;
+            var bgColor = isActive ? 'var(--sp-accent)' : (isDone ? 'var(--sp-success)' : 'var(--sp-bg-tertiary)');
+            var textColor = (isActive || isDone) ? '#fff' : 'var(--sp-text-tertiary)';
+            var stepDiv = document.createElement('div');
+            stepDiv.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-radius:var(--sp-radius-md);font-size:var(--sp-text-sm)';
+            stepDiv.style.background = bgColor;
+            stepDiv.style.color = textColor;
+            stepDiv.style.fontWeight = isActive ? '600' : '400';
+            var numSpan = document.createElement('span');
+            numSpan.style.cssText = 'width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--sp-text-xs)';
+            numSpan.textContent = i;
+            var labelSpan = document.createElement('span');
+            labelSpan.textContent = labels[i - 1];
+            stepDiv.append(numSpan, labelSpan);
+            steps.append(stepDiv);
         }
-        html += '</div>';
-        container.innerHTML = html;
+        container.replaceChildren(steps);
     }
 
     function renderNav() {
-        const nav = document.getElementById('wizard-nav');
+        var nav = document.getElementById('wizard-nav');
         if (!nav) return;
-        let html = '<div style="display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)">';
-        if (state.step > 1) html += '<button type="button" class="btn btn-secondary" id="wizard-prev">Previous</button>';
-        if (state.step < TOTAL_STEPS) html += '<button type="button" class="btn btn-primary" id="wizard-next">Next</button>';
-        if (state.step === TOTAL_STEPS) html += '<button type="button" class="btn btn-primary" id="wizard-create">Create Plugin</button>';
-        html += '</div>';
-        nav.innerHTML = html;
+        var wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)';
+        if (state.step > 1) {
+            var prevBtn = document.createElement('button');
+            prevBtn.type = 'button';
+            prevBtn.className = 'btn btn-secondary';
+            prevBtn.id = 'wizard-prev';
+            prevBtn.textContent = 'Previous';
+            wrapper.append(prevBtn);
+        }
+        if (state.step < TOTAL_STEPS) {
+            var nextBtn = document.createElement('button');
+            nextBtn.type = 'button';
+            nextBtn.className = 'btn btn-primary';
+            nextBtn.id = 'wizard-next';
+            nextBtn.textContent = 'Next';
+            wrapper.append(nextBtn);
+        }
+        if (state.step === TOTAL_STEPS) {
+            var createBtn = document.createElement('button');
+            createBtn.type = 'button';
+            createBtn.className = 'btn btn-primary';
+            createBtn.id = 'wizard-create';
+            createBtn.textContent = 'Create Plugin';
+            wrapper.append(createBtn);
+        }
+        nav.replaceChildren(wrapper);
     }
 
     function saveCurrentStepState() {
@@ -1724,7 +2075,7 @@
     function renderStep() {
         const contentEl = document.getElementById('wizard-step-content');
         if (!contentEl) return;
-        contentEl.innerHTML = '';
+        contentEl.replaceChildren();
 
         if (state.step === 7) {
             const frag = getTemplate('tpl-step-7');
@@ -1792,7 +2143,7 @@
     function renderHooks() {
         const list = document.getElementById('hooks-list');
         if (!list) return;
-        list.innerHTML = '';
+        list.replaceChildren();
         state.hooks.forEach(function(hook) {
             const frag = getTemplate('tpl-hook-entry');
             const entry = frag.querySelector('.hook-entry');
@@ -1811,30 +2162,76 @@
     }
 
     function renderReview() {
-        const el = document.getElementById('wizard-review');
+        var el = document.getElementById('wizard-review');
         if (!el) return;
-        const f = state.form;
-        const selectedSkills = Object.keys(state.selectedSkills).filter(function(k) { return state.selectedSkills[k]; });
-        const selectedAgents = Object.keys(state.selectedAgents).filter(function(k) { return state.selectedAgents[k]; });
-        const selectedMcp = Object.keys(state.selectedMcpServers).filter(function(k) { return state.selectedMcpServers[k]; });
-        const selectedRoles = Object.keys(f.roles).filter(function(k) { return f.roles[k]; });
-        function badgeList(items, emptyMsg) {
-            if (!items.length) return '<span style="color:var(--sp-text-tertiary)">' + escapeHtml(emptyMsg) + '</span>';
-            return items.map(function(i) { return '<span class="badge badge-blue" style="margin:var(--sp-space-1)">' + escapeHtml(i) + '</span>'; }).join('');
+        var f = state.form;
+        var selectedSkills = Object.keys(state.selectedSkills).filter(function(k) { return state.selectedSkills[k]; });
+        var selectedAgents = Object.keys(state.selectedAgents).filter(function(k) { return state.selectedAgents[k]; });
+        var selectedMcp = Object.keys(state.selectedMcpServers).filter(function(k) { return state.selectedMcpServers[k]; });
+        var selectedRoles = Object.keys(f.roles).filter(function(k) { return f.roles[k]; });
+
+        function buildBadgeList(items, emptyMsg) {
+            var container = document.createElement('div');
+            container.style.cssText = 'display:flex;flex-wrap:wrap';
+            if (!items.length) {
+                var empty = document.createElement('span');
+                empty.style.color = 'var(--sp-text-tertiary)';
+                empty.textContent = emptyMsg;
+                container.append(empty);
+            } else {
+                items.forEach(function(item) {
+                    var badge = document.createElement('span');
+                    badge.className = 'badge badge-blue';
+                    badge.style.margin = 'var(--sp-space-1)';
+                    badge.textContent = item;
+                    container.append(badge);
+                });
+            }
+            return container;
         }
-        el.innerHTML =
-            '<strong>Plugin ID:</strong><span>' + escapeHtml(f.plugin_id || '-') + '</span>' +
-            '<strong>Name:</strong><span>' + escapeHtml(f.name || '-') + '</span>' +
-            '<strong>Description:</strong><span>' + escapeHtml(f.description || '-') + '</span>' +
-            '<strong>Version:</strong><span>' + escapeHtml(f.version || '0.1.0') + '</span>' +
-            '<strong>Category:</strong><span>' + escapeHtml(f.category || '-') + '</span>' +
-            '<strong>Author:</strong><span>' + escapeHtml(f.author_name || '-') + '</span>' +
-            '<strong>Keywords:</strong><span>' + escapeHtml(f.keywords || '-') + '</span>' +
-            '<strong>Roles:</strong><div>' + badgeList(selectedRoles, 'None selected') + '</div>' +
-            '<strong>Skills (' + selectedSkills.length + '):</strong><div style="display:flex;flex-wrap:wrap">' + badgeList(selectedSkills, 'None selected') + '</div>' +
-            '<strong>Agents (' + selectedAgents.length + '):</strong><div style="display:flex;flex-wrap:wrap">' + badgeList(selectedAgents, 'None selected') + '</div>' +
-            '<strong>MCP (' + selectedMcp.length + '):</strong><div style="display:flex;flex-wrap:wrap">' + badgeList(selectedMcp, 'None selected') + '</div>' +
-            '<strong>Hooks (' + state.hooks.length + '):</strong><span>' + (state.hooks.length > 0 ? state.hooks.map(function(h) { return escapeHtml(h.event + ': ' + (h.command || '?')); }).join(', ') : 'None') + '</span>';
+
+        function addRow(frag, labelText, valueText) {
+            var strong = document.createElement('strong');
+            strong.textContent = labelText;
+            var span = document.createElement('span');
+            span.textContent = valueText;
+            frag.append(strong, span);
+        }
+
+        var frag = document.createDocumentFragment();
+        addRow(frag, 'Plugin ID:', f.plugin_id || '-');
+        addRow(frag, 'Name:', f.name || '-');
+        addRow(frag, 'Description:', f.description || '-');
+        addRow(frag, 'Version:', f.version || '0.1.0');
+        addRow(frag, 'Category:', f.category || '-');
+        addRow(frag, 'Author:', f.author_name || '-');
+        addRow(frag, 'Keywords:', f.keywords || '-');
+
+        var rolesLabel = document.createElement('strong');
+        rolesLabel.textContent = 'Roles:';
+        frag.append(rolesLabel, buildBadgeList(selectedRoles, 'None selected'));
+
+        var skillsLabel = document.createElement('strong');
+        skillsLabel.textContent = 'Skills (' + selectedSkills.length + '):';
+        frag.append(skillsLabel, buildBadgeList(selectedSkills, 'None selected'));
+
+        var agentsLabel = document.createElement('strong');
+        agentsLabel.textContent = 'Agents (' + selectedAgents.length + '):';
+        frag.append(agentsLabel, buildBadgeList(selectedAgents, 'None selected'));
+
+        var mcpLabel = document.createElement('strong');
+        mcpLabel.textContent = 'MCP (' + selectedMcp.length + '):';
+        frag.append(mcpLabel, buildBadgeList(selectedMcp, 'None selected'));
+
+        var hooksLabel = document.createElement('strong');
+        hooksLabel.textContent = 'Hooks (' + state.hooks.length + '):';
+        var hooksSpan = document.createElement('span');
+        hooksSpan.textContent = state.hooks.length > 0
+            ? state.hooks.map(function(h) { return h.event + ': ' + (h.command || '?'); }).join(', ')
+            : 'None';
+        frag.append(hooksLabel, hooksSpan);
+
+        el.replaceChildren(frag);
     }
 
     function validateStep1() {
@@ -2048,14 +2445,14 @@
         if (!details) return;
         const open = details.style.display !== 'none';
         details.style.display = open ? 'none' : 'block';
-        if (icon) icon.innerHTML = open ? '&#9654;' : '&#9660;';
+        if (icon) icon.textContent = open ? '\u25b6' : '\u25bc';
     }
 
     async function downloadZip(data) {
         const btn = document.getElementById('btn-download-zip');
         if (!btn) return;
-        const origHtml = btn.innerHTML;
-        btn.innerHTML = 'Generating...';
+        const origText = btn.textContent;
+        btn.textContent = 'Generating...';
         btn.disabled = true;
         try {
             const JSZip = await app.shared.loadJSZip();
@@ -2080,11 +2477,11 @@
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
-            btn.innerHTML = origHtml;
+            btn.textContent = origText;
             btn.disabled = false;
             app.Toast.show('ZIP downloaded successfully', 'success');
         } catch (err) {
-            btn.innerHTML = origHtml;
+            btn.textContent = origText;
             btn.disabled = false;
             app.Toast.show('Failed to generate ZIP: ' + err.message, 'error');
         }
@@ -2128,7 +2525,10 @@
         const container = document.getElementById(containerId);
         if (container) {
             container.removeAttribute('data-loaded');
-            container.innerHTML = '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Refreshing...</div>';
+            var refreshDiv = document.createElement('div');
+            refreshDiv.style.cssText = 'padding:var(--sp-space-4);color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
+            refreshDiv.textContent = 'Refreshing...';
+            container.replaceChildren(refreshDiv);
         }
     });
     app.pluginDetails = { render: function() { return ''; } };

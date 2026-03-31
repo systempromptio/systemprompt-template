@@ -1,7 +1,6 @@
 (function(app) {
     'use strict';
 
-    const escapeHtml = app.escapeHtml;
     let overlay = null;
     let currentSkillId = null;
     let currentSkillName = '';
@@ -30,30 +29,51 @@
         return groups;
     };
 
-    const renderFileList = () => {
+    const buildFileList = () => {
+        const frag = document.createDocumentFragment();
         if (!files.length) {
-            return '<div class="empty-state" style="padding:var(--sp-space-6)"><p>No files found for this skill.</p>' +
-                '<p style="font-size:var(--sp-text-sm);color:var(--sp-text-tertiary);margin-top:var(--sp-space-2)">Click "Sync Files" to scan the filesystem.</p></div>';
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.style.cssText = 'padding:var(--sp-space-6)';
+            const p1 = document.createElement('p');
+            p1.textContent = 'No files found for this skill.';
+            const p2 = document.createElement('p');
+            p2.style.cssText = 'font-size:var(--sp-text-sm);color:var(--sp-text-tertiary);margin-top:var(--sp-space-2)';
+            p2.textContent = 'Click "Sync Files" to scan the filesystem.';
+            empty.append(p1, p2);
+            frag.append(empty);
+            return frag;
         }
         const groups = groupByCategory(files);
-        let html = '';
         categoryOrder.forEach((cat) => {
             const group = groups[cat];
             if (!group || !group.length) return;
-            html += '<div style="margin-bottom:var(--sp-space-3)">' +
-                '<div class="skill-file-category">' +
-                escapeHtml(categoryLabels[cat] || cat) + ' (' + group.length + ')' +
-                '</div>';
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'margin-bottom:var(--sp-space-3)';
+            const catDiv = document.createElement('div');
+            catDiv.className = 'skill-file-category';
+            catDiv.textContent = (categoryLabels[cat] || cat) + ' (' + group.length + ')';
+            wrapper.append(catDiv);
             group.forEach((f) => {
                 const isSelected = selectedFile && selectedFile.id === f.id;
-                html += '<div class="skill-file-item' + (isSelected ? ' selected' : '') + '" data-file-id="' + escapeHtml(f.id) + '">' +
-                    '<span class="skill-file-name">' + escapeHtml(f.file_path) + '</span>' +
-                    (f.language ? '<span class="skill-file-lang">' + escapeHtml(f.language) + '</span>' : '') +
-                '</div>';
+                const item = document.createElement('div');
+                item.className = 'skill-file-item' + (isSelected ? ' selected' : '');
+                item.setAttribute('data-file-id', f.id);
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'skill-file-name';
+                nameSpan.textContent = f.file_path;
+                item.append(nameSpan);
+                if (f.language) {
+                    const langSpan = document.createElement('span');
+                    langSpan.className = 'skill-file-lang';
+                    langSpan.textContent = f.language;
+                    item.append(langSpan);
+                }
+                wrapper.append(item);
             });
-            html += '</div>';
+            frag.append(wrapper);
         });
-        return html;
+        return frag;
     };
 
     const validateContent = (content, lang) => {
@@ -129,50 +149,116 @@
         return null;
     };
 
-    const renderEditor = () => {
+    const buildEditor = () => {
         if (!selectedFile) {
-            return '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">Select a file to view its contents</div>';
+            const placeholder = document.createElement('div');
+            placeholder.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
+            placeholder.textContent = 'Select a file to view its contents';
+            return placeholder;
         }
-        return '<div style="display:flex;flex-direction:column;height:100%">' +
-            '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0">' +
-                '<span style="font-family:monospace;font-size:var(--sp-text-sm);font-weight:600">' + escapeHtml(selectedFile.file_path) + '</span>' +
-                '<span class="badge badge-blue" style="font-size:var(--sp-text-xs)">' + escapeHtml(selectedFile.language || 'text') + '</span>' +
-                (selectedFile.executable ? '<span class="badge badge-green" style="font-size:var(--sp-text-xs)">executable</span>' : '') +
-                '<span style="margin-left:auto;font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">' + selectedFile.size_bytes + ' bytes</span>' +
-            '</div>' +
-            '<textarea id="skill-file-editor" style="flex:1;width:100%;border:none;padding:var(--sp-space-3);font-family:monospace;font-size:var(--sp-text-sm);line-height:1.5;resize:none;background:var(--sp-bg-surface);color:var(--sp-text-primary);outline:none;box-sizing:border-box">' +
-                escapeHtml(selectedFile.content || '') +
-            '</textarea>' +
-            '<div style="display:flex;align-items:center;padding:var(--sp-space-2) var(--sp-space-3);border-top:1px solid var(--sp-border-subtle);flex-shrink:0">' +
-                '<span id="skill-file-validation" style="font-size:var(--sp-text-xs);flex:1"></span>' +
-                '<button class="btn btn-primary btn-sm" id="skill-file-save" style="font-size:var(--sp-text-xs)">Save</button>' +
-            '</div>' +
-        '</div>';
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:flex;flex-direction:column;height:100%';
+
+        const header = document.createElement('div');
+        header.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0';
+
+        const pathSpan = document.createElement('span');
+        pathSpan.style.cssText = 'font-family:monospace;font-size:var(--sp-text-sm);font-weight:600';
+        pathSpan.textContent = selectedFile.file_path;
+
+        const langBadge = document.createElement('span');
+        langBadge.className = 'badge badge-blue';
+        langBadge.style.cssText = 'font-size:var(--sp-text-xs)';
+        langBadge.textContent = selectedFile.language || 'text';
+
+        header.append(pathSpan, langBadge);
+
+        if (selectedFile.executable) {
+            const execBadge = document.createElement('span');
+            execBadge.className = 'badge badge-green';
+            execBadge.style.cssText = 'font-size:var(--sp-text-xs)';
+            execBadge.textContent = 'executable';
+            header.append(execBadge);
+        }
+
+        const sizeSpan = document.createElement('span');
+        sizeSpan.style.cssText = 'margin-left:auto;font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)';
+        sizeSpan.textContent = selectedFile.size_bytes + ' bytes';
+        header.append(sizeSpan);
+
+        const textarea = document.createElement('textarea');
+        textarea.id = 'skill-file-editor';
+        textarea.style.cssText = 'flex:1;width:100%;border:none;padding:var(--sp-space-3);font-family:monospace;font-size:var(--sp-text-sm);line-height:1.5;resize:none;background:var(--sp-bg-surface);color:var(--sp-text-primary);outline:none;box-sizing:border-box';
+        textarea.value = selectedFile.content || '';
+
+        const footer = document.createElement('div');
+        footer.style.cssText = 'display:flex;align-items:center;padding:var(--sp-space-2) var(--sp-space-3);border-top:1px solid var(--sp-border-subtle);flex-shrink:0';
+
+        const validationSpan = document.createElement('span');
+        validationSpan.id = 'skill-file-validation';
+        validationSpan.style.cssText = 'font-size:var(--sp-text-xs);flex:1';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-primary btn-sm';
+        saveBtn.id = 'skill-file-save';
+        saveBtn.style.cssText = 'font-size:var(--sp-text-xs)';
+        saveBtn.textContent = 'Save';
+
+        footer.append(validationSpan, saveBtn);
+        wrapper.append(header, textarea, footer);
+        return wrapper;
     };
 
-    const renderModal = () => {
-        return '<div style="display:flex;flex-direction:column;height:100%">' +
-            '<div style="display:flex;align-items:center;padding:var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0">' +
-                '<h2 style="margin:0;font-size:var(--sp-text-lg);font-weight:600;color:var(--sp-text-primary)">' + escapeHtml(currentSkillName) + ' - Files</h2>' +
-                '<div style="margin-left:auto;display:flex;gap:var(--sp-space-2)">' +
-                    '<button class="btn btn-secondary btn-sm" id="skill-files-sync" style="font-size:var(--sp-text-xs)">Sync Files</button>' +
-                    '<button class="btn btn-secondary btn-sm" id="skill-files-close" style="font-size:var(--sp-text-xs)">Close</button>' +
-                '</div>' +
-            '</div>' +
-            '<div style="display:flex;flex:1;min-height:0">' +
-                '<div id="skill-files-list" style="width:280px;overflow-y:auto;border-right:1px solid var(--sp-border-subtle);padding:var(--sp-space-2) 0">' +
-                    renderFileList() +
-                '</div>' +
-                '<div id="skill-files-editor" style="flex:1;min-width:0;overflow:hidden">' +
-                    renderEditor() +
-                '</div>' +
-            '</div>' +
-        '</div>';
+    const buildModal = () => {
+        const outer = document.createElement('div');
+        outer.style.cssText = 'display:flex;flex-direction:column;height:100%';
+
+        const topBar = document.createElement('div');
+        topBar.style.cssText = 'display:flex;align-items:center;padding:var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);flex-shrink:0';
+
+        const heading = document.createElement('h2');
+        heading.style.cssText = 'margin:0;font-size:var(--sp-text-lg);font-weight:600;color:var(--sp-text-primary)';
+        heading.textContent = currentSkillName + ' - Files';
+
+        const btnGroup = document.createElement('div');
+        btnGroup.style.cssText = 'margin-left:auto;display:flex;gap:var(--sp-space-2)';
+
+        const syncBtn = document.createElement('button');
+        syncBtn.className = 'btn btn-secondary btn-sm';
+        syncBtn.id = 'skill-files-sync';
+        syncBtn.style.cssText = 'font-size:var(--sp-text-xs)';
+        syncBtn.textContent = 'Sync Files';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'btn btn-secondary btn-sm';
+        closeBtn.id = 'skill-files-close';
+        closeBtn.style.cssText = 'font-size:var(--sp-text-xs)';
+        closeBtn.textContent = 'Close';
+
+        btnGroup.append(syncBtn, closeBtn);
+        topBar.append(heading, btnGroup);
+
+        const body = document.createElement('div');
+        body.style.cssText = 'display:flex;flex:1;min-height:0';
+
+        const listPane = document.createElement('div');
+        listPane.id = 'skill-files-list';
+        listPane.style.cssText = 'width:280px;overflow-y:auto;border-right:1px solid var(--sp-border-subtle);padding:var(--sp-space-2) 0';
+        listPane.append(buildFileList());
+
+        const editorPane = document.createElement('div');
+        editorPane.id = 'skill-files-editor';
+        editorPane.style.cssText = 'flex:1;min-width:0;overflow:hidden';
+        editorPane.append(buildEditor());
+
+        body.append(listPane, editorPane);
+        outer.append(topBar, body);
+        return outer;
     };
 
     const updatePanel = () => {
         const panel = overlay && overlay.querySelector('.skill-files-panel');
-        if (panel) panel.innerHTML = renderModal();
+        if (panel) panel.replaceChildren(buildModal());
         bindEvents();
     };
 
@@ -205,8 +291,8 @@
         selectedFile = files.find((f) => f.id === fileId) || null;
         const listEl = overlay.querySelector('#skill-files-list');
         const editorEl = overlay.querySelector('#skill-files-editor');
-        if (listEl) listEl.innerHTML = renderFileList();
-        if (editorEl) editorEl.innerHTML = renderEditor();
+        if (listEl) listEl.replaceChildren(buildFileList());
+        if (editorEl) editorEl.replaceChildren(buildEditor());
         bindFileItems();
         const newSaveBtn = overlay.querySelector('#skill-file-save');
         if (newSaveBtn) newSaveBtn.addEventListener('click', handleSave);
@@ -320,9 +406,17 @@
         overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;z-index:1000';
-        overlay.innerHTML = '<div class="skill-files-panel" style="background:var(--sp-bg-surface);border-radius:var(--sp-radius-lg);width:90vw;max-width:1100px;height:80vh;overflow:hidden;box-shadow:var(--sp-shadow-lg);display:flex;flex-direction:column">' +
-            '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary)">Loading files...</div>' +
-        '</div>';
+
+        const panel = document.createElement('div');
+        panel.className = 'skill-files-panel';
+        panel.style.cssText = 'background:var(--sp-bg-surface);border-radius:var(--sp-radius-lg);width:90vw;max-width:1100px;height:80vh;overflow:hidden;box-shadow:var(--sp-shadow-lg);display:flex;flex-direction:column';
+
+        const loadingDiv = document.createElement('div');
+        loadingDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:var(--sp-text-tertiary)';
+        loadingDiv.textContent = 'Loading files...';
+
+        panel.append(loadingDiv);
+        overlay.append(panel);
         document.body.append(overlay);
 
         overlay.addEventListener('click', (e) => {

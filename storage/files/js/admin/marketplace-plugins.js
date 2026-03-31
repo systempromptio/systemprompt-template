@@ -1,7 +1,6 @@
 (function(app) {
     'use strict';
 
-    const escapeHtml = app.escapeHtml;
     let plugins = [];
 
     function showVisibilityModal(pluginId) {
@@ -13,31 +12,84 @@
         overlay.className = 'confirm-overlay';
         overlay.id = 'visibility-modal';
 
-        const rulesListHtml = renderRulesList(rules);
+        const dialog = document.createElement('div');
+        dialog.className = 'confirm-dialog';
+        dialog.style.maxWidth = '500px';
 
-        overlay.innerHTML = '<div class="confirm-dialog" style="max-width:500px">' +
-            '<h3 style="margin:0 0 var(--sp-space-3)">Edit Visibility - ' + escapeHtml(plugin.name) + '</h3>' +
-            '<div id="visibility-rules-list">' + rulesListHtml + '</div>' +
-            '<div style="margin-top:var(--sp-space-4);padding-top:var(--sp-space-3);border-top:1px solid var(--sp-border-primary)">' +
-                '<strong style="font-size:var(--sp-text-sm)">Add Rule</strong>' +
-                '<div style="display:flex;gap:var(--sp-space-2);margin-top:var(--sp-space-2);flex-wrap:wrap">' +
-                    '<select id="vis-rule-type" class="btn btn-secondary" style="cursor:pointer;font-size:var(--sp-text-sm)">' +
-                        '<option value="department">Department</option>' +
-                        '<option value="user">User</option>' +
-                    '</select>' +
-                    '<input type="text" id="vis-rule-value" class="search-input" placeholder="Value..." style="flex:1;min-width:120px;font-size:var(--sp-text-sm)">' +
-                    '<select id="vis-rule-access" class="btn btn-secondary" style="cursor:pointer;font-size:var(--sp-text-sm)">' +
-                        '<option value="allow">Allow</option>' +
-                        '<option value="deny">Deny</option>' +
-                    '</select>' +
-                    '<button class="btn btn-secondary" id="vis-add-rule" style="font-size:var(--sp-text-sm)">Add</button>' +
-                '</div>' +
-            '</div>' +
-            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)">' +
-                '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
-                '<button class="btn btn-primary" id="vis-save">Save</button>' +
-            '</div>' +
-        '</div>';
+        const heading = document.createElement('h3');
+        heading.style.margin = '0 0 var(--sp-space-3)';
+        heading.textContent = 'Edit Visibility - ' + plugin.name;
+
+        const rulesList = document.createElement('div');
+        rulesList.id = 'visibility-rules-list';
+        renderRulesListDOM(rulesList, rules);
+
+        const addSection = document.createElement('div');
+        addSection.style.cssText = 'margin-top:var(--sp-space-4);padding-top:var(--sp-space-3);border-top:1px solid var(--sp-border-primary)';
+
+        const addLabel = document.createElement('strong');
+        addLabel.style.fontSize = 'var(--sp-text-sm)';
+        addLabel.textContent = 'Add Rule';
+
+        const addRow = document.createElement('div');
+        addRow.style.cssText = 'display:flex;gap:var(--sp-space-2);margin-top:var(--sp-space-2);flex-wrap:wrap';
+
+        const ruleTypeSelect = document.createElement('select');
+        ruleTypeSelect.id = 'vis-rule-type';
+        ruleTypeSelect.className = 'btn btn-secondary';
+        ruleTypeSelect.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm)';
+        var opt1 = document.createElement('option');
+        opt1.value = 'department';
+        opt1.textContent = 'Department';
+        var opt2 = document.createElement('option');
+        opt2.value = 'user';
+        opt2.textContent = 'User';
+        ruleTypeSelect.append(opt1, opt2);
+
+        const ruleValueInput = document.createElement('input');
+        ruleValueInput.type = 'text';
+        ruleValueInput.id = 'vis-rule-value';
+        ruleValueInput.className = 'search-input';
+        ruleValueInput.placeholder = 'Value...';
+        ruleValueInput.style.cssText = 'flex:1;min-width:120px;font-size:var(--sp-text-sm)';
+
+        const ruleAccessSelect = document.createElement('select');
+        ruleAccessSelect.id = 'vis-rule-access';
+        ruleAccessSelect.className = 'btn btn-secondary';
+        ruleAccessSelect.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm)';
+        var optAllow = document.createElement('option');
+        optAllow.value = 'allow';
+        optAllow.textContent = 'Allow';
+        var optDeny = document.createElement('option');
+        optDeny.value = 'deny';
+        optDeny.textContent = 'Deny';
+        ruleAccessSelect.append(optAllow, optDeny);
+
+        const addRuleBtn = document.createElement('button');
+        addRuleBtn.className = 'btn btn-secondary';
+        addRuleBtn.id = 'vis-add-rule';
+        addRuleBtn.style.fontSize = 'var(--sp-text-sm)';
+        addRuleBtn.textContent = 'Add';
+
+        addRow.append(ruleTypeSelect, ruleValueInput, ruleAccessSelect, addRuleBtn);
+        addSection.append(addLabel, addRow);
+
+        const btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.setAttribute('data-confirm-cancel', '');
+        cancelBtn.textContent = 'Cancel';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-primary';
+        saveBtn.id = 'vis-save';
+        saveBtn.textContent = 'Save';
+
+        btnRow.append(cancelBtn, saveBtn);
+        dialog.append(heading, rulesList, addSection, btnRow);
+        overlay.append(dialog);
 
         document.body.append(overlay);
 
@@ -45,7 +97,7 @@
 
         function refreshRulesList() {
             const container = overlay.querySelector('#visibility-rules-list');
-            if (container) container.innerHTML = renderRulesList(modalRules);
+            if (container) renderRulesListDOM(container, modalRules);
         }
 
         overlay.addEventListener('click', async (e) => {
@@ -93,14 +145,29 @@
         });
     }
 
-    function renderRulesList(rules) {
-        if (!rules.length) return '<p style="font-size:var(--sp-text-sm);color:var(--sp-text-tertiary)">No rules configured</p>';
-        return rules.map((rule, idx) => {
-            return '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;font-size:var(--sp-text-sm)">' +
-                '<span class="badge ' + (rule.access === 'allow' ? 'badge-yellow' : 'badge-red') + '">' + escapeHtml(rule.rule_type) + ': ' + escapeHtml(rule.rule_value) + ' (' + escapeHtml(rule.access) + ')</span>' +
-                '<button class="btn btn-danger" style="font-size:var(--sp-text-xs);padding:2px 6px" data-remove-rule="' + idx + '">Remove</button>' +
-            '</div>';
-        }).join('');
+    function renderRulesListDOM(container, rules) {
+        container.replaceChildren();
+        if (!rules.length) {
+            var emptyP = document.createElement('p');
+            emptyP.style.cssText = 'font-size:var(--sp-text-sm);color:var(--sp-text-tertiary)';
+            emptyP.textContent = 'No rules configured';
+            container.append(emptyP);
+            return;
+        }
+        rules.forEach(function(rule, idx) {
+            var row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;font-size:var(--sp-text-sm)';
+            var badge = document.createElement('span');
+            badge.className = 'badge ' + (rule.access === 'allow' ? 'badge-yellow' : 'badge-red');
+            badge.textContent = rule.rule_type + ': ' + rule.rule_value + ' (' + rule.access + ')';
+            var removeBtn = document.createElement('button');
+            removeBtn.className = 'btn btn-danger';
+            removeBtn.style.cssText = 'font-size:var(--sp-text-xs);padding:2px 6px';
+            removeBtn.setAttribute('data-remove-rule', idx);
+            removeBtn.textContent = 'Remove';
+            row.append(badge, removeBtn);
+            container.append(row);
+        });
     }
 
     app.initMarketplace = (selector, pluginsData) => {
@@ -165,19 +232,41 @@
                     const users = usersData.users || usersData || [];
                     const container = root.querySelector('[data-users-for="' + pluginId + '"]');
                     if (container) {
+                        container.replaceChildren();
                         if (users.length === 0) {
-                            container.innerHTML = '<div style="margin-top:var(--sp-space-2);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">No users found</div>';
+                            var noUsers = document.createElement('div');
+                            noUsers.style.cssText = 'margin-top:var(--sp-space-2);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)';
+                            noUsers.textContent = 'No users found';
+                            container.append(noUsers);
                         } else {
-                            container.innerHTML = '<div style="margin-top:var(--sp-space-2);display:flex;flex-direction:column;gap:var(--sp-space-1)">' +
-                                users.map((u) => {
-                                    return '<div style="display:flex;align-items:center;gap:var(--sp-space-2);font-size:var(--sp-text-xs);padding:var(--sp-space-1) 0;border-bottom:1px solid var(--sp-border-primary)">' +
-                                        '<span style="font-weight:600;color:var(--sp-text-primary)">' + escapeHtml(u.display_name || 'Unknown') + '</span>' +
-                                        (u.department ? '<span class="badge badge-blue">' + escapeHtml(u.department) + '</span>' : '') +
-                                        '<span class="badge badge-gray">' + (u.event_count || 0) + ' events</span>' +
-                                        (u.last_used ? '<span style="color:var(--sp-text-tertiary)">' + new Date(u.last_used).toLocaleDateString() + '</span>' : '') +
-                                    '</div>';
-                                }).join('') +
-                            '</div>';
+                            var userList = document.createElement('div');
+                            userList.style.cssText = 'margin-top:var(--sp-space-2);display:flex;flex-direction:column;gap:var(--sp-space-1)';
+                            users.forEach(function(u) {
+                                var userRow = document.createElement('div');
+                                userRow.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);font-size:var(--sp-text-xs);padding:var(--sp-space-1) 0;border-bottom:1px solid var(--sp-border-primary)';
+                                var nameSpan = document.createElement('span');
+                                nameSpan.style.cssText = 'font-weight:600;color:var(--sp-text-primary)';
+                                nameSpan.textContent = u.display_name || 'Unknown';
+                                userRow.append(nameSpan);
+                                if (u.department) {
+                                    var deptBadge = document.createElement('span');
+                                    deptBadge.className = 'badge badge-blue';
+                                    deptBadge.textContent = u.department;
+                                    userRow.append(deptBadge);
+                                }
+                                var eventBadge = document.createElement('span');
+                                eventBadge.className = 'badge badge-gray';
+                                eventBadge.textContent = (u.event_count || 0) + ' events';
+                                userRow.append(eventBadge);
+                                if (u.last_used) {
+                                    var dateSpan = document.createElement('span');
+                                    dateSpan.style.color = 'var(--sp-text-tertiary)';
+                                    dateSpan.textContent = new Date(u.last_used).toLocaleDateString();
+                                    userRow.append(dateSpan);
+                                }
+                                userList.append(userRow);
+                            });
+                            container.append(userList);
                         }
                     }
                     loadUsersBtn.style.display = 'none';

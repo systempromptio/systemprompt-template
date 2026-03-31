@@ -39,9 +39,14 @@
                 if (script) {
                     try {
                         const data = JSON.parse(script.textContent);
-                        container.innerHTML = OrgCommon.formatJson(data);
+                        container.replaceChildren();
+                        container.append(OrgCommon.formatJson(data));
                     } catch (err) {
-                        container.innerHTML = '<span class="text-muted">Failed to parse JSON</span>';
+                        container.replaceChildren();
+                        var errSpan = document.createElement('span');
+                        errSpan.className = 'text-muted';
+                        errSpan.textContent = 'Failed to parse JSON';
+                        container.append(errSpan);
                     }
                 }
                 container.style.display = 'block';

@@ -1,7 +1,6 @@
 (function(app) {
     'use strict';
 
-    const escapeHtml = app.escapeHtml;
     const versionDetails = {};
     const diffCache = {};
     let activeDiff = null;
@@ -16,108 +15,260 @@
     }
 
     function renderSkillRow(skill, versionId) {
-        const hasBase = skill.base_skill_id && skill.base_skill_id !== 'null';
-        let compareBtn = '';
-        if (hasBase) {
-            const isActive = activeDiff && activeDiff.versionId === versionId && activeDiff.skillId === skill.skill_id;
-            compareBtn = '<button class="btn btn-secondary btn-sm" data-compare-skill="' + escapeHtml(skill.skill_id) +
-                '" data-compare-version="' + escapeHtml(versionId) +
-                '" data-base-skill="' + escapeHtml(skill.base_skill_id) +
-                '" style="font-size:var(--sp-text-xs);padding:2px 8px;white-space:nowrap"' +
-                (isActive ? ' disabled' : '') + '>' +
-                (isActive ? 'Viewing Diff' : 'Compare to Core') + '</button>';
-        }
-        const enabledBadge = skill.enabled === false
-            ? '<span class="badge badge-red">disabled</span>'
-            : '<span class="badge badge-green">enabled</span>';
-        const baseBadge = hasBase
-            ? '<span class="badge badge-yellow">customized</span>'
-            : '<span class="badge badge-gray">custom</span>';
+        var hasBase = skill.base_skill_id && skill.base_skill_id !== 'null';
 
-        return '<div class="detail-item">' +
-            '<div class="detail-item-info">' +
-                '<div class="detail-item-name">' +
-                    escapeHtml(skill.name || skill.skill_id) +
-                    ' ' + baseBadge + ' ' + enabledBadge +
-                '</div>' +
-                '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:2px">' +
-                    '<code style="background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs)">' + escapeHtml(skill.skill_id) + '</code>' +
-                    (skill.version ? ' <span>v' + escapeHtml(skill.version) + '</span>' : '') +
-                    (skill.description ? ' &mdash; ' + escapeHtml(app.shared.truncate(skill.description, 80)) : '') +
-                '</div>' +
-            '</div>' +
-            compareBtn +
-        '</div>';
+        var row = document.createElement('div');
+        row.className = 'detail-item';
+
+        var info = document.createElement('div');
+        info.className = 'detail-item-info';
+
+        var nameDiv = document.createElement('div');
+        nameDiv.className = 'detail-item-name';
+        nameDiv.append(document.createTextNode((skill.name || skill.skill_id) + ' '));
+
+        var baseBadge = document.createElement('span');
+        baseBadge.className = hasBase ? 'badge badge-yellow' : 'badge badge-gray';
+        baseBadge.textContent = hasBase ? 'customized' : 'custom';
+        nameDiv.append(baseBadge, document.createTextNode(' '));
+
+        var enabledBadge = document.createElement('span');
+        enabledBadge.className = skill.enabled === false ? 'badge badge-red' : 'badge badge-green';
+        enabledBadge.textContent = skill.enabled === false ? 'disabled' : 'enabled';
+        nameDiv.append(enabledBadge);
+
+        var metaDiv = document.createElement('div');
+        metaDiv.style.cssText = 'font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:2px';
+
+        var codeEl = document.createElement('code');
+        codeEl.style.cssText = 'background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs)';
+        codeEl.textContent = skill.skill_id;
+        metaDiv.append(codeEl);
+
+        if (skill.version) {
+            var vSpan = document.createElement('span');
+            vSpan.textContent = ' v' + skill.version;
+            metaDiv.append(vSpan);
+        }
+        if (skill.description) {
+            metaDiv.append(document.createTextNode(' \u2014 ' + app.shared.truncate(skill.description, 80)));
+        }
+
+        info.append(nameDiv, metaDiv);
+        row.append(info);
+
+        if (hasBase) {
+            var isActive = activeDiff && activeDiff.versionId === versionId && activeDiff.skillId === skill.skill_id;
+            var cmpBtn = document.createElement('button');
+            cmpBtn.className = 'btn btn-secondary btn-sm';
+            cmpBtn.setAttribute('data-compare-skill', skill.skill_id);
+            cmpBtn.setAttribute('data-compare-version', versionId);
+            cmpBtn.setAttribute('data-base-skill', skill.base_skill_id);
+            cmpBtn.style.cssText = 'font-size:var(--sp-text-xs);padding:2px 8px;white-space:nowrap';
+            if (isActive) cmpBtn.disabled = true;
+            cmpBtn.textContent = isActive ? 'Viewing Diff' : 'Compare to Core';
+            row.append(cmpBtn);
+        }
+
+        return row;
     }
 
     function renderDiffPanel(userSkill, coreSkill) {
-        const userLines = (userSkill.content || '').split('\n');
-        const coreLines = (coreSkill.content || '').split('\n');
-        const maxLen = Math.max(userLines.length, coreLines.length);
-        let diffHtml = '';
-        for (let i = 0; i < maxLen; i++) {
-            const coreLine = i < coreLines.length ? coreLines[i] : '';
-            const userLine = i < userLines.length ? userLines[i] : '';
-            const lineNum = i + 1;
+        var userLines = (userSkill.content || '').split('\n');
+        var coreLines = (coreSkill.content || '').split('\n');
+        var maxLen = Math.max(userLines.length, coreLines.length);
+
+        var panel = document.createElement('div');
+        panel.className = 'diff-panel';
+
+        var header = document.createElement('div');
+        header.className = 'diff-panel-header';
+
+        var h4 = document.createElement('h4');
+        h4.style.cssText = 'margin:0;font-size:var(--sp-text-sm);font-weight:600';
+        h4.textContent = 'Diff: ' + userSkill.skill_id;
+
+        var legendDiv = document.createElement('div');
+        legendDiv.style.cssText = 'display:flex;gap:var(--sp-space-3);font-size:var(--sp-text-xs)';
+
+        var coreLabel = document.createElement('span');
+        var coreBadge = document.createElement('span');
+        coreBadge.className = 'badge badge-blue';
+        coreBadge.textContent = 'core';
+        coreLabel.append(coreBadge, document.createTextNode(' Base skill'));
+
+        var userLabel = document.createElement('span');
+        var userBadge = document.createElement('span');
+        userBadge.className = 'badge badge-green';
+        userBadge.textContent = 'user';
+        userLabel.append(userBadge, document.createTextNode(' User version'));
+
+        legendDiv.append(coreLabel, userLabel);
+
+        var closeBtn = document.createElement('button');
+        closeBtn.className = 'btn btn-secondary btn-sm';
+        closeBtn.setAttribute('data-close-diff', '');
+        closeBtn.style.cssText = 'margin-left:auto;font-size:var(--sp-text-xs);padding:2px 8px';
+        closeBtn.textContent = 'Close';
+
+        header.append(h4, legendDiv, closeBtn);
+        panel.append(header);
+
+        var hasMetaDiff = false;
+        if ((userSkill.name || '') !== (coreSkill.name || '') || (userSkill.description || '') !== (coreSkill.description || '')) {
+            hasMetaDiff = true;
+            var metaSection = document.createElement('div');
+            metaSection.style.cssText = 'padding:var(--sp-space-3) var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);font-size:var(--sp-text-sm)';
+
+            if ((userSkill.name || '') !== (coreSkill.name || '')) {
+                var nameRow = document.createElement('div');
+                nameRow.style.marginBottom = 'var(--sp-space-2)';
+                var nameLabel = document.createElement('strong');
+                nameLabel.textContent = 'Name:';
+                var nameOld = document.createElement('span');
+                nameOld.className = 'diff-removed';
+                nameOld.style.padding = '1px 4px';
+                nameOld.textContent = coreSkill.name || '';
+                var nameNew = document.createElement('span');
+                nameNew.className = 'diff-added';
+                nameNew.style.padding = '1px 4px';
+                nameNew.textContent = userSkill.name || '';
+                nameRow.append(nameLabel, document.createTextNode(' '), nameOld, document.createTextNode(' \u2192 '), nameNew);
+                metaSection.append(nameRow);
+            }
+
+            if ((userSkill.description || '') !== (coreSkill.description || '')) {
+                var descRow = document.createElement('div');
+                descRow.style.marginBottom = 'var(--sp-space-2)';
+                var descLabel = document.createElement('strong');
+                descLabel.textContent = 'Description:';
+                var descOld = document.createElement('span');
+                descOld.className = 'diff-removed';
+                descOld.style.padding = '1px 4px';
+                descOld.textContent = coreSkill.description || '';
+                var descNew = document.createElement('span');
+                descNew.className = 'diff-added';
+                descNew.style.padding = '1px 4px';
+                descNew.textContent = userSkill.description || '';
+                descRow.append(descLabel, document.createTextNode(' '), descOld, document.createTextNode(' \u2192 '), descNew);
+                metaSection.append(descRow);
+            }
+
+            panel.append(metaSection);
+        }
+
+        var diffContent = document.createElement('div');
+        diffContent.className = 'diff-content';
+
+        var hasDiff = false;
+        for (var i = 0; i < maxLen; i++) {
+            var coreLine = i < coreLines.length ? coreLines[i] : '';
+            var userLine = i < userLines.length ? userLines[i] : '';
+            var lineNum = i + 1;
             if (coreLine === userLine) {
-                diffHtml += '<div class="diff-line diff-unchanged"><span class="diff-linenum">' + lineNum + '</span><span class="diff-text">' + escapeHtml(coreLine) + '</span></div>';
+                var unchangedLine = document.createElement('div');
+                unchangedLine.className = 'diff-line diff-unchanged';
+                var numSpan = document.createElement('span');
+                numSpan.className = 'diff-linenum';
+                numSpan.textContent = lineNum;
+                var textSpan = document.createElement('span');
+                textSpan.className = 'diff-text';
+                textSpan.textContent = coreLine;
+                unchangedLine.append(numSpan, textSpan);
+                diffContent.append(unchangedLine);
+                hasDiff = true;
             } else {
-                if (coreLine) diffHtml += '<div class="diff-line diff-removed"><span class="diff-linenum">' + lineNum + '</span><span class="diff-text">- ' + escapeHtml(coreLine) + '</span></div>';
-                if (userLine) diffHtml += '<div class="diff-line diff-added"><span class="diff-linenum">' + lineNum + '</span><span class="diff-text">+ ' + escapeHtml(userLine) + '</span></div>';
+                if (coreLine) {
+                    var removedLine = document.createElement('div');
+                    removedLine.className = 'diff-line diff-removed';
+                    var rNumSpan = document.createElement('span');
+                    rNumSpan.className = 'diff-linenum';
+                    rNumSpan.textContent = lineNum;
+                    var rTextSpan = document.createElement('span');
+                    rTextSpan.className = 'diff-text';
+                    rTextSpan.textContent = '- ' + coreLine;
+                    removedLine.append(rNumSpan, rTextSpan);
+                    diffContent.append(removedLine);
+                    hasDiff = true;
+                }
+                if (userLine) {
+                    var addedLine = document.createElement('div');
+                    addedLine.className = 'diff-line diff-added';
+                    var aNumSpan = document.createElement('span');
+                    aNumSpan.className = 'diff-linenum';
+                    aNumSpan.textContent = lineNum;
+                    var aTextSpan = document.createElement('span');
+                    aTextSpan.className = 'diff-text';
+                    aTextSpan.textContent = '+ ' + userLine;
+                    addedLine.append(aNumSpan, aTextSpan);
+                    diffContent.append(addedLine);
+                    hasDiff = true;
+                }
             }
         }
 
-        let metaDiff = '';
-        if ((userSkill.name || '') !== (coreSkill.name || '')) {
-            metaDiff += '<div style="margin-bottom:var(--sp-space-2)"><strong>Name:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.name || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.name || '') + '</span></div>';
-        }
-        if ((userSkill.description || '') !== (coreSkill.description || '')) {
-            metaDiff += '<div style="margin-bottom:var(--sp-space-2)"><strong>Description:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.description || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.description || '') + '</span></div>';
+        if (!hasDiff) {
+            var identicalMsg = document.createElement('div');
+            identicalMsg.style.cssText = 'padding:var(--sp-space-4);color:var(--sp-text-tertiary);text-align:center';
+            identicalMsg.textContent = 'Content is identical';
+            diffContent.append(identicalMsg);
         }
 
-        return '<div class="diff-panel">' +
-            '<div class="diff-panel-header">' +
-                '<h4 style="margin:0;font-size:var(--sp-text-sm);font-weight:600">Diff: ' + escapeHtml(userSkill.skill_id) + '</h4>' +
-                '<div style="display:flex;gap:var(--sp-space-3);font-size:var(--sp-text-xs)">' +
-                    '<span><span class="badge badge-blue">core</span> Base skill</span>' +
-                    '<span><span class="badge badge-green">user</span> User version</span>' +
-                '</div>' +
-                '<button class="btn btn-secondary btn-sm" data-close-diff style="margin-left:auto;font-size:var(--sp-text-xs);padding:2px 8px">Close</button>' +
-            '</div>' +
-            (metaDiff ? '<div style="padding:var(--sp-space-3) var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);font-size:var(--sp-text-sm)">' + metaDiff + '</div>' : '') +
-            '<div class="diff-content">' + (diffHtml || '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);text-align:center">Content is identical</div>') + '</div>' +
-        '</div>';
+        panel.append(diffContent);
+        return panel;
     }
 
     function renderVersionDetails(detailsContainer, versionId) {
-        const detail = versionDetails[versionId];
+        var detail = versionDetails[versionId];
         if (!detail || detail === 'loading') return;
+        detailsContainer.replaceChildren();
         if (detail === 'error') {
-            detailsContainer.innerHTML = '<div style="padding:var(--sp-space-4)"><div class="empty-state"><p>Failed to load version details.</p></div></div>';
+            var errWrap = document.createElement('div');
+            errWrap.style.padding = 'var(--sp-space-4)';
+            var errState = document.createElement('div');
+            errState.className = 'empty-state';
+            var errP = document.createElement('p');
+            errP.textContent = 'Failed to load version details.';
+            errState.append(errP);
+            errWrap.append(errState);
+            detailsContainer.append(errWrap);
             return;
         }
-        let skills = [];
+        var skills = [];
         if (Array.isArray(detail.skills_snapshot)) {
             skills = detail.skills_snapshot;
         } else if (typeof detail.skills_snapshot === 'string') {
             try { skills = JSON.parse(detail.skills_snapshot); } catch(e) { skills = []; }
         }
-        const skillsHtml = skills.length
-            ? skills.map((s) => renderSkillRow(s, versionId)).join('')
-            : '<div class="empty-state" style="padding:var(--sp-space-4)"><p>No skills in this snapshot.</p></div>';
 
-        let diffHtml = '';
-        if (activeDiff && activeDiff.versionId === versionId && diffCache[activeDiff.cacheKey]) {
-            const userSkill = skills.find((s) => s.skill_id === activeDiff.skillId);
-            if (userSkill) diffHtml = renderDiffPanel(userSkill, diffCache[activeDiff.cacheKey]);
+        var skillsWrap = document.createElement('div');
+        skillsWrap.style.padding = 'var(--sp-space-4)';
+
+        var skillsLabel = document.createElement('div');
+        skillsLabel.style.cssText = 'font-size:var(--sp-text-sm);font-weight:600;margin-bottom:var(--sp-space-2);color:var(--sp-text-secondary)';
+        skillsLabel.textContent = 'Skills Snapshot (' + skills.length + ')';
+        skillsWrap.append(skillsLabel);
+
+        if (skills.length) {
+            skills.forEach(function(s) {
+                skillsWrap.append(renderSkillRow(s, versionId));
+            });
+        } else {
+            var emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            emptyState.style.padding = 'var(--sp-space-4)';
+            var emptyP = document.createElement('p');
+            emptyP.textContent = 'No skills in this snapshot.';
+            emptyState.append(emptyP);
+            skillsWrap.append(emptyState);
         }
 
-        detailsContainer.innerHTML =
-            '<div style="padding:var(--sp-space-4)">' +
-                '<div style="font-size:var(--sp-text-sm);font-weight:600;margin-bottom:var(--sp-space-2);color:var(--sp-text-secondary)">Skills Snapshot (' + skills.length + ')</div>' +
-                skillsHtml +
-            '</div>' +
-            diffHtml;
+        detailsContainer.append(skillsWrap);
+
+        if (activeDiff && activeDiff.versionId === versionId && diffCache[activeDiff.cacheKey]) {
+            var userSkill = skills.find(function(s) { return s.skill_id === activeDiff.skillId; });
+            if (userSkill) detailsContainer.append(renderDiffPanel(userSkill, diffCache[activeDiff.cacheKey]));
+        }
     }
 
     async function loadVersionDetail(versionId, userId, detailsContainer) {
@@ -262,46 +413,101 @@
             }
         });
 
+        function setEmptyState(container, message) {
+            container.replaceChildren();
+            var state = document.createElement('div');
+            state.className = 'empty-state';
+            var p = document.createElement('p');
+            p.textContent = message;
+            state.append(p);
+            container.append(state);
+        }
+
         async function loadChangelog(userId) {
-            const container = document.getElementById('mv-changelog-tab');
+            var container = document.getElementById('mv-changelog-tab');
             if (!container) return;
             if (!userId) {
-                container.innerHTML = '<div class="empty-state"><p>Select a user to view changelog.</p></div>';
+                setEmptyState(container, 'Select a user to view changelog.');
                 return;
             }
-            container.innerHTML = '<div class="loading-center"><div class="loading-spinner" role="status"><span class="sr-only">Loading...</span></div></div>';
+            container.replaceChildren();
+            var loadingCenter = document.createElement('div');
+            loadingCenter.className = 'loading-center';
+            var spinner = document.createElement('div');
+            spinner.className = 'loading-spinner';
+            spinner.setAttribute('role', 'status');
+            var srOnly = document.createElement('span');
+            srOnly.className = 'sr-only';
+            srOnly.textContent = 'Loading...';
+            spinner.append(srOnly);
+            loadingCenter.append(spinner);
+            container.append(loadingCenter);
             try {
-                const changelog = await marketplaceApi(userId, '/changelog');
+                var changelog = await marketplaceApi(userId, '/changelog');
                 changelogLoaded[userId] = true;
                 if (!changelog || !changelog.length) {
-                    container.innerHTML = '<div class="empty-state"><p>No changelog entries found for this user.</p></div>';
+                    setEmptyState(container, 'No changelog entries found for this user.');
                     return;
                 }
-                const rows = changelog.map((entry) => {
-                    let actionClass = '';
+                container.replaceChildren();
+                var tableContainer = document.createElement('div');
+                tableContainer.className = 'table-container';
+                var tableScroll = document.createElement('div');
+                tableScroll.className = 'table-scroll';
+                var table = document.createElement('table');
+                table.className = 'data-table';
+                var thead = document.createElement('thead');
+                var headRow = document.createElement('tr');
+                ['Action', 'Skill ID', 'Name', 'Detail', 'Time'].forEach(function(text) {
+                    var th = document.createElement('th');
+                    th.textContent = text;
+                    headRow.append(th);
+                });
+                thead.append(headRow);
+                var tbody = document.createElement('tbody');
+                changelog.forEach(function(entry) {
+                    var actionClass = 'badge-gray';
                     switch(entry.action) {
                         case 'added': actionClass = 'badge-green'; break;
                         case 'updated': actionClass = 'badge-yellow'; break;
                         case 'deleted': actionClass = 'badge-red'; break;
                         case 'restored': actionClass = 'badge-blue'; break;
-                        default: actionClass = 'badge-gray';
                     }
-                    return '<tr>' +
-                        '<td><span class="badge ' + actionClass + '">' + escapeHtml(entry.action) + '</span></td>' +
-                        '<td><code style="background:var(--sp-bg-surface-raised);padding:1px 4px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)">' + escapeHtml(entry.skill_id) + '</code></td>' +
-                        '<td>' + escapeHtml(entry.skill_name) + '</td>' +
-                        '<td style="color:var(--sp-text-secondary)">' + escapeHtml(entry.detail) + '</td>' +
-                        '<td><span title="' + escapeHtml(app.formatDate(entry.created_at)) + '">' + escapeHtml(app.formatRelativeTime(entry.created_at)) + '</span></td>' +
-                    '</tr>';
-                }).join('');
-                container.innerHTML = '<div class="table-container"><div class="table-scroll">' +
-                    '<table class="data-table">' +
-                        '<thead><tr><th>Action</th><th>Skill ID</th><th>Name</th><th>Detail</th><th>Time</th></tr></thead>' +
-                        '<tbody>' + rows + '</tbody>' +
-                    '</table>' +
-                '</div></div>';
+                    var tr = document.createElement('tr');
+                    var td1 = document.createElement('td');
+                    var actionBadge = document.createElement('span');
+                    actionBadge.className = 'badge ' + actionClass;
+                    actionBadge.textContent = entry.action;
+                    td1.append(actionBadge);
+
+                    var td2 = document.createElement('td');
+                    var codeEl = document.createElement('code');
+                    codeEl.style.cssText = 'background:var(--sp-bg-surface-raised);padding:1px 4px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)';
+                    codeEl.textContent = entry.skill_id;
+                    td2.append(codeEl);
+
+                    var td3 = document.createElement('td');
+                    td3.textContent = entry.skill_name;
+
+                    var td4 = document.createElement('td');
+                    td4.style.color = 'var(--sp-text-secondary)';
+                    td4.textContent = entry.detail;
+
+                    var td5 = document.createElement('td');
+                    var timeSpan = document.createElement('span');
+                    timeSpan.title = app.formatDate(entry.created_at);
+                    timeSpan.textContent = app.formatRelativeTime(entry.created_at);
+                    td5.append(timeSpan);
+
+                    tr.append(td1, td2, td3, td4, td5);
+                    tbody.append(tr);
+                });
+                table.append(thead, tbody);
+                tableScroll.append(table);
+                tableContainer.append(tableScroll);
+                container.append(tableContainer);
             } catch(err) {
-                container.innerHTML = '<div class="empty-state"><p>Failed to load changelog.</p></div>';
+                setEmptyState(container, 'Failed to load changelog.');
             }
         }
 

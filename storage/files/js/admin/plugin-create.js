@@ -1,7 +1,6 @@
 (function(app) {
     'use strict';
 
-    const escapeHtml = app.escapeHtml;
     const TOTAL_STEPS = 7;
     const state = {
         step: 1,
@@ -22,30 +21,57 @@
         const labels = ['Basic Info', 'Skills', 'Agents', 'MCP Servers', 'Hooks', 'Roles & Access', 'Review'];
         const container = document.getElementById('wizard-step-indicator');
         if (!container) return;
-        let html = '<div class="wizard-steps" style="display:flex;gap:var(--sp-space-1);margin-bottom:var(--sp-space-6);flex-wrap:wrap">';
-        for (let i = 1; i <= TOTAL_STEPS; i++) {
-            const isActive = i === state.step;
-            const isDone = i < state.step;
-            const bgColor = isActive ? 'var(--sp-accent)' : (isDone ? 'var(--sp-success)' : 'var(--sp-bg-tertiary)');
-            const textColor = (isActive || isDone) ? '#fff' : 'var(--sp-text-tertiary)';
-            html += '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-radius:var(--sp-radius-md);background:' + bgColor + ';color:' + textColor + ';font-size:var(--sp-text-sm);font-weight:' + (isActive ? '600' : '400') + '">' +
-                '<span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--sp-text-xs)">' + i + '</span>' +
-                '<span>' + escapeHtml(labels[i - 1]) + '</span>' +
-            '</div>';
+        const steps = document.createElement('div');
+        steps.className = 'wizard-steps';
+        steps.style.cssText = 'display:flex;gap:var(--sp-space-1);margin-bottom:var(--sp-space-6);flex-wrap:wrap';
+        for (var i = 1; i <= TOTAL_STEPS; i++) {
+            var isActive = i === state.step;
+            var isDone = i < state.step;
+            var bgColor = isActive ? 'var(--sp-accent)' : (isDone ? 'var(--sp-success)' : 'var(--sp-bg-tertiary)');
+            var textColor = (isActive || isDone) ? '#fff' : 'var(--sp-text-tertiary)';
+            var stepDiv = document.createElement('div');
+            stepDiv.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2) var(--sp-space-3);border-radius:var(--sp-radius-md);font-size:var(--sp-text-sm);background:' + bgColor + ';color:' + textColor + ';font-weight:' + (isActive ? '600' : '400');
+            var numSpan = document.createElement('span');
+            numSpan.style.cssText = 'width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:var(--sp-text-xs)';
+            numSpan.textContent = i;
+            var labelSpan = document.createElement('span');
+            labelSpan.textContent = labels[i - 1];
+            stepDiv.append(numSpan, labelSpan);
+            steps.append(stepDiv);
         }
-        html += '</div>';
-        container.innerHTML = html;
+        container.replaceChildren(steps);
     }
 
     function renderNav() {
         const nav = document.getElementById('wizard-nav');
         if (!nav) return;
-        let html = '<div style="display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)">';
-        if (state.step > 1) html += '<button type="button" class="btn btn-secondary" id="wizard-prev">Previous</button>';
-        if (state.step < TOTAL_STEPS) html += '<button type="button" class="btn btn-primary" id="wizard-next">Next</button>';
-        if (state.step === TOTAL_STEPS) html += '<button type="button" class="btn btn-primary" id="wizard-create">Create Plugin</button>';
-        html += '</div>';
-        nav.innerHTML = html;
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:flex;gap:var(--sp-space-3);margin-top:var(--sp-space-6)';
+        if (state.step > 1) {
+            var prevBtn = document.createElement('button');
+            prevBtn.type = 'button';
+            prevBtn.className = 'btn btn-secondary';
+            prevBtn.id = 'wizard-prev';
+            prevBtn.textContent = 'Previous';
+            wrapper.append(prevBtn);
+        }
+        if (state.step < TOTAL_STEPS) {
+            var nextBtn = document.createElement('button');
+            nextBtn.type = 'button';
+            nextBtn.className = 'btn btn-primary';
+            nextBtn.id = 'wizard-next';
+            nextBtn.textContent = 'Next';
+            wrapper.append(nextBtn);
+        }
+        if (state.step === TOTAL_STEPS) {
+            var createBtn = document.createElement('button');
+            createBtn.type = 'button';
+            createBtn.className = 'btn btn-primary';
+            createBtn.id = 'wizard-create';
+            createBtn.textContent = 'Create Plugin';
+            wrapper.append(createBtn);
+        }
+        nav.replaceChildren(wrapper);
     }
 
     function saveCurrentStepState() {
@@ -93,7 +119,7 @@
     function renderStep() {
         const contentEl = document.getElementById('wizard-step-content');
         if (!contentEl) return;
-        contentEl.innerHTML = '';
+        contentEl.replaceChildren();
 
         if (state.step === 7) {
             const frag = getTemplate('tpl-step-7');
@@ -161,7 +187,7 @@
     function renderHooks() {
         const list = document.getElementById('hooks-list');
         if (!list) return;
-        list.innerHTML = '';
+        list.replaceChildren();
         state.hooks.forEach((hook) => {
             const frag = getTemplate('tpl-hook-entry');
             const entry = frag.querySelector('.hook-entry');
@@ -187,23 +213,65 @@
         const selectedAgents = Object.keys(state.selectedAgents).filter((k) => state.selectedAgents[k]);
         const selectedMcp = Object.keys(state.selectedMcpServers).filter((k) => state.selectedMcpServers[k]);
         const selectedRoles = Object.keys(f.roles).filter((k) => f.roles[k]);
-        function badgeList(items, emptyMsg) {
-            if (!items.length) return '<span style="color:var(--sp-text-tertiary)">' + escapeHtml(emptyMsg) + '</span>';
-            return items.map((i) => '<span class="badge badge-blue" style="margin:var(--sp-space-1)">' + escapeHtml(i) + '</span>').join('');
+
+        function buildBadgeList(items, emptyMsg) {
+            const container = document.createDocumentFragment();
+            if (!items.length) {
+                var empty = document.createElement('span');
+                empty.style.cssText = 'color:var(--sp-text-tertiary)';
+                empty.textContent = emptyMsg;
+                container.append(empty);
+                return container;
+            }
+            items.forEach(function(item) {
+                var badge = document.createElement('span');
+                badge.className = 'badge badge-blue';
+                badge.style.cssText = 'margin:var(--sp-space-1)';
+                badge.textContent = item;
+                container.append(badge);
+            });
+            return container;
         }
-        el.innerHTML =
-            '<strong>Plugin ID:</strong><span>' + escapeHtml(f.plugin_id || '-') + '</span>' +
-            '<strong>Name:</strong><span>' + escapeHtml(f.name || '-') + '</span>' +
-            '<strong>Description:</strong><span>' + escapeHtml(f.description || '-') + '</span>' +
-            '<strong>Version:</strong><span>' + escapeHtml(f.version || '0.1.0') + '</span>' +
-            '<strong>Category:</strong><span>' + escapeHtml(f.category || '-') + '</span>' +
-            '<strong>Author:</strong><span>' + escapeHtml(f.author_name || '-') + '</span>' +
-            '<strong>Keywords:</strong><span>' + escapeHtml(f.keywords || '-') + '</span>' +
-            '<strong>Roles:</strong><div>' + badgeList(selectedRoles, 'None selected') + '</div>' +
-            '<strong>Skills (' + selectedSkills.length + '):</strong><div style="display:flex;flex-wrap:wrap">' + badgeList(selectedSkills, 'None selected') + '</div>' +
-            '<strong>Agents (' + selectedAgents.length + '):</strong><div style="display:flex;flex-wrap:wrap">' + badgeList(selectedAgents, 'None selected') + '</div>' +
-            '<strong>MCP (' + selectedMcp.length + '):</strong><div style="display:flex;flex-wrap:wrap">' + badgeList(selectedMcp, 'None selected') + '</div>' +
-            '<strong>Hooks (' + state.hooks.length + '):</strong><span>' + (state.hooks.length > 0 ? state.hooks.map((h) => escapeHtml(h.event + ': ' + (h.command || '?'))).join(', ') : 'None') + '</span>';
+
+        function addRow(frag, labelText, valueText) {
+            var strong = document.createElement('strong');
+            strong.textContent = labelText;
+            var span = document.createElement('span');
+            span.textContent = valueText;
+            frag.append(strong, span);
+        }
+
+        function addBadgeRow(frag, labelText, items, emptyMsg, wrap) {
+            var strong = document.createElement('strong');
+            strong.textContent = labelText;
+            var div = document.createElement('div');
+            if (wrap) div.style.cssText = 'display:flex;flex-wrap:wrap';
+            div.append(buildBadgeList(items, emptyMsg));
+            frag.append(strong, div);
+        }
+
+        var frag = document.createDocumentFragment();
+        addRow(frag, 'Plugin ID:', f.plugin_id || '-');
+        addRow(frag, 'Name:', f.name || '-');
+        addRow(frag, 'Description:', f.description || '-');
+        addRow(frag, 'Version:', f.version || '0.1.0');
+        addRow(frag, 'Category:', f.category || '-');
+        addRow(frag, 'Author:', f.author_name || '-');
+        addRow(frag, 'Keywords:', f.keywords || '-');
+        addBadgeRow(frag, 'Roles:', selectedRoles, 'None selected', false);
+        addBadgeRow(frag, 'Skills (' + selectedSkills.length + '):', selectedSkills, 'None selected', true);
+        addBadgeRow(frag, 'Agents (' + selectedAgents.length + '):', selectedAgents, 'None selected', true);
+        addBadgeRow(frag, 'MCP (' + selectedMcp.length + '):', selectedMcp, 'None selected', true);
+
+        var hooksStrong = document.createElement('strong');
+        hooksStrong.textContent = 'Hooks (' + state.hooks.length + '):';
+        var hooksSpan = document.createElement('span');
+        hooksSpan.textContent = state.hooks.length > 0
+            ? state.hooks.map(function(h) { return h.event + ': ' + (h.command || '?'); }).join(', ')
+            : 'None';
+        frag.append(hooksStrong, hooksSpan);
+
+        el.replaceChildren(frag);
     }
 
     function validateStep1() {
