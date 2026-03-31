@@ -11,8 +11,7 @@ pub struct SetSessionRequest {
 }
 
 fn is_secure_context() -> bool {
-    // Default to true (secure) in production. Set FORCE_HTTPS=false only for local dev.
-    std::env::var("FORCE_HTTPS").map_or(true, |v| v != "false")
+    systemprompt::models::Config::get().map_or(true, |c| c.use_https)
 }
 
 pub async fn set_session(
