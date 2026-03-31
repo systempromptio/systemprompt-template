@@ -20,6 +20,7 @@ pub struct GovernanceQuery {
     pub q: Option<String>,
 }
 
+#[allow(clippy::cast_possible_wrap)]
 pub(crate) async fn governance_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,

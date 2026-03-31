@@ -163,8 +163,7 @@ pub fn workspace_ssr_router(
         .layer(Extension(ai_service))
         .layer(Extension(tier_cache))
         .layer(Extension(engine))
-        .layer(axum_middleware::from_fn_with_state(
-            pool.clone(),
+        .layer(axum_middleware::from_fn(
             middleware::marketplace_context_middleware,
         ))
         .layer(axum_middleware::from_fn(
@@ -181,6 +180,23 @@ pub fn workspace_ssr_router(
             .layer(NormalizePathLayer::trim_trailing_slash())
             .service(inner),
     )
+}
+
+fn org_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route("/org/plugins", get(handlers::ssr::plugins_page))
+        .route("/org/skills", get(handlers::ssr::skills_page))
+        .route("/org/skills/edit", get(handlers::ssr::skill_edit_page))
+        .route("/org/agents", get(handlers::ssr::agents_page))
+        .route("/org/agents/edit", get(handlers::ssr::agent_edit_page))
+        .route("/org/mcp-servers", get(handlers::ssr::mcp_servers_page))
+        .route("/org/mcp-servers/edit", get(handlers::ssr::mcp_edit_page))
+        .route("/org/hooks", get(handlers::ssr::hooks_page))
+        .route("/org/hooks/edit", get(handlers::ssr::hook_edit_page))
+        .route(
+            "/org-marketplace",
+            get(handlers::ssr::org_marketplace_page),
+        )
 }
 
 pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Router {
@@ -232,25 +248,12 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
         .route("/mcp-servers/edit", get(handlers::ssr::mcp_edit_page))
         .route("/plugins", get(handlers::ssr::plugins_page))
         .route("/marketplace", get(handlers::ssr::marketplace_versions_page))
-        .route("/org/plugins", get(handlers::ssr::plugins_page))
-        .route("/org/skills", get(handlers::ssr::skills_page))
-        .route("/org/skills/edit", get(handlers::ssr::skill_edit_page))
-        .route("/org/agents", get(handlers::ssr::agents_page))
-        .route("/org/agents/edit", get(handlers::ssr::agent_edit_page))
-        .route("/org/mcp-servers", get(handlers::ssr::mcp_servers_page))
-        .route("/org/mcp-servers/edit", get(handlers::ssr::mcp_edit_page))
-        .route("/org/hooks", get(handlers::ssr::hooks_page))
-        .route("/org/hooks/edit", get(handlers::ssr::hook_edit_page))
-        .route(
-            "/org-marketplace",
-            get(handlers::ssr::org_marketplace_page),
-        )
+        .merge(org_routes())
         .route("/setup", get(handlers::ssr::setup_page))
         .route("/demo-register", get(handlers::ssr::demo_register_page))
         .route("/auth/me", get(middleware::auth_me_handler))
         .layer(Extension(engine.clone()))
-        .layer(axum_middleware::from_fn_with_state(
-            pool.clone(),
+        .layer(axum_middleware::from_fn(
             middleware::marketplace_context_middleware,
         ))
         .layer(axum_middleware::from_fn(

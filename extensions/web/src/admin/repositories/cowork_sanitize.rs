@@ -58,13 +58,13 @@ fn build_command_hooks_file(
 ) -> Result<PluginFile, MarketplaceError> {
     let govern_url = format!("{platform_url}/api/public/hooks/govern");
     let track_url = format!("{platform_url}/api/public/hooks/track");
-    let govern_curl = format!(
+    let govern_command = format!(
         "cat | curl -s -X POST '{govern_url}' \
          -H 'Authorization: Bearer {token}' \
          -H 'Content-Type: application/json' \
          -d @-"
     );
-    let track_curl = format!(
+    let track_command = format!(
         "cat | curl -s -X POST '{track_url}' \
          -H 'Authorization: Bearer {token}' \
          -H 'Content-Type: application/json' \
@@ -92,7 +92,7 @@ fn build_command_hooks_file(
     let govern_group = MatcherGroup {
         matcher: "*".to_string(),
         hooks: vec![HookHandler::Command(CommandHook {
-            command: govern_curl,
+            command: govern_command,
             is_async: None,
             timeout: Some(10),
         })],
@@ -104,7 +104,7 @@ fn build_command_hooks_file(
         let group = MatcherGroup {
             matcher: "*".to_string(),
             hooks: vec![HookHandler::Command(CommandHook {
-                command: track_curl.clone(),
+                command: track_command.clone(),
                 is_async: Some(true),
                 timeout: Some(30),
             })],

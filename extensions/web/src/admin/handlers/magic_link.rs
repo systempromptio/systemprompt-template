@@ -7,6 +7,8 @@ use axum::Json;
 use serde::Deserialize;
 use sqlx::PgPool;
 
+use systemprompt::identifiers::Email;
+
 use crate::admin::repositories::magic_links;
 
 #[derive(Deserialize)]
@@ -21,7 +23,7 @@ pub async fn request_magic_link(
 ) -> impl IntoResponse {
     let email = body.email.trim().to_lowercase();
 
-    if email.is_empty() || !email.contains('@') {
+    if Email::try_new(email.clone()).is_err() {
         return (
             StatusCode::BAD_REQUEST,
             Json(serde_json::json!({"error": "Invalid email address"})),
@@ -46,7 +48,21 @@ pub async fn request_magic_link(
         .get("x-forwarded-for")
         .or_else(|| req_headers.get("x-real-ip"))
         .and_then(|v| v.to_str().ok())
-        .map(|s| s.split(',').next().unwrap_or(s).trim().to_string());
+        .map_or_else(|| "unknown".to_string(), |s| s.split(',').next().unwrap_or(s).trim().to_string());
+
+    let ip_count = magic_links::count_recent_tokens_by_ip(&pool, &ip_address)
+        .await
+        .unwrap_or(0);
+
+    if ip_count >= 10 {
+        return (
+            StatusCode::OK,
+            Json(serde_json::json!({
+                "ok": true,
+                "message": "If an account exists for that email, a magic link has been sent."
+            })),
+        );
+    }
 
     let user_exists = magic_links::user_exists_by_email(&pool, &email)
         .await
@@ -54,7 +70,7 @@ pub async fn request_magic_link(
 
     if user_exists {
         if let Ok(_raw_token) =
-            magic_links::create_magic_link_token(&pool, &email, ip_address.as_deref()).await
+            magic_links::create_magic_link_token(&pool, &email, Some(&ip_address)).await
         {
             tracing::info!(email = %email, "Magic link token created (email sending not configured in this deployment)");
         }

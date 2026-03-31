@@ -14,6 +14,7 @@ use crate::admin::types::webhook::{StatusLinePayload, StatusLineQuery, TrackQuer
 use super::helpers::{extract_bearer_token, get_jwt_config};
 
 #[allow(dead_code)]
+#[allow(clippy::unused_async)]
 pub(crate) async fn track_hook_event(
     State(_pool): State<Arc<PgPool>>,
     headers: HeaderMap,
@@ -63,6 +64,7 @@ pub(crate) async fn track_hook_event(
     StatusCode::NO_CONTENT.into_response()
 }
 
+#[allow(clippy::unused_async)]
 pub(crate) async fn track_statusline_event(
     State(_pool): State<Arc<PgPool>>,
     headers: HeaderMap,
