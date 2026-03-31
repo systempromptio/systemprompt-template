@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>07: MCP Access Tracking — Architecture — foodles.com</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="mermaid.min.js"></script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --bg: oklch(0.16 0.01 45); --bg-surface: oklch(0.21 0.01 48); --text: oklch(0.98 0.004 70); --text-secondary: oklch(0.86 0.010 60); --text-tertiary: oklch(0.70 0.01 70); --brand-400: oklch(0.67 0.18 50); --brand-500: oklch(0.72 0.17 52); --border: oklch(1.00 0 0 / 0.10); }
+        [data-theme="light"] { --bg: oklch(0.96 0.004 70); --bg-surface: oklch(1.0 0 0); --text: oklch(0.20 0.01 50); --text-secondary: oklch(0.41 0.01 60); --text-tertiary: oklch(0.53 0.01 65); --brand-400: oklch(0.75 0.16 52); --brand-500: oklch(0.72 0.17 52); --border: oklch(0.20 0.01 50 / 0.12); }
+        body { font-family: 'Roboto', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 2rem; border-bottom: 1px solid var(--border); }
+        .page-header h1 { font-family: 'Dosis', system-ui, sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--brand-500); letter-spacing: 0.05em; }
+        .page-header h1 span { color: var(--text-tertiary); font-size: 0.875rem; }
+        .header-controls { display: flex; gap: 0.5rem; align-items: center; }
+        .nav-btn, .theme-toggle { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 6px; padding: 0.4rem 0.75rem; cursor: pointer; font-family: inherit; font-size: 0.8125rem; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .nav-btn:hover, .theme-toggle:hover { border-color: var(--brand-500); color: var(--text); }
+        .diagram-container { display: flex; justify-content: center; padding: 2rem; }
+        .mermaid { max-width: 900px; width: 100%; }
+        .info-section { max-width: 800px; margin: 0 auto; padding: 0 2rem 3rem; }
+        .info-section h2 { font-family: 'Dosis', system-ui, sans-serif; font-size: 1rem; font-weight: 700; color: var(--brand-400); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1rem; }
+        .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .info-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+        .info-table th, .info-table td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+        .info-table th { color: var(--text-tertiary); font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .info-table td { color: var(--text-secondary); }
+        .info-table tr:hover td { color: var(--text); }
+        .page-footer { display: flex; justify-content: space-between; padding: 1.5rem 2rem; border-top: 1px solid var(--border); }
+        @media print { body { background: white; color: #1a1a1a; } .theme-toggle, .nav-btn { display: none; } }
+        @media (max-width: 640px) { .page-header { flex-wrap: wrap; gap: 0.75rem; padding: 1rem; } .diagram-container { padding: 1rem; } .info-section { padding: 0 1rem 2rem; } .tables-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <h1><span>07 &mdash;</span> MCP Access Tracking</h1>
+        <div class="header-controls">
+            <a href="06-governance-secret-breach.html" class="nav-btn">&larr; Prev</a>
+            <a href="index.html" class="nav-btn">Index</a>
+            <a href="08-request-tracing.html" class="nav-btn">Next &rarr;</a>
+            <button class="theme-toggle" onclick="toggleTheme()"><span class="theme-icon">&#9790;</span></button>
+        </div>
+    </header>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+flowchart TD
+    subgraph P1 ["Part 1: Governance ALLOW"]
+        G1_IN["curl → POST /hooks/govern\nClean Read tool input"]
+        G1_OUT["✅ All rules pass → ALLOW"]
+        G1_IN --> G1_OUT
+    end
+
+    subgraph P2 ["Part 2: Governance DENY"]
+        G2_IN["curl → POST /hooks/govern\nAWS key in Bash command"]
+        G2_OUT["❌ secret_injection → DENY"]
+        G2_IN --> G2_OUT
+    end
+
+    subgraph P3 ["Part 3: MCP Tool Call"]
+        MCP_CMD["CLI: plugins mcp call\nskill-manager list_plugins"]
+        OAUTH["🔑 OAuth Authentication\nClient credentials → access token"]
+        EXEC["⚙️ Tool Execution\nskill-manager.list_plugins\nReturns: plugin list JSON"]
+        REC["📊 Access Recording\nrecord_mcp_access\nINSERT INTO user_activity\ncategory=mcp_access"]
+        MCP_CMD --> OAUTH
+        OAUTH --> EXEC
+        EXEC --> REC
+    end
+
+    subgraph P4 ["Part 4: Audit Trail"]
+        DB1["🗄️ governance_decisions\nSELECT decision, tool_name, reason\nShows allow + deny from Parts 1-2"]
+        DB2["🗄️ user_activity\nSELECT action, entity_name\nWHERE category = mcp_access\nShows events from Part 3"]
+    end
+
+    P1 --> P3
+    P2 --> P4
+    P3 --> P4
+
+    style G1_OUT fill:#1a4a2e,stroke:#2ecc71,color:#90EE90
+    style G2_OUT fill:#4a1a1a,stroke:#e74c3c,color:#ff9999
+        </pre>
+    </div>
+
+    <section class="info-section">
+        <h2>Database Tables</h2>
+        <div class="tables-grid">
+            <div>
+                <h2 style="font-size:0.875rem">governance_decisions</h2>
+                <table class="info-table">
+                    <thead><tr><th>Column</th><th>Type</th></tr></thead>
+                    <tbody>
+                        <tr><td style="color:var(--text)">id</td><td>UUID</td></tr>
+                        <tr><td style="color:var(--text)">user_id</td><td>UserId</td></tr>
+                        <tr><td style="color:var(--text)">session_id</td><td>SessionId</td></tr>
+                        <tr><td style="color:var(--text)">tool_name</td><td>String</td></tr>
+                        <tr><td style="color:var(--text)">decision</td><td>allow / deny</td></tr>
+                        <tr><td style="color:var(--text)">policy</td><td>String</td></tr>
+                        <tr><td style="color:var(--text)">evaluated_rules</td><td>JSONB</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h2 style="font-size:0.875rem">user_activity</h2>
+                <table class="info-table">
+                    <thead><tr><th>Column</th><th>Type</th></tr></thead>
+                    <tbody>
+                        <tr><td style="color:var(--text)">id</td><td>UUID</td></tr>
+                        <tr><td style="color:var(--text)">user_id</td><td>UserId</td></tr>
+                        <tr><td style="color:var(--text)">category</td><td>mcp_access</td></tr>
+                        <tr><td style="color:var(--text)">action</td><td>authenticated / used</td></tr>
+                        <tr><td style="color:var(--text)">entity_name</td><td>server name</td></tr>
+                        <tr><td style="color:var(--text)">metadata</td><td>JSONB</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer class="page-footer">
+        <a href="06-governance-secret-breach.html" class="nav-btn">&larr; Secret Breach</a>
+        <a href="08-request-tracing.html" class="nav-btn">Request Tracing &rarr;</a>
+    </footer>
+
+    <script>
+        function getTheme() { try { return localStorage.getItem('arch-theme') || 'dark'; } catch(e) { return 'dark'; } }
+        function initMermaid() { const t = getTheme(); mermaid.initialize({ startOnLoad: true, theme: t === 'dark' ? 'dark' : 'default', themeVariables: t === 'dark' ? { primaryColor:'#8B5E3C', primaryTextColor:'#F5F0EB', primaryBorderColor:'#C27A3C', lineColor:'#C27A3C', secondaryColor:'#3A3028', tertiaryColor:'#2E2720', background:'#2E2720', mainBkg:'#2E2720', nodeBorder:'#C27A3C', clusterBkg:'#3A3028', clusterBorder:'#C27A3C', titleColor:'#F5F0EB', edgeLabelBackground:'#2E2720', fontSize:'14px' } : { primaryColor:'#F5E6D3', primaryTextColor:'#2E2720', primaryBorderColor:'#C27A3C', lineColor:'#C27A3C', secondaryColor:'#FDF8F3', tertiaryColor:'#FAF5EF', background:'#FAF5EF', mainBkg:'#FDF8F3', nodeBorder:'#C27A3C', clusterBkg:'#FAF5EF', clusterBorder:'#C27A3C', titleColor:'#2E2720', edgeLabelBackground:'#FAF5EF', fontSize:'14px' } }); }
+        function toggleTheme() { const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); try { localStorage.setItem('arch-theme', n); } catch(e) {} location.reload(); }
+        try { document.documentElement.setAttribute('data-theme', getTheme()); } catch(e) {}
+        initMermaid();
+        document.addEventListener('keydown', function(e) { if (e.key === 'ArrowLeft') window.location.href = '06-governance-secret-breach.html'; if (e.key === 'ArrowRight') window.location.href = '08-request-tracing.html'; if (e.key === 'h' || e.key === 'H') window.location.href = 'index.html'; });
+    </script>
+</body>
+</html>

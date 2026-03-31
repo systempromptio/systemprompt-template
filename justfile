@@ -181,6 +181,10 @@ prepare:
 start:
     {{CLI}} infra services start --profile local
 
+# Start server with release binary
+start-release:
+    {{CLI_RELEASE}} infra services start --profile local
+
 # Run migrations
 migrate:
     {{CLI}} infra db migrate
@@ -346,3 +350,30 @@ marketplace:
 update-anthropic-plugins:
     git submodule update --remote vendor/knowledge-work-plugins
     {{CLI}} infra jobs run import_anthropic_plugins
+
+# ══════════════════════════════════════════════════════════════════════════════
+# BENCHMARKS
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Benchmark governance endpoint (requires hey: curl -sL https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64 -o /tmp/hey && chmod +x /tmp/hey)
+benchmark REQUESTS="200" CONCURRENCY="100":
+    #!/usr/bin/env bash
+    set -e
+    HEY="/tmp/hey"
+    if [[ ! -x "$HEY" ]]; then
+        echo "Installing hey..."
+        curl -sL https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64 -o "$HEY" && chmod +x "$HEY"
+    fi
+    TOKEN_FILE="demo/.token"
+    if [[ ! -f "$TOKEN_FILE" ]]; then
+        echo "ERROR: No token. Run: ./demo/00-preflight.sh" >&2
+        exit 1
+    fi
+    TOKEN=$(cat "$TOKEN_FILE")
+    echo "Governance endpoint: {{REQUESTS}} requests, {{CONCURRENCY}} concurrent"
+    echo ""
+    "$HEY" -n {{REQUESTS}} -c {{CONCURRENCY}} -m POST \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"bench","tool_input":{"file_path":"/src/main.rs"}}' \
+        "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo"

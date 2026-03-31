@@ -2,18 +2,44 @@
 # DEMO 7: MCP ACCESS TRACKING & GOVERNANCE
 # Shows successful + rejected tool calls surfaced on the admin dashboard.
 #
+# What this does:
+#   Part 1 — Governance ALLOWED:
+#     curl POST /hooks/govern with clean Read tool input
+#     → All rules pass → permissionDecision: "allow"
+#
+#   Part 2 — Governance DENIED:
+#     curl POST /hooks/govern with AWS key in Bash command
+#     → secret_injection rule triggers → permissionDecision: "deny"
+#
+#   Part 3 — MCP tool call (authenticated):
+#     `plugins mcp call skill-manager list_plugins`
+#     → OAuth authentication → tool executes → result returned
+#     → Access recorded in user_activity table
+#
+#   Part 4 — Audit trail (database):
+#     Queries governance_decisions table: shows allow/deny + reasons
+#     Queries user_activity table: shows MCP access events with category='mcp_access'
+#
+#   Part 5 — Dashboard pointer:
+#     Points to http://localhost:8080/admin/ where all events appear in:
+#     - Policy Violations section (governance denials)
+#     - MCP Server Access section (auth events + tool calls)
+#     - Governance Decisions section (allow/deny with reasons)
+#
 # Usage:
 #   ./demo/07-mcp-access-tracking.sh <TOKEN> [profile]
 #
 # TOKEN: The plugin token from the dashboard install widget (top-right of /admin/).
 #        Click the key icon, reveal, and copy.
+#
+# Cost: Free (governance API calls + direct MCP calls, no AI)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CLI="$PROJECT_DIR/target/debug/systemprompt"
-if [[ -x "$PROJECT_DIR/target/release/systemprompt" ]]; then
+if [[ -x "$PROJECT_DIR/target/release/systemprompt" && "$PROJECT_DIR/target/release/systemprompt" -nt "$CLI" ]]; then
   CLI="$PROJECT_DIR/target/release/systemprompt"
 fi
 if [[ ! -x "$CLI" ]]; then
@@ -21,18 +47,19 @@ if [[ ! -x "$CLI" ]]; then
   exit 1
 fi
 
+TOKEN_FILE="$SCRIPT_DIR/.token"
 TOKEN="${1:-}"
 PROFILE="${2:-local}"
 DASHBOARD_URL="http://localhost:8080/admin/"
 
+if [[ -z "$TOKEN" && -f "$TOKEN_FILE" ]]; then
+  TOKEN=$(cat "$TOKEN_FILE")
+fi
+
 if [[ -z "$TOKEN" ]]; then
   echo ""
-  echo "  Usage: ./demo/07-mcp-access-tracking.sh <TOKEN> [profile]"
-  echo ""
-  echo "  Get the TOKEN from the dashboard install widget:"
-  echo "  1. Open $DASHBOARD_URL"
-  echo "  2. Click the key icon (top-right)"
-  echo "  3. Reveal and copy the plugin token"
+  echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument:"
+  echo "  ./demo/07-mcp-access-tracking.sh <TOKEN> [profile]"
   echo ""
   exit 1
 fi

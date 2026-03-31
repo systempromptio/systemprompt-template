@@ -1,13 +1,10 @@
-use sqlx::PgPool;
-
+use super::rate_limit;
 use super::secrets::detect_secrets;
 use super::types::{EvaluatedRule, GovernanceContext, RuleEvaluation};
 
 const ADMIN_ONLY_TOOL_PREFIXES: &[&str] = &["mcp__systemprompt__", "mcp__skill-manager__"];
 
-const RATE_LIMIT_PER_MINUTE: i64 = 300;
-
-pub(super) async fn evaluate(pool: &PgPool, ctx: &GovernanceContext<'_>) -> RuleEvaluation {
+pub(super) fn evaluate(ctx: &GovernanceContext<'_>) -> RuleEvaluation {
     let mut rules = Vec::new();
     let mut denied = false;
     let mut deny_reason = String::new();
@@ -35,14 +32,12 @@ pub(super) async fn evaluate(pool: &PgPool, ctx: &GovernanceContext<'_>) -> Rule
         &mut deny_policy,
     );
     evaluate_rate_limit(
-        pool,
         ctx,
         &mut rules,
         &mut denied,
         &mut deny_reason,
         &mut deny_policy,
-    )
-    .await;
+    );
 
     if denied {
         RuleEvaluation {
@@ -203,8 +198,7 @@ fn evaluate_blocklist(
     }
 }
 
-async fn evaluate_rate_limit(
-    pool: &PgPool,
+fn evaluate_rate_limit(
     ctx: &GovernanceContext<'_>,
     rules: &mut Vec<EvaluatedRule>,
     denied: &mut bool,
@@ -220,32 +214,22 @@ async fn evaluate_rate_limit(
         return;
     }
 
-    let count = sqlx::query_scalar::<_, i64>(
-        "SELECT COUNT(*) FROM governance_decisions \
-         WHERE session_id = $1 AND user_id = $2 \
-         AND created_at > NOW() - INTERVAL '1 minute'",
-    )
-    .bind(ctx.session_id)
-    .bind(ctx.user_id)
-    .fetch_one(pool)
-    .await
-    .unwrap_or(0);
+    let (count, limit) = rate_limit::check(ctx.session_id, ctx.user_id);
 
-    if count >= RATE_LIMIT_PER_MINUTE {
+    if count >= limit {
         *denied = true;
-        *deny_reason =
-            format!("Rate limit exceeded: {count}/{RATE_LIMIT_PER_MINUTE} calls this minute");
+        *deny_reason = format!("Rate limit exceeded: {count}/{limit} calls this minute");
         *deny_policy = "rate_limit".to_string();
         rules.push(EvaluatedRule {
             rule: "rate_limit",
             result: "fail",
-            detail: format!("{count}/{RATE_LIMIT_PER_MINUTE} calls this minute — limit exceeded"),
+            detail: format!("{count}/{limit} calls this minute — limit exceeded"),
         });
     } else {
         rules.push(EvaluatedRule {
             rule: "rate_limit",
             result: "pass",
-            detail: format!("{count}/{RATE_LIMIT_PER_MINUTE} calls this minute"),
+            detail: format!("{count}/{limit} calls this minute"),
         });
     }
 }

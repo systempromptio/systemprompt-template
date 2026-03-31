@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>08: Request Tracing — Architecture — foodles.com</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@700&family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+    <script src="mermaid.min.js"></script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --bg: oklch(0.16 0.01 45); --bg-surface: oklch(0.21 0.01 48); --bg-elevated: oklch(0.24 0.01 48); --text: oklch(0.98 0.004 70); --text-secondary: oklch(0.86 0.010 60); --text-tertiary: oklch(0.70 0.01 70); --brand-400: oklch(0.67 0.18 50); --brand-500: oklch(0.72 0.17 52); --border: oklch(1.00 0 0 / 0.10); --success: oklch(0.78 0.16 165); --danger: oklch(0.70 0.17 20); }
+        [data-theme="light"] { --bg: oklch(0.96 0.004 70); --bg-surface: oklch(1.0 0 0); --bg-elevated: oklch(0.98 0.003 70); --text: oklch(0.20 0.01 50); --text-secondary: oklch(0.41 0.01 60); --text-tertiary: oklch(0.53 0.01 65); --brand-400: oklch(0.75 0.16 52); --brand-500: oklch(0.72 0.17 52); --border: oklch(0.20 0.01 50 / 0.12); }
+        body { font-family: 'Roboto', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 2rem; border-bottom: 1px solid var(--border); }
+        .page-header h1 { font-family: 'Dosis', system-ui, sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--brand-500); letter-spacing: 0.05em; }
+        .page-header h1 span { color: var(--text-tertiary); font-size: 0.875rem; }
+        .header-controls { display: flex; gap: 0.5rem; align-items: center; }
+        .nav-btn, .theme-toggle { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 6px; padding: 0.4rem 0.75rem; cursor: pointer; font-family: inherit; font-size: 0.8125rem; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .nav-btn:hover, .theme-toggle:hover { border-color: var(--brand-500); color: var(--text); }
+
+        .tabs { display: flex; gap: 0.25rem; padding: 1rem 2rem 0; border-bottom: 1px solid var(--border); overflow-x: auto; }
+        .tab-btn { background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-tertiary); font-family: 'Dosis', system-ui, sans-serif; font-size: 0.875rem; font-weight: 700; padding: 0.75rem 1rem; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .tab-btn:hover { color: var(--text-secondary); }
+        .tab-btn.active { color: var(--brand-500); border-bottom-color: var(--brand-500); }
+        .tab-panel { display: none; padding: 2rem; }
+        .tab-panel.active { display: block; }
+
+        .diagram-container { display: flex; justify-content: center; }
+        .mermaid { max-width: 900px; width: 100%; }
+        .info-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; max-width: 700px; margin: 0 auto; }
+        .info-table th, .info-table td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+        .info-table th { color: var(--text-tertiary); font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .info-table td { color: var(--text-secondary); }
+        .info-table tr:hover td { color: var(--text); }
+
+        .code-block { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; font-family: 'Roboto Mono', monospace; font-size: 0.8125rem; color: var(--text-secondary); max-width: 700px; margin: 1.5rem auto 0; white-space: pre; overflow-x: auto; line-height: 1.6; }
+
+        .cmd-grid { display: grid; gap: 1rem; max-width: 700px; margin: 0 auto; }
+        .cmd-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+        .cmd-card code { font-family: 'Roboto Mono', monospace; font-size: 0.8125rem; color: var(--brand-500); }
+        .cmd-card p { color: var(--text-secondary); font-size: 0.8125rem; margin-top: 0.5rem; }
+
+        .bench-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 700px; margin: 0 auto; }
+        .bench-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+        .bench-card h3 { font-family: 'Dosis', system-ui, sans-serif; font-size: 0.875rem; font-weight: 700; color: var(--brand-400); margin-bottom: 0.75rem; }
+        .bench-card .big-num { font-family: 'Dosis', system-ui, sans-serif; font-size: 2.5rem; font-weight: 700; color: var(--brand-500); }
+        .bench-card ul, .bench-card ol { color: var(--text-secondary); font-size: 0.8125rem; padding-left: 1.25rem; line-height: 1.8; }
+
+        .page-footer { display: flex; justify-content: space-between; padding: 1.5rem 2rem; border-top: 1px solid var(--border); }
+        @media print { body { background: white; color: #1a1a1a; } .theme-toggle, .nav-btn, .tabs { display: none; } .tab-panel { display: block !important; } }
+        @media (max-width: 640px) { .page-header { flex-wrap: wrap; gap: 0.75rem; padding: 1rem; } .tab-panel { padding: 1rem; } .bench-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <h1><span>08 &mdash;</span> Request Tracing</h1>
+        <div class="header-controls">
+            <a href="07-mcp-access-tracking.html" class="nav-btn">&larr; Prev</a>
+            <a href="index.html" class="nav-btn">Index</a>
+            <button class="theme-toggle" onclick="toggleTheme()"><span class="theme-icon">&#9790;</span></button>
+        </div>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('typed-flow')">Typed Flow</button>
+        <button class="tab-btn" onclick="showTab('all-ids')">All IDs</button>
+        <button class="tab-btn" onclick="showTab('log-commands')">Log Commands</button>
+        <button class="tab-btn" onclick="showTab('pipeline')">Pipeline</button>
+        <button class="tab-btn" onclick="showTab('benchmark')">Benchmark</button>
+    </div>
+
+    <div id="typed-flow" class="tab-panel active">
+        <div class="diagram-container">
+            <pre class="mermaid">
+flowchart TD
+    HTTP1["🌐 HTTP BOUNDARY — the only untyped moment\ncurl sends JSON:\nhook_event_name, tool_name, agent_id,\nsession_id, tool_input"]
+    AXUM["⚙️ Axum Handler\nJson raw → serde::from_value"]
+    TYPED["── TYPED FROM HERE ON ──"]
+    PAYLOAD["📋 HookEventPayload\nevent: PreToolUse · tool_name · tool_input\nsession_id → SessionId::new\nagent_id → AgentName::new"]
+    CTX["🔍 GovernanceContext\nuser_id: UserId · session_id: SessionId\nagent_id: AgentName · agent_scope\ntool_name · tool_input"]
+    EVAL["📊 Vec of RuleEvaluation\nrule · result: pass or fail · detail"]
+    RESP["📤 GovernanceResponse\npermission_decision: allow or deny\npermission_decision_reason"]
+    HTTP2["🌐 HTTP BOUNDARY — back to untyped\nserde::to_value → JSON response"]
+
+    HTTP1 --> AXUM
+    AXUM --> TYPED
+    TYPED --> PAYLOAD
+    PAYLOAD --> CTX
+    CTX --> EVAL
+    EVAL --> RESP
+    RESP --> HTTP2
+
+    style HTTP1 stroke:#9966cc,stroke-width:2px,stroke-dasharray:5 5
+    style HTTP2 stroke:#9966cc,stroke-width:2px,stroke-dasharray:5 5
+    style TYPED fill:#1a4a2e,stroke:#2ecc71,color:#90EE90
+            </pre>
+        </div>
+    </div>
+
+    <div id="all-ids" class="tab-panel">
+        <table class="info-table">
+            <thead><tr><th>ID</th><th>Rust Type</th><th>Source</th></tr></thead>
+            <tbody>
+                <tr><td style="color:var(--text)">decision_id</td><td>String (UUID v4)</td><td>Server-generated PK</td></tr>
+                <tr><td style="color:var(--text)">user_id</td><td>UserId(String)</td><td>JWT 'sub' claim</td></tr>
+                <tr><td style="color:var(--text)">session_id</td><td>SessionId(String)</td><td>Client payload</td></tr>
+                <tr><td style="color:var(--text)">agent_id</td><td>AgentName(String)</td><td>Client payload</td></tr>
+                <tr><td style="color:var(--text)">plugin_id</td><td>PluginId(String)</td><td>Query parameter</td></tr>
+                <tr><td style="color:var(--text)">trace_id</td><td>TraceId(String)</td><td>Per-request UUID</td></tr>
+                <tr><td style="color:var(--text)">context_id</td><td>ContextId(String)</td><td>CLI context creation</td></tr>
+            </tbody>
+        </table>
+        <div class="code-block">pub struct UserId(String);
+pub struct SessionId(String);
+// UserId and SessionId are DIFFERENT types
+// fn record(user: &amp;UserId, session: &amp;SessionId) — compiler enforced</div>
+    </div>
+
+    <div id="log-commands" class="tab-panel">
+        <div class="cmd-grid">
+            <div class="cmd-card">
+                <code>infra logs trace list</code>
+                <p>execution_traces table — TraceId, AgentName, status, event count</p>
+            </div>
+            <div class="cmd-card">
+                <code>infra logs trace show &lt;id&gt;</code>
+                <p>Trace events — AI requests, tool calls, execution steps, skills, governance</p>
+            </div>
+            <div class="cmd-card">
+                <code>infra logs request list</code>
+                <p>ai_requests table — model, tokens, cost per request</p>
+            </div>
+            <div class="cmd-card">
+                <code>infra logs view</code>
+                <p>Application logs — tracing crate structured output</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="pipeline" class="tab-panel">
+        <div class="diagram-container">
+            <pre class="mermaid">
+flowchart LR
+    C["Client"] --> R["Router\nHookEventPayload"]
+    R --> J["JWT\nJwtClaims sub: UserId"]
+    J --> S["Scope\nGovernanceContext"]
+    S --> RU["Rules\nVec RuleEvaluation"]
+    RU --> A["Audit\nsqlx::query! INSERT"]
+    A --> RE["Response\nGovernanceResponse"]
+            </pre>
+        </div>
+    </div>
+
+    <div id="benchmark" class="tab-panel">
+        <div class="bench-grid">
+            <div class="bench-card">
+                <h3>Concurrent Requests</h3>
+                <div class="big-num">100</div>
+            </div>
+            <div class="bench-card">
+                <h3>Per-Request Pipeline</h3>
+                <ol>
+                    <li>JWT validation (~0.1ms)</li>
+                    <li>Scope resolution (DB query)</li>
+                    <li>Rule evaluation (3 rules, in-memory)</li>
+                    <li>Audit write (tokio::spawn, async)</li>
+                    <li>Response serialization (serde)</li>
+                </ol>
+            </div>
+            <div class="bench-card">
+                <h3>Metrics Collected</h3>
+                <ul>
+                    <li>Wall-clock time (all 100)</li>
+                    <li>Throughput (req/sec)</li>
+                    <li>Per-request latency (min/max/avg)</li>
+                    <li>Success rate (HTTP 200)</li>
+                    <li>DB verification (SELECT COUNT)</li>
+                </ul>
+            </div>
+            <div class="bench-card">
+                <h3>Why Rust</h3>
+                <table class="info-table" style="font-size:0.75rem">
+                    <tr><td style="color:var(--text)">Type safety</td><td>Newtype IDs at compile time</td></tr>
+                    <tr><td style="color:var(--text)">Query safety</td><td>sqlx::query! checks SQL at build</td></tr>
+                    <tr><td style="color:var(--text)">Performance</td><td>Zero-cost abstractions, no GC</td></tr>
+                    <tr><td style="color:var(--text)">Concurrency</td><td>Tokio work-stealing runtime</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">
+        <a href="07-mcp-access-tracking.html" class="nav-btn">&larr; MCP Access Tracking</a>
+        <a href="index.html" class="nav-btn">Index</a>
+    </footer>
+
+    <script>
+        function showTab(id) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+        function getTheme() { try { return localStorage.getItem('arch-theme') || 'dark'; } catch(e) { return 'dark'; } }
+        function initMermaid() { const t = getTheme(); mermaid.initialize({ startOnLoad: true, theme: t === 'dark' ? 'dark' : 'default', themeVariables: t === 'dark' ? { primaryColor:'#8B5E3C', primaryTextColor:'#F5F0EB', primaryBorderColor:'#C27A3C', lineColor:'#C27A3C', secondaryColor:'#3A3028', tertiaryColor:'#2E2720', background:'#2E2720', mainBkg:'#2E2720', nodeBorder:'#C27A3C', clusterBkg:'#3A3028', clusterBorder:'#C27A3C', titleColor:'#F5F0EB', edgeLabelBackground:'#2E2720', fontSize:'14px' } : { primaryColor:'#F5E6D3', primaryTextColor:'#2E2720', primaryBorderColor:'#C27A3C', lineColor:'#C27A3C', secondaryColor:'#FDF8F3', tertiaryColor:'#FAF5EF', background:'#FAF5EF', mainBkg:'#FDF8F3', nodeBorder:'#C27A3C', clusterBkg:'#FAF5EF', clusterBorder:'#C27A3C', titleColor:'#2E2720', edgeLabelBackground:'#FAF5EF', fontSize:'14px' } }); }
+        function toggleTheme() { const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); try { localStorage.setItem('arch-theme', n); } catch(e) {} location.reload(); }
+        try { document.documentElement.setAttribute('data-theme', getTheme()); } catch(e) {}
+        initMermaid();
+        document.addEventListener('keydown', function(e) { if (e.key === 'ArrowLeft') window.location.href = '07-mcp-access-tracking.html'; if (e.key === 'h' || e.key === 'H') window.location.href = 'index.html'; });
+    </script>
+</body>
+</html>

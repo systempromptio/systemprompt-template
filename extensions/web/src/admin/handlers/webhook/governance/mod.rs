@@ -1,5 +1,6 @@
 mod audit;
 mod handler;
+mod rate_limit;
 mod rules;
 mod scope;
 mod secrets;

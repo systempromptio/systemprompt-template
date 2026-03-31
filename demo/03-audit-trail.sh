@@ -1,12 +1,28 @@
 #!/bin/bash
 # DEMO 3: AUDIT TRAIL
 # Shows the two most recent traces with full detail
+#
+# What this does:
+#   1. Queries trace list via `infra logs trace list --limit 2`
+#      - Each trace has: trace_id (UUID), agent name, status, event count
+#   2. Extracts the two most recent trace IDs using grep
+#   3. Shows full detail for each trace via `infra logs trace show <id> --all`
+#      - Trace detail includes: AI requests, MCP tool calls, execution steps,
+#        skills loaded, timing per step, and cost tracking
+#   4. Shows cost breakdown by agent via `analytics costs breakdown --by agent`
+#
+# Expected output (after running demos 01 + 02):
+#   Trace 1 (associate_agent): ~4 events, 1 AI request, 0 MCP calls
+#   Trace 2 (developer_agent): ~11 events, 3 AI requests, 1 MCP call
+#
+# IDs shown: trace_id, agent name, request IDs within each trace
+# Cost: Free (read-only queries)
 
 # Resolve the CLI binary
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CLI="$PROJECT_DIR/target/debug/systemprompt"
-if [[ -x "$PROJECT_DIR/target/release/systemprompt" ]]; then
+if [[ -x "$PROJECT_DIR/target/release/systemprompt" && "$PROJECT_DIR/target/release/systemprompt" -nt "$CLI" ]]; then
   CLI="$PROJECT_DIR/target/release/systemprompt"
 fi
 if [[ ! -x "$CLI" ]]; then

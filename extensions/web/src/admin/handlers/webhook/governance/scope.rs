@@ -1,23 +1,36 @@
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 use systemprompt::models::ProfileBootstrap;
 
+static SCOPE_CACHE: OnceLock<HashMap<String, String>> = OnceLock::new();
+
 pub(super) fn resolve_agent_scope(agent_id: &str) -> String {
+    let map = SCOPE_CACHE.get_or_init(load_all_agent_scopes);
+    map.get(agent_id)
+        .cloned()
+        .unwrap_or_else(|| "unknown".to_string())
+}
+
+fn load_all_agent_scopes() -> HashMap<String, String> {
+    let mut scopes = HashMap::new();
+
     let services_path = ProfileBootstrap::get()
         .map(|p| PathBuf::from(&p.paths.services))
         .ok();
 
     let Some(services_path) = services_path else {
-        return "unknown".to_string();
+        return scopes;
     };
 
     let agents_dir = services_path.join("agents");
     if !agents_dir.exists() {
-        return "unknown".to_string();
+        return scopes;
     }
 
     let Ok(entries) = std::fs::read_dir(&agents_dir) else {
-        return "unknown".to_string();
+        return scopes;
     };
 
     for entry in entries.flatten() {
@@ -32,18 +45,30 @@ pub(super) fn resolve_agent_scope(agent_id: &str) -> String {
         let Ok(config) = serde_yaml::from_str::<serde_yaml::Value>(&content) else {
             continue;
         };
-        if let Some(scope) = extract_scope_from_config(&config, agent_id) {
-            return scope;
-        }
+        extract_scopes_from_config(&config, &mut scopes);
     }
 
-    "unknown".to_string()
+    scopes
 }
 
-fn extract_scope_from_config(config: &serde_yaml::Value, agent_id: &str) -> Option<String> {
-    let agents_map = config.get("agents")?.as_mapping()?;
-    let agent_val = agents_map.get(serde_yaml::Value::String(agent_id.to_string()))?;
+fn extract_scopes_from_config(config: &serde_yaml::Value, scopes: &mut HashMap<String, String>) {
+    let Some(agents_map) = config.get("agents").and_then(|a| a.as_mapping()) else {
+        return;
+    };
 
+    for (key, agent_val) in agents_map {
+        let Some(agent_id) = key.as_str() else {
+            continue;
+        };
+
+        let scope = extract_scope_for_agent(agent_val);
+        if let Some(s) = scope {
+            scopes.insert(agent_id.to_string(), s);
+        }
+    }
+}
+
+fn extract_scope_for_agent(agent_val: &serde_yaml::Value) -> Option<String> {
     if let Some(scope) = agent_val
         .get("oauth")
         .and_then(|o| o.get("scopes"))

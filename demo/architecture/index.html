@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Diagrams — foodles.com</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: oklch(0.16 0.01 45);
+            --bg-surface: oklch(0.21 0.01 48);
+            --bg-elevated: oklch(0.24 0.01 48);
+            --text: oklch(0.98 0.004 70);
+            --text-secondary: oklch(0.86 0.010 60);
+            --text-tertiary: oklch(0.70 0.01 70);
+            --brand-300: oklch(0.52 0.14 48);
+            --brand-400: oklch(0.67 0.18 50);
+            --brand-500: oklch(0.72 0.17 52);
+            --brand-600: oklch(0.75 0.16 52);
+            --border: oklch(1.00 0 0 / 0.10);
+            --border-subtle: oklch(1.00 0 0 / 0.06);
+            --success: oklch(0.78 0.16 165);
+            --danger: oklch(0.70 0.17 20);
+            --warning: oklch(0.83 0.16 85);
+            --info: oklch(0.70 0.14 250);
+            --purple: oklch(0.68 0.18 300);
+        }
+
+        [data-theme="light"] {
+            --bg: oklch(0.96 0.004 70);
+            --bg-surface: oklch(1.0 0 0);
+            --bg-elevated: oklch(0.98 0.003 70);
+            --text: oklch(0.20 0.01 50);
+            --text-secondary: oklch(0.41 0.01 60);
+            --text-tertiary: oklch(0.53 0.01 65);
+            --brand-300: oklch(0.78 0.15 53);
+            --brand-400: oklch(0.75 0.16 52);
+            --brand-500: oklch(0.72 0.17 52);
+            --brand-600: oklch(0.67 0.18 50);
+            --border: oklch(0.20 0.01 50 / 0.12);
+            --border-subtle: oklch(0.20 0.01 50 / 0.08);
+        }
+
+        body {
+            font-family: 'Roboto', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .header {
+            padding: 2rem 2rem 1rem;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 {
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            font-weight: 700;
+            color: var(--brand-500);
+            letter-spacing: 0.05em;
+        }
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            margin-top: 0.5rem;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8125rem;
+            transition: all 0.2s;
+        }
+        .theme-toggle:hover {
+            border-color: var(--brand-500);
+            color: var(--text);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+            padding: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            background: radial-gradient(circle at 50% 0%, oklch(0.72 0.17 52 / 0.08), transparent 70%);
+        }
+        .card:hover {
+            border-color: var(--brand-500);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px oklch(0 0 0 / 0.2);
+        }
+        .card:hover::before { opacity: 1; }
+
+        .card-num {
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        .card-title {
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+        .card-desc {
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+        .card-badge {
+            display: inline-block;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+        .badge-simple { background: oklch(0.78 0.16 165 / 0.15); color: var(--success); }
+        .badge-medium { background: oklch(0.72 0.17 52 / 0.15); color: var(--brand-500); }
+        .badge-complex { background: oklch(0.70 0.17 20 / 0.15); color: var(--danger); }
+        .badge-index { background: oklch(0.70 0.14 250 / 0.15); color: var(--info); }
+
+        .card-accent {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .card:hover .card-accent { opacity: 1; }
+        .accent-happy { background: linear-gradient(90deg, var(--brand-500), var(--success)); }
+        .accent-denied { background: linear-gradient(90deg, var(--brand-500), var(--danger)); }
+        .accent-audit { background: linear-gradient(90deg, var(--brand-500), var(--info)); }
+        .accent-trace { background: linear-gradient(90deg, var(--brand-500), var(--purple)); }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-tertiary);
+            font-size: 0.8125rem;
+        }
+
+        @media print {
+            body { background: white; color: #1a1a1a; }
+            .card { break-inside: avoid; border-color: #ddd; }
+            .theme-toggle { display: none; }
+        }
+
+        @media (max-width: 640px) {
+            .grid { padding: 1rem; gap: 1rem; }
+            .header { padding: 1.5rem 1rem 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Architecture Diagrams</h1>
+        <p>Interactive visual walkthroughs of the foodles.com governance platform</p>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+            <span class="theme-icon">&#9790;</span> Theme
+        </button>
+    </header>
+
+    <main class="grid">
+        <a href="01-happy-path.html" class="card">
+            <div class="card-num">Demo 01</div>
+            <div class="card-title">Happy Path</div>
+            <div class="card-desc">Admin-scope agent receives a message, calls an MCP tool through governance, and returns a structured artifact. Full pipeline with typed IDs and trace.</div>
+            <span class="card-badge badge-medium">Pipeline</span>
+            <div class="card-accent accent-happy"></div>
+        </a>
+
+        <a href="04-governance-happy.html" class="card">
+            <div class="card-num">Demo 04</div>
+            <div class="card-title">Governance: Allow</div>
+            <div class="card-desc">Rule engine evaluates scope, secret injection, and rate limit. Admin scope passes all three. Async audit writes the decision.</div>
+            <span class="card-badge badge-medium">Rules</span>
+            <div class="card-accent accent-happy"></div>
+        </a>
+
+        <a href="05-governance-denied.html" class="card">
+            <div class="card-num">Demo 05</div>
+            <div class="card-title">Governance: Deny</div>
+            <div class="card-desc">User-scope agent fails scope_check. First failure is decisive &mdash; remaining rules skipped. Tool call blocked, denial audited.</div>
+            <span class="card-badge badge-medium">Rules</span>
+            <div class="card-accent accent-denied"></div>
+        </a>
+
+        <a href="06-governance-secret-breach.html" class="card">
+            <div class="card-num">Demo 06</div>
+            <div class="card-title">Secret Breach Detection</div>
+            <div class="card-desc">Four parallel tests through the secret_injection rule: AWS key, GitHub PAT, PEM key (all denied), clean input (allowed). Even admin scope is blocked.</div>
+            <span class="card-badge badge-complex">Security</span>
+            <div class="card-accent accent-denied"></div>
+        </a>
+
+        <a href="07-mcp-access-tracking.html" class="card">
+            <div class="card-num">Demo 07</div>
+            <div class="card-title">MCP Access Tracking</div>
+            <div class="card-desc">Governance allow + deny, live MCP tool call with OAuth authentication, access recording in user_activity, and database audit trail.</div>
+            <span class="card-badge badge-complex">Integration</span>
+            <div class="card-accent accent-audit"></div>
+        </a>
+
+        <a href="08-request-tracing.html" class="card">
+            <div class="card-num">Demo 08</div>
+            <div class="card-title">Request Tracing</div>
+            <div class="card-desc">Typed data flow through 6 stages, all newtype IDs, CLI log commands, 200-request benchmark with latency percentiles and capacity estimates.</div>
+            <span class="card-badge badge-complex">Performance</span>
+            <div class="card-accent accent-trace"></div>
+        </a>
+    </main>
+
+    <footer class="footer">
+        foodles.com &mdash; AI Governance Infrastructure
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            document.querySelector('.theme-icon').textContent = next === 'dark' ? '\u263E' : '\u2600';
+            try { localStorage.setItem('arch-theme', next); } catch(e) {}
+        }
+        try {
+            const saved = localStorage.getItem('arch-theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+                document.querySelector('.theme-icon').textContent = saved === 'dark' ? '\u263E' : '\u2600';
+            }
+        } catch(e) {}
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight') window.location.href = '00-preflight.html';
+        });
+    </script>
+</body>
+</html>

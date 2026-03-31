@@ -2,9 +2,34 @@
 # DEMO 6: GOVERNANCE — SECRET INJECTION BREACH
 # Demonstrates detection and blocking of plaintext secrets in tool inputs.
 #
-# When an LLM is tricked (via prompt injection) into passing a secret as a
-# tool argument, the governance endpoint detects the secret pattern and
-# immediately blocks the tool call — regardless of agent scope.
+# What this does:
+#   Gets auth token, then sends 4 direct API calls to /api/public/hooks/govern:
+#
+#   Test 1 — AWS Access Key:
+#     tool_input contains "AKIAIOSFODNN7EXAMPLE" in a curl command
+#     → secret_injection rule detects AWS key pattern → DENY
+#
+#   Test 2 — GitHub PAT:
+#     tool_input writes "ghp_ABCDEFghijklmnop..." to a .env file
+#     → secret_injection rule detects GitHub PAT pattern → DENY
+#
+#   Test 3 — Private Key:
+#     tool_input writes "-----BEGIN RSA PRIVATE KEY-----" to .ssh/id_rsa
+#     → secret_injection rule detects PEM key header → DENY
+#
+#   Test 4 — Clean input (control):
+#     tool_input reads a normal .rs source file
+#     → No secrets detected → all rules pass → ALLOW
+#
+# Key point: Even admin-scope agents (developer_agent) are BLOCKED.
+#   Secret detection overrides scope — it's a safety net against prompt
+#   injection attacks that trick the LLM into leaking credentials.
+#
+# Flow per test:
+#   curl → POST /hooks/govern → JWT auth → secret_injection scan
+#   → pattern match on tool_input values → DENY (or ALLOW for clean input)
+#
+# Cost: Free (direct API calls, no AI)
 
 set -e
 
@@ -12,7 +37,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CLI="$PROJECT_DIR/target/debug/systemprompt"
-if [[ -x "$PROJECT_DIR/target/release/systemprompt" ]]; then
+if [[ -x "$PROJECT_DIR/target/release/systemprompt" && "$PROJECT_DIR/target/release/systemprompt" -nt "$CLI" ]]; then
   CLI="$PROJECT_DIR/target/release/systemprompt"
 fi
 if [[ ! -x "$CLI" ]]; then
@@ -29,11 +54,17 @@ echo "  when tool input contains plaintext secrets."
 echo "=========================================="
 echo ""
 
-# Get a token for the API call
-TOKEN=$("$CLI" cloud auth token 2>/dev/null || echo "")
+TOKEN_FILE="$SCRIPT_DIR/.token"
+TOKEN="${1:-}"
+if [[ -z "$TOKEN" && -f "$TOKEN_FILE" ]]; then
+  TOKEN=$(cat "$TOKEN_FILE")
+fi
 
 if [[ -z "$TOKEN" ]]; then
-  echo "ERROR: Could not obtain auth token. Is the platform running?" >&2
+  echo ""
+  echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument:"
+  echo "  ./demo/06-governance-secret-breach.sh <TOKEN>"
+  echo ""
   exit 1
 fi
 
@@ -115,12 +146,40 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
     }
   }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
 
+# ──────────────────────────────────────────────
+#  AUDIT: Verify secret breach decisions
+# ──────────────────────────────────────────────
 echo ""
 echo "=========================================="
+echo "  AUDIT: Governance decisions for this session"
+echo "=========================================="
+echo ""
+
+echo "  Decision counts (session=demo-secret-breach):"
+"$CLI" infra db query \
+  "SELECT decision, COUNT(*) as count FROM governance_decisions WHERE session_id = 'demo-secret-breach' GROUP BY decision ORDER BY decision" \
+  2>&1 | grep -v "^\[profile"
+
+echo ""
+echo "  Expected: 3 deny + 1 allow = 4 total"
+echo ""
+
+echo "  Detailed decisions:"
+"$CLI" infra db query \
+  "SELECT decision, tool_name, policy, reason FROM governance_decisions WHERE session_id = 'demo-secret-breach' ORDER BY created_at" \
+  2>&1 | grep -v "^\[profile"
+
+echo ""
+echo "=========================================="
+echo "  AUDIT COMMANDS (run manually):"
+echo "  infra db query \"SELECT * FROM governance_decisions WHERE session_id = 'demo-secret-breach' ORDER BY created_at\""
+echo ""
 echo "  Tests 1-3: DENIED (secret_injection)"
 echo "  Test 4:    ALLOWED (clean input)"
 echo ""
 echo "  The governance layer blocks plaintext"
 echo "  secrets BEFORE they reach the tool —"
 echo "  even for admin-scope agents."
+echo ""
+echo "  Now run: ./demo/07-mcp-access-tracking.sh"
 echo "=========================================="

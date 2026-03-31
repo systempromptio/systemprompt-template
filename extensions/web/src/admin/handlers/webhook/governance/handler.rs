@@ -7,6 +7,7 @@ use axum::{
     Json,
 };
 use sqlx::PgPool;
+use systemprompt::identifiers::{SessionId, UserId};
 use systemprompt::models::auth::JwtAudience;
 
 use crate::admin::types::webhook::GovernQuery;
@@ -42,13 +43,13 @@ pub(crate) async fn govern_tool_use(
     let (payload, _warnings) = HookEventPayload::from_value(raw);
 
     let tool_name = payload.tool_name().unwrap_or("unknown");
-    let session_id = payload.session_id();
+    let session_id = SessionId::new(payload.session_id());
     let agent_id = payload.common.agent_id.as_deref();
     let plugin_id = query.plugin_id.as_deref();
 
     let denial_params = AuthDenialParams {
         pool: &pool,
-        session_id,
+        session_id: &session_id,
         tool_name,
         agent_id,
         plugin_id,
@@ -89,7 +90,7 @@ pub(crate) async fn govern_tool_use(
         }
     };
 
-    let user_id = &claims.sub;
+    let user_id = UserId::new(&claims.sub);
 
     let agent_scope = match agent_id {
         Some(id) => scope::resolve_agent_scope(id),
@@ -99,17 +100,17 @@ pub(crate) async fn govern_tool_use(
     let ctx = GovernanceContext {
         tool_name,
         agent_scope: &agent_scope,
-        session_id,
-        user_id,
+        session_id: &session_id,
+        user_id: &user_id,
         tool_input: payload.tool_input(),
     };
 
-    let evaluation = rules::evaluate(&pool, &ctx).await;
+    let evaluation = rules::evaluate(&ctx);
 
     spawn_audit_recording(&AuditParams {
         pool: &pool,
-        user_id,
-        session_id,
+        user_id: &user_id,
+        session_id: &session_id,
         tool_name,
         agent_id,
         agent_scope: &agent_scope,
@@ -137,8 +138,8 @@ pub(crate) async fn govern_tool_use(
 fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let p = params.pool.clone();
     let record = AuditRecord {
-        user_id: "unauthenticated".to_string(),
-        session_id: params.session_id.to_string(),
+        user_id: UserId::anonymous(),
+        session_id: params.session_id.clone(),
         tool_name: params.tool_name.to_string(),
         agent_id: params.agent_id.map(str::to_string),
         agent_scope: "unauthenticated".to_string(),
@@ -157,15 +158,16 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
 fn spawn_audit_recording(params: &AuditParams<'_>) {
     let p = params.pool.clone();
     let record = AuditRecord {
-        user_id: params.user_id.to_string(),
-        session_id: params.session_id.to_string(),
+        user_id: params.user_id.clone(),
+        session_id: params.session_id.clone(),
         tool_name: params.tool_name.to_string(),
         agent_id: params.agent_id.map(str::to_string),
         agent_scope: params.agent_scope.to_string(),
         decision: params.evaluation.decision.to_string(),
         policy: params.evaluation.policy.clone(),
         reason: params.evaluation.reason.clone(),
-        evaluated_rules: serde_json::to_value(&params.evaluation.rules).unwrap_or_else(|_| serde_json::Value::Null),
+        evaluated_rules: serde_json::to_value(&params.evaluation.rules)
+            .unwrap_or_else(|_| serde_json::Value::Null),
         plugin_id: params.plugin_id.map(str::to_string),
     };
 
