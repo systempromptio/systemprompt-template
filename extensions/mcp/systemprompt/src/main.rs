@@ -11,6 +11,8 @@ const DEFAULT_PORT: u16 = 5010;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    systemprompt::logging::init_console_logging();
+
     ProfileBootstrap::init().context("Failed to initialize profile")?;
     SecretsBootstrap::init().context("Failed to initialize secrets")?;
     Config::init().context("Failed to initialize configuration")?;
@@ -20,8 +22,6 @@ async fn main() -> Result<()> {
             .await
             .context("Failed to initialize application context")?,
     );
-
-    systemprompt::logging::init_logging(ctx.db_pool().clone());
 
     let service_id = McpServerId::from_env().unwrap_or_else(|_| {
         tracing::warn!("MCP_SERVICE_ID not set, using default: {DEFAULT_SERVICE_ID}");
