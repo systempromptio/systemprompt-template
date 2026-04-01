@@ -50,10 +50,10 @@ To rebrand this platform for a new client, edit the files below. After changes, 
 
 ## 5. Deployment Profiles
 
-**`services/profiles/production/profile.yaml`**
+**`.systemprompt/profiles/production/profile.yaml`**
 - `site.name`, `api_server_url`
 
-**`services/profiles/local/profile.yaml`**
+**`.systemprompt/profiles/local/profile.yaml`**
 - `site.name`
 
 ## 6. Agents

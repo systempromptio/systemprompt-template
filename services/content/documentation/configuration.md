@@ -28,17 +28,18 @@ The platform uses a profile-based configuration system that separates environmen
 
 ## Profile System
 
-A profile is a directory under `services/profiles/` containing environment-specific configuration:
+A profile is a directory under `.systemprompt/profiles/` containing environment-specific configuration:
 
 ```
-services/profiles/
+.systemprompt/profiles/
   local/
-    config.yaml          # Local development settings
+    profile.yaml         # Local development settings
+    secrets.json         # Local secrets (gitignored)
     docker/
       Dockerfile         # Development container
       docker-compose.yml # Local service stack
   production/
-    config.yaml          # Production settings
+    profile.yaml         # Production settings
     docker/
       Dockerfile         # Production container
 ```
@@ -107,10 +108,10 @@ See [Secrets & Encryption](/documentation/secrets) for details on key rotation a
 
 ## Custom Profiles
 
-Create a custom profile by adding a new directory under `services/profiles/`:
+Create a custom profile by adding a new directory under `.systemprompt/profiles/`:
 
 ```bash
-mkdir -p services/profiles/staging/docker
+mkdir -p .systemprompt/profiles/staging/docker
 ```
 
 Add a `config.yaml` with environment-specific overrides. Only the settings you want to change need to be specified — all other settings inherit from defaults.

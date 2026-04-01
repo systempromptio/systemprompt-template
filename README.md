@@ -126,11 +126,13 @@ your-project/
 │       ├── systemprompt/    #   CLI execution (admin-only)
 │       └── marketplace/     #   Skill management
 │
+├── .systemprompt/           # Runtime state (profiles, sessions, credentials)
+│   └── profiles/            # Deployment profiles (local/production)
+│
 ├── services/                # Configuration (YAML/Markdown only)
 │   ├── agents/              # Agent definitions
 │   ├── skills/              # Skill configurations
 │   ├── plugins/             # Claude Code plugins
-│   ├── profiles/            # Deployment profiles (local/production)
 │   └── web/                 # Theme, templates, homepage config
 │
 ├── storage/files/           # Static assets

@@ -114,7 +114,7 @@ The services layer is YAML and Markdown only — no Rust code. This is where you
 | `services/skills/` | Skill definitions in Markdown |
 | `services/plugins/` | Plugin manifests bundling agents, skills, and MCP servers |
 | `services/content/` | Documentation, pages, and content in Markdown with YAML frontmatter |
-| `services/profiles/` | Deployment profiles (local, production) |
+| `.systemprompt/profiles/` | Deployment profiles (local, production) |
 | `services/mcp/` | MCP server configurations |
 
 This separation means your team configures agents and skills without touching Rust code, and your developers extend the platform without breaking configurations.
@@ -204,7 +204,7 @@ All extensions compile into the single binary. There is no plugin hot-loading at
 The same binary runs in every environment. Profiles control the configuration:
 
 ```
-services/profiles/
+.systemprompt/profiles/
   local/
     profile.yaml      # Development settings
   production/
