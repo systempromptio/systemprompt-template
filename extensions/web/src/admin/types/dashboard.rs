@@ -194,8 +194,15 @@ pub struct EventRow {
     pub session_id: SessionId,
     pub event_type: String,
     pub tool_name: Option<String>,
+    pub plugin_id: Option<String>,
     pub metadata: serde_json::Value,
     pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, FromRow)]
+pub struct EventBreakdown {
+    pub event_type: String,
+    pub count: i64,
 }
 
 #[derive(Debug, Serialize)]

@@ -65,7 +65,7 @@ pub mod user_queries;
 pub mod webhook;
 
 pub use agents::{create_agent, delete_agent, find_agent, list_agents, update_agent};
-pub use dashboard::{get_dashboard_data, list_events};
+pub use dashboard::{get_dashboard_data, list_event_breakdown, list_events};
 pub use export::{generate_export_bundles, ExportParams};
 pub use jobs::list_jobs;
 pub use marketplace::{

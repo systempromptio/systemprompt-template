@@ -8,15 +8,23 @@
     <div class="metric-ribbon align-center flex-wrap gap-2">
         <span class="ribbon-heading" style="font-variant-numeric: tabular-nums;">{{total}} events</span>
         {{#each event_breakdown}}
-            {{#if (eq event_type "claude_code_PostToolUse")}}<span class="badge badge-info">Tool Use <strong>{{count}}</strong></span>
-            {{else if (eq event_type "claude_code_PostToolUseFailure")}}<span class="badge badge-danger">Tool Failure <strong>{{count}}</strong></span>
-            {{else if (eq event_type "claude_code_SessionStart")}}<span class="badge badge-success">Session Start <strong>{{count}}</strong></span>
-            {{else if (eq event_type "claude_code_SessionEnd")}}<span class="badge badge-warning">Session End <strong>{{count}}</strong></span>
-            {{else if (eq event_type "claude_code_Stop")}}<span class="badge badge-info">Turn Complete <strong>{{count}}</strong></span>
-            {{else if (eq event_type "claude_code_SubagentStart")}}<span class="badge badge-info">Subagent Start <strong>{{count}}</strong></span>
-            {{else if (eq event_type "claude_code_SubagentStop")}}<span class="badge badge-warning">Subagent Stop <strong>{{count}}</strong></span>
-            {{else if (eq event_type "claude_code_UserPromptSubmit")}}<span class="badge badge-purple">User Prompt <strong>{{count}}</strong></span>
-            {{else}}<span class="badge badge-secondary">{{event_type}} <strong>{{count}}</strong></span>
+            {{#if (eq event_type "PostToolUse")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-info">Tool Use <strong>{{count}}</strong></a>
+            {{else if (eq event_type "claude_code_PostToolUse")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-info">Tool Use <strong>{{count}}</strong></a>
+            {{else if (eq event_type "PostToolUseFailure")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-danger">Tool Failure <strong>{{count}}</strong></a>
+            {{else if (eq event_type "claude_code_PostToolUseFailure")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-danger">Tool Failure <strong>{{count}}</strong></a>
+            {{else if (eq event_type "SessionStart")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-success">Session Start <strong>{{count}}</strong></a>
+            {{else if (eq event_type "claude_code_SessionStart")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-success">Session Start <strong>{{count}}</strong></a>
+            {{else if (eq event_type "SessionEnd")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-warning">Session End <strong>{{count}}</strong></a>
+            {{else if (eq event_type "claude_code_SessionEnd")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-warning">Session End <strong>{{count}}</strong></a>
+            {{else if (eq event_type "Stop")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-info">Turn Complete <strong>{{count}}</strong></a>
+            {{else if (eq event_type "claude_code_Stop")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-info">Turn Complete <strong>{{count}}</strong></a>
+            {{else if (eq event_type "SubagentStart")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-info">Subagent Start <strong>{{count}}</strong></a>
+            {{else if (eq event_type "claude_code_SubagentStart")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-info">Subagent Start <strong>{{count}}</strong></a>
+            {{else if (eq event_type "SubagentStop")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-warning">Subagent Stop <strong>{{count}}</strong></a>
+            {{else if (eq event_type "claude_code_SubagentStop")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-warning">Subagent Stop <strong>{{count}}</strong></a>
+            {{else if (eq event_type "UserPromptSubmit")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-purple">User Prompt <strong>{{count}}</strong></a>
+            {{else if (eq event_type "claude_code_UserPromptSubmit")}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-purple">User Prompt <strong>{{count}}</strong></a>
+            {{else}}<a href="/admin/events/?event_type={{event_type}}" class="badge badge-secondary">{{event_type}} <strong>{{count}}</strong></a>
             {{/if}}
         {{/each}}
     </div>
@@ -49,13 +57,21 @@
             <td><span class="date">{{formatDate created_at}}</span></td>
             <td>{{default display_name user_id}}</td>
             <td>
-                {{#if (eq event_type "claude_code_PostToolUse")}}<span class="badge badge-info">Tool Use</span>
+                {{#if (eq event_type "PostToolUse")}}<span class="badge badge-info">Tool Use</span>
+                {{else if (eq event_type "claude_code_PostToolUse")}}<span class="badge badge-info">Tool Use</span>
+                {{else if (eq event_type "PostToolUseFailure")}}<span class="badge badge-danger">Tool Failure</span>
                 {{else if (eq event_type "claude_code_PostToolUseFailure")}}<span class="badge badge-danger">Tool Failure</span>
+                {{else if (eq event_type "SessionStart")}}<span class="badge badge-success">Session Start</span>
                 {{else if (eq event_type "claude_code_SessionStart")}}<span class="badge badge-success">Session Start</span>
+                {{else if (eq event_type "SessionEnd")}}<span class="badge badge-warning">Session End</span>
                 {{else if (eq event_type "claude_code_SessionEnd")}}<span class="badge badge-warning">Session End</span>
+                {{else if (eq event_type "Stop")}}<span class="badge badge-info">Turn Complete</span>
                 {{else if (eq event_type "claude_code_Stop")}}<span class="badge badge-info">Turn Complete</span>
+                {{else if (eq event_type "SubagentStart")}}<span class="badge badge-info">Subagent Start</span>
                 {{else if (eq event_type "claude_code_SubagentStart")}}<span class="badge badge-info">Subagent Start</span>
+                {{else if (eq event_type "SubagentStop")}}<span class="badge badge-warning">Subagent Stop</span>
                 {{else if (eq event_type "claude_code_SubagentStop")}}<span class="badge badge-warning">Subagent Stop</span>
+                {{else if (eq event_type "UserPromptSubmit")}}<span class="badge badge-purple">User Prompt</span>
                 {{else if (eq event_type "claude_code_UserPromptSubmit")}}<span class="badge badge-purple">User Prompt</span>
                 {{else}}<span class="badge badge-secondary">{{event_type}}</span>
                 {{/if}}

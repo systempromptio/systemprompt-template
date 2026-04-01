@@ -20,8 +20,8 @@ pub mod webhook;
 
 pub use dashboard::{
     AchievementInfo, ActivityStats, ContentPerformanceRow, DashboardData, DashboardQuery,
-    DepartmentActivity, DepartmentQuery, DepartmentScore, EventRow, EventTypeBreakdown,
-    EventsQuery, EventsResponse, GovernanceDecisionRow, GovernanceEvent, HourlyActivity,
+    DepartmentActivity, DepartmentQuery, DepartmentScore, EventBreakdown, EventRow,
+    EventTypeBreakdown, EventsQuery, EventsResponse, GovernanceDecisionRow, GovernanceEvent, HourlyActivity,
     LeaderboardEntry, McpAccessEvent, McpAccessSummary, ModelUsage, PaginationQuery,
     ProjectActivity, TokenUsageRow,
     RealtimePulse, RecentMcpError, SkillCount, TimeSeriesBucket, ToolSuccessRate,

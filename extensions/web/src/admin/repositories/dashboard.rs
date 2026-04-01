@@ -4,8 +4,8 @@ use std::sync::Arc;
 use sqlx::PgPool;
 
 use super::super::types::{
-    ContentPerformanceRow, DashboardData, EventRow, EventsQuery, EventsResponse, RealtimePulse,
-    RecentMcpError, TrafficData, TrafficTopPage,
+    ContentPerformanceRow, DashboardData, EventBreakdown, EventRow, EventsQuery, EventsResponse,
+    RealtimePulse, RecentMcpError, TrafficData, TrafficTopPage,
 };
 use super::dashboard_aggregates::{
     fetch_active_users_24h, fetch_usage_timeseries, get_activity_stats,
@@ -160,7 +160,7 @@ pub async fn list_events(
         r"SELECT
             p.id, p.user_id,
             COALESCE(u.display_name, u.full_name, u.name, u.email, p.user_id) AS display_name,
-            u.email, p.session_id, p.event_type, p.tool_name, p.metadata, p.created_at
+            u.email, p.session_id, p.event_type, p.tool_name, p.plugin_id, p.metadata, p.created_at
         FROM plugin_usage_events p
         JOIN users u ON u.id = p.user_id
         {where_clause}
@@ -181,4 +181,18 @@ pub async fn list_events(
         limit: query.limit,
         offset: query.offset,
     })
+}
+
+pub async fn list_event_breakdown(
+    pool: &Arc<PgPool>,
+) -> Result<Vec<EventBreakdown>, sqlx::Error> {
+    let sql = r"SELECT p.event_type, COUNT(*)::BIGINT AS count
+        FROM plugin_usage_events p
+        JOIN users u ON u.id = p.user_id
+        WHERE NOT ('anonymous' = ANY(u.roles)) AND u.email NOT LIKE '%@anonymous.local'
+        GROUP BY p.event_type
+        ORDER BY count DESC";
+    sqlx::query_as::<_, EventBreakdown>(sql)
+        .fetch_all(pool.as_ref())
+        .await
 }

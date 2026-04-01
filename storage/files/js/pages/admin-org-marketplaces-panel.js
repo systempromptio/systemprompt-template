@@ -3,10 +3,7 @@ import { showToast } from '../services/toast.js';
 import { on } from '../services/events.js';
 
 const mk = (tag, props = {}, children = []) => { const node = Object.assign(document.createElement(tag), props); for (const c of children) node.append(typeof c === 'string' ? document.createTextNode(c) : c); return node; };
-const fetchPlugins = async () => {
-  const res = await apiGet('/plugins');
-  return res?.plugins || [];
-};
+const fetchPlugins = () => apiGet('/plugins');
 const reloadAfter = (msg, api) => { showToast(msg, 'success'); api.close(); setTimeout(() => window.location.reload(), 500); };
 
 const savePlugins = async (panelApi, id) => {
