@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   z-index: var(--sp-z-sidebar);
-  background: rgba(180, 75, 20, 0.9);
+  background: var(--sp-brand-950);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   padding: var(--sp-space-sm) 0;
