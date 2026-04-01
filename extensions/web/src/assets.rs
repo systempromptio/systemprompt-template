@@ -174,6 +174,7 @@ fn service_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
         AssetDefinition::js(storage_js.join("services/sse-client.js"), "js/services/sse-client.js"),
         AssetDefinition::js(storage_js.join("services/table-sort.js"), "js/services/table-sort.js"),
         AssetDefinition::js(storage_js.join("services/theme.js"), "js/services/theme.js"),
+        AssetDefinition::js(storage_js.join("services/sp-toast.js"), "js/services/sp-toast.js"),
         AssetDefinition::js(storage_js.join("services/toast.js"), "js/services/toast.js"),
         AssetDefinition::js(storage_js.join("services/toc-highlight.js"), "js/services/toc-highlight.js"),
         AssetDefinition::js(storage_js.join("services/webauthn-helpers.js"), "js/services/webauthn-helpers.js"),

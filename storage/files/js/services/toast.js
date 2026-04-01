@@ -1,4 +1,4 @@
-import '../components/sp-toast.js';
+import './sp-toast.js';
 
 let toastEl = null;
 

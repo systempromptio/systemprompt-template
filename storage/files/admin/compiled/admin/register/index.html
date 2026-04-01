@@ -243,6 +243,7 @@
 
                 const completeParams = new URLSearchParams({
                     user_id: finishResponse.data.user_id,
+                    auth_token: finishResponse.data.auth_token,
                     response_type: 'code',
                     client_id: CLIENT_ID,
                     redirect_uri: window.location.origin + LOGIN_PATH,
