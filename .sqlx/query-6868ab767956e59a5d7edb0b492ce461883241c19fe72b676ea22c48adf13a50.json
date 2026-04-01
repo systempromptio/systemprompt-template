@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT recommendations\n          FROM session_analyses\n          WHERE user_id = $1\n            AND recommendations IS NOT NULL AND recommendations != ''\n          ORDER BY created_at DESC\n          LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "recommendations",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "6868ab767956e59a5d7edb0b492ce461883241c19fe72b676ea22c48adf13a50"
+}

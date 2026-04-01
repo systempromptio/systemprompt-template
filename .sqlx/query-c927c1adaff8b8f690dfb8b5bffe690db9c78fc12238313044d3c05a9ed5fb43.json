@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT SUM(subagent_spawns)\n          FROM plugin_session_summaries\n          WHERE user_id = $1\n            AND started_at::date = $2\n            AND COALESCE(status, 'active') != 'deleted'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sum",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Date"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c927c1adaff8b8f690dfb8b5bffe690db9c78fc12238313044d3c05a9ed5fb43"
+}

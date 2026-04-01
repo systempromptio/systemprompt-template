@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, plugin_id, var_name, var_value, is_secret FROM plugin_env_vars WHERE user_id = $1 ORDER BY plugin_id, var_name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "plugin_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "var_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "var_value",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "is_secret",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2ae7a0170ba757b7c78e65b92b0c50a194100203b76c2c504dc784bf4be9c5d1"
+}

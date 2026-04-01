@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(prompt_preview, description, '') as \"msg!\"\n          FROM plugin_usage_events\n          WHERE session_id = $1 AND user_id = $2\n            AND event_type IN ('Stop', 'SubagentStop', 'SessionEnd')\n          ORDER BY created_at DESC\n          LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "msg!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "71d2e4c7e190a7215ddfa7a6a79fdbee3b3bf8a56726b41673bf951609608d5f"
+}

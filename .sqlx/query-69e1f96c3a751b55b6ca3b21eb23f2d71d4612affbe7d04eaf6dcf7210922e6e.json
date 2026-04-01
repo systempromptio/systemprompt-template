@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, name, display_name, description, paddle_product_id, paddle_price_id,\n                amount_cents, currency, billing_interval, features, limits, sort_order, is_active\n         FROM marketplace.plans\n         WHERE paddle_price_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "paddle_product_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "paddle_price_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "amount_cents",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "currency",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "billing_interval",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "features",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
+        "name": "limits",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 11,
+        "name": "sort_order",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "is_active",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "69e1f96c3a751b55b6ca3b21eb23f2d71d4612affbe7d04eaf6dcf7210922e6e"
+}

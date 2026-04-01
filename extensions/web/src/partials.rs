@@ -27,11 +27,11 @@ impl HeadAssetsPartialRenderer {
 
 #[async_trait]
 impl ComponentRenderer for HeadAssetsPartialRenderer {
-    fn component_id(&self) -> &str {
+    fn component_id(&self) -> &'static str {
         "web:head-assets-partial"
     }
 
-    fn variable_name(&self) -> &str {
+    fn variable_name(&self) -> &'static str {
         "HEAD_ASSETS"
     }
 
@@ -61,11 +61,11 @@ impl HeaderPartialRenderer {
 
 #[async_trait]
 impl ComponentRenderer for HeaderPartialRenderer {
-    fn component_id(&self) -> &str {
+    fn component_id(&self) -> &'static str {
         "web:header-partial"
     }
 
-    fn variable_name(&self) -> &str {
+    fn variable_name(&self) -> &'static str {
         "HEADER"
     }
 
@@ -95,11 +95,11 @@ impl FooterPartialRenderer {
 
 #[async_trait]
 impl ComponentRenderer for FooterPartialRenderer {
-    fn component_id(&self) -> &str {
+    fn component_id(&self) -> &'static str {
         "web:footer-partial"
     }
 
-    fn variable_name(&self) -> &str {
+    fn variable_name(&self) -> &'static str {
         "FOOTER"
     }
 
@@ -129,11 +129,11 @@ impl ScriptsPartialRenderer {
 
 #[async_trait]
 impl ComponentRenderer for ScriptsPartialRenderer {
-    fn component_id(&self) -> &str {
+    fn component_id(&self) -> &'static str {
         "web:scripts-partial"
     }
 
-    fn variable_name(&self) -> &str {
+    fn variable_name(&self) -> &'static str {
         "SCRIPTS"
     }
 

@@ -192,15 +192,15 @@ pub async fn fetch_token_usage_by_user(
         TokenUsageRow,
         r#"SELECT
             COALESCE(u.display_name, u.full_name, u.name, u.email, p.user_id) AS "label!",
-            COALESCE(SUM(p.total_input_tokens), 0)::BIGINT AS "input_tokens!",
-            COALESCE(SUM(p.total_output_tokens), 0)::BIGINT AS "output_tokens!",
+            COALESCE(SUM(p.content_input_bytes), 0)::BIGINT AS "input_tokens!",
+            COALESCE(SUM(p.content_output_bytes), 0)::BIGINT AS "output_tokens!",
             COALESCE(SUM(p.event_count), 0)::BIGINT AS "event_count!"
         FROM plugin_usage_daily p
         LEFT JOIN users u ON u.id = p.user_id
         WHERE p.date >= CURRENT_DATE - INTERVAL '30 days'
         GROUP BY p.user_id, u.display_name, u.full_name, u.name, u.email
-        HAVING SUM(p.total_input_tokens) + SUM(p.total_output_tokens) > 0
-        ORDER BY SUM(p.total_input_tokens) + SUM(p.total_output_tokens) DESC
+        HAVING SUM(p.content_input_bytes) + SUM(p.content_output_bytes) > 0
+        ORDER BY SUM(p.content_input_bytes) + SUM(p.content_output_bytes) DESC
         LIMIT 10"#,
     )
     .fetch_all(pool.as_ref())

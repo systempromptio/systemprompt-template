@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO admin_traffic_reports (report_date, report_period, report_data, generated_at)\n        VALUES ($1, $2, $3, NOW())\n        ON CONFLICT (report_date, report_period)\n        DO UPDATE SET report_data = $3, generated_at = NOW()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Date",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dedfe1a4783ac5696330a544b86574933ea32f0d99f75576e62a928ea84d4716"
+}

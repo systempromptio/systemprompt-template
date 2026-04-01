@@ -165,7 +165,7 @@ impl ServerHandler for SystempromptServer {
         let tool_name = request.name.to_string();
         let server_name = self.service_id.to_string();
 
-        let rbac_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str()).await;
+        let rbac_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str());
 
         let auth_result = match rbac_result {
             Ok(result) => {

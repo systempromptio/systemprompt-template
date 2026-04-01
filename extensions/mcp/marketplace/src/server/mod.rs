@@ -111,7 +111,7 @@ impl ServerHandler for MarketplaceServer {
         let tool_name = request.name.to_string();
         let server_name = self.service_id.to_string();
 
-        let rbac_result = enforce_rbac_from_registry(&ctx, self.service_id.as_ref()).await;
+        let rbac_result = enforce_rbac_from_registry(&ctx, self.service_id.as_ref());
 
         let authenticated_ctx = match rbac_result {
             Ok(result) => {

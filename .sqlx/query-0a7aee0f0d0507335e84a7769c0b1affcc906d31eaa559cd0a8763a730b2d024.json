@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT 1 AS \"v!\" FROM user_plugin_agents upa\n               JOIN user_plugins up ON up.id = upa.user_plugin_id\n               WHERE up.user_id = $1 AND upa.user_agent_id = $2\n               AND up.base_plugin_id = 'systemprompt'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "v!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "0a7aee0f0d0507335e84a7769c0b1affcc906d31eaa559cd0a8763a730b2d024"
+}

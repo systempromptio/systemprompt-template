@@ -1,0 +1,130 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_hooks (id, user_id, plugin_id, hook_name, description, event_type,\n            matcher, hook_type, url, command, headers, timeout, is_async)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)\n        RETURNING id, user_id, plugin_id, hook_name, description, event_type, matcher,\n            hook_type, url, command, headers, timeout, is_async, enabled, is_default,\n            created_at, updated_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "plugin_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "hook_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "event_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "matcher",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "hook_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "command",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "headers",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 11,
+        "name": "timeout",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "is_async",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "enabled",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 14,
+        "name": "is_default",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Int4",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b1fd596fe956410e954f4d01c2c997e3ba8d0ac1a642f2efaad5cffd78231bda"
+}

@@ -17,11 +17,11 @@ impl CliRemoteAnimationPartialRenderer {
 
 #[async_trait]
 impl ComponentRenderer for CliRemoteAnimationPartialRenderer {
-    fn component_id(&self) -> &str {
+    fn component_id(&self) -> &'static str {
         "web:cli-remote-animation"
     }
 
-    fn variable_name(&self) -> &str {
+    fn variable_name(&self) -> &'static str {
         "ANIMATION_CLI_REMOTE"
     }
 
@@ -54,11 +54,11 @@ impl RustMeshAnimationPartialRenderer {
 
 #[async_trait]
 impl ComponentRenderer for RustMeshAnimationPartialRenderer {
-    fn component_id(&self) -> &str {
+    fn component_id(&self) -> &'static str {
         "web:rust-mesh-animation"
     }
 
-    fn variable_name(&self) -> &str {
+    fn variable_name(&self) -> &'static str {
         "RUST_MESH_ANIMATION"
     }
 
@@ -91,11 +91,11 @@ impl MemoryLoopAnimationPartialRenderer {
 
 #[async_trait]
 impl ComponentRenderer for MemoryLoopAnimationPartialRenderer {
-    fn component_id(&self) -> &str {
+    fn component_id(&self) -> &'static str {
         "web:memory-loop-animation"
     }
 
-    fn variable_name(&self) -> &str {
+    fn variable_name(&self) -> &'static str {
         "ANIMATION_MEMORY_LOOP"
     }
 
@@ -128,11 +128,11 @@ impl AgenticMeshAnimationPartialRenderer {
 
 #[async_trait]
 impl ComponentRenderer for AgenticMeshAnimationPartialRenderer {
-    fn component_id(&self) -> &str {
+    fn component_id(&self) -> &'static str {
         "web:agentic-mesh-animation"
     }
 
-    fn variable_name(&self) -> &str {
+    fn variable_name(&self) -> &'static str {
         "ANIMATION_AGENTIC_MESH"
     }
 
@@ -165,11 +165,11 @@ impl ArchitectureDiagramPartialRenderer {
 
 #[async_trait]
 impl ComponentRenderer for ArchitectureDiagramPartialRenderer {
-    fn component_id(&self) -> &str {
+    fn component_id(&self) -> &'static str {
         "web:architecture-diagram"
     }
 
-    fn variable_name(&self) -> &str {
+    fn variable_name(&self) -> &'static str {
         "ARCHITECTURE_DIAGRAM"
     }
 
