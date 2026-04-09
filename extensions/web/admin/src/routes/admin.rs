@@ -11,7 +11,7 @@ use super::super::gamification;
 use super::super::handlers;
 use super::super::middleware;
 
-pub fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<PgPool>) -> Router {
+pub(crate) fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<PgPool>) -> Router {
     let reads = Router::new()
         .route("/users", get(handlers::list_users_handler))
         .route(
@@ -89,7 +89,7 @@ pub fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<PgPool>
     ))
 }
 
-pub fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
+pub(crate) fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
     Router::new()
         .route("/dashboard", get(handlers::dashboard_handler))
         .route("/plugins", get(handlers::list_plugins_handler))
