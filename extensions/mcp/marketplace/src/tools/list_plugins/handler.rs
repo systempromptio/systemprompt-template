@@ -98,11 +98,36 @@ impl McpToolHandler for ListPluginsHandler {
                     .and_then(|base_id| onboarding_configs.get(base_id))
                     .or_else(|| onboarding_configs.get(&p.plugin_id));
 
-                let onboarding_value = onboarding
-                    .and_then(|o| serde_json::to_string(o).ok())
-                    .unwrap_or_default();
+                let onboarding_value = match onboarding {
+                    Some(o) => serde_json::to_string(o).map_err(|e| {
+                        McpError::internal_error(
+                            format!("Serialization failed for onboarding config: {e}"),
+                            None,
+                        )
+                    })?,
+                    None => String::new(),
+                };
 
-                serde_json::json!({
+                let skills_json = serde_json::to_string(&skills).map_err(|e| {
+                    McpError::internal_error(
+                        format!("Serialization failed for skills: {e}"),
+                        None,
+                    )
+                })?;
+                let agents_json = serde_json::to_string(&agents).map_err(|e| {
+                    McpError::internal_error(
+                        format!("Serialization failed for agents: {e}"),
+                        None,
+                    )
+                })?;
+                let mcp_servers_json = serde_json::to_string(&mcp_servers).map_err(|e| {
+                    McpError::internal_error(
+                        format!("Serialization failed for mcp_servers: {e}"),
+                        None,
+                    )
+                })?;
+
+                Ok(serde_json::json!({
                     "plugin_id": p.plugin_id,
                     "name": p.name,
                     "description": p.description,
@@ -111,15 +136,15 @@ impl McpToolHandler for ListPluginsHandler {
                     "category": p.category,
                     "keywords": p.keywords,
                     "base_plugin_id": p.base_plugin_id,
-                    "skills": serde_json::to_string(&skills).unwrap_or_default(),
-                    "agents": serde_json::to_string(&agents).unwrap_or_default(),
-                    "mcp_servers": serde_json::to_string(&mcp_servers).unwrap_or_default(),
+                    "skills": skills_json,
+                    "agents": agents_json,
+                    "mcp_servers": mcp_servers_json,
                     "onboarding": onboarding_value,
                     "created_at": p.created_at.to_rfc3339(),
                     "updated_at": p.updated_at.to_rfc3339(),
-                })
+                }))
             })
-            .collect();
+            .collect::<Result<Vec<_>, McpError>>()?;
 
         let total = rows.len();
         let summary = format!("Found {total} plugin(s) for user '{user_id}'");
