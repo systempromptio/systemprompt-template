@@ -20,7 +20,7 @@ pub async fn get_user_usage(
         ORDER BY created_at DESC
         LIMIT 100
         "#,
-        user_id,
+        user_id as &UserId,
     )
     .fetch_all(pool)
     .await

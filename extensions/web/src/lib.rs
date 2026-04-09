@@ -17,13 +17,11 @@ pub mod repository;
 mod schemas;
 pub mod services;
 
-// Re-exports from shared crate for API stability
-pub use systemprompt_web_shared as shared;
-pub use systemprompt_web_shared::html_escape;
-pub use systemprompt_web_shared::{config, config_errors, error, models};
-mod utils {
-    pub use systemprompt_web_shared::html_escape;
-}
+pub mod config;
+pub mod config_errors;
+pub mod error;
+pub mod models;
+pub mod utils;
 
 pub use blog::{BlogListPageDataProvider, BlogPostPageDataProvider};
 pub use config::{

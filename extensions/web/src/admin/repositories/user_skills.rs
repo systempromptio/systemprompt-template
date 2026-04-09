@@ -170,7 +170,7 @@ pub async fn fetch_skill_usage_counts(
           FROM plugin_usage_daily
           WHERE tool_name = ANY($1)
           GROUP BY tool_name"#,
-        &ids,
+        &ids as &[&str],
     )
     .fetch_all(pool)
     .await
@@ -196,7 +196,7 @@ pub async fn fetch_skill_avg_ratings(
           FROM plugin_ratings
           WHERE plugin_id = ANY($1)
           GROUP BY plugin_id"#,
-        &ids,
+        &ids as &[&str],
     )
     .fetch_all(pool)
     .await
