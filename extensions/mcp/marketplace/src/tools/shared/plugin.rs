@@ -54,7 +54,7 @@ pub async fn add_to_plugin(
             return match result {
                 Ok(()) => Some(plugin_id.to_string()),
                 Err(e) => {
-                    tracing::warn!(error = %e, plugin_id = %plugin_id, "Failed to add {entity_kind} to target plugin");
+                    tracing::warn!(error = %e, plugin_id = %plugin_id, entity_kind = %entity_kind, "Failed to add entity to target plugin");
                     None
                 }
             };
@@ -82,7 +82,7 @@ pub async fn auto_add_to_default_plugin(
     };
 
     if plugins.is_empty() {
-        tracing::warn!("No plugins found for user, cannot auto-add {entity_kind}");
+        tracing::warn!(entity_kind = %entity_kind, "No plugins found for user, cannot auto-add entity");
         return None;
     }
 
@@ -126,7 +126,7 @@ pub async fn auto_add_to_default_plugin(
     match result {
         Ok(()) => Some(first_plugin.plugin_id.clone()),
         Err(e) => {
-            tracing::warn!(error = %e, plugin_id = %first_plugin.plugin_id, "Failed to auto-add {entity_kind} to plugin");
+            tracing::warn!(error = %e, plugin_id = %first_plugin.plugin_id, entity_kind = %entity_kind, "Failed to auto-add entity to plugin");
             None
         }
     }
