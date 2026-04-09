@@ -8,7 +8,7 @@ use sqlx::PgPool;
 
 use super::super::handlers;
 
-pub(crate) fn build_auth_write_routes(write_pool: Arc<PgPool>) -> Router {
+pub fn build_auth_write_routes(write_pool: Arc<PgPool>) -> Router {
     let core_routes = build_core_write_routes();
     let user_routes = build_user_write_routes();
 

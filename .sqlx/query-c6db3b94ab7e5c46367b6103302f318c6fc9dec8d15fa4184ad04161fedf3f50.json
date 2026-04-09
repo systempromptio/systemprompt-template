@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            sel.entity_name AS skill_name,\n            COALESCE(sel.entity_id, sel.entity_name) AS \"skill_id!\",\n            COALESCE(SUM(sel.usage_count), 0)::BIGINT AS \"total_uses!\",\n            COUNT(DISTINCT sel.session_id)::BIGINT AS \"sessions_used_in!\",\n            COALESCE(AVG(\n                COALESCE(\n                    (sa.skill_scores ->> sel.entity_name)::FLOAT8,\n                    sa.quality_score::FLOAT8\n                )\n            ), 0.0) AS \"avg_effectiveness!\",\n            COUNT(sa.quality_score)::BIGINT AS \"scored_sessions!\",\n            COALESCE(\n                COUNT(*) FILTER (WHERE sa.goal_achieved = 'yes') * 100.0 /\n                NULLIF(COUNT(sa.session_id), 0)::FLOAT8,\n                0.0\n            ) AS \"goal_achievement_pct!\"\n        FROM session_entity_links sel\n        LEFT JOIN session_analyses sa\n            ON sa.session_id = sel.session_id AND sa.user_id = sel.user_id\n        WHERE sel.user_id = $1 AND sel.entity_type = 'skill'\n        GROUP BY sel.entity_name, sel.entity_id\n        ORDER BY 3 DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "skill_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "skill_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "total_uses!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "sessions_used_in!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "avg_effectiveness!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "scored_sessions!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "goal_achievement_pct!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c6db3b94ab7e5c46367b6103302f318c6fc9dec8d15fa4184ad04161fedf3f50"
+}

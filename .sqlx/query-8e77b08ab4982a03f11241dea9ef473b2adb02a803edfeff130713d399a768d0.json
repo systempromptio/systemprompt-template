@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_settings (user_id, display_name, avatar_url, notify_daily_summary, notify_achievements, leaderboard_opt_in, timezone, created_at, updated_at)\n         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())\n         ON CONFLICT (user_id) DO UPDATE SET\n             display_name = $2,\n             avatar_url = $3,\n             notify_daily_summary = $4,\n             notify_achievements = $5,\n             leaderboard_opt_in = $6,\n             timezone = $7,\n             updated_at = NOW()\n         RETURNING user_id, display_name, avatar_url, notify_daily_summary, notify_achievements, leaderboard_opt_in, timezone, achievement_email_sent_date, daily_report_email_sent_date, created_at, updated_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "avatar_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "notify_daily_summary",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "notify_achievements",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "leaderboard_opt_in",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "timezone",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "achievement_email_sent_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 8,
+        "name": "daily_report_email_sent_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "8e77b08ab4982a03f11241dea9ef473b2adb02a803edfeff130713d399a768d0"
+}

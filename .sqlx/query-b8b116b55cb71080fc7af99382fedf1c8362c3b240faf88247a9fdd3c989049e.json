@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT prompt_preview as \"prompt_preview!\"\n          FROM plugin_usage_events\n          WHERE session_id = $1 AND user_id = $2 AND event_type = 'UserPromptSubmit'\n            AND prompt_preview IS NOT NULL AND prompt_preview != ''\n          ORDER BY created_at ASC\n          LIMIT 20",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "prompt_preview!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "b8b116b55cb71080fc7af99382fedf1c8362c3b240faf88247a9fdd3c989049e"
+}

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            tool_name as \"tool_name!\",\n            SUM(event_count)::BIGINT as \"count!\"\n        FROM plugin_usage_daily\n        WHERE user_id = $1 AND tool_name IS NOT NULL AND tool_name != ''\n        GROUP BY tool_name\n        ORDER BY 2 DESC\n        LIMIT 10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tool_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      null
+    ]
+  },
+  "hash": "a93bda1ad9ee1c5f9511766990f0fbc1ba56cade94b8cbf0826f5cc316936c65"
+}

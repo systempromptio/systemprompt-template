@@ -1,0 +1,62 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO plugin_ratings (id, plugin_id, user_id, rating, review)\n          VALUES ($1, $2, $3, $4, $5)\n          ON CONFLICT (plugin_id, user_id) DO UPDATE\n            SET rating = EXCLUDED.rating,\n                review = EXCLUDED.review,\n                updated_at = NOW()\n          RETURNING id, plugin_id, user_id, rating, review, created_at, updated_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "plugin_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "rating",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 4,
+        "name": "review",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int2",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "107093370765810e7a96d7290f1b3643bd6b150ea30d69b73b4871f29ee506c1"
+}

@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            SUM(content_input_bytes)::BIGINT AS total_input,\n            SUM(content_output_bytes)::BIGINT AS total_output\n          FROM plugin_session_summaries\n          WHERE user_id = $1\n            AND started_at::date = $2\n            AND COALESCE(status, 'active') != 'deleted'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_input",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_output",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Date"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "affd37cfeeb62ead82bc413d1674ec94885df85c04ca2176134270271c83f729"
+}

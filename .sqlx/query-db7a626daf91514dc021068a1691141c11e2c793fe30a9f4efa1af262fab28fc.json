@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT tool_uses, prompts, started_at\n          FROM plugin_session_summaries\n          WHERE user_id = $1\n            AND started_at::date = CURRENT_DATE\n            AND ended_at IS NULL\n            AND COALESCE(status, 'active') != 'deleted'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tool_uses",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "prompts",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "started_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "db7a626daf91514dc021068a1691141c11e2c793fe30a9f4efa1af262fab28fc"
+}

@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT 1 AS \"v!\" FROM user_plugin_skills ups\n               JOIN user_plugins up ON up.id = ups.user_plugin_id\n               WHERE up.user_id = $1 AND ups.user_skill_id = $2\n               AND up.base_plugin_id = 'systemprompt'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "v!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f57a28978d5013d6e8e7eae37fb595f9026cc8dfbb5b20eb910fd071efbb0056"
+}

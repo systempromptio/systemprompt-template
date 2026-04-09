@@ -1,5 +1,3 @@
-use std::future::Future;
-
 use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 use systemprompt_web_extension::admin::repositories::{
     find_plugin_with_associations, set_plugin_agents, set_plugin_mcp_servers, set_plugin_skills,
@@ -11,22 +9,6 @@ fn push_if_absent<Id: AsRef<str>>(ids: &mut Vec<Id>, new_id: Id, entity_id: &str
     if !ids.iter().any(|id| id.as_ref() == entity_id) {
         ids.push(new_id);
     }
-}
-
-/// Adds an entity ID to a list (deduplicating) then persists via the provided setter.
-async fn upsert_entity<Id, Fut>(
-    current_ids: &[Id],
-    new_id: Id,
-    entity_id: &str,
-    setter: impl FnOnce(&[Id]) -> Fut,
-) -> Result<(), sqlx::Error>
-where
-    Id: AsRef<str> + Clone,
-    Fut: Future<Output = Result<(), sqlx::Error>>,
-{
-    let mut ids = current_ids.to_vec();
-    push_if_absent(&mut ids, new_id, entity_id);
-    setter(&ids).await
 }
 
 pub async fn add_to_plugin(
@@ -51,19 +33,19 @@ pub async fn add_to_plugin(
             let plugin_row_id = &assoc.plugin.id;
             let result = match entity_kind {
                 "skill" => {
-                    Some(upsert_entity(&assoc.skill_ids, SkillId::new(entity_id), entity_id, |ids| {
-                        set_plugin_skills(&pool, plugin_row_id, ids)
-                    }).await)
+                    let mut ids = assoc.skill_ids.clone();
+                    push_if_absent(&mut ids, SkillId::new(entity_id), entity_id);
+                    Some(set_plugin_skills(&pool, plugin_row_id, &ids).await)
                 }
                 "agent" => {
-                    Some(upsert_entity(&assoc.agent_ids, AgentId::new(entity_id), entity_id, |ids| {
-                        set_plugin_agents(&pool, plugin_row_id, ids)
-                    }).await)
+                    let mut ids = assoc.agent_ids.clone();
+                    push_if_absent(&mut ids, AgentId::new(entity_id), entity_id);
+                    Some(set_plugin_agents(&pool, plugin_row_id, &ids).await)
                 }
                 "mcp_server" => {
-                    Some(upsert_entity(&assoc.mcp_server_ids, McpServerId::new(entity_id), entity_id, |ids| {
-                        set_plugin_mcp_servers(&pool, plugin_row_id, ids)
-                    }).await)
+                    let mut ids = assoc.mcp_server_ids.clone();
+                    push_if_absent(&mut ids, McpServerId::new(entity_id), entity_id);
+                    Some(set_plugin_mcp_servers(&pool, plugin_row_id, &ids).await)
                 }
                 _ => None,
             };
@@ -99,7 +81,26 @@ pub async fn auto_add_to_default_plugin(
         .ok()
         .flatten()?;
 
-    let result = add_entity_to_plugin(&pool, &default_plugin.id, entity_id, entity_kind, &assoc).await;
+    let plugin_row_id = &assoc.plugin.id;
+    let result = match entity_kind {
+        "skill" => {
+            let mut ids = assoc.skill_ids.clone();
+            push_if_absent(&mut ids, SkillId::new(entity_id), entity_id);
+            Some(set_plugin_skills(&pool, plugin_row_id, &ids).await)
+        }
+        "agent" => {
+            let mut ids = assoc.agent_ids.clone();
+            push_if_absent(&mut ids, AgentId::new(entity_id), entity_id);
+            Some(set_plugin_agents(&pool, plugin_row_id, &ids).await)
+        }
+        "mcp_server" => {
+            let mut ids = assoc.mcp_server_ids.clone();
+            push_if_absent(&mut ids, McpServerId::new(entity_id), entity_id);
+            Some(set_plugin_mcp_servers(&pool, plugin_row_id, &ids).await)
+        }
+        _ => None,
+    };
+
     match result {
         Some(Ok(())) => Some(default_plugin.plugin_id.clone()),
         Some(Err(e)) => {
@@ -127,31 +128,4 @@ async fn find_default_plugin(
         return None;
     }
     plugins.into_iter().last()
-}
-
-async fn add_entity_to_plugin(
-    pool: &sqlx::PgPool,
-    plugin_row_id: &str,
-    entity_id: &str,
-    entity_kind: &str,
-    assoc: &systemprompt_web_extension::admin::types::UserPluginWithAssociations,
-) -> Option<Result<(), sqlx::Error>> {
-    match entity_kind {
-        "skill" => {
-            Some(upsert_entity(&assoc.skill_ids, SkillId::new(entity_id), entity_id, |ids| {
-                set_plugin_skills(pool, plugin_row_id, ids)
-            }).await)
-        }
-        "agent" => {
-            Some(upsert_entity(&assoc.agent_ids, AgentId::new(entity_id), entity_id, |ids| {
-                set_plugin_agents(pool, plugin_row_id, ids)
-            }).await)
-        }
-        "mcp_server" => {
-            Some(upsert_entity(&assoc.mcp_server_ids, McpServerId::new(entity_id), entity_id, |ids| {
-                set_plugin_mcp_servers(pool, plugin_row_id, ids)
-            }).await)
-        }
-        _ => None,
-    }
 }

@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COALESCE(SUM(search_impressions), 0)::BIGINT as \"total_impressions!\",\n            COALESCE(SUM(search_clicks), 0)::BIGINT as \"total_clicks!\",\n            COUNT(*)::BIGINT as \"total_indexed!\",\n            COALESCE(AVG(avg_search_position), 0.0)::FLOAT8 as \"avg_position!\"\n        FROM content_performance_metrics\n        WHERE search_impressions > 0 OR search_clicks > 0\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_impressions!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_clicks!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "total_indexed!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "avg_position!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "a39e9448157bdb7fbaaab71f359d533115f20fd586796d78df5a9f50bf80483c"
+}

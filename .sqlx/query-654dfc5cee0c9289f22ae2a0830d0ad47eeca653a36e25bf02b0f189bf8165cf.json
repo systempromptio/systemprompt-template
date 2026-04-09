@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, skill_id, var_name, var_value, is_secret FROM skill_secrets WHERE user_id = $1 ORDER BY skill_id, var_name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "skill_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "var_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "var_value",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "is_secret",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "654dfc5cee0c9289f22ae2a0830d0ad47eeca653a36e25bf02b0f189bf8165cf"
+}

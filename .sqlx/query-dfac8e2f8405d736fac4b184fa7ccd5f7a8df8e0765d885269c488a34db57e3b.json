@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE user_skills\n            SET name = $3, description = $4, content = $5, base_skill_id = $6, updated_at = NOW()\n            WHERE user_id = $1 AND skill_id = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dfac8e2f8405d736fac4b184fa7ccd5f7a8df8e0765d885269c488a34db57e3b"
+}
