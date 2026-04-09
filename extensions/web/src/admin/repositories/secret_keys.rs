@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -6,7 +5,7 @@ use systemprompt::identifiers::UserId;
 use super::secret_crypto::{self, SecretCryptoError};
 
 pub async fn get_or_create_user_dek(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     master_key: &[u8; 32],
 ) -> Result<[u8; 32], SecretCryptoError> {
@@ -14,7 +13,7 @@ pub async fn get_or_create_user_dek(
         "SELECT encrypted_dek, dek_nonce FROM user_encryption_keys WHERE user_id = $1",
         user_id.as_str(),
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
     .map_err(|e| SecretCryptoError::Database(e.to_string()))?;
 
@@ -43,7 +42,7 @@ pub async fn get_or_create_user_dek(
         encrypted_dek.as_slice(),
         nonce.as_slice(),
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await
     .map_err(|e| SecretCryptoError::Database(e.to_string()))?;
 
@@ -53,7 +52,7 @@ pub async fn get_or_create_user_dek(
 }
 
 pub async fn rotate_user_dek(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     master_key: &[u8; 32],
 ) -> Result<(), SecretCryptoError> {

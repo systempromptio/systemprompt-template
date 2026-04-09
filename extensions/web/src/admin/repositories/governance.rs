@@ -1,11 +1,10 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
 use super::super::types::{GovernanceDecisionRow, GovernanceEvent};
 
 pub async fn list_governance_decisions(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     search: Option<&str>,
 ) -> Result<Vec<GovernanceDecisionRow>, sqlx::Error> {
     let search_pattern = search.filter(|s| !s.is_empty()).map(|s| format!("%{s}%"));
@@ -20,7 +19,7 @@ pub async fn list_governance_decisions(
              LIMIT 200",
         )
         .bind(pattern)
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
     } else {
         sqlx::query_as::<_, GovernanceDecisionRow>(
@@ -29,7 +28,7 @@ pub async fn list_governance_decisions(
              ORDER BY created_at DESC \
              LIMIT 200",
         )
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
     }
 }
@@ -41,7 +40,7 @@ pub struct GovernanceCounts {
     pub secret_breaches: i64,
 }
 
-pub async fn fetch_governance_counts(pool: &Arc<PgPool>) -> Result<GovernanceCounts, sqlx::Error> {
+pub async fn fetch_governance_counts(pool: &PgPool) -> Result<GovernanceCounts, sqlx::Error> {
     let row = sqlx::query_as::<_, (i64, i64, i64, i64)>(
         r"SELECT
             COUNT(*)::bigint,
@@ -50,7 +49,7 @@ pub async fn fetch_governance_counts(pool: &Arc<PgPool>) -> Result<GovernanceCou
             COUNT(*) FILTER (WHERE reason ILIKE '%secret%')::bigint
         FROM governance_decisions",
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
     Ok(GovernanceCounts {
         total: row.0,
@@ -61,7 +60,7 @@ pub async fn fetch_governance_counts(pool: &Arc<PgPool>) -> Result<GovernanceCou
 }
 
 pub async fn fetch_governance_events(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<GovernanceEvent>, sqlx::Error> {
     sqlx::query_as::<_, GovernanceEvent>(
         r"SELECT id, user_id, tool_name, agent_id, decision, reason, created_at
@@ -69,6 +68,6 @@ pub async fn fetch_governance_events(
         ORDER BY created_at DESC
         LIMIT 50",
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }

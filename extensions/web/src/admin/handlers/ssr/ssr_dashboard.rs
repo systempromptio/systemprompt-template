@@ -20,7 +20,7 @@ struct ChartParams<'a> {
 }
 
 async fn fetch_dashboard_data(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     services_path: Option<&std::path::PathBuf>,
     user_roles: &[String],
     chart: &ChartParams<'_>,
@@ -85,7 +85,7 @@ async fn fetch_dashboard_data(
     (dash, counts)
 }
 
-async fn inject_mcp_access_and_costs(pool: &Arc<PgPool>, data: &mut serde_json::Value) {
+async fn inject_mcp_access_and_costs(pool: &PgPool, data: &mut serde_json::Value) {
     let (mcp_access, token_usage) = tokio::join!(
         repositories::dashboard_queries::fetch_mcp_access_events(pool),
         repositories::dashboard_queries::fetch_token_usage_by_user(pool),
@@ -148,7 +148,7 @@ async fn inject_mcp_access_and_costs(pool: &Arc<PgPool>, data: &mut serde_json::
     }
 }
 
-async fn inject_governance_data(pool: &Arc<PgPool>, data: &mut serde_json::Value) {
+async fn inject_governance_data(pool: &PgPool, data: &mut serde_json::Value) {
     let (gov_events, gov_counts) = tokio::join!(
         repositories::governance::fetch_governance_events(pool),
         repositories::governance::fetch_governance_counts(pool),

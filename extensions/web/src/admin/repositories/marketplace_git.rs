@@ -1,5 +1,4 @@
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -12,7 +11,7 @@ pub const CACHE_DIR: &str = "/tmp/systemprompt-marketplace-repos";
 const CACHE_TTL_SECS: u64 = 300;
 
 pub async fn get_or_generate_marketplace_repo(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     platform: &str,
 ) -> Result<PathBuf, MarketplaceError> {
@@ -20,7 +19,7 @@ pub async fn get_or_generate_marketplace_repo(
 }
 
 pub async fn get_or_generate_cowork_repo(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     platform: &str,
 ) -> Result<PathBuf, MarketplaceError> {
@@ -28,7 +27,7 @@ pub async fn get_or_generate_cowork_repo(
 }
 
 async fn generate_repo(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     platform: &str,
     repo_name: &str,
@@ -211,14 +210,14 @@ fn create_bare_repo(
 }
 
 pub async fn lookup_user_basic(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<crate::admin::types::UserBasicInfo, MarketplaceError> {
     let row = sqlx::query!(
         "SELECT COALESCE(display_name, full_name, name) as display_name, email, roles FROM users WHERE id = $1",
         user_id.as_str(),
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await?
     .ok_or_else(|| MarketplaceError::NotFound(format!("User not found: {user_id}")))?;
 

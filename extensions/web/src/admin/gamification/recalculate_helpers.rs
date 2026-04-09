@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use sqlx::PgPool;
 
 use super::{ERROR_XP, PROMPT_XP, SESSION_XP, SUBAGENT_XP, TOKEN_XP_PER_1K, TOOL_USE_XP};
@@ -7,7 +5,7 @@ use super::{ERROR_XP, PROMPT_XP, SESSION_XP, SUBAGENT_XP, TOKEN_XP_PER_1K, TOOL_
 pub(super) type UserXpResult = (i64, i64, i32, i32, i64, i64, i64, i32);
 
 pub(super) struct UserRankParams<'a> {
-    pub pool: &'a Arc<PgPool>,
+    pub pool: &'a PgPool,
     pub uid: &'a str,
     pub total_xp: i64,
     pub rank_level: i32,
@@ -20,7 +18,7 @@ pub(super) struct UserRankParams<'a> {
     pub last_active_date: Option<chrono::NaiveDate>,
 }
 
-pub(super) async fn populate_daily_usage(pool: &Arc<PgPool>) -> Result<(), anyhow::Error> {
+pub(super) async fn populate_daily_usage(pool: &PgPool) -> Result<(), anyhow::Error> {
     sqlx::query(
         r"
         INSERT INTO employee_daily_usage (user_id, usage_date, event_count)
@@ -31,13 +29,13 @@ pub(super) async fn populate_daily_usage(pool: &Arc<PgPool>) -> Result<(), anyho
         ON CONFLICT (user_id, usage_date) DO UPDATE SET event_count = EXCLUDED.event_count
         ",
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(())
 }
 
 pub(super) async fn calculate_user_xp(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     uid: &str,
 ) -> Result<UserXpResult, anyhow::Error> {
     let base_xp: i64 = sqlx::query_scalar(
@@ -62,7 +60,7 @@ pub(super) async fn calculate_user_xp(
     .bind(ERROR_XP)
     .bind(PROMPT_XP)
     .bind(SUBAGENT_XP)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let total_tokens: i64 = sqlx::query_scalar(
@@ -76,7 +74,7 @@ pub(super) async fn calculate_user_xp(
         ",
     )
     .bind(uid)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let token_xp = (total_tokens / 1000) * i64::from(TOKEN_XP_PER_1K);
@@ -85,7 +83,7 @@ pub(super) async fn calculate_user_xp(
         "SELECT COALESCE(SUM(xp_amount), 0)::BIGINT FROM employee_xp_ledger WHERE user_id = $1",
     )
     .bind(uid)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let total_xp = base_xp + token_xp + bonus_xp;
@@ -94,35 +92,35 @@ pub(super) async fn calculate_user_xp(
         "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1",
     )
     .bind(uid)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let unique_skills: i32 = sqlx::query_scalar(
         "SELECT COALESCE(COUNT(DISTINCT tool_name), 0)::INT FROM plugin_usage_events WHERE user_id = $1 AND tool_name IS NOT NULL",
     )
     .bind(uid)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let unique_plugins: i32 = sqlx::query_scalar(
         "SELECT COALESCE(COUNT(DISTINCT plugin_id), 0)::INT FROM plugin_usage_events WHERE user_id = $1 AND plugin_id IS NOT NULL",
     )
     .bind(uid)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let prompt_count: i64 = sqlx::query_scalar(
         "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1 AND event_type = 'claude_code_UserPromptSubmit'",
     )
     .bind(uid)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let subagent_count: i64 = sqlx::query_scalar(
         "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1 AND event_type = 'claude_code_SubagentStart'",
     )
     .bind(uid)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let models_used: i32 = sqlx::query_scalar(
@@ -135,7 +133,7 @@ pub(super) async fn calculate_user_xp(
         ",
     )
     .bind(uid)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     Ok((
@@ -151,7 +149,7 @@ pub(super) async fn calculate_user_xp(
 }
 
 pub(super) async fn calculate_streaks(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     uid: &str,
 ) -> Result<(i32, i32, Option<chrono::NaiveDate>), anyhow::Error> {
     #[derive(sqlx::FromRow)]
@@ -163,7 +161,7 @@ pub(super) async fn calculate_streaks(
         "SELECT usage_date FROM employee_daily_usage WHERE user_id = $1 ORDER BY usage_date DESC",
     )
     .bind(uid)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let dates: Vec<chrono::NaiveDate> = rows.iter().map(|d| d.usage_date).collect();
@@ -247,7 +245,7 @@ pub(super) async fn update_user_rank(params: &UserRankParams<'_>) -> Result<(), 
     .bind(params.current_streak)
     .bind(params.longest_streak)
     .bind(params.last_active_date)
-    .execute(params.pool.as_ref())
+    .execute(params.pool)
     .await?;
     Ok(())
 }

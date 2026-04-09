@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
@@ -10,12 +9,12 @@ use super::super::types::{
 };
 
 pub async fn fetch_timeline(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<activity::ActivityTimelineEvent>, sqlx::Error> {
     activity::queries::fetch_timeline(pool, None).await
 }
 
-pub async fn fetch_top_users(pool: &Arc<PgPool>) -> Result<Vec<TopUser>, sqlx::Error> {
+pub async fn fetch_top_users(pool: &PgPool) -> Result<Vec<TopUser>, sqlx::Error> {
     sqlx::query_as!(
         TopUser,
         r#"SELECT
@@ -57,11 +56,11 @@ pub async fn fetch_top_users(pool: &Arc<PgPool>) -> Result<Vec<TopUser>, sqlx::E
         ORDER BY (COALESCE(combined.edits, 0) + COALESCE(mcp.mcp_calls, 0)) DESC, logins DESC
         LIMIT 10"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
-pub async fn fetch_popular_skills(pool: &Arc<PgPool>) -> Result<Vec<SkillCount>, sqlx::Error> {
+pub async fn fetch_popular_skills(pool: &PgPool) -> Result<Vec<SkillCount>, sqlx::Error> {
     sqlx::query_as!(
         SkillCount,
         r#"SELECT COALESCE(m.tool_name, 'unknown') AS "tool_name!", COUNT(*)::BIGINT AS "count!"
@@ -69,11 +68,11 @@ pub async fn fetch_popular_skills(pool: &Arc<PgPool>) -> Result<Vec<SkillCount>,
         WHERE m.tool_name IS NOT NULL
         GROUP BY m.tool_name ORDER BY 2 DESC LIMIT 10"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
-pub async fn fetch_hourly_activity(pool: &Arc<PgPool>) -> Result<Vec<HourlyActivity>, sqlx::Error> {
+pub async fn fetch_hourly_activity(pool: &PgPool) -> Result<Vec<HourlyActivity>, sqlx::Error> {
     sqlx::query_as!(
         HourlyActivity,
         r#"SELECT hour as "hour!", SUM(cnt)::BIGINT AS "count!" FROM (
@@ -89,7 +88,7 @@ pub async fn fetch_hourly_activity(pool: &Arc<PgPool>) -> Result<Vec<HourlyActiv
         ) combined
         GROUP BY hour ORDER BY hour"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
@@ -135,7 +134,7 @@ pub async fn fetch_stats_snapshot(pool: &PgPool) -> Result<ActivityStats, sqlx::
 }
 
 pub async fn fetch_recent_mcp_errors(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<super::super::types::RecentMcpError>, sqlx::Error> {
     let rows = sqlx::query_as!(
         McpErrorRow,
@@ -148,7 +147,7 @@ pub async fn fetch_recent_mcp_errors(
         ORDER BY created_at DESC
         LIMIT 5"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     Ok(rows
@@ -167,7 +166,7 @@ struct McpErrorRow {
 }
 
 pub async fn fetch_mcp_access_events(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<McpAccessEvent>, sqlx::Error> {
     sqlx::query_as!(
         McpAccessEvent,
@@ -181,12 +180,12 @@ pub async fn fetch_mcp_access_events(
         ORDER BY created_at DESC
         LIMIT 20"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_token_usage_by_user(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<TokenUsageRow>, sqlx::Error> {
     sqlx::query_as!(
         TokenUsageRow,
@@ -203,12 +202,12 @@ pub async fn fetch_token_usage_by_user(
         ORDER BY SUM(p.content_input_bytes) + SUM(p.content_output_bytes) DESC
         LIMIT 10"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_tool_success_rates(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<ToolSuccessRate>, sqlx::Error> {
     sqlx::query_as!(
         ToolSuccessRate,
@@ -223,6 +222,6 @@ pub async fn fetch_tool_success_rates(
         HAVING COUNT(*) >= 3
         ORDER BY 5 ASC, 2 DESC LIMIT 15"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }

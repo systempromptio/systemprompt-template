@@ -1,11 +1,9 @@
-use std::sync::Arc;
-
 use sqlx::PgPool;
 
 use super::types::{ActivityCategorySummary, ActivityTimelineEvent};
 
 pub async fn fetch_timeline(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     department: Option<&str>,
 ) -> Result<Vec<ActivityTimelineEvent>, sqlx::Error> {
     if let Some(dept) = department {
@@ -21,7 +19,7 @@ pub async fn fetch_timeline(
             ORDER BY a.created_at DESC LIMIT 50",
         )
         .bind(dept)
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
     } else {
         sqlx::query_as::<_, ActivityTimelineEvent>(
@@ -34,7 +32,7 @@ pub async fn fetch_timeline(
               AND u.email NOT LIKE '%@anonymous.local'
             ORDER BY a.created_at DESC LIMIT 50",
         )
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
     }
 }
@@ -75,7 +73,7 @@ pub async fn fetch_new_events(
 }
 
 pub async fn get_user_recent_activity(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
 ) -> Result<Vec<ActivityTimelineEvent>, sqlx::Error> {
     sqlx::query_as::<_, ActivityTimelineEvent>(
@@ -88,12 +86,12 @@ pub async fn get_user_recent_activity(
         ORDER BY a.created_at DESC LIMIT 50",
     )
     .bind(user_id)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn get_user_activity_summary(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
 ) -> Result<Vec<ActivityCategorySummary>, sqlx::Error> {
     sqlx::query_as::<_, ActivityCategorySummary>(
@@ -112,12 +110,12 @@ pub async fn get_user_activity_summary(
         ORDER BY count DESC",
     )
     .bind(user_id)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn search_user_entity_activity(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
     search: Option<&str>,
     limit: i64,
@@ -133,7 +131,7 @@ pub async fn search_user_entity_activity(
         )
         .bind(user_id)
         .bind(&pattern)
-        .fetch_one(pool.as_ref())
+        .fetch_one(pool)
         .await?;
 
         let rows = sqlx::query_as::<_, ActivityTimelineEvent>(
@@ -150,7 +148,7 @@ pub async fn search_user_entity_activity(
         .bind(&pattern)
         .bind(limit)
         .bind(offset)
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await?;
 
         Ok((rows, total))
@@ -158,7 +156,7 @@ pub async fn search_user_entity_activity(
         let total: i64 =
             sqlx::query_scalar("SELECT COUNT(*)::BIGINT FROM user_activity WHERE user_id = $1")
                 .bind(user_id)
-                .fetch_one(pool.as_ref())
+                .fetch_one(pool)
                 .await?;
 
         let rows = sqlx::query_as::<_, ActivityTimelineEvent>(
@@ -173,7 +171,7 @@ pub async fn search_user_entity_activity(
         .bind(user_id)
         .bind(limit)
         .bind(offset)
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await?;
 
         Ok((rows, total))
@@ -181,7 +179,7 @@ pub async fn search_user_entity_activity(
 }
 
 pub async fn get_user_entity_activity(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
     limit: i64,
     offset: i64,
@@ -198,16 +196,16 @@ pub async fn get_user_entity_activity(
     .bind(user_id)
     .bind(limit)
     .bind(offset)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn count_user_entity_activity(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
 ) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar("SELECT COUNT(*)::BIGINT FROM user_activity WHERE user_id = $1")
         .bind(user_id)
-        .fetch_one(pool.as_ref())
+        .fetch_one(pool)
         .await
 }

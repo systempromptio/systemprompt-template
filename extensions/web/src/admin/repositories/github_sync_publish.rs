@@ -1,5 +1,4 @@
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use anyhow::Result;
 use sqlx::PgPool;
@@ -44,7 +43,7 @@ fn write_plugin_bundles_to_repo(bundles: &[PluginBundle], local_path: &Path) -> 
 }
 
 pub async fn publish_marketplace_to_github(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     marketplace_id: &str,
     repo_url: &str,
     triggered_by: &str,

@@ -250,7 +250,7 @@ fn build_skill_edit_json(skill: Option<&crate::admin::types::UserSkill>) -> serd
 }
 
 async fn build_required_secrets(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_ctx: &UserContext,
     skill_id: Option<&String>,
 ) -> Vec<RequiredSecretView> {

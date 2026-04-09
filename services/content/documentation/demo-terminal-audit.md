@@ -115,7 +115,7 @@ Every governance decision is recorded, queryable, and attributed — regardless 
 
 ---
 
-> **Note:** For full agent execution traces (AI requests, MCP tool calls, artifacts), run Demo 09 and see [Agent Tracing Demo](/documentation/demo-terminal-agent-tracing).
+> **Note:** For full agent execution traces (AI requests, MCP tool calls, artifacts), see the [Agent Tracing Demo](/documentation/demo-terminal-agent-tracing).
 
 ---
 

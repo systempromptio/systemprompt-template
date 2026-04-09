@@ -15,7 +15,7 @@ use systemprompt::identifiers::{AgentId, SkillId, UserId};
 
 use crate::admin::handlers::{responses::PluginsListResponse, shared};
 
-async fn is_platform_plugin(pool: &Arc<PgPool>, user_id: &UserId, plugin_id: &str) -> bool {
+async fn is_platform_plugin(pool: &PgPool, user_id: &UserId, plugin_id: &str) -> bool {
     repositories::find_user_plugin(pool, user_id, plugin_id)
         .await
         .map_err(|e| {
@@ -27,7 +27,7 @@ async fn is_platform_plugin(pool: &Arc<PgPool>, user_id: &UserId, plugin_id: &st
 }
 
 pub(crate) async fn is_entity_in_platform_plugin(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     entity_id: &str,
     entity_kind: &str,

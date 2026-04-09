@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Arc};
+use std::collections::HashSet;
 
 use serde::Serialize;
 use sqlx::PgPool;
@@ -36,7 +36,7 @@ struct AnalyticsEvent<'a> {
 }
 
 pub(super) async fn build_analytics_event(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &systemprompt::identifiers::UserId,
     input: &AnalyticsInput<'_>,
 ) -> Option<String> {
@@ -97,7 +97,7 @@ struct FetchedAnalytics {
 }
 
 async fn fetch_analytics_data(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &systemprompt::identifiers::UserId,
 ) -> FetchedAnalytics {
     let (
@@ -117,7 +117,7 @@ async fn fetch_analytics_data(
         crate::admin::repositories::conversation_analytics::fetch_unused_skills(pool, user_id),
         session_analyses::fetch_today_summary(pool, user_id),
         apm_metrics::fetch_apm_success_correlation(pool, user_id.as_str()),
-        hooks_track::fetch_today_achievements(pool.as_ref(), user_id.as_str()),
+        hooks_track::fetch_today_achievements(pool, user_id.as_str()),
         apm_metrics::fetch_hourly_breakdown(pool, user_id.as_str()),
         apm_metrics::fetch_today_performance_summary(pool, user_id.as_str()),
     );
@@ -142,7 +142,7 @@ struct EntityData {
 }
 
 async fn build_entity_data(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &systemprompt::identifiers::UserId,
     unused_skills: &[String],
     gam: Option<&UserGamificationProfile>,

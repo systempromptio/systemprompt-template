@@ -6,7 +6,6 @@ use crate::admin::types::conversation_analytics::{
 use crate::admin::types::UserContext;
 use sqlx::PgPool;
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
 
 use super::types::{CheckableEntity, NamedEntity, PluginEditData, PluginView, SkillWithStats};
 
@@ -134,7 +133,7 @@ fn enriched_plugin_to_view(
 }
 
 pub(super) async fn build_association_lists(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_ctx: &UserContext,
     plugin_with_assoc: Option<&crate::admin::types::UserPluginWithAssociations>,
 ) -> (

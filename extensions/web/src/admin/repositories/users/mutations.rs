@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -6,7 +5,7 @@ use systemprompt::identifiers::UserId;
 use super::super::super::types::{CreateUserRequest, UpdateUserRequest, UserSummary};
 
 pub async fn create_user(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     req: &CreateUserRequest,
 ) -> Result<UserSummary, sqlx::Error> {
     let user_id_str = req.user_id.as_str().to_string();
@@ -45,12 +44,12 @@ pub async fn create_user(
         &req.roles as &[String],
         &status,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await
 }
 
 pub async fn update_user(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     req: &UpdateUserRequest,
 ) -> Result<Option<UserSummary>, sqlx::Error> {
@@ -97,19 +96,19 @@ pub async fn update_user(
         status.as_deref(),
         set_email_verified,
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
 }
 
-pub async fn delete_user(pool: &Arc<PgPool>, user_id: &UserId) -> Result<bool, sqlx::Error> {
+pub async fn delete_user(pool: &PgPool, user_id: &UserId) -> Result<bool, sqlx::Error> {
     let result = sqlx::query!("DELETE FROM users WHERE id = $1", user_id.as_str())
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
     Ok(result.rows_affected() > 0)
 }
 
 pub async fn delete_user_complete(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<bool, sqlx::Error> {
     let mut tx = pool.begin().await?;

@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use sqlx::PgPool;
 
 pub struct AchievementContext {
@@ -17,7 +15,7 @@ pub struct AchievementContext {
 }
 
 pub async fn check_achievements(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     ctx: &AchievementContext,
 ) -> Result<(), anyhow::Error> {
     let (session_count, tool_count, custom_skills_count, error_count) =
@@ -60,35 +58,35 @@ pub async fn check_achievements(
 }
 
 async fn fetch_achievement_counts(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
 ) -> Result<(i64, i64, i64, i64), anyhow::Error> {
     let session_count: i64 = sqlx::query_scalar(
         "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1 AND event_type = 'claude_code_SessionStart'",
     )
     .bind(user_id)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let tool_count: i64 = sqlx::query_scalar(
         "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1 AND event_type = 'claude_code_PostToolUse'",
     )
     .bind(user_id)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let custom_skills_count: i64 = sqlx::query_scalar(
         "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM user_skills WHERE user_id = $1",
     )
     .bind(user_id)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let error_count: i64 = sqlx::query_scalar(
         "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1 AND event_type = 'claude_code_PostToolUseFailure'",
     )
     .bind(user_id)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     Ok((session_count, tool_count, custom_skills_count, error_count))
@@ -244,7 +242,7 @@ fn check_tokens(to_unlock: &mut Vec<&'static str>, total_tokens: i64) {
 }
 
 async fn check_time_based(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
     to_unlock: &mut Vec<&'static str>,
 ) -> Result<(), anyhow::Error> {
@@ -252,7 +250,7 @@ async fn check_time_based(
         "SELECT EXISTS(SELECT 1 FROM plugin_usage_events WHERE user_id = $1 AND EXTRACT(HOUR FROM created_at) < 7)",
     )
     .bind(user_id)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
     if has_early {
         to_unlock.push("early_bird");
@@ -262,7 +260,7 @@ async fn check_time_based(
         "SELECT EXISTS(SELECT 1 FROM plugin_usage_events WHERE user_id = $1 AND EXTRACT(HOUR FROM created_at) >= 22)",
     )
     .bind(user_id)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
     if has_late {
         to_unlock.push("night_owl");
@@ -272,7 +270,7 @@ async fn check_time_based(
         "SELECT EXISTS(SELECT 1 FROM plugin_usage_events WHERE user_id = $1 AND EXTRACT(DOW FROM created_at) IN (0, 6))",
     )
     .bind(user_id)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
     if has_weekend {
         to_unlock.push("weekend_warrior");
@@ -282,7 +280,7 @@ async fn check_time_based(
 }
 
 async fn insert_achievements(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
     to_unlock: &[&str],
 ) -> Result<(), anyhow::Error> {
@@ -292,7 +290,7 @@ async fn insert_achievements(
         )
         .bind(user_id)
         .bind(achievement_id)
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
     }
 

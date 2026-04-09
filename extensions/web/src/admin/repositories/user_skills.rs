@@ -1,12 +1,11 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, CategoryId, SkillId, SourceId, UserId};
 
 use super::super::types::{AgentSkill, CreateSkillRequest, UpdateUserSkillRequest, UserSkill};
 
-pub async fn list_agent_skills(pool: &Arc<PgPool>) -> Result<Vec<AgentSkill>, sqlx::Error> {
+pub async fn list_agent_skills(pool: &PgPool) -> Result<Vec<AgentSkill>, sqlx::Error> {
     sqlx::query_as!(
         AgentSkill,
         r#"
@@ -18,12 +17,12 @@ pub async fn list_agent_skills(pool: &Arc<PgPool>) -> Result<Vec<AgentSkill>, sq
         ORDER BY name ASC
         "#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn find_agent_skill(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     skill_id: &SkillId,
 ) -> Result<Option<AgentSkill>, sqlx::Error> {
     sqlx::query_as!(
@@ -38,12 +37,12 @@ pub async fn find_agent_skill(
         "#,
         skill_id.as_str(),
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
 }
 
 pub async fn list_user_skills(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<UserSkill>, sqlx::Error> {
     sqlx::query_as!(
@@ -57,12 +56,12 @@ pub async fn list_user_skills(
         ORDER BY created_at DESC"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn create_user_skill(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     req: &CreateSkillRequest,
 ) -> Result<UserSkill, sqlx::Error> {
@@ -84,12 +83,12 @@ pub async fn create_user_skill(
         &req.tags as &[String],
         req.base_skill_id.as_ref().map(SkillId::as_str),
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await
 }
 
 pub async fn get_or_create_user_skill(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     req: &CreateSkillRequest,
 ) -> Result<UserSkill, sqlx::Error> {
@@ -107,14 +106,14 @@ pub async fn get_or_create_user_skill(
                 user_id.as_str(),
                 req.skill_id.as_str(),
             )
-            .fetch_one(pool.as_ref())
+            .fetch_one(pool)
             .await
         }
     }
 }
 
 pub async fn delete_user_skill(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     skill_id: &SkillId,
 ) -> Result<bool, sqlx::Error> {
@@ -123,13 +122,13 @@ pub async fn delete_user_skill(
         user_id.as_str(),
         skill_id.as_str(),
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(result.rows_affected() > 0)
 }
 
 pub async fn update_user_skill(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     skill_id: &SkillId,
     req: &UpdateUserSkillRequest,
@@ -154,12 +153,12 @@ pub async fn update_user_skill(
         req.content.as_deref(),
         &req.tags as &Option<Vec<String>>,
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
 }
 
 pub async fn fetch_skill_usage_counts(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     skill_ids: &[SkillId],
 ) -> HashMap<String, i64> {
     if skill_ids.is_empty() {
@@ -173,7 +172,7 @@ pub async fn fetch_skill_usage_counts(
           GROUP BY tool_name"#,
         &ids as &[&str],
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
     .unwrap_or_else(|e| {
         tracing::warn!(error = %e, "Failed to fetch skill usage counts");
@@ -185,7 +184,7 @@ pub async fn fetch_skill_usage_counts(
 }
 
 pub async fn fetch_skill_avg_ratings(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     skill_ids: &[SkillId],
 ) -> HashMap<String, (f64, i64)> {
     if skill_ids.is_empty() {
@@ -199,7 +198,7 @@ pub async fn fetch_skill_avg_ratings(
           GROUP BY plugin_id"#,
         &ids as &[&str],
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
     .unwrap_or_else(|e| {
         tracing::warn!(error = %e, "Failed to fetch skill avg ratings");
@@ -211,7 +210,7 @@ pub async fn fetch_skill_avg_ratings(
 }
 
 pub async fn fetch_agent_usage_counts(
-    _pool: &Arc<PgPool>,
+    _pool: &PgPool,
     _agent_ids: &[AgentId],
 ) -> HashMap<String, i64> {
     HashMap::new()

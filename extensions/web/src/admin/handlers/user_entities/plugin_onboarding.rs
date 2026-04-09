@@ -101,7 +101,7 @@ pub(crate) async fn select_and_fork_plugins_handler(
 }
 
 async fn fork_valid_plugins(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_ctx: &UserContext,
     valid_ids: &[String],
     services_path: &std::path::Path,

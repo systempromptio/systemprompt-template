@@ -1,6 +1,5 @@
 mod sessions;
 
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -11,7 +10,7 @@ use crate::admin::types::control_center::{ActivityFeedEvent, RecentSession, Rece
 pub use sessions::{fetch_recent_sessions_filtered, update_session_status};
 
 pub async fn fetch_activity_feed(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     limit: i64,
 ) -> Result<Vec<ActivityFeedEvent>, sqlx::Error> {
@@ -28,12 +27,12 @@ pub async fn fetch_activity_feed(
         user_id.as_str(),
         limit,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_recent_sessions(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     limit: i64,
 ) -> Result<Vec<RecentSession>, sqlx::Error> {
@@ -41,7 +40,7 @@ pub async fn fetch_recent_sessions(
 }
 
 pub async fn fetch_session_events(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     session_ids: &[String],
 ) -> Result<Vec<ActivityFeedEvent>, sqlx::Error> {
@@ -57,18 +56,18 @@ pub async fn fetch_session_events(
         user_id.as_str(),
         session_ids,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
-pub async fn fetch_today_stats(pool: &Arc<PgPool>, user_id: &UserId) -> TodayStats {
+pub async fn fetch_today_stats(pool: &PgPool, user_id: &UserId) -> TodayStats {
     let sessions_started = sqlx::query_scalar!(
         r#"SELECT COALESCE(COUNT(*), 0)::BIGINT as "count!"
          FROM plugin_session_summaries
          WHERE user_id = $1 AND started_at >= CURRENT_DATE"#,
         user_id.as_str(),
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await
     .unwrap_or(0);
 
@@ -92,7 +91,7 @@ struct DailyRow {
     content_output_bytes: i64,
 }
 
-async fn fetch_daily_stats(pool: &Arc<PgPool>, user_id: &UserId) -> DailyRow {
+async fn fetch_daily_stats(pool: &PgPool, user_id: &UserId) -> DailyRow {
     #[derive(sqlx::FromRow)]
     struct DailyQueryRow {
         total_prompts: i64,
@@ -114,7 +113,7 @@ async fn fetch_daily_stats(pool: &Arc<PgPool>, user_id: &UserId) -> DailyRow {
         WHERE user_id = $1 AND date = CURRENT_DATE"#,
         user_id.as_str(),
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
     .map_err(|e| {
         tracing::warn!(error = %e, user_id = %user_id.as_str(), "Failed to fetch daily usage row for control center");
@@ -145,7 +144,7 @@ pub struct TodayOutcomeStats {
     pub rated_count: i64,
 }
 
-pub async fn fetch_today_outcome_stats(pool: &Arc<PgPool>, user_id: &UserId) -> TodayOutcomeStats {
+pub async fn fetch_today_outcome_stats(pool: &PgPool, user_id: &UserId) -> TodayOutcomeStats {
     #[derive(sqlx::FromRow)]
     struct Row {
         completed_today: i64,
@@ -164,7 +163,7 @@ pub async fn fetch_today_outcome_stats(pool: &Arc<PgPool>, user_id: &UserId) -> 
         WHERE s.user_id = $1 AND s.started_at >= CURRENT_DATE"#,
         user_id.as_str(),
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
     .map_err(|e| {
         tracing::warn!(error = %e, user_id = %user_id.as_str(), "Failed to fetch today's outcome stats");
@@ -182,7 +181,7 @@ pub async fn fetch_today_outcome_stats(pool: &Arc<PgPool>, user_id: &UserId) -> 
 }
 
 pub async fn fetch_recent_tasks(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<RecentTask>, sqlx::Error> {
     sqlx::query_as!(
@@ -199,7 +198,7 @@ pub async fn fetch_recent_tasks(
         LIMIT 5",
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 

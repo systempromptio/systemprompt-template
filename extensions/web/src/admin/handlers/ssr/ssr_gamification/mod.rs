@@ -173,7 +173,7 @@ fn build_ranks(user_rank_level: i32) -> (Vec<RankView>, bool, bool) {
 }
 
 async fn load_achievements_data(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
 ) -> (
     Vec<crate::admin::types::AchievementInfo>,

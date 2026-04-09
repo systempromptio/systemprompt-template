@@ -1,21 +1,20 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
 use super::super::types::access_control::{AccessControlRule, AccessControlRuleInput};
 
-pub async fn list_all_rules(pool: &Arc<PgPool>) -> Result<Vec<AccessControlRule>, sqlx::Error> {
+pub async fn list_all_rules(pool: &PgPool) -> Result<Vec<AccessControlRule>, sqlx::Error> {
     sqlx::query_as::<_, AccessControlRule>(
         "SELECT id, entity_type, entity_id, rule_type, rule_value, access, default_included, created_at, updated_at
          FROM access_control_rules
          ORDER BY entity_type, entity_id, rule_type, rule_value",
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn list_rules_for_entity(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     entity_type: &str,
     entity_id: &str,
 ) -> Result<Vec<AccessControlRule>, sqlx::Error> {
@@ -27,12 +26,12 @@ pub async fn list_rules_for_entity(
     )
     .bind(entity_type)
     .bind(entity_id)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn set_entity_rules(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     entity_type: &str,
     entity_id: &str,
     rules: &[AccessControlRuleInput],
@@ -70,7 +69,7 @@ pub async fn set_entity_rules(
 }
 
 pub async fn bulk_set_rules(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     entities: &[(String, String)],
     rules: &[AccessControlRuleInput],
 ) -> Result<usize, sqlx::Error> {

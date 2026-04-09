@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -6,7 +5,7 @@ use systemprompt::identifiers::UserId;
 use super::super::super::types::{HookEventTypeStat, HookSummaryStats, HookTimeSeriesBucket};
 
 pub async fn get_hook_event_breakdown(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<HookEventTypeStat>, sqlx::Error> {
     sqlx::query_as!(
@@ -23,12 +22,12 @@ pub async fn get_hook_event_breakdown(
         ORDER BY 2 DESC"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn get_hook_timeseries(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     range: &str,
 ) -> Result<Vec<HookTimeSeriesBucket>, sqlx::Error> {
@@ -60,12 +59,12 @@ pub async fn get_hook_timeseries(
 
     sqlx::query_as::<_, HookTimeSeriesBucket>(&sql)
         .bind(user_id.as_str())
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
 }
 
 pub async fn get_hook_summary_stats(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     range: &str,
 ) -> HookSummaryStats {
@@ -96,7 +95,7 @@ pub async fn get_hook_summary_stats(
 
     match sqlx::query_as::<_, StatsRow>(&sql)
         .bind(user_id.as_str())
-        .fetch_one(pool.as_ref())
+        .fetch_one(pool)
         .await
     {
         Ok(row) => HookSummaryStats {

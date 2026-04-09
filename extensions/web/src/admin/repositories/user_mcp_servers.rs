@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{McpServerId, UserId};
@@ -6,7 +5,7 @@ use systemprompt::identifiers::{McpServerId, UserId};
 use super::super::types::{CreateUserMcpServerRequest, UpdateUserMcpServerRequest, UserMcpServer};
 
 pub async fn list_user_mcp_servers(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<UserMcpServer>, sqlx::Error> {
     sqlx::query_as!(
@@ -21,12 +20,12 @@ pub async fn list_user_mcp_servers(
         ORDER BY created_at DESC"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn create_user_mcp_server(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     req: &CreateUserMcpServerRequest,
 ) -> Result<UserMcpServer, sqlx::Error> {
@@ -54,12 +53,12 @@ pub async fn create_user_mcp_server(
         req.oauth_audience,
         req.base_mcp_server_id.as_ref().map(McpServerId::as_str),
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await
 }
 
 pub async fn get_or_create_user_mcp_server(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     req: &CreateUserMcpServerRequest,
 ) -> Result<UserMcpServer, sqlx::Error> {
@@ -78,14 +77,14 @@ pub async fn get_or_create_user_mcp_server(
                 user_id.as_str(),
                 req.mcp_server_id.as_str(),
             )
-            .fetch_one(pool.as_ref())
+            .fetch_one(pool)
             .await
         }
     }
 }
 
 pub async fn update_user_mcp_server(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     mcp_server_id: &McpServerId,
     req: &UpdateUserMcpServerRequest,
@@ -123,12 +122,12 @@ pub async fn update_user_mcp_server(
         &req.oauth_scopes as &Option<Vec<String>>,
         req.oauth_audience.as_deref(),
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
 }
 
 pub async fn delete_user_mcp_server(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     mcp_server_id: &McpServerId,
 ) -> Result<bool, sqlx::Error> {
@@ -137,7 +136,7 @@ pub async fn delete_user_mcp_server(
         user_id.as_str(),
         mcp_server_id.as_str(),
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(result.rows_affected() > 0)
 }

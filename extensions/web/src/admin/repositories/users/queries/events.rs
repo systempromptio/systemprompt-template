@@ -1,5 +1,4 @@
 use std::fmt::Write;
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -9,7 +8,7 @@ use super::super::super::super::types::{
 };
 
 pub async fn get_user_usage(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<UsageEvent>, sqlx::Error> {
     sqlx::query_as!(
@@ -23,12 +22,12 @@ pub async fn get_user_usage(
         "#,
         user_id as &UserId,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn list_user_events(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     query: &EventsQuery,
 ) -> Result<EventsResponse, sqlx::Error> {
@@ -58,7 +57,7 @@ pub async fn list_user_events(
     for b in &binds {
         count_q = count_q.bind(b);
     }
-    let total = count_q.fetch_one(pool.as_ref()).await?;
+    let total = count_q.fetch_one(pool).await?;
 
     let limit_idx = bind_idx + 1;
     let offset_idx = bind_idx + 2;
@@ -80,7 +79,7 @@ pub async fn list_user_events(
         data_q = data_q.bind(b);
     }
     data_q = data_q.bind(query.limit).bind(query.offset);
-    let events = data_q.fetch_all(pool.as_ref()).await?;
+    let events = data_q.fetch_all(pool).await?;
 
     Ok(EventsResponse {
         events,
@@ -91,7 +90,7 @@ pub async fn list_user_events(
 }
 
 pub async fn get_user_event_type_counts(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<EventTypeCount>, sqlx::Error> {
     sqlx::query_as!(
@@ -105,6 +104,6 @@ pub async fn get_user_event_type_counts(
         ORDER BY 2 DESC"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }

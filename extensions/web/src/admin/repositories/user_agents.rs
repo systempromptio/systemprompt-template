@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, UserId};
@@ -6,7 +5,7 @@ use systemprompt::identifiers::{AgentId, UserId};
 use super::super::types::{CreateUserAgentRequest, UpdateUserAgentRequest, UserAgent};
 
 pub async fn list_user_agents(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<UserAgent>, sqlx::Error> {
     sqlx::query_as!(
@@ -14,12 +13,12 @@ pub async fn list_user_agents(
         r#"SELECT id, user_id as "user_id: UserId", agent_id as "agent_id: AgentId", name, description, system_prompt, enabled, base_agent_id as "base_agent_id: AgentId", created_at, updated_at FROM user_agents WHERE user_id = $1 ORDER BY created_at DESC"#,
         user_id as &UserId,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn create_user_agent(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     req: &CreateUserAgentRequest,
 ) -> Result<UserAgent, sqlx::Error> {
@@ -35,12 +34,12 @@ pub async fn create_user_agent(
         &req.system_prompt,
         req.base_agent_id.as_ref() as Option<&AgentId>,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await
 }
 
 pub async fn get_or_create_user_agent(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     req: &CreateUserAgentRequest,
 ) -> Result<UserAgent, sqlx::Error> {
@@ -53,14 +52,14 @@ pub async fn get_or_create_user_agent(
                 user_id as &UserId,
                 &req.agent_id as &AgentId,
             )
-            .fetch_one(pool.as_ref())
+            .fetch_one(pool)
             .await
         }
     }
 }
 
 pub async fn update_user_agent(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     agent_id: &AgentId,
     req: &UpdateUserAgentRequest,
@@ -74,19 +73,19 @@ pub async fn update_user_agent(
         req.description.as_deref(),
         req.system_prompt.as_deref(),
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
 }
 
 pub async fn fetch_agent_plugin_assignments(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<std::collections::HashMap<String, Vec<String>>, sqlx::Error> {
     let rows = sqlx::query!(
         "SELECT ua.agent_id, up.name FROM user_plugin_agents upa JOIN user_plugins up ON up.id = upa.user_plugin_id JOIN user_agents ua ON ua.id = upa.user_agent_id WHERE up.user_id = $1",
         user_id as &UserId,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let mut map: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
@@ -97,7 +96,7 @@ pub async fn fetch_agent_plugin_assignments(
 }
 
 pub async fn delete_user_agent(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     agent_id: &AgentId,
 ) -> Result<bool, sqlx::Error> {
@@ -106,7 +105,7 @@ pub async fn delete_user_agent(
         user_id as &UserId,
         agent_id as &AgentId,
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(result.rows_affected() > 0)
 }

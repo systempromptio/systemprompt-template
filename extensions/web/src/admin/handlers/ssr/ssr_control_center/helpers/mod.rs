@@ -7,7 +7,6 @@ pub(in crate::admin) mod report;
 pub(in crate::admin) mod report_sections;
 mod template;
 
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
@@ -46,7 +45,7 @@ pub(super) struct AnalyticsData {
 }
 
 pub(super) async fn fetch_control_center_data(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &systemprompt::identifiers::UserId,
     status_filter: &str,
 ) -> (
@@ -88,10 +87,10 @@ pub(super) async fn fetch_control_center_data(
         repositories::conversation_analytics::fetch_all_session_entity_links(pool, user_id),
         gamification::queries::find_user_gamification(pool, user_id.as_str()),
         repositories::conversation_analytics::fetch_unused_skills(pool, user_id),
-        repositories::session_analyses::fetch_today_summary(pool.as_ref(), user_id),
-        repositories::apm_metrics::fetch_today_apm_live(pool.as_ref(), user_id.as_str()),
-        repositories::apm_metrics::fetch_hourly_breakdown(pool.as_ref(), user_id.as_str()),
-        repositories::apm_metrics::fetch_today_performance_summary(pool.as_ref(), user_id.as_str()),
+        repositories::session_analyses::fetch_today_summary(pool, user_id),
+        repositories::apm_metrics::fetch_today_apm_live(pool, user_id.as_str()),
+        repositories::apm_metrics::fetch_hourly_breakdown(pool, user_id.as_str()),
+        repositories::apm_metrics::fetch_today_performance_summary(pool, user_id.as_str()),
     );
     (
         recent_sessions_res.unwrap_or_else(|_| Vec::new()),

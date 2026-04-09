@@ -1,5 +1,4 @@
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
 
 use serde::Serialize;
 use sqlx::PgPool;
@@ -27,7 +26,7 @@ pub(super) struct ActivityEvent {
 }
 
 pub(super) async fn build_activity_event(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &systemprompt::identifiers::UserId,
     recent_sessions: &[RecentSession],
 ) -> ActivityEvent {

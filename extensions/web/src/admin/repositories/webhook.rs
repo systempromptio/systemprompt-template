@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
@@ -20,7 +19,7 @@ pub struct UsageEventParams<'a> {
 }
 
 pub async fn insert_plugin_usage_event(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     params: &UsageEventParams<'_>,
 ) -> Result<bool, MarketplaceError> {
     let id = uuid::Uuid::new_v4().to_string();
@@ -42,7 +41,7 @@ pub async fn insert_plugin_usage_event(
         params.cwd,
         params.dedup_key,
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
 
     Ok(result.rows_affected() > 0)

@@ -6,7 +6,6 @@ pub use queries::{
     fetch_traffic_country_timeseries,
 };
 
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
@@ -24,7 +23,7 @@ fn range_params(range: &str) -> (&str, &str, &str) {
 }
 
 pub async fn fetch_traffic_data(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     range: &str,
 ) -> Result<TrafficData, sqlx::Error> {
     let (interval, prev_interval, bucket) = range_params(range);
@@ -54,7 +53,7 @@ pub async fn fetch_traffic_data(
 }
 
 async fn fetch_traffic_timeseries(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     interval: &str,
     bucket_size: &str,
 ) -> Result<Vec<TrafficTimeBucket>, sqlx::Error> {
@@ -91,12 +90,12 @@ async fn fetch_traffic_timeseries(
         bucket_size,
         interval,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 async fn fetch_traffic_sources(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     interval: &str,
 ) -> Result<Vec<TrafficSource>, sqlx::Error> {
     sqlx::query_as!(
@@ -118,12 +117,12 @@ async fn fetch_traffic_sources(
         LIMIT 10"#,
         interval,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 async fn fetch_traffic_geo(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     interval: &str,
 ) -> Result<Vec<TrafficGeo>, sqlx::Error> {
     sqlx::query_as!(
@@ -141,12 +140,12 @@ async fn fetch_traffic_geo(
         LIMIT 10"#,
         interval,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 async fn fetch_traffic_devices(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     interval: &str,
 ) -> Result<Vec<TrafficDevice>, sqlx::Error> {
     sqlx::query_as!(
@@ -164,12 +163,12 @@ async fn fetch_traffic_devices(
         LIMIT 10"#,
         interval,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 async fn fetch_traffic_top_pages(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     interval: &str,
 ) -> Result<Vec<TrafficTopPage>, sqlx::Error> {
     sqlx::query_as!(
@@ -187,11 +186,11 @@ async fn fetch_traffic_top_pages(
         LIMIT 15"#,
         interval,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
-async fn fetch_top_pages_daily(pool: &Arc<PgPool>) -> Result<Vec<TopPageDailyBucket>, sqlx::Error> {
+async fn fetch_top_pages_daily(pool: &PgPool) -> Result<Vec<TopPageDailyBucket>, sqlx::Error> {
     sqlx::query_as!(
         TopPageDailyBucket,
         r#"WITH top_pages AS (
@@ -216,6 +215,6 @@ async fn fetch_top_pages_daily(pool: &Arc<PgPool>) -> Result<Vec<TopPageDailyBuc
         GROUP BY tp.page_url, e.created_at::date
         ORDER BY tp.page_url, e.created_at::date"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }

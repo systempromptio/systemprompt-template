@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::admin::repositories;
 use crate::admin::types::CreateUserPluginRequest;
 use sqlx::PgPool;
@@ -12,7 +10,7 @@ pub(crate) struct ForkSinglePluginResult {
 }
 
 pub(crate) async fn fork_single_plugin(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     username: &str,
     org_plugin: &crate::admin::types::PluginOverview,
@@ -92,7 +90,7 @@ pub(super) fn read_skill_content(skill_dir: &std::path::Path) -> String {
 }
 
 async fn fork_plugin_skills(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     org_plugin: &crate::admin::types::PluginOverview,
     services_path: &std::path::Path,
@@ -124,7 +122,7 @@ async fn fork_plugin_skills(
 }
 
 async fn fork_plugin_agents(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     org_plugin: &crate::admin::types::PluginOverview,
     services_path: &std::path::Path,
@@ -164,7 +162,7 @@ async fn fork_plugin_agents(
 }
 
 async fn fork_plugin_mcp_servers(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     org_plugin: &crate::admin::types::PluginOverview,
     services_path: &std::path::Path,

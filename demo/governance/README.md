@@ -16,7 +16,8 @@ Run `../00-preflight.sh` first to start services and acquire a token.
 | 04 | governance-happy.sh | Detailed rule evaluation — all 3 rules pass for admin agent | Free |
 | 05 | governance-denied.sh | Scope check + blocklist deny for user agent | Free |
 | 06 | secret-breach.sh | Secret detection blocks leaked credentials in tool inputs | Free |
-| 07 | rate-limiting.sh | Rate limit configuration and security settings | Free |
+| 07 | rate-limiting.sh | Rate limit, security, and server configuration | Free |
+| 08 | hooks.sh | Hook listing and validation across all plugins | Free |
 
 ## How it works
 

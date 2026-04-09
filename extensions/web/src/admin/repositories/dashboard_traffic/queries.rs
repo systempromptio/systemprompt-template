@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
@@ -6,7 +5,7 @@ use super::super::super::types::{
     ContentPerformanceRow, RealtimePulse, TrafficCountryBucket, TrafficTopPage,
 };
 
-pub async fn fetch_realtime_pulse(pool: &Arc<PgPool>) -> Result<RealtimePulse, sqlx::Error> {
+pub async fn fetch_realtime_pulse(pool: &PgPool) -> Result<RealtimePulse, sqlx::Error> {
     let sessions_this_hour: i64 = sqlx::query_scalar!(
         r#"SELECT COUNT(*)::BIGINT AS "count!"
         FROM user_sessions
@@ -15,7 +14,7 @@ pub async fn fetch_realtime_pulse(pool: &Arc<PgPool>) -> Result<RealtimePulse, s
           AND NOT COALESCE(is_behavioral_bot, false)
           AND request_count > 0"#
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let page_views_this_hour: i64 = sqlx::query_scalar!(
@@ -24,7 +23,7 @@ pub async fn fetch_realtime_pulse(pool: &Arc<PgPool>) -> Result<RealtimePulse, s
         WHERE created_at >= date_trunc('hour', NOW())
           AND time_on_page_ms > 0"#
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let unique_visitors_today: i64 = sqlx::query_scalar!(
@@ -32,7 +31,7 @@ pub async fn fetch_realtime_pulse(pool: &Arc<PgPool>) -> Result<RealtimePulse, s
         FROM engagement_events
         WHERE created_at >= CURRENT_DATE"#
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     Ok(RealtimePulse {
@@ -42,7 +41,7 @@ pub async fn fetch_realtime_pulse(pool: &Arc<PgPool>) -> Result<RealtimePulse, s
     })
 }
 
-pub async fn fetch_top_pages_today(pool: &Arc<PgPool>) -> Result<Vec<TrafficTopPage>, sqlx::Error> {
+pub async fn fetch_top_pages_today(pool: &PgPool) -> Result<Vec<TrafficTopPage>, sqlx::Error> {
     sqlx::query_as!(
         TrafficTopPage,
         r#"SELECT
@@ -57,12 +56,12 @@ pub async fn fetch_top_pages_today(pool: &Arc<PgPool>) -> Result<Vec<TrafficTopP
         ORDER BY 2 DESC
         LIMIT 3"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_traffic_country_timeseries(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     interval: &str,
     bucket_size: &str,
 ) -> Result<Vec<TrafficCountryBucket>, sqlx::Error> {
@@ -94,12 +93,12 @@ pub async fn fetch_traffic_country_timeseries(
         interval,
         bucket_size,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_content_performance(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     content_range: &str,
 ) -> Result<Vec<ContentPerformanceRow>, sqlx::Error> {
     match content_range {
@@ -109,7 +108,7 @@ pub async fn fetch_content_performance(
 }
 
 async fn fetch_content_performance_precomputed(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     content_range: &str,
 ) -> Result<Vec<ContentPerformanceRow>, sqlx::Error> {
     let use_30d = content_range == "30d";
@@ -127,7 +126,7 @@ async fn fetch_content_performance_precomputed(
         LIMIT 10"#,
         use_30d,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     Ok(rows
@@ -142,7 +141,7 @@ async fn fetch_content_performance_precomputed(
 }
 
 async fn fetch_content_performance_live(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     content_range: &str,
 ) -> Result<Vec<ContentPerformanceRow>, sqlx::Error> {
     let interval = match content_range {
@@ -172,7 +171,7 @@ async fn fetch_content_performance_live(
         interval,
         is_yesterday,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     Ok(rows

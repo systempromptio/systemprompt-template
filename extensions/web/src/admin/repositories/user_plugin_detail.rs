@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -6,7 +5,7 @@ use systemprompt::identifiers::UserId;
 use super::super::types::UserPluginWithAssociations;
 
 pub async fn get_plugin_with_associations(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
 ) -> Result<Option<UserPluginWithAssociations>, sqlx::Error> {

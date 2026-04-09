@@ -90,7 +90,7 @@ pub(crate) async fn handle_hook_track(
 }
 
 async fn insert_hook_event(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     payload: &HookEventPayload,
 ) -> bool {

@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -22,7 +21,7 @@ const DEFAULT_HOOK_EVENTS: &[&str] = &[
 ];
 
 pub async fn ensure_default_hooks(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     platform_url: &str,
 ) -> Result<(), sqlx::Error> {
@@ -34,7 +33,7 @@ pub async fn ensure_default_hooks(
         "SELECT event_type FROM user_hooks WHERE user_id = $1 AND is_default = true",
     )
     .bind(user_id.as_str())
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let track_url = format!("{platform_url}/api/public/hooks/track");
@@ -56,7 +55,7 @@ pub async fn ensure_default_hooks(
         .bind(format!("Default platform hook for {event} events"))
         .bind(*event)
         .bind(&track_url)
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
     }
 
@@ -64,7 +63,7 @@ pub async fn ensure_default_hooks(
 }
 
 pub async fn list_user_hooks(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<UserHook>, sqlx::Error> {
     sqlx::query_as!(
@@ -77,12 +76,12 @@ pub async fn list_user_hooks(
         ORDER BY event_type, hook_name"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn find_user_hook(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     hook_id: &str,
     user_id: &UserId,
 ) -> Result<Option<UserHook>, sqlx::Error> {
@@ -96,12 +95,12 @@ pub async fn find_user_hook(
         hook_id,
         user_id.as_str(),
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
 }
 
 pub async fn create_user_hook(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     req: &CreateUserHookRequest,
 ) -> Result<UserHook, sqlx::Error> {
@@ -128,12 +127,12 @@ pub async fn create_user_hook(
         req.timeout,
         req.is_async,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await
 }
 
 pub async fn update_user_hook(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     hook_id: &str,
     user_id: &UserId,
     req: &UpdateUserHookRequest,
@@ -169,12 +168,12 @@ pub async fn update_user_hook(
         req.is_async,
         req.enabled,
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
 }
 
 pub async fn delete_user_hook(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     hook_id: &str,
     user_id: &UserId,
 ) -> Result<bool, sqlx::Error> {
@@ -183,13 +182,13 @@ pub async fn delete_user_hook(
         hook_id,
         user_id.as_str(),
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(result.rows_affected() > 0)
 }
 
 pub async fn toggle_user_hook(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     hook_id: &str,
     user_id: &UserId,
 ) -> Result<Option<UserHook>, sqlx::Error> {
@@ -203,6 +202,6 @@ pub async fn toggle_user_hook(
         hook_id,
         user_id.as_str(),
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
 }

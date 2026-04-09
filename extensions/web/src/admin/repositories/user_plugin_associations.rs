@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
@@ -6,7 +5,7 @@ use super::super::types::UserPlugin;
 use super::user_plugins::list_user_plugins;
 
 pub async fn set_plugin_skills(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_plugin_id: &str,
     skill_ids: &[String],
 ) -> Result<(), sqlx::Error> {
@@ -34,7 +33,7 @@ pub async fn set_plugin_skills(
 }
 
 pub async fn set_plugin_agents(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_plugin_id: &str,
     agent_ids: &[String],
 ) -> Result<(), sqlx::Error> {
@@ -62,7 +61,7 @@ pub async fn set_plugin_agents(
 }
 
 pub async fn set_plugin_mcp_servers(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_plugin_id: &str,
     mcp_server_ids: &[String],
 ) -> Result<(), sqlx::Error> {
@@ -90,7 +89,7 @@ pub async fn set_plugin_mcp_servers(
 }
 
 pub async fn set_plugin_hooks(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_plugin_id: &str,
     hook_ids: &[String],
 ) -> Result<(), sqlx::Error> {
@@ -118,7 +117,7 @@ pub async fn set_plugin_hooks(
 }
 
 pub async fn list_user_plugins_enriched(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
 ) -> Result<Vec<UserPluginEnriched>, sqlx::Error> {
     let plugins = list_user_plugins(pool, user_id).await?;
@@ -136,7 +135,7 @@ pub async fn list_user_plugins_enriched(
           ORDER BY ups.sort_order",
     )
     .bind(&plugin_db_ids)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let agent_rows: Vec<(String, String, String)> = sqlx::query_as(
@@ -147,7 +146,7 @@ pub async fn list_user_plugins_enriched(
           ORDER BY upa.sort_order",
     )
     .bind(&plugin_db_ids)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let mcp_rows: Vec<(String, String, String)> = sqlx::query_as(
@@ -158,7 +157,7 @@ pub async fn list_user_plugins_enriched(
           ORDER BY upm.sort_order",
     )
     .bind(&plugin_db_ids)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let hook_rows: Vec<(String, String, String, String, String, bool)> = sqlx::query_as(
@@ -169,7 +168,7 @@ pub async fn list_user_plugins_enriched(
           ORDER BY uph.sort_order",
     )
     .bind(&plugin_db_ids)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let mut skill_map: std::collections::HashMap<String, Vec<AssociatedEntity>> =

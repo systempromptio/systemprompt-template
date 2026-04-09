@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -13,7 +12,7 @@ pub struct AuditLogRow {
 }
 
 pub async fn list_audit_log(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
 ) -> Result<Vec<AuditLogRow>, sqlx::Error> {
@@ -23,13 +22,13 @@ pub async fn list_audit_log(
         user_id as &UserId,
         plugin_id,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
     Ok(rows)
 }
 
 pub async fn insert_audit_entry(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
     action: &str,
@@ -42,7 +41,7 @@ pub async fn insert_audit_entry(
         plugin_id,
         action,
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(())
 }

@@ -12,7 +12,7 @@ use crate::admin::types::webhook::{HookEvent, HookEventPayload};
 use super::{ai_summary, entity, helpers};
 
 pub(crate) struct ProcessInsertedEventParams<'a> {
-    pub pool: &'a Arc<PgPool>,
+    pub pool: &'a PgPool,
     pub user_id: &'a UserId,
     pub session_id: &'a SessionId,
     pub event_type: &'a str,
@@ -35,7 +35,7 @@ pub(crate) async fn process_inserted_event(params: &ProcessInsertedEventParams<'
     let today = chrono::Utc::now().date_naive();
 
     usage_aggregations::upsert_daily_aggregation(&usage_aggregations::DailyAggregationParams {
-        pool: pool.as_ref(),
+        pool: pool,
         user_id,
         date: &today,
         event_type,
@@ -50,7 +50,7 @@ pub(crate) async fn process_inserted_event(params: &ProcessInsertedEventParams<'
         let file_path = helpers::extract_file_path(payload);
         let is_from_subagent = payload.common.agent_id.is_some();
         usage_aggregations::increment_session_summary(&usage_aggregations::SessionSummaryParams {
-            pool: pool.as_ref(),
+            pool: pool,
             session_id,
             user_id,
             event_type,
@@ -65,7 +65,7 @@ pub(crate) async fn process_inserted_event(params: &ProcessInsertedEventParams<'
         if event_type == "SessionStart" {
             if let HookEvent::SessionStart(ref data) = payload.event {
                 usage_aggregations::update_session_metadata(
-                    pool.as_ref(),
+                    pool,
                     session_id,
                     &data.source,
                     &data.model,
@@ -77,7 +77,7 @@ pub(crate) async fn process_inserted_event(params: &ProcessInsertedEventParams<'
 
         if !payload.common.permission_mode.is_empty() && event_type != "SessionStart" {
             usage_aggregations::update_session_permission_mode(
-                pool.as_ref(),
+                pool,
                 session_id,
                 &payload.common.permission_mode,
             )
@@ -98,7 +98,7 @@ pub(crate) async fn process_inserted_event(params: &ProcessInsertedEventParams<'
                 None
             };
             if let Err(e) = conversation_analytics::upsert_session_entity_link(
-                pool.as_ref(),
+                pool,
                 user_id,
                 session_id.as_str(),
                 entity_type,
@@ -127,7 +127,7 @@ pub(crate) async fn process_inserted_event(params: &ProcessInsertedEventParams<'
 }
 
 async fn handle_prompt_title(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     event_type: &str,
     session_id: &SessionId,
     payload: &HookEventPayload,
@@ -152,7 +152,7 @@ async fn handle_session_analysis(params: &ProcessInsertedEventParams<'_>) {
 
     let can_analyse = crate::admin::tier_enforcement::check_limit(
         params.tier_cache,
-        pool.as_ref(),
+        pool,
         user_id,
         crate::admin::tier_limits::LimitCheck::FeatureAccess(
             crate::admin::tier_limits::Feature::AiSessionAnalysis,
@@ -188,7 +188,7 @@ async fn handle_session_analysis(params: &ProcessInsertedEventParams<'_>) {
 }
 
 async fn handle_session_end(params: &ProcessInsertedEventParams<'_>) {
-    let _ = hooks_track::mark_session_ended(params.pool.as_ref(), params.session_id).await;
+    let _ = hooks_track::mark_session_ended(params.pool, params.session_id).await;
 }
 
 async fn run_ai_analysis(params: &ProcessInsertedEventParams<'_>) {
@@ -219,7 +219,7 @@ async fn handle_apm_and_concurrent(params: &ProcessInsertedEventParams<'_>) {
 
     let can_apm = crate::admin::tier_enforcement::check_limit(
         params.tier_cache,
-        pool.as_ref(),
+        pool,
         user_id,
         crate::admin::tier_limits::LimitCheck::FeatureAccess(
             crate::admin::tier_limits::Feature::ApmMetrics,
@@ -232,18 +232,18 @@ async fn handle_apm_and_concurrent(params: &ProcessInsertedEventParams<'_>) {
     }
 
     let (apm, eapm) = crate::admin::repositories::apm_metrics::calculate_session_apm(
-        pool.as_ref(),
+        pool,
         session_id.as_str(),
     )
     .await;
 
     let concurrent_raw =
-        hooks_track::count_concurrent_sessions(pool.as_ref(), user_id, session_id).await;
+        hooks_track::count_concurrent_sessions(pool, user_id, session_id).await;
 
     let concurrent = numeric::saturating_i32(concurrent_raw) + 1;
 
     crate::admin::repositories::apm_metrics::update_session_apm(
-        pool.as_ref(),
+        pool,
         session_id.as_str(),
         apm,
         eapm,

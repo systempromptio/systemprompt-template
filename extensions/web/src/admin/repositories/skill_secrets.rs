@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
@@ -9,7 +8,7 @@ use super::super::types::SkillSecret;
 use crate::error::MarketplaceError;
 
 pub async fn list_skill_secrets(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     skill_id: &SkillId,
 ) -> Result<Vec<SkillSecret>, MarketplaceError> {
@@ -20,7 +19,7 @@ pub async fn list_skill_secrets(
         user_id.as_str(),
         skill_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let masked: Vec<SkillSecret> = rows
@@ -37,7 +36,7 @@ pub async fn list_skill_secrets(
 }
 
 pub async fn upsert_skill_secret(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     skill_id: &SkillId,
     var_name: &str,
@@ -72,14 +71,14 @@ pub async fn upsert_skill_secret(
         encrypted.as_slice(),
         nonce.as_slice(),
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
 
     Ok(())
 }
 
 pub async fn delete_skill_secret(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     skill_id: &SkillId,
     var_name: &str,
@@ -90,13 +89,13 @@ pub async fn delete_skill_secret(
         skill_id.as_str(),
         var_name,
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(result.rows_affected() > 0)
 }
 
 pub async fn list_all_user_skill_secrets(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<SkillSecret>, MarketplaceError> {
     let rows = sqlx::query_as!(
@@ -105,7 +104,7 @@ pub async fn list_all_user_skill_secrets(
          FROM skill_secrets WHERE user_id = $1 ORDER BY skill_id, var_name",
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let masked: Vec<SkillSecret> = rows
@@ -122,7 +121,7 @@ pub async fn list_all_user_skill_secrets(
 }
 
 pub async fn resolve_secrets_for_skill(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     skill_id: &SkillId,
     master_key: &[u8; 32],
@@ -137,7 +136,7 @@ pub async fn resolve_secrets_for_skill(
         user_id.as_str(),
         skill_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let mut secrets = HashMap::new();
@@ -162,7 +161,7 @@ pub async fn resolve_secrets_for_skill(
         user_id.as_str(),
         format!("skill:{}", skill_id.as_str()),
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await
     {
         tracing::warn!(error = %e, "Failed to insert secret audit log");

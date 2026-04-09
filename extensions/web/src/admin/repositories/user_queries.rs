@@ -1,9 +1,8 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
 pub async fn fetch_department_stats(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<super::super::types::DepartmentStats>, sqlx::Error> {
     sqlx::query_as::<_, super::super::types::DepartmentStats>(
         r"
@@ -45,6 +44,6 @@ pub async fn fetch_department_stats(
         ORDER BY user_count DESC
         ",
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }

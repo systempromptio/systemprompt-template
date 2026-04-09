@@ -1,5 +1,4 @@
 use std::fmt::Write;
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
@@ -17,7 +16,7 @@ use super::dashboard_queries::{
 use super::dashboard_traffic;
 
 pub async fn get_dashboard_data(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     chart_interval: &str,
     chart_bucket: &str,
     traffic_range: &str,
@@ -72,7 +71,7 @@ type TrafficSectionResult = (
 );
 
 async fn fetch_traffic_section(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     traffic_range: &str,
     content_range: &str,
 ) -> TrafficSectionResult {
@@ -121,7 +120,7 @@ async fn fetch_traffic_section(
 }
 
 pub async fn list_events(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     query: &EventsQuery,
 ) -> Result<EventsResponse, sqlx::Error> {
     let mut where_clause = String::from(
@@ -151,7 +150,7 @@ pub async fn list_events(
     for b in &binds {
         count_q = count_q.bind(b);
     }
-    let total = count_q.fetch_one(pool.as_ref()).await?;
+    let total = count_q.fetch_one(pool).await?;
 
     let limit_idx = bind_idx + 1;
     let offset_idx = bind_idx + 2;
@@ -173,7 +172,7 @@ pub async fn list_events(
         data_q = data_q.bind(b);
     }
     data_q = data_q.bind(query.limit).bind(query.offset);
-    let events = data_q.fetch_all(pool.as_ref()).await?;
+    let events = data_q.fetch_all(pool).await?;
 
     Ok(EventsResponse {
         events,
@@ -183,7 +182,7 @@ pub async fn list_events(
     })
 }
 
-pub async fn list_event_breakdown(pool: &Arc<PgPool>) -> Result<Vec<EventBreakdown>, sqlx::Error> {
+pub async fn list_event_breakdown(pool: &PgPool) -> Result<Vec<EventBreakdown>, sqlx::Error> {
     let sql = r"SELECT p.event_type, COUNT(*)::BIGINT AS count
         FROM plugin_usage_events p
         JOIN users u ON u.id = p.user_id
@@ -191,6 +190,6 @@ pub async fn list_event_breakdown(pool: &Arc<PgPool>) -> Result<Vec<EventBreakdo
         GROUP BY p.event_type
         ORDER BY count DESC";
     sqlx::query_as::<_, EventBreakdown>(sql)
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
 }

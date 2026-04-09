@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use crate::error::MarketplaceError;
 use serde::Serialize;
@@ -15,7 +14,7 @@ pub struct PluginEnvVar {
 }
 
 pub async fn list_plugin_env_vars(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
 ) -> Result<Vec<PluginEnvVar>, MarketplaceError> {
@@ -26,7 +25,7 @@ pub async fn list_plugin_env_vars(
         user_id.as_str(),
         plugin_id,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let rows = if rows.is_empty() && user_id.as_str() != "admin" {
@@ -36,7 +35,7 @@ pub async fn list_plugin_env_vars(
              FROM plugin_env_vars WHERE user_id = 'admin' AND plugin_id = $1 ORDER BY var_name",
             plugin_id,
         )
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, plugin_id = %plugin_id, "Failed to fetch admin fallback env vars");
@@ -60,7 +59,7 @@ pub async fn list_plugin_env_vars(
 }
 
 pub async fn upsert_plugin_env_var(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
     var_name: &str,
@@ -98,7 +97,7 @@ pub async fn upsert_plugin_env_var(
             encrypted.as_slice(),
             nonce.as_slice(),
         )
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
 
         return Ok(());
@@ -116,13 +115,13 @@ pub async fn upsert_plugin_env_var(
         var_value,
         is_secret,
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(())
 }
 
 pub async fn get_raw_env_vars_for_export(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
 ) -> Result<std::collections::HashMap<String, String>, MarketplaceError> {
@@ -132,7 +131,7 @@ pub async fn get_raw_env_vars_for_export(
         user_id.as_str(),
         plugin_id,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     if rows.is_empty() && user_id.as_str() != "admin" {
@@ -141,7 +140,7 @@ pub async fn get_raw_env_vars_for_export(
              WHERE user_id = 'admin' AND plugin_id = $1 ORDER BY var_name",
             plugin_id,
         )
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await?;
         return Ok(fallback
             .into_iter()
@@ -174,7 +173,7 @@ pub async fn get_raw_env_vars_for_export(
 }
 
 pub async fn list_all_user_env_vars(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<PluginEnvVar>, MarketplaceError> {
     let rows = sqlx::query_as!(
@@ -183,7 +182,7 @@ pub async fn list_all_user_env_vars(
          FROM plugin_env_vars WHERE user_id = $1 ORDER BY plugin_id, var_name",
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let masked: Vec<PluginEnvVar> = rows
@@ -200,7 +199,7 @@ pub async fn list_all_user_env_vars(
 }
 
 pub async fn delete_plugin_env_var(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
     var_name: &str,
@@ -211,7 +210,7 @@ pub async fn delete_plugin_env_var(
         plugin_id,
         var_name,
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(result.rows_affected() > 0)
 }

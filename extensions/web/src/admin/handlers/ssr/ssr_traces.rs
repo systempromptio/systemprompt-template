@@ -229,7 +229,7 @@ fn build_entities_json(entities: &[TraceEntity]) -> Vec<serde_json::Value> {
 }
 
 async fn fetch_trace_events(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     session_id: &str,
 ) -> Result<Vec<TraceEvent>, sqlx::Error> {
     sqlx::query_as::<_, TraceEvent>(
@@ -240,12 +240,12 @@ async fn fetch_trace_events(
          LIMIT 500",
     )
     .bind(session_id)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 async fn fetch_trace_governance(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     session_id: &str,
 ) -> Result<Vec<TraceGovernanceRow>, sqlx::Error> {
     sqlx::query_as::<_, TraceGovernanceRow>(
@@ -256,12 +256,12 @@ async fn fetch_trace_governance(
          LIMIT 100",
     )
     .bind(session_id)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 async fn fetch_trace_entities(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     session_id: &str,
 ) -> Result<Vec<TraceEntity>, sqlx::Error> {
     sqlx::query_as::<_, TraceEntity>(
@@ -272,12 +272,12 @@ async fn fetch_trace_entities(
          LIMIT 50",
     )
     .bind(session_id)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 async fn fetch_session_summary(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     session_id: &str,
 ) -> Result<SessionSummaryRow, sqlx::Error> {
     sqlx::query_as::<_, SessionSummaryRow>(
@@ -290,6 +290,6 @@ async fn fetch_session_summary(
         WHERE session_id = $1",
     )
     .bind(session_id)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await
 }

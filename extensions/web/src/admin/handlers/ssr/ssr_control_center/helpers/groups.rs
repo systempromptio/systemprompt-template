@@ -1,5 +1,4 @@
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
@@ -11,7 +10,7 @@ use super::super::session_groups::build_session_groups_with_status;
 use super::super::types::SessionGroup;
 
 pub(in crate::admin) async fn build_session_groups(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &systemprompt::identifiers::UserId,
     recent_sessions: &[crate::admin::types::control_center::RecentSession],
 ) -> Vec<SessionGroup> {

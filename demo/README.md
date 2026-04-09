@@ -1,6 +1,6 @@
 # Demo Suite
 
-39 runnable demo scripts organized into 10 categories. Each demonstrates a different aspect of the platform via CLI commands.
+42 runnable demo scripts organized into 10 categories. Each demonstrates a different aspect of the platform via CLI commands.
 
 ## Quick Start
 
@@ -8,10 +8,13 @@
 # 1. Build and start services
 just build && just start
 
-# 2. Run preflight (acquires token, checks services)
+# 2. Run preflight (acquires token, checks services, creates admin user if needed)
 ./demo/00-preflight.sh
 
-# 3. Pick any category
+# 3. Seed data for analytics and trace demos
+./demo/01-seed-data.sh
+
+# 4. Pick any category
 ./demo/governance/01-happy-path.sh
 ./demo/infrastructure/02-database.sh
 ./demo/analytics/01-overview.sh
@@ -21,31 +24,33 @@ just build && just start
 
 | Category | Scripts | What it covers | Cost |
 |----------|---------|---------------|------|
-| [governance/](governance/) | 7 | Tool access control, scope enforcement, secret detection, audit trails | Free |
+| [governance/](governance/) | 8 | Tool access control, scope enforcement, secret detection, audit trails, hooks | Free |
 | [agents/](agents/) | 5 | Agent discovery, configuration, messaging, tracing, A2A registry | 2 @ ~$0.01 |
 | [mcp/](mcp/) | 3 | MCP server management, access tracking, tool execution | Free |
-| [skills/](skills/) | 4 | Skills, content, files, plugins, hooks | Free |
-| [infrastructure/](infrastructure/) | 4 | Services, database, jobs, logs | Free |
-| [analytics/](analytics/) | 6 | Overview, agents, costs, requests, sessions, content/traffic | Free |
+| [skills/](skills/) | 5 | Skills, content, files, plugins, contexts | Free |
+| [infrastructure/](infrastructure/) | 5 | Services, database, jobs, logs, configuration | Free |
+| [analytics/](analytics/) | 8 | Overview, agents, costs, requests, sessions, content/traffic, conversations, tools | Free |
 | [users/](users/) | 4 | User CRUD, roles, sessions, IP bans | Free |
 | [web/](web/) | 2 | Content types, templates, sitemaps, validation | Free |
 | [cloud/](cloud/) | 1 | Auth status, profiles, deployment info | Free |
 | [performance/](performance/) | 2 | Request tracing, benchmarks, load testing | Free |
 
-**Total: 39 scripts. 37 free, 2 cost ~$0.01 each (agent messaging).**
+**Total: 42 category scripts + preflight + seed = 44 scripts. 41 free, 2 cost ~$0.01 each.**
 
 ## Prerequisites
 
 - Built binary: `just build`
 - Running services: `just start`
 - Preflight completed: `./demo/00-preflight.sh`
+- Seed data (recommended): `./demo/01-seed-data.sh`
 
 ## Script Index
 
-### 00 — Preflight
+### Setup
 | Script | Description |
 |--------|-------------|
-| `00-preflight.sh` | Service health check, token acquisition, JWT validation |
+| `00-preflight.sh` | Service health check, admin user creation, token acquisition |
+| `01-seed-data.sh` | Populate governance decisions, events, skills, and content |
 
 ### Governance
 | Script | Description |
@@ -56,7 +61,8 @@ just build && just start
 | `governance/04-governance-happy.sh` | All 3 rules pass for admin agent |
 | `governance/05-governance-denied.sh` | Scope + blocklist deny for user agent |
 | `governance/06-secret-breach.sh` | Secret detection blocks credentials |
-| `governance/07-rate-limiting.sh` | Rate limit and security configuration |
+| `governance/07-rate-limiting.sh` | Rate limit, security, and server configuration |
+| `governance/08-hooks.sh` | Hook listing and validation |
 
 ### Agents
 | Script | Description |
@@ -70,7 +76,7 @@ just build && just start
 ### MCP Servers
 | Script | Description |
 |--------|-------------|
-| `mcp/01-mcp-servers.sh` | List servers, status, logs |
+| `mcp/01-mcp-servers.sh` | Server status, tools by server |
 | `mcp/02-mcp-access-tracking.sh` | OAuth + MCP tool call tracking |
 | `mcp/03-mcp-tool-execution.sh` | Tool listings, execution logs |
 
@@ -81,6 +87,7 @@ just build && just start
 | `skills/02-content-management.sh` | Content listing, search, popularity |
 | `skills/03-file-management.sh` | File listing, config, storage stats |
 | `skills/04-plugin-management.sh` | Plugins, hooks, extensions, capabilities |
+| `skills/05-contexts.sh` | Context CRUD — create, show, edit, delete |
 
 ### Infrastructure
 | Script | Description |
@@ -89,6 +96,7 @@ just build && just start
 | `infrastructure/02-database.sh` | Tables, schema, queries, migrations |
 | `infrastructure/03-jobs.sh` | Job scheduling, execution history |
 | `infrastructure/04-logs.sh` | Log viewing, search, traces, requests |
+| `infrastructure/05-config.sh` | Full platform configuration overview |
 
 ### Analytics
 | Script | Description |
@@ -99,6 +107,8 @@ just build && just start
 | `analytics/04-request-analytics.sh` | AI request volume, latency, models |
 | `analytics/05-session-analytics.sh` | Session stats, trends, real-time |
 | `analytics/06-content-traffic.sh` | Content engagement, traffic, geo |
+| `analytics/07-conversations.sh` | Conversation stats, trends, listing |
+| `analytics/08-tool-analytics.sh` | Tool usage stats, trends |
 
 ### Users & Auth
 | Script | Description |
@@ -112,7 +122,7 @@ just build && just start
 | Script | Description |
 |--------|-------------|
 | `web/01-web-config.sh` | Content types, templates, assets |
-| `web/02-sitemap-validate.sh` | Sitemap generation, validation |
+| `web/02-sitemap-validate.sh` | Sitemap config, web validation |
 
 ### Cloud
 | Script | Description |
@@ -139,7 +149,3 @@ systemprompt infra services start --kill-port-process
 
 SVG terminal recordings and video recording infrastructure are in `recording/`.
 See `recording/RECORDING-GUIDE.md` for video production workflow.
-
-## Backward Compatibility
-
-Old numbered paths (e.g., `demo/01-happy-path.sh`) still work — they delegate to the category scripts.

@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use sha2::{Digest, Sha256};
 use sqlx::PgPool;
@@ -11,7 +10,7 @@ use super::secret_keys;
 use crate::error::MarketplaceError;
 
 pub async fn create_resolution_token(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
 ) -> Result<String, MarketplaceError> {
@@ -27,7 +26,7 @@ pub async fn create_resolution_token(
         plugin_id,
         token_hash,
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
 
     tracing::debug!(user_id = %user_id, plugin_id = %plugin_id, "Created resolution token");
@@ -35,7 +34,7 @@ pub async fn create_resolution_token(
 }
 
 pub async fn validate_and_consume_token(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     raw_token: &str,
 ) -> Result<(String, String), MarketplaceError> {
     let token_hash = hex::encode(Sha256::digest(raw_token.as_bytes()));
@@ -46,7 +45,7 @@ pub async fn validate_and_consume_token(
          RETURNING user_id, plugin_id",
         token_hash,
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await?;
 
     match row {
@@ -61,7 +60,7 @@ pub async fn validate_and_consume_token(
 }
 
 pub async fn resolve_secrets_for_plugin(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
     master_key: &[u8; 32],
@@ -76,7 +75,7 @@ pub async fn resolve_secrets_for_plugin(
         user_id.as_str(),
         plugin_id,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let mut secrets = HashMap::new();
@@ -101,7 +100,7 @@ pub async fn resolve_secrets_for_plugin(
         user_id.as_str(),
         plugin_id,
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
 
     tracing::info!(

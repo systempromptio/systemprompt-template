@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
@@ -7,7 +6,7 @@ use super::super::super::types::{UserPlugin, UserPluginWithAssociations};
 use super::types::{AssociatedEntity, UserPluginEnriched};
 
 pub async fn list_user_plugins(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<UserPlugin>, sqlx::Error> {
     sqlx::query_as!(
@@ -20,12 +19,12 @@ pub async fn list_user_plugins(
         "#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn find_user_plugin(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
 ) -> Result<Option<UserPlugin>, sqlx::Error> {
@@ -39,12 +38,12 @@ pub async fn find_user_plugin(
         user_id.as_str(),
         plugin_id,
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
 }
 
 pub async fn count_user_plugin_items(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<crate::admin::types::UserPluginCounts, sqlx::Error> {
     let row = sqlx::query!(
@@ -60,7 +59,7 @@ pub async fn count_user_plugin_items(
           WHERE up.user_id = $1"#,
         user_id as &UserId,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
     Ok(crate::admin::types::UserPluginCounts {
         plugins: usize::try_from(row.plugins).unwrap_or(0),
@@ -77,7 +76,7 @@ struct PluginEntityRow {
 }
 
 pub async fn list_user_plugins_enriched(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<UserPluginEnriched>, sqlx::Error> {
     let plugins = list_user_plugins(pool, user_id).await?;
@@ -96,7 +95,7 @@ pub async fn list_user_plugins_enriched(
           ORDER BY ups.sort_order"#,
         &plugin_db_ids,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let agent_rows = sqlx::query_as!(
@@ -108,7 +107,7 @@ pub async fn list_user_plugins_enriched(
           ORDER BY upa.sort_order"#,
         &plugin_db_ids,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let mcp_rows = sqlx::query_as!(
@@ -120,7 +119,7 @@ pub async fn list_user_plugins_enriched(
           ORDER BY upm.sort_order"#,
         &plugin_db_ids,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let mut skill_map = build_entity_map(skill_rows);
@@ -165,7 +164,7 @@ fn build_entity_map(
 }
 
 pub async fn is_entity_in_platform_plugin(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     entity_id: &str,
     entity_kind: &str,
@@ -179,7 +178,7 @@ pub async fn is_entity_in_platform_plugin(
             user_id as &UserId,
             entity_id,
         )
-        .fetch_optional(pool.as_ref())
+        .fetch_optional(pool)
         .await
         .map_err(|e| {
             tracing::warn!(error = %e, user_id = %user_id.as_str(), entity_id = %entity_id, "Failed to check skill entity ownership");
@@ -195,7 +194,7 @@ pub async fn is_entity_in_platform_plugin(
             user_id as &UserId,
             entity_id,
         )
-        .fetch_optional(pool.as_ref())
+        .fetch_optional(pool)
         .await
         .map_err(|e| {
             tracing::warn!(error = %e, user_id = %user_id.as_str(), entity_id = %entity_id, "Failed to check agent entity ownership");
@@ -208,7 +207,7 @@ pub async fn is_entity_in_platform_plugin(
 }
 
 pub async fn find_plugin_with_associations(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
 ) -> Result<Option<UserPluginWithAssociations>, sqlx::Error> {
@@ -221,7 +220,7 @@ pub async fn find_plugin_with_associations(
         "SELECT user_skill_id FROM user_plugin_skills WHERE user_plugin_id = $1 ORDER BY sort_order",
         &plugin.id,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
     let skill_ids: Vec<SkillId> = skill_rows
         .into_iter()
@@ -232,7 +231,7 @@ pub async fn find_plugin_with_associations(
         "SELECT user_agent_id FROM user_plugin_agents WHERE user_plugin_id = $1 ORDER BY sort_order",
         &plugin.id,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
     let agent_ids: Vec<AgentId> = agent_rows
         .into_iter()
@@ -243,7 +242,7 @@ pub async fn find_plugin_with_associations(
         "SELECT user_mcp_server_id FROM user_plugin_mcp_servers WHERE user_plugin_id = $1 ORDER BY sort_order",
         &plugin.id,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
     let mcp_server_ids: Vec<McpServerId> = mcp_rows
         .into_iter()

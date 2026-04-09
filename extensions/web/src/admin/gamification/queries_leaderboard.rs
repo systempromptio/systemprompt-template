@@ -1,11 +1,9 @@
-use std::sync::Arc;
-
 use sqlx::PgPool;
 
 use super::super::types::{DepartmentScore, LeaderboardEntry};
 
 pub async fn get_leaderboard(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     limit: i64,
     offset: i64,
     department: Option<&str>,
@@ -35,7 +33,7 @@ pub async fn get_leaderboard(
         .bind(limit)
         .bind(offset)
         .bind(dept)
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
     } else {
         sqlx::query_as::<_, LeaderboardEntry>(
@@ -60,13 +58,13 @@ pub async fn get_leaderboard(
         )
         .bind(limit)
         .bind(offset)
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
     }
 }
 
 pub async fn get_department_leaderboard(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     dept: &str,
 ) -> Result<Vec<LeaderboardEntry>, sqlx::Error> {
     sqlx::query_as::<_, LeaderboardEntry>(
@@ -89,12 +87,12 @@ pub async fn get_department_leaderboard(
         ",
     )
     .bind(dept)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn get_department_scores(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     department: Option<&str>,
 ) -> Result<Vec<DepartmentScore>, sqlx::Error> {
     if let Some(dept) = department {
@@ -123,7 +121,7 @@ pub async fn get_department_scores(
             ",
         )
         .bind(dept)
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
     } else {
         sqlx::query_as::<_, DepartmentScore>(
@@ -149,7 +147,7 @@ pub async fn get_department_scores(
             ORDER BY total_xp DESC
             ",
         )
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
     }
 }
@@ -168,7 +166,7 @@ pub struct LeaderboardAverages {
 }
 
 pub async fn get_leaderboard_averages(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<LeaderboardAverages, sqlx::Error> {
     #[derive(sqlx::FromRow)]
     struct AvgRow {
@@ -188,7 +186,7 @@ pub async fn get_leaderboard_averages(
             COUNT(*)::BIGINT AS total_users
         FROM employee_ranks r",
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     Ok(LeaderboardAverages {

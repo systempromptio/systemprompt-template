@@ -7,7 +7,7 @@ use systemprompt::ai::AiService;
 use crate::error::MarketplaceError;
 
 pub async fn generate_user_daily_summary(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
     date: NaiveDate,
     ai_service: Option<&Arc<AiService>>,
@@ -21,7 +21,7 @@ pub async fn generate_user_daily_summary(
     )
     .bind(user_id)
     .bind(date)
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
     .map_err(MarketplaceError::Database)?;
 
@@ -35,7 +35,7 @@ pub async fn generate_user_daily_summary(
     )
     .bind(user_id)
     .bind(date)
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await
     .unwrap_or(0);
 
@@ -52,7 +52,7 @@ pub async fn generate_user_daily_summary(
     .bind(user_id)
     .bind(date)
     .bind(session_count)
-    .execute(pool.as_ref())
+    .execute(pool)
     .await
     .map_err(MarketplaceError::Database)?;
 

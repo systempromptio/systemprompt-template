@@ -1,9 +1,8 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-pub async fn mark_user_dirty(pool: &Arc<PgPool>, user_id: &UserId) -> Result<(), sqlx::Error> {
+pub async fn mark_user_dirty(pool: &PgPool, user_id: &UserId) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r"
         INSERT INTO marketplace_sync_status (user_id, dirty, last_changed_at)
@@ -12,7 +11,7 @@ pub async fn mark_user_dirty(pool: &Arc<PgPool>, user_id: &UserId) -> Result<(),
         ",
         user_id.as_str(),
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
 
     let persistent_repo = std::path::PathBuf::from("storage/marketplace-versions")
@@ -31,7 +30,7 @@ pub async fn mark_user_dirty(pool: &Arc<PgPool>, user_id: &UserId) -> Result<(),
     Ok(())
 }
 
-pub async fn get_dirty_users(pool: &Arc<PgPool>, limit: i64) -> Result<Vec<UserId>, sqlx::Error> {
+pub async fn get_dirty_users(pool: &PgPool, limit: i64) -> Result<Vec<UserId>, sqlx::Error> {
     let rows = sqlx::query!(
         r"
         SELECT user_id FROM marketplace_sync_status
@@ -42,12 +41,12 @@ pub async fn get_dirty_users(pool: &Arc<PgPool>, limit: i64) -> Result<Vec<UserI
         ",
         limit,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
     Ok(rows.into_iter().map(|r| UserId::new(&r.user_id)).collect())
 }
 
-pub async fn mark_user_synced(pool: &Arc<PgPool>, user_id: &UserId) -> Result<(), sqlx::Error> {
+pub async fn mark_user_synced(pool: &PgPool, user_id: &UserId) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r"
         UPDATE marketplace_sync_status
@@ -56,13 +55,13 @@ pub async fn mark_user_synced(pool: &Arc<PgPool>, user_id: &UserId) -> Result<()
         ",
         user_id.as_str(),
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(())
 }
 
 pub async fn mark_sync_error(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     error: &str,
 ) -> Result<(), sqlx::Error> {
@@ -75,17 +74,17 @@ pub async fn mark_sync_error(
         user_id.as_str(),
         error,
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(())
 }
 
-pub async fn delete_sync_status(pool: &Arc<PgPool>, user_id: &UserId) -> Result<(), sqlx::Error> {
+pub async fn delete_sync_status(pool: &PgPool, user_id: &UserId) -> Result<(), sqlx::Error> {
     sqlx::query!(
         "DELETE FROM marketplace_sync_status WHERE user_id = $1",
         user_id.as_str(),
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(())
 }

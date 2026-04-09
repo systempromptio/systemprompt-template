@@ -57,7 +57,7 @@ fn load_filesystem_entities(
     (plugins, agents, mcp_servers)
 }
 
-async fn load_access_control_data(pool: &Arc<PgPool>) -> AccessControlData {
+async fn load_access_control_data(pool: &PgPool) -> AccessControlData {
     let (rules_res, dept_res) = tokio::join!(
         repositories::access_control::list_all_rules(pool),
         repositories::fetch_department_stats(pool),

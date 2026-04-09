@@ -16,3 +16,5 @@ Run `../00-preflight.sh` first. More data = richer analytics output.
 | 04 | request-analytics.sh | AI request volume, latency, model usage | Free |
 | 05 | session-analytics.sh | Session statistics, trends, real-time | Free |
 | 06 | content-traffic.sh | Content engagement, traffic sources, geo, devices | Free |
+| 07 | conversations.sh | Conversation stats, trends, listing | Free |
+| 08 | tool-analytics.sh | Tool usage stats, listings, trends | Free |

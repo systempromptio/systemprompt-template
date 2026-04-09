@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -6,7 +5,7 @@ use systemprompt::identifiers::UserId;
 use crate::admin::types::conversation_analytics::{EntityUsageSummary, SessionEntityLink};
 
 pub async fn fetch_session_entities(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     session_id: &str,
 ) -> Result<Vec<SessionEntityLink>, sqlx::Error> {
@@ -19,7 +18,7 @@ pub async fn fetch_session_entities(
         user_id.as_str(),
         session_id,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
@@ -40,7 +39,7 @@ pub async fn fetch_session_entity_links(
 }
 
 pub async fn fetch_all_session_entity_links(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<(String, SessionEntityLink)>, sqlx::Error> {
     #[derive(sqlx::FromRow)]
@@ -60,7 +59,7 @@ pub async fn fetch_all_session_entity_links(
         LIMIT 200",
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     Ok(rows
@@ -79,7 +78,7 @@ pub async fn fetch_all_session_entity_links(
 }
 
 pub async fn fetch_entity_usage_summary(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<EntityUsageSummary>, sqlx::Error> {
     sqlx::query_as!(
@@ -97,7 +96,7 @@ pub async fn fetch_entity_usage_summary(
         LIMIT 200"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
@@ -127,7 +126,7 @@ pub async fn upsert_session_entity_link(
 }
 
 pub async fn fetch_unused_skills(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<String>, sqlx::Error> {
     sqlx::query_scalar!(
@@ -141,6 +140,6 @@ pub async fn fetch_unused_skills(
           ORDER BY us.skill_id ASC",
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }

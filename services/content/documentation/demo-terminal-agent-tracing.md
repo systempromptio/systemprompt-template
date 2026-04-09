@@ -40,7 +40,7 @@ This demo runs a live AI agent through the platform runtime. It is the only demo
 Contexts isolate conversations. Each agent interaction gets its own context so artifacts, traces, and history stay separate.
 
 ```bash
-CONTEXT_OUTPUT=$(systemprompt core contexts create --name "Demo 9 - Agent Tracing" 2>&1)
+CONTEXT_OUTPUT=$(systemprompt core contexts create --name "Agents - Agent Tracing" 2>&1)
 CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep -oP '"id":\s*"\K[^"]+' | head -1)
 echo "Context: $CONTEXT_ID"
 ```

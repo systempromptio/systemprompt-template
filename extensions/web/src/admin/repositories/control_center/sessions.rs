@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -6,7 +5,7 @@ use systemprompt::identifiers::UserId;
 use crate::admin::types::control_center::RecentSession;
 
 pub async fn fetch_recent_sessions_filtered(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     limit: i64,
     status: &str,
@@ -18,7 +17,7 @@ pub async fn fetch_recent_sessions_filtered(
 }
 
 async fn fetch_sessions_active(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     limit: i64,
 ) -> Result<Vec<RecentSession>, sqlx::Error> {
@@ -50,12 +49,12 @@ async fn fetch_sessions_active(
         user_id.as_str(),
         limit,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 async fn fetch_sessions_all(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     limit: i64,
 ) -> Result<Vec<RecentSession>, sqlx::Error> {
@@ -86,12 +85,12 @@ async fn fetch_sessions_all(
         user_id.as_str(),
         limit,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn update_session_status(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     session_id: &str,
     status: &str,
@@ -102,7 +101,7 @@ pub async fn update_session_status(
             session_id,
             user_id.as_str(),
         )
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
 
         sqlx::query!(
@@ -110,7 +109,7 @@ pub async fn update_session_status(
             session_id,
             user_id.as_str(),
         )
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
 
         sqlx::query!(
@@ -118,7 +117,7 @@ pub async fn update_session_status(
             session_id,
             user_id.as_str(),
         )
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
 
         sqlx::query!(
@@ -126,7 +125,7 @@ pub async fn update_session_status(
             session_id,
             user_id.as_str(),
         )
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
 
         sqlx::query!(
@@ -134,7 +133,7 @@ pub async fn update_session_status(
             session_id,
             user_id.as_str(),
         )
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
     } else {
         sqlx::query!(
@@ -145,7 +144,7 @@ pub async fn update_session_status(
             user_id.as_str(),
             session_id,
         )
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
     }
 

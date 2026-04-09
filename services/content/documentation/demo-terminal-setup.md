@@ -56,8 +56,8 @@ The agents map to the demo scenarios as follows:
 
 | Service Agent | Agent ID | Scope | Used In |
 |---|---|---|---|
-| platform | developer_agent | admin | Demos 01, 04 |
-| revenue | associate_agent | user | Demos 02, 05 |
+| platform | developer_agent | admin | Governance (allow, scope), Agents |
+| revenue | associate_agent | user | Governance (deny, scope) |
 | admin | admin_agent | admin | Background |
 
 If anything is down:
@@ -98,7 +98,7 @@ Save it as an environment variable:
 TOKEN="<paste-your-plugin-token-here>"
 ```
 
-You will use this token for the [Governance API](/documentation/demo-terminal-governance) demos (04-06) and the [MCP Access Tracking](/documentation/demo-terminal-mcp) demo (07).
+You will use this token for the [Governance API](/documentation/demo-terminal-governance) demos and the [MCP Access Tracking](/documentation/demo-terminal-mcp) demo.
 
 ---
 
@@ -126,10 +126,11 @@ Expected: 3 agents running, 2 MCP servers running, all background jobs healthy. 
 
 Run the demos in order. Each builds on the previous:
 
-| Demo | Page | What It Covers |
-|------|------|---------------|
-| 01-02 | [Agent Messaging](/documentation/demo-terminal-agents) | Allowed vs refused agent paths |
-| 03 | [Audit Trails & Costs](/documentation/demo-terminal-audit) | Inspect traces from demos 01-02 |
-| 04-06 | [Governance API](/documentation/demo-terminal-governance) | Direct curl calls: allow, deny, secret detection |
-| 07 | [MCP Access Tracking](/documentation/demo-terminal-mcp) | MCP tool calls + database audit queries |
-| 08 | [Request Tracing & Benchmark](/documentation/demo-terminal-tracing) | Typed data flow, all IDs, 200-request benchmark |
+| Category | Page | What It Covers |
+|----------|------|---------------|
+| Governance | [Agent Messaging](/documentation/demo-terminal-agents) | Allowed vs refused agent paths |
+| Governance | [Audit Trails & Costs](/documentation/demo-terminal-audit) | Inspect traces from agent messaging demos |
+| Governance | [Governance API](/documentation/demo-terminal-governance) | Direct curl calls: allow, deny, secret detection |
+| MCP | [MCP Access Tracking](/documentation/demo-terminal-mcp) | MCP tool calls + database audit queries |
+| Performance | [Request Tracing & Benchmark](/documentation/demo-terminal-tracing) | Typed data flow, all IDs, 200-request benchmark |
+| Agents | [Agent Tracing](/documentation/demo-terminal-agent-tracing) | Live agent messaging, artifacts, execution tracing |

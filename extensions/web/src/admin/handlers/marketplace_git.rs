@@ -27,7 +27,7 @@ fn detect_platform(headers: &HeaderMap) -> &'static str {
 }
 
 async fn resolve_repo(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id_raw: &str,
     headers: &HeaderMap,
 ) -> Result<PathBuf, Response> {
@@ -47,7 +47,7 @@ async fn resolve_repo(
 }
 
 async fn resolve_cowork_repo(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id_raw: &str,
     headers: &HeaderMap,
 ) -> Result<PathBuf, Response> {

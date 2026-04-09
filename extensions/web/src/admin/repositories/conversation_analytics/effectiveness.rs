@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -9,7 +8,7 @@ use crate::admin::types::conversation_analytics::{
 };
 
 pub async fn fetch_skill_effectiveness(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<SkillEffectiveness>, sqlx::Error> {
     sqlx::query_as!(
@@ -39,12 +38,12 @@ pub async fn fetch_skill_effectiveness(
         ORDER BY 3 DESC"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_entity_effectiveness(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     entity_type: &str,
 ) -> Result<Vec<EntityEffectiveness>, sqlx::Error> {
@@ -70,12 +69,12 @@ pub async fn fetch_entity_effectiveness(
         user_id.as_str(),
         entity_type,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_entity_last_used(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<EntityLastUsed>, sqlx::Error> {
     sqlx::query_as!(
@@ -89,12 +88,12 @@ pub async fn fetch_entity_last_used(
         GROUP BY entity_type, entity_name"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_entity_quality_trend(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     entity_type: &str,
 ) -> Result<Vec<EntityQualityTrend>, sqlx::Error> {
@@ -117,12 +116,12 @@ pub async fn fetch_entity_quality_trend(
         user_id.as_str(),
         entity_type,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_entity_improvement_hints(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     entity_type: &str,
 ) -> Result<Vec<EntityHint>, sqlx::Error> {
@@ -140,12 +139,12 @@ pub async fn fetch_entity_improvement_hints(
         user_id.as_str(),
         entity_type,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_hook_session_quality(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<HookSessionQuality>, sqlx::Error> {
     sqlx::query_as!(
@@ -166,6 +165,6 @@ pub async fn fetch_hook_session_quality(
         GROUP BY pue.event_type"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }

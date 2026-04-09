@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
@@ -6,7 +5,7 @@ use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 use super::super::super::types::{CreateUserPluginRequest, UpdateUserPluginRequest, UserPlugin};
 
 pub async fn create_user_plugin(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     req: &CreateUserPluginRequest,
 ) -> Result<UserPlugin, sqlx::Error> {
@@ -34,12 +33,12 @@ pub async fn create_user_plugin(
         &req.author_name,
         req.base_plugin_id.as_deref(),
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await
 }
 
 pub async fn update_user_plugin(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
     req: &UpdateUserPluginRequest,
@@ -69,12 +68,12 @@ pub async fn update_user_plugin(
         &req.keywords as &Option<Vec<String>>,
         req.author_name.as_deref(),
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
 }
 
 pub async fn delete_user_plugin(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
 ) -> Result<bool, sqlx::Error> {
@@ -150,7 +149,7 @@ pub async fn delete_user_plugin(
 }
 
 pub async fn set_plugin_skills(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_plugin_id: &str,
     skill_ids: &[SkillId],
 ) -> Result<(), sqlx::Error> {
@@ -179,7 +178,7 @@ pub async fn set_plugin_skills(
 }
 
 pub async fn set_plugin_agents(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_plugin_id: &str,
     agent_ids: &[AgentId],
 ) -> Result<(), sqlx::Error> {
@@ -208,7 +207,7 @@ pub async fn set_plugin_agents(
 }
 
 pub async fn set_plugin_mcp_servers(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_plugin_id: &str,
     mcp_server_ids: &[McpServerId],
 ) -> Result<(), sqlx::Error> {

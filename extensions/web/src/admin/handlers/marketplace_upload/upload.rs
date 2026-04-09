@@ -164,7 +164,7 @@ async fn apply_changes_and_respond(
 }
 
 async fn snapshot_and_save(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     body: &Bytes,
 ) -> Result<(serde_json::Value, String), Response> {

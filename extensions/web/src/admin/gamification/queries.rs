@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use sqlx::PgPool;
 
 use super::super::types::{AchievementInfo, UnlockedAchievement, UserGamificationProfile};
@@ -11,7 +9,7 @@ pub use super::queries_leaderboard::{
 };
 
 pub async fn get_user_gamification(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
 ) -> Result<Option<UserGamificationProfile>, sqlx::Error> {
     #[derive(sqlx::FromRow)]
@@ -47,7 +45,7 @@ pub async fn get_user_gamification(
         ",
     )
     .bind(user_id)
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await?
     else {
         return Ok(None);
@@ -57,14 +55,14 @@ pub async fn get_user_gamification(
         "SELECT achievement_id, unlocked_at FROM employee_achievements WHERE user_id = $1 ORDER BY unlocked_at DESC",
     )
     .bind(user_id)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let rank_position: i64 = sqlx::query_scalar(
         "SELECT COUNT(*)::BIGINT FROM employee_ranks WHERE total_xp > (SELECT COALESCE(total_xp, 0) FROM employee_ranks WHERE user_id = $1)",
     )
     .bind(user_id)
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await?
     .unwrap_or(0);
 
@@ -89,7 +87,7 @@ pub async fn get_user_gamification(
 }
 
 pub async fn get_achievement_stats(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<AchievementInfo>, sqlx::Error> {
     #[derive(sqlx::FromRow)]
     struct AchievementCount {
@@ -99,13 +97,13 @@ pub async fn get_achievement_stats(
 
     let total_users: i64 =
         sqlx::query_scalar("SELECT COALESCE(COUNT(*), 0)::BIGINT FROM employee_ranks")
-            .fetch_one(pool.as_ref())
+            .fetch_one(pool)
             .await?;
 
     let counts = sqlx::query_as::<_, AchievementCount>(
         "SELECT achievement_id, COUNT(*)::BIGINT AS count FROM employee_achievements GROUP BY achievement_id",
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let count_map: std::collections::HashMap<&str, i64> = counts
@@ -139,7 +137,7 @@ pub async fn get_achievement_stats(
 }
 
 pub async fn find_user_gamification(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
 ) -> Result<Option<UserGamificationProfile>, sqlx::Error> {
     get_user_gamification(pool, user_id).await

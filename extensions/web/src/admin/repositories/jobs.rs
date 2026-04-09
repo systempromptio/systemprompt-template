@@ -1,10 +1,9 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
 use crate::admin::types::JobSummary;
 
-pub async fn list_jobs(pool: &Arc<PgPool>) -> Result<Vec<JobSummary>, sqlx::Error> {
+pub async fn list_jobs(pool: &PgPool) -> Result<Vec<JobSummary>, sqlx::Error> {
     sqlx::query_as!(
         JobSummary,
         r"
@@ -24,6 +23,6 @@ pub async fn list_jobs(pool: &Arc<PgPool>) -> Result<Vec<JobSummary>, sqlx::Erro
         ORDER BY job_name
         ",
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }

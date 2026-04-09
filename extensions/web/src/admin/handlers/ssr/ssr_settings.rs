@@ -70,7 +70,7 @@ pub(crate) async fn settings_page(
 }
 
 async fn fetch_settings_data(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_ctx: &UserContext,
 ) -> (Option<UserSettingsRow>, serde_json::Value, usize, usize) {
     let (settings_result, sub_result, plans_result) = tokio::join!(

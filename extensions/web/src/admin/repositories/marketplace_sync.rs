@@ -1,5 +1,4 @@
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
@@ -12,7 +11,7 @@ pub use super::marketplace_sync_archive::extract_archive;
 pub use super::marketplace_sync_parse::parse_skills_from_directory;
 
 pub async fn compute_skill_diff(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     uploaded: &[ParsedSkill],
 ) -> Result<SyncDiff, MarketplaceError> {
@@ -120,7 +119,7 @@ pub async fn apply_sync_diff(
 }
 
 pub async fn snapshot_current_skills(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<serde_json::Value, MarketplaceError> {
     let skills = super::user_skills::list_user_skills(pool, user_id).await?;

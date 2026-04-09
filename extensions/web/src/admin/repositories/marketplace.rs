@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -9,20 +8,20 @@ use super::super::types::{
 };
 
 pub async fn get_all_plugin_usage(
-    _pool: &Arc<PgPool>,
+    _pool: &PgPool,
 ) -> Result<Vec<PluginUsageAggregate>, sqlx::Error> {
     Ok(vec![])
 }
 
 pub async fn get_plugin_users(
-    _pool: &Arc<PgPool>,
+    _pool: &PgPool,
     _plugin_id: &str,
 ) -> Result<Vec<PluginUser>, sqlx::Error> {
     Ok(vec![])
 }
 
 pub async fn get_all_plugin_ratings(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<PluginRatingAggregate>, sqlx::Error> {
     sqlx::query_as!(
         PluginRatingAggregate,
@@ -33,12 +32,12 @@ pub async fn get_all_plugin_ratings(
         FROM plugin_ratings
         GROUP BY plugin_id"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn get_all_visibility_rules(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<VisibilityRule>, sqlx::Error> {
     sqlx::query_as!(
         VisibilityRule,
@@ -46,12 +45,12 @@ pub async fn get_all_visibility_rules(
          FROM plugin_visibility_rules
          ORDER BY plugin_id, rule_type, rule_value",
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn upsert_rating(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     plugin_id: &str,
     user_id: &UserId,
     rating: i16,
@@ -73,12 +72,12 @@ pub async fn upsert_rating(
         rating,
         review,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await
 }
 
 pub async fn set_visibility_rules(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     plugin_id: &str,
     rules: &[VisibilityRuleInput],
 ) -> Result<Vec<VisibilityRule>, sqlx::Error> {

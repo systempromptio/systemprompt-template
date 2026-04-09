@@ -138,7 +138,7 @@ systemprompt core plugins list
 
 This is the centrepiece of the demo. Run Claude Code (Cowork) with the enterprise-demo plugin to demonstrate real-time tool governance.
 
-#### Demo 1: Allowed Tool Call — Web Search
+#### Governance: Allowed Tool Call — Web Search
 
 In Cowork, invoke the `example-web-search` skill:
 
@@ -157,7 +157,7 @@ In Cowork, invoke the `example-web-search` skill:
 
 > "Standard tool call. The governance hook evaluated it in real time, allowed it, and logged it. Every tool call goes through this pipeline — no exceptions."
 
-#### Demo 2: Blocked Tool Call — Secret Detection
+#### Governance: Blocked Tool Call — Secret Detection
 
 In Cowork, invoke the `use-dangerous-secret` skill:
 

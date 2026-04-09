@@ -1,10 +1,9 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
 use super::super::types::{ActivityStats, TimeSeriesBucket};
 
-pub async fn get_activity_stats(pool: &Arc<PgPool>) -> Result<ActivityStats, sqlx::Error> {
+pub async fn get_activity_stats(pool: &PgPool) -> Result<ActivityStats, sqlx::Error> {
     let row = sqlx::query!(
         r#"SELECT
             COALESCE(COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE), 0)::BIGINT AS "events_today!",
@@ -13,7 +12,7 @@ pub async fn get_activity_stats(pool: &Arc<PgPool>) -> Result<ActivityStats, sql
             COALESCE(COUNT(*) FILTER (WHERE category = 'login'), 0)::BIGINT AS "total_logins!"
         FROM user_activity"#,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let mcp_row = sqlx::query!(
@@ -22,7 +21,7 @@ pub async fn get_activity_stats(pool: &Arc<PgPool>) -> Result<ActivityStats, sql
             COALESCE(COUNT(*) FILTER (WHERE status = 'failed'), 0)::BIGINT AS "mcp_errors!"
         FROM mcp_tool_executions"#,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await;
 
     let (mcp_tool_calls, mcp_errors) = match mcp_row {
@@ -44,7 +43,7 @@ pub async fn get_activity_stats(pool: &Arc<PgPool>) -> Result<ActivityStats, sql
 }
 
 pub async fn fetch_usage_timeseries(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     interval: &str,
     bucket_interval: &str,
 ) -> Result<Vec<TimeSeriesBucket>, sqlx::Error> {
@@ -100,12 +99,12 @@ pub async fn fetch_usage_timeseries(
         ORDER BY b.bucket"
     );
     sqlx::query_as::<_, TimeSeriesBucket>(&sql)
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
 }
 
 pub async fn fetch_user_usage_timeseries(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
     interval: &str,
     bucket_interval: &str,
@@ -165,11 +164,11 @@ pub async fn fetch_user_usage_timeseries(
     );
     sqlx::query_as::<_, TimeSeriesBucket>(&sql)
         .bind(user_id)
-        .fetch_all(pool.as_ref())
+        .fetch_all(pool)
         .await
 }
 
-pub async fn fetch_active_users_24h(pool: &Arc<PgPool>) -> Result<i64, sqlx::Error> {
+pub async fn fetch_active_users_24h(pool: &PgPool) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT COALESCE(COUNT(DISTINCT combined.user_id), 0)::BIGINT as "count!"
         FROM (
@@ -181,6 +180,6 @@ pub async fn fetch_active_users_24h(pool: &Arc<PgPool>) -> Result<i64, sqlx::Err
         WHERE NOT ('anonymous' = ANY(u.roles))
           AND u.email NOT LIKE '%@anonymous.local'"#,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await
 }

@@ -1,5 +1,4 @@
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
@@ -7,19 +6,19 @@ use super::super::types::marketplaces::{
     CreateOrgMarketplaceRequest, OrgMarketplace, UpdateOrgMarketplaceRequest,
 };
 
-pub async fn list_org_marketplaces(pool: &Arc<PgPool>) -> Result<Vec<OrgMarketplace>, sqlx::Error> {
+pub async fn list_org_marketplaces(pool: &PgPool) -> Result<Vec<OrgMarketplace>, sqlx::Error> {
     sqlx::query_as!(
         OrgMarketplace,
         "SELECT id, name, description, github_repo_url, enabled, created_at, updated_at
          FROM org_marketplaces
          ORDER BY name",
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn find_org_marketplace(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     id: &str,
 ) -> Result<Option<OrgMarketplace>, sqlx::Error> {
     sqlx::query_as!(
@@ -29,12 +28,12 @@ pub async fn find_org_marketplace(
          WHERE id = $1",
         id,
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await
 }
 
 pub async fn create_org_marketplace(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     req: &CreateOrgMarketplaceRequest,
 ) -> Result<OrgMarketplace, sqlx::Error> {
     let marketplace = sqlx::query_as!(
@@ -46,7 +45,7 @@ pub async fn create_org_marketplace(
         req.name,
         req.description,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     if !req.plugin_ids.is_empty() {
@@ -57,7 +56,7 @@ pub async fn create_org_marketplace(
 }
 
 pub async fn update_org_marketplace(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     id: &str,
     req: &UpdateOrgMarketplaceRequest,
 ) -> Result<Option<OrgMarketplace>, sqlx::Error> {
@@ -78,7 +77,7 @@ pub async fn update_org_marketplace(
         name,
         description,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     if let Some(ref plugin_ids) = req.plugin_ids {
@@ -88,15 +87,15 @@ pub async fn update_org_marketplace(
     Ok(Some(updated))
 }
 
-pub async fn delete_org_marketplace(pool: &Arc<PgPool>, id: &str) -> Result<bool, sqlx::Error> {
+pub async fn delete_org_marketplace(pool: &PgPool, id: &str) -> Result<bool, sqlx::Error> {
     let result = sqlx::query!("DELETE FROM org_marketplaces WHERE id = $1", id)
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
     Ok(result.rows_affected() > 0)
 }
 
 pub async fn list_marketplace_plugin_ids(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     marketplace_id: &str,
 ) -> Result<Vec<String>, sqlx::Error> {
     let rows = sqlx::query!(
@@ -105,13 +104,13 @@ pub async fn list_marketplace_plugin_ids(
          ORDER BY position, created_at",
         marketplace_id,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
     Ok(rows.into_iter().map(|r| r.plugin_id).collect())
 }
 
 pub async fn set_marketplace_plugins(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     marketplace_id: &str,
     plugin_ids: &[String],
 ) -> Result<(), sqlx::Error> {
@@ -141,20 +140,20 @@ pub async fn set_marketplace_plugins(
 }
 
 pub async fn resolve_authorized_org_plugin_ids(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<HashSet<String>, sqlx::Error> {
     let rows = sqlx::query!(
         "SELECT DISTINCT mp.plugin_id
          FROM org_marketplace_plugins mp
          JOIN org_marketplaces m ON m.id = mp.marketplace_id",
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
     Ok(rows.into_iter().map(|r| r.plugin_id).collect())
 }
 
 pub async fn resolve_authorized_marketplace_groups(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<(OrgMarketplace, Vec<String>)>, sqlx::Error> {
     let (marketplaces, assoc_rows) = tokio::join!(
         list_org_marketplaces(pool),
@@ -163,7 +162,7 @@ pub async fn resolve_authorized_marketplace_groups(
              FROM org_marketplace_plugins
              ORDER BY marketplace_id, position, created_at",
         )
-        .fetch_all(pool.as_ref()),
+        .fetch_all(pool),
     );
     let marketplaces = marketplaces?;
     let assoc_rows = assoc_rows?;
@@ -187,7 +186,7 @@ pub async fn resolve_authorized_marketplace_groups(
 }
 
 pub async fn list_marketplaces_for_plugins(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<HashMap<String, Vec<(String, String)>>, sqlx::Error> {
     let rows = sqlx::query!(
         "SELECT mp.plugin_id, m.id, m.name
@@ -195,7 +194,7 @@ pub async fn list_marketplaces_for_plugins(
          JOIN org_marketplaces m ON m.id = mp.marketplace_id
          ORDER BY m.name",
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let mut map: HashMap<String, Vec<(String, String)>> = HashMap::new();
@@ -208,7 +207,7 @@ pub async fn list_marketplaces_for_plugins(
 }
 
 pub async fn list_github_marketplaces(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
 ) -> Result<Vec<OrgMarketplace>, sqlx::Error> {
     sqlx::query_as::<_, OrgMarketplace>(
         "SELECT id, name, description, github_repo_url, enabled, created_at, updated_at
@@ -216,7 +215,7 @@ pub async fn list_github_marketplaces(
          WHERE github_repo_url IS NOT NULL AND github_repo_url != ''
          ORDER BY name",
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
@@ -233,7 +232,7 @@ pub struct SyncLogEntry<'a> {
 }
 
 pub async fn insert_sync_log(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     entry: &SyncLogEntry<'_>,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
@@ -249,7 +248,7 @@ pub async fn insert_sync_log(
     .bind(entry.error_message)
     .bind(entry.triggered_by)
     .bind(entry.duration_ms)
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(())
 }

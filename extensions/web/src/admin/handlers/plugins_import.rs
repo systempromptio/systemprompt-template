@@ -66,7 +66,7 @@ async fn fetch_plugin_bundle(
 }
 
 fn import_bundle_for_site(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     bundle: &crate::admin::repositories::export::PluginBundle,
 ) -> Response {
     let services_path = match get_services_path() {
@@ -102,7 +102,7 @@ fn import_bundle_for_site(
 }
 
 async fn import_bundle_for_user(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_ctx: &UserContext,
     bundle: &crate::admin::repositories::export::PluginBundle,
 ) -> Response {

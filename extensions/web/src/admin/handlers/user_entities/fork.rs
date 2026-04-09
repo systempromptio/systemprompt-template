@@ -36,7 +36,7 @@ fn tier_limit_response(
 }
 
 fn spawn_fork_activity(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     entity: ActivityEntity,
     id: &str,

@@ -1,11 +1,10 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
 use super::super::super::super::types::UserSummary;
 
-pub async fn list_users(pool: &Arc<PgPool>) -> Result<Vec<UserSummary>, sqlx::Error> {
+pub async fn list_users(pool: &PgPool) -> Result<Vec<UserSummary>, sqlx::Error> {
     sqlx::query_as!(
         UserSummary,
         r#"SELECT
@@ -58,7 +57,7 @@ pub async fn list_users(pool: &Arc<PgPool>) -> Result<Vec<UserSummary>, sqlx::Er
                      ua.logins, ua.last_ua, mcp.last_mcp
             ORDER BY 6 DESC"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
@@ -69,18 +68,18 @@ pub struct UserRank {
     pub total_xp: i64,
 }
 
-pub async fn fetch_user_ranks(pool: &Arc<PgPool>) -> Result<Vec<UserRank>, sqlx::Error> {
+pub async fn fetch_user_ranks(pool: &PgPool) -> Result<Vec<UserRank>, sqlx::Error> {
     sqlx::query_as!(
         UserRank,
         r#"SELECT user_id as "user_id!", rank_name as "rank_name!", total_xp::BIGINT AS "total_xp!" FROM user_ranks"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
-pub async fn fetch_user_roles(pool: &Arc<PgPool>, user_id: &str) -> Option<Vec<String>> {
+pub async fn fetch_user_roles(pool: &PgPool, user_id: &str) -> Option<Vec<String>> {
     let row = sqlx::query!("SELECT roles FROM users WHERE id = $1", user_id,)
-        .fetch_optional(pool.as_ref())
+        .fetch_optional(pool)
         .await
         .map_err(|e| {
             tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user roles");
@@ -91,13 +90,13 @@ pub async fn fetch_user_roles(pool: &Arc<PgPool>, user_id: &str) -> Option<Vec<S
     Some(row.roles)
 }
 
-pub async fn fetch_distinct_roles(pool: &Arc<PgPool>) -> Result<Vec<String>, sqlx::Error> {
+pub async fn fetch_distinct_roles(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT DISTINCT unnest(roles) AS "role!" FROM users
           WHERE NOT ('anonymous' = ANY(roles))
           ORDER BY 1"#,
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
     Ok(rows
         .into_iter()

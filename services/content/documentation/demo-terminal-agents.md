@@ -37,7 +37,7 @@ The `developer_agent` (admin scope) is allowed to call MCP tools. The `associate
 
 ---
 
-## Demo 1: Allowed Path — Admin Scope
+## Governance: Allowed Path — Admin Scope
 
 ### Governance Check
 
@@ -88,7 +88,7 @@ Open [/admin/governance](/admin/governance). You should see the allow decision w
 
 ---
 
-## Demo 2: Refused Path — User Scope
+## Governance: Refused Path — User Scope
 
 ### Governance Check
 

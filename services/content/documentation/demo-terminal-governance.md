@@ -389,11 +389,11 @@ The key takeaway: **the same governance pipeline that blocked these curl calls r
 Verify governance decisions were recorded correctly:
 
 ```bash
-# Demo 04-05: Check most recent allow/deny decisions
+# Governance: Check most recent allow/deny decisions
 systemprompt infra db query \
   "SELECT decision, tool_name, policy, reason FROM governance_decisions ORDER BY created_at DESC LIMIT 5"
 
-# Demo 06: Verify secret breach counts (should be 3 deny + 1 allow)
+# Governance: Verify secret breach counts (should be 3 deny + 1 allow)
 systemprompt infra db query \
   "SELECT decision, COUNT(*) as count FROM governance_decisions WHERE session_id = 'demo-secret-breach' GROUP BY decision ORDER BY decision"
 
@@ -404,12 +404,12 @@ systemprompt infra db query \
 
 **Expected results:**
 
-| Demo | Decision | Policy | Reason |
+| Test | Decision | Policy | Reason |
 |------|----------|--------|--------|
-| 04 | allow | default_allow | admin scope, all rules passed |
-| 05 | deny | scope_restriction | user scope cannot access admin tools |
-| 06 (tests 1-3) | deny | secret_injection | AWS key / GitHub PAT / PEM key detected |
-| 06 (test 4) | allow | default_allow | clean input, no secrets found |
+| Governance allow | allow | default_allow | admin scope, all rules passed |
+| Governance deny | deny | scope_restriction | user scope cannot access admin tools |
+| Secret breach (tests 1-3) | deny | secret_injection | AWS key / GitHub PAT / PEM key detected |
+| Secret breach (test 4) | allow | default_allow | clean input, no secrets found |
 
 ---
 

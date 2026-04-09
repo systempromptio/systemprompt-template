@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
@@ -8,7 +7,7 @@ use super::super::super::super::types::{EventTypeCount, ToolUsageCount, UserSess
 use super::super::super::user_skills;
 
 pub async fn find_user_detail(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Option<super::super::super::super::types::UserDetail>, sqlx::Error> {
     let row = sqlx::query_as!(
@@ -63,7 +62,7 @@ pub async fn find_user_detail(
                  bytes.total_bytes, pe.last_pe, mcp.last_mcp"#,
         user_id.as_str(),
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await?;
 
     let Some(summary) = row else {
@@ -74,7 +73,7 @@ pub async fn find_user_detail(
 }
 
 async fn build_user_detail(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     summary: UserSummary,
 ) -> Result<Option<super::super::super::super::types::UserDetail>, sqlx::Error> {
@@ -115,7 +114,7 @@ async fn build_user_detail(
         "SELECT created_at FROM users WHERE id = $1",
         user_id as &UserId
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(pool)
     .await?
     .unwrap_or(summary.last_active);
 
@@ -140,7 +139,7 @@ async fn build_user_detail(
 }
 
 pub async fn get_user_sessions(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<UserSession>, sqlx::Error> {
     sqlx::query_as!(
@@ -161,12 +160,12 @@ pub async fn get_user_sessions(
         LIMIT 20"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn get_user_event_type_breakdown(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<EventTypeCount>, sqlx::Error> {
     sqlx::query_as!(
@@ -180,12 +179,12 @@ pub async fn get_user_event_type_breakdown(
         ORDER BY 2 DESC"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn get_user_top_tools(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<ToolUsageCount>, sqlx::Error> {
     sqlx::query_as!(
@@ -200,6 +199,6 @@ pub async fn get_user_top_tools(
         LIMIT 10"#,
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }

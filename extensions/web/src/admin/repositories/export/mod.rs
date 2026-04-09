@@ -97,7 +97,7 @@ pub async fn generate_export_bundles(
 }
 
 async fn resolve_org_plugin_ids(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> std::collections::HashSet<String> {
     let mut ids = super::org_marketplaces::resolve_authorized_org_plugin_ids(pool)
@@ -254,7 +254,7 @@ async fn build_user_bundles(
 
 pub async fn generate_org_marketplace_export_bundles(
     services_path: &Path,
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     marketplace_id: &str,
     _platform: &str,
 ) -> Result<SyncPluginsResponse, MarketplaceError> {

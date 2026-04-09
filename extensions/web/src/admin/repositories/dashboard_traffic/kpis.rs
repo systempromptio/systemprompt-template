@@ -1,11 +1,10 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 
 use crate::admin::types::TrafficKpis;
 
 pub(super) async fn fetch_traffic_kpis(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     interval: &str,
     prev_interval: &str,
 ) -> Result<TrafficKpis, sqlx::Error> {
@@ -30,7 +29,7 @@ pub(super) async fn fetch_traffic_kpis(
         interval,
         prev_interval,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     let engagement = sqlx::query_as!(
@@ -50,7 +49,7 @@ pub(super) async fn fetch_traffic_kpis(
         interval,
         prev_interval,
     )
-    .fetch_one(pool.as_ref())
+    .fetch_one(pool)
     .await?;
 
     Ok(TrafficKpis {

@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -6,7 +5,7 @@ use systemprompt::identifiers::UserId;
 use crate::admin::types::conversation_analytics::{SessionRating, SkillRating};
 
 pub async fn upsert_session_rating(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     session_id: &str,
     rating: i16,
@@ -24,13 +23,13 @@ pub async fn upsert_session_rating(
         outcome,
         notes,
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(())
 }
 
 pub async fn upsert_skill_rating(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
     skill_name: &str,
     rating: i16,
@@ -46,13 +45,13 @@ pub async fn upsert_skill_rating(
         rating,
         notes,
     )
-    .execute(pool.as_ref())
+    .execute(pool)
     .await?;
     Ok(())
 }
 
 pub async fn fetch_all_session_ratings(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<SessionRating>, sqlx::Error> {
     sqlx::query_as!(
@@ -64,12 +63,12 @@ pub async fn fetch_all_session_ratings(
         LIMIT 200",
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_all_skill_ratings(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<SkillRating>, sqlx::Error> {
     sqlx::query_as!(
@@ -81,6 +80,6 @@ pub async fn fetch_all_skill_ratings(
         LIMIT 200",
         user_id.as_str(),
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
 }

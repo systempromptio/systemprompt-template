@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 
+
 const MAX_BATCH_DELETE_IDS: usize = 100;
 
 use super::plugins::is_entity_in_platform_plugin;
@@ -49,7 +50,7 @@ fn validate_ids(ids: &[String]) -> Option<Response> {
     None
 }
 
-fn spawn_delete_activity(pool: &Arc<PgPool>, user_id: &UserId, entity: ActivityEntity, id: &str) {
+fn spawn_delete_activity(pool: &PgPool, user_id: &UserId, entity: ActivityEntity, id: &str) {
     let pool = pool.clone();
     let uid = user_id.clone();
     let entity_id = id.to_string();
@@ -63,7 +64,7 @@ fn spawn_delete_activity(pool: &Arc<PgPool>, user_id: &UserId, entity: ActivityE
 }
 
 async fn finish_batch(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_ctx: &UserContext,
     deleted: usize,
     skipped: usize,

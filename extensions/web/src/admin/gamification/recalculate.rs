@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use sqlx::PgPool;
 
 use super::achievements::{check_achievements, AchievementContext};
@@ -8,7 +6,7 @@ use super::recalculate_helpers::{
     calculate_streaks, calculate_user_xp, populate_daily_usage, update_user_rank, UserRankParams,
 };
 
-pub async fn recalculate_all(pool: &Arc<PgPool>) -> Result<u64, anyhow::Error> {
+pub async fn recalculate_all(pool: &PgPool) -> Result<u64, anyhow::Error> {
     #[derive(sqlx::FromRow)]
     struct UserRow {
         user_id: String,
@@ -19,7 +17,7 @@ pub async fn recalculate_all(pool: &Arc<PgPool>) -> Result<u64, anyhow::Error> {
     let users = sqlx::query_as::<_, UserRow>(
         "SELECT DISTINCT e.user_id FROM plugin_usage_events e INNER JOIN users u ON u.id = e.user_id",
     )
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await?;
 
     let mut updated = 0u64;

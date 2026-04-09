@@ -1,5 +1,4 @@
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use anyhow::Result;
 use sqlx::PgPool;
@@ -83,7 +82,7 @@ fn import_plugins_from_entries(
 }
 
 async fn finalize_sync(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     marketplace_id: &str,
     plugin_ids: &[String],
     error_count: &mut u64,
@@ -107,7 +106,7 @@ pub(super) fn elapsed_ms(start: std::time::Instant) -> u64 {
 }
 
 pub async fn sync_marketplace_from_github(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     marketplace_id: &str,
     repo_url: &str,
     triggered_by: &str,
@@ -212,7 +211,7 @@ pub async fn sync_marketplace_from_github(
 pub use super::github_sync_publish::publish_marketplace_to_github;
 
 pub async fn sync_marketplace_from_local(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     marketplace_id: &str,
 ) -> Result<SyncResult> {
     let start = std::time::Instant::now();
@@ -283,9 +282,9 @@ pub async fn sync_marketplace_from_local(
     })
 }
 
-pub(crate) async fn mark_all_users_dirty(pool: &Arc<PgPool>) -> Result<(), sqlx::Error> {
+pub(crate) async fn mark_all_users_dirty(pool: &PgPool) -> Result<(), sqlx::Error> {
     sqlx::query("UPDATE marketplace_sync_status SET dirty = true, last_changed_at = NOW()")
-        .execute(pool.as_ref())
+        .execute(pool)
         .await?;
     Ok(())
 }
