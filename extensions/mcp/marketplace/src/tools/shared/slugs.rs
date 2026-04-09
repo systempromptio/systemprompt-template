@@ -13,23 +13,22 @@ pub async fn resolve_skill_slugs(
         return Ok(vec![]);
     }
 
-    let rows: Vec<(String, String)> =
-        sqlx::query_as("SELECT skill_id, id FROM user_skills WHERE user_id = $1 AND skill_id = ANY($2)")
-            .bind(user_id)
-            .bind(slugs)
-            .fetch_all(pool.as_ref())
-            .await
-            .map_err(|e| {
-                McpError::internal_error(format!("Failed to resolve Skill slugs: {e}"), None)
-            })?;
+    let rows: Vec<(String, String)> = sqlx::query_as(
+        "SELECT skill_id, id FROM user_skills WHERE user_id = $1 AND skill_id = ANY($2)",
+    )
+    .bind(user_id)
+    .bind(slugs)
+    .fetch_all(pool.as_ref())
+    .await
+    .map_err(|e| McpError::internal_error(format!("Failed to resolve Skill slugs: {e}"), None))?;
 
     let map: HashMap<String, String> = rows.into_iter().collect();
     slugs
         .iter()
         .map(|slug| {
-            map.get(slug).cloned().ok_or_else(|| {
-                McpError::invalid_params(format!("Skill '{slug}' not found"), None)
-            })
+            map.get(slug)
+                .cloned()
+                .ok_or_else(|| McpError::invalid_params(format!("Skill '{slug}' not found"), None))
         })
         .collect()
 }
@@ -43,23 +42,22 @@ pub async fn resolve_agent_slugs(
         return Ok(vec![]);
     }
 
-    let rows: Vec<(String, String)> =
-        sqlx::query_as("SELECT agent_id, id FROM user_agents WHERE user_id = $1 AND agent_id = ANY($2)")
-            .bind(user_id)
-            .bind(slugs)
-            .fetch_all(pool.as_ref())
-            .await
-            .map_err(|e| {
-                McpError::internal_error(format!("Failed to resolve Agent slugs: {e}"), None)
-            })?;
+    let rows: Vec<(String, String)> = sqlx::query_as(
+        "SELECT agent_id, id FROM user_agents WHERE user_id = $1 AND agent_id = ANY($2)",
+    )
+    .bind(user_id)
+    .bind(slugs)
+    .fetch_all(pool.as_ref())
+    .await
+    .map_err(|e| McpError::internal_error(format!("Failed to resolve Agent slugs: {e}"), None))?;
 
     let map: HashMap<String, String> = rows.into_iter().collect();
     slugs
         .iter()
         .map(|slug| {
-            map.get(slug).cloned().ok_or_else(|| {
-                McpError::invalid_params(format!("Agent '{slug}' not found"), None)
-            })
+            map.get(slug)
+                .cloned()
+                .ok_or_else(|| McpError::invalid_params(format!("Agent '{slug}' not found"), None))
         })
         .collect()
 }

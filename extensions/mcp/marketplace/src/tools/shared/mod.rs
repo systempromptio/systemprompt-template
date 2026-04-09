@@ -4,7 +4,6 @@ mod slugs;
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::mcp::McpError;
 
 pub use plugin::{add_to_plugin, auto_add_to_default_plugin};
 pub use slugs::{
@@ -36,11 +35,11 @@ pub async fn resolve_association_slugs(
     pool: &Arc<PgPool>,
     user_id: &UserId,
     plugin_id: &str,
-) -> Result<(Vec<String>, Vec<String>, Vec<String>), McpError> {
+) -> (Vec<String>, Vec<String>, Vec<String>) {
     let Ok(Some(assoc)) =
         repositories::get_plugin_with_associations(pool, user_id, plugin_id).await
     else {
-        return Ok((vec![], vec![], vec![]));
+        return (vec![], vec![], vec![]);
     };
     let skill_strs: Vec<String> = assoc
         .skill_ids
@@ -57,10 +56,12 @@ pub async fn resolve_association_slugs(
         .iter()
         .map(std::string::ToString::to_string)
         .collect();
-    let skills = resolve_skill_uuids_to_slugs(pool, &skill_strs).await?;
-    let agents = resolve_agent_uuids_to_slugs(pool, &agent_strs).await?;
-    let mcps = resolve_mcp_server_uuids_to_slugs(pool, &mcp_strs).await?;
-    Ok((skills, agents, mcps))
+    let (skills, agents, mcps) = tokio::join!(
+        resolve_skill_uuids_to_slugs(pool, &skill_strs),
+        resolve_agent_uuids_to_slugs(pool, &agent_strs),
+        resolve_mcp_server_uuids_to_slugs(pool, &mcp_strs),
+    );
+    (skills, agents, mcps)
 }
 
 pub async fn invalidate_marketplace_cache(pool: &Arc<PgPool>, user_id: &UserId) {

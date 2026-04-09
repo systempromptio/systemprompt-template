@@ -121,7 +121,7 @@ impl ServerHandler for MarketplaceServer {
                     Ok(authenticated) => {
                         record_mcp_access(
                             &self.db_pool,
-                            &authenticated.context.user_id().to_string(),
+                            authenticated.context.user_id().as_ref(),
                             &server_name,
                             &tool_name,
                             "authenticated",
@@ -134,7 +134,7 @@ impl ServerHandler for MarketplaceServer {
                             &self.db_pool,
                             &server_name,
                             &tool_name,
-                            &e.message.to_string(),
+                            e.message.as_ref(),
                         )
                         .await;
                         return Err(e);
@@ -157,7 +157,7 @@ impl ServerHandler for MarketplaceServer {
 
         record_mcp_access(
             &self.db_pool,
-            &request_context.user_id().to_string(),
+            request_context.user_id().as_ref(),
             &server_name,
             &tool_name,
             "used",

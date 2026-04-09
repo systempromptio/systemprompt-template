@@ -69,7 +69,10 @@ pub async fn load_tier_context(
         let guard = cache.tier_cache.read().await;
         if let Some(cached) = guard.get(user_id.as_str()) {
             if cached.cached_at.elapsed().as_secs() < TIER_CACHE_TTL_SECS {
-                return (Arc::clone(&cached.limits), cached.subscription_status.clone());
+                return (
+                    Arc::clone(&cached.limits),
+                    cached.subscription_status.clone(),
+                );
             }
         }
     }
