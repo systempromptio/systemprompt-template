@@ -197,7 +197,7 @@ pub async fn calculate_multitasking_score(
     session_count: i32,
 ) -> f32 {
     let subagent_spawns: i64 = sqlx::query_scalar!(
-        r"SELECT SUM(subagent_spawns)
+        r"SELECT COALESCE(SUM(subagent_spawns), 0)::bigint
           FROM plugin_session_summaries
           WHERE user_id = $1
             AND started_at::date = $2
