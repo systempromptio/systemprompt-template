@@ -195,7 +195,10 @@ fn build_hook_views(
                 }
             };
             let hook_code =
-                serde_json::to_string_pretty(&[&hook_code_entry]).unwrap_or_else(|_| String::new());
+                serde_json::to_string_pretty(&[&hook_code_entry]).unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to serialize hook code entry");
+                    String::new()
+                });
             HookView {
                 id: h.id.clone(),
                 hook_name: h.hook_name.clone(),

@@ -146,7 +146,10 @@ async fn collect_existing_base_ids(
 ) -> std::collections::HashSet<String> {
     repositories::list_user_plugins(pool, user_id)
         .await
-        .unwrap_or_else(|_| Vec::new())
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = ?e, "Failed to list user plugins for onboarding");
+            Vec::new()
+        })
         .iter()
         .filter_map(|p| p.base_plugin_id.clone())
         .collect()

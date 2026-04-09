@@ -52,12 +52,18 @@ pub async fn list_available_plugins_handler(
 
     let authorized = repositories::org_marketplaces::resolve_authorized_org_plugin_ids(&pool)
         .await
-        .unwrap_or_else(|_| std::collections::HashSet::new());
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = ?e, "Failed to resolve authorized org plugin IDs");
+            std::collections::HashSet::new()
+        });
 
     let selected =
         repositories::user_plugin_selections::list_selected_org_plugins(&pool, &user_ctx.user_id)
             .await
-            .unwrap_or_else(|_| Vec::new());
+            .unwrap_or_else(|e| {
+            tracing::warn!(error = ?e, "Failed to list selected org plugins");
+            Vec::new()
+        });
 
     let selected_set: std::collections::HashSet<&str> =
         selected.iter().map(String::as_str).collect();
@@ -138,7 +144,10 @@ pub async fn set_selected_plugins_handler(
 ) -> Response {
     let authorized = repositories::org_marketplaces::resolve_authorized_org_plugin_ids(&pool)
         .await
-        .unwrap_or_else(|_| std::collections::HashSet::new());
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = ?e, "Failed to resolve authorized org plugin IDs");
+            std::collections::HashSet::new()
+        });
 
     let valid_ids: Vec<String> = req
         .plugin_ids

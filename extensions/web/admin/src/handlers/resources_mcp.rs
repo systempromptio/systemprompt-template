@@ -38,7 +38,10 @@ pub(crate) async fn list_mcp_servers_handler(
         return Json(servers).into_response();
     }
     let plugins =
-        repositories::list_plugins_for_roles(&services_path, &user_ctx.roles).unwrap_or_else(|_| Vec::new());
+        repositories::list_plugins_for_roles(&services_path, &user_ctx.roles).unwrap_or_else(|e| {
+            tracing::warn!(error = ?e, "Failed to list plugins for roles");
+            Vec::new()
+        });
     let visible_ids: std::collections::HashSet<String> = plugins
         .iter()
         .flat_map(|p| p.mcp_servers.iter().cloned())
