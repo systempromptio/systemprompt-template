@@ -69,10 +69,19 @@ pub(super) fn build_dashboard_template(
     DashboardTemplateData {
         page: "dashboard",
         title: "Dashboard",
-        stats: serde_json::to_value(dash.stats).unwrap_or_else(|_| serde_json::Value::Null),
-        timeline: serde_json::to_value(&dash.timeline).unwrap_or_else(|_| serde_json::Value::Null),
+        stats: serde_json::to_value(dash.stats).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to serialize dashboard stats");
+            serde_json::Value::Null
+        }),
+        timeline: serde_json::to_value(&dash.timeline).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to serialize dashboard timeline");
+            serde_json::Value::Null
+        }),
         top_users: serde_json::to_value(&dash.top_users)
-            .unwrap_or_else(|_| serde_json::Value::Null),
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to serialize dashboard top users");
+                serde_json::Value::Null
+            }),
         popular_skills: activity.skills,
         hourly_activity: activity.hourly,
         total_users: counts.total_users,

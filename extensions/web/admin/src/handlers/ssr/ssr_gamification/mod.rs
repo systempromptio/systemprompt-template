@@ -230,7 +230,10 @@ pub async fn achievements_page(
         total_count,
     };
 
-    let mut value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
+    let mut value = serde_json::to_value(&data).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize achievements page data");
+        serde_json::Value::Null
+    });
     if let Some(obj) = value.as_object_mut() {
         obj.insert(
             "page_stats".to_string(),
@@ -259,7 +262,10 @@ pub async fn leaderboard_page(
         crate::gamification::queries::get_leaderboard(&pool, 50, 0, None),
         crate::gamification::queries::get_leaderboard_averages(&pool),
     );
-    let entries = entries.unwrap_or_else(|_| vec![]);
+    let entries = entries.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch leaderboard entries");
+        vec![]
+    });
     let averages = averages
         .map_err(|e| {
             tracing::warn!(error = %e, "Failed to fetch leaderboard averages");
@@ -268,6 +274,9 @@ pub async fn leaderboard_page(
 
     let current_user_id = user_ctx.user_id.to_string();
     let data = build_leaderboard_data(&entries, averages.as_ref(), &current_user_id, sort);
-    let value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
+    let value = serde_json::to_value(&data).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize leaderboard data");
+        serde_json::Value::Null
+    });
     super::render_page(&engine, "leaderboard", &value, &user_ctx, &mkt_ctx)
 }

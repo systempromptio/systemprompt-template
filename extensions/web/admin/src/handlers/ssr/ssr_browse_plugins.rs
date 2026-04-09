@@ -28,8 +28,14 @@ pub async fn browse_plugins_page(
         repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id),
     );
 
-    let marketplace_groups = marketplace_groups.unwrap_or_else(|_| vec![]);
-    let user_plugins = user_plugins_result.unwrap_or_else(|_| vec![]);
+    let marketplace_groups = marketplace_groups.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to resolve authorized marketplace groups");
+        vec![]
+    });
+    let user_plugins = user_plugins_result.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to list user plugins");
+        vec![]
+    });
 
     let added_base_ids: HashSet<String> = user_plugins
         .iter()
@@ -65,7 +71,10 @@ pub async fn browse_plugins_page(
         },
     };
 
-    let value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
+    let value = serde_json::to_value(&data).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize browse plugins page data");
+        serde_json::Value::Null
+    });
     super::render_page(&engine, "browse-plugins", &value, &user_ctx, &mkt_ctx)
 }
 

@@ -43,7 +43,9 @@ async fn fetch_dashboard_data(
         },
     );
 
-    let dash = dash_result.unwrap_or_else(|_| crate::types::DashboardData {
+    let dash = dash_result.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch dashboard data");
+        crate::types::DashboardData {
         timeline: vec![],
         top_users: vec![],
         popular_skills: vec![],
@@ -64,7 +66,7 @@ async fn fetch_dashboard_data(
         top_pages_today: vec![],
         realtime_pulse: None,
         content_performance: vec![],
-    });
+    }});
     let users = users_result.unwrap_or_else(|e| {
         tracing::warn!(error = %e, "Failed to list users for dashboard");
         vec![]
@@ -253,7 +255,10 @@ pub async fn dashboard_page(
         content_range_key,
         tab,
     ))
-    .unwrap_or_else(|_| serde_json::Value::Null);
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize dashboard template data");
+        serde_json::Value::Null
+    });
 
     if let Some(obj) = data.as_object_mut() {
         let users_val = obj

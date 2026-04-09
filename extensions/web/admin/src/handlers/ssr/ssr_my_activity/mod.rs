@@ -84,7 +84,10 @@ pub async fn my_activity_page(
         total_count,
         stats: &stats,
     });
-    let mut value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
+    let mut value = serde_json::to_value(&data).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize my-activity page data");
+        serde_json::Value::Null
+    });
     if let Some(obj) = value.as_object_mut() {
         obj.insert(
             "page_stats".to_string(),

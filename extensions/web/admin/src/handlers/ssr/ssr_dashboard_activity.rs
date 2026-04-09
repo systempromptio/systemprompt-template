@@ -78,7 +78,10 @@ pub(super) fn build_activity_data(dash: &types::DashboardData, range_key: &str) 
         &dash.usage_timeseries,
         range_key,
     ))
-    .unwrap_or_else(|_| serde_json::Value::Null);
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize area chart data");
+        serde_json::Value::Null
+    });
     ActivityData {
         hourly,
         skills,

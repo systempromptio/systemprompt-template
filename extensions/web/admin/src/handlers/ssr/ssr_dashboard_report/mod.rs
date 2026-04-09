@@ -110,7 +110,10 @@ pub(super) fn build_dashboard_report(
         breakdown_visibility,
     };
 
-    serde_json::to_value(&view).unwrap_or_else(|_| serde_json::Value::Null)
+    serde_json::to_value(&view).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize dashboard report view");
+        serde_json::Value::Null
+    })
 }
 
 pub async fn handle_generate_traffic_report(
