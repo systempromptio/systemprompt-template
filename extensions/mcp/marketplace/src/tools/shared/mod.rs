@@ -49,11 +49,11 @@ pub async fn resolve_association_slugs(
     pool: &Arc<PgPool>,
     user_id: &UserId,
     plugin_id: &str,
-) -> (Vec<String>, Vec<String>, Vec<String>) {
+) -> Result<(Vec<String>, Vec<String>, Vec<String>), McpError> {
     let Ok(Some(assoc)) =
         repositories::get_plugin_with_associations(pool, user_id, plugin_id).await
     else {
-        return (vec![], vec![], vec![]);
+        return Ok((vec![], vec![], vec![]));
     };
     let skill_strs: Vec<String> = assoc
         .skill_ids
@@ -70,12 +70,12 @@ pub async fn resolve_association_slugs(
         .iter()
         .map(std::string::ToString::to_string)
         .collect();
-    let (skills, agents, mcps) = tokio::join!(
+    let (skills, agents, mcps) = tokio::try_join!(
         resolve_skill_uuids_to_slugs(pool, &skill_strs),
         resolve_agent_uuids_to_slugs(pool, &agent_strs),
         resolve_mcp_server_uuids_to_slugs(pool, &mcp_strs),
-    );
-    (skills, agents, mcps)
+    )?;
+    Ok((skills, agents, mcps))
 }
 
 pub async fn set_plugin_associations(

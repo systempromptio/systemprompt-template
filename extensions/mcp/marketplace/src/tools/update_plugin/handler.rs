@@ -93,7 +93,7 @@ impl McpToolHandler for UpdatePluginHandler {
         .await?;
 
         let (skill_slugs, agent_slugs, mcp_server_slugs) =
-            shared::resolve_association_slugs(&pool, &user_id, &input.plugin_id).await;
+            shared::resolve_association_slugs(&pool, &user_id, &input.plugin_id).await?;
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 

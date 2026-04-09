@@ -93,9 +93,12 @@ pub async fn resolve_mcp_server_slugs(
         .collect()
 }
 
-pub async fn resolve_skill_uuids_to_slugs(pool: &PgPool, uuids: &[String]) -> Vec<String> {
+pub async fn resolve_skill_uuids_to_slugs(
+    pool: &PgPool,
+    uuids: &[String],
+) -> Result<Vec<String>, McpError> {
     if uuids.is_empty() {
-        return vec![];
+        return Ok(vec![]);
     }
 
     let rows: Vec<(String, String)> =
@@ -103,18 +106,23 @@ pub async fn resolve_skill_uuids_to_slugs(pool: &PgPool, uuids: &[String]) -> Ve
             .bind(uuids)
             .fetch_all(pool)
             .await
-            .unwrap_or_else(|_| Vec::new());
+            .map_err(|e| {
+                McpError::internal_error(format!("Failed to resolve Skill UUIDs: {e}"), None)
+            })?;
 
     let map: HashMap<String, String> = rows.into_iter().collect();
-    uuids
+    Ok(uuids
         .iter()
         .filter_map(|uuid| map.get(uuid).cloned())
-        .collect()
+        .collect())
 }
 
-pub async fn resolve_agent_uuids_to_slugs(pool: &PgPool, uuids: &[String]) -> Vec<String> {
+pub async fn resolve_agent_uuids_to_slugs(
+    pool: &PgPool,
+    uuids: &[String],
+) -> Result<Vec<String>, McpError> {
     if uuids.is_empty() {
-        return vec![];
+        return Ok(vec![]);
     }
 
     let rows: Vec<(String, String)> =
@@ -122,18 +130,23 @@ pub async fn resolve_agent_uuids_to_slugs(pool: &PgPool, uuids: &[String]) -> Ve
             .bind(uuids)
             .fetch_all(pool)
             .await
-            .unwrap_or_else(|_| Vec::new());
+            .map_err(|e| {
+                McpError::internal_error(format!("Failed to resolve Agent UUIDs: {e}"), None)
+            })?;
 
     let map: HashMap<String, String> = rows.into_iter().collect();
-    uuids
+    Ok(uuids
         .iter()
         .filter_map(|uuid| map.get(uuid).cloned())
-        .collect()
+        .collect())
 }
 
-pub async fn resolve_mcp_server_uuids_to_slugs(pool: &PgPool, uuids: &[String]) -> Vec<String> {
+pub async fn resolve_mcp_server_uuids_to_slugs(
+    pool: &PgPool,
+    uuids: &[String],
+) -> Result<Vec<String>, McpError> {
     if uuids.is_empty() {
-        return vec![];
+        return Ok(vec![]);
     }
 
     let rows: Vec<(String, String)> =
@@ -141,11 +154,16 @@ pub async fn resolve_mcp_server_uuids_to_slugs(pool: &PgPool, uuids: &[String]) 
             .bind(uuids)
             .fetch_all(pool)
             .await
-            .unwrap_or_else(|_| Vec::new());
+            .map_err(|e| {
+                McpError::internal_error(
+                    format!("Failed to resolve MCP server UUIDs: {e}"),
+                    None,
+                )
+            })?;
 
     let map: HashMap<String, String> = rows.into_iter().collect();
-    uuids
+    Ok(uuids
         .iter()
         .filter_map(|uuid| map.get(uuid).cloned())
-        .collect()
+        .collect())
 }

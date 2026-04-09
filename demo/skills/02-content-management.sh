@@ -23,7 +23,7 @@ subheader "STEP 2: Search Content"
 run_cli_head 20 core content search "governance"
 
 subheader "STEP 3: Popular Content"
-run_cli_head 20 core content popular
+run_cli_head 20 core content popular documentation
 
 subheader "STEP 4: Content Status"
 run_cli_indented core content status --source documentation

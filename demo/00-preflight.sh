@@ -48,8 +48,11 @@ if [[ ! -x "$CLI" ]]; then
   exit 1
 fi
 
+export RUST_LOG="${RUST_LOG:-warn}"
+
 BASE_URL="http://localhost:8080"
 TOKEN_FILE="$SCRIPT_DIR/.token"
+PROFILE="local"
 
 # Helper: decode JWT payload and print selected claims
 decode_jwt() {
@@ -123,12 +126,39 @@ echo "  For local dev, the CLI shortcut uses your cloud identity."
 echo "------------------------------------------"
 echo ""
 
-ADMIN_TOKEN=$("$CLI" admin session login --token-only 2>/dev/null | tail -1)
+# Try login first; if user not found, auto-create and retry
+ADMIN_TOKEN=$("$CLI" admin session login --token-only --profile "$PROFILE" 2>/dev/null | tail -1)
 
 if [[ -z "$ADMIN_TOKEN" || ! "$ADMIN_TOKEN" == eyJ* ]]; then
-  echo "  ERROR: Could not obtain admin session token." >&2
-  echo "  Is the database running? Try: just start" >&2
-  exit 1
+  echo "  Admin user not found — creating automatically..."
+  echo ""
+
+  # Extract email from cloud credentials
+  CLOUD_EMAIL=$(python3 -c "import json; print(json.load(open('$PROJECT_DIR/.systemprompt/credentials.json')).get('email',''))" 2>/dev/null || true)
+
+  if [[ -z "$CLOUD_EMAIL" ]]; then
+    echo "  ERROR: No cloud credentials found at .systemprompt/credentials.json" >&2
+    exit 1
+  fi
+
+  # Create user and promote to admin
+  "$CLI" admin users create --name "admin" --email "$CLOUD_EMAIL" --profile "$PROFILE" 2>/dev/null || true
+  USER_ID=$("$CLI" admin users search "$CLOUD_EMAIL" --profile "$PROFILE" 2>/dev/null \
+    | grep -oP '"id":\s*"\K[^"]+' | head -1 || true)
+  if [[ -n "$USER_ID" ]]; then
+    "$CLI" admin users role promote "$USER_ID" --profile "$PROFILE" 2>/dev/null || true
+    echo "  Created admin user: $CLOUD_EMAIL ($USER_ID)"
+    echo ""
+  fi
+
+  # Retry login
+  ADMIN_TOKEN=$("$CLI" admin session login --token-only --profile "$PROFILE" 2>/dev/null | tail -1)
+
+  if [[ -z "$ADMIN_TOKEN" || ! "$ADMIN_TOKEN" == eyJ* ]]; then
+    echo "  ERROR: Could not obtain admin session token after user creation." >&2
+    echo "  Is the database running? Try: just start" >&2
+    exit 1
+  fi
 fi
 
 echo "  Admin session token (${#ADMIN_TOKEN} chars):"
@@ -223,5 +253,5 @@ echo "  Services: running"
 echo "  Token: acquired and saved"
 echo "  Dashboard: $BASE_URL/admin/"
 echo ""
-echo "  Next: ./demo/01-happy-path.sh"
+echo "  Next: ./demo/governance/01-happy-path.sh"
 echo "=========================================="

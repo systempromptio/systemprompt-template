@@ -21,6 +21,9 @@ _find_demo_root() {
 DEMO_ROOT="$(_find_demo_root)"
 PROJECT_DIR="$(dirname "$DEMO_ROOT")"
 
+# Suppress verbose Rust logging — show warnings and errors only
+export RUST_LOG="${RUST_LOG:-warn}"
+
 # ── CLI binary resolution ──────────────────────
 CLI="$PROJECT_DIR/target/debug/systemprompt"
 if [[ -x "$PROJECT_DIR/target/release/systemprompt" && "$PROJECT_DIR/target/release/systemprompt" -nt "$CLI" ]]; then

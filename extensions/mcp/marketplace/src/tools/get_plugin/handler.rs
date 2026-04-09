@@ -76,11 +76,11 @@ impl McpToolHandler for GetPluginHandler {
             .iter()
             .map(std::string::ToString::to_string)
             .collect();
-        let (skill_slugs, agent_slugs, mcp_server_slugs) = tokio::join!(
+        let (skill_slugs, agent_slugs, mcp_server_slugs) = tokio::try_join!(
             shared::resolve_skill_uuids_to_slugs(&pool, &skill_strs),
             shared::resolve_agent_uuids_to_slugs(&pool, &agent_strs),
             shared::resolve_mcp_server_uuids_to_slugs(&pool, &mcp_strs),
-        );
+        )?;
 
         let plugin_json = serde_json::to_string_pretty(&serde_json::json!({
             "_display": { "type": "card", "entity": "plugin", "action": "retrieved" },

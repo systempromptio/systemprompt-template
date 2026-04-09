@@ -26,7 +26,9 @@ subheader "STEP 3: Agent Trends"
 run_cli_indented analytics agents trends --since 7d
 
 subheader "STEP 4: Deep Dive"
-info "Showing developer_agent details..."
-run_cli_head 30 analytics agents show developer_agent
+info "Showing developer_agent details (requires prior agent activity)..."
+cmd "systemprompt analytics agents show developer_agent"
+"$CLI" analytics agents show developer_agent --profile "$PROFILE" 2>&1 | head -30 | sed 's/^/  /' || info "No agent data available yet. Run agents/03-agent-messaging.sh first."
+echo ""
 
 header "AGENT ANALYTICS DEMO COMPLETE"

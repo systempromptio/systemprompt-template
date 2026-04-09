@@ -31,7 +31,7 @@ run_cli_indented admin users ban list
 subheader "STEP 4: Remove Test Ban"
 info "Cleaning up test ban..."
 cmd "systemprompt admin users ban remove 192.168.99.99"
-"$CLI" admin users ban remove 192.168.99.99 --profile "$PROFILE" 2>&1 | sed 's/^/  /' || true
+"$CLI" admin users ban remove 192.168.99.99 --yes --profile "$PROFILE" 2>&1 | sed 's/^/  /' || true
 
 subheader "STEP 5: Confirm Removal"
 run_cli_indented admin users ban list
