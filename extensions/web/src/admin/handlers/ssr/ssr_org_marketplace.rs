@@ -108,7 +108,9 @@ fn build_marketplace_json(
     })
 }
 
-fn build_rules_map(all_rules: &[AccessControlRule]) -> HashMap<(String, String), Vec<&AccessControlRule>> {
+fn build_rules_map(
+    all_rules: &[AccessControlRule],
+) -> HashMap<(String, String), Vec<&AccessControlRule>> {
     let mut rules_map: HashMap<(String, String), Vec<&AccessControlRule>> = HashMap::new();
     for rule in all_rules {
         if rule.entity_type == "marketplace" {

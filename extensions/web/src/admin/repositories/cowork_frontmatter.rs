@@ -2,17 +2,19 @@ use super::export::PluginFile;
 
 const RESERVED_PATH_PREFIXES: &[&str] = &["anthropic-"];
 const RESERVED_PATH_SUBSTRINGS: &[&str] = &["claude-code"];
-const RESERVED_BODY_WORDS: &[(&str, &str)] = &[
-    ("Anthropic", "The provider"),
-    ("anthropic", "the provider"),
-];
+const RESERVED_BODY_WORDS: &[(&str, &str)] =
+    &[("Anthropic", "The provider"), ("anthropic", "the provider")];
 
 pub fn sanitize_skill_md(file: &PluginFile) -> PluginFile {
     let path = strip_reserved_from_path(&file.path);
     let content = strip_frontmatter_hooks(&file.content);
     let content = rewrite_frontmatter_name(&content, &path);
     let content = replace_reserved_in_body(&content);
-    PluginFile { path, content, executable: false }
+    PluginFile {
+        path,
+        content,
+        executable: false,
+    }
 }
 
 pub fn sanitize_skill_aux(file: &PluginFile) -> PluginFile {
@@ -32,22 +34,29 @@ pub fn agent_to_skill(file: &PluginFile) -> PluginFile {
     let path = format!("skills/{stem}/SKILL.md");
     let content = strip_frontmatter_hooks(&file.content);
     let content = replace_reserved_in_body(&content);
-    PluginFile { path, content, executable: false }
+    PluginFile {
+        path,
+        content,
+        executable: false,
+    }
 }
 
 pub fn strip_hooks_from_manifest(file: PluginFile) -> PluginFile {
     use super::export::PluginManifest;
 
-    let content = serde_json::from_str::<PluginManifest>(&file.content)
-        .map_or_else(
-            |_| file.content.clone(),
-            |mut m| {
-                m.hooks = None;
-                serde_json::to_string_pretty(&m).unwrap_or_else(|_| file.content.clone())
-            },
-        );
+    let content = serde_json::from_str::<PluginManifest>(&file.content).map_or_else(
+        |_| file.content.clone(),
+        |mut m| {
+            m.hooks = None;
+            serde_json::to_string_pretty(&m).unwrap_or_else(|_| file.content.clone())
+        },
+    );
 
-    PluginFile { path: file.path, content, executable: false }
+    PluginFile {
+        path: file.path,
+        content,
+        executable: false,
+    }
 }
 
 fn strip_reserved_from_path(path: &str) -> String {
@@ -84,10 +93,7 @@ fn find_frontmatter_bounds(lines: &[&str]) -> Option<(usize, usize)> {
 }
 
 fn is_top_level_yaml_key(line: &str) -> bool {
-    !line.is_empty()
-        && !line.starts_with(' ')
-        && !line.starts_with('\t')
-        && line.contains(':')
+    !line.is_empty() && !line.starts_with(' ') && !line.starts_with('\t') && line.contains(':')
 }
 
 fn strip_frontmatter_hooks(content: &str) -> String {

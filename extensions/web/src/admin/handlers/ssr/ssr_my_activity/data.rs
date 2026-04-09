@@ -54,24 +54,23 @@ pub(super) fn rarity_label(pct: f64) -> &'static str {
 pub(super) fn enrich_achievements(
     gamification: Option<&crate::admin::types::UserGamificationProfile>,
 ) -> Vec<EnrichedAchievementView> {
-    gamification
-        .map_or_else(Vec::new, |g| {
-            let defs = crate::admin::gamification::ACHIEVEMENTS;
-            g.achievements
-                .iter()
-                .filter_map(|ua| {
-                    defs.iter().find(|d| d.id == ua.achievement_id).map(|d| {
-                        EnrichedAchievementView {
-                            achievement_id: ua.achievement_id.clone(),
-                            name: d.name,
-                            description: d.description,
-                            category: d.category,
-                            unlocked_at: ua.unlocked_at,
-                        }
+    gamification.map_or_else(Vec::new, |g| {
+        let defs = crate::admin::gamification::ACHIEVEMENTS;
+        g.achievements
+            .iter()
+            .filter_map(|ua| {
+                defs.iter()
+                    .find(|d| d.id == ua.achievement_id)
+                    .map(|d| EnrichedAchievementView {
+                        achievement_id: ua.achievement_id.clone(),
+                        name: d.name,
+                        description: d.description,
+                        category: d.category,
+                        unlocked_at: ua.unlocked_at,
                     })
-                })
-                .collect()
-        })
+            })
+            .collect()
+    })
 }
 
 pub(super) struct ActivityStats {

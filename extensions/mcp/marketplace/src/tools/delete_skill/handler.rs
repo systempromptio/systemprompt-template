@@ -47,9 +47,7 @@ impl McpToolHandler for DeleteSkillHandler {
         let skill_id = SkillId::new(input.skill_id.clone());
         let deleted =
             systemprompt_web_extension::admin::repositories::user_skills::delete_user_skill(
-                &pool,
-                &user_id,
-                &skill_id,
+                &pool, &user_id, &skill_id,
             )
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to delete skill: {e}"), None))?;

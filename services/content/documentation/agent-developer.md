@@ -23,7 +23,7 @@ related_docs:
 
 # Platform Agent — Reference Architecture
 
-> **Note:** This is a reference architecture document. It demonstrates how a platform agent would be configured in a Enterprise Demo deployment. The specific agent configuration, skills, MCP server access, and RBAC rules would be scoped collaboratively during the Phase 1 PRD.
+> **Note:** This is a reference architecture document. It demonstrates how a platform agent would be configured in a systemprompt.io deployment. The specific agent configuration, skills, MCP server access, and RBAC rules would be scoped collaboratively during the Phase 1 PRD.
 
 **TL;DR:** The Platform Agent shows a developer orchestration agent for engineering teams. It uses MCP for discovery and A2A for delegation. This reference covers code review, CI/CD automation, security scanning, and architecture guidance. It connects to the `systemprompt` MCP server for platform management with `admin`-scoped OAuth.
 
@@ -42,7 +42,7 @@ The Platform Agent is unique among the demo agents in two ways:
 | Property | Value |
 |----------|-------|
 | Agent ID | `developer_agent` |
-| Enterprise Demo Name | Platform Agent |
+| systemprompt.io Name | Platform Agent |
 | Port | 9026 |
 | Endpoint | `http://localhost:8080/api/v1/agents/developer_agent` |
 | Protocol | A2A v0.3.0, JSONRPC |
@@ -57,7 +57,7 @@ The Platform Agent is unique among the demo agents in two ways:
 The Platform Agent is defined in `services/agents/developer_agent.yaml`:
 
 ```yaml
-# Platform Agent Configuration (Enterprise Demo Demo)
+# Platform Agent Configuration (systemprompt.io Demo)
 # Developer orchestration layer for engineering teams
 
 agents:

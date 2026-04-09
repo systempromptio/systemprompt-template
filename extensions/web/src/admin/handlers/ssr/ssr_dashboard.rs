@@ -112,7 +112,12 @@ async fn inject_mcp_access_and_costs(pool: &Arc<PgPool>, data: &mut serde_json::
         tracing::warn!(error = %e, "Failed to fetch token usage for dashboard");
         vec![]
     });
-    let max_tokens: i64 = tokens.iter().map(|t| t.input_tokens + t.output_tokens).max().unwrap_or(1).max(1);
+    let max_tokens: i64 = tokens
+        .iter()
+        .map(|t| t.input_tokens + t.output_tokens)
+        .max()
+        .unwrap_or(1)
+        .max(1);
     let tokens_json: Vec<serde_json::Value> = tokens
         .iter()
         .map(|r| {
@@ -131,9 +136,15 @@ async fn inject_mcp_access_and_costs(pool: &Arc<PgPool>, data: &mut serde_json::
 
     if let Some(obj) = data.as_object_mut() {
         obj.insert("mcp_access_events".to_string(), json!(mcp_json));
-        obj.insert("has_mcp_access_events".to_string(), json!(!mcp_json.is_empty()));
+        obj.insert(
+            "has_mcp_access_events".to_string(),
+            json!(!mcp_json.is_empty()),
+        );
         obj.insert("token_usage".to_string(), json!(tokens_json));
-        obj.insert("has_token_usage".to_string(), json!(!tokens_json.is_empty()));
+        obj.insert(
+            "has_token_usage".to_string(),
+            json!(!tokens_json.is_empty()),
+        );
     }
 }
 
@@ -174,9 +185,15 @@ async fn inject_governance_data(pool: &Arc<PgPool>, data: &mut serde_json::Value
         obj.insert("governance_total".to_string(), json!(counts.total));
         obj.insert("governance_allowed".to_string(), json!(counts.allowed));
         obj.insert("governance_denied".to_string(), json!(counts.denied));
-        obj.insert("governance_secret_breaches".to_string(), json!(counts.secret_breaches));
+        obj.insert(
+            "governance_secret_breaches".to_string(),
+            json!(counts.secret_breaches),
+        );
         obj.insert("governance_events".to_string(), json!(gov_json));
-        obj.insert("has_governance_events".to_string(), json!(!gov_json.is_empty()));
+        obj.insert(
+            "has_governance_events".to_string(),
+            json!(!gov_json.is_empty()),
+        );
     }
 }
 
@@ -239,7 +256,10 @@ pub(crate) async fn dashboard_page(
     .unwrap_or_else(|_| serde_json::Value::Null);
 
     if let Some(obj) = data.as_object_mut() {
-        let users_val = obj.get("total_users").and_then(serde_json::Value::as_u64).unwrap_or(0);
+        let users_val = obj
+            .get("total_users")
+            .and_then(serde_json::Value::as_u64)
+            .unwrap_or(0);
         let active_val = obj
             .get("active_users_24h")
             .and_then(serde_json::Value::as_i64)

@@ -183,9 +183,7 @@ pub async fn list_events(
     })
 }
 
-pub async fn list_event_breakdown(
-    pool: &Arc<PgPool>,
-) -> Result<Vec<EventBreakdown>, sqlx::Error> {
+pub async fn list_event_breakdown(pool: &Arc<PgPool>) -> Result<Vec<EventBreakdown>, sqlx::Error> {
     let sql = r"SELECT p.event_type, COUNT(*)::BIGINT AS count
         FROM plugin_usage_events p
         JOIN users u ON u.id = p.user_id

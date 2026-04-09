@@ -1,8 +1,10 @@
-use anyhow::{anyhow, Context, Result};
 use std::fmt::Write as FmtWrite;
+
 use systemprompt::database::DbPool;
 use systemprompt::generator::ContentConfigRaw;
 use systemprompt::traits::{Job, JobContext, JobResult};
+
+use crate::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct LlmsTxtGenerationJob;
@@ -25,14 +27,16 @@ impl Job for LlmsTxtGenerationJob {
         false
     }
 
-    async fn execute(&self, ctx: &JobContext) -> Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
         let start = std::time::Instant::now();
 
         tracing::info!("llms.txt generation started");
 
         let db_pool = ctx
             .db_pool::<DbPool>()
-            .ok_or_else(|| anyhow::anyhow!("Database not available in job context"))?;
+            .ok_or(MarketplaceError::Internal(
+                "Database not available in job context".to_string(),
+            ))?;
 
         generate_llms_txt(db_pool.clone()).await?;
 
@@ -46,20 +50,22 @@ impl Job for LlmsTxtGenerationJob {
 
 systemprompt::traits::submit_job!(&LlmsTxtGenerationJob);
 
-pub async fn generate_llms_txt(db_pool: DbPool) -> Result<()> {
+pub async fn generate_llms_txt(db_pool: DbPool) -> Result<(), MarketplaceError> {
     use systemprompt::models::{AppPaths, Config};
     use tokio::fs;
 
-    let global_config = Config::get()?;
-    let paths = AppPaths::get().map_err(|e| anyhow!("{e}"))?;
+    let global_config =
+        Config::get().map_err(|e| MarketplaceError::Internal(format!("Config error: {e}")))?;
+    let paths = AppPaths::get()
+        .map_err(|e| MarketplaceError::Internal(format!("AppPaths error: {e}")))?;
 
     let config_path = paths.system().content_config();
-    let yaml_content = fs::read_to_string(&config_path)
-        .await
-        .context("Failed to read content config")?;
+    let yaml_content = fs::read_to_string(&config_path).await.map_err(|e| {
+        MarketplaceError::Internal(format!("Failed to read content config: {e}"))
+    })?;
 
     let content_config: ContentConfigRaw =
-        serde_yaml::from_str(&yaml_content).context("Failed to parse content config")?;
+        serde_yaml::from_str(&yaml_content).map_err(MarketplaceError::Yaml)?;
 
     let web_dir = paths.web().dist().to_path_buf();
     let base_url = &global_config.api_external_url;
@@ -106,29 +112,37 @@ async fn build_llms_txt_content(
     db_pool: DbPool,
     config: &ContentConfigRaw,
     base_url: &str,
-) -> Result<String> {
+) -> Result<String, MarketplaceError> {
     use systemprompt::content::ContentRepository;
 
     let mut content = String::new();
 
-    write_header(&mut content, base_url)?;
+    write_header(&mut content, base_url).map_err(|e| {
+        MarketplaceError::Internal(format!("Failed to write header: {e}"))
+    })?;
 
-    let repo = ContentRepository::new(&db_pool).map_err(|e| anyhow!("{e}"))?;
+    let repo = ContentRepository::new(&db_pool)
+        .map_err(|e| MarketplaceError::Internal(format!("ContentRepository error: {e}")))?;
 
-    write_playbooks_section(&mut content, config, &repo, base_url).await?;
     write_documentation_section(&mut content, config, &repo, base_url).await?;
     write_blog_section(&mut content, config, &repo, base_url).await?;
 
-    writeln!(content, "## Resources")?;
-    writeln!(content)?;
+    writeln!(content, "## Resources").map_err(|e| {
+        MarketplaceError::Internal(format!("fmt error: {e}"))
+    })?;
+    writeln!(content).map_err(|e| {
+        MarketplaceError::Internal(format!("fmt error: {e}"))
+    })?;
     writeln!(
         content,
         "- [Sitemap]({base_url}/sitemap.xml): Complete URL index"
-    )?;
+    )
+    .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
     writeln!(
         content,
         "- [Documentation]({base_url}/documentation): All documentation"
-    )?;
+    )
+    .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
 
     Ok(content)
 }
@@ -149,64 +163,26 @@ fn write_header(content: &mut String, base_url: &str) -> std::fmt::Result {
     writeln!(content)
 }
 
-async fn write_playbooks_section(
-    content: &mut String,
-    config: &ContentConfigRaw,
-    repo: &systemprompt::content::ContentRepository,
-    base_url: &str,
-) -> Result<()> {
-    use systemprompt::identifiers::SourceId;
-
-    writeln!(content, "## Playbooks")?;
-    writeln!(content)?;
-    writeln!(content, "Operational guides and procedures.")?;
-    writeln!(content)?;
-
-    if let Some(source) = config.content_sources.get("playbooks") {
-        if source.enabled {
-            let source_id = SourceId::new(&source.source_id);
-            if let Ok(playbooks) = repo.list_by_source(&source_id).await {
-                let prefixes = [
-                    ("guide", "Getting Started (Start Here)"),
-                    ("cli", "CLI Operations"),
-                    ("build", "Build & Development"),
-                    ("config", "Configuration"),
-                    ("domain", "Domain Operations"),
-                    ("content", "Content Creation"),
-                ];
-                for (prefix, heading) in &prefixes {
-                    let filtered: Vec<_> = playbooks
-                        .iter()
-                        .filter(|p| p.slug.starts_with(prefix))
-                        .map(|p| {
-                            (
-                                p.title.clone(),
-                                format!("{}/playbooks/{}", base_url, p.slug),
-                                p.description.clone(),
-                            )
-                        })
-                        .collect();
-                    let entries = collect_sorted_entries(&filtered);
-                    write_section(content, heading, &entries)?;
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
 async fn write_documentation_section(
     content: &mut String,
     config: &ContentConfigRaw,
     repo: &systemprompt::content::ContentRepository,
     base_url: &str,
-) -> Result<()> {
+) -> Result<(), MarketplaceError> {
     use systemprompt::identifiers::SourceId;
 
-    writeln!(content, "## Documentation")?;
-    writeln!(content)?;
-    writeln!(content, "Technical documentation and guides.")?;
-    writeln!(content)?;
+    writeln!(content, "## Documentation").map_err(|e| {
+        MarketplaceError::Internal(format!("fmt error: {e}"))
+    })?;
+    writeln!(content).map_err(|e| {
+        MarketplaceError::Internal(format!("fmt error: {e}"))
+    })?;
+    writeln!(content, "Technical documentation and guides.").map_err(|e| {
+        MarketplaceError::Internal(format!("fmt error: {e}"))
+    })?;
+    writeln!(content).map_err(|e| {
+        MarketplaceError::Internal(format!("fmt error: {e}"))
+    })?;
 
     if let Some(source) = config.content_sources.get("documentation") {
         if source.enabled {
@@ -230,7 +206,9 @@ async fn write_documentation_section(
                         })
                         .collect();
                     let entries = collect_sorted_entries(&filtered);
-                    write_section(content, heading, &entries)?;
+                    write_section(content, heading, &entries).map_err(|e| {
+                        MarketplaceError::Internal(format!("fmt error: {e}"))
+                    })?;
                 }
                 let other: Vec<_> = docs
                     .iter()
@@ -248,7 +226,9 @@ async fn write_documentation_section(
                     })
                     .collect();
                 let entries = collect_sorted_entries(&other);
-                write_section(content, "General", &entries)?;
+                write_section(content, "General", &entries).map_err(|e| {
+                    MarketplaceError::Internal(format!("fmt error: {e}"))
+                })?;
             }
         }
     }
@@ -260,13 +240,21 @@ async fn write_blog_section(
     config: &ContentConfigRaw,
     repo: &systemprompt::content::ContentRepository,
     base_url: &str,
-) -> Result<()> {
+) -> Result<(), MarketplaceError> {
     use systemprompt::identifiers::SourceId;
 
-    writeln!(content, "## Blog")?;
-    writeln!(content)?;
-    writeln!(content, "Articles and updates.")?;
-    writeln!(content)?;
+    writeln!(content, "## Blog").map_err(|e| {
+        MarketplaceError::Internal(format!("fmt error: {e}"))
+    })?;
+    writeln!(content).map_err(|e| {
+        MarketplaceError::Internal(format!("fmt error: {e}"))
+    })?;
+    writeln!(content, "Articles and updates.").map_err(|e| {
+        MarketplaceError::Internal(format!("fmt error: {e}"))
+    })?;
+    writeln!(content).map_err(|e| {
+        MarketplaceError::Internal(format!("fmt error: {e}"))
+    })?;
 
     if let Some(source) = config.content_sources.get("blog") {
         if source.enabled {
@@ -274,11 +262,16 @@ async fn write_blog_section(
             if let Ok(posts) = repo.list_by_source(&source_id).await {
                 for post in posts.iter().take(15) {
                     let url = format!("{}/blog/{}", base_url, post.slug);
-                    writeln!(content, "- [{}]({}): {}", post.title, url, post.description)?;
+                    writeln!(content, "- [{}]({}): {}", post.title, url, post.description)
+                        .map_err(|e| {
+                            MarketplaceError::Internal(format!("fmt error: {e}"))
+                        })?;
                 }
             }
         }
     }
-    writeln!(content)?;
+    writeln!(content).map_err(|e| {
+        MarketplaceError::Internal(format!("fmt error: {e}"))
+    })?;
     Ok(())
 }

@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
-use anyhow::Result;
 use async_trait::async_trait;
 use systemprompt::extension::prelude::*;
 
 use super::config::FeaturePage;
+use crate::error::MarketplaceError;
 
 pub struct FeaturePagePrerenderer {
     page: FeaturePage,
@@ -29,8 +29,11 @@ impl PagePrerenderer for FeaturePagePrerenderer {
         50
     }
 
-    async fn prepare(&self, ctx: &PagePrepareContext<'_>) -> Result<Option<PageRenderSpec>> {
-        let page_data = serde_json::to_value(&self.page)?;
+    async fn prepare(
+        &self,
+        ctx: &PagePrepareContext<'_>,
+    ) -> anyhow::Result<Option<PageRenderSpec>> {
+        let page_data = serde_json::to_value(&self.page).map_err(MarketplaceError::Json)?;
 
         let base_data = serde_json::json!({
             "feature": page_data,

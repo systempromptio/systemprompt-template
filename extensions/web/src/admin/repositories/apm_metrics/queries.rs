@@ -85,7 +85,8 @@ async fn compute_active_session_apm(pool: &PgPool, user_id: &str) -> (f32, i32, 
         current_apm += numeric::to_f32_from_i64(actions) / numeric::to_f32(mins);
     }
 
-    let current_concurrency = numeric::saturating_i32(i64::try_from(active_sessions.len()).unwrap_or(0));
+    let current_concurrency =
+        numeric::saturating_i32(i64::try_from(active_sessions.len()).unwrap_or(0));
 
     let total_active_seconds: f64 = active_sessions
         .iter()

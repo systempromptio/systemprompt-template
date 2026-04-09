@@ -1,6 +1,8 @@
-use anyhow::{anyhow, Result};
 use std::fmt::Write as FmtWrite;
+
 use systemprompt::traits::{Job, JobContext, JobResult};
+
+use crate::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct RobotsTxtGenerationJob;
@@ -23,7 +25,7 @@ impl Job for RobotsTxtGenerationJob {
         true
     }
 
-    async fn execute(&self, _ctx: &JobContext) -> Result<JobResult> {
+    async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
         let start = std::time::Instant::now();
 
         tracing::info!("robots.txt generation started");
@@ -40,12 +42,14 @@ impl Job for RobotsTxtGenerationJob {
 
 systemprompt::traits::submit_job!(&RobotsTxtGenerationJob);
 
-pub async fn generate_robots_txt() -> Result<()> {
+pub async fn generate_robots_txt() -> Result<(), MarketplaceError> {
     use systemprompt::models::{AppPaths, Config};
     use tokio::fs;
 
-    let global_config = Config::get()?;
-    let paths = AppPaths::get().map_err(|e| anyhow!("{e}"))?;
+    let global_config =
+        Config::get().map_err(|e| MarketplaceError::Internal(format!("Config error: {e}")))?;
+    let paths = AppPaths::get()
+        .map_err(|e| MarketplaceError::Internal(format!("AppPaths error: {e}")))?;
 
     let web_dir = paths.web().dist().to_path_buf();
     let base_url = &global_config.api_external_url;
@@ -60,17 +64,25 @@ pub async fn generate_robots_txt() -> Result<()> {
     Ok(())
 }
 
-fn build_robots_txt_content(base_url: &str) -> Result<String> {
+fn build_robots_txt_content(base_url: &str) -> Result<String, MarketplaceError> {
     let mut content = String::new();
 
-    writeln!(content, "User-agent: *")?;
-    writeln!(content, "Allow: /")?;
-    writeln!(content)?;
-    writeln!(content, "Disallow: /api/")?;
-    writeln!(content, "Disallow: /console/")?;
-    writeln!(content, "Disallow: /_/")?;
-    writeln!(content)?;
-    writeln!(content, "Sitemap: {base_url}/sitemap.xml")?;
+    writeln!(content, "User-agent: *")
+        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content, "Allow: /")
+        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content)
+        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content, "Disallow: /api/")
+        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content, "Disallow: /console/")
+        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content, "Disallow: /_/")
+        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content)
+        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content, "Sitemap: {base_url}/sitemap.xml")
+        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
 
     Ok(content)
 }

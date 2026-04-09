@@ -1,8 +1,6 @@
 use std::collections::HashSet;
 use std::path::Path;
 
-
-
 use super::super::types::{AgentInfo, RequiredSecret, SkillInfo};
 
 pub(crate) fn resolve_all_plugin_skill_ids(

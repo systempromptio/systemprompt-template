@@ -111,6 +111,7 @@ pub(crate) async fn my_mcp_servers_page(
         },
     };
 
-    let value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+    let value =
+        serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-mcp-servers", &value, &user_ctx, &mkt_ctx)
 }

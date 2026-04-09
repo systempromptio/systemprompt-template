@@ -21,8 +21,6 @@ pub struct HomepageConfig {
     #[serde(default)]
     pub how_it_works: Option<HowItWorksConfig>,
     #[serde(default)]
-    pub playbooks: Option<PlaybooksConfig>,
-    #[serde(default)]
     pub whats_next: Option<WhatsNextConfig>,
     #[serde(default)]
     pub actions: Option<ActionsConfig>,

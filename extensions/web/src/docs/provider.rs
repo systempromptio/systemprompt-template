@@ -117,10 +117,7 @@ impl PageDataProvider for DocsPageDataProvider {
             }
 
             if let Some(published) = item.get("published_at").and_then(|v| v.as_str()) {
-                obj.insert(
-                    "DATE_ISO".to_string(),
-                    Value::String(published.to_string()),
-                );
+                obj.insert("DATE_ISO".to_string(), Value::String(published.to_string()));
                 if let Ok(dt) = DateTime::parse_from_rfc3339(published) {
                     obj.insert(
                         "DATE".to_string(),

@@ -17,7 +17,13 @@ fn sanitize_filename(name: &str) -> String {
     let sanitized: String = name
         .to_lowercase()
         .chars()
-        .map(|c| if c.is_ascii_alphanumeric() || c == '-' { c } else { '-' })
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '-' {
+                c
+            } else {
+                '-'
+            }
+        })
         .collect();
 
     sanitized
@@ -148,7 +154,10 @@ pub(crate) async fn export_marketplace_zip_handler(
         }
     };
 
-    let filename = format!("{}-marketplace.zip", sanitize_filename(&user_info.display_name));
+    let filename = format!(
+        "{}-marketplace.zip",
+        sanitize_filename(&user_info.display_name)
+    );
     (
         StatusCode::OK,
         [
@@ -181,8 +190,7 @@ pub(crate) async fn export_cowork_zip_handler(
         }
     };
 
-    let platform_url =
-        Config::get().map_or_else(|_| String::new(), |c| c.api_external_url.clone());
+    let platform_url = Config::get().map_or_else(|_| String::new(), |c| c.api_external_url.clone());
 
     let export_params = repositories::ExportParams {
         services_path: &services_path,

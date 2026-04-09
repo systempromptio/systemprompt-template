@@ -1,6 +1,4 @@
-use super::export::{
-    ManifestAuthor, MarketplaceManifest, MarketplacePluginEntry,
-};
+use super::export::{ManifestAuthor, MarketplaceManifest, MarketplacePluginEntry};
 use crate::error::MarketplaceError;
 
 pub(super) fn build_marketplace(

@@ -173,7 +173,9 @@ pub(crate) async fn sync_marketplace_handler(
             .into_response();
     };
 
-    match github_sync::sync_marketplace_from_github(&pool, &id, repo_url, user_ctx.user_id.as_str()).await {
+    match github_sync::sync_marketplace_from_github(&pool, &id, repo_url, user_ctx.user_id.as_str())
+        .await
+    {
         Ok(result) => (
             StatusCode::OK,
             Json(json!({
@@ -244,7 +246,13 @@ pub(crate) async fn publish_marketplace_handler(
             .into_response();
     };
 
-    match github_sync::publish_marketplace_to_github(&pool, &id, repo_url, user_ctx.user_id.as_str()).await
+    match github_sync::publish_marketplace_to_github(
+        &pool,
+        &id,
+        repo_url,
+        user_ctx.user_id.as_str(),
+    )
+    .await
     {
         Ok(result) => (
             StatusCode::OK,

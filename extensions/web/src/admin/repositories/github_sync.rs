@@ -5,9 +5,7 @@ use anyhow::Result;
 use sqlx::PgPool;
 use systemprompt::models::ProfileBootstrap;
 
-pub(crate) use super::github_sync_bundle::{
-    build_bundle_from_directory, import_or_update_plugin,
-};
+pub(crate) use super::github_sync_bundle::{build_bundle_from_directory, import_or_update_plugin};
 pub(crate) use super::github_sync_git::{git_clone_shallow, git_head_hash, git_pull};
 
 #[derive(Debug, Clone)]
@@ -92,8 +90,7 @@ async fn finalize_sync(
 ) {
     if !plugin_ids.is_empty() {
         if let Err(e) =
-            super::org_marketplaces::set_marketplace_plugins(pool, marketplace_id, plugin_ids)
-                .await
+            super::org_marketplaces::set_marketplace_plugins(pool, marketplace_id, plugin_ids).await
         {
             tracing::error!(error = %e, "Failed to update marketplace plugin associations");
             *error_count += 1;
@@ -164,7 +161,13 @@ pub async fn sync_marketplace_from_github(
 
     let mut tally = import_plugins_from_entries(plugins, &local_path, &services_path, "github");
 
-    finalize_sync(pool, marketplace_id, &tally.plugin_ids, &mut tally.error_count).await;
+    finalize_sync(
+        pool,
+        marketplace_id,
+        &tally.plugin_ids,
+        &mut tally.error_count,
+    )
+    .await;
 
     if let Err(e) = std::fs::write(&marker_path, &current_hash) {
         tracing::warn!(error = %e, "Failed to save last commit marker");
@@ -237,7 +240,13 @@ pub async fn sync_marketplace_from_local(
     let base_path = PathBuf::from(".");
     let mut tally = import_plugins_from_entries(plugins, &base_path, &services_path, "local");
 
-    finalize_sync(pool, marketplace_id, &tally.plugin_ids, &mut tally.error_count).await;
+    finalize_sync(
+        pool,
+        marketplace_id,
+        &tally.plugin_ids,
+        &mut tally.error_count,
+    )
+    .await;
 
     let duration_ms = elapsed_ms(start);
 

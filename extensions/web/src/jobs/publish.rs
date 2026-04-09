@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use anyhow::Result;
 use systemprompt::database::DbPool;
 use systemprompt::generator::{generate_feed, organize_dist_assets, prerender_pages};
 use systemprompt::models::AppPaths;
@@ -10,6 +9,7 @@ use super::{
     ContentIngestionJob, ContentPrerenderJob, CopyExtensionAssetsJob, LlmsTxtGenerationJob,
     RobotsTxtGenerationJob, SitemapGenerationJob,
 };
+use crate::error::MarketplaceError;
 
 #[derive(Default)]
 struct PipelineStats {
@@ -178,12 +178,14 @@ impl Job for PublishPipelineJob {
         true
     }
 
-    async fn execute(&self, ctx: &JobContext) -> Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
         let start_time = std::time::Instant::now();
 
         let db_pool = ctx
             .db_pool::<DbPool>()
-            .ok_or_else(|| anyhow::anyhow!("Database not available in job context"))?;
+            .ok_or(MarketplaceError::Internal(
+                "Database not available in job context".to_string(),
+            ))?;
 
         tracing::info!("Publish pipeline started");
 

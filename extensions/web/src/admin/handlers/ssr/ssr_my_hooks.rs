@@ -122,7 +122,8 @@ pub(crate) async fn my_hooks_page(
         hook_event_types: HOOK_EVENT_TYPES.to_vec(),
     };
 
-    let value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+    let value =
+        serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-hooks", &value, &user_ctx, &mkt_ctx)
 }
 
@@ -193,7 +194,8 @@ fn build_hook_views(
                     }],
                 }
             };
-            let hook_code = serde_json::to_string_pretty(&[&hook_code_entry]).unwrap_or_else(|_| String::new());
+            let hook_code =
+                serde_json::to_string_pretty(&[&hook_code_entry]).unwrap_or_else(|_| String::new());
             HookView {
                 id: h.id.clone(),
                 hook_name: h.hook_name.clone(),

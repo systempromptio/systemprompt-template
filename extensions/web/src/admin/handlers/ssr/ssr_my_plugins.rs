@@ -58,12 +58,8 @@ pub(crate) async fn my_plugins_page(
         .iter()
         .map(|a| (a.entity_name.as_str(), a))
         .collect();
-    let (plugins_json, categories) = collect_my_plugins(
-        &enriched,
-        &skill_usage_map,
-        &skill_eff_map,
-        &agent_eff_map,
-    );
+    let (plugins_json, categories) =
+        collect_my_plugins(&enriched, &skill_usage_map, &skill_eff_map, &agent_eff_map);
     let plugin_count = plugins_json.len();
     let data = MyPluginsPageData {
         page: "my-plugins",
@@ -73,7 +69,8 @@ pub(crate) async fn my_plugins_page(
         categories,
         stats: PluginStats { plugin_count },
     };
-    let data_value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+    let data_value =
+        serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-plugins", &data_value, &user_ctx, &mkt_ctx)
 }
 
@@ -120,6 +117,7 @@ pub(crate) async fn my_plugin_edit_page(
         agents_list,
         mcp_list,
     };
-    let data_value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+    let data_value =
+        serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-plugin-edit", &data_value, &user_ctx, &mkt_ctx)
 }

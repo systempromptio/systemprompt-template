@@ -90,7 +90,12 @@ pub(crate) async fn traces_page(
     let entities = unwrap_or_warn(entities_result, "trace entities");
     let summary = summary_result.unwrap_or_else(|e| {
         tracing::warn!(error = %e, "Failed to fetch session summary");
-        SessionSummaryRow { total_events: 0, tool_uses: 0, prompts: 0, errors: 0 }
+        SessionSummaryRow {
+            total_events: 0,
+            tool_uses: 0,
+            prompts: 0,
+            errors: 0,
+        }
     });
 
     let data = build_trace_data(session_id, &events, &governance, &entities, &summary);

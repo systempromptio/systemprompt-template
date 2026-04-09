@@ -199,4 +199,3 @@ pub(super) struct DashboardTemplateData {
     pub recent_mcp_errors: Vec<McpErrorView>,
     pub top_pages_today: Vec<TopPageView>,
 }
-

@@ -80,9 +80,12 @@ impl McpToolHandler for CreatePluginHandler {
             .map_err(|e| McpError::internal_error(format!("Failed to create plugin: {e}"), None))?;
 
         if !input.skill_ids.is_empty() {
-            let uuids = shared::resolve_skill_slugs(&pool, user_id.as_ref(), &input.skill_ids).await?;
-            let typed: Vec<systemprompt::identifiers::SkillId> =
-                uuids.into_iter().map(systemprompt::identifiers::SkillId::new).collect();
+            let uuids =
+                shared::resolve_skill_slugs(&pool, user_id.as_ref(), &input.skill_ids).await?;
+            let typed: Vec<systemprompt::identifiers::SkillId> = uuids
+                .into_iter()
+                .map(systemprompt::identifiers::SkillId::new)
+                .collect();
             systemprompt_web_extension::admin::repositories::set_plugin_skills(
                 &pool, &plugin.id, &typed,
             )
@@ -92,9 +95,12 @@ impl McpToolHandler for CreatePluginHandler {
             })?;
         }
         if !input.agent_ids.is_empty() {
-            let uuids = shared::resolve_agent_slugs(&pool, user_id.as_ref(), &input.agent_ids).await?;
-            let typed: Vec<systemprompt::identifiers::AgentId> =
-                uuids.into_iter().map(systemprompt::identifiers::AgentId::new).collect();
+            let uuids =
+                shared::resolve_agent_slugs(&pool, user_id.as_ref(), &input.agent_ids).await?;
+            let typed: Vec<systemprompt::identifiers::AgentId> = uuids
+                .into_iter()
+                .map(systemprompt::identifiers::AgentId::new)
+                .collect();
             systemprompt_web_extension::admin::repositories::set_plugin_agents(
                 &pool, &plugin.id, &typed,
             )
@@ -105,9 +111,12 @@ impl McpToolHandler for CreatePluginHandler {
         }
         if !input.mcp_server_ids.is_empty() {
             let uuids =
-                shared::resolve_mcp_server_slugs(&pool, user_id.as_ref(), &input.mcp_server_ids).await?;
-            let typed: Vec<systemprompt::identifiers::McpServerId> =
-                uuids.into_iter().map(systemprompt::identifiers::McpServerId::new).collect();
+                shared::resolve_mcp_server_slugs(&pool, user_id.as_ref(), &input.mcp_server_ids)
+                    .await?;
+            let typed: Vec<systemprompt::identifiers::McpServerId> = uuids
+                .into_iter()
+                .map(systemprompt::identifiers::McpServerId::new)
+                .collect();
             systemprompt_web_extension::admin::repositories::set_plugin_mcp_servers(
                 &pool, &plugin.id, &typed,
             )

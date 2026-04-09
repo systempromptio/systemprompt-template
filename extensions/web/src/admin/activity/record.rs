@@ -6,73 +6,8 @@ pub async fn record(pool: &PgPool, activity: NewActivity) {
     let category = activity.category.as_ref();
     let action = activity.action.as_ref();
 
-    if category == "login" {
-        let recent = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM user_activity WHERE user_id = $1 AND category = 'login' AND created_at > NOW() - INTERVAL '1 hour'"
-        )
-        .bind(&activity.user_id)
-        .fetch_one(pool)
-        .await
-        .unwrap_or(0);
-
-        if recent > 0 {
-            return;
-        }
-    }
-
-    if category == "tool_usage" {
-        if let Some(ref ent) = activity.entity {
-            if let Some(ref tool_name) = ent.entity_name {
-                let recent = sqlx::query_scalar::<_, i64>(
-                    "SELECT COUNT(*) FROM user_activity WHERE user_id = $1 AND category = 'tool_usage' AND entity_name = $2 AND created_at > NOW() - INTERVAL '30 seconds'"
-                )
-                .bind(&activity.user_id)
-                .bind(tool_name)
-                .fetch_one(pool)
-                .await
-                .unwrap_or(0);
-
-                if recent > 0 {
-                    return;
-                }
-            }
-        }
-    }
-
-    if category == "mcp_access" && action == "rejected" {
-        if let Some(ref ent) = activity.entity {
-            if let Some(ref server_name) = ent.entity_name {
-                let recent = sqlx::query_scalar::<_, i64>(
-                    "SELECT COUNT(*) FROM user_activity WHERE category = 'mcp_access' AND action = 'rejected' AND entity_name = $1 AND created_at > NOW() - INTERVAL '60 seconds'"
-                )
-                .bind(server_name)
-                .fetch_one(pool)
-                .await
-                .unwrap_or(0);
-
-                if recent > 0 {
-                    return;
-                }
-            }
-        }
-    }
-
-    if category == "session" && action == "started" {
-        if let Some(ref ent) = activity.entity {
-            if let Some(ref eid) = ent.entity_id {
-                let existing = sqlx::query_scalar::<_, i64>(
-                    "SELECT COUNT(*) FROM user_activity WHERE entity_id = $1 AND category = 'session' AND action = 'started'",
-                )
-                .bind(eid)
-                .fetch_one(pool)
-                .await
-                .unwrap_or(0);
-
-                if existing > 0 {
-                    return;
-                }
-            }
-        }
+    if should_deduplicate(pool, category, action, &activity).await {
+        return;
     }
 
     let (entity_type, entity_id, entity_name) = match &activity.entity {
@@ -101,4 +36,83 @@ pub async fn record(pool: &PgPool, activity: NewActivity) {
     {
         tracing::warn!(error = %e, "Failed to record user activity (non-fatal)");
     }
+}
+
+async fn should_deduplicate(
+    pool: &PgPool,
+    category: &str,
+    action: &str,
+    activity: &NewActivity,
+) -> bool {
+    match (category, action) {
+        ("login", _) => {
+            has_recent_activity(
+                pool,
+                "SELECT COUNT(*) FROM user_activity WHERE user_id = $1 AND category = 'login' AND created_at > NOW() - INTERVAL '1 hour'",
+                &[&activity.user_id],
+            )
+            .await
+        }
+        ("tool_usage", _) => {
+            let tool_name = activity
+                .entity
+                .as_ref()
+                .and_then(|e| e.entity_name.as_ref());
+            match tool_name {
+                Some(name) => {
+                    has_recent_activity(
+                        pool,
+                        "SELECT COUNT(*) FROM user_activity WHERE user_id = $1 AND category = 'tool_usage' AND entity_name = $2 AND created_at > NOW() - INTERVAL '30 seconds'",
+                        &[&activity.user_id, name],
+                    )
+                    .await
+                }
+                None => false,
+            }
+        }
+        ("mcp_access", "rejected") => {
+            let server_name = activity
+                .entity
+                .as_ref()
+                .and_then(|e| e.entity_name.as_ref());
+            match server_name {
+                Some(name) => {
+                    has_recent_activity(
+                        pool,
+                        "SELECT COUNT(*) FROM user_activity WHERE category = 'mcp_access' AND action = 'rejected' AND entity_name = $1 AND created_at > NOW() - INTERVAL '60 seconds'",
+                        &[name],
+                    )
+                    .await
+                }
+                None => false,
+            }
+        }
+        ("session", "started") => {
+            let entity_id = activity
+                .entity
+                .as_ref()
+                .and_then(|e| e.entity_id.as_ref());
+            match entity_id {
+                Some(eid) => {
+                    has_recent_activity(
+                        pool,
+                        "SELECT COUNT(*) FROM user_activity WHERE entity_id = $1 AND category = 'session' AND action = 'started'",
+                        &[eid],
+                    )
+                    .await
+                }
+                None => false,
+            }
+        }
+        _ => false,
+    }
+}
+
+async fn has_recent_activity(pool: &PgPool, query: &str, binds: &[&str]) -> bool {
+    let mut q = sqlx::query_scalar::<_, i64>(query);
+    for bind in binds {
+        q = q.bind(bind);
+    }
+    let count = q.fetch_one(pool).await.unwrap_or(0);
+    count > 0
 }

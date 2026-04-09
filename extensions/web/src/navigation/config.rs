@@ -30,10 +30,6 @@ pub struct BrandingConfig {
     pub favicon: String,
     #[serde(default)]
     pub twitter_handle: String,
-    #[serde(default)]
-    pub password_hash: Option<String>,
-    #[serde(default)]
-    pub session_storage_key: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

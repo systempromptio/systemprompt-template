@@ -37,7 +37,10 @@ impl BundleAdminJsJob {
     }
 }
 
-async fn build_per_page_bundles(js_dir: &std::path::Path, output_dir: &std::path::Path) -> Result<u64> {
+async fn build_per_page_bundles(
+    js_dir: &std::path::Path,
+    output_dir: &std::path::Path,
+) -> Result<u64> {
     let bundles_dir = js_dir.join("bundles");
     if !bundles_dir.is_dir() {
         return Ok(0);
@@ -63,7 +66,10 @@ async fn build_per_page_bundles(js_dir: &std::path::Path, output_dir: &std::path
         let manifest = tokio::fs::read_to_string(&manifest_path)
             .await
             .with_context(|| {
-                format!("Failed to read bundle manifest: {}", manifest_path.display())
+                format!(
+                    "Failed to read bundle manifest: {}",
+                    manifest_path.display()
+                )
             })?;
 
         let files: Vec<&str> = manifest
@@ -103,7 +109,10 @@ async fn build_per_page_bundles(js_dir: &std::path::Path, output_dir: &std::path
     Ok(total_bundled)
 }
 
-async fn build_main_bundle(js_dir: &std::path::Path, output_dir: &std::path::Path) -> Result<(u64, u64)> {
+async fn build_main_bundle(
+    js_dir: &std::path::Path,
+    output_dir: &std::path::Path,
+) -> Result<(u64, u64)> {
     let manifest_path = js_dir.join("bundle-order.txt");
     let bundle_path = output_dir.join("admin-bundle.js");
 

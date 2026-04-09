@@ -23,7 +23,10 @@ pub(crate) async fn delete_skill_handler(
     Query(query): Query<UserQuery>,
 ) -> Response {
     let default_user_id = UserId::new("admin");
-    let user_id = query.user_id.as_ref().map_or_else(|| default_user_id.clone(), UserId::new);
+    let user_id = query
+        .user_id
+        .as_ref()
+        .map_or_else(|| default_user_id.clone(), UserId::new);
     let skill_id = SkillId::new(skill_id_raw);
     match repositories::delete_user_skill(&pool, &user_id, &skill_id).await {
         Ok(true) => {

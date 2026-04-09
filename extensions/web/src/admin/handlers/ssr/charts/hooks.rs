@@ -1,6 +1,8 @@
 use serde::Serialize;
 
-use super::svg::{build_stacked_area, build_svg_line, build_y_labels, AxisLabel, SVG_HEIGHT, SVG_WIDTH};
+use super::svg::{
+    build_stacked_area, build_svg_line, build_y_labels, AxisLabel, SVG_HEIGHT, SVG_WIDTH,
+};
 
 #[derive(Serialize)]
 struct HooksChartPaths {

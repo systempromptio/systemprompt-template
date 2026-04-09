@@ -48,7 +48,10 @@ pub async fn request_magic_link(
         .get("x-forwarded-for")
         .or_else(|| req_headers.get("x-real-ip"))
         .and_then(|v| v.to_str().ok())
-        .map_or_else(|| "unknown".to_string(), |s| s.split(',').next().unwrap_or(s).trim().to_string());
+        .map_or_else(
+            || "unknown".to_string(),
+            |s| s.split(',').next().unwrap_or(s).trim().to_string(),
+        );
 
     let ip_count = magic_links::count_recent_tokens_by_ip(&pool, &ip_address)
         .await

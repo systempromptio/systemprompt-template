@@ -55,12 +55,10 @@ pub const SCHEMA_PLUGIN_INSTALLATIONS: &str =
     include_str!("../schema/042_plugin_installations.sql");
 pub const SCHEMA_SEED_ENTERPRISE_DEMO: &str =
     include_str!("../schema/043_seed_enterprise_demo_marketplace.sql");
-pub const SCHEMA_MARKETPLACE_GITHUB: &str =
-    include_str!("../schema/044_marketplace_github.sql");
+pub const SCHEMA_MARKETPLACE_GITHUB: &str = include_str!("../schema/044_marketplace_github.sql");
 pub const SCHEMA_GOVERNANCE_DECISIONS: &str =
     include_str!("../schema/045_governance_decisions.sql");
-pub const SCHEMA_MCP_ACCESS_TRACKING: &str =
-    include_str!("../schema/045_mcp_access_tracking.sql");
+pub const SCHEMA_MCP_ACCESS_TRACKING: &str = include_str!("../schema/045_mcp_access_tracking.sql");
 pub const SCHEMA_ADMIN_DASHBOARD_TABLES: &str =
     include_str!("../schema/046_admin_dashboard_tables.sql");
 pub const SCHEMA_ADMIN_DASHBOARD_VIEWS: &str =
@@ -131,7 +129,10 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::inline("admin_dashboard_tables", SCHEMA_ADMIN_DASHBOARD_TABLES),
         SchemaDefinition::inline("admin_dashboard_views", SCHEMA_ADMIN_DASHBOARD_VIEWS),
         SchemaDefinition::inline("admin_dashboard_columns", SCHEMA_ADMIN_DASHBOARD_COLUMNS),
-        SchemaDefinition::inline("profile_reports_hooks_fix", SCHEMA_PROFILE_REPORTS_HOOKS_FIX),
+        SchemaDefinition::inline(
+            "profile_reports_hooks_fix",
+            SCHEMA_PROFILE_REPORTS_HOOKS_FIX,
+        ),
         SchemaDefinition::inline("fix_user_hooks_event", SCHEMA_FIX_USER_HOOKS_EVENT),
         SchemaDefinition::inline("fix_nullable_columns", SCHEMA_FIX_NULLABLE_COLUMNS),
     ]

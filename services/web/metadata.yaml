@@ -3,19 +3,19 @@
 # ===== CUSTOMIZE THESE =====
 
 site:
-  name: "Enterprise Demo"
-  title: "Enterprise Demo — AI Agent Platform"
+  name: "systemprompt.io"
+  title: "systemprompt.io — AI Agent Platform"
   description: "One platform to deploy, secure, distribute, and observe AI usage across your entire organization. Role-based access, audit trails, and cost visibility from day one."
-  author: "Enterprise Demo"
-  baseUrl: "https://demo.systemprompt.io"
+  author: "systemprompt.io"
+  baseUrl: "https://systemprompt.io"
 
 seo:
   defaultImage: "/files/images/logo.png"
   twitterHandle: "@systempromptio"
-  keywords: "enterprise demo, AI governance, AI usage governance, enterprise security, MCP, Claude Code, AI management, audit trails, RBAC"
+  keywords: "systemprompt.io, AI governance, AI usage governance, enterprise security, MCP, Claude Code, AI management, audit trails, RBAC"
 
 copyright:
-  holder: "Enterprise Demo"
+  holder: "systemprompt.io"
   year: 2026
-  link: "https://demo.systemprompt.io"
+  link: "https://systemprompt.io"
   notice: "2026 systemprompt.io"

@@ -115,9 +115,9 @@ impl ServerHandler for MarketplaceServer {
 
         let authenticated_ctx = match rbac_result {
             Ok(result) => {
-                match result.expect_authenticated(
-                    "skill-manager requires OAuth but auth was not enforced",
-                ) {
+                match result
+                    .expect_authenticated("skill-manager requires OAuth but auth was not enforced")
+                {
                     Ok(authenticated) => {
                         let pool = self.db_pool.clone();
                         let uid = authenticated.context.user_id().to_string();
@@ -226,7 +226,11 @@ async fn record_mcp_access(
         "used" => format!("Executed '{tool}' on {server}"),
         _ => format!("{action} on {server}"),
     };
-    let entity_type = if action == "used" { "tool" } else { "mcp_server" };
+    let entity_type = if action == "used" {
+        "tool"
+    } else {
+        "mcp_server"
+    };
     let entity_name = if action == "used" { tool } else { server };
     let metadata = serde_json::json!({ "tool_name": tool, "server": server });
 

@@ -21,6 +21,7 @@ pub(crate) use batch_delete::{
     batch_delete_agents_handler, batch_delete_hooks_handler, batch_delete_mcp_servers_handler,
     batch_delete_secrets_handler, batch_delete_skills_handler,
 };
+pub(crate) use delete_account::delete_account_handler;
 pub(crate) use fork::{fork_org_agent_handler, fork_org_plugin_handler, fork_org_skill_handler};
 pub(crate) use fork_lists::{
     list_forkable_agents_handler, list_forkable_plugins_handler, list_forkable_skills_handler,
@@ -46,7 +47,6 @@ pub(crate) use secrets::{
     list_skill_secrets_handler, list_user_secrets_handler, update_user_secret_handler,
     upsert_skill_secret_handler,
 };
-pub(crate) use delete_account::delete_account_handler;
 pub(crate) use settings::update_user_settings_handler;
 pub(crate) use skills::{
     create_user_skill_handler, delete_user_skill_handler, list_user_skills_handler,

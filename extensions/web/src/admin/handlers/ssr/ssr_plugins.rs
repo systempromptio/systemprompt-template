@@ -43,9 +43,9 @@ fn build_plugin_json(
     for role_name in &known_roles {
         let from_yaml = yaml_roles.iter().any(|r| r == role_name);
         let from_db = entity_rules.is_some_and(|rules| {
-            rules.iter().any(|r| {
-                r.rule_type == "role" && r.rule_value == *role_name && r.access == "allow"
-            })
+            rules
+                .iter()
+                .any(|r| r.rule_type == "role" && r.rule_value == *role_name && r.access == "allow")
         });
         if from_yaml || from_db {
             role_names.push((*role_name).to_string());
@@ -66,10 +66,7 @@ fn build_plugin_json(
         obj.insert("role_names".to_string(), json!(role_names));
         obj.insert("marketplace_badges".to_string(), json!(marketplace_badges));
     }
-    PluginJsonResult {
-        value: v,
-        category,
-    }
+    PluginJsonResult { value: v, category }
 }
 
 pub(crate) async fn plugins_page(
@@ -84,8 +81,8 @@ pub(crate) async fn plugins_page(
     };
 
     let roles = user_ctx.roles.clone();
-    let plugins = repositories::list_plugins_for_roles_full(&services_path, &roles)
-        .unwrap_or_else(|e| {
+    let plugins =
+        repositories::list_plugins_for_roles_full(&services_path, &roles).unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to list plugins for roles");
             vec![]
         });

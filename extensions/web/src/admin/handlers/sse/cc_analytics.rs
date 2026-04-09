@@ -4,7 +4,7 @@ use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::admin::numeric;
-use crate::admin::repositories::{apm_metrics, session_analyses};
+use crate::admin::repositories::{apm_metrics, hooks_track, session_analyses};
 use crate::admin::types::{
     conversation_analytics::{SessionEntityLink, SessionRating},
     UserGamificationProfile,
@@ -100,17 +100,24 @@ async fn fetch_analytics_data(
     pool: &Arc<PgPool>,
     user_id: &systemprompt::identifiers::UserId,
 ) -> FetchedAnalytics {
-    let (skill_eff_res, health_metrics, unused_skills_res, today_summary, apm_correlation, achievements_today, hourly_breakdown, perf_summary) = tokio::join!(
-        crate::admin::repositories::conversation_analytics::fetch_skill_effectiveness(pool, user_id),
+    let (
+        skill_eff_res,
+        health_metrics,
+        unused_skills_res,
+        today_summary,
+        apm_correlation,
+        achievements_today,
+        hourly_breakdown,
+        perf_summary,
+    ) = tokio::join!(
+        crate::admin::repositories::conversation_analytics::fetch_skill_effectiveness(
+            pool, user_id
+        ),
         session_analyses::fetch_health_metrics(pool, user_id),
         crate::admin::repositories::conversation_analytics::fetch_unused_skills(pool, user_id),
         session_analyses::fetch_today_summary(pool, user_id),
         apm_metrics::fetch_apm_success_correlation(pool, user_id.as_str()),
-        sqlx::query_scalar::<_, String>(
-            "SELECT achievement_id FROM user_achievements WHERE user_id = $1 AND unlocked_at::date = CURRENT_DATE"
-        )
-        .bind(user_id.as_str())
-        .fetch_all(pool.as_ref()),
+        hooks_track::fetch_today_achievements(pool.as_ref(), user_id.as_str()),
         apm_metrics::fetch_hourly_breakdown(pool, user_id.as_str()),
         apm_metrics::fetch_today_performance_summary(pool, user_id.as_str()),
     );
@@ -121,7 +128,7 @@ async fn fetch_analytics_data(
         unused_skills: unused_skills_res.unwrap_or_else(|_| Vec::new()),
         today_summary,
         apm_correlation,
-        achievements_today: achievements_today.unwrap_or_else(|_| Vec::new()),
+        achievements_today,
         hourly_breakdown,
         perf_summary,
     }

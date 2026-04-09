@@ -1,8 +1,8 @@
 use serde::Serialize;
 
 use super::svg::{
-    build_stacked_area, build_svg_line, build_y_labels, svg_x, AxisLabel, SVG_HEIGHT, SVG_WIDTH,
-    XAxisLabel,
+    build_stacked_area, build_svg_line, build_y_labels, svg_x, AxisLabel, XAxisLabel, SVG_HEIGHT,
+    SVG_WIDTH,
 };
 
 #[derive(Serialize)]

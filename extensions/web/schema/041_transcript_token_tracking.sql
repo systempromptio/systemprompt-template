@@ -1,5 +1,0 @@
-ALTER TABLE session_transcripts
-  ADD COLUMN IF NOT EXISTS total_input_tokens BIGINT DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS total_output_tokens BIGINT DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS model TEXT,
-  ADD COLUMN IF NOT EXISTS entries_counted INT DEFAULT 0;

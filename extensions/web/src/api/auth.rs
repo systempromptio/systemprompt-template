@@ -19,11 +19,7 @@ pub async fn set_session(
     Json(body): Json<SetSessionRequest>,
 ) -> (HeaderMap, Json<serde_json::Value>) {
     let max_age = body.expires_in.unwrap_or(3600);
-    let secure_flag = if is_secure_context() {
-        "; Secure"
-    } else {
-        ""
-    };
+    let secure_flag = if is_secure_context() { "; Secure" } else { "" };
     let access_cookie = format!(
         "access_token={}; Path=/; HttpOnly; SameSite=Lax; Max-Age={}{}",
         body.access_token, max_age, secure_flag
@@ -49,8 +45,11 @@ pub async fn set_session(
 
 pub async fn clear_session() -> (HeaderMap, Json<serde_json::Value>) {
     let secure_flag = if is_secure_context() { "; Secure" } else { "" };
-    let access_cookie = format!("access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}");
-    let refresh_cookie = format!("refresh_token=; Path=/api/public/auth; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}");
+    let access_cookie =
+        format!("access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}");
+    let refresh_cookie = format!(
+        "refresh_token=; Path=/api/public/auth; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}"
+    );
 
     let mut headers = HeaderMap::new();
     if let Ok(val) = access_cookie.parse() {

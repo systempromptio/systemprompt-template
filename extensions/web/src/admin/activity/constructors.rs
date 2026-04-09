@@ -15,4 +15,3 @@ pub(super) fn extract_project_name(path: &str) -> &str {
         .find(|part| !part.is_empty())
         .unwrap_or(path)
 }
-

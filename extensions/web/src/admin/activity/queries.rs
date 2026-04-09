@@ -155,12 +155,11 @@ pub async fn search_user_entity_activity(
 
         Ok((rows, total))
     } else {
-        let total: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*)::BIGINT FROM user_activity WHERE user_id = $1",
-        )
-        .bind(user_id)
-        .fetch_one(pool.as_ref())
-        .await?;
+        let total: i64 =
+            sqlx::query_scalar("SELECT COUNT(*)::BIGINT FROM user_activity WHERE user_id = $1")
+                .bind(user_id)
+                .fetch_one(pool.as_ref())
+                .await?;
 
         let rows = sqlx::query_as::<_, ActivityTimelineEvent>(
             r"SELECT a.id, a.user_id,

@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use anyhow::Result;
 use async_trait::async_trait;
 use systemprompt::extension::prelude::*;
 
 use super::config::HomepageConfig;
+use crate::error::MarketplaceError;
 
 pub struct HomepagePrerenderer {
     config: Arc<HomepageConfig>,
@@ -28,8 +28,11 @@ impl PagePrerenderer for HomepagePrerenderer {
         150
     }
 
-    async fn prepare(&self, _ctx: &PagePrepareContext<'_>) -> Result<Option<PageRenderSpec>> {
-        let config_value = serde_json::to_value(&*self.config)?;
+    async fn prepare(
+        &self,
+        _ctx: &PagePrepareContext<'_>,
+    ) -> anyhow::Result<Option<PageRenderSpec>> {
+        let config_value = serde_json::to_value(&*self.config).map_err(MarketplaceError::Json)?;
 
         let base_data = serde_json::json!({
             "site": {

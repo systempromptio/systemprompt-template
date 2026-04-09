@@ -68,7 +68,9 @@ impl HelperDef for RelativeTimeHelper {
                         if days < 30 {
                             format!("{days}d ago")
                         } else {
-                            dt.with_timezone(&chrono::Local).format("%b %d, %Y %I:%M %p").to_string()
+                            dt.with_timezone(&chrono::Local)
+                                .format("%b %d, %Y %I:%M %p")
+                                .to_string()
                         }
                     }
                 };

@@ -33,7 +33,6 @@ pub struct DashboardData {
     pub content_performance: Vec<ContentPerformanceRow>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct TimeSeriesBucket {
     pub bucket: DateTime<Utc>,
@@ -220,4 +219,3 @@ fn default_limit() -> i64 {
 fn default_events_limit() -> i64 {
     100
 }
-

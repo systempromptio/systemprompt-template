@@ -1,6 +1,6 @@
 ---
 title: "Engagement Summary"
-description: "Two-phase reference implementation partnership — Phase 1: PRD and development on our cloud. Phase 2: production license on Enterprise Demo infrastructure."
+description: "Two-phase reference implementation partnership — Phase 1: PRD and development on our cloud. Phase 2: production license on systemprompt.io infrastructure."
 author: "systemprompt.io"
 slug: "engagement-summary"
 keywords: "engagement, proposal, partnership, reference implementation, pricing, cost summary, PRD, phases"
@@ -26,21 +26,21 @@ related_docs:
 
 # Engagement Summary
 
-**Prepared for Enterprise Demo** | March 2026
+**Prepared for systemprompt.io** | March 2026
 
 ---
 
 ## Partnership
 
-We are proposing a two-phase reference implementation partnership. Enterprise Demo becomes a flagship deployment of the platform, and in return receives preferential partnership terms.
+We are proposing a two-phase reference implementation partnership. systemprompt.io becomes a flagship deployment of the platform, and in return receives preferential partnership terms.
 
-This is not a standard commercial engagement. We are investing in Enterprise Demo as a reference partner because we believe in the alignment between Enterprise Demo's AI strategy and the platform's governance architecture. A successful deployment here demonstrates enterprise-grade AI governance in hospitality at scale — and that is valuable to both organisations.
+This is not a standard commercial engagement. We are investing in systemprompt.io as a reference partner because we believe in the alignment between systemprompt.io's AI strategy and the platform's governance architecture. A successful deployment here demonstrates enterprise-grade AI governance in hospitality at scale — and that is valuable to both organisations.
 
 ---
 
 ## Two-Phase Engagement
 
-The engagement is designed so that Enterprise Demo can evaluate the platform hands-on before committing to a production license. Phase 2 only begins once Phase 1 has been signed off by both sides.
+The engagement is designed so that systemprompt.io can evaluate the platform hands-on before committing to a production license. Phase 2 only begins once Phase 1 has been signed off by both sides.
 
 ### Phase 1: PRD & Development
 
@@ -50,14 +50,14 @@ The engagement is designed so that Enterprise Demo can evaluate the platform han
 - Iterative feedback throughout development
 - Ends with formal sign-off by both parties
 
-**During Phase 1, the platform runs on systemprompt cloud infrastructure.** Enterprise Demo evaluates the working system without provisioning any of their own infrastructure.
+**During Phase 1, the platform runs on systemprompt cloud infrastructure.** systemprompt.io evaluates the working system without provisioning any of their own infrastructure.
 
 [Read the Phase 1 detail](/documentation/engagement-implementation)
 
 ### Phase 2: Production License & Support
 
 - Begins only after Phase 1 sign-off
-- Platform deployed on Enterprise Demo infrastructure
+- Platform deployed on systemprompt.io infrastructure
 - 12-month production use license, paid in advance
 - Monthly maintenance and priority support
 
@@ -71,21 +71,21 @@ The engagement comprises Phase 1 (PRD & Development) and Phase 2 (Platform Licen
 
 ---
 
-## What Enterprise Demo Receives
+## What systemprompt.io Receives
 
 ### Phase 1: A Working Control Center
 
-A branded Control Center dashboard built on the platform's extension architecture. This is a standalone codebase — **owned by Enterprise Demo** — with all skills migrated and configured for Enterprise Demo's operations.
+A branded Control Center dashboard built on the platform's extension architecture. This is a standalone codebase — **owned by systemprompt.io** — with all skills migrated and configured for systemprompt.io's operations.
 
 - Collaboratively scoped PRD covering all platform capabilities — governance, analytics, marketplace, skills, user engagement, and internal data integration
-- White-label dashboard with Enterprise Demo branding
+- White-label dashboard with systemprompt.io branding
 - Full skill migration and agent configuration
 - Running on our cloud for hands-on evaluation
-- **Enterprise Demo owns this code outright** — regardless of whether Phase 2 proceeds
+- **systemprompt.io owns this code outright** — regardless of whether Phase 2 proceeds
 
 ### Phase 2: Production Deployment
 
-The platform deployed on Enterprise Demo's own infrastructure, running in production with a 12-month license and ongoing maintenance.
+The platform deployed on systemprompt.io's own infrastructure, running in production with a 12-month license and ongoing maintenance.
 
 - Full platform access with all governance features
 - Unlimited agents, users, skills, and MCP servers
@@ -100,10 +100,10 @@ This engagement involves two distinct codebases with different ownership:
 
 | Codebase | Ownership | What Happens at End of Term |
 |----------|-----------|---------------------------|
-| **Core platform** (systemprompt IP) | Licensed to Enterprise Demo for 12 months, enforced by CLI | License renewal required to continue production use |
-| **Control Center** (extension codebase) | **Owned by Enterprise Demo** | Enterprise Demo retains full ownership regardless of license status |
+| **Core platform** (systemprompt IP) | Licensed to systemprompt.io for 12 months, enforced by CLI | License renewal required to continue production use |
+| **Control Center** (extension codebase) | **Owned by systemprompt.io** | systemprompt.io retains full ownership regardless of license status |
 
-The extension codebase — the Control Center dashboard, all skills, agents, configurations, and customisations — is Enterprise Demo's intellectual property from the moment it is delivered in Phase 1. It does not depend on the Phase 2 license for continued ownership.
+The extension codebase — the Control Center dashboard, all skills, agents, configurations, and customisations — is systemprompt.io's intellectual property from the moment it is delivered in Phase 1. It does not depend on the Phase 2 license for continued ownership.
 
 [Read the full licensing terms](/documentation/proposal-licensing)
 
@@ -125,7 +125,7 @@ Payment terms will be discussed as part of the engagement process.
 
 1. **Review the detailed pages** — [Phase 1](/documentation/engagement-implementation) · [License](/documentation/engagement-license) · [Maintenance](/documentation/engagement-maintenance)
 2. **Review the licensing terms** — [Licensing](/documentation/proposal-licensing)
-3. **Schedule a meeting** — agree on a joint PRD document covering a customised Control Center for the Enterprise Demo organisation
+3. **Schedule a meeting** — agree on a joint PRD document covering a customised Control Center for the systemprompt.io organisation
 4. **Begin Phase 1** — sign the PRD and start building on systemprompt cloud infrastructure
 
 We look forward to building this together.

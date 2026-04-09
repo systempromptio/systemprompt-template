@@ -233,7 +233,10 @@ pub(super) fn build_hook_files(
         hooks.insert(event, vec![matcher_group]);
     }
 
-    let hooks_file = HooksFile { description: None, hooks };
+    let hooks_file = HooksFile {
+        description: None,
+        hooks,
+    };
     files.push(PluginFile {
         path: "hooks/hooks.json".to_string(),
         content: serde_json::to_string_pretty(&hooks_file)?,
@@ -242,4 +245,3 @@ pub(super) fn build_hook_files(
 
     Ok(())
 }
-

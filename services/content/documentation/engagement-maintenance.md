@@ -55,9 +55,9 @@ The maintenance retainer keeps the platform current, secure, and optimised throu
 | Item | Notes |
 |------|-------|
 | **Major new feature development** | Scoped and quoted separately as additional consulting |
-| **Infrastructure management** | Hosting, networking, and server management are Enterprise Demo's responsibility |
+| **Infrastructure management** | Hosting, networking, and server management are systemprompt.io's responsibility |
 | **AI provider API costs** | API fees are billed directly by the provider (Anthropic, OpenAI, etc.) |
-| **Third-party software licenses** | Any third-party tools required are Enterprise Demo's responsibility |
+| **Third-party software licenses** | Any third-party tools required are systemprompt.io's responsibility |
 
 Major feature requests are welcome — they are scoped, quoted, and delivered as separate consulting engagements alongside the retainer.
 
@@ -70,8 +70,8 @@ The maintenance retainer can be cancelled with **30 days' notice**.
 Upon cancellation:
 
 - The **platform license** remains active for the remainder of the 12-month term
-- The **Control Center** extension code remains Enterprise Demo's property
-- All skills, agents, configurations, and data remain with Enterprise Demo
+- The **Control Center** extension code remains systemprompt.io's property
+- All skills, agents, configurations, and data remain with systemprompt.io
 - The platform continues to function — the retainer covers updates and support, not operational capability
 
 ---

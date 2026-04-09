@@ -1,9 +1,9 @@
-use anyhow::Result;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::admin::repositories::{secret_crypto, secret_keys};
+use crate::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct SecretMigrationJob;
@@ -26,7 +26,7 @@ impl Job for SecretMigrationJob {
         false
     }
 
-    async fn execute(&self, ctx: &JobContext) -> Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
         let start = std::time::Instant::now();
 
         let Ok(master_key) = secret_crypto::load_master_key() else {
@@ -35,11 +35,13 @@ impl Job for SecretMigrationJob {
 
         let db = ctx
             .db_pool::<DbPool>()
-            .ok_or_else(|| anyhow::anyhow!("Database not available in job context"))?;
+            .ok_or(MarketplaceError::Internal(
+                "Database not available in job context".to_string(),
+            ))?;
 
-        let pool = db
-            .pool()
-            .ok_or_else(|| anyhow::anyhow!("PgPool not available from database"))?;
+        let pool = db.pool().ok_or(MarketplaceError::Internal(
+            "PgPool not available from database".to_string(),
+        ))?;
 
         let rows = sqlx::query_as::<_, (String, String, String, String)>(
             "SELECT id, user_id, var_name, var_value FROM plugin_env_vars \
@@ -48,7 +50,7 @@ impl Job for SecretMigrationJob {
         )
         .fetch_all(pool.as_ref())
         .await
-        .map_err(|e| anyhow::anyhow!("Failed to query unencrypted secrets: {e}"))?;
+        .map_err(MarketplaceError::Database)?;
 
         if rows.is_empty() {
             let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
@@ -61,14 +63,15 @@ impl Job for SecretMigrationJob {
         let mut error_count = 0u64;
 
         for (id, user_id, var_name, var_value) in &rows {
-            let result: Result<()> = async {
-                let dek = secret_keys::get_or_create_user_dek(&pool, &UserId::new(user_id), &master_key)
-                    .await
-                    .map_err(|e| anyhow::anyhow!("DEK error: {e}"))?;
+            let result: Result<(), MarketplaceError> = async {
+                let dek =
+                    secret_keys::get_or_create_user_dek(&pool, &UserId::new(user_id), &master_key)
+                        .await
+                        .map_err(|e| MarketplaceError::Internal(format!("DEK error: {e}")))?;
 
                 let nonce = secret_crypto::generate_nonce();
                 let encrypted = secret_crypto::encrypt(&dek, &nonce, var_value.as_bytes())
-                    .map_err(|e| anyhow::anyhow!("Encryption error: {e}"))?;
+                    .map_err(|e| MarketplaceError::Internal(format!("Encryption error: {e}")))?;
 
                 let key_version: i32 = sqlx::query_scalar(
                     "SELECT key_version FROM user_encryption_keys WHERE user_id = $1",
@@ -88,7 +91,7 @@ impl Job for SecretMigrationJob {
                 .bind(id)
                 .execute(pool.as_ref())
                 .await
-                .map_err(|e| anyhow::anyhow!("Update error: {e}"))?;
+                .map_err(|e| MarketplaceError::Internal(format!("Update error: {e}")))?;
 
                 let audit_id = uuid::Uuid::new_v4().to_string();
                 let _ = sqlx::query(

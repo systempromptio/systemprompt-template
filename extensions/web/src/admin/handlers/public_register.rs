@@ -41,17 +41,8 @@ pub(crate) async fn public_register_handler(
         return shared::error_response(StatusCode::BAD_REQUEST, "Invalid email address");
     };
 
-    let rate_count = sqlx::query_scalar!(
-        "SELECT COUNT(*) FROM webauthn_setup_tokens
-         WHERE user_id IN (SELECT id FROM users WHERE email = $1)
-         AND created_at > NOW() - INTERVAL '15 minutes'",
-        &email_str,
-    )
-    .fetch_one(pool.as_ref())
-    .await
-    .ok()
-    .flatten()
-    .unwrap_or(0);
+    let rate_count =
+        repositories::registration::count_recent_setup_tokens(pool.as_ref(), &email_str).await;
 
     if rate_count >= 5 {
         return shared::error_response(
@@ -96,14 +87,12 @@ pub(crate) async fn public_register_handler(
 
     let token_id = uuid::Uuid::new_v4().to_string();
 
-    if let Err(e) = sqlx::query!(
-        "INSERT INTO webauthn_setup_tokens (id, user_id, token_hash, purpose, expires_at)
-         VALUES ($1, $2, $3, 'credential_link', NOW() + INTERVAL '15 minutes')",
+    if let Err(e) = repositories::registration::insert_setup_token(
+        pool.as_ref(),
         &token_id,
         user.user_id.as_str(),
         &token_hash,
     )
-    .execute(pool.as_ref())
     .await
     {
         tracing::error!(error = %e, "Failed to create setup token");

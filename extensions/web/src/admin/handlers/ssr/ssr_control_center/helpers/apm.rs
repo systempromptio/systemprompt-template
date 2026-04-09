@@ -87,7 +87,8 @@ pub(in crate::admin) fn build_apm_data(params: &BuildTemplateDataParams<'_>) -> 
             multitasking_score: apm.multitasking_score,
         },
     };
-    let cc_initial_json = serde_json::to_string(&initial_chart_data).unwrap_or_else(|_| String::new());
+    let cc_initial_json =
+        serde_json::to_string(&initial_chart_data).unwrap_or_else(|_| String::new());
 
     ApmData {
         today_obj,

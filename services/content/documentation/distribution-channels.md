@@ -1,6 +1,6 @@
 ---
 title: "Distribution Channels"
-description: "How personal marketplaces are distributed via git repositories and Claude Code plugin format in Enterprise Demo."
+description: "How personal marketplaces are distributed via git repositories and Claude Code plugin format in systemprompt.io."
 author: "systemprompt.io"
 slug: "distribution-channels"
 keywords: "distribution, git, Claude Code, marketplace, plugin format, personal marketplace"
@@ -136,4 +136,4 @@ All content uses standard formats:
 - Distribution uses git
 - No proprietary encoding or vendor-specific schemas
 
-Exported content works outside Enterprise Demo without modification — open files in any editor, parse with any toolchain, or feed to any Markdown processor.
+Exported content works outside systemprompt.io without modification — open files in any editor, parse with any toolchain, or feed to any Markdown processor.

@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
-use anyhow::Result;
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
+
+use crate::error::MarketplaceError;
 
 #[derive(Debug)]
 struct ContentAnalyticsRow {
@@ -19,7 +20,7 @@ struct ContentAnalyticsRow {
 pub struct ContentAnalyticsAggregationJob;
 
 impl ContentAnalyticsAggregationJob {
-    pub async fn execute_with_pool(pool: Arc<PgPool>) -> Result<JobResult> {
+    pub async fn execute_with_pool(pool: Arc<PgPool>) -> anyhow::Result<JobResult> {
         let start = std::time::Instant::now();
 
         tracing::info!("Content analytics aggregation started");
@@ -66,7 +67,9 @@ impl ContentAnalyticsAggregationJob {
             .with_duration(duration_ms))
     }
 
-    async fn aggregate_engagement_stats(pool: &PgPool) -> Result<Vec<ContentAnalyticsRow>> {
+    async fn aggregate_engagement_stats(
+        pool: &PgPool,
+    ) -> Result<Vec<ContentAnalyticsRow>, MarketplaceError> {
         let rows = sqlx::query_as!(
             ContentAnalyticsRow,
             r#"
@@ -95,12 +98,16 @@ impl ContentAnalyticsAggregationJob {
             "#
         )
         .fetch_all(pool)
-        .await?;
+        .await
+        .map_err(MarketplaceError::Database)?;
 
         Ok(rows)
     }
 
-    async fn upsert_metrics(pool: &PgPool, stats: &ContentAnalyticsRow) -> Result<()> {
+    async fn upsert_metrics(
+        pool: &PgPool,
+        stats: &ContentAnalyticsRow,
+    ) -> Result<(), MarketplaceError> {
         let id = format!("cpm_{}", uuid::Uuid::new_v4());
 
         let previous_23d = stats.views_30d - stats.views_7d;
@@ -146,7 +153,8 @@ impl ContentAnalyticsAggregationJob {
             trend_direction
         )
         .execute(pool)
-        .await?;
+        .await
+        .map_err(MarketplaceError::Database)?;
 
         Ok(())
     }
@@ -166,14 +174,16 @@ impl Job for ContentAnalyticsAggregationJob {
         "0 */15 * * * *"
     }
 
-    async fn execute(&self, ctx: &JobContext) -> Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
         let db = ctx
             .db_pool::<DbPool>()
-            .ok_or_else(|| anyhow::anyhow!("Database not available in job context"))?;
+            .ok_or(MarketplaceError::Internal(
+                "Database not available in job context".to_string(),
+            ))?;
 
-        let pool = db
-            .write_pool()
-            .ok_or_else(|| anyhow::anyhow!("Write PgPool not available from database"))?;
+        let pool = db.write_pool().ok_or(MarketplaceError::Internal(
+            "Write PgPool not available from database".to_string(),
+        ))?;
 
         Self::execute_with_pool(pool).await
     }

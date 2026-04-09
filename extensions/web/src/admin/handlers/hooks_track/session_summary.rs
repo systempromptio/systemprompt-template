@@ -1,16 +1,11 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 
+use crate::admin::repositories::hooks_track;
+
 pub struct SessionSummary {
     pub summary: String,
     pub tags: String,
-}
-
-#[derive(sqlx::FromRow)]
-struct EventRow {
-    event_type: String,
-    tool_name: Option<String>,
-    cwd: Option<String>,
 }
 
 pub async fn generate_session_summary(
@@ -18,17 +13,9 @@ pub async fn generate_session_summary(
     user_id: &UserId,
     session_id: &SessionId,
 ) -> Option<SessionSummary> {
-    let rows = sqlx::query_as::<_, EventRow>(
-        r"SELECT event_type, tool_name, cwd
-          FROM plugin_usage_events
-          WHERE session_id = $1 AND user_id = $2
-          ORDER BY created_at ASC",
-    )
-    .bind(session_id.as_str())
-    .bind(user_id.as_str())
-    .fetch_all(pool)
-    .await
-    .ok()?;
+    let rows = hooks_track::fetch_session_events(pool, session_id, user_id)
+        .await
+        .ok()?;
 
     if rows.is_empty() {
         return None;

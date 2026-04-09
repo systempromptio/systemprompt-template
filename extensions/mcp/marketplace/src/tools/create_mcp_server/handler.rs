@@ -70,7 +70,9 @@ impl McpToolHandler for CreateMcpServerHandler {
             oauth_required: input.oauth_required,
             oauth_scopes: input.oauth_scopes,
             oauth_audience: input.oauth_audience.unwrap_or_else(String::new),
-            base_mcp_server_id: input.base_mcp_server_id.map(systemprompt::identifiers::McpServerId::new),
+            base_mcp_server_id: input
+                .base_mcp_server_id
+                .map(systemprompt::identifiers::McpServerId::new),
         };
 
         let user_id = UserId::new(ctx.user_id().to_string());
@@ -111,7 +113,9 @@ impl McpToolHandler for CreateMcpServerHandler {
             "created_at": server.created_at.to_rfc3339(),
             "updated_at": server.updated_at.to_rfc3339(),
         }))
-        .map_err(|e| McpError::internal_error(format!("Failed to serialize MCP server: {e}"), None))?;
+        .map_err(|e| {
+            McpError::internal_error(format!("Failed to serialize MCP server: {e}"), None)
+        })?;
 
         let summary = if let Some(ref plugin_id) = added_to_plugin {
             format!(

@@ -47,9 +47,7 @@ impl McpToolHandler for DeleteAgentHandler {
         let agent_id = systemprompt::identifiers::AgentId::new(&input.agent_id);
         let deleted =
             systemprompt_web_extension::admin::repositories::user_agents::delete_user_agent(
-                &pool,
-                &user_id,
-                &agent_id,
+                &pool, &user_id, &agent_id,
             )
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to delete agent: {e}"), None))?;

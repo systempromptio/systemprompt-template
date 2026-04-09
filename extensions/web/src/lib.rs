@@ -17,7 +17,6 @@ pub mod models;
 pub mod navigation;
 pub mod partials;
 mod partials_animations;
-pub mod playbooks;
 pub mod repository;
 mod schemas;
 pub mod services;
@@ -47,11 +46,6 @@ pub use homepage::{
 pub use navigation::{
     HeaderNavConfig, NavCta, NavItem, NavLink, NavSection, NavigationPageDataProvider,
 };
-pub use playbooks::{
-    PlaybookPageDataProvider, PlaybooksContentDataProvider, PlaybooksListPageDataProvider,
-    SameCategoryPlaybook,
-};
-
 pub use models::{
     CampaignLink, CampaignPerformance, Content, ContentJourneyNode, ContentKind,
     ContentLinkMetadata, ContentMetadata, CreateContentParams, CreateLinkParams, DestinationType,

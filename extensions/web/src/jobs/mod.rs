@@ -1,9 +1,9 @@
 mod bundle_admin_css;
 mod bundle_admin_js;
-pub mod daily_summary;
 mod compile_admin_templates;
 mod content_analytics;
 mod copy_assets;
+pub mod daily_summary;
 mod github_marketplace_sync;
 mod ingestion;
 mod llms_txt;

@@ -2,7 +2,7 @@
 :root {
   --sp-pres-blue-900: var(--sp-primitive-warm-900, #252526);
   --sp-pres-blue-700: var(--sp-primitive-brand-700, #1d4ed8);
-  --sp-pres-blue-500: var(--sp-primitive-brand-500, #2563eb);
+  --sp-pres-blue-500: var(--sp-primitive-brand-500, #f79938);
   --sp-pres-blue-300: var(--sp-primitive-brand-300, #93c5fd);
   --sp-pres-blue-100: var(--sp-primitive-brand-100, #dbeafe);
   --sp-pres-blue-50:  var(--sp-primitive-brand-50, #eff6ff);

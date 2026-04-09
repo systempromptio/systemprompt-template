@@ -47,7 +47,11 @@ fn spawn_fork_activity(
     let id = id.to_string();
     let name = name.to_string();
     tokio::spawn(async move {
-        activity::record(&pool, NewActivity::entity_forked(uid.as_str(), entity, &id, &name)).await;
+        activity::record(
+            &pool,
+            NewActivity::entity_forked(uid.as_str(), entity, &id, &name),
+        )
+        .await;
     });
 }
 
@@ -77,14 +81,14 @@ fn read_skill_config(
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
-    let tags: Vec<String> = cfg
-        .get("tags")
-        .and_then(|v| v.as_sequence())
-        .map_or_else(Vec::new, |seq| {
-            seq.iter()
-                .filter_map(|v| v.as_str().map(String::from))
-                .collect()
-        });
+    let tags: Vec<String> =
+        cfg.get("tags")
+            .and_then(|v| v.as_sequence())
+            .map_or_else(Vec::new, |seq| {
+                seq.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            });
     (name, desc, tags)
 }
 

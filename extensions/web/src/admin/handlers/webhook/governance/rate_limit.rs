@@ -40,7 +40,9 @@ impl SlidingWindow {
 
 pub(super) fn check(session_id: &SessionId, user_id: &UserId) -> (usize, usize) {
     let key = format!("{}:{}", session_id.as_str(), user_id.as_str());
-    let mut guard = COUNTERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let mut guard = COUNTERS
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     let window = guard.get_or_insert_with(SlidingWindow::new);
     let count = window.check_and_record(&key);
     (count, MAX_PER_WINDOW)

@@ -13,7 +13,9 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
-fn build_agent_updated_at(agents_dir: &std::path::Path) -> std::collections::HashMap<String, String> {
+fn build_agent_updated_at(
+    agents_dir: &std::path::Path,
+) -> std::collections::HashMap<String, String> {
     let mut agent_updated_at: std::collections::HashMap<String, String> =
         std::collections::HashMap::new();
     if !agents_dir.exists() {

@@ -24,7 +24,7 @@ related_docs:
 
 # Enterprise AI Governance Platform
 
-**Prepared for Enterprise Demo** | March 2026
+**Prepared for systemprompt.io** | March 2026
 
 ---
 
@@ -38,12 +38,12 @@ Agree a detailed PRD between both sides. The Control Center is then built and de
 
 ### Phase 2: Production License & Support
 
-After Phase 1 sign-off, the platform is deployed on Enterprise Demo infrastructure and goes live. 12-month production use license with monthly maintenance and support.
+After Phase 1 sign-off, the platform is deployed on systemprompt.io infrastructure and goes live. 12-month production use license with monthly maintenance and support.
 
 - **Platform license** — 12-month production use, paid in advance
 - **Maintenance & support** — monthly retainer for updates, security patches, and priority support
 
-> **Phase 2 is conditional on Phase 1 sign-off.** Enterprise Demo is not committed to the production license until both sides agree the PRD has been delivered successfully.
+> **Phase 2 is conditional on Phase 1 sign-off.** systemprompt.io is not committed to the production license until both sides agree the PRD has been delivered successfully.
 
 Pricing is available on request and will be discussed as part of the engagement process. Reference implementation partners receive preferential terms.
 
@@ -90,5 +90,5 @@ For detailed answers to questions about data sovereignty, model lock-in, cost ju
 ## Next Steps
 
 1. **Review the engagement** — see the [Engagement Summary](/documentation/engagement-summary) for the full two-phase breakdown
-2. **Schedule a meeting** — agree on a joint PRD document covering the initial Phase 1 engagement: a customised and personalised Control Center for the Enterprise Demo organisation. The PRD covers the complete feature set — skills, marketplace, governance tools (whitelisting, blacklisting), analytics, user engagement, and internal data integration — scoped collaboratively to Enterprise Demo's priorities
+2. **Schedule a meeting** — agree on a joint PRD document covering the initial Phase 1 engagement: a customised and personalised Control Center for the systemprompt.io organisation. The PRD covers the complete feature set — skills, marketplace, governance tools (whitelisting, blacklisting), analytics, user engagement, and internal data integration — scoped collaboratively to systemprompt.io's priorities
 3. **Begin Phase 1** — sign the PRD, begin development on systemprompt cloud infrastructure

@@ -94,7 +94,9 @@ pub struct CoworkExportParams<'a> {
     pub user_id: &'a systemprompt::identifiers::UserId,
 }
 
-pub fn build_cowork_plugin_zip(params: &CoworkExportParams<'_>) -> Result<Vec<u8>, MarketplaceError> {
+pub fn build_cowork_plugin_zip(
+    params: &CoworkExportParams<'_>,
+) -> Result<Vec<u8>, MarketplaceError> {
     let cowork_token =
         super::plugin_jwt::generate_plugin_token(params.user_id, params.email, "cowork-bundle")?;
 
@@ -115,7 +117,10 @@ pub fn build_cowork_plugin_zip(params: &CoworkExportParams<'_>) -> Result<Vec<u8
     let merged_bundle = PluginBundle {
         id: "cowork-bundle".to_string(),
         name: params.username.to_string(),
-        description: format!("All plugins from {0} systemprompt.io marketplace", params.username),
+        description: format!(
+            "All plugins from {0} systemprompt.io marketplace",
+            params.username
+        ),
         version: "1.0.0".to_string(),
         files: merged_files,
         counts,
@@ -133,7 +138,8 @@ fn collect_merged_files(response: &SyncPluginsResponse) -> Vec<super::export::Pl
     for bundle in &response.plugins {
         for file in &bundle.files {
             match file.path.as_str() {
-                ".mcp.json" | "hooks/hooks.json" | ".env.plugin" | ".claude-plugin/plugin.json" => {}
+                ".mcp.json" | "hooks/hooks.json" | ".env.plugin" | ".claude-plugin/plugin.json" => {
+                }
                 _ => {
                     if seen_paths.insert(file.path.clone()) {
                         files.push(PluginFile {
@@ -184,29 +190,29 @@ fn append_merged_mcp_config(
     }
 }
 
-fn append_env_plugin(
-    token: &str,
-    platform_url: &str,
-    files: &mut Vec<super::export::PluginFile>,
-) {
+fn append_env_plugin(token: &str, platform_url: &str, files: &mut Vec<super::export::PluginFile>) {
     files.push(super::export::PluginFile {
         path: ".env.plugin".to_string(),
-        content: format!("SYSTEMPROMPT_PLUGIN_TOKEN={token}\nSYSTEMPROMPT_API_URL={platform_url}\n"),
+        content: format!(
+            "SYSTEMPROMPT_PLUGIN_TOKEN={token}\nSYSTEMPROMPT_API_URL={platform_url}\n"
+        ),
         executable: false,
     });
 }
 
-fn append_cowork_manifest(
-    username: &str,
-    email: &str,
-    files: &mut Vec<super::export::PluginFile>,
-) {
+fn append_cowork_manifest(username: &str, email: &str, files: &mut Vec<super::export::PluginFile>) {
     use super::export::{ManifestAuthor, PluginManifest};
 
     let sanitized: String = username
         .to_lowercase()
         .chars()
-        .map(|c| if c.is_ascii_alphanumeric() || c == '-' { c } else { '-' })
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '-' {
+                c
+            } else {
+                '-'
+            }
+        })
         .collect();
     let slug = sanitized
         .trim_matches('-')

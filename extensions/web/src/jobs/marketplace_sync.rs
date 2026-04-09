@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use anyhow::Result;
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
@@ -9,6 +8,7 @@ use systemprompt::models::ProfileBootstrap;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::admin::repositories;
+use crate::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct MarketplaceSyncJob;
@@ -31,22 +31,26 @@ impl Job for MarketplaceSyncJob {
         false
     }
 
-    async fn execute(&self, ctx: &JobContext) -> Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
         let start = std::time::Instant::now();
 
         tracing::info!("Marketplace sync job started");
 
         let db = ctx
             .db_pool::<DbPool>()
-            .ok_or_else(|| anyhow::anyhow!("Database not available in job context"))?;
+            .ok_or(MarketplaceError::Internal(
+                "Database not available in job context".to_string(),
+            ))?;
 
-        let pool = db
-            .pool()
-            .ok_or_else(|| anyhow::anyhow!("PgPool not available from database"))?;
+        let pool = db.pool().ok_or(MarketplaceError::Internal(
+            "PgPool not available from database".to_string(),
+        ))?;
 
         let dirty_users = repositories::marketplace_sync_status::get_dirty_users(&pool, 50)
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to query dirty users: {e}"))?;
+            .map_err(|e| {
+                MarketplaceError::Internal(format!("Failed to query dirty users: {e}"))
+            })?;
 
         let total = dirty_users.len() as u64;
         let mut success_count = 0u64;
@@ -97,13 +101,18 @@ impl Job for MarketplaceSyncJob {
     }
 }
 
-pub async fn generate_and_persist_marketplace(pool: &Arc<PgPool>, user_id: &str) -> Result<()> {
+pub async fn generate_and_persist_marketplace(
+    pool: &Arc<PgPool>,
+    user_id: &str,
+) -> Result<(), MarketplaceError> {
     let user_basic =
-        repositories::marketplace_git::lookup_user_basic(pool, &UserId::new(user_id)).await?;
+        repositories::marketplace_git::lookup_user_basic(pool, &UserId::new(user_id))
+            .await
+            .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
 
     let services_path = ProfileBootstrap::get()
         .map(|p| PathBuf::from(&p.paths.services))
-        .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
+        .map_err(|e| MarketplaceError::Internal(format!("Failed to get profile: {e}")))?;
 
     let uid = UserId::new(user_id);
     let params = repositories::ExportParams {
@@ -114,7 +123,9 @@ pub async fn generate_and_persist_marketplace(pool: &Arc<PgPool>, user_id: &str)
         email: &user_basic.email,
         roles: &user_basic.roles,
     };
-    let response = repositories::generate_export_bundles(&params).await?;
+    let response = repositories::generate_export_bundles(&params)
+        .await
+        .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
 
     let base_dir = PathBuf::from("storage/marketplace-versions").join(user_id);
     let work_dir = base_dir.join("work");
@@ -161,22 +172,38 @@ pub async fn generate_and_persist_marketplace(pool: &Arc<PgPool>, user_id: &str)
     Ok(())
 }
 
-fn create_bare_repo(work_dir: &std::path::Path, repo_path: &std::path::Path) -> Result<()> {
+fn create_bare_repo(
+    work_dir: &std::path::Path,
+    repo_path: &std::path::Path,
+) -> Result<(), MarketplaceError> {
     use std::process::Command;
 
     let (git_name, git_email) = crate::config_loader::load_branding_config()
         .ok()
         .flatten()
         .map_or_else(
-            || ("SystemPrompt".to_string(), "support@systemprompt.io".to_string()),
+            || {
+                (
+                    "SystemPrompt".to_string(),
+                    "support@systemprompt.io".to_string(),
+                )
+            },
             |b| {
-                let name = if b.display_name.is_empty() { "SystemPrompt".to_string() } else { b.display_name };
-                let email = if b.support_email.is_empty() { "support@systemprompt.io".to_string() } else { b.support_email };
+                let name = if b.display_name.is_empty() {
+                    "SystemPrompt".to_string()
+                } else {
+                    b.display_name
+                };
+                let email = if b.support_email.is_empty() {
+                    "support@systemprompt.io".to_string()
+                } else {
+                    b.support_email
+                };
                 (name, email)
             },
         );
 
-    let run = |args: &[&str], dir: &std::path::Path| -> Result<()> {
+    let run = |args: &[&str], dir: &std::path::Path| -> Result<(), MarketplaceError> {
         let output = Command::new("git")
             .args(args)
             .current_dir(dir)
@@ -187,7 +214,11 @@ fn create_bare_repo(work_dir: &std::path::Path, repo_path: &std::path::Path) -> 
             .output()?;
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("git {} failed: {}", args.join(" "), stderr);
+            return Err(MarketplaceError::Internal(format!(
+                "git {} failed: {}",
+                args.join(" "),
+                stderr
+            )));
         }
         Ok(())
     };
@@ -199,10 +230,20 @@ fn create_bare_repo(work_dir: &std::path::Path, repo_path: &std::path::Path) -> 
         &[
             "clone",
             "--bare",
-            work_dir.to_str().expect("work_dir path is valid UTF-8"),
-            repo_path.to_str().expect("repo_path path is valid UTF-8"),
+            work_dir
+                .to_str()
+                .ok_or_else(|| {
+                    MarketplaceError::Internal("work_dir path is not valid UTF-8".to_string())
+                })?,
+            repo_path
+                .to_str()
+                .ok_or_else(|| {
+                    MarketplaceError::Internal("repo_path path is not valid UTF-8".to_string())
+                })?,
         ],
-        work_dir.parent().expect("work_dir has a parent directory"),
+        work_dir.parent().ok_or_else(|| {
+            MarketplaceError::Internal("work_dir has no parent directory".to_string())
+        })?,
     )?;
     run(&["update-server-info"], repo_path)?;
 

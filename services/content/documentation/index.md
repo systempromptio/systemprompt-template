@@ -1,6 +1,6 @@
 ---
-title: "Enterprise Demo AI Governance Platform"
-description: "Documentation for the Enterprise Demo AI governance platform. Deploy, secure, distribute, and observe AI usage across your entire organisation."
+title: "systemprompt.io AI Governance Platform"
+description: "Documentation for the systemprompt.io AI governance platform. Deploy, secure, distribute, and observe AI usage across your entire organisation."
 author: "systemprompt.io"
 slug: ""
 keywords: "enterprise-demo, ai governance, deployment, security, marketplace, analytics, plugins, skills"
@@ -10,16 +10,16 @@ tags: ["documentation"]
 published_at: "2026-02-18"
 updated_at: "2026-03-25"
 after_reading_this:
-  - "Understand how the Enterprise Demo AI governance platform manages enterprise AI usage"
+  - "Understand how the systemprompt.io AI governance platform manages enterprise AI usage"
   - "Navigate to documentation for any platform capability"
   - "Know how deployment, governance, marketplace, and analytics work together"
 ---
 
-# Enterprise Demo AI Governance Platform
+# systemprompt.io AI Governance Platform
 
 > **Start with the presentation:** [Enterprise AI Governance Layer](/documentation/presentation)
 
-Welcome to the Enterprise Demo AI Governance Platform documentation. This platform provides enterprise-grade governance infrastructure for AI usage — deploying, securing, distributing, and observing AI across your entire organisation.
+Welcome to the systemprompt.io AI Governance Platform documentation. This platform provides enterprise-grade governance infrastructure for AI usage — deploying, securing, distributing, and observing AI across your entire organisation.
 
 ## Start Here
 

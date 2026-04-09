@@ -27,7 +27,7 @@ related_docs:
 
 ## Overview
 
-Enterprise Demo's hotel guests interact with AI across dozens of touchpoints: the mobile app, the website, in-property kiosks, and guest service channels. Before consolidation, each touchpoint had its own chatbot with its own logic, training data, and governance gaps.
+systemprompt.io's hotel guests interact with AI across dozens of touchpoints: the mobile app, the website, in-property kiosks, and guest service channels. Before consolidation, each touchpoint had its own chatbot with its own logic, training data, and governance gaps.
 
 The Guest Agent replaces all of those with a single governed agent. Whether a guest asks about room availability on their phone or requests a late checkout on the website, the same agent handles it -- with the same system prompt, the same security controls, and the same audit trail.
 
@@ -36,7 +36,7 @@ The Guest Agent replaces all of those with a single governed agent. Whether a gu
 | Property | Value |
 |----------|-------|
 | Agent ID | `customer_agent` |
-| Enterprise Demo Name | Guest Agent |
+| systemprompt.io Name | Guest Agent |
 | Port | 9029 |
 | Endpoint | `http://localhost:8080/api/v1/agents/customer_agent` |
 | Protocol | A2A v0.3.0, JSONRPC |
@@ -51,7 +51,7 @@ The Guest Agent replaces all of those with a single governed agent. Whether a gu
 The Guest Agent is defined in `services/agents/customer_agent.yaml`. Here is the full configuration with explanations:
 
 ```yaml
-# Guest Agent Configuration (Enterprise Demo Demo)
+# Guest Agent Configuration (systemprompt.io Demo)
 # Guest-facing agent for hotel booking and concierge services
 
 agents:

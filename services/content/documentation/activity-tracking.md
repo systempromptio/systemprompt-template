@@ -1,6 +1,6 @@
 ---
 title: "Activity Tracking"
-description: "How the Enterprise Demo platform captures and classifies every AI interaction through 13 activity categories, 11 action types, and 13 entity types."
+description: "How the systemprompt.io platform captures and classifies every AI interaction through 13 activity categories, 11 action types, and 13 entity types."
 author: "systemprompt.io"
 slug: "activity-tracking"
 keywords: "activity tracking, event categories, activity categories, audit trail, event hooks, webhook"

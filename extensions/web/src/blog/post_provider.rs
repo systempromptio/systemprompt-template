@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use anyhow::Result;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde_json::{json, Value};
@@ -10,6 +9,7 @@ use systemprompt::models::Config;
 
 use super::renderers::{render_references, render_related_posts, render_social_action_bar};
 use super::types::RelatedPost;
+use crate::error::BlogError;
 
 pub struct BlogPostPageDataProvider;
 
@@ -36,10 +36,10 @@ impl PageDataProvider for BlogPostPageDataProvider {
         vec!["blog".to_string()]
     }
 
-    async fn provide_page_data(&self, ctx: &PageContext<'_>) -> Result<Value> {
-        let item = ctx
-            .content_item()
-            .ok_or_else(|| anyhow::anyhow!("Content item required for blog post"))?;
+    async fn provide_page_data(&self, ctx: &PageContext<'_>) -> anyhow::Result<Value> {
+        let item = ctx.content_item().ok_or_else(|| {
+            BlogError::InvalidRequest("Content item required for blog post".to_string())
+        })?;
 
         let mut data = json!({});
 
@@ -99,8 +99,14 @@ impl PageDataProvider for BlogPostPageDataProvider {
                 );
             }
 
-            let slug = item.get("slug").and_then(|v| v.as_str()).unwrap_or("");
-            let title = item.get("title").and_then(|v| v.as_str()).unwrap_or("");
+            let slug = item
+                .get("slug")
+                .and_then(|v| v.as_str())
+                .unwrap_or_default();
+            let title = item
+                .get("title")
+                .and_then(|v| v.as_str())
+                .unwrap_or_default();
 
             let org_url =
                 Config::get().map_or_else(|_| String::new(), |c| c.api_external_url.clone());

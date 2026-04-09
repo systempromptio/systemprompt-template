@@ -1,29 +1,29 @@
 @layer tokens {
 :root {
 
-  --sp-primitive-brand-50:  oklch(0.97 0.02 260);
-  --sp-primitive-brand-100: oklch(0.93 0.04 258);
-  --sp-primitive-brand-200: oklch(0.86 0.09 255);
-  --sp-primitive-brand-300: oklch(0.76 0.14 253);
-  --sp-primitive-brand-400: oklch(0.68 0.17 252);
-  --sp-primitive-brand-500: oklch(0.62 0.19 252);
-  --sp-primitive-brand-600: oklch(0.55 0.20 255);
-  --sp-primitive-brand-700: oklch(0.47 0.18 258);
-  --sp-primitive-brand-800: oklch(0.39 0.15 260);
-  --sp-primitive-brand-900: oklch(0.31 0.11 262);
-  --sp-primitive-brand-950: oklch(0.22 0.07 264);
+  --sp-primitive-brand-50:  oklch(0.96 0.03 60);
+  --sp-primitive-brand-100: oklch(0.93 0.06 58);
+  --sp-primitive-brand-200: oklch(0.86 0.11 55);
+  --sp-primitive-brand-300: oklch(0.78 0.14 52);
+  --sp-primitive-brand-400: oklch(0.73 0.16 50);
+  --sp-primitive-brand-500: oklch(0.70 0.17 50);
+  --sp-primitive-brand-600: oklch(0.65 0.18 48);
+  --sp-primitive-brand-700: oklch(0.55 0.15 47);
+  --sp-primitive-brand-800: oklch(0.45 0.12 46);
+  --sp-primitive-brand-900: oklch(0.35 0.08 45);
+  --sp-primitive-brand-950: oklch(0.25 0.05 45);
 
-  --sp-primitive-warm-50:  oklch(0.98 0.003 260);
-  --sp-primitive-warm-100: oklch(0.96 0.004 260);
-  --sp-primitive-warm-200: oklch(0.92 0.006 258);
-  --sp-primitive-warm-300: oklch(0.86 0.008 255);
-  --sp-primitive-warm-400: oklch(0.70 0.008 255);
-  --sp-primitive-warm-500: oklch(0.53 0.008 255);
-  --sp-primitive-warm-600: oklch(0.41 0.008 255);
-  --sp-primitive-warm-700: oklch(0.34 0.008 255);
-  --sp-primitive-warm-800: oklch(0.24 0.008 255);
-  --sp-primitive-warm-900: oklch(0.20 0.008 255);
-  --sp-primitive-warm-950: oklch(0.13 0.006 255);
+  --sp-primitive-warm-50:  oklch(0.98 0.003 60);
+  --sp-primitive-warm-100: oklch(0.96 0.004 60);
+  --sp-primitive-warm-200: oklch(0.92 0.006 58);
+  --sp-primitive-warm-300: oklch(0.86 0.008 55);
+  --sp-primitive-warm-400: oklch(0.70 0.008 55);
+  --sp-primitive-warm-500: oklch(0.53 0.008 55);
+  --sp-primitive-warm-600: oklch(0.41 0.008 55);
+  --sp-primitive-warm-700: oklch(0.34 0.008 55);
+  --sp-primitive-warm-800: oklch(0.24 0.008 55);
+  --sp-primitive-warm-900: oklch(0.20 0.008 55);
+  --sp-primitive-warm-950: oklch(0.13 0.006 55);
 
   --sp-primitive-white: oklch(1.00 0 0);
   --sp-primitive-black: oklch(0 0 0);

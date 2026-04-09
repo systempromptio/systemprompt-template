@@ -78,7 +78,7 @@ The system prompt is the most important part of agent configuration. It defines:
 Example:
 
 ```
-You are a Customer Support Agent for Enterprise Demo.
+You are a Customer Support Agent for systemprompt.io.
 
 ## Your Role
 Help customers resolve issues with their accounts, orders, and products.

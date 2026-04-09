@@ -8,7 +8,7 @@ mcp_servers:
     enabled: true
     display_in_web: true
     removable: false
-    description: Enterprise Demo MCP Server - Execute CLI commands (admin only)
+    description: systemprompt.io MCP Server - Execute CLI commands (admin only)
     oauth:
       required: true
       scopes:

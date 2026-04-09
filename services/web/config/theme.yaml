@@ -3,13 +3,13 @@
 
 branding:
   # ===== CUSTOMIZE THESE FOR EACH DEMO CLIENT =====
-  name: "Enterprise Demo"
-  domain: "demo.systemprompt.io"
-  display_name: "Enterprise Demo"
-  title: "Enterprise Demo — AI Agent Platform"
-  description: "One platform to secure, distribute, and observe AI agents across your entire organization. Role-based access, audit trails, and cost visibility from day one."
+  name: "systemprompt.io"
+  domain: "systemprompt.io"
+  display_name: "systemprompt.io"
+  title: "systemprompt.io — AI Governance Platform"
+  description: "Control how your organization uses Claude. One platform to deploy, secure, distribute, and observe AI usage across your entire organization."
   copyright: "2026 systemprompt.io"
-  themeColor: "#2563eb"
+  themeColor: "#f79938"
   platform_name: "systemprompt.io"
   support_email: "support@systemprompt.io"
   logo_light: "/files/images/logo.svg"
@@ -33,15 +33,15 @@ branding:
 
 fonts:
   body:
-    family: "Roboto"
+    family: "OpenSans"
     fallback: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
     files: []
   heading:
-    family: "Dosis"
+    family: "Inter"
     fallback: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
     files: []
   brand:
-    family: "Dosis"
+    family: "Inter"
     fallback: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
     files: []
 
@@ -50,63 +50,63 @@ fonts:
 colors:
   light:
     primary:
-      hsl: "hsl(240, 1%, 15%)"
-      rgb: [37, 37, 38]
+      hsl: "hsl(28, 91%, 50%)"
+      rgb: [247, 153, 56]
     secondary:
-      hsl: "hsl(220, 90%, 56%)"
-      rgb: [37, 99, 235]
-    accent: "#2563eb"
+      hsl: "hsl(28, 91%, 50%)"
+      rgb: [247, 153, 56]
+    accent: "#f79938"
     success: "#10b981"
     warning: "#f59e0b"
     error: "#ef4444"
     surface:
       default: "#FFFFFF"
-      dark: "#F8FAFC"
-      variant: "#F1F5F9"
-      secondaryContainer: "#EFF6FF"
+      dark: "#FAFAF9"
+      variant: "#F5F5F4"
+      secondaryContainer: "#FFF7ED"
       errorContainer: "#FEE2E2"
     text:
-      primary: "#252526"
-      secondary: "#464E5D"
+      primary: "#0F172A"
+      secondary: "#475569"
       inverted: "#FFFFFF"
-      disabled: "#A2AAB9"
+      disabled: "#A8A29E"
     background:
-      default: "#F8FAFC"
-      dark: "#F1F5F9"
+      default: "#FAFAF9"
+      dark: "#F5F5F4"
     border:
-      default: "#D6DCE8"
-      dark: "#A2AAB9"
-      outline: "#A2AAB9"
+      default: "#D6D3D1"
+      dark: "#A8A29E"
+      outline: "#A8A29E"
 
   dark:
     primary:
-      hsl: "hsl(240, 1%, 15%)"
-      rgb: [37, 37, 38]
+      hsl: "hsl(28, 91%, 50%)"
+      rgb: [247, 153, 56]
     secondary:
-      hsl: "hsl(220, 90%, 56%)"
-      rgb: [37, 99, 235]
-    accent: "#2563eb"
+      hsl: "hsl(28, 91%, 50%)"
+      rgb: [247, 153, 56]
+    accent: "#f79938"
     success: "#34d399"
     warning: "#fbbf24"
     error: "#f87171"
     surface:
-      default: "#1A1A1A"
-      dark: "#0A0A0A"
-      variant: "#2A2A2A"
-      secondaryContainer: "rgba(37, 37, 38, 0.1)"
+      default: "#1C1917"
+      dark: "#0C0A09"
+      variant: "#292524"
+      secondaryContainer: "rgba(247, 153, 56, 0.1)"
       errorContainer: "rgba(248, 113, 113, 0.1)"
     text:
-      primary: "#FFFFFF"
-      secondary: "#A0A0A0"
+      primary: "#FAFAF9"
+      secondary: "#D6D3D1"
       inverted: "#000000"
-      disabled: "#666666"
+      disabled: "#78716C"
     background:
-      default: "#1A2025"
-      dark: "#141A1E"
+      default: "#1C1917"
+      dark: "#0C0A09"
     border:
       default: "rgba(255, 255, 255, 0.1)"
-      dark: "#333333"
-      outline: "#666666"
+      dark: "#44403C"
+      outline: "#78716C"
 
 typography:
   sizes:
@@ -144,12 +144,12 @@ shadows:
     sm: "0 1px 2px rgba(0, 0, 0, 0.04)"
     md: "0 4px 6px rgba(0, 0, 0, 0.07)"
     lg: "0 10px 15px rgba(0, 0, 0, 0.1)"
-    accent: "0 4px 14px rgba(37, 99, 235, 0.15)"
+    accent: "0 4px 14px rgba(247, 153, 56, 0.15)"
   dark:
     sm: "0 2px 4px rgba(0, 0, 0, 0.3)"
     md: "0 4px 8px rgba(0, 0, 0, 0.4)"
     lg: "0 10px 20px rgba(0, 0, 0, 0.5)"
-    accent: "0 4px 14px rgba(37, 99, 235, 0.25)"
+    accent: "0 4px 14px rgba(247, 153, 56, 0.25)"
 
 animation:
   fast: "150ms"
@@ -185,9 +185,9 @@ card:
     md: "16px"
     lg: "24px"
   gradient:
-    start: "rgba(37, 99, 235, 0.08)"
-    mid: "rgba(37, 99, 235, 0.04)"
-    end: "rgba(37, 99, 235, 0.01)"
+    start: "rgba(247, 153, 56, 0.08)"
+    mid: "rgba(247, 153, 56, 0.04)"
+    end: "rgba(247, 153, 56, 0.01)"
 
 mobile:
   spacing:

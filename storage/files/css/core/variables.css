@@ -1,58 +1,58 @@
 :root {
   /* Brand hue — change this single value to shift the entire brand palette */
-  --sp-brand-hue: 220;
-  --sp-brand-50: hsl(var(--sp-brand-hue), 95%, 96%);
-  --sp-brand-100: hsl(var(--sp-brand-hue), 90%, 91%);
-  --sp-brand-200: hsl(var(--sp-brand-hue), 85%, 82%);
-  --sp-brand-300: hsl(var(--sp-brand-hue), 80%, 70%);
-  --sp-brand-400: hsl(var(--sp-brand-hue), 80%, 58%);
-  --sp-brand-500: hsl(var(--sp-brand-hue), 83%, 53%);
-  --sp-brand-600: hsl(var(--sp-brand-hue), 70%, 47%);
-  --sp-brand-700: hsl(var(--sp-brand-hue), 65%, 41%);
-  --sp-brand-800: hsl(var(--sp-brand-hue), 60%, 35%);
-  --sp-brand-900: hsl(var(--sp-brand-hue), 55%, 25%);
-  --sp-brand-950: hsl(var(--sp-brand-hue), 50%, 15%);
+  --sp-brand-hue: 28;
+  --sp-brand-50: hsl(var(--sp-brand-hue), 91%, 95%);
+  --sp-brand-100: hsl(var(--sp-brand-hue), 91%, 90%);
+  --sp-brand-200: hsl(var(--sp-brand-hue), 91%, 80%);
+  --sp-brand-300: hsl(var(--sp-brand-hue), 91%, 70%);
+  --sp-brand-400: hsl(var(--sp-brand-hue), 91%, 65%);
+  --sp-brand-500: hsl(var(--sp-brand-hue), 91%, 60%);
+  --sp-brand-600: hsl(var(--sp-brand-hue), 91%, 50%);
+  --sp-brand-700: hsl(var(--sp-brand-hue), 91%, 40%);
+  --sp-brand-800: hsl(var(--sp-brand-hue), 91%, 30%);
+  --sp-brand-900: hsl(var(--sp-brand-hue), 91%, 20%);
+  --sp-brand-950: hsl(var(--sp-brand-hue), 91%, 10%);
 
-  --sp-color-primary: #2563eb;
-  --sp-color-primary-hover: #1d4ed8;
-  --sp-color-primary-dark: #1e40af;
-  --sp-color-primary-rgb: 37, 99, 235;
+  --sp-color-primary: hsl(28, 91%, 50%);
+  --sp-color-primary-hover: hsl(28, 91%, 43%);
+  --sp-color-primary-dark: hsl(28, 91%, 37%);
+  --sp-color-primary-rgb: 247, 153, 56;
   --sp-color-text-on-primary: #ffffff;
-  --sp-color-background: #F8FAFC;
-  --sp-color-surface: #F1F5F9;
-  --sp-color-surface-elevated: #F8FAFC;
+  --sp-color-background: #FAFAF9;
+  --sp-color-surface: #F5F5F4;
+  --sp-color-surface-elevated: #FAFAF9;
   --sp-color-surface-variant: #FFFFFF;
-  --sp-color-surface-dark: #E2E8F0;
-  --sp-color-text: #252526;
-  --sp-color-text-primary: #252526;
-  --sp-color-text-secondary: #3a3a3b;
-  --sp-color-text-muted: #A2AAB9;
-  --sp-color-text-disabled: #A2AAB9;
-  --sp-color-border: #D6DCE8;
+  --sp-color-surface-dark: #E7E5E4;
+  --sp-color-text: #0F172A;
+  --sp-color-text-primary: #0F172A;
+  --sp-color-text-secondary: #475569;
+  --sp-color-text-muted: #A8A29E;
+  --sp-color-text-disabled: #A8A29E;
+  --sp-color-border: #D6D3D1;
 
   --sp-color-success: #22c55e;
   --sp-color-warning: #fbbf24;
   --sp-color-error: #ef4444;
-  --sp-color-info: #2563eb;
+  --sp-color-info: #3b82f6;
 
   --sp-terminal-dot-close: #ff5f57;
   --sp-terminal-dot-minimize: #febc2e;
   --sp-terminal-dot-maximize: #28c840;
 
-  --sp-syntax-bg: #1A2025;
-  --sp-syntax-fg: #abb2bf;
-  --sp-syntax-comment: #5c6370;
-  --sp-syntax-keyword: #2563eb;
+  --sp-syntax-bg: #1C1917;
+  --sp-syntax-fg: #FAFAF9;
+  --sp-syntax-comment: #A8A29E;
+  --sp-syntax-keyword: #f79938;
   --sp-syntax-string: #22c55e;
-  --sp-syntax-number: #3b82f6;
-  --sp-syntax-function: #2563eb;
+  --sp-syntax-number: #FDBA74;
+  --sp-syntax-function: #f79938;
   --sp-syntax-variable: #e06c75;
-  --sp-syntax-operator: #2563eb;
+  --sp-syntax-operator: #f79938;
   --sp-syntax-class: #FFC55B;
 
-  --sp-font-brand: "Dosis", system-ui, sans-serif;
-  --sp-font-body: "Roboto", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --sp-font-heading: "Dosis", system-ui, sans-serif;
+  --sp-font-brand: "Inter", system-ui, sans-serif;
+  --sp-font-body: "OpenSans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --sp-font-heading: "Inter", system-ui, sans-serif;
 
   --sp-font-size-xs: 12px;
   --sp-font-size-sm: 14px;
@@ -116,28 +116,28 @@
   --sp-card-radius-notch: 6px;
   --sp-card-radius: 18px 6px 18px 18px;
   --sp-card-border-width: 1px;
-  --sp-card-bg-glass: hsla(214, 32%, 98%, 0.6);
+  --sp-card-bg-glass: hsla(28, 32%, 98%, 0.6);
   --sp-card-bg-gradient: linear-gradient(135deg,
-    rgba(37, 99, 235, 0.06) 0%,
-    rgba(147, 197, 253, 0.08) 50%,
-    rgba(248, 250, 252, 0.04) 100%);
+    rgba(247, 153, 56, 0.06) 0%,
+    rgba(253, 186, 116, 0.08) 50%,
+    rgba(250, 250, 249, 0.04) 100%);
   --sp-card-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  --sp-card-shadow-hover: 0 8px 32px rgba(37, 37, 38, 0.12);
-  --sp-card-shadow-highlight: 0 0 20px rgba(37, 99, 235, 0.15);
-  --sp-brand-green: #3b82f6;
-  --sp-brand-gradient: linear-gradient(135deg, #bfdbfe, #F8FAFC);
-  --sp-brand-gradient-reverse: linear-gradient(135deg, #F8FAFC, #bfdbfe);
+  --sp-card-shadow-hover: 0 8px 32px rgba(28, 25, 23, 0.12);
+  --sp-card-shadow-highlight: 0 0 20px rgba(247, 153, 56, 0.15);
+  --sp-brand-green: #f79938;
+  --sp-brand-gradient: linear-gradient(135deg, #fde0b8, #FAFAF9);
+  --sp-brand-gradient-reverse: linear-gradient(135deg, #FAFAF9, #fde0b8);
 
-  --sp-client-black: #252526;
-  --sp-client-orange: #3b82f6;
-  --sp-client-tints-cta-orange: #3b82f6;
-  --sp-client-tints-orange-3: #bfdbfe;
-  --sp-client-sand: #F8FAFC;
-  --sp-client-sand-60: hsla(214, 32%, 98%, 0.6);
+  --sp-client-black: #0F172A;
+  --sp-client-orange: #f79938;
+  --sp-client-tints-cta-orange: #f79938;
+  --sp-client-tints-orange-3: #fde0b8;
+  --sp-client-sand: #FAFAF9;
+  --sp-client-sand-60: hsla(28, 32%, 98%, 0.6);
   --sp-client-yellow: #FFF4C1;
   --sp-client-teal: #006463;
-  --sp-client-grey: #F1F5F9;
-  --sp-client-cards-card-bg: #F1F5F9;
+  --sp-client-grey: #F5F5F4;
+  --sp-client-cards-card-bg: #F5F5F4;
 }
 
 h1, h2, h3, h4, h5, h6 { letter-spacing: -0.03em; }

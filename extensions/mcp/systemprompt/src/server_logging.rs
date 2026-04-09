@@ -16,7 +16,11 @@ pub(crate) async fn record_mcp_access(
         "used" => format!("Executed '{tool}' on {server}"),
         _ => format!("{action} on {server}"),
     };
-    let entity_type = if action == "used" { "tool" } else { "mcp_server" };
+    let entity_type = if action == "used" {
+        "tool"
+    } else {
+        "mcp_server"
+    };
     let entity_name = if action == "used" { tool } else { server };
     let metadata = serde_json::json!({ "tool_name": tool, "server": server });
 

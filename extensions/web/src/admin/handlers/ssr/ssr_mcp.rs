@@ -12,7 +12,9 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
-fn build_mcp_rules_map(all_rules: &[AccessControlRule]) -> HashMap<String, Vec<&AccessControlRule>> {
+fn build_mcp_rules_map(
+    all_rules: &[AccessControlRule],
+) -> HashMap<String, Vec<&AccessControlRule>> {
     let mut rules_map: HashMap<String, Vec<&AccessControlRule>> = HashMap::new();
     for rule in all_rules {
         if rule.entity_type == "mcp_server" {
@@ -34,9 +36,7 @@ fn build_role_badges(
         .filter_map(|role_name| {
             let assigned = entity_rules.is_some_and(|rules| {
                 rules.iter().any(|r| {
-                    r.rule_type == "role"
-                        && r.rule_value == *role_name
-                        && r.access == "allow"
+                    r.rule_type == "role" && r.rule_value == *role_name && r.access == "allow"
                 })
             });
             if assigned {

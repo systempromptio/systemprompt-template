@@ -71,7 +71,8 @@ pub(super) fn build_dashboard_template(
         title: "Dashboard",
         stats: serde_json::to_value(&dash.stats).unwrap_or_else(|_| serde_json::Value::Null),
         timeline: serde_json::to_value(&dash.timeline).unwrap_or_else(|_| serde_json::Value::Null),
-        top_users: serde_json::to_value(&dash.top_users).unwrap_or_else(|_| serde_json::Value::Null),
+        top_users: serde_json::to_value(&dash.top_users)
+            .unwrap_or_else(|_| serde_json::Value::Null),
         popular_skills: activity.skills,
         hourly_activity: activity.hourly,
         total_users: counts.total_users,
@@ -112,7 +113,8 @@ pub(super) fn build_dashboard_template(
         tab: active_tab.to_string(),
         tab_flags: TabFlags {
             tab_mcp: active_tab == "mcp",
-            tab_traffic: active_tab == "governance" || (active_tab != "mcp" && active_tab != "report"),
+            tab_traffic: active_tab == "governance"
+                || (active_tab != "mcp" && active_tab != "report"),
             tab_report: active_tab == "report",
         },
         active_tab: active_tab.to_string(),

@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use anyhow::Result;
 use async_trait::async_trait;
 use serde_json::json;
 use systemprompt::database::Database;
@@ -37,7 +36,7 @@ impl ContentDataProvider for DocsContentDataProvider {
         &self,
         ctx: &ContentDataContext<'_>,
         item: &mut serde_json::Value,
-    ) -> Result<()> {
+    ) -> anyhow::Result<()> {
         let db = ctx
             .db_pool::<Arc<Database>>()
             .ok_or(DocsError::NoDatabaseInContext)?;

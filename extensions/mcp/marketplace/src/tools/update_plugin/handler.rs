@@ -86,8 +86,10 @@ impl McpToolHandler for UpdatePluginHandler {
 
         if let Some(ref skill_slugs) = input.skill_ids {
             let uuids = shared::resolve_skill_slugs(&pool, user_id.as_ref(), skill_slugs).await?;
-            let typed: Vec<systemprompt::identifiers::SkillId> =
-                uuids.into_iter().map(systemprompt::identifiers::SkillId::new).collect();
+            let typed: Vec<systemprompt::identifiers::SkillId> = uuids
+                .into_iter()
+                .map(systemprompt::identifiers::SkillId::new)
+                .collect();
             systemprompt_web_extension::admin::repositories::set_plugin_skills(
                 &pool, &plugin.id, &typed,
             )
@@ -98,8 +100,10 @@ impl McpToolHandler for UpdatePluginHandler {
         }
         if let Some(ref agent_slugs) = input.agent_ids {
             let uuids = shared::resolve_agent_slugs(&pool, user_id.as_ref(), agent_slugs).await?;
-            let typed: Vec<systemprompt::identifiers::AgentId> =
-                uuids.into_iter().map(systemprompt::identifiers::AgentId::new).collect();
+            let typed: Vec<systemprompt::identifiers::AgentId> = uuids
+                .into_iter()
+                .map(systemprompt::identifiers::AgentId::new)
+                .collect();
             systemprompt_web_extension::admin::repositories::set_plugin_agents(
                 &pool, &plugin.id, &typed,
             )
@@ -109,9 +113,12 @@ impl McpToolHandler for UpdatePluginHandler {
             })?;
         }
         if let Some(ref mcp_server_slugs) = input.mcp_server_ids {
-            let uuids = shared::resolve_mcp_server_slugs(&pool, user_id.as_ref(), mcp_server_slugs).await?;
-            let typed: Vec<systemprompt::identifiers::McpServerId> =
-                uuids.into_iter().map(systemprompt::identifiers::McpServerId::new).collect();
+            let uuids =
+                shared::resolve_mcp_server_slugs(&pool, user_id.as_ref(), mcp_server_slugs).await?;
+            let typed: Vec<systemprompt::identifiers::McpServerId> = uuids
+                .into_iter()
+                .map(systemprompt::identifiers::McpServerId::new)
+                .collect();
             systemprompt_web_extension::admin::repositories::set_plugin_mcp_servers(
                 &pool, &plugin.id, &typed,
             )

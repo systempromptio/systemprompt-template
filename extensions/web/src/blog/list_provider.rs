@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use anyhow::Result;
 use async_trait::async_trait;
 use serde_json::{json, Value};
 use systemprompt::database::Database;
@@ -8,6 +7,7 @@ use systemprompt::extension::prelude::*;
 
 use super::renderers::render_blog_cards;
 use super::types::BlogPost;
+use crate::error::BlogError;
 
 pub struct BlogListPageDataProvider;
 
@@ -34,7 +34,7 @@ impl PageDataProvider for BlogListPageDataProvider {
         vec!["blog-list".to_string()]
     }
 
-    async fn provide_page_data(&self, ctx: &PageContext<'_>) -> Result<Value> {
+    async fn provide_page_data(&self, ctx: &PageContext<'_>) -> anyhow::Result<Value> {
         let Some(db) = ctx.db_pool::<Arc<Database>>() else {
             tracing::warn!("BlogListPageDataProvider: No database in context");
             return Ok(json!({ "POSTS": "" }));
@@ -61,7 +61,8 @@ impl PageDataProvider for BlogListPageDataProvider {
             "#
         )
         .fetch_all(&*pool)
-        .await?;
+        .await
+        .map_err(BlogError::Database)?;
 
         tracing::debug!(count = posts.len(), "Fetched blog posts");
 

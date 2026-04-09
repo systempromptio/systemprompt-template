@@ -37,8 +37,8 @@ fn load_filesystem_entities(
     Vec<crate::admin::types::McpServerDetail>,
 ) {
     let admin_roles = vec!["admin".to_string()];
-    let plugins = repositories::list_plugins_for_roles(services_path, &admin_roles)
-        .unwrap_or_else(|e| {
+    let plugins =
+        repositories::list_plugins_for_roles(services_path, &admin_roles).unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to list plugins");
             vec![]
         });
@@ -79,7 +79,9 @@ async fn load_access_control_data(pool: &Arc<PgPool>) -> AccessControlData {
     }
 }
 
-fn build_rules_map(all_rules: &[AccessControlRule]) -> HashMap<(String, String), Vec<&AccessControlRule>> {
+fn build_rules_map(
+    all_rules: &[AccessControlRule],
+) -> HashMap<(String, String), Vec<&AccessControlRule>> {
     let mut rules_map: HashMap<(String, String), Vec<&AccessControlRule>> = HashMap::new();
     for rule in all_rules {
         rules_map
@@ -134,11 +136,34 @@ fn assemble_page_data(
 ) -> serde_json::Value {
     let rules_map = build_rules_map(&ac_data.all_rules);
     let known_roles = vec!["admin", "developer", "analyst", "viewer"];
-    let dept_names: Vec<&str> = ac_data.departments.iter().map(|d| d.department.as_str()).collect();
+    let dept_names: Vec<&str> = ac_data
+        .departments
+        .iter()
+        .map(|d| d.department.as_str())
+        .collect();
 
-    let plugins_json = build_plugins_json(services_path, plugins, &rules_map, &known_roles, &dept_names, &ac_data.departments);
-    let agents_json = build_agents_json(agents, &rules_map, &known_roles, &dept_names, &ac_data.departments);
-    let mcp_json = build_mcp_json(mcp_servers, &rules_map, &known_roles, &dept_names, &ac_data.departments);
+    let plugins_json = build_plugins_json(
+        services_path,
+        plugins,
+        &rules_map,
+        &known_roles,
+        &dept_names,
+        &ac_data.departments,
+    );
+    let agents_json = build_agents_json(
+        agents,
+        &rules_map,
+        &known_roles,
+        &dept_names,
+        &ac_data.departments,
+    );
+    let mcp_json = build_mcp_json(
+        mcp_servers,
+        &rules_map,
+        &known_roles,
+        &dept_names,
+        &ac_data.departments,
+    );
 
     json!({
         "page": "access-control",

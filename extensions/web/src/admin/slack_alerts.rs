@@ -23,5 +23,9 @@ pub fn send_alert(message: String) {
 }
 
 fn send_to_slack(channel_id: &str, message: &str) {
-    tracing::debug!(channel_id, message, "Slack alert skipped: integration not yet implemented");
+    tracing::debug!(
+        channel_id,
+        message,
+        "Slack alert skipped: integration not yet implemented"
+    );
 }

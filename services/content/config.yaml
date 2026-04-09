@@ -73,15 +73,15 @@ metadata:
 
   structured_data:
     organization:
-      name: "Enterprise Demo"
-      url: "https://demo.systemprompt.io"
-      logo: "https://demo.systemprompt.io/logo.png"
+      name: "systemprompt.io"
+      url: "https://systemprompt.io"
+      logo: "https://systemprompt.io/logo.png"
       description: "AI Agent Platform"
 
     blog:
       type: "Blog"
       name: "Blog"
-      url: "https://demo.systemprompt.io/blog"
+      url: "https://systemprompt.io/blog"
       description: "Articles and updates"
       article_section: "Technology"
       language: "en-US"

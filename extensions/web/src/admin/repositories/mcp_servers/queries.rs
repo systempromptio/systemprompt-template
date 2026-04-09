@@ -1,7 +1,5 @@
 use std::path::Path;
 
-
-
 use super::super::super::types::McpServerDetail;
 use crate::error::MarketplaceError;
 

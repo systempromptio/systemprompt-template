@@ -8,9 +8,7 @@ pub async fn list_governance_decisions(
     pool: &Arc<PgPool>,
     search: Option<&str>,
 ) -> Result<Vec<GovernanceDecisionRow>, sqlx::Error> {
-    let search_pattern = search
-        .filter(|s| !s.is_empty())
-        .map(|s| format!("%{s}%"));
+    let search_pattern = search.filter(|s| !s.is_empty()).map(|s| format!("%{s}%"));
 
     if let Some(ref pattern) = search_pattern {
         sqlx::query_as::<_, GovernanceDecisionRow>(
@@ -43,9 +41,7 @@ pub struct GovernanceCounts {
     pub secret_breaches: i64,
 }
 
-pub async fn fetch_governance_counts(
-    pool: &Arc<PgPool>,
-) -> Result<GovernanceCounts, sqlx::Error> {
+pub async fn fetch_governance_counts(pool: &Arc<PgPool>) -> Result<GovernanceCounts, sqlx::Error> {
     let row = sqlx::query_as::<_, (i64, i64, i64, i64)>(
         r"SELECT
             COUNT(*)::bigint,

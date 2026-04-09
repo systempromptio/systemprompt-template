@@ -114,14 +114,7 @@ impl CompileAdminTemplatesJob {
             branding_value: &branding_value,
         };
         for (template_file, page_id, output_path) in &pages {
-            match compile_page(
-                &compile_ctx,
-                template_file,
-                page_id,
-                output_path,
-            )
-            .await
-            {
+            match compile_page(&compile_ctx, template_file, page_id, output_path).await {
                 Ok(()) => compiled += 1,
                 Err(e) => {
                     tracing::error!(
@@ -206,7 +199,8 @@ async fn compile_page(
             .insert("branding".to_string(), ctx.branding_value.clone());
     }
 
-    let rendered = ctx.hbs
+    let rendered = ctx
+        .hbs
         .render_template(&template_content, &data)
         .with_context(|| format!("Failed to render template: {template_file}"))?;
 

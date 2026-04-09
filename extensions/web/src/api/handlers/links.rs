@@ -8,8 +8,8 @@ use axum::{
 };
 use chrono::Utc;
 use sqlx::PgPool;
-use url::Url;
 use systemprompt::identifiers::{LinkClickId, SessionId};
+use url::Url;
 
 const DEFAULT_CLICK_LIMIT: i64 = 100;
 

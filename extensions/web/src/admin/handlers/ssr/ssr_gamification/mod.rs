@@ -23,21 +23,19 @@ fn build_achievement_maps<'a>(
     profile: Option<&'a crate::admin::types::UserGamificationProfile>,
     stats: &'a [crate::admin::types::AchievementInfo],
 ) -> AchievementMaps<'a> {
-    let unlocked_ids = profile
-        .map_or_else(std::collections::HashSet::new, |g| {
-            g.achievements
-                .iter()
-                .map(|ua| ua.achievement_id.as_str())
-                .collect()
-        });
+    let unlocked_ids = profile.map_or_else(std::collections::HashSet::new, |g| {
+        g.achievements
+            .iter()
+            .map(|ua| ua.achievement_id.as_str())
+            .collect()
+    });
 
-    let unlocked_at = profile
-        .map_or_else(std::collections::HashMap::new, |g| {
-            g.achievements
-                .iter()
-                .map(|ua| (ua.achievement_id.as_str(), &ua.unlocked_at))
-                .collect()
-        });
+    let unlocked_at = profile.map_or_else(std::collections::HashMap::new, |g| {
+        g.achievements
+            .iter()
+            .map(|ua| (ua.achievement_id.as_str(), &ua.unlocked_at))
+            .collect()
+    });
 
     let stats_map = stats.iter().map(|s| (s.id.as_str(), s)).collect();
 

@@ -93,8 +93,7 @@ impl McpToolHandler for SystempromptToolHandler {
                 }
             }
         } else {
-            let text_artifact =
-                TextArtifact::new(&output.stdout, ctx).with_title("Command Output");
+            let text_artifact = TextArtifact::new(&output.stdout, ctx).with_title("Command Output");
             CliArtifact::text(text_artifact)
         };
 
@@ -140,7 +139,7 @@ impl ServerHandler for SystempromptServer {
         _request: InitializeRequestParams,
         _ctx: RequestContext<RoleServer>,
     ) -> Result<InitializeResult, McpError> {
-        tracing::info!("Enterprise Demo MCP server initialized");
+        tracing::info!("systemprompt.io MCP server initialized");
         Ok(self.get_info())
     }
 
@@ -245,8 +244,8 @@ impl ServerHandler for SystempromptServer {
     ) -> Result<ListResourcesResult, McpError> {
         Ok(build_artifact_viewer_resource(&ArtifactViewerConfig {
             server_name: SERVER_NAME,
-            title: "Enterprise Demo Artifact Viewer",
-            description: "Interactive UI viewer for Enterprise Demo artifacts. Renders playbooks, lists, \
+            title: "systemprompt.io Artifact Viewer",
+            description: "Interactive UI viewer for systemprompt.io artifacts. Renders playbooks, lists, \
                          and text content with syntax highlighting. Template receives artifact data \
                          dynamically via MCP Apps ui/notifications/tool-result protocol.",
             template: ARTIFACT_VIEWER_TEMPLATE,

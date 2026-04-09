@@ -78,7 +78,11 @@ pub(crate) fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBun
     for f in &files {
         if f.path.starts_with("skills/") && f.path.ends_with("SKILL.md") {
             skills_count += 1;
-        } else if f.path.starts_with("agents/") && std::path::Path::new(&f.path).extension().is_some_and(|ext| ext.eq_ignore_ascii_case("md")) {
+        } else if f.path.starts_with("agents/")
+            && std::path::Path::new(&f.path)
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
+        {
             agents_count += 1;
         } else if f.path == "hooks/hooks.json" {
             _hooks_count += 1;

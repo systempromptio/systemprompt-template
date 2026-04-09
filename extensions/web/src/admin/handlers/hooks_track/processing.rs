@@ -6,7 +6,7 @@ use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::admin::event_hub::EventHub;
 use crate::admin::numeric;
-use crate::admin::repositories::{conversation_analytics, usage_aggregations};
+use crate::admin::repositories::{conversation_analytics, hooks_track, usage_aggregations};
 use crate::admin::types::webhook::{HookEvent, HookEventPayload};
 
 use super::{ai_summary, entity, helpers};
@@ -188,12 +188,7 @@ async fn handle_session_analysis(params: &ProcessInsertedEventParams<'_>) {
 }
 
 async fn handle_session_end(params: &ProcessInsertedEventParams<'_>) {
-    let _ = sqlx::query!(
-        "UPDATE plugin_session_summaries SET ended_at = NOW(), status = 'completed' WHERE session_id = $1 AND ended_at IS NULL",
-        params.session_id.as_str(),
-    )
-    .execute(params.pool.as_ref())
-    .await;
+    let _ = hooks_track::mark_session_ended(params.pool.as_ref(), params.session_id).await;
 }
 
 async fn run_ai_analysis(params: &ProcessInsertedEventParams<'_>) {
@@ -242,15 +237,8 @@ async fn handle_apm_and_concurrent(params: &ProcessInsertedEventParams<'_>) {
     )
     .await;
 
-    let concurrent_raw = sqlx::query_scalar!(
-        "SELECT COUNT(*)::BIGINT FROM plugin_session_summaries WHERE user_id = $1 AND started_at <= NOW() AND (ended_at IS NULL OR ended_at >= NOW()) AND session_id != $2",
-        user_id.as_str(),
-        session_id.as_str(),
-    )
-    .fetch_one(pool.as_ref())
-    .await
-    .unwrap_or(Some(0))
-    .unwrap_or(0);
+    let concurrent_raw =
+        hooks_track::count_concurrent_sessions(pool.as_ref(), user_id, session_id).await;
 
     let concurrent = numeric::saturating_i32(concurrent_raw) + 1;
 

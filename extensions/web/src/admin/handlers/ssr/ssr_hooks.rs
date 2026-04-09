@@ -46,9 +46,7 @@ fn build_plugin_name_map(
     map
 }
 
-fn list_hooks_from_filesystem(
-    services_path: &std::path::Path,
-) -> Vec<HookDetail> {
+fn list_hooks_from_filesystem(services_path: &std::path::Path) -> Vec<HookDetail> {
     let plugins_dir = services_path.join("plugins");
     let mut hooks = Vec::new();
     if !plugins_dir.exists() {

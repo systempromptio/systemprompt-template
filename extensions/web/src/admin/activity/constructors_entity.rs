@@ -20,7 +20,12 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn entity_created(user_id: impl AsRef<str>, entity: ActivityEntity, id: &str, name: &str) -> Self {
+    pub fn entity_created(
+        user_id: impl AsRef<str>,
+        entity: ActivityEntity,
+        id: &str,
+        name: &str,
+    ) -> Self {
         Self {
             user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::MarketplaceEdit,
@@ -36,7 +41,12 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn entity_updated(user_id: impl AsRef<str>, entity: ActivityEntity, id: &str, name: &str) -> Self {
+    pub fn entity_updated(
+        user_id: impl AsRef<str>,
+        entity: ActivityEntity,
+        id: &str,
+        name: &str,
+    ) -> Self {
         Self {
             user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::MarketplaceEdit,
@@ -52,7 +62,12 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn entity_deleted(user_id: impl AsRef<str>, entity: ActivityEntity, id: &str, name: &str) -> Self {
+    pub fn entity_deleted(
+        user_id: impl AsRef<str>,
+        entity: ActivityEntity,
+        id: &str,
+        name: &str,
+    ) -> Self {
         Self {
             user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::MarketplaceEdit,
@@ -68,7 +83,12 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn entity_forked(user_id: impl AsRef<str>, entity: ActivityEntity, id: &str, name: &str) -> Self {
+    pub fn entity_forked(
+        user_id: impl AsRef<str>,
+        entity: ActivityEntity,
+        id: &str,
+        name: &str,
+    ) -> Self {
         Self {
             user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::MarketplaceEdit,
@@ -138,7 +158,11 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn user_skill_imported(user_id: impl AsRef<str>, bundle_id: &str, imported_count: u32) -> Self {
+    pub fn user_skill_imported(
+        user_id: impl AsRef<str>,
+        bundle_id: &str,
+        imported_count: u32,
+    ) -> Self {
         let uid = user_id.as_ref();
         Self {
             user_id: uid.to_string(),
@@ -155,7 +179,12 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn tool_used(user_id: impl AsRef<str>, tool_name: &str, session_id: &str, detail: &str) -> Self {
+    pub fn tool_used(
+        user_id: impl AsRef<str>,
+        tool_name: &str,
+        session_id: &str,
+        detail: &str,
+    ) -> Self {
         Self {
             user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::ToolUsage,
@@ -171,7 +200,12 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn skill_used_rich(user_id: impl AsRef<str>, tool_name: &str, session_id: &str, detail: &str) -> Self {
+    pub fn skill_used_rich(
+        user_id: impl AsRef<str>,
+        tool_name: &str,
+        session_id: &str,
+        detail: &str,
+    ) -> Self {
         Self {
             user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::SkillUsage,
@@ -235,7 +269,11 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn task_completed_activity(user_id: impl AsRef<str>, session_id: &str, subject: Option<&str>) -> Self {
+    pub fn task_completed_activity(
+        user_id: impl AsRef<str>,
+        session_id: &str,
+        subject: Option<&str>,
+    ) -> Self {
         let description = match subject {
             Some(s) => format!("Completed task: '{s}'"),
             None => "Completed a task".to_string(),
@@ -251,7 +289,11 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn context_compacted(user_id: impl AsRef<str>, session_id: &str, trigger: Option<&str>) -> Self {
+    pub fn context_compacted(
+        user_id: impl AsRef<str>,
+        session_id: &str,
+        trigger: Option<&str>,
+    ) -> Self {
         let description = if trigger == Some("auto") {
             "Context auto-compacted".to_string()
         } else {

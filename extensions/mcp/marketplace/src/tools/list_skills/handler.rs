@@ -79,8 +79,10 @@ impl McpToolHandler for ListSkillsHandler {
             .iter()
             .map(|s| {
                 let usage = usage_counts.get(s.skill_id.as_ref()).copied().unwrap_or(0);
-                let (avg_rating, _rating_count) =
-                    avg_ratings.get(s.skill_id.as_ref()).copied().unwrap_or((0.0, 0));
+                let (avg_rating, _rating_count) = avg_ratings
+                    .get(s.skill_id.as_ref())
+                    .copied()
+                    .unwrap_or((0.0, 0));
 
                 serde_json::json!({
                     "skill_id": s.skill_id,

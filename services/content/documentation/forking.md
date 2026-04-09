@@ -1,6 +1,6 @@
 ---
 title: "Forking & Customization"
-description: "How to fork skills, plugins, agents, and MCP servers in Enterprise Demo. Create customised versions without affecting the organisation baseline."
+description: "How to fork skills, plugins, agents, and MCP servers in systemprompt.io. Create customised versions without affecting the organisation baseline."
 author: "systemprompt.io"
 slug: "forking"
 keywords: "forking, customization, skills, plugins, agents, baseline, origin tracking"

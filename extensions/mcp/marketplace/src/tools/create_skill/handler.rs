@@ -56,7 +56,9 @@ impl McpToolHandler for CreateSkillHandler {
             description: input.description.clone(),
             content: input.content.clone(),
             tags: input.tags,
-            base_skill_id: input.base_skill_id.map(systemprompt::identifiers::SkillId::new),
+            base_skill_id: input
+                .base_skill_id
+                .map(systemprompt::identifiers::SkillId::new),
         };
 
         let user_id = UserId::new(ctx.user_id().to_string());

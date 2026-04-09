@@ -1,10 +1,10 @@
 {
   "name": "systemprompt-marketplace",
   "owner": {
-    "name": "Enterprise Demo"
+    "name": "systemprompt.io"
   },
   "metadata": {
-    "description": "Enterprise Demo plugin marketplace",
+    "description": "systemprompt.io plugin marketplace",
     "version": "0.1.0"
   },
   "plugins": [

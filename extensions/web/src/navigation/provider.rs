@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use anyhow::Result;
 use async_trait::async_trait;
 use serde_json::Value;
 use systemprompt::extension::prelude::*;
@@ -38,7 +37,7 @@ impl PageDataProvider for NavigationPageDataProvider {
         vec![]
     }
 
-    async fn provide_page_data(&self, _ctx: &PageContext<'_>) -> Result<Value> {
+    async fn provide_page_data(&self, _ctx: &PageContext<'_>) -> anyhow::Result<Value> {
         Ok(serde_json::json!({
             "site": {
                 "header_nav": &self.config.header,

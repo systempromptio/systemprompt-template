@@ -79,10 +79,7 @@ fn build_skill_json(
     }
 
     let usage_count = usage_counts.get(skill_id_str).copied().unwrap_or(0);
-    let (avg_rating, rating_count) = avg_ratings
-        .get(skill_id_str)
-        .copied()
-        .unwrap_or((0.0, 0));
+    let (avg_rating, rating_count) = avg_ratings.get(skill_id_str).copied().unwrap_or((0.0, 0));
 
     json!({
         "skill_id": skill_id_str,

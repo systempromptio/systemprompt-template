@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
-use anyhow::Result;
 use async_trait::async_trait;
 use serde_json::Value;
-use systemprompt::database::Database;
 use systemprompt::extension::prelude::*;
 
 use super::config::HomepageConfig;
+use crate::error::MarketplaceError;
 
 pub struct HomepagePageDataProvider {
     config: Arc<HomepageConfig>,
@@ -29,42 +28,9 @@ impl PageDataProvider for HomepagePageDataProvider {
         vec!["homepage".to_string()]
     }
 
-    async fn provide_page_data(&self, ctx: &PageContext<'_>) -> Result<Value> {
-        let mut config = (*self.config).clone();
-
-        if let Some(ref mut playbooks) = config.playbooks {
-            if let Some(db) = ctx.db_pool::<Arc<Database>>() {
-                if let Some(pool) = db.pool() {
-                    for category in &mut playbooks.categories {
-                        let prefix = format!("{}-%", category.id);
-                        let count_result = sqlx::query_scalar!(
-                            r#"
-                            SELECT COUNT(*) as "count!"
-                            FROM markdown_content
-                            WHERE source_id = 'playbooks' AND slug LIKE $1
-                            "#,
-                            prefix
-                        )
-                        .fetch_one(&*pool)
-                        .await;
-
-                        match count_result {
-                            Ok(c) => {
-                                tracing::debug!(category = %category.id, count = c, "Playbook category count");
-                                category.count = Some(i32::try_from(c).unwrap_or(0));
-                            }
-                            Err(e) => {
-                                tracing::warn!(category = %category.id, error = %e, "Failed to fetch playbook count");
-                            }
-                        }
-                    }
-                }
-            } else {
-                tracing::debug!("No database pool available for playbook counts");
-            }
-        }
-
-        let config_value = serde_json::to_value(&config)?;
+    async fn provide_page_data(&self, _ctx: &PageContext<'_>) -> anyhow::Result<Value> {
+        let config = (*self.config).clone();
+        let config_value = serde_json::to_value(&config).map_err(MarketplaceError::Json)?;
         Ok(serde_json::json!({ "site": { "homepage": config_value } }))
     }
 

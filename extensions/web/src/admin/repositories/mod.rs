@@ -2,26 +2,28 @@ pub mod access_control;
 pub mod admin_traffic_reports;
 pub mod agents;
 pub mod apm_metrics;
-pub mod github_sync;
-mod github_sync_bundle;
-mod github_sync_git;
-mod github_sync_publish;
 pub mod control_center;
 pub mod conversation_analytics;
+mod cowork_frontmatter;
+mod cowork_sanitize;
 pub mod daily_summaries;
 pub mod dashboard;
 pub mod dashboard_aggregates;
 pub mod dashboard_queries;
 pub mod dashboard_traffic;
 pub mod export;
-mod cowork_frontmatter;
-mod cowork_sanitize;
 mod export_auth;
 mod export_builders;
 mod export_resolvers;
 mod export_scripts;
 mod export_validation;
 pub mod export_zip;
+pub mod github_sync;
+mod github_sync_bundle;
+mod github_sync_git;
+mod github_sync_publish;
+pub mod governance;
+pub mod hooks_track;
 pub mod jobs;
 pub mod magic_links;
 pub mod marketplace;
@@ -38,11 +40,11 @@ mod plugin_crud_ops;
 pub mod plugin_env;
 mod plugin_import;
 pub mod plugin_jwt;
-mod user_plugin_detail;
 mod plugin_maps;
 mod plugin_resolvers;
 pub mod plugins;
 pub mod profile_reports;
+pub mod registration;
 pub mod secret_audit;
 pub mod secret_crypto;
 pub mod secret_keys;
@@ -55,13 +57,13 @@ pub mod usage_aggregations;
 pub mod user_agents;
 pub mod user_hooks;
 pub mod user_mcp_servers;
+mod user_plugin_detail;
 pub mod user_plugin_selections;
 pub mod user_plugins;
+pub mod user_queries;
 pub mod user_settings;
 pub mod user_skills;
 pub mod users;
-pub mod governance;
-pub mod user_queries;
 pub mod webhook;
 
 pub use agents::{create_agent, delete_agent, find_agent, list_agents, update_agent};
@@ -107,6 +109,7 @@ pub use user_plugins::{
     find_user_plugin, is_entity_in_platform_plugin, list_user_plugins, list_user_plugins_enriched,
     set_plugin_agents, set_plugin_mcp_servers, set_plugin_skills, update_user_plugin,
 };
+pub use user_queries::fetch_department_stats;
 pub use user_skills::{
     create_user_skill, delete_user_skill, fetch_agent_usage_counts, fetch_skill_avg_ratings,
     fetch_skill_usage_counts, find_agent_skill, get_or_create_user_skill, list_agent_skills,
@@ -117,5 +120,4 @@ pub use users::{
     fetch_user_roles, find_user_detail, get_user_event_type_counts, get_user_sessions,
     get_user_top_tools, get_user_usage, list_user_events, list_users, update_user, UserRank,
 };
-pub use user_queries::fetch_department_stats;
 pub use webhook::{insert_plugin_usage_event, UsageEventParams};

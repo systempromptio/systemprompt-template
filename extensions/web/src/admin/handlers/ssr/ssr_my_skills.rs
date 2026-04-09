@@ -73,7 +73,8 @@ pub(crate) async fn my_skills_page(
         all_tags,
         stats: SkillStats { skill_count },
     };
-    let data_value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+    let data_value =
+        serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-skills", &data_value, &user_ctx, &mkt_ctx)
 }
 
@@ -159,7 +160,8 @@ fn build_skills_json(
                 skill_rating_notes: rating.map(|r| r.notes.clone()),
             };
 
-            let mut v = serde_json::to_value(s).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+            let mut v = serde_json::to_value(s)
+                .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
             if let Some(obj) = v.as_object_mut() {
                 if let Ok(extra_value) = serde_json::to_value(&extra) {
                     if let Some(extra_obj) = extra_value.as_object() {
@@ -214,13 +216,15 @@ pub(crate) async fn my_skill_edit_page(
         skill: skill_json,
         required_secrets,
     };
-    let data_value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+    let data_value =
+        serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
     super::render_page(&engine, "my-skill-edit", &data_value, &user_ctx, &mkt_ctx)
 }
 
 fn build_skill_edit_json(skill: Option<&crate::admin::types::UserSkill>) -> serde_json::Value {
     if let Some(s) = skill {
-        let mut v = serde_json::to_value(s).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+        let mut v =
+            serde_json::to_value(s).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
         if let Some(obj) = v.as_object_mut() {
             if let Some(tags) = obj.get("tags").and_then(|t| t.as_array()) {
                 let csv: String = tags
@@ -253,8 +257,10 @@ async fn build_required_secrets(
     let Some(sid) = skill_id else {
         return vec![];
     };
-    let req_secrets = super::get_services_path()
-        .map_or_else(|_| vec![], |sp| repositories::read_skill_required_secrets(&sp.join("skills"), sid));
+    let req_secrets = super::get_services_path().map_or_else(
+        |_| vec![],
+        |sp| repositories::read_skill_required_secrets(&sp.join("skills"), sid),
+    );
 
     let stored = repositories::list_skill_secrets(pool, &user_ctx.user_id, &SkillId::new(sid))
         .await

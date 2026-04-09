@@ -1,26 +1,9 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 
-use crate::admin::repositories::conversation_analytics;
+use crate::admin::repositories::{conversation_analytics, hooks_track};
 
 use super::session_summary;
-
-struct SessionMetricsRow {
-    prompts: i64,
-    unique_files_touched: Option<i32>,
-    errors: i64,
-    subagent_spawns: i64,
-    client_source: String,
-    permission_mode: String,
-    model: String,
-    user_prompts: Option<i32>,
-    automated_actions: Option<i32>,
-}
-
-struct SessionTimingRow {
-    started: Option<chrono::DateTime<chrono::Utc>>,
-    ended: Option<chrono::DateTime<chrono::Utc>>,
-}
 
 fn format_user_messages(messages: &[String]) -> Option<String> {
     if messages.is_empty() {
@@ -44,7 +27,7 @@ fn format_skills(skills: &[&str]) -> Option<String> {
     Some(format!("SKILLS USED: {}", skills.join(", ")))
 }
 
-fn format_session_metrics(m: &SessionMetricsRow) -> Vec<String> {
+fn format_session_metrics(m: &hooks_track::SessionMetricsRow) -> Vec<String> {
     let mut parts = Vec::new();
     let files_count = m.unique_files_touched.unwrap_or(0);
     let user_p = m.user_prompts.unwrap_or(0);
@@ -84,7 +67,7 @@ fn format_session_metrics(m: &SessionMetricsRow) -> Vec<String> {
     parts
 }
 
-fn format_session_timing(t: &SessionTimingRow) -> Option<String> {
+fn format_session_timing(t: &hooks_track::SessionTimingRow) -> Option<String> {
     if let (Some(started), Some(ended)) = (t.started, t.ended) {
         let duration_secs = (ended - started).num_seconds().max(0);
         let duration_mins = duration_secs / 60;
@@ -105,19 +88,7 @@ pub async fn gather_analysis_context(
 ) -> String {
     let mut parts = Vec::new();
 
-    let user_messages = sqlx::query_scalar!(
-        r#"SELECT prompt_preview as "prompt_preview!"
-          FROM plugin_usage_events
-          WHERE session_id = $1 AND user_id = $2 AND event_type = 'UserPromptSubmit'
-            AND prompt_preview IS NOT NULL AND prompt_preview != ''
-          ORDER BY created_at ASC
-          LIMIT 20"#,
-        session_id.as_str(),
-        user_id.as_str(),
-    )
-    .fetch_all(pool)
-    .await
-    .unwrap_or_else(|_| Vec::new());
+    let user_messages = hooks_track::fetch_user_messages(pool, session_id, user_id).await;
 
     if let Some(msg_part) = format_user_messages(&user_messages) {
         parts.push(msg_part);
@@ -138,47 +109,13 @@ pub async fn gather_analysis_context(
         parts.push(skills_part);
     }
 
-    let metrics = sqlx::query_as!(
-        SessionMetricsRow,
-        r#"SELECT prompts, unique_files_touched,
-                  COALESCE(errors, 0)::BIGINT AS "errors!",
-                  COALESCE(subagent_spawns, 0)::BIGINT AS "subagent_spawns!",
-                  COALESCE(client_source, '') AS "client_source!",
-                  COALESCE(permission_mode, '') AS "permission_mode!",
-                  COALESCE(model, '') AS "model!",
-                  user_prompts,
-                  automated_actions
-          FROM plugin_session_summaries
-          WHERE session_id = $1"#,
-        session_id.as_str(),
-    )
-    .fetch_optional(pool)
-    .await
-    .map_err(|e| {
-        tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to fetch session metrics for AI context");
-    })
-    .ok()
-    .flatten();
+    let metrics = hooks_track::fetch_session_metrics(pool, session_id).await;
 
     if let Some(m) = metrics {
         parts.extend(format_session_metrics(&m));
     }
 
-    let timing = sqlx::query_as!(
-        SessionTimingRow,
-        r#"SELECT MIN(created_at) AS started, MAX(created_at) AS ended
-          FROM plugin_usage_events
-          WHERE session_id = $1 AND user_id = $2"#,
-        session_id.as_str(),
-        user_id.as_str(),
-    )
-    .fetch_optional(pool)
-    .await
-    .map_err(|e| {
-        tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to fetch session timing for AI context");
-    })
-    .ok()
-    .flatten();
+    let timing = hooks_track::fetch_session_timing(pool, session_id, user_id).await;
 
     if let Some(t) = timing {
         if let Some(timing_part) = format_session_timing(&t) {
@@ -219,22 +156,5 @@ pub async fn resolve_last_message(
         return msg.to_string();
     }
 
-    sqlx::query_scalar!(
-        r#"SELECT COALESCE(prompt_preview, description, '') as "msg!"
-          FROM plugin_usage_events
-          WHERE session_id = $1 AND user_id = $2
-            AND event_type IN ('Stop', 'SubagentStop', 'SessionEnd')
-          ORDER BY created_at DESC
-          LIMIT 1"#,
-        session_id.as_str(),
-        user_id.as_str(),
-    )
-    .fetch_optional(pool)
-    .await
-    .map_err(|e| {
-        tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to resolve last message");
-    })
-    .ok()
-    .flatten()
-    .unwrap_or_else(String::new)
+    hooks_track::fetch_last_message(pool, session_id, user_id).await
 }

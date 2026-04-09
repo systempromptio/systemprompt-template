@@ -53,9 +53,7 @@ fn collect_strings(value: &serde_json::Value, out: &mut Vec<String>) {
     }
 }
 
-pub(super) fn detect_secrets(
-    tool_input: Option<&serde_json::Value>,
-) -> Option<(String, String)> {
+pub(super) fn detect_secrets(tool_input: Option<&serde_json::Value>) -> Option<(String, String)> {
     let input = tool_input?;
 
     let mut strings = Vec::new();

@@ -53,7 +53,9 @@ impl McpToolHandler for CreateAgentHandler {
             name: input.name.clone(),
             description: input.description.clone(),
             system_prompt: input.system_prompt.clone(),
-            base_agent_id: input.base_agent_id.map(systemprompt::identifiers::AgentId::new),
+            base_agent_id: input
+                .base_agent_id
+                .map(systemprompt::identifiers::AgentId::new),
         };
 
         let user_id = UserId::new(ctx.user_id().to_string());

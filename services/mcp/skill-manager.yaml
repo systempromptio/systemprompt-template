@@ -7,7 +7,7 @@ mcp_servers:
     enabled: true
     display_in_web: true
     removable: false
-    description: "Enterprise Demo Skill Manager - The source of truth for all cloud agent skills, secrets, and sync operations"
+    description: "systemprompt.io Skill Manager - The source of truth for all cloud agent skills, secrets, and sync operations"
 
     oauth:
       required: true

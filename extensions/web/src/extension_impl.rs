@@ -19,9 +19,6 @@ use crate::partials::{
     HeaderPartialRenderer, MemoryLoopAnimationPartialRenderer, RustMeshAnimationPartialRenderer,
     ScriptsPartialRenderer,
 };
-use crate::playbooks::{
-    PlaybookPageDataProvider, PlaybooksContentDataProvider, PlaybooksListPageDataProvider,
-};
 use crate::{
     admin, api,
     assets::web_assets,
@@ -70,17 +67,12 @@ impl Extension for WebExtension {
             Arc::new(DocsPageDataProvider::new()) as Arc<dyn PageDataProvider>,
             Arc::new(BlogListPageDataProvider::new()),
             Arc::new(BlogPostPageDataProvider::new()),
-            Arc::new(PlaybooksListPageDataProvider::new()),
-            Arc::new(PlaybookPageDataProvider::new()),
         ]);
         providers
     }
 
     fn content_data_providers(&self) -> Vec<Arc<dyn ContentDataProvider>> {
-        vec![
-            Arc::new(DocsContentDataProvider::new()),
-            Arc::new(PlaybooksContentDataProvider::new()),
-        ]
+        vec![Arc::new(DocsContentDataProvider::new())]
     }
 
     fn page_prerenderers(&self) -> Vec<Arc<dyn PagePrerenderer>> {

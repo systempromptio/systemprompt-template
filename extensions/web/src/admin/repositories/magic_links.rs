@@ -81,9 +81,12 @@ pub async fn count_recent_tokens_by_ip(pool: &PgPool, ip: &str) -> Result<i64, a
 }
 
 pub async fn user_exists_by_email(pool: &PgPool, email: &str) -> Result<bool, anyhow::Error> {
-    let row = sqlx::query_scalar!("SELECT 1::BIGINT FROM users WHERE email = $1 LIMIT 1", email)
-        .fetch_optional(pool)
-        .await?;
+    let row = sqlx::query_scalar!(
+        "SELECT 1::BIGINT FROM users WHERE email = $1 LIMIT 1",
+        email
+    )
+    .fetch_optional(pool)
+    .await?;
 
     Ok(row.is_some())
 }

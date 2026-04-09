@@ -82,19 +82,27 @@ async fn dispatch_skill(
 ) -> Result<CallToolResult, systemprompt::mcp::McpError> {
     match name {
         "create_skill" => {
-            let handler = create_skill::CreateSkillHandler { db_pool: services.db_pool.clone() };
+            let handler = create_skill::CreateSkillHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "update_skill" => {
-            let handler = update_skill::UpdateSkillHandler { db_pool: services.db_pool.clone() };
+            let handler = update_skill::UpdateSkillHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "list_skills" => {
-            let handler = list_skills::ListSkillsHandler { db_pool: services.db_pool.clone() };
+            let handler = list_skills::ListSkillsHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "delete_skill" => {
-            let handler = delete_skill::DeleteSkillHandler { db_pool: services.db_pool.clone() };
+            let handler = delete_skill::DeleteSkillHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         _ => unreachable!(),
@@ -110,19 +118,27 @@ async fn dispatch_agent(
 ) -> Result<CallToolResult, systemprompt::mcp::McpError> {
     match name {
         "create_agent" => {
-            let handler = create_agent::CreateAgentHandler { db_pool: services.db_pool.clone() };
+            let handler = create_agent::CreateAgentHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "list_agents" => {
-            let handler = list_agents::ListAgentsHandler { db_pool: services.db_pool.clone() };
+            let handler = list_agents::ListAgentsHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "update_agent" => {
-            let handler = update_agent::UpdateAgentHandler { db_pool: services.db_pool.clone() };
+            let handler = update_agent::UpdateAgentHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "delete_agent" => {
-            let handler = delete_agent::DeleteAgentHandler { db_pool: services.db_pool.clone() };
+            let handler = delete_agent::DeleteAgentHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         _ => unreachable!(),
@@ -138,19 +154,27 @@ async fn dispatch_mcp_server(
 ) -> Result<CallToolResult, systemprompt::mcp::McpError> {
     match name {
         "create_mcp_server" => {
-            let handler = create_mcp_server::CreateMcpServerHandler { db_pool: services.db_pool.clone() };
+            let handler = create_mcp_server::CreateMcpServerHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "list_mcp_servers" => {
-            let handler = list_mcp_servers::ListMcpServersHandler { db_pool: services.db_pool.clone() };
+            let handler = list_mcp_servers::ListMcpServersHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "update_mcp_server" => {
-            let handler = update_mcp_server::UpdateMcpServerHandler { db_pool: services.db_pool.clone() };
+            let handler = update_mcp_server::UpdateMcpServerHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "delete_mcp_server" => {
-            let handler = delete_mcp_server::DeleteMcpServerHandler { db_pool: services.db_pool.clone() };
+            let handler = delete_mcp_server::DeleteMcpServerHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         _ => unreachable!(),
@@ -166,23 +190,33 @@ async fn dispatch_plugin(
 ) -> Result<CallToolResult, systemprompt::mcp::McpError> {
     match name {
         "create_plugin" => {
-            let handler = create_plugin::CreatePluginHandler { db_pool: services.db_pool.clone() };
+            let handler = create_plugin::CreatePluginHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "get_plugin" => {
-            let handler = get_plugin::GetPluginHandler { db_pool: services.db_pool.clone() };
+            let handler = get_plugin::GetPluginHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "update_plugin" => {
-            let handler = update_plugin::UpdatePluginHandler { db_pool: services.db_pool.clone() };
+            let handler = update_plugin::UpdatePluginHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "delete_plugin" => {
-            let handler = delete_plugin::DeletePluginHandler { db_pool: services.db_pool.clone() };
+            let handler = delete_plugin::DeletePluginHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "list_plugins" => {
-            let handler = list_plugins::ListPluginsHandler { db_pool: services.db_pool.clone() };
+            let handler = list_plugins::ListPluginsHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         _ => unreachable!(),
@@ -198,11 +232,15 @@ async fn dispatch_secrets(
 ) -> Result<CallToolResult, systemprompt::mcp::McpError> {
     match name {
         "get_secrets" => {
-            let handler = get_secrets::GetSecretsHandler { db_pool: services.db_pool.clone() };
+            let handler = get_secrets::GetSecretsHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         "manage_secrets" => {
-            let handler = manage_secrets::ManageSecretsHandler { db_pool: services.db_pool.clone() };
+            let handler = manage_secrets::ManageSecretsHandler {
+                db_pool: services.db_pool.clone(),
+            };
             executor.execute(&handler, request, ctx).await
         }
         _ => unreachable!(),

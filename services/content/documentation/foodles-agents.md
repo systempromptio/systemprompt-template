@@ -1,6 +1,6 @@
 ---
-title: "Enterprise Demo Agent Architecture"
-description: "How Enterprise Demo's four super-agents map to the platform's plugin-agent-skill architecture. Architecture overview for guest, revenue, platform, and distribution agents."
+title: "systemprompt.io Agent Architecture"
+description: "How systemprompt.io's four super-agents map to the platform's plugin-agent-skill architecture. Architecture overview for guest, revenue, platform, and distribution agents."
 author: "systemprompt.io"
 slug: "enterprise-demo-agents"
 keywords: "enterprise-demo, agents, super-agents, architecture, governance"
@@ -10,7 +10,7 @@ tags: ["enterprise-demo", "agents", "enterprise", "architecture"]
 published_at: "2026-03-19"
 updated_at: "2026-03-19"
 after_reading_this:
-  - "Understand how Enterprise Demo's four super-agents map to the platform's plugin-agent-skill model"
+  - "Understand how systemprompt.io's four super-agents map to the platform's plugin-agent-skill model"
   - "Identify which agent serves which user population and on which port"
   - "Trace the governance controls applied to each agent domain"
   - "Navigate to individual agent documentation for deeper configuration details"
@@ -21,24 +21,24 @@ related_docs:
     url: "/documentation/access-control"
   - title: "Plugins"
     url: "/documentation/plugins"
-  - title: "Enterprise Demo"
+  - title: "systemprompt.io"
     url: "/documentation/demo"
 ---
 
-# Enterprise Demo Agent Architecture
+# systemprompt.io Agent Architecture
 
-**TL;DR:** This page maps Enterprise Demo's four super-agent strategy to the platform's agent configurations. Each super-agent maps to a platform agent backed by the Enterprise Agent Governance plugin, with dedicated ports, skills, security scopes, and audit controls.
+**TL;DR:** This page maps systemprompt.io's four super-agent strategy to the platform's agent configurations. Each super-agent maps to a platform agent backed by the Enterprise Agent Governance plugin, with dedicated ports, skills, security scopes, and audit controls.
 
-> **Sources:** This architecture is based on Enterprise Demo's AI strategy:
-> - [Enterprise Demo AI Strategy](https://www.demo.systemprompt.io/blog) -- describes the four super-agent strategy for hospitality technology
+> **Sources:** This architecture is based on systemprompt.io's AI strategy:
+> - [systemprompt.io AI Strategy](https://www.systemprompt.io/blog) -- describes the four super-agent strategy for hospitality technology
 > - Platform Agent uses MCP + A2A for developer orchestration
-> - Port assignments, OAuth scopes, and skill configurations below are **our platform's demonstration** of these capabilities, not Enterprise Demo's internal implementation.
+> - Port assignments, OAuth scopes, and skill configurations below are **our platform's demonstration** of these capabilities, not systemprompt.io's internal implementation.
 
 ## Why Four Super-Agents
 
 Large enterprises accumulate AI sprawl quickly. Guest services has one chatbot, revenue management has another, engineering has its own copilot, and distribution partner management runs on spreadsheets and email. The result is inconsistent governance, duplicated infrastructure, and security blind spots.
 
-Enterprise Demo's strategy consolidates AI interactions into four domains, each served by a single super-agent:
+systemprompt.io's strategy consolidates AI interactions into four domains, each served by a single super-agent:
 
 1. **Guest Agent** -- guest-facing interactions: hotel search, booking assistance, stay management
 2. **Revenue Agent** -- revenue manager workflows: pricing optimization, occupancy data, competitive intelligence
@@ -49,7 +49,7 @@ Four agents means four security boundaries, four audit domains, and four indepen
 
 ## Our Platform's Demonstration
 
-The table below shows how our platform demonstrates these capabilities. Port assignments and OAuth scopes are our configuration, not Enterprise Demo's.
+The table below shows how our platform demonstrates these capabilities. Port assignments and OAuth scopes are our configuration, not systemprompt.io's.
 
 | Agent ID | Published Name | Demo Port | Target Users | Purpose | OAuth Scope |
 |----------|-------------|------|--------------|---------|-------------|
@@ -178,7 +178,7 @@ The platform enforces rate limits at multiple levels:
 - **Per-tier**: Service and MCP tiers get higher limits (5x base rate)
 - **Per-tool**: Individual MCP tool calls are rate-limited at 200 req/s base
 
-## Scaling to Enterprise Demo's User Base
+## Scaling to systemprompt.io's User Base
 
 The enterprise demo is designed for enterprise-scale deployments across all four agent domains. The architecture supports this through:
 
