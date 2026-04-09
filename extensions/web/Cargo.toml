@@ -17,6 +17,7 @@ systemprompt = { workspace = true, features = ["full"] }
 systemprompt-web-shared = { workspace = true }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-content = { workspace = true }
+systemprompt-web-site = { workspace = true }
 
 # Database access
 sqlx = { workspace = true }
