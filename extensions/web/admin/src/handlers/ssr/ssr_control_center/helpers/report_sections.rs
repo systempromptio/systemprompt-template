@@ -6,7 +6,7 @@ use crate::repositories::daily_summaries::DailySummaryRow;
 use super::super::types::{HistoryEntry, InsightsData, MetricRow};
 use super::metrics::{avg_field, make_metric_row, MetricRowInput};
 
-pub(in crate::admin) fn build_performance_section(
+pub(crate) fn build_performance_section(
     perf: &TodayPerformanceSummary,
     yesterday: &DailySummaryRow,
     days_7: &[DailySummaryRow],
@@ -78,7 +78,7 @@ pub(in crate::admin) fn build_performance_section(
     ]
 }
 
-pub(in crate::admin) fn build_productivity_section(
+pub(crate) fn build_productivity_section(
     perf: &TodayPerformanceSummary,
     yesterday: &DailySummaryRow,
     days_7: &[DailySummaryRow],
@@ -149,7 +149,7 @@ pub(in crate::admin) fn build_productivity_section(
     ]
 }
 
-pub(in crate::admin) fn build_insights(yesterday: &DailySummaryRow) -> InsightsData {
+pub(crate) fn build_insights(yesterday: &DailySummaryRow) -> InsightsData {
     InsightsData {
         summary: yesterday.summary.clone(),
         patterns: yesterday.patterns.as_deref().unwrap_or("").to_string(),
@@ -164,7 +164,7 @@ pub(in crate::admin) fn build_insights(yesterday: &DailySummaryRow) -> InsightsD
     }
 }
 
-pub(in crate::admin) fn build_history(daily_summaries: &[DailySummaryRow]) -> Vec<HistoryEntry> {
+pub(crate) fn build_history(daily_summaries: &[DailySummaryRow]) -> Vec<HistoryEntry> {
     daily_summaries
         .iter()
         .take(7)

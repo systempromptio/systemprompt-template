@@ -2,9 +2,9 @@ mod apm;
 mod data;
 mod data_analyses;
 mod groups;
-pub(in crate::admin) mod metrics;
-pub(in crate::admin) mod report;
-pub(in crate::admin) mod report_sections;
+pub(crate) mod metrics;
+pub(crate) mod report;
+pub(crate) mod report_sections;
 mod template;
 
 use sqlx::PgPool;

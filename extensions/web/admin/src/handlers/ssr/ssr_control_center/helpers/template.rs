@@ -8,7 +8,7 @@ use crate::handlers::ssr::ssr_control_center::types::{
     SessionGroup, SkillEffectivenessEntry, StarRating,
 };
 
-pub(in crate::admin) struct AssembleInput<'a> {
+pub(crate) struct AssembleInput<'a> {
     pub params: &'a BuildTemplateDataParams<'a>,
     pub counts: data::SessionCounts,
     pub gam: data::GamificationData,
@@ -20,14 +20,14 @@ pub(in crate::admin) struct AssembleInput<'a> {
 }
 
 #[derive(Serialize)]
-pub(in crate::admin) struct SectionFlags {
+pub(crate) struct SectionFlags {
     pub has_skill_adoption: bool,
     pub has_today_summary: bool,
     pub has_report: bool,
 }
 
 #[derive(Serialize)]
-pub(in crate::admin) struct TemplateData<'a> {
+pub(crate) struct TemplateData<'a> {
     pub page: &'static str,
     pub title: &'static str,
     pub cc_initial_json: &'a str,
@@ -75,7 +75,7 @@ pub(in crate::admin) struct TemplateData<'a> {
     pub section_flags: SectionFlags,
 }
 
-pub(in crate::admin) fn assemble_template<'a>(input: &'a AssembleInput<'a>) -> TemplateData<'a> {
+pub(crate) fn assemble_template<'a>(input: &'a AssembleInput<'a>) -> TemplateData<'a> {
     let AssembleInput {
         params,
         counts,

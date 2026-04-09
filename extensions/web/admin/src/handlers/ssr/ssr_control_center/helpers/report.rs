@@ -12,7 +12,7 @@ use super::super::types::{CategoryBreakdownEntry, EntityCounts, ReportData};
 use super::metrics::{avg_field, make_metric_row, MetricRowInput};
 use super::report_sections;
 
-pub(in crate::admin) struct ReportParams<'a> {
+pub(crate) struct ReportParams<'a> {
     pub perf: &'a TodayPerformanceSummary,
     pub today: &'a TodaySummary,
     pub health: &'a HealthMetrics,
@@ -23,7 +23,7 @@ pub(in crate::admin) struct ReportParams<'a> {
     pub recent_analyses: &'a [SessionAnalysisRow],
 }
 
-pub(in crate::admin) fn build_report_data(params: &ReportParams<'_>) -> ReportData {
+pub(crate) fn build_report_data(params: &ReportParams<'_>) -> ReportData {
     if params.daily_summaries.is_empty() {
         return ReportData {
             has_data: false,

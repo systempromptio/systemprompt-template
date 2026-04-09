@@ -3,12 +3,12 @@ use crate::repositories::session_analyses::SessionAnalysisRow;
 use super::super::types::AnalysisEntry;
 use super::metrics::parse_summary_parts;
 
-pub(in crate::admin) struct AnalysesData {
+pub(crate) struct AnalysesData {
     pub recent_analyses_json: Vec<AnalysisEntry>,
     pub recommendations_json: Vec<AnalysisEntry>,
 }
 
-pub(in crate::admin) fn build_analyses_data(
+pub(crate) fn build_analyses_data(
     recent_analyses: &[SessionAnalysisRow],
 ) -> AnalysesData {
     let recent_analyses_json: Vec<AnalysisEntry> = recent_analyses
@@ -66,13 +66,13 @@ pub(in crate::admin) fn build_analyses_data(
     }
 }
 
-pub(in crate::admin) struct SkillAdoption {
+pub(crate) struct SkillAdoption {
     pub adoption_pct: usize,
     pub total_available: usize,
     pub total_used: usize,
 }
 
-pub(in crate::admin) const fn build_skill_adoption(
+pub(crate) const fn build_skill_adoption(
     skills_usage: &[&crate::types::conversation_analytics::EntityUsageSummary],
     unused_skills: &[String],
 ) -> SkillAdoption {

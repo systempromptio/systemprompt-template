@@ -4,13 +4,13 @@ use crate::types::UserGamificationProfile;
 
 use super::super::types::{AchievementProgress, HealthObj, SessionGroup};
 
-pub(in crate::admin) struct SessionCounts {
+pub(crate) struct SessionCounts {
     pub active: usize,
     pub analysed_closed: usize,
     pub has_any_data: bool,
 }
 
-pub(in crate::admin) fn build_session_counts(session_groups: &[SessionGroup]) -> SessionCounts {
+pub(crate) fn build_session_counts(session_groups: &[SessionGroup]) -> SessionCounts {
     let active = session_groups.iter().filter(|g| g.flags.is_active).count();
     let analysed_closed = session_groups
         .iter()
@@ -24,7 +24,7 @@ pub(in crate::admin) fn build_session_counts(session_groups: &[SessionGroup]) ->
     }
 }
 
-pub(in crate::admin) struct GamificationData {
+pub(crate) struct GamificationData {
     pub has_gamification: bool,
     pub rank_level: i32,
     pub rank_name: String,
@@ -39,7 +39,7 @@ pub(in crate::admin) struct GamificationData {
     pub achievement_progress: Vec<AchievementProgress>,
 }
 
-pub(in crate::admin) fn build_gamification_data(
+pub(crate) fn build_gamification_data(
     gamification: Option<&UserGamificationProfile>,
     skills_usage: &[&crate::types::conversation_analytics::EntityUsageSummary],
     mcp_usage: &[&crate::types::conversation_analytics::EntityUsageSummary],
@@ -154,12 +154,12 @@ fn build_achievement_progress(
     achievement_progress
 }
 
-pub(in crate::admin) struct HealthData {
+pub(crate) struct HealthData {
     pub has_health: bool,
     pub health_obj: HealthObj,
 }
 
-pub(in crate::admin) fn build_health_data(health: &HealthMetrics) -> HealthData {
+pub(crate) fn build_health_data(health: &HealthMetrics) -> HealthData {
     let health_label = match health.health_score {
         90..=100 => "Excellent",
         75..=89 => "Good",

@@ -126,7 +126,9 @@ pub async fn resolve_secrets_for_skill(
     skill_id: &SkillId,
     master_key: &[u8; 32],
 ) -> Result<HashMap<String, String>, MarketplaceError> {
-    let dek = super::secret_keys::get_or_create_user_dek(pool, user_id, master_key).await?;
+    let dek = super::secret_keys::get_or_create_user_dek(pool, user_id, master_key)
+        .await
+        .map_err(|e| MarketplaceError::Crypto(e.to_string()))?;
 
     let rows = sqlx::query!(
         "SELECT var_name, encrypted_value, value_nonce, key_version \
@@ -146,7 +148,8 @@ pub async fn resolve_secrets_for_skill(
         let nonce: [u8; 12] = value_nonce.try_into().map_err(|_| {
             MarketplaceError::Internal(format!("Invalid nonce length for var {}", row.var_name))
         })?;
-        let plaintext = super::secret_crypto::decrypt(&dek, &nonce, encrypted_value)?;
+        let plaintext = super::secret_crypto::decrypt(&dek, &nonce, encrypted_value)
+            .map_err(|e| MarketplaceError::Crypto(e.to_string()))?;
         let value = String::from_utf8(plaintext).map_err(|e| {
             MarketplaceError::Internal(format!("Decrypted value is not valid UTF-8: {e}"))
         })?;

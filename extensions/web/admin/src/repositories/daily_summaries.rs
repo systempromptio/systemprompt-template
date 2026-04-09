@@ -1,4 +1,9 @@
+use std::sync::Arc;
+
+use chrono::NaiveDate;
 use sqlx::PgPool;
+use systemprompt::ai::AiService;
+use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Default, sqlx::FromRow)]
 pub struct DailySummaryRow {
@@ -295,13 +300,6 @@ pub async fn fetch_global_averages(pool: &PgPool) -> GlobalAverages {
     .flatten()
     .unwrap_or_else(GlobalAverages::default)
 }
-use std::sync::Arc;
-
-use chrono::NaiveDate;
-use sqlx::PgPool;
-use systemprompt::ai::AiService;
-
-use systemprompt_web_shared::error::MarketplaceError;
 
 pub async fn generate_user_daily_summary(
     pool: &PgPool,
