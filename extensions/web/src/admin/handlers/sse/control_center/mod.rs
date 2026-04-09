@@ -91,7 +91,7 @@ pub(crate) async fn control_center_sse(
             }
 
             let usage_summary = crate::admin::tier_enforcement::get_usage_summary(
-                &tier_cache, pool, &user_id
+                &tier_cache, &pool, &user_id
             ).await;
             if let Ok(data) = serde_json::to_string(&usage_summary) {
                 yield Ok(Event::default().event("usage-limits").data(data));
