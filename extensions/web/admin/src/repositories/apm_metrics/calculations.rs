@@ -72,7 +72,10 @@ pub async fn calculate_daily_concurrency(
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_else(|_| Vec::new());
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch session timing rows for active hours calculation");
+        Vec::new()
+    });
 
     if rows.is_empty() {
         return (0, 0.0);

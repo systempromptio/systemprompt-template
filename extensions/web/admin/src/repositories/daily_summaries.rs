@@ -272,7 +272,10 @@ pub async fn fetch_recent_daily_summaries(
     .bind(limit)
     .fetch_all(pool)
     .await
-    .unwrap_or_else(|_| Vec::new())
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch daily summaries for user");
+        Vec::new()
+    })
 }
 
 pub async fn fetch_global_averages(pool: &PgPool) -> GlobalAverages {

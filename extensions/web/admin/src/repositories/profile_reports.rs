@@ -263,7 +263,10 @@ async fn fetch_category_distribution(
     .bind(days)
     .fetch_all(pool)
     .await
-    .unwrap_or_else(|_| Vec::new());
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch category distribution for profile report");
+        Vec::new()
+    });
 
     rows.into_iter()
         .filter_map(|r| Some((r.category?, r.total.unwrap_or(0))))

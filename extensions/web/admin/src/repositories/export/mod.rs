@@ -101,10 +101,16 @@ async fn resolve_org_plugin_ids(
 ) -> std::collections::HashSet<String> {
     let mut ids = super::org_marketplaces::resolve_authorized_org_plugin_ids(pool)
         .await
-        .unwrap_or_else(|_| std::collections::HashSet::new());
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to resolve authorized org plugin IDs");
+            std::collections::HashSet::new()
+        });
     let selected = super::user_plugin_selections::list_selected_org_plugins(pool, user_id)
         .await
-        .unwrap_or_else(|_| Vec::new());
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list selected org plugins for user");
+            Vec::new()
+        });
     if !selected.is_empty() {
         let selected_set: std::collections::HashSet<String> = selected.into_iter().collect();
         ids.retain(|id| selected_set.contains(id));
