@@ -66,7 +66,10 @@ impl CompileAdminTemplatesJob {
         tracing::info!("Compile admin templates job started");
 
         let admin_dir = std::env::current_dir()
-            .unwrap_or_else(|_| PathBuf::from("."))
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to get current directory, using fallback");
+                PathBuf::from(".")
+            })
             .join("storage")
             .join("files")
             .join("admin");
@@ -148,7 +151,10 @@ fn resolve_site_url() -> String {
 
 fn resolve_branding_value() -> serde_json::Value {
     let config_dir = systemprompt::models::AppPaths::get().map_or_else(
-        |_| PathBuf::from("./services/config"),
+        |e| {
+            tracing::warn!(error = %e, "Failed to get app paths, using fallback config dir");
+            PathBuf::from("./services/config")
+        },
         |p| p.system().services().join("config"),
     );
     let theme_path = config_dir.join("theme.yaml");
@@ -166,7 +172,10 @@ fn resolve_branding_value() -> serde_json::Value {
     else {
         return serde_json::Value::Null;
     };
-    serde_json::to_value(&config).unwrap_or_default()
+    serde_json::to_value(&config).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize branding config to JSON");
+        serde_json::Value::Null
+    })
 }
 
 async fn compile_all_pages(

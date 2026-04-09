@@ -124,7 +124,10 @@ impl BlogConfigValidated {
                 PathBuf::from(&src.path)
             } else if src.path.starts_with("./") {
                 let services_dir = AppPaths::get().map_or_else(
-                    |_| PathBuf::from("./services"),
+                    |e| {
+                        tracing::warn!(error = %e, "Failed to get app paths, using fallback services dir");
+                        PathBuf::from("./services")
+                    },
                     |p| p.system().services().to_path_buf(),
                 );
                 let clean_path = src.path.strip_prefix("./services/").unwrap_or(&src.path);

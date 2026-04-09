@@ -14,7 +14,10 @@ impl BundleAdminJsJob {
         tracing::info!("Bundle admin JS job started");
 
         let js_dir = std::env::current_dir()
-            .unwrap_or_else(|_| PathBuf::from("."))
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to get current directory, using fallback");
+                PathBuf::from(".")
+            })
             .join("storage")
             .join("files")
             .join("js")
