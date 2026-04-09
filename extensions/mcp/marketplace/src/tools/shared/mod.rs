@@ -55,20 +55,12 @@ pub async fn resolve_association_slugs(
     else {
         return Ok((vec![], vec![], vec![]));
     };
-    let skill_strs: Vec<String> = assoc
-        .skill_ids
-        .iter()
-        .map(std::string::ToString::to_string)
-        .collect();
-    let agent_strs: Vec<String> = assoc
-        .agent_ids
-        .iter()
-        .map(std::string::ToString::to_string)
-        .collect();
+    let skill_strs: Vec<String> = assoc.skill_ids.iter().map(ToString::to_string).collect();
+    let agent_strs: Vec<String> = assoc.agent_ids.iter().map(ToString::to_string).collect();
     let mcp_strs: Vec<String> = assoc
         .mcp_server_ids
         .iter()
-        .map(std::string::ToString::to_string)
+        .map(ToString::to_string)
         .collect();
     let (skills, agents, mcps) = tokio::try_join!(
         resolve_skill_uuids_to_slugs(pool, &skill_strs),
@@ -199,11 +191,7 @@ pub async fn invalidate_marketplace_cache(pool: &Arc<PgPool>, user_id: &UserId) 
     if let Err(e) = repositories::mark_user_dirty(pool, user_id).await {
         tracing::warn!(error = %e, "Failed to mark user dirty after MCP mutation");
     }
-    if let Err(e) =
-        systemprompt_web_extension::admin::repositories::marketplace_sync::invalidate_git_cache(
-            user_id,
-        )
-    {
+    if let Err(e) = repositories::marketplace_sync::invalidate_git_cache(user_id) {
         tracing::warn!(error = %e, "Failed to invalidate git cache after MCP mutation");
     }
 }

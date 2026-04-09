@@ -10,7 +10,7 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct UpdatePluginInput {
     pub plugin_id: String,
     pub name: Option<String>,
@@ -25,6 +25,7 @@ pub struct UpdatePluginInput {
     pub mcp_server_ids: Option<Vec<String>>,
 }
 
+#[derive(Debug)]
 pub struct UpdatePluginHandler {
     pub db_pool: DbPool,
 }

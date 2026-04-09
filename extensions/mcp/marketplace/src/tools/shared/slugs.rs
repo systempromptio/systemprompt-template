@@ -155,10 +155,7 @@ pub async fn resolve_mcp_server_uuids_to_slugs(
             .fetch_all(pool)
             .await
             .map_err(|e| {
-                McpError::internal_error(
-                    format!("Failed to resolve MCP server UUIDs: {e}"),
-                    None,
-                )
+                McpError::internal_error(format!("Failed to resolve MCP server UUIDs: {e}"), None)
             })?;
 
     let map: HashMap<String, String> = rows.into_iter().collect();

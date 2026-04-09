@@ -23,7 +23,7 @@ use systemprompt_mcp_shared::{record_mcp_access, record_mcp_access_rejected};
 
 const ARTIFACT_VIEWER_TEMPLATE: &str = include_str!("../templates/artifact-viewer.html");
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SystempromptServer {
     service_id: McpServerId,
     db_pool: DbPool,
