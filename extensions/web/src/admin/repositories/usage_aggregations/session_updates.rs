@@ -64,11 +64,7 @@ pub async fn update_session_title_if_empty(pool: &PgPool, session_id: &SessionId
     }
 }
 
-pub async fn update_unique_files_touched(
-    pool: &PgPool,
-    session_id: &SessionId,
-    _file_path: &str,
-) {
+pub async fn update_unique_files_touched(pool: &PgPool, session_id: &SessionId, _file_path: &str) {
     let result = sqlx::query!(
         r"UPDATE plugin_session_summaries SET unique_files_touched = sub.cnt
           FROM (

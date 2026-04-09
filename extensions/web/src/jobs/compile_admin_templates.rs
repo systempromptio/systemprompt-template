@@ -120,20 +120,16 @@ async fn prepare_compiled_dir(compiled_dir: &Path) -> Result<(), MarketplaceErro
                 ))
             })?;
     }
-    tokio::fs::create_dir_all(compiled_dir)
-        .await
-        .map_err(|e| {
-            MarketplaceError::Internal(format!(
-                "Failed to create compiled dir: {}: {e}",
-                compiled_dir.display()
-            ))
-        })?;
+    tokio::fs::create_dir_all(compiled_dir).await.map_err(|e| {
+        MarketplaceError::Internal(format!(
+            "Failed to create compiled dir: {}: {e}",
+            compiled_dir.display()
+        ))
+    })?;
     Ok(())
 }
 
-fn build_handlebars_registry(
-    partials_dir: &Path,
-) -> Result<Handlebars<'static>, MarketplaceError> {
+fn build_handlebars_registry(partials_dir: &Path) -> Result<Handlebars<'static>, MarketplaceError> {
     let mut hbs = Handlebars::new();
     hbs.set_strict_mode(false);
     register_partials_recursive(&mut hbs, partials_dir, partials_dir)?;

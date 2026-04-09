@@ -113,9 +113,7 @@ pub async fn login_page(Extension(engine): Extension<AdminTemplateEngine>) -> Re
     }
 }
 
-pub async fn verify_pending_page(
-    Extension(engine): Extension<AdminTemplateEngine>,
-) -> Response {
+pub async fn verify_pending_page(Extension(engine): Extension<AdminTemplateEngine>) -> Response {
     match engine.render("verify-pending", &branding_context(&engine)) {
         Ok(html) => Html(html).into_response(),
         Err(e) => {

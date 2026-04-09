@@ -280,12 +280,11 @@ fn find_forkable_plugin(
             "Platform plugin cannot be forked",
         ));
     }
-    let org_plugins = repositories::list_plugins_for_roles(services_path, roles).unwrap_or_else(
-        |e| {
+    let org_plugins =
+        repositories::list_plugins_for_roles(services_path, roles).unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to list plugins for fork");
             Vec::new()
-        },
-    );
+        });
     org_plugins
         .into_iter()
         .find(|p| p.id == org_plugin_id)

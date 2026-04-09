@@ -15,9 +15,7 @@ use sqlx::PgPool;
 use crate::admin::repositories::github_sync;
 use crate::admin::types::UserContext;
 
-pub async fn list_org_marketplaces_handler(
-    State(pool): State<Arc<PgPool>>,
-) -> impl IntoResponse {
+pub async fn list_org_marketplaces_handler(State(pool): State<Arc<PgPool>>) -> impl IntoResponse {
     match repositories::org_marketplaces::list_org_marketplaces(&pool).await {
         Ok(marketplaces) => (StatusCode::OK, Json(json!(marketplaces))).into_response(),
         Err(e) => {

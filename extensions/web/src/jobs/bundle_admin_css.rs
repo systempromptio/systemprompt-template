@@ -66,9 +66,11 @@ async fn collect_css_files(css_dir: &std::path::Path) -> Result<Vec<PathBuf>, Ma
         ))
     })?;
 
-    while let Some(entry) = read_dir.next_entry().await.map_err(|e| {
-        MarketplaceError::Internal(format!("Failed to read directory entry: {e}"))
-    })? {
+    while let Some(entry) = read_dir
+        .next_entry()
+        .await
+        .map_err(|e| MarketplaceError::Internal(format!("Failed to read directory entry: {e}")))?
+    {
         let path = entry.path();
         if path.extension().and_then(|e| e.to_str()) == Some("css") {
             css_files.push(path);

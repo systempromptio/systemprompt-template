@@ -61,16 +61,8 @@ impl McpToolHandler for GetPluginHandler {
 
         let plugin = &assoc.plugin;
 
-        let skill_strs: Vec<String> = assoc
-            .skill_ids
-            .iter()
-            .map(ToString::to_string)
-            .collect();
-        let agent_strs: Vec<String> = assoc
-            .agent_ids
-            .iter()
-            .map(ToString::to_string)
-            .collect();
+        let skill_strs: Vec<String> = assoc.skill_ids.iter().map(ToString::to_string).collect();
+        let agent_strs: Vec<String> = assoc.agent_ids.iter().map(ToString::to_string).collect();
         let mcp_strs: Vec<String> = assoc
             .mcp_server_ids
             .iter()

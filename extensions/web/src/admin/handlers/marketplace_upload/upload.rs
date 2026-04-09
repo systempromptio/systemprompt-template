@@ -13,7 +13,9 @@ use systemprompt::identifiers::UserId;
 
 use crate::admin::activity::{self, NewActivity};
 use crate::admin::repositories;
-use crate::admin::types::{MarketplaceChangelogEntry, MarketplaceUploadResponse, NewChangelogEntry};
+use crate::admin::types::{
+    MarketplaceChangelogEntry, MarketplaceUploadResponse, NewChangelogEntry,
+};
 
 fn extract_and_parse_archive(
     body: &Bytes,

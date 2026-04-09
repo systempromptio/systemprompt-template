@@ -113,9 +113,7 @@ pub async fn bulk_assign_handler(
     }
 }
 
-pub async fn access_control_departments_handler(
-    State(pool): State<Arc<PgPool>>,
-) -> Response {
+pub async fn access_control_departments_handler(State(pool): State<Arc<PgPool>>) -> Response {
     match repositories::fetch_department_stats(&pool).await {
         Ok(stats) => Json(stats).into_response(),
         Err(e) => {

@@ -265,8 +265,7 @@ async fn build_required_secrets(
     let stored = repositories::list_skill_secrets(pool, &user_ctx.user_id, &SkillId::new(sid))
         .await
         .unwrap_or_else(|_| vec![]);
-    let stored_names: HashSet<String> =
-        stored.iter().map(|s| s.var_name.clone()).collect();
+    let stored_names: HashSet<String> = stored.iter().map(|s| s.var_name.clone()).collect();
 
     req_secrets
         .iter()

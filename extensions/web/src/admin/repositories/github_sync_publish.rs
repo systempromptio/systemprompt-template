@@ -101,7 +101,15 @@ pub async fn publish_marketplace_to_github(
 
     let _ = std::fs::write(local_path.join(".last-commit"), &current_hash);
 
-    log_publish_result(pool, marketplace_id, &current_hash, plugin_count, triggered_by, duration_ms).await;
+    log_publish_result(
+        pool,
+        marketplace_id,
+        &current_hash,
+        plugin_count,
+        triggered_by,
+        duration_ms,
+    )
+    .await;
 
     Ok(SyncResult {
         commit_hash: current_hash,

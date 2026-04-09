@@ -39,8 +39,14 @@ pub async fn fork_single_plugin(
     let forked_agent_ids = fork_plugin_agents(pool, user_id, org_plugin, services_path).await;
     let forked_mcp_ids = fork_plugin_mcp_servers(pool, user_id, org_plugin, services_path).await;
 
-    link_forked_entities(pool, &plugin.id, &forked_skill_ids, &forked_agent_ids, &forked_mcp_ids)
-        .await;
+    link_forked_entities(
+        pool,
+        &plugin.id,
+        &forked_skill_ids,
+        &forked_agent_ids,
+        &forked_mcp_ids,
+    )
+    .await;
 
     Ok(ForkSinglePluginResult {
         forked_skills: forked_skill_ids.len(),
@@ -198,7 +204,10 @@ async fn fork_single_mcp_server(
     services_path: &std::path::Path,
     mcp_server_id: &str,
 ) -> Option<String> {
-    let server_detail = match repositories::mcp_servers::find_mcp_server(services_path, mcp_server_id) {
+    let server_detail = match repositories::mcp_servers::find_mcp_server(
+        services_path,
+        mcp_server_id,
+    ) {
         Ok(Some(s)) => s,
         Ok(None) => {
             tracing::warn!(mcp_server = %mcp_server_id, "MCP server not found during plugin fork, skipping");

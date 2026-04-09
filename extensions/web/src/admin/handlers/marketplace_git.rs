@@ -220,10 +220,7 @@ async fn run_upload_pack(repo_path: &PathBuf, body: &Bytes) -> Response {
     }
 }
 
-async fn run_upload_pack_inner(
-    repo_path: &PathBuf,
-    body: &Bytes,
-) -> Result<Vec<u8>, Response> {
+async fn run_upload_pack_inner(repo_path: &PathBuf, body: &Bytes) -> Result<Vec<u8>, Response> {
     let mut child = tokio::process::Command::new("git")
         .args(["upload-pack", "--stateless-rpc"])
         .arg(repo_path)

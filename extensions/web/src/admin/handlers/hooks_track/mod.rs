@@ -56,7 +56,16 @@ pub async fn handle_hook_track(
         return StatusCode::OK.into_response();
     }
 
-    dispatch_inserted_event(&pool, &user_id, &payload, &event_hub, &ai_service, &jwt_token, &tier_cache).await;
+    dispatch_inserted_event(
+        &pool,
+        &user_id,
+        &payload,
+        &event_hub,
+        &ai_service,
+        &jwt_token,
+        &tier_cache,
+    )
+    .await;
     StatusCode::OK.into_response()
 }
 

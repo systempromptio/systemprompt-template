@@ -71,13 +71,12 @@ async fn resolve_secrets_inner(
     plugin_id: &str,
     token: &str,
 ) -> Result<Response, Response> {
-    let (user_id, token_plugin_id) =
-        secret_resolve::validate_and_consume_token(pool, token)
-            .await
-            .map_err(|e| {
-                tracing::warn!(error = %e, "Token validation failed");
-                shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or expired token")
-            })?;
+    let (user_id, token_plugin_id) = secret_resolve::validate_and_consume_token(pool, token)
+        .await
+        .map_err(|e| {
+            tracing::warn!(error = %e, "Token validation failed");
+            shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or expired token")
+        })?;
 
     if token_plugin_id != plugin_id {
         return Err(shared::error_response(

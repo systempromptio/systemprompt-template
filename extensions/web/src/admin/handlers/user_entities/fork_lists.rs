@@ -88,11 +88,7 @@ pub async fn list_forkable_skills_handler(
 
     let forked_base_ids: HashSet<String> = user_skills
         .iter()
-        .filter_map(|s| {
-            s.base_skill_id
-                .as_ref()
-                .map(ToString::to_string)
-        })
+        .filter_map(|s| s.base_skill_id.as_ref().map(ToString::to_string))
         .collect();
 
     let mut seen = HashSet::new();
@@ -139,11 +135,7 @@ pub async fn list_forkable_agents_handler(
 
     let forked_base_ids: HashSet<String> = user_agents
         .iter()
-        .filter_map(|a| {
-            a.base_agent_id
-                .as_ref()
-                .map(ToString::to_string)
-        })
+        .filter_map(|a| a.base_agent_id.as_ref().map(ToString::to_string))
         .collect();
 
     let mut seen = HashSet::new();

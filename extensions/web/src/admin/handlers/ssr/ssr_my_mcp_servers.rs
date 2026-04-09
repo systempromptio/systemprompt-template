@@ -81,10 +81,7 @@ pub async fn my_mcp_servers_page(
                 endpoint: s.endpoint.clone(),
                 enabled: s.enabled,
                 plugin_names: mcp_plugin_map.get(&s.id).cloned().unwrap_or_else(Vec::new),
-                base_mcp_server_id: s
-                    .base_mcp_server_id
-                    .as_ref()
-                    .map(ToString::to_string),
+                base_mcp_server_id: s.base_mcp_server_id.as_ref().map(ToString::to_string),
                 is_system,
                 total_uses: usage.map_or(0, |u| u.total_uses),
                 session_count: usage.map_or(0, |u| u.session_count),

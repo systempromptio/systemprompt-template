@@ -108,10 +108,7 @@ fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String, Vec<R
     (name, desc, required_secrets)
 }
 
-pub fn read_skill_required_secrets(
-    skills_path: &Path,
-    skill_id: &str,
-) -> Vec<RequiredSecret> {
+pub fn read_skill_required_secrets(skills_path: &Path, skill_id: &str) -> Vec<RequiredSecret> {
     let skill_dir = skills_path.join(skill_id);
     let (_, _, required_secrets) = read_skill_config(&skill_dir, skill_id);
     required_secrets

@@ -126,7 +126,11 @@ impl Extension for WebExtension {
         let tier_cache = admin::tier_enforcement::TierEnforcementCache::new();
         let ai_service: Option<Arc<systemprompt::ai::AiService>> = init_ai_service();
 
-        let admin_api = admin::admin_router(Arc::clone(&pool), Arc::clone(&write_pool), tier_cache.clone());
+        let admin_api = admin::admin_router(
+            Arc::clone(&pool),
+            Arc::clone(&write_pool),
+            tier_cache.clone(),
+        );
         let webhook_api = admin::hooks_webhook_router(Arc::clone(&write_pool));
         let secrets_api = admin::secrets_router(write_pool);
         let marketplace_git = admin::marketplace_git_router(Arc::clone(&pool));
@@ -223,10 +227,7 @@ impl Extension for WebExtension {
         true
     }
 
-    fn required_assets(
-        &self,
-        paths: &dyn AssetPaths,
-    ) -> Vec<AssetDefinition> {
+    fn required_assets(&self, paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
         web_assets(paths)
     }
 }

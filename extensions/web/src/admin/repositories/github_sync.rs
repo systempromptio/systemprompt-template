@@ -35,7 +35,13 @@ fn import_plugins_from_entries(
     };
 
     for plugin_entry in plugins {
-        import_single_plugin(plugin_entry, base_path, services_path, log_context, &mut tally);
+        import_single_plugin(
+            plugin_entry,
+            base_path,
+            services_path,
+            log_context,
+            &mut tally,
+        );
     }
 
     tally
@@ -87,11 +93,7 @@ fn import_single_plugin(
     }
 }
 
-fn log_missing_plugin_dir(
-    plugin_dir: &Path,
-    log_context: &str,
-    tally: &mut PluginImportTally,
-) {
+fn log_missing_plugin_dir(plugin_dir: &Path, log_context: &str, tally: &mut PluginImportTally) {
     if log_context == "github" {
         tracing::warn!(path = %plugin_dir.display(), "Plugin source directory not found");
         tally.error_count += 1;

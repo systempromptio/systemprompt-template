@@ -153,22 +153,13 @@ pub(super) async fn build_association_lists(
             .unwrap_or_else(|_| vec![]);
 
     let selected_skills: Vec<String> = plugin_with_assoc.map_or(vec![], |p| {
-        p.skill_ids
-            .iter()
-            .map(ToString::to_string)
-            .collect()
+        p.skill_ids.iter().map(ToString::to_string).collect()
     });
     let selected_agents: Vec<String> = plugin_with_assoc.map_or(vec![], |p| {
-        p.agent_ids
-            .iter()
-            .map(ToString::to_string)
-            .collect()
+        p.agent_ids.iter().map(ToString::to_string).collect()
     });
     let selected_mcp: Vec<String> = plugin_with_assoc.map_or(vec![], |p| {
-        p.mcp_server_ids
-            .iter()
-            .map(ToString::to_string)
-            .collect()
+        p.mcp_server_ids.iter().map(ToString::to_string).collect()
     });
 
     let skills_list: Vec<CheckableEntity> = user_skills
