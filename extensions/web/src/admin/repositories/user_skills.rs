@@ -151,7 +151,7 @@ pub async fn update_user_skill(
         req.name.as_deref(),
         req.description.as_deref(),
         req.content.as_deref(),
-        &req.tags,
+        &req.tags as &Option<Vec<String>>,
     )
     .fetch_optional(pool)
     .await

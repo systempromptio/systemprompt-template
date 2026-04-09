@@ -9,7 +9,7 @@ pub struct HooksFile {
     pub hooks: HashMap<HookEventType, Vec<MatcherGroup>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 pub enum HookEventType {
     PreToolUse,
     PostToolUse,

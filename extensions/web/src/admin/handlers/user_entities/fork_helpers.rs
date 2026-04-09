@@ -62,6 +62,16 @@ async fn link_forked_entities(
     forked_agent_ids: &[String],
     forked_mcp_ids: &[String],
 ) {
+    link_skills_and_agents(pool, plugin_id, forked_skill_ids, forked_agent_ids).await;
+    link_mcp_servers(pool, plugin_id, forked_mcp_ids).await;
+}
+
+async fn link_skills_and_agents(
+    pool: &PgPool,
+    plugin_id: &str,
+    forked_skill_ids: &[String],
+    forked_agent_ids: &[String],
+) {
     let skill_ids: Vec<SkillId> = forked_skill_ids
         .iter()
         .map(|s| SkillId::from(s.clone()))
@@ -76,6 +86,9 @@ async fn link_forked_entities(
     if let Err(e) = repositories::set_plugin_agents(pool, plugin_id, &agent_ids).await {
         tracing::warn!(error = %e, "Failed to set plugin agents");
     }
+}
+
+async fn link_mcp_servers(pool: &PgPool, plugin_id: &str, forked_mcp_ids: &[String]) {
     if forked_mcp_ids.is_empty() {
         return;
     }

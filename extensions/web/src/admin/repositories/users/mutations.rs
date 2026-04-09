@@ -91,7 +91,7 @@ pub async fn update_user(
         user_id.as_str(),
         req.display_name.as_deref(),
         req.email.as_deref(),
-        &req.roles,
+        &req.roles as &Option<Vec<String>>,
         status.as_deref(),
         set_email_verified,
     )

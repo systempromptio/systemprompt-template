@@ -22,7 +22,7 @@ pub struct ProcessInsertedEventParams<'a> {
     pub content_output_bytes: i64,
     pub payload: &'a HookEventPayload,
     pub event_hub: &'a EventHub,
-    pub ai_service: &'a Option<Arc<AiService>>,
+    pub ai_service: Option<&'a Arc<AiService>>,
     pub jwt_token: &'a str,
     pub tier_cache: &'a crate::admin::tier_enforcement::TierEnforcementCache,
 }
@@ -206,7 +206,7 @@ async fn handle_session_end(params: &ProcessInsertedEventParams<'_>) {
 }
 
 async fn run_ai_analysis(params: &ProcessInsertedEventParams<'_>) {
-    if let Some(ref ai) = params.ai_service {
+    if let Some(ai) = params.ai_service {
         let direct_msg = if let HookEvent::Stop(ref d) = params.payload.event {
             d.last_assistant_message
                 .as_deref()

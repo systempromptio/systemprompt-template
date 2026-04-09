@@ -54,10 +54,7 @@ fn import_single_plugin(
     log_context: &str,
     tally: &mut PluginImportTally,
 ) {
-    let Some(source) = plugin_entry.get("source").and_then(|v| v.as_str()) else {
-        if log_context == "github" {
-            tracing::warn!("Plugin entry missing 'source' field, skipping");
-        }
+    let Some(source) = extract_plugin_source(plugin_entry, log_context) else {
         tally.error_count += 1;
         return;
     };
@@ -70,27 +67,45 @@ fn import_single_plugin(
         return;
     }
 
-    let bundle = match build_bundle_from_directory(&plugin_dir) {
-        Ok(b) => b,
-        Err(e) => {
-            tracing::warn!(source = %source, error = %e, "Failed to build bundle from directory");
-            tally.error_count += 1;
-            return;
-        }
-    };
-
-    let plugin_id = bundle.id.clone();
-    match import_or_update_plugin(services_path, &bundle) {
-        Ok(()) => {
-            tally.plugin_ids.push(plugin_id.clone());
+    match build_and_import_plugin(&plugin_dir, services_path, source, log_context) {
+        Ok(plugin_id) => {
+            tally.plugin_ids.push(plugin_id);
             tally.success_count += 1;
-            tracing::info!(plugin_id = %plugin_id, "Plugin synced from {log_context}");
         }
-        Err(e) => {
-            tracing::warn!(plugin_id = %plugin_id, error = %e, "Failed to import plugin");
+        Err(()) => {
             tally.error_count += 1;
         }
     }
+}
+
+fn extract_plugin_source<'a>(
+    plugin_entry: &'a serde_json::Value,
+    log_context: &str,
+) -> Option<&'a str> {
+    let source = plugin_entry.get("source").and_then(|v| v.as_str());
+    if source.is_none() && log_context == "github" {
+        tracing::warn!("Plugin entry missing 'source' field, skipping");
+    }
+    source
+}
+
+fn build_and_import_plugin(
+    plugin_dir: &Path,
+    services_path: &Path,
+    source: &str,
+    log_context: &str,
+) -> Result<String, ()> {
+    let bundle = build_bundle_from_directory(plugin_dir).map_err(|e| {
+        tracing::warn!(source = %source, error = %e, "Failed to build bundle from directory");
+    })?;
+
+    let plugin_id = bundle.id.clone();
+    import_or_update_plugin(services_path, &bundle).map_err(|e| {
+        tracing::warn!(plugin_id = %plugin_id, error = %e, "Failed to import plugin");
+    })?;
+
+    tracing::info!(plugin_id = %plugin_id, "Plugin synced from {log_context}");
+    Ok(plugin_id)
 }
 
 fn log_missing_plugin_dir(plugin_dir: &Path, log_context: &str, tally: &mut PluginImportTally) {

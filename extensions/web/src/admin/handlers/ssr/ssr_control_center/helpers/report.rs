@@ -80,7 +80,7 @@ pub(in crate::admin) fn build_report_data(params: &ReportParams<'_>) -> ReportDa
         productivity: Some(productivity),
         insights: Some(insights),
         history: Some(history),
-        entity_counts: Some(params.entity_counts.clone()),
+        entity_counts: Some(*params.entity_counts),
         category_breakdown: Some(category_breakdown),
         has_category_breakdown: Some(has_category_breakdown),
     }

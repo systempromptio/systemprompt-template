@@ -223,7 +223,7 @@ async fn mark_dirty_and_record_activity(pool: &Arc<PgPool>, user_id: &UserId, pl
     if let Err(e) = repositories::mark_user_dirty(pool, user_id).await {
         tracing::warn!(error = %e, "Failed to mark user dirty");
     }
-    let activity_pool = Arc::clone(&pool);
+    let activity_pool = Arc::clone(pool);
     let uid = user_id.clone();
     let pid = plugin_id.to_string();
     tokio::spawn(async move {

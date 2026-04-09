@@ -61,8 +61,7 @@ pub async fn resolve_secrets_handler(
     Query(params): Query<ResolveQuery>,
 ) -> Response {
     match resolve_secrets_inner(&pool, &plugin_id, &params.token).await {
-        Ok(resp) => resp,
-        Err(resp) => resp,
+        Ok(resp) | Err(resp) => resp,
     }
 }
 
@@ -153,8 +152,7 @@ pub async fn rotate_handler(
     headers: HeaderMap,
 ) -> Response {
     match rotate_inner(&pool, &plugin_id, &headers).await {
-        Ok(resp) => resp,
-        Err(resp) => resp,
+        Ok(resp) | Err(resp) => resp,
     }
 }
 

@@ -61,7 +61,7 @@ pub async fn handle_hook_track(
         &user_id,
         &payload,
         &event_hub,
-        &ai_service,
+        ai_service.as_ref(),
         &jwt_token,
         &tier_cache,
     )
@@ -99,7 +99,7 @@ async fn dispatch_inserted_event(
     user_id: &UserId,
     payload: &HookEventPayload,
     event_hub: &EventHub,
-    ai_service: &Option<Arc<AiService>>,
+    ai_service: Option<&Arc<AiService>>,
     jwt_token: &str,
     tier_cache: &crate::admin::tier_enforcement::TierEnforcementCache,
 ) {

@@ -233,7 +233,7 @@ pub async fn fork_org_plugin_handler(
     let org_plugin = match find_forkable_plugin(&services_path, &user_ctx.roles, &req.org_plugin_id)
     {
         Ok(p) => p,
-        Err(r) => return r,
+        Err(r) => return *r,
     };
 
     let result = match fork_single_plugin(
@@ -273,12 +273,12 @@ fn find_forkable_plugin(
     services_path: &std::path::Path,
     roles: &[String],
     org_plugin_id: &str,
-) -> Result<crate::admin::types::PluginOverview, Response> {
+) -> Result<crate::admin::types::PluginOverview, Box<Response>> {
     if org_plugin_id == "systemprompt" {
-        return Err(shared::error_response(
+        return Err(Box::new(shared::error_response(
             StatusCode::FORBIDDEN,
             "Platform plugin cannot be forked",
-        ));
+        )));
     }
     let org_plugins =
         repositories::list_plugins_for_roles(services_path, roles).unwrap_or_else(|e| {
@@ -289,10 +289,10 @@ fn find_forkable_plugin(
         .into_iter()
         .find(|p| p.id == org_plugin_id)
         .ok_or_else(|| {
-            shared::error_response(
+            Box::new(shared::error_response(
                 StatusCode::NOT_FOUND,
                 "Org plugin not found or not accessible",
-            )
+            ))
         })
 }
 

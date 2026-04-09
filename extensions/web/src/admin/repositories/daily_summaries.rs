@@ -120,6 +120,43 @@ async fn execute_upsert(
     date: chrono::NaiveDate,
     input: &DailySummaryInput,
 ) -> Result<(), sqlx::Error> {
+    let patterns = input.patterns.clone();
+    let skill_gaps = input.skill_gaps.clone();
+    let top_recommendation = input.top_recommendation.clone();
+    let highlights = input.highlights.clone();
+    let trends = input.trends.clone();
+    let category_distribution = input.category_distribution.clone();
+    let skill_effectiveness = input.skill_effectiveness.clone();
+
+    execute_upsert_query(pool, user_id, date, input, &UpsertCloned {
+        patterns,
+        skill_gaps,
+        top_recommendation,
+        highlights,
+        trends,
+        category_distribution,
+        skill_effectiveness,
+    })
+    .await
+}
+
+struct UpsertCloned {
+    patterns: Option<String>,
+    skill_gaps: Option<String>,
+    top_recommendation: Option<String>,
+    highlights: Option<String>,
+    trends: Option<String>,
+    category_distribution: Option<serde_json::Value>,
+    skill_effectiveness: Option<serde_json::Value>,
+}
+
+async fn execute_upsert_query(
+    pool: &PgPool,
+    user_id: &str,
+    date: chrono::NaiveDate,
+    input: &DailySummaryInput,
+    cloned: &UpsertCloned,
+) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r"INSERT INTO daily_summaries
             (user_id, summary_date, session_count, avg_quality_score,
@@ -165,19 +202,19 @@ async fn execute_upsert(
         user_id, date, input.session_count, input.avg_quality_score,
         input.goals_achieved, input.goals_partial, input.goals_failed,
         input.total_prompts, input.total_tool_uses, input.total_errors,
-        input.summary, input.patterns.clone(),
-        input.skill_gaps.clone(),
-        input.top_recommendation.clone(),
+        input.summary, cloned.patterns,
+        cloned.skill_gaps,
+        cloned.top_recommendation,
         input.daily_xp, input.tags, input.avg_apm, input.peak_apm,
         input.avg_eapm, input.peak_concurrency, input.avg_concurrency,
         input.total_input_bytes, input.total_output_bytes, input.peak_throughput_bps,
         input.tool_diversity, input.multitasking_score, input.session_velocity,
-        input.achievements_unlocked, input.highlights.clone(),
-        input.trends.clone(),
-        input.category_distribution.clone(),
+        input.achievements_unlocked, cloned.highlights,
+        cloned.trends,
+        cloned.category_distribution,
         input.plugins_count, input.skills_count,
         input.agents_count, input.mcp_servers_count, input.hooks_count,
-        input.health_score, input.skill_effectiveness.clone(),
+        input.health_score, cloned.skill_effectiveness,
         input.avg_session_duration_minutes, input.avg_turns_per_session,
         input.total_corrections, input.avg_automation_ratio, input.plan_mode_sessions,
     )

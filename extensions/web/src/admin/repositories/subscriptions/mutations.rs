@@ -4,6 +4,7 @@ use systemprompt::identifiers::UserId;
 
 use super::types::{PaddleCustomerRow, SubscriptionRow};
 
+#[derive(Debug)]
 pub struct UpsertSubscriptionParams<'a> {
     pub user_id: &'a UserId,
     pub paddle_subscription_id: &'a str,

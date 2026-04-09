@@ -111,10 +111,25 @@ pub async fn insert_session_analysis(
     }
 }
 
+struct UpsertAnalysisIds<'a> {
+    session_id: &'a str,
+    user_id: &'a str,
+}
+
 async fn execute_upsert_analysis(
     pool: &PgPool,
     session_id: &str,
     user_id: &str,
+    analysis: &SessionAnalysis,
+    p: &InsertParams,
+) -> Result<(), sqlx::Error> {
+    let ids = UpsertAnalysisIds { session_id, user_id };
+    run_upsert_query(pool, &ids, analysis, p).await
+}
+
+async fn run_upsert_query(
+    pool: &PgPool,
+    ids: &UpsertAnalysisIds<'_>,
     analysis: &SessionAnalysis,
     p: &InsertParams,
 ) -> Result<(), sqlx::Error> {
@@ -153,8 +168,8 @@ async fn execute_upsert_analysis(
             plan_mode_used = EXCLUDED.plan_mode_used,
             client_surface = EXCLUDED.client_surface,
             updated_at = NOW()",
-        session_id,
-        user_id,
+        ids.session_id,
+        ids.user_id,
         analysis.title,
         analysis.description,
         p.composed_summary,

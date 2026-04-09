@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-use crate::html_escape;
+use crate::utils::html_escape;
 
 use super::types::{BlogPost, RelatedPost};
 

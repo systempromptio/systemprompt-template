@@ -1,6 +1,7 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
+#[derive(Debug)]
 pub struct AuditLogRow {
     pub id: String,
     pub var_name: String,

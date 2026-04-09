@@ -117,7 +117,7 @@ impl ApiLimits {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum LimitCheck {
     IngestEvent,
     IngestContentBytes(i64),
@@ -130,7 +130,7 @@ pub enum LimitCheck {
     FeatureAccess(Feature),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum Feature {
     AiSessionAnalysis,
     AiDailySummaries,

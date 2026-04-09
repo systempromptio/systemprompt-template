@@ -55,18 +55,24 @@ fn try_serve_persistent_json(user_id: &UserId) -> Option<Response> {
 }
 
 async fn generate_marketplace_json(pool: &PgPool, user_id: &UserId) -> Response {
-    let services_path = match shared::get_services_path() {
-        Ok(p) => p,
-        Err(r) => return *r,
-    };
+    match generate_marketplace_json_inner(pool, user_id).await {
+        Ok(json) => Json(json).into_response(),
+        Err(r) => *r,
+    }
+}
 
-    let user_info = match repositories::marketplace_git::lookup_user_basic(pool, user_id).await {
-        Ok(info) => info,
-        Err(e) => {
+async fn generate_marketplace_json_inner(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<serde_json::Value, Box<Response>> {
+    let services_path = shared::get_services_path()?;
+
+    let user_info = repositories::marketplace_git::lookup_user_basic(pool, user_id)
+        .await
+        .map_err(|e| {
             tracing::error!(error = %e, user_id = %user_id, "User not found for marketplace");
-            return shared::error_response(StatusCode::NOT_FOUND, "User not found");
-        }
-    };
+            shared::boxed_error_response(StatusCode::NOT_FOUND, "User not found")
+        })?;
 
     if let Err(e) = repositories::marketplace_sync_status::mark_user_dirty(pool, user_id).await {
         tracing::warn!(error = %e, "Failed to mark user dirty");
@@ -80,28 +86,21 @@ async fn generate_marketplace_json(pool: &PgPool, user_id: &UserId) -> Response 
         email: &user_info.email,
         roles: &user_info.roles,
     };
-    let response = match repositories::generate_export_bundles(&export_params).await {
-        Ok(r) => r,
-        Err(e) => {
+    let response = repositories::generate_export_bundles(&export_params)
+        .await
+        .map_err(|e| {
             tracing::error!(error = %e, "Failed to generate export bundles");
-            return shared::error_response(
+            shared::boxed_error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 &format!("Export failed: {e}"),
-            );
-        }
-    };
+            )
+        })?;
 
-    let marketplace_json: serde_json::Value =
-        match serde_json::from_str(&response.marketplace.content) {
-            Ok(v) => v,
-            Err(e) => {
-                tracing::error!(error = %e, "Failed to parse marketplace JSON");
-                return shared::error_response(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Invalid marketplace JSON",
-                );
-            }
-        };
-
-    Json(marketplace_json).into_response()
+    serde_json::from_str(&response.marketplace.content).map_err(|e| {
+        tracing::error!(error = %e, "Failed to parse marketplace JSON");
+        shared::boxed_error_response(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Invalid marketplace JSON",
+        )
+    })
 }
