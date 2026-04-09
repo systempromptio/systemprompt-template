@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use urlencoding::encode;
 use systemprompt::identifiers::{
     CampaignId, ContentId, ContextId, LinkClickId, LinkId, SessionId, TaskId, UserId,
 };
@@ -130,19 +131,19 @@ impl UtmParams {
     pub fn to_query_string(&self) -> String {
         let mut parts = Vec::new();
         if let Some(ref source) = self.source {
-            parts.push(format!("utm_source={source}"));
+            parts.push(format!("utm_source={}", encode(source)));
         }
         if let Some(ref medium) = self.medium {
-            parts.push(format!("utm_medium={medium}"));
+            parts.push(format!("utm_medium={}", encode(medium)));
         }
         if let Some(ref campaign) = self.campaign {
-            parts.push(format!("utm_campaign={campaign}"));
+            parts.push(format!("utm_campaign={}", encode(campaign)));
         }
         if let Some(ref term) = self.term {
-            parts.push(format!("utm_term={term}"));
+            parts.push(format!("utm_term={}", encode(term)));
         }
         if let Some(ref content) = self.content {
-            parts.push(format!("utm_content={content}"));
+            parts.push(format!("utm_content={}", encode(content)));
         }
         parts.join("&")
     }
