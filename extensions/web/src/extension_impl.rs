@@ -120,7 +120,10 @@ impl Extension for WebExtension {
         let db_handle = ctx.database();
         let db = db_handle.as_any().downcast_ref::<Database>()?;
         let pool = db.pool()?;
-        let write_pool = db.write_pool_arc().unwrap_or_else(|_| Arc::clone(&pool));
+        let write_pool = db.write_pool_arc().unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to get write pool, falling back to read pool");
+            Arc::clone(&pool)
+        });
 
         let event_hub = admin::event_hub::EventHub::new();
         let tier_cache = admin::tier_enforcement::TierEnforcementCache::new();
@@ -148,7 +151,10 @@ impl Extension for WebExtension {
             .nest("/admin", admin_api);
 
         let admin_dir = std::env::current_dir()
-            .unwrap_or_else(|_| std::path::PathBuf::from("."))
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to get current directory, using fallback");
+                std::path::PathBuf::from(".")
+            })
             .join("storage")
             .join("files")
             .join("admin");
