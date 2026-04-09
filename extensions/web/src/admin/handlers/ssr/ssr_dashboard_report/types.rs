@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Copy)]
 pub struct TrafficOverviewData {
     pub sessions_today: f64,
     pub sessions_yesterday: f64,
@@ -97,7 +97,7 @@ impl TrafficOverviewData {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Copy)]
 pub struct UserAcquisitionData {
     pub signups_today: f64,
     pub signups_yesterday: f64,
@@ -178,7 +178,7 @@ pub struct TopContentItem {
     pub search_clicks: i64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Copy)]
 pub struct SeoMetrics {
     pub total_impressions: i64,
     pub total_clicks: i64,
@@ -205,7 +205,7 @@ pub struct SourceBreakdownItem {
     pub sessions: i64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Copy)]
 pub struct ContentFunnel {
     pub total_published: i64,
     pub avg_views_per_piece: f64,

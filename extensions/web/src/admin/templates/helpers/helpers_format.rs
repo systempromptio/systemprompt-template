@@ -1,5 +1,6 @@
 use handlebars::{Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext};
 
+#[derive(Debug, Clone, Copy)]
 pub struct FormatDateHelper;
 impl HelperDef for FormatDateHelper {
     fn call<'reg: 'rc, 'rc>(
@@ -32,6 +33,7 @@ impl HelperDef for FormatDateHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct RelativeTimeHelper;
 impl HelperDef for RelativeTimeHelper {
     fn call<'reg: 'rc, 'rc>(
@@ -84,6 +86,7 @@ impl HelperDef for RelativeTimeHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct InitialsHelper;
 impl HelperDef for InitialsHelper {
     fn call<'reg: 'rc, 'rc>(
@@ -104,13 +107,14 @@ impl HelperDef for InitialsHelper {
             .filter(|s| !s.is_empty())
             .take(2)
             .filter_map(|s| s.chars().next())
-            .flat_map(|c| c.to_uppercase())
+            .flat_map(char::to_uppercase)
             .collect();
         out.write(if initials.is_empty() { "?" } else { &initials })?;
         Ok(())
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct TruncateHelper;
 impl HelperDef for TruncateHelper {
     fn call<'reg: 'rc, 'rc>(
@@ -137,6 +141,7 @@ impl HelperDef for TruncateHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct JsonHelper;
 impl HelperDef for JsonHelper {
     fn call<'reg: 'rc, 'rc>(
@@ -160,6 +165,7 @@ impl HelperDef for JsonHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct ConcatHelper;
 impl HelperDef for ConcatHelper {
     fn call<'reg: 'rc, 'rc>(
@@ -185,6 +191,7 @@ impl HelperDef for ConcatHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct ToLowerCaseHelper;
 impl HelperDef for ToLowerCaseHelper {
     fn call<'reg: 'rc, 'rc>(
@@ -201,6 +208,7 @@ impl HelperDef for ToLowerCaseHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct ToUpperCaseHelper;
 impl HelperDef for ToUpperCaseHelper {
     fn call<'reg: 'rc, 'rc>(
@@ -217,6 +225,7 @@ impl HelperDef for ToUpperCaseHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct CssVersionHelper;
 impl HelperDef for CssVersionHelper {
     fn call<'reg: 'rc, 'rc>(
@@ -244,6 +253,7 @@ impl HelperDef for CssVersionHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct DefaultHelper;
 impl HelperDef for DefaultHelper {
     fn call<'reg: 'rc, 'rc>(

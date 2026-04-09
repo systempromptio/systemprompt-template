@@ -118,7 +118,7 @@ pub async fn create_user_hook_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = hook.id.clone();
             let name = hook.hook_name.clone();
@@ -168,7 +168,7 @@ pub async fn update_user_hook_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = hook_id.clone();
             tokio::spawn(async move {
@@ -198,7 +198,7 @@ pub async fn delete_user_hook_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = hook_id.clone();
             tokio::spawn(async move {
@@ -228,7 +228,7 @@ pub async fn toggle_user_hook_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = hook_id.clone();
             tokio::spawn(async move {

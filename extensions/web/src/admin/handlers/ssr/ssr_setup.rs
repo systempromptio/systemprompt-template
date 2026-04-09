@@ -17,7 +17,7 @@ struct SetupPhase {
     current: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct SetupQuery {
     #[serde(default)]
     verified: Option<String>,

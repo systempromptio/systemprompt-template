@@ -1,18 +1,18 @@
 use serde::Serialize;
 
-#[derive(Serialize, Clone, Default)]
+#[derive(Serialize, Clone, Default, Debug)]
 pub struct ToolError {
     pub tool_name: String,
     pub description: String,
 }
 
-#[derive(Serialize, Clone, Default)]
+#[derive(Serialize, Clone, Default, Debug)]
 pub struct ToolGroup {
     pub name: String,
     pub count: usize,
 }
 
-#[derive(Serialize, Clone, Default)]
+#[derive(Serialize, Clone, Default, Debug)]
 pub struct Turn {
     pub prompt_text: String,
     pub prompt_time: String,
@@ -23,21 +23,21 @@ pub struct Turn {
     pub errors: Vec<ToolError>,
 }
 
-#[derive(Serialize, Clone, Default)]
+#[derive(Serialize, Clone, Default, Debug)]
 pub struct EntityEntry {
     pub entity_type: String,
     pub entity_name: String,
     pub usage_count: i32,
 }
 
-#[derive(Serialize, Clone, Default)]
+#[derive(Serialize, Clone, Default, Debug, Copy)]
 pub struct SessionGroupFlags {
     pub is_active: bool,
     pub is_analysed: bool,
     pub is_plan_mode: bool,
 }
 
-#[derive(Serialize, Clone, Default)]
+#[derive(Serialize, Clone, Default, Debug)]
 pub struct SessionGroup {
     pub session_id: String,
     pub session_id_short: String,

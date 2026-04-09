@@ -3,7 +3,7 @@ use serde::Serialize;
 use super::{TierLimits, UsageWarning};
 use crate::admin::numeric;
 
-#[derive(Debug, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize, Copy)]
 pub struct UsageSnapshot {
     pub events_today: i64,
     pub content_bytes_today: i64,

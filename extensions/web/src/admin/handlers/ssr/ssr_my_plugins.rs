@@ -79,7 +79,7 @@ pub async fn my_plugin_edit_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
+    Query(params): Query<HashMap<String, String>>,
 ) -> Response {
     let plugin_id = params.get("id");
     let is_edit = plugin_id.is_some();

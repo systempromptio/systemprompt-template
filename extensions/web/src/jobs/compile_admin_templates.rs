@@ -29,7 +29,7 @@ fn output_path_for(page_id: &str) -> String {
 }
 
 fn discover_templates(
-    templates_dir: &std::path::Path,
+    templates_dir: &Path,
 ) -> Result<Vec<(String, String, String)>, MarketplaceError> {
     let mut pages = Vec::new();
     let entries = std::fs::read_dir(templates_dir).map_err(|e| {
@@ -75,51 +75,14 @@ impl CompileAdminTemplatesJob {
         let partials_dir = admin_dir.join("partials");
         let compiled_dir = admin_dir.join("compiled");
 
-        let admin_output = compiled_dir.join("admin");
-        if admin_output.exists() {
-            tokio::fs::remove_dir_all(&admin_output)
-                .await
-                .map_err(|e| {
-                    MarketplaceError::Internal(format!(
-                        "Failed to clean compiled dir: {}: {e}",
-                        admin_output.display()
-                    ))
-                })?;
-        }
-        tokio::fs::create_dir_all(&compiled_dir)
-            .await
-            .map_err(|e| {
-                MarketplaceError::Internal(format!(
-                    "Failed to create compiled dir: {}: {e}",
-                    compiled_dir.display()
-                ))
-            })?;
+        prepare_compiled_dir(&compiled_dir).await?;
 
-        let mut hbs = Handlebars::new();
-        hbs.set_strict_mode(false);
-
-        register_partials_recursive(&mut hbs, &partials_dir, &partials_dir)?;
-        helpers::register_helpers(&mut hbs);
-
-        let site_url = Config::get().map_or_else(
-            |e| {
-                tracing::warn!(error = %e, "Config not available, using empty site_url");
-                String::new()
-            },
-            |c| c.api_external_url.trim_end_matches('/').to_string(),
-        );
-
-        let branding_value = match config_loader::load_branding_config() {
-            Ok(Some(b)) => serde_json::to_value(&b).unwrap_or_default(),
-            _ => serde_json::Value::Null,
-        };
+        let hbs = build_handlebars_registry(&partials_dir)?;
+        let site_url = resolve_site_url();
+        let branding_value = resolve_branding_value();
 
         let pages = discover_templates(&templates_dir)?;
-
         tracing::info!(count = pages.len(), "Discovered admin templates");
-
-        let mut compiled = 0u64;
-        let mut failed = 0u64;
 
         let compile_ctx = CompilePageCtx {
             hbs: &hbs,
@@ -128,22 +91,8 @@ impl CompileAdminTemplatesJob {
             site_url: &site_url,
             branding_value: &branding_value,
         };
-        for (template_file, page_id, output_path) in &pages {
-            match compile_page(&compile_ctx, template_file, page_id, output_path).await {
-                Ok(()) => compiled += 1,
-                Err(e) => {
-                    tracing::error!(
-                        template = %template_file,
-                        output = %output_path,
-                        error = %e,
-                        error_chain = ?e,
-                        "Failed to compile admin template"
-                    );
-                    failed += 1;
-                }
-            }
-        }
 
+        let (compiled, failed) = compile_all_pages(&compile_ctx, &pages).await;
         let duration_ms = u64::try_from(start_time.elapsed().as_millis()).unwrap_or(u64::MAX);
 
         tracing::info!(
@@ -157,6 +106,82 @@ impl CompileAdminTemplatesJob {
             .with_stats(compiled, failed)
             .with_duration(duration_ms))
     }
+}
+
+async fn prepare_compiled_dir(compiled_dir: &Path) -> Result<(), MarketplaceError> {
+    let admin_output = compiled_dir.join("admin");
+    if admin_output.exists() {
+        tokio::fs::remove_dir_all(&admin_output)
+            .await
+            .map_err(|e| {
+                MarketplaceError::Internal(format!(
+                    "Failed to clean compiled dir: {}: {e}",
+                    admin_output.display()
+                ))
+            })?;
+    }
+    tokio::fs::create_dir_all(compiled_dir)
+        .await
+        .map_err(|e| {
+            MarketplaceError::Internal(format!(
+                "Failed to create compiled dir: {}: {e}",
+                compiled_dir.display()
+            ))
+        })?;
+    Ok(())
+}
+
+fn build_handlebars_registry(
+    partials_dir: &Path,
+) -> Result<Handlebars<'static>, MarketplaceError> {
+    let mut hbs = Handlebars::new();
+    hbs.set_strict_mode(false);
+    register_partials_recursive(&mut hbs, partials_dir, partials_dir)?;
+    helpers::register_helpers(&mut hbs);
+    Ok(hbs)
+}
+
+fn resolve_site_url() -> String {
+    Config::get().map_or_else(
+        |e| {
+            tracing::warn!(error = %e, "Config not available, using empty site_url");
+            String::new()
+        },
+        |c| c.api_external_url.trim_end_matches('/').to_string(),
+    )
+}
+
+fn resolve_branding_value() -> serde_json::Value {
+    match config_loader::load_branding_config() {
+        Ok(Some(b)) => serde_json::to_value(&b).unwrap_or_default(),
+        _ => serde_json::Value::Null,
+    }
+}
+
+async fn compile_all_pages(
+    compile_ctx: &CompilePageCtx<'_>,
+    pages: &[(String, String, String)],
+) -> (u64, u64) {
+    let mut compiled = 0u64;
+    let mut failed = 0u64;
+
+    for (template_file, page_id, output_path) in pages {
+        match compile_page(compile_ctx, template_file, page_id, output_path).await {
+            Ok(()) => compiled += 1,
+            Err(e) => {
+                tracing::error!(
+                    template = %template_file,
+                    output = %output_path,
+                    error = %e,
+                    error_chain = ?e,
+                    "Failed to compile admin template"
+                );
+                failed += 1;
+            }
+        }
+    }
+
+    (compiled, failed)
 }
 
 fn register_partials_recursive(
@@ -200,8 +225,8 @@ fn register_partials_recursive(
 
 struct CompilePageCtx<'a> {
     hbs: &'a Handlebars<'a>,
-    templates_dir: &'a std::path::Path,
-    compiled_dir: &'a std::path::Path,
+    templates_dir: &'a Path,
+    compiled_dir: &'a Path,
     site_url: &'a str,
     branding_value: &'a serde_json::Value,
 }

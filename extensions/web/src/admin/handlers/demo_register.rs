@@ -11,7 +11,7 @@ use crate::admin::types::{CreateUserRequest, UserContext};
 
 use super::shared;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct DemoRegisterRequest {
     pub name: String,
     pub email: String,

@@ -5,7 +5,7 @@ const MAX_TITLE_LENGTH: usize = 200;
 const MAX_DESCRIPTION_LENGTH: usize = 500;
 const MIN_BODY_LENGTH: usize = 100;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Copy)]
 pub struct ValidationService;
 
 #[derive(Debug, Clone)]

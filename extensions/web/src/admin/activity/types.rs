@@ -4,12 +4,14 @@ use sqlx::FromRow;
 
 pub use super::enums::{ActivityAction, ActivityCategory, ActivityEntity};
 
+#[derive(Debug)]
 pub struct ActivityEntityRef {
     pub entity_type: ActivityEntity,
     pub entity_id: Option<String>,
     pub entity_name: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct NewActivity {
     pub user_id: String,
     pub category: ActivityCategory,

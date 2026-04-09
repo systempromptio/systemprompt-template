@@ -79,23 +79,48 @@ pub fn load_features_config() -> Result<Option<Arc<FeaturesConfig>>, ConfigError
 
     let features_dir = paths.system().services().join("web/config/features");
 
-    let entries = match std::fs::read_dir(&features_dir) {
-        Ok(entries) => entries,
+    let entries = match read_features_dir(&features_dir)? {
+        Some(entries) => entries,
+        None => return Ok(None),
+    };
+
+    let mut pages = parse_feature_pages(entries)?;
+
+    if pages.is_empty() {
+        tracing::debug!("No feature pages loaded");
+        return Ok(None);
+    }
+
+    pages.sort_by(|a, b| a.slug.cmp(&b.slug));
+
+    tracing::info!(
+        page_count = pages.len(),
+        "Loaded features config from config/features/"
+    );
+
+    Ok(Some(Arc::new(FeaturesConfig { pages })))
+}
+
+fn read_features_dir(
+    features_dir: &std::path::Path,
+) -> Result<Option<std::fs::ReadDir>, ConfigError> {
+    match std::fs::read_dir(features_dir) {
+        Ok(entries) => Ok(Some(entries)),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             tracing::debug!(
                 path = %features_dir.display(),
                 "Features config directory does not exist"
             );
-            return Ok(None);
+            Ok(None)
         }
-        Err(e) => {
-            return Err(ConfigError::Parse {
-                config_name: features_dir.display().to_string(),
-                message: format!("Failed to read directory: {e}"),
-            });
-        }
-    };
+        Err(e) => Err(ConfigError::Parse {
+            config_name: features_dir.display().to_string(),
+            message: format!("Failed to read directory: {e}"),
+        }),
+    }
+}
 
+fn parse_feature_pages(entries: std::fs::ReadDir) -> Result<Vec<FeaturePage>, ConfigError> {
     let results: Vec<Result<FeaturePage, String>> = entries
         .flatten()
         .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "yaml"))
@@ -119,21 +144,7 @@ pub fn load_features_config() -> Result<Option<Arc<FeaturesConfig>>, ConfigError
         });
     }
 
-    let mut pages: Vec<FeaturePage> = results.into_iter().filter_map(Result::ok).collect();
-
-    if pages.is_empty() {
-        tracing::debug!("No feature pages loaded");
-        return Ok(None);
-    }
-
-    pages.sort_by(|a, b| a.slug.cmp(&b.slug));
-
-    tracing::info!(
-        page_count = pages.len(),
-        "Loaded features config from config/features/"
-    );
-
-    Ok(Some(Arc::new(FeaturesConfig { pages })))
+    Ok(results.into_iter().filter_map(Result::ok).collect())
 }
 
 fn load_config_section(filename: &str) -> Result<Option<serde_yaml::Value>, ConfigError> {

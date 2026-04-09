@@ -1,6 +1,7 @@
 use crate::admin::repositories::daily_summaries::GlobalAverages;
 use crate::admin::repositories::profile_reports::UserAggregateMetrics;
 
+#[derive(Debug)]
 pub struct ArchetypeResult {
     pub id: String,
     pub name: String,

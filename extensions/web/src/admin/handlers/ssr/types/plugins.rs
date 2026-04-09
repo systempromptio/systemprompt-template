@@ -34,7 +34,7 @@ pub struct PluginView {
     pub mcp_servers: Vec<NamedEntity>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct PluginStats {
     pub plugin_count: usize,
 }
@@ -113,7 +113,7 @@ pub struct BrowsePluginView {
     pub already_added: bool,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct BrowsePluginStats {
     pub total_available: usize,
     pub already_added: usize,

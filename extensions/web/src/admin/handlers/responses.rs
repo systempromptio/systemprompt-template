@@ -1,22 +1,22 @@
 use serde::Serialize;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone)]
 pub struct RulesResponse<T: Serialize> {
     pub rules: T,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct ResolutionTokenResponse {
     pub token: String,
     pub expires_in: u32,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone, Copy)]
 pub struct ResultOkResponse {
     pub result: &'static str,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct AuditLogEntry {
     pub id: String,
     pub var_name: String,
@@ -26,7 +26,7 @@ pub struct AuditLogEntry {
     pub created_at: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct PluginEnvResponse {
     pub definitions: Vec<serde_json::Value>,
 
@@ -35,7 +35,7 @@ pub struct PluginEnvResponse {
     pub missing_required: Vec<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct ImportUserBundleResponse {
     pub message: String,
     pub imported_count: u32,
@@ -57,7 +57,7 @@ list_response!(SecretsListResponse, secrets);
 list_response!(McpServersListResponse, mcp_servers);
 list_response!(HooksListResponse, hooks);
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct ForkablePluginItem {
     pub id: String,
     pub name: String,
@@ -68,7 +68,7 @@ pub struct ForkablePluginItem {
     pub already_forked: bool,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct ForkableSkillItem {
     pub id: String,
     pub name: String,
@@ -78,7 +78,7 @@ pub struct ForkableSkillItem {
     pub already_forked: bool,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct ForkableAgentItem {
     pub id: String,
     pub name: String,
@@ -88,14 +88,14 @@ pub struct ForkableAgentItem {
     pub already_forked: bool,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone)]
 pub struct ForkPluginResponse<T: Serialize> {
     pub plugin: T,
     pub forked_skills: usize,
     pub forked_agents: usize,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct BaseSkillContentResponse {
     pub skill_id: String,
     pub name: String,

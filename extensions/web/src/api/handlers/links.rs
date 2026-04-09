@@ -37,7 +37,7 @@ pub async fn generate_link_handler(
         return error_response(StatusCode::BAD_REQUEST, msg);
     }
 
-    let service = LinkGenerationService::new(state.pool.clone());
+    let service = LinkGenerationService::new(Arc::clone(&state.pool));
 
     match service
         .generate(
@@ -68,7 +68,7 @@ pub async fn list_links_handler(
     State(state): State<BlogState>,
     Query(query): Query<ListLinksQuery>,
 ) -> Response {
-    let repo = LinkRepository::new(state.pool.clone());
+    let repo = LinkRepository::new(Arc::clone(&state.pool));
 
     let result = if let Some(ref campaign_id) = query.campaign_id {
         repo.list_links_by_campaign(campaign_id).await
@@ -92,7 +92,7 @@ pub async fn record_click_handler(
     State(state): State<BlogState>,
     Json(request): Json<RecordClickRequest>,
 ) -> Response {
-    let analytics_repo = LinkAnalyticsRepository::new(state.pool.clone());
+    let analytics_repo = LinkAnalyticsRepository::new(Arc::clone(&state.pool));
 
     let click_id = LinkClickId::generate();
     let link_id = request.link_id;
@@ -121,7 +121,7 @@ pub async fn link_performance_handler(
     State(state): State<BlogState>,
     Path(link_id): Path<String>,
 ) -> Response {
-    let service = LinkService::new(state.pool.clone());
+    let service = LinkService::new(Arc::clone(&state.pool));
 
     match service.get_performance(&link_id).await {
         Ok(Some(perf)) => Json(perf).into_response(),
@@ -134,7 +134,7 @@ pub async fn link_clicks_handler(
     State(state): State<BlogState>,
     Path(link_id): Path<String>,
 ) -> Response {
-    let service = LinkService::new(state.pool.clone());
+    let service = LinkService::new(Arc::clone(&state.pool));
 
     match service.get_clicks(&link_id, DEFAULT_CLICK_LIMIT).await {
         Ok(clicks) => Json(clicks).into_response(),
@@ -146,7 +146,7 @@ pub async fn campaign_performance_handler(
     State(state): State<BlogState>,
     Path(campaign_id): Path<String>,
 ) -> Response {
-    let service = LinkAnalyticsService::new(state.pool.clone());
+    let service = LinkAnalyticsService::new(Arc::clone(&state.pool));
 
     match service.get_campaign_performance(&campaign_id).await {
         Ok(Some(perf)) => Json(perf).into_response(),
@@ -159,7 +159,7 @@ pub async fn content_journey_handler(
     State(state): State<BlogState>,
     Query(query): Query<ContentJourneyQuery>,
 ) -> Response {
-    let service = LinkAnalyticsService::new(state.pool.clone());
+    let service = LinkAnalyticsService::new(Arc::clone(&state.pool));
 
     match service.get_content_journey(query.content_id.as_str()).await {
         Ok(journey) => Json(journey).into_response(),

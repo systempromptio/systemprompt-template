@@ -20,7 +20,7 @@ pub struct SkillFile {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone, Copy)]
 pub struct SyncResult {
     pub created: usize,
     pub updated: usize,
@@ -128,7 +128,7 @@ pub async fn sync_skill_files(
                 let name = e.file_name().to_string_lossy();
                 !name.starts_with('.') && name != "__pycache__"
             })
-            .filter_map(std::result::Result::ok)
+            .filter_map(Result::ok)
         {
             let path = walk_entry.path();
             if !path.is_file() {

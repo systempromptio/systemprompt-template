@@ -23,7 +23,7 @@ where
         .collect()
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct AreaChart {
     has_data: bool,
     paths: HashMap<String, String>,

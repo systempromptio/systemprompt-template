@@ -192,18 +192,18 @@ pub struct StatusLineModel {
     pub api_model_id: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, Copy)]
 pub struct StatusLineCost {
     pub total_cost_usd: Option<f64>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, Copy)]
 pub struct ContextWindow {
     pub context_window_size: Option<i64>,
     pub current_usage: Option<ContextWindowUsage>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, Copy)]
 pub struct ContextWindowUsage {
     #[serde(rename = "input_tokens")]
     pub input: Option<i64>,

@@ -168,6 +168,7 @@ impl UpdateContentParams {
     }
 }
 
+#[derive(Debug)]
 pub struct UpdateContentParamsBuilder {
     id: ContentId,
     title: String,

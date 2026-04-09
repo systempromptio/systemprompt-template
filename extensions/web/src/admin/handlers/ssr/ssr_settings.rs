@@ -97,8 +97,8 @@ async fn fetch_settings_data(
         repositories::list_all_user_env_vars(pool, &user_ctx.user_id),
     );
 
-    let hooks_count = hooks_result.as_ref().map_or(0, std::vec::Vec::len);
-    let secrets_count = secrets_result.as_ref().map_or(0, std::vec::Vec::len);
+    let hooks_count = hooks_result.as_ref().map_or(0, Vec::len);
+    let secrets_count = secrets_result.as_ref().map_or(0, Vec::len);
 
     let sub_plan_id = subscription.as_ref().and_then(|s| s.plan_id);
     let current_limits = sub_plan_id

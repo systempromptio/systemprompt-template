@@ -105,7 +105,7 @@ pub async fn update_plugin_env_handler(
         }
     }
 
-    let p = pool.clone();
+    let p = Arc::clone(&pool);
     let uid = user_id.clone();
     let pid = plugin_id.clone();
     tokio::spawn(async move {

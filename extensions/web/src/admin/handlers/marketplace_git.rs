@@ -66,7 +66,7 @@ async fn resolve_cowork_repo(
         })
 }
 
-#[derive(serde::Deserialize, Default)]
+#[derive(serde::Deserialize, Default, Debug)]
 pub struct InfoRefsQuery {
     service: Option<String>,
 }
@@ -206,59 +206,57 @@ async fn serve_git_file(repo_path: &PathBuf, file_path: &str, query: &InfoRefsQu
 }
 
 async fn run_upload_pack(repo_path: &PathBuf, body: &Bytes) -> Response {
-    let mut child = match tokio::process::Command::new("git")
+    match run_upload_pack_inner(repo_path, body).await {
+        Ok(stdout) => (
+            StatusCode::OK,
+            [
+                (header::CONTENT_TYPE, "application/x-git-upload-pack-result"),
+                (header::CACHE_CONTROL, "no-cache"),
+            ],
+            stdout,
+        )
+            .into_response(),
+        Err(r) => r,
+    }
+}
+
+async fn run_upload_pack_inner(
+    repo_path: &PathBuf,
+    body: &Bytes,
+) -> Result<Vec<u8>, Response> {
+    let mut child = tokio::process::Command::new("git")
         .args(["upload-pack", "--stateless-rpc"])
         .arg(repo_path)
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
-    {
-        Ok(c) => c,
-        Err(e) => {
+        .map_err(|e| {
             tracing::error!(error = %e, "Failed to spawn git upload-pack");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "git upload-pack failed",
-            );
-        }
-    };
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "git upload-pack failed")
+        })?;
 
     if let Some(mut stdin) = child.stdin.take() {
         use tokio::io::AsyncWriteExt;
-        if let Err(e) = stdin.write_all(body).await {
+        stdin.write_all(body).await.map_err(|e| {
             tracing::error!(error = %e, "Failed to write to git upload-pack stdin");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "git upload-pack failed",
-            );
-        }
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "git upload-pack failed")
+        })?;
     }
 
-    let output = match child.wait_with_output().await {
-        Ok(o) => o,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to wait for git upload-pack");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "git upload-pack failed",
-            );
-        }
-    };
+    let output = child.wait_with_output().await.map_err(|e| {
+        tracing::error!(error = %e, "Failed to wait for git upload-pack");
+        shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "git upload-pack failed")
+    })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         tracing::error!(stderr = %stderr, "git upload-pack --stateless-rpc failed");
-        return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "git upload-pack failed");
+        return Err(shared::error_response(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "git upload-pack failed",
+        ));
     }
 
-    (
-        StatusCode::OK,
-        [
-            (header::CONTENT_TYPE, "application/x-git-upload-pack-result"),
-            (header::CACHE_CONTROL, "no-cache"),
-        ],
-        output.stdout,
-    )
-        .into_response()
+    Ok(output.stdout)
 }

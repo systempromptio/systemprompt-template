@@ -76,7 +76,7 @@ fn parse_agent_detail(agent_id: &str, val: &serde_yaml::Value) -> AgentDetail {
         endpoint: val
             .get("endpoint")
             .and_then(|e| e.as_str())
-            .map(std::string::ToString::to_string),
+            .map(ToString::to_string),
         mcp_servers: val
             .get("mcp_servers")
             .and_then(|v| v.as_sequence())

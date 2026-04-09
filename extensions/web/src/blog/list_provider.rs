@@ -9,6 +9,7 @@ use super::renderers::render_blog_cards;
 use super::types::BlogPost;
 use crate::error::BlogError;
 
+#[derive(Debug, Clone, Copy)]
 pub struct BlogListPageDataProvider;
 
 impl BlogListPageDataProvider {

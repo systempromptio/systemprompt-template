@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct HealthObj {
     pub score: i64,
     pub label: &'static str,
@@ -12,7 +12,7 @@ pub struct HealthObj {
     pub has_suggestion: bool,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug, Copy)]
 pub struct AchievementProgress {
     pub id: &'static str,
     pub name: &'static str,
@@ -22,7 +22,7 @@ pub struct AchievementProgress {
     pub pct: i64,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct MetricRow {
     pub label: &'static str,
     pub value: String,
@@ -40,7 +40,7 @@ pub struct MetricRow {
     pub global_sentiment: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct InsightsData {
     pub summary: String,
     pub patterns: String,
@@ -50,7 +50,7 @@ pub struct InsightsData {
     pub trends: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct HistoryEntry {
     pub date: String,
     pub sessions: i32,
@@ -59,7 +59,7 @@ pub struct HistoryEntry {
     pub errors: i64,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct CategoryBreakdownEntry {
     pub category: String,
     pub label: &'static str,
@@ -68,12 +68,12 @@ pub struct CategoryBreakdownEntry {
     pub bar_width: f64,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug, Copy)]
 pub struct StarRating {
     pub rating: u8,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct SkillEffectivenessEntry {
     pub skill_name: String,
     pub total_uses: i64,
@@ -86,7 +86,7 @@ pub struct SkillEffectivenessEntry {
     pub stars: StarRating,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug, Copy)]
 pub struct EntityCounts {
     pub plugins: i64,
     pub skills: i64,
@@ -95,7 +95,7 @@ pub struct EntityCounts {
     pub hooks: i64,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct AnalysisEntry {
     pub session_id: String,
     pub title: String,

@@ -12,7 +12,7 @@ pub struct GoalOutcomeMapping {
     pub achieved: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct EfficiencyMetrics {
     #[serde(default)]
     pub total_turns: i32,

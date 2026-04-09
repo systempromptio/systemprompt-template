@@ -17,6 +17,7 @@ pub use super::partials_animations::{
     RustMeshAnimationPartialRenderer,
 };
 
+#[derive(Debug, Clone, Copy)]
 pub struct HeadAssetsPartialRenderer;
 
 impl HeadAssetsPartialRenderer {
@@ -51,6 +52,7 @@ impl ComponentRenderer for HeadAssetsPartialRenderer {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct HeaderPartialRenderer;
 
 impl HeaderPartialRenderer {
@@ -85,6 +87,7 @@ impl ComponentRenderer for HeaderPartialRenderer {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct FooterPartialRenderer;
 
 impl FooterPartialRenderer {
@@ -119,6 +122,7 @@ impl ComponentRenderer for FooterPartialRenderer {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct ScriptsPartialRenderer;
 
 impl ScriptsPartialRenderer {

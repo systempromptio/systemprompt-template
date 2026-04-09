@@ -40,7 +40,7 @@ pub async fn create_user(
         username,
         req.email.as_str(),
         &req.display_name,
-        &req.roles as &[String],
+        &req.roles,
         &status,
     )
     .fetch_one(pool)

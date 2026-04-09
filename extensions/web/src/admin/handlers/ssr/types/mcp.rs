@@ -20,7 +20,7 @@ pub struct McpServerView {
     pub goal_achievement_pct: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct McpServerStats {
     pub total_count: usize,
     pub enabled_count: usize,
@@ -50,7 +50,7 @@ pub struct SecretGroupView {
     pub count: usize,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct SecretsStats {
     pub total_count: usize,
     pub secret_count: usize,

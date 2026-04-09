@@ -80,7 +80,7 @@ pub async fn select_and_fork_plugins_handler(
         fork_valid_plugins(&pool, &user_ctx, &valid_ids, &services_path).await;
 
     if forked_count > 0 {
-        let pool = pool.clone();
+        let pool = Arc::clone(&pool);
         let uid = user_ctx.user_id.clone();
         let desc = format!("Selected and forked {forked_count} plugin(s) during onboarding");
         tokio::spawn(async move {
@@ -112,13 +112,7 @@ async fn fork_valid_plugins(
             Vec::new()
         });
 
-    let existing_plugins = repositories::list_user_plugins(pool, &user_ctx.user_id)
-        .await
-        .unwrap_or_else(|_| Vec::new());
-    let existing_base_ids: std::collections::HashSet<String> = existing_plugins
-        .iter()
-        .filter_map(|p| p.base_plugin_id.clone())
-        .collect();
+    let existing_base_ids = collect_existing_base_ids(pool, &user_ctx.user_id).await;
 
     let mut forked_count = 0;
     let mut skipped_count = 0;
@@ -134,31 +128,8 @@ async fn fork_valid_plugins(
             continue;
         };
 
-        match fork_single_plugin(
-            pool,
-            &user_ctx.user_id,
-            &user_ctx.username,
-            org_plugin,
-            services_path,
-            None,
-        )
-        .await
-        {
-            Ok(_result) => {
-                forked_count += 1;
-                if let Err(e) = repositories::user_plugin_selections::remove_selected_org_plugin(
-                    pool,
-                    &user_ctx.user_id,
-                    plugin_id,
-                )
-                .await
-                {
-                    tracing::warn!(error = %e, plugin_id = %plugin_id, "Failed to remove forked org plugin from selections");
-                }
-            }
-            Err(msg) => {
-                tracing::error!(error = %msg, plugin_id = %plugin_id, "Failed to fork plugin during onboarding");
-            }
+        if try_fork_plugin(pool, user_ctx, org_plugin, services_path, plugin_id).await {
+            forked_count += 1;
         }
     }
 
@@ -167,4 +138,52 @@ async fn fork_valid_plugins(
     }
 
     (forked_count, skipped_count)
+}
+
+async fn collect_existing_base_ids(
+    pool: &PgPool,
+    user_id: &systemprompt::identifiers::UserId,
+) -> std::collections::HashSet<String> {
+    repositories::list_user_plugins(pool, user_id)
+        .await
+        .unwrap_or_else(|_| Vec::new())
+        .iter()
+        .filter_map(|p| p.base_plugin_id.clone())
+        .collect()
+}
+
+async fn try_fork_plugin(
+    pool: &PgPool,
+    user_ctx: &UserContext,
+    org_plugin: &crate::admin::types::PluginOverview,
+    services_path: &std::path::Path,
+    plugin_id: &str,
+) -> bool {
+    match fork_single_plugin(
+        pool,
+        &user_ctx.user_id,
+        &user_ctx.username,
+        org_plugin,
+        services_path,
+        None,
+    )
+    .await
+    {
+        Ok(_result) => {
+            if let Err(e) = repositories::user_plugin_selections::remove_selected_org_plugin(
+                pool,
+                &user_ctx.user_id,
+                plugin_id,
+            )
+            .await
+            {
+                tracing::warn!(error = %e, plugin_id = %plugin_id, "Failed to remove forked org plugin from selections");
+            }
+            true
+        }
+        Err(msg) => {
+            tracing::error!(error = %msg, plugin_id = %plugin_id, "Failed to fork plugin during onboarding");
+            false
+        }
+    }
 }

@@ -46,6 +46,7 @@ pub struct DailySummaryRow {
     pub plan_mode_sessions: i32,
 }
 
+#[derive(Debug)]
 pub struct DailySummaryInput {
     pub session_count: i32,
     pub avg_quality_score: Option<f32>,
@@ -90,7 +91,7 @@ pub struct DailySummaryInput {
     pub plan_mode_sessions: i32,
 }
 
-#[derive(Debug, Default, sqlx::FromRow)]
+#[derive(Debug, Default, sqlx::FromRow, Clone, Copy)]
 pub struct GlobalAverages {
     pub avg_sessions: Option<f32>,
     pub avg_quality: Option<f32>,
@@ -164,19 +165,19 @@ async fn execute_upsert(
         user_id, date, input.session_count, input.avg_quality_score,
         input.goals_achieved, input.goals_partial, input.goals_failed,
         input.total_prompts, input.total_tool_uses, input.total_errors,
-        input.summary, input.patterns.clone() as Option<String>,
-        input.skill_gaps.clone() as Option<String>,
-        input.top_recommendation.clone() as Option<String>,
+        input.summary, input.patterns.clone(),
+        input.skill_gaps.clone(),
+        input.top_recommendation.clone(),
         input.daily_xp, input.tags, input.avg_apm, input.peak_apm,
         input.avg_eapm, input.peak_concurrency, input.avg_concurrency,
         input.total_input_bytes, input.total_output_bytes, input.peak_throughput_bps,
         input.tool_diversity, input.multitasking_score, input.session_velocity,
-        input.achievements_unlocked, input.highlights.clone() as Option<String>,
-        input.trends.clone() as Option<String>,
-        input.category_distribution.clone() as Option<serde_json::Value>,
+        input.achievements_unlocked, input.highlights.clone(),
+        input.trends.clone(),
+        input.category_distribution.clone(),
         input.plugins_count, input.skills_count,
         input.agents_count, input.mcp_servers_count, input.hooks_count,
-        input.health_score, input.skill_effectiveness.clone() as Option<serde_json::Value>,
+        input.health_score, input.skill_effectiveness.clone(),
         input.avg_session_duration_minutes, input.avg_turns_per_session,
         input.total_corrections, input.avg_automation_ratio, input.plan_mode_sessions,
     )

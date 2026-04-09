@@ -87,7 +87,7 @@ pub struct StopData {
     pub last_assistant_message: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Copy)]
 pub struct SubagentStartData {}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

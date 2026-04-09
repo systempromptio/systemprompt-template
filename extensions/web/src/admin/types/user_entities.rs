@@ -146,7 +146,7 @@ pub struct ForkAgentRequest {
     pub agent_id: Option<AgentId>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ForkMcpServerRequest {
     pub org_mcp_server_id: McpServerId,
     #[serde(default)]

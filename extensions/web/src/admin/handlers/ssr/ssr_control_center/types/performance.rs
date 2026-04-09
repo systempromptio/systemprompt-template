@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct TodaySummaryObj {
     pub sessions_count: i64,
     pub analysed_count: i64,
@@ -14,7 +14,7 @@ pub struct TodaySummaryObj {
     pub has_top_recommendation: bool,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug, Copy)]
 pub struct HourlyEntry {
     pub hour: i32,
     pub actions: i64,
@@ -26,7 +26,7 @@ pub struct HourlyEntry {
     pub subagent_spawns: i64,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct PerfSummaryObj {
     pub total_sessions: i64,
     pub total_actions: i64,
@@ -44,7 +44,7 @@ pub struct PerfSummaryObj {
     pub active_minutes: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct ApmMetrics {
     pub apm: ApmValues,
     pub concurrency: ConcurrencyValues,
@@ -53,34 +53,34 @@ pub struct ApmMetrics {
     pub multitasking_score: f32,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct ApmValues {
     pub current: f32,
     pub peak: f32,
     pub avg: f32,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct ConcurrencyValues {
     pub current: i32,
     pub peak: i32,
     pub avg: f32,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct ThroughputValues {
     pub total_display: String,
     pub rate_display: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct InitialChartData {
     pub hourly: Vec<HourlyEntry>,
     pub perf: PerfSummaryObj,
     pub apm_metrics: ApmMetrics,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct TodayObj {
     pub active_now: usize,
     pub completed: i64,

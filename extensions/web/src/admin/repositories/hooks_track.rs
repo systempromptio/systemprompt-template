@@ -28,7 +28,7 @@ pub async fn count_concurrent_sessions(
     .unwrap_or(0)
 }
 
-#[derive(sqlx::FromRow)]
+#[derive(sqlx::FromRow, Debug)]
 pub struct EventRow {
     pub event_type: String,
     pub tool_name: Option<String>,
@@ -72,6 +72,7 @@ pub async fn fetch_user_messages(
     .unwrap_or_else(|_| Vec::new())
 }
 
+#[derive(Debug)]
 pub struct SessionMetricsRow {
     pub prompts: i64,
     pub unique_files_touched: Option<i32>,
@@ -111,6 +112,7 @@ pub async fn fetch_session_metrics(
     .flatten()
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct SessionTimingRow {
     pub started: Option<chrono::DateTime<chrono::Utc>>,
     pub ended: Option<chrono::DateTime<chrono::Utc>>,

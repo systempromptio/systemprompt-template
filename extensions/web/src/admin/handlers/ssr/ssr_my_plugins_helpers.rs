@@ -10,7 +10,7 @@ use std::collections::{HashMap, HashSet};
 use super::types::{CheckableEntity, NamedEntity, PluginEditData, PluginView, SkillWithStats};
 
 pub(super) fn collect_my_plugins(
-    enriched: &[crate::admin::repositories::user_plugins::UserPluginEnriched],
+    enriched: &[repositories::user_plugins::UserPluginEnriched],
     skill_usage_map: &HashMap<&str, &EntityUsageSummary>,
     skill_eff_map: &HashMap<&str, &SkillEffectiveness>,
     agent_eff_map: &HashMap<&str, &EntityEffectiveness>,
@@ -35,7 +35,7 @@ pub(super) fn collect_my_plugins(
 }
 
 fn enriched_plugin_to_view(
-    ep: &crate::admin::repositories::user_plugins::UserPluginEnriched,
+    ep: &repositories::user_plugins::UserPluginEnriched,
     skill_usage_map: &HashMap<&str, &EntityUsageSummary>,
     skill_eff_map: &HashMap<&str, &SkillEffectiveness>,
     agent_eff_map: &HashMap<&str, &EntityEffectiveness>,
@@ -155,19 +155,19 @@ pub(super) async fn build_association_lists(
     let selected_skills: Vec<String> = plugin_with_assoc.map_or(vec![], |p| {
         p.skill_ids
             .iter()
-            .map(std::string::ToString::to_string)
+            .map(ToString::to_string)
             .collect()
     });
     let selected_agents: Vec<String> = plugin_with_assoc.map_or(vec![], |p| {
         p.agent_ids
             .iter()
-            .map(std::string::ToString::to_string)
+            .map(ToString::to_string)
             .collect()
     });
     let selected_mcp: Vec<String> = plugin_with_assoc.map_or(vec![], |p| {
         p.mcp_server_ids
             .iter()
-            .map(std::string::ToString::to_string)
+            .map(ToString::to_string)
             .collect()
     });
 

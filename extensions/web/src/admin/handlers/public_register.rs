@@ -16,7 +16,7 @@ use super::shared;
 
 const TOKEN_PREFIX: &str = "sp_wst_";
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct PublicRegisterRequest {
     pub name: String,
     pub email: String,

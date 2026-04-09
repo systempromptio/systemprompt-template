@@ -175,7 +175,7 @@ pub struct CookieSession {
     pub email: Email,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct UserPluginCounts {
     pub plugins: usize,
     pub skills: usize,
@@ -183,7 +183,7 @@ pub struct UserPluginCounts {
     pub mcp_servers: usize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct ContentBytes {
     pub input: i64,
     pub output: i64,

@@ -81,14 +81,14 @@ pub struct HookEventTypeStat {
     pub content_output_bytes: i64,
 }
 
-#[derive(Debug, Serialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, sqlx::FromRow, Clone, Copy)]
 pub struct HookTimeSeriesBucket {
     pub bucket: DateTime<Utc>,
     pub event_count: i64,
     pub error_count: i64,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone, Copy)]
 pub struct HookSummaryStats {
     pub total_events: i64,
     pub total_errors: i64,

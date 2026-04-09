@@ -91,7 +91,7 @@ pub async fn list_forkable_skills_handler(
         .filter_map(|s| {
             s.base_skill_id
                 .as_ref()
-                .map(std::string::ToString::to_string)
+                .map(ToString::to_string)
         })
         .collect();
 
@@ -142,7 +142,7 @@ pub async fn list_forkable_agents_handler(
         .filter_map(|a| {
             a.base_agent_id
                 .as_ref()
-                .map(std::string::ToString::to_string)
+                .map(ToString::to_string)
         })
         .collect();
 

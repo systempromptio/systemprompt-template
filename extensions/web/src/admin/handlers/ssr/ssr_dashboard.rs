@@ -284,7 +284,7 @@ pub async fn dashboard_page(
 
     if tab == "report" {
         if let Ok(Some(report_row)) =
-            crate::admin::repositories::admin_traffic_reports::fetch_latest_report(&pool).await
+            repositories::admin_traffic_reports::fetch_latest_report(&pool).await
         {
             let report = super::ssr_dashboard_report::build_dashboard_report(&report_row);
             if let Some(obj) = data.as_object_mut() {

@@ -3,13 +3,13 @@ use serde::Serialize;
 pub(super) const SVG_WIDTH: f64 = 960.0;
 pub(super) const SVG_HEIGHT: f64 = 280.0;
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub(super) struct AxisLabel {
     pub label: String,
     pub y: String,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub(super) struct XAxisLabel {
     pub label: String,
     pub x: String,

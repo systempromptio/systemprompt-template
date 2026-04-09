@@ -8,7 +8,7 @@ use serde_json::Value;
 use super::helpers;
 use crate::navigation::BrandingConfig;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AdminTemplateEngine {
     hbs: Arc<Handlebars<'static>>,
     branding: Option<BrandingConfig>,

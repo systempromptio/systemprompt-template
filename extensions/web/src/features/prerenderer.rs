@@ -6,6 +6,7 @@ use systemprompt::extension::prelude::*;
 use super::config::FeaturePage;
 use crate::error::MarketplaceError;
 
+#[derive(Debug)]
 pub struct FeaturePagePrerenderer {
     page: FeaturePage,
     page_type_id: String,

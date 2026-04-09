@@ -11,6 +11,7 @@ pub const RANKS: &[(i32, &str, i64)] = &[
     (10, "Superintelligence", 12000),
 ];
 
+#[derive(Debug, Clone, Copy)]
 pub struct AchievementDef {
     pub id: &'static str,
     pub name: &'static str,

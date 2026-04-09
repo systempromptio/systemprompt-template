@@ -26,7 +26,7 @@ pub struct TodayApmLive {
     pub multitasking_score: f32,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct ApmCorrelation {
     pub high_apm_success_rate: f32,
     pub medium_apm_success_rate: f32,
@@ -35,7 +35,7 @@ pub struct ApmCorrelation {
     pub low_apm_avg_quality: f32,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct HourlyApmBucket {
     pub hour: i32,
     pub actions: i64,
@@ -59,7 +59,7 @@ pub struct DailyApmBucket {
     pub subagent_spawns: i64,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct TodayPerformanceSummary {
     pub total_sessions: i64,
     pub total_actions: i64,

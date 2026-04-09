@@ -62,13 +62,7 @@ pub async fn publish_marketplace_to_github(
 
     let local_path = PathBuf::from("storage/github-marketplaces").join(marketplace_id);
 
-    if local_path.join(".git").exists() {
-        git_pull(&local_path)?;
-    } else {
-        std::fs::create_dir_all(&local_path)?;
-        let push_url = build_authenticated_url(repo_url);
-        git_clone_shallow(&push_url, &local_path)?;
-    }
+    ensure_publish_repo(repo_url, &local_path)?;
 
     let export = super::export::generate_org_marketplace_export_bundles(
         &services_path,
@@ -79,18 +73,12 @@ pub async fn publish_marketplace_to_github(
     .await?;
 
     let plugin_count = write_plugin_bundles_to_repo(&export.plugins, &local_path)?;
-
-    let marketplace_json_path = local_path.join(".claude-plugin/marketplace.json");
-    if let Some(parent) = marketplace_json_path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    std::fs::write(&marketplace_json_path, &export.marketplace.content)?;
+    write_marketplace_json(&local_path, &export.marketplace.content)?;
 
     let push_url = build_authenticated_url(repo_url);
     git_add_all(&local_path)?;
 
-    let has_changes = git_has_changes(&local_path)?;
-    if !has_changes {
+    if !git_has_changes(&local_path)? {
         let duration_ms = elapsed_ms(start);
         tracing::info!(marketplace_id, "No changes to publish");
         return Ok(SyncResult {
@@ -111,16 +99,54 @@ pub async fn publish_marketplace_to_github(
     let current_hash = git_head_hash(&local_path)?;
     let duration_ms = elapsed_ms(start);
 
-    let marker_path = local_path.join(".last-commit");
-    let _ = std::fs::write(&marker_path, &current_hash);
+    let _ = std::fs::write(local_path.join(".last-commit"), &current_hash);
 
+    log_publish_result(pool, marketplace_id, &current_hash, plugin_count, triggered_by, duration_ms).await;
+
+    Ok(SyncResult {
+        commit_hash: current_hash,
+        plugins_synced: plugin_count,
+        errors: 0,
+        changed: true,
+        duration_ms,
+    })
+}
+
+fn ensure_publish_repo(repo_url: &str, local_path: &Path) -> Result<()> {
+    if local_path.join(".git").exists() {
+        git_pull(local_path)?;
+    } else {
+        std::fs::create_dir_all(local_path)?;
+        let push_url = build_authenticated_url(repo_url);
+        git_clone_shallow(&push_url, local_path)?;
+    }
+    Ok(())
+}
+
+fn write_marketplace_json(local_path: &Path, content: impl AsRef<[u8]>) -> Result<()> {
+    let marketplace_json_path = local_path.join(".claude-plugin/marketplace.json");
+    if let Some(parent) = marketplace_json_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(&marketplace_json_path, content)?;
+    Ok(())
+}
+
+async fn log_publish_result(
+    pool: &PgPool,
+    marketplace_id: &str,
+    current_hash: &str,
+    plugin_count: u64,
+    triggered_by: &str,
+    duration_ms: u64,
+) {
     let _ = super::org_marketplaces::insert_sync_log(
         pool,
         &super::org_marketplaces::SyncLogEntry {
             marketplace_id,
             operation: "publish",
             status: "success",
-            commit_hash: Some(&current_hash),
+            commit_hash: Some(current_hash),
             plugins_synced: i64::try_from(plugin_count).unwrap_or(i64::MAX),
             errors: 0,
             error_message: None,
@@ -137,12 +163,4 @@ pub async fn publish_marketplace_to_github(
         duration_ms,
         "GitHub marketplace publish completed"
     );
-
-    Ok(SyncResult {
-        commit_hash: current_hash,
-        plugins_synced: plugin_count,
-        errors: 0,
-        changed: true,
-        duration_ms,
-    })
 }

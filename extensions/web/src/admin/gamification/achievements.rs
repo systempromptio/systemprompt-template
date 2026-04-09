@@ -1,5 +1,6 @@
 use sqlx::PgPool;
 
+#[derive(Debug)]
 pub struct AchievementContext {
     pub user_id: String,
     pub total_xp: i64,

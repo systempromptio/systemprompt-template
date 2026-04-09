@@ -7,6 +7,7 @@ use systemprompt::extension::prelude::{ContentDataContext, ContentDataProvider};
 
 use super::error::DocsError;
 
+#[derive(Debug, Clone, Copy)]
 pub struct DocsContentDataProvider;
 
 impl DocsContentDataProvider {
@@ -84,7 +85,7 @@ impl ContentDataProvider for DocsContentDataProvider {
     }
 }
 
-#[derive(Clone, serde::Serialize)]
+#[derive(Clone, serde::Serialize, Debug)]
 pub struct ChildDoc {
     pub slug: String,
     pub title: String,

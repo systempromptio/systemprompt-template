@@ -80,7 +80,7 @@ pub async fn create_user_plugin_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = plugin.id.clone();
             let name = plugin.name.clone();
@@ -114,7 +114,7 @@ pub async fn update_user_plugin_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = plugin.id.clone();
             let name = plugin.name.clone();
@@ -148,7 +148,7 @@ pub async fn delete_user_plugin_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = plugin_id.clone();
             tokio::spawn(async move {
@@ -182,39 +182,61 @@ pub async fn set_plugin_skills_handler(
     if is_platform_plugin(&pool, &user_ctx.user_id, &plugin_id).await {
         return shared::error_response(StatusCode::FORBIDDEN, "Platform plugin cannot be modified");
     }
-    let plugin = repositories::find_user_plugin(&pool, &user_ctx.user_id, &plugin_id).await;
-    match plugin {
-        Ok(Some(p)) => {
-            let skill_ids: Vec<SkillId> =
-                req.ids.iter().map(|s| SkillId::from(s.clone())).collect();
-            if let Err(e) = repositories::set_plugin_skills(&pool, &p.id, &skill_ids).await {
-                tracing::error!(error = %e, "Failed to set plugin skills");
-                return shared::error_response(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to set skills",
-                );
-            }
-            if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
-            }
-            let activity_pool = pool.clone();
-            let uid = user_ctx.user_id.clone();
-            let pid = plugin_id.clone();
-            tokio::spawn(async move {
-                activity::record(
-                    &activity_pool,
-                    NewActivity::entity_updated(&uid, ActivityEntity::Plugin, &pid, &pid),
-                )
-                .await;
-            });
-            StatusCode::NO_CONTENT.into_response()
-        }
-        Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Plugin not found"),
+
+    let p = match resolve_user_plugin(&pool, &user_ctx.user_id, &plugin_id).await {
+        Ok(p) => p,
+        Err(resp) => return resp,
+    };
+
+    let skill_ids: Vec<SkillId> = req.ids.iter().map(|s| SkillId::from(s.clone())).collect();
+    if let Err(e) = repositories::set_plugin_skills(&pool, &p.id, &skill_ids).await {
+        tracing::error!(error = %e, "Failed to set plugin skills");
+        return shared::error_response(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Failed to set skills",
+        );
+    }
+
+    mark_dirty_and_record_activity(&pool, &user_ctx.user_id, &plugin_id).await;
+    StatusCode::NO_CONTENT.into_response()
+}
+
+async fn resolve_user_plugin(
+    pool: &PgPool,
+    user_id: &UserId,
+    plugin_id: &str,
+) -> Result<crate::admin::types::UserPlugin, Response> {
+    match repositories::find_user_plugin(pool, user_id, plugin_id).await {
+        Ok(Some(p)) => Ok(p),
+        Ok(None) => Err(shared::error_response(StatusCode::NOT_FOUND, "Plugin not found")),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get user plugin");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
+            Err(shared::error_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal error",
+            ))
         }
     }
+}
+
+async fn mark_dirty_and_record_activity(
+    pool: &Arc<PgPool>,
+    user_id: &UserId,
+    plugin_id: &str,
+) {
+    if let Err(e) = repositories::mark_user_dirty(pool, user_id).await {
+        tracing::warn!(error = %e, "Failed to mark user dirty");
+    }
+    let activity_pool = Arc::clone(&pool);
+    let uid = user_id.clone();
+    let pid = plugin_id.to_string();
+    tokio::spawn(async move {
+        activity::record(
+            &activity_pool,
+            NewActivity::entity_updated(&uid, ActivityEntity::Plugin, &pid, &pid),
+        )
+        .await;
+    });
 }
 
 pub async fn set_plugin_agents_handler(
@@ -226,37 +248,21 @@ pub async fn set_plugin_agents_handler(
     if is_platform_plugin(&pool, &user_ctx.user_id, &plugin_id).await {
         return shared::error_response(StatusCode::FORBIDDEN, "Platform plugin cannot be modified");
     }
-    let plugin = repositories::find_user_plugin(&pool, &user_ctx.user_id, &plugin_id).await;
-    match plugin {
-        Ok(Some(p)) => {
-            let agent_ids: Vec<AgentId> =
-                req.ids.iter().map(|s| AgentId::from(s.clone())).collect();
-            if let Err(e) = repositories::set_plugin_agents(&pool, &p.id, &agent_ids).await {
-                tracing::error!(error = %e, "Failed to set plugin agents");
-                return shared::error_response(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to set agents",
-                );
-            }
-            if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
-            }
-            let activity_pool = pool.clone();
-            let uid = user_ctx.user_id.clone();
-            let pid = plugin_id.clone();
-            tokio::spawn(async move {
-                activity::record(
-                    &activity_pool,
-                    NewActivity::entity_updated(&uid, ActivityEntity::Plugin, &pid, &pid),
-                )
-                .await;
-            });
-            StatusCode::NO_CONTENT.into_response()
-        }
-        Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Plugin not found"),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to get user plugin");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
-        }
+
+    let p = match resolve_user_plugin(&pool, &user_ctx.user_id, &plugin_id).await {
+        Ok(p) => p,
+        Err(resp) => return resp,
+    };
+
+    let agent_ids: Vec<AgentId> = req.ids.iter().map(|s| AgentId::from(s.clone())).collect();
+    if let Err(e) = repositories::set_plugin_agents(&pool, &p.id, &agent_ids).await {
+        tracing::error!(error = %e, "Failed to set plugin agents");
+        return shared::error_response(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Failed to set agents",
+        );
     }
+
+    mark_dirty_and_record_activity(&pool, &user_ctx.user_id, &plugin_id).await;
+    StatusCode::NO_CONTENT.into_response()
 }

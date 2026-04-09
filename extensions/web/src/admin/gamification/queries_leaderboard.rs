@@ -152,7 +152,7 @@ pub async fn get_department_scores(
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, Copy)]
 pub struct LeaderboardAverages {
     pub avg_xp: f64,
     pub avg_sessions: f64,

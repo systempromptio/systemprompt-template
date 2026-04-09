@@ -4,6 +4,7 @@ use serde_json::{json, Value};
 use systemprompt::models::Config;
 use systemprompt::template_provider::{ExtenderContext, TemplateDataExtender};
 
+#[derive(Debug, Clone, Copy)]
 pub struct OrgUrlExtender;
 
 impl OrgUrlExtender {

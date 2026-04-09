@@ -11,6 +11,7 @@ use super::renderers::{render_references, render_related_posts, render_social_ac
 use super::types::RelatedPost;
 use crate::error::BlogError;
 
+#[derive(Debug, Clone, Copy)]
 pub struct BlogPostPageDataProvider;
 
 impl BlogPostPageDataProvider {

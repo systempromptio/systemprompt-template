@@ -39,7 +39,7 @@ pub async fn import_plugin_handler(
 
 async fn fetch_plugin_bundle(
     url: &str,
-) -> Result<crate::admin::repositories::export::PluginBundle, Response> {
+) -> Result<repositories::export::PluginBundle, Response> {
     let resp = reqwest::get(url).await.map_err(|e| {
         shared::error_response(
             StatusCode::BAD_REQUEST,
@@ -55,7 +55,7 @@ async fn fetch_plugin_bundle(
         ));
     }
 
-    resp.json::<crate::admin::repositories::export::PluginBundle>()
+    resp.json::<repositories::export::PluginBundle>()
         .await
         .map_err(|e| {
             shared::error_response(
@@ -67,7 +67,7 @@ async fn fetch_plugin_bundle(
 
 fn import_bundle_for_site(
     pool: &PgPool,
-    bundle: &crate::admin::repositories::export::PluginBundle,
+    bundle: &repositories::export::PluginBundle,
 ) -> Response {
     let services_path = match get_services_path() {
         Ok(p) => p,
@@ -104,7 +104,7 @@ fn import_bundle_for_site(
 async fn import_bundle_for_user(
     pool: &PgPool,
     user_ctx: &UserContext,
-    bundle: &crate::admin::repositories::export::PluginBundle,
+    bundle: &repositories::export::PluginBundle,
 ) -> Response {
     let skills: Vec<_> = bundle
         .files

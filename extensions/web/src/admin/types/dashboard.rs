@@ -33,7 +33,7 @@ pub struct DashboardData {
     pub content_performance: Vec<ContentPerformanceRow>,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone, Copy)]
 pub struct TimeSeriesBucket {
     pub bucket: DateTime<Utc>,
     pub tool_uses: i64,
@@ -60,13 +60,13 @@ pub struct SkillCount {
     pub count: i64,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone, Copy)]
 pub struct HourlyActivity {
     pub hour: i32,
     pub count: i64,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct ActivityStats {
     pub events_today: i64,
     pub events_this_week: i64,
@@ -166,7 +166,7 @@ fn default_traffic_range() -> String {
     "today".to_string()
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, Copy)]
 pub struct PaginationQuery {
     #[serde(default = "default_limit")]
     pub limit: i64,

@@ -24,6 +24,7 @@ fn slugify(name: &str) -> String {
         .join("-")
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct UserBundleContext<'a> {
     pub pool: &'a PgPool,
     pub user_id: &'a UserId,

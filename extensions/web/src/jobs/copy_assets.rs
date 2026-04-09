@@ -29,28 +29,7 @@ impl CopyExtensionAssetsJob {
                 .with_duration(duration_ms));
         }
 
-        let dist_dir = paths.web().dist();
-
-        let mut copied = 0u64;
-        let mut failed = 0u64;
-
-        for (ext_id, asset) in assets {
-            match copy_asset(dist_dir, ext_id, &asset).await {
-                Ok(()) => copied += 1,
-                Err(e) => {
-                    if asset.is_required() {
-                        return Err(e.into());
-                    }
-                    tracing::warn!(
-                        extension = %ext_id,
-                        asset = %asset.source().display(),
-                        error = %e,
-                        "Optional asset copy failed"
-                    );
-                    failed += 1;
-                }
-            }
-        }
+        let (copied, failed) = copy_all_assets(paths.web().dist(), assets).await?;
 
         let duration_ms = u64::try_from(start_time.elapsed().as_millis()).unwrap_or(u64::MAX);
 
@@ -65,6 +44,34 @@ impl CopyExtensionAssetsJob {
             .with_stats(copied, failed)
             .with_duration(duration_ms))
     }
+}
+
+async fn copy_all_assets(
+    dist_dir: &Path,
+    assets: Vec<(&str, AssetDefinition)>,
+) -> anyhow::Result<(u64, u64)> {
+    let mut copied = 0u64;
+    let mut failed = 0u64;
+
+    for (ext_id, asset) in assets {
+        match copy_asset(dist_dir, ext_id, &asset).await {
+            Ok(()) => copied += 1,
+            Err(e) => {
+                if asset.is_required() {
+                    return Err(e.into());
+                }
+                tracing::warn!(
+                    extension = %ext_id,
+                    asset = %asset.source().display(),
+                    error = %e,
+                    "Optional asset copy failed"
+                );
+                failed += 1;
+            }
+        }
+    }
+
+    Ok((copied, failed))
 }
 
 async fn copy_asset(

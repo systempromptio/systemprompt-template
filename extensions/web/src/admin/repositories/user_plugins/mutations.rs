@@ -28,7 +28,7 @@ pub async fn create_user_plugin(
         &req.description,
         &req.version,
         &req.category,
-        &req.keywords as &[String],
+        &req.keywords,
         &req.author_name,
         req.base_plugin_id.as_deref(),
     )

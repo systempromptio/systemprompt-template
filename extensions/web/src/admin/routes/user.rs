@@ -49,7 +49,7 @@ fn build_core_write_routes() -> Router<Arc<PgPool>> {
         .route("/user-agents", post(handlers::create_user_agent_handler))
         .route(
             "/user-agents/{agent_id}",
-            axum::routing::delete(handlers::delete_user_agent_handler),
+            delete(handlers::delete_user_agent_handler),
         )
         .route(
             "/marketplace-plugins/{plugin_id}/ratings",
@@ -186,7 +186,7 @@ fn user_secret_routes() -> Router<Arc<PgPool>> {
         )
         .route(
             "/user/skills/{skill_id}/secrets/{var_name}",
-            axum::routing::delete(handlers::user_entities::delete_skill_secret_handler),
+            delete(handlers::user_entities::delete_skill_secret_handler),
         )
 }
 

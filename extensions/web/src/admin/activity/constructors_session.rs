@@ -169,7 +169,7 @@ impl NewActivity {
             entity: Some(ActivityEntityRef {
                 entity_type: ActivityEntity::Agent,
                 entity_id: Some(session_id.to_string()),
-                entity_name: agent_type.map(std::string::ToString::to_string),
+                entity_name: agent_type.map(ToString::to_string),
             }),
             description: format!("Spawned {} agent", agent_type.unwrap_or("unknown")),
             metadata: serde_json::json!({ "session_id": session_id }),
@@ -195,7 +195,7 @@ impl NewActivity {
             entity: Some(ActivityEntityRef {
                 entity_type: ActivityEntity::Agent,
                 entity_id: Some(session_id.to_string()),
-                entity_name: agent_type.map(std::string::ToString::to_string),
+                entity_name: agent_type.map(ToString::to_string),
             }),
             description,
             metadata: serde_json::json!({ "session_id": session_id }),
@@ -212,7 +212,7 @@ impl NewActivity {
             entity: Some(ActivityEntityRef {
                 entity_type: ActivityEntity::Agent,
                 entity_id: Some(session_id.to_string()),
-                entity_name: name.map(std::string::ToString::to_string),
+                entity_name: name.map(ToString::to_string),
             }),
             description: format!("Teammate {who} went idle"),
             metadata: serde_json::json!({ "session_id": session_id }),

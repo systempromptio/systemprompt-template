@@ -79,7 +79,7 @@ pub async fn apply_sync_diff(
             skill.name,
             skill.description,
             skill.content,
-            &skill.tags as &[String],
+            &skill.tags,
             skill.base_skill_id.as_ref().map(SkillId::as_str),
         )
         .execute(&mut *tx)
@@ -156,7 +156,7 @@ pub async fn restore_skills_from_snapshot(
             skill.content,
             skill.enabled,
             skill.version,
-            &skill.tags as &[String],
+            &skill.tags,
             skill.base_skill_id.as_ref().map(SkillId::as_str),
             skill.created_at,
             skill.updated_at,

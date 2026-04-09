@@ -33,7 +33,7 @@ pub fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<PgPool>
             "/org/marketplaces",
             get(handlers::org_marketplaces::list_org_marketplaces_handler),
         )
-        .with_state(read_pool.clone());
+        .with_state(Arc::clone(read_pool));
 
     let writes = Router::new()
         .route("/users", post(handlers::create_user_handler))
@@ -82,7 +82,7 @@ pub fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<PgPool>
             "/org/marketplaces/{id}/publish",
             post(handlers::org_marketplaces::publish_marketplace_handler),
         )
-        .with_state(write_pool.clone());
+        .with_state(Arc::clone(write_pool));
 
     reads.merge(writes).layer(axum_middleware::from_fn(
         middleware::require_admin_middleware,
@@ -149,5 +149,5 @@ pub fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
             "/gamification/leaderboard",
             get(gamification::leaderboard_handler),
         )
-        .with_state(read_pool.clone())
+        .with_state(Arc::clone(read_pool))
 }

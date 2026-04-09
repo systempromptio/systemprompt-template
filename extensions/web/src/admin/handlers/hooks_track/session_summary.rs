@@ -3,6 +3,7 @@ use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::admin::repositories::hooks_track;
 
+#[derive(Debug)]
 pub struct SessionSummary {
     pub summary: String,
     pub tags: String,

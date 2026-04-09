@@ -3,6 +3,7 @@ use crate::admin::types::CreateUserPluginRequest;
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 
+#[derive(Debug, Clone)]
 pub struct ForkSinglePluginResult {
     pub plugin: crate::admin::types::UserPlugin,
     pub forked_skills: usize,
@@ -38,6 +39,23 @@ pub async fn fork_single_plugin(
     let forked_agent_ids = fork_plugin_agents(pool, user_id, org_plugin, services_path).await;
     let forked_mcp_ids = fork_plugin_mcp_servers(pool, user_id, org_plugin, services_path).await;
 
+    link_forked_entities(pool, &plugin.id, &forked_skill_ids, &forked_agent_ids, &forked_mcp_ids)
+        .await;
+
+    Ok(ForkSinglePluginResult {
+        forked_skills: forked_skill_ids.len(),
+        forked_agents: forked_agent_ids.len(),
+        plugin,
+    })
+}
+
+async fn link_forked_entities(
+    pool: &PgPool,
+    plugin_id: &str,
+    forked_skill_ids: &[String],
+    forked_agent_ids: &[String],
+    forked_mcp_ids: &[String],
+) {
     let skill_ids: Vec<SkillId> = forked_skill_ids
         .iter()
         .map(|s| SkillId::from(s.clone()))
@@ -46,29 +64,24 @@ pub async fn fork_single_plugin(
         .iter()
         .map(|s| AgentId::from(s.clone()))
         .collect();
-    if let Err(e) = repositories::set_plugin_skills(pool, &plugin.id, &skill_ids).await {
+    if let Err(e) = repositories::set_plugin_skills(pool, plugin_id, &skill_ids).await {
         tracing::warn!(error = %e, "Failed to set plugin skills");
     }
-    if let Err(e) = repositories::set_plugin_agents(pool, &plugin.id, &agent_ids).await {
+    if let Err(e) = repositories::set_plugin_agents(pool, plugin_id, &agent_ids).await {
         tracing::warn!(error = %e, "Failed to set plugin agents");
+    }
+    if forked_mcp_ids.is_empty() {
+        return;
     }
     let mcp_ids: Vec<McpServerId> = forked_mcp_ids
         .iter()
         .map(|s| McpServerId::new(s.clone()))
         .collect();
-    if !mcp_ids.is_empty() {
-        if let Err(e) =
-            repositories::user_plugins::set_plugin_mcp_servers(pool, &plugin.id, &mcp_ids).await
-        {
-            tracing::warn!(error = %e, "Failed to set plugin MCP servers");
-        }
+    if let Err(e) =
+        repositories::user_plugins::set_plugin_mcp_servers(pool, plugin_id, &mcp_ids).await
+    {
+        tracing::warn!(error = %e, "Failed to set plugin MCP servers");
     }
-
-    Ok(ForkSinglePluginResult {
-        forked_skills: forked_skill_ids.len(),
-        forked_agents: forked_agent_ids.len(),
-        plugin,
-    })
 }
 
 pub(super) fn read_skill_content(skill_dir: &std::path::Path) -> String {
@@ -170,55 +183,54 @@ async fn fork_plugin_mcp_servers(
     let mut forked_mcp_ids = Vec::new();
 
     for mcp_server_id in &org_plugin.mcp_servers {
-        let server_detail =
-            match repositories::mcp_servers::find_mcp_server(services_path, mcp_server_id) {
-                Ok(Some(s)) => s,
-                Ok(None) => {
-                    tracing::warn!(
-                        mcp_server = %mcp_server_id,
-                        "MCP server not found during plugin fork, skipping"
-                    );
-                    continue;
-                }
-                Err(e) => {
-                    tracing::warn!(
-                        error = %e,
-                        mcp_server = %mcp_server_id,
-                        "Failed to read MCP server config during plugin fork"
-                    );
-                    continue;
-                }
-            };
-
-        let create_req = crate::admin::types::CreateUserMcpServerRequest {
-            mcp_server_id: McpServerId::new(mcp_server_id.clone()),
-            name: server_detail.description.clone(),
-            description: server_detail.description.clone(),
-            binary: server_detail.binary,
-            package_name: server_detail.package_name,
-            port: i32::from(server_detail.port),
-            endpoint: server_detail.endpoint,
-            oauth_required: server_detail.oauth_required,
-            oauth_scopes: server_detail.oauth_scopes,
-            oauth_audience: server_detail.oauth_audience,
-            base_mcp_server_id: Some(McpServerId::new(mcp_server_id.clone())),
-        };
-
-        match repositories::user_mcp_servers::get_or_create_user_mcp_server(
-            pool,
-            user_id,
-            &create_req,
-        )
-        .await
+        if let Some(id) = fork_single_mcp_server(pool, user_id, services_path, mcp_server_id).await
         {
-            Ok(mcp) => forked_mcp_ids.push(mcp.id),
-            Err(e) => tracing::warn!(
-                error = %e,
-                mcp_server = %mcp_server_id,
-                "Failed to fork MCP server during plugin fork"
-            ),
+            forked_mcp_ids.push(id);
         }
     }
 
     forked_mcp_ids
+}
+
+async fn fork_single_mcp_server(
+    pool: &PgPool,
+    user_id: &UserId,
+    services_path: &std::path::Path,
+    mcp_server_id: &str,
+) -> Option<String> {
+    let server_detail = match repositories::mcp_servers::find_mcp_server(services_path, mcp_server_id) {
+        Ok(Some(s)) => s,
+        Ok(None) => {
+            tracing::warn!(mcp_server = %mcp_server_id, "MCP server not found during plugin fork, skipping");
+            return None;
+        }
+        Err(e) => {
+            tracing::warn!(error = %e, mcp_server = %mcp_server_id, "Failed to read MCP server config during plugin fork");
+            return None;
+        }
+    };
+
+    let create_req = crate::admin::types::CreateUserMcpServerRequest {
+        mcp_server_id: McpServerId::new(mcp_server_id.to_string()),
+        name: server_detail.description.clone(),
+        description: server_detail.description.clone(),
+        binary: server_detail.binary,
+        package_name: server_detail.package_name,
+        port: i32::from(server_detail.port),
+        endpoint: server_detail.endpoint,
+        oauth_required: server_detail.oauth_required,
+        oauth_scopes: server_detail.oauth_scopes,
+        oauth_audience: server_detail.oauth_audience,
+        base_mcp_server_id: Some(McpServerId::new(mcp_server_id.to_string())),
+    };
+
+    match repositories::user_mcp_servers::get_or_create_user_mcp_server(pool, user_id, &create_req)
+        .await
+    {
+        Ok(mcp) => Some(mcp.id),
+        Err(e) => {
+            tracing::warn!(error = %e, mcp_server = %mcp_server_id, "Failed to fork MCP server during plugin fork");
+            None
+        }
+    }
 }

@@ -3,7 +3,7 @@ use axum::http::HeaderMap;
 use axum::Json;
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct SetSessionRequest {
     pub access_token: String,
     pub expires_in: Option<i64>,

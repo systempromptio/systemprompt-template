@@ -48,7 +48,7 @@ pub async fn govern_tool_use(
     let plugin_id = query.plugin_id.as_deref();
 
     let denial_params = AuthDenialParams {
-        pool: &*pool,
+        pool: &pool,
         session_id: &session_id,
         tool_name,
         agent_id,
@@ -108,7 +108,7 @@ pub async fn govern_tool_use(
     let evaluation = rules::evaluate(&ctx);
 
     spawn_audit_recording(&AuditParams {
-        pool: &*pool,
+        pool: &pool,
         user_id: &user_id,
         session_id: &session_id,
         tool_name,

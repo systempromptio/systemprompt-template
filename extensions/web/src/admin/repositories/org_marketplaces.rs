@@ -217,6 +217,7 @@ pub async fn list_github_marketplaces(pool: &PgPool) -> Result<Vec<OrgMarketplac
     .await
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct SyncLogEntry<'a> {
     pub marketplace_id: &'a str,
     pub operation: &'a str,

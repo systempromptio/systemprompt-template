@@ -64,7 +64,7 @@ pub struct MarketplaceUploadResponse {
     pub changelog: Vec<MarketplaceChangelogEntry>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone, Copy)]
 pub struct MarketplaceRestoreResponse {
     pub restored_version: i32,
     pub new_version: i32,

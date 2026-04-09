@@ -24,8 +24,26 @@ impl ContentAnalyticsAggregationJob {
         tracing::info!("Content analytics aggregation started");
 
         let stats = Self::aggregate_engagement_stats(pool).await?;
-
         let total_count = stats.len();
+
+        let (success_count, error_count) = Self::upsert_all_metrics(pool, stats).await;
+
+        let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+
+        tracing::info!(
+            total = total_count,
+            success = success_count,
+            errors = error_count,
+            duration_ms,
+            "Content analytics aggregation completed"
+        );
+
+        Ok(JobResult::success()
+            .with_stats(success_count, error_count)
+            .with_duration(duration_ms))
+    }
+
+    async fn upsert_all_metrics(pool: &PgPool, stats: Vec<ContentAnalyticsRow>) -> (u64, u64) {
         let mut success_count = 0u64;
         let mut error_count = 0u64;
 
@@ -50,19 +68,7 @@ impl ContentAnalyticsAggregationJob {
             }
         }
 
-        let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
-
-        tracing::info!(
-            total = total_count,
-            success = success_count,
-            errors = error_count,
-            duration_ms,
-            "Content analytics aggregation completed"
-        );
-
-        Ok(JobResult::success()
-            .with_stats(success_count, error_count)
-            .with_duration(duration_ms))
+        (success_count, error_count)
     }
 
     async fn aggregate_engagement_stats(

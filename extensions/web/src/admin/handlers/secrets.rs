@@ -27,7 +27,7 @@ use super::responses::{
     SecretsListResponse,
 };
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Debug)]
 pub struct ResolveQuery {
     token: String,
 }
@@ -60,50 +60,56 @@ pub async fn resolve_secrets_handler(
     Path(plugin_id): Path<String>,
     Query(params): Query<ResolveQuery>,
 ) -> Response {
+    match resolve_secrets_inner(&pool, &plugin_id, &params.token).await {
+        Ok(resp) => resp,
+        Err(resp) => resp,
+    }
+}
+
+async fn resolve_secrets_inner(
+    pool: &PgPool,
+    plugin_id: &str,
+    token: &str,
+) -> Result<Response, Response> {
     let (user_id, token_plugin_id) =
-        match secret_resolve::validate_and_consume_token(&pool, &params.token).await {
-            Ok(v) => v,
-            Err(e) => {
+        secret_resolve::validate_and_consume_token(pool, token)
+            .await
+            .map_err(|e| {
                 tracing::warn!(error = %e, "Token validation failed");
-                return shared::error_response(
-                    StatusCode::UNAUTHORIZED,
-                    "Invalid or expired token",
-                );
-            }
-        };
+                shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or expired token")
+            })?;
 
     if token_plugin_id != plugin_id {
-        return shared::error_response(StatusCode::FORBIDDEN, "Token plugin mismatch");
+        return Err(shared::error_response(
+            StatusCode::FORBIDDEN,
+            "Token plugin mismatch",
+        ));
     }
 
-    let master_key = match secret_crypto::load_master_key() {
-        Ok(k) => k,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to load master key");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal configuration error",
-            );
-        }
-    };
+    let master_key = secret_crypto::load_master_key().map_err(|e| {
+        tracing::error!(error = %e, "Failed to load master key");
+        shared::error_response(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Internal configuration error",
+        )
+    })?;
 
-    match secret_resolve::resolve_secrets_for_plugin(
-        &pool,
+    let secrets = secret_resolve::resolve_secrets_for_plugin(
+        pool,
         &UserId::new(&user_id),
-        &plugin_id,
+        plugin_id,
         &master_key,
     )
     .await
-    {
-        Ok(secrets) => Json(SecretsListResponse { secrets }).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to resolve secrets");
-            shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Failed to resolve secrets",
-            )
-        }
-    }
+    .map_err(|e| {
+        tracing::error!(error = %e, "Failed to resolve secrets");
+        shared::error_response(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Failed to resolve secrets",
+        )
+    })?;
+
+    Ok(Json(SecretsListResponse { secrets }).into_response())
 }
 
 pub async fn audit_log_handler(
@@ -147,33 +153,41 @@ pub async fn rotate_handler(
     Path(plugin_id): Path<String>,
     headers: HeaderMap,
 ) -> Response {
-    let session = match extract_user_from_cookie(&headers) {
-        Ok(s) => s,
-        Err(e) => return shared::error_response(StatusCode::UNAUTHORIZED, &e),
-    };
+    match rotate_inner(&pool, &plugin_id, &headers).await {
+        Ok(resp) => resp,
+        Err(resp) => resp,
+    }
+}
+
+async fn rotate_inner(
+    pool: &PgPool,
+    plugin_id: &str,
+    headers: &HeaderMap,
+) -> Result<Response, Response> {
+    let session = extract_user_from_cookie(headers)
+        .map_err(|e| shared::error_response(StatusCode::UNAUTHORIZED, &e))?;
     let user_id = session.user_id;
 
-    let master_key = match secret_crypto::load_master_key() {
-        Ok(k) => k,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to load master key");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal configuration error",
-            );
-        }
-    };
+    let master_key = secret_crypto::load_master_key().map_err(|e| {
+        tracing::error!(error = %e, "Failed to load master key");
+        shared::error_response(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Internal configuration error",
+        )
+    })?;
 
-    if let Err(e) = secret_keys::rotate_user_dek(&pool, &user_id, &master_key).await {
-        tracing::error!(error = %e, user_id = %user_id, "DEK rotation failed");
-        return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Key rotation failed");
-    }
+    secret_keys::rotate_user_dek(pool, &user_id, &master_key)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, user_id = %user_id, "DEK rotation failed");
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Key rotation failed")
+        })?;
 
-    if let Err(e) = secret_audit::insert_audit_entry(&pool, &user_id, &plugin_id, "rotated").await {
+    if let Err(e) = secret_audit::insert_audit_entry(pool, &user_id, plugin_id, "rotated").await {
         tracing::warn!(error = %e, "Failed to insert secret audit log");
     }
 
-    Json(ResultOkResponse { result: "ok" }).into_response()
+    Ok(Json(ResultOkResponse { result: "ok" }).into_response())
 }
 
 fn validate_plugin_jwt(headers: &HeaderMap) -> Result<String, Box<Response>> {

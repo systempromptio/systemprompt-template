@@ -47,13 +47,13 @@ pub struct LandingPageView {
     pub avg_time: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct ContentVisibility {
     pub has_top_content: bool,
     pub has_landing_pages: bool,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct BreakdownVisibility {
     pub has_geo: bool,
     pub has_devices: bool,
@@ -92,11 +92,12 @@ pub struct ApiErrorResponse {
     pub error: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct ApiStatusResponse {
     pub status: &'static str,
 }
 
+#[derive(Debug)]
 pub struct SparklineStrings {
     pub sessions: String,
     pub page_views: String,

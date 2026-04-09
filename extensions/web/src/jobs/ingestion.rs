@@ -45,46 +45,11 @@ impl ContentIngestionJob {
                 "Ingesting source"
             );
 
-            match ingestion_service
-                .ingest_path_with_options(
-                    source.path(),
-                    source.source_id(),
-                    source.category_id(),
-                    options,
-                )
-                .await
-            {
-                Ok(report) => {
-                    total_processed += report.files_processed as u64;
-                    total_errors += report.errors.len() as u64;
-                    total_orphans_deleted += report.orphans_deleted as u64;
-
-                    for error in &report.errors {
-                        tracing::warn!(
-                            source_id = %source.source_id(),
-                            error = %error,
-                            "Ingestion warning"
-                        );
-                    }
-
-                    tracing::info!(
-                        source_id = %source.source_id(),
-                        files_found = report.files_found,
-                        files_processed = report.files_processed,
-                        orphans_deleted = report.orphans_deleted,
-                        errors = report.errors.len(),
-                        "Source ingested"
-                    );
-                }
-                Err(e) => {
-                    tracing::error!(
-                        source_id = %source.source_id(),
-                        error = %e,
-                        "Source ingestion failed"
-                    );
-                    total_errors += 1;
-                }
-            }
+            let (processed, errors, orphans) =
+                ingest_source(&ingestion_service, source, options).await;
+            total_processed += processed;
+            total_errors += errors;
+            total_orphans_deleted += orphans;
         }
 
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
@@ -136,6 +101,55 @@ impl Job for ContentIngestionJob {
         let options = IngestionOptions::default().with_delete_orphans(delete_orphans);
 
         Self::execute_with_options(pool, &config, options).await
+    }
+}
+
+async fn ingest_source(
+    ingestion_service: &IngestionService,
+    source: &crate::config::ContentSourceValidated,
+    options: IngestionOptions,
+) -> (u64, u64, u64) {
+    match ingestion_service
+        .ingest_path_with_options(
+            source.path(),
+            source.source_id(),
+            source.category_id(),
+            options,
+        )
+        .await
+    {
+        Ok(report) => {
+            for error in &report.errors {
+                tracing::warn!(
+                    source_id = %source.source_id(),
+                    error = %error,
+                    "Ingestion warning"
+                );
+            }
+
+            tracing::info!(
+                source_id = %source.source_id(),
+                files_found = report.files_found,
+                files_processed = report.files_processed,
+                orphans_deleted = report.orphans_deleted,
+                errors = report.errors.len(),
+                "Source ingested"
+            );
+
+            (
+                report.files_processed as u64,
+                report.errors.len() as u64,
+                report.orphans_deleted as u64,
+            )
+        }
+        Err(e) => {
+            tracing::error!(
+                source_id = %source.source_id(),
+                error = %e,
+                "Source ingestion failed"
+            );
+            (0, 1, 0)
+        }
     }
 }
 

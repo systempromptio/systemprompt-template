@@ -45,7 +45,7 @@ pub async fn my_marketplace_page(
 }
 
 fn collect_marketplace_plugins(
-    user_plugins: &[crate::admin::repositories::user_plugins::UserPluginEnriched],
+    user_plugins: &[repositories::user_plugins::UserPluginEnriched],
 ) -> (Vec<MarketplacePluginView>, usize, usize, usize) {
     let mut total_skills = 0usize;
     let mut total_agents = 0usize;

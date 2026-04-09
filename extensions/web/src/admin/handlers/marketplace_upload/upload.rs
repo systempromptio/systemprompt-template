@@ -13,7 +13,7 @@ use systemprompt::identifiers::UserId;
 
 use crate::admin::activity::{self, NewActivity};
 use crate::admin::repositories;
-use crate::admin::types::{MarketplaceUploadResponse, NewChangelogEntry};
+use crate::admin::types::{MarketplaceChangelogEntry, MarketplaceUploadResponse, NewChangelogEntry};
 
 fn extract_and_parse_archive(
     body: &Bytes,
@@ -138,20 +138,8 @@ async fn apply_changes_and_respond(
         return super::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Failed to apply changes");
     }
 
-    let changelog =
-        match repositories::marketplace_versions::insert_changelog_entries(pool, changelog_entries)
-            .await
-        {
-            Ok(c) => c,
-            Err(e) => {
-                tracing::warn!(error = %e, "Failed to insert changelog entries (non-fatal)");
-                Vec::new()
-            }
-        };
-
-    if let Err(e) = repositories::marketplace_sync::invalidate_git_cache(user_id) {
-        tracing::warn!(error = %e, "Failed to invalidate git cache (non-fatal)");
-    }
+    let changelog = insert_changelog(pool, changelog_entries).await;
+    invalidate_cache(user_id);
 
     Json(MarketplaceUploadResponse {
         version_number: new_version,
@@ -161,6 +149,24 @@ async fn apply_changes_and_respond(
         changelog,
     })
     .into_response()
+}
+
+async fn insert_changelog(
+    pool: &PgPool,
+    entries: &[NewChangelogEntry],
+) -> Vec<MarketplaceChangelogEntry> {
+    repositories::marketplace_versions::insert_changelog_entries(pool, entries)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to insert changelog entries (non-fatal)");
+            Vec::new()
+        })
+}
+
+fn invalidate_cache(user_id: &UserId) {
+    if let Err(e) = repositories::marketplace_sync::invalidate_git_cache(user_id) {
+        tracing::warn!(error = %e, "Failed to invalidate git cache (non-fatal)");
+    }
 }
 
 async fn snapshot_and_save(
@@ -249,7 +255,7 @@ pub async fn marketplace_upload_handler(
 
     let uid = user_id.clone();
     let ver = new_version;
-    let p = pool.clone();
+    let p = Arc::clone(&pool);
     tokio::spawn(async move {
         activity::record(&p, NewActivity::marketplace_uploaded(&uid, ver)).await;
     });

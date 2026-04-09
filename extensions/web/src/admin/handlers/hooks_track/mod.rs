@@ -41,52 +41,75 @@ pub async fn handle_hook_track(
     if matches!(&payload.event, HookEvent::PreToolUse(_)) {
         return StatusCode::OK.into_response();
     }
-    if let Some(resp) = check_event_limit(&tier_cache, &pool, &user_id).await {
+    if let Some(resp) = check_tier_limits(&tier_cache, &pool, &user_id, &payload).await {
         return resp;
     }
-    if payload.event_name() == "SessionStart" {
-        if let Some(resp) = check_session_limit(&tier_cache, &pool, &user_id).await {
-            return resp;
-        }
-    }
-    for w in &warnings {
-        tracing::debug!(
-            event_type = payload.event_name(),
-            warning = %w,
-            "Hook payload validation warning"
-        );
-    }
+    log_payload_warnings(&payload, &warnings);
 
     let was_inserted = insert_hook_event(&pool, &user_id, &payload).await;
-
     if !was_inserted {
         tracing::trace!(
             plugin_id = %plugin_id,
             event_type = payload.event_name(),
             "Hook event deduplicated"
         );
+        return StatusCode::OK.into_response();
     }
 
-    if was_inserted {
-        let content_bytes = helpers::compute_content_bytes(&payload);
-        processing::process_inserted_event(&processing::ProcessInsertedEventParams {
-            pool: &*pool,
-            user_id: &user_id,
-            session_id: &SessionId::new(payload.session_id()),
-            event_type: payload.event_name(),
-            tool_name: payload.tool_name(),
-            content_input_bytes: content_bytes.input,
-            content_output_bytes: content_bytes.output,
-            payload: &payload,
-            event_hub: &event_hub,
-            ai_service: &ai_service,
-            jwt_token: &jwt_token,
-            tier_cache: &tier_cache,
-        })
-        .await;
-    }
-
+    dispatch_inserted_event(&pool, &user_id, &payload, &event_hub, &ai_service, &jwt_token, &tier_cache).await;
     StatusCode::OK.into_response()
+}
+
+async fn check_tier_limits(
+    tier_cache: &crate::admin::tier_enforcement::TierEnforcementCache,
+    pool: &PgPool,
+    user_id: &UserId,
+    payload: &HookEventPayload,
+) -> Option<Response> {
+    if let Some(resp) = check_event_limit(tier_cache, pool, user_id).await {
+        return Some(resp);
+    }
+    if payload.event_name() == "SessionStart" {
+        return check_session_limit(tier_cache, pool, user_id).await;
+    }
+    None
+}
+
+fn log_payload_warnings(payload: &HookEventPayload, warnings: &[String]) {
+    for w in warnings {
+        tracing::debug!(
+            event_type = payload.event_name(),
+            warning = %w,
+            "Hook payload validation warning"
+        );
+    }
+}
+
+async fn dispatch_inserted_event(
+    pool: &PgPool,
+    user_id: &UserId,
+    payload: &HookEventPayload,
+    event_hub: &EventHub,
+    ai_service: &Option<Arc<AiService>>,
+    jwt_token: &str,
+    tier_cache: &crate::admin::tier_enforcement::TierEnforcementCache,
+) {
+    let content_bytes = helpers::compute_content_bytes(payload);
+    processing::process_inserted_event(&processing::ProcessInsertedEventParams {
+        pool,
+        user_id,
+        session_id: &SessionId::new(payload.session_id()),
+        event_type: payload.event_name(),
+        tool_name: payload.tool_name(),
+        content_input_bytes: content_bytes.input,
+        content_output_bytes: content_bytes.output,
+        payload,
+        event_hub,
+        ai_service,
+        jwt_token,
+        tier_cache,
+    })
+    .await;
 }
 
 async fn insert_hook_event(pool: &PgPool, user_id: &UserId, payload: &HookEventPayload) -> bool {

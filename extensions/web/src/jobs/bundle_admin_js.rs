@@ -55,7 +55,7 @@ async fn build_per_page_bundles(
                 bundles_dir.display()
             ))
         })?
-        .filter_map(std::result::Result::ok)
+        .filter_map(Result::ok)
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "txt"))
         .collect();
     entries.sort_by_key(std::fs::DirEntry::file_name);

@@ -79,7 +79,7 @@ pub async fn my_skills_page(
 }
 
 fn build_skill_plugin_map(
-    user_plugins: &[crate::admin::repositories::user_plugins::UserPluginEnriched],
+    user_plugins: &[repositories::user_plugins::UserPluginEnriched],
 ) -> HashMap<String, Vec<NamedEntity>> {
     let mut map: HashMap<String, Vec<NamedEntity>> = HashMap::new();
     for ep in user_plugins {
@@ -181,7 +181,7 @@ pub async fn my_skill_edit_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
+    Query(params): Query<HashMap<String, String>>,
 ) -> Response {
     let skill_id = params.get("id");
     let is_edit = skill_id.is_some();
@@ -265,7 +265,7 @@ async fn build_required_secrets(
     let stored = repositories::list_skill_secrets(pool, &user_ctx.user_id, &SkillId::new(sid))
         .await
         .unwrap_or_else(|_| vec![]);
-    let stored_names: std::collections::HashSet<String> =
+    let stored_names: HashSet<String> =
         stored.iter().map(|s| s.var_name.clone()).collect();
 
     req_secrets

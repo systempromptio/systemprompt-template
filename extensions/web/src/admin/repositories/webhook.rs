@@ -3,6 +3,7 @@ use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::error::MarketplaceError;
 
+#[derive(Debug, Clone, Copy)]
 pub struct UsageEventParams<'a> {
     pub user_id: &'a UserId,
     pub session_id: &'a SessionId,

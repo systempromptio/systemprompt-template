@@ -4,7 +4,7 @@ use super::analytics::{
     CategoryBreakdownEntry, EntityCounts, HistoryEntry, InsightsData, MetricRow,
 };
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct ReportData {
     pub has_data: bool,
     pub report_date: String,

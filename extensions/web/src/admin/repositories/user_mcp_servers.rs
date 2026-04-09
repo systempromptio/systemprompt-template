@@ -48,7 +48,7 @@ pub async fn create_user_mcp_server(
         req.port,
         req.endpoint,
         req.oauth_required,
-        &req.oauth_scopes as &[String],
+        &req.oauth_scopes,
         req.oauth_audience,
         req.base_mcp_server_id.as_ref().map(McpServerId::as_str),
     )

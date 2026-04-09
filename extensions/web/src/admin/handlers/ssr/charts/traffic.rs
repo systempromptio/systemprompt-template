@@ -13,7 +13,7 @@ struct TrafficTooltip {
     x: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct TrafficChart {
     has_data: bool,
     area_path: String,

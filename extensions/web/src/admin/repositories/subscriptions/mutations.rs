@@ -15,6 +15,7 @@ pub struct UpsertSubscriptionParams<'a> {
     pub paddle_data: Option<serde_json::Value>,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct UpsertPlanParams<'a> {
     pub name: &'a str,
     pub display_name: &'a str,

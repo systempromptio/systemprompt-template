@@ -86,6 +86,7 @@ pub fn build_marketplace_zip(response: &SyncPluginsResponse) -> Result<Vec<u8>, 
     Ok(data)
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct CoworkExportParams<'a> {
     pub response: &'a SyncPluginsResponse,
     pub username: &'a str,

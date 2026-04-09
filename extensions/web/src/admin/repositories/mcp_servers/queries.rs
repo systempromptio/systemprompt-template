@@ -81,7 +81,7 @@ fn parse_server_detail(server_id: &str, val: &serde_yaml::Value) -> McpServerDet
     {
         Some(s) => s
             .iter()
-            .filter_map(|v| v.as_str().map(std::string::ToString::to_string))
+            .filter_map(|v| v.as_str().map(ToString::to_string))
             .collect(),
         None => Vec::new(),
     };

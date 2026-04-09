@@ -19,7 +19,7 @@ pub struct SkillViewExtra {
     pub skill_rating_notes: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct SkillStats {
     pub skill_count: usize,
 }

@@ -3,6 +3,7 @@ use crate::admin::repositories::daily_summaries::DailySummaryRow;
 
 use super::super::types::MetricRow;
 
+#[derive(Debug, Clone, Copy)]
 pub struct MetricRowInput {
     pub label: &'static str,
     pub today_val: f64,

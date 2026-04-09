@@ -7,6 +7,7 @@ use systemprompt::template_provider::{
 
 use super::partials::PRIORITY_MID;
 
+#[derive(Debug, Clone, Copy)]
 pub struct CliRemoteAnimationPartialRenderer;
 
 impl CliRemoteAnimationPartialRenderer {
@@ -44,6 +45,7 @@ impl ComponentRenderer for CliRemoteAnimationPartialRenderer {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct RustMeshAnimationPartialRenderer;
 
 impl RustMeshAnimationPartialRenderer {
@@ -81,6 +83,7 @@ impl ComponentRenderer for RustMeshAnimationPartialRenderer {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct MemoryLoopAnimationPartialRenderer;
 
 impl MemoryLoopAnimationPartialRenderer {
@@ -118,6 +121,7 @@ impl ComponentRenderer for MemoryLoopAnimationPartialRenderer {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct AgenticMeshAnimationPartialRenderer;
 
 impl AgenticMeshAnimationPartialRenderer {
@@ -155,6 +159,7 @@ impl ComponentRenderer for AgenticMeshAnimationPartialRenderer {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct ArchitectureDiagramPartialRenderer;
 
 impl ArchitectureDiagramPartialRenderer {

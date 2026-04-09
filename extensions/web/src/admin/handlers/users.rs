@@ -120,7 +120,7 @@ pub async fn create_user_handler(
     }
     match repositories::create_user(&pool, &body).await {
         Ok(user) => {
-            let p = pool.clone();
+            let p = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let new_user_id = user.user_id.clone();
             let name = user
@@ -160,7 +160,7 @@ pub async fn update_user_handler(
     }
     match repositories::update_user(&pool, &user_id, &body).await {
         Ok(Some(user)) => {
-            let p = pool.clone();
+            let p = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let target_user_id = user.user_id.clone();
             let name = user
@@ -200,7 +200,7 @@ pub async fn delete_user_handler(
     }
     match repositories::delete_user(&pool, &user_id).await {
         Ok(true) => {
-            let p = pool.clone();
+            let p = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let target = user_id.clone();
             tokio::spawn(async move {

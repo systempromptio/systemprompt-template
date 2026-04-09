@@ -6,6 +6,7 @@ use systemprompt::extension::prelude::*;
 
 use super::config::{BrandingConfig, NavigationConfig};
 
+#[derive(Debug)]
 pub struct NavigationPageDataProvider {
     config: Arc<NavigationConfig>,
     branding: Option<BrandingConfig>,

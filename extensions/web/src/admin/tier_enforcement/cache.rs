@@ -10,6 +10,7 @@ use tokio::sync::RwLock;
 use super::super::tier_limits::{TierLimits, UsageSnapshot};
 use super::usage::fetch_usage_from_db;
 
+#[derive(Debug)]
 struct CachedTierContext {
     limits: Arc<TierLimits>,
     plan_name: String,
@@ -18,6 +19,7 @@ struct CachedTierContext {
     cached_at: Instant,
 }
 
+#[derive(Debug)]
 struct CachedUsageSnapshot {
     snapshot: Arc<UsageSnapshot>,
     cached_at: Instant,
@@ -26,7 +28,7 @@ struct CachedUsageSnapshot {
 const TIER_CACHE_TTL_SECS: u64 = 60;
 const USAGE_CACHE_TTL_SECS: u64 = 10;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TierEnforcementCache {
     tier_cache: Arc<RwLock<HashMap<String, CachedTierContext>>>,
     usage_cache: Arc<RwLock<HashMap<String, CachedUsageSnapshot>>>,

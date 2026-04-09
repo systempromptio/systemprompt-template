@@ -136,7 +136,7 @@ pub async fn create_skill_handler(
             let name = body.name.clone();
             let skill_id_clone = skill.skill_id.clone();
             let uid = user_id.clone();
-            let p = pool.clone();
+            let p = Arc::clone(&pool);
             tokio::spawn(async move {
                 crate::admin::activity::record(
                     &p,

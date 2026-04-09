@@ -1,6 +1,7 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 
+#[derive(Debug, Clone, Copy)]
 pub struct DailyAggregationParams<'a> {
     pub pool: &'a PgPool,
     pub user_id: &'a UserId,
@@ -50,6 +51,7 @@ pub async fn upsert_daily_aggregation(params: &DailyAggregationParams<'_>) {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct SessionSummaryParams<'a> {
     pub pool: &'a PgPool,
     pub session_id: &'a SessionId,

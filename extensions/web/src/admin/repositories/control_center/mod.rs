@@ -137,6 +137,7 @@ async fn fetch_daily_stats(pool: &PgPool, user_id: &UserId) -> DailyRow {
     )
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct TodayOutcomeStats {
     pub completed_today: i64,
     pub positive_count: i64,

@@ -11,7 +11,7 @@ use systemprompt::identifiers::Email;
 
 use crate::admin::repositories::magic_links;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct MagicLinkRequest {
     pub email: String,
 }
@@ -88,7 +88,7 @@ pub async fn request_magic_link(
     )
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ValidateTokenRequest {
     pub token: String,
 }

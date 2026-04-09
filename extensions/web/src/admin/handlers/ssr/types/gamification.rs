@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct AchievementView {
     pub achievement_id: &'static str,
     pub name: &'static str,
@@ -24,7 +24,7 @@ pub struct AchievementCategoryView {
     pub completion_pct: u32,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct RankView {
     pub level: i32,
     pub name: &'static str,

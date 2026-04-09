@@ -106,7 +106,19 @@ pub async fn insert_session_analysis(
         "Inserting session analysis"
     );
 
-    let result = sqlx::query!(
+    if let Err(e) = execute_upsert_analysis(pool, session_id, user_id, analysis, &p).await {
+        tracing::warn!(error = %e, "Failed to insert session analysis");
+    }
+}
+
+async fn execute_upsert_analysis(
+    pool: &PgPool,
+    session_id: &str,
+    user_id: &str,
+    analysis: &SessionAnalysis,
+    p: &InsertParams,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
         r"INSERT INTO session_analyses
             (session_id, user_id, title, description, summary, tags,
              goal_achieved, quality_score, outcome, error_analysis,
@@ -167,9 +179,6 @@ pub async fn insert_session_analysis(
         p.client_surface,
     )
     .execute(pool)
-    .await;
-
-    if let Err(e) = result {
-        tracing::warn!(error = %e, "Failed to insert session analysis");
-    }
+    .await?;
+    Ok(())
 }

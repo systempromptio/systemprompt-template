@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -15,7 +17,7 @@ pub async fn query_handler(
 ) -> Response {
     tracing::info!(query = %request.query, "Searching content");
 
-    let search_service = SearchService::new(state.pool.clone());
+    let search_service = SearchService::new(Arc::clone(&state.pool));
 
     match search_service.search(&request).await {
         Ok(response) => {
@@ -33,7 +35,7 @@ pub async fn list_content_handler(
     State(state): State<BlogState>,
     Path(source_id): Path<String>,
 ) -> Response {
-    let content_service = ContentService::new(state.pool.clone());
+    let content_service = ContentService::new(Arc::clone(&state.pool));
 
     match content_service.list_by_source(&source_id).await {
         Ok(content) => Json(content).into_response(),
@@ -45,7 +47,7 @@ pub async fn get_content_handler(
     State(state): State<BlogState>,
     Path((source_id, slug)): Path<(String, String)>,
 ) -> Response {
-    let content_service = ContentService::new(state.pool.clone());
+    let content_service = ContentService::new(Arc::clone(&state.pool));
 
     match content_service
         .get_by_source_and_slug(&source_id, &slug)

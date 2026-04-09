@@ -32,6 +32,7 @@ pub async fn list_governance_decisions(
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct GovernanceCounts {
     pub total: i64,
     pub allowed: i64,

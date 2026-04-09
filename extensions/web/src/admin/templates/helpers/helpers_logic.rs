@@ -2,6 +2,7 @@ use handlebars::{
     Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext, RenderError,
 };
 
+#[derive(Debug, Clone, Copy)]
 pub struct EqHelper;
 impl HelperDef for EqHelper {
     fn call_inner<'reg: 'rc, 'rc>(
@@ -24,6 +25,7 @@ impl HelperDef for EqHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct GtHelper;
 impl HelperDef for GtHelper {
     fn call_inner<'reg: 'rc, 'rc>(
@@ -41,6 +43,7 @@ impl HelperDef for GtHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct NotHelper;
 impl HelperDef for NotHelper {
     fn call_inner<'reg: 'rc, 'rc>(
@@ -64,6 +67,7 @@ impl HelperDef for NotHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct AddHelper;
 impl HelperDef for AddHelper {
     fn call<'reg: 'rc, 'rc>(
@@ -81,6 +85,7 @@ impl HelperDef for AddHelper {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct SubHelper;
 impl HelperDef for SubHelper {
     fn call<'reg: 'rc, 'rc>(

@@ -52,7 +52,7 @@ pub struct AnalyseSessionRequest {
     pub session_id: String,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone, Copy)]
 pub struct TodayStats {
     pub sessions_started: i64,
     pub total_prompts: i64,

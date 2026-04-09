@@ -17,6 +17,7 @@ pub struct UserSettingsRow {
     pub updated_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct UpsertUserSettings<'a> {
     pub user_id: &'a str,
     pub display_name: Option<&'a str>,

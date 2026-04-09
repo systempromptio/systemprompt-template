@@ -19,7 +19,7 @@ pub struct MarketplacePluginView {
     pub mcp_servers: Vec<NamedEntity>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct MarketplaceStats {
     pub plugin_count: usize,
     pub total_skills: usize,

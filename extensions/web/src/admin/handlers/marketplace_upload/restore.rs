@@ -148,7 +148,7 @@ pub async fn marketplace_restore_handler(
 
     let uid = user_id.clone();
     let ver = target_version.version_number;
-    let p = pool.clone();
+    let p = Arc::clone(&pool);
     tokio::spawn(async move {
         activity::record(&p, NewActivity::marketplace_restored(&uid, ver)).await;
     });

@@ -6,6 +6,7 @@ use systemprompt::identifiers::{McpServerId, UserId};
 use super::super::skill_secrets::resolve_secrets_for_skill;
 use super::types::{ManifestAuthor, McpConfigFile, McpServerEntry, PluginFile, PluginManifest};
 
+#[derive(Debug, Clone, Copy)]
 pub struct BundleContext<'a> {
     pub master_key: Option<&'a [u8; 32]>,
     pub pool: &'a PgPool,
@@ -140,6 +141,7 @@ pub fn build_env_and_hook_files_with_token(
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct ManifestInfo<'a> {
     pub name: &'a str,
     pub description: &'a str,

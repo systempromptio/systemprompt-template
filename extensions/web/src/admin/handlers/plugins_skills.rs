@@ -32,7 +32,7 @@ pub async fn delete_skill_handler(
         Ok(true) => {
             let sid = skill_id.clone();
             let uid = user_id.clone();
-            let p = pool.clone();
+            let p = Arc::clone(&pool);
             tokio::spawn(async move {
                 activity::record(
                     &p,
@@ -98,7 +98,7 @@ pub async fn update_plugin_skills_handler(
 
     match repositories::update_plugin_skills(&services_path, &plugin_id, &body.skills) {
         Ok(()) => {
-            let p = pool.clone();
+            let p = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let pid = plugin_id.clone();
             tokio::spawn(async move {

@@ -80,7 +80,7 @@ pub async fn create_user_skill(
         req.name,
         req.description,
         req.content,
-        &req.tags as &[String],
+        &req.tags,
         req.base_skill_id.as_ref().map(SkillId::as_str),
     )
     .fetch_one(pool)

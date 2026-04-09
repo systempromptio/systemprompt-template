@@ -4,14 +4,14 @@ use super::svg::{
     build_stacked_area, build_svg_line, build_y_labels, AxisLabel, SVG_HEIGHT, SVG_WIDTH,
 };
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 struct HooksChartPaths {
     errors: String,
     events: String,
     top_line: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct HooksChart {
     has_data: bool,
     paths: HooksChartPaths,

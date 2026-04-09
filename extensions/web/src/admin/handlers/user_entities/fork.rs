@@ -229,66 +229,97 @@ pub async fn fork_org_plugin_handler(
         Ok(p) => p,
         Err(r) => return *r,
     };
-    let org_plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list plugins for fork");
-            Vec::new()
-        });
 
-    if req.org_plugin_id == "systemprompt" {
-        return shared::error_response(StatusCode::FORBIDDEN, "Platform plugin cannot be forked");
-    }
-
-    let Some(org_plugin) = org_plugins.iter().find(|p| p.id == req.org_plugin_id) else {
-        return shared::error_response(
-            StatusCode::NOT_FOUND,
-            "Org plugin not found or not accessible",
-        );
+    let org_plugin = match find_forkable_plugin(&services_path, &user_ctx.roles, &req.org_plugin_id)
+    {
+        Ok(p) => p,
+        Err(r) => return r,
     };
 
-    match fork_single_plugin(
+    let result = match fork_single_plugin(
         &pool,
         &user_ctx.user_id,
         &user_ctx.username,
-        org_plugin,
+        &org_plugin,
         &services_path,
         req.plugin_id,
     )
     .await
     {
-        Ok(result) => {
-            if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
-            }
-            if let Err(e) = repositories::user_plugin_selections::remove_selected_org_plugin(
-                &pool,
-                &user_ctx.user_id,
-                &req.org_plugin_id,
-            )
-            .await
-            {
-                tracing::warn!(error = %e, org_plugin_id = %req.org_plugin_id, "Failed to remove forked org plugin from selections");
-            }
-            spawn_fork_activity(
-                &pool,
-                &user_ctx.user_id,
-                ActivityEntity::Plugin,
-                &result.plugin.id,
-                &result.plugin.name,
-            );
-            (
-                StatusCode::CREATED,
-                Json(ForkPluginResponse {
-                    plugin: result.plugin,
-                    forked_skills: result.forked_skills,
-                    forked_agents: result.forked_agents,
-                }),
-            )
-                .into_response()
-        }
+        Ok(r) => r,
         Err(msg) => {
             tracing::error!(error = %msg, "Failed to fork plugin");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fork plugin")
+            return shared::error_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to fork plugin",
+            );
         }
+    };
+
+    post_fork_cleanup(&pool, &user_ctx.user_id, &req.org_plugin_id, &result).await;
+
+    (
+        StatusCode::CREATED,
+        Json(ForkPluginResponse {
+            plugin: result.plugin,
+            forked_skills: result.forked_skills,
+            forked_agents: result.forked_agents,
+        }),
+    )
+        .into_response()
+}
+
+fn find_forkable_plugin(
+    services_path: &std::path::Path,
+    roles: &[String],
+    org_plugin_id: &str,
+) -> Result<crate::admin::types::PluginOverview, Response> {
+    if org_plugin_id == "systemprompt" {
+        return Err(shared::error_response(
+            StatusCode::FORBIDDEN,
+            "Platform plugin cannot be forked",
+        ));
     }
+    let org_plugins = repositories::list_plugins_for_roles(services_path, roles).unwrap_or_else(
+        |e| {
+            tracing::warn!(error = %e, "Failed to list plugins for fork");
+            Vec::new()
+        },
+    );
+    org_plugins
+        .into_iter()
+        .find(|p| p.id == org_plugin_id)
+        .ok_or_else(|| {
+            shared::error_response(
+                StatusCode::NOT_FOUND,
+                "Org plugin not found or not accessible",
+            )
+        })
+}
+
+async fn post_fork_cleanup(
+    pool: &PgPool,
+    user_id: &UserId,
+    org_plugin_id: &str,
+    result: &super::fork_helpers::ForkSinglePluginResult,
+) {
+    if let Err(e) = repositories::mark_user_dirty(pool, user_id).await {
+        tracing::warn!(error = %e, "Failed to mark user dirty");
+    }
+    if let Err(e) = repositories::user_plugin_selections::remove_selected_org_plugin(
+        pool,
+        user_id,
+        org_plugin_id,
+    )
+    .await
+    {
+        tracing::warn!(error = %e, org_plugin_id = %org_plugin_id, "Failed to remove forked org plugin from selections");
+    }
+    spawn_fork_activity(
+        pool,
+        user_id,
+        ActivityEntity::Plugin,
+        &result.plugin.id,
+        &result.plugin.name,
+    );
 }

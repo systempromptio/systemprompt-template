@@ -11,6 +11,7 @@ use crate::admin::types::webhook::{HookEvent, HookEventPayload};
 
 use super::{ai_summary, entity, helpers};
 
+#[derive(Debug, Clone, Copy)]
 pub struct ProcessInsertedEventParams<'a> {
     pub pool: &'a PgPool,
     pub user_id: &'a UserId,
@@ -46,84 +47,97 @@ pub async fn process_inserted_event(params: &ProcessInsertedEventParams<'_>) {
     })
     .await;
 
-    if !session_id.as_str().is_empty() {
-        let file_path = helpers::extract_file_path(payload);
-        let is_from_subagent = payload.common.agent_id.is_some();
-        usage_aggregations::increment_session_summary(&usage_aggregations::SessionSummaryParams {
-            pool,
-            session_id,
-            user_id,
-            event_type,
-            content_input_bytes: params.content_input_bytes,
-            content_output_bytes: params.content_output_bytes,
-            is_subagent_stop: matches!(&payload.event, HookEvent::SubagentStop(_)),
-            file_path: file_path.as_deref(),
-            is_from_subagent,
-        })
-        .await;
+    let has_session = !session_id.as_str().is_empty();
 
-        if event_type == "SessionStart" {
-            if let HookEvent::SessionStart(ref data) = payload.event {
-                usage_aggregations::update_session_metadata(
-                    pool,
-                    session_id,
-                    &data.source,
-                    &data.model,
-                    &payload.common.permission_mode,
-                )
-                .await;
-            }
-        }
+    if has_session {
+        update_session_tracking(params).await;
+        track_session_entity(pool, user_id, session_id, payload).await;
+    }
 
-        if !payload.common.permission_mode.is_empty() && event_type != "SessionStart" {
-            usage_aggregations::update_session_permission_mode(
-                pool,
-                session_id,
-                &payload.common.permission_mode,
+    handle_prompt_title(pool, event_type, session_id, payload).await;
+
+    if event_type == "Stop" && has_session {
+        handle_session_analysis(params).await;
+        handle_apm_and_concurrent(params).await;
+    }
+
+    if event_type == "SessionEnd" && has_session {
+        handle_session_end(params).await;
+    }
+
+    params.event_hub.notify(user_id).await;
+}
+
+async fn update_session_tracking(params: &ProcessInsertedEventParams<'_>) {
+    let file_path = helpers::extract_file_path(params.payload);
+    let is_from_subagent = params.payload.common.agent_id.is_some();
+    usage_aggregations::increment_session_summary(&usage_aggregations::SessionSummaryParams {
+        pool: params.pool,
+        session_id: params.session_id,
+        user_id: params.user_id,
+        event_type: params.event_type,
+        content_input_bytes: params.content_input_bytes,
+        content_output_bytes: params.content_output_bytes,
+        is_subagent_stop: matches!(&params.payload.event, HookEvent::SubagentStop(_)),
+        file_path: file_path.as_deref(),
+        is_from_subagent,
+    })
+    .await;
+
+    if params.event_type == "SessionStart" {
+        if let HookEvent::SessionStart(ref data) = params.payload.event {
+            usage_aggregations::update_session_metadata(
+                params.pool,
+                params.session_id,
+                &data.source,
+                &data.model,
+                &params.payload.common.permission_mode,
             )
             .await;
         }
     }
 
-    if !session_id.as_str().is_empty() {
-        if let Some((entity_type, entity_name)) = entity::detect_entity(payload) {
-            let entity_id = if entity_type == "skill" {
-                Some(
-                    entity_name
-                        .rsplit_once(':')
-                        .map_or(entity_name.as_str(), |(_, slug)| slug)
-                        .to_string(),
-                )
-            } else {
-                None
-            };
-            if let Err(e) = conversation_analytics::upsert_session_entity_link(
-                pool,
-                user_id,
-                session_id.as_str(),
-                entity_type,
-                &entity_name,
-                entity_id.as_deref(),
-            )
-            .await
-            {
-                tracing::warn!(error = %e, "Failed to upsert session entity link");
-            }
-        }
+    if !params.payload.common.permission_mode.is_empty() && params.event_type != "SessionStart" {
+        usage_aggregations::update_session_permission_mode(
+            params.pool,
+            params.session_id,
+            &params.payload.common.permission_mode,
+        )
+        .await;
     }
+}
 
-    handle_prompt_title(pool, event_type, session_id, payload).await;
-
-    if event_type == "Stop" && !session_id.as_str().is_empty() {
-        handle_session_analysis(params).await;
-        handle_apm_and_concurrent(params).await;
+async fn track_session_entity(
+    pool: &PgPool,
+    user_id: &UserId,
+    session_id: &SessionId,
+    payload: &HookEventPayload,
+) {
+    let Some((entity_type, entity_name)) = entity::detect_entity(payload) else {
+        return;
+    };
+    let entity_id = if entity_type == "skill" {
+        Some(
+            entity_name
+                .rsplit_once(':')
+                .map_or(entity_name.as_str(), |(_, slug)| slug)
+                .to_string(),
+        )
+    } else {
+        None
+    };
+    if let Err(e) = conversation_analytics::upsert_session_entity_link(
+        pool,
+        user_id,
+        session_id.as_str(),
+        entity_type,
+        &entity_name,
+        entity_id.as_deref(),
+    )
+    .await
+    {
+        tracing::warn!(error = %e, "Failed to upsert session entity link");
     }
-
-    if event_type == "SessionEnd" && !session_id.as_str().is_empty() {
-        handle_session_end(params).await;
-    }
-
-    params.event_hub.notify(user_id).await;
 }
 
 async fn handle_prompt_title(

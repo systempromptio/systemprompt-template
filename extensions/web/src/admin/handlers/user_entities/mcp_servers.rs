@@ -108,7 +108,7 @@ pub async fn create_user_mcp_server_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = create_req.mcp_server_id.to_string();
             let name = create_req.name.clone();
@@ -162,7 +162,7 @@ pub async fn update_user_mcp_server_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = mcp_server_id.clone();
             tokio::spawn(async move {
@@ -202,7 +202,7 @@ pub async fn delete_user_mcp_server_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = mcp_server_id.clone();
             tokio::spawn(async move {
@@ -231,42 +231,43 @@ pub async fn set_plugin_mcp_servers_handler(
     Path(plugin_id): Path<String>,
     Json(req): Json<SetPluginMcpServersRequest>,
 ) -> Response {
-    let plugin = repositories::find_user_plugin(&pool, &user_ctx.user_id, &plugin_id).await;
-    match plugin {
-        Ok(Some(p)) => {
-            let mcp_ids: Vec<McpServerId> = req
-                .ids
-                .iter()
-                .map(|s| McpServerId::new(s.clone()))
-                .collect();
-            if let Err(e) =
-                repositories::user_plugins::set_plugin_mcp_servers(&pool, &p.id, &mcp_ids).await
-            {
-                tracing::error!(error = %e, "Failed to set plugin MCP servers");
-                return shared::error_response(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to set MCP servers",
-                );
-            }
-            if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
-            }
-            let activity_pool = pool.clone();
-            let uid = user_ctx.user_id.clone();
-            let pid = plugin_id.clone();
-            tokio::spawn(async move {
-                activity::record(
-                    &activity_pool,
-                    NewActivity::entity_updated(&uid, ActivityEntity::Plugin, &pid, &pid),
-                )
-                .await;
-            });
-            StatusCode::NO_CONTENT.into_response()
+    let plugin = match repositories::find_user_plugin(&pool, &user_ctx.user_id, &plugin_id).await {
+        Ok(Some(p)) => p,
+        Ok(None) => {
+            return shared::error_response(StatusCode::NOT_FOUND, "Plugin not found");
         }
-        Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Plugin not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get user plugin");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
+            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
         }
+    };
+
+    let mcp_ids: Vec<McpServerId> = req
+        .ids
+        .iter()
+        .map(|s| McpServerId::new(s.clone()))
+        .collect();
+    if let Err(e) =
+        repositories::user_plugins::set_plugin_mcp_servers(&pool, &plugin.id, &mcp_ids).await
+    {
+        tracing::error!(error = %e, "Failed to set plugin MCP servers");
+        return shared::error_response(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Failed to set MCP servers",
+        );
     }
+    if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
+        tracing::warn!(error = %e, "Failed to mark user dirty");
+    }
+    let activity_pool = Arc::clone(&pool);
+    let uid = user_ctx.user_id.clone();
+    let pid = plugin_id.clone();
+    tokio::spawn(async move {
+        activity::record(
+            &activity_pool,
+            NewActivity::entity_updated(&uid, ActivityEntity::Plugin, &pid, &pid),
+        )
+        .await;
+    });
+    StatusCode::NO_CONTENT.into_response()
 }

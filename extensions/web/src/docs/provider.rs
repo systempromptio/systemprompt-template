@@ -7,6 +7,7 @@ use systemprompt::extension::prelude::*;
 use super::types::DocsLearningContent;
 use crate::utils::html_escape;
 
+#[derive(Debug, Clone, Copy)]
 pub struct DocsPageDataProvider;
 
 impl DocsPageDataProvider {

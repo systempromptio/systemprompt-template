@@ -65,7 +65,7 @@ pub struct MarketplacePluginEntry {
     pub category: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone, Copy)]
 pub struct ExportTotals {
     pub plugins: usize,
     pub files: usize,
@@ -73,7 +73,7 @@ pub struct ExportTotals {
     pub agents: usize,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct PluginBundleCounts {
     pub skills: usize,
     pub agents: usize,

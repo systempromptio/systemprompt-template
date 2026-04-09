@@ -14,7 +14,7 @@ pub fn value_field(value: &serde_json::Value, field: &str) -> Option<String> {
         .as_object()?
         .get(field)?
         .as_str()
-        .map(std::string::ToString::to_string)
+        .map(ToString::to_string)
 }
 
 pub fn generate_prompt_preview(payload: &HookEventPayload) -> Option<String> {

@@ -98,6 +98,7 @@ pub fn update_plugin_skills(
     Ok(())
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct MarketplaceCounts {
     pub total_plugins: usize,
     pub total_skills: usize,

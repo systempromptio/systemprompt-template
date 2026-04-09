@@ -32,7 +32,7 @@ fn enrich_users_with_ranks(
             EnrichedUserView {
                 user_id: u.user_id.to_string(),
                 display_name: u.display_name.clone(),
-                email: u.email.as_ref().map(std::string::ToString::to_string),
+                email: u.email.as_ref().map(ToString::to_string),
                 roles: u.roles.clone(),
                 is_active: u.is_active,
                 last_active: u.last_active.to_rfc3339(),

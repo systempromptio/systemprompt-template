@@ -4,7 +4,7 @@ use std::sync::Arc;
 use systemprompt::identifiers::UserId;
 use tokio::sync::{broadcast, RwLock};
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct EventHub {
     channels: Arc<RwLock<HashMap<String, broadcast::Sender<()>>>>,
 }

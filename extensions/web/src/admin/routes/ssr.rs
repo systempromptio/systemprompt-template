@@ -31,7 +31,7 @@ pub fn workspace_ssr_router(
             middleware::require_user_middleware,
         ))
         .layer(axum_middleware::from_fn_with_state(
-            pool.clone(),
+            Arc::clone(&pool),
             middleware::user_context_middleware,
         ))
         .with_state(pool);
@@ -91,10 +91,10 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
             middleware::require_user_middleware,
         ))
         .layer(axum_middleware::from_fn_with_state(
-            pool.clone(),
+            Arc::clone(&pool),
             middleware::user_context_middleware,
         ))
-        .with_state(pool.clone());
+        .with_state(Arc::clone(&pool));
 
     let combined = public_routes()
         .layer(Extension(engine))

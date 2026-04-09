@@ -60,7 +60,7 @@ pub async fn create_user_skill_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = skill.id.clone();
             let name = skill.name.clone();
@@ -95,7 +95,7 @@ pub async fn update_user_skill_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = skill.id.clone();
             let name = skill.name.clone();
@@ -130,7 +130,7 @@ pub async fn delete_user_skill_handler(
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
             }
-            let activity_pool = pool.clone();
+            let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let id = skill_id.clone();
             tokio::spawn(async move {

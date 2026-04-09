@@ -7,6 +7,7 @@ use systemprompt::extension::prelude::*;
 use super::config::HomepageConfig;
 use crate::error::MarketplaceError;
 
+#[derive(Debug)]
 pub struct HomepagePrerenderer {
     config: Arc<HomepageConfig>,
 }

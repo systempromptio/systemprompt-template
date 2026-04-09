@@ -63,8 +63,9 @@ impl Extension for WebExtension {
             providers.push(Arc::new(HomepagePageDataProvider::new(homepage_config)));
         }
 
+        let docs_provider: Arc<dyn PageDataProvider> = Arc::new(DocsPageDataProvider::new());
         providers.extend([
-            Arc::new(DocsPageDataProvider::new()) as Arc<dyn PageDataProvider>,
+            docs_provider,
             Arc::new(BlogListPageDataProvider::new()),
             Arc::new(BlogPostPageDataProvider::new()),
         ]);
@@ -119,17 +120,17 @@ impl Extension for WebExtension {
         let db_handle = ctx.database();
         let db = db_handle.as_any().downcast_ref::<Database>()?;
         let pool = db.pool()?;
-        let write_pool = db.write_pool_arc().unwrap_or_else(|_| pool.clone());
+        let write_pool = db.write_pool_arc().unwrap_or_else(|_| Arc::clone(&pool));
 
         let event_hub = admin::event_hub::EventHub::new();
         let tier_cache = admin::tier_enforcement::TierEnforcementCache::new();
         let ai_service: Option<Arc<systemprompt::ai::AiService>> = init_ai_service();
 
-        let admin_api = admin::admin_router(pool.clone(), write_pool.clone(), tier_cache.clone());
-        let webhook_api = admin::hooks_webhook_router(write_pool.clone());
+        let admin_api = admin::admin_router(Arc::clone(&pool), Arc::clone(&write_pool), tier_cache.clone());
+        let webhook_api = admin::hooks_webhook_router(Arc::clone(&write_pool));
         let secrets_api = admin::secrets_router(write_pool);
-        let marketplace_git = admin::marketplace_git_router(pool.clone());
-        let links_router = api::router(pool.clone(), self.validated_config.clone());
+        let marketplace_git = admin::marketplace_git_router(Arc::clone(&pool));
+        let links_router = api::router(Arc::clone(&pool), self.validated_config.clone());
 
         let api_router = Router::new()
             .route(
@@ -162,7 +163,7 @@ impl Extension for WebExtension {
             }
         };
         let workspace_router = admin::workspace_ssr_router(
-            pool.clone(),
+            Arc::clone(&pool),
             engine.clone(),
             event_hub,
             ai_service,
@@ -224,8 +225,8 @@ impl Extension for WebExtension {
 
     fn required_assets(
         &self,
-        paths: &dyn systemprompt::extension::AssetPaths,
-    ) -> Vec<systemprompt::extension::AssetDefinition> {
+        paths: &dyn AssetPaths,
+    ) -> Vec<AssetDefinition> {
         web_assets(paths)
     }
 }
@@ -235,7 +236,7 @@ fn init_ai_service() -> Option<Arc<systemprompt::ai::AiService>> {
     let services_config = systemprompt::loader::ConfigLoader::load().ok()?;
 
     let db = tokio::task::block_in_place(|| {
-        tokio::runtime::Handle::current().block_on(systemprompt::database::Database::from_config(
+        tokio::runtime::Handle::current().block_on(Database::from_config(
             &config.database_type,
             &config.database_url,
         ))

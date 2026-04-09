@@ -23,7 +23,7 @@ pub struct TopPageDailyBucket {
     pub avg_time_ms: f64,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct TrafficKpis {
     pub sessions_current: i64,
     pub sessions_previous: i64,
@@ -37,7 +37,7 @@ pub struct TrafficKpis {
     pub unique_visitors_previous: i64,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone, Copy)]
 pub struct TrafficTimeBucket {
     pub bucket: DateTime<Utc>,
     pub sessions: i64,
@@ -82,7 +82,7 @@ pub struct RecentMcpError {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
 pub struct RealtimePulse {
     pub sessions_this_hour: i64,
     pub page_views_this_hour: i64,

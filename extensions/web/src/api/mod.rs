@@ -44,7 +44,7 @@ pub fn redirect_router(pool: Arc<PgPool>) -> Router {
         .with_state(pool)
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BlogState {
     pub pool: Arc<PgPool>,
     pub config: Option<Arc<BlogConfigValidated>>,

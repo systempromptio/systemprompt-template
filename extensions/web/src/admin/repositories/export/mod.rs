@@ -20,6 +20,7 @@ use super::user_skills::list_user_skills;
 use crate::error::MarketplaceError;
 use user_bundles::UserBundleContext;
 
+#[derive(Debug, Clone, Copy)]
 pub struct ExportParams<'a> {
     pub services_path: &'a Path,
     pub pool: &'a PgPool,
@@ -132,7 +133,7 @@ fn generate_bundle_env_and_hook_files(
 ) {
     for bundle in bundles.iter_mut() {
         if let Some(token) = tokens.get(&bundle.id) {
-            bundle.files.push(types::PluginFile {
+            bundle.files.push(PluginFile {
                 path: ".env.plugin".to_string(),
                 content: format!(
                     "SYSTEMPROMPT_PLUGIN_TOKEN={token}\nSYSTEMPROMPT_API_URL={platform_url}\n"
@@ -173,7 +174,7 @@ fn build_org_bundles(
             .iter()
             .find(|f| f.path == ".claude-plugin/plugin.json")
             .and_then(|f| {
-                serde_json::from_str::<types::PluginManifest>(&f.content)
+                serde_json::from_str::<PluginManifest>(&f.content)
                     .map_err(|e| {
                         tracing::warn!(error = %e, "Failed to parse plugin.json for version");
                     })

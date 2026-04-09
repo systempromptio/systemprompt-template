@@ -158,7 +158,7 @@ pub async fn set_selected_plugins_handler(
                 tracing::warn!(error = %e, "Failed to mark user dirty after plugin selection");
             }
             let count = valid_ids.len();
-            let pool = pool.clone();
+            let pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
             let desc = format!("Updated plugin selections ({count} plugins selected)");
             tokio::spawn(async move {

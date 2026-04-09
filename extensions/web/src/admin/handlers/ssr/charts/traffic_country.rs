@@ -30,7 +30,7 @@ fn country_color(i: usize) -> &'static str {
     COUNTRY_COLORS.get(i).copied().unwrap_or(DEFAULT_COLOR)
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 struct CountryArea {
     name: String,
     color: &'static str,
@@ -51,7 +51,7 @@ struct TooltipBucket {
     countries: Vec<TooltipBreakdown>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct CountryTrafficChart {
     has_data: bool,
     countries: Vec<CountryArea>,

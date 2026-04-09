@@ -5,7 +5,7 @@ pub use usage::{UsageSnapshot, UsageSummary};
 use crate::admin::numeric;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
 pub struct TierLimits {
     #[serde(default = "IngestionLimits::free_default")]
     pub ingestion: IngestionLimits,
@@ -17,7 +17,7 @@ pub struct TierLimits {
     pub api: ApiLimits,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
 pub struct IngestionLimits {
     #[serde(alias = "events_per_day")]
     pub events: i64,
@@ -27,7 +27,7 @@ pub struct IngestionLimits {
     pub sessions: i64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
 pub struct EntityLimits {
     #[serde(alias = "max_skills")]
     pub skills: i64,
@@ -41,13 +41,13 @@ pub struct EntityLimits {
     pub hooks: i64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
 pub struct AiFeatures {
     pub session_analysis: bool,
     pub daily_summaries: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
 pub struct FeatureFlags {
     pub ai: AiFeatures,
     pub apm_metrics: bool,
@@ -55,7 +55,7 @@ pub struct FeatureFlags {
     pub export_zip: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
 pub struct ApiLimits {
     pub requests_per_minute: i64,
 }

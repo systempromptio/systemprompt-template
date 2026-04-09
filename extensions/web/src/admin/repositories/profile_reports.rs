@@ -20,6 +20,7 @@ pub struct ProfileReportRow {
     pub generated_at: chrono::DateTime<chrono::Utc>,
 }
 
+#[derive(Debug)]
 pub struct ProfileReportInput {
     pub archetype: String,
     pub archetype_description: String,
