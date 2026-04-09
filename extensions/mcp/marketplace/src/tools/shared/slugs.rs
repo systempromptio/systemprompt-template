@@ -46,9 +46,9 @@ async fn resolve_uuids_to_slugs_generic(
     table: &str,
     id_col: &str,
     slug_col: &str,
-) -> Vec<String> {
+) -> Result<Vec<String>, McpError> {
     if uuids.is_empty() {
-        return vec![];
+        return Ok(vec![]);
     }
 
     let query = format!("SELECT {id_col}, {slug_col} FROM {table} WHERE {id_col} = ANY($1)");
@@ -57,13 +57,13 @@ async fn resolve_uuids_to_slugs_generic(
         .bind(uuids)
         .fetch_all(pool.as_ref())
         .await
-        .unwrap_or_else(|_| Vec::new());
+        .map_err(|e| McpError::internal_error(format!("Failed to resolve slugs: {e}"), None))?;
 
     let map: std::collections::HashMap<String, String> = rows.into_iter().collect();
-    uuids
+    Ok(uuids
         .iter()
         .filter_map(|uuid| map.get(uuid).cloned())
-        .collect()
+        .collect())
 }
 
 pub async fn resolve_skill_slugs(
@@ -117,17 +117,17 @@ pub async fn resolve_mcp_server_slugs(
     .await
 }
 
-pub async fn resolve_skill_uuids_to_slugs(pool: &Arc<PgPool>, uuids: &[String]) -> Vec<String> {
+pub async fn resolve_skill_uuids_to_slugs(pool: &Arc<PgPool>, uuids: &[String]) -> Result<Vec<String>, McpError> {
     resolve_uuids_to_slugs_generic(pool, uuids, "user_skills", "id", "skill_id").await
 }
 
-pub async fn resolve_agent_uuids_to_slugs(pool: &Arc<PgPool>, uuids: &[String]) -> Vec<String> {
+pub async fn resolve_agent_uuids_to_slugs(pool: &Arc<PgPool>, uuids: &[String]) -> Result<Vec<String>, McpError> {
     resolve_uuids_to_slugs_generic(pool, uuids, "user_agents", "id", "agent_id").await
 }
 
 pub async fn resolve_mcp_server_uuids_to_slugs(
     pool: &Arc<PgPool>,
     uuids: &[String],
-) -> Vec<String> {
+) -> Result<Vec<String>, McpError> {
     resolve_uuids_to_slugs_generic(pool, uuids, "user_mcp_servers", "id", "mcp_server_id").await
 }
