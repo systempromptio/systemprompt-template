@@ -97,7 +97,10 @@ pub async fn gather_analysis_context(
     let entity_links =
         conversation_analytics::fetch_session_entity_links(pool, session_id.as_str())
             .await
-            .unwrap_or_else(|_| Vec::new());
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to fetch session entity links");
+                Vec::new()
+            });
 
     let skills: Vec<&str> = entity_links
         .iter()

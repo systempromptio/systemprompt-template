@@ -136,8 +136,10 @@ impl PageDataProvider for BlogPostPageDataProvider {
                     )
                     .fetch_all(&*pool)
                     .await
-                    .inspect_err(|e| tracing::warn!(error = %e, "Failed to fetch related posts"))
-                    .unwrap_or_else(|_| Vec::new());
+                    .unwrap_or_else(|e| {
+                        tracing::warn!(error = %e, "Failed to fetch related posts");
+                        Vec::new()
+                    });
 
                     if let Some(related_html) = render_related_posts(&related) {
                         obj.insert("SOCIAL_CONTENT".to_string(), Value::String(related_html));
