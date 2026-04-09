@@ -63,6 +63,12 @@ impl McpToolHandler for UpdatePluginHandler {
             author_name: input.author_name,
         };
 
+        // TODO(ARCH-03): These operations (update_user_plugin + set_plugin_associations)
+        // should run inside a single database transaction so that a failure in
+        // set_plugin_associations rolls back the plugin update. Currently the
+        // repository functions accept `&PgPool` and manage their own internal
+        // transactions, so wrapping them in an outer transaction requires
+        // changing their signatures to accept `impl PgExecutor<'_>`.
         let user_id = UserId::new(ctx.user_id().to_string());
         let plugin =
             systemprompt_web_extension::admin::repositories::user_plugins::update_user_plugin(
