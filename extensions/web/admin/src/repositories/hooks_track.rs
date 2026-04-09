@@ -69,7 +69,10 @@ pub async fn fetch_user_messages(
     )
     .fetch_all(pool)
     .await
-    .unwrap_or_else(|_| Vec::new())
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch user messages for session");
+        Vec::new()
+    })
 }
 
 #[derive(Debug)]
@@ -168,5 +171,8 @@ pub async fn fetch_today_achievements(pool: &PgPool, user_id: &str) -> Vec<Strin
     .bind(user_id)
     .fetch_all(pool)
     .await
-    .unwrap_or_else(|_| Vec::new())
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch today's achievements");
+        Vec::new()
+    })
 }
