@@ -172,50 +172,24 @@ impl ServerHandler for SystempromptServer {
                     "BUG: systemprompt requires OAuth but auth was not enforced",
                 ) {
                     Ok(authenticated) => {
-                        let pool = self.db_pool.clone();
-                        let uid = authenticated.context.user_id().to_string();
-                        let srv = server_name.clone();
-                        let tn = tool_name.clone();
-                        tokio::spawn(async move {
-                            record_mcp_access(&pool, &uid, &srv, &tn, "authenticated").await;
-                        });
+                        record_mcp_access(&self.db_pool, &authenticated.context.user_id().to_string(), &server_name, &tool_name, "authenticated").await;
                         authenticated
                     }
                     Err(e) => {
-                        let pool = self.db_pool.clone();
-                        let srv = server_name.clone();
-                        let tn = tool_name.clone();
-                        let reason = e.message.to_string();
-                        tokio::spawn(async move {
-                            record_mcp_access_rejected(&pool, &srv, &tn, &reason).await;
-                        });
+                        record_mcp_access_rejected(&self.db_pool, &server_name, &tool_name, &e.message.to_string()).await;
                         return Err(e);
                     }
                 }
             }
             Err(e) => {
-                let pool = self.db_pool.clone();
-                let srv = server_name.clone();
-                let tn = tool_name.clone();
-                let reason = format!("{e}");
-                tokio::spawn(async move {
-                    record_mcp_access_rejected(&pool, &srv, &tn, &reason).await;
-                });
+                record_mcp_access_rejected(&self.db_pool, &server_name, &tool_name, &format!("{e}")).await;
                 return Err(e);
             }
         };
 
         let request_context = auth_result.context.clone();
 
-        {
-            let pool = self.db_pool.clone();
-            let uid = request_context.user_id().to_string();
-            let srv = server_name.clone();
-            let tn = tool_name.clone();
-            tokio::spawn(async move {
-                record_mcp_access(&pool, &uid, &srv, &tn, "used").await;
-            });
-        }
+        record_mcp_access(&self.db_pool, &request_context.user_id().to_string(), &server_name, &tool_name, "used").await;
 
         match tool_name.as_str() {
             "systemprompt" => {
