@@ -28,11 +28,11 @@ use super::responses::{
 };
 
 #[derive(serde::Deserialize)]
-pub(crate) struct ResolveQuery {
+pub struct ResolveQuery {
     token: String,
 }
 
-pub(crate) async fn create_resolution_token_handler(
+pub async fn create_resolution_token_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     headers: HeaderMap,
@@ -55,7 +55,7 @@ pub(crate) async fn create_resolution_token_handler(
     }
 }
 
-pub(crate) async fn resolve_secrets_handler(
+pub async fn resolve_secrets_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     Query(params): Query<ResolveQuery>,
@@ -106,7 +106,7 @@ pub(crate) async fn resolve_secrets_handler(
     }
 }
 
-pub(crate) async fn audit_log_handler(
+pub async fn audit_log_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     headers: HeaderMap,
@@ -142,7 +142,7 @@ pub(crate) async fn audit_log_handler(
     }
 }
 
-pub(crate) async fn rotate_handler(
+pub async fn rotate_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     headers: HeaderMap,

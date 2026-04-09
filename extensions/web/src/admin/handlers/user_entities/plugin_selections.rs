@@ -37,11 +37,11 @@ struct AvailablePlugin {
 }
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct SelectPluginsRequest {
+pub struct SelectPluginsRequest {
     pub plugin_ids: Vec<String>,
 }
 
-pub(crate) async fn list_available_plugins_handler(
+pub async fn list_available_plugins_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -106,7 +106,7 @@ pub(crate) async fn list_available_plugins_handler(
     Json(AvailablePluginsResponse { plugins }).into_response()
 }
 
-pub(crate) async fn list_selected_plugins_handler(
+pub async fn list_selected_plugins_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -131,7 +131,7 @@ pub(crate) async fn list_selected_plugins_handler(
     }
 }
 
-pub(crate) async fn set_selected_plugins_handler(
+pub async fn set_selected_plugins_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<SelectPluginsRequest>,

@@ -13,42 +13,42 @@ mod secrets;
 mod settings;
 mod skills;
 
-pub(crate) use agents::{
+pub use agents::{
     create_user_agent_entity_handler, delete_user_agent_entity_handler, list_user_agents_handler,
     update_user_agent_entity_handler,
 };
-pub(crate) use batch_delete::{
+pub use batch_delete::{
     batch_delete_agents_handler, batch_delete_hooks_handler, batch_delete_mcp_servers_handler,
     batch_delete_secrets_handler, batch_delete_skills_handler,
 };
-pub(crate) use delete_account::delete_account_handler;
-pub(crate) use fork::{fork_org_agent_handler, fork_org_plugin_handler, fork_org_skill_handler};
-pub(crate) use fork_lists::{
+pub use delete_account::delete_account_handler;
+pub use fork::{fork_org_agent_handler, fork_org_plugin_handler, fork_org_skill_handler};
+pub use fork_lists::{
     list_forkable_agents_handler, list_forkable_plugins_handler, list_forkable_skills_handler,
 };
-pub(crate) use hooks::{
+pub use hooks::{
     create_user_hook_handler, delete_user_hook_handler, list_user_hooks_handler,
     toggle_user_hook_handler, update_user_hook_handler,
 };
-pub(crate) use mcp_servers::{
+pub use mcp_servers::{
     create_user_mcp_server_handler, delete_user_mcp_server_handler, list_user_mcp_servers_handler,
     set_plugin_mcp_servers_handler, update_user_mcp_server_handler,
 };
-pub(crate) use plugin_onboarding::select_and_fork_plugins_handler;
-pub(crate) use plugin_selections::{
+pub use plugin_onboarding::select_and_fork_plugins_handler;
+pub use plugin_selections::{
     list_available_plugins_handler, list_selected_plugins_handler, set_selected_plugins_handler,
 };
-pub(crate) use plugins::{
+pub use plugins::{
     create_user_plugin_handler, delete_user_plugin_handler, list_user_plugins_handler,
     set_plugin_agents_handler, set_plugin_skills_handler, update_user_plugin_handler,
 };
-pub(crate) use secrets::{
+pub use secrets::{
     create_user_secret_handler, delete_skill_secret_handler, delete_user_secret_handler,
     list_skill_secrets_handler, list_user_secrets_handler, update_user_secret_handler,
     upsert_skill_secret_handler,
 };
-pub(crate) use settings::update_user_settings_handler;
-pub(crate) use skills::{
+pub use settings::update_user_settings_handler;
+pub use skills::{
     create_user_skill_handler, delete_user_skill_handler, list_user_skills_handler,
     update_user_skill_handler,
 };

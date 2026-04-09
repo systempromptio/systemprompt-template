@@ -18,18 +18,18 @@ const MAX_BATCH_DELETE_IDS: usize = 100;
 use super::plugins::is_entity_in_platform_plugin;
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct BatchDeleteRequest {
+pub struct BatchDeleteRequest {
     pub ids: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct SecretKeyItem {
+pub struct SecretKeyItem {
     pub plugin_id: String,
     pub var_name: String,
 }
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct BatchDeleteSecretsRequest {
+pub struct BatchDeleteSecretsRequest {
     pub items: Vec<SecretKeyItem>,
 }
 
@@ -76,7 +76,7 @@ async fn finish_batch(
     Json(BatchDeleteResponse { deleted, skipped }).into_response()
 }
 
-pub(crate) async fn batch_delete_skills_handler(
+pub async fn batch_delete_skills_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<BatchDeleteRequest>,
@@ -108,7 +108,7 @@ pub(crate) async fn batch_delete_skills_handler(
     finish_batch(&pool, &user_ctx, deleted, skipped).await
 }
 
-pub(crate) async fn batch_delete_agents_handler(
+pub async fn batch_delete_agents_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<BatchDeleteRequest>,
@@ -140,7 +140,7 @@ pub(crate) async fn batch_delete_agents_handler(
     finish_batch(&pool, &user_ctx, deleted, skipped).await
 }
 
-pub(crate) async fn batch_delete_mcp_servers_handler(
+pub async fn batch_delete_mcp_servers_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<BatchDeleteRequest>,
@@ -174,7 +174,7 @@ pub(crate) async fn batch_delete_mcp_servers_handler(
     finish_batch(&pool, &user_ctx, deleted, skipped).await
 }
 
-pub(crate) async fn batch_delete_hooks_handler(
+pub async fn batch_delete_hooks_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<BatchDeleteRequest>,
@@ -201,7 +201,7 @@ pub(crate) async fn batch_delete_hooks_handler(
     finish_batch(&pool, &user_ctx, deleted, skipped).await
 }
 
-pub(crate) async fn batch_delete_secrets_handler(
+pub async fn batch_delete_secrets_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<BatchDeleteSecretsRequest>,

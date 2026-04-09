@@ -23,7 +23,7 @@ fn format_limit(val: Option<i64>) -> String {
 
 const FREE_TIER_LIMITS: &str = r#"{"max_plugins":1,"max_skills":5,"max_agents":1,"max_mcp_servers":1,"max_hooks":5,"max_secrets":2}"#;
 
-pub(crate) async fn settings_page(
+pub async fn settings_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

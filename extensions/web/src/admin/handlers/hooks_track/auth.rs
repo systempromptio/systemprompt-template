@@ -8,7 +8,7 @@ use systemprompt::models::auth::JwtAudience;
 use systemprompt::models::{Config, SecretsBootstrap};
 use systemprompt::oauth::validate_jwt_token;
 
-pub(crate) fn extract_and_validate_jwt(
+pub fn extract_and_validate_jwt(
     headers: &HeaderMap,
 ) -> Result<(UserId, String, String), Box<Response>> {
     let token = headers

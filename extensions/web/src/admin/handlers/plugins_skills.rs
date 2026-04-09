@@ -17,7 +17,7 @@ use crate::admin::types::{UpdatePluginSkillsRequest, UserContext, UserQuery};
 
 use super::responses::SkillIdsListResponse;
 
-pub(crate) async fn delete_skill_handler(
+pub async fn delete_skill_handler(
     State(pool): State<Arc<PgPool>>,
     Path(skill_id_raw): Path<String>,
     Query(query): Query<UserQuery>,
@@ -55,7 +55,7 @@ pub(crate) async fn delete_skill_handler(
     }
 }
 
-pub(crate) async fn list_all_skills_handler() -> Response {
+pub async fn list_all_skills_handler() -> Response {
     let services_path = match shared::get_services_path() {
         Ok(p) => p,
         Err(r) => return *r,
@@ -70,7 +70,7 @@ pub(crate) async fn list_all_skills_handler() -> Response {
     }
 }
 
-pub(crate) async fn get_plugin_skills_handler(Path(plugin_id): Path<String>) -> Response {
+pub async fn get_plugin_skills_handler(Path(plugin_id): Path<String>) -> Response {
     let services_path = match shared::get_services_path() {
         Ok(p) => p,
         Err(r) => return *r,
@@ -85,7 +85,7 @@ pub(crate) async fn get_plugin_skills_handler(Path(plugin_id): Path<String>) -> 
     }
 }
 
-pub(crate) async fn update_plugin_skills_handler(
+pub async fn update_plugin_skills_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(plugin_id): Path<String>,

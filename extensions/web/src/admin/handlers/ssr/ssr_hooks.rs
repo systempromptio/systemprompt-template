@@ -170,7 +170,7 @@ fn hook_detail_to_json(
     })
 }
 
-pub(crate) async fn hooks_page(
+pub async fn hooks_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -232,7 +232,7 @@ pub(crate) async fn hooks_page(
     super::render_page(&engine, "hooks", &data, &user_ctx, &mkt_ctx)
 }
 
-pub(crate) async fn hook_edit_page(
+pub async fn hook_edit_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

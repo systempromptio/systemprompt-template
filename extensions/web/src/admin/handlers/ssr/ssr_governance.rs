@@ -20,7 +20,7 @@ pub struct GovernanceQuery {
     pub q: Option<String>,
 }
 
-pub(crate) async fn governance_page(
+pub async fn governance_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

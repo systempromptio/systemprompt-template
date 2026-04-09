@@ -64,7 +64,7 @@ pub async fn update_session_title_if_empty(pool: &PgPool, session_id: &SessionId
     }
 }
 
-pub(crate) async fn update_unique_files_touched(
+pub async fn update_unique_files_touched(
     pool: &PgPool,
     session_id: &SessionId,
     _file_path: &str,

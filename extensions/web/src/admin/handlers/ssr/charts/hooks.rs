@@ -12,7 +12,7 @@ struct HooksChartPaths {
 }
 
 #[derive(Serialize)]
-pub(crate) struct HooksChart {
+pub struct HooksChart {
     has_data: bool,
     paths: HooksChartPaths,
     x_labels: Vec<String>,
@@ -20,7 +20,7 @@ pub(crate) struct HooksChart {
     peak: i64,
 }
 
-pub(crate) fn compute_hooks_chart_data(
+pub fn compute_hooks_chart_data(
     buckets: &[crate::admin::types::HookTimeSeriesBucket],
     range: &str,
 ) -> HooksChart {

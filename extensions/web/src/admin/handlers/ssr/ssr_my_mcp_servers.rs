@@ -14,7 +14,7 @@ use sqlx::PgPool;
 
 use super::types::{McpServerStats, McpServerView, MyMcpServersPageData, NamedEntity};
 
-pub(crate) async fn my_mcp_servers_page(
+pub async fn my_mcp_servers_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

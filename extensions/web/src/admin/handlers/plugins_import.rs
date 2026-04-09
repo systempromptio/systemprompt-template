@@ -18,7 +18,7 @@ use crate::admin::types::{CreateSkillRequest, ImportPluginRequest, UserContext};
 use super::resources::get_services_path;
 use super::responses::ImportUserBundleResponse;
 
-pub(crate) async fn import_plugin_handler(
+pub async fn import_plugin_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Json(body): Json<ImportPluginRequest>,

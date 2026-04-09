@@ -11,7 +11,7 @@ use sqlx::PgPool;
 
 use super::types::{MySecretsPageData, NamedEntity, SecretGroupView, SecretVarView, SecretsStats};
 
-pub(crate) async fn my_secrets_page(
+pub async fn my_secrets_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

@@ -11,7 +11,7 @@ use crate::admin::types::webhook::{HookEvent, HookEventPayload};
 
 use super::{ai_summary, entity, helpers};
 
-pub(crate) struct ProcessInsertedEventParams<'a> {
+pub struct ProcessInsertedEventParams<'a> {
     pub pool: &'a PgPool,
     pub user_id: &'a UserId,
     pub session_id: &'a SessionId,
@@ -26,7 +26,7 @@ pub(crate) struct ProcessInsertedEventParams<'a> {
     pub tier_cache: &'a crate::admin::tier_enforcement::TierEnforcementCache,
 }
 
-pub(crate) async fn process_inserted_event(params: &ProcessInsertedEventParams<'_>) {
+pub async fn process_inserted_event(params: &ProcessInsertedEventParams<'_>) {
     let pool = params.pool;
     let user_id = params.user_id;
     let session_id = params.session_id;

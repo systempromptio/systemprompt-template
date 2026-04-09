@@ -15,7 +15,7 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
-pub(crate) async fn my_agents_page(
+pub async fn my_agents_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -174,7 +174,7 @@ fn build_single_agent_json(
     v
 }
 
-pub(crate) async fn my_agent_edit_page(
+pub async fn my_agent_edit_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

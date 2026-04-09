@@ -23,7 +23,7 @@ use crate::admin::types::UserContext;
 
 use super::responses::{EventsListResponse, UsersListResponse};
 
-pub(crate) fn extract_user_from_cookie(
+pub fn extract_user_from_cookie(
     headers: &HeaderMap,
 ) -> Result<crate::admin::types::CookieSession, String> {
     let cookie_header = headers
@@ -61,7 +61,7 @@ pub(crate) fn extract_user_from_cookie(
     })
 }
 
-pub(crate) async fn dashboard_handler(State(pool): State<Arc<PgPool>>) -> Response {
+pub async fn dashboard_handler(State(pool): State<Arc<PgPool>>) -> Response {
     match repositories::get_dashboard_data(&pool, "7 days", "4 hours", "today", "7d").await {
         Ok(data) => Json(data).into_response(),
         Err(e) => {
@@ -71,7 +71,7 @@ pub(crate) async fn dashboard_handler(State(pool): State<Arc<PgPool>>) -> Respon
     }
 }
 
-pub(crate) async fn list_users_handler(State(pool): State<Arc<PgPool>>) -> Response {
+pub async fn list_users_handler(State(pool): State<Arc<PgPool>>) -> Response {
     match repositories::list_users(&pool).await {
         Ok(users) => Json(UsersListResponse { users }).into_response(),
         Err(e) => {
@@ -81,7 +81,7 @@ pub(crate) async fn list_users_handler(State(pool): State<Arc<PgPool>>) -> Respo
     }
 }
 
-pub(crate) async fn user_detail_handler(
+pub async fn user_detail_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_raw): Path<String>,
 ) -> Response {
@@ -96,7 +96,7 @@ pub(crate) async fn user_detail_handler(
     }
 }
 
-pub(crate) async fn user_usage_handler(
+pub async fn user_usage_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_raw): Path<String>,
 ) -> Response {
@@ -110,7 +110,7 @@ pub(crate) async fn user_usage_handler(
     }
 }
 
-pub(crate) async fn create_user_handler(
+pub async fn create_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Json(body): Json<CreateUserRequest>,
@@ -148,7 +148,7 @@ pub(crate) async fn create_user_handler(
     }
 }
 
-pub(crate) async fn update_user_handler(
+pub async fn update_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(user_id_raw): Path<String>,
@@ -189,7 +189,7 @@ pub(crate) async fn update_user_handler(
     }
 }
 
-pub(crate) async fn delete_user_handler(
+pub async fn delete_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(user_id_raw): Path<String>,
@@ -225,7 +225,7 @@ pub(crate) async fn delete_user_handler(
     }
 }
 
-pub(crate) async fn list_events_handler(
+pub async fn list_events_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<EventsQuery>,
 ) -> Response {

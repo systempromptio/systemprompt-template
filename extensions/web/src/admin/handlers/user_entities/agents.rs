@@ -15,7 +15,7 @@ use systemprompt::identifiers::AgentId;
 use super::plugins::is_entity_in_platform_plugin;
 use crate::admin::handlers::{responses::AgentsListResponse, shared};
 
-pub(crate) async fn list_user_agents_handler(
+pub async fn list_user_agents_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -28,7 +28,7 @@ pub(crate) async fn list_user_agents_handler(
     }
 }
 
-pub(crate) async fn create_user_agent_entity_handler(
+pub async fn create_user_agent_entity_handler(
     Extension(user_ctx): Extension<UserContext>,
     Extension(tier_cache): Extension<crate::admin::tier_enforcement::TierEnforcementCache>,
     State(pool): State<Arc<PgPool>>,
@@ -80,7 +80,7 @@ pub(crate) async fn create_user_agent_entity_handler(
     }
 }
 
-pub(crate) async fn update_user_agent_entity_handler(
+pub async fn update_user_agent_entity_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(agent_id): Path<String>,
@@ -116,7 +116,7 @@ pub(crate) async fn update_user_agent_entity_handler(
     }
 }
 
-pub(crate) async fn delete_user_agent_entity_handler(
+pub async fn delete_user_agent_entity_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(agent_id): Path<String>,

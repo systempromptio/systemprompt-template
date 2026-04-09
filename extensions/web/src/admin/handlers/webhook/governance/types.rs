@@ -3,13 +3,13 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 
 #[derive(Debug, Serialize)]
-pub(crate) struct GovernanceResponse {
+pub struct GovernanceResponse {
     #[serde(rename = "hookSpecificOutput")]
     pub hook_specific_output: HookSpecificOutput,
 }
 
 #[derive(Debug, Serialize)]
-pub(crate) struct HookSpecificOutput {
+pub struct HookSpecificOutput {
     #[serde(rename = "hookEventName")]
     pub hook_event_name: &'static str,
     #[serde(rename = "permissionDecision")]
@@ -22,7 +22,7 @@ pub(crate) struct HookSpecificOutput {
 }
 
 #[derive(Debug, Serialize)]
-pub(crate) struct EvaluatedRule {
+pub struct EvaluatedRule {
     pub rule: &'static str,
     pub result: &'static str,
     pub detail: String,

@@ -197,7 +197,7 @@ async fn inject_governance_data(pool: &PgPool, data: &mut serde_json::Value) {
     }
 }
 
-pub(crate) async fn dashboard_page(
+pub async fn dashboard_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

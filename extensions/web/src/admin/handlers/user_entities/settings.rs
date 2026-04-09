@@ -13,7 +13,7 @@ use crate::admin::repositories::user_settings::UpsertUserSettings;
 use crate::admin::types::UserContext;
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct UpdateSettingsRequest {
+pub struct UpdateSettingsRequest {
     pub display_name: Option<String>,
     pub avatar_url: Option<String>,
     pub notify_daily_summary: Option<bool>,
@@ -22,7 +22,7 @@ pub(crate) struct UpdateSettingsRequest {
     pub timezone: Option<String>,
 }
 
-pub(crate) async fn update_user_settings_handler(
+pub async fn update_user_settings_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<UpdateSettingsRequest>,

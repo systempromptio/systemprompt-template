@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use super::svg::{build_svg_line, build_y_labels, svg_x, AxisLabel, SVG_HEIGHT, SVG_WIDTH};
 
-pub(crate) fn compute_bar_chart<T, F, G>(
+pub fn compute_bar_chart<T, F, G>(
     items: &[T],
     get_count: F,
     build_json: G,
@@ -24,7 +24,7 @@ where
 }
 
 #[derive(Serialize)]
-pub(crate) struct AreaChart {
+pub struct AreaChart {
     has_data: bool,
     paths: HashMap<String, String>,
     x_labels: Vec<String>,
@@ -32,7 +32,7 @@ pub(crate) struct AreaChart {
     peak: i64,
 }
 
-pub(crate) fn compute_area_chart_data(
+pub fn compute_area_chart_data(
     buckets: &[crate::admin::types::TimeSeriesBucket],
     range: &str,
 ) -> AreaChart {

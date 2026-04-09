@@ -67,11 +67,11 @@ async fn resolve_cowork_repo(
 }
 
 #[derive(serde::Deserialize, Default)]
-pub(crate) struct InfoRefsQuery {
+pub struct InfoRefsQuery {
     service: Option<String>,
 }
 
-pub(crate) async fn marketplace_git_handler(
+pub async fn marketplace_git_handler(
     State(pool): State<Arc<PgPool>>,
     Path((user_id_raw, file_path)): Path<(String, String)>,
     Query(query): Query<InfoRefsQuery>,
@@ -126,7 +126,7 @@ async fn smart_info_refs(repo_path: &PathBuf) -> Response {
         .into_response()
 }
 
-pub(crate) async fn git_upload_pack_handler(
+pub async fn git_upload_pack_handler(
     State(pool): State<Arc<PgPool>>,
     Path((user_id_raw, _path)): Path<(String, String)>,
     headers: HeaderMap,
@@ -139,7 +139,7 @@ pub(crate) async fn git_upload_pack_handler(
     run_upload_pack(&repo_path, &body).await
 }
 
-pub(crate) async fn cowork_git_handler(
+pub async fn cowork_git_handler(
     State(pool): State<Arc<PgPool>>,
     Path((user_id_raw, file_path)): Path<(String, String)>,
     Query(query): Query<InfoRefsQuery>,
@@ -152,7 +152,7 @@ pub(crate) async fn cowork_git_handler(
     serve_git_file(&repo_path, &file_path, &query).await
 }
 
-pub(crate) async fn cowork_upload_pack_handler(
+pub async fn cowork_upload_pack_handler(
     State(pool): State<Arc<PgPool>>,
     Path((user_id_raw, _path)): Path<(String, String)>,
     headers: HeaderMap,

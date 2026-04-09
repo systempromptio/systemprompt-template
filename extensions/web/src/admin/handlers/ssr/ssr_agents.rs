@@ -127,7 +127,7 @@ fn build_agent_json(
     })
 }
 
-pub(crate) async fn agents_page(
+pub async fn agents_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -210,7 +210,7 @@ pub(crate) async fn agents_page(
     super::render_page(&engine, "agents", &data, &user_ctx, &mkt_ctx)
 }
 
-pub(crate) async fn agent_edit_page(
+pub async fn agent_edit_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

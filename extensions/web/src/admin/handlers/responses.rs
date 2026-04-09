@@ -1,23 +1,23 @@
 use serde::Serialize;
 
 #[derive(Serialize)]
-pub(crate) struct RulesResponse<T: Serialize> {
+pub struct RulesResponse<T: Serialize> {
     pub rules: T,
 }
 
 #[derive(Serialize)]
-pub(crate) struct ResolutionTokenResponse {
+pub struct ResolutionTokenResponse {
     pub token: String,
     pub expires_in: u32,
 }
 
 #[derive(Serialize)]
-pub(crate) struct ResultOkResponse {
+pub struct ResultOkResponse {
     pub result: &'static str,
 }
 
 #[derive(Serialize)]
-pub(crate) struct AuditLogEntry {
+pub struct AuditLogEntry {
     pub id: String,
     pub var_name: String,
     pub action: String,
@@ -27,7 +27,7 @@ pub(crate) struct AuditLogEntry {
 }
 
 #[derive(Serialize)]
-pub(crate) struct PluginEnvResponse {
+pub struct PluginEnvResponse {
     pub definitions: Vec<serde_json::Value>,
 
     pub stored: Vec<crate::admin::repositories::plugin_env::PluginEnvVar>,
@@ -36,7 +36,7 @@ pub(crate) struct PluginEnvResponse {
 }
 
 #[derive(Serialize)]
-pub(crate) struct ImportUserBundleResponse {
+pub struct ImportUserBundleResponse {
     pub message: String,
     pub imported_count: u32,
 }
@@ -44,7 +44,7 @@ pub(crate) struct ImportUserBundleResponse {
 macro_rules! list_response {
     ($name:ident, $field:ident) => {
         #[derive(Serialize)]
-        pub(crate) struct $name<T: Serialize> {
+        pub struct $name<T: Serialize> {
             pub $field: T,
         }
     };
@@ -58,7 +58,7 @@ list_response!(McpServersListResponse, mcp_servers);
 list_response!(HooksListResponse, hooks);
 
 #[derive(Serialize)]
-pub(crate) struct ForkablePluginItem {
+pub struct ForkablePluginItem {
     pub id: String,
     pub name: String,
     pub description: String,
@@ -69,7 +69,7 @@ pub(crate) struct ForkablePluginItem {
 }
 
 #[derive(Serialize)]
-pub(crate) struct ForkableSkillItem {
+pub struct ForkableSkillItem {
     pub id: String,
     pub name: String,
     pub description: String,
@@ -79,7 +79,7 @@ pub(crate) struct ForkableSkillItem {
 }
 
 #[derive(Serialize)]
-pub(crate) struct ForkableAgentItem {
+pub struct ForkableAgentItem {
     pub id: String,
     pub name: String,
     pub description: String,
@@ -89,14 +89,14 @@ pub(crate) struct ForkableAgentItem {
 }
 
 #[derive(Serialize)]
-pub(crate) struct ForkPluginResponse<T: Serialize> {
+pub struct ForkPluginResponse<T: Serialize> {
     pub plugin: T,
     pub forked_skills: usize,
     pub forked_agents: usize,
 }
 
 #[derive(Serialize)]
-pub(crate) struct BaseSkillContentResponse {
+pub struct BaseSkillContentResponse {
     pub skill_id: String,
     pub name: String,
     pub description: String,

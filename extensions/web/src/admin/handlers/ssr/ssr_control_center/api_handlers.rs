@@ -16,7 +16,7 @@ use sqlx::PgPool;
 use systemprompt::ai::AiService;
 use systemprompt::identifiers::SessionId;
 
-pub(crate) async fn handle_rate_session(
+pub async fn handle_rate_session(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<crate::admin::types::conversation_analytics::RateSessionRequest>,
@@ -42,7 +42,7 @@ pub(crate) async fn handle_rate_session(
     }
 }
 
-pub(crate) async fn handle_rate_skill(
+pub async fn handle_rate_skill(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<crate::admin::types::conversation_analytics::RateSkillRequest>,
@@ -67,7 +67,7 @@ pub(crate) async fn handle_rate_skill(
     }
 }
 
-pub(crate) async fn handle_update_session_status(
+pub async fn handle_update_session_status(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<crate::admin::types::control_center::UpdateSessionStatusRequest>,
@@ -92,7 +92,7 @@ pub(crate) async fn handle_update_session_status(
     }
 }
 
-pub(crate) async fn handle_batch_update_session_status(
+pub async fn handle_batch_update_session_status(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<crate::admin::types::control_center::BatchUpdateSessionStatusRequest>,
@@ -112,7 +112,7 @@ pub(crate) async fn handle_batch_update_session_status(
     StatusCode::OK.into_response()
 }
 
-pub(crate) async fn handle_analyse_session(
+pub async fn handle_analyse_session(
     Extension(user_ctx): Extension<UserContext>,
     Extension(ai_service): Extension<Option<Arc<AiService>>>,
     State(pool): State<Arc<PgPool>>,
@@ -176,7 +176,7 @@ pub(crate) async fn handle_analyse_session(
     }
 }
 
-pub(crate) async fn handle_generate_report(
+pub async fn handle_generate_report(
     Extension(user_ctx): Extension<UserContext>,
     Extension(ai_service): Extension<Option<Arc<AiService>>>,
     Extension(tier_cache): Extension<TierEnforcementCache>,

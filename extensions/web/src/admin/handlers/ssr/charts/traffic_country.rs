@@ -52,7 +52,7 @@ struct TooltipBucket {
 }
 
 #[derive(Serialize)]
-pub(crate) struct CountryTrafficChart {
+pub struct CountryTrafficChart {
     has_data: bool,
     countries: Vec<CountryArea>,
     x_labels: Vec<XAxisLabel>,
@@ -192,7 +192,7 @@ fn build_country_tooltips(
         .collect()
 }
 
-pub(crate) fn compute_country_traffic_chart(
+pub fn compute_country_traffic_chart(
     data: &[crate::admin::types::TrafficCountryBucket],
     range: &str,
 ) -> CountryTrafficChart {

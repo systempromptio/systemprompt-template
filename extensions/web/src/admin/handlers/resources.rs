@@ -19,11 +19,11 @@ use crate::admin::types::{
 
 use super::responses::AgentsListResponse;
 
-pub(crate) fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
+pub fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
     shared::get_services_path()
 }
 
-pub(crate) async fn list_agents_handler(Extension(user_ctx): Extension<UserContext>) -> Response {
+pub async fn list_agents_handler(Extension(user_ctx): Extension<UserContext>) -> Response {
     let services_path = match get_services_path() {
         Ok(p) => p,
         Err(r) => return *r,
@@ -54,7 +54,7 @@ pub(crate) async fn list_agents_handler(Extension(user_ctx): Extension<UserConte
     Json(AgentsListResponse { agents: filtered }).into_response()
 }
 
-pub(crate) async fn get_agent_handler(Path(agent_id): Path<String>) -> Response {
+pub async fn get_agent_handler(Path(agent_id): Path<String>) -> Response {
     let services_path = match get_services_path() {
         Ok(p) => p,
         Err(r) => return *r,
@@ -69,7 +69,7 @@ pub(crate) async fn get_agent_handler(Path(agent_id): Path<String>) -> Response 
     }
 }
 
-pub(crate) async fn create_agent_handler(
+pub async fn create_agent_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Json(body): Json<CreateAgentRequest>,
@@ -99,7 +99,7 @@ pub(crate) async fn create_agent_handler(
     }
 }
 
-pub(crate) async fn update_agent_handler(
+pub async fn update_agent_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(agent_id): Path<String>,
@@ -131,7 +131,7 @@ pub(crate) async fn update_agent_handler(
     }
 }
 
-pub(crate) async fn delete_agent_handler(
+pub async fn delete_agent_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(agent_id): Path<String>,
@@ -164,7 +164,7 @@ pub(crate) async fn delete_agent_handler(
     }
 }
 
-pub(crate) async fn create_user_agent_handler(
+pub async fn create_user_agent_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Json(body): Json<CreateUserAgentRequest>,
@@ -195,7 +195,7 @@ pub(crate) async fn create_user_agent_handler(
     }
 }
 
-pub(crate) async fn delete_user_agent_handler(
+pub async fn delete_user_agent_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(agent_id_raw): Path<String>,

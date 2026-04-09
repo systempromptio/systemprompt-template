@@ -34,7 +34,7 @@ fn build_deny_response(reason: &str) -> Response {
     (StatusCode::OK, Json(response)).into_response()
 }
 
-pub(crate) async fn govern_tool_use(
+pub async fn govern_tool_use(
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
     Query(query): Query<GovernQuery>,

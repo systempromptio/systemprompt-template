@@ -13,7 +13,7 @@ use crate::admin::types::webhook::{TranscriptPayload, TranscriptQuery};
 
 use super::helpers::{extract_bearer_token, get_jwt_config};
 
-pub(crate) async fn track_transcript_event(
+pub async fn track_transcript_event(
     State(_pool): State<Arc<PgPool>>,
     headers: HeaderMap,
     Query(_query): Query<TranscriptQuery>,

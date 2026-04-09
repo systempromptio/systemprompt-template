@@ -13,7 +13,7 @@ use systemprompt::identifiers::UserId;
 use crate::admin::handlers::responses::{ChangelogListResponse, VersionsListResponse};
 use crate::admin::repositories;
 
-pub(crate) async fn marketplace_versions_handler(
+pub async fn marketplace_versions_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_raw): Path<String>,
     headers: HeaderMap,
@@ -39,7 +39,7 @@ pub(crate) async fn marketplace_versions_handler(
     }
 }
 
-pub(crate) async fn marketplace_changelog_handler(
+pub async fn marketplace_changelog_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_raw): Path<String>,
     headers: HeaderMap,
@@ -66,7 +66,7 @@ pub(crate) async fn marketplace_changelog_handler(
     }
 }
 
-pub(crate) async fn get_base_skill_content_handler(
+pub async fn get_base_skill_content_handler(
     Path(skill_id): Path<String>,
     headers: HeaderMap,
 ) -> Response {
@@ -141,7 +141,7 @@ pub(crate) async fn get_base_skill_content_handler(
     .into_response()
 }
 
-pub(crate) async fn marketplace_version_detail_handler(
+pub async fn marketplace_version_detail_handler(
     State(pool): State<Arc<PgPool>>,
     Path((user_id_raw, version_id)): Path<(String, String)>,
     headers: HeaderMap,
@@ -172,7 +172,7 @@ pub(crate) async fn marketplace_version_detail_handler(
     }
 }
 
-pub(crate) async fn marketplace_all_versions_handler(State(pool): State<Arc<PgPool>>) -> Response {
+pub async fn marketplace_all_versions_handler(State(pool): State<Arc<PgPool>>) -> Response {
     match repositories::marketplace_versions::list_all_versions_summary(pool.as_ref()).await {
         Ok(versions) => Json(VersionsListResponse { versions }).into_response(),
         Err(e) => {

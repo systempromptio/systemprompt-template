@@ -15,7 +15,7 @@ use sqlx::PgPool;
 use crate::admin::repositories::github_sync;
 use crate::admin::types::UserContext;
 
-pub(crate) async fn list_org_marketplaces_handler(
+pub async fn list_org_marketplaces_handler(
     State(pool): State<Arc<PgPool>>,
 ) -> impl IntoResponse {
     match repositories::org_marketplaces::list_org_marketplaces(&pool).await {
@@ -31,7 +31,7 @@ pub(crate) async fn list_org_marketplaces_handler(
     }
 }
 
-pub(crate) async fn create_org_marketplace_handler(
+pub async fn create_org_marketplace_handler(
     Extension(_user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<CreateOrgMarketplaceRequest>,
@@ -50,7 +50,7 @@ pub(crate) async fn create_org_marketplace_handler(
     }
 }
 
-pub(crate) async fn update_org_marketplace_handler(
+pub async fn update_org_marketplace_handler(
     Extension(_user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
@@ -74,7 +74,7 @@ pub(crate) async fn update_org_marketplace_handler(
     }
 }
 
-pub(crate) async fn delete_org_marketplace_handler(
+pub async fn delete_org_marketplace_handler(
     Extension(_user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
@@ -98,11 +98,11 @@ pub(crate) async fn delete_org_marketplace_handler(
 }
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct SetPluginsRequest {
+pub struct SetPluginsRequest {
     pub plugin_ids: Vec<String>,
 }
 
-pub(crate) async fn set_marketplace_plugins_handler(
+pub async fn set_marketplace_plugins_handler(
     Extension(_user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
@@ -141,7 +141,7 @@ pub(crate) async fn set_marketplace_plugins_handler(
     }
 }
 
-pub(crate) async fn sync_marketplace_handler(
+pub async fn sync_marketplace_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
@@ -214,7 +214,7 @@ pub(crate) async fn sync_marketplace_handler(
     }
 }
 
-pub(crate) async fn publish_marketplace_handler(
+pub async fn publish_marketplace_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,

@@ -18,7 +18,7 @@ pub struct DemoRegisterRequest {
     pub role: String,
 }
 
-pub(crate) async fn create_demo_user_handler(
+pub async fn create_demo_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Json(body): Json<DemoRegisterRequest>,

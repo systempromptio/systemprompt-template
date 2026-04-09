@@ -168,7 +168,7 @@ impl ServerHandler for MarketplaceServer {
         let progress_callback = ctx
             .meta
             .get_progress_token()
-            .map(|token| create_progress_callback(token.clone(), ctx.peer.clone()));
+            .map(|token| create_progress_callback(token, ctx.peer.clone()));
 
         let services = tools::ToolServices {
             db_pool: self.db_pool.clone(),

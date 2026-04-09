@@ -51,7 +51,7 @@ fn enrich_users_with_ranks(
         .collect()
 }
 
-pub(crate) async fn users_page(
+pub async fn users_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -103,7 +103,7 @@ pub(crate) async fn users_page(
     super::render_page(&engine, "users", &value, &user_ctx, &mkt_ctx)
 }
 
-pub(crate) async fn user_detail_page(
+pub async fn user_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

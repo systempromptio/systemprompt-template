@@ -18,12 +18,12 @@ struct SetupPhase {
 }
 
 #[derive(Deserialize)]
-pub(crate) struct SetupQuery {
+pub struct SetupQuery {
     #[serde(default)]
     verified: Option<String>,
 }
 
-pub(crate) async fn setup_page(
+pub async fn setup_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

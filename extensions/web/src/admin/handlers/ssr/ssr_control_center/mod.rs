@@ -1,9 +1,9 @@
 mod api_handlers;
-pub(crate) mod enrichment;
+pub mod enrichment;
 mod helpers;
 mod session_groups;
 mod turns;
-pub(crate) mod types;
+pub mod types;
 
 use std::sync::Arc;
 
@@ -21,14 +21,14 @@ use types::EntityCounts;
 
 pub use session_groups::build_session_groups_with_status;
 
-pub(crate) use api_handlers::handle_analyse_session;
-pub(crate) use api_handlers::handle_batch_update_session_status;
-pub(crate) use api_handlers::handle_generate_report;
-pub(crate) use api_handlers::handle_rate_session;
-pub(crate) use api_handlers::handle_rate_skill;
-pub(crate) use api_handlers::handle_update_session_status;
+pub use api_handlers::handle_analyse_session;
+pub use api_handlers::handle_batch_update_session_status;
+pub use api_handlers::handle_generate_report;
+pub use api_handlers::handle_rate_session;
+pub use api_handlers::handle_rate_skill;
+pub use api_handlers::handle_update_session_status;
 
-pub(crate) async fn control_center_page(
+pub async fn control_center_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

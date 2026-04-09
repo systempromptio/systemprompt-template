@@ -14,13 +14,13 @@ mod api;
 mod restore;
 mod upload;
 
-pub(crate) use api::{
+pub use api::{
     get_base_skill_content_handler, marketplace_all_versions_handler,
     marketplace_changelog_handler, marketplace_version_detail_handler,
     marketplace_versions_handler,
 };
-pub(crate) use restore::marketplace_restore_handler;
-pub(crate) use upload::marketplace_upload_handler;
+pub use restore::marketplace_restore_handler;
+pub use upload::marketplace_upload_handler;
 
 fn authenticate(headers: &HeaderMap, user_id: &str) -> Result<(), Box<Response>> {
     if let Some(token) = extract_bearer_token(headers) {

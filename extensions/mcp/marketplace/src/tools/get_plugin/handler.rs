@@ -64,17 +64,17 @@ impl McpToolHandler for GetPluginHandler {
         let skill_strs: Vec<String> = assoc
             .skill_ids
             .iter()
-            .map(std::string::ToString::to_string)
+            .map(ToString::to_string)
             .collect();
         let agent_strs: Vec<String> = assoc
             .agent_ids
             .iter()
-            .map(std::string::ToString::to_string)
+            .map(ToString::to_string)
             .collect();
         let mcp_strs: Vec<String> = assoc
             .mcp_server_ids
             .iter()
-            .map(std::string::ToString::to_string)
+            .map(ToString::to_string)
             .collect();
         let (skill_slugs, agent_slugs, mcp_server_slugs) = tokio::try_join!(
             shared::resolve_skill_uuids_to_slugs(&pool, &skill_strs),

@@ -9,7 +9,7 @@ use serde_json::json;
 
 use super::{render_page, ACCESS_DENIED_HTML};
 
-pub(crate) async fn demo_register_page(
+pub async fn demo_register_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

@@ -18,7 +18,7 @@ use crate::admin::types::{UpdatePluginEnvRequest, UserQuery};
 
 use super::responses::PluginEnvResponse;
 
-pub(crate) async fn list_plugin_env_handler(
+pub async fn list_plugin_env_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     headers: HeaderMap,
@@ -73,7 +73,7 @@ pub(crate) async fn list_plugin_env_handler(
     .into_response()
 }
 
-pub(crate) async fn update_plugin_env_handler(
+pub async fn update_plugin_env_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     headers: HeaderMap,

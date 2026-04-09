@@ -1,4 +1,4 @@
-pub(crate) use super::fork_helpers::fork_single_plugin;
+pub use super::fork_helpers::fork_single_plugin;
 use super::fork_helpers::read_skill_content;
 use crate::admin::activity::{self, ActivityEntity, NewActivity};
 use crate::admin::handlers::responses::ForkPluginResponse;
@@ -92,7 +92,7 @@ fn read_skill_config(
     (name, desc, tags)
 }
 
-pub(crate) async fn fork_org_skill_handler(
+pub async fn fork_org_skill_handler(
     Extension(user_ctx): Extension<UserContext>,
     Extension(tier_cache): Extension<crate::admin::tier_enforcement::TierEnforcementCache>,
     State(pool): State<Arc<PgPool>>,
@@ -151,7 +151,7 @@ pub(crate) async fn fork_org_skill_handler(
     }
 }
 
-pub(crate) async fn fork_org_agent_handler(
+pub async fn fork_org_agent_handler(
     Extension(user_ctx): Extension<UserContext>,
     Extension(tier_cache): Extension<crate::admin::tier_enforcement::TierEnforcementCache>,
     State(pool): State<Arc<PgPool>>,
@@ -209,7 +209,7 @@ pub(crate) async fn fork_org_agent_handler(
     }
 }
 
-pub(crate) async fn fork_org_plugin_handler(
+pub async fn fork_org_plugin_handler(
     Extension(user_ctx): Extension<UserContext>,
     Extension(tier_cache): Extension<crate::admin::tier_enforcement::TierEnforcementCache>,
     State(pool): State<Arc<PgPool>>,

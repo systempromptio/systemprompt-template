@@ -3,13 +3,13 @@ use crate::admin::types::CreateUserPluginRequest;
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 
-pub(crate) struct ForkSinglePluginResult {
+pub struct ForkSinglePluginResult {
     pub plugin: crate::admin::types::UserPlugin,
     pub forked_skills: usize,
     pub forked_agents: usize,
 }
 
-pub(crate) async fn fork_single_plugin(
+pub async fn fork_single_plugin(
     pool: &PgPool,
     user_id: &UserId,
     username: &str,

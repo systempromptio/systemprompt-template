@@ -117,7 +117,7 @@ fn build_mcp_server_json(
     })
 }
 
-pub(crate) async fn mcp_servers_page(
+pub async fn mcp_servers_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -186,7 +186,7 @@ pub(crate) async fn mcp_servers_page(
     super::render_page(&engine, "mcp-servers", &data, &user_ctx, &mkt_ctx)
 }
 
-pub(crate) async fn mcp_edit_page(
+pub async fn mcp_edit_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

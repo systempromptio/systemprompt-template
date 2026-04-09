@@ -3,7 +3,7 @@ use serde::Serialize;
 use super::types::ContentFunnel;
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct MetricRowView {
+pub struct MetricRowView {
     pub label: String,
     pub value: String,
     pub yesterday_delta: String,
@@ -21,7 +21,7 @@ pub(crate) struct MetricRowView {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct TopContentView {
+pub struct TopContentView {
     pub title: String,
     pub views_7d: i64,
     pub views_30d: i64,
@@ -34,34 +34,34 @@ pub(crate) struct TopContentView {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct BarDataView {
+pub struct BarDataView {
     pub label: String,
     pub sessions: i64,
     pub pct: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct LandingPageView {
+pub struct LandingPageView {
     pub page_url: String,
     pub sessions: i64,
     pub avg_time: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct ContentVisibility {
+pub struct ContentVisibility {
     pub has_top_content: bool,
     pub has_landing_pages: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct BreakdownVisibility {
+pub struct BreakdownVisibility {
     pub has_geo: bool,
     pub has_devices: bool,
     pub has_sources: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct DashboardReportView {
+pub struct DashboardReportView {
     pub report_date: String,
     pub generated_at: String,
     pub traffic_overview: Vec<MetricRowView>,
@@ -88,16 +88,16 @@ pub(crate) struct DashboardReportView {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct ApiErrorResponse {
+pub struct ApiErrorResponse {
     pub error: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct ApiStatusResponse {
+pub struct ApiStatusResponse {
     pub status: &'static str,
 }
 
-pub(crate) struct SparklineStrings {
+pub struct SparklineStrings {
     pub sessions: String,
     pub page_views: String,
     pub signups: String,

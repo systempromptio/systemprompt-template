@@ -18,7 +18,7 @@ use super::ssr_my_plugins_helpers::{
 };
 use super::types::{MyPluginEditPageData, MyPluginsPageData, PluginStats};
 
-pub(crate) async fn my_plugins_page(
+pub async fn my_plugins_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -74,7 +74,7 @@ pub(crate) async fn my_plugins_page(
     super::render_page(&engine, "my-plugins", &data_value, &user_ctx, &mkt_ctx)
 }
 
-pub(crate) async fn my_plugin_edit_page(
+pub async fn my_plugin_edit_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

@@ -1,13 +1,13 @@
-pub(crate) mod ai_context;
-pub(crate) mod ai_summary;
-pub(crate) mod ai_summary_types;
+pub mod ai_context;
+pub mod ai_summary;
+pub mod ai_summary_types;
 mod auth;
 mod dedup;
 mod description;
 mod entity;
 mod helpers;
 mod processing;
-pub(crate) mod session_summary;
+pub mod session_summary;
 
 use crate::admin::event_hub::EventHub;
 use crate::admin::repositories::webhook;
@@ -24,7 +24,7 @@ use std::sync::Arc;
 use systemprompt::ai::AiService;
 use systemprompt::identifiers::{SessionId, UserId};
 
-pub(crate) async fn handle_hook_track(
+pub async fn handle_hook_track(
     Extension(event_hub): Extension<EventHub>,
     Extension(ai_service): Extension<Option<Arc<AiService>>>,
     Extension(tier_cache): Extension<crate::admin::tier_enforcement::TierEnforcementCache>,

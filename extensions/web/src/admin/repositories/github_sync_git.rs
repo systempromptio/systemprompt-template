@@ -2,7 +2,7 @@ use std::path::Path;
 
 use anyhow::Result;
 
-pub(crate) fn git_clone_shallow(url: &str, target: &Path) -> Result<()> {
+pub fn git_clone_shallow(url: &str, target: &Path) -> Result<()> {
     let output = std::process::Command::new("git")
         .args(["clone", "--depth", "1", url, "."])
         .current_dir(target)
@@ -14,7 +14,7 @@ pub(crate) fn git_clone_shallow(url: &str, target: &Path) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn git_pull(repo_path: &Path) -> Result<()> {
+pub fn git_pull(repo_path: &Path) -> Result<()> {
     let output = std::process::Command::new("git")
         .args(["pull", "--ff-only"])
         .current_dir(repo_path)
@@ -26,7 +26,7 @@ pub(crate) fn git_pull(repo_path: &Path) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn git_head_hash(repo_path: &Path) -> Result<String> {
+pub fn git_head_hash(repo_path: &Path) -> Result<String> {
     let output = std::process::Command::new("git")
         .args(["rev-parse", "HEAD"])
         .current_dir(repo_path)

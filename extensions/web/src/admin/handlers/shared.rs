@@ -7,15 +7,15 @@ use axum::{
 };
 use systemprompt::models::ProfileBootstrap;
 
-pub(crate) fn error_response(status: StatusCode, message: &str) -> Response {
+pub fn error_response(status: StatusCode, message: &str) -> Response {
     (status, Json(serde_json::json!({"error": message}))).into_response()
 }
 
-pub(crate) fn boxed_error_response(status: StatusCode, message: &str) -> Box<Response> {
+pub fn boxed_error_response(status: StatusCode, message: &str) -> Box<Response> {
     Box::new(error_response(status, message))
 }
 
-pub(crate) fn get_services_path() -> Result<PathBuf, Box<Response>> {
+pub fn get_services_path() -> Result<PathBuf, Box<Response>> {
     ProfileBootstrap::get()
         .map(|p| PathBuf::from(&p.paths.services))
         .map_err(|e| {

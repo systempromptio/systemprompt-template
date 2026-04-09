@@ -12,7 +12,7 @@ use sqlx::PgPool;
 
 use super::types::{BrowsePluginStats, BrowsePluginView, BrowsePluginsPageData};
 
-pub(crate) async fn browse_plugins_page(
+pub async fn browse_plugins_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

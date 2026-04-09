@@ -10,14 +10,14 @@ use serde_json::json;
 
 use super::ssr_demo_help::demo_help_text;
 
-pub(crate) fn branding_context(engine: &AdminTemplateEngine) -> serde_json::Value {
+pub fn branding_context(engine: &AdminTemplateEngine) -> serde_json::Value {
     match engine.branding() {
         Some(b) => json!({"branding": b}),
         None => json!({}),
     }
 }
 
-pub(crate) fn render_page(
+pub fn render_page(
     engine: &AdminTemplateEngine,
     template: &str,
     data: &serde_json::Value,

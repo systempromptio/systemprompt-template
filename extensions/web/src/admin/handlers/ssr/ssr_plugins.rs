@@ -69,7 +69,7 @@ fn build_plugin_json(
     PluginJsonResult { value: v, category }
 }
 
-pub(crate) async fn plugins_page(
+pub async fn plugins_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

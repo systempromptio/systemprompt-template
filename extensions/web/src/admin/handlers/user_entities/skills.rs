@@ -15,7 +15,7 @@ use systemprompt::identifiers::SkillId;
 use super::plugins::is_entity_in_platform_plugin;
 use crate::admin::handlers::{responses::SkillsListResponse, shared};
 
-pub(crate) async fn list_user_skills_handler(
+pub async fn list_user_skills_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -28,7 +28,7 @@ pub(crate) async fn list_user_skills_handler(
     }
 }
 
-pub(crate) async fn create_user_skill_handler(
+pub async fn create_user_skill_handler(
     Extension(user_ctx): Extension<UserContext>,
     Extension(tier_cache): Extension<crate::admin::tier_enforcement::TierEnforcementCache>,
     State(pool): State<Arc<PgPool>>,
@@ -80,7 +80,7 @@ pub(crate) async fn create_user_skill_handler(
     }
 }
 
-pub(crate) async fn update_user_skill_handler(
+pub async fn update_user_skill_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(skill_id): Path<String>,
@@ -116,7 +116,7 @@ pub(crate) async fn update_user_skill_handler(
     }
 }
 
-pub(crate) async fn delete_user_skill_handler(
+pub async fn delete_user_skill_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(skill_id): Path<String>,

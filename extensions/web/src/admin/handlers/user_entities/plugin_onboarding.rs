@@ -24,7 +24,7 @@ struct SelectAndForkResponse {
     skipped_count: usize,
 }
 
-pub(crate) async fn select_and_fork_plugins_handler(
+pub async fn select_and_fork_plugins_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<SelectPluginsRequest>,

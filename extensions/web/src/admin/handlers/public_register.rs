@@ -23,7 +23,7 @@ pub struct PublicRegisterRequest {
     pub role: String,
 }
 
-pub(crate) async fn public_register_handler(
+pub async fn public_register_handler(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<PublicRegisterRequest>,
 ) -> impl IntoResponse {

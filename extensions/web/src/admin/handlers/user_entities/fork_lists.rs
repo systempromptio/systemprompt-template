@@ -20,7 +20,7 @@ fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
     shared::get_services_path()
 }
 
-pub(crate) async fn list_forkable_plugins_handler(
+pub async fn list_forkable_plugins_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -64,7 +64,7 @@ pub(crate) async fn list_forkable_plugins_handler(
     Json(PluginsListResponse { plugins: items }).into_response()
 }
 
-pub(crate) async fn list_forkable_skills_handler(
+pub async fn list_forkable_skills_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -115,7 +115,7 @@ pub(crate) async fn list_forkable_skills_handler(
     Json(SkillsListResponse { skills: items }).into_response()
 }
 
-pub(crate) async fn list_forkable_agents_handler(
+pub async fn list_forkable_agents_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {

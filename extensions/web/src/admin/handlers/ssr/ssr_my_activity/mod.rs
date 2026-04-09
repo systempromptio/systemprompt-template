@@ -17,7 +17,7 @@ use data::{
     rarity_label, BuildActivityTemplateParams, CATEGORY_ORDER,
 };
 
-pub(crate) async fn my_activity_page(
+pub async fn my_activity_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

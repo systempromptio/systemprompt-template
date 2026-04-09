@@ -197,7 +197,7 @@ async fn load_achievements_data(
     (stats, profile)
 }
 
-pub(crate) async fn achievements_page(
+pub async fn achievements_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -242,7 +242,7 @@ pub(crate) async fn achievements_page(
     super::render_page(&engine, "achievements", &value, &user_ctx, &mkt_ctx)
 }
 
-pub(crate) async fn leaderboard_page(
+pub async fn leaderboard_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

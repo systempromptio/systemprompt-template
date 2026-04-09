@@ -17,7 +17,7 @@ use crate::admin::types::{
 
 use super::responses::{MarketplaceListResponse, RulesResponse, UsersListResponse};
 
-pub(crate) async fn list_marketplace_handler(
+pub async fn list_marketplace_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<MarketplaceQuery>,
@@ -188,7 +188,7 @@ fn sort_and_filter(marketplace_plugins: &mut Vec<MarketplacePlugin>, query: &Mar
     }
 }
 
-pub(crate) async fn marketplace_plugin_users_handler(
+pub async fn marketplace_plugin_users_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
 ) -> Response {
@@ -201,7 +201,7 @@ pub(crate) async fn marketplace_plugin_users_handler(
     }
 }
 
-pub(crate) async fn submit_rating_handler(
+pub async fn submit_rating_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     Json(body): Json<SubmitRatingRequest>,
@@ -226,7 +226,7 @@ pub(crate) async fn submit_rating_handler(
     }
 }
 
-pub(crate) async fn update_visibility_handler(
+pub async fn update_visibility_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     Json(body): Json<UpdateVisibilityRequest>,

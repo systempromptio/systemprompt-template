@@ -17,7 +17,7 @@ use crate::admin::types::{CreateSkillRequest, UserContext, UserQuery};
 
 use super::responses::{PluginsListResponse, SkillsListResponse};
 
-pub(crate) async fn list_plugins_handler(
+pub async fn list_plugins_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<UserQuery>,
@@ -72,7 +72,7 @@ pub(crate) async fn list_plugins_handler(
     Json(PluginsListResponse { plugins }).into_response()
 }
 
-pub(crate) async fn list_skills_handler(
+pub async fn list_skills_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -106,7 +106,7 @@ pub(crate) async fn list_skills_handler(
     Json(SkillsListResponse { skills: filtered }).into_response()
 }
 
-pub(crate) async fn get_skill_handler(
+pub async fn get_skill_handler(
     State(pool): State<Arc<PgPool>>,
     Path(skill_id_raw): Path<String>,
 ) -> Response {
@@ -121,7 +121,7 @@ pub(crate) async fn get_skill_handler(
     }
 }
 
-pub(crate) async fn create_skill_handler(
+pub async fn create_skill_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<UserQuery>,
     Json(body): Json<CreateSkillRequest>,

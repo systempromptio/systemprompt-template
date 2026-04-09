@@ -9,7 +9,7 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
-pub(crate) async fn marketplace_versions_page(
+pub async fn marketplace_versions_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

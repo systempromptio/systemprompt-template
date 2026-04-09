@@ -14,7 +14,7 @@ use sqlx::PgPool;
 use crate::admin::handlers::{responses::HooksListResponse, shared};
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct CreateHookApiRequest {
+pub struct CreateHookApiRequest {
     pub hook_name: String,
     #[serde(default)]
     pub description: String,
@@ -47,7 +47,7 @@ fn default_timeout() -> i32 {
 }
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct UpdateHookApiRequest {
+pub struct UpdateHookApiRequest {
     pub hook_name: Option<String>,
     pub description: Option<String>,
     pub event_type: Option<String>,
@@ -60,7 +60,7 @@ pub(crate) struct UpdateHookApiRequest {
     pub enabled: Option<bool>,
 }
 
-pub(crate) async fn list_user_hooks_handler(
+pub async fn list_user_hooks_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -73,7 +73,7 @@ pub(crate) async fn list_user_hooks_handler(
     }
 }
 
-pub(crate) async fn create_user_hook_handler(
+pub async fn create_user_hook_handler(
     Extension(user_ctx): Extension<UserContext>,
     Extension(tier_cache): Extension<crate::admin::tier_enforcement::TierEnforcementCache>,
     State(pool): State<Arc<PgPool>>,
@@ -138,7 +138,7 @@ pub(crate) async fn create_user_hook_handler(
     }
 }
 
-pub(crate) async fn update_user_hook_handler(
+pub async fn update_user_hook_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(hook_id): Path<String>,
@@ -188,7 +188,7 @@ pub(crate) async fn update_user_hook_handler(
     }
 }
 
-pub(crate) async fn delete_user_hook_handler(
+pub async fn delete_user_hook_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(hook_id): Path<String>,
@@ -218,7 +218,7 @@ pub(crate) async fn delete_user_hook_handler(
     }
 }
 
-pub(crate) async fn toggle_user_hook_handler(
+pub async fn toggle_user_hook_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(hook_id): Path<String>,

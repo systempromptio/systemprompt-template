@@ -34,7 +34,7 @@ fn sanitize_filename(name: &str) -> String {
         .join("-")
 }
 
-pub(crate) async fn export_plugin_zip_handler(
+pub async fn export_plugin_zip_handler(
     State(pool): State<Arc<PgPool>>,
     Path((user_id_str, plugin_id)): Path<(String, String)>,
 ) -> Response {
@@ -105,7 +105,7 @@ pub(crate) async fn export_plugin_zip_handler(
         .into_response()
 }
 
-pub(crate) async fn export_marketplace_zip_handler(
+pub async fn export_marketplace_zip_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_str): Path<String>,
 ) -> Response {
@@ -172,7 +172,7 @@ pub(crate) async fn export_marketplace_zip_handler(
         .into_response()
 }
 
-pub(crate) async fn export_cowork_zip_handler(
+pub async fn export_cowork_zip_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_str): Path<String>,
 ) -> Response {

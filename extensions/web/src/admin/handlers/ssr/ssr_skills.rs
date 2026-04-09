@@ -100,7 +100,7 @@ fn build_skill_json(
     })
 }
 
-pub(crate) async fn skills_page(
+pub async fn skills_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -193,7 +193,7 @@ pub(crate) async fn skills_page(
     super::render_page(&engine, "skills", &data, &user_ctx, &mkt_ctx)
 }
 
-pub(crate) async fn skill_edit_page(
+pub async fn skill_edit_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

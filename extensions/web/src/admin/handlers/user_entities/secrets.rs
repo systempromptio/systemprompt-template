@@ -15,7 +15,7 @@ use systemprompt::identifiers::SkillId;
 use crate::admin::handlers::{responses::SecretsListResponse, shared};
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct CreateSecretRequest {
+pub struct CreateSecretRequest {
     pub plugin_id: String,
     pub var_name: String,
     pub var_value: String,
@@ -24,13 +24,13 @@ pub(crate) struct CreateSecretRequest {
 }
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct UpdateSecretRequest {
+pub struct UpdateSecretRequest {
     pub var_value: String,
     #[serde(default)]
     pub is_secret: bool,
 }
 
-pub(crate) async fn list_user_secrets_handler(
+pub async fn list_user_secrets_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -43,7 +43,7 @@ pub(crate) async fn list_user_secrets_handler(
     }
 }
 
-pub(crate) async fn create_user_secret_handler(
+pub async fn create_user_secret_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<CreateSecretRequest>,
@@ -71,7 +71,7 @@ pub(crate) async fn create_user_secret_handler(
     }
 }
 
-pub(crate) async fn update_user_secret_handler(
+pub async fn update_user_secret_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path((plugin_id, var_name)): Path<(String, String)>,
@@ -100,7 +100,7 @@ pub(crate) async fn update_user_secret_handler(
     }
 }
 
-pub(crate) async fn delete_user_secret_handler(
+pub async fn delete_user_secret_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path((plugin_id, var_name)): Path<(String, String)>,
@@ -121,7 +121,7 @@ pub(crate) async fn delete_user_secret_handler(
     }
 }
 
-pub(crate) async fn list_skill_secrets_handler(
+pub async fn list_skill_secrets_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(skill_id): Path<String>,
@@ -139,7 +139,7 @@ pub(crate) async fn list_skill_secrets_handler(
     }
 }
 
-pub(crate) async fn upsert_skill_secret_handler(
+pub async fn upsert_skill_secret_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(skill_id): Path<String>,
@@ -171,7 +171,7 @@ pub(crate) async fn upsert_skill_secret_handler(
     }
 }
 
-pub(crate) async fn delete_skill_secret_handler(
+pub async fn delete_skill_secret_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path((skill_id, var_name)): Path<(String, String)>,

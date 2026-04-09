@@ -55,7 +55,7 @@ struct SessionSummaryRow {
     errors: i64,
 }
 
-pub(crate) async fn traces_page(
+pub async fn traces_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

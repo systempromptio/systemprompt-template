@@ -14,7 +14,7 @@ struct TrafficTooltip {
 }
 
 #[derive(Serialize)]
-pub(crate) struct TrafficChart {
+pub struct TrafficChart {
     has_data: bool,
     area_path: String,
     line_path: String,
@@ -24,7 +24,7 @@ pub(crate) struct TrafficChart {
     buckets_json: String,
 }
 
-pub(crate) fn compute_traffic_chart_data(
+pub fn compute_traffic_chart_data(
     buckets: &[crate::admin::types::TrafficTimeBucket],
     range: &str,
 ) -> TrafficChart {

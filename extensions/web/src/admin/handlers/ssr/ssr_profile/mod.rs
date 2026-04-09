@@ -23,7 +23,7 @@ use systemprompt::ai::AiService;
 
 const PROFILE_PERIOD_DAYS: i32 = 30;
 
-pub(crate) async fn profile_page(
+pub async fn profile_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -108,7 +108,7 @@ pub(crate) async fn profile_page(
     super::render_page(&engine, "profile", &data, &user_ctx, &mkt_ctx)
 }
 
-pub(crate) async fn handle_generate_profile_report(
+pub async fn handle_generate_profile_report(
     Extension(user_ctx): Extension<UserContext>,
     Extension(ai_service): Extension<Option<Arc<AiService>>>,
     Extension(tier_cache): Extension<TierEnforcementCache>,

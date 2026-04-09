@@ -13,7 +13,7 @@ use crate::admin::activity;
 use crate::admin::repositories::dashboard_queries;
 use crate::admin::types::UserContext;
 
-pub(crate) async fn dashboard_sse(
+pub async fn dashboard_sse(
     Extension(_user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {

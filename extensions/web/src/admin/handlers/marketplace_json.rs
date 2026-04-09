@@ -13,7 +13,7 @@ use systemprompt::identifiers::UserId;
 use crate::admin::handlers::shared;
 use crate::admin::repositories;
 
-pub(crate) async fn marketplace_json_handler(
+pub async fn marketplace_json_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_raw): Path<String>,
     _headers: HeaderMap,

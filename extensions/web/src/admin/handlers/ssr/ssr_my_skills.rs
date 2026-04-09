@@ -21,7 +21,7 @@ use super::types::{
     SkillStats, SkillViewExtra,
 };
 
-pub(crate) async fn my_skills_page(
+pub async fn my_skills_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -176,7 +176,7 @@ fn build_skills_json(
         .collect()
 }
 
-pub(crate) async fn my_skill_edit_page(
+pub async fn my_skill_edit_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

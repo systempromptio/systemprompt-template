@@ -26,7 +26,7 @@ async fn is_platform_plugin(pool: &PgPool, user_id: &UserId, plugin_id: &str) ->
         .is_some_and(|p| p.base_plugin_id.as_deref() == Some("systemprompt"))
 }
 
-pub(crate) async fn is_entity_in_platform_plugin(
+pub async fn is_entity_in_platform_plugin(
     pool: &PgPool,
     user_id: &UserId,
     entity_id: &str,
@@ -35,7 +35,7 @@ pub(crate) async fn is_entity_in_platform_plugin(
     repositories::is_entity_in_platform_plugin(pool, user_id, entity_id, entity_kind).await
 }
 
-pub(crate) async fn list_user_plugins_handler(
+pub async fn list_user_plugins_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -48,7 +48,7 @@ pub(crate) async fn list_user_plugins_handler(
     }
 }
 
-pub(crate) async fn create_user_plugin_handler(
+pub async fn create_user_plugin_handler(
     Extension(user_ctx): Extension<UserContext>,
     Extension(tier_cache): Extension<crate::admin::tier_enforcement::TierEnforcementCache>,
     State(pool): State<Arc<PgPool>>,
@@ -100,7 +100,7 @@ pub(crate) async fn create_user_plugin_handler(
     }
 }
 
-pub(crate) async fn update_user_plugin_handler(
+pub async fn update_user_plugin_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
@@ -135,7 +135,7 @@ pub(crate) async fn update_user_plugin_handler(
     }
 }
 
-pub(crate) async fn delete_user_plugin_handler(
+pub async fn delete_user_plugin_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
@@ -169,11 +169,11 @@ pub(crate) async fn delete_user_plugin_handler(
 }
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct SetAssociationsRequest {
+pub struct SetAssociationsRequest {
     pub ids: Vec<String>,
 }
 
-pub(crate) async fn set_plugin_skills_handler(
+pub async fn set_plugin_skills_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
@@ -217,7 +217,7 @@ pub(crate) async fn set_plugin_skills_handler(
     }
 }
 
-pub(crate) async fn set_plugin_agents_handler(
+pub async fn set_plugin_agents_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,

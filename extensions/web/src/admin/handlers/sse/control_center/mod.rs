@@ -67,7 +67,7 @@ struct TodayStats {
 
 type SessionGroup = crate::admin::handlers::ssr::ssr_control_center::types::SessionGroup;
 
-pub(crate) async fn control_center_sse(
+pub async fn control_center_sse(
     Extension(user_ctx): Extension<UserContext>,
     Extension(event_hub): Extension<EventHub>,
     Extension(tier_cache): Extension<crate::admin::tier_enforcement::TierEnforcementCache>,

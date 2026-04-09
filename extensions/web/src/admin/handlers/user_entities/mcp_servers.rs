@@ -16,7 +16,7 @@ use systemprompt::identifiers::McpServerId;
 use crate::admin::handlers::{responses::McpServersListResponse, shared};
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct CreateMcpServerApiRequest {
+pub struct CreateMcpServerApiRequest {
     pub mcp_server_id: String,
     pub name: String,
     #[serde(default)]
@@ -26,7 +26,7 @@ pub(crate) struct CreateMcpServerApiRequest {
 }
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct UpdateMcpServerApiRequest {
+pub struct UpdateMcpServerApiRequest {
     pub name: Option<String>,
     pub description: Option<String>,
     pub endpoint: Option<String>,
@@ -34,11 +34,11 @@ pub(crate) struct UpdateMcpServerApiRequest {
 }
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct SetPluginMcpServersRequest {
+pub struct SetPluginMcpServersRequest {
     pub ids: Vec<String>,
 }
 
-pub(crate) async fn list_user_mcp_servers_handler(
+pub async fn list_user_mcp_servers_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -57,7 +57,7 @@ pub(crate) async fn list_user_mcp_servers_handler(
     }
 }
 
-pub(crate) async fn create_user_mcp_server_handler(
+pub async fn create_user_mcp_server_handler(
     Extension(user_ctx): Extension<UserContext>,
     Extension(tier_cache): Extension<crate::admin::tier_enforcement::TierEnforcementCache>,
     State(pool): State<Arc<PgPool>>,
@@ -131,7 +131,7 @@ pub(crate) async fn create_user_mcp_server_handler(
     }
 }
 
-pub(crate) async fn update_user_mcp_server_handler(
+pub async fn update_user_mcp_server_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(mcp_server_id): Path<String>,
@@ -185,7 +185,7 @@ pub(crate) async fn update_user_mcp_server_handler(
     }
 }
 
-pub(crate) async fn delete_user_mcp_server_handler(
+pub async fn delete_user_mcp_server_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(mcp_server_id): Path<String>,
@@ -225,7 +225,7 @@ pub(crate) async fn delete_user_mcp_server_handler(
     }
 }
 
-pub(crate) async fn set_plugin_mcp_servers_handler(
+pub async fn set_plugin_mcp_servers_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,

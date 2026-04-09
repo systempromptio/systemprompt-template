@@ -15,7 +15,7 @@ use crate::admin::types::access_control::{
 };
 use crate::admin::types::UpdatePluginRequest;
 
-pub(crate) async fn list_access_rules_handler(
+pub async fn list_access_rules_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<AccessControlQuery>,
 ) -> Response {
@@ -38,7 +38,7 @@ pub(crate) async fn list_access_rules_handler(
     }
 }
 
-pub(crate) async fn update_entity_rules_handler(
+pub async fn update_entity_rules_handler(
     State(pool): State<Arc<PgPool>>,
     Path((entity_type, entity_id)): Path<(String, String)>,
     Json(body): Json<UpdateEntityRulesRequest>,
@@ -77,7 +77,7 @@ pub(crate) async fn update_entity_rules_handler(
     }
 }
 
-pub(crate) async fn bulk_assign_handler(
+pub async fn bulk_assign_handler(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<BulkAssignRequest>,
 ) -> Response {
@@ -113,7 +113,7 @@ pub(crate) async fn bulk_assign_handler(
     }
 }
 
-pub(crate) async fn access_control_departments_handler(
+pub async fn access_control_departments_handler(
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
     match repositories::fetch_department_stats(&pool).await {

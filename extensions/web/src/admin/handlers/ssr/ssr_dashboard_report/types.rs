@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub(crate) struct TrafficOverviewData {
+pub struct TrafficOverviewData {
     pub sessions_today: f64,
     pub sessions_yesterday: f64,
     pub sessions_7d_avg: f64,
@@ -34,7 +34,7 @@ pub(crate) struct TrafficOverviewData {
     pub pages_per_session_30d_avg: f64,
 }
 
-pub(crate) type MetricTuple = (&'static str, f64, f64, f64, f64, f64, bool);
+pub type MetricTuple = (&'static str, f64, f64, f64, f64, f64, bool);
 
 impl TrafficOverviewData {
     pub fn metric_values(&self) -> [MetricTuple; 6] {
@@ -98,7 +98,7 @@ impl TrafficOverviewData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub(crate) struct UserAcquisitionData {
+pub struct UserAcquisitionData {
     pub signups_today: f64,
     pub signups_yesterday: f64,
     pub signups_7d_avg: f64,
@@ -165,7 +165,7 @@ impl UserAcquisitionData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct TopContentItem {
+pub struct TopContentItem {
     pub title: String,
     #[serde(default)]
     pub slug: String,
@@ -179,7 +179,7 @@ pub(crate) struct TopContentItem {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub(crate) struct SeoMetrics {
+pub struct SeoMetrics {
     pub total_impressions: i64,
     pub total_clicks: i64,
     pub avg_ctr: f64,
@@ -188,25 +188,25 @@ pub(crate) struct SeoMetrics {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct GeoBreakdownItem {
+pub struct GeoBreakdownItem {
     pub country: String,
     pub sessions: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct DeviceBreakdownItem {
+pub struct DeviceBreakdownItem {
     pub device: String,
     pub sessions: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct SourceBreakdownItem {
+pub struct SourceBreakdownItem {
     pub source: String,
     pub sessions: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub(crate) struct ContentFunnel {
+pub struct ContentFunnel {
     pub total_published: i64,
     pub avg_views_per_piece: f64,
     pub total_shares: i64,
@@ -214,7 +214,7 @@ pub(crate) struct ContentFunnel {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub(crate) struct SparklineData {
+pub struct SparklineData {
     pub sessions: Vec<i64>,
     pub page_views: Vec<i64>,
     pub signups: Vec<i64>,
@@ -224,14 +224,14 @@ pub(crate) struct SparklineData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct LandingPageItem {
+pub struct LandingPageItem {
     pub page_url: String,
     pub sessions: i64,
     pub avg_time_seconds: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct InlineReportData {
+pub struct InlineReportData {
     pub traffic_overview: TrafficOverviewData,
     pub user_acquisition: UserAcquisitionData,
     pub top_content: Vec<TopContentItem>,

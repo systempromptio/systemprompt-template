@@ -1,6 +1,6 @@
 use handlebars::{Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext};
 
-pub(crate) struct FormatDateHelper;
+pub struct FormatDateHelper;
 impl HelperDef for FormatDateHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -32,7 +32,7 @@ impl HelperDef for FormatDateHelper {
     }
 }
 
-pub(crate) struct RelativeTimeHelper;
+pub struct RelativeTimeHelper;
 impl HelperDef for RelativeTimeHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -84,7 +84,7 @@ impl HelperDef for RelativeTimeHelper {
     }
 }
 
-pub(crate) struct InitialsHelper;
+pub struct InitialsHelper;
 impl HelperDef for InitialsHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -111,7 +111,7 @@ impl HelperDef for InitialsHelper {
     }
 }
 
-pub(crate) struct TruncateHelper;
+pub struct TruncateHelper;
 impl HelperDef for TruncateHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -137,7 +137,7 @@ impl HelperDef for TruncateHelper {
     }
 }
 
-pub(crate) struct JsonHelper;
+pub struct JsonHelper;
 impl HelperDef for JsonHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -160,7 +160,7 @@ impl HelperDef for JsonHelper {
     }
 }
 
-pub(crate) struct ConcatHelper;
+pub struct ConcatHelper;
 impl HelperDef for ConcatHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -185,7 +185,7 @@ impl HelperDef for ConcatHelper {
     }
 }
 
-pub(crate) struct ToLowerCaseHelper;
+pub struct ToLowerCaseHelper;
 impl HelperDef for ToLowerCaseHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -201,7 +201,7 @@ impl HelperDef for ToLowerCaseHelper {
     }
 }
 
-pub(crate) struct ToUpperCaseHelper;
+pub struct ToUpperCaseHelper;
 impl HelperDef for ToUpperCaseHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -217,7 +217,7 @@ impl HelperDef for ToUpperCaseHelper {
     }
 }
 
-pub(crate) struct CssVersionHelper;
+pub struct CssVersionHelper;
 impl HelperDef for CssVersionHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -244,7 +244,7 @@ impl HelperDef for CssVersionHelper {
     }
 }
 
-pub(crate) struct DefaultHelper;
+pub struct DefaultHelper;
 impl HelperDef for DefaultHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,

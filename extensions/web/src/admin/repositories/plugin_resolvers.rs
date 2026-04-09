@@ -3,7 +3,7 @@ use std::path::Path;
 
 use super::super::types::{AgentInfo, RequiredSecret, SkillInfo};
 
-pub(crate) fn resolve_all_plugin_skill_ids(
+pub fn resolve_all_plugin_skill_ids(
     plugin: &systemprompt::models::PluginConfig,
     skills_path: &Path,
     agents_path: &Path,
@@ -45,7 +45,7 @@ pub(crate) fn resolve_all_plugin_skill_ids(
     skill_ids
 }
 
-pub(crate) fn resolve_plugin_skills(
+pub fn resolve_plugin_skills(
     plugin: &systemprompt::models::PluginConfig,
     skills_path: &Path,
     agents_path: &Path,
@@ -108,7 +108,7 @@ fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String, Vec<R
     (name, desc, required_secrets)
 }
 
-pub(crate) fn read_skill_required_secrets(
+pub fn read_skill_required_secrets(
     skills_path: &Path,
     skill_id: &str,
 ) -> Vec<RequiredSecret> {
@@ -158,7 +158,7 @@ pub(super) fn collect_agent_skills(agent_ids: &[String], agents_path: &Path) -> 
     skills
 }
 
-pub(crate) fn resolve_plugin_agents(
+pub fn resolve_plugin_agents(
     plugin: &systemprompt::models::PluginConfig,
     agents_path: &Path,
 ) -> Vec<AgentInfo> {

@@ -11,7 +11,7 @@ use crate::admin::handlers::shared;
 use crate::admin::repositories;
 use crate::admin::types::UserContext;
 
-pub(crate) async fn delete_account_handler(
+pub async fn delete_account_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
 ) -> Response {

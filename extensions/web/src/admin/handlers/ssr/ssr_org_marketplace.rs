@@ -146,7 +146,7 @@ async fn fetch_plugin_map(pool: &PgPool) -> HashMap<String, Vec<String>> {
     plugin_map
 }
 
-pub(crate) async fn org_marketplace_page(
+pub async fn org_marketplace_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

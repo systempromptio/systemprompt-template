@@ -31,7 +31,7 @@ const HOOK_EVENT_TYPES: &[&str] = &[
     "InstructionsLoaded",
 ];
 
-pub(crate) async fn my_hooks_page(
+pub async fn my_hooks_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

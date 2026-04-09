@@ -13,7 +13,7 @@ use super::types::{MarketplacePluginView, MarketplaceStats, MyMarketplacePageDat
 
 const DEFAULT_HOOK_COUNT: usize = 14;
 
-pub(crate) async fn my_marketplace_page(
+pub async fn my_marketplace_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

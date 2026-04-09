@@ -37,7 +37,7 @@ fn extract_and_parse_archive(
         })
 }
 
-pub(crate) async fn create_version_and_prune(
+pub async fn create_version_and_prune(
     pool: &PgPool,
     user_id: &UserId,
     version_type: &str,
@@ -187,7 +187,7 @@ async fn snapshot_and_save(
     Ok((snapshot, snapshot_path))
 }
 
-pub(crate) async fn marketplace_upload_handler(
+pub async fn marketplace_upload_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_raw): Path<String>,
     headers: HeaderMap,

@@ -4,7 +4,7 @@ use anyhow::Result;
 
 use super::export::{PluginBundle, PluginBundleCounts, PluginFile};
 
-pub(crate) fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBundle> {
+pub fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBundle> {
     let plugin_json_path = plugin_dir.join(".claude-plugin/plugin.json");
     let manifest_content = std::fs::read_to_string(&plugin_json_path).map_err(|e| {
         anyhow::anyhow!(
@@ -106,7 +106,7 @@ pub(crate) fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBun
     })
 }
 
-pub(crate) fn collect_directory_files(
+pub fn collect_directory_files(
     dir: &Path,
     prefix: &str,
     files: &mut Vec<PluginFile>,
@@ -133,7 +133,7 @@ pub(crate) fn collect_directory_files(
     Ok(())
 }
 
-pub(crate) fn import_or_update_plugin(services_path: &Path, bundle: &PluginBundle) -> Result<()> {
+pub fn import_or_update_plugin(services_path: &Path, bundle: &PluginBundle) -> Result<()> {
     let plugin_dir = services_path.join("plugins").join(&bundle.id);
 
     if plugin_dir.exists() {

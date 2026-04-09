@@ -105,7 +105,7 @@ fn build_departments_json(departments: &[DepartmentStats]) -> Vec<serde_json::Va
         .collect()
 }
 
-pub(crate) async fn access_control_page(
+pub async fn access_control_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

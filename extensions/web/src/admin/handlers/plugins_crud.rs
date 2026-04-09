@@ -18,7 +18,7 @@ use crate::admin::types::{
 use super::resources::get_services_path;
 use super::responses::FilesListResponse;
 
-pub(crate) async fn get_plugin_detail_handler(Path(plugin_id): Path<String>) -> Response {
+pub async fn get_plugin_detail_handler(Path(plugin_id): Path<String>) -> Response {
     let services_path = match get_services_path() {
         Ok(p) => p,
         Err(r) => return *r,
@@ -33,7 +33,7 @@ pub(crate) async fn get_plugin_detail_handler(Path(plugin_id): Path<String>) -> 
     }
 }
 
-pub(crate) async fn create_plugin_handler(
+pub async fn create_plugin_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Json(body): Json<CreatePluginRequest>,
@@ -63,7 +63,7 @@ pub(crate) async fn create_plugin_handler(
     }
 }
 
-pub(crate) async fn update_plugin_handler(
+pub async fn update_plugin_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(plugin_id): Path<String>,
@@ -95,7 +95,7 @@ pub(crate) async fn update_plugin_handler(
     }
 }
 
-pub(crate) async fn delete_plugin_handler(
+pub async fn delete_plugin_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(plugin_id): Path<String>,
@@ -128,7 +128,7 @@ pub(crate) async fn delete_plugin_handler(
     }
 }
 
-pub(crate) async fn list_skill_files_handler(
+pub async fn list_skill_files_handler(
     State(pool): State<Arc<PgPool>>,
     Path(skill_id): Path<String>,
 ) -> Response {
@@ -141,7 +141,7 @@ pub(crate) async fn list_skill_files_handler(
     }
 }
 
-pub(crate) async fn get_skill_file_handler(
+pub async fn get_skill_file_handler(
     State(pool): State<Arc<PgPool>>,
     Path((skill_id, file_path)): Path<(String, String)>,
 ) -> Response {
@@ -155,7 +155,7 @@ pub(crate) async fn get_skill_file_handler(
     }
 }
 
-pub(crate) async fn update_skill_file_handler(
+pub async fn update_skill_file_handler(
     State(pool): State<Arc<PgPool>>,
     Path((skill_id, file_path)): Path<(String, String)>,
     Json(body): Json<UpdateSkillFileRequest>,
@@ -182,7 +182,7 @@ pub(crate) async fn update_skill_file_handler(
     }
 }
 
-pub(crate) async fn sync_skill_files_handler(State(pool): State<Arc<PgPool>>) -> Response {
+pub async fn sync_skill_files_handler(State(pool): State<Arc<PgPool>>) -> Response {
     let services_path = match shared::get_services_path() {
         Ok(p) => p,
         Err(r) => return *r,

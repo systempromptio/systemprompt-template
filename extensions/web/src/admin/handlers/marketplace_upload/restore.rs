@@ -95,7 +95,7 @@ async fn snapshot_current(pool: &PgPool, user_id: &UserId) -> Result<serde_json:
         })
 }
 
-pub(crate) async fn marketplace_restore_handler(
+pub async fn marketplace_restore_handler(
     State(pool): State<Arc<PgPool>>,
     Path((user_id_raw, version_id)): Path<(String, String)>,
     headers: HeaderMap,

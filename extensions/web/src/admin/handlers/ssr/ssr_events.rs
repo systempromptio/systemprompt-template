@@ -10,7 +10,7 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
-pub(crate) async fn events_page(
+pub async fn events_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
