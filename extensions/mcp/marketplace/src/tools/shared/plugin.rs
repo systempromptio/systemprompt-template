@@ -4,6 +4,27 @@ use systemprompt_web_extension::admin::repositories::{
     user_plugins,
 };
 
+/// Deduplicates and appends a new entity ID, then persists via the provided setter.
+async fn add_entity_to_association<Id, MkId, F, Fut>(
+    pool: &std::sync::Arc<sqlx::PgPool>,
+    plugin_id: &str,
+    mut existing_ids: Vec<Id>,
+    new_entity_id: &str,
+    make_id: MkId,
+    setter: F,
+) -> Result<(), sqlx::Error>
+where
+    Id: AsRef<str>,
+    MkId: FnOnce(&str) -> Id,
+    F: FnOnce(&std::sync::Arc<sqlx::PgPool>, &str, &[Id]) -> Fut,
+    Fut: std::future::Future<Output = Result<(), sqlx::Error>>,
+{
+    if !existing_ids.iter().any(|id| id.as_ref() == new_entity_id) {
+        existing_ids.push(make_id(new_entity_id));
+    }
+    setter(pool, plugin_id, &existing_ids).await
+}
+
 pub async fn add_to_plugin(
     db_pool: &systemprompt::database::DbPool,
     user_id: &UserId,
@@ -25,28 +46,37 @@ pub async fn add_to_plugin(
         if let Some(assoc) = assoc {
             let result = match entity_kind {
                 "skill" => {
-                    let mut ids: Vec<SkillId> = assoc.skill_ids;
-                    let new_id = SkillId::new(entity_id);
-                    if !ids.iter().any(|id| id.as_ref() == entity_id) {
-                        ids.push(new_id);
-                    }
-                    set_plugin_skills(&pool, &assoc.plugin.id, &ids).await
+                    add_entity_to_association(
+                        &pool,
+                        &assoc.plugin.id,
+                        assoc.skill_ids,
+                        entity_id,
+                        |id| SkillId::new(id),
+                        |p, pid, ids| set_plugin_skills(p, pid, ids),
+                    )
+                    .await
                 }
                 "agent" => {
-                    let mut ids: Vec<AgentId> = assoc.agent_ids;
-                    let new_id = AgentId::new(entity_id);
-                    if !ids.iter().any(|id| id.as_ref() == entity_id) {
-                        ids.push(new_id);
-                    }
-                    set_plugin_agents(&pool, &assoc.plugin.id, &ids).await
+                    add_entity_to_association(
+                        &pool,
+                        &assoc.plugin.id,
+                        assoc.agent_ids,
+                        entity_id,
+                        |id| AgentId::new(id),
+                        |p, pid, ids| set_plugin_agents(p, pid, ids),
+                    )
+                    .await
                 }
                 "mcp_server" => {
-                    let mut ids: Vec<McpServerId> = assoc.mcp_server_ids;
-                    let new_id = McpServerId::new(entity_id);
-                    if !ids.iter().any(|id| id.as_ref() == entity_id) {
-                        ids.push(new_id);
-                    }
-                    set_plugin_mcp_servers(&pool, &assoc.plugin.id, &ids).await
+                    add_entity_to_association(
+                        &pool,
+                        &assoc.plugin.id,
+                        assoc.mcp_server_ids,
+                        entity_id,
+                        |id| McpServerId::new(id),
+                        |p, pid, ids| set_plugin_mcp_servers(p, pid, ids),
+                    )
+                    .await
                 }
                 _ => return None,
             };
@@ -86,47 +116,56 @@ pub async fn auto_add_to_default_plugin(
         return None;
     }
 
-    let first_plugin = plugins.last()?;
-    let assoc = find_plugin_with_associations(&pool, user_id, &first_plugin.plugin_id)
+    let default_plugin = plugins.last()?;
+    let assoc = find_plugin_with_associations(&pool, user_id, &default_plugin.plugin_id)
         .await
         .map_err(|e| {
-            tracing::warn!(error = %e, plugin_id = %first_plugin.plugin_id, "Failed to fetch plugin associations for default plugin");
+            tracing::warn!(error = %e, plugin_id = %default_plugin.plugin_id, "Failed to fetch plugin associations for default plugin");
         })
         .ok()
         .flatten()?;
 
     let result = match entity_kind {
         "skill" => {
-            let mut ids: Vec<SkillId> = assoc.skill_ids;
-            let new_id = SkillId::new(entity_id);
-            if !ids.iter().any(|id| id.as_ref() == entity_id) {
-                ids.push(new_id);
-            }
-            set_plugin_skills(&pool, &first_plugin.id, &ids).await
+            add_entity_to_association(
+                &pool,
+                &default_plugin.id,
+                assoc.skill_ids,
+                entity_id,
+                |id| SkillId::new(id),
+                |p, pid, ids| set_plugin_skills(p, pid, ids),
+            )
+            .await
         }
         "agent" => {
-            let mut ids: Vec<AgentId> = assoc.agent_ids;
-            let new_id = AgentId::new(entity_id);
-            if !ids.iter().any(|id| id.as_ref() == entity_id) {
-                ids.push(new_id);
-            }
-            set_plugin_agents(&pool, &first_plugin.id, &ids).await
+            add_entity_to_association(
+                &pool,
+                &default_plugin.id,
+                assoc.agent_ids,
+                entity_id,
+                |id| AgentId::new(id),
+                |p, pid, ids| set_plugin_agents(p, pid, ids),
+            )
+            .await
         }
         "mcp_server" => {
-            let mut ids: Vec<McpServerId> = assoc.mcp_server_ids;
-            let new_id = McpServerId::new(entity_id);
-            if !ids.iter().any(|id| id.as_ref() == entity_id) {
-                ids.push(new_id);
-            }
-            set_plugin_mcp_servers(&pool, &first_plugin.id, &ids).await
+            add_entity_to_association(
+                &pool,
+                &default_plugin.id,
+                assoc.mcp_server_ids,
+                entity_id,
+                |id| McpServerId::new(id),
+                |p, pid, ids| set_plugin_mcp_servers(p, pid, ids),
+            )
+            .await
         }
         _ => return None,
     };
 
     match result {
-        Ok(()) => Some(first_plugin.plugin_id.clone()),
+        Ok(()) => Some(default_plugin.plugin_id.clone()),
         Err(e) => {
-            tracing::warn!(error = %e, plugin_id = %first_plugin.plugin_id, entity_kind = %entity_kind, "Failed to auto-add entity to plugin");
+            tracing::warn!(error = %e, plugin_id = %default_plugin.plugin_id, entity_kind = %entity_kind, "Failed to auto-add entity to plugin");
             None
         }
     }
