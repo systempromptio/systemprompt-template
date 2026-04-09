@@ -140,7 +140,10 @@ async fn build_today_stats_event(
         crate::repositories::apm_metrics::fetch_today_apm_live(pool, user_id.as_str()),
     );
 
-    let recent_sessions = sessions_res.unwrap_or_else(|_| Vec::new());
+    let recent_sessions = sessions_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch recent sessions");
+        Vec::new()
+    });
     let active_now = recent_sessions
         .iter()
         .filter(|s| s.ended_at.is_none() && s.status == "active")

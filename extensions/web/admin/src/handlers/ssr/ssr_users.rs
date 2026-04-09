@@ -76,7 +76,10 @@ pub async fn users_page(
 
     let rank_rows: Vec<UserRank> = repositories::fetch_user_ranks(&pool)
         .await
-        .unwrap_or_else(|_| Vec::new());
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to fetch user ranks");
+            Vec::new()
+        });
 
     let enriched_users = enrich_users_with_ranks(&users, &rank_rows);
 

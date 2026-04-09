@@ -125,7 +125,10 @@ async fn fetch_analytics_data(
     FetchedAnalytics {
         skill_eff_res,
         health_metrics,
-        unused_skills: unused_skills_res.unwrap_or_else(|_| Vec::new()),
+        unused_skills: unused_skills_res.unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to fetch unused skills");
+            Vec::new()
+        }),
         today_summary,
         apm_correlation,
         achievements_today,
@@ -152,7 +155,10 @@ async fn build_entity_data(
             pool, user_id,
         )
         .await
-        .unwrap_or_else(|_| Vec::new());
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to fetch entity usage summary");
+            Vec::new()
+        });
 
     let skills_usage: Vec<_> = entity_usage
         .iter()
