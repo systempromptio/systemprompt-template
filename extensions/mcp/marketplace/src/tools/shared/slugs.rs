@@ -1,11 +1,9 @@
 use std::collections::HashMap;
-use std::sync::Arc;
-
 use sqlx::PgPool;
 use systemprompt::mcp::McpError;
 
 pub async fn resolve_skill_slugs(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
     slugs: &[String],
 ) -> Result<Vec<String>, McpError> {
@@ -18,7 +16,7 @@ pub async fn resolve_skill_slugs(
     )
     .bind(user_id)
     .bind(slugs)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
     .map_err(|e| McpError::internal_error(format!("Failed to resolve Skill slugs: {e}"), None))?;
 
@@ -34,7 +32,7 @@ pub async fn resolve_skill_slugs(
 }
 
 pub async fn resolve_agent_slugs(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
     slugs: &[String],
 ) -> Result<Vec<String>, McpError> {
@@ -47,7 +45,7 @@ pub async fn resolve_agent_slugs(
     )
     .bind(user_id)
     .bind(slugs)
-    .fetch_all(pool.as_ref())
+    .fetch_all(pool)
     .await
     .map_err(|e| McpError::internal_error(format!("Failed to resolve Agent slugs: {e}"), None))?;
 
@@ -63,7 +61,7 @@ pub async fn resolve_agent_slugs(
 }
 
 pub async fn resolve_mcp_server_slugs(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
     slugs: &[String],
 ) -> Result<Vec<String>, McpError> {
@@ -75,7 +73,7 @@ pub async fn resolve_mcp_server_slugs(
         sqlx::query_as("SELECT mcp_server_id, id FROM user_mcp_servers WHERE user_id = $1 AND mcp_server_id = ANY($2)")
             .bind(user_id)
             .bind(slugs)
-            .fetch_all(pool.as_ref())
+            .fetch_all(pool)
             .await
             .map_err(|e| {
                 McpError::internal_error(
@@ -95,7 +93,7 @@ pub async fn resolve_mcp_server_slugs(
         .collect()
 }
 
-pub async fn resolve_skill_uuids_to_slugs(pool: &Arc<PgPool>, uuids: &[String]) -> Vec<String> {
+pub async fn resolve_skill_uuids_to_slugs(pool: &PgPool, uuids: &[String]) -> Vec<String> {
     if uuids.is_empty() {
         return vec![];
     }
@@ -103,7 +101,7 @@ pub async fn resolve_skill_uuids_to_slugs(pool: &Arc<PgPool>, uuids: &[String]) 
     let rows: Vec<(String, String)> =
         sqlx::query_as("SELECT id, skill_id FROM user_skills WHERE id = ANY($1)")
             .bind(uuids)
-            .fetch_all(pool.as_ref())
+            .fetch_all(pool)
             .await
             .unwrap_or_else(|_| Vec::new());
 
@@ -114,7 +112,7 @@ pub async fn resolve_skill_uuids_to_slugs(pool: &Arc<PgPool>, uuids: &[String]) 
         .collect()
 }
 
-pub async fn resolve_agent_uuids_to_slugs(pool: &Arc<PgPool>, uuids: &[String]) -> Vec<String> {
+pub async fn resolve_agent_uuids_to_slugs(pool: &PgPool, uuids: &[String]) -> Vec<String> {
     if uuids.is_empty() {
         return vec![];
     }
@@ -122,7 +120,7 @@ pub async fn resolve_agent_uuids_to_slugs(pool: &Arc<PgPool>, uuids: &[String]) 
     let rows: Vec<(String, String)> =
         sqlx::query_as("SELECT id, agent_id FROM user_agents WHERE id = ANY($1)")
             .bind(uuids)
-            .fetch_all(pool.as_ref())
+            .fetch_all(pool)
             .await
             .unwrap_or_else(|_| Vec::new());
 
@@ -134,7 +132,7 @@ pub async fn resolve_agent_uuids_to_slugs(pool: &Arc<PgPool>, uuids: &[String]) 
 }
 
 pub async fn resolve_mcp_server_uuids_to_slugs(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     uuids: &[String],
 ) -> Vec<String> {
     if uuids.is_empty() {
@@ -144,7 +142,7 @@ pub async fn resolve_mcp_server_uuids_to_slugs(
     let rows: Vec<(String, String)> =
         sqlx::query_as("SELECT id, mcp_server_id FROM user_mcp_servers WHERE id = ANY($1)")
             .bind(uuids)
-            .fetch_all(pool.as_ref())
+            .fetch_all(pool)
             .await
             .unwrap_or_else(|_| Vec::new());
 
