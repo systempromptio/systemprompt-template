@@ -258,7 +258,10 @@ pub fn load_plugin_onboarding_configs() -> HashMap<String, PluginOnboardingConfi
     let plugins_path = ProfileBootstrap::get().map_or_else(
         |_| {
             let cwd =
-                std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+                std::env::current_dir().unwrap_or_else(|e| {
+                    tracing::debug!(error = %e, "Failed to get current directory for plugin onboarding configs");
+                    std::path::PathBuf::from(".")
+                });
             cwd.join("services").join("plugins")
         },
         |profile| std::path::PathBuf::from(&profile.paths.services).join("plugins"),

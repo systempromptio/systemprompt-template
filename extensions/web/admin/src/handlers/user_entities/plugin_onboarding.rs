@@ -47,7 +47,10 @@ pub async fn select_and_fork_plugins_handler(
 
     let authorized = repositories::org_marketplaces::resolve_authorized_org_plugin_ids(&pool)
         .await
-        .unwrap_or_else(|_| std::collections::HashSet::new());
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to resolve authorized org plugin IDs");
+            std::collections::HashSet::new()
+        });
 
     let valid_ids: Vec<String> = req
         .plugin_ids

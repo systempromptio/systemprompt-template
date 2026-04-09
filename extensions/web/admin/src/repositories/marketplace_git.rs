@@ -129,7 +129,10 @@ fn strip_manifest_hooks(content: &str) -> String {
     match serde_json::from_str::<super::export::PluginManifest>(content) {
         Ok(mut manifest) => {
             manifest.hooks = None;
-            serde_json::to_string_pretty(&manifest).unwrap_or_else(|_| content.to_string())
+            serde_json::to_string_pretty(&manifest).unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to re-serialize plugin manifest after stripping hooks");
+                content.to_string()
+            })
         }
         Err(_) => content.to_string(),
     }

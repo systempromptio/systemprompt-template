@@ -48,7 +48,10 @@ pub fn strip_hooks_from_manifest(file: PluginFile) -> PluginFile {
         |_| file.content.clone(),
         |mut m| {
             m.hooks = None;
-            serde_json::to_string_pretty(&m).unwrap_or_else(|_| file.content.clone())
+            serde_json::to_string_pretty(&m).unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to re-serialize plugin manifest after stripping hooks");
+                file.content.clone()
+            })
         },
     );
 

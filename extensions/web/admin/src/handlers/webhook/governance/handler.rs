@@ -164,7 +164,10 @@ fn spawn_audit_recording(params: &AuditParams<'_>) {
         policy: params.evaluation.policy.clone(),
         reason: params.evaluation.reason.clone(),
         evaluated_rules: serde_json::to_value(&params.evaluation.rules)
-            .unwrap_or_else(|_| serde_json::Value::Null),
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to serialize governance evaluation rules");
+                serde_json::Value::Null
+            }),
         plugin_id: params.plugin_id.map(str::to_string),
     };
 
