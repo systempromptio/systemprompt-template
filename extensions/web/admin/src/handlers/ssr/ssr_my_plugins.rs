@@ -1,0 +1,123 @@
+use crate::repositories;
+use crate::repositories::conversation_analytics;
+use crate::templates::AdminTemplateEngine;
+use crate::types::conversation_analytics::{
+    EntityEffectiveness, EntityUsageSummary, SkillEffectiveness,
+};
+use crate::types::{MarketplaceContext, UserContext};
+use axum::{
+    extract::{Extension, Query, State},
+    response::Response,
+};
+use sqlx::PgPool;
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use super::ssr_my_plugins_helpers::{
+    build_association_lists, build_plugin_edit_data, collect_my_plugins,
+};
+use super::types::{MyPluginEditPageData, MyPluginsPageData, PluginStats};
+
+pub async fn my_plugins_page(
+    Extension(user_ctx): Extension<UserContext>,
+    Extension(mkt_ctx): Extension<MarketplaceContext>,
+    Extension(engine): Extension<AdminTemplateEngine>,
+    State(pool): State<Arc<PgPool>>,
+) -> Response {
+    let (enriched, entity_usage, skill_eff, agent_eff) = tokio::join!(
+        async {
+            repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id)
+                .await
+                .unwrap_or_else(|_| vec![])
+        },
+        async {
+            conversation_analytics::fetch_entity_usage_summary(&pool, &user_ctx.user_id)
+                .await
+                .unwrap_or_else(|_| vec![])
+        },
+        async {
+            conversation_analytics::fetch_skill_effectiveness(&pool, &user_ctx.user_id)
+                .await
+                .unwrap_or_else(|_| vec![])
+        },
+        async {
+            conversation_analytics::fetch_entity_effectiveness(&pool, &user_ctx.user_id, "agent")
+                .await
+                .unwrap_or_else(|_| vec![])
+        },
+    );
+
+    let skill_usage_map: HashMap<&str, &EntityUsageSummary> = entity_usage
+        .iter()
+        .filter(|e| e.entity_type == "skill")
+        .map(|e| (e.entity_id.as_str(), e))
+        .collect();
+    let skill_eff_map: HashMap<&str, &SkillEffectiveness> =
+        skill_eff.iter().map(|s| (s.skill_id.as_str(), s)).collect();
+    let agent_eff_map: HashMap<&str, &EntityEffectiveness> = agent_eff
+        .iter()
+        .map(|a| (a.entity_name.as_str(), a))
+        .collect();
+    let (plugins_json, categories) =
+        collect_my_plugins(&enriched, &skill_usage_map, &skill_eff_map, &agent_eff_map);
+    let plugin_count = plugins_json.len();
+    let data = MyPluginsPageData {
+        page: "my-plugins",
+        title: "My Plugins",
+        has_plugins: !plugins_json.is_empty(),
+        plugins: plugins_json,
+        categories,
+        stats: PluginStats { plugin_count },
+    };
+    let data_value =
+        serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+    super::render_page(&engine, "my-plugins", &data_value, &user_ctx, &mkt_ctx)
+}
+
+pub async fn my_plugin_edit_page(
+    Extension(user_ctx): Extension<UserContext>,
+    Extension(mkt_ctx): Extension<MarketplaceContext>,
+    Extension(engine): Extension<AdminTemplateEngine>,
+    State(pool): State<Arc<PgPool>>,
+    Query(params): Query<HashMap<String, String>>,
+) -> Response {
+    let plugin_id = params.get("id");
+    let is_edit = plugin_id.is_some();
+
+    let plugin_with_assoc = if let Some(id) = plugin_id {
+        repositories::find_plugin_with_associations(&pool, &user_ctx.user_id, id)
+            .await
+            .map_err(|e| {
+                tracing::warn!(error = %e, plugin_id = %id, "Failed to fetch user plugin");
+            })
+            .ok()
+            .flatten()
+    } else {
+        None
+    };
+
+    let (skills_list, agents_list, mcp_list) =
+        build_association_lists(&pool, &user_ctx, plugin_with_assoc.as_ref()).await;
+    let plugin = build_plugin_edit_data(plugin_with_assoc.as_ref());
+    let keywords_csv = plugin_with_assoc
+        .as_ref()
+        .map_or(String::new(), |p| p.plugin.keywords.join(", "));
+
+    let data = MyPluginEditPageData {
+        page: "my-plugin-edit",
+        title: if is_edit {
+            "Edit My Plugin"
+        } else {
+            "Create My Plugin"
+        },
+        is_edit,
+        plugin,
+        keywords_csv,
+        skills_list,
+        agents_list,
+        mcp_list,
+    };
+    let data_value =
+        serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+    super::render_page(&engine, "my-plugin-edit", &data_value, &user_ctx, &mkt_ctx)
+}
