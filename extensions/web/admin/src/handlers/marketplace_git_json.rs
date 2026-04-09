@@ -16,10 +16,7 @@ pub(crate) async fn org_marketplace_json_handler(
     Path(marketplace_id_raw): Path<String>,
     headers: HeaderMap,
 ) -> Response {
-    let marketplace_id = marketplace_id_raw
-        .strip_suffix(".git")
-        .unwrap_or(&marketplace_id_raw)
-        .to_string();
+    let marketplace_id = crate::handlers::shared::normalize_user_id(&marketplace_id_raw).to_string();
     let platform = detect_platform(&headers);
 
     let services_path = match systemprompt::models::ProfileBootstrap::get() {
@@ -47,7 +44,7 @@ pub(crate) async fn org_marketplace_json_handler(
             tracing::error!(error = %e, "Failed to generate org marketplace export");
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Export failed: {e}"),
+                "Export failed",
             )
                 .into_response();
         }
@@ -74,10 +71,7 @@ pub(crate) async fn marketplace_json_handler(
     Path(user_id_raw): Path<String>,
     headers: HeaderMap,
 ) -> Response {
-    let user_id = user_id_raw
-        .strip_suffix(".git")
-        .unwrap_or(&user_id_raw)
-        .to_string();
+    let user_id = crate::handlers::shared::normalize_user_id(&user_id_raw).to_string();
     let platform = detect_platform(&headers);
 
     let persistent_path = std::path::PathBuf::from("storage/marketplace-versions")
@@ -135,7 +129,7 @@ pub(crate) async fn marketplace_json_handler(
             tracing::error!(error = %e, "Failed to generate export bundles");
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Export failed: {e}"),
+                "Export failed",
             )
                 .into_response();
         }

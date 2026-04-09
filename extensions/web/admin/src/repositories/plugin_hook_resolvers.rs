@@ -25,7 +25,11 @@ pub(crate) fn resolve_plugin_hooks(
 
     let mut result = Vec::new();
     for (event_key, matchers) in hooks_map {
-        let event = event_key.as_str().unwrap_or("").to_string();
+        let Some(event) = event_key.as_str() else {
+            tracing::debug!(key = ?event_key, "Skipping non-string hook event key");
+            continue;
+        };
+        let event = event.to_string();
         if let Some(matcher_seq) = matchers.as_sequence() {
             for (idx, matcher_entry) in matcher_seq.iter().enumerate() {
                 let matcher = matcher_entry

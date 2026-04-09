@@ -205,7 +205,7 @@ pub async fn sync_marketplace_handler(
             .await;
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({"error": format!("Sync failed: {e}")})),
+                Json(json!({"error": "Sync failed"})),
             )
                 .into_response()
         }
@@ -283,7 +283,7 @@ pub async fn publish_marketplace_handler(
             .await;
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({"error": format!("Publish failed: {e}")})),
+                Json(json!({"error": "Publish failed"})),
             )
                 .into_response()
         }

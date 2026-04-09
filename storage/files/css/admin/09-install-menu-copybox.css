@@ -86,4 +86,19 @@
     text-decoration: underline;
 }
 
+/* Copy button success state */
+[data-copy].copy-success > * { visibility: hidden; }
+[data-copy].copy-success { position: relative; }
+[data-copy].copy-success::after {
+    content: '\2713';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sp-success);
+    font-size: 16px;
+    visibility: visible;
+}
+
 }

@@ -18,10 +18,7 @@ pub async fn marketplace_versions_handler(
     Path(user_id_raw): Path<String>,
     headers: HeaderMap,
 ) -> Response {
-    let user_id_str = user_id_raw
-        .strip_suffix(".git")
-        .unwrap_or(&user_id_raw)
-        .to_string();
+    let user_id_str = crate::handlers::shared::normalize_user_id(&user_id_raw).to_string();
     let user_id = UserId::new(user_id_str.clone());
 
     if let Err(r) = super::authenticate(&headers, &user_id_str) {
@@ -44,10 +41,7 @@ pub async fn marketplace_changelog_handler(
     Path(user_id_raw): Path<String>,
     headers: HeaderMap,
 ) -> Response {
-    let user_id_str = user_id_raw
-        .strip_suffix(".git")
-        .unwrap_or(&user_id_raw)
-        .to_string();
+    let user_id_str = crate::handlers::shared::normalize_user_id(&user_id_raw).to_string();
     let user_id = UserId::new(user_id_str.clone());
 
     if let Err(r) = super::authenticate(&headers, &user_id_str) {
@@ -146,10 +140,7 @@ pub async fn marketplace_version_detail_handler(
     Path((user_id_raw, version_id)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Response {
-    let user_id_str = user_id_raw
-        .strip_suffix(".git")
-        .unwrap_or(&user_id_raw)
-        .to_string();
+    let user_id_str = crate::handlers::shared::normalize_user_id(&user_id_raw).to_string();
     let user_id = UserId::new(user_id_str.clone());
 
     if let Err(r) = super::authenticate(&headers, &user_id_str) {

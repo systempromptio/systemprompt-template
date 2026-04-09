@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Keep shared logic in sync with extensions/mcp/systemprompt/templates/artifact-viewer.html -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1085,8 +1086,8 @@
   </style>
 </head>
 <body>
-  <div id="content">
-    <div class="loading">
+  <div id="content" aria-live="polite">
+    <div class="loading" role="status" aria-live="polite">
       <div class="spinner"></div>
       <div class="loading-text">Waiting for artifact data...</div>
     </div>

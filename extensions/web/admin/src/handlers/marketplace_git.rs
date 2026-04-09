@@ -31,7 +31,7 @@ async fn resolve_repo(
     user_id_raw: &str,
     headers: &HeaderMap,
 ) -> Result<PathBuf, Response> {
-    let user_id_str = user_id_raw.strip_suffix(".git").unwrap_or(user_id_raw);
+    let user_id_str = shared::normalize_user_id(user_id_raw);
     let user_id = UserId::new(user_id_str);
     let platform = detect_platform(headers);
 
@@ -41,7 +41,7 @@ async fn resolve_repo(
             tracing::error!(error = %e, user_id = %user_id, "Failed to generate marketplace repo");
             shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                &format!("Failed to generate marketplace: {e}"),
+                "Failed to generate marketplace",
             )
         })
 }
@@ -51,7 +51,7 @@ async fn resolve_cowork_repo(
     user_id_raw: &str,
     headers: &HeaderMap,
 ) -> Result<PathBuf, Response> {
-    let user_id_str = user_id_raw.strip_suffix(".git").unwrap_or(user_id_raw);
+    let user_id_str = shared::normalize_user_id(user_id_raw);
     let user_id = UserId::new(user_id_str);
     let platform = detect_platform(headers);
 
@@ -61,7 +61,7 @@ async fn resolve_cowork_repo(
             tracing::error!(error = %e, user_id = %user_id, "Failed to generate cowork marketplace repo");
             shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                &format!("Failed to generate cowork marketplace: {e}"),
+                "Failed to generate cowork marketplace",
             )
         })
 }

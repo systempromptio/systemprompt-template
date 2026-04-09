@@ -60,9 +60,9 @@ pub async fn resolve_secrets_handler(
     Path(plugin_id): Path<String>,
     Query(params): Query<ResolveQuery>,
 ) -> Response {
-    match resolve_secrets_inner(&pool, &plugin_id, &params.token).await {
-        Ok(resp) | Err(resp) => resp,
-    }
+    resolve_secrets_inner(&pool, &plugin_id, &params.token)
+        .await
+        .unwrap_or_else(|resp| resp)
 }
 
 async fn resolve_secrets_inner(
@@ -151,9 +151,9 @@ pub async fn rotate_handler(
     Path(plugin_id): Path<String>,
     headers: HeaderMap,
 ) -> Response {
-    match rotate_inner(&pool, &plugin_id, &headers).await {
-        Ok(resp) | Err(resp) => resp,
-    }
+    rotate_inner(&pool, &plugin_id, &headers)
+        .await
+        .unwrap_or_else(|resp| resp)
 }
 
 async fn rotate_inner(

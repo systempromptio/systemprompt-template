@@ -18,10 +18,7 @@ pub async fn marketplace_json_handler(
     Path(user_id_raw): Path<String>,
     _headers: HeaderMap,
 ) -> Response {
-    let user_id_str = user_id_raw
-        .strip_suffix(".git")
-        .unwrap_or(&user_id_raw)
-        .to_string();
+    let user_id_str = shared::normalize_user_id(&user_id_raw).to_string();
     let user_id = UserId::new(&user_id_str);
 
     if let Some(resp) = try_serve_persistent_json(&user_id) {
@@ -92,7 +89,7 @@ async fn generate_marketplace_json_inner(
             tracing::error!(error = %e, "Failed to generate export bundles");
             shared::boxed_error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                &format!("Export failed: {e}"),
+                "Export failed",
             )
         })?;
 

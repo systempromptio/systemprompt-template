@@ -47,6 +47,7 @@ window.AdminApp = window.AdminApp || {};
         if (!str) return '';
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     };
+    // Display-only: decoded for UI hints. All API auth is server-side.
     (() => {
         try {
             const cookie = document.cookie.split(';').find((c) => c.trim().startsWith('access_token='));
@@ -781,11 +782,10 @@ window.AdminApp = window.AdminApp || {};
     });
 
     app.events.on('click', '[data-copy]', function(e, copyBtn) {
-        const text = copyBtn.getAttribute('data-copy');
+        var text = copyBtn.getAttribute('data-copy');
         navigator.clipboard.writeText(text).then(function() {
-            const orig = copyBtn.innerHTML;
-            copyBtn.innerHTML = '<span style="color:var(--sp-success);font-size:16px">&#10003;</span>';
-            setTimeout(function() { copyBtn.innerHTML = orig; }, 2000);
+            copyBtn.classList.add('copy-success');
+            setTimeout(function() { copyBtn.classList.remove('copy-success'); }, 2000);
         });
     });
 

@@ -16,7 +16,7 @@ branding:
   logo_dark: "/files/images/logo-white.svg"
   favicon: "/files/images/favicon.ico"
   twitter_handle: "@systempromptio"
-  password_hash: "88afe7f16a24c14b041bd33f3ee3dcee8df4c2be58f37958ff310765b40057de"
+  password_hash: ""  # Set via: echo -n 'your-password' | sha256sum | cut -d' ' -f1
   session_storage_key: "enterpriseDemoUnlocked"
   # Legacy fields (used by public site pipeline)
   display_sitename: true

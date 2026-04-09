@@ -4,6 +4,11 @@ use std::path::Path;
 const MAX_UPLOAD_SIZE: usize = 10 * 1024 * 1024;
 pub const MAX_FILE_SIZE: usize = 1024 * 1024;
 
+/// Gzip magic number (first two bytes of any gzip stream)
+const GZIP_MAGIC: [u8; 2] = [0x1f, 0x8b];
+/// ZIP local file header signature (first two bytes)
+const ZIP_MAGIC: [u8; 2] = [0x50, 0x4b];
+
 pub fn validate_upload_size(data: &[u8]) -> Result<(), MarketplaceError> {
     if data.len() > MAX_UPLOAD_SIZE {
         return Err(MarketplaceError::Internal(format!(
@@ -26,9 +31,9 @@ pub fn detect_archive_format(data: &[u8]) -> Result<ArchiveFormat, MarketplaceEr
             "Upload too small to be a valid archive".to_string(),
         ));
     }
-    if data[0] == 0x1f && data[1] == 0x8b {
+    if data[..2] == GZIP_MAGIC {
         Ok(ArchiveFormat::TarGz)
-    } else if data[0] == 0x50 && data[1] == 0x4b {
+    } else if data[..2] == ZIP_MAGIC {
         Ok(ArchiveFormat::Zip)
     } else {
         Err(MarketplaceError::Internal(

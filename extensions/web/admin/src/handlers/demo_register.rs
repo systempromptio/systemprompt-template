@@ -69,7 +69,7 @@ pub async fn create_demo_user_handler(
         tracing::error!(error = %e, "Failed to create demo user");
         return shared::error_response(
             StatusCode::INTERNAL_SERVER_ERROR,
-            &format!("Failed to create user: {e}"),
+            "Registration failed",
         );
     }
 

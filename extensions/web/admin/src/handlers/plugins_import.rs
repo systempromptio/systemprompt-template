@@ -39,9 +39,10 @@ pub async fn import_plugin_handler(
 
 async fn fetch_plugin_bundle(url: &str) -> Result<repositories::export::PluginBundle, Response> {
     let resp = reqwest::get(url).await.map_err(|e| {
+        tracing::error!(error = %e, "Failed to fetch plugin URL");
         shared::error_response(
             StatusCode::BAD_REQUEST,
-            &format!("Failed to fetch URL: {e}"),
+            "Failed to fetch URL",
         )
     })?;
 
@@ -56,9 +57,10 @@ async fn fetch_plugin_bundle(url: &str) -> Result<repositories::export::PluginBu
     resp.json::<repositories::export::PluginBundle>()
         .await
         .map_err(|e| {
+            tracing::error!(error = %e, "Failed to parse plugin bundle JSON");
             shared::error_response(
                 StatusCode::BAD_REQUEST,
-                &format!("Failed to parse plugin bundle JSON: {e}"),
+                "Failed to parse plugin bundle",
             )
         })
 }

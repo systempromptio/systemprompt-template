@@ -72,7 +72,7 @@ pub async fn public_register_handler(
             tracing::error!(error = %e, "Failed to create user during public registration");
             return shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                &format!("Failed to create user: {e}"),
+                "Registration failed",
             );
         }
     };

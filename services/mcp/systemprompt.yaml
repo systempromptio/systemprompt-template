@@ -4,6 +4,7 @@ mcp_servers:
     binary: systemprompt-mcp-agent
     package: systemprompt
     port: 5010
+    # TEMPLATE: Replace http://localhost:8080 with your deployment URL
     endpoint: http://localhost:8080/api/v1/mcp/systemprompt/mcp
     enabled: true
     display_in_web: true

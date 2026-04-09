@@ -99,7 +99,7 @@ async fn generate_bundles(
             tracing::error!(error = %e, "Failed to generate export bundles for {context_label}");
             shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                &format!("Export failed: {e}"),
+                "Export failed",
             )
         })
 }
@@ -131,7 +131,7 @@ pub async fn export_plugin_zip_handler(
             tracing::error!(error = %e, plugin_id = %plugin_id, "Failed to build plugin ZIP");
             return shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                &format!("ZIP generation failed: {e}"),
+                "ZIP generation failed",
             );
         }
     };
@@ -160,7 +160,7 @@ pub async fn export_marketplace_zip_handler(
             tracing::error!(error = %e, "Failed to build marketplace ZIP");
             return shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                &format!("ZIP generation failed: {e}"),
+                "ZIP generation failed",
             );
         }
     };
@@ -202,7 +202,7 @@ pub async fn export_cowork_zip_handler(
             tracing::error!(error = %e, "Failed to build Cowork plugin ZIP");
             return shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                &format!("ZIP generation failed: {e}"),
+                "ZIP generation failed",
             );
         }
     };

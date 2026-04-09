@@ -64,7 +64,11 @@ fn collect_custom_hooks(plugin_id: &str, doc: &serde_yaml::Value, hooks: &mut Ve
         return;
     };
     for (event_key, event_entries) in hooks_map {
-        let event = event_key.as_str().unwrap_or("unknown").to_string();
+        let Some(event) = event_key.as_str() else {
+            tracing::debug!(key = ?event_key, "Skipping non-string hook event key");
+            continue;
+        };
+        let event = event.to_string();
         let Some(entries) = event_entries.as_sequence() else {
             continue;
         };

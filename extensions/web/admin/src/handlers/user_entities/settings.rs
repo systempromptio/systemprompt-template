@@ -87,7 +87,7 @@ pub async fn update_user_settings_handler(
             tracing::error!(error = %e, "Failed to update user settings");
             (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": format!("Failed to save settings: {e}")})),
+                Json(serde_json::json!({"error": "Failed to save settings"})),
             )
                 .into_response()
         }

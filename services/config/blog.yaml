@@ -25,6 +25,7 @@ content_sources:
     override_existing: true
 
 # Base URL for generated links
+# TEMPLATE: Replace http://localhost:8080 with your deployment URL
 base_url: "http://localhost:8080"
 
 # Enable link tracking for analytics

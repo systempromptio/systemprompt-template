@@ -1,16 +1,5 @@
 use crate::types::webhook::HookEventPayload;
 
-#[derive(serde::Deserialize)]
-struct SkillToolInput {
-    skill: String,
-}
-
-#[derive(serde::Deserialize)]
-struct AgentToolInput {
-    subagent_type: Option<String>,
-    description: Option<String>,
-}
-
 pub fn detect_entity(payload: &HookEventPayload) -> Option<(&'static str, String)> {
     let tool_name = payload.tool_name();
 
@@ -42,8 +31,8 @@ pub fn detect_entity(payload: &HookEventPayload) -> Option<(&'static str, String
 
 fn detect_skill_entity(payload: &HookEventPayload) -> Option<(&'static str, String)> {
     let input = payload.tool_input()?;
-    let parsed: SkillToolInput = serde_json::from_value(input.clone()).ok()?;
-    (!parsed.skill.is_empty()).then_some(("skill", parsed.skill))
+    let skill = input.get("skill")?.as_str()?;
+    (!skill.is_empty()).then(|| ("skill", skill.to_string()))
 }
 
 fn detect_mcp_server(tool_name: &str) -> Option<String> {
@@ -59,10 +48,10 @@ fn detect_mcp_server(tool_name: &str) -> Option<String> {
 
 fn detect_agent_entity(payload: &HookEventPayload) -> Option<(&'static str, String)> {
     let input = payload.tool_input()?;
-    let parsed: AgentToolInput = serde_json::from_value(input.clone()).ok()?;
-    let name = parsed
-        .subagent_type
-        .or(parsed.description)
-        .unwrap_or_else(|| "subagent".to_string());
-    Some(("agent", name))
+    let name = input
+        .get("subagent_type")
+        .and_then(|v| v.as_str())
+        .or_else(|| input.get("description").and_then(|v| v.as_str()))
+        .unwrap_or("subagent");
+    Some(("agent", name.to_string()))
 }

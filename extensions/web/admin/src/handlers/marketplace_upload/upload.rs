@@ -34,7 +34,7 @@ fn extract_and_parse_archive(
             tracing::error!(error = %e, "Failed to parse skills from archive");
             Box::new(super::error_response(
                 StatusCode::BAD_REQUEST,
-                &format!("Failed to parse skills: {e}"),
+                "Failed to parse skills",
             ))
         })
 }
@@ -201,10 +201,7 @@ pub async fn marketplace_upload_handler(
     headers: HeaderMap,
     body: Bytes,
 ) -> Response {
-    let user_id_str = user_id_raw
-        .strip_suffix(".git")
-        .unwrap_or(&user_id_raw)
-        .to_string();
+    let user_id_str = crate::handlers::shared::normalize_user_id(&user_id_raw).to_string();
     let user_id = UserId::new(user_id_str.clone());
 
     if let Err(r) = super::authenticate(&headers, &user_id_str) {

@@ -20,8 +20,7 @@ settings:
   agentPortRange: [9000, 9999]
   mcpPortRange: [5000, 5999]
   autoStartEnabled: true
-  validationStrict: true
-  schemaValidationMode: "skip"
+  schemaValidationMode: "warn"  # Use "strict" for production
 
 # AI configuration is defined in services/ai/config.yaml (included above)
 # Do NOT duplicate here - the include has google_search_enabled: true
