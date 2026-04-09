@@ -1,4 +1,3 @@
-pub mod admin;
 pub mod api;
 mod assets;
 pub mod blog;
@@ -17,11 +16,16 @@ pub mod repository;
 mod schemas;
 pub mod services;
 
-pub mod config;
-pub mod config_errors;
-pub mod error;
-pub mod models;
-pub mod utils;
+// Re-exports from sub-crates for API stability
+pub use systemprompt_web_shared as shared;
+pub use systemprompt_web_shared::{config, config_errors, error, models};
+pub use systemprompt_web_shared::html_escape;
+pub use systemprompt_web_shared::BrandingConfig;
+pub use systemprompt_web_admin as admin;
+// Backward-compatible utils module
+pub mod utils {
+    pub use systemprompt_web_shared::html_escape;
+}
 
 pub use blog::{BlogListPageDataProvider, BlogPostPageDataProvider};
 pub use config::{

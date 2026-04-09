@@ -21,7 +21,7 @@ use axum::{
 };
 use sqlx::PgPool;
 
-pub(crate) use routes::{admin_ssr_router, workspace_ssr_router};
+pub use routes::{admin_ssr_router, workspace_ssr_router};
 pub use types::{CreateUserRequest, MarketplaceContext, UsageEvent, UserContext, UserSummary};
 
 pub fn hooks_webhook_router(pool: Arc<PgPool>) -> Router {

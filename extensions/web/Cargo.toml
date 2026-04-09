@@ -15,6 +15,7 @@ systemprompt = { workspace = true, features = ["full"] }
 
 # Local sub-crates
 systemprompt-web-shared = { workspace = true }
+systemprompt-web-admin = { workspace = true }
 
 # Database access
 sqlx = { workspace = true }
