@@ -43,15 +43,15 @@ pub use homepage::{
     HowItWorksStep, IntegrationBrand, IntegrationsConfig, PricingConfig, PricingTier,
     TechnicalConfig, TechnicalStandard, UseCase, UseCasesConfig, ValueProp,
 };
-pub use navigation::{
-    HeaderNavConfig, NavCta, NavItem, NavLink, NavSection, NavigationPageDataProvider,
-};
 pub use models::{
     CampaignLink, CampaignPerformance, Content, ContentJourneyNode, ContentKind,
     ContentLinkMetadata, ContentMetadata, CreateContentParams, CreateLinkParams, DestinationType,
     IngestionOptions, IngestionReport, LinkClick, LinkPerformance, LinkType, PaperMetadata,
     PaperSection, RecordClickParams, SearchFilters, SearchRequest, SearchResponse, SearchResult,
     Tag, TrackClickParams, UtmParams,
+};
+pub use navigation::{
+    HeaderNavConfig, NavCta, NavItem, NavLink, NavSection, NavigationPageDataProvider,
 };
 
 pub use extenders::OrgUrlExtender;

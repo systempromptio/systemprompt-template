@@ -1,6 +1,6 @@
 id: dev_web_standards
 name: "Web Standards"
-description: "Extension system, content templates, page prerendering, and CSS management standards for Enterprise Demo web development"
+description: "Extension system, content templates, page prerendering, and CSS management standards for systemprompt.io web development"
 enabled: true
 version: "1.0.0"
 file: "index.md"

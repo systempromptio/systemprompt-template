@@ -36,11 +36,9 @@ impl Job for MarketplaceSyncJob {
 
         tracing::info!("Marketplace sync job started");
 
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or(MarketplaceError::Internal(
-                "Database not available in job context".to_string(),
-            ))?;
+        let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
+            "Database not available in job context".to_string(),
+        ))?;
 
         let pool = db.pool().ok_or(MarketplaceError::Internal(
             "PgPool not available from database".to_string(),
@@ -48,9 +46,7 @@ impl Job for MarketplaceSyncJob {
 
         let dirty_users = repositories::marketplace_sync_status::get_dirty_users(&pool, 50)
             .await
-            .map_err(|e| {
-                MarketplaceError::Internal(format!("Failed to query dirty users: {e}"))
-            })?;
+            .map_err(|e| MarketplaceError::Internal(format!("Failed to query dirty users: {e}")))?;
 
         let total = dirty_users.len() as u64;
         let mut success_count = 0u64;
@@ -105,10 +101,9 @@ pub async fn generate_and_persist_marketplace(
     pool: &Arc<PgPool>,
     user_id: &str,
 ) -> Result<(), MarketplaceError> {
-    let user_basic =
-        repositories::marketplace_git::lookup_user_basic(pool, &UserId::new(user_id))
-            .await
-            .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+    let user_basic = repositories::marketplace_git::lookup_user_basic(pool, &UserId::new(user_id))
+        .await
+        .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
 
     let services_path = ProfileBootstrap::get()
         .map(|p| PathBuf::from(&p.paths.services))
@@ -230,16 +225,12 @@ fn create_bare_repo(
         &[
             "clone",
             "--bare",
-            work_dir
-                .to_str()
-                .ok_or_else(|| {
-                    MarketplaceError::Internal("work_dir path is not valid UTF-8".to_string())
-                })?,
-            repo_path
-                .to_str()
-                .ok_or_else(|| {
-                    MarketplaceError::Internal("repo_path path is not valid UTF-8".to_string())
-                })?,
+            work_dir.to_str().ok_or_else(|| {
+                MarketplaceError::Internal("work_dir path is not valid UTF-8".to_string())
+            })?,
+            repo_path.to_str().ok_or_else(|| {
+                MarketplaceError::Internal("repo_path path is not valid UTF-8".to_string())
+            })?,
         ],
         work_dir.parent().ok_or_else(|| {
             MarketplaceError::Internal("work_dir has no parent directory".to_string())

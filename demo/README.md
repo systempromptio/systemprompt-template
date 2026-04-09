@@ -1,196 +1,145 @@
-# Live Demo Script
+# Demo Suite
 
-Ten scripts. Run them in order.
+39 runnable demo scripts organized into 10 categories. Each demonstrates a different aspect of the platform via CLI commands.
 
-```
+## Quick Start
+
+```bash
+# 1. Build and start services
+just build && just start
+
+# 2. Run preflight (acquires token, checks services)
 ./demo/00-preflight.sh
-./demo/01-happy-path.sh
-./demo/02-refused-path.sh
-./demo/03-audit-trail.sh
-./demo/04-governance-happy.sh
-./demo/05-governance-denied.sh
-./demo/06-governance-secret-breach.sh
-./demo/07-mcp-access-tracking.sh
-./demo/08-request-tracing.sh
-./demo/09-agent-tracing.sh
+
+# 3. Pick any category
+./demo/governance/01-happy-path.sh
+./demo/infrastructure/02-database.sh
+./demo/analytics/01-overview.sh
 ```
 
----
+## Categories
+
+| Category | Scripts | What it covers | Cost |
+|----------|---------|---------------|------|
+| [governance/](governance/) | 7 | Tool access control, scope enforcement, secret detection, audit trails | Free |
+| [agents/](agents/) | 5 | Agent discovery, configuration, messaging, tracing, A2A registry | 2 @ ~$0.01 |
+| [mcp/](mcp/) | 3 | MCP server management, access tracking, tool execution | Free |
+| [skills/](skills/) | 4 | Skills, content, files, plugins, hooks | Free |
+| [infrastructure/](infrastructure/) | 4 | Services, database, jobs, logs | Free |
+| [analytics/](analytics/) | 6 | Overview, agents, costs, requests, sessions, content/traffic | Free |
+| [users/](users/) | 4 | User CRUD, roles, sessions, IP bans | Free |
+| [web/](web/) | 2 | Content types, templates, sitemaps, validation | Free |
+| [cloud/](cloud/) | 1 | Auth status, profiles, deployment info | Free |
+| [performance/](performance/) | 2 | Request tracing, benchmarks, load testing | Free |
+
+**Total: 39 scripts. 37 free, 2 cost ~$0.01 each (agent messaging).**
+
+## Prerequisites
+
+- Built binary: `just build`
+- Running services: `just start`
+- Preflight completed: `./demo/00-preflight.sh`
+
+## Script Index
+
+### 00 — Preflight
+| Script | Description |
+|--------|-------------|
+| `00-preflight.sh` | Service health check, token acquisition, JWT validation |
+
+### Governance
+| Script | Description |
+|--------|-------------|
+| `governance/01-happy-path.sh` | Governance ALLOWS admin-scope tool call |
+| `governance/02-refused-path.sh` | Governance DENIES user-scope agent |
+| `governance/03-audit-trail.sh` | Query governance decisions from database |
+| `governance/04-governance-happy.sh` | All 3 rules pass for admin agent |
+| `governance/05-governance-denied.sh` | Scope + blocklist deny for user agent |
+| `governance/06-secret-breach.sh` | Secret detection blocks credentials |
+| `governance/07-rate-limiting.sh` | Rate limit and security configuration |
+
+### Agents
+| Script | Description |
+|--------|-------------|
+| `agents/01-list-agents.sh` | Agent discovery — admin and core views |
+| `agents/02-agent-config.sh` | Validation, MCP tool access, status |
+| `agents/03-agent-messaging.sh` | Full agent pipeline with AI (~$0.01) |
+| `agents/04-agent-tracing.sh` | Traces, artifacts, cost attribution |
+| `agents/05-agent-registry.sh` | A2A gateway, agent logs |
+
+### MCP Servers
+| Script | Description |
+|--------|-------------|
+| `mcp/01-mcp-servers.sh` | List servers, status, logs |
+| `mcp/02-mcp-access-tracking.sh` | OAuth + MCP tool call tracking |
+| `mcp/03-mcp-tool-execution.sh` | Tool listings, execution logs |
+
+### Skills & Content
+| Script | Description |
+|--------|-------------|
+| `skills/01-skill-lifecycle.sh` | Skill listing, details, sync status |
+| `skills/02-content-management.sh` | Content listing, search, popularity |
+| `skills/03-file-management.sh` | File listing, config, storage stats |
+| `skills/04-plugin-management.sh` | Plugins, hooks, extensions, capabilities |
+
+### Infrastructure
+| Script | Description |
+|--------|-------------|
+| `infrastructure/01-services.sh` | Service status and health checks |
+| `infrastructure/02-database.sh` | Tables, schema, queries, migrations |
+| `infrastructure/03-jobs.sh` | Job scheduling, execution history |
+| `infrastructure/04-logs.sh` | Log viewing, search, traces, requests |
+
+### Analytics
+| Script | Description |
+|--------|-------------|
+| `analytics/01-overview.sh` | Dashboard overview |
+| `analytics/02-agent-analytics.sh` | Agent stats, trends, deep-dives |
+| `analytics/03-cost-analytics.sh` | Cost summary, breakdown, trends |
+| `analytics/04-request-analytics.sh` | AI request volume, latency, models |
+| `analytics/05-session-analytics.sh` | Session stats, trends, real-time |
+| `analytics/06-content-traffic.sh` | Content engagement, traffic, geo |
+
+### Users & Auth
+| Script | Description |
+|--------|-------------|
+| `users/01-user-crud.sh` | User listing, counts, stats, search |
+| `users/02-role-management.sh` | User details and role inspection |
+| `users/03-session-management.sh` | Current session, available profiles |
+| `users/04-ip-ban.sh` | Add/remove IP bans with verification |
+
+### Web Generation
+| Script | Description |
+|--------|-------------|
+| `web/01-web-config.sh` | Content types, templates, assets |
+| `web/02-sitemap-validate.sh` | Sitemap generation, validation |
+
+### Cloud
+| Script | Description |
+|--------|-------------|
+| `cloud/01-cloud-overview.sh` | Auth status, profiles, deployment info |
 
-## Overview
+### Performance
+| Script | Description |
+|--------|-------------|
+| `performance/01-request-tracing.sh` | Typed data, flow maps, benchmarks |
+| `performance/02-load-test.sh` | 2000-request load test |
 
-| Demo | What it proves | Cost |
-|------|---------------|------|
-| 00 | Services are running | Free |
-| 01 | Governance ALLOWS admin-scope tool call, then MCP tool executes | Free |
-| 02 | Governance DENIES user-scope agent calling admin tool (scope restriction) | Free |
-| 03 | Governance audit trail — both decisions queryable | Free |
-| 04 | Detailed rule evaluation — all 3 rules pass for admin agent | Free |
-| 05 | Detailed rule evaluation — scope check + blocklist deny for user agent | Free |
-| 06 | Secret detection blocks leaked credentials in tool inputs | Free |
-| 07 | MCP tool calls are OAuth-authenticated and audit-logged | Free |
-| 08 | End-to-end request tracing, typed IDs, flow maps, 100-request benchmark | Free |
-| 09 | Full agent pipeline — AI reasoning, MCP tool calls, artifacts, tracing | ~$0.01 |
+## Troubleshooting
 
-Demos 01-08 call the governance API directly with curl — simulating Claude Code's PreToolUse hook workflow. No AI calls, deterministic, instant.
-
-Demo 09 is the only demo that runs a live agent. It shows the platform agent runtime with full tracing, artifacts, and MCP tool calls.
-
----
-
-## STEP 0: PREFLIGHT
-
-```
-./demo/00-preflight.sh
-```
-
-You should see services running: 3 agents + 2 MCP servers.
-
-If services are down, it tells you the fix commands.
-
----
-
-## STEP 1: HAPPY PATH
-
-```
-./demo/01-happy-path.sh
-```
-
-SAY: "This simulates what Claude Code does under the hood. When the admin agent calls a tool, the PreToolUse hook fires and POSTs to the governance endpoint. Admin scope — all rules pass — ALLOW. Then the MCP tool executes and returns real data."
-
-EXPECT: Part 1 shows ALLOW JSON. Part 2 shows the actual agent list from MCP.
-
----
-
-## STEP 2: REFUSED PATH
-
-```
-./demo/02-refused-path.sh
-```
-
-SAY: "Same tool, different agent. User scope. Governance denies it — scope_restriction rule fails. In production, this agent would never even see the tool because MCP mappings filter it. But governance provides a second enforcement layer."
-
-EXPECT: DENY JSON with scope_restriction policy.
-
----
-
-## STEP 3: AUDIT TRAIL
-
-```
-./demo/03-audit-trail.sh
-```
-
-SAY: "Both decisions are in the database. The ALLOW from demo 01, the DENY from demo 02. Every governance decision is queryable — decision, tool, agent, scope, policy, reason."
-
-EXPECT: Table showing ALLOW for developer_agent and DENY for associate_agent.
-
-Optional — cost breakdown:
-
-```
-systemprompt analytics costs breakdown --by agent
-```
-
----
-
-## STEP 4: GOVERNANCE HAPPY PATH
-
-```
-./demo/04-governance-happy.sh
-```
-
-SAY: "Now let's see the rule evaluation in detail. Admin agent, clean tool input. Three rules evaluated: scope check passes for admin, secret detection finds nothing, rate limit is fine. All pass. ALLOW."
-
-EXPECT: ALLOW JSON. Audit shows evaluated_rules with all 3 rules passed.
-
----
-
-## STEP 5: GOVERNANCE DENIED PATH
-
-```
-./demo/05-governance-denied.sh
-```
-
-SAY: "Two denial scenarios. First: user-scope agent tries an admin tool — scope check fails. Second: user-scope agent tries a destructive tool — both scope check and blocklist trigger. When Claude Code receives DENY, it blocks the tool and shows the governance reason to the user."
-
-EXPECT: Two DENY responses with different policies.
-
----
-
-## STEP 6: SECRET INJECTION BREACH
-
-```
-./demo/06-governance-secret-breach.sh
-```
-
-SAY: "Even admin-scope agents are blocked if tool input contains plaintext secrets. AWS keys, GitHub PATs, private keys — all caught by pattern matching before the tool executes. This is the safety net against prompt injection."
-
-EXPECT: Tests 1-3 DENIED, Test 4 ALLOWED.
-
----
-
-## STEP 7: MCP ACCESS TRACKING
-
-```
-./demo/07-mcp-access-tracking.sh
-```
-
-SAY: "Every MCP tool call is tracked. We make two real calls — one to the skill-manager, one to the systemprompt CLI server. Both authenticate via OAuth, both execute a tool. Every event — authentication, tool execution — is recorded in user_activity."
-
-EXPECT: Two successful MCP tool calls, then a database query showing 4 events (2 authenticated + 2 used). Script prints the dashboard URL where you can see them.
-
-SAY: "On the dashboard you can see the MCP Server Access section — per-server stats, Granted/Rejected badges, and the live activity feed picks them up in real time. When a rejection happens, the metric ribbon shows an MCP Rejections counter."
-
-Dashboard: http://localhost:8080/admin/
-
----
-
-## STEP 8: REQUEST TRACING
-
-```
-./demo/08-request-tracing.sh
-```
-
-SAY: "This traces a single request end-to-end. JSON arrives at the HTTP boundary — that's the only untyped moment. Serde immediately deserializes it into Rust structs. From there, every field is typed. UserId, SessionId, AgentName — all newtype wrappers. The compiler prevents mixing them up. Every database query uses sqlx macros — checked against the live schema at compile time."
-
-SAY for benchmark: "100 concurrent governance requests. Each one: JWT validation, scope resolution, three rule evaluations, async database write. All typed. Zero garbage collector pauses. That's what Rust's zero-cost abstractions deliver."
-
-EXPECT: Typed payloads, ID table, 4 CLI log commands, ASCII flow map, benchmark results.
-
----
-
-## STEP 9: AGENT TRACING
-
-```
-./demo/09-agent-tracing.sh
-```
-
-SAY: "This is the live agent. Admin scope, MCP tools available. It calls the systemprompt MCP server, gets real data, produces a structured artifact. Every step is traced — AI requests, MCP tool calls, execution timing, cost attribution."
-
-EXPECT: Agent response with real agent list. Artifact retrieval. Full trace showing ~11 events, 3 AI requests, 1 MCP tool call. Takes ~5 seconds.
-
-WHY 3 AI REQUESTS?
-
-1. AI receives the message, sees MCP tools, decides to call `systemprompt`
-2. MCP tool returns result, AI processes the tool output
-3. AI formats the final response
-
-Normal multi-turn tool use. Each step traced and costed separately.
-
-Dashboard: http://localhost:8080/admin/traces
-
----
-
-## IF SOMETHING GOES WRONG
-
-```
+```bash
+# If services are down
 systemprompt infra services cleanup --yes
 systemprompt infra services start --kill-port-process
+
+# Wait for "All services started successfully" then retry
 ```
 
-Wait for "All services started successfully" then retry from step 1.
+## Recording
 
----
+SVG terminal recordings and video recording infrastructure are in `recording/`.
+See `recording/RECORDING-GUIDE.md` for video production workflow.
 
-## COST
+## Backward Compatibility
 
-Steps 0-8 are free (direct API calls, CLI commands, no AI). Step 9 costs one AI call (~$0.01 on Gemini Flash).
+Old numbered paths (e.g., `demo/01-happy-path.sh`) still work — they delegate to the category scripts.

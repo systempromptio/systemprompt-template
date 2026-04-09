@@ -1,20 +1,22 @@
-use anyhow::{Context, Result};
 use std::path::Path;
+
 use systemprompt::extension::{AssetDefinition, ExtensionRegistry};
 use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
+
+use crate::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CopyExtensionAssetsJob;
 
 impl CopyExtensionAssetsJob {
-    pub async fn execute_copy() -> Result<JobResult> {
+    pub async fn execute_copy() -> anyhow::Result<JobResult> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Copy extension assets job started");
 
-        let paths =
-            AppPaths::get().map_err(|e| anyhow::anyhow!("AppPaths not initialized: {e}"))?;
+        let paths = AppPaths::get()
+            .map_err(|e| MarketplaceError::Internal(format!("AppPaths not initialized: {e}")))?;
 
         let registry = ExtensionRegistry::discover();
         let assets = registry.all_required_assets(paths);
@@ -37,7 +39,7 @@ impl CopyExtensionAssetsJob {
                 Ok(()) => copied += 1,
                 Err(e) => {
                     if asset.is_required() {
-                        return Err(e);
+                        return Err(e.into());
                     }
                     tracing::warn!(
                         extension = %ext_id,
@@ -65,23 +67,30 @@ impl CopyExtensionAssetsJob {
     }
 }
 
-async fn copy_asset(dist_dir: &Path, ext_id: &str, asset: &AssetDefinition) -> Result<()> {
+async fn copy_asset(
+    dist_dir: &Path,
+    ext_id: &str,
+    asset: &AssetDefinition,
+) -> Result<(), MarketplaceError> {
     let dest_path = dist_dir.join(asset.destination());
 
     if let Some(parent) = dest_path.parent() {
-        tokio::fs::create_dir_all(parent)
-            .await
-            .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
+        tokio::fs::create_dir_all(parent).await.map_err(|e| {
+            MarketplaceError::Internal(format!(
+                "Failed to create directory: {}: {e}",
+                parent.display()
+            ))
+        })?;
     }
 
     tokio::fs::copy(asset.source(), &dest_path)
         .await
-        .with_context(|| {
-            format!(
-                "Failed to copy asset from {} to {}",
+        .map_err(|e| {
+            MarketplaceError::Internal(format!(
+                "Failed to copy asset from {} to {}: {e}",
                 asset.source().display(),
                 dest_path.display()
-            )
+            ))
         })?;
 
     tracing::debug!(
@@ -108,7 +117,7 @@ impl Job for CopyExtensionAssetsJob {
         "0 */15 * * * *"
     }
 
-    async fn execute(&self, _ctx: &JobContext) -> Result<JobResult> {
+    async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
         Self::execute_copy().await
     }
 }

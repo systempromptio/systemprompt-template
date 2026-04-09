@@ -181,11 +181,9 @@ impl Job for PublishPipelineJob {
     async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
         let start_time = std::time::Instant::now();
 
-        let db_pool = ctx
-            .db_pool::<DbPool>()
-            .ok_or(MarketplaceError::Internal(
-                "Database not available in job context".to_string(),
-            ))?;
+        let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
+            "Database not available in job context".to_string(),
+        ))?;
 
         tracing::info!("Publish pipeline started");
 

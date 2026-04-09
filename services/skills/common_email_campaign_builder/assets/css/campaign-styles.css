@@ -5,16 +5,16 @@
 
 /* ── Variables CSS ── */
 :root {
-  /* Colores de marca Enterprise Demo */
-  --enterprise-demo-warm-yellow: #E5B92B;
-  --enterprise-demo-blue-lilac: #6B4FBB;
-  --enterprise-demo-blue-space: #0A0F1A;
-  --enterprise-demo-light-sky: #00B67A;
-  --enterprise-demo-white: #FFFFFF;
+  /* Colores de marca systemprompt.io */
+  --systemprompt-io-warm-yellow: #E5B92B;
+  --systemprompt-io-blue-lilac: #6B4FBB;
+  --systemprompt-io-blue-space: #0A0F1A;
+  --systemprompt-io-light-sky: #00B67A;
+  --systemprompt-io-white: #FFFFFF;
   
   /* Gradientes */
-  --enterprise-demo-gradient-blue: linear-gradient(135deg, #6B4FBB 0%, #00B67A 100%);
-  --enterprise-demo-gradient-yellow: linear-gradient(135deg, #00B67A 0%, #E5B92B 100%);
+  --systemprompt-io-gradient-blue: linear-gradient(135deg, #6B4FBB 0%, #00B67A 100%);
+  --systemprompt-io-gradient-yellow: linear-gradient(135deg, #00B67A 0%, #E5B92B 100%);
   
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.15);
@@ -24,10 +24,10 @@
   
   /* Tema claro (default) */
   --bg-primary: #f8f9fa;
-  --bg-secondary: var(--enterprise-demo-white);
-  --text-primary: var(--enterprise-demo-blue-space);
+  --bg-secondary: var(--systemprompt-io-white);
+  --text-primary: var(--systemprompt-io-blue-space);
   --text-secondary: #4a5568;
-  --card-bg: var(--enterprise-demo-white);
+  --card-bg: var(--systemprompt-io-white);
   --card-border: rgba(107, 79, 187, 0.1);
   
   /* Animaciones */
@@ -44,10 +44,10 @@
 
 /* ── Tema Oscuro ── */
 [data-theme="dark"] {
-  --bg-primary: var(--enterprise-demo-blue-space);
+  --bg-primary: var(--systemprompt-io-blue-space);
   --bg-secondary: #252f5a;
-  --text-primary: var(--enterprise-demo-white);
-  --text-secondary: var(--enterprise-demo-light-sky);
+  --text-primary: var(--systemprompt-io-white);
+  --text-secondary: var(--systemprompt-io-light-sky);
   --card-bg: rgba(37, 47, 90, 0.8);
   --card-border: rgba(241, 60, 66, 0.2);
   --glass-bg: rgba(26, 0, 48, 0.6);
@@ -68,7 +68,7 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Dosis', sans-serif;
   font-weight: 700;
-  color: var(--enterprise-demo-blue-lilac);
+  color: var(--systemprompt-io-blue-lilac);
   line-height: 1.2;
 }
 
@@ -76,7 +76,7 @@ h1, h2, h3, h4, h5, h6 {
 [data-theme="dark"] h2,
 [data-theme="dark"] h3,
 [data-theme="dark"] h4 {
-  color: var(--enterprise-demo-white);
+  color: var(--systemprompt-io-white);
 }
 
 h1, h2 {
@@ -181,9 +181,9 @@ p {
 }
 
 /* ── Buttons ── */
-.btn-primary-enterprise-demo {
-  background: var(--enterprise-demo-warm-yellow);
-  color: var(--enterprise-demo-blue-space);
+.btn-primary-systemprompt-io {
+  background: var(--systemprompt-io-warm-yellow);
+  color: var(--systemprompt-io-blue-space);
   font-family: 'Dosis', sans-serif;
   font-weight: 700;
   text-transform: uppercase;
@@ -197,20 +197,20 @@ p {
   display: inline-block;
 }
 
-.btn-primary-enterprise-demo:hover {
+.btn-primary-systemprompt-io:hover {
   background: #d4a824;
-  color: var(--enterprise-demo-blue-space);
+  color: var(--systemprompt-io-blue-space);
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(229, 185, 43, 0.4);
 }
 
-.btn-secondary-enterprise-demo {
+.btn-secondary-systemprompt-io {
   background: transparent;
-  color: var(--enterprise-demo-blue-lilac);
+  color: var(--systemprompt-io-blue-lilac);
   font-family: 'Dosis', sans-serif;
   font-weight: 600;
   padding: 0.875rem 2rem;
-  border: 2px solid var(--enterprise-demo-blue-lilac);
+  border: 2px solid var(--systemprompt-io-blue-lilac);
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -218,19 +218,19 @@ p {
   display: inline-block;
 }
 
-.btn-secondary-enterprise-demo:hover {
-  background: var(--enterprise-demo-blue-lilac);
-  color: var(--enterprise-demo-white);
+.btn-secondary-systemprompt-io:hover {
+  background: var(--systemprompt-io-blue-lilac);
+  color: var(--systemprompt-io-white);
 }
 
-[data-theme="dark"] .btn-secondary-enterprise-demo {
-  color: var(--enterprise-demo-light-sky);
-  border-color: var(--enterprise-demo-light-sky);
+[data-theme="dark"] .btn-secondary-systemprompt-io {
+  color: var(--systemprompt-io-light-sky);
+  border-color: var(--systemprompt-io-light-sky);
 }
 
-[data-theme="dark"] .btn-secondary-enterprise-demo:hover {
-  background: var(--enterprise-demo-light-sky);
-  color: var(--enterprise-demo-blue-space);
+[data-theme="dark"] .btn-secondary-systemprompt-io:hover {
+  background: var(--systemprompt-io-light-sky);
+  color: var(--systemprompt-io-blue-space);
 }
 
 /* ── Theme Toggle ── */
@@ -259,7 +259,7 @@ p {
 .theme-toggle svg {
   width: 24px;
   height: 24px;
-  fill: var(--enterprise-demo-warm-yellow);
+  fill: var(--systemprompt-io-warm-yellow);
   transition: fill var(--transition-fast);
 }
 
@@ -280,7 +280,7 @@ p {
   right: -20%;
   width: 80%;
   height: 150%;
-  background: var(--enterprise-demo-gradient-blue);
+  background: var(--systemprompt-io-gradient-blue);
   opacity: 0.1;
   border-radius: 50%;
   filter: blur(80px);
@@ -298,7 +298,7 @@ p {
 
 .hero-subtitle {
   font-size: 1.125rem;
-  color: var(--enterprise-demo-blue-lilac);
+  color: var(--systemprompt-io-blue-lilac);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -306,7 +306,7 @@ p {
 }
 
 [data-theme="dark"] .hero-subtitle {
-  color: var(--enterprise-demo-light-sky);
+  color: var(--systemprompt-io-light-sky);
 }
 
 .hero-title {
@@ -322,13 +322,13 @@ p {
 }
 
 /* ── Form Styles ── */
-.form-floating-enterprise-demo {
+.form-floating-systemprompt-io {
   position: relative;
   margin-bottom: 1.5rem;
 }
 
-.form-floating-enterprise-demo input,
-.form-floating-enterprise-demo textarea {
+.form-floating-systemprompt-io input,
+.form-floating-systemprompt-io textarea {
   width: 100%;
   padding: 1.25rem 1rem 0.5rem;
   font-family: 'Dosis', sans-serif;
@@ -340,14 +340,14 @@ p {
   transition: all var(--transition-fast);
 }
 
-.form-floating-enterprise-demo input:focus,
-.form-floating-enterprise-demo textarea:focus {
+.form-floating-systemprompt-io input:focus,
+.form-floating-systemprompt-io textarea:focus {
   outline: none;
-  border-color: var(--enterprise-demo-blue-lilac);
+  border-color: var(--systemprompt-io-blue-lilac);
   box-shadow: 0 0 0 4px rgba(107, 79, 187, 0.15);
 }
 
-.form-floating-enterprise-demo label {
+.form-floating-systemprompt-io label {
   position: absolute;
   top: 50%;
   left: 1rem;
@@ -358,19 +358,19 @@ p {
   transition: all var(--transition-fast);
 }
 
-.form-floating-enterprise-demo input:focus + label,
-.form-floating-enterprise-demo input:not(:placeholder-shown) + label {
+.form-floating-systemprompt-io input:focus + label,
+.form-floating-systemprompt-io input:not(:placeholder-shown) + label {
   top: 0.75rem;
   transform: translateY(0);
   font-size: 0.75rem;
-  color: var(--enterprise-demo-blue-lilac);
+  color: var(--systemprompt-io-blue-lilac);
 }
 
 /* ── Features/Benefits Section ── */
 .feature-icon {
   width: 56px;
   height: 56px;
-  background: var(--enterprise-demo-gradient-blue);
+  background: var(--systemprompt-io-gradient-blue);
   border-radius: 1rem;
   display: flex;
   align-items: center;
@@ -381,7 +381,7 @@ p {
 .feature-icon svg {
   width: 28px;
   height: 28px;
-  fill: var(--enterprise-demo-white);
+  fill: var(--systemprompt-io-white);
 }
 
 .feature-title {
@@ -398,7 +398,7 @@ p {
 .stat-number {
   font-size: 3rem;
   font-weight: 700;
-  color: var(--enterprise-demo-warm-yellow);
+  color: var(--systemprompt-io-warm-yellow);
   line-height: 1;
   margin-bottom: 0.5rem;
 }
@@ -433,7 +433,7 @@ p {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: var(--enterprise-demo-gradient-blue);
+  background: var(--systemprompt-io-gradient-blue);
   border-radius: 2px;
 }
 
@@ -447,7 +447,7 @@ p {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--enterprise-demo-gradient-blue);
+  background: var(--systemprompt-io-gradient-blue);
 }
 
 .testimonial-name {
@@ -462,13 +462,13 @@ p {
 
 /* ── Footer ── */
 .footer-section {
-  background: var(--enterprise-demo-blue-space);
-  color: var(--enterprise-demo-white);
+  background: var(--systemprompt-io-blue-space);
+  color: var(--systemprompt-io-white);
   padding: 4rem 0 2rem;
 }
 
 .footer-section h4 {
-  color: var(--enterprise-demo-white);
+  color: var(--systemprompt-io-white);
   margin-bottom: 1.5rem;
 }
 
@@ -485,7 +485,7 @@ p {
 }
 
 .footer-link:hover {
-  color: var(--enterprise-demo-warm-yellow);
+  color: var(--systemprompt-io-warm-yellow);
 }
 
 .footer-bottom {
@@ -529,14 +529,14 @@ p {
 
 /* ── Utilities ── */
 .text-gradient {
-  background: var(--enterprise-demo-gradient-blue);
+  background: var(--systemprompt-io-gradient-blue);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-accent {
-  color: var(--enterprise-demo-warm-yellow);
+  color: var(--systemprompt-io-warm-yellow);
 }
 
 .bg-gradient-subtle {

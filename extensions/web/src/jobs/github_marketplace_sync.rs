@@ -1,8 +1,8 @@
-use anyhow::Result;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::admin::repositories;
+use crate::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GitHubMarketplaceSyncJob;
@@ -25,22 +25,24 @@ impl Job for GitHubMarketplaceSyncJob {
         true
     }
 
-    async fn execute(&self, ctx: &JobContext) -> Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
         let start = std::time::Instant::now();
 
         tracing::info!("GitHub marketplace sync job started");
 
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or_else(|| anyhow::anyhow!("Database not available in job context"))?;
+        let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
+            "Database not available in job context".to_string(),
+        ))?;
 
-        let pool = db
-            .pool()
-            .ok_or_else(|| anyhow::anyhow!("PgPool not available from database"))?;
+        let pool = db.pool().ok_or(MarketplaceError::Internal(
+            "PgPool not available from database".to_string(),
+        ))?;
 
         let marketplaces = repositories::org_marketplaces::list_github_marketplaces(&pool)
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to list GitHub marketplaces: {e}"))?;
+            .map_err(|e| {
+                MarketplaceError::Internal(format!("Failed to list GitHub marketplaces: {e}"))
+            })?;
 
         if marketplaces.is_empty() {
             tracing::info!("No GitHub-connected marketplaces found");

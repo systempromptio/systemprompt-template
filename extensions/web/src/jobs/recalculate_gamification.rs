@@ -30,11 +30,9 @@ impl Job for RecalculateGamificationJob {
 
         tracing::info!("Recalculate gamification job started");
 
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or(MarketplaceError::Internal(
-                "Database not available in job context".to_string(),
-            ))?;
+        let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
+            "Database not available in job context".to_string(),
+        ))?;
 
         let pool = db.write_pool().ok_or(MarketplaceError::Internal(
             "Write PgPool not available from database".to_string(),

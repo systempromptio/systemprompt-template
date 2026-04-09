@@ -48,7 +48,7 @@ async fn main() -> Result<()> {
     tracing::info!(
         service_id = %service_id,
         addr = %addr,
-        "Enterprise Demo Skill Manager listening"
+        "systemprompt.io Skill Manager listening"
     );
 
     axum::serve(listener, router).await?;

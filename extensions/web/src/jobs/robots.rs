@@ -48,8 +48,8 @@ pub async fn generate_robots_txt() -> Result<(), MarketplaceError> {
 
     let global_config =
         Config::get().map_err(|e| MarketplaceError::Internal(format!("Config error: {e}")))?;
-    let paths = AppPaths::get()
-        .map_err(|e| MarketplaceError::Internal(format!("AppPaths error: {e}")))?;
+    let paths =
+        AppPaths::get().map_err(|e| MarketplaceError::Internal(format!("AppPaths error: {e}")))?;
 
     let web_dir = paths.web().dist().to_path_buf();
     let base_url = &global_config.api_external_url;
@@ -71,16 +71,14 @@ fn build_robots_txt_content(base_url: &str) -> Result<String, MarketplaceError> 
         .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
     writeln!(content, "Allow: /")
         .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
-    writeln!(content)
-        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content).map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
     writeln!(content, "Disallow: /api/")
         .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
     writeln!(content, "Disallow: /console/")
         .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
     writeln!(content, "Disallow: /_/")
         .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
-    writeln!(content)
-        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content).map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
     writeln!(content, "Sitemap: {base_url}/sitemap.xml")
         .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
 

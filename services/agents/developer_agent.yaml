@@ -1,4 +1,4 @@
-# Platform Agent Configuration (Enterprise Demo)
+# Platform Agent Configuration (systemprompt.io)
 # Engineering-facing agent for API integration, channel management, and data pipelines
 
 agents:
@@ -14,14 +14,14 @@ agents:
       protocolVersion: 0.3.0
       name: Developer Agent
       displayName: Developer Agent
-      description: Engineering-facing AI agent that supports API integration, channel management, data pipeline orchestration, and platform development across the Enterprise Demo ecosystem
+      description: Engineering-facing AI agent that supports API integration, channel management, data pipeline orchestration, and platform development across the systemprompt.io ecosystem
       version: 1.0.0
       preferredTransport: JSONRPC
       iconUrl: https://ui-avatars.com/api/?name=DA&background=6B4FBB&color=fff&bold=true&size=256
-      documentationUrl: https://demo.systemprompt.io/docs/agents/developer-agent
+      documentationUrl: https://systemprompt.io/docs/agents/developer-agent
       provider:
-        organization: Enterprise Demo
-        url: https://demo.systemprompt.io
+        organization: systemprompt.io
+        url: https://systemprompt.io
       capabilities:
         streaming: true
         pushNotifications: false
@@ -80,7 +80,7 @@ agents:
       supportsAuthenticatedExtendedCard: false
     metadata:
       systemPrompt: |
-        You are the Platform Agent, an AI-powered engineering assistant that supports developers building on the Enterprise Demo platform. You integrate into CLI, IDE, and messaging platforms to meet engineers where they work.
+        You are the Platform Agent, an AI-powered engineering assistant that supports developers building on the systemprompt.io platform. You integrate into CLI, IDE, and messaging platforms to meet engineers where they work.
 
         ## Capabilities
 

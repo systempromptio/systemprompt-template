@@ -1,12 +1,13 @@
-use anyhow::{Context, Result};
+use std::path::{Path, PathBuf};
+
 use handlebars::Handlebars;
 use serde_json::json;
-use std::path::{Path, PathBuf};
 use systemprompt::models::Config;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::admin::templates::helpers;
 use crate::config_loader;
+use crate::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CompileAdminTemplatesJob;
@@ -27,13 +28,21 @@ fn output_path_for(page_id: &str) -> String {
     path.to_string()
 }
 
-fn discover_templates(templates_dir: &std::path::Path) -> Result<Vec<(String, String, String)>> {
+fn discover_templates(
+    templates_dir: &std::path::Path,
+) -> Result<Vec<(String, String, String)>, MarketplaceError> {
     let mut pages = Vec::new();
-    let entries = std::fs::read_dir(templates_dir)
-        .with_context(|| format!("Failed to read templates dir: {}", templates_dir.display()))?;
+    let entries = std::fs::read_dir(templates_dir).map_err(|e| {
+        MarketplaceError::Internal(format!(
+            "Failed to read templates dir: {}: {e}",
+            templates_dir.display()
+        ))
+    })?;
 
     for entry in entries {
-        let entry = entry.context("Failed to read directory entry")?;
+        let entry = entry.map_err(|e| {
+            MarketplaceError::Internal(format!("Failed to read directory entry: {e}"))
+        })?;
         let path = entry.path();
         let ext = path.extension().and_then(|e| e.to_str());
         if ext != Some("hbs") {
@@ -52,7 +61,7 @@ fn discover_templates(templates_dir: &std::path::Path) -> Result<Vec<(String, St
 }
 
 impl CompileAdminTemplatesJob {
-    pub async fn execute_compile() -> Result<JobResult> {
+    pub async fn execute_compile() -> anyhow::Result<JobResult> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Compile admin templates job started");
@@ -70,14 +79,20 @@ impl CompileAdminTemplatesJob {
         if admin_output.exists() {
             tokio::fs::remove_dir_all(&admin_output)
                 .await
-                .with_context(|| {
-                    format!("Failed to clean compiled dir: {}", admin_output.display())
+                .map_err(|e| {
+                    MarketplaceError::Internal(format!(
+                        "Failed to clean compiled dir: {}: {e}",
+                        admin_output.display()
+                    ))
                 })?;
         }
         tokio::fs::create_dir_all(&compiled_dir)
             .await
-            .with_context(|| {
-                format!("Failed to create compiled dir: {}", compiled_dir.display())
+            .map_err(|e| {
+                MarketplaceError::Internal(format!(
+                    "Failed to create compiled dir: {}: {e}",
+                    compiled_dir.display()
+                ))
             })?;
 
         let mut hbs = Handlebars::new();
@@ -148,12 +163,16 @@ fn register_partials_recursive(
     hbs: &mut Handlebars<'static>,
     dir: &Path,
     base: &Path,
-) -> Result<()> {
+) -> Result<(), MarketplaceError> {
     if !dir.exists() {
         return Ok(());
     }
-    let entries = std::fs::read_dir(dir)
-        .with_context(|| format!("Failed to read partials dir: {}", dir.display()))?;
+    let entries = std::fs::read_dir(dir).map_err(|e| {
+        MarketplaceError::Internal(format!(
+            "Failed to read partials dir: {}: {e}",
+            dir.display()
+        ))
+    })?;
 
     for entry in entries {
         let entry = entry?;
@@ -161,14 +180,19 @@ fn register_partials_recursive(
         if path.is_dir() {
             register_partials_recursive(hbs, &path, base)?;
         } else if path.extension().and_then(|e| e.to_str()) == Some("hbs") {
-            let content = std::fs::read_to_string(&path)
-                .with_context(|| format!("Failed to read partial: {}", path.display()))?;
+            let content = std::fs::read_to_string(&path).map_err(|e| {
+                MarketplaceError::Internal(format!(
+                    "Failed to read partial: {}: {e}",
+                    path.display()
+                ))
+            })?;
 
             let rel = path.strip_prefix(base).unwrap_or(&path);
             let name = rel.with_extension("").to_string_lossy().replace('\\', "/");
 
-            hbs.register_partial(&name, &content)
-                .with_context(|| format!("Failed to register partial: {name}"))?;
+            hbs.register_partial(&name, &content).map_err(|e| {
+                MarketplaceError::Internal(format!("Failed to register partial: {name}: {e}"))
+            })?;
         }
     }
     Ok(())
@@ -187,33 +211,43 @@ async fn compile_page(
     template_file: &str,
     page_id: &str,
     output_path: &str,
-) -> Result<()> {
+) -> Result<(), MarketplaceError> {
     let template_content = tokio::fs::read_to_string(ctx.templates_dir.join(template_file))
         .await
-        .with_context(|| format!("Failed to read template: {template_file}"))?;
+        .map_err(|e| {
+            MarketplaceError::Internal(format!("Failed to read template: {template_file}: {e}"))
+        })?;
 
     let mut data = json!({ "page": page_id, "site_url": ctx.site_url });
     if !ctx.branding_value.is_null() {
-        data.as_object_mut()
-            .expect("json object")
-            .insert("branding".to_string(), ctx.branding_value.clone());
+        if let Some(obj) = data.as_object_mut() {
+            obj.insert("branding".to_string(), ctx.branding_value.clone());
+        }
     }
 
     let rendered = ctx
         .hbs
         .render_template(&template_content, &data)
-        .with_context(|| format!("Failed to render template: {template_file}"))?;
+        .map_err(|e| {
+            MarketplaceError::Internal(format!("Failed to render template: {template_file}: {e}"))
+        })?;
 
     let dest = ctx.compiled_dir.join(output_path);
     if let Some(parent) = dest.parent() {
-        tokio::fs::create_dir_all(parent)
-            .await
-            .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
+        tokio::fs::create_dir_all(parent).await.map_err(|e| {
+            MarketplaceError::Internal(format!(
+                "Failed to create directory: {}: {e}",
+                parent.display()
+            ))
+        })?;
     }
 
-    tokio::fs::write(&dest, rendered)
-        .await
-        .with_context(|| format!("Failed to write compiled output: {}", dest.display()))?;
+    tokio::fs::write(&dest, rendered).await.map_err(|e| {
+        MarketplaceError::Internal(format!(
+            "Failed to write compiled output: {}: {e}",
+            dest.display()
+        ))
+    })?;
 
     tracing::debug!(
         template = template_file,
@@ -242,7 +276,7 @@ impl Job for CompileAdminTemplatesJob {
         true
     }
 
-    async fn execute(&self, _ctx: &JobContext) -> Result<JobResult> {
+    async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
         Self::execute_compile().await
     }
 }

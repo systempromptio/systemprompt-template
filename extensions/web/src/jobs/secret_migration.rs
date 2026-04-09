@@ -33,11 +33,9 @@ impl Job for SecretMigrationJob {
             return Ok(JobResult::success().with_stats(0, 0).with_duration(0));
         };
 
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or(MarketplaceError::Internal(
-                "Database not available in job context".to_string(),
-            ))?;
+        let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
+            "Database not available in job context".to_string(),
+        ))?;
 
         let pool = db.pool().ok_or(MarketplaceError::Internal(
             "PgPool not available from database".to_string(),

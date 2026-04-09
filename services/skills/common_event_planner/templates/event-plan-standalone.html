@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{EVENT_NAME}} - Plan de Evento | Enterprise Demo</title>
+  <title>{{EVENT_NAME}} - Plan de Evento | systemprompt.io</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,22 +14,22 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   
   <style>
-    /* Event Planner - Enterprise Demo Brand Styles */
+    /* Event Planner - systemprompt.io Brand Styles */
     :root {
-      --enterprise-demo-warm-yellow: #E5B92B;
-      --enterprise-demo-blue-lilac: #6B4FBB;
-      --enterprise-demo-blue-space: #0A0F1A;
-      --enterprise-demo-light-sky: #00B67A;
-      --enterprise-demo-white: #FFFFFF;
-      --enterprise-demo-gradient-blue: linear-gradient(135deg, #6B4FBB 0%, #00B67A 100%);
-      --enterprise-demo-gradient-yellow: linear-gradient(135deg, #00B67A 0%, #E5B92B 100%);
+      --systemprompt-io-warm-yellow: #E5B92B;
+      --systemprompt-io-blue-lilac: #6B4FBB;
+      --systemprompt-io-blue-space: #0A0F1A;
+      --systemprompt-io-light-sky: #00B67A;
+      --systemprompt-io-white: #FFFFFF;
+      --systemprompt-io-gradient-blue: linear-gradient(135deg, #6B4FBB 0%, #00B67A 100%);
+      --systemprompt-io-gradient-yellow: linear-gradient(135deg, #00B67A 0%, #E5B92B 100%);
       --glass-bg: rgba(255, 255, 255, 0.15);
       --glass-border: rgba(255, 255, 255, 0.25);
       --glass-shadow: 0 8px 32px rgba(0, 33, 90, 0.15);
       --glass-blur: blur(12px);
       --bg-primary: #f8f9fc;
       --bg-secondary: #ffffff;
-      --text-primary: var(--enterprise-demo-blue-space);
+      --text-primary: var(--systemprompt-io-blue-space);
       --text-secondary: #4a5568;
       --border-color: rgba(107, 79, 187, 0.15);
       --card-bg: rgba(255, 255, 255, 0.85);
@@ -48,10 +48,10 @@
     }
 
     [data-theme="dark"] {
-      --bg-primary: var(--enterprise-demo-blue-space);
+      --bg-primary: var(--systemprompt-io-blue-space);
       --bg-secondary: #252d5a;
-      --text-primary: var(--enterprise-demo-white);
-      --text-secondary: var(--enterprise-demo-light-sky);
+      --text-primary: var(--systemprompt-io-white);
+      --text-secondary: var(--systemprompt-io-light-sky);
       --border-color: rgba(241, 60, 66, 0.2);
       --card-bg: rgba(37, 45, 90, 0.85);
       --card-border: rgba(107, 79, 187, 0.25);
@@ -73,13 +73,13 @@
     }
 
     h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; margin-bottom: var(--spacing-sm); }
-    h1 { font-size: 2.5rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--enterprise-demo-blue-lilac); }
-    h2 { font-size: 1.75rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--enterprise-demo-blue-lilac); }
+    h1 { font-size: 2.5rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--systemprompt-io-blue-lilac); }
+    h2 { font-size: 1.75rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--systemprompt-io-blue-lilac); }
     h3 { font-size: 1.25rem; font-weight: 600; color: var(--text-primary); }
     h4 { font-size: 1.1rem; font-weight: 600; color: var(--text-secondary); }
     p { margin-bottom: var(--spacing-sm); color: var(--text-secondary); }
-    a { color: var(--enterprise-demo-blue-lilac); text-decoration: none; transition: color var(--transition-fast); }
-    a:hover { color: var(--enterprise-demo-warm-yellow); }
+    a { color: var(--systemprompt-io-blue-lilac); text-decoration: none; transition: color var(--transition-fast); }
+    a:hover { color: var(--systemprompt-io-warm-yellow); }
 
     .bento-container { max-width: 1400px; margin: 0 auto; padding: var(--spacing-lg); }
     .bento-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--spacing-md); }
@@ -115,7 +115,7 @@
     }
 
     .event-header {
-      background: var(--enterprise-demo-gradient-blue);
+      background: var(--systemprompt-io-gradient-blue);
       padding: var(--spacing-xl) var(--spacing-lg);
       position: relative;
       overflow: hidden;
@@ -143,7 +143,7 @@
     }
     .header-logo { height: 40px; width: auto; }
     .header-info { flex: 1; min-width: 280px; }
-    .header-info h1 { color: var(--enterprise-demo-white); margin-bottom: var(--spacing-xs); }
+    .header-info h1 { color: var(--systemprompt-io-white); margin-bottom: var(--spacing-xs); }
     .header-meta { display: flex; flex-wrap: wrap; gap: var(--spacing-md); color: rgba(255, 255, 255, 0.9); font-size: 0.95rem; }
     .header-meta span { display: flex; align-items: center; gap: var(--spacing-xs); }
 
@@ -168,8 +168,8 @@
       transition: all var(--transition-fast);
       font-family: inherit;
     }
-    .theme-toggle-btn.active { background: var(--enterprise-demo-white); color: var(--enterprise-demo-blue-space); }
-    .theme-toggle-btn:hover:not(.active) { color: var(--enterprise-demo-white); }
+    .theme-toggle-btn.active { background: var(--systemprompt-io-white); color: var(--systemprompt-io-blue-space); }
+    .theme-toggle-btn:hover:not(.active) { color: var(--systemprompt-io-white); }
 
     .card-header {
       padding: var(--spacing-md);
@@ -189,7 +189,7 @@
       top: 0;
       bottom: 0;
       width: 2px;
-      background: var(--enterprise-demo-gradient-blue);
+      background: var(--systemprompt-io-gradient-blue);
       border-radius: 1px;
     }
     .timeline-item { position: relative; padding-bottom: var(--spacing-md); animation: fadeInUp 0.5s ease backwards; }
@@ -204,19 +204,19 @@
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background: var(--enterprise-demo-blue-lilac);
+      background: var(--systemprompt-io-blue-lilac);
       border: 2px solid var(--bg-secondary);
       box-shadow: 0 0 0 3px rgba(107, 79, 187, 0.2);
     }
-    .timeline-item.completed .timeline-marker { background: var(--enterprise-demo-warm-yellow); box-shadow: 0 0 0 3px rgba(229, 185, 43, 0.2); }
-    .timeline-item.active .timeline-marker { background: var(--enterprise-demo-light-sky); box-shadow: 0 0 0 3px rgba(241, 60, 66, 0.3); animation: pulse 2s infinite; }
+    .timeline-item.completed .timeline-marker { background: var(--systemprompt-io-warm-yellow); box-shadow: 0 0 0 3px rgba(229, 185, 43, 0.2); }
+    .timeline-item.active .timeline-marker { background: var(--systemprompt-io-light-sky); box-shadow: 0 0 0 3px rgba(241, 60, 66, 0.3); animation: pulse 2s infinite; }
     .timeline-content { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: var(--spacing-sm); }
-    .timeline-date { font-size: 0.85rem; font-weight: 600; color: var(--enterprise-demo-blue-lilac); margin-bottom: 4px; }
+    .timeline-date { font-size: 0.85rem; font-weight: 600; color: var(--systemprompt-io-blue-lilac); margin-bottom: 4px; }
     .timeline-title { font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
     .timeline-description { font-size: 0.9rem; color: var(--text-secondary); margin: 0; }
 
     .budget-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-    .budget-table th { background: var(--enterprise-demo-blue-space); color: var(--enterprise-demo-white); padding: var(--spacing-sm); text-align: left; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; }
+    .budget-table th { background: var(--systemprompt-io-blue-space); color: var(--systemprompt-io-white); padding: var(--spacing-sm); text-align: left; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; }
     .budget-table th:first-child { border-radius: var(--radius-sm) 0 0 0; }
     .budget-table th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
     .budget-table td { padding: var(--spacing-sm); border-bottom: 1px solid var(--border-color); transition: background-color var(--transition-fast); }
@@ -230,9 +230,9 @@
     .task-list { list-style: none; }
     .task-item { display: flex; align-items: flex-start; gap: var(--spacing-sm); padding: var(--spacing-sm); border-radius: var(--radius-sm); margin-bottom: var(--spacing-xs); transition: background-color var(--transition-fast); }
     .task-item:hover { background: rgba(107, 79, 187, 0.05); }
-    .task-checkbox { width: 20px; height: 20px; border: 2px solid var(--enterprise-demo-blue-lilac); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all var(--transition-fast); }
-    .task-item.completed .task-checkbox { background: var(--enterprise-demo-warm-yellow); border-color: var(--enterprise-demo-warm-yellow); }
-    .task-checkbox svg { width: 12px; height: 12px; stroke: var(--enterprise-demo-blue-space); stroke-width: 3; opacity: 0; transition: opacity var(--transition-fast); }
+    .task-checkbox { width: 20px; height: 20px; border: 2px solid var(--systemprompt-io-blue-lilac); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all var(--transition-fast); }
+    .task-item.completed .task-checkbox { background: var(--systemprompt-io-warm-yellow); border-color: var(--systemprompt-io-warm-yellow); }
+    .task-checkbox svg { width: 12px; height: 12px; stroke: var(--systemprompt-io-blue-space); stroke-width: 3; opacity: 0; transition: opacity var(--transition-fast); }
     .task-item.completed .task-checkbox svg { opacity: 1; }
     .task-content { flex: 1; }
     .task-title { font-weight: 500; color: var(--text-primary); margin-bottom: 2px; }
@@ -240,7 +240,7 @@
     .task-meta { font-size: 0.85rem; color: var(--text-secondary); display: flex; gap: var(--spacing-sm); flex-wrap: wrap; }
 
     .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-    .badge-pending { background: rgba(107, 79, 187, 0.15); color: var(--enterprise-demo-blue-lilac); }
+    .badge-pending { background: rgba(107, 79, 187, 0.15); color: var(--systemprompt-io-blue-lilac); }
     .badge-progress { background: rgba(241, 60, 66, 0.2); color: #0891b2; }
     .badge-completed { background: rgba(229, 185, 43, 0.15); color: #b45309; }
     .badge-confirmed { background: rgba(16, 185, 129, 0.15); color: #059669; }
@@ -252,16 +252,16 @@
     .attendee-role { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--spacing-xs); }
 
     .stat-card { text-align: center; padding: var(--spacing-md); }
-    .stat-value { font-size: 2.5rem; font-weight: 700; color: var(--enterprise-demo-blue-lilac); line-height: 1; margin-bottom: var(--spacing-xs); }
+    .stat-value { font-size: 2.5rem; font-weight: 700; color: var(--systemprompt-io-blue-lilac); line-height: 1; margin-bottom: var(--spacing-xs); }
     .stat-label { font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-    .stat-card.highlight .stat-value { color: var(--enterprise-demo-warm-yellow); }
+    .stat-card.highlight .stat-value { color: var(--systemprompt-io-warm-yellow); }
 
     .progress-container { margin-bottom: var(--spacing-sm); }
     .progress-label { display: flex; justify-content: space-between; margin-bottom: var(--spacing-xs); font-size: 0.9rem; }
     .progress-bar { height: 8px; background: var(--border-color); border-radius: 4px; overflow: hidden; }
-    .progress-fill { height: 100%; background: var(--enterprise-demo-gradient-blue); border-radius: 4px; transition: width var(--transition-slow); }
+    .progress-fill { height: 100%; background: var(--systemprompt-io-gradient-blue); border-radius: 4px; transition: width var(--transition-slow); }
 
-    .event-footer { background: var(--enterprise-demo-blue-space); padding: var(--spacing-lg); margin-top: var(--spacing-xl); }
+    .event-footer { background: var(--systemprompt-io-blue-space); padding: var(--spacing-lg); margin-top: var(--spacing-xl); }
     .footer-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-md); }
     .footer-logo { height: 32px; width: auto; }
     .footer-text { color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; }
@@ -458,7 +458,7 @@
       <svg class="footer-logo" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
         <text x="0" y="28" font-family="Dosis, sans-serif" font-size="24" font-weight="700" fill="white">ENTERPRISE DEMO</text>
       </svg>
-      <span class="footer-text">Documento generado el {{GENERATION_DATE}} | Enterprise Demo {{YEAR}}</span>
+      <span class="footer-text">Documento generado el {{GENERATION_DATE}} | systemprompt.io {{YEAR}}</span>
     </div>
   </footer>
   

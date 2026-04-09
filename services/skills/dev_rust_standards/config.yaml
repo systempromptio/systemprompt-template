@@ -1,6 +1,6 @@
 id: dev_rust_standards
 name: "Rust Standards"
-description: "Complete Rust coding, linting, testing, architecture, and layer boundary standards for Enterprise Demo development"
+description: "Complete Rust coding, linting, testing, architecture, and layer boundary standards for systemprompt.io development"
 enabled: true
 version: "1.0.0"
 file: "index.md"

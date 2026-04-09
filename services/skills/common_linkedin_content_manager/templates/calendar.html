@@ -13,8 +13,8 @@
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   
-  <!-- Enterprise Demo UI -->
-  <link rel="stylesheet" href="../assets/css/enterprise-demo-ui.css">
+  <!-- systemprompt.io UI -->
+  <link rel="stylesheet" href="../assets/css/systemprompt-io-ui.css">
 </head>
 <body>
   
@@ -48,7 +48,7 @@
         <h1 class="mb-0">Calendario de Contenido</h1>
         <p class="text-muted mb-0">Planifica y organiza tus publicaciones de LinkedIn</p>
       </div>
-      <a href="editor.html" class="btn-enterprise-demo btn-primary">
+      <a href="editor.html" class="btn-systemprompt-io btn-primary">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/>
         </svg>
@@ -81,8 +81,8 @@
       <div class="card-header">
         <h3 class="card-title">Vista Mensual</h3>
         <div class="d-flex gap-sm">
-          <button class="btn-enterprise-demo btn-ghost btn-sm" data-view="month">Mes</button>
-          <button class="btn-enterprise-demo btn-outline btn-sm" data-view="week">Semana</button>
+          <button class="btn-systemprompt-io btn-ghost btn-sm" data-view="month">Mes</button>
+          <button class="btn-systemprompt-io btn-outline btn-sm" data-view="week">Semana</button>
         </div>
       </div>
       
@@ -93,7 +93,7 @@
     <div class="glass-card mt-lg">
       <div class="card-header">
         <h3 class="card-title">Proximas Publicaciones</h3>
-        <a href="library.html" class="btn-enterprise-demo btn-ghost btn-sm">Ver todas</a>
+        <a href="library.html" class="btn-systemprompt-io btn-ghost btn-sm">Ver todas</a>
       </div>
       
       <table class="table-glass">
@@ -114,9 +114,9 @@
             </td>
             <td>11 Feb 2026, 10:00</td>
             <td>Articulo</td>
-            <td><span class="badge-enterprise-demo badge--scheduled">Programado</span></td>
+            <td><span class="badge-systemprompt-io badge--scheduled">Programado</span></td>
             <td>
-              <button class="btn-enterprise-demo btn-ghost btn-sm">Editar</button>
+              <button class="btn-systemprompt-io btn-ghost btn-sm">Editar</button>
             </td>
           </tr>
           <tr>
@@ -126,9 +126,9 @@
             </td>
             <td>13 Feb 2026, 12:00</td>
             <td>Carrusel</td>
-            <td><span class="badge-enterprise-demo badge--scheduled">Programado</span></td>
+            <td><span class="badge-systemprompt-io badge--scheduled">Programado</span></td>
             <td>
-              <button class="btn-enterprise-demo btn-ghost btn-sm">Editar</button>
+              <button class="btn-systemprompt-io btn-ghost btn-sm">Editar</button>
             </td>
           </tr>
           <tr>
@@ -138,9 +138,9 @@
             </td>
             <td>15 Feb 2026, 09:00</td>
             <td>Imagen</td>
-            <td><span class="badge-enterprise-demo badge--draft">Borrador</span></td>
+            <td><span class="badge-systemprompt-io badge--draft">Borrador</span></td>
             <td>
-              <button class="btn-enterprise-demo btn-ghost btn-sm">Editar</button>
+              <button class="btn-systemprompt-io btn-ghost btn-sm">Editar</button>
             </td>
           </tr>
           <tr>
@@ -150,9 +150,9 @@
             </td>
             <td>18 Feb 2026, 10:00</td>
             <td>Video</td>
-            <td><span class="badge-enterprise-demo badge--draft">Borrador</span></td>
+            <td><span class="badge-systemprompt-io badge--draft">Borrador</span></td>
             <td>
-              <button class="btn-enterprise-demo btn-ghost btn-sm">Editar</button>
+              <button class="btn-systemprompt-io btn-ghost btn-sm">Editar</button>
             </td>
           </tr>
         </tbody>
@@ -163,7 +163,7 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../assets/js/enterprise-demo-ui.js"></script>
+  <script src="../assets/js/systemprompt-io-ui.js"></script>
   <script>
     // Sample events data
     const sampleEvents = [
@@ -179,12 +179,12 @@
 
     // Initialize calendar
     document.addEventListener('DOMContentLoaded', () => {
-      Enterprise DemoUI.Calendar.init('calendar-container', sampleEvents);
-      Enterprise DemoUI.Calendar.setEventClickHandler((event) => {
-        Enterprise DemoUI.Modal.show(
+      systemprompt.ioUI.Calendar.init('calendar-container', sampleEvents);
+      systemprompt.ioUI.Calendar.setEventClickHandler((event) => {
+        systemprompt.ioUI.Modal.show(
           event.title,
           `<p>Fecha programada: ${new Date(event.date).toLocaleString('es-ES')}</p>
-           <p>Estado: <span class="badge-enterprise-demo badge--${event.status}">${event.status}</span></p>`,
+           <p>Estado: <span class="badge-systemprompt-io badge--${event.status}">${event.status}</span></p>`,
           [
             { label: 'Editar', action: 'edit', class: 'btn-primary', handler: () => console.log('Edit:', event.id) },
             { label: 'Cerrar', action: 'close', class: 'btn-outline' }
@@ -192,7 +192,7 @@
         );
       });
       
-      Enterprise DemoUI.DataTable.init('upcoming-table');
+      systemprompt.ioUI.DataTable.init('upcoming-table');
     });
   </script>
 </body>

@@ -2,7 +2,7 @@ extension:
   type: mcp
   name: systemprompt
   binary: systemprompt-mcp-agent
-  description: Enterprise Demo MCP Agent for executing CLI commands (admin only)
+  description: systemprompt.io MCP Agent for executing CLI commands (admin only)
   port: 5010
   build_type: workspace
   enabled: true

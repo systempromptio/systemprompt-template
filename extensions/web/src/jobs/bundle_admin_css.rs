@@ -1,12 +1,14 @@
-use anyhow::{Context, Result};
 use std::path::PathBuf;
+
 use systemprompt::traits::{Job, JobContext, JobResult};
+
+use crate::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BundleAdminCssJob;
 
 impl BundleAdminCssJob {
-    pub async fn execute_bundle() -> Result<JobResult> {
+    pub async fn execute_bundle() -> anyhow::Result<JobResult> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Bundle admin CSS job started");
@@ -24,9 +26,12 @@ impl BundleAdminCssJob {
             .join("admin-bundle.css");
 
         let mut css_files: Vec<PathBuf> = Vec::new();
-        let mut read_dir = tokio::fs::read_dir(&css_dir)
-            .await
-            .with_context(|| format!("Failed to read CSS directory: {}", css_dir.display()))?;
+        let mut read_dir = tokio::fs::read_dir(&css_dir).await.map_err(|e| {
+            MarketplaceError::Internal(format!(
+                "Failed to read CSS directory: {}: {e}",
+                css_dir.display()
+            ))
+        })?;
 
         while let Some(entry) = read_dir.next_entry().await? {
             let path = entry.path();
@@ -66,14 +71,18 @@ impl BundleAdminCssJob {
         }
 
         if failed > 0 {
-            return Err(anyhow::anyhow!(
+            return Err(MarketplaceError::Internal(format!(
                 "Failed to read {failed} CSS file(s) during bundling"
-            ));
+            ))
+            .into());
         }
 
-        tokio::fs::write(&bundle_path, &bundle)
-            .await
-            .with_context(|| format!("Failed to write bundle: {}", bundle_path.display()))?;
+        tokio::fs::write(&bundle_path, &bundle).await.map_err(|e| {
+            MarketplaceError::Internal(format!(
+                "Failed to write bundle: {}: {e}",
+                bundle_path.display()
+            ))
+        })?;
 
         let duration_ms = u64::try_from(start_time.elapsed().as_millis()).unwrap_or(u64::MAX);
 
@@ -108,7 +117,7 @@ impl Job for BundleAdminCssJob {
         true
     }
 
-    async fn execute(&self, _ctx: &JobContext) -> Result<JobResult> {
+    async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
         Self::execute_bundle().await
     }
 }

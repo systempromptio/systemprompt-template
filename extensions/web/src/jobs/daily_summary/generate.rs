@@ -1,17 +1,20 @@
 use std::sync::Arc;
 
-use anyhow::Result;
 use chrono::NaiveDate;
 use sqlx::PgPool;
 use systemprompt::ai::AiService;
+
+use crate::error::MarketplaceError;
 
 pub async fn generate_user_daily_summary(
     pool: &Arc<PgPool>,
     user_id: &str,
     date: NaiveDate,
     ai_service: Option<&Arc<AiService>>,
-) -> Result<()> {
-    let _ai = ai_service.ok_or_else(|| anyhow::anyhow!("AI service not available"))?;
+) -> anyhow::Result<()> {
+    let _ai = ai_service.ok_or(MarketplaceError::Internal(
+        "AI service not available".to_string(),
+    ))?;
 
     let existing: Option<i64> = sqlx::query_scalar(
         "SELECT COUNT(*)::BIGINT FROM daily_summaries WHERE user_id = $1 AND summary_date = $2",
@@ -19,7 +22,8 @@ pub async fn generate_user_daily_summary(
     .bind(user_id)
     .bind(date)
     .fetch_optional(pool.as_ref())
-    .await?;
+    .await
+    .map_err(MarketplaceError::Database)?;
 
     if existing.unwrap_or(0) > 0 {
         tracing::info!(user_id, %date, "Daily summary already exists, skipping");
@@ -49,7 +53,8 @@ pub async fn generate_user_daily_summary(
     .bind(date)
     .bind(session_count)
     .execute(pool.as_ref())
-    .await?;
+    .await
+    .map_err(MarketplaceError::Database)?;
 
     tracing::info!(user_id, %date, sessions = session_count, "Daily summary generated");
     Ok(())

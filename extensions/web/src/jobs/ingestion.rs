@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use anyhow::Result;
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::config::BlogConfigValidated;
+use crate::error::MarketplaceError;
 use crate::models::IngestionOptions;
 use crate::services::IngestionService;
 
@@ -16,7 +16,7 @@ impl ContentIngestionJob {
     pub async fn execute_with_config(
         pool: Arc<PgPool>,
         config: &BlogConfigValidated,
-    ) -> Result<JobResult> {
+    ) -> anyhow::Result<JobResult> {
         Self::execute_with_options(pool, config, IngestionOptions::default()).await
     }
 
@@ -24,7 +24,7 @@ impl ContentIngestionJob {
         pool: Arc<PgPool>,
         config: &BlogConfigValidated,
         options: IngestionOptions,
-    ) -> Result<JobResult> {
+    ) -> anyhow::Result<JobResult> {
         let start = std::time::Instant::now();
 
         tracing::info!(
@@ -117,17 +117,17 @@ impl Job for ContentIngestionJob {
         "0 0 * * * *"
     }
 
-    async fn execute(&self, ctx: &JobContext) -> Result<JobResult> {
-        let db = ctx
-            .db_pool::<DbPool>()
-            .ok_or_else(|| anyhow::anyhow!("Database not available in job context"))?;
+    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
+        let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
+            "Database not available in job context".to_string(),
+        ))?;
 
-        let pool = db
-            .write_pool()
-            .ok_or_else(|| anyhow::anyhow!("Write PgPool not available from database"))?;
+        let pool = db.write_pool().ok_or(MarketplaceError::Internal(
+            "Write PgPool not available from database".to_string(),
+        ))?;
 
         let config = BlogConfigValidated::load_from_env_or_default()
-            .map_err(|e| anyhow::anyhow!("Failed to load blog config: {e}"))?;
+            .map_err(|e| MarketplaceError::Internal(format!("Failed to load blog config: {e}")))?;
 
         let delete_orphans = std::env::var("CONTENT_INGESTION_DELETE_ORPHANS")
             .map(|v| v.eq_ignore_ascii_case("true") || v == "1")

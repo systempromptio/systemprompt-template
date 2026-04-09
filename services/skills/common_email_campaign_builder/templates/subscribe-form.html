@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Suscripcion | Enterprise Demo</title>
+  <title>Suscripcion | systemprompt.io</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,18 +16,18 @@
        ═══════════════════════════════════════════════════════════════════════ */
     
     :root {
-      --enterprise-demo-warm-yellow: #E5B92B;
-      --enterprise-demo-blue-lilac: #6B4FBB;
-      --enterprise-demo-blue-space: #0A0F1A;
-      --enterprise-demo-light-sky: #00B67A;
-      --enterprise-demo-white: #FFFFFF;
+      --systemprompt-io-warm-yellow: #E5B92B;
+      --systemprompt-io-blue-lilac: #6B4FBB;
+      --systemprompt-io-blue-space: #0A0F1A;
+      --systemprompt-io-light-sky: #00B67A;
+      --systemprompt-io-white: #FFFFFF;
       
       --glass-bg: rgba(255, 255, 255, 0.9);
       --glass-border: rgba(107, 79, 187, 0.2);
       --glass-shadow: 0 8px 32px rgba(0, 33, 90, 0.15);
       
       --bg-primary: #f8f9fa;
-      --text-primary: var(--enterprise-demo-blue-space);
+      --text-primary: var(--systemprompt-io-blue-space);
       --text-secondary: #4a5568;
       
       --transition-fast: 0.2s ease;
@@ -38,9 +38,9 @@
       --glass-bg: rgba(0, 33, 90, 0.9);
       --glass-border: rgba(241, 60, 66, 0.2);
       --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      --bg-primary: var(--enterprise-demo-blue-space);
-      --text-primary: var(--enterprise-demo-white);
-      --text-secondary: var(--enterprise-demo-light-sky);
+      --bg-primary: var(--systemprompt-io-blue-space);
+      --text-primary: var(--systemprompt-io-white);
+      --text-secondary: var(--systemprompt-io-light-sky);
     }
     
     * {
@@ -99,7 +99,7 @@
     .widget-icon {
       width: 64px;
       height: 64px;
-      background: linear-gradient(135deg, var(--enterprise-demo-blue-lilac) 0%, var(--enterprise-demo-light-sky) 100%);
+      background: linear-gradient(135deg, var(--systemprompt-io-blue-lilac) 0%, var(--systemprompt-io-light-sky) 100%);
       border-radius: 1rem;
       display: flex;
       align-items: center;
@@ -110,20 +110,20 @@
     .widget-icon svg {
       width: 32px;
       height: 32px;
-      fill: var(--enterprise-demo-white);
+      fill: var(--systemprompt-io-white);
     }
     
     .widget-title {
       font-size: 1.5rem;
       font-weight: 700;
-      color: var(--enterprise-demo-blue-lilac);
+      color: var(--systemprompt-io-blue-lilac);
       text-transform: uppercase;
       letter-spacing: 0.02em;
       margin-bottom: 0.5rem;
     }
     
     [data-theme="dark"] .widget-title {
-      color: var(--enterprise-demo-white);
+      color: var(--systemprompt-io-white);
     }
     
     .widget-subtitle {
@@ -160,7 +160,7 @@
     
     .form-input:focus {
       outline: none;
-      border-color: var(--enterprise-demo-blue-lilac);
+      border-color: var(--systemprompt-io-blue-lilac);
       box-shadow: 0 0 0 4px rgba(107, 79, 187, 0.15);
     }
     
@@ -187,8 +187,8 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      background: var(--enterprise-demo-warm-yellow);
-      color: var(--enterprise-demo-blue-space);
+      background: var(--systemprompt-io-warm-yellow);
+      color: var(--systemprompt-io-blue-space);
       border: none;
       border-radius: 0.75rem;
       cursor: pointer;
@@ -216,7 +216,7 @@
     }
     
     .privacy-text a {
-      color: var(--enterprise-demo-blue-lilac);
+      color: var(--systemprompt-io-blue-lilac);
       text-decoration: none;
     }
     
@@ -237,7 +237,7 @@
     .success-icon {
       width: 64px;
       height: 64px;
-      background: var(--enterprise-demo-warm-yellow);
+      background: var(--systemprompt-io-warm-yellow);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -248,7 +248,7 @@
     .success-icon svg {
       width: 32px;
       height: 32px;
-      fill: var(--enterprise-demo-blue-space);
+      fill: var(--systemprompt-io-blue-space);
     }
     
     .success-title {
@@ -288,11 +288,11 @@
     .theme-toggle svg {
       width: 20px;
       height: 20px;
-      stroke: var(--enterprise-demo-blue-lilac);
+      stroke: var(--systemprompt-io-blue-lilac);
     }
     
     [data-theme="dark"] .theme-toggle svg {
-      stroke: var(--enterprise-demo-warm-yellow);
+      stroke: var(--systemprompt-io-warm-yellow);
     }
     
     /* Responsive */
@@ -379,7 +379,7 @@
   <script>
     // Theme Management
     const ThemeManager = {
-      STORAGE_KEY: 'enterprise-demo-theme',
+      STORAGE_KEY: 'systemprompt-io-theme',
       
       init() {
         this.applyStoredTheme();

@@ -3,7 +3,7 @@
   "description": "Enterprise governance demo — web search and secret detection policies with HTTP hooks",
   "version": "2.0.0",
   "author": {
-    "name": "Enterprise Demo",
-    "email": "help@demo.systemprompt.io"
+    "name": "systemprompt.io",
+    "email": "help@systemprompt.io"
   }
 }

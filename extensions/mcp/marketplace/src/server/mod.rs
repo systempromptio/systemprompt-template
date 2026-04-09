@@ -31,13 +31,13 @@ impl ServerHandler for MarketplaceServer {
         .with_protocol_version(ProtocolVersion::V_2024_11_05)
         .with_server_info(
             Implementation::new(
-                format!("Enterprise Demo Skill Manager ({})", self.service_id),
+                format!("systemprompt.io Skill Manager ({})", self.service_id),
                 env!("CARGO_PKG_VERSION"),
             )
-            .with_title("Enterprise Demo Skill Manager"),
+            .with_title("systemprompt.io Skill Manager"),
         )
         .with_instructions(
-                "Enterprise Demo Skill Manager — the source of truth for all cloud agent skills, \
+                "systemprompt.io Skill Manager — the source of truth for all cloud agent skills, \
                  secrets, and sync operations. All skill and secret management for agents in the \
                  cloud MUST go through this server.\n\n\
                  ## Getting Started\n\n\
@@ -81,7 +81,7 @@ impl ServerHandler for MarketplaceServer {
         _request: InitializeRequestParams,
         _ctx: RequestContext<RoleServer>,
     ) -> Result<InitializeResult, McpError> {
-        tracing::info!("Enterprise Demo Skill Manager initialized");
+        tracing::info!("systemprompt.io Skill Manager initialized");
         Ok(self.get_info())
     }
 

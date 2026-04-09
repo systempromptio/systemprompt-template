@@ -1,12 +1,14 @@
-use anyhow::{Context, Result};
 use std::path::PathBuf;
+
 use systemprompt::traits::{Job, JobContext, JobResult};
+
+use crate::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BundleAdminJsJob;
 
 impl BundleAdminJsJob {
-    pub async fn execute_bundle() -> Result<JobResult> {
+    pub async fn execute_bundle() -> anyhow::Result<JobResult> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Bundle admin JS job started");
@@ -40,14 +42,19 @@ impl BundleAdminJsJob {
 async fn build_per_page_bundles(
     js_dir: &std::path::Path,
     output_dir: &std::path::Path,
-) -> Result<u64> {
+) -> Result<u64, MarketplaceError> {
     let bundles_dir = js_dir.join("bundles");
     if !bundles_dir.is_dir() {
         return Ok(0);
     }
 
     let mut entries: Vec<_> = std::fs::read_dir(&bundles_dir)
-        .with_context(|| format!("Failed to read bundles dir: {}", bundles_dir.display()))?
+        .map_err(|e| {
+            MarketplaceError::Internal(format!(
+                "Failed to read bundles dir: {}: {e}",
+                bundles_dir.display()
+            ))
+        })?
         .filter_map(std::result::Result::ok)
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "txt"))
         .collect();
@@ -65,11 +72,11 @@ async fn build_per_page_bundles(
 
         let manifest = tokio::fs::read_to_string(&manifest_path)
             .await
-            .with_context(|| {
-                format!(
-                    "Failed to read bundle manifest: {}",
+            .map_err(|e| {
+                MarketplaceError::Internal(format!(
+                    "Failed to read bundle manifest: {}: {e}",
                     manifest_path.display()
-                )
+                ))
             })?;
 
         let files: Vec<&str> = manifest
@@ -86,15 +93,20 @@ async fn build_per_page_bundles(
         let (content, bundled, failed) = concatenate_files(js_dir, &files).await;
 
         if failed > 0 {
-            return Err(anyhow::anyhow!(
+            return Err(MarketplaceError::Internal(format!(
                 "Failed to read {failed} JS file(s) for bundle '{bundle_name}'"
-            ));
+            )));
         }
 
         let bundle_path = output_dir.join(format!("admin-{bundle_name}.js"));
         tokio::fs::write(&bundle_path, &content)
             .await
-            .with_context(|| format!("Failed to write bundle: {}", bundle_path.display()))?;
+            .map_err(|e| {
+                MarketplaceError::Internal(format!(
+                    "Failed to write bundle: {}: {e}",
+                    bundle_path.display()
+                ))
+            })?;
 
         tracing::info!(
             bundle = %bundle_name,
@@ -112,13 +124,18 @@ async fn build_per_page_bundles(
 async fn build_main_bundle(
     js_dir: &std::path::Path,
     output_dir: &std::path::Path,
-) -> Result<(u64, u64)> {
+) -> Result<(u64, u64), MarketplaceError> {
     let manifest_path = js_dir.join("bundle-order.txt");
     let bundle_path = output_dir.join("admin-bundle.js");
 
     let manifest = tokio::fs::read_to_string(&manifest_path)
         .await
-        .with_context(|| format!("Failed to read manifest: {}", manifest_path.display()))?;
+        .map_err(|e| {
+            MarketplaceError::Internal(format!(
+                "Failed to read manifest: {}: {e}",
+                manifest_path.display()
+            ))
+        })?;
 
     let files: Vec<&str> = manifest
         .lines()
@@ -134,14 +151,19 @@ async fn build_main_bundle(
     let (content, bundled, failed) = concatenate_files(js_dir, &files).await;
 
     if failed > 0 {
-        return Err(anyhow::anyhow!(
+        return Err(MarketplaceError::Internal(format!(
             "Failed to read {failed} JS file(s) during bundling"
-        ));
+        )));
     }
 
     tokio::fs::write(&bundle_path, &content)
         .await
-        .with_context(|| format!("Failed to write bundle: {}", bundle_path.display()))?;
+        .map_err(|e| {
+            MarketplaceError::Internal(format!(
+                "Failed to write bundle: {}: {e}",
+                bundle_path.display()
+            ))
+        })?;
 
     Ok((bundled, failed))
 }
@@ -193,7 +215,7 @@ impl Job for BundleAdminJsJob {
         true
     }
 
-    async fn execute(&self, _ctx: &JobContext) -> Result<JobResult> {
+    async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
         Self::execute_bundle().await
     }
 }

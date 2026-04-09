@@ -2,7 +2,7 @@ extension:
   type: mcp
   name: marketplace
   binary: systemprompt-mcp-marketplace
-  description: Enterprise Demo Skill Manager MCP Server for managing cloud agent skills, secrets, and sync operations
+  description: systemprompt.io Skill Manager MCP Server for managing cloud agent skills, secrets, and sync operations
   port: 5050
   build_type: workspace
   enabled: true

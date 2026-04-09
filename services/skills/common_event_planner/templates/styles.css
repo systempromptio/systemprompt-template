@@ -1,4 +1,4 @@
-/* Event Planner - Enterprise Demo Brand Styles */
+/* Event Planner - systemprompt.io Brand Styles */
 /* Glassmorphism + Bento Box Layout */
 
 /* ========================================
@@ -6,15 +6,15 @@
    ======================================== */
 :root {
   /* Brand Colors */
-  --enterprise-demo-warm-yellow: #E5B92B;
-  --enterprise-demo-blue-lilac: #6B4FBB;
-  --enterprise-demo-blue-space: #0A0F1A;
-  --enterprise-demo-light-sky: #00B67A;
-  --enterprise-demo-white: #FFFFFF;
+  --systemprompt-io-warm-yellow: #E5B92B;
+  --systemprompt-io-blue-lilac: #6B4FBB;
+  --systemprompt-io-blue-space: #0A0F1A;
+  --systemprompt-io-light-sky: #00B67A;
+  --systemprompt-io-white: #FFFFFF;
   
   /* Gradients */
-  --enterprise-demo-gradient-blue: linear-gradient(135deg, #6B4FBB 0%, #00B67A 100%);
-  --enterprise-demo-gradient-yellow: linear-gradient(135deg, #00B67A 0%, #E5B92B 100%);
+  --systemprompt-io-gradient-blue: linear-gradient(135deg, #6B4FBB 0%, #00B67A 100%);
+  --systemprompt-io-gradient-yellow: linear-gradient(135deg, #00B67A 0%, #E5B92B 100%);
   
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.15);
@@ -25,7 +25,7 @@
   /* Light Theme (default) */
   --bg-primary: #f8f9fc;
   --bg-secondary: #ffffff;
-  --text-primary: var(--enterprise-demo-blue-space);
+  --text-primary: var(--systemprompt-io-blue-space);
   --text-secondary: #4a5568;
   --border-color: rgba(107, 79, 187, 0.15);
   --card-bg: rgba(255, 255, 255, 0.85);
@@ -53,10 +53,10 @@
    Dark Theme
    ======================================== */
 [data-theme="dark"] {
-  --bg-primary: var(--enterprise-demo-blue-space);
+  --bg-primary: var(--systemprompt-io-blue-space);
   --bg-secondary: #252d5a;
-  --text-primary: var(--enterprise-demo-white);
-  --text-secondary: var(--enterprise-demo-light-sky);
+  --text-primary: var(--systemprompt-io-white);
+  --text-secondary: var(--systemprompt-io-light-sky);
   --border-color: rgba(138, 194, 219, 0.2);
   --card-bg: rgba(37, 45, 90, 0.85);
   --card-border: rgba(107, 79, 187, 0.25);
@@ -97,14 +97,14 @@ h1 {
   font-size: 2.5rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--enterprise-demo-blue-lilac);
+  color: var(--systemprompt-io-blue-lilac);
 }
 
 h2 {
   font-size: 1.75rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--enterprise-demo-blue-lilac);
+  color: var(--systemprompt-io-blue-lilac);
 }
 
 h3 {
@@ -125,13 +125,13 @@ p {
 }
 
 a {
-  color: var(--enterprise-demo-blue-lilac);
+  color: var(--systemprompt-io-blue-lilac);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--enterprise-demo-warm-yellow);
+  color: var(--systemprompt-io-warm-yellow);
 }
 
 /* ========================================
@@ -187,7 +187,7 @@ a:hover {
    Header
    ======================================== */
 .event-header {
-  background: var(--enterprise-demo-gradient-blue);
+  background: var(--systemprompt-io-gradient-blue);
   padding: var(--spacing-xl) var(--spacing-lg);
   position: relative;
   overflow: hidden;
@@ -227,7 +227,7 @@ a:hover {
 }
 
 .header-info h1 {
-  color: var(--enterprise-demo-white);
+  color: var(--systemprompt-io-white);
   margin-bottom: var(--spacing-xs);
 }
 
@@ -273,12 +273,12 @@ a:hover {
 }
 
 .theme-toggle-btn.active {
-  background: var(--enterprise-demo-white);
-  color: var(--enterprise-demo-blue-space);
+  background: var(--systemprompt-io-white);
+  color: var(--systemprompt-io-blue-space);
 }
 
 .theme-toggle-btn:hover:not(.active) {
-  color: var(--enterprise-demo-white);
+  color: var(--systemprompt-io-white);
 }
 
 /* ========================================
@@ -324,7 +324,7 @@ a:hover {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: var(--enterprise-demo-gradient-blue);
+  background: var(--systemprompt-io-gradient-blue);
   border-radius: 1px;
 }
 
@@ -346,18 +346,18 @@ a:hover {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--enterprise-demo-blue-lilac);
+  background: var(--systemprompt-io-blue-lilac);
   border: 2px solid var(--bg-secondary);
   box-shadow: 0 0 0 3px rgba(107, 79, 187, 0.2);
 }
 
 .timeline-item.completed .timeline-marker {
-  background: var(--enterprise-demo-warm-yellow);
+  background: var(--systemprompt-io-warm-yellow);
   box-shadow: 0 0 0 3px rgba(229, 185, 43, 0.2);
 }
 
 .timeline-item.active .timeline-marker {
-  background: var(--enterprise-demo-light-sky);
+  background: var(--systemprompt-io-light-sky);
   box-shadow: 0 0 0 3px rgba(138, 194, 219, 0.3);
   animation: pulse 2s infinite;
 }
@@ -372,7 +372,7 @@ a:hover {
 .timeline-date {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--enterprise-demo-blue-lilac);
+  color: var(--systemprompt-io-blue-lilac);
   margin-bottom: 4px;
 }
 
@@ -398,8 +398,8 @@ a:hover {
 }
 
 .budget-table th {
-  background: var(--enterprise-demo-blue-space);
-  color: var(--enterprise-demo-white);
+  background: var(--systemprompt-io-blue-space);
+  color: var(--systemprompt-io-white);
   padding: var(--spacing-sm);
   text-align: left;
   font-weight: 600;
@@ -481,7 +481,7 @@ a:hover {
 .task-checkbox {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--enterprise-demo-blue-lilac);
+  border: 2px solid var(--systemprompt-io-blue-lilac);
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -492,14 +492,14 @@ a:hover {
 }
 
 .task-item.completed .task-checkbox {
-  background: var(--enterprise-demo-warm-yellow);
-  border-color: var(--enterprise-demo-warm-yellow);
+  background: var(--systemprompt-io-warm-yellow);
+  border-color: var(--systemprompt-io-warm-yellow);
 }
 
 .task-checkbox svg {
   width: 12px;
   height: 12px;
-  stroke: var(--enterprise-demo-blue-space);
+  stroke: var(--systemprompt-io-blue-space);
   stroke-width: 3;
   opacity: 0;
   transition: opacity var(--transition-fast);
@@ -548,7 +548,7 @@ a:hover {
 
 .badge-pending {
   background: rgba(107, 79, 187, 0.15);
-  color: var(--enterprise-demo-blue-lilac);
+  color: var(--systemprompt-io-blue-lilac);
 }
 
 .badge-progress {
@@ -602,7 +602,7 @@ a:hover {
 
 .attendee-email {
   font-size: 0.8rem;
-  color: var(--enterprise-demo-blue-lilac);
+  color: var(--systemprompt-io-blue-lilac);
 }
 
 /* ========================================
@@ -616,7 +616,7 @@ a:hover {
 .stat-value {
   font-size: 2.5rem;
   font-weight: 700;
-  color: var(--enterprise-demo-blue-lilac);
+  color: var(--systemprompt-io-blue-lilac);
   line-height: 1;
   margin-bottom: var(--spacing-xs);
 }
@@ -629,7 +629,7 @@ a:hover {
 }
 
 .stat-card.highlight .stat-value {
-  color: var(--enterprise-demo-warm-yellow);
+  color: var(--systemprompt-io-warm-yellow);
 }
 
 /* ========================================
@@ -655,7 +655,7 @@ a:hover {
 
 .progress-fill {
   height: 100%;
-  background: var(--enterprise-demo-gradient-blue);
+  background: var(--systemprompt-io-gradient-blue);
   border-radius: 4px;
   transition: width var(--transition-slow);
 }
@@ -664,7 +664,7 @@ a:hover {
    Footer
    ======================================== */
 .event-footer {
-  background: var(--enterprise-demo-blue-space);
+  background: var(--systemprompt-io-blue-space);
   padding: var(--spacing-lg);
   margin-top: var(--spacing-xl);
 }
@@ -775,7 +775,7 @@ a:hover {
   }
   
   .event-header {
-    background: var(--enterprise-demo-blue-space);
+    background: var(--systemprompt-io-blue-space);
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

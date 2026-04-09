@@ -1,6 +1,5 @@
 #![allow(clippy::unnecessary_literal_bound)]
 
-use anyhow::Result;
 use async_trait::async_trait;
 use systemprompt::template_provider::{
     ComponentContext, ComponentRenderer, PartialTemplate, RenderedComponent,
@@ -43,7 +42,7 @@ impl ComponentRenderer for HeadAssetsPartialRenderer {
         Some(PartialTemplate::embedded("head-assets", Self::TEMPLATE))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent> {
+    async fn render(&self, _ctx: &ComponentContext<'_>) -> anyhow::Result<RenderedComponent> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 
@@ -77,7 +76,7 @@ impl ComponentRenderer for HeaderPartialRenderer {
         Some(PartialTemplate::embedded("header", Self::TEMPLATE))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent> {
+    async fn render(&self, _ctx: &ComponentContext<'_>) -> anyhow::Result<RenderedComponent> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 
@@ -111,7 +110,7 @@ impl ComponentRenderer for FooterPartialRenderer {
         Some(PartialTemplate::embedded("footer", Self::TEMPLATE))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent> {
+    async fn render(&self, _ctx: &ComponentContext<'_>) -> anyhow::Result<RenderedComponent> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 
@@ -145,7 +144,7 @@ impl ComponentRenderer for ScriptsPartialRenderer {
         Some(PartialTemplate::embedded("scripts", Self::TEMPLATE))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent> {
+    async fn render(&self, _ctx: &ComponentContext<'_>) -> anyhow::Result<RenderedComponent> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 
