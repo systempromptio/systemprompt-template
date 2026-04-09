@@ -87,7 +87,7 @@ fn collect_country_series(data: &[crate::admin::types::TrafficCountryBucket]) ->
     }
 
     let mut countries_ordered: Vec<(String, i64)> = country_totals.into_iter().collect();
-    countries_ordered.sort_by(|a, b| b.1.cmp(&a.1));
+    countries_ordered.sort_unstable_by(|a, b| b.1.cmp(&a.1));
     let country_names: Vec<String> = countries_ordered
         .iter()
         .map(|(name, _)| name.clone())

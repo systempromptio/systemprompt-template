@@ -64,7 +64,7 @@ pub fn list_file_hooks(services_path: &Path) -> Result<Vec<HookCatalogEntry>, an
         if !config_path.exists() {
             continue;
         }
-        let dir_name = entry.file_name().to_string_lossy().to_string();
+        let dir_name = entry.file_name().to_string_lossy().into_owned();
         let content = std::fs::read_to_string(&config_path)?;
         let config: HookConfig = match serde_yaml::from_str(&content) {
             Ok(c) => c,

@@ -25,7 +25,7 @@ pub(super) fn resolve_export_skills(
             if !path.is_dir() {
                 continue;
             }
-            let skill_id = entry.file_name().to_string_lossy().to_string();
+            let skill_id = entry.file_name().to_string_lossy().into_owned();
             if plugin.skills.exclude.contains(&skill_id) {
                 continue;
             }
@@ -160,7 +160,7 @@ fn collect_aux_recursive(
 
     for entry in entries.flatten() {
         let path = entry.path();
-        let file_name = entry.file_name().to_string_lossy().to_string();
+        let file_name = entry.file_name().to_string_lossy().into_owned();
 
         if file_name.starts_with('.') {
             continue;

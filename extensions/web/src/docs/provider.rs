@@ -21,29 +21,43 @@ impl DocsPageDataProvider {
             return None;
         }
 
-        let cards: Vec<String> = children
-            .iter()
-            .filter_map(|child| {
-                let title = child.get("title")?.as_str()?;
-                let description = child.get("description")?.as_str()?;
-                let url = child.get("url")?.as_str()?;
+        // Pre-allocate with estimated capacity to avoid intermediate Vec<String> + join
+        let mut result = String::with_capacity(children.len() * 128);
+        let mut first = true;
 
-                Some(format!(
-                    r#"<a href="{}" class="docs-card">
+        for child in children {
+            let Some(title) = child.get("title").and_then(|v| v.as_str()) else {
+                continue;
+            };
+            let Some(description) = child.get("description").and_then(|v| v.as_str()) else {
+                continue;
+            };
+            let Some(url) = child.get("url").and_then(|v| v.as_str()) else {
+                continue;
+            };
+
+            if !first {
+                result.push('\n');
+            }
+            first = false;
+
+            use std::fmt::Write;
+            let _ = write!(
+                result,
+                r#"<a href="{}" class="docs-card">
   <h3 class="docs-card-title">{}</h3>
   <p class="docs-card-description">{}</p>
 </a>"#,
-                    html_escape(url),
-                    html_escape(title),
-                    html_escape(description)
-                ))
-            })
-            .collect();
+                html_escape(url),
+                html_escape(title),
+                html_escape(description)
+            );
+        }
 
-        if cards.is_empty() {
+        if result.is_empty() {
             None
         } else {
-            Some(cards.join("\n"))
+            Some(result)
         }
     }
 }
@@ -62,11 +76,11 @@ impl PageDataProvider for DocsPageDataProvider {
 
     fn applies_to_pages(&self) -> Vec<String> {
         vec![
-            "docs-page".to_string(),
-            "guide".to_string(),
-            "reference".to_string(),
-            "tutorial".to_string(),
-            "docs".to_string(),
+            "docs-page".into(),
+            "guide".into(),
+            "reference".into(),
+            "tutorial".into(),
+            "docs".into(),
         ]
     }
 

@@ -24,7 +24,7 @@ pub(crate) fn resolve_all_plugin_skill_ids(
                     if !entry.path().is_dir() {
                         continue;
                     }
-                    let skill_id = entry.file_name().to_string_lossy().to_string();
+                    let skill_id = entry.file_name().to_string_lossy().into_owned();
                     if plugin.skills.exclude.contains(&skill_id) {
                         continue;
                     }

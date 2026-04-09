@@ -45,7 +45,7 @@ pub(crate) async fn list_agents_handler(Extension(user_ctx): Extension<UserConte
         });
     let visible_ids: std::collections::HashSet<String> = plugins
         .iter()
-        .flat_map(|p| p.agents.iter().map(|a| a.id.as_str().to_string()))
+        .flat_map(|p| p.agents.iter().map(|a| a.id.clone()))
         .collect();
     let filtered: Vec<_> = agents
         .into_iter()

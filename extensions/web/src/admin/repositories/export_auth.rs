@@ -141,7 +141,7 @@ fn load_all_plugin_configs(
                 )));
             }
         };
-        let dir_name = entry.file_name().to_string_lossy().to_string();
+        let dir_name = entry.file_name().to_string_lossy().into_owned();
         plugins.push((dir_name, plugin_file.plugin));
     }
 

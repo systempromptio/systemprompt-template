@@ -79,7 +79,7 @@ fn build_category_achievements(
 }
 
 fn sort_achievements(achievements: &mut [AchievementView]) {
-    achievements.sort_by(|a, b| match (a.is_unlocked, b.is_unlocked) {
+    achievements.sort_unstable_by(|a, b| match (a.is_unlocked, b.is_unlocked) {
         (true, false) => std::cmp::Ordering::Less,
         (false, true) => std::cmp::Ordering::Greater,
         _ => a

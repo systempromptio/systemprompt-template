@@ -190,7 +190,7 @@ pub fn save_upload_archive(
     let path = dir.join(&filename);
     std::fs::write(&path, data)?;
 
-    Ok(path.to_string_lossy().to_string())
+    Ok(path.to_string_lossy().into_owned())
 }
 
 pub fn delete_snapshot_file(snapshot_path: &str) {

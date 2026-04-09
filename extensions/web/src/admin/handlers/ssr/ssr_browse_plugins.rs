@@ -48,7 +48,7 @@ pub(crate) async fn browse_plugins_page(
     let (mut plugins, categories_set, already_added_count) =
         collect_browse_plugins(&plugin_ids, &services_path, &added_base_ids);
 
-    plugins.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    plugins.sort_unstable_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
     let total_available = plugins.len();
     let mut categories: Vec<String> = categories_set.into_iter().collect();

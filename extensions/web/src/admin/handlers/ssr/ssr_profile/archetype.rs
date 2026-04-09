@@ -76,7 +76,7 @@ pub fn classify_archetype(user: &UserAggregateMetrics, global: &GlobalAverages) 
          score_steady_performer(apm_ratio, quality_ratio, tool_div_ratio, multitask_ratio, goal_ratio)),
     ];
 
-    candidates.sort_by(|a, b| b.3.partial_cmp(&a.3).unwrap_or(std::cmp::Ordering::Equal));
+    candidates.sort_unstable_by(|a, b| b.3.partial_cmp(&a.3).unwrap_or(std::cmp::Ordering::Equal));
     let (id, name, description, score) = candidates.remove(0);
 
     ArchetypeResult {

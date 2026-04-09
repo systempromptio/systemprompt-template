@@ -5,7 +5,7 @@ use systemprompt::identifiers::{CampaignId, ContentId};
 pub struct CreateLinkParams {
     pub short_code: String,
     pub target_url: String,
-    pub link_type: String,
+    pub link_type: &'static str,
     pub source_content_id: Option<ContentId>,
     pub source_page: Option<String>,
     pub campaign_id: Option<CampaignId>,
@@ -20,7 +20,7 @@ pub struct CreateLinkParams {
 
 impl CreateLinkParams {
     #[must_use]
-    pub const fn new(short_code: String, target_url: String, link_type: String) -> Self {
+    pub const fn new(short_code: String, target_url: String, link_type: &'static str) -> Self {
         Self {
             short_code,
             target_url,

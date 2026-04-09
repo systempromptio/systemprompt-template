@@ -146,7 +146,7 @@ fn build_category_breakdown(analyses: &[SessionAnalysisRow]) -> Vec<CategoryBrea
 
     let total = numeric::usize_to_f64(analyses.len());
     let mut entries: Vec<_> = counts.into_iter().collect();
-    entries.sort_by(|a, b| b.1.cmp(&a.1));
+    entries.sort_unstable_by(|a, b| b.1.cmp(&a.1));
 
     entries
         .into_iter()

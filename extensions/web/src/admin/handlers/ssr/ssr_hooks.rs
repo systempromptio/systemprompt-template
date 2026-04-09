@@ -64,7 +64,7 @@ fn list_hooks_from_filesystem(services_path: &std::path::Path) -> Vec<HookDetail
         if !config_path.exists() {
             continue;
         }
-        let plugin_id = entry.file_name().to_string_lossy().to_string();
+        let plugin_id = entry.file_name().to_string_lossy().into_owned();
         let Ok(content) = std::fs::read_to_string(&config_path) else {
             continue;
         };
@@ -73,7 +73,7 @@ fn list_hooks_from_filesystem(services_path: &std::path::Path) -> Vec<HookDetail
         };
         collect_hooks_from_plugin(&plugin_id, &doc, &mut hooks);
     }
-    hooks.sort_by(|a, b| a.id.cmp(&b.id));
+    hooks.sort_unstable_by(|a, b| a.id.cmp(&b.id));
     hooks
 }
 

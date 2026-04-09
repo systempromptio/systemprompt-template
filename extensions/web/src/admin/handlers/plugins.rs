@@ -97,7 +97,7 @@ pub(crate) async fn list_skills_handler(
         });
     let visible_ids: std::collections::HashSet<String> = plugins
         .iter()
-        .flat_map(|p| p.skills.iter().map(|s| s.id.as_str().to_string()))
+        .flat_map(|p| p.skills.iter().map(|s| s.id.clone()))
         .collect();
     let filtered: Vec<_> = skills
         .into_iter()

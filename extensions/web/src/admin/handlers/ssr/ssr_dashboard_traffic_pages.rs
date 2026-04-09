@@ -99,6 +99,6 @@ pub(super) fn build_top_pages_enhanced(
         })
         .collect();
 
-    pages.sort_by(|a, b| b.horizon_1d.views.cmp(&a.horizon_1d.views));
+    pages.sort_unstable_by(|a, b| b.horizon_1d.views.cmp(&a.horizon_1d.views));
     pages
 }

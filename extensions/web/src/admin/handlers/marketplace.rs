@@ -160,14 +160,14 @@ fn build_marketplace_plugin(
 fn sort_and_filter(marketplace_plugins: &mut Vec<MarketplacePlugin>, query: &MarketplaceQuery) {
     let sort = query.sort.as_deref().unwrap_or("rank");
     match sort {
-        "rating" => marketplace_plugins.sort_by(|a, b| {
+        "rating" => marketplace_plugins.sort_unstable_by(|a, b| {
             b.avg_rating
                 .partial_cmp(&a.avg_rating)
                 .unwrap_or(std::cmp::Ordering::Equal)
         }),
-        "usage" => marketplace_plugins.sort_by(|a, b| b.total_events.cmp(&a.total_events)),
-        "name" => marketplace_plugins.sort_by(|a, b| a.name.cmp(&b.name)),
-        _ => marketplace_plugins.sort_by(|a, b| {
+        "usage" => marketplace_plugins.sort_unstable_by(|a, b| b.total_events.cmp(&a.total_events)),
+        "name" => marketplace_plugins.sort_unstable_by(|a, b| a.name.cmp(&b.name)),
+        _ => marketplace_plugins.sort_unstable_by(|a, b| {
             b.rank_score
                 .partial_cmp(&a.rank_score)
                 .unwrap_or(std::cmp::Ordering::Equal)

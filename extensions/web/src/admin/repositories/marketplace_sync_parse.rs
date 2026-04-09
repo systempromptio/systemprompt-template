@@ -93,7 +93,7 @@ pub fn parse_skills_from_directory(
             continue;
         }
 
-        let skill_id = entry.file_name().to_string_lossy().to_string();
+        let skill_id = entry.file_name().to_string_lossy().into_owned();
         let skill_md_path = path.join("SKILL.md");
 
         if !skill_md_path.exists() {

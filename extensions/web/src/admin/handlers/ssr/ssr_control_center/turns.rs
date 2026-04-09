@@ -63,7 +63,7 @@ fn flush_turn(turns: &mut Vec<Turn>, state: &mut FlushTurnState) {
         || !state.errors.is_empty()
     {
         let mut tool_groups: Vec<(String, usize)> = state.tools.drain().collect();
-        tool_groups.sort_by(|a, b| b.1.cmp(&a.1));
+        tool_groups.sort_unstable_by(|a, b| b.1.cmp(&a.1));
         let total_tools: usize = tool_groups.iter().map(|(_, c)| c).sum();
         let tool_groups_typed: Vec<ToolGroup> = tool_groups
             .iter()

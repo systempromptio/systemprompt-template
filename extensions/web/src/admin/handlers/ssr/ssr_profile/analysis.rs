@@ -109,12 +109,12 @@ pub fn compute_strengths_weaknesses(
         }
     }
 
-    strengths.sort_by(|a, b| {
+    strengths.sort_unstable_by(|a, b| {
         b.deviation_pct
             .partial_cmp(&a.deviation_pct)
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    weaknesses.sort_by(|a, b| {
+    weaknesses.sort_unstable_by(|a, b| {
         a.deviation_pct
             .partial_cmp(&b.deviation_pct)
             .unwrap_or(std::cmp::Ordering::Equal)

@@ -109,7 +109,7 @@ pub(super) fn build_category_breakdown(
 
     let total = f64::from(u32::try_from(analyses.len()).unwrap_or(u32::MAX));
     let mut entries: Vec<_> = counts.into_iter().collect();
-    entries.sort_by(|a, b| b.1.cmp(&a.1));
+    entries.sort_unstable_by(|a, b| b.1.cmp(&a.1));
 
     entries
         .into_iter()

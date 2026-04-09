@@ -104,7 +104,7 @@ impl HelperDef for InitialsHelper {
             .filter(|s| !s.is_empty())
             .take(2)
             .filter_map(|s| s.chars().next())
-            .map(|c| c.to_uppercase().to_string())
+            .flat_map(|c| c.to_uppercase())
             .collect();
         out.write(if initials.is_empty() { "?" } else { &initials })?;
         Ok(())

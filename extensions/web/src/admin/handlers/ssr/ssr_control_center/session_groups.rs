@@ -34,7 +34,7 @@ pub fn build_session_groups_with_status(
         session_groups.push(group);
     }
 
-    session_groups.sort_by(|a, b| b.last_activity_at.cmp(&a.last_activity_at));
+    session_groups.sort_unstable_by(|a, b| b.last_activity_at.cmp(&a.last_activity_at));
 
     session_groups
 }

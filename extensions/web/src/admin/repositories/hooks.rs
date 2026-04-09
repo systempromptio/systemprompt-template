@@ -22,7 +22,7 @@ pub fn list_hooks(services_path: &Path) -> Result<Vec<HookDetail>, anyhow::Error
         if !config_path.exists() {
             continue;
         }
-        let plugin_id = entry.file_name().to_string_lossy().to_string();
+        let plugin_id = entry.file_name().to_string_lossy().into_owned();
 
         let content = std::fs::read_to_string(&config_path)?;
         let doc: serde_yaml::Value = match serde_yaml::from_str(&content) {

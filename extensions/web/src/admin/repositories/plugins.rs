@@ -16,7 +16,7 @@ pub fn list_all_skill_ids(services_path: &Path) -> Result<Vec<String>, Marketpla
     for entry in std::fs::read_dir(&skills_path)? {
         let entry = entry?;
         if entry.path().is_dir() {
-            ids.push(entry.file_name().to_string_lossy().to_string());
+            ids.push(entry.file_name().to_string_lossy().into_owned());
         }
     }
     ids.sort();
