@@ -100,10 +100,8 @@ fn write_section<T: AsRef<str>>(
     writeln!(content)
 }
 
-fn collect_sorted_entries(items: &[(String, String, String)]) -> Vec<(String, String, String)> {
-    let mut sorted: Vec<_> = items.to_vec();
-    sorted.sort_by(|a, b| a.0.cmp(&b.0));
-    sorted
+fn sort_entries_in_place(items: &mut [(String, String, String)]) {
+    items.sort_by(|a, b| a.0.cmp(&b.0));
 }
 
 async fn build_llms_txt_content(
@@ -182,7 +180,7 @@ async fn write_documentation_section(
                     ("config", "Configuration Reference"),
                 ];
                 for (prefix, heading) in &prefixes {
-                    let filtered: Vec<_> = docs
+                    let mut filtered: Vec<_> = docs
                         .iter()
                         .filter(|d| d.slug.starts_with(prefix))
                         .map(|d| {
@@ -193,11 +191,11 @@ async fn write_documentation_section(
                             )
                         })
                         .collect();
-                    let entries = collect_sorted_entries(&filtered);
-                    write_section(content, heading, &entries)
+                    sort_entries_in_place(&mut filtered);
+                    write_section(content, heading, &filtered)
                         .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
                 }
-                let other: Vec<_> = docs
+                let mut other: Vec<_> = docs
                     .iter()
                     .filter(|d| {
                         !d.slug.starts_with("services")
@@ -212,8 +210,8 @@ async fn write_documentation_section(
                         )
                     })
                     .collect();
-                let entries = collect_sorted_entries(&other);
-                write_section(content, "General", &entries)
+                sort_entries_in_place(&mut other);
+                write_section(content, "General", &other)
                     .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
             }
         }
