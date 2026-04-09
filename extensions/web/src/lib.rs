@@ -1,4 +1,3 @@
-pub mod api;
 mod assets;
 pub mod blog;
 mod config_loader;
@@ -12,9 +11,7 @@ pub mod jobs;
 pub mod navigation;
 pub mod partials;
 mod partials_animations;
-pub mod repository;
 mod schemas;
-pub mod services;
 
 // Re-exports from sub-crates for API stability
 pub use systemprompt_web_shared as shared;
@@ -22,6 +19,7 @@ pub use systemprompt_web_shared::{config, config_errors, error, models};
 pub use systemprompt_web_shared::html_escape;
 pub use systemprompt_web_shared::BrandingConfig;
 pub use systemprompt_web_admin as admin;
+pub use systemprompt_web_content::{api, repository, services};
 // Backward-compatible utils module
 pub mod utils {
     pub use systemprompt_web_shared::html_escape;

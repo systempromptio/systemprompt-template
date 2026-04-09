@@ -1,0 +1,30 @@
+[package]
+name = "systemprompt-web-content"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+
+[dependencies]
+systemprompt-web-shared = { workspace = true }
+systemprompt = { workspace = true }
+sqlx = { workspace = true }
+axum = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+tracing = { workspace = true }
+async-trait = { workspace = true }
+reqwest = { workspace = true }
+pulldown-cmark = { workspace = true }
+comrak = { workspace = true }
+sha2 = { workspace = true }
+url = { workspace = true }
+urlencoding = { workspace = true }
+walkdir = { workspace = true }
+anyhow = { workspace = true }
+serde_yaml = { workspace = true }
+rand = { workspace = true }
+
+[lints]
+workspace = true
