@@ -24,6 +24,8 @@ pub struct FeaturePage {
     #[serde(default)]
     pub image: Option<String>,
     #[serde(default)]
+    pub hero_diagram: Option<String>,
+    #[serde(default)]
     pub sections: Vec<FeatureSection>,
     #[serde(default)]
     pub related: Vec<RelatedFeature>,

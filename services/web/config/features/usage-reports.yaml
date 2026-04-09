@@ -1,0 +1,92 @@
+# Feature: Usage Reports
+# Cost tracking, skill rankings, webhook ingestion, CLI export
+
+slug: "usage-reports"
+title: "Usage Reports | Cost Tracking, Skill Rankings & CLI Export"
+headline: "COMPLETE VISIBILITY INTO"
+headline_highlight: "EVERY AI INTERACTION."
+subtitle: "Track sessions, tokens, costs, and tool usage across your entire AI fleet in real time. From individual prompts to department-wide trends, usage reports give you the data to optimise spend and measure impact."
+description: "systemprompt.io captures every agent event via real-time webhooks and aggregates them into actionable dashboards, CLI reports, and CSV exports."
+icon: "server"
+hero_diagram: "/files/images/features/hero-usage-reports.svg"
+keywords: "usage reports, cost tracking, AI analytics, token usage, skill rankings, CSV export, webhook ingestion, security awareness"
+
+highlights:
+  - text: "Real-time webhook event ingestion"
+    id: "realtime-ingestion"
+  - text: "Token and cost tracking per session"
+    id: "cost-tracking"
+  - text: "Skill popularity and usage rankings"
+    id: "skill-rankings"
+  - text: "CLI analytics and CSV export"
+    id: "cli-export"
+
+cta:
+  text: "View Documentation"
+  url: "/documentation/cost-tracking"
+  secondary_text: "See Tracing Demo"
+  secondary_url: "/documentation/demo-terminal-tracing"
+
+sections:
+  - id: "realtime-tracking"
+    title: "Real-Time Event Tracking"
+    content: |
+      <p>Every AI agent interaction is captured the moment it happens. systemprompt.io ingests webhook events from Claude Code sessions, prompts, tool invocations, and errors through dedicated tracking endpoints. Built-in event deduplication prevents data bloat while ensuring nothing is missed.</p>
+      <p>Whether the Training Agent is generating a phishing simulation or the Compliance Agent is running an audit, every action is recorded with full context.</p>
+    items:
+      - title: "Webhook Ingestion"
+        description: "Dedicated tracking endpoints capture every session, prompt, tool use, and error as it occurs."
+      - title: "Event Deduplication"
+        description: "Automatic deduplication logic filters duplicate events at ingestion time, keeping your analytics clean and storage efficient."
+      - title: "Session Summaries"
+        description: "Raw events are rolled into structured session summaries with timestamps, durations, and outcome status for fast querying."
+
+  - id: "skill-tool-analytics"
+    title: "Skill & Tool Analytics"
+    content: |
+      <p>Understand which skills and tools your teams rely on most. systemprompt.io ranks skills by popularity, tracks per-user activity timelines, and surfaces usage patterns across projects and departments. Identify underused capabilities and double down on what works.</p>
+      <p>See which of your four super-agents — Training, Threat Intelligence, Platform, and Compliance — drives the most value across your organisation.</p>
+    items:
+      - title: "Popularity Rankings"
+        description: "Skills and tools are ranked by invocation count so you can see at a glance which capabilities drive the most value."
+      - title: "Per-User Activity"
+        description: "Drill into individual user timelines to understand adoption patterns, onboarding progress, and power-user workflows."
+      - title: "Department Filtering"
+        description: "Filter analytics by department, project, or team to compare adoption and identify groups that need additional enablement."
+
+  - id: "cost-management"
+    title: "Cost Management"
+    content: |
+      <p>Every token counts. systemprompt.io tracks input and output token consumption per session and calculates USD cost using model-specific pricing. Daily aggregation tables power fast cost queries, and model usage breakdowns reveal where spend is concentrated.</p>
+      <p>Compare costs across models and across agents. Identify optimisation opportunities before they become budget problems.</p>
+    items:
+      - title: "Token Consumption"
+        description: "Input and output tokens are recorded for every AI request, giving you precise consumption data down to the individual session."
+      - title: "Cost Per Session"
+        description: "Automatic USD cost calculation per session using model-specific token pricing, aggregated into daily summaries for trend analysis."
+      - title: "Model Usage Breakdown"
+        description: "See which models your teams are using and how costs distribute across Opus, Sonnet, and Haiku to optimise model selection."
+
+  - id: "dashboard-reporting"
+    title: "Dashboard & Reporting"
+    content: |
+      <p>Access your analytics through a web dashboard with configurable time ranges or go deeper with CLI commands. The dashboard supports 24-hour, 7-day, and 14-day views with content performance metrics including views and engagement time.</p>
+      <p>Run <code>systemprompt analytics overview</code> from the terminal for quick checks. Export any dataset to CSV with <code>--export</code> for further analysis in your preferred tools.</p>
+    items:
+      - title: "Configurable Dashboards"
+        description: "Web dashboards with 24h, 7d, and 14d time range selectors surface trends in sessions, costs, and content engagement at a glance."
+      - title: "CLI Analytics"
+        description: "Run systemprompt analytics overview, costs, tools, or sessions from the terminal for quick checks without leaving your workflow."
+      - title: "CSV Export"
+        description: "Export any analytics dataset to CSV for offline analysis, executive reporting, or integration with external BI tools."
+
+related:
+  - title: "Analytics & Observability"
+    description: "13 activity categories, 20+ dashboard metrics, and real-time feeds."
+    url: "/features/analytics-and-observability"
+  - title: "Granular Management"
+    description: "Role and department filtering with per-user customisation."
+    url: "/features/granular-management"
+  - title: "No Vendor Lock-In"
+    description: "Open standards and portable formats with full data ownership."
+    url: "/features/no-vendor-lock-in"

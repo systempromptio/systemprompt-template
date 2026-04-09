@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#464E5D"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#EF4623"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="400" y="24" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#252526" letter-spacing="1.5">PLUGIN BUNDLE ARCHITECTURE</text>
+  <rect x="310" y="30" width="180" height="3" rx="1.5" fill="#EF4623"/>
+
+  <!-- Central Plugin Bundle box -->
+  <rect x="300" y="100" width="200" height="80" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="300" y="100" width="200" height="4" rx="2" fill="#EF4623"/>
+  <text x="400" y="135" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#252526">Plugin Bundle</text>
+  <text x="400" y="155" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#A2AAB9">Governed Unit</text>
+
+  <!-- Top-left: Agents -->
+  <rect x="80" y="55" width="140" height="60" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="80" y="55" width="140" height="4" rx="2" fill="#0071CE"/>
+  <text x="150" y="80" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#252526">Agents</text>
+  <text x="150" y="98" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">System prompts, permissions</text>
+
+  <!-- Top-right: Skills -->
+  <rect x="580" y="55" width="140" height="60" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="580" y="55" width="140" height="4" rx="2" fill="#22c55e"/>
+  <text x="650" y="80" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#252526">Skills</text>
+  <text x="650" y="98" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Markdown instructions</text>
+
+  <!-- Bottom-left: MCP Servers -->
+  <rect x="80" y="150" width="140" height="60" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="80" y="150" width="140" height="4" rx="2" fill="#EF4623"/>
+  <text x="150" y="175" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#252526">MCP Servers</text>
+  <text x="150" y="193" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Tool providers</text>
+
+  <!-- Bottom-right: Hooks -->
+  <rect x="580" y="150" width="140" height="60" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="580" y="150" width="140" height="4" rx="2" fill="#6366f1"/>
+  <text x="650" y="175" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#252526">Hooks</text>
+  <text x="650" y="193" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Event handlers</text>
+
+  <!-- Connection lines from center to satellite boxes -->
+  <line x1="300" y1="125" x2="220" y2="95" stroke="#D6DCE8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="500" y1="125" x2="580" y2="95" stroke="#D6DCE8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="300" y1="155" x2="220" y2="175" stroke="#D6DCE8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="500" y1="155" x2="580" y2="175" stroke="#D6DCE8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Fork diagram (right side, y~225) -->
+  <rect x="570" y="225" width="100" height="32" rx="6" fill="#F7F4EF" stroke="#D6DCE8" stroke-width="1"/>
+  <text x="620" y="245" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="600" fill="#252526">Org Baseline</text>
+  <line x1="670" y1="241" x2="700" y2="241" stroke="#464E5D" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="700" y="225" width="85" height="32" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <text x="742" y="245" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="600" fill="#252526">User Fork</text>
+  <text x="700" y="270" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9" font-style="italic">non-destructive</text>
+
+  <!-- Distribution section -->
+  <rect x="100" y="280" width="120" height="40" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="100" y="280" width="120" height="4" rx="2" fill="#EF4623"/>
+  <text x="160" y="306" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#252526">Distribution</text>
+
+  <!-- Arrow from Distribution -->
+  <line x1="220" y1="300" x2="270" y2="300" stroke="#464E5D" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Output box 1: Git Repository -->
+  <rect x="275" y="282" width="120" height="36" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <text x="290" y="299" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#464E5D">1</text>
+  <text x="335" y="305" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#252526">Git Repository</text>
+
+  <!-- Output box 2: JSON API -->
+  <rect x="405" y="282" width="100" height="36" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <text x="418" y="299" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#464E5D">2</text>
+  <text x="455" y="305" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#252526">JSON API</text>
+
+  <!-- Output box 3: Claude Code Plugin -->
+  <rect x="515" y="282" width="130" height="36" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <text x="528" y="299" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#464E5D">3</text>
+  <text x="580" y="305" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#252526">Claude Code Plugin</text>
+
+  <!-- Arrows between output boxes -->
+  <line x1="395" y1="300" x2="405" y2="300" stroke="#D6DCE8" stroke-width="1"/>
+  <line x1="505" y1="300" x2="515" y2="300" stroke="#D6DCE8" stroke-width="1"/>
+
+  <!-- Legend -->
+  <circle cx="120" cy="365" r="5" fill="#0071CE"/>
+  <text x="130" y="369" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Agents</text>
+  <circle cx="200" cy="365" r="5" fill="#22c55e"/>
+  <text x="210" y="369" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Skills</text>
+  <circle cx="270" cy="365" r="5" fill="#EF4623"/>
+  <text x="280" y="369" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">MCP</text>
+  <circle cx="325" cy="365" r="5" fill="#6366f1"/>
+  <text x="335" y="369" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Hooks</text>
+
+  <!-- Bottom right label -->
+  <text x="770" y="390" text-anchor="end" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#A2AAB9">systemprompt.io plugins</text>
+</svg>

@@ -1,0 +1,92 @@
+# Feature: No Vendor Lock-In
+# Open formats, git portability, lossless export, version history
+
+slug: "no-vendor-lock-in"
+title: "No Vendor Lock-In | Open Standards & Portable Formats"
+headline: "YOUR SKILLS, YOUR DATA,"
+headline_highlight: "YOUR CHOICE."
+subtitle: "Everything stored in standard Markdown, YAML, and Git. Export anytime, import anywhere, keep full control."
+description: "systemprompt.io uses open, portable formats throughout. Skills are Markdown files, plugins are YAML configs, and distribution happens over Git. There is no proprietary encoding, no walled garden, and no data you cannot take with you."
+icon: "refresh-cw"
+hero_diagram: "/files/images/features/hero-no-vendor-lock-in.svg"
+keywords: "no vendor lock-in, open standards, portable AI, Markdown, YAML, git portability, data ownership, security awareness"
+
+highlights:
+  - text: "Markdown + YAML standard"
+    id: "standard-formats"
+  - text: "Private git repos"
+    id: "git-portability"
+  - text: "Full import and export"
+    id: "import-export"
+  - text: "JSONB version snapshots"
+    id: "version-history"
+
+cta:
+  text: "View Documentation"
+  url: "/documentation/architecture"
+  secondary_text: "See Setup Demo"
+  secondary_url: "/documentation/demo-terminal-setup"
+
+sections:
+  - id: "standard-formats"
+    title: "Standard Formats"
+    content: |
+      <p>Skills are stored as plain Markdown with YAML frontmatter in a predictable directory structure. Every skill lives in <code>services/skills/{skill_id}/</code> as an <code>index.md</code> file — readable by any text editor, parseable by any toolchain. No proprietary binary formats, no encoded blobs, no vendor-specific schemas.</p>
+      <p>The SKILL.md standard uses YAML frontmatter for metadata (name, description, version) and a Markdown body for content, a format understood by thousands of existing tools.</p>
+    items:
+      - title: "Markdown + YAML Frontmatter"
+        description: "Skills use industry-standard YAML frontmatter for metadata and Markdown for content. No custom syntax to learn or decode."
+      - title: "Readable Directory Structure"
+        description: "Each skill lives in its own directory with a clear layout: index.md, scripts/, agents/, and hooks/. Human-readable at every level."
+      - title: "YAML Plugin Configs"
+        description: "Plugins are defined as config.yaml bundles listing skills, agents, and MCP servers. Exportable, importable, and version-controllable."
+
+  - id: "git-portability"
+    title: "Git-Based Portability"
+    content: |
+      <p>Every user gets a private Git repository at <code>marketplace-versions/{user_id}/repo.git</code>. Your entire marketplace — skills, plugins, configurations — is a Git repo you can clone, fork, and push. This means your data travels with standard Git tooling.</p>
+      <p>Run <code>git clone</code> to get a full local copy, use branches for experimentation, and push changes back when ready. The same workflows developers already use for source code apply directly to skill management.</p>
+    items:
+      - title: "Private Git Repos"
+        description: "Each user gets a dedicated Git repository. Clone your marketplace to any machine with a single command."
+      - title: "Standard Git Workflows"
+        description: "Use clone, pull, push, branch, and merge. No proprietary sync protocol or custom CLI required."
+      - title: "Claude Code Native Format"
+        description: "Plugins use the .claude-plugin/plugin.json format. Run them directly with the Claude Code --plugin flag, no conversion needed."
+
+  - id: "import-export"
+    title: "Import & Export"
+    content: |
+      <p>The platform provides a full import and export pipeline with zero data loss. Export a skill or plugin bundle, share it with collaborators, let them import it, and they can export it again — the round trip is lossless.</p>
+      <p>Plugin bundles include config.yaml, skill files, agent definitions, hooks, and scripts. Everything that defines a plugin travels together as a portable unit. Because the underlying format is standard Markdown and YAML, exported content works outside systemprompt.io without modification.</p>
+    items:
+      - title: "Lossless Round Trips"
+        description: "Export, share, import, and re-export with no data loss. What goes out is exactly what comes back in."
+      - title: "Complete Plugin Bundles"
+        description: "Exports include config.yaml, index.md, agents, hooks, and scripts. Every component of a plugin travels together."
+      - title: "Works Outside the Platform"
+        description: "Exported files are standard formats. Open them in VS Code, parse them with Python, or feed them to any Markdown processor."
+
+  - id: "version-history"
+    title: "Version History"
+    content: |
+      <p>Every published version is stored as a JSONB snapshot in the marketplace_versions table, paired with a changelog entry. This gives you a complete audit trail of how skills and plugins evolved over time.</p>
+      <p>Need to roll back? Every prior version is a self-contained snapshot you can restore. Need to compare changes? Changelogs track what changed between versions. The combination of Git history and database snapshots provides two independent records of your content history.</p>
+    items:
+      - title: "JSONB Snapshots"
+        description: "Each published version is captured as a complete JSONB snapshot. No incremental diffs to reconstruct — every version stands alone."
+      - title: "Changelog Tracking"
+        description: "Version publications include changelog entries describing what changed. Review the evolution of any skill or plugin at a glance."
+      - title: "Rollback Capability"
+        description: "Restore any previous version from its snapshot. Combined with Git history, you have two independent paths to recover prior state."
+
+related:
+  - title: "DevOps & Deployment"
+    description: "Single Rust binary with Docker support and profile-based configuration."
+    url: "/features/devops-and-deployment"
+  - title: "Granular Management"
+    description: "Role and department filtering with per-user customisation."
+    url: "/features/granular-management"
+  - title: "Usage Reports"
+    description: "Cost tracking, skill rankings, and CLI export for leadership reporting."
+    url: "/features/usage-reports"

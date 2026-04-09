@@ -1,50 +1,88 @@
 # Feature: DevOps & Deployment
-# Single binary, Docker, profiles, build pipeline, scaling
+# Single binary, Docker, profiles, enterprise integration, scaling
 
 slug: "devops-and-deployment"
-title: "DevOps & Deployment | Single Binary, Docker & Profile-Based Config"
+title: "DevOps & Deployment | Single Binary, Docker, Enterprise Integration"
 headline: "DEPLOY ANYWHERE."
 headline_highlight: "OWN EVERYTHING."
-subtitle: "A single Rust binary that runs as sidecar, gateway, or embedded library. Docker-ready with profile-based configuration for dev, staging, and production. Build once, deploy on your infrastructure."
-description: "Self-hosted AI governance deployment with a single Rust binary, Docker support, profile-based configuration, and enterprise scaling. Deploy as sidecar, gateway, or embedded library on your own infrastructure."
+subtitle: "A single Rust binary backed by PostgreSQL. No JVM, no Node.js, no microservice mesh. Docker-ready with profile-based configuration. Integrates with your existing identity, secrets, and observability infrastructure."
+description: "Self-hosted AI governance deployment with a single Rust binary, Docker support, profile-based configuration, enterprise integration, and horizontal scaling. Deploy on your infrastructure."
 icon: "terminal"
-keywords: "AI deployment, self-hosted, Docker, Rust binary, DevOps, CI/CD, scaling, infrastructure"
+hero_diagram: "/files/images/features/hero-devops-and-deployment.svg"
+keywords: "AI deployment, self-hosted, Docker, Rust binary, DevOps, enterprise integration, scaling, infrastructure"
 
 highlights:
-  - text: "Single Rust binary, no runtime dependencies"
+  - text: "Single binary, zero runtime dependencies"
     id: "single-binary"
-  - text: "Docker-ready with multi-stage builds"
-    id: "docker"
+  - text: "Integrates with your existing infrastructure"
+    id: "enterprise-integration"
   - text: "Profile-based config for any environment"
     id: "profiles"
-  - text: "Four deployment models for any architecture"
-    id: "deployment-models"
+  - text: "Horizontal scaling with stateless architecture"
+    id: "scaling"
 
 cta:
   text: "View Documentation"
   url: "/documentation/architecture"
-  secondary_text: "Installation Guide"
-  secondary_url: "/documentation/installation"
+  secondary_text: "See Deployment Models"
+  secondary_url: "/documentation/deployment-models"
 
 sections:
   - id: "single-binary"
     title: "Single Binary Architecture"
+    visual_desktop: "/files/images/features/architecture-overview.svg"
     content: |
-      <p>The entire platform compiles to a single Rust binary with no external runtime dependencies. No JVM, no Node.js, no Python interpreter. The binary includes the web server, API layer, background job runner, template engine, and all governance logic.</p>
-      <p>This means deployment is copying one file. No dependency resolution, no package managers, no version conflicts. The binary runs on any Linux x86_64 system with a PostgreSQL connection.</p>
+      <p>The entire platform compiles to a single Rust binary with no external runtime dependencies. The binary includes the web server, API layer, background job runner, template engine, and all governance logic. Deployment is copying one file.</p>
+      <pre style="background:#1a1a2e;color:#e0e0e0;padding:1.25rem;border-radius:8px;font-size:0.85rem;line-height:1.6;overflow-x:auto;margin:1.5rem 0">
+      $ systemprompt infra services status
+      ┌───────────────────┬────────┬───────────────────┐
+      │ Service           │ Status │ Details           │
+      ├───────────────────┼────────┼───────────────────┤
+      │ Web Server        │ UP     │ :8080             │
+      │ PostgreSQL        │ UP     │ 42 migrations     │
+      │ MCP: systemprompt │ UP     │ :5010 (admin)     │
+      │ MCP: skill-mgr    │ UP     │ :5050 (user)      │
+      │ Job Runner        │ UP     │ Background tasks  │
+      └───────────────────┴────────┴───────────────────┘
+      </pre>
     items:
       - title: "Zero Runtime Dependencies"
         description: "No JVM, Node.js, or Python. One binary, one PostgreSQL connection. That is the entire dependency tree."
       - title: "All-In-One Binary"
         description: "Web server, API, job runner, template engine, and governance logic compiled into a single executable."
-      - title: "Predictable Deployments"
-        description: "No dependency resolution at deploy time. Copy the binary, set environment variables, start the process."
+      - title: "CLI-First Design"
+        description: "8 CLI domains (core, infra, admin, cloud, analytics, web, plugins, build) covering every platform operation."
+
+  - id: "enterprise-integration"
+    title: "Enterprise Integration"
+    content: |
+      <p>The platform is designed to delegate to your existing infrastructure, not replace it. OAuth2/JWT authentication works with any identity provider. Structured logs integrate with your observability stack. The PostgreSQL database is standard and queryable by your existing tools.</p>
+      <pre style="background:#1a1a2e;color:#e0e0e0;padding:1.25rem;border-radius:8px;font-size:0.85rem;line-height:1.6;overflow-x:auto;margin:1.5rem 0">
+      Integration Point    How It Connects
+      ──────────────────   ─────────────────────────────────────
+      Identity             OAuth2/JWT tokens — any IdP that issues JWTs
+      Secrets              ChaCha20-Poly1305 storage + REST API access
+      Observability        Structured JSON logs → your SIEM / ELK / Datadog
+      Database             Standard PostgreSQL — query with your BI tools
+      CI/CD                Single binary artifact, Docker multi-stage builds
+      Export               CSV export from CLI for any analytics dataset
+      </pre>
+      <p>The platform does not require you to adopt its authentication system, its logging format, or its secrets manager. It produces standard outputs that plug into what you already run.</p>
+    items:
+      - title: "Bring Your Own IdP"
+        description: "OAuth2/JWT authentication accepts tokens from any identity provider. SAML bridging via standard reverse proxy."
+      - title: "SIEM-Ready Structured Logs"
+        description: "Structured JSON logs designed for security team consumption. Compatible with any log aggregator — Splunk, ELK, Datadog, Sumo Logic. No custom log format. Standard JSON that your existing SIEM pipeline ingests directly."
+      - title: "Full Governance Context in Logs"
+        description: "Every governance decision logged with full context: user, agent, tool, decision, and reason. Your security team sees exactly what was allowed, what was denied, and why — without asking the AI team."
+      - title: "REST API Surface"
+        description: "Full HTTP API for programmatic access. Integrate governance decisions, analytics, and management into your existing workflows."
 
   - id: "docker"
     title: "Docker & Container Deployment"
     content: |
-      <p>Multi-stage Docker builds produce minimal container images. The build stage compiles the Rust binary, the runtime stage copies only the binary and static assets into a slim base image. No build tools, no source code, no development dependencies in production.</p>
-      <p>Container images work with any orchestration platform: Docker Compose for development, Kubernetes for production, ECS or Cloud Run for managed deployments.</p>
+      <p>Multi-stage Docker builds produce minimal container images. The build stage compiles the Rust binary; the runtime stage contains only the binary and static assets. No build tools, no source code, no development dependencies in production.</p>
+      <p>Container images work with any orchestration platform: Docker Compose for development, Kubernetes for production, ECS or Cloud Run for managed deployments. Health check endpoints are built in for liveness and readiness probes.</p>
     items:
       - title: "Multi-Stage Builds"
         description: "Build stage compiles, runtime stage contains only the binary and assets. Minimal attack surface, minimal image size."
@@ -56,8 +94,7 @@ sections:
   - id: "profiles"
     title: "Profile-Based Configuration"
     content: |
-      <p>Profiles separate environment-specific configuration from application logic. A local profile enables debug logging, hot reload, and development databases. A production profile enables TLS, connection pooling, and production-grade settings. Switch profiles with a single environment variable.</p>
-      <p>Each profile is a directory containing a config.yaml, Docker configuration, and environment-specific overrides. Create custom profiles for staging, QA, or any environment your pipeline requires.</p>
+      <p>Profiles separate environment-specific configuration from application logic. A local profile enables debug logging and development databases. A production profile enables TLS, connection pooling, and production-grade settings. Switch profiles with a single environment variable.</p>
     items:
       - title: "Environment Isolation"
         description: "Local, staging, and production profiles with independent database, logging, and security settings."
@@ -66,28 +103,26 @@ sections:
       - title: "Custom Profiles"
         description: "Create profiles for any environment. Each profile is a directory with config.yaml and Docker overrides."
 
-  - id: "deployment-models"
-    title: "Deployment Models"
+  - id: "scaling"
+    title: "Horizontal Scaling"
     content: |
-      <p>Four deployment models cover any architecture. Sidecar mode runs alongside each agent instance. Gateway mode provides a centralised governance layer for all agents. Embedded mode compiles governance directly into your application. Multi-tenant mode serves multiple organisations from a single deployment.</p>
-      <p>Choose the model that fits your infrastructure. Start with gateway mode for simplicity, move to sidecar for isolation, or embed for maximum performance.</p>
+      <p>Stateless JWT-based architecture means horizontal scaling is N replicas behind a load balancer. No session affinity, no shared state between instances, no distributed cache to manage. Connection pooling via SQLx handles database concurrency.</p>
+      <p>Tiered rate limiting is built into the governance pipeline — it scales with your deployment without additional infrastructure. Security headers (HSTS with preload, frame deny, strict referrer policy) are enabled by default on every instance.</p>
     items:
-      - title: "Sidecar Mode"
-        description: "Run alongside each agent instance. Process-level isolation with shared-nothing architecture."
-      - title: "Gateway Mode"
-        description: "Centralised governance layer. All agents route through a single governance endpoint."
-      - title: "Embedded Mode"
-        description: "Compile governance directly into your application. Zero network overhead, maximum performance."
-      - title: "Multi-Tenant Mode"
-        description: "Serve multiple organisations from a single deployment with tenant-level data isolation."
+      - title: "Stateless Design"
+        description: "JWT authentication, no session affinity. Any request can hit any instance. Add replicas as needed."
+      - title: "Connection Pooling"
+        description: "SQLx connection pooling handles database concurrency. Configurable pool size per profile."
+      - title: "Built-In Rate Limiting"
+        description: "Tiered rate limiting scales with deployment. No Redis or external rate limiting service required."
 
 related:
-  - title: "Governance & Security"
-    description: "RBAC, audit trails, encrypted secrets, and rate limiting for all AI usage."
-    url: "/features/governance-and-security"
-  - title: "Marketplace & Skill Management"
-    description: "Create, fork, and distribute skills and plugins across your organisation."
-    url: "/features/marketplace-and-skill-management"
+  - title: "Agent Governance"
+    description: "RBAC, tool governance, audit trails, and secret detection."
+    url: "/features/agent-governance"
+  - title: "Skills & Plugins"
+    description: "Governed bundles with marketplace distribution and multi-channel sync."
+    url: "/features/skills-and-plugins"
   - title: "Analytics & Observability"
-    description: "20+ dashboard metrics, activity tracking, and usage reporting."
+    description: "20+ dashboard metrics, cost visibility, and real-time activity tracking."
     url: "/features/analytics-and-observability"

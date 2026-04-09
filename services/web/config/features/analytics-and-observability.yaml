@@ -1,37 +1,111 @@
 # Feature: Analytics & Observability
-# Activity tracking, dashboard metrics, CLI analytics, gamification
+# Activity tracking, dashboard metrics, cost visibility, CLI analytics
 
 slug: "analytics-and-observability"
-title: "Analytics & Observability | Metrics, Activity Tracking & Dashboard"
+title: "Analytics & Observability | Metrics, Cost Tracking & Dashboard"
 headline: "FULL VISIBILITY."
 headline_highlight: "NO BLIND SPOTS."
-subtitle: "13 activity categories tracking every login, prompt, tool call, and session. 20+ dashboard metrics with real-time usage charts and activity feeds. CLI analytics with CSV export for leadership reporting."
-description: "Comprehensive AI analytics and observability with 13 activity categories, 20+ dashboard metrics, real-time activity tracking, CLI analytics, gamification, and CSV export for enterprise reporting."
+subtitle: "13 activity categories tracking every login, prompt, tool call, and session. 20+ dashboard metrics with real-time usage charts. Cost visibility by model, agent, and department. CLI analytics with CSV export."
+description: "Comprehensive AI analytics and observability with 13 activity categories, 20+ dashboard metrics, cost tracking, real-time activity tracking, CLI analytics, and CSV export for enterprise reporting."
 icon: "chart"
-keywords: "AI analytics, observability, audit dashboard, AI usage reporting, activity tracking, metrics, gamification"
+hero_diagram: "/files/images/features/hero-analytics-and-observability.svg"
+keywords: "AI analytics, observability, audit dashboard, AI usage reporting, cost tracking, activity tracking, metrics"
 
 highlights:
   - text: "13 activity categories tracking all AI usage"
     id: "activity-tracking"
+  - text: "Cost visibility by model, agent, and department"
+    id: "cost-tracking"
   - text: "20+ dashboard metrics in real time"
     id: "dashboard-metrics"
-  - text: "Token and session-level usage tracking"
-    id: "usage-tracking"
+  - text: "SIEM & log forwarding to Splunk, ELK, Datadog"
+    id: "siem-integration"
   - text: "CLI analytics with CSV export"
     id: "cli-analytics"
 
 cta:
   text: "View Documentation"
   url: "/documentation/dashboard"
-  secondary_text: "Metrics Reference"
-  secondary_url: "/documentation/metrics-reference"
+  secondary_text: "See Audit Demo"
+  secondary_url: "/documentation/demo-terminal-audit"
 
 sections:
+  - id: "dashboard-metrics"
+    title: "Admin Dashboard"
+    content: |
+      <p>The admin dashboard surfaces 20+ metrics across a stats ribbon, usage charts, and detail tables. See events today, tool uses, prompts, sessions, active users, errors, and total tokens at a glance. Drill into usage patterns by hour, day, or week.</p>
+      <pre style="background:#1a1a2e;color:#e0e0e0;padding:1.25rem;border-radius:8px;font-size:0.85rem;line-height:1.6;overflow-x:auto;margin:1.5rem 0">
+      $ systemprompt analytics overview --since 24h
+      ┌────────────────┬────────┐
+      │ Metric         │ Value  │
+      ├────────────────┼────────┤
+      │ Events         │ 1,247  │
+      │ Tool Calls     │ 384    │
+      │ Prompts        │ 89     │
+      │ Sessions       │ 23     │
+      │ Active Users   │ 12     │
+      │ Errors         │ 3      │
+      │ Tokens (in)    │ 847K   │
+      │ Tokens (out)   │ 312K   │
+      └────────────────┴────────┘
+      </pre>
+    items:
+      - title: "Stats Ribbon"
+        description: "Events, tool uses, prompts, sessions, active users, errors, tokens, and more. Key metrics at a glance."
+      - title: "Usage Time Series"
+        description: "Stacked area chart with hourly buckets showing sessions, active users, prompts, tool uses, and errors over 24h/7d/14d."
+      - title: "Top Users & Skills"
+        description: "Most active users and most popular skills. Identify power users and high-value capabilities."
+
+  - id: "cost-tracking"
+    title: "Cost Visibility"
+    content: |
+      <p>Every AI request tracks input and output tokens with model and provider attribution. Break down costs by model, by agent, by department, or by user. The data your finance team needs for chargeback is available from day one.</p>
+      <pre style="background:#1a1a2e;color:#e0e0e0;padding:1.25rem;border-radius:8px;font-size:0.85rem;line-height:1.6;overflow-x:auto;margin:1.5rem 0">
+      $ systemprompt analytics costs breakdown --by model --since 7d
+      ┌────────────────────┬──────────┬──────────┬──────────┐
+      │ Model              │ Requests │ Tokens   │ Est Cost │
+      ├────────────────────┼──────────┼──────────┼──────────┤
+      │ claude-sonnet-4-6  │ 142      │ 847,291  │ $12.71   │
+      │ claude-haiku-4-5   │ 89       │ 312,847  │ $1.56    │
+      └────────────────────┴──────────┴──────────┴──────────┘
+
+      $ systemprompt analytics costs breakdown --by agent --export costs.csv
+      Exported 4 rows to costs.csv
+      </pre>
+    items:
+      - title: "Per-Model Breakdown"
+        description: "See which models consume the most tokens and at what cost. Optimise model selection across your deployment."
+      - title: "Per-Department Chargeback"
+        description: "Break down AI costs by department for internal billing. Export to CSV for your finance team."
+      - title: "Per-Agent Attribution"
+        description: "Track which agents generate the most cost. Identify optimisation opportunities by agent type."
+
+  - id: "siem-integration"
+    title: "SIEM & Log Integration"
+    content: |
+      <p>Every AI event — tool calls, governance decisions, sessions, errors — is emitted as structured JSON. Forward logs to Splunk, ELK/Elasticsearch, Datadog, or any log aggregator without format conversion. Real-time Server-Sent Events (SSE) streaming enables live dashboards and instant alerting. The CLI provides log queries with filtering by level, time range, and request ID.</p>
+      <pre style="background:#1a1a2e;color:#e0e0e0;padding:1.25rem;border-radius:8px;font-size:0.85rem;line-height:1.6;overflow-x:auto;margin:1.5rem 0">
+      $ systemprompt infra logs view --level info --since 1h --format json
+      {"ts":"2026-04-01T14:23:01Z","level":"info","event":"tool_call","agent":"developer_agent","tool":"WebSearch","decision":"allow","scope":"admin","session":"sess_01JR5X"}
+      {"ts":"2026-04-01T14:23:02Z","level":"info","event":"governance","agent":"associate_agent","tool":"Write","decision":"deny","reason":"secret_detected","scope":"user","session":"sess_01JR6Y"}
+      {"ts":"2026-04-01T14:23:05Z","level":"info","event":"session_end","agent":"developer_agent","tokens_in":1247,"tokens_out":892,"tools_called":3,"session":"sess_01JR5X"}
+      </pre>
+    items:
+      - title: "Structured JSON Log Output"
+        description: "Every AI event (tool calls, governance decisions, sessions, errors) emitted as structured JSON. No parsing, no regex — ready for your SIEM pipeline."
+      - title: "Real-Time SSE Streaming"
+        description: "Server-Sent Events streaming for live dashboards and real-time monitoring. Subscribe to event streams and see AI activity as it happens."
+      - title: "Universal Log Aggregator Support"
+        description: "Forward to Splunk, ELK/Elasticsearch, Datadog, or any log aggregator. Standard JSON output that your existing log pipeline ingests directly."
+      - title: "CLI Log Queries"
+        description: "Filter logs by level, time range, request ID, agent, or tool. Use --format json for pipeline integration or --export for batch analysis."
+
   - id: "activity-tracking"
     title: "Activity Tracking"
     content: |
       <p>Every AI interaction is captured through 13 activity categories: Login, Session, Prompt, SkillUsage, MarketplaceEdit, MarketplaceConnect, UserManagement, ToolUsage, Error, AgentResponse, Notification, TaskCompletion, and Compaction. Each event records user, timestamp, entity type, and rich metadata.</p>
-      <p>11 action types and 13 entity types provide fine-grained filtering across your entire AI deployment. Every event is stored with full context for audit and compliance.</p>
+      <p>11 action types and 13 entity types provide fine-grained filtering. Real-time activity feed with SSE updates shows what is happening across your AI deployment as it happens.</p>
     items:
       - title: "13 Activity Categories"
         description: "Login, Session, Prompt, SkillUsage, ToolUsage, Error, AgentResponse, and 6 more. Every type of AI interaction classified and tracked."
@@ -40,54 +114,35 @@ sections:
       - title: "Real-Time Activity Feed"
         description: "Live activity timeline with SSE updates. See what is happening across your AI deployment as it happens."
 
-  - id: "dashboard-metrics"
-    title: "Dashboard Metrics"
-    content: |
-      <p>The admin dashboard surfaces 20+ metrics across a stats ribbon, usage charts, and detail tables. The stats ribbon shows events today, tool uses, prompts, sessions, active users, errors, total tokens, and more.</p>
-      <p>Drill into top users by activity and token usage. View popular skills ranked by invocation count. Monitor tool success rates with per-tool success and failure counts. Track hourly activity patterns and see which AI models your organisation uses most.</p>
-    items:
-      - title: "Stats Ribbon"
-        description: "Events, tool uses, prompts, sessions, active users, errors, tokens, and more. Key metrics at a glance."
-      - title: "Usage Time Series"
-        description: "Stacked area chart with hourly buckets showing sessions, active users, prompts, tool uses, and errors over 24h/7d/14d."
-      - title: "Top Users & Skills"
-        description: "Most active users and most popular skills. Identify power users and high-value capabilities."
-      - title: "Tool Success Rates"
-        description: "Per-tool success, failure, and total counts with success percentage. Identify reliability issues before they impact users."
-
-  - id: "usage-tracking"
-    title: "Usage & Token Tracking"
-    content: |
-      <p>Every AI request is tracked with token counts and session context. Input and output tokens are recorded per session, giving you visibility into how AI is being consumed across your organisation.</p>
-      <p>Session summaries capture event counts, tool uses, prompts, errors, and token consumption. Daily aggregation tables provide fast querying for trend analysis and reporting.</p>
-    items:
-      - title: "Token Consumption"
-        description: "Input and output tokens recorded for every session. See total consumption across your organisation."
-      - title: "Session Summaries"
-        description: "Per-session records of events, tool uses, prompts, errors, and tokens. Complete session-level observability."
-      - title: "Daily Aggregations"
-        description: "Automatic daily rollups for fast trend analysis and historical reporting."
-
   - id: "cli-analytics"
     title: "CLI Analytics & Export"
     content: |
       <p>The <code>systemprompt analytics</code> CLI provides programmatic access to all metrics: overview, conversations, sessions, content, agents, tools, traffic, and requests. Filter by time range with <code>--since</code> and <code>--until</code> flags. Export any dataset to CSV with <code>--export</code>.</p>
-      <p>Gamification drives adoption with XP tracking, rank levels, achievement badges, streaks, and leaderboards. Track which teams are adopting AI most effectively and celebrate top contributors.</p>
+      <pre style="background:#1a1a2e;color:#e0e0e0;padding:1.25rem;border-radius:8px;font-size:0.85rem;line-height:1.6;overflow-x:auto;margin:1.5rem 0">
+      $ systemprompt analytics tools stats
+      ┌──────────────────┬─────────┬─────────┬─────────┐
+      │ Tool             │ Success │ Failed  │ Rate    │
+      ├──────────────────┼─────────┼─────────┼─────────┤
+      │ WebSearch        │ 47      │ 0       │ 100%    │
+      │ Read             │ 312     │ 8       │ 97.5%   │
+      │ Write            │ 89      │ 12      │ 88.1%   │
+      └──────────────────┴─────────┴─────────┴─────────┘
+      </pre>
     items:
       - title: "Full CLI Access"
         description: "systemprompt analytics overview, tools, sessions, agents, traffic, and requests. All from the terminal."
       - title: "CSV Export"
         description: "Export any analytics view to CSV for downstream analysis, reporting, or integration with BI tools."
-      - title: "Gamification & Leaderboards"
-        description: "XP tracking, rank levels, achievement badges, streaks, and department scores. Drive AI adoption across your organisation."
+      - title: "Tool Success Rates"
+        description: "Per-tool success, failure, and total counts with success percentage. Identify reliability issues before they impact users."
 
 related:
+  - title: "Agent Governance"
+    description: "RBAC, tool governance, audit trails, and secret detection."
+    url: "/features/agent-governance"
   - title: "DevOps & Deployment"
     description: "Single Rust binary with Docker support and profile-based configuration."
     url: "/features/devops-and-deployment"
-  - title: "Governance & Security"
-    description: "RBAC, audit trails, encrypted secrets, and rate limiting for all AI usage."
-    url: "/features/governance-and-security"
-  - title: "Marketplace & Skill Management"
-    description: "Personal marketplaces for every user with git-native distribution."
-    url: "/features/marketplace-and-skill-management"
+  - title: "Skills & Plugins"
+    description: "Governed bundles with marketplace distribution and multi-channel sync."
+    url: "/features/skills-and-plugins"
