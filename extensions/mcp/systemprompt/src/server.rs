@@ -87,7 +87,10 @@ impl McpToolHandler for SystempromptToolHandler {
                 Err(e) => {
                     tracing::warn!(error = %e, "Failed to convert CLI result to artifact, falling back to text");
                     let content = serde_json::to_string_pretty(&cmd_result.data)
-                        .unwrap_or_else(|_| cmd_result.data.to_string());
+                        .unwrap_or_else(|e| {
+                            tracing::warn!(error = %e, "Failed to pretty-print CLI result data, falling back to Display");
+                            cmd_result.data.to_string()
+                        });
                     let text_artifact = TextArtifact::new(&content, ctx);
                     CliArtifact::text(text_artifact)
                 }
