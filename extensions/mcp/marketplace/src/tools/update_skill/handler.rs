@@ -89,7 +89,7 @@ impl McpToolHandler for UpdateSkillHandler {
             "created_at": skill.created_at.to_rfc3339(),
             "updated_at": skill.updated_at.to_rfc3339(),
         }))
-        .unwrap_or_else(|_| String::new());
+        .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
 
         let summary = format!("Updated skill '{}' ({})", skill.name, skill.skill_id);
         let content = format!("{summary}\n\n{skill_json}");

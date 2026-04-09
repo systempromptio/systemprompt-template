@@ -102,7 +102,7 @@ impl McpToolHandler for UpdateMcpServerHandler {
             "created_at": server.created_at.to_rfc3339(),
             "updated_at": server.updated_at.to_rfc3339(),
         }))
-        .unwrap_or_else(|_| String::new());
+        .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
 
         let summary = format!(
             "Updated MCP server '{}' ({})",

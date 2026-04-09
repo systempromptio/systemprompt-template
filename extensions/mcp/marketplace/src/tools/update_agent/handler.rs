@@ -86,7 +86,7 @@ impl McpToolHandler for UpdateAgentHandler {
             "created_at": agent.created_at.to_rfc3339(),
             "updated_at": agent.updated_at.to_rfc3339(),
         }))
-        .unwrap_or_else(|_| String::new());
+        .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
 
         let summary = format!("Updated agent '{}' ({})", agent.name, agent.agent_id);
         let content = format!("{summary}\n\n{agent_json}");
