@@ -54,7 +54,7 @@ cmd "systemprompt infra db query \"SELECT decision, COUNT(*) as count FROM gover
 "$CLI" infra db query "SELECT decision, COUNT(*) as count FROM governance_decisions GROUP BY decision" --profile "$PROFILE" 2>&1 | sed 's/^/  /'
 
 subheader "STEP 9: Migration Status"
-run_cli_head 20 infra db migrations
+run_cli_head 20 infra db migrations status
 
 subheader "STEP 10: Schema Validation"
 run_cli_indented infra db validate

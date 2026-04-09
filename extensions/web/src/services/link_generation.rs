@@ -34,8 +34,7 @@ impl LinkGenerationService {
         };
 
         let short_code = generate_short_code();
-        let mut params =
-            CreateLinkParams::new(short_code, target_url, DEFAULT_LINK_TYPE);
+        let mut params = CreateLinkParams::new(short_code, target_url, DEFAULT_LINK_TYPE);
 
         if let Some(name) = campaign_name {
             let campaign_id = CampaignId::new(uuid::Uuid::new_v4().to_string());
@@ -60,9 +59,8 @@ impl LinkGenerationService {
     ) -> Result<CampaignLink, BlogError> {
         let short_code = generate_short_code();
         let content_id = ContentId::new(content_id);
-        let mut params =
-            CreateLinkParams::new(short_code, target_url, DEFAULT_LINK_TYPE)
-                .with_source_content_id(Some(content_id));
+        let mut params = CreateLinkParams::new(short_code, target_url, DEFAULT_LINK_TYPE)
+            .with_source_content_id(Some(content_id));
 
         if let Some(name) = campaign_name {
             let campaign_id = CampaignId::new(uuid::Uuid::new_v4().to_string());

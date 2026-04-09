@@ -15,331 +15,300 @@ pub fn web_assets(paths: &dyn systemprompt::extension::AssetPaths) -> Vec<AssetD
     assets
 }
 
-#[allow(clippy::too_many_lines)]
+// ---------------------------------------------------------------------------
+// CSS assets — split by logical prefix group
+// ---------------------------------------------------------------------------
+
 fn css_assets(storage_css: &Path) -> Vec<AssetDefinition> {
+    let mut v = core_css(storage_css);
+    v.extend(homepage_css(storage_css));
+    v.extend(blog_css(storage_css));
+    v.extend(docs_css(storage_css));
+    v.extend(paper_css(storage_css));
+    v.extend(feature_page_css(storage_css));
+    v.extend(syntax_css(storage_css));
+    v.extend(feature_base_css(storage_css));
+    v.extend(playbook_css(storage_css));
+    v.extend(presentation_css(storage_css));
+    v
+}
+
+fn core_css(p: &Path) -> Vec<AssetDefinition> {
     vec![
+        AssetDefinition::css(p.join("core/variables.css"), "css/core/variables.css"),
+        AssetDefinition::css(p.join("core/fonts.css"), "css/core/fonts.css"),
+        AssetDefinition::css(p.join("core/reset.css"), "css/core/reset.css"),
         AssetDefinition::css(
-            storage_css.join("core/variables.css"),
-            "css/core/variables.css",
-        ),
-        AssetDefinition::css(storage_css.join("core/fonts.css"), "css/core/fonts.css"),
-        AssetDefinition::css(storage_css.join("core/reset.css"), "css/core/reset.css"),
-        AssetDefinition::css(
-            storage_css.join("components/header-core.css"),
+            p.join("components/header-core.css"),
             "css/components/header-core.css",
         ),
         AssetDefinition::css(
-            storage_css.join("components/header-dropdown.css"),
+            p.join("components/header-dropdown.css"),
             "css/components/header-dropdown.css",
         ),
+        AssetDefinition::css(p.join("components/footer.css"), "css/components/footer.css"),
         AssetDefinition::css(
-            storage_css.join("components/footer.css"),
-            "css/components/footer.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("components/mobile-menu.css"),
+            p.join("components/mobile-menu.css"),
             "css/components/mobile-menu.css",
         ),
         AssetDefinition::css(
-            storage_css.join("components/cta-buttons.css"),
+            p.join("components/cta-buttons.css"),
             "css/components/cta-buttons.css",
         ),
+    ]
+}
+
+fn homepage_css(p: &Path) -> Vec<AssetDefinition> {
+    vec![
+        AssetDefinition::css(p.join("homepage-hero.css"), "css/homepage-hero.css"),
         AssetDefinition::css(
-            storage_css.join("homepage-hero.css"),
-            "css/homepage-hero.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("homepage-demo-terminal.css"),
+            p.join("homepage-demo-terminal.css"),
             "css/homepage-demo-terminal.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-demo-responsive.css"),
+            p.join("homepage-demo-responsive.css"),
             "css/homepage-demo-responsive.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-sections-titles.css"),
+            p.join("homepage-sections-titles.css"),
             "css/homepage-sections-titles.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-sections-features.css"),
+            p.join("homepage-sections-features.css"),
             "css/homepage-sections-features.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-sections-steps.css"),
+            p.join("homepage-sections-steps.css"),
             "css/homepage-sections-steps.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-sections-comparison.css"),
+            p.join("homepage-sections-comparison.css"),
             "css/homepage-sections-comparison.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-sections-technical.css"),
+            p.join("homepage-sections-technical.css"),
             "css/homepage-sections-technical.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-sections-traits.css"),
+            p.join("homepage-sections-traits.css"),
             "css/homepage-sections-traits.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-sections-faq.css"),
+            p.join("homepage-sections-faq.css"),
             "css/homepage-sections-faq.css",
         ),
+        AssetDefinition::css(p.join("homepage-features.css"), "css/homepage-features.css"),
         AssetDefinition::css(
-            storage_css.join("homepage-features.css"),
-            "css/homepage-features.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("homepage-playbooks-section.css"),
+            p.join("homepage-playbooks-section.css"),
             "css/homepage-playbooks-section.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-playbooks-featured.css"),
+            p.join("homepage-playbooks-featured.css"),
             "css/homepage-playbooks-featured.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-playbooks-actions.css"),
+            p.join("homepage-playbooks-actions.css"),
             "css/homepage-playbooks-actions.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-playbooks-categories.css"),
+            p.join("homepage-playbooks-categories.css"),
             "css/homepage-playbooks-categories.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-playbooks-links.css"),
+            p.join("homepage-playbooks-links.css"),
             "css/homepage-playbooks-links.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-playbooks-ctas.css"),
+            p.join("homepage-playbooks-ctas.css"),
             "css/homepage-playbooks-ctas.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-playbooks-status.css"),
+            p.join("homepage-playbooks-status.css"),
             "css/homepage-playbooks-status.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-playbooks-modal.css"),
+            p.join("homepage-playbooks-modal.css"),
             "css/homepage-playbooks-modal.css",
         ),
         AssetDefinition::css(
-            storage_css.join("homepage-architecture.css"),
+            p.join("homepage-architecture.css"),
             "css/homepage-architecture.css",
         ),
+    ]
+}
+
+fn blog_css(p: &Path) -> Vec<AssetDefinition> {
+    vec![
+        AssetDefinition::css(p.join("blog-variables.css"), "css/blog-variables.css"),
+        AssetDefinition::css(p.join("blog-background.css"), "css/blog-background.css"),
+        AssetDefinition::css(p.join("blog-base.css"), "css/blog-base.css"),
+        AssetDefinition::css(p.join("blog-post-header.css"), "css/blog-post-header.css"),
+        AssetDefinition::css(p.join("blog-social-bar.css"), "css/blog-social-bar.css"),
         AssetDefinition::css(
-            storage_css.join("blog-variables.css"),
-            "css/blog-variables.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("blog-background.css"),
-            "css/blog-background.css",
-        ),
-        AssetDefinition::css(storage_css.join("blog-base.css"), "css/blog-base.css"),
-        AssetDefinition::css(
-            storage_css.join("blog-post-header.css"),
-            "css/blog-post-header.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("blog-social-bar.css"),
-            "css/blog-social-bar.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("blog-featured-image.css"),
+            p.join("blog-featured-image.css"),
             "css/blog-featured-image.css",
         ),
+        AssetDefinition::css(p.join("blog-post-content.css"), "css/blog-post-content.css"),
+        AssetDefinition::css(p.join("blog-breadcrumb.css"), "css/blog-breadcrumb.css"),
+        AssetDefinition::css(p.join("blog-page-header.css"), "css/blog-page-header.css"),
         AssetDefinition::css(
-            storage_css.join("blog-post-content.css"),
-            "css/blog-post-content.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("blog-breadcrumb.css"),
-            "css/blog-breadcrumb.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("blog-page-header.css"),
-            "css/blog-page-header.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("blog-list-controls.css"),
+            p.join("blog-list-controls.css"),
             "css/blog-list-controls.css",
         ),
-        AssetDefinition::css(storage_css.join("blog-cards.css"), "css/blog-cards.css"),
-        AssetDefinition::css(storage_css.join("blog-footer.css"), "css/blog-footer.css"),
+        AssetDefinition::css(p.join("blog-cards.css"), "css/blog-cards.css"),
+        AssetDefinition::css(p.join("blog-footer.css"), "css/blog-footer.css"),
+        AssetDefinition::css(p.join("blog-references.css"), "css/blog-references.css"),
+        AssetDefinition::css(p.join("blog-related.css"), "css/blog-related.css"),
+        AssetDefinition::css(p.join("blog-banner.css"), "css/blog-banner.css"),
+        AssetDefinition::css(p.join("blog-chat-cta.css"), "css/blog-chat-cta.css"),
         AssetDefinition::css(
-            storage_css.join("blog-references.css"),
-            "css/blog-references.css",
-        ),
-        AssetDefinition::css(storage_css.join("blog-related.css"), "css/blog-related.css"),
-        AssetDefinition::css(storage_css.join("blog-banner.css"), "css/blog-banner.css"),
-        AssetDefinition::css(
-            storage_css.join("blog-chat-cta.css"),
-            "css/blog-chat-cta.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("blog-social-content.css"),
+            p.join("blog-social-content.css"),
             "css/blog-social-content.css",
         ),
-        AssetDefinition::css(storage_css.join("blog-hero.css"), "css/blog-hero.css"),
+        AssetDefinition::css(p.join("blog-hero.css"), "css/blog-hero.css"),
+        AssetDefinition::css(p.join("blog-homepage.css"), "css/blog-homepage.css"),
+        AssetDefinition::css(p.join("blog-platforms.css"), "css/blog-platforms.css"),
+        AssetDefinition::css(p.join("blog-ai-badges.css"), "css/blog-ai-badges.css"),
         AssetDefinition::css(
-            storage_css.join("blog-homepage.css"),
-            "css/blog-homepage.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("blog-platforms.css"),
-            "css/blog-platforms.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("blog-ai-badges.css"),
-            "css/blog-ai-badges.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("blog-content-sections.css"),
+            p.join("blog-content-sections.css"),
             "css/blog-content-sections.css",
         ),
         AssetDefinition::css(
-            storage_css.join("blog-content-cards.css"),
+            p.join("blog-content-cards.css"),
             "css/blog-content-cards.css",
         ),
         AssetDefinition::css(
-            storage_css.join("blog-provenance-panel.css"),
+            p.join("blog-provenance-panel.css"),
             "css/blog-provenance-panel.css",
         ),
         AssetDefinition::css(
-            storage_css.join("blog-provenance-sections.css"),
+            p.join("blog-provenance-sections.css"),
             "css/blog-provenance-sections.css",
         ),
         AssetDefinition::css(
-            storage_css.join("blog-provenance-header.css"),
+            p.join("blog-provenance-header.css"),
             "css/blog-provenance-header.css",
         ),
+        AssetDefinition::css(p.join("blog-workflow.css"), "css/blog-workflow.css"),
         AssetDefinition::css(
-            storage_css.join("blog-workflow.css"),
-            "css/blog-workflow.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("blog-provenance-details.css"),
+            p.join("blog-provenance-details.css"),
             "css/blog-provenance-details.css",
         ),
         AssetDefinition::css(
-            storage_css.join("blog-live-dashboard.css"),
+            p.join("blog-live-dashboard.css"),
             "css/blog-live-dashboard.css",
         ),
+        AssetDefinition::css(p.join("blog-responsive.css"), "css/blog-responsive.css"),
+        AssetDefinition::css(p.join("blog-code.css"), "css/blog-code.css"),
         AssetDefinition::css(
-            storage_css.join("blog-responsive.css"),
-            "css/blog-responsive.css",
-        ),
-        AssetDefinition::css(storage_css.join("blog-code.css"), "css/blog-code.css"),
-        AssetDefinition::css(
-            storage_css.join("blog-layout-structure.css"),
+            p.join("blog-layout-structure.css"),
             "css/blog-layout-structure.css",
         ),
+        AssetDefinition::css(p.join("blog-layout-cards.css"), "css/blog-layout-cards.css"),
+        AssetDefinition::css(p.join("blog-print.css"), "css/blog-print.css"),
         AssetDefinition::css(
-            storage_css.join("blog-layout-cards.css"),
-            "css/blog-layout-cards.css",
-        ),
-        AssetDefinition::css(storage_css.join("blog-print.css"), "css/blog-print.css"),
-        AssetDefinition::css(
-            storage_css.join("blog-typography-base.css"),
+            p.join("blog-typography-base.css"),
             "css/blog-typography-base.css",
         ),
         AssetDefinition::css(
-            storage_css.join("blog-typography-blocks.css"),
+            p.join("blog-typography-blocks.css"),
             "css/blog-typography-blocks.css",
         ),
-        AssetDefinition::css(storage_css.join("docs-layout.css"), "css/docs-layout.css"),
-        AssetDefinition::css(storage_css.join("docs-header.css"), "css/docs-header.css"),
-        AssetDefinition::css(storage_css.join("docs-content.css"), "css/docs-content.css"),
+    ]
+}
+
+fn docs_css(p: &Path) -> Vec<AssetDefinition> {
+    vec![
+        AssetDefinition::css(p.join("docs-layout.css"), "css/docs-layout.css"),
+        AssetDefinition::css(p.join("docs-header.css"), "css/docs-header.css"),
+        AssetDefinition::css(p.join("docs-content.css"), "css/docs-content.css"),
+        AssetDefinition::css(p.join("docs-pagination.css"), "css/docs-pagination.css"),
+        AssetDefinition::css(p.join("docs-toc.css"), "css/docs-toc.css"),
+        AssetDefinition::css(p.join("docs-responsive.css"), "css/docs-responsive.css"),
         AssetDefinition::css(
-            storage_css.join("docs-pagination.css"),
-            "css/docs-pagination.css",
-        ),
-        AssetDefinition::css(storage_css.join("docs-toc.css"), "css/docs-toc.css"),
-        AssetDefinition::css(
-            storage_css.join("docs-responsive.css"),
-            "css/docs-responsive.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("docs-sidebar-links.css"),
+            p.join("docs-sidebar-links.css"),
             "css/docs-sidebar-links.css",
         ),
-        AssetDefinition::css(storage_css.join("paper-layout.css"), "css/paper-layout.css"),
+    ]
+}
+
+fn paper_css(p: &Path) -> Vec<AssetDefinition> {
+    vec![
+        AssetDefinition::css(p.join("paper-layout.css"), "css/paper-layout.css"),
+        AssetDefinition::css(p.join("paper-content.css"), "css/paper-content.css"),
+        AssetDefinition::css(p.join("paper-components.css"), "css/paper-components.css"),
+    ]
+}
+
+fn feature_page_css(p: &Path) -> Vec<AssetDefinition> {
+    vec![
+        AssetDefinition::css(p.join("feature-page-hero.css"), "css/feature-page-hero.css"),
         AssetDefinition::css(
-            storage_css.join("paper-content.css"),
-            "css/paper-content.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("paper-components.css"),
-            "css/paper-components.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("feature-page-hero.css"),
-            "css/feature-page-hero.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("feature-page-content.css"),
+            p.join("feature-page-content.css"),
             "css/feature-page-content.css",
         ),
         AssetDefinition::css(
-            storage_css.join("feature-page-responsive.css"),
+            p.join("feature-page-responsive.css"),
             "css/feature-page-responsive.css",
         ),
+    ]
+}
+
+fn feature_base_css(p: &Path) -> Vec<AssetDefinition> {
+    vec![
+        AssetDefinition::css(p.join("feature-base-hero.css"), "css/feature-base-hero.css"),
         AssetDefinition::css(
-            storage_css.join("syntax-highlight.css"),
-            "css/syntax-highlight.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("feature-base-hero.css"),
-            "css/feature-base-hero.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("feature-base-sections.css"),
+            p.join("feature-base-sections.css"),
             "css/feature-base-sections.css",
         ),
+        AssetDefinition::css(p.join("feature-base-cta.css"), "css/feature-base-cta.css"),
         AssetDefinition::css(
-            storage_css.join("feature-base-cta.css"),
-            "css/feature-base-cta.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("feature-base-details.css"),
+            p.join("feature-base-details.css"),
             "css/feature-base-details.css",
         ),
         AssetDefinition::css(
-            storage_css.join("content-cards-base.css"),
+            p.join("content-cards-base.css"),
             "css/content-cards-base.css",
         ),
         AssetDefinition::css(
-            storage_css.join("content-cards-categories.css"),
+            p.join("content-cards-categories.css"),
             "css/content-cards-categories.css",
         ),
         AssetDefinition::css(
-            storage_css.join("content-cards-list.css"),
+            p.join("content-cards-list.css"),
             "css/content-cards-list.css",
         ),
-        AssetDefinition::css(
-            storage_css.join("playbook-layout.css"),
-            "css/playbook-layout.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("playbook-list.css"),
-            "css/playbook-list.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("playbook-post.css"),
-            "css/playbook-post.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("playbook-content.css"),
-            "css/playbook-content.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("playbook-grid.css"),
-            "css/playbook-grid.css",
-        ),
-        AssetDefinition::css(
-            storage_css.join("playbook-cards.css"),
-            "css/playbook-cards.css",
-        ),
-        AssetDefinition::css(storage_css.join("presentation.css"), "css/presentation.css"),
     ]
 }
+
+fn playbook_css(p: &Path) -> Vec<AssetDefinition> {
+    vec![
+        AssetDefinition::css(p.join("playbook-layout.css"), "css/playbook-layout.css"),
+        AssetDefinition::css(p.join("playbook-list.css"), "css/playbook-list.css"),
+        AssetDefinition::css(p.join("playbook-post.css"), "css/playbook-post.css"),
+        AssetDefinition::css(p.join("playbook-content.css"), "css/playbook-content.css"),
+        AssetDefinition::css(p.join("playbook-grid.css"), "css/playbook-grid.css"),
+        AssetDefinition::css(p.join("playbook-cards.css"), "css/playbook-cards.css"),
+    ]
+}
+
+fn presentation_css(p: &Path) -> Vec<AssetDefinition> {
+    vec![AssetDefinition::css(
+        p.join("presentation.css"),
+        "css/presentation.css",
+    )]
+}
+
+fn syntax_css(p: &Path) -> Vec<AssetDefinition> {
+    vec![AssetDefinition::css(
+        p.join("syntax-highlight.css"),
+        "css/syntax-highlight.css",
+    )]
+}
+
+// ---------------------------------------------------------------------------
+// Public JS assets
+// ---------------------------------------------------------------------------
 
 fn public_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     vec![
@@ -356,234 +325,220 @@ fn public_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     ]
 }
 
-#[allow(clippy::too_many_lines)]
+// ---------------------------------------------------------------------------
+// Service JS assets — split by logical prefix group
+// ---------------------------------------------------------------------------
+
 fn service_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
+    let p = storage_js.join("services");
+    let mut v = service_core_js(&p);
+    v.extend(service_cc_js(&p));
+    v.extend(service_control_center_js(&p));
+    v.extend(service_entity_js(&p));
+    v.extend(service_plugin_js(&p));
+    v.extend(service_skill_js(&p));
+    v.extend(service_webauthn_js(&p));
+    v.extend(service_utils_js(storage_js));
+    v
+}
+
+fn service_core_js(p: &Path) -> Vec<AssetDefinition> {
     vec![
-        AssetDefinition::js(storage_js.join("services/api.js"), "js/services/api.js"),
-        AssetDefinition::js(storage_js.join("services/auth.js"), "js/services/auth.js"),
+        AssetDefinition::js(p.join("api.js"), "js/services/api.js"),
+        AssetDefinition::js(p.join("auth.js"), "js/services/auth.js"),
+        AssetDefinition::js(p.join("bootstrap.js"), "js/services/bootstrap.js"),
+        AssetDefinition::js(p.join("confirm.js"), "js/services/confirm.js"),
+        AssetDefinition::js(p.join("dropdown.js"), "js/services/dropdown.js"),
+        AssetDefinition::js(p.join("events.js"), "js/services/events.js"),
+        AssetDefinition::js(p.join("header-actions.js"), "js/services/header-actions.js"),
+        AssetDefinition::js(p.join("install-widget.js"), "js/services/install-widget.js"),
         AssetDefinition::js(
-            storage_js.join("services/bootstrap.js"),
-            "js/services/bootstrap.js",
+            p.join("onboarding-banner.js"),
+            "js/services/onboarding-banner.js",
         ),
+        AssetDefinition::js(p.join("sidebar.js"), "js/services/sidebar.js"),
+        AssetDefinition::js(p.join("sse-client.js"), "js/services/sse-client.js"),
+        AssetDefinition::js(p.join("table-sort.js"), "js/services/table-sort.js"),
+        AssetDefinition::js(p.join("theme.js"), "js/services/theme.js"),
+        AssetDefinition::js(p.join("sp-toast.js"), "js/services/sp-toast.js"),
+        AssetDefinition::js(p.join("toast.js"), "js/services/toast.js"),
+        AssetDefinition::js(p.join("toc-highlight.js"), "js/services/toc-highlight.js"),
+    ]
+}
+
+fn service_cc_js(p: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(
-            storage_js.join("services/cc-cards-helpers.js"),
+            p.join("cc-cards-helpers.js"),
             "js/services/cc-cards-helpers.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/cc-cards-render-metrics.js"),
+            p.join("cc-cards-render-metrics.js"),
             "js/services/cc-cards-render-metrics.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/cc-cards-render-sections.js"),
+            p.join("cc-cards-render-sections.js"),
             "js/services/cc-cards-render-sections.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/cc-cards-render-session.js"),
+            p.join("cc-cards-render-session.js"),
             "js/services/cc-cards-render-session.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/cc-charts-render.js"),
+            p.join("cc-charts-render.js"),
             "js/services/cc-charts-render.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/cc-charts-setup.js"),
+            p.join("cc-charts-setup.js"),
             "js/services/cc-charts-setup.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/cc-charts-tooltip.js"),
+            p.join("cc-charts-tooltip.js"),
             "js/services/cc-charts-tooltip.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/cc-feed-reorder.js"),
+            p.join("cc-feed-reorder.js"),
             "js/services/cc-feed-reorder.js",
         ),
+        AssetDefinition::js(p.join("cc-stats-api.js"), "js/services/cc-stats-api.js"),
         AssetDefinition::js(
-            storage_js.join("services/cc-stats-api.js"),
-            "js/services/cc-stats-api.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/cc-stats-charts.js"),
+            p.join("cc-stats-charts.js"),
             "js/services/cc-stats-charts.js",
         ),
+        AssetDefinition::js(p.join("cc-stats-daily.js"), "js/services/cc-stats-daily.js"),
         AssetDefinition::js(
-            storage_js.join("services/cc-stats-daily.js"),
-            "js/services/cc-stats-daily.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/cc-stats-header.js"),
+            p.join("cc-stats-header.js"),
             "js/services/cc-stats-header.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/cc-stats-suggestions.js"),
+            p.join("cc-stats-suggestions.js"),
             "js/services/cc-stats-suggestions.js",
         ),
+        AssetDefinition::js(p.join("cc-stats-ui.js"), "js/services/cc-stats-ui.js"),
+    ]
+}
+
+fn service_control_center_js(p: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(
-            storage_js.join("services/cc-stats-ui.js"),
-            "js/services/cc-stats-ui.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/confirm.js"),
-            "js/services/confirm.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/control-center-batch.js"),
+            p.join("control-center-batch.js"),
             "js/services/control-center-batch.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/control-center-cards-render.js"),
+            p.join("control-center-cards-render.js"),
             "js/services/control-center-cards-render.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/control-center-cards.js"),
+            p.join("control-center-cards.js"),
             "js/services/control-center-cards.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/control-center-feed.js"),
+            p.join("control-center-feed.js"),
             "js/services/control-center-feed.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/control-center-limits.js"),
+            p.join("control-center-limits.js"),
             "js/services/control-center-limits.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/control-center-stats.js"),
+            p.join("control-center-stats.js"),
             "js/services/control-center-stats.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/control-center-turns.js"),
+            p.join("control-center-turns.js"),
             "js/services/control-center-turns.js",
         ),
+    ]
+}
+
+fn service_entity_js(p: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(
-            storage_js.join("services/dropdown.js"),
-            "js/services/dropdown.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/engagement-state.js"),
+            p.join("engagement-state.js"),
             "js/services/engagement-state.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/engagement-tracker.js"),
+            p.join("engagement-tracker.js"),
             "js/services/engagement-tracker.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/entity-batch-ops.js"),
+            p.join("entity-batch-ops.js"),
             "js/services/entity-batch-ops.js",
         ),
+        AssetDefinition::js(p.join("entity-batch.js"), "js/services/entity-batch.js"),
+        AssetDefinition::js(p.join("entity-common.js"), "js/services/entity-common.js"),
+        AssetDefinition::js(p.join("list-page.js"), "js/services/list-page.js"),
+    ]
+}
+
+fn service_plugin_js(p: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(
-            storage_js.join("services/entity-batch.js"),
-            "js/services/entity-batch.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/entity-common.js"),
-            "js/services/entity-common.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/events.js"),
-            "js/services/events.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/header-actions.js"),
-            "js/services/header-actions.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/install-widget.js"),
-            "js/services/install-widget.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/list-page.js"),
-            "js/services/list-page.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/onboarding-banner.js"),
-            "js/services/onboarding-banner.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/plugin-details-ui.js"),
+            p.join("plugin-details-ui.js"),
             "js/services/plugin-details-ui.js",
         ),
+        AssetDefinition::js(p.join("plugin-details.js"), "js/services/plugin-details.js"),
+        AssetDefinition::js(p.join("plugin-env-ui.js"), "js/services/plugin-env-ui.js"),
+        AssetDefinition::js(p.join("plugin-env.js"), "js/services/plugin-env.js"),
         AssetDefinition::js(
-            storage_js.join("services/plugin-details.js"),
-            "js/services/plugin-details.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/plugin-env-ui.js"),
-            "js/services/plugin-env-ui.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/plugin-env.js"),
-            "js/services/plugin-env.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/plugin-resources-helpers.js"),
+            p.join("plugin-resources-helpers.js"),
             "js/services/plugin-resources-helpers.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/plugin-resources.js"),
+            p.join("plugin-resources.js"),
             "js/services/plugin-resources.js",
         ),
+    ]
+}
+
+fn service_skill_js(p: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(
-            storage_js.join("services/sidebar.js"),
-            "js/services/sidebar.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/skill-files-editor.js"),
+            p.join("skill-files-editor.js"),
             "js/services/skill-files-editor.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/skill-files-modal.js"),
+            p.join("skill-files-modal.js"),
             "js/services/skill-files-modal.js",
         ),
+        AssetDefinition::js(p.join("skill-files.js"), "js/services/skill-files.js"),
+    ]
+}
+
+fn service_webauthn_js(p: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(
-            storage_js.join("services/skill-files.js"),
-            "js/services/skill-files.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/sse-client.js"),
-            "js/services/sse-client.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/table-sort.js"),
-            "js/services/table-sort.js",
-        ),
-        AssetDefinition::js(storage_js.join("services/theme.js"), "js/services/theme.js"),
-        AssetDefinition::js(
-            storage_js.join("services/sp-toast.js"),
-            "js/services/sp-toast.js",
-        ),
-        AssetDefinition::js(storage_js.join("services/toast.js"), "js/services/toast.js"),
-        AssetDefinition::js(
-            storage_js.join("services/toc-highlight.js"),
-            "js/services/toc-highlight.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/webauthn-helpers.js"),
+            p.join("webauthn-helpers.js"),
             "js/services/webauthn-helpers.js",
         ),
+        AssetDefinition::js(p.join("webauthn-login.js"), "js/services/webauthn-login.js"),
         AssetDefinition::js(
-            storage_js.join("services/webauthn-login.js"),
-            "js/services/webauthn-login.js",
-        ),
-        AssetDefinition::js(
-            storage_js.join("services/webauthn-login-ui.js"),
+            p.join("webauthn-login-ui.js"),
             "js/services/webauthn-login-ui.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/webauthn-passkey.js"),
+            p.join("webauthn-passkey.js"),
             "js/services/webauthn-passkey.js",
         ),
         AssetDefinition::js(
-            storage_js.join("services/webauthn-passkey-helpers.js"),
+            p.join("webauthn-passkey-helpers.js"),
             "js/services/webauthn-passkey-helpers.js",
         ),
-        AssetDefinition::js(
-            storage_js.join("services/webauthn-utils.js"),
-            "js/services/webauthn-utils.js",
-        ),
+        AssetDefinition::js(p.join("webauthn-utils.js"), "js/services/webauthn-utils.js"),
+    ]
+}
+
+fn service_utils_js(storage_js: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(storage_js.join("utils/dom.js"), "js/utils/dom.js"),
         AssetDefinition::js(storage_js.join("utils/format.js"), "js/utils/format.js"),
         AssetDefinition::js(storage_js.join("utils/form.js"), "js/utils/form.js"),
     ]
 }
+
+// ---------------------------------------------------------------------------
+// Admin assets
+// ---------------------------------------------------------------------------
 
 fn admin_assets(storage_css: &Path, storage_js: &Path) -> Vec<AssetDefinition> {
     vec![
@@ -619,9 +574,22 @@ fn admin_assets(storage_css: &Path, storage_js: &Path) -> Vec<AssetDefinition> {
     ]
 }
 
-#[allow(clippy::too_many_lines)]
+// ---------------------------------------------------------------------------
+// Page JS assets — split by logical prefix group
+// ---------------------------------------------------------------------------
+
 fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     let pages = storage_js.join("pages");
+    let mut v = page_admin_core_js(&pages);
+    v.extend(page_admin_cc_js(&pages));
+    v.extend(page_admin_marketplace_js(&pages));
+    v.extend(page_admin_my_js(&pages));
+    v.extend(page_admin_org_js(&pages));
+    v.extend(page_admin_plugin_js(&pages));
+    v
+}
+
+fn page_admin_core_js(pages: &Path) -> Vec<AssetDefinition> {
     vec![
         AssetDefinition::js(pages.join("admin-access.js"), "js/pages/admin-access.js"),
         AssetDefinition::js(
@@ -647,9 +615,39 @@ fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
         AssetDefinition::js(pages.join("admin-audit.js"), "js/pages/admin-audit.js"),
         AssetDefinition::js(pages.join("admin-billing.js"), "js/pages/admin-billing.js"),
         AssetDefinition::js(
-            pages.join("admin-browse-plugins.js"),
-            "js/pages/admin-browse-plugins.js",
+            pages.join("admin-dashboard-charts.js"),
+            "js/pages/admin-dashboard-charts.js",
         ),
+        AssetDefinition::js(
+            pages.join("admin-dashboard.js"),
+            "js/pages/admin-dashboard.js",
+        ),
+        AssetDefinition::js(pages.join("admin-events.js"), "js/pages/admin-events.js"),
+        AssetDefinition::js(pages.join("admin-export.js"), "js/pages/admin-export.js"),
+        AssetDefinition::js(pages.join("admin-jobs.js"), "js/pages/admin-jobs.js"),
+        AssetDefinition::js(
+            pages.join("admin-leaderboard.js"),
+            "js/pages/admin-leaderboard.js",
+        ),
+        AssetDefinition::js(pages.join("admin-profile.js"), "js/pages/admin-profile.js"),
+        AssetDefinition::js(
+            pages.join("admin-settings.js"),
+            "js/pages/admin-settings.js",
+        ),
+        AssetDefinition::js(
+            pages.join("admin-skill-edit.js"),
+            "js/pages/admin-skill-edit.js",
+        ),
+        AssetDefinition::js(
+            pages.join("admin-users-actions.js"),
+            "js/pages/admin-users-actions.js",
+        ),
+        AssetDefinition::js(pages.join("admin-users.js"), "js/pages/admin-users.js"),
+    ]
+}
+
+fn page_admin_cc_js(pages: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(
             pages.join("admin-cc-report-build.js"),
             "js/pages/admin-cc-report-build.js",
@@ -674,20 +672,14 @@ fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
             pages.join("admin-control-center.js"),
             "js/pages/admin-control-center.js",
         ),
+    ]
+}
+
+fn page_admin_marketplace_js(pages: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(
-            pages.join("admin-dashboard-charts.js"),
-            "js/pages/admin-dashboard-charts.js",
-        ),
-        AssetDefinition::js(
-            pages.join("admin-dashboard.js"),
-            "js/pages/admin-dashboard.js",
-        ),
-        AssetDefinition::js(pages.join("admin-events.js"), "js/pages/admin-events.js"),
-        AssetDefinition::js(pages.join("admin-export.js"), "js/pages/admin-export.js"),
-        AssetDefinition::js(pages.join("admin-jobs.js"), "js/pages/admin-jobs.js"),
-        AssetDefinition::js(
-            pages.join("admin-leaderboard.js"),
-            "js/pages/admin-leaderboard.js",
+            pages.join("admin-browse-plugins.js"),
+            "js/pages/admin-browse-plugins.js",
         ),
         AssetDefinition::js(
             pages.join("admin-marketplace-browse-panel-helpers.js"),
@@ -713,6 +705,11 @@ fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
             pages.join("admin-marketplace-versions.js"),
             "js/pages/admin-marketplace-versions.js",
         ),
+    ]
+}
+
+fn page_admin_my_js(pages: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(
             pages.join("admin-my-activity.js"),
             "js/pages/admin-my-activity.js",
@@ -754,6 +751,11 @@ fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
             pages.join("admin-my-skills.js"),
             "js/pages/admin-my-skills.js",
         ),
+    ]
+}
+
+fn page_admin_org_js(pages: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(
             pages.join("admin-org-access-panel.js"),
             "js/pages/admin-org-access-panel.js",
@@ -807,6 +809,11 @@ fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
             pages.join("admin-org-skills.js"),
             "js/pages/admin-org-skills.js",
         ),
+    ]
+}
+
+fn page_admin_plugin_js(pages: &Path) -> Vec<AssetDefinition> {
+    vec![
         AssetDefinition::js(
             pages.join("admin-plugin-edit.js"),
             "js/pages/admin-plugin-edit.js",
@@ -827,22 +834,12 @@ fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
             pages.join("admin-plugins-list.js"),
             "js/pages/admin-plugins-list.js",
         ),
-        AssetDefinition::js(pages.join("admin-profile.js"), "js/pages/admin-profile.js"),
-        AssetDefinition::js(
-            pages.join("admin-settings.js"),
-            "js/pages/admin-settings.js",
-        ),
-        AssetDefinition::js(
-            pages.join("admin-skill-edit.js"),
-            "js/pages/admin-skill-edit.js",
-        ),
-        AssetDefinition::js(
-            pages.join("admin-users-actions.js"),
-            "js/pages/admin-users-actions.js",
-        ),
-        AssetDefinition::js(pages.join("admin-users.js"), "js/pages/admin-users.js"),
     ]
 }
+
+// ---------------------------------------------------------------------------
+// Admin HTML assets
+// ---------------------------------------------------------------------------
 
 fn admin_html_assets(compiled_dir: &Path) -> Vec<AssetDefinition> {
     let admin = compiled_dir.join("admin");
