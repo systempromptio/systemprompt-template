@@ -62,9 +62,9 @@ pub async fn update_user_plugin(
         req.name.as_deref(),
         req.description.as_deref(),
         req.version.as_deref(),
-        req.enabled as Option<bool>,
+        req.enabled,
         req.category.as_deref(),
-        &req.keywords as &Option<Vec<String>>,
+        &req.keywords,
         req.author_name.as_deref(),
     )
     .fetch_optional(pool)

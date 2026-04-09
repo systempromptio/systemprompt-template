@@ -14,7 +14,7 @@ pub struct NavigationPageDataProvider {
 
 impl NavigationPageDataProvider {
     #[must_use]
-    pub fn new(config: Arc<NavigationConfig>) -> Self {
+    pub const fn new(config: Arc<NavigationConfig>) -> Self {
         Self {
             config,
             branding: None,

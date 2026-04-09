@@ -29,7 +29,7 @@ pub struct RelatedLink {
 
 impl DocsLearningContent {
     #[must_use]
-    pub fn has_content(&self) -> bool {
+    pub const fn has_content(&self) -> bool {
         !self.after_reading_this.is_empty()
             || !self.related_playbooks.is_empty()
             || !self.related_code.is_empty()

@@ -83,7 +83,7 @@ pub(super) struct AchievementProgressEntry {
     pub pct: i64,
 }
 
-pub(super) fn build_health(h: &session_analyses::HealthMetrics) -> Option<HealthEntry> {
+pub(super) const fn build_health(h: &session_analyses::HealthMetrics) -> Option<HealthEntry> {
     if h.total_sessions_30d == 0 {
         return None;
     }

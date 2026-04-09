@@ -16,7 +16,7 @@ pub struct ExtensionConfigError {
 
 impl ExtensionConfigErrors {
     #[must_use]
-    pub fn new(extension: &'static str) -> Self {
+    pub const fn new(extension: &'static str) -> Self {
         Self {
             extension,
             errors: Vec::new(),
@@ -61,7 +61,7 @@ impl ExtensionConfigErrors {
     }
 
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.errors.is_empty()
     }
 

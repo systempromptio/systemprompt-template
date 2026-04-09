@@ -28,17 +28,20 @@ async fn main() -> Result<()> {
         McpServerId::new(DEFAULT_SERVICE_ID)
     });
 
-    let port = if let Ok(p) = env::var("MCP_PORT") {
-        p.parse::<u16>().unwrap_or_else(|e| {
-            tracing::warn!(error = %e, port = %p, "Invalid MCP_PORT, using default: {DEFAULT_PORT}");
+    let port = env::var("MCP_PORT").map_or_else(
+        |_| {
+            tracing::warn!("MCP_PORT not set, using default: {DEFAULT_PORT}");
             DEFAULT_PORT
-        })
-    } else {
-        tracing::warn!("MCP_PORT not set, using default: {DEFAULT_PORT}");
-        DEFAULT_PORT
-    };
+        },
+        |p| {
+            p.parse::<u16>().unwrap_or_else(|e| {
+                tracing::warn!(error = %e, port = %p, "Invalid MCP_PORT, using default: {DEFAULT_PORT}");
+                DEFAULT_PORT
+            })
+        },
+    );
 
-    let server = SystempromptServer::new(ctx.db_pool().clone(), service_id.clone())
+    let server = SystempromptServer::new(Arc::clone(ctx.db_pool()), service_id.clone())
         .context("Failed to initialize SystempromptServer")?;
     let router = systemprompt::mcp::create_router(server, ctx.db_pool());
     let addr = format!("0.0.0.0:{port}");

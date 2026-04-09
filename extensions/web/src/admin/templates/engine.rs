@@ -39,7 +39,7 @@ impl AdminTemplateEngine {
     }
 
     #[must_use]
-    pub fn branding(&self) -> Option<&BrandingConfig> {
+    pub const fn branding(&self) -> Option<&BrandingConfig> {
         self.branding.as_ref()
     }
 

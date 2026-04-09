@@ -212,10 +212,10 @@ pub struct EventsResponse {
     pub offset: i64,
 }
 
-fn default_limit() -> i64 {
+const fn default_limit() -> i64 {
     50
 }
 
-fn default_events_limit() -> i64 {
+const fn default_events_limit() -> i64 {
     100
 }

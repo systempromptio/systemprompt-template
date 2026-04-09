@@ -56,7 +56,7 @@ pub async fn count_user_plugin_items(
           LEFT JOIN user_plugin_agents upa ON upa.user_plugin_id = up.id
           LEFT JOIN user_plugin_mcp_servers upm ON upm.user_plugin_id = up.id
           WHERE up.user_id = $1"#,
-        user_id as &UserId,
+        user_id,
     )
     .fetch_one(pool)
     .await?;
@@ -174,7 +174,7 @@ pub async fn is_entity_in_platform_plugin(
                JOIN user_plugins up ON up.id = ups.user_plugin_id
                WHERE up.user_id = $1 AND ups.user_skill_id = $2
                AND up.base_plugin_id = 'systemprompt'"#,
-            user_id as &UserId,
+            user_id,
             entity_id,
         )
         .fetch_optional(pool)
@@ -190,7 +190,7 @@ pub async fn is_entity_in_platform_plugin(
                JOIN user_plugins up ON up.id = upa.user_plugin_id
                WHERE up.user_id = $1 AND upa.user_agent_id = $2
                AND up.base_plugin_id = 'systemprompt'"#,
-            user_id as &UserId,
+            user_id,
             entity_id,
         )
         .fetch_optional(pool)

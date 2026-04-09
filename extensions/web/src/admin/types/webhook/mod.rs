@@ -23,7 +23,7 @@ impl HookEventPayload {
     }
 
     #[must_use]
-    pub fn event_name(&self) -> &str {
+    pub const fn event_name(&self) -> &str {
         match &self.event {
             HookEvent::SessionStart(_) => "SessionStart",
             HookEvent::SessionEnd(_) => "SessionEnd",
@@ -59,7 +59,7 @@ impl HookEventPayload {
     }
 
     #[must_use]
-    pub fn tool_input(&self) -> Option<&serde_json::Value> {
+    pub const fn tool_input(&self) -> Option<&serde_json::Value> {
         match &self.event {
             HookEvent::PreToolUse(d) => Some(&d.tool_input),
             HookEvent::PostToolUse(d) => Some(&d.tool_input),
@@ -122,7 +122,7 @@ fn parse_common_fields(raw: &serde_json::Value, warnings: &mut Vec<String>) -> H
     common
 }
 
-fn resolve_event_name(common: &HookCommonFields) -> &str {
+const fn resolve_event_name(common: &HookCommonFields) -> &str {
     if common.hook_event_name.is_empty() {
         "unknown"
     } else {

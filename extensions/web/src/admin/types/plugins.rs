@@ -1,8 +1,8 @@
-pub fn default_true() -> bool {
+pub const fn default_true() -> bool {
     true
 }
 
-pub fn default_port() -> u16 {
+pub const fn default_port() -> u16 {
     5000
 }
 

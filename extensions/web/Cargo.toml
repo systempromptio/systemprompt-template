@@ -13,6 +13,9 @@ workspace = true
 # Core facade - provides all systemprompt types via unified API
 systemprompt = { workspace = true, features = ["full"] }
 
+# Local sub-crates
+systemprompt-web-shared = { workspace = true }
+
 # Database access
 sqlx = { workspace = true }
 

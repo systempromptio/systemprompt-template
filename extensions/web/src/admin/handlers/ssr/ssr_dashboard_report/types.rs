@@ -37,7 +37,7 @@ pub struct TrafficOverviewData {
 pub type MetricTuple = (&'static str, f64, f64, f64, f64, f64, bool);
 
 impl TrafficOverviewData {
-    pub fn metric_values(&self) -> [MetricTuple; 6] {
+    pub const fn metric_values(&self) -> [MetricTuple; 6] {
         [
             (
                 "Sessions",
@@ -122,7 +122,7 @@ pub struct UserAcquisitionData {
 }
 
 impl UserAcquisitionData {
-    pub fn metric_values(&self) -> [MetricTuple; 4] {
+    pub const fn metric_values(&self) -> [MetricTuple; 4] {
         [
             (
                 "New Signups",

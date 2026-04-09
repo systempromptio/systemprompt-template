@@ -10,7 +10,7 @@ pub struct ContentQueryRepository {
 
 impl ContentQueryRepository {
     #[must_use]
-    pub fn new(pool: Arc<PgPool>) -> Self {
+    pub const fn new(pool: Arc<PgPool>) -> Self {
         Self { pool }
     }
 

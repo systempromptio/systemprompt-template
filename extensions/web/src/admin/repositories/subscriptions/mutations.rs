@@ -38,7 +38,7 @@ pub async fn get_or_create_paddle_customer(
     sqlx::query_as!(
         PaddleCustomerRow,
         r#"INSERT INTO marketplace.paddle_customers (user_id, email) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET updated_at = now() RETURNING id, user_id, paddle_customer_id, email, name"#,
-        user_id as &UserId,
+        user_id,
         email,
     )
     .fetch_one(pool)
@@ -53,7 +53,7 @@ pub async fn update_paddle_customer_id(
     let existing = sqlx::query_scalar!(
         "SELECT user_id FROM marketplace.paddle_customers WHERE paddle_customer_id = $1 AND user_id != $2",
         paddle_customer_id,
-        user_id as &UserId,
+        user_id,
     )
     .fetch_optional(pool)
     .await?;
@@ -68,7 +68,7 @@ pub async fn update_paddle_customer_id(
         sqlx::query!(
             "UPDATE marketplace.paddle_customers SET paddle_customer_id = NULL, updated_at = now() WHERE paddle_customer_id = $1 AND user_id != $2",
             paddle_customer_id,
-            user_id as &UserId,
+            user_id,
         )
         .execute(pool)
         .await?;
@@ -76,7 +76,7 @@ pub async fn update_paddle_customer_id(
 
     sqlx::query!(
         "UPDATE marketplace.paddle_customers SET paddle_customer_id = $2, updated_at = now() WHERE user_id = $1",
-        user_id as &UserId,
+        user_id,
         paddle_customer_id,
     )
     .execute(pool)
@@ -91,14 +91,14 @@ pub async fn upsert_subscription(
     sqlx::query_as!(
         SubscriptionRow,
         r#"INSERT INTO marketplace.subscriptions (user_id, paddle_subscription_id, paddle_customer_id, plan_id, status, current_period_start, current_period_end, paddle_data) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (paddle_subscription_id) DO UPDATE SET plan_id = COALESCE($4, marketplace.subscriptions.plan_id), status = $5, current_period_start = COALESCE($6, marketplace.subscriptions.current_period_start), current_period_end = COALESCE($7, marketplace.subscriptions.current_period_end), paddle_data = COALESCE($8, marketplace.subscriptions.paddle_data), updated_at = now() RETURNING id, user_id, paddle_subscription_id, paddle_customer_id, plan_id, status, current_period_start, current_period_end, cancel_at, paddle_data, created_at, updated_at"#,
-        params.user_id as &UserId,
+        params.user_id,
         params.paddle_subscription_id,
         params.paddle_customer_id,
         params.plan_id,
         params.status,
         params.period_start,
         params.period_end,
-        params.paddle_data.clone() as Option<serde_json::Value>,
+        params.paddle_data.clone(),
     )
     .fetch_one(pool)
     .await

@@ -27,14 +27,14 @@ impl WebExtension {
     }
 
     #[must_use]
-    pub fn with_validated_config(config: Arc<BlogConfigValidated>) -> Self {
+    pub const fn with_validated_config(config: Arc<BlogConfigValidated>) -> Self {
         Self {
             validated_config: Some(config),
         }
     }
 
     #[must_use]
-    pub fn validated_config(&self) -> Option<&Arc<BlogConfigValidated>> {
+    pub const fn validated_config(&self) -> Option<&Arc<BlogConfigValidated>> {
         self.validated_config.as_ref()
     }
 
@@ -44,7 +44,7 @@ impl WebExtension {
     }
 
     #[must_use]
-    pub fn ingestion_job() -> ContentIngestionJob {
+    pub const fn ingestion_job() -> ContentIngestionJob {
         ContentIngestionJob
     }
 

@@ -137,7 +137,7 @@ impl AsRef<str> for ActivityEntity {
 }
 
 #[must_use]
-pub fn entity_label(entity: ActivityEntity) -> &'static str {
+pub const fn entity_label(entity: ActivityEntity) -> &'static str {
     match entity {
         ActivityEntity::Plugin => "plugin",
         ActivityEntity::Hook => "hook",

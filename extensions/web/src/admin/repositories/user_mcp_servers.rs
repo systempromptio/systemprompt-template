@@ -118,7 +118,7 @@ pub async fn update_user_mcp_server(
         req.endpoint.as_deref(),
         req.enabled,
         req.oauth_required,
-        &req.oauth_scopes as &Option<Vec<String>>,
+        &req.oauth_scopes,
         req.oauth_audience.as_deref(),
     )
     .fetch_optional(pool)

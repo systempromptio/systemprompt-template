@@ -18,11 +18,11 @@ struct PipelineStats {
 }
 
 impl PipelineStats {
-    fn record_success(&mut self) {
+    const fn record_success(&mut self) {
         self.succeeded += 1;
     }
 
-    fn record_failure(&mut self) {
+    const fn record_failure(&mut self) {
         self.failed += 1;
     }
 }

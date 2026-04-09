@@ -14,7 +14,7 @@ pub struct HomepagePrerenderer {
 
 impl HomepagePrerenderer {
     #[must_use]
-    pub fn new(config: Arc<HomepageConfig>) -> Self {
+    pub const fn new(config: Arc<HomepageConfig>) -> Self {
         Self { config }
     }
 }

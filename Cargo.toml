@@ -2,6 +2,7 @@
 members = [
     # Local extensions
     "extensions/web",
+    "extensions/web/shared",
     # MCP servers
     "extensions/mcp/systemprompt",
     "extensions/mcp/marketplace",
@@ -30,6 +31,7 @@ systemprompt = { version = "0.1.22", features = ["full"] }
 # LOCAL EXTENSIONS
 # ============================================
 systemprompt-web-extension = { path = "extensions/web" }
+systemprompt-web-shared = { path = "extensions/web/shared" }
 systemprompt-mcp-shared = { path = "extensions/mcp/shared" }
 
 # Core runtime dependencies

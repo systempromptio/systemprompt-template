@@ -23,7 +23,7 @@ pub struct ValidationError {
 
 impl ValidationResult {
     #[must_use]
-    pub fn valid() -> Self {
+    pub const fn valid() -> Self {
         Self {
             is_valid: true,
             errors: Vec::new(),
@@ -32,7 +32,7 @@ impl ValidationResult {
     }
 
     #[must_use]
-    pub fn invalid(errors: Vec<ValidationError>) -> Self {
+    pub const fn invalid(errors: Vec<ValidationError>) -> Self {
         Self {
             is_valid: false,
             errors,
@@ -66,7 +66,7 @@ impl ValidationError {
 
 impl ValidationService {
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 

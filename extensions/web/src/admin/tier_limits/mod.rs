@@ -74,7 +74,7 @@ impl TierLimits {
 
 impl IngestionLimits {
     #[must_use]
-    pub fn free_default() -> Self {
+    pub const fn free_default() -> Self {
         Self {
             events: 500,
             content_bytes: 10 * 1024 * 1024,
@@ -84,7 +84,7 @@ impl IngestionLimits {
 }
 impl EntityLimits {
     #[must_use]
-    pub fn free_default() -> Self {
+    pub const fn free_default() -> Self {
         Self {
             skills: 5,
             agents: 3,
@@ -96,7 +96,7 @@ impl EntityLimits {
 }
 impl FeatureFlags {
     #[must_use]
-    pub fn free_default() -> Self {
+    pub const fn free_default() -> Self {
         Self {
             ai: AiFeatures {
                 session_analysis: false,
@@ -110,7 +110,7 @@ impl FeatureFlags {
 }
 impl ApiLimits {
     #[must_use]
-    pub fn free_default() -> Self {
+    pub const fn free_default() -> Self {
         Self {
             requests_per_minute: 30,
         }
@@ -149,7 +149,7 @@ pub struct LimitCheckResult {
 
 impl LimitCheckResult {
     #[must_use]
-    pub fn allowed() -> Self {
+    pub const fn allowed() -> Self {
         Self {
             allowed: true,
             reason: None,

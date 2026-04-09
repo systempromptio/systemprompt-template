@@ -109,13 +109,11 @@ async fn build_user_detail(
         Vec::new()
     });
 
-    let created_at: chrono::DateTime<chrono::Utc> = sqlx::query_scalar!(
-        "SELECT created_at FROM users WHERE id = $1",
-        user_id as &UserId
-    )
-    .fetch_optional(pool)
-    .await?
-    .unwrap_or(summary.last_active);
+    let created_at: chrono::DateTime<chrono::Utc> =
+        sqlx::query_scalar!("SELECT created_at FROM users WHERE id = $1", user_id)
+            .fetch_optional(pool)
+            .await?
+            .unwrap_or(summary.last_active);
 
     Ok(Some(super::super::super::super::types::UserDetail {
         user_id: summary.user_id,

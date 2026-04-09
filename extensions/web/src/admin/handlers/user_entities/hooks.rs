@@ -42,7 +42,7 @@ fn default_matcher() -> String {
 fn default_hook_type() -> String {
     "http".to_string()
 }
-fn default_timeout() -> i32 {
+const fn default_timeout() -> i32 {
     10
 }
 

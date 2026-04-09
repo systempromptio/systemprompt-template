@@ -54,7 +54,7 @@ fn default_hook_type() -> String {
 fn default_headers() -> serde_json::Value {
     serde_json::json!({})
 }
-fn default_timeout() -> i32 {
+const fn default_timeout() -> i32 {
     10
 }
 

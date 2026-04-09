@@ -72,7 +72,7 @@ pub(in crate::admin) struct SkillAdoption {
     pub total_used: usize,
 }
 
-pub(in crate::admin) fn build_skill_adoption(
+pub(in crate::admin) const fn build_skill_adoption(
     skills_usage: &[&crate::admin::types::conversation_analytics::EntityUsageSummary],
     unused_skills: &[String],
 ) -> SkillAdoption {

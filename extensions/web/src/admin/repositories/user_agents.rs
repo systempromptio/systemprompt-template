@@ -10,7 +10,7 @@ pub async fn list_user_agents(
     sqlx::query_as!(
         UserAgent,
         r#"SELECT id, user_id as "user_id: UserId", agent_id as "agent_id: AgentId", name, description, system_prompt, enabled, base_agent_id as "base_agent_id: AgentId", created_at, updated_at FROM user_agents WHERE user_id = $1 ORDER BY created_at DESC"#,
-        user_id as &UserId,
+        user_id,
     )
     .fetch_all(pool)
     .await
@@ -26,12 +26,12 @@ pub async fn create_user_agent(
         UserAgent,
         r#"INSERT INTO user_agents (id, user_id, agent_id, name, description, system_prompt, base_agent_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, user_id as "user_id: UserId", agent_id as "agent_id: AgentId", name, description, system_prompt, enabled, base_agent_id as "base_agent_id: AgentId", created_at, updated_at"#,
         &id,
-        user_id as &UserId,
-        &req.agent_id as &AgentId,
+        user_id,
+        &req.agent_id,
         &req.name,
         &req.description,
         &req.system_prompt,
-        req.base_agent_id.as_ref() as Option<&AgentId>,
+        req.base_agent_id.as_ref(),
     )
     .fetch_one(pool)
     .await
@@ -48,8 +48,8 @@ pub async fn get_or_create_user_agent(
             sqlx::query_as!(
                 UserAgent,
                 r#"SELECT id, user_id as "user_id: UserId", agent_id as "agent_id: AgentId", name, description, system_prompt, enabled, base_agent_id as "base_agent_id: AgentId", created_at, updated_at FROM user_agents WHERE user_id = $1 AND agent_id = $2"#,
-                user_id as &UserId,
-                &req.agent_id as &AgentId,
+                user_id,
+                &req.agent_id,
             )
             .fetch_one(pool)
             .await
@@ -66,8 +66,8 @@ pub async fn update_user_agent(
     sqlx::query_as!(
         UserAgent,
         r#"UPDATE user_agents SET name = COALESCE($3, name), description = COALESCE($4, description), system_prompt = COALESCE($5, system_prompt), updated_at = NOW() WHERE user_id = $1 AND agent_id = $2 RETURNING id, user_id as "user_id: UserId", agent_id as "agent_id: AgentId", name, description, system_prompt, enabled, base_agent_id as "base_agent_id: AgentId", created_at, updated_at"#,
-        user_id as &UserId,
-        agent_id as &AgentId,
+        user_id,
+        agent_id,
         req.name.as_deref(),
         req.description.as_deref(),
         req.system_prompt.as_deref(),
@@ -82,7 +82,7 @@ pub async fn fetch_agent_plugin_assignments(
 ) -> Result<std::collections::HashMap<String, Vec<String>>, sqlx::Error> {
     let rows = sqlx::query!(
         "SELECT ua.agent_id, up.name FROM user_plugin_agents upa JOIN user_plugins up ON up.id = upa.user_plugin_id JOIN user_agents ua ON ua.id = upa.user_agent_id WHERE up.user_id = $1",
-        user_id as &UserId,
+        user_id,
     )
     .fetch_all(pool)
     .await?;
@@ -101,8 +101,8 @@ pub async fn delete_user_agent(
 ) -> Result<bool, sqlx::Error> {
     let result = sqlx::query!(
         "DELETE FROM user_agents WHERE user_id = $1 AND agent_id = $2",
-        user_id as &UserId,
-        agent_id as &AgentId,
+        user_id,
+        agent_id,
     )
     .execute(pool)
     .await?;

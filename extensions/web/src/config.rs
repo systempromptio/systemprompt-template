@@ -42,7 +42,7 @@ fn default_base_url() -> String {
     "https://example.com".to_string()
 }
 
-fn default_true() -> bool {
+const fn default_true() -> bool {
     true
 }
 
@@ -217,24 +217,24 @@ impl BlogConfigValidated {
     }
 
     #[must_use]
-    pub fn base_url(&self) -> &Url {
+    pub const fn base_url(&self) -> &Url {
         &self.base_url
     }
 
     #[must_use]
-    pub fn link_tracking_enabled(&self) -> bool {
+    pub const fn link_tracking_enabled(&self) -> bool {
         self.enable_link_tracking
     }
 }
 
 impl ContentSourceValidated {
     #[must_use]
-    pub fn source_id(&self) -> &SourceId {
+    pub const fn source_id(&self) -> &SourceId {
         &self.source_id
     }
 
     #[must_use]
-    pub fn category_id(&self) -> &CategoryId {
+    pub const fn category_id(&self) -> &CategoryId {
         &self.category_id
     }
 
@@ -249,12 +249,12 @@ impl ContentSourceValidated {
     }
 
     #[must_use]
-    pub fn is_enabled(&self) -> bool {
+    pub const fn is_enabled(&self) -> bool {
         self.enabled
     }
 
     #[must_use]
-    pub fn override_existing(&self) -> bool {
+    pub const fn override_existing(&self) -> bool {
         self.override_existing
     }
 }

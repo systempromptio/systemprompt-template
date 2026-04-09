@@ -2,27 +2,28 @@ pub mod admin;
 pub mod api;
 mod assets;
 pub mod blog;
-pub mod config;
-mod config_errors;
 mod config_loader;
 pub mod docs;
-pub mod error;
 pub mod extenders;
 pub mod extension;
 mod extension_impl;
 pub mod features;
 pub mod homepage;
 pub mod jobs;
-pub mod models;
 pub mod navigation;
 pub mod partials;
 mod partials_animations;
 pub mod repository;
 mod schemas;
 pub mod services;
-mod utils;
 
-pub use utils::html_escape;
+// Re-exports from shared crate for API stability
+pub use systemprompt_web_shared as shared;
+pub use systemprompt_web_shared::html_escape;
+pub use systemprompt_web_shared::{config, config_errors, error, models};
+mod utils {
+    pub use systemprompt_web_shared::html_escape;
+}
 
 pub use blog::{BlogListPageDataProvider, BlogPostPageDataProvider};
 pub use config::{
