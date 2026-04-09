@@ -9,12 +9,9 @@ use crate::navigation::NavigationConfig;
 
 use systemprompt::extension::prelude::*;
 
-static NAVIGATION_CONFIG: OnceLock<Result<Option<Arc<NavigationConfig>>, ConfigError>> =
-    OnceLock::new();
-static HOMEPAGE_CONFIG: OnceLock<Result<Option<Arc<HomepageConfig>>, ConfigError>> =
-    OnceLock::new();
-static FEATURES_CONFIG: OnceLock<Result<Option<Arc<FeaturesConfig>>, ConfigError>> =
-    OnceLock::new();
+static NAVIGATION_CONFIG: OnceLock<Option<Arc<NavigationConfig>>> = OnceLock::new();
+static HOMEPAGE_CONFIG: OnceLock<Option<Arc<HomepageConfig>>> = OnceLock::new();
+static FEATURES_CONFIG: OnceLock<Option<Arc<FeaturesConfig>>> = OnceLock::new();
 
 #[derive(Debug, Default, Clone)]
 pub struct WebExtension {
@@ -80,17 +77,18 @@ impl WebExtension {
 }
 
 fn log_and_discard_err<T: Clone>(
-    lock: &OnceLock<Result<Option<T>, ConfigError>>,
+    lock: &OnceLock<Option<T>>,
     init: fn() -> Result<Option<T>, ConfigError>,
     msg: &str,
 ) -> Option<T> {
-    match lock.get_or_init(init) {
-        Ok(val) => val.clone(),
+    lock.get_or_init(|| match init() {
+        Ok(val) => val,
         Err(e) => {
             tracing::error!(error = %e, "{msg}");
             None
         }
-    }
+    })
+    .clone()
 }
 
 register_extension!(WebExtension);
