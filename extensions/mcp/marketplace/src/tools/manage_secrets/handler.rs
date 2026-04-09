@@ -13,6 +13,9 @@ use systemprompt::identifiers::UserId;
 
 use crate::tools::shared;
 
+const MAX_NAME_LEN: usize = 256;
+const MAX_SECRET_VALUE_LEN: usize = 8192;
+
 #[derive(Deserialize, JsonSchema)]
 pub struct ManageSecretsInput {
     pub action: String,
@@ -53,6 +56,29 @@ impl McpToolHandler for ManageSecretsHandler {
         ctx: &RequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
+        if input.plugin_id.len() > MAX_NAME_LEN {
+            return Err(McpError::invalid_params(
+                format!("plugin_id exceeds maximum length of {MAX_NAME_LEN}"),
+                None,
+            ));
+        }
+        if let Some(ref var_name) = input.var_name {
+            if var_name.len() > MAX_NAME_LEN {
+                return Err(McpError::invalid_params(
+                    format!("var_name exceeds maximum length of {MAX_NAME_LEN}"),
+                    None,
+                ));
+            }
+        }
+        if let Some(ref var_value) = input.var_value {
+            if var_value.len() > MAX_SECRET_VALUE_LEN {
+                return Err(McpError::invalid_params(
+                    format!("var_value exceeds maximum length of {MAX_SECRET_VALUE_LEN}"),
+                    None,
+                ));
+            }
+        }
+
         let pool = self.db_pool.write_pool().ok_or_else(|| {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
