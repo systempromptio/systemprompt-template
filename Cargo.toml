@@ -24,7 +24,7 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.1.17", features = ["full"] }
+systemprompt = { version = "0.1.22", features = ["full"] }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -97,15 +97,84 @@ rmcp = { version = "1.1", features = ["server", "client", "transport-io", "trans
 [workspace.lints.clippy]
 all = { level = "deny", priority = -1 }
 pedantic = { level = "deny", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+cargo_common_metadata = "allow"
+multiple_crate_versions = "allow"
+return_self_not_must_use = "allow"
+must_use_candidate = "allow"
+trivially_copy_pass_by_ref = "allow"
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+cast_precision_loss = "allow"
+cast_possible_wrap = "allow"
+format_push_string = "allow"
+uninlined_format_args = "allow"
+result_unit_err = "allow"
+perf = { level = "warn", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
 missing_docs_in_private_items = "allow"
+too_many_arguments = "deny"
 module_name_repetitions = "allow"
 missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+derive_partial_eq_without_eq = "allow"
+cognitive_complexity = "deny"
+type_complexity = "warn"
+too_many_lines = "warn"
+expect_used = "warn"
+unwrap_used = "deny"
+panic = "deny"
+unimplemented = "deny"
+todo = "deny"
+inefficient_to_string = "warn"
+unnecessary_wraps = "warn"
+unused_async = "warn"
+
+# Project standards: never use unwrap_or_default() - fail explicitly
 unwrap_or_default = "allow"
-cast_possible_truncation = "allow"
-cast_precision_loss = "allow"
+
+# Code clarity
+if_not_else = "warn"
+redundant_else = "warn"
+manual_let_else = "warn"
+match_bool = "warn"
+option_if_let_else = "warn"
+needless_pass_by_value = "warn"
+items_after_statements = "warn"
+semicolon_if_nothing_returned = "warn"
+
+# Performance
+or_fun_call = "warn"
+redundant_clone = "warn"
+unnecessary_to_owned = "warn"
+implicit_clone = "warn"
+large_futures = "warn"
+
+# Error handling
+match_wild_err_arm = "warn"
+
+# Restriction (stricter quality)
+dbg_macro = "deny"
+print_stdout = "warn"
+print_stderr = "warn"
+exit = "deny"
+rc_mutex = "deny"
+empty_structs_with_brackets = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+clone_on_ref_ptr = "warn"
+separated_literal_suffix = "warn"
+try_err = "warn"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+missing_copy_implementations = "warn"
+trivial_casts = "warn"
+trivial_numeric_casts = "warn"
+unused_import_braces = "warn"
+unused_qualifications = "warn"
+variant_size_differences = "warn"
 
 # ============================================
 # ROOT PACKAGE (Template Application)

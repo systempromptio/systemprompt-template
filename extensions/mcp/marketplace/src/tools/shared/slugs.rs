@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use sqlx::PgPool;
+use std::collections::HashMap;
 use systemprompt::mcp::McpError;
 
 pub async fn resolve_skill_slugs(
@@ -131,10 +131,7 @@ pub async fn resolve_agent_uuids_to_slugs(pool: &PgPool, uuids: &[String]) -> Ve
         .collect()
 }
 
-pub async fn resolve_mcp_server_uuids_to_slugs(
-    pool: &PgPool,
-    uuids: &[String],
-) -> Vec<String> {
+pub async fn resolve_mcp_server_uuids_to_slugs(pool: &PgPool, uuids: &[String]) -> Vec<String> {
     if uuids.is_empty() {
         return vec![];
     }

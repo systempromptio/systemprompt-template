@@ -196,18 +196,17 @@ pub async fn calculate_multitasking_score(
     peak_concurrency: i32,
     session_count: i32,
 ) -> f32 {
-    let subagent_spawns: i64 = sqlx::query_scalar!(
+    let subagent_spawns: i64 = sqlx::query_scalar::<_, i64>(
         r"SELECT COALESCE(SUM(subagent_spawns), 0)::bigint
           FROM plugin_session_summaries
           WHERE user_id = $1
             AND started_at::date = $2
             AND COALESCE(status, 'active') != 'deleted'",
-        user_id,
-        date,
     )
+    .bind(user_id)
+    .bind(date)
     .fetch_one(pool)
     .await
-    .unwrap_or(Some(0))
     .unwrap_or(0);
 
     let denom = numeric::to_f32_from_i64(i64::from(session_count.max(1)));

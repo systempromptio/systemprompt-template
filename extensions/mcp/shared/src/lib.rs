@@ -41,12 +41,7 @@ pub async fn record_mcp_access(
     }
 }
 
-pub async fn record_mcp_access_rejected(
-    pool: &DbPool,
-    server: &str,
-    tool: &str,
-    reason: &str,
-) {
+pub async fn record_mcp_access_rejected(pool: &DbPool, server: &str, tool: &str, reason: &str) {
     let Some(pg_pool) = pool.pool() else {
         tracing::warn!("No PgPool available to record MCP access rejection");
         return;

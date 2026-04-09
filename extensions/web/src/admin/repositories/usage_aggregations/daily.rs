@@ -70,7 +70,7 @@ pub async fn increment_session_summary(params: &SessionSummaryParams<'_>) {
     let tool_inc = i64::from(is_tool_use);
     let prompt_inc = i64::from(is_prompt);
     let error_inc = i64::from(is_error);
-    let subagent_inc = i64::from(params.is_subagent_stop);
+    let subagent_inc = i32::from(params.is_subagent_stop);
     let user_prompt_inc = i32::from(is_prompt && !params.is_from_subagent);
     let automated_inc = i32::from(is_tool_use && params.is_from_subagent);
 

@@ -6,7 +6,7 @@
 
 ## Summary
 
-The web extension has visibility mismatches between module declarations and re-exports, unused imports that trigger compiler warnings, and dead code functions that inflate the binary and confuse maintainers. These are the easiest findings to fix and should be addressed first to clean up the compiler output so real warnings become visible.
+The web extension has visibility mismatches between module declarations and re-exports, unused imports that trigger compiler warnings, and dead code functions that inflate the binary and confuse maintainers. Additionally, the workspace clippy configuration was significantly weaker than `systemprompt-core`, missing nursery/cargo lint groups, `unwrap_used = "deny"`, `panic = "deny"`, and 20+ other lint rules. This has been corrected -- the template now mirrors core's lint standards. These are the easiest findings to fix and should be addressed first to clean up the compiler output so real warnings become visible.
 
 ## Findings
 
@@ -67,15 +67,33 @@ The web extension has visibility mismatches between module declarations and re-e
 - **Impact**: If `lib.rs` still has `mod playbooks;`, compilation fails. If the module reference has been removed, this is clean. Needs verification.
 - **Fix**: Ensure `mod playbooks` is removed from `lib.rs` and any `use crate::playbooks::*` imports are removed.
 
+### COMP-05 Workspace clippy config misaligned with systemprompt-core
+
+- **File(s)**: `Cargo.toml` (workspace.lints section)
+- **Crate**: all (workspace-level)
+- **Impact**: The template workspace was missing critical lint rules that core enforces. Key gaps:
+  - `unwrap_used = "deny"` -- core denies unwrap, template allowed it silently
+  - `panic = "deny"`, `unimplemented = "deny"`, `todo = "deny"` -- missing
+  - `nursery`, `cargo`, `suspicious` lint groups -- missing entirely
+  - `cognitive_complexity = "deny"`, `too_many_arguments = "deny"` -- missing
+  - `dbg_macro = "deny"`, `exit = "deny"`, `rc_mutex = "deny"` -- missing
+  - Performance lints (`redundant_clone`, `unnecessary_to_owned`, `implicit_clone`) -- missing
+  - Code clarity lints (`if_not_else`, `manual_let_else`, `needless_pass_by_value`) -- missing
+  - Rust-level lints (`missing_debug_implementations`, `trivial_casts`, etc.) -- missing
+- **Status**: **FIXED** -- `Cargo.toml` has been updated to match core's configuration exactly.
+- **Impact of fix**: Running `cargo clippy` will now surface the ~785 unwrap/expect calls as hard errors, plus many other warnings. These must be resolved before the codebase can pass CI with the new lint config.
+
 ## Recommended fix order
 
-1. **COMP-04** -- Verify deleted playbooks module doesn't break compilation
-2. **COMP-02** -- Remove unused import (1 line)
-3. **COMP-01** -- Align visibility modifiers
-4. **COMP-03** -- Audit and remove dead SSR route code
+1. **COMP-05** -- Already fixed (lint config aligned with core)
+2. **COMP-04** -- Verify deleted playbooks module doesn't break compilation
+3. **COMP-02** -- Remove unused import (1 line)
+4. **COMP-01** -- Align visibility modifiers
+5. **COMP-03** -- Audit and remove dead SSR route code
+6. Resolve all new clippy errors/warnings from the aligned lint config
 
 ## Verification
 
-1. `cargo build 2>&1 | grep -c warning` -- should be 0
-2. `cargo clippy -- -D warnings -D dead_code` -- should pass clean
-3. `cargo clippy -- -W unused-imports` -- should report no unused imports
+1. `cargo clippy --workspace 2>&1 | grep -c error` -- track reduction to 0
+2. `cargo clippy --workspace 2>&1 | grep -c warning` -- track reduction to 0
+3. `diff <(grep -A100 'workspace.lints.clippy' Cargo.toml) <(grep -A100 'workspace.lints.clippy' ../systemprompt-core/Cargo.toml)` -- should show no meaningful differences

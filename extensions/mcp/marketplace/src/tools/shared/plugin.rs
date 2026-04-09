@@ -4,25 +4,11 @@ use systemprompt_web_extension::admin::repositories::{
     user_plugins,
 };
 
-/// Deduplicates and appends a new entity ID, then persists via the provided setter.
-async fn add_entity_to_association<Id, MkId, F, Fut>(
-    pool: &std::sync::Arc<sqlx::PgPool>,
-    plugin_id: &str,
-    mut existing_ids: Vec<Id>,
-    new_entity_id: &str,
-    make_id: MkId,
-    setter: F,
-) -> Result<(), sqlx::Error>
-where
-    Id: AsRef<str>,
-    MkId: FnOnce(&str) -> Id,
-    F: FnOnce(&std::sync::Arc<sqlx::PgPool>, &str, &[Id]) -> Fut,
-    Fut: std::future::Future<Output = Result<(), sqlx::Error>>,
-{
-    if !existing_ids.iter().any(|id| id.as_ref() == new_entity_id) {
-        existing_ids.push(make_id(new_entity_id));
+/// Appends `new_id` to `ids` if not already present (by string comparison).
+fn push_if_absent<Id: AsRef<str>>(ids: &mut Vec<Id>, new_id: Id, entity_id: &str) {
+    if !ids.iter().any(|id| id.as_ref() == entity_id) {
+        ids.push(new_id);
     }
-    setter(pool, plugin_id, &existing_ids).await
 }
 
 pub async fn add_to_plugin(
@@ -46,37 +32,19 @@ pub async fn add_to_plugin(
         if let Some(assoc) = assoc {
             let result = match entity_kind {
                 "skill" => {
-                    add_entity_to_association(
-                        &pool,
-                        &assoc.plugin.id,
-                        assoc.skill_ids,
-                        entity_id,
-                        |id| SkillId::new(id),
-                        |p, pid, ids| set_plugin_skills(p, pid, ids),
-                    )
-                    .await
+                    let mut ids = assoc.skill_ids;
+                    push_if_absent(&mut ids, SkillId::new(entity_id), entity_id);
+                    set_plugin_skills(&pool, &assoc.plugin.id, &ids).await
                 }
                 "agent" => {
-                    add_entity_to_association(
-                        &pool,
-                        &assoc.plugin.id,
-                        assoc.agent_ids,
-                        entity_id,
-                        |id| AgentId::new(id),
-                        |p, pid, ids| set_plugin_agents(p, pid, ids),
-                    )
-                    .await
+                    let mut ids = assoc.agent_ids;
+                    push_if_absent(&mut ids, AgentId::new(entity_id), entity_id);
+                    set_plugin_agents(&pool, &assoc.plugin.id, &ids).await
                 }
                 "mcp_server" => {
-                    add_entity_to_association(
-                        &pool,
-                        &assoc.plugin.id,
-                        assoc.mcp_server_ids,
-                        entity_id,
-                        |id| McpServerId::new(id),
-                        |p, pid, ids| set_plugin_mcp_servers(p, pid, ids),
-                    )
-                    .await
+                    let mut ids = assoc.mcp_server_ids;
+                    push_if_absent(&mut ids, McpServerId::new(entity_id), entity_id);
+                    set_plugin_mcp_servers(&pool, &assoc.plugin.id, &ids).await
                 }
                 _ => return None,
             };
@@ -127,37 +95,19 @@ pub async fn auto_add_to_default_plugin(
 
     let result = match entity_kind {
         "skill" => {
-            add_entity_to_association(
-                &pool,
-                &default_plugin.id,
-                assoc.skill_ids,
-                entity_id,
-                |id| SkillId::new(id),
-                |p, pid, ids| set_plugin_skills(p, pid, ids),
-            )
-            .await
+            let mut ids = assoc.skill_ids;
+            push_if_absent(&mut ids, SkillId::new(entity_id), entity_id);
+            set_plugin_skills(&pool, &default_plugin.id, &ids).await
         }
         "agent" => {
-            add_entity_to_association(
-                &pool,
-                &default_plugin.id,
-                assoc.agent_ids,
-                entity_id,
-                |id| AgentId::new(id),
-                |p, pid, ids| set_plugin_agents(p, pid, ids),
-            )
-            .await
+            let mut ids = assoc.agent_ids;
+            push_if_absent(&mut ids, AgentId::new(entity_id), entity_id);
+            set_plugin_agents(&pool, &default_plugin.id, &ids).await
         }
         "mcp_server" => {
-            add_entity_to_association(
-                &pool,
-                &default_plugin.id,
-                assoc.mcp_server_ids,
-                entity_id,
-                |id| McpServerId::new(id),
-                |p, pid, ids| set_plugin_mcp_servers(p, pid, ids),
-            )
-            .await
+            let mut ids = assoc.mcp_server_ids;
+            push_if_absent(&mut ids, McpServerId::new(entity_id), entity_id);
+            set_plugin_mcp_servers(&pool, &default_plugin.id, &ids).await
         }
         _ => return None,
     };

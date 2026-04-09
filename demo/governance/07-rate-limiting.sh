@@ -16,12 +16,15 @@ source "$(cd "$(dirname "$0")/.." && pwd)/_common.sh"
 header "GOVERNANCE: RATE LIMITING" "Rate limit configuration and enforcement"
 
 subheader "STEP 1: Current Rate Limit Config"
-run_cli_indented admin config rate-limits
+run_cli_indented admin config rate-limits show
 
-subheader "STEP 2: Security Config"
-run_cli_indented admin config security
+subheader "STEP 2: Rate Limit Tier Comparison"
+run_cli_indented admin config rate-limits compare
 
-subheader "STEP 3: Server Config"
-run_cli_indented admin config server
+subheader "STEP 3: Security Config"
+run_cli_indented admin config security show
+
+subheader "STEP 4: Server Config"
+run_cli_indented admin config server show
 
 header "RATE LIMITING DEMO COMPLETE"

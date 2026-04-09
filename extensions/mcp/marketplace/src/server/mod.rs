@@ -3,7 +3,6 @@ mod constructor;
 pub use constructor::MarketplaceServer;
 
 use crate::tools::{self, SERVER_NAME};
-use systemprompt_mcp_shared::{record_mcp_access, record_mcp_access_rejected};
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Implementation, InitializeRequestParams,
     InitializeResult, ListResourcesResult, ListToolsResult, PaginatedRequestParams,
@@ -17,6 +16,7 @@ use systemprompt::mcp::{
     build_artifact_viewer_resource, create_progress_callback, read_artifact_viewer_resource,
     ArtifactViewerConfig,
 };
+use systemprompt_mcp_shared::{record_mcp_access, record_mcp_access_rejected};
 
 const ARTIFACT_VIEWER_TEMPLATE: &str = include_str!("../../templates/artifact-viewer.html");
 
@@ -210,4 +210,3 @@ impl ServerHandler for MarketplaceServer {
         read_artifact_viewer_resource(&request, SERVER_NAME, ARTIFACT_VIEWER_TEMPLATE)
     }
 }
-

@@ -1,5 +1,4 @@
 use crate::cli;
-use systemprompt_mcp_shared::{record_mcp_access, record_mcp_access_rejected};
 use crate::tools::{self, CliInput, SERVER_NAME};
 use async_trait::async_trait;
 use rmcp::model::{
@@ -20,6 +19,7 @@ use systemprompt::mcp::{
 };
 use systemprompt::models::artifacts::{CliArtifact, CommandResultRaw, TextArtifact};
 use systemprompt::models::execution::context::RequestContext as SysRequestContext;
+use systemprompt_mcp_shared::{record_mcp_access, record_mcp_access_rejected};
 
 const ARTIFACT_VIEWER_TEMPLATE: &str = include_str!("../templates/artifact-viewer.html");
 

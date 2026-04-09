@@ -14,7 +14,9 @@ source "$(cd "$(dirname "$0")/.." && pwd)/_common.sh"
 header "AGENTS: REGISTRY & LOGS" "A2A discovery, running agents, process logs"
 
 subheader "STEP 1: Agent Registry (A2A Gateway)"
-run_cli_head 30 admin agents registry
+cmd "systemprompt admin agents registry"
+"$CLI" admin agents registry --profile "$PROFILE" 2>&1 | head -30 | sed 's/^/  /' || info "Registry unavailable — agents may need restart."
+echo ""
 
 subheader "STEP 2: Agent Logs — Developer Agent"
 run_cli_head 20 admin agents logs developer_agent

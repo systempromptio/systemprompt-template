@@ -78,6 +78,123 @@ pub async fn resolve_association_slugs(
     (skills, agents, mcps)
 }
 
+pub async fn set_plugin_associations(
+    pool: &Arc<PgPool>,
+    plugin_id: &str,
+    user_id: &UserId,
+    skill_slugs: Option<&[String]>,
+    agent_slugs: Option<&[String]>,
+    mcp_server_slugs: Option<&[String]>,
+) -> Result<(), McpError> {
+    tokio::try_join!(
+        async {
+            if let Some(slugs) = skill_slugs {
+                if !slugs.is_empty() {
+                    let uuids = resolve_skill_slugs(pool, user_id.as_ref(), slugs).await?;
+                    let typed: Vec<_> = uuids
+                        .into_iter()
+                        .map(systemprompt::identifiers::SkillId::new)
+                        .collect();
+                    repositories::set_plugin_skills(pool, plugin_id, &typed)
+                        .await
+                        .map_err(|e| {
+                            McpError::internal_error(
+                                format!("Failed to set plugin skills: {e}"),
+                                None,
+                            )
+                        })?;
+                }
+            }
+            Ok::<(), McpError>(())
+        },
+        async {
+            if let Some(slugs) = agent_slugs {
+                if !slugs.is_empty() {
+                    let uuids = resolve_agent_slugs(pool, user_id.as_ref(), slugs).await?;
+                    let typed: Vec<_> = uuids
+                        .into_iter()
+                        .map(systemprompt::identifiers::AgentId::new)
+                        .collect();
+                    repositories::set_plugin_agents(pool, plugin_id, &typed)
+                        .await
+                        .map_err(|e| {
+                            McpError::internal_error(
+                                format!("Failed to set plugin agents: {e}"),
+                                None,
+                            )
+                        })?;
+                }
+            }
+            Ok::<(), McpError>(())
+        },
+        async {
+            if let Some(slugs) = mcp_server_slugs {
+                if !slugs.is_empty() {
+                    let uuids = resolve_mcp_server_slugs(pool, user_id.as_ref(), slugs).await?;
+                    let typed: Vec<_> = uuids
+                        .into_iter()
+                        .map(systemprompt::identifiers::McpServerId::new)
+                        .collect();
+                    repositories::set_plugin_mcp_servers(pool, plugin_id, &typed)
+                        .await
+                        .map_err(|e| {
+                            McpError::internal_error(
+                                format!("Failed to set plugin MCP servers: {e}"),
+                                None,
+                            )
+                        })?;
+                }
+            }
+            Ok::<(), McpError>(())
+        },
+    )?;
+    Ok(())
+}
+
+pub fn build_plugin_response(
+    plugin: &systemprompt_web_extension::admin::types::UserPlugin,
+    ctx: &systemprompt::models::execution::context::RequestContext,
+    action: &str,
+    skill_slugs: Vec<String>,
+    agent_slugs: Vec<String>,
+    mcp_server_slugs: Vec<String>,
+) -> Result<(systemprompt::models::artifacts::TextArtifact, String), McpError> {
+    use systemprompt::models::artifacts::TextArtifact;
+
+    let plugin_json = serde_json::to_string_pretty(&serde_json::json!({
+        "_display": { "type": "card", "entity": "plugin", "action": action },
+        "plugin_id": plugin.plugin_id,
+        "name": plugin.name,
+        "description": plugin.description,
+        "version": plugin.version,
+        "enabled": plugin.enabled,
+        "category": plugin.category,
+        "keywords": plugin.keywords,
+        "author_name": plugin.author_name,
+        "skill_ids": skill_slugs,
+        "agent_ids": agent_slugs,
+        "mcp_server_ids": mcp_server_slugs,
+        "created_at": plugin.created_at.to_rfc3339(),
+        "updated_at": plugin.updated_at.to_rfc3339(),
+    }))
+    .map_err(|e| McpError::internal_error(format!("Failed to serialize plugin: {e}"), None))?;
+
+    let action_past = if action == "created" {
+        "Created"
+    } else {
+        "Updated"
+    };
+    let summary = format!(
+        "{action_past} plugin '{}' ({})",
+        plugin.name, plugin.plugin_id
+    );
+    let content = format!("{summary}\n\n{plugin_json}");
+    let artifact =
+        TextArtifact::new(&plugin_json, ctx).with_title(format!("Plugin: {}", plugin.name));
+
+    Ok((artifact, content))
+}
+
 pub async fn invalidate_marketplace_cache(pool: &Arc<PgPool>, user_id: &UserId) {
     if let Err(e) = repositories::mark_user_dirty(pool, user_id).await {
         tracing::warn!(error = %e, "Failed to mark user dirty after MCP mutation");
