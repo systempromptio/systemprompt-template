@@ -1,26 +1,30 @@
 <div align="center">
 
-# systemprompt-template
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://systemprompt.io/files/images/logo.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://systemprompt.io/files/images/logo-dark.svg">
+  <img src="https://systemprompt.io/files/images/logo-dark.svg" alt="systemprompt.io" width="400">
+</picture>
 
-**Production AI agent mesh in 3 commands.**
+### Evaluate systemprompt.io. Run it yourself.
 
 [![Built on systemprompt-core](https://img.shields.io/badge/built%20on-systemprompt--core-blue)](https://github.com/systempromptio/systemprompt-core)
-[![License: BSL-1.1](https://img.shields.io/badge/License-BSL--1.1-green.svg)](LICENSE)
+[![Template License: MIT](https://img.shields.io/badge/Template-MIT-green.svg)](LICENSE)
+[![Core License: BSL-1.1](https://img.shields.io/badge/Core-BSL--1.1-blue.svg)](https://github.com/systempromptio/systemprompt-core/blob/main/LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18+-336791.svg)](https://www.postgresql.org/)
-[![MCP](https://img.shields.io/badge/MCP-compatible-purple.svg)](https://modelcontextprotocol.io/)
 
-[Documentation](https://systemprompt.io/documentation) · [Plugin Marketplace](https://github.com/systempromptio/systemprompt-enterprise-demo-marketplace) · [Issues](https://github.com/systempromptio/systemprompt-template/issues)
+[Website](https://systemprompt.io) · [About](https://systemprompt.io/about) · [Documentation](https://systemprompt.io/documentation/) · [Live Demo](https://systemprompt.io/features/demo) · [Discord](https://discord.gg/wkAbSuPWpr)
 
 </div>
 
 ---
 
-The canonical template for building enterprise AI agent platforms on [systemprompt-core](https://github.com/systempromptio/systemprompt-core). Clone it, rebrand it, ship it.
+This is the evaluation template for [systemprompt.io](https://systemprompt.io), the touchpoint between your AI and everything it does.
 
-Compiles into a single Rust binary with auth, memory, MCP hosting, and observability built in. One dependency: PostgreSQL.
+Clone it, build it, run it. Full governance pipeline, admin dashboard, MCP servers, skill marketplace, and demo scripts. No sign-up required.
 
-> **This is a library, not a framework.** No vendor lock-in. Self-hosted with PostgreSQL.
+The template code is MIT licensed. The underlying [systemprompt-core](https://github.com/systempromptio/systemprompt-core) library is BSL-1.1: free for evaluation, testing, and non-production use. Production use requires a [commercial license](mailto:ed@systemprompt.io).
 
 ---
 
@@ -35,8 +39,8 @@ Compiles into a single Rust binary with auth, memory, MCP hosting, and observabi
 ### 1. Create Your Project
 
 ```bash
-gh repo create my-agent-platform --template systempromptio/systemprompt-template --clone
-cd my-agent-platform
+gh repo create my-project --template systempromptio/systemprompt-template --clone
+cd my-project
 ```
 
 ### 2. Build
@@ -58,101 +62,72 @@ just tenant     # Create your tenant
 just start
 ```
 
-Visit **http://localhost:8080**
+Visit **http://localhost:8080** to see the dashboard, admin panel, and governance pipeline in action.
 
 ---
 
-## Rebranding
+## What You Can Evaluate
 
-This template ships with generic "Enterprise Demo" branding. To create a branded deployment for a client:
+### Governance Pipeline
 
-1. Read **[BRANDING.md](BRANDING.md)** for the complete checklist
-2. Edit `services/web/config/theme.yaml` (name, domain, colors, logos)
-3. Update CSS tokens in `storage/files/css/admin/01-tokens-primitives.css` and `storage/files/css/core/variables.css`
-4. Replace image assets in `storage/files/images/`
-5. Run `just publish` to rebuild
+Synchronous four-layer evaluation on every tool call: scope check, secret scan, blocklist, rate limit. Sub-5ms p50 latency. See it execute in real time.
 
-See existing branded deployments for reference:
-- [systemprompt-dynapps](https://github.com/systempromptio/systemprompt-dynapps) (purple, Odoo partner)
-- [systemprompt-agentic-accounting](https://github.com/systempromptio/systemprompt-agentic-accounting) (teal, AI accounting)
-- [systemprompt-knowbe4](https://github.com/systempromptio/systemprompt-knowbe4) (orange, cybersecurity training)
+### Admin Dashboard
 
----
-
-## What's Included
-
-### Agents
-
-Three pre-configured agents with RBAC governance:
-
-| Agent | Role | Access Level |
-|-------|------|-------------|
-| Associate | Revenue operations | Standard |
-| Developer | Platform development | Extended |
-| Admin | System administration | Full |
+Full web dashboard with user management, skill editing, plugin distribution, analytics, and agent configuration. Runs from the same binary.
 
 ### MCP Servers
 
-| Server | Purpose |
-|--------|---------|
-| `systemprompt` | CLI execution, artifact viewing |
-| `marketplace` | Skill management, plugin sync |
+Pre-configured MCP servers for CLI execution and skill management. Connect Claude Code, Claude Desktop, or any MCP-compatible client.
 
-### Extensions
+### Skill Marketplace
 
-| Extension | Purpose |
-|-----------|---------|
-| `extensions/web/` | Web publishing, themes, SSR, SEO |
-| `extensions/mcp/` | MCP server implementations |
+Browse, install, create, and fork skills. Plugin bundles with governed distribution by role and department.
 
-### Plugins
+### Demo Scripts
 
-| Plugin | Purpose |
-|--------|---------|
-| `systemprompt-admin` | Platform administration |
-| `systemprompt-dev` | Development toolkit (10 skills, 6 agents) |
-| `common-skills` | Shared skills (Odoo, brand, content) |
-| `sales-skills` | Sales CRM (reports, emails, health) |
+The `demo/` directory contains executable scripts demonstrating every aspect of the governance pipeline:
+
+| Script | What it demonstrates |
+|--------|---------------------|
+| `00-preflight.sh` | Environment and connectivity checks |
+| `01-happy-path.sh` | Agent request with governance approval |
+| `02-refused-path.sh` | Governance denial and audit trail |
+| `03-audit-trail.sh` | Full request tracing |
+| `04-governance-happy.sh` | Governance pipeline approval flow |
+| `05-governance-denied.sh` | Governance pipeline denial flow |
+| `06-governance-secret-breach.sh` | Secret detection and blocking |
+| `07-mcp-access-tracking.sh` | MCP server access audit |
+| `08-request-tracing.sh` | End-to-end request tracing |
+| `09-agent-tracing.sh` | Agent execution tracing |
+
+```bash
+cd demo && bash 00-preflight.sh
+```
 
 ---
 
-## Architecture
+## Project Structure
 
 ```
 your-project/
-├── extensions/              # Your Rust code
-│   ├── web/                 # Web publishing extension
-│   └── mcp/                 # MCP servers
-│       ├── systemprompt/    #   CLI execution (admin-only)
-│       └── marketplace/     #   Skill management
-│
-├── .systemprompt/           # Runtime state (profiles, sessions, credentials)
-│   └── profiles/            # Deployment profiles (local/production)
+├── extensions/              # Your Rust code (compile-time extensions)
+│   ├── web/                 # Web publishing, themes, SSR
+│   └── mcp/                 # MCP server implementations
 │
 ├── services/                # Configuration (YAML/Markdown only)
-│   ├── agents/              # Agent definitions
+│   ├── agents/              # Agent definitions with OAuth scopes
 │   ├── skills/              # Skill configurations
 │   ├── plugins/             # Claude Code plugins
-│   └── web/                 # Theme, templates, homepage config
+│   ├── ai/                  # Provider configs (Anthropic, OpenAI, Gemini)
+│   └── web/                 # Theme, branding, navigation
 │
-├── storage/files/           # Static assets
-│   ├── css/                 # CSS source (tokens, components)
-│   ├── js/                  # JavaScript bundles
-│   ├── admin/               # Admin templates (HBS)
-│   └── images/              # Logos, favicons
-│
+├── demo/                    # Executable demo scripts
+├── storage/files/           # Static assets (CSS, JS, images)
 ├── Cargo.toml               # Workspace manifest
 ├── justfile                 # Development commands
-├── BRANDING.md              # Rebranding checklist
 └── CLAUDE.md                # AI assistant instructions
 ```
-
-**Key rules:**
-- Rust code goes in `extensions/`
-- Configuration goes in `services/` (YAML/Markdown only)
-- CSS goes in `storage/files/css/` (registered in `extensions/web/src/extension.rs`)
-- `core/` is read-only (git submodule)
-- Run `just publish` after changing templates, CSS, JS, or static files
 
 ---
 
@@ -166,7 +141,6 @@ your-project/
 | `just login` | Authenticate with cloud |
 | `just tenant` | Create tenant (database, profile, migrations) |
 | `just deploy` | Build and deploy to cloud |
-| `just clippy` | Run Rust lints |
 
 ---
 
@@ -180,53 +154,33 @@ systemprompt infra logs view     # View logs
 systemprompt analytics overview  # Analytics dashboard
 ```
 
-See [CLAUDE.md](CLAUDE.md) for full CLI structure.
-
 ---
 
-## Demo Suite
+## How systemprompt.io Works
 
-The `demo/` directory contains executable scripts that demonstrate platform capabilities:
+systemprompt.io is a single compiled Rust binary that sits between your AI agents and everything they touch. Every tool call authenticated, authorised, rate-limited, logged, and costed.
 
-| Script | What it shows |
-|--------|--------------|
-| `01-happy-path.sh` | Agent request with governance approval |
-| `02-refused-path.sh` | Governance denial and audit trail |
-| `03-audit-trail.sh` | Full request tracing |
-| `04-governance-happy.sh` | Multi-agent governance flow |
-| `05-governance-denied.sh` | Secret access denied |
+- One language (Rust), one database (PostgreSQL), one binary (~50MB)
+- Self-hosted, air-gap capable, provider-agnostic
+- MCP, A2A, OAuth2/OIDC, WebAuthn
+- Sub-5ms governance overhead per tool call
 
-```bash
-cd demo && bash 01-happy-path.sh
-```
-
----
-
-## Built on systemprompt-core
-
-This template extends [systemprompt-core](https://github.com/systempromptio/systemprompt-core), which provides:
-
-- **API server + CLI** with full command discovery
-- **Agent runtime** with A2A protocol
-- **MCP server hosting** (Model Context Protocol)
-- **Authentication** (OAuth2 + WebAuthn)
-- **Memory systems** (long-term, short-term, working)
-- **Observability** with request logging and audit trails
-
-Works with Claude Code, Claude Desktop, ChatGPT, and any MCP-compatible tool.
+Read the [full about page](https://systemprompt.io/about) for the story behind the code.
 
 ---
 
 ## License
 
-BSL-1.1, see [LICENSE](LICENSE)
+**This template** is MIT licensed. Fork it, modify it, use it however you like.
 
-Depends on [systemprompt-core](https://github.com/systempromptio/systemprompt-core) (FSL-1.1-ALv2).
+**systemprompt-core** (the underlying library) is [BSL-1.1](https://github.com/systempromptio/systemprompt-core/blob/main/LICENSE). Free for evaluation, testing, and non-production use. Production use requires a commercial license. Converts to Apache 2.0 four years after each version is published.
+
+For licensing enquiries: [ed@systemprompt.io](mailto:ed@systemprompt.io)
 
 ---
 
 <div align="center">
 
-**[systemprompt.io](https://systemprompt.io)** · **[systemprompt-core](https://github.com/systempromptio/systemprompt-core)** · **[Issues](https://github.com/systempromptio/systemprompt-template/issues)**
+**[systemprompt.io](https://systemprompt.io)** · **[systemprompt-core](https://github.com/systempromptio/systemprompt-core)** · **[About](https://systemprompt.io/about)** · **[Discord](https://discord.gg/wkAbSuPWpr)**
 
 </div>
