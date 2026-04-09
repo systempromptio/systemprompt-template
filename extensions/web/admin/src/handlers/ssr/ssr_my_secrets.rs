@@ -26,7 +26,10 @@ pub async fn my_secrets_page(
 
     let user_plugins = repositories::list_user_plugins(&pool, &user_ctx.user_id)
         .await
-        .unwrap_or_else(|_| vec![]);
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list user plugins for secrets page");
+            vec![]
+        });
 
     let total_count = env_vars.len();
     let secret_count = env_vars.iter().filter(|v| v.is_secret).count();
@@ -75,6 +78,9 @@ pub async fn my_secrets_page(
         },
     };
 
-    let value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
+    let value = serde_json::to_value(&data).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize secrets page data");
+        serde_json::Value::Null
+    });
     super::render_page(&engine, "my-secrets", &value, &user_ctx, &mkt_ctx)
 }

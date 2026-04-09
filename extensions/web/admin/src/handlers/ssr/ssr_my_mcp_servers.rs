@@ -33,11 +33,23 @@ pub async fn my_mcp_servers_page(
         vec![]
     });
 
-    let user_plugins = user_plugins_res.unwrap_or_else(|_| vec![]);
+    let user_plugins = user_plugins_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to list enriched user plugins");
+        vec![]
+    });
 
-    let usage_data = usage_res.unwrap_or_else(|_| vec![]);
-    let eff_data = eff_res.unwrap_or_else(|_| vec![]);
-    let _last_used_data = last_used_res.unwrap_or_else(|_| vec![]);
+    let usage_data = usage_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch entity usage summary");
+        vec![]
+    });
+    let eff_data = eff_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch MCP tool effectiveness");
+        vec![]
+    });
+    let _last_used_data = last_used_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch entity last used");
+        vec![]
+    });
 
     let usage_map: HashMap<&str, _> = usage_data
         .iter()

@@ -65,7 +65,10 @@ pub async fn settings_page(
         usage_items,
     };
 
-    let value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
+    let value = serde_json::to_value(&data).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize settings page data");
+        serde_json::Value::Null
+    });
     super::render_page(&engine, "settings", &value, &user_ctx, &mkt_ctx)
 }
 
@@ -104,7 +107,10 @@ async fn fetch_settings_data(
     let current_limits = sub_plan_id
         .and_then(|pid| plans.iter().find(|p| p.id == pid))
         .map_or_else(
-            || serde_json::from_str(FREE_TIER_LIMITS).unwrap_or_else(|_| serde_json::json!({})),
+            || serde_json::from_str(FREE_TIER_LIMITS).unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to parse free tier limits");
+                serde_json::json!({})
+            }),
             |p| p.limits.clone(),
         );
 

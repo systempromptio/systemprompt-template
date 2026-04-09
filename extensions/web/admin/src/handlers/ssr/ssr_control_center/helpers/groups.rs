@@ -22,7 +22,10 @@ pub async fn build_session_groups(
         control_center::fetch_session_events(pool, user_id, &session_ids),
         repositories::session_analyses::fetch_session_analyses_batch(pool, &session_ids),
     );
-    let activity_feed = activity_feed.unwrap_or_else(|_| vec![]);
+    let activity_feed = activity_feed.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch session activity feed");
+        vec![]
+    });
 
     let active_sessions: HashSet<String> = recent_sessions
         .iter()

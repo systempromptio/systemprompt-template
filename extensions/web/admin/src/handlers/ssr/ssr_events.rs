@@ -29,13 +29,19 @@ pub async fn events_page(
         repositories::list_events(&pool, &query),
         repositories::list_event_breakdown(&pool),
     );
-    let response = response.unwrap_or_else(|_| crate::types::EventsResponse {
-        events: vec![],
-        total: 0,
-        limit: query.limit,
-        offset: query.offset,
+    let response = response.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to list events");
+        crate::types::EventsResponse {
+            events: vec![],
+            total: 0,
+            limit: query.limit,
+            offset: query.offset,
+        }
     });
-    let event_breakdown = event_breakdown.unwrap_or_else(|_| vec![]);
+    let event_breakdown = event_breakdown.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to list event breakdown");
+        vec![]
+    });
 
     let has_prev = response.offset > 0;
     let has_next = response.offset + response.limit < response.total;

@@ -33,17 +33,26 @@ pub async fn my_agents_page(
         async {
             conversation_analytics::fetch_entity_effectiveness(&pool, &user_ctx.user_id, "agent")
                 .await
-                .unwrap_or_else(|_| vec![])
+                .unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to fetch agent effectiveness");
+                    vec![]
+                })
         },
         async {
             conversation_analytics::fetch_entity_last_used(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_else(|_| vec![])
+                .unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to fetch entity last used");
+                    vec![]
+                })
         },
         async {
             conversation_analytics::fetch_entity_quality_trend(&pool, &user_ctx.user_id, "agent")
                 .await
-                .unwrap_or_else(|_| vec![])
+                .unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to fetch agent quality trend");
+                    vec![]
+                })
         },
         async {
             repositories::fetch_agent_plugin_assignments(&pool, &user_ctx.user_id)
@@ -187,7 +196,10 @@ pub async fn my_agent_edit_page(
     let agent = if let Some(id) = agent_id {
         let agents = repositories::list_user_agents(&pool, &user_ctx.user_id)
             .await
-            .unwrap_or_else(|_| vec![]);
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to list user agents for edit page");
+                vec![]
+            });
         agents
             .into_iter()
             .find(|a| a.agent_id.as_str() == id.as_str())
