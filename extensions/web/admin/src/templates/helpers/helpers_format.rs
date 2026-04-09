@@ -155,7 +155,10 @@ impl HelperDef for JsonHelper {
         let val = h
             .param(0)
             .map_or(serde_json::Value::Null, |v| v.value().clone());
-        let json_str = serde_json::to_string_pretty(&val).unwrap_or_else(|_| "null".to_string());
+        let json_str = serde_json::to_string_pretty(&val).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to serialize value to JSON for template helper");
+            "null".to_string()
+        });
         let escaped = json_str
             .replace('&', "&amp;")
             .replace('<', "&lt;")
@@ -240,7 +243,10 @@ impl HelperDef for CssVersionHelper {
         static VERSION: OnceLock<String> = OnceLock::new();
         let v = VERSION.get_or_init(|| {
             let path = std::env::current_dir()
-                .unwrap_or_else(|_| std::path::PathBuf::from("."))
+                .unwrap_or_else(|e| {
+                    tracing::debug!(error = %e, "Failed to get current directory for CSS version helper");
+                    std::path::PathBuf::from(".")
+                })
                 .join("storage/files/css/css-manifest.json");
             std::fs::read_to_string(&path)
                 .ok()

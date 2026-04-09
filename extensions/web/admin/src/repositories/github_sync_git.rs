@@ -87,7 +87,10 @@ pub(super) fn git_push(repo_path: &Path, remote_url: &str) -> Result<()> {
 }
 
 pub(super) fn build_authenticated_url(repo_url: &str) -> String {
-    let token = std::env::var("GITHUB_MARKETPLACE_TOKEN").unwrap_or_else(|_| String::new());
+    let token = std::env::var("GITHUB_MARKETPLACE_TOKEN").unwrap_or_else(|e| {
+        tracing::debug!(error = %e, "GITHUB_MARKETPLACE_TOKEN env var not set");
+        String::new()
+    });
     if token.is_empty() {
         return repo_url.to_string();
     }

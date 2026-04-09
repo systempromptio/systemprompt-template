@@ -33,7 +33,10 @@ pub async fn list_plugin_env_handler(
             .map_or_else(|| default_user_id.clone(), UserId::new),
     };
 
-    let definitions = load_plugin_variable_defs(&plugin_id).unwrap_or_else(|_| vec![]);
+    let definitions = load_plugin_variable_defs(&plugin_id).unwrap_or_else(|e| {
+        tracing::debug!(error = %e, plugin_id = %plugin_id, "Failed to load plugin variable definitions");
+        vec![]
+    });
 
     let stored = match repositories::list_plugin_env_vars(&pool, &user_id, &plugin_id).await {
         Ok(vars) => vars,
