@@ -21,7 +21,10 @@ pub async fn my_marketplace_page(
 ) -> Response {
     let user_plugins = repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id)
         .await
-        .unwrap_or_else(|_| vec![]);
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list enriched user plugins for marketplace");
+            vec![]
+        });
 
     let (plugins, total_skills, total_agents, total_mcp) =
         collect_marketplace_plugins(&user_plugins);
@@ -40,7 +43,10 @@ pub async fn my_marketplace_page(
         },
         plugins,
     };
-    let data_value = serde_json::to_value(&data).unwrap_or_else(|_| serde_json::Value::Null);
+    let data_value = serde_json::to_value(&data).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize marketplace page data");
+        serde_json::Value::Null
+    });
     super::render_page(&engine, "my-marketplace", &data_value, &user_ctx, &mkt_ctx)
 }
 

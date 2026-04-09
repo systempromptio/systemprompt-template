@@ -28,22 +28,34 @@ pub async fn my_plugins_page(
         async {
             repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_else(|_| vec![])
+                .unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to list enriched user plugins");
+                    vec![]
+                })
         },
         async {
             conversation_analytics::fetch_entity_usage_summary(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_else(|_| vec![])
+                .unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to fetch entity usage summary");
+                    vec![]
+                })
         },
         async {
             conversation_analytics::fetch_skill_effectiveness(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_else(|_| vec![])
+                .unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to fetch skill effectiveness");
+                    vec![]
+                })
         },
         async {
             conversation_analytics::fetch_entity_effectiveness(&pool, &user_ctx.user_id, "agent")
                 .await
-                .unwrap_or_else(|_| vec![])
+                .unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to fetch agent effectiveness");
+                    vec![]
+                })
         },
     );
 

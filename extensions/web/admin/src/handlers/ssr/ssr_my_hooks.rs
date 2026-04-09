@@ -47,11 +47,17 @@ pub async fn my_hooks_page(
 
     let hooks = repositories::user_hooks::list_user_hooks(&pool, &user_ctx.user_id)
         .await
-        .unwrap_or_else(|_| vec![]);
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list user hooks");
+            vec![]
+        });
 
     let user_plugins = repositories::list_user_plugins(&pool, &user_ctx.user_id)
         .await
-        .unwrap_or_else(|_| vec![]);
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list user plugins");
+            vec![]
+        });
 
     let range = match query.range.as_str() {
         "24h" | "7d" | "14d" => query.range.as_str(),
@@ -65,12 +71,21 @@ pub async fn my_hooks_page(
         async {
             conversation_analytics::fetch_hook_session_quality(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_else(|_| vec![])
+                .unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to fetch hook session quality");
+                    vec![]
+                })
         },
     );
 
-    let event_breakdown = event_breakdown.unwrap_or_else(|_| vec![]);
-    let timeseries = timeseries.unwrap_or_else(|_| vec![]);
+    let event_breakdown = event_breakdown.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch hook event breakdown");
+        vec![]
+    });
+    let timeseries = timeseries.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch hook timeseries");
+        vec![]
+    });
     let chart = super::charts::compute_hooks_chart_data(&timeseries, range);
 
     let quality_map: std::collections::HashMap<&str, _> = hook_quality
@@ -117,13 +132,18 @@ pub async fn my_hooks_page(
             avg_session_quality: format!("{avg_session_quality:.1}"),
         },
         event_breakdown: event_breakdown_views,
-        chart: serde_json::to_value(chart).unwrap_or_else(|_| serde_json::Value::Null),
+        chart: serde_json::to_value(chart).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to serialize hooks chart data");
+            serde_json::Value::Null
+        }),
         range: range.to_string(),
         hook_event_types: HOOK_EVENT_TYPES.to_vec(),
     };
 
-    let value =
-        serde_json::to_value(&data).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+    let value = serde_json::to_value(&data).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize hooks page data");
+        serde_json::Value::Object(serde_json::Map::new())
+    });
     super::render_page(&engine, "my-hooks", &value, &user_ctx, &mkt_ctx)
 }
 

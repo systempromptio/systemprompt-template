@@ -41,17 +41,26 @@ pub async fn my_skills_page(
         async {
             repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_else(|_| vec![])
+                .unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to list enriched user plugins");
+                    vec![]
+                })
         },
         async {
             conversation_analytics::fetch_skill_effectiveness(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_else(|_| vec![])
+                .unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to fetch skill effectiveness");
+                    vec![]
+                })
         },
         async {
             conversation_analytics::fetch_all_skill_ratings(&pool, &user_ctx.user_id)
                 .await
-                .unwrap_or_else(|_| vec![])
+                .unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to fetch skill ratings");
+                    vec![]
+                })
         },
     );
 
@@ -189,7 +198,10 @@ pub async fn my_skill_edit_page(
     let skill = if let Some(id) = skill_id {
         let skills = repositories::list_user_skills(&pool, &user_ctx.user_id)
             .await
-            .unwrap_or_else(|_| vec![]);
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to list user skills for edit page");
+                vec![]
+            });
         skills
             .into_iter()
             .find(|s| s.skill_id.as_str() == id.as_str())
@@ -267,7 +279,10 @@ async fn build_required_secrets(
 
     let stored = repositories::list_skill_secrets(pool, &user_ctx.user_id, &SkillId::new(sid))
         .await
-        .unwrap_or_else(|_| vec![]);
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list skill secrets");
+            vec![]
+        });
     let stored_names: HashSet<String> = stored.iter().map(|s| s.var_name.clone()).collect();
 
     req_secrets
