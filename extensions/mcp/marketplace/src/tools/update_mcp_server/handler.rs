@@ -10,6 +10,10 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
+const MAX_NAME_LEN: usize = 256;
+const MAX_DESCRIPTION_LEN: usize = 4096;
+const MAX_ENDPOINT_LEN: usize = 2048;
+
 #[derive(Deserialize, JsonSchema)]
 pub struct UpdateMcpServerInput {
     pub mcp_server_id: String,
@@ -50,6 +54,31 @@ impl McpToolHandler for UpdateMcpServerHandler {
         ctx: &RequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
+        if let Some(ref name) = input.name {
+            if name.len() > MAX_NAME_LEN {
+                return Err(McpError::invalid_params(
+                    format!("name exceeds maximum length of {MAX_NAME_LEN}"),
+                    None,
+                ));
+            }
+        }
+        if let Some(ref description) = input.description {
+            if description.len() > MAX_DESCRIPTION_LEN {
+                return Err(McpError::invalid_params(
+                    format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
+                    None,
+                ));
+            }
+        }
+        if let Some(ref endpoint) = input.endpoint {
+            if endpoint.len() > MAX_ENDPOINT_LEN {
+                return Err(McpError::invalid_params(
+                    format!("endpoint exceeds maximum length of {MAX_ENDPOINT_LEN}"),
+                    None,
+                ));
+            }
+        }
+
         let pool = self.db_pool.write_pool().ok_or_else(|| {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;

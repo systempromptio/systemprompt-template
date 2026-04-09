@@ -10,6 +10,13 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
+const MAX_NAME_LEN: usize = 256;
+const MAX_DESCRIPTION_LEN: usize = 4096;
+const MAX_VERSION_LEN: usize = 64;
+const MAX_CATEGORY_LEN: usize = 128;
+const MAX_TAG_LEN: usize = 128;
+const MAX_TAGS_COUNT: usize = 50;
+
 #[derive(Deserialize, JsonSchema)]
 pub struct UpdatePluginInput {
     pub plugin_id: String,
@@ -50,6 +57,63 @@ impl McpToolHandler for UpdatePluginHandler {
         ctx: &RequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
+        if let Some(ref name) = input.name {
+            if name.len() > MAX_NAME_LEN {
+                return Err(McpError::invalid_params(
+                    format!("name exceeds maximum length of {MAX_NAME_LEN}"),
+                    None,
+                ));
+            }
+        }
+        if let Some(ref description) = input.description {
+            if description.len() > MAX_DESCRIPTION_LEN {
+                return Err(McpError::invalid_params(
+                    format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
+                    None,
+                ));
+            }
+        }
+        if let Some(ref version) = input.version {
+            if version.len() > MAX_VERSION_LEN {
+                return Err(McpError::invalid_params(
+                    format!("version exceeds maximum length of {MAX_VERSION_LEN}"),
+                    None,
+                ));
+            }
+        }
+        if let Some(ref category) = input.category {
+            if category.len() > MAX_CATEGORY_LEN {
+                return Err(McpError::invalid_params(
+                    format!("category exceeds maximum length of {MAX_CATEGORY_LEN}"),
+                    None,
+                ));
+            }
+        }
+        if let Some(ref author_name) = input.author_name {
+            if author_name.len() > MAX_NAME_LEN {
+                return Err(McpError::invalid_params(
+                    format!("author_name exceeds maximum length of {MAX_NAME_LEN}"),
+                    None,
+                ));
+            }
+        }
+        if let Some(ref keywords) = input.keywords {
+            if keywords.len() > MAX_TAGS_COUNT {
+                return Err(McpError::invalid_params(
+                    format!("keywords count exceeds maximum of {MAX_TAGS_COUNT}"),
+                    None,
+                ));
+            }
+            for keyword in keywords {
+                if keyword.len() > MAX_TAG_LEN {
+                    return Err(McpError::invalid_params(
+                        format!("keyword exceeds maximum length of {MAX_TAG_LEN}"),
+                        None,
+                    ));
+                }
+            }
+        }
+
         let pool = self.db_pool.write_pool().ok_or_else(|| {
             McpError::internal_error("Database pool not available".to_string(), None)
         })?;
