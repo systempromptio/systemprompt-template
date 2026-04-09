@@ -1,4 +1,3 @@
-
 use crate::error::MarketplaceError;
 use serde::Serialize;
 use sqlx::PgPool;

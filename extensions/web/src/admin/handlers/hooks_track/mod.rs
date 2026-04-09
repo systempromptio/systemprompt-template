@@ -89,11 +89,7 @@ pub(crate) async fn handle_hook_track(
     StatusCode::OK.into_response()
 }
 
-async fn insert_hook_event(
-    pool: &PgPool,
-    user_id: &UserId,
-    payload: &HookEventPayload,
-) -> bool {
+async fn insert_hook_event(pool: &PgPool, user_id: &UserId, payload: &HookEventPayload) -> bool {
     let session_id = SessionId::new(payload.session_id());
     let description = description::generate_description(payload);
     let prompt_preview = helpers::generate_prompt_preview(payload);

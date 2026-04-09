@@ -86,9 +86,7 @@ pub async fn get_user_gamification(
     }))
 }
 
-pub async fn get_achievement_stats(
-    pool: &PgPool,
-) -> Result<Vec<AchievementInfo>, sqlx::Error> {
+pub async fn get_achievement_stats(pool: &PgPool) -> Result<Vec<AchievementInfo>, sqlx::Error> {
     #[derive(sqlx::FromRow)]
     struct AchievementCount {
         achievement_id: String,

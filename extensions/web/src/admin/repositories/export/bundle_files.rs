@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{McpServerId, UserId};
@@ -9,7 +8,7 @@ use super::types::{ManifestAuthor, McpConfigFile, McpServerEntry, PluginFile, Pl
 
 pub struct BundleContext<'a> {
     pub master_key: Option<&'a [u8; 32]>,
-    pub pool: &'a Arc<PgPool>,
+    pub pool: &'a PgPool,
     pub user_id: &'a UserId,
     pub platform_url: &'a str,
     pub plugin_id: &'a str,

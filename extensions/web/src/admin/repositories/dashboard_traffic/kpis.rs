@@ -1,4 +1,3 @@
-
 use sqlx::PgPool;
 
 use crate::admin::types::TrafficKpis;

@@ -1,4 +1,3 @@
-
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
@@ -36,9 +35,7 @@ pub async fn get_all_plugin_ratings(
     .await
 }
 
-pub async fn get_all_visibility_rules(
-    pool: &PgPool,
-) -> Result<Vec<VisibilityRule>, sqlx::Error> {
+pub async fn get_all_visibility_rules(pool: &PgPool) -> Result<Vec<VisibilityRule>, sqlx::Error> {
     sqlx::query_as!(
         VisibilityRule,
         "SELECT id, plugin_id, rule_type, rule_value, access, created_at

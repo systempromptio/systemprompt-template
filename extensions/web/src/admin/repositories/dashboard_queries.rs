@@ -1,4 +1,3 @@
-
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
@@ -165,9 +164,7 @@ struct McpErrorRow {
     created_at: chrono::DateTime<chrono::Utc>,
 }
 
-pub async fn fetch_mcp_access_events(
-    pool: &PgPool,
-) -> Result<Vec<McpAccessEvent>, sqlx::Error> {
+pub async fn fetch_mcp_access_events(pool: &PgPool) -> Result<Vec<McpAccessEvent>, sqlx::Error> {
     sqlx::query_as!(
         McpAccessEvent,
         r#"SELECT
@@ -184,9 +181,7 @@ pub async fn fetch_mcp_access_events(
     .await
 }
 
-pub async fn fetch_token_usage_by_user(
-    pool: &PgPool,
-) -> Result<Vec<TokenUsageRow>, sqlx::Error> {
+pub async fn fetch_token_usage_by_user(pool: &PgPool) -> Result<Vec<TokenUsageRow>, sqlx::Error> {
     sqlx::query_as!(
         TokenUsageRow,
         r#"SELECT
@@ -206,9 +201,7 @@ pub async fn fetch_token_usage_by_user(
     .await
 }
 
-pub async fn fetch_tool_success_rates(
-    pool: &PgPool,
-) -> Result<Vec<ToolSuccessRate>, sqlx::Error> {
+pub async fn fetch_tool_success_rates(pool: &PgPool) -> Result<Vec<ToolSuccessRate>, sqlx::Error> {
     sqlx::query_as!(
         ToolSuccessRate,
         r#"SELECT

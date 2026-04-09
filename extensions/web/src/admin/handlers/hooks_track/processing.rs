@@ -231,14 +231,11 @@ async fn handle_apm_and_concurrent(params: &ProcessInsertedEventParams<'_>) {
         return;
     }
 
-    let (apm, eapm) = crate::admin::repositories::apm_metrics::calculate_session_apm(
-        pool,
-        session_id.as_str(),
-    )
-    .await;
+    let (apm, eapm) =
+        crate::admin::repositories::apm_metrics::calculate_session_apm(pool, session_id.as_str())
+            .await;
 
-    let concurrent_raw =
-        hooks_track::count_concurrent_sessions(pool, user_id, session_id).await;
+    let concurrent_raw = hooks_track::count_concurrent_sessions(pool, user_id, session_id).await;
 
     let concurrent = numeric::saturating_i32(concurrent_raw) + 1;
 

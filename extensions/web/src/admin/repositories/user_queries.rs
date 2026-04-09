@@ -1,4 +1,3 @@
-
 use sqlx::PgPool;
 
 pub async fn fetch_department_stats(

@@ -165,9 +165,7 @@ pub struct LeaderboardAverages {
     pub total_users: i64,
 }
 
-pub async fn get_leaderboard_averages(
-    pool: &PgPool,
-) -> Result<LeaderboardAverages, sqlx::Error> {
+pub async fn get_leaderboard_averages(pool: &PgPool) -> Result<LeaderboardAverages, sqlx::Error> {
     #[derive(sqlx::FromRow)]
     struct AvgRow {
         avg_xp: Option<f64>,

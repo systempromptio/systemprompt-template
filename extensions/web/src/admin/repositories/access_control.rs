@@ -1,4 +1,3 @@
-
 use sqlx::PgPool;
 
 use super::super::types::access_control::{AccessControlRule, AccessControlRuleInput};

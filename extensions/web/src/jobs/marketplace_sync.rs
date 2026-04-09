@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
@@ -98,7 +97,7 @@ impl Job for MarketplaceSyncJob {
 }
 
 pub async fn generate_and_persist_marketplace(
-    pool: &Arc<PgPool>,
+    pool: &PgPool,
     user_id: &str,
 ) -> Result<(), MarketplaceError> {
     let user_basic = repositories::marketplace_git::lookup_user_basic(pool, &UserId::new(user_id))

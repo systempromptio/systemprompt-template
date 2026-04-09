@@ -1,4 +1,3 @@
-
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
@@ -107,10 +106,7 @@ pub async fn delete_user(pool: &PgPool, user_id: &UserId) -> Result<bool, sqlx::
     Ok(result.rows_affected() > 0)
 }
 
-pub async fn delete_user_complete(
-    pool: &PgPool,
-    user_id: &UserId,
-) -> Result<bool, sqlx::Error> {
+pub async fn delete_user_complete(pool: &PgPool, user_id: &UserId) -> Result<bool, sqlx::Error> {
     let mut tx = pool.begin().await?;
     let uid = user_id.as_str();
 

@@ -4,8 +4,8 @@ mod user_bundles;
 
 pub use types::*;
 
-use std::path::Path;
 use sqlx::PgPool;
+use std::path::Path;
 use systemprompt::identifiers::UserId;
 use systemprompt::models::Config;
 

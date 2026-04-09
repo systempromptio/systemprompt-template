@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 
@@ -27,7 +25,7 @@ fn slugify(name: &str) -> String {
 }
 
 pub struct UserBundleContext<'a> {
-    pub pool: &'a Arc<PgPool>,
+    pub pool: &'a PgPool,
     pub user_id: &'a UserId,
     pub username: &'a str,
     pub email: &'a str,

@@ -200,10 +200,7 @@ pub async fn get_user_entity_activity(
     .await
 }
 
-pub async fn count_user_entity_activity(
-    pool: &PgPool,
-    user_id: &str,
-) -> Result<i64, sqlx::Error> {
+pub async fn count_user_entity_activity(pool: &PgPool, user_id: &str) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar("SELECT COUNT(*)::BIGINT FROM user_activity WHERE user_id = $1")
         .bind(user_id)
         .fetch_one(pool)

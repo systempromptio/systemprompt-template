@@ -1,4 +1,3 @@
-
 use sqlx::PgPool;
 
 use super::super::types::{GovernanceDecisionRow, GovernanceEvent};
@@ -59,9 +58,7 @@ pub async fn fetch_governance_counts(pool: &PgPool) -> Result<GovernanceCounts, 
     })
 }
 
-pub async fn fetch_governance_events(
-    pool: &PgPool,
-) -> Result<Vec<GovernanceEvent>, sqlx::Error> {
+pub async fn fetch_governance_events(pool: &PgPool) -> Result<Vec<GovernanceEvent>, sqlx::Error> {
     sqlx::query_as::<_, GovernanceEvent>(
         r"SELECT id, user_id, tool_name, agent_id, decision, reason, created_at
         FROM governance_decisions

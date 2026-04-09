@@ -206,9 +206,7 @@ pub async fn list_marketplaces_for_plugins(
     Ok(map)
 }
 
-pub async fn list_github_marketplaces(
-    pool: &PgPool,
-) -> Result<Vec<OrgMarketplace>, sqlx::Error> {
+pub async fn list_github_marketplaces(pool: &PgPool) -> Result<Vec<OrgMarketplace>, sqlx::Error> {
     sqlx::query_as::<_, OrgMarketplace>(
         "SELECT id, name, description, github_repo_url, enabled, created_at, updated_at
          FROM org_marketplaces
@@ -231,10 +229,7 @@ pub struct SyncLogEntry<'a> {
     pub duration_ms: Option<i64>,
 }
 
-pub async fn insert_sync_log(
-    pool: &PgPool,
-    entry: &SyncLogEntry<'_>,
-) -> Result<(), sqlx::Error> {
+pub async fn insert_sync_log(pool: &PgPool, entry: &SyncLogEntry<'_>) -> Result<(), sqlx::Error> {
     sqlx::query(
         "INSERT INTO org_marketplace_sync_logs (marketplace_id, operation, status, commit_hash, plugins_synced, errors, error_message, triggered_by, duration_ms)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",

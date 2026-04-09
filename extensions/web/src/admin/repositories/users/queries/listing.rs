@@ -1,4 +1,3 @@
-
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 

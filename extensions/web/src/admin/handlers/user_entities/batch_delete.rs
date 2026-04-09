@@ -13,7 +13,6 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 
-
 const MAX_BATCH_DELETE_IDS: usize = 100;
 
 use super::plugins::is_entity_in_platform_plugin;

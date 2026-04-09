@@ -1,6 +1,5 @@
 mod sessions;
 
-
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

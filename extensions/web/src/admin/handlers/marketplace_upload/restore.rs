@@ -83,10 +83,7 @@ async fn load_target_version(
     }
 }
 
-async fn snapshot_current(
-    pool: &PgPool,
-    user_id: &UserId,
-) -> Result<serde_json::Value, Response> {
+async fn snapshot_current(pool: &PgPool, user_id: &UserId) -> Result<serde_json::Value, Response> {
     repositories::marketplace_sync::snapshot_current_skills(pool, user_id)
         .await
         .map_err(|e| {

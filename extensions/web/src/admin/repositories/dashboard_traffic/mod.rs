@@ -6,7 +6,6 @@ pub use queries::{
     fetch_traffic_country_timeseries,
 };
 
-
 use sqlx::PgPool;
 
 use super::super::types::{
@@ -22,10 +21,7 @@ fn range_params(range: &str) -> (&str, &str, &str) {
     }
 }
 
-pub async fn fetch_traffic_data(
-    pool: &PgPool,
-    range: &str,
-) -> Result<TrafficData, sqlx::Error> {
+pub async fn fetch_traffic_data(pool: &PgPool, range: &str) -> Result<TrafficData, sqlx::Error> {
     let (interval, prev_interval, bucket) = range_params(range);
 
     let (kpis, timeseries, sources, geo, devices, top_pages, country_timeseries, top_pages_daily) =
@@ -121,10 +117,7 @@ async fn fetch_traffic_sources(
     .await
 }
 
-async fn fetch_traffic_geo(
-    pool: &PgPool,
-    interval: &str,
-) -> Result<Vec<TrafficGeo>, sqlx::Error> {
+async fn fetch_traffic_geo(pool: &PgPool, interval: &str) -> Result<Vec<TrafficGeo>, sqlx::Error> {
     sqlx::query_as!(
         TrafficGeo,
         r#"SELECT
