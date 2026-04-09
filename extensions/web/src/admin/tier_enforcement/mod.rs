@@ -1,6 +1,8 @@
 mod cache;
 mod usage;
 
+use std::sync::Arc;
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
@@ -43,7 +45,11 @@ pub async fn get_usage_summary(
     let (limits, _status) = load_tier_context(cache, pool, user_id).await;
     let usage = load_usage_snapshot(cache, pool, user_id).await;
     let plan_name = cache.get_plan_name(user_id.as_str()).await;
-    UsageSummary::build(limits, usage, plan_name)
+    UsageSummary::build(
+        Arc::unwrap_or_clone(limits),
+        Arc::unwrap_or_clone(usage),
+        plan_name,
+    )
 }
 
 fn check_feature(limits: &TierLimits, feature: Feature) -> LimitCheckResult {

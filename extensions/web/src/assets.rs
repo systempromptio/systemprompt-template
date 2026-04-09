@@ -15,6 +15,7 @@ pub fn web_assets(paths: &dyn systemprompt::extension::AssetPaths) -> Vec<AssetD
     assets
 }
 
+#[allow(clippy::too_many_lines)]
 fn css_assets(storage_css: &Path) -> Vec<AssetDefinition> {
     vec![
         AssetDefinition::css(
@@ -355,6 +356,7 @@ fn public_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     ]
 }
 
+#[allow(clippy::too_many_lines)]
 fn service_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     vec![
         AssetDefinition::js(storage_js.join("services/api.js"), "js/services/api.js"),
@@ -617,6 +619,7 @@ fn admin_assets(storage_css: &Path, storage_js: &Path) -> Vec<AssetDefinition> {
     ]
 }
 
+#[allow(clippy::too_many_lines)]
 fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     let pages = storage_js.join("pages");
     vec![

@@ -21,7 +21,7 @@ pub fn sanitize_for_cowork(
             Kind::SkillAux => result.push(cowork_frontmatter::sanitize_skill_aux(file)),
             Kind::Agent => result.push(cowork_frontmatter::agent_to_skill(file)),
             Kind::PluginManifest => {
-                result.push(cowork_frontmatter::strip_hooks_from_manifest(file.clone()))
+                result.push(cowork_frontmatter::strip_hooks_from_manifest(file.clone()));
             }
             Kind::HooksJson => {}
             Kind::Passthrough => result.push(file.clone()),

@@ -11,7 +11,7 @@ use super::super::tier_limits::{TierLimits, UsageSnapshot};
 use super::usage::fetch_usage_from_db;
 
 struct CachedTierContext {
-    limits: TierLimits,
+    limits: Arc<TierLimits>,
     plan_name: String,
     subscription_status: String,
     _period_end: Option<chrono::DateTime<Utc>>,
@@ -19,7 +19,7 @@ struct CachedTierContext {
 }
 
 struct CachedUsageSnapshot {
-    snapshot: UsageSnapshot,
+    snapshot: Arc<UsageSnapshot>,
     cached_at: Instant,
 }
 
@@ -64,24 +64,25 @@ pub async fn load_tier_context(
     cache: &TierEnforcementCache,
     pool: &PgPool,
     user_id: &UserId,
-) -> (TierLimits, String) {
+) -> (Arc<TierLimits>, String) {
     {
         let guard = cache.tier_cache.read().await;
         if let Some(cached) = guard.get(user_id.as_str()) {
             if cached.cached_at.elapsed().as_secs() < TIER_CACHE_TTL_SECS {
-                return (cached.limits.clone(), cached.subscription_status.clone());
+                return (Arc::clone(&cached.limits), cached.subscription_status.clone());
             }
         }
     }
 
     let (limits, plan_name, status, period_end) = resolve_tier_for_user(pool, user_id).await;
+    let limits = Arc::new(limits);
 
     {
         let mut guard = cache.tier_cache.write().await;
         guard.insert(
             user_id.as_str().to_string(),
             CachedTierContext {
-                limits: limits.clone(),
+                limits: Arc::clone(&limits),
                 plan_name,
                 subscription_status: status.clone(),
                 _period_end: period_end,
@@ -234,24 +235,24 @@ pub async fn load_usage_snapshot(
     cache: &TierEnforcementCache,
     pool: &PgPool,
     user_id: &UserId,
-) -> UsageSnapshot {
+) -> Arc<UsageSnapshot> {
     {
         let guard = cache.usage_cache.read().await;
         if let Some(cached) = guard.get(user_id.as_str()) {
             if cached.cached_at.elapsed().as_secs() < USAGE_CACHE_TTL_SECS {
-                return cached.snapshot.clone();
+                return Arc::clone(&cached.snapshot);
             }
         }
     }
 
-    let snapshot = fetch_usage_from_db(pool, user_id).await;
+    let snapshot = Arc::new(fetch_usage_from_db(pool, user_id).await);
 
     {
         let mut guard = cache.usage_cache.write().await;
         guard.insert(
             user_id.as_str().to_string(),
             CachedUsageSnapshot {
-                snapshot: snapshot.clone(),
+                snapshot: Arc::clone(&snapshot),
                 cached_at: Instant::now(),
             },
         );

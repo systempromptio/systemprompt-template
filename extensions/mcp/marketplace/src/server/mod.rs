@@ -119,24 +119,50 @@ impl ServerHandler for MarketplaceServer {
                     .expect_authenticated("skill-manager requires OAuth but auth was not enforced")
                 {
                     Ok(authenticated) => {
-                        record_mcp_access(&self.db_pool, &authenticated.context.user_id().to_string(), &server_name, &tool_name, "authenticated").await;
+                        record_mcp_access(
+                            &self.db_pool,
+                            &authenticated.context.user_id().to_string(),
+                            &server_name,
+                            &tool_name,
+                            "authenticated",
+                        )
+                        .await;
                         authenticated
                     }
                     Err(e) => {
-                        record_mcp_access_rejected(&self.db_pool, &server_name, &tool_name, &e.message.to_string()).await;
+                        record_mcp_access_rejected(
+                            &self.db_pool,
+                            &server_name,
+                            &tool_name,
+                            &e.message.to_string(),
+                        )
+                        .await;
                         return Err(e);
                     }
                 }
             }
             Err(e) => {
-                record_mcp_access_rejected(&self.db_pool, &server_name, &tool_name, &format!("{e}")).await;
+                record_mcp_access_rejected(
+                    &self.db_pool,
+                    &server_name,
+                    &tool_name,
+                    &format!("{e}"),
+                )
+                .await;
                 return Err(e);
             }
         };
 
         let request_context = authenticated_ctx.context.clone();
 
-        record_mcp_access(&self.db_pool, &request_context.user_id().to_string(), &server_name, &tool_name, "used").await;
+        record_mcp_access(
+            &self.db_pool,
+            &request_context.user_id().to_string(),
+            &server_name,
+            &tool_name,
+            "used",
+        )
+        .await;
 
         let progress_callback = ctx
             .meta
