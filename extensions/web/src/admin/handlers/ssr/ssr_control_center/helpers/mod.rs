@@ -7,7 +7,6 @@ pub(in crate::admin) mod report;
 pub(in crate::admin) mod report_sections;
 mod template;
 
-
 use sqlx::PgPool;
 
 use crate::admin::gamification;
