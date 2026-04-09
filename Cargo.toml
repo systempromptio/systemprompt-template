@@ -6,6 +6,7 @@ members = [
     "extensions/web/admin",
     "extensions/web/content",
     "extensions/web/site",
+    "extensions/web/jobs",
     # MCP servers
     "extensions/mcp/systemprompt",
     "extensions/mcp/marketplace",
@@ -38,6 +39,7 @@ systemprompt-web-shared = { path = "extensions/web/shared" }
 systemprompt-web-admin = { path = "extensions/web/admin" }
 systemprompt-web-content = { path = "extensions/web/content" }
 systemprompt-web-site = { path = "extensions/web/site" }
+systemprompt-web-jobs = { path = "extensions/web/jobs" }
 systemprompt-mcp-shared = { path = "extensions/mcp/shared" }
 
 # Core runtime dependencies

@@ -18,6 +18,7 @@ systemprompt-web-shared = { workspace = true }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-content = { workspace = true }
 systemprompt-web-site = { workspace = true }
+systemprompt-web-jobs = { workspace = true }
 
 # Database access
 sqlx = { workspace = true }

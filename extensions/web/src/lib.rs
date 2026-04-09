@@ -1,7 +1,6 @@
 mod config_loader;
 pub mod extension;
 mod extension_impl;
-pub mod jobs;
 mod schemas;
 
 // Re-exports from sub-crates for API stability
@@ -14,6 +13,7 @@ pub use systemprompt_web_content::{api, repository, services};
 pub use systemprompt_web_site::{
     assets, blog, docs, extenders, features, homepage, navigation, partials,
 };
+pub use systemprompt_web_jobs as jobs;
 // Backward-compatible utils module
 pub mod utils {
     pub use systemprompt_web_shared::html_escape;
