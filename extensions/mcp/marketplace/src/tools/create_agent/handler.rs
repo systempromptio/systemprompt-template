@@ -10,6 +10,10 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
+const MAX_NAME_LEN: usize = 256;
+const MAX_DESCRIPTION_LEN: usize = 4096;
+const MAX_SYSTEM_PROMPT_LEN: usize = 65536;
+
 #[derive(Deserialize, JsonSchema)]
 pub struct CreateAgentInput {
     pub name: String,
@@ -42,6 +46,25 @@ impl McpToolHandler for CreateAgentHandler {
         ctx: &RequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
+        if input.name.len() > MAX_NAME_LEN {
+            return Err(McpError::invalid_params(
+                format!("name exceeds maximum length of {MAX_NAME_LEN}"),
+                None,
+            ));
+        }
+        if input.description.len() > MAX_DESCRIPTION_LEN {
+            return Err(McpError::invalid_params(
+                format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
+                None,
+            ));
+        }
+        if input.system_prompt.len() > MAX_SYSTEM_PROMPT_LEN {
+            return Err(McpError::invalid_params(
+                format!("system_prompt exceeds maximum length of {MAX_SYSTEM_PROMPT_LEN}"),
+                None,
+            ));
+        }
+
         let agent_id = shared::generate_slug(&input.name);
 
         let pool = self.db_pool.write_pool().ok_or_else(|| {
