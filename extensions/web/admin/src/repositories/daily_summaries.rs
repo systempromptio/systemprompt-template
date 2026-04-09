@@ -7,7 +7,7 @@ use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Default, sqlx::FromRow)]
 pub struct DailySummaryRow {
-    pub summary_date: chrono::NaiveDate,
+    pub summary_date: NaiveDate,
     pub session_count: i32,
     pub avg_quality_score: Option<f32>,
     pub goals_achieved: i32,
@@ -113,7 +113,7 @@ pub struct GlobalAverages {
 pub async fn upsert_daily_summary(
     pool: &PgPool,
     user_id: &str,
-    date: chrono::NaiveDate,
+    date: NaiveDate,
     input: &DailySummaryInput,
 ) -> Result<(), sqlx::Error> {
     execute_upsert(pool, user_id, date, input).await
@@ -122,7 +122,7 @@ pub async fn upsert_daily_summary(
 async fn execute_upsert(
     pool: &PgPool,
     user_id: &str,
-    date: chrono::NaiveDate,
+    date: NaiveDate,
     input: &DailySummaryInput,
 ) -> Result<(), sqlx::Error> {
     let patterns = input.patterns.clone();
@@ -155,10 +155,11 @@ struct UpsertCloned {
     skill_effectiveness: Option<serde_json::Value>,
 }
 
+#[allow(clippy::cognitive_complexity)]
 async fn execute_upsert_query(
     pool: &PgPool,
     user_id: &str,
-    date: chrono::NaiveDate,
+    date: NaiveDate,
     input: &DailySummaryInput,
     cloned: &UpsertCloned,
 ) -> Result<(), sqlx::Error> {
@@ -243,7 +244,7 @@ const SELECT_COLUMNS: &str = r"summary_date, session_count, avg_quality_score,
 pub async fn fetch_daily_summary(
     pool: &PgPool,
     user_id: &str,
-    date: chrono::NaiveDate,
+    date: NaiveDate,
 ) -> Option<DailySummaryRow> {
     sqlx::query_as::<_, DailySummaryRow>(&format!(
         "SELECT {SELECT_COLUMNS} FROM daily_summaries WHERE user_id = $1 AND summary_date = $2"

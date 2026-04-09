@@ -9,7 +9,7 @@ use systemprompt::mcp::repository::ToolUsageRepository;
 use systemprompt::mcp::{McpArtifactRepository, McpToolExecutor};
 use systemprompt::system::AppContext;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MarketplaceServer {
     pub db_pool: DbPool,
     pub service_id: McpServerId,

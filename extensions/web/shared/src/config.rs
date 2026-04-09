@@ -186,7 +186,7 @@ impl BlogConfigValidated {
             errors
         })?;
 
-        let base_path = path.parent().unwrap_or(Path::new("."));
+        let base_path = path.parent().unwrap_or_else(|| Path::new("."));
         Self::validate(raw, base_path)
     }
 

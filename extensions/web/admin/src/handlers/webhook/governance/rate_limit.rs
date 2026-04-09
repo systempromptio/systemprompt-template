@@ -24,7 +24,7 @@ impl SlidingWindow {
         let now = Instant::now();
         let cutoff = now
             .checked_sub(std::time::Duration::from_secs(WINDOW_SECS))
-            .expect("WINDOW_SECS is 60s; Instant is always >60s after program start");
+            .unwrap_or(now);
 
         let timestamps = self.buckets.entry(key.to_string()).or_default();
         timestamps.retain(|t| *t > cutoff);
@@ -40,10 +40,10 @@ impl SlidingWindow {
 
 pub(super) fn check(session_id: &SessionId, user_id: &UserId) -> (usize, usize) {
     let key = format!("{}:{}", session_id.as_str(), user_id.as_str());
-    let mut guard = COUNTERS
+    let count = COUNTERS
         .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let window = guard.get_or_insert_with(SlidingWindow::new);
-    let count = window.check_and_record(&key);
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .get_or_insert_with(SlidingWindow::new)
+        .check_and_record(&key);
     (count, MAX_PER_WINDOW)
 }

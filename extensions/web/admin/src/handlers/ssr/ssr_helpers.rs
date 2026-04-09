@@ -11,10 +11,9 @@ use serde_json::json;
 use super::ssr_demo_help::demo_help_text;
 
 pub fn branding_context(engine: &AdminTemplateEngine) -> serde_json::Value {
-    match engine.branding() {
-        Some(b) => json!({"branding": b}),
-        None => json!({}),
-    }
+    engine
+        .branding()
+        .map_or_else(|| json!({}), |b| json!({"branding": b}))
 }
 
 pub fn render_page(

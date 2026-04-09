@@ -13,7 +13,7 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct AnalyzeSkillInput {
     pub skill_id: String,
 }
@@ -23,6 +23,17 @@ pub struct AnalyzeSkillHandler {
     pub ai_service: Arc<AiService>,
     pub skill_loader: Arc<SkillService>,
     pub progress: Option<ProgressCallback>,
+}
+
+impl std::fmt::Debug for AnalyzeSkillHandler {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AnalyzeSkillHandler")
+            .field("db_pool", &self.db_pool)
+            .field("ai_service", &self.ai_service)
+            .field("skill_loader", &self.skill_loader)
+            .field("progress", &self.progress.as_ref().map(|_| "..."))
+            .finish()
+    }
 }
 
 #[async_trait]
@@ -53,12 +64,13 @@ impl McpToolHandler for AnalyzeSkillHandler {
         let pool = shared::require_pool(&self.db_pool)?;
 
         let skill_content =
-            match systemprompt_web_extension::admin::repositories::user_skills::list_user_skills(
+            systemprompt_web_extension::admin::repositories::user_skills::list_user_skills(
                 &pool, &user_id,
             )
             .await
-            {
-                Ok(skills) => skills
+            .ok()
+            .and_then(|skills| {
+                skills
                     .into_iter()
                     .find(|s| s.skill_id.as_ref() == input.skill_id)
                     .map(|s| {
@@ -66,9 +78,8 @@ impl McpToolHandler for AnalyzeSkillHandler {
                             "Name: {}\nDescription: {}\nContent:\n{}",
                             s.name, s.description, s.content
                         )
-                    }),
-                Err(_) => None,
-            };
+                    })
+            });
 
         let skill_content = match skill_content {
             Some(content) => content,

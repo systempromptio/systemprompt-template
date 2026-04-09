@@ -61,7 +61,7 @@ pub fn extract_and_validate_jwt(
         .unwrap_or("")
         .to_string();
     Ok((
-        UserId::new(claims.sub.clone()),
+        UserId::new(claims.sub),
         plugin_id,
         token.to_string(),
     ))

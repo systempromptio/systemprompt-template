@@ -97,20 +97,22 @@ pub async fn validate_magic_link(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<ValidateTokenRequest>,
 ) -> impl IntoResponse {
-    match magic_links::consume_magic_link_token(&pool, &body.token).await {
-        Ok(email) => (
-            StatusCode::OK,
-            Json(serde_json::json!({
-                "ok": true,
-                "email": email
-            })),
-        ),
-        Err(_) => (
-            StatusCode::BAD_REQUEST,
-            Json(serde_json::json!({
-                "ok": false,
-                "error": "This link is invalid or has expired. Please request a new one."
-            })),
-        ),
-    }
+    magic_links::consume_magic_link_token(&pool, &body.token)
+        .await
+        .map_or_else(
+            |_| (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({
+                    "ok": false,
+                    "error": "This link is invalid or has expired. Please request a new one."
+                })),
+            ),
+            |email| (
+                StatusCode::OK,
+                Json(serde_json::json!({
+                    "ok": true,
+                    "email": email
+                })),
+            ),
+        )
 }

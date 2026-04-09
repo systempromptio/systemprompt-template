@@ -208,7 +208,7 @@ pub async fn hooks_page(
         .map(|h| hook_detail_to_json(h, &plugin_name_map))
         .collect();
 
-    let mut unified_hooks = system_json.clone();
+    let mut unified_hooks = system_json;
     unified_hooks.extend(custom_json);
 
     let tracked_plugin_count = {
@@ -246,12 +246,10 @@ pub async fn hook_edit_page(
         Err(r) => return *r,
     };
 
-    let hook: Option<HookDetail> = if let Some(id) = hook_id {
+    let hook: Option<HookDetail> = hook_id.and_then(|id| {
         let hooks = list_hooks_from_filesystem(&services_path);
         hooks.into_iter().find(|h| h.id == *id)
-    } else {
-        None
-    };
+    });
 
     let roles = user_ctx.roles.clone();
     let plugins =

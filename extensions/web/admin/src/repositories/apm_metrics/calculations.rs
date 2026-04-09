@@ -161,14 +161,11 @@ pub async fn calculate_daily_apm_stats(
     .ok()
     .flatten();
 
-    match row {
-        Some(r) => (
-            r.avg_apm.map(numeric::to_f32),
-            r.peak_apm,
-            r.avg_eapm.map(numeric::to_f32),
-        ),
-        None => (None, None, None),
-    }
+    row.map_or((None, None, None), |r| (
+        r.avg_apm.map(numeric::to_f32),
+        r.peak_apm,
+        r.avg_eapm.map(numeric::to_f32),
+    ))
 }
 
 pub async fn calculate_tool_diversity(pool: &PgPool, user_id: &str, date: NaiveDate) -> i32 {
@@ -210,8 +207,8 @@ pub async fn calculate_multitasking_score(
     .unwrap_or(0);
 
     let denom = numeric::to_f32_from_i64(i64::from(session_count.max(1)));
-    let score = (numeric::to_f32_from_i64(subagent_spawns) * 2.0
-        + numeric::to_f32(f64::from(peak_concurrency)) * 3.0)
+    let score = numeric::to_f32_from_i64(subagent_spawns)
+        .mul_add(2.0, numeric::to_f32(f64::from(peak_concurrency)) * 3.0)
         / denom
         * 10.0;
     score.min(100.0)

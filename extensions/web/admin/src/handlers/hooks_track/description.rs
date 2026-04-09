@@ -56,10 +56,7 @@ fn describe_post_tool_use(d: &crate::types::webhook::PostToolUseData) -> String 
     let detail = value_field(&d.tool_input, "file_path")
         .or_else(|| value_field(&d.tool_input, "command").map(|c| truncate(&c, 60)))
         .or_else(|| value_field(&d.tool_input, "pattern"));
-    match detail {
-        Some(det) => format!("Completed: {tool} — {det}"),
-        None => format!("Completed: {tool}"),
-    }
+    detail.map_or_else(|| format!("Completed: {tool}"), |det| format!("Completed: {tool} — {det}"))
 }
 
 fn describe_permission_request(d: &crate::types::webhook::PermissionRequestData) -> String {
@@ -90,10 +87,10 @@ fn describe_session_end(d: &crate::types::webhook::SessionEndData) -> String {
 }
 
 fn describe_stop(d: &crate::types::webhook::StopData) -> String {
-    match &d.last_assistant_message {
-        Some(msg) => format!("AI: {}", truncate(msg, 120)),
-        None => "Turn completed".to_string(),
-    }
+    d.last_assistant_message.as_ref().map_or_else(
+        || "Turn completed".to_string(),
+        |msg| format!("AI: {}", truncate(msg, 120)),
+    )
 }
 
 fn describe_subagent_start(payload: &HookEventPayload) -> String {
@@ -102,10 +99,10 @@ fn describe_subagent_start(payload: &HookEventPayload) -> String {
 }
 
 fn describe_subagent_stop(d: &crate::types::webhook::SubagentStopData) -> String {
-    match &d.last_assistant_message {
-        Some(msg) => format!("Subagent: {}", truncate(msg, 120)),
-        None => "Subagent finished".to_string(),
-    }
+    d.last_assistant_message.as_ref().map_or_else(
+        || "Subagent finished".to_string(),
+        |msg| format!("Subagent: {}", truncate(msg, 120)),
+    )
 }
 
 fn describe_task_completed(d: &crate::types::webhook::TaskCompletedData) -> String {
@@ -140,10 +137,10 @@ fn describe_config_change(d: &crate::types::webhook::ConfigChangeData) -> String
     } else {
         &d.source
     };
-    match &d.file_path {
-        Some(path) => format!("Config changed ({source}): {path}"),
-        None => format!("Config changed ({source})"),
-    }
+    d.file_path.as_ref().map_or_else(
+        || format!("Config changed ({source})"),
+        |path| format!("Config changed ({source}): {path}"),
+    )
 }
 
 fn describe_worktree_create(d: &crate::types::webhook::WorktreeCreateData) -> String {

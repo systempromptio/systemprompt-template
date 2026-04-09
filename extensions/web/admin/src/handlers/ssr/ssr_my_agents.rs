@@ -200,15 +200,15 @@ pub async fn my_agent_edit_page(
         .and_then(|a| a.base_agent_id.as_ref())
         .is_some();
 
-    let agent_json = match &agent {
-        Some(a) => serde_json::to_value(a).unwrap_or(json!({})),
-        None => json!({
+    let agent_json = agent.as_ref().map_or_else(
+        || json!({
             "agent_id": "",
             "name": "",
             "description": "",
             "system_prompt": "",
         }),
-    };
+        |a| serde_json::to_value(a).unwrap_or(json!({})),
+    );
 
     let data = json!({
         "page": "my-agent-edit",

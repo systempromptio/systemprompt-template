@@ -187,12 +187,7 @@ async fn get_cached_marketplace(roles: &[String]) -> (MarketplaceCounts, String)
     {
         let mut cache = MARKETPLACE_CACHE.write().await;
         *cache = Some(CachedMarketplace {
-            counts: MarketplaceCounts {
-                total_plugins: counts.total_plugins,
-                total_skills: counts.total_skills,
-                agents_count: counts.agents_count,
-                mcp_count: counts.mcp_count,
-            },
+            counts,
             site_url: site_url.clone(),
             fetched_at: Instant::now(),
         });

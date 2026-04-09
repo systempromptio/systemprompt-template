@@ -127,6 +127,7 @@ async fn execute_upsert_analysis(
     run_upsert_query(pool, &ids, analysis, p).await
 }
 
+#[allow(clippy::cognitive_complexity)]
 async fn run_upsert_query(
     pool: &PgPool,
     ids: &UpsertAnalysisIds<'_>,

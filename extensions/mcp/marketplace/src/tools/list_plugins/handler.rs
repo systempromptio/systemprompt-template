@@ -10,9 +10,10 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
-#[derive(Deserialize, JsonSchema)]
-pub struct ListPluginsInput {}
+#[derive(Debug, Clone, Copy, Deserialize, JsonSchema)]
+pub struct ListPluginsInput;
 
+#[derive(Debug)]
 pub struct ListPluginsHandler {
     pub db_pool: DbPool,
 }
@@ -110,9 +111,9 @@ impl McpToolHandler for ListPluginsHandler {
                     "category": p.category,
                     "keywords": p.keywords,
                     "base_plugin_id": p.base_plugin_id,
-                    "skills": serde_json::to_string(&skills).expect("Vec<serde_json::Value> is always serializable"),
-                    "agents": serde_json::to_string(&agents).expect("Vec<serde_json::Value> is always serializable"),
-                    "mcp_servers": serde_json::to_string(&mcp_servers).expect("Vec<serde_json::Value> is always serializable"),
+                    "skills": serde_json::to_string(&skills).unwrap_or_default(),
+                    "agents": serde_json::to_string(&agents).unwrap_or_default(),
+                    "mcp_servers": serde_json::to_string(&mcp_servers).unwrap_or_default(),
                     "onboarding": onboarding_value,
                     "created_at": p.created_at.to_rfc3339(),
                     "updated_at": p.updated_at.to_rfc3339(),

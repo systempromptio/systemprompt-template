@@ -113,22 +113,6 @@ fn build_podium(
         .collect()
 }
 
-fn build_averages_view(
-    averages: Option<&crate::gamification::queries::LeaderboardAverages>,
-) -> Option<LeaderboardAveragesView> {
-    averages.map(|a| LeaderboardAveragesView {
-        avg_xp: format!("{:.0}", a.avg_xp),
-        avg_sessions: format!("{:.0}", a.avg_sessions),
-        avg_prompts: format!("{:.0}", a.avg_prompts),
-        avg_tool_uses: format!("{:.0}", a.avg_tool_uses),
-        avg_subagents: format!("{:.0}", a.avg_subagents),
-        avg_streak: format!("{:.0}", a.avg_streak),
-        avg_achievements: format!("{:.0}", a.avg_achievements),
-        avg_days_active: format!("{:.0}", a.avg_days_active),
-        total_users: a.total_users,
-    })
-}
-
 pub(super) fn build_leaderboard_data(
     entries: &[crate::types::LeaderboardEntry],
     averages: Option<&crate::gamification::queries::LeaderboardAverages>,
@@ -148,6 +132,16 @@ pub(super) fn build_leaderboard_data(
         entries: enriched,
         podium,
         current_sort: sort.to_string(),
-        averages: build_averages_view(averages),
+        averages: averages.map(|a| LeaderboardAveragesView {
+            avg_xp: format!("{:.0}", a.avg_xp),
+            avg_sessions: format!("{:.0}", a.avg_sessions),
+            avg_prompts: format!("{:.0}", a.avg_prompts),
+            avg_tool_uses: format!("{:.0}", a.avg_tool_uses),
+            avg_subagents: format!("{:.0}", a.avg_subagents),
+            avg_streak: format!("{:.0}", a.avg_streak),
+            avg_achievements: format!("{:.0}", a.avg_achievements),
+            avg_days_active: format!("{:.0}", a.avg_days_active),
+            total_users: a.total_users,
+        }),
     }
 }

@@ -12,7 +12,7 @@ pub struct SearchService {
 
 impl SearchService {
     #[must_use]
-    pub fn new(pool: Arc<PgPool>) -> Self {
+    pub const fn new(pool: Arc<PgPool>) -> Self {
         Self {
             repo: SearchRepository::new(pool),
         }

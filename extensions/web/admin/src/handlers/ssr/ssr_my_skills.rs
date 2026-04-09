@@ -222,31 +222,34 @@ pub async fn my_skill_edit_page(
 }
 
 fn build_skill_edit_json(skill: Option<&crate::types::UserSkill>) -> serde_json::Value {
-    if let Some(s) = skill {
-        let mut v =
-            serde_json::to_value(s).unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
-        if let Some(obj) = v.as_object_mut() {
-            if let Some(tags) = obj.get("tags").and_then(|t| t.as_array()) {
-                let csv: String = tags
-                    .iter()
-                    .filter_map(|t| t.as_str())
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                obj.insert("tags_csv".to_string(), serde_json::Value::String(csv));
+    skill.map_or_else(
+        || {
+            serde_json::to_value(&SkillEditView {
+                skill_id: String::new(),
+                name: String::new(),
+                description: String::new(),
+                content: String::new(),
+                tags: vec![],
+                tags_csv: String::new(),
+            })
+            .unwrap_or(serde_json::Value::Object(serde_json::Map::new()))
+        },
+        |s| {
+            let mut v = serde_json::to_value(s)
+                .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+            if let Some(obj) = v.as_object_mut() {
+                if let Some(tags) = obj.get("tags").and_then(|t| t.as_array()) {
+                    let csv: String = tags
+                        .iter()
+                        .filter_map(|t| t.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    obj.insert("tags_csv".to_string(), serde_json::Value::String(csv));
+                }
             }
-        }
-        v
-    } else {
-        serde_json::to_value(&SkillEditView {
-            skill_id: String::new(),
-            name: String::new(),
-            description: String::new(),
-            content: String::new(),
-            tags: vec![],
-            tags_csv: String::new(),
-        })
-        .unwrap_or(serde_json::Value::Object(serde_json::Map::new()))
-    }
+            v
+        },
+    )
 }
 
 async fn build_required_secrets(

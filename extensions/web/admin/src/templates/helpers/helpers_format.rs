@@ -273,9 +273,11 @@ impl HelperDef for DefaultHelper {
             _ => true,
         };
         if is_truthy {
-            match val.expect("val is Some because is_truthy requires Some(_)") {
-                serde_json::Value::String(s) => out.write(s)?,
-                other => out.write(&other.to_string())?,
+            if let Some(v) = val {
+                match v {
+                    serde_json::Value::String(s) => out.write(s)?,
+                    other => out.write(&other.to_string())?,
+                }
             }
         } else {
             out.write(fallback)?;

@@ -102,9 +102,9 @@ impl McpToolHandler for UpdatePluginHandler {
             &plugin,
             ctx,
             "updated",
-            skill_slugs,
-            agent_slugs,
-            mcp_server_slugs,
+            &skill_slugs,
+            &agent_slugs,
+            &mcp_server_slugs,
         )
     }
 }

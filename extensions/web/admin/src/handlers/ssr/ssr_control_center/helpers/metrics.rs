@@ -14,7 +14,7 @@ pub struct MetricRowInput {
     pub positive_when_up: bool,
 }
 
-pub(crate) fn make_metric_row(input: &MetricRowInput) -> MetricRow {
+pub fn make_metric_row(input: &MetricRowInput) -> MetricRow {
     let fmt_delta = |baseline: Option<f64>| -> (String, String, String) {
         match baseline {
             None => (
@@ -101,7 +101,7 @@ pub(crate) fn make_metric_row(input: &MetricRowInput) -> MetricRow {
     }
 }
 
-pub(crate) fn avg_field(
+pub fn avg_field(
     days: &[DailySummaryRow],
     f: impl Fn(&DailySummaryRow) -> f64,
 ) -> Option<f64> {
@@ -111,7 +111,7 @@ pub(crate) fn avg_field(
     Some(days.iter().map(&f).sum::<f64>() / numeric::usize_to_f64(days.len()))
 }
 
-pub(crate) fn parse_summary_parts(summary: &str) -> (String, Vec<String>) {
+pub fn parse_summary_parts(summary: &str) -> (String, Vec<String>) {
     let mut goal_lines = Vec::new();
     let mut outcomes = Vec::new();
 

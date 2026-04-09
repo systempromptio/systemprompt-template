@@ -24,7 +24,7 @@ pub async fn check_limit(
     match check {
         LimitCheck::FeatureAccess(feature) => check_feature(&limits, feature),
         LimitCheck::IngestEvent
-        | LimitCheck::IngestContentBytes(_)
+        | LimitCheck::IngestContentBytes
         | LimitCheck::IngestSession
         | LimitCheck::CreateSkill
         | LimitCheck::CreateAgent
@@ -77,9 +77,9 @@ fn check_usage(limits: &TierLimits, usage: &UsageSnapshot, check: LimitCheck) ->
         LimitCheck::IngestEvent => {
             LimitCheckResult::with_usage(limits.ingestion.events, usage.events_today)
         }
-        LimitCheck::IngestContentBytes(additional) => LimitCheckResult::with_usage(
+        LimitCheck::IngestContentBytes => LimitCheckResult::with_usage(
             limits.ingestion.content_bytes,
-            usage.content_bytes_today + additional,
+            usage.content_bytes_today,
         ),
         LimitCheck::IngestSession => {
             LimitCheckResult::with_usage(limits.ingestion.sessions, usage.sessions_today)

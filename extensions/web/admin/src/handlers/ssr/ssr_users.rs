@@ -26,7 +26,7 @@ fn enrich_users_with_ranks(
         .map(|u| {
             let (rank_name, xp) = rank_map
                 .get(u.user_id.as_str())
-                .map_or(("-".to_string(), 0), |rank| {
+                .map_or_else(|| ("-".to_string(), 0), |rank| {
                     (rank.rank_name.clone(), rank.total_xp)
                 });
             EnrichedUserView {

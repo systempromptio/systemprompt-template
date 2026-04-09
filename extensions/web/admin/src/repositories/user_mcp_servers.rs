@@ -82,6 +82,7 @@ pub async fn get_or_create_user_mcp_server(
     }
 }
 
+#[allow(trivial_casts)]
 pub async fn update_user_mcp_server(
     pool: &PgPool,
     user_id: &UserId,

@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 #[derive(Serialize, Debug, Clone)]
-pub struct RulesResponse<T: Serialize> {
+pub struct RulesResponse<T> {
     pub rules: T,
 }
 
@@ -44,7 +44,7 @@ pub struct ImportUserBundleResponse {
 macro_rules! list_response {
     ($name:ident, $field:ident) => {
         #[derive(Serialize)]
-        pub struct $name<T: Serialize> {
+        pub struct $name<T> {
             pub $field: T,
         }
     };
@@ -89,7 +89,7 @@ pub struct ForkableAgentItem {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct ForkPluginResponse<T: Serialize> {
+pub struct ForkPluginResponse<T> {
     pub plugin: T,
     pub forked_skills: usize,
     pub forked_agents: usize,

@@ -33,6 +33,7 @@ pub use tool_dispatch::handle_tool_call;
 
 pub const SERVER_NAME: &str = "skill-manager";
 
+#[derive(Debug)]
 pub struct ToolServices {
     pub db_pool: DbPool,
     pub ai_service: Arc<AiService>,

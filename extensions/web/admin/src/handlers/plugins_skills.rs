@@ -99,7 +99,7 @@ pub async fn update_plugin_skills_handler(
     match repositories::update_plugin_skills(&services_path, &plugin_id, &body.skills) {
         Ok(()) => {
             let p = Arc::clone(&pool);
-            let uid = user_ctx.user_id.clone();
+            let uid = user_ctx.user_id;
             let pid = plugin_id.clone();
             tokio::spawn(async move {
                 activity::record(

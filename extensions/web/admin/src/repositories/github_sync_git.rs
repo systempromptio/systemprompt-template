@@ -92,9 +92,8 @@ pub(super) fn build_authenticated_url(repo_url: &str) -> String {
         return repo_url.to_string();
     }
 
-    if let Some(rest) = repo_url.strip_prefix("https://") {
-        format!("https://{token}@{rest}")
-    } else {
-        repo_url.to_string()
-    }
+    repo_url.strip_prefix("https://").map_or_else(
+        || repo_url.to_string(),
+        |rest| format!("https://{token}@{rest}"),
+    )
 }

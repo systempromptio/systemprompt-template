@@ -34,7 +34,7 @@ impl Job for SitemapGenerationJob {
             "Database not available in job context".to_string(),
         ))?;
 
-        generate_sitemap(db_pool.clone()).await?;
+        generate_sitemap(DbPool::clone(db_pool)).await?;
 
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 

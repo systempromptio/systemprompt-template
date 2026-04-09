@@ -47,6 +47,7 @@ pub async fn create_user(
     .await
 }
 
+#[allow(trivial_casts)]
 pub async fn update_user(
     pool: &PgPool,
     user_id: &UserId,

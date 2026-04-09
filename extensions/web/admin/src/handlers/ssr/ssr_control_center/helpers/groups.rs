@@ -9,7 +9,7 @@ use crate::repositories::session_analyses::SessionAnalysisRow;
 use super::super::session_groups::build_session_groups_with_status;
 use super::super::types::SessionGroup;
 
-pub(crate) async fn build_session_groups(
+pub async fn build_session_groups(
     pool: &PgPool,
     user_id: &systemprompt::identifiers::UserId,
     recent_sessions: &[crate::types::control_center::RecentSession],
@@ -147,7 +147,7 @@ fn format_model_short(model: &str) -> String {
     }
 }
 
-pub(crate) fn partition_entity_usage(
+pub fn partition_entity_usage(
     entity_usage: &[crate::types::conversation_analytics::EntityUsageSummary],
 ) -> (
     Vec<&crate::types::conversation_analytics::EntityUsageSummary>,

@@ -274,10 +274,10 @@ impl NewActivity {
         session_id: &str,
         subject: Option<&str>,
     ) -> Self {
-        let description = match subject {
-            Some(s) => format!("Completed task: '{s}'"),
-            None => "Completed a task".to_string(),
-        };
+        let description = subject.map_or_else(
+            || "Completed a task".to_string(),
+            |s| format!("Completed task: '{s}'"),
+        );
         Self {
             user_id: user_id.as_ref().to_string(),
             category: ActivityCategory::TaskCompletion,

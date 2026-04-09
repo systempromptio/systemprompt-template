@@ -14,7 +14,7 @@ const MAX_NAME_LEN: usize = 256;
 const MAX_DESCRIPTION_LEN: usize = 4096;
 const MAX_ENDPOINT_LEN: usize = 2048;
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct CreateMcpServerInput {
     pub name: String,
     pub description: String,
@@ -32,6 +32,7 @@ pub struct CreateMcpServerInput {
     pub base_mcp_server_id: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct CreateMcpServerHandler {
     pub db_pool: DbPool,
 }

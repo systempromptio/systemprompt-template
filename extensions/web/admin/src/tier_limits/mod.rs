@@ -62,7 +62,7 @@ pub struct ApiLimits {
 
 impl TierLimits {
     #[must_use]
-    pub fn free_default() -> Self {
+    pub const fn free_default() -> Self {
         Self {
             ingestion: IngestionLimits::free_default(),
             entities: EntityLimits::free_default(),
@@ -120,7 +120,7 @@ impl ApiLimits {
 #[derive(Debug, Clone, Copy)]
 pub enum LimitCheck {
     IngestEvent,
-    IngestContentBytes(i64),
+    IngestContentBytes,
     IngestSession,
     CreateSkill,
     CreateAgent,

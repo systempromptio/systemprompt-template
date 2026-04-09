@@ -79,9 +79,8 @@ pub fn load_features_config() -> Result<Option<Arc<FeaturesConfig>>, ConfigError
 
     let features_dir = paths.system().services().join("web/config/features");
 
-    let entries = match read_features_dir(&features_dir)? {
-        Some(entries) => entries,
-        None => return Ok(None),
+    let Some(entries) = read_features_dir(&features_dir)? else {
+        return Ok(None);
     };
 
     let mut pages = parse_feature_pages(entries)?;

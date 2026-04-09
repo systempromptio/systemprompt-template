@@ -46,7 +46,7 @@ pub async fn create_plugin_handler(
         Ok(plugin) => {
             let name = body.name.clone();
             let pid = plugin.id.clone();
-            let uid = user_ctx.user_id.clone();
+            let uid = user_ctx.user_id;
             tokio::spawn(async move {
                 activity::record(
                     &pool,
@@ -77,7 +77,7 @@ pub async fn update_plugin_handler(
         Ok(Some(plugin)) => {
             let name = plugin.name.clone();
             let pid = plugin_id.clone();
-            let uid = user_ctx.user_id.clone();
+            let uid = user_ctx.user_id;
             tokio::spawn(async move {
                 activity::record(
                     &pool,
@@ -110,7 +110,7 @@ pub async fn delete_plugin_handler(
     match repositories::delete_plugin(&services_path, &plugin_id) {
         Ok(true) => {
             let pid = plugin_id.clone();
-            let uid = user_ctx.user_id.clone();
+            let uid = user_ctx.user_id;
             tokio::spawn(async move {
                 activity::record(
                     &pool,

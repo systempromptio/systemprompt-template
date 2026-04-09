@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use anyhow::Result;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -42,7 +44,6 @@ impl DocsPageDataProvider {
             }
             first = false;
 
-            use std::fmt::Write;
             let _ = write!(
                 result,
                 r#"<a href="{}" class="docs-card">

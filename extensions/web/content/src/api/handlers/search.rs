@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     extract::{Query, State},
     response::{IntoResponse, Response},
@@ -12,7 +14,7 @@ pub async fn search_handler(
     State(state): State<BlogState>,
     Query(query): Query<SearchQuery>,
 ) -> Response {
-    let service = SearchService::new(state.pool.clone());
+    let service = SearchService::new(Arc::clone(&state.pool));
 
     let request = SearchRequest {
         query: query.q,

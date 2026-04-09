@@ -16,7 +16,7 @@ pub struct LinkGenerationService {
 
 impl LinkGenerationService {
     #[must_use]
-    pub fn new(pool: Arc<PgPool>) -> Self {
+    pub const fn new(pool: Arc<PgPool>) -> Self {
         Self {
             repo: LinkRepository::new(pool),
         }

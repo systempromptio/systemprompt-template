@@ -170,31 +170,7 @@ pub(super) struct GamificationBlock {
 pub(super) fn build_gamification_block(
     gam: Option<&crate::types::UserGamificationProfile>,
 ) -> GamificationBlock {
-    if let Some(g) = gam {
-        let total_for_rank = g.total_xp + g.xp_to_next_rank;
-        let xp_pct = if total_for_rank > 0 {
-            numeric::pct_i64(g.total_xp, total_for_rank)
-        } else {
-            100
-        };
-        GamificationBlock {
-            has_gamification: true,
-            rank_level: Some(g.rank_level),
-            rank_name: Some(g.rank_name.clone()),
-            total_xp: Some(g.total_xp),
-            xp_to_next_rank: Some(g.xp_to_next_rank),
-            next_rank_name: Some(
-                g.next_rank_name
-                    .as_deref()
-                    .unwrap_or("Max Rank")
-                    .to_string(),
-            ),
-            current_streak: Some(g.current_streak),
-            achievements_count: Some(g.achievements.len()),
-            achievements_total: Some(60),
-            xp_progress_pct: Some(xp_pct),
-        }
-    } else {
+    gam.map_or(
         GamificationBlock {
             has_gamification: false,
             rank_level: None,
@@ -206,8 +182,33 @@ pub(super) fn build_gamification_block(
             achievements_count: None,
             achievements_total: None,
             xp_progress_pct: None,
-        }
-    }
+        },
+        |g| {
+            let total_for_rank = g.total_xp + g.xp_to_next_rank;
+            let xp_pct = if total_for_rank > 0 {
+                numeric::pct_i64(g.total_xp, total_for_rank)
+            } else {
+                100
+            };
+            GamificationBlock {
+                has_gamification: true,
+                rank_level: Some(g.rank_level),
+                rank_name: Some(g.rank_name.clone()),
+                total_xp: Some(g.total_xp),
+                xp_to_next_rank: Some(g.xp_to_next_rank),
+                next_rank_name: Some(
+                    g.next_rank_name
+                        .as_deref()
+                        .unwrap_or("Max Rank")
+                        .to_string(),
+                ),
+                current_streak: Some(g.current_streak),
+                achievements_count: Some(g.achievements.len()),
+                achievements_total: Some(60),
+                xp_progress_pct: Some(xp_pct),
+            }
+        },
+    )
 }
 
 pub(super) fn build_performance(p: &apm_metrics::TodayPerformanceSummary) -> PerformanceEntry {

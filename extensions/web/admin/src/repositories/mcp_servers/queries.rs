@@ -75,16 +75,14 @@ fn parse_server_detail(server_id: &str, val: &serde_yaml::Value) -> McpServerDet
         .and_then(|o| o.get("required"))
         .and_then(serde_yaml::Value::as_bool)
         .unwrap_or(false);
-    let oauth_scopes: Vec<String> = match oauth
+    let oauth_scopes: Vec<String> = oauth
         .and_then(|o| o.get("scopes"))
         .and_then(|v| v.as_sequence())
-    {
-        Some(s) => s
-            .iter()
-            .filter_map(|v| v.as_str().map(ToString::to_string))
-            .collect(),
-        None => Vec::new(),
-    };
+        .map_or_else(Vec::new, |s| {
+            s.iter()
+                .filter_map(|v| v.as_str().map(ToString::to_string))
+                .collect()
+        });
     let oauth_audience = oauth
         .and_then(|o| o.get("audience"))
         .and_then(|v| v.as_str())

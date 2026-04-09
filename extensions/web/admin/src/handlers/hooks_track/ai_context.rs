@@ -130,20 +130,21 @@ pub fn build_full_context(
     analysis_context: &str,
     events_ctx: Option<&session_summary::SessionSummary>,
 ) -> String {
-    if let Some(s) = events_ctx {
-        let tags_part = if s.tags.is_empty() {
-            String::new()
-        } else {
-            format!("\nTags: {}", s.tags)
-        };
-        if analysis_context.is_empty() {
-            format!("{}{tags_part}", s.summary)
-        } else {
-            format!("{analysis_context}\nActivity: {}{tags_part}", s.summary)
-        }
-    } else {
-        analysis_context.to_string()
-    }
+    events_ctx.map_or_else(
+        || analysis_context.to_string(),
+        |s| {
+            let tags_part = if s.tags.is_empty() {
+                String::new()
+            } else {
+                format!("\nTags: {}", s.tags)
+            };
+            if analysis_context.is_empty() {
+                format!("{}{tags_part}", s.summary)
+            } else {
+                format!("{analysis_context}\nActivity: {}{tags_part}", s.summary)
+            }
+        },
+    )
 }
 
 pub async fn resolve_last_message(

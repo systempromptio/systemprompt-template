@@ -111,7 +111,7 @@ async fn build_user_detail(
 
     let created_at: chrono::DateTime<chrono::Utc> = sqlx::query_scalar!(
         "SELECT created_at FROM users WHERE id = $1",
-        user_id as &UserId
+        user_id.as_str()
     )
     .fetch_optional(pool)
     .await?

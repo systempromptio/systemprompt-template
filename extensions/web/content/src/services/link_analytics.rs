@@ -13,7 +13,7 @@ pub struct LinkAnalyticsService {
 
 impl LinkAnalyticsService {
     #[must_use]
-    pub fn new(pool: Arc<PgPool>) -> Self {
+    pub const fn new(pool: Arc<PgPool>) -> Self {
         Self {
             repo: LinkAnalyticsRepository::new(pool),
         }

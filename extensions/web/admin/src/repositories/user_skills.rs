@@ -127,6 +127,7 @@ pub async fn delete_user_skill(
     Ok(result.rows_affected() > 0)
 }
 
+#[allow(trivial_casts)]
 pub async fn update_user_skill(
     pool: &PgPool,
     user_id: &UserId,
@@ -157,6 +158,7 @@ pub async fn update_user_skill(
     .await
 }
 
+#[allow(trivial_casts)]
 pub async fn fetch_skill_usage_counts(
     pool: &PgPool,
     skill_ids: &[SkillId],
@@ -183,6 +185,7 @@ pub async fn fetch_skill_usage_counts(
         .collect()
 }
 
+#[allow(trivial_casts)]
 pub async fn fetch_skill_avg_ratings(
     pool: &PgPool,
     skill_ids: &[SkillId],

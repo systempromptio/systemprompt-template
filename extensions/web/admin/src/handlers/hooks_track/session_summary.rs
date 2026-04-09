@@ -22,9 +22,9 @@ pub async fn generate_session_summary(
         return None;
     }
 
-    let mut prompt_count = 0_usize;
-    let mut tool_count = 0_usize;
-    let mut error_count = 0_usize;
+    let mut prompt_count = 0usize;
+    let mut tool_count = 0usize;
+    let mut error_count = 0usize;
     let mut tools_seen: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut project: Option<String> = None;
 

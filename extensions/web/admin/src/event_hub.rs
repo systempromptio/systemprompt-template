@@ -25,10 +25,13 @@ impl EventHub {
     }
 
     pub async fn subscribe(&self, user_id: &UserId) -> broadcast::Receiver<()> {
-        let mut channels = self.channels.write().await;
-        let tx = channels
+        let rx = self
+            .channels
+            .write()
+            .await
             .entry(user_id.as_str().to_string())
-            .or_insert_with(|| broadcast::channel(16).0);
-        tx.subscribe()
+            .or_insert_with(|| broadcast::channel(16).0)
+            .subscribe();
+        rx
     }
 }

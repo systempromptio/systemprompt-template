@@ -226,5 +226,5 @@ fn validate_plugin_jwt(headers: &HeaderMap) -> Result<String, Box<Response>> {
         shared::boxed_error_response(StatusCode::UNAUTHORIZED, "Invalid or expired token")
     })?;
 
-    Ok(claims.sub.clone())
+    Ok(claims.sub)
 }

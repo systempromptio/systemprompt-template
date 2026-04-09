@@ -10,9 +10,10 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
-#[derive(Deserialize, JsonSchema)]
-pub struct ListMcpServersInput {}
+#[derive(Debug, Clone, Copy, Deserialize, JsonSchema)]
+pub struct ListMcpServersInput;
 
+#[derive(Debug)]
 pub struct ListMcpServersHandler {
     pub db_pool: DbPool,
 }

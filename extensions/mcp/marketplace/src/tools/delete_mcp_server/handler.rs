@@ -10,11 +10,12 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct DeleteMcpServerInput {
     pub mcp_server_id: String,
 }
 
+#[derive(Debug)]
 pub struct DeleteMcpServerHandler {
     pub db_pool: DbPool,
 }

@@ -50,10 +50,7 @@ pub async fn consume_magic_link_token(
     .fetch_optional(pool)
     .await?;
 
-    match row {
-        Some(email) => Ok(email),
-        None => Err(anyhow::anyhow!("Invalid or expired magic link")),
-    }
+    row.ok_or_else(|| anyhow::anyhow!("Invalid or expired magic link"))
 }
 
 pub async fn count_recent_tokens(pool: &PgPool, email: &str) -> Result<i64, anyhow::Error> {

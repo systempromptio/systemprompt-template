@@ -14,7 +14,7 @@ const MAX_NAME_LEN: usize = 256;
 const MAX_DESCRIPTION_LEN: usize = 4096;
 const MAX_SYSTEM_PROMPT_LEN: usize = 65536;
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct UpdateAgentInput {
     pub agent_id: String,
     pub name: Option<String>,
@@ -22,6 +22,7 @@ pub struct UpdateAgentInput {
     pub system_prompt: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct UpdateAgentHandler {
     pub db_pool: DbPool,
 }

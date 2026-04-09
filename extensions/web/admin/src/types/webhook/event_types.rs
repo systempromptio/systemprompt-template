@@ -88,7 +88,7 @@ pub struct StopData {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Copy)]
-pub struct SubagentStartData {}
+pub struct SubagentStartData;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SubagentStopData {

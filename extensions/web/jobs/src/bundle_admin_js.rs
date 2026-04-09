@@ -66,7 +66,7 @@ async fn build_per_page_bundles(
         let manifest_path = entry.path();
         let bundle_name = manifest_path
             .file_stem()
-            .unwrap_or(std::ffi::OsStr::new(""))
+            .unwrap_or_else(|| std::ffi::OsStr::new(""))
             .to_string_lossy()
             .to_string();
 

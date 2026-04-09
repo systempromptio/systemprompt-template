@@ -16,7 +16,7 @@ use crate::tools::shared;
 const MAX_NAME_LEN: usize = 256;
 const MAX_SECRET_VALUE_LEN: usize = 8192;
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct ManageSecretsInput {
     pub action: String,
     pub plugin_id: String,
@@ -26,6 +26,7 @@ pub struct ManageSecretsInput {
     pub is_secret: bool,
 }
 
+#[derive(Debug)]
 pub struct ManageSecretsHandler {
     pub db_pool: DbPool,
 }

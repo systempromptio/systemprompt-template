@@ -96,9 +96,9 @@ impl McpToolHandler for CreatePluginHandler {
             &plugin,
             ctx,
             "created",
-            skill_slugs,
-            agent_slugs,
-            mcp_server_slugs,
+            &skill_slugs,
+            &agent_slugs,
+            &mcp_server_slugs,
         )
     }
 }

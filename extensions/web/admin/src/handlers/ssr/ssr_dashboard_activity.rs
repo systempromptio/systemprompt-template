@@ -87,11 +87,9 @@ pub(super) fn build_activity_data(dash: &types::DashboardData, range_key: &str) 
     }
 }
 
-pub(super) fn build_mcp_health(
+pub(super) const fn build_mcp_health(
     stats: &types::ActivityStats,
 ) -> (usize, &'static str, &'static str) {
-    use crate::numeric;
-
     let mcp_error_rate_pct = if stats.mcp_tool_calls > 0 {
         stats.mcp_errors.saturating_mul(100) / stats.mcp_tool_calls
     } else {
@@ -105,7 +103,7 @@ pub(super) fn build_mcp_health(
         ("critical", "Critical")
     };
     (
-        numeric::i64_to_usize(mcp_error_rate_pct),
+        crate::numeric::i64_to_usize(mcp_error_rate_pct),
         health_status,
         label,
     )

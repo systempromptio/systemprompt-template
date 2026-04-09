@@ -10,14 +10,14 @@ pub async fn record(pool: &PgPool, activity: NewActivity) {
         return;
     }
 
-    let (entity_type, entity_id, entity_name) = match &activity.entity {
-        Some(ent) => (
+    let (entity_type, entity_id, entity_name) = activity.entity.as_ref().map_or(
+        (None, None, None),
+        |ent| (
             Some(ent.entity_type.as_ref().to_string()),
             ent.entity_id.clone(),
             ent.entity_name.clone(),
         ),
-        None => (None, None, None),
-    };
+    );
 
     if let Err(e) = sqlx::query(
         r"INSERT INTO user_activity (id, user_id, category, action, entity_type, entity_id, entity_name, description, metadata)

@@ -82,7 +82,7 @@ pub async fn create_agent_handler(
         Ok(agent) => {
             let name = agent.name.clone();
             let aid = agent.id.clone();
-            let uid = user_ctx.user_id.clone();
+            let uid = user_ctx.user_id;
             tokio::spawn(async move {
                 activity::record(
                     &pool,
@@ -113,7 +113,7 @@ pub async fn update_agent_handler(
         Ok(Some(agent)) => {
             let name = agent.name.clone();
             let aid = agent_id.clone();
-            let uid = user_ctx.user_id.clone();
+            let uid = user_ctx.user_id;
             tokio::spawn(async move {
                 activity::record(
                     &pool,
@@ -146,7 +146,7 @@ pub async fn delete_agent_handler(
     match repositories::delete_agent(&services_path, &agent_id) {
         Ok(true) => {
             let aid = agent_id.clone();
-            let uid = user_ctx.user_id.clone();
+            let uid = user_ctx.user_id;
             tokio::spawn(async move {
                 activity::record(
                     &pool,
@@ -173,7 +173,7 @@ pub async fn create_user_agent_handler(
         Ok(agent) => {
             let name = agent.name.clone();
             let aid = agent.agent_id.clone();
-            let uid = user_ctx.user_id.clone();
+            let uid = user_ctx.user_id;
             tokio::spawn(async move {
                 activity::record(
                     &pool,
@@ -204,7 +204,7 @@ pub async fn delete_user_agent_handler(
     match repositories::delete_user_agent(&pool, &user_ctx.user_id, &agent_id).await {
         Ok(true) => {
             let aid = agent_id.clone();
-            let uid = user_ctx.user_id.clone();
+            let uid = user_ctx.user_id;
             tokio::spawn(async move {
                 activity::record(
                     &pool,

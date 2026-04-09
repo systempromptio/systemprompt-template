@@ -10,9 +10,10 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
-#[derive(Deserialize, JsonSchema)]
-pub struct ListAgentsInput {}
+#[derive(Debug, Clone, Copy, Deserialize, JsonSchema)]
+pub struct ListAgentsInput;
 
+#[derive(Debug)]
 pub struct ListAgentsHandler {
     pub db_pool: DbPool,
 }

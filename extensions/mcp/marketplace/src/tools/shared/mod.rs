@@ -147,9 +147,9 @@ pub fn build_plugin_response(
     plugin: &systemprompt_web_extension::admin::types::UserPlugin,
     ctx: &systemprompt::models::execution::context::RequestContext,
     action: &str,
-    skill_slugs: Vec<String>,
-    agent_slugs: Vec<String>,
-    mcp_server_slugs: Vec<String>,
+    skill_slugs: &[String],
+    agent_slugs: &[String],
+    mcp_server_slugs: &[String],
 ) -> Result<(systemprompt::models::artifacts::TextArtifact, String), McpError> {
     use systemprompt::models::artifacts::TextArtifact;
 

@@ -58,7 +58,7 @@ pub fn resolve_plugin_skills(
             let kebab_name = skill_id.replace('_', "-");
             let command = format!("/{}:{}", plugin.id, kebab_name);
             SkillInfo {
-                id: skill_id.clone(),
+                id: skill_id,
                 name,
                 description,
                 command,

@@ -92,10 +92,7 @@ pub async fn govern_tool_use(
 
     let user_id = UserId::new(&claims.sub);
 
-    let agent_scope = match agent_id {
-        Some(id) => scope::resolve_agent_scope(id),
-        None => "unknown".to_string(),
-    };
+    let agent_scope = agent_id.map_or_else(|| "unknown".to_string(), scope::resolve_agent_scope);
 
     let ctx = GovernanceContext {
         tool_name,

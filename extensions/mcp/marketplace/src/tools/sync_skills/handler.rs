@@ -10,7 +10,7 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct SyncSkillsInput {
     #[serde(default)]
     pub skill_ids: Vec<String>,
@@ -19,6 +19,15 @@ pub struct SyncSkillsInput {
 pub struct SyncSkillsHandler {
     pub db_pool: DbPool,
     pub progress: Option<ProgressCallback>,
+}
+
+impl std::fmt::Debug for SyncSkillsHandler {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SyncSkillsHandler")
+            .field("db_pool", &self.db_pool)
+            .field("progress", &self.progress.as_ref().map(|_| "..."))
+            .finish()
+    }
 }
 
 #[async_trait]

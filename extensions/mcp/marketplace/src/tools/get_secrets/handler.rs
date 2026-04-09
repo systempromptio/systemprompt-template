@@ -10,11 +10,12 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct GetSecretsInput {
     pub plugin_id: String,
 }
 
+#[derive(Debug)]
 pub struct GetSecretsHandler {
     pub db_pool: DbPool,
 }

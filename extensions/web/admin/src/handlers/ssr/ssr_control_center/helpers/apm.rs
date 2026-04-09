@@ -7,7 +7,7 @@ use super::super::types::{
 };
 use super::BuildTemplateDataParams;
 
-pub(crate) struct ApmData {
+pub struct ApmData {
     pub today_obj: TodayObj,
     pub today_summary_obj: TodaySummaryObj,
     pub hourly_json: Vec<HourlyEntry>,
@@ -15,7 +15,7 @@ pub(crate) struct ApmData {
     pub cc_initial_json: String,
 }
 
-pub(crate) fn build_apm_data(params: &BuildTemplateDataParams<'_>) -> ApmData {
+pub fn build_apm_data(params: &BuildTemplateDataParams<'_>) -> ApmData {
     let ts = params.today_summary;
     let today_summary_obj = TodaySummaryObj {
         sessions_count: ts.sessions_count,

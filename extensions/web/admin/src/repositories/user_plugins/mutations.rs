@@ -36,6 +36,7 @@ pub async fn create_user_plugin(
     .await
 }
 
+#[allow(trivial_casts)]
 pub async fn update_user_plugin(
     pool: &PgPool,
     user_id: &UserId,

@@ -10,9 +10,10 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
-#[derive(Deserialize, JsonSchema)]
-pub struct ListSkillsInput {}
+#[derive(Debug, Clone, Copy, Deserialize, JsonSchema)]
+pub struct ListSkillsInput;
 
+#[derive(Debug)]
 pub struct ListSkillsHandler {
     pub db_pool: DbPool,
 }

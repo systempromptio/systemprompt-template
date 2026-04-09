@@ -164,10 +164,7 @@ async fn upsert_skill_file(
 ) -> Result<(), MarketplaceError> {
     let checksum = compute_checksum(content);
     let category = detect_category(rel_path);
-    let filename = match path.file_name() {
-        Some(name) => name.to_str().unwrap_or(""),
-        None => "",
-    };
+    let filename = path.file_name().map_or("", |name| name.to_str().unwrap_or(""));
     let language = detect_language(filename);
     let size_bytes = i64::try_from(content.len()).unwrap_or(0);
     let executable = language == "python" || language == "bash";

@@ -10,11 +10,12 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::tools::shared;
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct DeleteSkillInput {
     pub skill_id: String,
 }
 
+#[derive(Debug)]
 pub struct DeleteSkillHandler {
     pub db_pool: DbPool,
 }

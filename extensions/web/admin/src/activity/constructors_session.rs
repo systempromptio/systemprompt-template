@@ -74,10 +74,10 @@ impl NewActivity {
         session_id: &str,
         prompt_preview: Option<&str>,
     ) -> Self {
-        let description = match prompt_preview {
-            Some(text) => format!("Asked: \"{}\"", truncate(text, 80)),
-            None => "Sent a prompt".to_string(),
-        };
+        let description = prompt_preview.map_or_else(
+            || "Sent a prompt".to_string(),
+            |text| format!("Asked: \"{}\"", truncate(text, 80)),
+        );
         Self {
             user_id: user_id.to_string(),
             category: ActivityCategory::Prompt,
@@ -126,10 +126,10 @@ impl NewActivity {
 
     #[must_use]
     pub fn session_ended_rich(user_id: &str, session_id: &str, reason: Option<&str>) -> Self {
-        let description = match reason {
-            Some(r) => format!("Ended a session ({r})"),
-            None => "Ended a session".to_string(),
-        };
+        let description = reason.map_or_else(
+            || "Ended a session".to_string(),
+            |r| format!("Ended a session ({r})"),
+        );
         Self {
             user_id: user_id.to_string(),
             category: ActivityCategory::Session,
@@ -146,10 +146,10 @@ impl NewActivity {
 
     #[must_use]
     pub fn agent_response(user_id: &str, session_id: &str, message_preview: Option<&str>) -> Self {
-        let description = match message_preview {
-            Some(msg) => format!("Claude responded: \"{}\"", truncate(msg, 80)),
-            None => "Claude finished responding".to_string(),
-        };
+        let description = message_preview.map_or_else(
+            || "Claude finished responding".to_string(),
+            |msg| format!("Claude responded: \"{}\"", truncate(msg, 80)),
+        );
         Self {
             user_id: user_id.to_string(),
             category: ActivityCategory::AgentResponse,
@@ -184,10 +184,10 @@ impl NewActivity {
         msg: Option<&str>,
     ) -> Self {
         let agent = agent_type.unwrap_or("unknown");
-        let description = match msg {
-            Some(m) => format!("{agent} agent stopped: {}", truncate(m, 60)),
-            None => format!("{agent} agent stopped"),
-        };
+        let description = msg.map_or_else(
+            || format!("{agent} agent stopped"),
+            |m| format!("{agent} agent stopped: {}", truncate(m, 60)),
+        );
         Self {
             user_id: user_id.to_string(),
             category: ActivityCategory::Session,

@@ -18,7 +18,7 @@ fn count_entities_via_plugins(
     entity_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
     target_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
 ) -> usize {
-    if let Some(plugins) = entity_plugin_map.get(entity_id) {
+    entity_plugin_map.get(entity_id).map_or(0, |plugins| {
         let mut ids: HashSet<String> = HashSet::new();
         for (plugin_id, _) in plugins {
             for (target_id, target_plugins) in target_plugin_map {
@@ -28,9 +28,7 @@ fn count_entities_via_plugins(
             }
         }
         ids.len()
-    } else {
-        0
-    }
+    })
 }
 
 struct SkillFilters {

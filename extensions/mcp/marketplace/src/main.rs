@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use std::{env, sync::Arc};
+use systemprompt::database::DbPool;
 use systemprompt::identifiers::McpServerId;
 use systemprompt::models::{Config, ProfileBootstrap, SecretsBootstrap};
 use systemprompt::system::AppContext;
@@ -28,17 +29,20 @@ async fn main() -> Result<()> {
         McpServerId::new(DEFAULT_SERVICE_ID)
     });
 
-    let port = if let Ok(p) = env::var("MCP_PORT") {
-        p.parse::<u16>().unwrap_or_else(|e| {
-            tracing::warn!(error = %e, port = %p, "Invalid MCP_PORT, using default: {DEFAULT_PORT}");
+    let port = env::var("MCP_PORT").map_or_else(
+        |_| {
+            tracing::warn!("MCP_PORT not set, using default: {DEFAULT_PORT}");
             DEFAULT_PORT
-        })
-    } else {
-        tracing::warn!("MCP_PORT not set, using default: {DEFAULT_PORT}");
-        DEFAULT_PORT
-    };
+        },
+        |p| {
+            p.parse::<u16>().unwrap_or_else(|e| {
+                tracing::warn!(error = %e, port = %p, "Invalid MCP_PORT, using default: {DEFAULT_PORT}");
+                DEFAULT_PORT
+            })
+        },
+    );
 
-    let server = MarketplaceServer::new(ctx.db_pool().clone(), service_id.clone(), ctx.clone())
+    let server = MarketplaceServer::new(DbPool::clone(ctx.db_pool()), service_id.clone(), Arc::clone(&ctx))
         .context("Failed to initialize MarketplaceServer")?;
 
     let router = systemprompt::mcp::create_router(server, ctx.db_pool());

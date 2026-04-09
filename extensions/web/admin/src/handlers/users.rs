@@ -55,8 +55,8 @@ pub fn extract_user_from_cookie(
         Email::try_new(claims.email.clone()).map_err(|e| format!("Invalid email in JWT: {e}"))?;
 
     Ok(crate::types::CookieSession {
-        user_id: UserId::new(claims.sub.clone()),
-        username: claims.username.clone(),
+        user_id: UserId::new(claims.sub),
+        username: claims.username,
         email,
     })
 }

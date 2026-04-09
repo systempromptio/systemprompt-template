@@ -3,11 +3,7 @@ pub(super) fn truncate(s: &str, max: usize) -> String {
         return s.to_string();
     }
     let slice = &s[..max];
-    if let Some(pos) = slice.rfind(' ') {
-        format!("{}...", &s[..pos])
-    } else {
-        format!("{slice}...")
-    }
+    slice.rfind(' ').map_or_else(|| format!("{slice}..."), |pos| format!("{}...", &s[..pos]))
 }
 
 pub(super) fn extract_project_name(path: &str) -> &str {

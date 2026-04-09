@@ -90,7 +90,6 @@ fn import_skill_files(
     skills_path: &Path,
 ) -> Result<Vec<String>, MarketplaceError> {
     let mut skill_ids = Vec::new();
-    let mut processed_skills = std::collections::HashSet::new();
 
     for file in files.iter().filter(|f| f.path.starts_with("skills/")) {
         let Some(rest) = file.path.strip_prefix("skills/") else {
@@ -102,7 +101,6 @@ fn import_skill_files(
         }
         let kebab_name = parts[0];
         let skill_id = kebab_name.replace('-', "_");
-        processed_skills.insert(skill_id.clone());
 
         let skill_dir = skills_path.join(&skill_id);
 

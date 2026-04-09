@@ -126,7 +126,7 @@ fn build_area_paths(
         let mut d = String::new();
         for (j, &y_val) in top.iter().enumerate() {
             let x = svg_x(j, n, svg_w);
-            let y = svg_h - (y_val / y_max * svg_h);
+            let y = (y_val / y_max).mul_add(-svg_h, svg_h);
             if j == 0 {
                 let _ = write!(d, "M{x:.1},{y:.1}");
             } else {
@@ -135,7 +135,7 @@ fn build_area_paths(
         }
         for j in (0..n).rev() {
             let x = svg_x(j, n, svg_w);
-            let y = svg_h - (prev_base[j] / y_max * svg_h);
+            let y = (prev_base[j] / y_max).mul_add(-svg_h, svg_h);
             let _ = write!(d, " L{x:.1},{y:.1}");
         }
         d.push('Z');

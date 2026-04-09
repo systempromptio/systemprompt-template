@@ -4,13 +4,13 @@ use crate::types::UserGamificationProfile;
 
 use super::super::types::{AchievementProgress, HealthObj, SessionGroup};
 
-pub(crate) struct SessionCounts {
+pub struct SessionCounts {
     pub active: usize,
     pub analysed_closed: usize,
     pub has_any_data: bool,
 }
 
-pub(crate) fn build_session_counts(session_groups: &[SessionGroup]) -> SessionCounts {
+pub fn build_session_counts(session_groups: &[SessionGroup]) -> SessionCounts {
     let active = session_groups.iter().filter(|g| g.flags.is_active).count();
     let analysed_closed = session_groups
         .iter()
@@ -24,7 +24,7 @@ pub(crate) fn build_session_counts(session_groups: &[SessionGroup]) -> SessionCo
     }
 }
 
-pub(crate) struct GamificationData {
+pub struct GamificationData {
     pub has_gamification: bool,
     pub rank_level: i32,
     pub rank_name: String,
@@ -39,7 +39,7 @@ pub(crate) struct GamificationData {
     pub achievement_progress: Vec<AchievementProgress>,
 }
 
-pub(crate) fn build_gamification_data(
+pub fn build_gamification_data(
     gamification: Option<&UserGamificationProfile>,
     skills_usage: &[&crate::types::conversation_analytics::EntityUsageSummary],
     mcp_usage: &[&crate::types::conversation_analytics::EntityUsageSummary],
@@ -56,7 +56,7 @@ pub(crate) fn build_gamification_data(
         achievements_count,
         achievements_total,
         xp_progress_pct,
-    ) = if let Some(g) = gamification {
+    ) = gamification.map_or((0, "", 0, 0, "", 0, 0, 0, 60usize, 0), |g| {
         let total_for_rank = g.total_xp + g.xp_to_next_rank;
         let pct = if total_for_rank > 0 {
             let p = numeric::to_i64(
@@ -75,12 +75,10 @@ pub(crate) fn build_gamification_data(
             g.current_streak,
             g.longest_streak,
             g.achievements.len(),
-            60_usize,
+            60usize,
             pct,
         )
-    } else {
-        (0, "", 0, 0, "", 0, 0, 0, 60, 0)
-    };
+    });
 
     let achievement_progress = build_achievement_progress(gamification, skills_usage, mcp_usage);
 
@@ -154,12 +152,12 @@ fn build_achievement_progress(
     achievement_progress
 }
 
-pub(crate) struct HealthData {
+pub struct HealthData {
     pub has_health: bool,
     pub health_obj: HealthObj,
 }
 
-pub(crate) fn build_health_data(health: &HealthMetrics) -> HealthData {
+pub fn build_health_data(health: &HealthMetrics) -> HealthData {
     let health_label = match health.health_score {
         90..=100 => "Excellent",
         75..=89 => "Good",

@@ -147,9 +147,10 @@ fn resolve_site_url() -> String {
 }
 
 fn resolve_branding_value() -> serde_json::Value {
-    let config_dir = systemprompt::models::AppPaths::get()
-        .map(|p| p.system().services().join("config"))
-        .unwrap_or_else(|_| std::path::PathBuf::from("./services/config"));
+    let config_dir = systemprompt::models::AppPaths::get().map_or_else(
+        |_| PathBuf::from("./services/config"),
+        |p| p.system().services().join("config"),
+    );
     let theme_path = config_dir.join("theme.yaml");
     let Ok(content) = std::fs::read_to_string(&theme_path) else {
         return serde_json::Value::Null;

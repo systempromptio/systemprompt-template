@@ -16,7 +16,7 @@ const MAX_CONTENT_LEN: usize = 65536;
 const MAX_TAG_LEN: usize = 128;
 const MAX_TAGS_COUNT: usize = 50;
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct CreateSkillInput {
     pub name: String,
     pub description: String,
@@ -27,6 +27,7 @@ pub struct CreateSkillInput {
     pub target_plugin_id: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct CreateSkillHandler {
     pub db_pool: DbPool,
 }

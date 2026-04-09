@@ -16,7 +16,7 @@ const MAX_CONTENT_LEN: usize = 65536;
 const MAX_TAG_LEN: usize = 128;
 const MAX_TAGS_COUNT: usize = 50;
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct UpdateSkillInput {
     pub skill_id: String,
     pub name: Option<String>,
@@ -25,6 +25,7 @@ pub struct UpdateSkillInput {
     pub tags: Option<Vec<String>>,
 }
 
+#[derive(Debug)]
 pub struct UpdateSkillHandler {
     pub db_pool: DbPool,
 }
