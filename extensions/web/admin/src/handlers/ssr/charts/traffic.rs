@@ -105,6 +105,9 @@ pub fn compute_traffic_chart_data(
         x_labels,
         y_labels,
         peak,
-        buckets_json: serde_json::to_string(&tooltips).unwrap_or_else(|_| String::new()),
+        buckets_json: serde_json::to_string(&tooltips).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to serialize traffic chart tooltips");
+            String::new()
+        }),
     }
 }

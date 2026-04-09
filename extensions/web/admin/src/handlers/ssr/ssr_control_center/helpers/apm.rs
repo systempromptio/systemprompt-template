@@ -88,7 +88,10 @@ pub fn build_apm_data(params: &BuildTemplateDataParams<'_>) -> ApmData {
         },
     };
     let cc_initial_json =
-        serde_json::to_string(&initial_chart_data).unwrap_or_else(|_| String::new());
+        serde_json::to_string(&initial_chart_data).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to serialize APM initial chart data");
+            String::new()
+        });
 
     ApmData {
         today_obj,
