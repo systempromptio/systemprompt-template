@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
@@ -20,19 +18,19 @@ struct ContentAnalyticsRow {
 pub struct ContentAnalyticsAggregationJob;
 
 impl ContentAnalyticsAggregationJob {
-    pub async fn execute_with_pool(pool: Arc<PgPool>) -> anyhow::Result<JobResult> {
+    pub async fn execute_with_pool(pool: &PgPool) -> anyhow::Result<JobResult> {
         let start = std::time::Instant::now();
 
         tracing::info!("Content analytics aggregation started");
 
-        let stats = Self::aggregate_engagement_stats(&pool).await?;
+        let stats = Self::aggregate_engagement_stats(pool).await?;
 
         let total_count = stats.len();
         let mut success_count = 0u64;
         let mut error_count = 0u64;
 
         for stat in stats {
-            match Self::upsert_metrics(&pool, &stat).await {
+            match Self::upsert_metrics(pool, &stat).await {
                 Ok(()) => {
                     success_count += 1;
                     tracing::debug!(
@@ -183,7 +181,7 @@ impl Job for ContentAnalyticsAggregationJob {
             "Write PgPool not available from database".to_string(),
         ))?;
 
-        Self::execute_with_pool(pool).await
+        Self::execute_with_pool(&pool).await
     }
 }
 
