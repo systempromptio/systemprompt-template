@@ -5,8 +5,6 @@ mod user_bundles;
 pub use types::*;
 
 use std::path::Path;
-use std::sync::Arc;
-
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::models::Config;
@@ -24,7 +22,7 @@ use user_bundles::UserBundleContext;
 
 pub struct ExportParams<'a> {
     pub services_path: &'a Path,
-    pub pool: &'a Arc<PgPool>,
+    pub pool: &'a PgPool,
     pub user_id: &'a UserId,
     pub username: &'a str,
     pub email: &'a str,

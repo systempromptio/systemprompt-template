@@ -35,7 +35,7 @@ pub(crate) async fn process_inserted_event(params: &ProcessInsertedEventParams<'
     let today = chrono::Utc::now().date_naive();
 
     usage_aggregations::upsert_daily_aggregation(&usage_aggregations::DailyAggregationParams {
-        pool: pool,
+        pool,
         user_id,
         date: &today,
         event_type,
@@ -50,7 +50,7 @@ pub(crate) async fn process_inserted_event(params: &ProcessInsertedEventParams<'
         let file_path = helpers::extract_file_path(payload);
         let is_from_subagent = payload.common.agent_id.is_some();
         usage_aggregations::increment_session_summary(&usage_aggregations::SessionSummaryParams {
-            pool: pool,
+            pool,
             session_id,
             user_id,
             event_type,

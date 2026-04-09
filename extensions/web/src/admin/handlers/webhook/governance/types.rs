@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
@@ -59,7 +57,7 @@ pub(super) struct AuditRecord {
 }
 
 pub(super) struct AuthDenialParams<'a> {
-    pub pool: &'a Arc<PgPool>,
+    pub pool: &'a PgPool,
     pub session_id: &'a SessionId,
     pub tool_name: &'a str,
     pub agent_id: Option<&'a str>,
@@ -67,7 +65,7 @@ pub(super) struct AuthDenialParams<'a> {
 }
 
 pub(super) struct AuditParams<'a> {
-    pub pool: &'a Arc<PgPool>,
+    pub pool: &'a PgPool,
     pub user_id: &'a UserId,
     pub session_id: &'a SessionId,
     pub tool_name: &'a str,

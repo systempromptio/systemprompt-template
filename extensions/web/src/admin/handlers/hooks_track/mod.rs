@@ -70,7 +70,7 @@ pub(crate) async fn handle_hook_track(
     if was_inserted {
         let content_bytes = helpers::compute_content_bytes(&payload);
         processing::process_inserted_event(&processing::ProcessInsertedEventParams {
-            pool: &pool,
+            pool: &*pool,
             user_id: &user_id,
             session_id: &SessionId::new(payload.session_id()),
             event_type: payload.event_name(),
