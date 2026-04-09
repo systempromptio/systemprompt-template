@@ -1,5 +1,5 @@
 use crate::cli;
-use crate::server_logging::{record_mcp_access, record_mcp_access_rejected};
+use systemprompt_mcp_shared::{record_mcp_access, record_mcp_access_rejected};
 use crate::tools::{self, CliInput, SERVER_NAME};
 use async_trait::async_trait;
 use rmcp::model::{

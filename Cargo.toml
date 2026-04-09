@@ -5,6 +5,7 @@ members = [
     # MCP servers
     "extensions/mcp/systemprompt",
     "extensions/mcp/marketplace",
+    "extensions/mcp/shared",
 ]
 resolver = "2"
 
@@ -29,6 +30,7 @@ systemprompt = { version = "0.1.17", features = ["full"] }
 # LOCAL EXTENSIONS
 # ============================================
 systemprompt-web-extension = { path = "extensions/web" }
+systemprompt-mcp-shared = { path = "extensions/mcp/shared" }
 
 # Core runtime dependencies
 tokio = { version = "1.49", features = ["rt-multi-thread", "net", "io-util", "time", "sync", "macros", "fs", "process", "signal"] }

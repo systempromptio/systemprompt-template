@@ -39,6 +39,7 @@ schemars.workspace = true
 uuid.workspace = true
 chrono.workspace = true
 sqlx.workspace = true
+systemprompt-mcp-shared.workspace = true
 
 [lints]
 workspace = true

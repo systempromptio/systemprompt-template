@@ -1,6 +1,6 @@
 use systemprompt::database::DbPool;
 
-pub(crate) async fn record_mcp_access(
+pub async fn record_mcp_access(
     pool: &DbPool,
     user_id: &str,
     server: &str,
@@ -41,7 +41,7 @@ pub(crate) async fn record_mcp_access(
     }
 }
 
-pub(crate) async fn record_mcp_access_rejected(
+pub async fn record_mcp_access_rejected(
     pool: &DbPool,
     server: &str,
     tool: &str,

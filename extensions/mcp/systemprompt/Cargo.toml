@@ -30,6 +30,7 @@ tracing.workspace = true
 shell-words.workspace = true
 
 sqlx.workspace = true
+systemprompt-mcp-shared.workspace = true
 
 [lints]
 workspace = true
