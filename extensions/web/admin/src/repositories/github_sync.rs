@@ -217,7 +217,10 @@ fn check_unchanged(
     start: std::time::Instant,
 ) -> Option<SyncResult> {
     let marker_path = local_path.join(".last-commit");
-    let last_hash = std::fs::read_to_string(&marker_path).unwrap_or_else(|_| String::new());
+    let last_hash = std::fs::read_to_string(&marker_path).unwrap_or_else(|e| {
+        tracing::debug!(error = %e, path = %marker_path.display(), "No marker file found, treating as first run");
+        String::new()
+    });
     if current_hash.trim() != last_hash.trim() || last_hash.is_empty() {
         return None;
     }
