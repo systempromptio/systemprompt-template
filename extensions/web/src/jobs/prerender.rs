@@ -34,7 +34,7 @@ impl Job for ContentPrerenderJob {
             "Database not available in job context".to_string(),
         ))?;
 
-        prerender_content(db_Arc::clone(&pool)).await?;
+        prerender_content(db_pool.clone()).await?;
 
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 

@@ -12,7 +12,7 @@ pub async fn search_handler(
     State(state): State<BlogState>,
     Query(query): Query<SearchQuery>,
 ) -> Response {
-    let service = SearchService::new(state.Arc::clone(&pool));
+    let service = SearchService::new(state.pool.clone());
 
     let request = SearchRequest {
         query: query.q,
