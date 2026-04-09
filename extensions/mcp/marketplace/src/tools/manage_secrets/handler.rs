@@ -133,7 +133,7 @@ async fn handle_list(
         "variables": var_list,
         "total": total,
     }))
-    .unwrap_or_else(|_| String::new());
+    .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
 
     let summary = format!(
         "Found {total} environment variable(s) for plugin '{}'",
@@ -173,7 +173,7 @@ async fn handle_set(
         "is_secret": is_secret,
         "success": true,
     }))
-    .unwrap_or_else(|_| String::new());
+    .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
 
     let summary = format!(
         "Set environment variable '{var_name}' for plugin '{}'",
@@ -210,7 +210,7 @@ async fn handle_delete(
         "deleted": deleted,
         "success": true,
     }))
-    .unwrap_or_else(|_| String::new());
+    .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
 
     let summary = if deleted {
         format!(
