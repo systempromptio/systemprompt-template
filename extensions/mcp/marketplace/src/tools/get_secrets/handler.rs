@@ -8,6 +8,8 @@ use systemprompt::mcp::McpToolHandler;
 use systemprompt::models::artifacts::TextArtifact;
 use systemprompt::models::execution::context::RequestContext;
 
+use crate::tools::shared;
+
 #[derive(Deserialize, JsonSchema)]
 pub struct GetSecretsInput {
     pub plugin_id: String,
@@ -37,9 +39,7 @@ impl McpToolHandler for GetSecretsHandler {
         ctx: &RequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
-        let pool = self.db_pool.pool().ok_or_else(|| {
-            McpError::internal_error("Database pool not available".to_string(), None)
-        })?;
+        let pool = shared::require_pool(&self.db_pool)?;
         let user_id = UserId::new(ctx.user_id().to_string());
 
         let master_key =

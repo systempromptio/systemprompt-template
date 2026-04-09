@@ -11,6 +11,8 @@ use systemprompt::mcp::{McpToolHandler, ProgressCallback};
 use systemprompt::models::artifacts::TextArtifact;
 use systemprompt::models::execution::context::RequestContext;
 
+use crate::tools::shared;
+
 #[derive(Deserialize, JsonSchema)]
 pub struct AnalyzeSkillInput {
     pub skill_id: String,
@@ -48,9 +50,7 @@ impl McpToolHandler for AnalyzeSkillHandler {
         }
 
         let user_id = UserId::new(ctx.user_id().to_string());
-        let pool = self.db_pool.pool().ok_or_else(|| {
-            McpError::internal_error("Database pool not available".to_string(), None)
-        })?;
+        let pool = shared::require_pool(&self.db_pool)?;
 
         let skill_content =
             match systemprompt_web_extension::admin::repositories::user_skills::list_user_skills(

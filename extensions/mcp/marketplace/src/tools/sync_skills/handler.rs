@@ -46,9 +46,7 @@ impl McpToolHandler for SyncSkillsHandler {
         }
 
         let user_id = UserId::new(ctx.user_id().to_string());
-        let pool = self.db_pool.write_pool().ok_or_else(|| {
-            McpError::internal_error("Database pool not available".to_string(), None)
-        })?;
+        let pool = shared::require_write_pool(&self.db_pool)?;
 
         let skills =
             systemprompt_web_extension::admin::repositories::user_skills::list_user_skills(

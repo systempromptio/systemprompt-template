@@ -91,9 +91,7 @@ impl McpToolHandler for UpdateSkillHandler {
             }
         }
 
-        let pool = self.db_pool.write_pool().ok_or_else(|| {
-            McpError::internal_error("Database pool not available".to_string(), None)
-        })?;
+        let pool = shared::require_write_pool(&self.db_pool)?;
         let update_req = systemprompt_web_extension::admin::types::UpdateUserSkillRequest {
             name: input.name,
             description: input.description,

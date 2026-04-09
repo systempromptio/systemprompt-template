@@ -86,9 +86,7 @@ impl McpToolHandler for CreateSkillHandler {
 
         let skill_id = shared::generate_slug(&input.name);
 
-        let pool = self.db_pool.write_pool().ok_or_else(|| {
-            McpError::internal_error("Database pool not available".to_string(), None)
-        })?;
+        let pool = shared::require_write_pool(&self.db_pool)?;
         let create_req = systemprompt_web_extension::admin::types::CreateSkillRequest {
             skill_id: systemprompt::identifiers::SkillId::new(skill_id.clone()),
             name: input.name.clone(),

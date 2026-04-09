@@ -67,9 +67,7 @@ impl McpToolHandler for CreateAgentHandler {
 
         let agent_id = shared::generate_slug(&input.name);
 
-        let pool = self.db_pool.write_pool().ok_or_else(|| {
-            McpError::internal_error("Database pool not available".to_string(), None)
-        })?;
+        let pool = shared::require_write_pool(&self.db_pool)?;
 
         let create_req = systemprompt_web_extension::admin::types::CreateUserAgentRequest {
             agent_id: systemprompt::identifiers::AgentId::new(agent_id.clone()),

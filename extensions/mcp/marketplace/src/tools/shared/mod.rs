@@ -11,8 +11,22 @@ pub use slugs::{
     resolve_mcp_server_uuids_to_slugs, resolve_skill_slugs, resolve_skill_uuids_to_slugs,
 };
 
+use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
+use systemprompt::mcp::McpError;
 use systemprompt_web_extension::admin::repositories;
+
+pub fn require_write_pool(db_pool: &DbPool) -> Result<Arc<PgPool>, McpError> {
+    db_pool
+        .write_pool()
+        .ok_or_else(|| McpError::internal_error("Database pool not available".to_string(), None))
+}
+
+pub fn require_pool(db_pool: &DbPool) -> Result<Arc<PgPool>, McpError> {
+    db_pool
+        .pool()
+        .ok_or_else(|| McpError::internal_error("Database pool not available".to_string(), None))
+}
 
 #[must_use]
 pub fn generate_slug(name: &str) -> String {
