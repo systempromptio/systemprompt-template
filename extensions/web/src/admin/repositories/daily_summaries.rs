@@ -157,71 +157,96 @@ async fn execute_upsert_query(
     input: &DailySummaryInput,
     cloned: &UpsertCloned,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query!(
-        r"INSERT INTO daily_summaries
-            (user_id, summary_date, session_count, avg_quality_score,
-             goals_achieved, goals_partial, goals_failed,
-             total_prompts, total_tool_uses, total_errors,
-             summary, patterns, skill_gaps, top_recommendation,
-             daily_xp, tags,
-             avg_apm, peak_apm, avg_eapm, peak_concurrency, avg_concurrency,
-             total_input_bytes, total_output_bytes, peak_throughput_bps,
-             tool_diversity, multitasking_score, session_velocity, achievements_unlocked,
-             highlights, trends, category_distribution, plugins_count, skills_count, agents_count, mcp_servers_count, hooks_count,
-             health_score, skill_effectiveness,
-             avg_session_duration_minutes, avg_turns_per_session, total_corrections, avg_automation_ratio, plan_mode_sessions)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
-                  $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28,
-                  $29, $30, $31, $32, $33, $34, $35, $36, $37, $38,
-                  $39, $40, $41, $42, $43)
-          ON CONFLICT (user_id, summary_date) DO UPDATE SET
-            session_count = EXCLUDED.session_count, avg_quality_score = EXCLUDED.avg_quality_score,
-            goals_achieved = EXCLUDED.goals_achieved, goals_partial = EXCLUDED.goals_partial,
-            goals_failed = EXCLUDED.goals_failed, total_prompts = EXCLUDED.total_prompts,
-            total_tool_uses = EXCLUDED.total_tool_uses, total_errors = EXCLUDED.total_errors,
-            summary = EXCLUDED.summary, patterns = EXCLUDED.patterns,
-            skill_gaps = EXCLUDED.skill_gaps, top_recommendation = EXCLUDED.top_recommendation,
-            daily_xp = EXCLUDED.daily_xp, tags = EXCLUDED.tags,
-            avg_apm = EXCLUDED.avg_apm, peak_apm = EXCLUDED.peak_apm,
-            avg_eapm = EXCLUDED.avg_eapm, peak_concurrency = EXCLUDED.peak_concurrency,
-            avg_concurrency = EXCLUDED.avg_concurrency, total_input_bytes = EXCLUDED.total_input_bytes,
-            total_output_bytes = EXCLUDED.total_output_bytes, peak_throughput_bps = EXCLUDED.peak_throughput_bps,
-            tool_diversity = EXCLUDED.tool_diversity, multitasking_score = EXCLUDED.multitasking_score,
-            session_velocity = EXCLUDED.session_velocity, achievements_unlocked = EXCLUDED.achievements_unlocked,
-            highlights = EXCLUDED.highlights, trends = EXCLUDED.trends,
-            category_distribution = EXCLUDED.category_distribution,
-            plugins_count = EXCLUDED.plugins_count, skills_count = EXCLUDED.skills_count,
-            agents_count = EXCLUDED.agents_count, mcp_servers_count = EXCLUDED.mcp_servers_count,
-            hooks_count = EXCLUDED.hooks_count, health_score = EXCLUDED.health_score,
-            skill_effectiveness = EXCLUDED.skill_effectiveness,
-            avg_session_duration_minutes = EXCLUDED.avg_session_duration_minutes,
-            avg_turns_per_session = EXCLUDED.avg_turns_per_session,
-            total_corrections = EXCLUDED.total_corrections,
-            avg_automation_ratio = EXCLUDED.avg_automation_ratio,
-            plan_mode_sessions = EXCLUDED.plan_mode_sessions, updated_at = NOW()",
-        user_id, date, input.session_count, input.avg_quality_score,
-        input.goals_achieved, input.goals_partial, input.goals_failed,
-        input.total_prompts, input.total_tool_uses, input.total_errors,
-        input.summary, cloned.patterns,
-        cloned.skill_gaps,
-        cloned.top_recommendation,
-        input.daily_xp, input.tags, input.avg_apm, input.peak_apm,
-        input.avg_eapm, input.peak_concurrency, input.avg_concurrency,
-        input.total_input_bytes, input.total_output_bytes, input.peak_throughput_bps,
-        input.tool_diversity, input.multitasking_score, input.session_velocity,
-        input.achievements_unlocked, cloned.highlights,
-        cloned.trends,
-        cloned.category_distribution,
-        input.plugins_count, input.skills_count,
-        input.agents_count, input.mcp_servers_count, input.hooks_count,
-        input.health_score, cloned.skill_effectiveness,
-        input.avg_session_duration_minutes, input.avg_turns_per_session,
-        input.total_corrections, input.avg_automation_ratio, input.plan_mode_sessions,
-    )
-    .execute(pool)
-    .await?;
+    sqlx::query(UPSERT_SQL)
+        .bind(user_id)
+        .bind(date)
+        .bind(input.session_count)
+        .bind(input.avg_quality_score)
+        .bind(input.goals_achieved)
+        .bind(input.goals_partial)
+        .bind(input.goals_failed)
+        .bind(input.total_prompts)
+        .bind(input.total_tool_uses)
+        .bind(input.total_errors)
+        .bind(&input.summary)
+        .bind(&cloned.patterns)
+        .bind(&cloned.skill_gaps)
+        .bind(&cloned.top_recommendation)
+        .bind(input.daily_xp)
+        .bind(&input.tags)
+        .bind(input.avg_apm)
+        .bind(input.peak_apm)
+        .bind(input.avg_eapm)
+        .bind(input.peak_concurrency)
+        .bind(input.avg_concurrency)
+        .bind(input.total_input_bytes)
+        .bind(input.total_output_bytes)
+        .bind(input.peak_throughput_bps)
+        .bind(input.tool_diversity)
+        .bind(input.multitasking_score)
+        .bind(input.session_velocity)
+        .bind(&input.achievements_unlocked)
+        .bind(&cloned.highlights)
+        .bind(&cloned.trends)
+        .bind(&cloned.category_distribution)
+        .bind(input.plugins_count)
+        .bind(input.skills_count)
+        .bind(input.agents_count)
+        .bind(input.mcp_servers_count)
+        .bind(input.hooks_count)
+        .bind(input.health_score)
+        .bind(&cloned.skill_effectiveness)
+        .bind(input.avg_session_duration_minutes)
+        .bind(input.avg_turns_per_session)
+        .bind(input.total_corrections)
+        .bind(input.avg_automation_ratio)
+        .bind(input.plan_mode_sessions)
+        .execute(pool)
+        .await?;
     Ok(())
 }
+
+const UPSERT_SQL: &str = r"INSERT INTO daily_summaries
+    (user_id, summary_date, session_count, avg_quality_score,
+     goals_achieved, goals_partial, goals_failed,
+     total_prompts, total_tool_uses, total_errors,
+     summary, patterns, skill_gaps, top_recommendation,
+     daily_xp, tags,
+     avg_apm, peak_apm, avg_eapm, peak_concurrency, avg_concurrency,
+     total_input_bytes, total_output_bytes, peak_throughput_bps,
+     tool_diversity, multitasking_score, session_velocity, achievements_unlocked,
+     highlights, trends, category_distribution, plugins_count, skills_count, agents_count, mcp_servers_count, hooks_count,
+     health_score, skill_effectiveness,
+     avg_session_duration_minutes, avg_turns_per_session, total_corrections, avg_automation_ratio, plan_mode_sessions)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
+          $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28,
+          $29, $30, $31, $32, $33, $34, $35, $36, $37, $38,
+          $39, $40, $41, $42, $43)
+  ON CONFLICT (user_id, summary_date) DO UPDATE SET
+    session_count = EXCLUDED.session_count, avg_quality_score = EXCLUDED.avg_quality_score,
+    goals_achieved = EXCLUDED.goals_achieved, goals_partial = EXCLUDED.goals_partial,
+    goals_failed = EXCLUDED.goals_failed, total_prompts = EXCLUDED.total_prompts,
+    total_tool_uses = EXCLUDED.total_tool_uses, total_errors = EXCLUDED.total_errors,
+    summary = EXCLUDED.summary, patterns = EXCLUDED.patterns,
+    skill_gaps = EXCLUDED.skill_gaps, top_recommendation = EXCLUDED.top_recommendation,
+    daily_xp = EXCLUDED.daily_xp, tags = EXCLUDED.tags,
+    avg_apm = EXCLUDED.avg_apm, peak_apm = EXCLUDED.peak_apm,
+    avg_eapm = EXCLUDED.avg_eapm, peak_concurrency = EXCLUDED.peak_concurrency,
+    avg_concurrency = EXCLUDED.avg_concurrency, total_input_bytes = EXCLUDED.total_input_bytes,
+    total_output_bytes = EXCLUDED.total_output_bytes, peak_throughput_bps = EXCLUDED.peak_throughput_bps,
+    tool_diversity = EXCLUDED.tool_diversity, multitasking_score = EXCLUDED.multitasking_score,
+    session_velocity = EXCLUDED.session_velocity, achievements_unlocked = EXCLUDED.achievements_unlocked,
+    highlights = EXCLUDED.highlights, trends = EXCLUDED.trends,
+    category_distribution = EXCLUDED.category_distribution,
+    plugins_count = EXCLUDED.plugins_count, skills_count = EXCLUDED.skills_count,
+    agents_count = EXCLUDED.agents_count, mcp_servers_count = EXCLUDED.mcp_servers_count,
+    hooks_count = EXCLUDED.hooks_count, health_score = EXCLUDED.health_score,
+    skill_effectiveness = EXCLUDED.skill_effectiveness,
+    avg_session_duration_minutes = EXCLUDED.avg_session_duration_minutes,
+    avg_turns_per_session = EXCLUDED.avg_turns_per_session,
+    total_corrections = EXCLUDED.total_corrections,
+    avg_automation_ratio = EXCLUDED.avg_automation_ratio,
+    plan_mode_sessions = EXCLUDED.plan_mode_sessions, updated_at = NOW()";
 
 const SELECT_COLUMNS: &str = r"summary_date, session_count, avg_quality_score,
     goals_achieved, goals_partial, goals_failed,

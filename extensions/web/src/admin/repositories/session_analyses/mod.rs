@@ -133,67 +133,67 @@ async fn run_upsert_query(
     analysis: &SessionAnalysis,
     p: &InsertParams,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query!(
-        r"INSERT INTO session_analyses
-            (session_id, user_id, title, description, summary, tags,
-             goal_achieved, quality_score, outcome, error_analysis,
-             skill_assessment, recommendations, skill_scores,
-             category, goal_outcome_map, efficiency_metrics,
-             best_practices_checklist, improvement_hints,
-             corrections_count, session_duration_minutes, total_turns,
-             automation_ratio, plan_mode_used, client_surface)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-                  $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
-          ON CONFLICT (session_id) DO UPDATE SET
-            title = EXCLUDED.title,
-            description = EXCLUDED.description,
-            summary = EXCLUDED.summary,
-            tags = EXCLUDED.tags,
-            goal_achieved = EXCLUDED.goal_achieved,
-            quality_score = EXCLUDED.quality_score,
-            outcome = EXCLUDED.outcome,
-            error_analysis = EXCLUDED.error_analysis,
-            skill_assessment = EXCLUDED.skill_assessment,
-            recommendations = EXCLUDED.recommendations,
-            skill_scores = EXCLUDED.skill_scores,
-            category = EXCLUDED.category,
-            goal_outcome_map = EXCLUDED.goal_outcome_map,
-            efficiency_metrics = EXCLUDED.efficiency_metrics,
-            best_practices_checklist = EXCLUDED.best_practices_checklist,
-            improvement_hints = EXCLUDED.improvement_hints,
-            corrections_count = EXCLUDED.corrections_count,
-            session_duration_minutes = EXCLUDED.session_duration_minutes,
-            total_turns = EXCLUDED.total_turns,
-            automation_ratio = EXCLUDED.automation_ratio,
-            plan_mode_used = EXCLUDED.plan_mode_used,
-            client_surface = EXCLUDED.client_surface,
-            updated_at = NOW()",
-        ids.session_id,
-        ids.user_id,
-        analysis.title,
-        analysis.description,
-        p.composed_summary,
-        p.tags,
-        analysis.goal_achieved,
-        analysis.quality_score,
-        analysis.outcome,
-        analysis.error_analysis,
-        analysis.skill_assessment,
-        analysis.recommendations,
-        p.skill_scores_json,
-        p.category,
-        p.goal_outcome_map_json,
-        p.efficiency_metrics_json,
-        p.best_practices_json,
-        analysis.improvement_hints,
-        p.corrections_count,
-        p.duration_minutes,
-        p.total_turns,
-        p.automation_ratio,
-        p.plan_mode_used,
-        p.client_surface,
-    )
-    .execute(pool)
-    .await?;
+    sqlx::query(SESSION_ANALYSIS_UPSERT_SQL)
+        .bind(ids.session_id)
+        .bind(ids.user_id)
+        .bind(&analysis.title)
+        .bind(&analysis.description)
+        .bind(&p.composed_summary)
+        .bind(&p.tags)
+        .bind(&analysis.goal_achieved)
+        .bind(analysis.quality_score)
+        .bind(&analysis.outcome)
+        .bind(&analysis.error_analysis)
+        .bind(&analysis.skill_assessment)
+        .bind(&analysis.recommendations)
+        .bind(&p.skill_scores_json)
+        .bind(&p.category)
+        .bind(&p.goal_outcome_map_json)
+        .bind(&p.efficiency_metrics_json)
+        .bind(&p.best_practices_json)
+        .bind(&analysis.improvement_hints)
+        .bind(p.corrections_count)
+        .bind(p.duration_minutes)
+        .bind(p.total_turns)
+        .bind(p.automation_ratio)
+        .bind(p.plan_mode_used)
+        .bind(&p.client_surface)
+        .execute(pool)
+        .await?;
     Ok(())
 }
+
+const SESSION_ANALYSIS_UPSERT_SQL: &str = r"INSERT INTO session_analyses
+    (session_id, user_id, title, description, summary, tags,
+     goal_achieved, quality_score, outcome, error_analysis,
+     skill_assessment, recommendations, skill_scores,
+     category, goal_outcome_map, efficiency_metrics,
+     best_practices_checklist, improvement_hints,
+     corrections_count, session_duration_minutes, total_turns,
+     automation_ratio, plan_mode_used, client_surface)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
+          $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+  ON CONFLICT (session_id) DO UPDATE SET
+    title = EXCLUDED.title,
+    description = EXCLUDED.description,
+    summary = EXCLUDED.summary,
+    tags = EXCLUDED.tags,
+    goal_achieved = EXCLUDED.goal_achieved,
+    quality_score = EXCLUDED.quality_score,
+    outcome = EXCLUDED.outcome,
+    error_analysis = EXCLUDED.error_analysis,
+    skill_assessment = EXCLUDED.skill_assessment,
+    recommendations = EXCLUDED.recommendations,
+    skill_scores = EXCLUDED.skill_scores,
+    category = EXCLUDED.category,
+    goal_outcome_map = EXCLUDED.goal_outcome_map,
+    efficiency_metrics = EXCLUDED.efficiency_metrics,
+    best_practices_checklist = EXCLUDED.best_practices_checklist,
+    improvement_hints = EXCLUDED.improvement_hints,
+    corrections_count = EXCLUDED.corrections_count,
+    session_duration_minutes = EXCLUDED.session_duration_minutes,
+    total_turns = EXCLUDED.total_turns,
+    automation_ratio = EXCLUDED.automation_ratio,
+    plan_mode_used = EXCLUDED.plan_mode_used,
+    client_surface = EXCLUDED.client_surface,
+    updated_at = NOW()";

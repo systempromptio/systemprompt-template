@@ -68,70 +68,70 @@ fn build_tool<H: McpToolHandler>(handler: &H) -> Tool {
 pub fn list_tools(services: &ToolServices) -> Vec<Tool> {
     vec![
         build_tool(&create_skill::CreateSkillHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&update_skill::UpdateSkillHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&list_skills::ListSkillsHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&analyze_skill::AnalyzeSkillHandler {
-            db_pool: services.db_pool.clone(),
-            ai_service: services.ai_service.clone(),
-            skill_loader: services.skill_loader.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
+            ai_service: Arc::clone(&services.ai_service),
+            skill_loader: Arc::clone(&services.skill_loader),
             progress: None,
         }),
         build_tool(&delete_skill::DeleteSkillHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&create_agent::CreateAgentHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&list_agents::ListAgentsHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&update_agent::UpdateAgentHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&delete_agent::DeleteAgentHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&create_mcp_server::CreateMcpServerHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&list_mcp_servers::ListMcpServersHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&update_mcp_server::UpdateMcpServerHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&delete_mcp_server::DeleteMcpServerHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&create_plugin::CreatePluginHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&get_plugin::GetPluginHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&update_plugin::UpdatePluginHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&delete_plugin::DeletePluginHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&list_plugins::ListPluginsHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&get_secrets::GetSecretsHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&manage_secrets::ManageSecretsHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
         }),
         build_tool(&sync_skills::SyncSkillsHandler {
-            db_pool: services.db_pool.clone(),
+            db_pool: DbPool::clone(&services.db_pool),
             progress: None,
         }),
     ]

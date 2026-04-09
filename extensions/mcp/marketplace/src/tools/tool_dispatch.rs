@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 use rmcp::model::{CallToolRequestParams, CallToolResult};
 use rmcp::ErrorData;
+use systemprompt::database::DbPool;
 use systemprompt::mcp::{McpResponseBuilder, ProgressCallback};
 use systemprompt::models::execution::context::RequestContext;
 
@@ -37,16 +40,16 @@ async fn handle_tool_call_inner(
         }
         "analyze_skill" => {
             let handler = analyze_skill::AnalyzeSkillHandler {
-                db_pool: services.db_pool.clone(),
-                ai_service: services.ai_service.clone(),
-                skill_loader: services.skill_loader.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
+                ai_service: Arc::clone(&services.ai_service),
+                skill_loader: Arc::clone(&services.skill_loader),
                 progress,
             };
             executor.execute(&handler, &request, &ctx).await
         }
         "sync_skills" => {
             let handler = sync_skills::SyncSkillsHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
                 progress,
             };
             executor.execute(&handler, &request, &ctx).await
@@ -83,25 +86,25 @@ async fn dispatch_skill(
     match name {
         "create_skill" => {
             let handler = create_skill::CreateSkillHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "update_skill" => {
             let handler = update_skill::UpdateSkillHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "list_skills" => {
             let handler = list_skills::ListSkillsHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "delete_skill" => {
             let handler = delete_skill::DeleteSkillHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
@@ -119,25 +122,25 @@ async fn dispatch_agent(
     match name {
         "create_agent" => {
             let handler = create_agent::CreateAgentHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "list_agents" => {
             let handler = list_agents::ListAgentsHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "update_agent" => {
             let handler = update_agent::UpdateAgentHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "delete_agent" => {
             let handler = delete_agent::DeleteAgentHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
@@ -155,25 +158,25 @@ async fn dispatch_mcp_server(
     match name {
         "create_mcp_server" => {
             let handler = create_mcp_server::CreateMcpServerHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "list_mcp_servers" => {
             let handler = list_mcp_servers::ListMcpServersHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "update_mcp_server" => {
             let handler = update_mcp_server::UpdateMcpServerHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "delete_mcp_server" => {
             let handler = delete_mcp_server::DeleteMcpServerHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
@@ -191,31 +194,31 @@ async fn dispatch_plugin(
     match name {
         "create_plugin" => {
             let handler = create_plugin::CreatePluginHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "get_plugin" => {
             let handler = get_plugin::GetPluginHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "update_plugin" => {
             let handler = update_plugin::UpdatePluginHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "delete_plugin" => {
             let handler = delete_plugin::DeletePluginHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "list_plugins" => {
             let handler = list_plugins::ListPluginsHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
@@ -233,13 +236,13 @@ async fn dispatch_secrets(
     match name {
         "get_secrets" => {
             let handler = get_secrets::GetSecretsHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }
         "manage_secrets" => {
             let handler = manage_secrets::ManageSecretsHandler {
-                db_pool: services.db_pool.clone(),
+                db_pool: DbPool::clone(&services.db_pool),
             };
             executor.execute(&handler, request, ctx).await
         }

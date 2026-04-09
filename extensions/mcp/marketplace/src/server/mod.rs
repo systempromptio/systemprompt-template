@@ -2,7 +2,10 @@ mod constructor;
 
 pub use constructor::MarketplaceServer;
 
+use std::sync::Arc;
+
 use crate::tools::{self, SERVER_NAME};
+use systemprompt::database::DbPool;
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Implementation, InitializeRequestParams,
     InitializeResult, ListResourcesResult, ListToolsResult, PaginatedRequestParams,
@@ -92,9 +95,9 @@ impl ServerHandler for MarketplaceServer {
         _ctx: RequestContext<RoleServer>,
     ) -> Result<ListToolsResult, McpError> {
         let services = tools::ToolServices {
-            db_pool: self.db_pool.clone(),
-            ai_service: self.ai_service.clone(),
-            skill_loader: self.skill_loader.clone(),
+            db_pool: DbPool::clone(&self.db_pool),
+            ai_service: Arc::clone(&self.ai_service),
+            skill_loader: Arc::clone(&self.skill_loader),
             executor: self.executor.clone(),
         };
         Ok(ListToolsResult {
@@ -171,9 +174,9 @@ impl ServerHandler for MarketplaceServer {
             .map(|token| create_progress_callback(token, ctx.peer.clone()));
 
         let services = tools::ToolServices {
-            db_pool: self.db_pool.clone(),
-            ai_service: self.ai_service.clone(),
-            skill_loader: self.skill_loader.clone(),
+            db_pool: DbPool::clone(&self.db_pool),
+            ai_service: Arc::clone(&self.ai_service),
+            skill_loader: Arc::clone(&self.skill_loader),
             executor: self.executor.clone(),
         };
 

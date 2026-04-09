@@ -36,7 +36,7 @@ impl Job for LlmsTxtGenerationJob {
             "Database not available in job context".to_string(),
         ))?;
 
-        generate_llms_txt(db_pool.clone()).await?;
+        generate_llms_txt(db_Arc::clone(&pool)).await?;
 
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 

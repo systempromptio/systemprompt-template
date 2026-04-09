@@ -16,7 +16,7 @@ impl LinkService {
     #[must_use]
     pub fn new(pool: Arc<PgPool>) -> Self {
         Self {
-            link_repo: LinkRepository::new(pool.clone()),
+            link_repo: LinkRepository::new(Arc::clone(&pool)),
             analytics_repo: LinkAnalyticsRepository::new(pool),
         }
     }
