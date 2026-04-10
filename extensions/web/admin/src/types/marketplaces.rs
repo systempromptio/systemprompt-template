@@ -28,6 +28,7 @@ pub struct OrgMarketplaceOverview {
     pub hook_count: usize,
     // JSON: variable-shape role/department badges for template rendering
     pub roles: Vec<serde_json::Value>,
+    // JSON: variable-shape department badges for template rendering
     pub departments: Vec<serde_json::Value>,
 }
 

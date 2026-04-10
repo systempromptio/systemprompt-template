@@ -151,6 +151,7 @@ pub struct UpdateContentParams {
     pub keywords: String,
     pub image: Option<String>,
     pub version_hash: String,
+    // JSON: variable-shape content links from jsonb column
     pub links: Option<serde_json::Value>,
 }
 

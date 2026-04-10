@@ -136,6 +136,7 @@ pub(super) struct CompilePageCtx<'a> {
     pub(super) templates_dir: &'a Path,
     pub(super) compiled_dir: &'a Path,
     pub(super) site_url: &'a str,
+    // JSON: dynamic branding config for template rendering
     pub(super) branding_value: &'a serde_json::Value,
 }
 

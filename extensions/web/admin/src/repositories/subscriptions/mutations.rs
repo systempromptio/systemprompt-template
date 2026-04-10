@@ -13,6 +13,7 @@ pub struct UpsertSubscriptionParams<'a> {
     pub status: &'a str,
     pub period_start: Option<DateTime<Utc>>,
     pub period_end: Option<DateTime<Utc>>,
+    // JSON: Paddle payment provider data from jsonb column
     pub paddle_data: Option<serde_json::Value>,
 }
 
