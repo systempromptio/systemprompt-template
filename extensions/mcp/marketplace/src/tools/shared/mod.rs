@@ -70,50 +70,58 @@ pub async fn resolve_association_slugs(
     Ok((skills, agents, mcps))
 }
 
+#[derive(Debug)]
+pub struct PluginAssociationParams<'a> {
+    pub conn: &'a mut sqlx::PgConnection,
+    pub plugin_id: &'a str,
+    pub user_id: &'a UserId,
+    pub skill_slugs: Option<&'a [String]>,
+    pub agent_slugs: Option<&'a [String]>,
+    pub mcp_server_slugs: Option<&'a [String]>,
+}
+
 pub async fn set_plugin_associations(
-    conn: &mut sqlx::PgConnection,
-    plugin_id: &str,
-    user_id: &UserId,
-    skill_slugs: Option<&[String]>,
-    agent_slugs: Option<&[String]>,
-    mcp_server_slugs: Option<&[String]>,
+    params: &mut PluginAssociationParams<'_>,
 ) -> Result<(), McpError> {
-    if let Some(slugs) = skill_slugs {
+    if let Some(slugs) = params.skill_slugs {
         if !slugs.is_empty() {
-            let uuids = resolve_skill_slugs(&mut *conn, user_id.as_ref(), slugs).await?;
+            let uuids =
+                resolve_skill_slugs(&mut *params.conn, params.user_id.as_ref(), slugs).await?;
             let typed: Vec<_> = uuids
                 .into_iter()
                 .map(systemprompt::identifiers::SkillId::new)
                 .collect();
-            repositories::set_plugin_skills(&mut *conn, plugin_id, &typed)
+            repositories::set_plugin_skills(&mut *params.conn, params.plugin_id, &typed)
                 .await
                 .map_err(|e| {
                     McpError::internal_error(format!("Failed to set plugin skills: {e}"), None)
                 })?;
         }
     }
-    if let Some(slugs) = agent_slugs {
+    if let Some(slugs) = params.agent_slugs {
         if !slugs.is_empty() {
-            let uuids = resolve_agent_slugs(&mut *conn, user_id.as_ref(), slugs).await?;
+            let uuids =
+                resolve_agent_slugs(&mut *params.conn, params.user_id.as_ref(), slugs).await?;
             let typed: Vec<_> = uuids
                 .into_iter()
                 .map(systemprompt::identifiers::AgentId::new)
                 .collect();
-            repositories::set_plugin_agents(&mut *conn, plugin_id, &typed)
+            repositories::set_plugin_agents(&mut *params.conn, params.plugin_id, &typed)
                 .await
                 .map_err(|e| {
                     McpError::internal_error(format!("Failed to set plugin agents: {e}"), None)
                 })?;
         }
     }
-    if let Some(slugs) = mcp_server_slugs {
+    if let Some(slugs) = params.mcp_server_slugs {
         if !slugs.is_empty() {
-            let uuids = resolve_mcp_server_slugs(&mut *conn, user_id.as_ref(), slugs).await?;
+            let uuids =
+                resolve_mcp_server_slugs(&mut *params.conn, params.user_id.as_ref(), slugs).await?;
             let typed: Vec<_> = uuids
                 .into_iter()
                 .map(systemprompt::identifiers::McpServerId::new)
                 .collect();
-            repositories::set_plugin_mcp_servers(&mut *conn, plugin_id, &typed)
+            repositories::set_plugin_mcp_servers(&mut *params.conn, params.plugin_id, &typed)
                 .await
                 .map_err(|e| {
                     McpError::internal_error(format!("Failed to set plugin MCP servers: {e}"), None)
@@ -123,18 +131,24 @@ pub async fn set_plugin_associations(
     Ok(())
 }
 
+#[derive(Debug)]
+pub struct PluginResponseInput<'a> {
+    pub plugin: &'a systemprompt_web_extension::admin::types::UserPlugin,
+    pub ctx: &'a systemprompt::models::execution::context::RequestContext,
+    pub action: &'a str,
+    pub skill_slugs: &'a [String],
+    pub agent_slugs: &'a [String],
+    pub mcp_server_slugs: &'a [String],
+}
+
 pub fn build_plugin_response(
-    plugin: &systemprompt_web_extension::admin::types::UserPlugin,
-    ctx: &systemprompt::models::execution::context::RequestContext,
-    action: &str,
-    skill_slugs: &[String],
-    agent_slugs: &[String],
-    mcp_server_slugs: &[String],
+    input: &PluginResponseInput<'_>,
 ) -> Result<(systemprompt::models::artifacts::TextArtifact, String), McpError> {
     use systemprompt::models::artifacts::TextArtifact;
 
+    let plugin = input.plugin;
     let plugin_json = serde_json::to_string_pretty(&serde_json::json!({
-        "_display": { "type": "card", "entity": "plugin", "action": action },
+        "_display": { "type": "card", "entity": "plugin", "action": input.action },
         "plugin_id": plugin.plugin_id,
         "name": plugin.name,
         "description": plugin.description,
@@ -143,15 +157,15 @@ pub fn build_plugin_response(
         "category": plugin.category,
         "keywords": plugin.keywords,
         "author_name": plugin.author_name,
-        "skill_ids": skill_slugs,
-        "agent_ids": agent_slugs,
-        "mcp_server_ids": mcp_server_slugs,
+        "skill_ids": input.skill_slugs,
+        "agent_ids": input.agent_slugs,
+        "mcp_server_ids": input.mcp_server_slugs,
         "created_at": plugin.created_at.to_rfc3339(),
         "updated_at": plugin.updated_at.to_rfc3339(),
     }))
     .map_err(|e| McpError::internal_error(format!("Failed to serialize plugin: {e}"), None))?;
 
-    let action_past = if action == "created" {
+    let action_past = if input.action == "created" {
         "Created"
     } else {
         "Updated"
@@ -162,7 +176,7 @@ pub fn build_plugin_response(
     );
     let content = format!("{summary}\n\n{plugin_json}");
     let artifact =
-        TextArtifact::new(&plugin_json, ctx).with_title(format!("Plugin: {}", plugin.name));
+        TextArtifact::new(&plugin_json, input.ctx).with_title(format!("Plugin: {}", plugin.name));
 
     Ok((artifact, content))
 }

@@ -130,56 +130,70 @@ fn build_cumulative_stacks(series: &[Vec<f64>]) -> Vec<Vec<f64>> {
     cumulative
 }
 
-fn build_country_areas(
-    country_names: &[String],
-    cumulative: &[Vec<f64>],
+struct AreaBuildParams<'a> {
+    country_names: &'a [String],
+    cumulative: &'a [Vec<f64>],
     n: usize,
     svg_w: f64,
     svg_h: f64,
     y_max: f64,
-) -> Vec<CountryArea> {
-    country_names
+}
+
+fn build_country_areas(params: &AreaBuildParams<'_>) -> Vec<CountryArea> {
+    params
+        .country_names
         .iter()
         .enumerate()
         .map(|(i, name)| {
-            let top = &cumulative[i];
+            let top = &params.cumulative[i];
             let base = if i == 0 {
-                vec![0.0f64; n]
+                vec![0.0f64; params.n]
             } else {
-                cumulative[i - 1].clone()
+                params.cumulative[i - 1].clone()
             };
             CountryArea {
                 name: name.clone(),
                 color: country_color(i),
-                area_path: build_stacked_area(top, &base, n, svg_w, svg_h, y_max),
+                area_path: build_stacked_area(
+                    top,
+                    &base,
+                    params.n,
+                    params.svg_w,
+                    params.svg_h,
+                    params.y_max,
+                ),
             }
         })
         .collect()
 }
 
-fn build_country_tooltips(
-    time_buckets: &[chrono::DateTime<chrono::Utc>],
-    country_names: &[String],
-    country_series: &[Vec<f64>],
+struct TooltipBuildParams<'a> {
+    time_buckets: &'a [chrono::DateTime<chrono::Utc>],
+    country_names: &'a [String],
+    country_series: &'a [Vec<f64>],
     n: usize,
     svg_w: f64,
-    range: &str,
-) -> Vec<TooltipBucket> {
-    let tooltip_fmt = match range {
+    range: &'a str,
+}
+
+fn build_country_tooltips(params: &TooltipBuildParams<'_>) -> Vec<TooltipBucket> {
+    let tooltip_fmt = match params.range {
         "7d" | "30d" => "%b %d",
         _ => "%H:%M",
     };
-    time_buckets
+    params
+        .time_buckets
         .iter()
         .enumerate()
         .map(|(i, tb)| {
-            let x = svg_x(i, n, svg_w);
-            let countries = country_names
+            let x = svg_x(i, params.n, params.svg_w);
+            let countries = params
+                .country_names
                 .iter()
                 .enumerate()
                 .map(|(ci, name)| TooltipBreakdown {
                     country: name.clone(),
-                    sessions: f64_to_i64(country_series[ci][i]),
+                    sessions: f64_to_i64(params.country_series[ci][i]),
                     color: country_color(ci),
                 })
                 .collect();
@@ -215,17 +229,24 @@ pub fn compute_country_traffic_chart(
     let cumulative = build_cumulative_stacks(&cs.series);
 
     let (peak, y_max) = compute_peak_and_ymax(&cumulative);
-    let countries = build_country_areas(&cs.country_names, &cumulative, n, svg_w, svg_h, y_max);
+    let countries = build_country_areas(&AreaBuildParams {
+        country_names: &cs.country_names,
+        cumulative: &cumulative,
+        n,
+        svg_w,
+        svg_h,
+        y_max,
+    });
     let x_labels = build_country_x_labels(&cs.time_buckets, n, svg_w, range);
     let y_labels = build_y_labels(peak, svg_h, y_max);
-    let tooltips = build_country_tooltips(
-        &cs.time_buckets,
-        &cs.country_names,
-        &cs.series,
+    let tooltips = build_country_tooltips(&TooltipBuildParams {
+        time_buckets: &cs.time_buckets,
+        country_names: &cs.country_names,
+        country_series: &cs.series,
         n,
         svg_w,
         range,
-    );
+    });
 
     CountryTrafficChart {
         has_data: true,

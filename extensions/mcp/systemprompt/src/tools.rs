@@ -39,40 +39,43 @@ pub fn output_schema() -> serde_json::Value {
     ToolResponse::<CliArtifact>::schema()
 }
 
-fn create_tool(
-    server_name: &str,
-    name: &str,
-    title: &str,
-    description: &str,
-    input_schema: &serde_json::Value,
-    output_schema: &serde_json::Value,
-) -> Tool {
-    let input_obj = input_schema
+struct ToolDef<'a> {
+    server_name: &'a str,
+    name: &'a str,
+    title: &'a str,
+    description: &'a str,
+    input_schema: &'a serde_json::Value,
+    output_schema: &'a serde_json::Value,
+}
+
+fn create_tool(def: &ToolDef<'_>) -> Tool {
+    let input_obj = def
+        .input_schema
         .as_object()
         .cloned()
         .unwrap_or_else(serde_json::Map::new);
-    let output_obj = output_schema
+    let output_obj = def
+        .output_schema
         .as_object()
         .cloned()
         .unwrap_or_else(serde_json::Map::new);
 
     let mut tool = Tool::default();
-    tool.name = name.to_string().into();
-    tool.title = Some(title.to_string());
-    tool.description = Some(description.to_string().into());
+    tool.name = def.name.to_string().into();
+    tool.title = Some(def.title.to_string());
+    tool.description = Some(def.description.to_string().into());
     tool.input_schema = Arc::new(input_obj);
     tool.output_schema = Some(Arc::new(output_obj));
-    tool.meta = Some(Meta(tool_ui_meta(server_name, &default_tool_visibility())));
+    tool.meta = Some(Meta(tool_ui_meta(
+        def.server_name,
+        &default_tool_visibility(),
+    )));
     tool
 }
 
 #[must_use]
 pub fn list_tools() -> Vec<Tool> {
-    vec![create_tool(
-        SERVER_NAME,
-        "systemprompt",
-        "SystemPrompt CLI",
-        &format!("Execute SystemPrompt CLI commands. Pass the command WITHOUT the 'systemprompt' prefix.\n\n\
+    let desc = format!("Execute SystemPrompt CLI commands. Pass the command WITHOUT the 'systemprompt' prefix.\n\n\
         MANDATORY FIRST STEP: Run 'core playbooks show guide_start' before any task.\n\n\
         Common commands:\n  \
         - core playbooks show guide_start: Load the getting started guide (ALWAYS DO THIS FIRST)\n  \
@@ -82,8 +85,13 @@ pub fn list_tools() -> Vec<Tool> {
         - plugins run discord send \"message\" --channel <id>: Send to specific channel\n  \
         - admin agents list: List agents\n\n\
         Example: {{\"command\": \"core playbooks show guide_start\"}}\n\n\
-        Full documentation: {WEBSITE_URL}/playbooks"),
-        &input_schema(),
-        &output_schema(),
-    )]
+        Full documentation: {WEBSITE_URL}/playbooks");
+    vec![create_tool(&ToolDef {
+        server_name: SERVER_NAME,
+        name: "systemprompt",
+        title: "SystemPrompt CLI",
+        description: &desc,
+        input_schema: &input_schema(),
+        output_schema: &output_schema(),
+    })]
 }

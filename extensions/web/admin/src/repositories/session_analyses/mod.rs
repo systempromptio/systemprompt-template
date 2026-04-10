@@ -39,14 +39,23 @@ pub struct SessionAnalysisRow {
     pub total_turns: Option<i32>,
 }
 
-struct InsertParams {
+struct UpsertParams {
+    title: String,
+    description: String,
+    summary: String,
     tags: String,
-    composed_summary: String,
+    goal_achieved: String,
+    quality_score: i16,
+    outcome: String,
+    error_analysis: Option<String>,
+    skill_assessment: Option<String>,
+    recommendations: Option<String>,
     skill_scores_json: Option<serde_json::Value>,
     category: String,
     goal_outcome_map_json: Option<serde_json::Value>,
     efficiency_metrics_json: Option<serde_json::Value>,
     best_practices_json: Option<serde_json::Value>,
+    improvement_hints: Option<String>,
     corrections_count: i32,
     duration_minutes: Option<i32>,
     total_turns: Option<i32>,
@@ -55,10 +64,18 @@ struct InsertParams {
     client_surface: String,
 }
 
-fn prepare_insert_params(analysis: &SessionAnalysis) -> InsertParams {
-    InsertParams {
+fn prepare_upsert_params(analysis: &SessionAnalysis) -> UpsertParams {
+    UpsertParams {
+        title: analysis.title.clone(),
+        description: analysis.description.clone(),
+        summary: analysis.composed_summary(),
         tags: analysis.tags.join(","),
-        composed_summary: analysis.composed_summary(),
+        goal_achieved: analysis.goal_achieved.clone(),
+        quality_score: analysis.quality_score,
+        outcome: analysis.outcome.clone(),
+        error_analysis: analysis.error_analysis.clone(),
+        skill_assessment: analysis.skill_assessment.clone(),
+        recommendations: analysis.recommendations.clone(),
         skill_scores_json: analysis
             .skill_scores
             .as_ref()
@@ -76,6 +93,7 @@ fn prepare_insert_params(analysis: &SessionAnalysis) -> InsertParams {
             .best_practices_checklist
             .as_ref()
             .and_then(|v| serde_json::to_value(v).ok()),
+        improvement_hints: analysis.improvement_hints.clone(),
         corrections_count: analysis
             .efficiency_metrics
             .as_ref()
@@ -97,7 +115,7 @@ pub async fn insert_session_analysis(
     user_id: &str,
     analysis: &SessionAnalysis,
 ) {
-    let p = prepare_insert_params(analysis);
+    let p = prepare_upsert_params(analysis);
 
     tracing::debug!(
         session_id,
@@ -106,37 +124,18 @@ pub async fn insert_session_analysis(
         "Inserting session analysis"
     );
 
-    if let Err(e) = execute_upsert_analysis(pool, session_id, user_id, analysis, &p).await {
+    if let Err(e) = run_upsert_query(pool, session_id, user_id, &p).await {
         tracing::warn!(error = %e, "Failed to insert session analysis");
     }
 }
 
-struct UpsertAnalysisIds<'a> {
-    session_id: &'a str,
-    user_id: &'a str,
-}
-
-async fn execute_upsert_analysis(
+async fn run_upsert_query(
     pool: &PgPool,
     session_id: &str,
     user_id: &str,
-    analysis: &SessionAnalysis,
-    p: &InsertParams,
+    p: &UpsertParams,
 ) -> Result<(), sqlx::Error> {
-    let ids = UpsertAnalysisIds {
-        session_id,
-        user_id,
-    };
-    run_upsert_query(pool, &ids, analysis, p).await
-}
-
-async fn run_upsert_query(
-    pool: &PgPool,
-    ids: &UpsertAnalysisIds<'_>,
-    analysis: &SessionAnalysis,
-    p: &InsertParams,
-) -> Result<(), sqlx::Error> {
-    let query = sqlx::query!(
+    sqlx::query!(
         r"INSERT INTO session_analyses
             (session_id, user_id, title, description, summary, tags,
              goal_achieved, quality_score, outcome, error_analysis,
@@ -171,31 +170,32 @@ async fn run_upsert_query(
             plan_mode_used = EXCLUDED.plan_mode_used,
             client_surface = EXCLUDED.client_surface,
             updated_at = NOW()",
-        ids.session_id,
-        ids.user_id,
-        analysis.title,
-        analysis.description,
-        p.composed_summary,
+        session_id,
+        user_id,
+        p.title,
+        p.description,
+        p.summary,
         p.tags,
-        analysis.goal_achieved,
-        analysis.quality_score,
-        analysis.outcome,
-        analysis.error_analysis,
-        analysis.skill_assessment,
-        analysis.recommendations,
+        p.goal_achieved,
+        p.quality_score,
+        p.outcome,
+        p.error_analysis,
+        p.skill_assessment,
+        p.recommendations,
         p.skill_scores_json,
         p.category,
         p.goal_outcome_map_json,
         p.efficiency_metrics_json,
         p.best_practices_json,
-        analysis.improvement_hints,
+        p.improvement_hints,
         p.corrections_count,
         p.duration_minutes,
         p.total_turns,
         p.automation_ratio,
         p.plan_mode_used,
         p.client_surface,
-    );
-    query.execute(pool).await?;
+    )
+    .execute(pool)
+    .await?;
     Ok(())
 }

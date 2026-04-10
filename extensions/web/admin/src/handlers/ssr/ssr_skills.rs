@@ -37,16 +37,21 @@ struct SkillFilters {
     tags: HashSet<String>,
 }
 
+struct SkillViewContext<'a> {
+    skill_plugin_map: &'a std::collections::HashMap<String, Vec<(String, String)>>,
+    agent_plugin_map: &'a std::collections::HashMap<String, Vec<(String, String)>>,
+    usage_counts: &'a std::collections::HashMap<String, i64>,
+    avg_ratings: &'a std::collections::HashMap<String, (f64, i64)>,
+}
+
 fn build_skill_json(
     skill: &AgentSkill,
-    skill_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
-    agent_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
-    usage_counts: &std::collections::HashMap<String, i64>,
-    avg_ratings: &std::collections::HashMap<String, (f64, i64)>,
+    ctx: &SkillViewContext<'_>,
     filters: &mut SkillFilters,
 ) -> serde_json::Value {
     let skill_id_str = skill.skill_id.as_str();
-    let assigned_plugins: Vec<serde_json::Value> = skill_plugin_map
+    let assigned_plugins: Vec<serde_json::Value> = ctx
+        .skill_plugin_map
         .get(skill_id_str)
         .map(|plugins| {
             plugins
@@ -56,7 +61,8 @@ fn build_skill_json(
         })
         .unwrap_or_default();
 
-    let agent_count = count_entities_via_plugins(skill_id_str, skill_plugin_map, agent_plugin_map);
+    let agent_count =
+        count_entities_via_plugins(skill_id_str, ctx.skill_plugin_map, ctx.agent_plugin_map);
 
     let source = if skill.source_id.as_str() == "custom" || skill.source_id.as_str() == "user" {
         "custom"
@@ -76,8 +82,12 @@ fn build_skill_json(
         }
     }
 
-    let usage_count = usage_counts.get(skill_id_str).copied().unwrap_or(0);
-    let (avg_rating, rating_count) = avg_ratings.get(skill_id_str).copied().unwrap_or((0.0, 0));
+    let usage_count = ctx.usage_counts.get(skill_id_str).copied().unwrap_or(0);
+    let (avg_rating, rating_count) = ctx
+        .avg_ratings
+        .get(skill_id_str)
+        .copied()
+        .unwrap_or((0.0, 0));
 
     json!({
         "skill_id": skill_id_str,
@@ -158,18 +168,16 @@ pub async fn skills_page(
         tags: HashSet::new(),
     };
 
+    let skill_view_ctx = SkillViewContext {
+        skill_plugin_map: &skill_plugin_map,
+        agent_plugin_map: &agent_plugin_map,
+        usage_counts: &usage_counts,
+        avg_ratings: &avg_ratings,
+    };
+
     let skills_data: Vec<serde_json::Value> = skills
         .iter()
-        .map(|skill| {
-            build_skill_json(
-                skill,
-                &skill_plugin_map,
-                &agent_plugin_map,
-                &usage_counts,
-                &avg_ratings,
-                &mut filters,
-            )
-        })
+        .map(|skill| build_skill_json(skill, &skill_view_ctx, &mut filters))
         .collect();
 
     let mut sorted_sources: Vec<String> = filters.sources.into_iter().collect();

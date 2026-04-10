@@ -56,15 +56,15 @@ pub async fn handle_hook_track(
         return StatusCode::OK.into_response();
     }
 
-    dispatch_inserted_event(
-        &pool,
-        &user_id,
-        &payload,
-        &event_hub,
-        ai_service.as_ref(),
-        &jwt_token,
-        &tier_cache,
-    )
+    dispatch_inserted_event(&DispatchContext {
+        pool: &pool,
+        user_id: &user_id,
+        payload: &payload,
+        event_hub: &event_hub,
+        ai_service: ai_service.as_ref(),
+        jwt_token: &jwt_token,
+        tier_cache: &tier_cache,
+    })
     .await;
     StatusCode::OK.into_response()
 }
@@ -94,29 +94,31 @@ fn log_payload_warnings(payload: &HookEventPayload, warnings: &[String]) {
     }
 }
 
-async fn dispatch_inserted_event(
-    pool: &PgPool,
-    user_id: &UserId,
-    payload: &HookEventPayload,
-    event_hub: &EventHub,
-    ai_service: Option<&Arc<AiService>>,
-    jwt_token: &str,
-    tier_cache: &crate::tier_enforcement::TierEnforcementCache,
-) {
-    let content_bytes = helpers::compute_content_bytes(payload);
+struct DispatchContext<'a> {
+    pool: &'a PgPool,
+    user_id: &'a UserId,
+    payload: &'a HookEventPayload,
+    event_hub: &'a EventHub,
+    ai_service: Option<&'a Arc<AiService>>,
+    jwt_token: &'a str,
+    tier_cache: &'a crate::tier_enforcement::TierEnforcementCache,
+}
+
+async fn dispatch_inserted_event(ctx: &DispatchContext<'_>) {
+    let content_bytes = helpers::compute_content_bytes(ctx.payload);
     processing::process_inserted_event(&processing::ProcessInsertedEventParams {
-        pool,
-        user_id,
-        session_id: &SessionId::new(payload.session_id()),
-        event_type: payload.event_name(),
-        tool_name: payload.tool_name(),
+        pool: ctx.pool,
+        user_id: ctx.user_id,
+        session_id: &SessionId::new(ctx.payload.session_id()),
+        event_type: ctx.payload.event_name(),
+        tool_name: ctx.payload.tool_name(),
         content_input_bytes: content_bytes.input,
         content_output_bytes: content_bytes.output,
-        payload,
-        event_hub,
-        ai_service,
-        jwt_token,
-        tier_cache,
+        payload: ctx.payload,
+        event_hub: ctx.event_hub,
+        ai_service: ctx.ai_service,
+        jwt_token: ctx.jwt_token,
+        tier_cache: ctx.tier_cache,
     })
     .await;
 }

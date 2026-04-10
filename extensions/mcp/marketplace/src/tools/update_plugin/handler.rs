@@ -87,14 +87,14 @@ impl McpToolHandler for UpdatePluginHandler {
                 )
             })?;
 
-        shared::set_plugin_associations(
-            &mut *tx,
-            &plugin.id,
-            &user_id,
-            input.skill_ids.as_deref(),
-            input.agent_ids.as_deref(),
-            input.mcp_server_ids.as_deref(),
-        )
+        shared::set_plugin_associations(&mut shared::PluginAssociationParams {
+            conn: &mut *tx,
+            plugin_id: &plugin.id,
+            user_id: &user_id,
+            skill_slugs: input.skill_ids.as_deref(),
+            agent_slugs: input.agent_ids.as_deref(),
+            mcp_server_slugs: input.mcp_server_ids.as_deref(),
+        })
         .await?;
 
         tx.commit().await.map_err(|e| {
@@ -106,13 +106,13 @@ impl McpToolHandler for UpdatePluginHandler {
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 
-        shared::build_plugin_response(
-            &plugin,
+        shared::build_plugin_response(&shared::PluginResponseInput {
+            plugin: &plugin,
             ctx,
-            "updated",
-            &skill_slugs,
-            &agent_slugs,
-            &mcp_server_slugs,
-        )
+            action: "updated",
+            skill_slugs: &skill_slugs,
+            agent_slugs: &agent_slugs,
+            mcp_server_slugs: &mcp_server_slugs,
+        })
     }
 }

@@ -81,14 +81,14 @@ impl McpToolHandler for CreatePluginHandler {
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to create plugin: {e}"), None))?;
 
-        shared::set_plugin_associations(
-            &mut *tx,
-            &plugin.id,
-            &user_id,
-            Some(&input.skill_ids),
-            Some(&input.agent_ids),
-            Some(&input.mcp_server_ids),
-        )
+        shared::set_plugin_associations(&mut shared::PluginAssociationParams {
+            conn: &mut *tx,
+            plugin_id: &plugin.id,
+            user_id: &user_id,
+            skill_slugs: Some(&input.skill_ids),
+            agent_slugs: Some(&input.agent_ids),
+            mcp_server_slugs: Some(&input.mcp_server_ids),
+        })
         .await?;
 
         tx.commit().await.map_err(|e| {
@@ -100,13 +100,13 @@ impl McpToolHandler for CreatePluginHandler {
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 
-        shared::build_plugin_response(
-            &plugin,
+        shared::build_plugin_response(&shared::PluginResponseInput {
+            plugin: &plugin,
             ctx,
-            "created",
-            &skill_slugs,
-            &agent_slugs,
-            &mcp_server_slugs,
-        )
+            action: "created",
+            skill_slugs: &skill_slugs,
+            agent_slugs: &agent_slugs,
+            mcp_server_slugs: &mcp_server_slugs,
+        })
     }
 }

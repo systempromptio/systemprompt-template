@@ -49,14 +49,14 @@ pub fn build_report_data(params: &ReportParams<'_>) -> ReportData {
         days_14,
         params.global,
     );
-    let quality = build_quality_section(
-        params.today,
-        params.health,
+    let quality = build_quality_section(&QualitySectionInput {
+        today: params.today,
+        health: params.health,
         yesterday,
         days_7,
         days_14,
-        params.global,
-    );
+        global: params.global,
+    });
     let productivity = report_sections::build_productivity_section(
         params.perf,
         yesterday,
@@ -84,45 +84,51 @@ pub fn build_report_data(params: &ReportParams<'_>) -> ReportData {
     }
 }
 
-fn build_quality_section(
-    today: &TodaySummary,
-    health: &HealthMetrics,
-    yesterday: &DailySummaryRow,
-    days_7: &[DailySummaryRow],
-    days_14: &[DailySummaryRow],
-    global: &repositories::daily_summaries::GlobalAverages,
-) -> Vec<super::super::types::MetricRow> {
+struct QualitySectionInput<'a> {
+    today: &'a TodaySummary,
+    health: &'a HealthMetrics,
+    yesterday: &'a DailySummaryRow,
+    days_7: &'a [DailySummaryRow],
+    days_14: &'a [DailySummaryRow],
+    global: &'a repositories::daily_summaries::GlobalAverages,
+}
+
+fn build_quality_section(input: &QualitySectionInput<'_>) -> Vec<super::super::types::MetricRow> {
     vec![
         make_metric_row(&MetricRowInput {
             label: "Avg Quality",
-            today_val: today.avg_quality,
-            yesterday_val: yesterday.avg_quality_score.map(f64::from),
-            avg_7d: avg_field(days_7, |d| f64::from(d.avg_quality_score.unwrap_or(0.0))),
-            avg_14d: avg_field(days_14, |d| f64::from(d.avg_quality_score.unwrap_or(0.0))),
-            global_avg: global.avg_quality.map(f64::from),
+            today_val: input.today.avg_quality,
+            yesterday_val: input.yesterday.avg_quality_score.map(f64::from),
+            avg_7d: avg_field(input.days_7, |d| {
+                f64::from(d.avg_quality_score.unwrap_or(0.0))
+            }),
+            avg_14d: avg_field(input.days_14, |d| {
+                f64::from(d.avg_quality_score.unwrap_or(0.0))
+            }),
+            global_avg: input.global.avg_quality.map(f64::from),
             positive_when_up: true,
         }),
         make_metric_row(&MetricRowInput {
             label: "Goals Achieved",
-            today_val: numeric::to_f64(today.goals_achieved),
-            yesterday_val: Some(f64::from(yesterday.goals_achieved)),
-            avg_7d: avg_field(days_7, |d| f64::from(d.goals_achieved)),
-            avg_14d: avg_field(days_14, |d| f64::from(d.goals_achieved)),
+            today_val: numeric::to_f64(input.today.goals_achieved),
+            yesterday_val: Some(f64::from(input.yesterday.goals_achieved)),
+            avg_7d: avg_field(input.days_7, |d| f64::from(d.goals_achieved)),
+            avg_14d: avg_field(input.days_14, |d| f64::from(d.goals_achieved)),
             global_avg: None,
             positive_when_up: true,
         }),
         make_metric_row(&MetricRowInput {
             label: "Goals Failed",
-            today_val: numeric::to_f64(today.goals_failed),
-            yesterday_val: Some(f64::from(yesterday.goals_failed)),
-            avg_7d: avg_field(days_7, |d| f64::from(d.goals_failed)),
-            avg_14d: avg_field(days_14, |d| f64::from(d.goals_failed)),
+            today_val: numeric::to_f64(input.today.goals_failed),
+            yesterday_val: Some(f64::from(input.yesterday.goals_failed)),
+            avg_7d: avg_field(input.days_7, |d| f64::from(d.goals_failed)),
+            avg_14d: avg_field(input.days_14, |d| f64::from(d.goals_failed)),
             global_avg: None,
             positive_when_up: false,
         }),
         make_metric_row(&MetricRowInput {
             label: "Health Score",
-            today_val: numeric::to_f64(health.health_score),
+            today_val: numeric::to_f64(input.health.health_score),
             yesterday_val: None,
             avg_7d: None,
             avg_14d: None,

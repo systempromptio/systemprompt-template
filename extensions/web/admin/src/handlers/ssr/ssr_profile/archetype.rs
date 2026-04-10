@@ -283,14 +283,21 @@ fn score_efficiency_expert(
 
 fn score_steady_performer(apm_r: f64, q_r: f64, td_r: f64, m_r: f64, g_r: f64) -> f64 {
     let c = |r: f64| match () {
-        _ if (r - 1.0).abs() < 0.1 => 15.0,
-        _ if (r - 1.0).abs() < 0.2 => 10.0,
-        _ if (r - 1.0).abs() < 0.3 => 5.0,
-        _ => 0.0,
+        () if (r - 1.0).abs() < 0.1 => 15.0,
+        () if (r - 1.0).abs() < 0.2 => 10.0,
+        () if (r - 1.0).abs() < 0.3 => 5.0,
+        () => 0.0,
     };
     c(apm_r) + c(q_r) + c(td_r) + c(m_r) + c(g_r)
 }
 
-fn f64_to_u8(v: f64) -> u8 {
-    v.clamp(0.0, 100.0).round() as u8
+const fn f64_to_u8(v: f64) -> u8 {
+    let clamped = if v < 0.0 {
+        0.0
+    } else if v > 100.0 {
+        100.0
+    } else {
+        v
+    };
+    clamped as u8
 }

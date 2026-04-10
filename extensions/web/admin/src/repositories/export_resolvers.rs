@@ -135,23 +135,31 @@ pub(super) fn collect_skill_auxiliary_files(
     ];
     let mut result = Vec::new();
 
+    let aux_ctx = AuxCollectContext {
+        kebab_name: &kebab_name,
+        binary_exts,
+    };
     for subdir in &subdirs {
         let dir = skill_dir.join(subdir);
         if !dir.is_dir() {
             continue;
         }
-        collect_aux_recursive(&dir, &dir, &kebab_name, subdir, binary_exts, &mut result);
+        collect_aux_recursive(&dir, &dir, subdir, &aux_ctx, &mut result);
     }
 
     result
 }
 
+struct AuxCollectContext<'a> {
+    kebab_name: &'a str,
+    binary_exts: &'a [&'a str],
+}
+
 fn collect_aux_recursive(
     base: &Path,
     current: &Path,
-    kebab_name: &str,
     subdir: &str,
-    binary_exts: &[&str],
+    ctx: &AuxCollectContext<'_>,
     result: &mut Vec<(String, String, bool)>,
 ) {
     let Ok(entries) = std::fs::read_dir(current) else {
@@ -170,12 +178,12 @@ fn collect_aux_recursive(
             if file_name == "__pycache__" {
                 continue;
             }
-            collect_aux_recursive(base, &path, kebab_name, subdir, binary_exts, result);
+            collect_aux_recursive(base, &path, subdir, ctx, result);
             continue;
         }
 
         if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-            if binary_exts.contains(&ext.to_lowercase().as_str()) {
+            if ctx.binary_exts.contains(&ext.to_lowercase().as_str()) {
                 continue;
             }
         }
@@ -186,7 +194,8 @@ fn collect_aux_recursive(
 
         let relative = path.strip_prefix(base).unwrap_or(&path);
         let export_path = format!(
-            "skills/{kebab_name}/{subdir}/{}",
+            "skills/{}/{subdir}/{}",
+            ctx.kebab_name,
             relative.to_string_lossy()
         );
 

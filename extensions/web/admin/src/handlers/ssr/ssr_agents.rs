@@ -69,16 +69,21 @@ fn count_entities_via_plugins(
     })
 }
 
+struct AgentViewContext<'a> {
+    agent_plugin_map: &'a std::collections::HashMap<String, Vec<(String, String)>>,
+    skill_plugin_map: &'a std::collections::HashMap<String, Vec<(String, String)>>,
+    mcp_plugin_map: &'a std::collections::HashMap<String, Vec<(String, String)>>,
+    usage_counts: &'a std::collections::HashMap<String, i64>,
+    agent_updated_at: &'a std::collections::HashMap<String, String>,
+}
+
 fn build_agent_json(
     agent: &AgentDetail,
-    agent_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
-    skill_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
-    mcp_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
-    usage_counts: &std::collections::HashMap<String, i64>,
-    agent_updated_at: &std::collections::HashMap<String, String>,
+    ctx: &AgentViewContext<'_>,
     filter_plugins: &mut HashSet<String>,
 ) -> serde_json::Value {
-    let assigned_plugins: Vec<serde_json::Value> = agent_plugin_map
+    let assigned_plugins: Vec<serde_json::Value> = ctx
+        .agent_plugin_map
         .get(&agent.id)
         .map(|plugins| {
             plugins
@@ -88,8 +93,9 @@ fn build_agent_json(
         })
         .unwrap_or_default();
 
-    let skill_count = count_entities_via_plugins(&agent.id, agent_plugin_map, skill_plugin_map);
-    let mcp_count = count_entities_via_plugins(&agent.id, agent_plugin_map, mcp_plugin_map);
+    let skill_count =
+        count_entities_via_plugins(&agent.id, ctx.agent_plugin_map, ctx.skill_plugin_map);
+    let mcp_count = count_entities_via_plugins(&agent.id, ctx.agent_plugin_map, ctx.mcp_plugin_map);
 
     let prompt_preview = if agent.system_prompt.len() > 300 {
         format!("{}...", &agent.system_prompt[..300])
@@ -103,8 +109,12 @@ fn build_agent_json(
         }
     }
 
-    let usage_count = usage_counts.get(&agent.id).copied().unwrap_or(0);
-    let updated_at = agent_updated_at.get(&agent.id).cloned().unwrap_or_default();
+    let usage_count = ctx.usage_counts.get(&agent.id).copied().unwrap_or(0);
+    let updated_at = ctx
+        .agent_updated_at
+        .get(&agent.id)
+        .cloned()
+        .unwrap_or_default();
 
     json!({
         "id": agent.id,
@@ -180,19 +190,17 @@ pub async fn agents_page(
 
     let mut filter_plugins: HashSet<String> = HashSet::new();
 
+    let agent_view_ctx = AgentViewContext {
+        agent_plugin_map: &agent_plugin_map,
+        skill_plugin_map: &skill_plugin_map,
+        mcp_plugin_map: &mcp_plugin_map,
+        usage_counts: &usage_counts,
+        agent_updated_at: &agent_updated_at,
+    };
+
     let agents_data: Vec<serde_json::Value> = agents
         .iter()
-        .map(|agent| {
-            build_agent_json(
-                agent,
-                &agent_plugin_map,
-                &skill_plugin_map,
-                &mcp_plugin_map,
-                &usage_counts,
-                &agent_updated_at,
-                &mut filter_plugins,
-            )
-        })
+        .map(|agent| build_agent_json(agent, &agent_view_ctx, &mut filter_plugins))
         .collect();
 
     let mut sorted_plugins: Vec<String> = filter_plugins.into_iter().collect();

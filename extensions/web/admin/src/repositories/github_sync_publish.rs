@@ -67,16 +67,26 @@ pub async fn publish_marketplace_to_github(
         prepare_publish_content(pool, marketplace_id, &services_path, &local_path, repo_url)
             .await?;
 
-    commit_and_push_if_changed(
+    let publish_ctx = PublishContext {
         pool,
         marketplace_id,
-        &local_path,
-        &push_url,
+        local_path: &local_path,
+        push_url: &push_url,
         plugin_count,
         triggered_by,
         start,
-    )
-    .await
+    };
+    commit_and_push_if_changed(&publish_ctx).await
+}
+
+struct PublishContext<'a> {
+    pool: &'a PgPool,
+    marketplace_id: &'a str,
+    local_path: &'a Path,
+    push_url: &'a str,
+    plugin_count: u64,
+    triggered_by: &'a str,
+    start: std::time::Instant,
 }
 
 async fn prepare_publish_content(
@@ -103,21 +113,13 @@ async fn prepare_publish_content(
     Ok((plugin_count, push_url))
 }
 
-async fn commit_and_push_if_changed(
-    pool: &PgPool,
-    marketplace_id: &str,
-    local_path: &Path,
-    push_url: &str,
-    plugin_count: u64,
-    triggered_by: &str,
-    start: std::time::Instant,
-) -> Result<SyncResult> {
-    if !git_has_changes(local_path)? {
-        let duration_ms = elapsed_ms(start);
-        tracing::info!(marketplace_id, "No changes to publish");
+async fn commit_and_push_if_changed(ctx: &PublishContext<'_>) -> Result<SyncResult> {
+    if !git_has_changes(ctx.local_path)? {
+        let duration_ms = elapsed_ms(ctx.start);
+        tracing::info!(marketplace_id = ctx.marketplace_id, "No changes to publish");
         return Ok(SyncResult {
-            commit_hash: git_head_hash(local_path)?,
-            plugins_synced: plugin_count,
+            commit_hash: git_head_hash(ctx.local_path)?,
+            plugins_synced: ctx.plugin_count,
             errors: 0,
             changed: false,
             duration_ms,
@@ -125,29 +127,29 @@ async fn commit_and_push_if_changed(
     }
 
     git_commit(
-        local_path,
-        &format!("Marketplace update from admin ({marketplace_id})"),
+        ctx.local_path,
+        &format!("Marketplace update from admin ({})", ctx.marketplace_id),
     )?;
-    git_push(local_path, push_url)?;
+    git_push(ctx.local_path, ctx.push_url)?;
 
-    let current_hash = git_head_hash(local_path)?;
-    let duration_ms = elapsed_ms(start);
+    let current_hash = git_head_hash(ctx.local_path)?;
+    let duration_ms = elapsed_ms(ctx.start);
 
-    let _ = std::fs::write(local_path.join(".last-commit"), &current_hash);
+    let _ = std::fs::write(ctx.local_path.join(".last-commit"), &current_hash);
 
-    log_publish_result(
-        pool,
-        marketplace_id,
-        &current_hash,
-        plugin_count,
-        triggered_by,
+    log_publish_result(&PublishLogInput {
+        pool: ctx.pool,
+        marketplace_id: ctx.marketplace_id,
+        current_hash: &current_hash,
+        plugin_count: ctx.plugin_count,
+        triggered_by: ctx.triggered_by,
         duration_ms,
-    )
+    })
     .await;
 
     Ok(SyncResult {
         commit_hash: current_hash,
-        plugins_synced: plugin_count,
+        plugins_synced: ctx.plugin_count,
         errors: 0,
         changed: true,
         duration_ms,
@@ -174,35 +176,37 @@ fn write_marketplace_json(local_path: &Path, content: impl AsRef<[u8]>) -> Resul
     Ok(())
 }
 
-async fn log_publish_result(
-    pool: &PgPool,
-    marketplace_id: &str,
-    current_hash: &str,
+struct PublishLogInput<'a> {
+    pool: &'a PgPool,
+    marketplace_id: &'a str,
+    current_hash: &'a str,
     plugin_count: u64,
-    triggered_by: &str,
+    triggered_by: &'a str,
     duration_ms: u64,
-) {
+}
+
+async fn log_publish_result(input: &PublishLogInput<'_>) {
     let _ = super::org_marketplaces::insert_sync_log(
-        pool,
+        input.pool,
         &super::org_marketplaces::SyncLogEntry {
-            marketplace_id,
+            marketplace_id: input.marketplace_id,
             operation: "publish",
             status: "success",
-            commit_hash: Some(current_hash),
-            plugins_synced: i64::try_from(plugin_count).unwrap_or(i64::MAX),
+            commit_hash: Some(input.current_hash),
+            plugins_synced: i64::try_from(input.plugin_count).unwrap_or(i64::MAX),
             errors: 0,
             error_message: None,
-            triggered_by,
-            duration_ms: Some(i64::try_from(duration_ms).unwrap_or(i64::MAX)),
+            triggered_by: input.triggered_by,
+            duration_ms: Some(i64::try_from(input.duration_ms).unwrap_or(i64::MAX)),
         },
     )
     .await;
 
     tracing::info!(
-        marketplace_id,
-        plugins = plugin_count,
-        commit = &current_hash[..std::cmp::min(8, current_hash.len())],
-        duration_ms,
+        marketplace_id = input.marketplace_id,
+        plugins = input.plugin_count,
+        commit = &input.current_hash[..std::cmp::min(8, input.current_hash.len())],
+        duration_ms = input.duration_ms,
         "GitHub marketplace publish completed"
     );
 }

@@ -24,22 +24,16 @@ pub async fn check_achievements(
 
     let mut to_unlock = Vec::new();
 
-    check_first_steps(
-        &mut to_unlock,
-        session_count,
-        tool_count,
-        custom_skills_count,
-        ctx.prompt_count,
-        ctx.subagent_count,
-    );
-    check_milestones(
-        &mut to_unlock,
-        session_count,
-        tool_count,
-        ctx.total_xp,
-        ctx.prompt_count,
-        ctx.subagent_count,
-    );
+    let usage_counts = UsageCounts {
+        sessions: session_count,
+        tools: tool_count,
+        custom_skills: custom_skills_count,
+        prompts: ctx.prompt_count,
+        subagents: ctx.subagent_count,
+        total_xp: ctx.total_xp,
+    };
+    check_first_steps(&mut to_unlock, &usage_counts);
+    check_milestones(&mut to_unlock, &usage_counts);
     check_exploration(
         &mut to_unlock,
         ctx.unique_skills,
@@ -93,67 +87,62 @@ async fn fetch_achievement_counts(
     Ok((session_count, tool_count, custom_skills_count, error_count))
 }
 
-fn check_first_steps(
-    to_unlock: &mut Vec<&'static str>,
+struct UsageCounts {
     sessions: i64,
     tools: i64,
-    custom: i64,
+    custom_skills: i64,
     prompts: i64,
     subagents: i64,
-) {
-    if sessions >= 1 {
+    total_xp: i64,
+}
+
+fn check_first_steps(to_unlock: &mut Vec<&'static str>, counts: &UsageCounts) {
+    if counts.sessions >= 1 {
         to_unlock.push("first_spark");
     }
-    if tools >= 1 {
+    if counts.tools >= 1 {
         to_unlock.push("first_tool");
     }
-    if custom >= 1 {
+    if counts.custom_skills >= 1 {
         to_unlock.push("first_custom_skill");
     }
-    if prompts >= 1 {
+    if counts.prompts >= 1 {
         to_unlock.push("first_prompt");
     }
-    if subagents >= 1 {
+    if counts.subagents >= 1 {
         to_unlock.push("first_subagent");
     }
 }
 
-fn check_milestones(
-    to_unlock: &mut Vec<&'static str>,
-    sessions: i64,
-    tools: i64,
-    total_xp: i64,
-    prompts: i64,
-    subagents: i64,
-) {
-    if sessions >= 5 {
+fn check_milestones(to_unlock: &mut Vec<&'static str>, counts: &UsageCounts) {
+    if counts.sessions >= 5 {
         to_unlock.push("five_sessions");
     }
-    if sessions >= 25 {
+    if counts.sessions >= 25 {
         to_unlock.push("twenty_five_sessions");
     }
-    if sessions >= 100 {
+    if counts.sessions >= 100 {
         to_unlock.push("hundred_sessions");
     }
-    if tools >= 50 {
+    if counts.tools >= 50 {
         to_unlock.push("fifty_tools");
     }
-    if tools >= 250 {
+    if counts.tools >= 250 {
         to_unlock.push("two_fifty_tools");
     }
-    if tools >= 1000 {
+    if counts.tools >= 1000 {
         to_unlock.push("thousand_tools");
     }
-    if total_xp >= 1000 {
+    if counts.total_xp >= 1000 {
         to_unlock.push("xp_1000");
     }
-    if prompts >= 50 {
+    if counts.prompts >= 50 {
         to_unlock.push("fifty_prompts");
     }
-    if prompts >= 500 {
+    if counts.prompts >= 500 {
         to_unlock.push("five_hundred_prompts");
     }
-    if subagents >= 10 {
+    if counts.subagents >= 10 {
         to_unlock.push("ten_subagents");
     }
 }

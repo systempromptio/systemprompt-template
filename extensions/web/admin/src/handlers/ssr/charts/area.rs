@@ -59,7 +59,14 @@ pub fn compute_area_chart_data(
 
     let series_order: &[&str] = &["sessions", "active_users", "prompts", "tools", "errors"];
     let (cum, base) = compute_cumulative_series(buckets, series_order, n);
-    let mut paths = build_area_paths(&cum, series_order, n, svg_w, svg_h, y_max);
+    let mut paths = build_area_paths(&AreaPathParams {
+        cum: &cum,
+        series_order,
+        n,
+        svg_w,
+        svg_h,
+        y_max,
+    });
 
     let top_line = build_svg_line(&base, n, svg_w, svg_h, y_max);
     paths.insert("top_line".to_string(), top_line);
@@ -109,33 +116,35 @@ fn compute_cumulative_series(
     (cum, base)
 }
 
-fn build_area_paths(
-    cum: &[Vec<f64>],
-    series_order: &[&str],
+struct AreaPathParams<'a> {
+    cum: &'a [Vec<f64>],
+    series_order: &'a [&'a str],
     n: usize,
     svg_w: f64,
     svg_h: f64,
     y_max: f64,
-) -> HashMap<String, String> {
+}
+
+fn build_area_paths(params: &AreaPathParams<'_>) -> HashMap<String, String> {
     use std::fmt::Write as _;
     let mut paths = HashMap::new();
-    let mut prev_base = vec![0.0f64; n];
+    let mut prev_base = vec![0.0f64; params.n];
 
-    for (i, &name) in series_order.iter().enumerate() {
-        let top = &cum[i];
+    for (i, &name) in params.series_order.iter().enumerate() {
+        let top = &params.cum[i];
         let mut d = String::new();
         for (j, &y_val) in top.iter().enumerate() {
-            let x = svg_x(j, n, svg_w);
-            let y = (y_val / y_max).mul_add(-svg_h, svg_h);
+            let x = svg_x(j, params.n, params.svg_w);
+            let y = (y_val / params.y_max).mul_add(-params.svg_h, params.svg_h);
             if j == 0 {
                 let _ = write!(d, "M{x:.1},{y:.1}");
             } else {
                 let _ = write!(d, " L{x:.1},{y:.1}");
             }
         }
-        for j in (0..n).rev() {
-            let x = svg_x(j, n, svg_w);
-            let y = (prev_base[j] / y_max).mul_add(-svg_h, svg_h);
+        for j in (0..params.n).rev() {
+            let x = svg_x(j, params.n, params.svg_w);
+            let y = (prev_base[j] / params.y_max).mul_add(-params.svg_h, params.svg_h);
             let _ = write!(d, " L{x:.1},{y:.1}");
         }
         d.push('Z');

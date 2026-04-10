@@ -188,94 +188,101 @@ async fn fetch_report_data_inline(
     let (spark_sess_arr, spark_signup_arr, spark_labels) =
         build_sparkline_arrays(today, &spark_sessions, &spark_signups);
 
-    Ok(assemble_inline_report(
-        &sessions_row,
-        &pv_row,
-        &acq_row,
+    Ok(assemble_inline_report(&InlineReportInput {
+        sessions_row: &sessions_row,
+        pv_row: &pv_row,
+        acq_row: &acq_row,
         top_content,
-        &seo,
+        seo: &seo,
         geo,
         devices,
         sources,
-        &funnel,
+        funnel: &funnel,
         landing,
         spark_sess_arr,
         spark_signup_arr,
         spark_labels,
-    ))
+    }))
 }
 
-fn assemble_inline_report(
-    sessions_row: &data::SessionsRow,
-    pv_row: &data::PageViewsRow,
-    acq_row: &data::AcquisitionRow,
+struct InlineReportInput<'a> {
+    sessions_row: &'a data::SessionsRow,
+    pv_row: &'a data::PageViewsRow,
+    acq_row: &'a data::AcquisitionRow,
     top_content: Vec<data::TopContentRow>,
-    seo: &data::SeoRow,
+    seo: &'a data::SeoRow,
     geo: Vec<data::GeoRow>,
     devices: Vec<data::DeviceRow>,
     sources: Vec<data::SourceRow>,
-    funnel: &data::FunnelRow,
+    funnel: &'a data::FunnelRow,
     landing: Vec<data::LandingRow>,
     spark_sess_arr: Vec<i64>,
     spark_signup_arr: Vec<i64>,
     spark_labels: Vec<String>,
-) -> InlineReportData {
+}
+
+fn assemble_inline_report(input: &InlineReportInput<'_>) -> InlineReportData {
     InlineReportData {
-        traffic_overview: build_traffic_overview(sessions_row, pv_row),
-        user_acquisition: build_user_acquisition(acq_row),
-        top_content: top_content
-            .into_iter()
+        traffic_overview: build_traffic_overview(input.sessions_row, input.pv_row),
+        user_acquisition: build_user_acquisition(input.acq_row),
+        top_content: input
+            .top_content
+            .iter()
             .map(|r| TopContentItem {
-                title: r.title,
-                slug: r.slug,
+                title: r.title.clone(),
+                slug: r.slug.clone(),
                 views_7d: r.views_7d,
                 views_30d: r.views_30d,
                 unique_visitors: r.unique_visitors,
                 avg_time_seconds: r.avg_time_seconds,
-                trend: r.trend,
+                trend: r.trend.clone(),
                 search_impressions: r.search_impressions,
                 search_clicks: r.search_clicks,
             })
             .collect(),
-        seo_metrics: build_seo_metrics(seo),
-        geo_breakdown: geo
-            .into_iter()
+        seo_metrics: build_seo_metrics(input.seo),
+        geo_breakdown: input
+            .geo
+            .iter()
             .map(|r| GeoBreakdownItem {
-                country: r.country,
+                country: r.country.clone(),
                 sessions: r.sessions,
             })
             .collect(),
-        device_breakdown: devices
-            .into_iter()
+        device_breakdown: input
+            .devices
+            .iter()
             .map(|r| DeviceBreakdownItem {
-                device: r.device,
+                device: r.device.clone(),
                 sessions: r.sessions,
             })
             .collect(),
-        source_breakdown: sources
-            .into_iter()
+        source_breakdown: input
+            .sources
+            .iter()
             .map(|r| SourceBreakdownItem {
-                source: r.source,
+                source: r.source.clone(),
                 sessions: r.sessions,
             })
             .collect(),
         content_funnel: ContentFunnel {
-            total_published: funnel.total_published,
-            avg_views_per_piece: funnel.avg_views,
-            total_shares: funnel.total_shares,
-            total_comments: funnel.total_comments,
+            total_published: input.funnel.total_published,
+            avg_views_per_piece: input.funnel.avg_views,
+            total_shares: input.funnel.total_shares,
+            total_comments: input.funnel.total_comments,
         },
         sparklines: SparklineData {
-            sessions: spark_sess_arr,
+            sessions: input.spark_sess_arr.clone(),
             page_views: vec![],
-            signups: spark_signup_arr,
+            signups: input.spark_signup_arr.clone(),
             avg_time_ms: vec![],
-            labels: spark_labels,
+            labels: input.spark_labels.clone(),
         },
-        top_landing_pages: landing
-            .into_iter()
+        top_landing_pages: input
+            .landing
+            .iter()
             .map(|r| LandingPageItem {
-                page_url: r.page_url,
+                page_url: r.page_url.clone(),
                 sessions: r.sessions,
                 avg_time_seconds: r.avg_time_seconds,
             })

@@ -175,14 +175,14 @@ pub async fn sync_marketplace_from_github(
 
     let duration_ms = elapsed_ms(start);
 
-    log_sync_result(
+    log_sync_result(&SyncLogInput {
         pool,
         marketplace_id,
-        &current_hash,
-        &tally,
+        current_hash: &current_hash,
+        tally: &tally,
         triggered_by,
         duration_ms,
-    )
+    })
     .await;
 
     Ok(SyncResult {
@@ -247,36 +247,38 @@ fn read_marketplace_plugins(local_path: &Path) -> Result<Vec<serde_json::Value>>
         .ok_or_else(|| anyhow::anyhow!("marketplace.json missing 'plugins' array"))
 }
 
-async fn log_sync_result(
-    pool: &PgPool,
-    marketplace_id: &str,
-    current_hash: &str,
-    tally: &PluginImportTally,
-    triggered_by: &str,
+struct SyncLogInput<'a> {
+    pool: &'a PgPool,
+    marketplace_id: &'a str,
+    current_hash: &'a str,
+    tally: &'a PluginImportTally,
+    triggered_by: &'a str,
     duration_ms: u64,
-) {
+}
+
+async fn log_sync_result(input: &SyncLogInput<'_>) {
     let _ = super::org_marketplaces::insert_sync_log(
-        pool,
+        input.pool,
         &super::org_marketplaces::SyncLogEntry {
-            marketplace_id,
+            marketplace_id: input.marketplace_id,
             operation: "sync",
             status: "success",
-            commit_hash: Some(current_hash),
-            plugins_synced: i64::try_from(tally.success_count).unwrap_or(i64::MAX),
-            errors: i64::try_from(tally.error_count).unwrap_or(i64::MAX),
+            commit_hash: Some(input.current_hash),
+            plugins_synced: i64::try_from(input.tally.success_count).unwrap_or(i64::MAX),
+            errors: i64::try_from(input.tally.error_count).unwrap_or(i64::MAX),
             error_message: None,
-            triggered_by,
-            duration_ms: Some(i64::try_from(duration_ms).unwrap_or(i64::MAX)),
+            triggered_by: input.triggered_by,
+            duration_ms: Some(i64::try_from(input.duration_ms).unwrap_or(i64::MAX)),
         },
     )
     .await;
 
     tracing::info!(
-        marketplace_id,
-        plugins = tally.success_count,
-        errors = tally.error_count,
-        commit = &current_hash[..std::cmp::min(8, current_hash.len())],
-        duration_ms,
+        marketplace_id = input.marketplace_id,
+        plugins = input.tally.success_count,
+        errors = input.tally.error_count,
+        commit = &input.current_hash[..std::cmp::min(8, input.current_hash.len())],
+        duration_ms = input.duration_ms,
         "GitHub marketplace sync completed"
     );
 }
