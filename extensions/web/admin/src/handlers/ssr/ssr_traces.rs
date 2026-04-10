@@ -11,7 +11,7 @@ use serde_json::json;
 use sqlx::{FromRow, PgPool};
 
 use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
+use crate::types::{MarketplaceContext, UserContext, DECISION_DENY, POLICY_SECRET_INJECTION};
 
 use super::ACCESS_DENIED_HTML;
 
@@ -198,8 +198,8 @@ fn build_governance_json(governance: &[TraceGovernanceRow]) -> Vec<serde_json::V
                 "agent_id": g.agent_id,
                 "agent_scope": g.agent_scope,
                 "decision": g.decision,
-                "is_denied": g.decision == "deny",
-                "is_secret_breach": g.policy == "secret_injection",
+                "is_denied": g.decision == DECISION_DENY,
+                "is_secret_breach": g.policy == POLICY_SECRET_INJECTION,
                 "policy": g.policy,
                 "reason": g.reason,
                 "created_at": g.created_at.with_timezone(&chrono::Local).format("%H:%M:%S%.3f").to_string(),

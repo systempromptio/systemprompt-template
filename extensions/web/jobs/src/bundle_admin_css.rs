@@ -8,7 +8,7 @@ use systemprompt_web_shared::error::MarketplaceError;
 pub struct BundleAdminCssJob;
 
 impl BundleAdminCssJob {
-    pub async fn execute_bundle() -> anyhow::Result<JobResult> {
+    pub async fn execute_bundle() -> Result<JobResult, MarketplaceError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Bundle admin CSS job started");
@@ -35,7 +35,7 @@ impl BundleAdminCssJob {
             return Err(MarketplaceError::Internal(format!(
                 "Failed to read {failed} CSS file(s) during bundling"
             ))
-            .into());
+            );
         }
 
         tokio::fs::write(&bundle_path, &bundle).await.map_err(|e| {
@@ -135,7 +135,7 @@ impl Job for BundleAdminCssJob {
     }
 
     async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
-        Self::execute_bundle().await
+        Ok(Self::execute_bundle().await?)
     }
 }
 

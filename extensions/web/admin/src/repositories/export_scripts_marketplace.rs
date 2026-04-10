@@ -52,7 +52,7 @@ pub(super) fn build_marketplace(
     plugin_configs: &[(String, super::super::types::PlatformPluginConfig)],
     bundles: &[super::export::PluginBundle],
     identity: &MarketplaceIdentity,
-) -> Result<super::export::MarketplaceFile, anyhow::Error> {
+) -> Result<super::export::MarketplaceFile, systemprompt_web_shared::error::MarketplaceError> {
     let org_ids: std::collections::HashSet<&str> =
         plugin_configs.iter().map(|(id, _)| id.as_str()).collect();
 

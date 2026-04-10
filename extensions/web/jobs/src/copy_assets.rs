@@ -10,7 +10,7 @@ use systemprompt_web_shared::error::MarketplaceError;
 pub struct CopyExtensionAssetsJob;
 
 impl CopyExtensionAssetsJob {
-    pub async fn execute_copy() -> anyhow::Result<JobResult> {
+    pub async fn execute_copy() -> Result<JobResult, MarketplaceError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Copy extension assets job started");
@@ -49,7 +49,7 @@ impl CopyExtensionAssetsJob {
 async fn copy_all_assets(
     dist_dir: &Path,
     assets: Vec<(&str, AssetDefinition)>,
-) -> anyhow::Result<(u64, u64)> {
+) -> Result<(u64, u64), MarketplaceError> {
     let mut copied = 0u64;
     let mut failed = 0u64;
 
@@ -58,7 +58,7 @@ async fn copy_all_assets(
             Ok(()) => copied += 1,
             Err(e) => {
                 if asset.is_required() {
-                    return Err(e.into());
+                    return Err(e);
                 }
                 tracing::warn!(
                     extension = %ext_id,
@@ -125,7 +125,7 @@ impl Job for CopyExtensionAssetsJob {
     }
 
     async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
-        Self::execute_copy().await
+        Ok(Self::execute_copy().await?)
     }
 }
 

@@ -101,6 +101,7 @@ pub async fn get_base_skill_content_handler(
         }
     };
 
+    // JSON: dynamic plugin config with variable schema
     let config: serde_json::Value = match serde_yaml::from_str(&config_str) {
         Ok(v) => v,
         Err(e) => {

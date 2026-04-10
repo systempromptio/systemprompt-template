@@ -1,4 +1,5 @@
 pub mod access_control;
+pub mod constants;
 pub mod control_center;
 pub mod conversation_analytics;
 mod dashboard;
@@ -80,6 +81,7 @@ pub struct MarketplaceContext {
     pub xp_to_next_rank: i64,
     pub plugin_token: String,
 }
+pub use constants::*;
 pub use conversation_analytics::{
     EntityEffectiveness, EntityUsageSummary, RateSessionRequest, RateSkillRequest,
     SessionEntityLink, SessionRating, SkillEffectiveness, SkillRating,

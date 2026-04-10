@@ -5,6 +5,7 @@ use sqlx::PgPool;
 use crate::repositories;
 use crate::repositories::control_center;
 use crate::repositories::session_analyses::SessionAnalysisRow;
+use crate::types::{ENTITY_AGENT, ENTITY_MCP_TOOL, ENTITY_SKILL, PERMISSION_MODE_PLAN, STATUS_ACTIVE};
 
 use super::super::session_groups::build_session_groups_with_status;
 use super::super::types::SessionGroup;
@@ -19,7 +20,7 @@ pub async fn build_session_groups(
     let mut status_map = HashMap::with_capacity(recent_sessions.len());
     for s in recent_sessions {
         session_ids.push(s.session_id.clone());
-        if s.ended_at.is_none() && s.status == "active" {
+        if s.ended_at.is_none() && s.status == STATUS_ACTIVE {
             active_sessions.insert(s.session_id.clone());
         }
         status_map.insert(s.session_id.clone(), s.status.clone());
@@ -47,11 +48,18 @@ fn inject_analysis_data(
     analyses_batch: &[SessionAnalysisRow],
     recent_sessions: &[crate::types::control_center::RecentSession],
 ) {
-    for group in groups.iter_mut() {
-        if let Some(analysis) = analyses_batch
+    let analyses_map: HashMap<String, &SessionAnalysisRow> = analyses_batch
+        .iter()
+        .map(|a| (a.session_id.clone(), a))
+        .collect();
+    let sessions_map: HashMap<String, &crate::types::control_center::RecentSession> =
+        recent_sessions
             .iter()
-            .find(|a| a.session_id == group.session_id)
-        {
+            .map(|s| (s.session_id.clone(), s))
+            .collect();
+
+    for group in groups.iter_mut() {
+        if let Some(analysis) = analyses_map.get(&group.session_id) {
             group.flags.is_analysed = true;
             group.ai_summary = Some(analysis.summary.clone());
             group.ai_tags = Some(analysis.tags.clone());
@@ -65,7 +73,7 @@ fn inject_analysis_data(
                 _ => "low",
             }
             .to_string();
-            analysis.goal_achieved.clone_into(&mut group.goal_achieved);
+            group.goal_achieved = analysis.goal_achieved.clone();
             group.goal_icon = match group.goal_achieved.as_str() {
                 "yes" => "\u{2713}",
                 "partial" => "\u{25CF}",
@@ -87,25 +95,20 @@ fn inject_analysis_data(
             group.flags.is_analysed = false;
         }
 
-        if let Some(session) = recent_sessions
-            .iter()
-            .find(|s| s.session_id == group.session_id)
-        {
+        if let Some(session) = sessions_map.get(&group.session_id) {
             group.content_bytes = session.content_input_bytes + session.content_output_bytes;
 
             group.client_source_label =
                 format_client_source(&session.client_source).to_string();
             group.client_source_class =
                 client_source_class(&session.client_source).to_string();
-            session.client_source.clone_into(&mut group.client_source);
+            group.client_source = session.client_source.clone();
 
-            group.flags.is_plan_mode = session.permission_mode == "plan";
-            session
-                .permission_mode
-                .clone_into(&mut group.permission_mode);
+            group.flags.is_plan_mode = session.permission_mode == PERMISSION_MODE_PLAN;
+            group.permission_mode = session.permission_mode.clone();
 
             group.model_short = format_model_short(&session.model);
-            session.model.clone_into(&mut group.model);
+            group.model = session.model.clone();
 
             group.user_prompts = session.user_prompts;
             group.automated_actions = session.automated_actions;
@@ -161,9 +164,9 @@ pub fn partition_entity_usage(
     let mut mcp = Vec::new();
     for entry in entity_usage {
         match entry.entity_type.as_str() {
-            "skill" => skills.push(entry),
-            "agent" => agents.push(entry),
-            "mcp_tool" => mcp.push(entry),
+            ENTITY_SKILL => skills.push(entry),
+            ENTITY_AGENT => agents.push(entry),
+            ENTITY_MCP_TOOL => mcp.push(entry),
             _ => {}
         }
     }

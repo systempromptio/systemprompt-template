@@ -7,7 +7,7 @@ use crate::numeric;
 use crate::repositories::{apm_metrics, hooks_track, session_analyses};
 use crate::types::{
     conversation_analytics::{SessionEntityLink, SessionRating},
-    UserGamificationProfile,
+    UserGamificationProfile, ENTITY_MCP_TOOL, ENTITY_SKILL,
 };
 
 use super::cc_types::{self, AchievementProgressEntry, EntityLinkEntry};
@@ -158,11 +158,11 @@ async fn build_entity_data(
 
     let skills_usage: Vec<_> = entity_usage
         .iter()
-        .filter(|e| e.entity_type == "skill")
+        .filter(|e| e.entity_type == ENTITY_SKILL)
         .collect();
     let mcp_usage: Vec<_> = entity_usage
         .iter()
-        .filter(|e| e.entity_type == "mcp_tool")
+        .filter(|e| e.entity_type == ENTITY_MCP_TOOL)
         .collect();
 
     let total_skills_available = skills_usage.len() + unused_skills.len();

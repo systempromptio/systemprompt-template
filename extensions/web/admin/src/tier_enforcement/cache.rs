@@ -1,7 +1,4 @@
-use std::collections::HashMap;
-use std::fmt;
-use std::sync::Arc;
-use std::time::Instant;
+use std::{collections::HashMap, fmt, sync::Arc, time::Instant};
 
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -87,7 +84,7 @@ impl TierEnforcementCache {
         self.usage_cache.write().await.remove(user_id);
     }
 
-    pub async fn get_plan_name(&self, user_id: &str) -> Arc<str> {
+    pub async fn plan_name(&self, user_id: &str) -> Arc<str> {
         let guard = self.tier_cache.read().await;
         guard
             .get(user_id)
@@ -114,7 +111,6 @@ pub async fn load_tier_context(
 
     let (limits, plan_name, status, period_end) = resolve_tier_for_user(pool, user_id).await;
     let limits = Arc::new(limits);
-
     {
         let mut guard = cache.tier_cache.write().await;
         guard.insert(
@@ -288,7 +284,6 @@ pub async fn load_usage_snapshot(
     }
 
     let snapshot = Arc::new(fetch_usage_from_db(pool, user_id).await?);
-
     {
         let mut guard = cache.usage_cache.write().await;
         guard.insert(

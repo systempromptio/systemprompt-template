@@ -8,6 +8,7 @@ use crate::event_hub::EventHub;
 use crate::numeric;
 use crate::repositories::{conversation_analytics, hooks_track, usage_aggregations};
 use crate::types::webhook::{HookEvent, HookEventPayload};
+use crate::types::ENTITY_SKILL;
 
 use super::{ai_summary, entity, helpers};
 
@@ -116,7 +117,7 @@ async fn track_session_entity(
     let Some((entity_type, entity_name)) = entity::detect_entity(payload) else {
         return;
     };
-    let entity_id = if entity_type == "skill" {
+    let entity_id = if entity_type == ENTITY_SKILL {
         Some(
             entity_name
                 .rsplit_once(':')

@@ -17,11 +17,11 @@ pub struct CreateContentParams {
     pub category: Option<String>,
     pub source_id: SourceId,
     pub version_hash: String,
-    pub links: serde_json::Value,
-    pub after_reading_this: serde_json::Value,
-    pub related_playbooks: serde_json::Value,
-    pub related_code: serde_json::Value,
-    pub related_docs: serde_json::Value,
+    pub links: serde_json::Value, // JSON: variable-shape template data
+    pub after_reading_this: serde_json::Value, // JSON: variable-shape template data
+    pub related_playbooks: serde_json::Value, // JSON: variable-shape template data
+    pub related_code: serde_json::Value, // JSON: variable-shape template data
+    pub related_docs: serde_json::Value, // JSON: variable-shape template data
 }
 
 impl CreateContentParams {

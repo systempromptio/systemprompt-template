@@ -20,6 +20,7 @@ pub struct MarketplaceVersion {
     pub version_number: i32,
     pub version_type: String,
     pub snapshot_path: String,
+    // JSON: dynamic snapshot data from jsonb column
     pub skills_snapshot: serde_json::Value,
     pub created_at: DateTime<Utc>,
 }
@@ -32,6 +33,7 @@ pub struct MarketplaceVersionSummary {
     pub version_type: String,
     pub snapshot_path: String,
     pub skills_count: i32,
+    // JSON: dynamic snapshot data from jsonb column
     pub skill_names: serde_json::Value,
     pub created_at: DateTime<Utc>,
 }
@@ -80,6 +82,7 @@ pub struct AllVersionsSummaryRow {
     pub version_number: i32,
     pub version_type: String,
     pub skills_count: i32,
+    // JSON: dynamic snapshot data from jsonb column
     pub skill_names: serde_json::Value,
     pub created_at: DateTime<Utc>,
 }

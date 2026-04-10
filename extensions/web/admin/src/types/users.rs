@@ -74,6 +74,7 @@ pub struct UsageEvent {
     pub event_type: String,
     pub tool_name: Option<String>,
     pub created_at: DateTime<Utc>,
+    // JSON: dynamic event metadata from jsonb column
     pub metadata: serde_json::Value,
 }
 

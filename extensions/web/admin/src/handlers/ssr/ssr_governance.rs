@@ -11,7 +11,7 @@ use sqlx::PgPool;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
+use crate::types::{MarketplaceContext, UserContext, DECISION_DENY, POLICY_SECRET_INJECTION};
 
 use super::ACCESS_DENIED_HTML;
 
@@ -64,8 +64,8 @@ pub async fn governance_page(
                 "agent_id": r.agent_id,
                 "agent_scope": r.agent_scope,
                 "decision": r.decision,
-                "is_denied": r.decision == "deny",
-                "is_secret_breach": r.policy == "secret_injection",
+                "is_denied": r.decision == DECISION_DENY,
+                "is_secret_breach": r.policy == POLICY_SECRET_INJECTION,
                 "policy": r.policy,
                 "reason": r.reason,
                 "created_at": r.created_at.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string(),

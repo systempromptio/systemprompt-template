@@ -5,7 +5,7 @@ use crate::repositories;
 use crate::repositories::conversation_analytics;
 use crate::templates::AdminTemplateEngine;
 use crate::types::conversation_analytics::EntityEffectiveness;
-use crate::types::{MarketplaceContext, UserContext};
+use crate::types::{MarketplaceContext, UserContext, ENTITY_MCP_TOOL};
 use axum::{
     extract::{Extension, State},
     response::Response,
@@ -25,7 +25,7 @@ pub async fn my_mcp_servers_page(
 
     let usage_map: HashMap<&str, _> = usage_data
         .iter()
-        .filter(|u| u.entity_type == "mcp_tool")
+        .filter(|u| u.entity_type == ENTITY_MCP_TOOL)
         .map(|u| (u.entity_name.as_str(), u))
         .collect();
 

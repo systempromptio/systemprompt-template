@@ -5,7 +5,7 @@ use crate::repositories;
 use crate::repositories::conversation_analytics;
 use crate::templates::AdminTemplateEngine;
 use crate::types::conversation_analytics::{EntityLastUsed, EntityQualityTrend};
-use crate::types::{EntityEffectiveness, MarketplaceContext, UserAgent, UserContext};
+use crate::types::{EntityEffectiveness, MarketplaceContext, UserAgent, UserContext, ENTITY_AGENT};
 
 const PROMPT_PREVIEW_LEN: usize = 200;
 use axum::{
@@ -97,7 +97,7 @@ fn build_agents_json(
         .collect();
     let last_used_map: HashMap<&str, _> = last_used
         .iter()
-        .filter(|lu| lu.entity_type == "agent")
+        .filter(|lu| lu.entity_type == ENTITY_AGENT)
         .map(|lu| (lu.entity_name.as_str(), lu))
         .collect();
     let trend_map: HashMap<&str, _> = trends.iter().map(|t| (t.entity_name.as_str(), t)).collect();

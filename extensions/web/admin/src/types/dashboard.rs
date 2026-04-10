@@ -194,6 +194,7 @@ pub struct EventRow {
     pub event_type: String,
     pub tool_name: Option<String>,
     pub plugin_id: Option<String>,
+    // JSON: dynamic event metadata from jsonb column
     pub metadata: serde_json::Value,
     pub created_at: DateTime<Utc>,
 }

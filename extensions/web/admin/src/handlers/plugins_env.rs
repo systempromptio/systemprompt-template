@@ -148,6 +148,7 @@ fn load_plugin_variable_defs(
         .cloned()
         .unwrap_or_else(Vec::new);
 
+    // JSON: user-defined plugin variable definitions with variable schema
     let defs: Vec<serde_json::Value> = variables
         .into_iter()
         .filter_map(|v| {

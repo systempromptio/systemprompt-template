@@ -16,7 +16,7 @@ impl ContentIngestionJob {
     pub async fn execute_with_config(
         pool: Arc<PgPool>,
         config: &BlogConfigValidated,
-    ) -> anyhow::Result<JobResult> {
+    ) -> Result<JobResult, MarketplaceError> {
         Self::execute_with_options(pool, config, IngestionOptions::default()).await
     }
 
@@ -24,7 +24,7 @@ impl ContentIngestionJob {
         pool: Arc<PgPool>,
         config: &BlogConfigValidated,
         options: IngestionOptions,
-    ) -> anyhow::Result<JobResult> {
+    ) -> Result<JobResult, MarketplaceError> {
         let start = std::time::Instant::now();
 
         tracing::info!(
@@ -100,7 +100,7 @@ impl Job for ContentIngestionJob {
 
         let options = IngestionOptions::default().with_delete_orphans(delete_orphans);
 
-        Self::execute_with_options(pool, &config, options).await
+        Ok(Self::execute_with_options(pool, &config, options).await?)
     }
 }
 

@@ -6,6 +6,7 @@ use sqlx::PgPool;
 use crate::handlers::ssr::{build_session_groups_with_status, ssr_control_center::enrichment};
 use crate::repositories::{control_center, session_analyses};
 use crate::types::control_center::RecentSession;
+use crate::types::STATUS_ACTIVE;
 
 use super::SessionGroup;
 
@@ -33,7 +34,7 @@ pub(super) async fn build_activity_event(
     let mut status_map = HashMap::with_capacity(recent_sessions.len());
     for s in recent_sessions {
         session_ids.push(s.session_id.clone());
-        if s.ended_at.is_none() && s.status == "active" {
+        if s.ended_at.is_none() && s.status == STATUS_ACTIVE {
             active_session_ids.insert(s.session_id.clone());
         }
         status_map.insert(s.session_id.clone(), s.status.clone());

@@ -84,6 +84,7 @@ fn build_agent_json(
     ctx: &AgentViewContext<'_>,
     filter_plugins: &mut HashSet<String>,
 ) -> serde_json::Value {
+    // JSON: template context for Handlebars rendering
     let assigned_plugins: Vec<serde_json::Value> = ctx
         .agent_plugin_map
         .get(&agent.id)

@@ -4,7 +4,7 @@ use crate::templates::AdminTemplateEngine;
 use crate::types::conversation_analytics::{
     EntityEffectiveness, EntityUsageSummary, SkillEffectiveness,
 };
-use crate::types::{MarketplaceContext, UserContext};
+use crate::types::{MarketplaceContext, UserContext, ENTITY_SKILL};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -61,7 +61,7 @@ pub async fn my_plugins_page(
 
     let skill_usage_map: HashMap<&str, &EntityUsageSummary> = entity_usage
         .iter()
-        .filter(|e| e.entity_type == "skill")
+        .filter(|e| e.entity_type == ENTITY_SKILL)
         .map(|e| (e.entity_id.as_str(), e))
         .collect();
     let skill_eff_map: HashMap<&str, &SkillEffectiveness> =

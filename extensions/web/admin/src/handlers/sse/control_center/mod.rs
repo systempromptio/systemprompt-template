@@ -14,7 +14,7 @@ use tokio_stream::Stream;
 
 use crate::repositories::control_center;
 use crate::types::control_center::RecentSession;
-use crate::types::UserContext;
+use crate::types::{UserContext, STATUS_ACTIVE};
 use crate::{event_hub::EventHub, gamification};
 
 use super::{cc_analytics, cc_types};
@@ -147,7 +147,7 @@ async fn build_today_stats_event(
     });
     let active_now = recent_sessions
         .iter()
-        .filter(|s| s.ended_at.is_none() && s.status == "active")
+        .filter(|s| s.ended_at.is_none() && s.status == STATUS_ACTIVE)
         .count();
 
     let success_rate = if outcome.rated_count > 0 {

@@ -31,9 +31,9 @@ pub struct SystempromptServer {
 }
 
 impl SystempromptServer {
-    pub fn new(db_pool: DbPool, service_id: McpServerId) -> anyhow::Result<Self> {
-        let tool_usage_repo = Arc::new(ToolUsageRepository::new(&db_pool)?);
-        let artifact_repo = Arc::new(McpArtifactRepository::new(&db_pool)?);
+    pub fn new(db_pool: DbPool, service_id: McpServerId) -> Result<Self, crate::error::SystempromptToolError> {
+        let tool_usage_repo = Arc::new(ToolUsageRepository::new(&db_pool).map_err(|e| crate::error::SystempromptToolError::Internal(e.to_string()))?);
+        let artifact_repo = Arc::new(McpArtifactRepository::new(&db_pool).map_err(|e| crate::error::SystempromptToolError::Internal(e.to_string()))?);
         let executor = McpToolExecutor::new(tool_usage_repo, artifact_repo, SERVER_NAME);
 
         Ok(Self {

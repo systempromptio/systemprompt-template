@@ -83,6 +83,7 @@ fn build_mcp_server_json(
     departments: &[DepartmentStats],
     known_roles: &[&str],
 ) -> serde_json::Value {
+    // JSON: template context for Handlebars rendering
     let assigned_plugins: Vec<serde_json::Value> = mcp_plugin_map
         .get(&m.id)
         .map(|plugins| {
@@ -174,6 +175,7 @@ pub async fn mcp_servers_page(
     let rules_map = build_mcp_rules_map(&all_rules);
     let known_roles = ["admin", "developer", "analyst", "viewer"];
 
+    // JSON: template context for Handlebars rendering
     let mcp_json: Vec<serde_json::Value> = mcp_servers
         .iter()
         .map(|m| build_mcp_server_json(m, &mcp_plugin_map, &rules_map, &departments, &known_roles))

@@ -64,7 +64,7 @@ pub async fn get_usage_summary(
             return None;
         }
     };
-    let plan_name = cache.get_plan_name(user_id.as_str()).await;
+    let plan_name = cache.plan_name(user_id.as_str()).await;
     Some(UsageSummary::build(
         Arc::unwrap_or_clone(limits),
         Arc::unwrap_or_clone(usage),

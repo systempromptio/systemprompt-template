@@ -2,6 +2,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::repositories::{conversation_analytics, hooks_track};
+use crate::types::ENTITY_SKILL;
 
 use super::session_summary;
 
@@ -104,7 +105,7 @@ pub async fn gather_analysis_context(
 
     let skills: Vec<&str> = entity_links
         .iter()
-        .filter(|e| e.entity_type == "skill")
+        .filter(|e| e.entity_type == ENTITY_SKILL)
         .map(|e| e.entity_name.as_str())
         .collect();
 

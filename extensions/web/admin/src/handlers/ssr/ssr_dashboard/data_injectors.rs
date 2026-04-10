@@ -1,4 +1,5 @@
 use crate::repositories;
+use crate::types::DECISION_DENY;
 use serde_json::json;
 use sqlx::PgPool;
 
@@ -91,7 +92,7 @@ pub(super) async fn inject_governance_data(pool: &PgPool, data: &mut serde_json:
                 "tool_name": r.tool_name,
                 "agent_id": r.agent_id,
                 "decision": r.decision,
-                "is_denied": r.decision == "deny",
+                "is_denied": r.decision == DECISION_DENY,
                 "reason": r.reason,
                 "created_at": r.created_at.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string(),
             })

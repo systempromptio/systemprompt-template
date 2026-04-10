@@ -11,7 +11,7 @@ pub async fn generate_user_daily_summary(
     user_id: &str,
     date: NaiveDate,
     ai_service: Option<&Arc<AiService>>,
-) -> anyhow::Result<()> {
+) -> Result<(), MarketplaceError> {
     let _ai = ai_service.ok_or(MarketplaceError::Internal(
         "AI service not available".to_string(),
     ))?;
