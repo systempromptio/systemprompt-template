@@ -21,8 +21,9 @@ pub fn detect_entity(payload: &HookEventPayload) -> Option<(&'static str, String
         let agent_type = payload
             .common
             .agent_type
-            .clone()
-            .unwrap_or_else(|| "subagent".to_string());
+            .as_deref()
+            .unwrap_or("subagent")
+            .to_string();
         return Some(("agent", agent_type));
     }
 

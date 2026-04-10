@@ -28,27 +28,23 @@ pub(super) async fn build_activity_event(
     user_id: &systemprompt::identifiers::UserId,
     recent_sessions: &[RecentSession],
 ) -> ActivityEvent {
-    let session_ids: Vec<String> = recent_sessions
-        .iter()
-        .map(|s| s.session_id.clone())
-        .collect();
+    let mut session_ids = Vec::with_capacity(recent_sessions.len());
+    let mut active_session_ids = HashSet::new();
+    let mut status_map = HashMap::with_capacity(recent_sessions.len());
+    for s in recent_sessions {
+        session_ids.push(s.session_id.clone());
+        if s.ended_at.is_none() && s.status == "active" {
+            active_session_ids.insert(s.session_id.clone());
+        }
+        status_map.insert(s.session_id.clone(), s.status.clone());
+    }
+
     let activity_feed = control_center::fetch_session_events(pool, user_id, &session_ids)
         .await
         .unwrap_or_else(|e| {
             tracing::error!(error = %e, "Failed to fetch session events");
             Vec::new()
         });
-
-    let active_session_ids: HashSet<String> = recent_sessions
-        .iter()
-        .filter(|s| s.ended_at.is_none() && s.status == "active")
-        .map(|s| s.session_id.clone())
-        .collect();
-
-    let status_map: HashMap<String, String> = recent_sessions
-        .iter()
-        .map(|s| (s.session_id.clone(), s.status.clone()))
-        .collect();
 
     let mut session_groups =
         build_session_groups_with_status(&activity_feed, &active_session_ids, &status_map);

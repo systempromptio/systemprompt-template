@@ -14,10 +14,17 @@ pub async fn build_session_groups(
     user_id: &systemprompt::identifiers::UserId,
     recent_sessions: &[crate::types::control_center::RecentSession],
 ) -> Vec<SessionGroup> {
-    let session_ids: Vec<String> = recent_sessions
-        .iter()
-        .map(|s| s.session_id.clone())
-        .collect();
+    let mut session_ids = Vec::with_capacity(recent_sessions.len());
+    let mut active_sessions = HashSet::new();
+    let mut status_map = HashMap::with_capacity(recent_sessions.len());
+    for s in recent_sessions {
+        session_ids.push(s.session_id.clone());
+        if s.ended_at.is_none() && s.status == "active" {
+            active_sessions.insert(s.session_id.clone());
+        }
+        status_map.insert(s.session_id.clone(), s.status.clone());
+    }
+
     let (activity_feed, analyses_batch) = tokio::join!(
         control_center::fetch_session_events(pool, user_id, &session_ids),
         repositories::session_analyses::fetch_session_analyses_batch(pool, &session_ids),
@@ -26,16 +33,6 @@ pub async fn build_session_groups(
         tracing::warn!(error = %e, "Failed to fetch session activity feed");
         vec![]
     });
-
-    let active_sessions: HashSet<String> = recent_sessions
-        .iter()
-        .filter(|s| s.ended_at.is_none() && s.status == "active")
-        .map(|s| s.session_id.clone())
-        .collect();
-    let status_map: HashMap<String, String> = recent_sessions
-        .iter()
-        .map(|s| (s.session_id.clone(), s.status.clone()))
-        .collect();
 
     let mut groups =
         build_session_groups_with_status(&activity_feed, &active_sessions, &status_map);
@@ -62,14 +59,15 @@ fn inject_analysis_data(
                 group.ai_title = Some(analysis.title.clone());
             }
             group.quality_score = analysis.quality_score;
-            group.goal_achieved = analysis.goal_achieved.clone();
             group.quality_class = match analysis.quality_score {
                 4..=5 => "high",
                 3 => "medium",
                 _ => "low",
             }
             .to_string();
-            group.goal_icon = match analysis.goal_achieved.as_str() {
+            // Clone goal_achieved first, then derive goal_icon from the owned copy
+            analysis.goal_achieved.clone_into(&mut group.goal_achieved);
+            group.goal_icon = match group.goal_achieved.as_str() {
                 "yes" => "\u{2713}",
                 "partial" => "\u{25CF}",
                 "no" => "\u{2717}",
@@ -79,11 +77,11 @@ fn inject_analysis_data(
             if !analysis.description.is_empty() {
                 group.description = Some(analysis.description.clone());
             }
-            let has_recs = analysis
+            if analysis
                 .recommendations
                 .as_ref()
-                .is_some_and(|r| !r.is_empty());
-            if has_recs {
+                .is_some_and(|r| !r.is_empty())
+            {
                 group.recommendations = analysis.recommendations.clone();
             }
         } else {
@@ -96,17 +94,19 @@ fn inject_analysis_data(
         {
             group.content_bytes = session.content_input_bytes + session.content_output_bytes;
 
-            let source = &session.client_source;
-            group.client_source = source.clone();
-            group.client_source_label = format_client_source(source).to_string();
-            group.client_source_class = client_source_class(source).to_string();
+            group.client_source_label =
+                format_client_source(&session.client_source).to_string();
+            group.client_source_class =
+                client_source_class(&session.client_source).to_string();
+            session.client_source.clone_into(&mut group.client_source);
 
-            let mode = &session.permission_mode;
-            group.permission_mode = mode.clone();
-            group.flags.is_plan_mode = mode == "plan";
+            group.flags.is_plan_mode = session.permission_mode == "plan";
+            session
+                .permission_mode
+                .clone_into(&mut group.permission_mode);
 
-            group.model = session.model.clone();
             group.model_short = format_model_short(&session.model);
+            session.model.clone_into(&mut group.model);
 
             group.user_prompts = session.user_prompts;
             group.automated_actions = session.automated_actions;
@@ -157,17 +157,16 @@ pub fn partition_entity_usage(
     Vec<&crate::types::conversation_analytics::EntityUsageSummary>,
     Vec<&crate::types::conversation_analytics::EntityUsageSummary>,
 ) {
-    let skills: Vec<_> = entity_usage
-        .iter()
-        .filter(|e| e.entity_type == "skill")
-        .collect();
-    let agents: Vec<_> = entity_usage
-        .iter()
-        .filter(|e| e.entity_type == "agent")
-        .collect();
-    let mcp: Vec<_> = entity_usage
-        .iter()
-        .filter(|e| e.entity_type == "mcp_tool")
-        .collect();
+    let mut skills = Vec::new();
+    let mut agents = Vec::new();
+    let mut mcp = Vec::new();
+    for entry in entity_usage {
+        match entry.entity_type.as_str() {
+            "skill" => skills.push(entry),
+            "agent" => agents.push(entry),
+            "mcp_tool" => mcp.push(entry),
+            _ => {}
+        }
+    }
     (skills, agents, mcp)
 }

@@ -40,7 +40,7 @@ mod plugin_crud_ops;
 pub mod plugin_env;
 mod plugin_import;
 pub mod plugin_jwt;
-mod plugin_maps;
+pub mod plugin_maps;
 mod plugin_resolvers;
 pub mod plugins;
 pub mod profile_reports;

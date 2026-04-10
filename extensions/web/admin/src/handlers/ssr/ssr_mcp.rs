@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::repositories;
+use crate::repositories::plugin_maps::EntityPluginMap;
 use crate::templates::AdminTemplateEngine;
 use crate::types::access_control::{AccessControlRule, AccessDecision, RuleType};
 use crate::types::{DepartmentStats, MarketplaceContext, McpServerDetail, UserContext};
@@ -77,7 +78,7 @@ fn build_dept_badges(
 
 fn build_mcp_server_json(
     m: &McpServerDetail,
-    mcp_plugin_map: &HashMap<String, Vec<(String, String)>>,
+    mcp_plugin_map: &EntityPluginMap,
     rules_map: &HashMap<String, Vec<&AccessControlRule>>,
     departments: &[DepartmentStats],
     known_roles: &[&str],
@@ -87,7 +88,7 @@ fn build_mcp_server_json(
         .map(|plugins| {
             plugins
                 .iter()
-                .map(|(pid, pname)| json!({"id": pid, "name": pname}))
+                .map(|entry| json!({"id": entry.0, "name": entry.1}))
                 .collect()
         })
         .unwrap_or_default();

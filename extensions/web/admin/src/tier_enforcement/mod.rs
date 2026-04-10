@@ -68,7 +68,7 @@ pub async fn get_usage_summary(
     Some(UsageSummary::build(
         Arc::unwrap_or_clone(limits),
         Arc::unwrap_or_clone(usage),
-        plan_name,
+        plan_name.to_string(),
     ))
 }
 

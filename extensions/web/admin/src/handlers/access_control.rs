@@ -31,7 +31,7 @@ pub async fn list_access_rules_handler(
             tracing::error!(error = %e, "Failed to list access control rules");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -70,7 +70,7 @@ pub async fn update_entity_rules_handler(
             tracing::error!(error = %e, entity_type, entity_id, "Failed to update access control rules");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -106,7 +106,7 @@ pub async fn bulk_assign_handler(
             tracing::error!(error = %e, "Failed to bulk assign access control rules");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -120,7 +120,7 @@ pub async fn access_control_departments_handler(State(pool): State<Arc<PgPool>>)
             tracing::error!(error = %e, "Failed to fetch department stats");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }

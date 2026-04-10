@@ -37,7 +37,7 @@ pub async fn leaderboard_handler(
             tracing::error!(error = %e, "Failed to get leaderboard");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -64,7 +64,7 @@ pub async fn department_leaderboard_handler(
             tracing::error!(error = %e, "Failed to get department leaderboard");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -86,7 +86,7 @@ pub async fn user_gamification_handler(
             tracing::error!(error = %e, user_id = %user_id, "Failed to get user gamification");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -100,7 +100,7 @@ pub async fn achievements_handler(State(pool): State<Arc<PgPool>>) -> Response {
             tracing::error!(error = %e, "Failed to get achievement stats");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -114,7 +114,7 @@ pub async fn departments_handler(State(pool): State<Arc<PgPool>>) -> Response {
             tracing::error!(error = %e, "Failed to get department scores");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -132,7 +132,7 @@ pub async fn recalculate_handler(State(pool): State<Arc<PgPool>>) -> Response {
             tracing::error!(error = %e, "Failed to recalculate gamification");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }

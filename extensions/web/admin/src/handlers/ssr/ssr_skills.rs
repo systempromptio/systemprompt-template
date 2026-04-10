@@ -4,6 +4,7 @@ use std::sync::Arc;
 use systemprompt::identifiers::SkillId;
 
 use crate::repositories;
+use crate::repositories::plugin_maps::EntityPluginMap;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{AgentSkill, MarketplaceContext, UserContext};
 use axum::{
@@ -15,14 +16,15 @@ use sqlx::PgPool;
 
 fn count_entities_via_plugins(
     entity_id: &str,
-    entity_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
-    target_plugin_map: &std::collections::HashMap<String, Vec<(String, String)>>,
+    entity_plugin_map: &EntityPluginMap,
+    target_plugin_map: &EntityPluginMap,
 ) -> usize {
     entity_plugin_map.get(entity_id).map_or(0, |plugins| {
         let mut ids: HashSet<String> = HashSet::new();
-        for (plugin_id, _) in plugins {
+        for entry in plugins {
+            let plugin_id = &entry.0;
             for (target_id, target_plugins) in target_plugin_map {
-                if target_plugins.iter().any(|(pid, _)| pid == plugin_id) {
+                if target_plugins.iter().any(|e| &e.0 == plugin_id) {
                     ids.insert(target_id.clone());
                 }
             }
@@ -38,8 +40,8 @@ struct SkillFilters {
 }
 
 struct SkillViewContext<'a> {
-    skill_plugin_map: &'a std::collections::HashMap<String, Vec<(String, String)>>,
-    agent_plugin_map: &'a std::collections::HashMap<String, Vec<(String, String)>>,
+    skill_plugin_map: &'a EntityPluginMap,
+    agent_plugin_map: &'a EntityPluginMap,
     usage_counts: &'a std::collections::HashMap<String, i64>,
     avg_ratings: &'a std::collections::HashMap<String, (f64, i64)>,
 }
@@ -56,7 +58,7 @@ fn build_skill_json(
         .map(|plugins| {
             plugins
                 .iter()
-                .map(|(pid, pname)| json!({"id": pid, "name": pname}))
+                .map(|entry| json!({"id": entry.0, "name": entry.1}))
                 .collect()
         })
         .unwrap_or_default();

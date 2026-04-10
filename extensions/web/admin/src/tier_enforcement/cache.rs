@@ -46,7 +46,7 @@ impl fmt::Display for SubscriptionStatus {
 #[derive(Debug)]
 struct CachedTierContext {
     limits: Arc<TierLimits>,
-    plan_name: String,
+    plan_name: Arc<str>,
     subscription_status: SubscriptionStatus,
     _period_end: Option<chrono::DateTime<Utc>>,
     cached_at: Instant,
@@ -87,11 +87,11 @@ impl TierEnforcementCache {
         self.usage_cache.write().await.remove(user_id);
     }
 
-    pub async fn get_plan_name(&self, user_id: &str) -> String {
+    pub async fn get_plan_name(&self, user_id: &str) -> Arc<str> {
         let guard = self.tier_cache.read().await;
         guard
             .get(user_id)
-            .map_or_else(|| "Free".to_string(), |c| c.plan_name.clone())
+            .map_or_else(|| Arc::from("Free"), |c| Arc::clone(&c.plan_name))
     }
 }
 
@@ -121,7 +121,7 @@ pub async fn load_tier_context(
             user_id.as_str().to_string(),
             CachedTierContext {
                 limits: Arc::clone(&limits),
-                plan_name,
+                plan_name: Arc::from(plan_name),
                 subscription_status: status,
                 _period_end: period_end,
                 cached_at: Instant::now(),

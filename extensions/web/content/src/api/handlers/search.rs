@@ -25,10 +25,10 @@ pub async fn search_handler(
     match service.search(&request).await {
         Ok(response) => Json(response).into_response(),
         Err(e) => {
-            tracing::warn!(error = %e, "Search failed");
+            tracing::error!(error = %e, "Search failed");
             (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
