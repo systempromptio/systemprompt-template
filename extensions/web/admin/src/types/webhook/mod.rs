@@ -9,6 +9,7 @@ use serde::Deserialize;
 pub struct HookEventPayload {
     pub common: HookCommonFields,
     pub event: HookEvent,
+    // JSON: raw webhook event payload with variable structure per event type
     pub raw: serde_json::Value,
 }
 
@@ -184,6 +185,7 @@ pub struct StatusLinePayload {
     pub cost: Option<StatusLineCost>,
     pub context_window: Option<ContextWindow>,
     #[serde(flatten)]
+    // JSON: dynamic extra context from webhook event
     pub extra: serde_json::Value,
 }
 
@@ -224,6 +226,7 @@ pub struct StatusLineQuery {
 #[derive(Debug, Deserialize)]
 pub struct TranscriptPayload {
     pub session_id: Option<String>,
+    // JSON: dynamic conversation transcript data
     pub transcript: serde_json::Value,
 }
 

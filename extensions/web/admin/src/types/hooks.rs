@@ -13,6 +13,7 @@ pub struct UserHook {
     pub hook_type: String,
     pub url: String,
     pub command: String,
+    // JSON: dynamic HTTP headers from user-defined hook config
     pub headers: serde_json::Value,
     pub timeout: i32,
     pub is_async: bool,
@@ -38,6 +39,7 @@ pub struct CreateUserHookRequest {
     #[serde(default)]
     pub command: String,
     #[serde(default = "default_headers")]
+    // JSON: dynamic HTTP headers from user-defined hook config
     pub headers: serde_json::Value,
     #[serde(default = "default_timeout")]
     pub timeout: i32,
@@ -66,6 +68,7 @@ pub struct UpdateUserHookRequest {
     pub matcher: Option<String>,
     pub url: Option<String>,
     pub command: Option<String>,
+    // JSON: dynamic HTTP headers from user-defined hook config
     pub headers: Option<serde_json::Value>,
     pub timeout: Option<i32>,
     pub is_async: Option<bool>,
