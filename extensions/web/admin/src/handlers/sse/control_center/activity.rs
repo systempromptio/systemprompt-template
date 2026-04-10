@@ -3,9 +3,7 @@ use std::collections::{HashMap, HashSet};
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::handlers::ssr::{
-    build_session_groups_with_status, ssr_control_center::enrichment,
-};
+use crate::handlers::ssr::{build_session_groups_with_status, ssr_control_center::enrichment};
 use crate::repositories::{control_center, session_analyses};
 use crate::types::control_center::RecentSession;
 
@@ -56,16 +54,9 @@ pub(super) async fn build_activity_event(
         build_session_groups_with_status(&activity_feed, &active_session_ids, &status_map);
 
     let (ai_summaries_res, entity_links_res, session_ratings_res, analysed_ids) = tokio::join!(
-        crate::repositories::usage_aggregations::fetch_session_ai_summaries(
-            pool,
-            &session_ids
-        ),
-        crate::repositories::conversation_analytics::fetch_all_session_entity_links(
-            pool, user_id
-        ),
-        crate::repositories::conversation_analytics::fetch_all_session_ratings(
-            pool, user_id
-        ),
+        crate::repositories::usage_aggregations::fetch_session_ai_summaries(pool, &session_ids),
+        crate::repositories::conversation_analytics::fetch_all_session_entity_links(pool, user_id),
+        crate::repositories::conversation_analytics::fetch_all_session_ratings(pool, user_id),
         session_analyses::fetch_analysed_session_ids(pool, &session_ids),
     );
 

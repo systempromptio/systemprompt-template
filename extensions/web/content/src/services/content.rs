@@ -2,9 +2,9 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{ContentId, SourceId};
 
+use crate::repository::{ContentRepository, UpdateContentParams};
 use systemprompt_web_shared::error::BlogError;
 use systemprompt_web_shared::models::{Content, CreateContentParams};
-use crate::repository::{ContentRepository, UpdateContentParams};
 
 #[derive(Debug, Clone)]
 pub struct ContentService {

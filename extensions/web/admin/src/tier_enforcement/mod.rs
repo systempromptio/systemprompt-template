@@ -77,10 +77,9 @@ fn check_usage(limits: &TierLimits, usage: &UsageSnapshot, check: LimitCheck) ->
         LimitCheck::IngestEvent => {
             LimitCheckResult::with_usage(limits.ingestion.events, usage.events_today)
         }
-        LimitCheck::IngestContentBytes => LimitCheckResult::with_usage(
-            limits.ingestion.content_bytes,
-            usage.content_bytes_today,
-        ),
+        LimitCheck::IngestContentBytes => {
+            LimitCheckResult::with_usage(limits.ingestion.content_bytes, usage.content_bytes_today)
+        }
         LimitCheck::IngestSession => {
             LimitCheckResult::with_usage(limits.ingestion.sessions, usage.sessions_today)
         }

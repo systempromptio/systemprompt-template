@@ -61,9 +61,9 @@ pub async fn list_available_plugins_handler(
         repositories::user_plugin_selections::list_selected_org_plugins(&pool, &user_ctx.user_id)
             .await
             .unwrap_or_else(|e| {
-            tracing::warn!(error = ?e, "Failed to list selected org plugins");
-            Vec::new()
-        });
+                tracing::warn!(error = ?e, "Failed to list selected org plugins");
+                Vec::new()
+            });
 
     let selected_set: std::collections::HashSet<&str> =
         selected.iter().map(String::as_str).collect();

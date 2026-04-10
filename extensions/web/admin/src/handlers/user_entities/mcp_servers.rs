@@ -249,18 +249,21 @@ async fn update_plugin_mcp_servers(
     let plugin = match repositories::find_user_plugin(pool, user_id, plugin_id).await {
         Ok(Some(p)) => p,
         Ok(None) => {
-            return Err(shared::error_response(StatusCode::NOT_FOUND, "Plugin not found"));
+            return Err(shared::error_response(
+                StatusCode::NOT_FOUND,
+                "Plugin not found",
+            ));
         }
         Err(e) => {
             tracing::error!(error = %e, "Failed to get user plugin");
-            return Err(shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error"));
+            return Err(shared::error_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal error",
+            ));
         }
     };
 
-    let mcp_ids: Vec<McpServerId> = ids
-        .iter()
-        .map(|s| McpServerId::new(s.clone()))
-        .collect();
+    let mcp_ids: Vec<McpServerId> = ids.iter().map(|s| McpServerId::new(s.clone())).collect();
     if let Err(e) =
         repositories::user_plugins::set_plugin_mcp_servers(pool, &plugin.id, &mcp_ids).await
     {
@@ -273,7 +276,11 @@ async fn update_plugin_mcp_servers(
     Ok(())
 }
 
-async fn mark_dirty_and_record_mcp_activity(pool: &Arc<PgPool>, user_id: &systemprompt::identifiers::UserId, plugin_id: &str) {
+async fn mark_dirty_and_record_mcp_activity(
+    pool: &Arc<PgPool>,
+    user_id: &systemprompt::identifiers::UserId,
+    plugin_id: &str,
+) {
     if let Err(e) = repositories::mark_user_dirty(pool, user_id).await {
         tracing::warn!(error = %e, "Failed to mark user dirty");
     }

@@ -63,83 +63,63 @@ pub async fn resolve_association_slugs(
         .map(ToString::to_string)
         .collect();
     let (skills, agents, mcps) = tokio::try_join!(
-        resolve_skill_uuids_to_slugs(pool, &skill_strs),
-        resolve_agent_uuids_to_slugs(pool, &agent_strs),
-        resolve_mcp_server_uuids_to_slugs(pool, &mcp_strs),
+        resolve_skill_uuids_to_slugs(&**pool, &skill_strs),
+        resolve_agent_uuids_to_slugs(&**pool, &agent_strs),
+        resolve_mcp_server_uuids_to_slugs(&**pool, &mcp_strs),
     )?;
     Ok((skills, agents, mcps))
 }
 
 pub async fn set_plugin_associations(
-    pool: &Arc<PgPool>,
+    conn: &mut sqlx::PgConnection,
     plugin_id: &str,
     user_id: &UserId,
     skill_slugs: Option<&[String]>,
     agent_slugs: Option<&[String]>,
     mcp_server_slugs: Option<&[String]>,
 ) -> Result<(), McpError> {
-    tokio::try_join!(
-        async {
-            if let Some(slugs) = skill_slugs {
-                if !slugs.is_empty() {
-                    let uuids = resolve_skill_slugs(pool, user_id.as_ref(), slugs).await?;
-                    let typed: Vec<_> = uuids
-                        .into_iter()
-                        .map(systemprompt::identifiers::SkillId::new)
-                        .collect();
-                    repositories::set_plugin_skills(pool, plugin_id, &typed)
-                        .await
-                        .map_err(|e| {
-                            McpError::internal_error(
-                                format!("Failed to set plugin skills: {e}"),
-                                None,
-                            )
-                        })?;
-                }
-            }
-            Ok::<(), McpError>(())
-        },
-        async {
-            if let Some(slugs) = agent_slugs {
-                if !slugs.is_empty() {
-                    let uuids = resolve_agent_slugs(pool, user_id.as_ref(), slugs).await?;
-                    let typed: Vec<_> = uuids
-                        .into_iter()
-                        .map(systemprompt::identifiers::AgentId::new)
-                        .collect();
-                    repositories::set_plugin_agents(pool, plugin_id, &typed)
-                        .await
-                        .map_err(|e| {
-                            McpError::internal_error(
-                                format!("Failed to set plugin agents: {e}"),
-                                None,
-                            )
-                        })?;
-                }
-            }
-            Ok::<(), McpError>(())
-        },
-        async {
-            if let Some(slugs) = mcp_server_slugs {
-                if !slugs.is_empty() {
-                    let uuids = resolve_mcp_server_slugs(pool, user_id.as_ref(), slugs).await?;
-                    let typed: Vec<_> = uuids
-                        .into_iter()
-                        .map(systemprompt::identifiers::McpServerId::new)
-                        .collect();
-                    repositories::set_plugin_mcp_servers(pool, plugin_id, &typed)
-                        .await
-                        .map_err(|e| {
-                            McpError::internal_error(
-                                format!("Failed to set plugin MCP servers: {e}"),
-                                None,
-                            )
-                        })?;
-                }
-            }
-            Ok::<(), McpError>(())
-        },
-    )?;
+    if let Some(slugs) = skill_slugs {
+        if !slugs.is_empty() {
+            let uuids = resolve_skill_slugs(&mut *conn, user_id.as_ref(), slugs).await?;
+            let typed: Vec<_> = uuids
+                .into_iter()
+                .map(systemprompt::identifiers::SkillId::new)
+                .collect();
+            repositories::set_plugin_skills(&mut *conn, plugin_id, &typed)
+                .await
+                .map_err(|e| {
+                    McpError::internal_error(format!("Failed to set plugin skills: {e}"), None)
+                })?;
+        }
+    }
+    if let Some(slugs) = agent_slugs {
+        if !slugs.is_empty() {
+            let uuids = resolve_agent_slugs(&mut *conn, user_id.as_ref(), slugs).await?;
+            let typed: Vec<_> = uuids
+                .into_iter()
+                .map(systemprompt::identifiers::AgentId::new)
+                .collect();
+            repositories::set_plugin_agents(&mut *conn, plugin_id, &typed)
+                .await
+                .map_err(|e| {
+                    McpError::internal_error(format!("Failed to set plugin agents: {e}"), None)
+                })?;
+        }
+    }
+    if let Some(slugs) = mcp_server_slugs {
+        if !slugs.is_empty() {
+            let uuids = resolve_mcp_server_slugs(&mut *conn, user_id.as_ref(), slugs).await?;
+            let typed: Vec<_> = uuids
+                .into_iter()
+                .map(systemprompt::identifiers::McpServerId::new)
+                .collect();
+            repositories::set_plugin_mcp_servers(&mut *conn, plugin_id, &typed)
+                .await
+                .map_err(|e| {
+                    McpError::internal_error(format!("Failed to set plugin MCP servers: {e}"), None)
+                })?;
+        }
+    }
     Ok(())
 }
 

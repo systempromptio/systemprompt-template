@@ -97,10 +97,7 @@ async fn generate_bundles(
         .await
         .map_err(|e| {
             tracing::error!(error = %e, "Failed to generate export bundles for {context_label}");
-            shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Export failed",
-            )
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Export failed")
         })
 }
 

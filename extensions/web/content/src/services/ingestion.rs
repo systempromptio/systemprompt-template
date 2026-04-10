@@ -7,11 +7,11 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{CategoryId, SourceId};
 use walkdir::WalkDir;
 
+use crate::repository::ContentRepository;
 use systemprompt_web_shared::error::BlogError;
 use systemprompt_web_shared::models::{
     ContentKind, ContentMetadata, CreateContentParams, IngestionOptions, IngestionReport,
 };
-use crate::repository::ContentRepository;
 
 #[derive(Debug, Clone)]
 pub struct IngestionService {

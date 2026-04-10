@@ -24,11 +24,10 @@ fn enrich_users_with_ranks(
     users
         .iter()
         .map(|u| {
-            let (rank_name, xp) = rank_map
-                .get(u.user_id.as_str())
-                .map_or_else(|| ("-".to_string(), 0), |rank| {
-                    (rank.rank_name.clone(), rank.total_xp)
-                });
+            let (rank_name, xp) = rank_map.get(u.user_id.as_str()).map_or_else(
+                || ("-".to_string(), 0),
+                |rank| (rank.rank_name.clone(), rank.total_xp),
+            );
             EnrichedUserView {
                 user_id: u.user_id.to_string(),
                 display_name: u.display_name.clone(),
@@ -74,12 +73,13 @@ pub async fn users_page(
     let active_users = users.iter().filter(|u| u.is_active).count();
     let total_events: i64 = users.iter().map(|u| u.total_events).sum();
 
-    let rank_rows: Vec<UserRank> = repositories::fetch_user_ranks(&pool)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to fetch user ranks");
-            Vec::new()
-        });
+    let rank_rows: Vec<UserRank> =
+        repositories::fetch_user_ranks(&pool)
+            .await
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to fetch user ranks");
+                Vec::new()
+            });
 
     let enriched_users = enrich_users_with_ranks(&users, &rank_rows);
 

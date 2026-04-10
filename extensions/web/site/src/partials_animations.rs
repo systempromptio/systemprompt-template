@@ -1,5 +1,3 @@
-#![allow(clippy::unnecessary_literal_bound)]
-
 use async_trait::async_trait;
 use systemprompt::template_provider::{
     ComponentContext, ComponentRenderer, PartialTemplate, RenderedComponent,
@@ -11,7 +9,7 @@ use super::partials::PRIORITY_MID;
 pub struct CliRemoteAnimationPartialRenderer;
 
 impl CliRemoteAnimationPartialRenderer {
-    const TEMPLATE: &'static str =
+    const TEMPLATE: &str =
         include_str!("../../../../services/web/templates/partials/animation-cli-remote.html");
 }
 
@@ -49,7 +47,7 @@ impl ComponentRenderer for CliRemoteAnimationPartialRenderer {
 pub struct RustMeshAnimationPartialRenderer;
 
 impl RustMeshAnimationPartialRenderer {
-    const TEMPLATE: &'static str =
+    const TEMPLATE: &str =
         include_str!("../../../../services/web/templates/partials/animation-rust-mesh.html");
 }
 
@@ -87,7 +85,7 @@ impl ComponentRenderer for RustMeshAnimationPartialRenderer {
 pub struct MemoryLoopAnimationPartialRenderer;
 
 impl MemoryLoopAnimationPartialRenderer {
-    const TEMPLATE: &'static str =
+    const TEMPLATE: &str =
         include_str!("../../../../services/web/templates/partials/animation-memory-loop.html");
 }
 
@@ -125,7 +123,7 @@ impl ComponentRenderer for MemoryLoopAnimationPartialRenderer {
 pub struct AgenticMeshAnimationPartialRenderer;
 
 impl AgenticMeshAnimationPartialRenderer {
-    const TEMPLATE: &'static str =
+    const TEMPLATE: &str =
         include_str!("../../../../services/web/templates/partials/animation-agentic-mesh.html");
 }
 
@@ -163,7 +161,7 @@ impl ComponentRenderer for AgenticMeshAnimationPartialRenderer {
 pub struct ArchitectureDiagramPartialRenderer;
 
 impl ArchitectureDiagramPartialRenderer {
-    const TEMPLATE: &'static str =
+    const TEMPLATE: &str =
         include_str!("../../../../services/web/templates/partials/architecture-diagram.html");
 }
 

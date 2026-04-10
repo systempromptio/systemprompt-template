@@ -4,9 +4,7 @@ use crate::numeric;
 use crate::repositories;
 use crate::repositories::apm_metrics::TodayPerformanceSummary;
 use crate::repositories::daily_summaries::DailySummaryRow;
-use crate::repositories::session_analyses::{
-    HealthMetrics, SessionAnalysisRow, TodaySummary,
-};
+use crate::repositories::session_analyses::{HealthMetrics, SessionAnalysisRow, TodaySummary};
 
 use super::super::types::{CategoryBreakdownEntry, EntityCounts, ReportData};
 use super::metrics::{avg_field, make_metric_row, MetricRowInput};

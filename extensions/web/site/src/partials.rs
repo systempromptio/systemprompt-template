@@ -1,5 +1,3 @@
-#![allow(clippy::unnecessary_literal_bound)]
-
 use async_trait::async_trait;
 use systemprompt::template_provider::{
     ComponentContext, ComponentRenderer, PartialTemplate, RenderedComponent,
@@ -21,7 +19,7 @@ pub use super::partials_animations::{
 pub struct HeadAssetsPartialRenderer;
 
 impl HeadAssetsPartialRenderer {
-    const TEMPLATE: &'static str =
+    const TEMPLATE: &str =
         include_str!("../../../../services/web/templates/partials/head-assets.html");
 }
 
@@ -56,8 +54,7 @@ impl ComponentRenderer for HeadAssetsPartialRenderer {
 pub struct HeaderPartialRenderer;
 
 impl HeaderPartialRenderer {
-    const TEMPLATE: &'static str =
-        include_str!("../../../../services/web/templates/partials/header.html");
+    const TEMPLATE: &str = include_str!("../../../../services/web/templates/partials/header.html");
 }
 
 #[async_trait]
@@ -91,8 +88,7 @@ impl ComponentRenderer for HeaderPartialRenderer {
 pub struct FooterPartialRenderer;
 
 impl FooterPartialRenderer {
-    const TEMPLATE: &'static str =
-        include_str!("../../../../services/web/templates/partials/footer.html");
+    const TEMPLATE: &str = include_str!("../../../../services/web/templates/partials/footer.html");
 }
 
 #[async_trait]
@@ -126,8 +122,7 @@ impl ComponentRenderer for FooterPartialRenderer {
 pub struct ScriptsPartialRenderer;
 
 impl ScriptsPartialRenderer {
-    const TEMPLATE: &'static str =
-        include_str!("../../../../services/web/templates/partials/scripts.html");
+    const TEMPLATE: &str = include_str!("../../../../services/web/templates/partials/scripts.html");
 }
 
 #[async_trait]

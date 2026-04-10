@@ -25,8 +25,13 @@ impl MarketplaceServer {
 
         let tool_provider = Arc::new(NoopToolProvider::new());
         let ai_service = Arc::new(
-            AiService::new(DbPool::clone(&db_pool), &services_config.ai, tool_provider, None)
-                .context("Failed to initialize AiService")?,
+            AiService::new(
+                DbPool::clone(&db_pool),
+                &services_config.ai,
+                tool_provider,
+                None,
+            )
+            .context("Failed to initialize AiService")?,
         );
 
         let skill_loader = Arc::new(SkillService::new(&db_pool)?);

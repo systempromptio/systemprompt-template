@@ -172,10 +172,12 @@ fn build_event_breakdown_views(
                 content_input_bytes: e.content_input_bytes,
                 content_output_bytes: e.content_output_bytes,
                 pct,
-                avg_quality: quality.map_or_else(|| "0.0".to_string(), |q| format!("{:.1}", q.avg_quality)),
-                quality_goal_pct: quality.map_or_else(|| "0.0".to_string(), |q| {
-                    format!("{:.0}", q.goal_achievement_pct)
-                }),
+                avg_quality: quality
+                    .map_or_else(|| "0.0".to_string(), |q| format!("{:.1}", q.avg_quality)),
+                quality_goal_pct: quality.map_or_else(
+                    || "0.0".to_string(),
+                    |q| format!("{:.0}", q.goal_achievement_pct),
+                ),
                 quality_sessions: quality.map_or(0, |q| q.session_count),
             }
         })
@@ -214,11 +216,10 @@ fn build_hook_views(
                     }],
                 }
             };
-            let hook_code =
-                serde_json::to_string_pretty(&[&hook_code_entry]).unwrap_or_else(|e| {
-                    tracing::warn!(error = %e, "Failed to serialize hook code entry");
-                    String::new()
-                });
+            let hook_code = serde_json::to_string_pretty(&[&hook_code_entry]).unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to serialize hook code entry");
+                String::new()
+            });
             HookView {
                 id: h.id.clone(),
                 hook_name: h.hook_name.clone(),

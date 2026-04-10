@@ -1,9 +1,8 @@
-use sqlx::PgPool;
 use std::collections::HashMap;
 use systemprompt::mcp::McpError;
 
-pub async fn resolve_skill_slugs(
-    pool: &PgPool,
+pub async fn resolve_skill_slugs<'e, E: sqlx::Executor<'e, Database = sqlx::Postgres>>(
+    pool: E,
     user_id: &str,
     slugs: &[String],
 ) -> Result<Vec<String>, McpError> {
@@ -31,8 +30,8 @@ pub async fn resolve_skill_slugs(
         .collect()
 }
 
-pub async fn resolve_agent_slugs(
-    pool: &PgPool,
+pub async fn resolve_agent_slugs<'e, E: sqlx::Executor<'e, Database = sqlx::Postgres>>(
+    pool: E,
     user_id: &str,
     slugs: &[String],
 ) -> Result<Vec<String>, McpError> {
@@ -60,8 +59,8 @@ pub async fn resolve_agent_slugs(
         .collect()
 }
 
-pub async fn resolve_mcp_server_slugs(
-    pool: &PgPool,
+pub async fn resolve_mcp_server_slugs<'e, E: sqlx::Executor<'e, Database = sqlx::Postgres>>(
+    pool: E,
     user_id: &str,
     slugs: &[String],
 ) -> Result<Vec<String>, McpError> {
@@ -93,8 +92,8 @@ pub async fn resolve_mcp_server_slugs(
         .collect()
 }
 
-pub async fn resolve_skill_uuids_to_slugs(
-    pool: &PgPool,
+pub async fn resolve_skill_uuids_to_slugs<'e, E: sqlx::Executor<'e, Database = sqlx::Postgres>>(
+    pool: E,
     uuids: &[String],
 ) -> Result<Vec<String>, McpError> {
     if uuids.is_empty() {
@@ -117,8 +116,8 @@ pub async fn resolve_skill_uuids_to_slugs(
         .collect())
 }
 
-pub async fn resolve_agent_uuids_to_slugs(
-    pool: &PgPool,
+pub async fn resolve_agent_uuids_to_slugs<'e, E: sqlx::Executor<'e, Database = sqlx::Postgres>>(
+    pool: E,
     uuids: &[String],
 ) -> Result<Vec<String>, McpError> {
     if uuids.is_empty() {
@@ -141,8 +140,11 @@ pub async fn resolve_agent_uuids_to_slugs(
         .collect())
 }
 
-pub async fn resolve_mcp_server_uuids_to_slugs(
-    pool: &PgPool,
+pub async fn resolve_mcp_server_uuids_to_slugs<
+    'e,
+    E: sqlx::Executor<'e, Database = sqlx::Postgres>,
+>(
+    pool: E,
     uuids: &[String],
 ) -> Result<Vec<String>, McpError> {
     if uuids.is_empty() {

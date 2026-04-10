@@ -129,7 +129,8 @@ pub async fn calculate_session_velocity(pool: &PgPool, user_id: &str, date: Naiv
     .unwrap_or(0);
 
     let denom = numeric::to_f32_from_i64(sessions.max(1));
-    numeric::to_f32_from_i64(goals_achieved)
-        .mul_add(10.0, numeric::to_f32_from_i64(files) + numeric::to_f32_from_i64(tools))
-        / denom
+    numeric::to_f32_from_i64(goals_achieved).mul_add(
+        10.0,
+        numeric::to_f32_from_i64(files) + numeric::to_f32_from_i64(tools),
+    ) / denom
 }

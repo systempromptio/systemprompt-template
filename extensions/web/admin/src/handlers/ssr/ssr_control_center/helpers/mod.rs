@@ -11,14 +11,10 @@ use sqlx::PgPool;
 
 use crate::gamification;
 use crate::repositories;
-use crate::repositories::apm_metrics::{
-    HourlyApmBucket, TodayApmLive, TodayPerformanceSummary,
-};
+use crate::repositories::apm_metrics::{HourlyApmBucket, TodayApmLive, TodayPerformanceSummary};
 use crate::repositories::control_center;
 use crate::repositories::daily_summaries::DailySummaryRow;
-use crate::repositories::session_analyses::{
-    HealthMetrics, SessionAnalysisRow, TodaySummary,
-};
+use crate::repositories::session_analyses::{HealthMetrics, SessionAnalysisRow, TodaySummary};
 use crate::types::{MarketplaceContext, UserContext, UserGamificationProfile};
 
 use apm::build_apm_data;
@@ -144,8 +140,7 @@ pub(super) struct BuildTemplateDataParams<'a> {
     pub outcome_stats: &'a control_center::TodayOutcomeStats,
     pub session_groups: &'a [SessionGroup],
     pub tools_with_pct: &'a [serde_json::Value],
-    pub skill_effectiveness:
-        &'a [crate::types::conversation_analytics::SkillEffectiveness],
+    pub skill_effectiveness: &'a [crate::types::conversation_analytics::SkillEffectiveness],
     pub skills_usage: &'a [&'a crate::types::conversation_analytics::EntityUsageSummary],
     pub agents_usage: &'a [&'a crate::types::conversation_analytics::EntityUsageSummary],
     pub mcp_usage: &'a [&'a crate::types::conversation_analytics::EntityUsageSummary],

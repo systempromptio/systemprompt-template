@@ -60,9 +60,5 @@ pub fn extract_and_validate_jwt(
         .and_then(|s| s.strip_prefix("plugin_"))
         .unwrap_or("")
         .to_string();
-    Ok((
-        UserId::new(claims.sub),
-        plugin_id,
-        token.to_string(),
-    ))
+    Ok((UserId::new(claims.sub), plugin_id, token.to_string()))
 }

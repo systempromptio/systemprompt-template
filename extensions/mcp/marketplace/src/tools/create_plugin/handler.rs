@@ -67,16 +67,14 @@ impl McpToolHandler for CreatePluginHandler {
             base_plugin_id: None,
         };
 
-        // TODO(ARCH-03): These operations (create_user_plugin + set_plugin_associations)
-        // should run inside a single database transaction so that a failure in
-        // set_plugin_associations rolls back the plugin row. Currently the
-        // repository functions accept `&PgPool` and manage their own internal
-        // transactions, so wrapping them in an outer transaction requires
-        // changing their signatures to accept `impl PgExecutor<'_>`.
         let user_id = UserId::new(ctx.user_id().to_string());
+        let mut tx = pool.begin().await.map_err(|e| {
+            McpError::internal_error(format!("Failed to begin transaction: {e}"), None)
+        })?;
+
         let plugin =
             systemprompt_web_extension::admin::repositories::user_plugins::create_user_plugin(
-                &pool,
+                &mut *tx,
                 &user_id,
                 &create_req,
             )
@@ -84,7 +82,7 @@ impl McpToolHandler for CreatePluginHandler {
             .map_err(|e| McpError::internal_error(format!("Failed to create plugin: {e}"), None))?;
 
         shared::set_plugin_associations(
-            &pool,
+            &mut *tx,
             &plugin.id,
             &user_id,
             Some(&input.skill_ids),
@@ -92,6 +90,10 @@ impl McpToolHandler for CreatePluginHandler {
             Some(&input.mcp_server_ids),
         )
         .await?;
+
+        tx.commit().await.map_err(|e| {
+            McpError::internal_error(format!("Failed to commit transaction: {e}"), None)
+        })?;
 
         let (skill_slugs, agent_slugs, mcp_server_slugs) =
             shared::resolve_association_slugs(&pool, &user_id, &plugin.plugin_id).await?;

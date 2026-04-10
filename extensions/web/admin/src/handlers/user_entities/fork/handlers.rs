@@ -1,6 +1,4 @@
-pub use super::fork_helpers::fork_single_plugin;
-use super::fork_helpers::read_skill_content;
-use crate::activity::{self, ActivityEntity, NewActivity};
+use crate::activity::ActivityEntity;
 use crate::handlers::responses::ForkPluginResponse;
 use crate::handlers::shared;
 use crate::repositories;
@@ -12,85 +10,11 @@ use axum::{
 };
 use sqlx::PgPool;
 use std::sync::Arc;
-use systemprompt::identifiers::UserId;
 
-fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
-    shared::get_services_path()
-}
-
-fn tier_limit_response(
-    entity_type: &str,
-    limit_check: &crate::tier_limits::LimitCheckResult,
-) -> Response {
-    (
-        StatusCode::FORBIDDEN,
-        Json(serde_json::json!({
-            "error": "entity_limit_reached",
-            "entity_type": entity_type,
-            "message": limit_check.reason,
-            "limit": limit_check.limit_value,
-            "current": limit_check.current_value,
-        })),
-    )
-        .into_response()
-}
-
-fn spawn_fork_activity(
-    pool: &PgPool,
-    user_id: &UserId,
-    entity: ActivityEntity,
-    id: &str,
-    name: &str,
-) {
-    let pool = pool.clone();
-    let uid = user_id.clone();
-    let id = id.to_string();
-    let name = name.to_string();
-    tokio::spawn(async move {
-        activity::record(
-            &pool,
-            NewActivity::entity_forked(uid.as_str(), entity, &id, &name),
-        )
-        .await;
-    });
-}
-
-fn read_skill_config(
-    skill_dir: &std::path::Path,
-    org_skill_id: &str,
-) -> (String, String, Vec<String>) {
-    let config_path = skill_dir.join("config.yaml");
-    if !config_path.exists() {
-        return (org_skill_id.to_string(), String::new(), vec![]);
-    }
-    let cfg_text = std::fs::read_to_string(&config_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, path = %config_path.display(), "Failed to read skill config for fork");
-        String::new()
-    });
-    let cfg: serde_yaml::Value = serde_yaml::from_str(&cfg_text).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, path = %config_path.display(), "Failed to parse skill config YAML for fork");
-        serde_yaml::Value::Null
-    });
-    let name = cfg
-        .get("name")
-        .and_then(|v| v.as_str())
-        .unwrap_or(org_skill_id)
-        .to_string();
-    let desc = cfg
-        .get("description")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
-    let tags: Vec<String> =
-        cfg.get("tags")
-            .and_then(|v| v.as_sequence())
-            .map_or_else(Vec::new, |seq| {
-                seq.iter()
-                    .filter_map(|v| v.as_str().map(String::from))
-                    .collect()
-            });
-    (name, desc, tags)
-}
+use super::{
+    find_forkable_plugin, get_services_path, read_skill_config, spawn_fork_activity,
+    tier_limit_response,
+};
 
 pub async fn fork_org_skill_handler(
     Extension(user_ctx): Extension<UserContext>,
@@ -118,7 +42,7 @@ pub async fn fork_org_skill_handler(
     }
 
     let (name, description, tags) = read_skill_config(&skill_dir, req.org_skill_id.as_str());
-    let content = read_skill_content(&skill_dir);
+    let content = super::fork_helpers::read_skill_content(&skill_dir);
     let skill_id = req.skill_id.unwrap_or_else(|| req.org_skill_id.clone());
 
     let create_req = crate::types::CreateSkillRequest {
@@ -173,7 +97,7 @@ pub async fn fork_org_agent_handler(
     };
     let agents_path = services_path.join("agents");
     let (name, description, system_prompt) =
-        super::read_agent_from_fs(&agents_path, req.org_agent_id.as_str());
+        super::super::read_agent_from_fs(&agents_path, req.org_agent_id.as_str());
 
     if name.is_empty() {
         return shared::error_response(StatusCode::NOT_FOUND, "Org agent not found");
@@ -236,7 +160,7 @@ pub async fn fork_org_plugin_handler(
         Err(r) => return *r,
     };
 
-    let result = match fork_single_plugin(
+    let result = match super::fork_helpers::fork_single_plugin(
         &pool,
         &user_ctx.user_id,
         &user_ctx.username,
@@ -269,36 +193,9 @@ pub async fn fork_org_plugin_handler(
         .into_response()
 }
 
-fn find_forkable_plugin(
-    services_path: &std::path::Path,
-    roles: &[String],
-    org_plugin_id: &str,
-) -> Result<crate::types::PluginOverview, Box<Response>> {
-    if org_plugin_id == "systemprompt" {
-        return Err(Box::new(shared::error_response(
-            StatusCode::FORBIDDEN,
-            "Platform plugin cannot be forked",
-        )));
-    }
-    let org_plugins =
-        repositories::list_plugins_for_roles(services_path, roles).unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list plugins for fork");
-            Vec::new()
-        });
-    org_plugins
-        .into_iter()
-        .find(|p| p.id == org_plugin_id)
-        .ok_or_else(|| {
-            Box::new(shared::error_response(
-                StatusCode::NOT_FOUND,
-                "Org plugin not found or not accessible",
-            ))
-        })
-}
-
 async fn post_fork_cleanup(
     pool: &PgPool,
-    user_id: &UserId,
+    user_id: &systemprompt::identifiers::UserId,
     org_plugin_id: &str,
     result: &super::fork_helpers::ForkSinglePluginResult,
 ) {

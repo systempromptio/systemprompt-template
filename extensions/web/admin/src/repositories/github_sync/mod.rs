@@ -1,26 +1,20 @@
+mod local_sync;
+mod types;
+
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use sqlx::PgPool;
 use systemprompt::models::ProfileBootstrap;
 
+use types::PluginImportTally;
+pub use types::SyncResult;
+
 pub(crate) use super::github_sync_bundle::{build_bundle_from_directory, import_or_update_plugin};
 pub(crate) use super::github_sync_git::{git_clone_shallow, git_head_hash, git_pull};
 
-#[derive(Debug, Clone)]
-pub struct SyncResult {
-    pub commit_hash: String,
-    pub plugins_synced: u64,
-    pub errors: u64,
-    pub changed: bool,
-    pub duration_ms: u64,
-}
-
-struct PluginImportTally {
-    plugin_ids: Vec<String>,
-    success_count: u64,
-    error_count: u64,
-}
+pub use super::github_sync_publish::publish_marketplace_to_github;
+pub use local_sync::sync_marketplace_from_local;
 
 fn import_plugins_from_entries(
     plugins: &[serde_json::Value],
@@ -285,80 +279,6 @@ async fn log_sync_result(
         duration_ms,
         "GitHub marketplace sync completed"
     );
-}
-
-pub use super::github_sync_publish::publish_marketplace_to_github;
-
-pub async fn sync_marketplace_from_local(
-    pool: &PgPool,
-    marketplace_id: &str,
-) -> Result<SyncResult> {
-    let start = std::time::Instant::now();
-
-    let marketplace_json_path =
-        PathBuf::from("storage/files/plugins/.claude-plugin/marketplace.json");
-    if !marketplace_json_path.exists() {
-        anyhow::bail!("Local marketplace.json not found");
-    }
-
-    let services_path = ProfileBootstrap::get()
-        .map(|p| PathBuf::from(&p.paths.services))
-        .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
-
-    let content = std::fs::read_to_string(&marketplace_json_path)
-        .map_err(|e| anyhow::anyhow!("Failed to read local marketplace.json: {e}"))?;
-    let marketplace: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| anyhow::anyhow!("Failed to parse local marketplace.json: {e}"))?;
-
-    let plugins = marketplace
-        .get("plugins")
-        .and_then(|v| v.as_array())
-        .ok_or_else(|| anyhow::anyhow!("Local marketplace.json missing 'plugins' array"))?;
-
-    let base_path = PathBuf::from(".");
-    let mut tally = import_plugins_from_entries(plugins, &base_path, &services_path, "local");
-
-    finalize_sync(
-        pool,
-        marketplace_id,
-        &tally.plugin_ids,
-        &mut tally.error_count,
-    )
-    .await;
-
-    let duration_ms = elapsed_ms(start);
-
-    let _ = super::org_marketplaces::insert_sync_log(
-        pool,
-        &super::org_marketplaces::SyncLogEntry {
-            marketplace_id,
-            operation: "sync",
-            status: "success",
-            commit_hash: None,
-            plugins_synced: i64::try_from(tally.success_count).unwrap_or(i64::MAX),
-            errors: i64::try_from(tally.error_count).unwrap_or(i64::MAX),
-            error_message: None,
-            triggered_by: "local",
-            duration_ms: Some(i64::try_from(duration_ms).unwrap_or(i64::MAX)),
-        },
-    )
-    .await;
-
-    tracing::info!(
-        marketplace_id,
-        plugins = tally.success_count,
-        errors = tally.error_count,
-        duration_ms,
-        "Local marketplace sync completed"
-    );
-
-    Ok(SyncResult {
-        commit_hash: String::new(),
-        plugins_synced: tally.success_count,
-        errors: tally.error_count,
-        changed: true,
-        duration_ms,
-    })
 }
 
 pub(crate) async fn mark_all_users_dirty(pool: &PgPool) -> Result<(), sqlx::Error> {

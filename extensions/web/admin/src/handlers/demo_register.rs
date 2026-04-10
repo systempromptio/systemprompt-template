@@ -67,10 +67,7 @@ pub async fn create_demo_user_handler(
 
     if let Err(e) = repositories::create_user(&pool, &create_req).await {
         tracing::error!(error = %e, "Failed to create demo user");
-        return shared::error_response(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Registration failed",
-        );
+        return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Registration failed");
     }
 
     let raw_token = match magic_links::create_magic_link_token(&pool, &email_str, None).await {

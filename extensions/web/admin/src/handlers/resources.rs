@@ -13,9 +13,7 @@ use systemprompt::identifiers::AgentId;
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::handlers::shared;
 use crate::repositories;
-use crate::types::{
-    CreateAgentRequest, CreateUserAgentRequest, UpdateAgentRequest, UserContext,
-};
+use crate::types::{CreateAgentRequest, CreateUserAgentRequest, UpdateAgentRequest, UserContext};
 
 use super::responses::AgentsListResponse;
 

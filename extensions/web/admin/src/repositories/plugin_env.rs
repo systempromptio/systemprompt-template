@@ -1,7 +1,7 @@
-use systemprompt_web_shared::error::MarketplaceError;
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Serialize, sqlx::FromRow)]
 pub struct PluginEnvVar {

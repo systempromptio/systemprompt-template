@@ -110,9 +110,7 @@ async fn fetch_analytics_data(
         hourly_breakdown,
         perf_summary,
     ) = tokio::join!(
-        crate::repositories::conversation_analytics::fetch_skill_effectiveness(
-            pool, user_id
-        ),
+        crate::repositories::conversation_analytics::fetch_skill_effectiveness(pool, user_id),
         session_analyses::fetch_health_metrics(pool, user_id),
         crate::repositories::conversation_analytics::fetch_unused_skills(pool, user_id),
         session_analyses::fetch_today_summary(pool, user_id),
@@ -151,14 +149,12 @@ async fn build_entity_data(
     gam: Option<&UserGamificationProfile>,
 ) -> EntityData {
     let entity_usage =
-        crate::repositories::conversation_analytics::fetch_entity_usage_summary(
-            pool, user_id,
-        )
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to fetch entity usage summary");
-            Vec::new()
-        });
+        crate::repositories::conversation_analytics::fetch_entity_usage_summary(pool, user_id)
+            .await
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to fetch entity usage summary");
+                Vec::new()
+            });
 
     let skills_usage: Vec<_> = entity_usage
         .iter()

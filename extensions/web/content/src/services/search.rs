@@ -1,9 +1,9 @@
 use sqlx::PgPool;
 use std::sync::Arc;
 
+use crate::repository::SearchRepository;
 use systemprompt_web_shared::error::BlogError;
 use systemprompt_web_shared::models::{SearchRequest, SearchResponse};
-use crate::repository::SearchRepository;
 
 #[derive(Debug, Clone)]
 pub struct SearchService {

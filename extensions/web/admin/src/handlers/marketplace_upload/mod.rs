@@ -87,12 +87,16 @@ fn extract_bearer_token(headers: &HeaderMap) -> Option<&str> {
 fn get_jwt_config() -> Result<(String, String), systemprompt_web_shared::error::MarketplaceError> {
     let secret = SecretsBootstrap::jwt_secret()
         .map_err(|e| {
-            systemprompt_web_shared::error::MarketplaceError::Internal(format!("Failed to load JWT secret: {e}"))
+            systemprompt_web_shared::error::MarketplaceError::Internal(format!(
+                "Failed to load JWT secret: {e}"
+            ))
         })?
         .to_string();
     let issuer = Config::get()
         .map_err(|e| {
-            systemprompt_web_shared::error::MarketplaceError::Internal(format!("Failed to load config: {e}"))
+            systemprompt_web_shared::error::MarketplaceError::Internal(format!(
+                "Failed to load config: {e}"
+            ))
         })?
         .jwt_issuer
         .clone();

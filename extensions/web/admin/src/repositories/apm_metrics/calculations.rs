@@ -164,11 +164,13 @@ pub async fn calculate_daily_apm_stats(
     .ok()
     .flatten();
 
-    row.map_or((None, None, None), |r| (
-        r.avg_apm.map(numeric::to_f32),
-        r.peak_apm,
-        r.avg_eapm.map(numeric::to_f32),
-    ))
+    row.map_or((None, None, None), |r| {
+        (
+            r.avg_apm.map(numeric::to_f32),
+            r.peak_apm,
+            r.avg_eapm.map(numeric::to_f32),
+        )
+    })
 }
 
 pub async fn calculate_tool_diversity(pool: &PgPool, user_id: &str, date: NaiveDate) -> i32 {

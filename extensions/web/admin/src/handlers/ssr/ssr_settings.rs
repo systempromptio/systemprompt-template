@@ -107,10 +107,12 @@ async fn fetch_settings_data(
     let current_limits = sub_plan_id
         .and_then(|pid| plans.iter().find(|p| p.id == pid))
         .map_or_else(
-            || serde_json::from_str(FREE_TIER_LIMITS).unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to parse free tier limits");
-                serde_json::json!({})
-            }),
+            || {
+                serde_json::from_str(FREE_TIER_LIMITS).unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to parse free tier limits");
+                    serde_json::json!({})
+                })
+            },
             |p| p.limits.clone(),
         );
 

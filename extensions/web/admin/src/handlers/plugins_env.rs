@@ -128,7 +128,9 @@ fn load_plugin_variable_defs(
     let services_path = ProfileBootstrap::get()
         .map(|p| std::path::PathBuf::from(&p.paths.services))
         .map_err(|e| {
-            systemprompt_web_shared::error::MarketplaceError::Internal(format!("Failed to load profile: {e}"))
+            systemprompt_web_shared::error::MarketplaceError::Internal(format!(
+                "Failed to load profile: {e}"
+            ))
         })?;
     let config_path = services_path
         .join("plugins")

@@ -235,9 +235,7 @@ async fn handle_apm_and_concurrent(params: &ProcessInsertedEventParams<'_>) {
         params.tier_cache,
         pool,
         user_id,
-        crate::tier_limits::LimitCheck::FeatureAccess(
-            crate::tier_limits::Feature::ApmMetrics,
-        ),
+        crate::tier_limits::LimitCheck::FeatureAccess(crate::tier_limits::Feature::ApmMetrics),
     )
     .await;
 
@@ -246,8 +244,7 @@ async fn handle_apm_and_concurrent(params: &ProcessInsertedEventParams<'_>) {
     }
 
     let (apm, eapm) =
-        crate::repositories::apm_metrics::calculate_session_apm(pool, session_id.as_str())
-            .await;
+        crate::repositories::apm_metrics::calculate_session_apm(pool, session_id.as_str()).await;
 
     let concurrent_raw = hooks_track::count_concurrent_sessions(pool, user_id, session_id).await;
 

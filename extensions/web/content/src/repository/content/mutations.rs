@@ -1,8 +1,8 @@
-use systemprompt_web_shared::models::{Content, CreateContentParams};
 use chrono::Utc;
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{CategoryId, ContentId, SourceId};
+use systemprompt_web_shared::models::{Content, CreateContentParams};
 
 #[derive(Debug, Clone)]
 pub struct ContentMutationRepository {

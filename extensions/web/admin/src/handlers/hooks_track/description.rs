@@ -56,7 +56,10 @@ fn describe_post_tool_use(d: &crate::types::webhook::PostToolUseData) -> String 
     let detail = value_field(&d.tool_input, "file_path")
         .or_else(|| value_field(&d.tool_input, "command").map(|c| truncate(&c, 60)))
         .or_else(|| value_field(&d.tool_input, "pattern"));
-    detail.map_or_else(|| format!("Completed: {tool}"), |det| format!("Completed: {tool} — {det}"))
+    detail.map_or_else(
+        || format!("Completed: {tool}"),
+        |det| format!("Completed: {tool} — {det}"),
+    )
 }
 
 fn describe_permission_request(d: &crate::types::webhook::PermissionRequestData) -> String {
@@ -160,9 +163,7 @@ fn describe_pre_compact(d: &crate::types::webhook::PreCompactData) -> String {
     format!("Context compaction ({trigger})")
 }
 
-fn describe_instructions_loaded(
-    d: &crate::types::webhook::InstructionsLoadedData,
-) -> String {
+fn describe_instructions_loaded(d: &crate::types::webhook::InstructionsLoadedData) -> String {
     if d.load_reason.is_empty() {
         format!("Instructions loaded: {}", d.file_path)
     } else {

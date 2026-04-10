@@ -2,115 +2,11 @@ use std::path::{Path, PathBuf};
 
 use handlebars::Handlebars;
 use serde_json::json;
-use systemprompt::models::Config;
-use systemprompt::traits::{Job, JobContext, JobResult};
 
 use systemprompt_web_admin::templates::helpers;
 use systemprompt_web_shared::error::MarketplaceError;
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct CompileAdminTemplatesJob;
-
-fn output_path_for(page_id: &str) -> String {
-    let path = match page_id {
-        "dashboard" => "admin/index.html",
-        "plugin-create" => "admin/plugins/create/index.html",
-        "plugin-edit" => "admin/plugins/edit/index.html",
-        "skill-edit" => "admin/skills/edit/index.html",
-        "agent-edit" => "admin/agents/edit/index.html",
-        "hook-edit" => "admin/hooks/edit/index.html",
-        "mcp-edit" => "admin/mcp-servers/edit/index.html",
-        "user-detail" => "admin/user/index.html",
-        "presentation" => "presentation/index.html",
-        _ => return format!("admin/{page_id}/index.html"),
-    };
-    path.to_string()
-}
-
-fn discover_templates(
-    templates_dir: &Path,
-) -> Result<Vec<(String, String, String)>, MarketplaceError> {
-    let mut pages = Vec::new();
-    let entries = std::fs::read_dir(templates_dir).map_err(|e| {
-        MarketplaceError::Internal(format!(
-            "Failed to read templates dir: {}: {e}",
-            templates_dir.display()
-        ))
-    })?;
-
-    for entry in entries {
-        let entry = entry.map_err(|e| {
-            MarketplaceError::Internal(format!("Failed to read directory entry: {e}"))
-        })?;
-        let path = entry.path();
-        let ext = path.extension().and_then(|e| e.to_str());
-        if ext != Some("hbs") {
-            continue;
-        }
-        let file_name = entry.file_name();
-        let file_name = file_name.to_string_lossy();
-        let page_id = file_name.trim_end_matches(".hbs").to_string();
-        let output_path = output_path_for(&page_id);
-
-        pages.push((file_name.to_string(), page_id, output_path));
-    }
-
-    pages.sort_by(|a, b| a.0.cmp(&b.0));
-    Ok(pages)
-}
-
-impl CompileAdminTemplatesJob {
-    pub async fn execute_compile() -> anyhow::Result<JobResult> {
-        let start_time = std::time::Instant::now();
-
-        tracing::info!("Compile admin templates job started");
-
-        let admin_dir = std::env::current_dir()
-            .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to get current directory, using fallback");
-                PathBuf::from(".")
-            })
-            .join("storage")
-            .join("files")
-            .join("admin");
-        let templates_dir = admin_dir.join("templates");
-        let partials_dir = admin_dir.join("partials");
-        let compiled_dir = admin_dir.join("compiled");
-
-        prepare_compiled_dir(&compiled_dir).await?;
-
-        let hbs = build_handlebars_registry(&partials_dir)?;
-        let site_url = resolve_site_url();
-        let branding_value = resolve_branding_value();
-
-        let pages = discover_templates(&templates_dir)?;
-        tracing::info!(count = pages.len(), "Discovered admin templates");
-
-        let compile_ctx = CompilePageCtx {
-            hbs: &hbs,
-            templates_dir: &templates_dir,
-            compiled_dir: &compiled_dir,
-            site_url: &site_url,
-            branding_value: &branding_value,
-        };
-
-        let (compiled, failed) = compile_all_pages(&compile_ctx, &pages).await;
-        let duration_ms = u64::try_from(start_time.elapsed().as_millis()).unwrap_or(u64::MAX);
-
-        tracing::info!(
-            compiled,
-            failed,
-            duration_ms,
-            "Compile admin templates job completed"
-        );
-
-        Ok(JobResult::success()
-            .with_stats(compiled, failed)
-            .with_duration(duration_ms))
-    }
-}
-
-async fn prepare_compiled_dir(compiled_dir: &Path) -> Result<(), MarketplaceError> {
+pub(super) async fn prepare_compiled_dir(compiled_dir: &Path) -> Result<(), MarketplaceError> {
     let admin_output = compiled_dir.join("admin");
     if admin_output.exists() {
         tokio::fs::remove_dir_all(&admin_output)
@@ -131,7 +27,9 @@ async fn prepare_compiled_dir(compiled_dir: &Path) -> Result<(), MarketplaceErro
     Ok(())
 }
 
-fn build_handlebars_registry(partials_dir: &Path) -> Result<Handlebars<'static>, MarketplaceError> {
+pub(super) fn build_handlebars_registry(
+    partials_dir: &Path,
+) -> Result<Handlebars<'static>, MarketplaceError> {
     let mut hbs = Handlebars::new();
     hbs.set_strict_mode(false);
     register_partials_recursive(&mut hbs, partials_dir, partials_dir)?;
@@ -139,17 +37,7 @@ fn build_handlebars_registry(partials_dir: &Path) -> Result<Handlebars<'static>,
     Ok(hbs)
 }
 
-fn resolve_site_url() -> String {
-    Config::get().map_or_else(
-        |e| {
-            tracing::warn!(error = %e, "Config not available, using empty site_url");
-            String::new()
-        },
-        |c| c.api_external_url.trim_end_matches('/').to_string(),
-    )
-}
-
-fn resolve_branding_value() -> serde_json::Value {
+pub(super) fn resolve_branding_value() -> serde_json::Value {
     let config_dir = systemprompt::models::AppPaths::get().map_or_else(
         |e| {
             tracing::warn!(error = %e, "Failed to get app paths, using fallback config dir");
@@ -178,7 +66,7 @@ fn resolve_branding_value() -> serde_json::Value {
     })
 }
 
-async fn compile_all_pages(
+pub(super) async fn compile_all_pages(
     compile_ctx: &CompilePageCtx<'_>,
     pages: &[(String, String, String)],
 ) -> (u64, u64) {
@@ -243,12 +131,12 @@ fn register_partials_recursive(
     Ok(())
 }
 
-struct CompilePageCtx<'a> {
-    hbs: &'a Handlebars<'a>,
-    templates_dir: &'a Path,
-    compiled_dir: &'a Path,
-    site_url: &'a str,
-    branding_value: &'a serde_json::Value,
+pub(super) struct CompilePageCtx<'a> {
+    pub(super) hbs: &'a Handlebars<'a>,
+    pub(super) templates_dir: &'a Path,
+    pub(super) compiled_dir: &'a Path,
+    pub(super) site_url: &'a str,
+    pub(super) branding_value: &'a serde_json::Value,
 }
 
 async fn compile_page(
@@ -302,28 +190,3 @@ async fn compile_page(
 
     Ok(())
 }
-
-#[async_trait::async_trait]
-impl Job for CompileAdminTemplatesJob {
-    fn name(&self) -> &'static str {
-        "compile_admin_templates"
-    }
-
-    fn description(&self) -> &'static str {
-        "Compiles Handlebars admin templates with shared sidebar partial"
-    }
-
-    fn schedule(&self) -> &'static str {
-        "0 */15 * * * *"
-    }
-
-    fn run_on_startup(&self) -> bool {
-        true
-    }
-
-    async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
-        Self::execute_compile().await
-    }
-}
-
-systemprompt::traits::submit_job!(&CompileAdminTemplatesJob);

@@ -4,7 +4,6 @@ use systemprompt_web_extension::admin::repositories::{
     user_plugins,
 };
 
-/// Appends `new_id` to `ids` if not already present (by string comparison).
 fn push_if_absent<Id: AsRef<str>>(ids: &mut Vec<Id>, new_id: Id, entity_id: &str) {
     if !ids.iter().any(|id| id.as_ref() == entity_id) {
         ids.push(new_id);
@@ -35,17 +34,17 @@ pub async fn add_to_plugin(
                 "skill" => {
                     let mut ids = assoc.skill_ids.clone();
                     push_if_absent(&mut ids, SkillId::new(entity_id), entity_id);
-                    Some(set_plugin_skills(&pool, plugin_row_id, &ids).await)
+                    Some(set_plugin_skills(&*pool, plugin_row_id, &ids).await)
                 }
                 "agent" => {
                     let mut ids = assoc.agent_ids.clone();
                     push_if_absent(&mut ids, AgentId::new(entity_id), entity_id);
-                    Some(set_plugin_agents(&pool, plugin_row_id, &ids).await)
+                    Some(set_plugin_agents(&*pool, plugin_row_id, &ids).await)
                 }
                 "mcp_server" => {
                     let mut ids = assoc.mcp_server_ids.clone();
                     push_if_absent(&mut ids, McpServerId::new(entity_id), entity_id);
-                    Some(set_plugin_mcp_servers(&pool, plugin_row_id, &ids).await)
+                    Some(set_plugin_mcp_servers(&*pool, plugin_row_id, &ids).await)
                 }
                 _ => None,
             };
@@ -86,17 +85,17 @@ pub async fn auto_add_to_default_plugin(
         "skill" => {
             let mut ids = assoc.skill_ids.clone();
             push_if_absent(&mut ids, SkillId::new(entity_id), entity_id);
-            Some(set_plugin_skills(&pool, plugin_row_id, &ids).await)
+            Some(set_plugin_skills(&*pool, plugin_row_id, &ids).await)
         }
         "agent" => {
             let mut ids = assoc.agent_ids.clone();
             push_if_absent(&mut ids, AgentId::new(entity_id), entity_id);
-            Some(set_plugin_agents(&pool, plugin_row_id, &ids).await)
+            Some(set_plugin_agents(&*pool, plugin_row_id, &ids).await)
         }
         "mcp_server" => {
             let mut ids = assoc.mcp_server_ids.clone();
             push_if_absent(&mut ids, McpServerId::new(entity_id), entity_id);
-            Some(set_plugin_mcp_servers(&pool, plugin_row_id, &ids).await)
+            Some(set_plugin_mcp_servers(&*pool, plugin_row_id, &ids).await)
         }
         _ => None,
     };

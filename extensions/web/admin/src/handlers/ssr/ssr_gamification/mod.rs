@@ -207,8 +207,7 @@ pub async fn achievements_page(
 
     let user_rank_level = profile.as_ref().map_or(1, |p| p.rank_level);
     let (ranks, can_scroll_left, can_scroll_right) = build_ranks(user_rank_level);
-    let max_rank =
-        i32::try_from(crate::gamification::constants::RANKS.len()).unwrap_or(i32::MAX);
+    let max_rank = i32::try_from(crate::gamification::constants::RANKS.len()).unwrap_or(i32::MAX);
     let xp_progress_pct = compute_xp_progress(profile.as_ref());
     let maps = build_achievement_maps(profile.as_ref(), &stats);
     let defs = crate::gamification::ACHIEVEMENTS;

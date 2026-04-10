@@ -1,7 +1,7 @@
-use systemprompt_web_shared::models::SearchResult;
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::CategoryId;
+use systemprompt_web_shared::models::SearchResult;
 
 #[derive(Debug, Clone)]
 pub struct SearchRepository {

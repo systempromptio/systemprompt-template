@@ -7,8 +7,8 @@ use axum::{
 };
 
 use crate::api::{BlogState, SearchQuery};
-use systemprompt_web_shared::models::SearchRequest;
 use crate::services::SearchService;
+use systemprompt_web_shared::models::SearchRequest;
 
 pub async fn search_handler(
     State(state): State<BlogState>,

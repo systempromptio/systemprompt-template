@@ -5,7 +5,6 @@ pub use constructor::MarketplaceServer;
 use std::sync::Arc;
 
 use crate::tools::{self, SERVER_NAME};
-use systemprompt::database::DbPool;
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Implementation, InitializeRequestParams,
     InitializeResult, ListResourcesResult, ListToolsResult, PaginatedRequestParams,
@@ -13,6 +12,7 @@ use rmcp::model::{
 };
 use rmcp::service::{RequestContext, RoleServer};
 use rmcp::{ErrorData as McpError, ServerHandler};
+use systemprompt::database::DbPool;
 use systemprompt::mcp::build_experimental_capabilities;
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
 use systemprompt::mcp::{

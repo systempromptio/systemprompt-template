@@ -109,16 +109,10 @@ impl McpToolHandler for ListPluginsHandler {
                 };
 
                 let skills_json = serde_json::to_string(&skills).map_err(|e| {
-                    McpError::internal_error(
-                        format!("Serialization failed for skills: {e}"),
-                        None,
-                    )
+                    McpError::internal_error(format!("Serialization failed for skills: {e}"), None)
                 })?;
                 let agents_json = serde_json::to_string(&agents).map_err(|e| {
-                    McpError::internal_error(
-                        format!("Serialization failed for agents: {e}"),
-                        None,
-                    )
+                    McpError::internal_error(format!("Serialization failed for agents: {e}"), None)
                 })?;
                 let mcp_servers_json = serde_json::to_string(&mcp_servers).map_err(|e| {
                     McpError::internal_error(

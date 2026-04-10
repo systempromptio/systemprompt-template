@@ -153,13 +153,15 @@ pub(super) async fn build_association_lists(
             tracing::warn!(error = %e, "Failed to list user agents for plugin associations");
             vec![]
         });
-    let user_mcp_servers =
-        repositories::user_mcp_servers::list_user_mcp_servers(pool, &user_ctx.user_id)
-            .await
-            .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to list user MCP servers for plugin associations");
-                vec![]
-            });
+    let user_mcp_servers = repositories::user_mcp_servers::list_user_mcp_servers(
+        pool,
+        &user_ctx.user_id,
+    )
+    .await
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to list user MCP servers for plugin associations");
+        vec![]
+    });
 
     let selected_skills: Vec<String> = plugin_with_assoc.map_or(vec![], |p| {
         p.skill_ids.iter().map(ToString::to_string).collect()

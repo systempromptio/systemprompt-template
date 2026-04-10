@@ -123,18 +123,20 @@ async fn execute_upsert_analysis(
     analysis: &SessionAnalysis,
     p: &InsertParams,
 ) -> Result<(), sqlx::Error> {
-    let ids = UpsertAnalysisIds { session_id, user_id };
+    let ids = UpsertAnalysisIds {
+        session_id,
+        user_id,
+    };
     run_upsert_query(pool, &ids, analysis, p).await
 }
 
-#[allow(clippy::cognitive_complexity)]
 async fn run_upsert_query(
     pool: &PgPool,
     ids: &UpsertAnalysisIds<'_>,
     analysis: &SessionAnalysis,
     p: &InsertParams,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query!(
+    let query = sqlx::query!(
         r"INSERT INTO session_analyses
             (session_id, user_id, title, description, summary, tags,
              goal_achieved, quality_score, outcome, error_analysis,
@@ -193,8 +195,7 @@ async fn run_upsert_query(
         p.automation_ratio,
         p.plan_mode_used,
         p.client_surface,
-    )
-    .execute(pool)
-    .await?;
+    );
+    query.execute(pool).await?;
     Ok(())
 }

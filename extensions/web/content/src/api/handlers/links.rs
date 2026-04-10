@@ -17,9 +17,9 @@ use crate::api::{
     BlogState, ContentJourneyQuery, GenerateLinkRequest, GenerateLinkResponse, ListLinksQuery,
     RecordClickRequest,
 };
-use systemprompt_web_shared::models::RecordClickParams;
 use crate::repository::{LinkAnalyticsRepository, LinkRepository};
 use crate::services::{LinkAnalyticsService, LinkGenerationService, LinkService};
+use systemprompt_web_shared::models::RecordClickParams;
 
 fn validate_url_protocol(target_url: &str) -> Result<(), &'static str> {
     let parsed = Url::parse(target_url).map_err(|_| "Invalid URL")?;

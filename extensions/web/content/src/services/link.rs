@@ -2,9 +2,11 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{LinkId, SessionId};
 
-use systemprompt_web_shared::error::BlogError;
-use systemprompt_web_shared::models::{CampaignLink, CreateLinkParams, LinkClick, LinkPerformance, TrackClickParams};
 use crate::repository::{LinkAnalyticsRepository, LinkRepository};
+use systemprompt_web_shared::error::BlogError;
+use systemprompt_web_shared::models::{
+    CampaignLink, CreateLinkParams, LinkClick, LinkPerformance, TrackClickParams,
+};
 
 #[derive(Debug, Clone)]
 pub struct LinkService {

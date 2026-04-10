@@ -12,10 +12,14 @@ pub fn generate_plugin_token(
     plugin_id: &str,
 ) -> Result<String, systemprompt_web_shared::error::MarketplaceError> {
     let jwt_secret = SecretsBootstrap::jwt_secret().map_err(|e| {
-        systemprompt_web_shared::error::MarketplaceError::Internal(format!("Failed to load JWT secret: {e}"))
+        systemprompt_web_shared::error::MarketplaceError::Internal(format!(
+            "Failed to load JWT secret: {e}"
+        ))
     })?;
     let config = Config::get().map_err(|e| {
-        systemprompt_web_shared::error::MarketplaceError::Internal(format!("Failed to load config: {e}"))
+        systemprompt_web_shared::error::MarketplaceError::Internal(format!(
+            "Failed to load config: {e}"
+        ))
     })?;
     let issuer = &config.jwt_issuer;
 
@@ -34,7 +38,9 @@ pub fn generate_plugin_token(
     };
 
     let token = generator.generate(&params).map_err(|e| {
-        systemprompt_web_shared::error::MarketplaceError::Internal(format!("Failed to generate token: {e}"))
+        systemprompt_web_shared::error::MarketplaceError::Internal(format!(
+            "Failed to generate token: {e}"
+        ))
     })?;
     Ok(token.as_str().to_string())
 }

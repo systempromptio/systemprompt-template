@@ -3,8 +3,8 @@ use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 
 use super::super::super::types::{CreateUserPluginRequest, UpdateUserPluginRequest, UserPlugin};
 
-pub async fn create_user_plugin(
-    pool: &PgPool,
+pub async fn create_user_plugin<'e, E: sqlx::Executor<'e, Database = sqlx::Postgres>>(
+    pool: E,
     user_id: &UserId,
     req: &CreateUserPluginRequest,
 ) -> Result<UserPlugin, sqlx::Error> {
@@ -36,9 +36,8 @@ pub async fn create_user_plugin(
     .await
 }
 
-#[allow(trivial_casts)]
-pub async fn update_user_plugin(
-    pool: &PgPool,
+pub async fn update_user_plugin<'e, E: sqlx::Executor<'e, Database = sqlx::Postgres>>(
+    pool: E,
     user_id: &UserId,
     plugin_id: &str,
     req: &UpdateUserPluginRequest,
@@ -65,7 +64,7 @@ pub async fn update_user_plugin(
         req.version.as_deref(),
         req.enabled,
         req.category.as_deref(),
-        &req.keywords as &Option<Vec<String>>,
+        &req.keywords,
         req.author_name.as_deref(),
     )
     .fetch_optional(pool)
@@ -148,12 +147,12 @@ pub async fn delete_user_plugin(
     Ok(true)
 }
 
-pub async fn set_plugin_skills(
-    pool: &PgPool,
+pub async fn set_plugin_skills<'a, A: sqlx::Acquire<'a, Database = sqlx::Postgres>>(
+    db: A,
     user_plugin_id: &str,
     skill_ids: &[SkillId],
 ) -> Result<(), sqlx::Error> {
-    let mut tx = pool.begin().await?;
+    let mut tx = db.begin().await?;
 
     sqlx::query!(
         "DELETE FROM user_plugin_skills WHERE user_plugin_id = $1",
@@ -177,12 +176,12 @@ pub async fn set_plugin_skills(
     Ok(())
 }
 
-pub async fn set_plugin_agents(
-    pool: &PgPool,
+pub async fn set_plugin_agents<'a, A: sqlx::Acquire<'a, Database = sqlx::Postgres>>(
+    db: A,
     user_plugin_id: &str,
     agent_ids: &[AgentId],
 ) -> Result<(), sqlx::Error> {
-    let mut tx = pool.begin().await?;
+    let mut tx = db.begin().await?;
 
     sqlx::query!(
         "DELETE FROM user_plugin_agents WHERE user_plugin_id = $1",
@@ -206,12 +205,12 @@ pub async fn set_plugin_agents(
     Ok(())
 }
 
-pub async fn set_plugin_mcp_servers(
-    pool: &PgPool,
+pub async fn set_plugin_mcp_servers<'a, A: sqlx::Acquire<'a, Database = sqlx::Postgres>>(
+    db: A,
     user_plugin_id: &str,
     mcp_server_ids: &[McpServerId],
 ) -> Result<(), sqlx::Error> {
-    let mut tx = pool.begin().await?;
+    let mut tx = db.begin().await?;
 
     sqlx::query!(
         "DELETE FROM user_plugin_mcp_servers WHERE user_plugin_id = $1",

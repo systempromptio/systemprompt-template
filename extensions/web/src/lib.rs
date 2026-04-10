@@ -3,18 +3,16 @@ pub mod extension;
 mod extension_impl;
 mod schemas;
 
-// Re-exports from sub-crates for API stability
-pub use systemprompt_web_shared as shared;
-pub use systemprompt_web_shared::{config, config_errors, error, models};
-pub use systemprompt_web_shared::html_escape;
-pub use systemprompt_web_shared::BrandingConfig;
 pub use systemprompt_web_admin as admin;
 pub use systemprompt_web_content::{api, repository, services};
+pub use systemprompt_web_jobs as jobs;
+pub use systemprompt_web_shared as shared;
+pub use systemprompt_web_shared::html_escape;
+pub use systemprompt_web_shared::BrandingConfig;
+pub use systemprompt_web_shared::{config, config_errors, error, models};
 pub use systemprompt_web_site::{
     assets, blog, docs, extenders, features, homepage, navigation, partials,
 };
-pub use systemprompt_web_jobs as jobs;
-// Backward-compatible utils module
 pub mod utils {
     pub use systemprompt_web_shared::html_escape;
 }

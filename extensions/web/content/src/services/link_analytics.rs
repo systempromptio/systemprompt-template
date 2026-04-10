@@ -2,9 +2,9 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{CampaignId, ContentId};
 
+use crate::repository::LinkAnalyticsRepository;
 use systemprompt_web_shared::error::BlogError;
 use systemprompt_web_shared::models::{CampaignPerformance, ContentJourneyNode};
-use crate::repository::LinkAnalyticsRepository;
 
 #[derive(Debug, Clone)]
 pub struct LinkAnalyticsService {

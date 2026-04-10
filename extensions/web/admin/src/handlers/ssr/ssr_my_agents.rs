@@ -213,12 +213,14 @@ pub async fn my_agent_edit_page(
         .is_some();
 
     let agent_json = agent.as_ref().map_or_else(
-        || json!({
-            "agent_id": "",
-            "name": "",
-            "description": "",
-            "system_prompt": "",
-        }),
+        || {
+            json!({
+                "agent_id": "",
+                "name": "",
+                "description": "",
+                "system_prompt": "",
+            })
+        },
         |a| serde_json::to_value(a).unwrap_or(json!({})),
     );
 

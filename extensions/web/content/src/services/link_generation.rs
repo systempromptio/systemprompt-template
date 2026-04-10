@@ -2,9 +2,9 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{CampaignId, ContentId};
 
+use crate::repository::LinkRepository;
 use systemprompt_web_shared::error::BlogError;
 use systemprompt_web_shared::models::{CampaignLink, CreateLinkParams, UtmParams};
-use crate::repository::LinkRepository;
 
 const SHORT_CODE_LENGTH: usize = 8;
 const DEFAULT_LINK_TYPE: &str = "redirect";

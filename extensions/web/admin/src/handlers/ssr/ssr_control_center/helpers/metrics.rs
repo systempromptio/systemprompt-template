@@ -101,10 +101,7 @@ pub fn make_metric_row(input: &MetricRowInput) -> MetricRow {
     }
 }
 
-pub fn avg_field(
-    days: &[DailySummaryRow],
-    f: impl Fn(&DailySummaryRow) -> f64,
-) -> Option<f64> {
+pub fn avg_field(days: &[DailySummaryRow], f: impl Fn(&DailySummaryRow) -> f64) -> Option<f64> {
     if days.is_empty() {
         return None;
     }

@@ -1,11 +1,11 @@
 use crate::handlers::extract_user_from_cookie;
 use crate::templates::AdminTemplateEngine;
-use systemprompt_web_shared::html_escape;
 use axum::{
     http::{HeaderMap, StatusCode},
     response::{Html, IntoResponse, Redirect, Response},
     Extension,
 };
+use systemprompt_web_shared::html_escape;
 
 pub const ACCESS_DENIED_HTML: &str = "<h1>Access Denied</h1><p>Admin access required.</p>";
 

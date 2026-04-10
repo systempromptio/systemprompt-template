@@ -4,10 +4,10 @@ use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
+use systemprompt_web_content::services::IngestionService;
 use systemprompt_web_shared::config::BlogConfigValidated;
 use systemprompt_web_shared::error::MarketplaceError;
 use systemprompt_web_shared::models::IngestionOptions;
-use systemprompt_web_content::services::IngestionService;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ContentIngestionJob;

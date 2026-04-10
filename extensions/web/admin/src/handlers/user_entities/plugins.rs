@@ -75,7 +75,7 @@ pub async fn create_user_plugin_handler(
             .into_response();
     }
 
-    match repositories::create_user_plugin(&pool, &user_ctx.user_id, &req).await {
+    match repositories::create_user_plugin(&*pool, &user_ctx.user_id, &req).await {
         Ok(plugin) => {
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
@@ -109,7 +109,7 @@ pub async fn update_user_plugin_handler(
     if is_platform_plugin(&pool, &user_ctx.user_id, &plugin_id).await {
         return shared::error_response(StatusCode::FORBIDDEN, "Platform plugin cannot be modified");
     }
-    match repositories::update_user_plugin(&pool, &user_ctx.user_id, &plugin_id, &req).await {
+    match repositories::update_user_plugin(&*pool, &user_ctx.user_id, &plugin_id, &req).await {
         Ok(Some(plugin)) => {
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
                 tracing::warn!(error = %e, "Failed to mark user dirty");
@@ -189,7 +189,7 @@ pub async fn set_plugin_skills_handler(
     };
 
     let skill_ids: Vec<SkillId> = req.ids.iter().map(|s| SkillId::from(s.clone())).collect();
-    if let Err(e) = repositories::set_plugin_skills(&pool, &p.id, &skill_ids).await {
+    if let Err(e) = repositories::set_plugin_skills(&*pool, &p.id, &skill_ids).await {
         tracing::error!(error = %e, "Failed to set plugin skills");
         return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Failed to set skills");
     }
@@ -251,7 +251,7 @@ pub async fn set_plugin_agents_handler(
     };
 
     let agent_ids: Vec<AgentId> = req.ids.iter().map(|s| AgentId::from(s.clone())).collect();
-    if let Err(e) = repositories::set_plugin_agents(&pool, &p.id, &agent_ids).await {
+    if let Err(e) = repositories::set_plugin_agents(&*pool, &p.id, &agent_ids).await {
         tracing::error!(error = %e, "Failed to set plugin agents");
         return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Failed to set agents");
     }

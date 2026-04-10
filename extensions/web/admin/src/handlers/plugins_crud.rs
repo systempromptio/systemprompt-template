@@ -11,9 +11,7 @@ use sqlx::PgPool;
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::handlers::shared;
 use crate::repositories;
-use crate::types::{
-    CreatePluginRequest, UpdatePluginRequest, UpdateSkillFileRequest, UserContext,
-};
+use crate::types::{CreatePluginRequest, UpdatePluginRequest, UpdateSkillFileRequest, UserContext};
 
 use super::resources::get_services_path;
 use super::responses::FilesListResponse;

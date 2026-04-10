@@ -87,10 +87,7 @@ async fn generate_marketplace_json_inner(
         .await
         .map_err(|e| {
             tracing::error!(error = %e, "Failed to generate export bundles");
-            shared::boxed_error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Export failed",
-            )
+            shared::boxed_error_response(StatusCode::INTERNAL_SERVER_ERROR, "Export failed")
         })?;
 
     serde_json::from_str(&response.marketplace.content).map_err(|e| {

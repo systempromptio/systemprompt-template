@@ -8,9 +8,7 @@ pub struct AnalysesData {
     pub recommendations_json: Vec<AnalysisEntry>,
 }
 
-pub fn build_analyses_data(
-    recent_analyses: &[SessionAnalysisRow],
-) -> AnalysesData {
+pub fn build_analyses_data(recent_analyses: &[SessionAnalysisRow]) -> AnalysesData {
     let recent_analyses_json: Vec<AnalysisEntry> = recent_analyses
         .iter()
         .map(|a| {

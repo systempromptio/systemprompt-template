@@ -123,15 +123,13 @@ pub async fn get_base_skill_content_handler(
         .unwrap_or("")
         .to_string();
 
-    Json(
-        crate::handlers::responses::BaseSkillContentResponse {
-            skill_id,
-            name,
-            description,
-            content: content_str,
-            config: config_str,
-        },
-    )
+    Json(crate::handlers::responses::BaseSkillContentResponse {
+        skill_id,
+        name,
+        description,
+        content: content_str,
+        config: config_str,
+    })
     .into_response()
 }
 

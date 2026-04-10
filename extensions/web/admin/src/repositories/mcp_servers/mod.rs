@@ -4,8 +4,8 @@ mod queries;
 pub use mutations::*;
 pub use queries::*;
 
-use systemprompt_web_shared::error::MarketplaceError;
 use std::path::Path;
+use systemprompt_web_shared::error::MarketplaceError;
 
 fn find_mcp_file(
     mcp_dir: &Path,

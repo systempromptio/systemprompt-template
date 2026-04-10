@@ -250,5 +250,8 @@ fn compute_rank_score(
     let active_score = f64::from(i32::try_from(active_30d).unwrap_or(0)).ln_1p();
     let rc_f = f64::from(i32::try_from(rating_count).unwrap_or(0));
     let bayesian_rating = avg_rating.mul_add(rc_f, 3.0 * 5.0) / (rc_f + 5.0);
-    0.4f64.mul_add(usage_score, 0.3f64.mul_add(active_score, 0.3 * bayesian_rating))
+    0.4f64.mul_add(
+        usage_score,
+        0.3f64.mul_add(active_score, 0.3 * bayesian_rating),
+    )
 }

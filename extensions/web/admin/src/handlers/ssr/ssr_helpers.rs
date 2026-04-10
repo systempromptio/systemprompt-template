@@ -1,12 +1,12 @@
 use crate::numeric;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
-use systemprompt_web_shared::html_escape;
 use axum::{
     http::StatusCode,
     response::{Html, IntoResponse, Response},
 };
 use serde_json::json;
+use systemprompt_web_shared::html_escape;
 
 use super::ssr_demo_help::demo_help_text;
 

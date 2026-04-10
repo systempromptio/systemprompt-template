@@ -11,9 +11,7 @@ pub(super) struct DashboardCounts {
     pub mcp_count: usize,
 }
 
-fn build_page_lists(
-    dash: &crate::types::DashboardData,
-) -> (Vec<TopPageView>, Vec<McpErrorView>) {
+fn build_page_lists(dash: &crate::types::DashboardData) -> (Vec<TopPageView>, Vec<McpErrorView>) {
     let top_pages_today = dash
         .top_pages_today
         .iter()
@@ -77,11 +75,10 @@ pub(super) fn build_dashboard_template(
             tracing::warn!(error = %e, "Failed to serialize dashboard timeline");
             serde_json::Value::Null
         }),
-        top_users: serde_json::to_value(&dash.top_users)
-            .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to serialize dashboard top users");
-                serde_json::Value::Null
-            }),
+        top_users: serde_json::to_value(&dash.top_users).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to serialize dashboard top users");
+            serde_json::Value::Null
+        }),
         popular_skills: activity.skills,
         hourly_activity: activity.hourly,
         total_users: counts.total_users,

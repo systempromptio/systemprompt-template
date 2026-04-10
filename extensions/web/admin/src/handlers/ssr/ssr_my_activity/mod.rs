@@ -46,16 +46,14 @@ pub async fn my_activity_page(
             vec![]
         });
 
-    let gamification = crate::gamification::queries::find_user_gamification(
-        &pool,
-        user_ctx.user_id.as_str(),
-    )
-    .await
-    .map_err(|e| {
-        tracing::warn!(error = %e, "Failed to fetch user gamification");
-    })
-    .ok()
-    .flatten();
+    let gamification =
+        crate::gamification::queries::find_user_gamification(&pool, user_ctx.user_id.as_str())
+            .await
+            .map_err(|e| {
+                tracing::warn!(error = %e, "Failed to fetch user gamification");
+            })
+            .ok()
+            .flatten();
 
     let achievement_stats = crate::gamification::queries::get_achievement_stats(&pool)
         .await

@@ -1,8 +1,8 @@
-use systemprompt_web_shared::models::{CampaignLink, CreateLinkParams};
 use chrono::Utc;
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{CampaignId, ContentId, LinkId};
+use systemprompt_web_shared::models::{CampaignLink, CreateLinkParams};
 
 #[derive(Debug, Clone)]
 pub struct LinkRepository {

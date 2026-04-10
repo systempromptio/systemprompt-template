@@ -5,110 +5,19 @@ use sqlx::PgPool;
 use systemprompt::ai::AiService;
 use systemprompt_web_shared::error::MarketplaceError;
 
-#[derive(Debug, Default, sqlx::FromRow)]
-pub struct DailySummaryRow {
-    pub summary_date: NaiveDate,
-    pub session_count: i32,
-    pub avg_quality_score: Option<f32>,
-    pub goals_achieved: i32,
-    pub goals_partial: i32,
-    pub goals_failed: i32,
-    pub total_prompts: i64,
-    pub total_tool_uses: i64,
-    pub total_errors: i64,
-    pub summary: String,
-    pub patterns: Option<String>,
-    pub skill_gaps: Option<String>,
-    pub top_recommendation: Option<String>,
-    pub daily_xp: i32,
-    pub tags: String,
-    pub avg_apm: Option<f32>,
-    pub peak_apm: Option<f32>,
-    pub avg_eapm: Option<f32>,
-    pub peak_concurrency: i32,
-    pub avg_concurrency: Option<f32>,
-    pub total_input_bytes: i64,
-    pub total_output_bytes: i64,
-    pub peak_throughput_bps: i64,
-    pub tool_diversity: i32,
-    pub multitasking_score: Option<f32>,
-    pub session_velocity: Option<f32>,
-    pub achievements_unlocked: String,
-    pub highlights: Option<String>,
-    pub trends: Option<String>,
-    pub category_distribution: Option<serde_json::Value>,
-    pub plugins_count: i32,
-    pub skills_count: i32,
-    pub agents_count: i32,
-    pub mcp_servers_count: i32,
-    pub hooks_count: i32,
-    pub health_score: Option<f32>,
-    pub skill_effectiveness: Option<serde_json::Value>,
-    pub avg_session_duration_minutes: Option<f32>,
-    pub avg_turns_per_session: Option<f32>,
-    pub total_corrections: i32,
-    pub avg_automation_ratio: Option<f32>,
-    pub plan_mode_sessions: i32,
-}
+use super::types::{DailySummaryInput, DailySummaryRow, GlobalAverages, UpsertCloned};
 
-#[derive(Debug)]
-pub struct DailySummaryInput {
-    pub session_count: i32,
-    pub avg_quality_score: Option<f32>,
-    pub goals_achieved: i32,
-    pub goals_partial: i32,
-    pub goals_failed: i32,
-    pub total_prompts: i64,
-    pub total_tool_uses: i64,
-    pub total_errors: i64,
-    pub summary: String,
-    pub patterns: Option<String>,
-    pub skill_gaps: Option<String>,
-    pub top_recommendation: Option<String>,
-    pub daily_xp: i32,
-    pub tags: String,
-    pub avg_apm: Option<f32>,
-    pub peak_apm: Option<f32>,
-    pub avg_eapm: Option<f32>,
-    pub peak_concurrency: i32,
-    pub avg_concurrency: Option<f32>,
-    pub total_input_bytes: i64,
-    pub total_output_bytes: i64,
-    pub peak_throughput_bps: i64,
-    pub tool_diversity: i32,
-    pub multitasking_score: Option<f32>,
-    pub session_velocity: Option<f32>,
-    pub achievements_unlocked: String,
-    pub highlights: Option<String>,
-    pub trends: Option<String>,
-    pub category_distribution: Option<serde_json::Value>,
-    pub plugins_count: i32,
-    pub skills_count: i32,
-    pub agents_count: i32,
-    pub mcp_servers_count: i32,
-    pub hooks_count: i32,
-    pub health_score: Option<f32>,
-    pub skill_effectiveness: Option<serde_json::Value>,
-    pub avg_session_duration_minutes: Option<f32>,
-    pub avg_turns_per_session: Option<f32>,
-    pub total_corrections: i32,
-    pub avg_automation_ratio: Option<f32>,
-    pub plan_mode_sessions: i32,
-}
-
-#[derive(Debug, Default, sqlx::FromRow, Clone, Copy)]
-pub struct GlobalAverages {
-    pub avg_sessions: Option<f32>,
-    pub avg_quality: Option<f32>,
-    pub avg_apm: Option<f32>,
-    pub avg_peak_apm: Option<f32>,
-    pub avg_error_rate: Option<f64>,
-    pub avg_tool_diversity: Option<f32>,
-    pub avg_multitasking: Option<f32>,
-    pub avg_goal_rate: Option<f64>,
-    pub avg_throughput: Option<i64>,
-    pub total_users: Option<i64>,
-}
+const SELECT_COLUMNS: &str = r"summary_date, session_count, avg_quality_score,
+    goals_achieved, goals_partial, goals_failed,
+    total_prompts, total_tool_uses, total_errors,
+    summary, patterns, skill_gaps, top_recommendation,
+    daily_xp, tags,
+    avg_apm, peak_apm, avg_eapm, peak_concurrency, avg_concurrency,
+    total_input_bytes, total_output_bytes, peak_throughput_bps,
+    tool_diversity, multitasking_score, session_velocity, achievements_unlocked,
+    highlights, trends, category_distribution, plugins_count, skills_count, agents_count, mcp_servers_count, hooks_count,
+    health_score, skill_effectiveness,
+    avg_session_duration_minutes, avg_turns_per_session, total_corrections, avg_automation_ratio, plan_mode_sessions";
 
 pub async fn upsert_daily_summary(
     pool: &PgPool,
@@ -116,43 +25,17 @@ pub async fn upsert_daily_summary(
     date: NaiveDate,
     input: &DailySummaryInput,
 ) -> Result<(), sqlx::Error> {
-    execute_upsert(pool, user_id, date, input).await
-}
+    let cloned = UpsertCloned {
+        patterns: input.patterns.clone(),
+        skill_gaps: input.skill_gaps.clone(),
+        top_recommendation: input.top_recommendation.clone(),
+        highlights: input.highlights.clone(),
+        trends: input.trends.clone(),
+        category_distribution: input.category_distribution.clone(),
+        skill_effectiveness: input.skill_effectiveness.clone(),
+    };
 
-async fn execute_upsert(
-    pool: &PgPool,
-    user_id: &str,
-    date: NaiveDate,
-    input: &DailySummaryInput,
-) -> Result<(), sqlx::Error> {
-    let patterns = input.patterns.clone();
-    let skill_gaps = input.skill_gaps.clone();
-    let top_recommendation = input.top_recommendation.clone();
-    let highlights = input.highlights.clone();
-    let trends = input.trends.clone();
-    let category_distribution = input.category_distribution.clone();
-    let skill_effectiveness = input.skill_effectiveness.clone();
-
-    execute_upsert_query(pool, user_id, date, input, &UpsertCloned {
-        patterns,
-        skill_gaps,
-        top_recommendation,
-        highlights,
-        trends,
-        category_distribution,
-        skill_effectiveness,
-    })
-    .await
-}
-
-struct UpsertCloned {
-    patterns: Option<String>,
-    skill_gaps: Option<String>,
-    top_recommendation: Option<String>,
-    highlights: Option<String>,
-    trends: Option<String>,
-    category_distribution: Option<serde_json::Value>,
-    skill_effectiveness: Option<serde_json::Value>,
+    execute_upsert_query(pool, user_id, date, input, &cloned).await
 }
 
 #[allow(clippy::cognitive_complexity)]
@@ -228,18 +111,6 @@ async fn execute_upsert_query(
     .await?;
     Ok(())
 }
-
-const SELECT_COLUMNS: &str = r"summary_date, session_count, avg_quality_score,
-    goals_achieved, goals_partial, goals_failed,
-    total_prompts, total_tool_uses, total_errors,
-    summary, patterns, skill_gaps, top_recommendation,
-    daily_xp, tags,
-    avg_apm, peak_apm, avg_eapm, peak_concurrency, avg_concurrency,
-    total_input_bytes, total_output_bytes, peak_throughput_bps,
-    tool_diversity, multitasking_score, session_velocity, achievements_unlocked,
-    highlights, trends, category_distribution, plugins_count, skills_count, agents_count, mcp_servers_count, hooks_count,
-    health_score, skill_effectiveness,
-    avg_session_duration_minutes, avg_turns_per_session, total_corrections, avg_automation_ratio, plan_mode_sessions";
 
 pub async fn fetch_daily_summary(
     pool: &PgPool,

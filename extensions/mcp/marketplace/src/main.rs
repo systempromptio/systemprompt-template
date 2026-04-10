@@ -42,8 +42,12 @@ async fn main() -> Result<()> {
         },
     );
 
-    let server = MarketplaceServer::new(DbPool::clone(ctx.db_pool()), service_id.clone(), Arc::clone(&ctx))
-        .context("Failed to initialize MarketplaceServer")?;
+    let server = MarketplaceServer::new(
+        DbPool::clone(ctx.db_pool()),
+        service_id.clone(),
+        Arc::clone(&ctx),
+    )
+    .context("Failed to initialize MarketplaceServer")?;
 
     let router = systemprompt::mcp::create_router(server, ctx.db_pool());
     let addr = format!("0.0.0.0:{port}");

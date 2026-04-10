@@ -14,7 +14,6 @@ fn is_secure_context() -> bool {
     systemprompt::models::Config::get().map_or(true, |c| c.use_https)
 }
 
-#[allow(clippy::unused_async)]
 pub async fn set_session(
     _req_headers: HeaderMap,
     Json(body): Json<SetSessionRequest>,
@@ -44,7 +43,6 @@ pub async fn set_session(
     (headers, Json(serde_json::json!({ "ok": true })))
 }
 
-#[allow(clippy::unused_async)]
 pub async fn clear_session() -> (HeaderMap, Json<serde_json::Value>) {
     let secure_flag = if is_secure_context() { "; Secure" } else { "" };
     let access_cookie =

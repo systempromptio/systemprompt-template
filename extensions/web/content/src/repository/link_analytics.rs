@@ -1,12 +1,12 @@
-use systemprompt_web_shared::models::{
-    CampaignPerformance, ContentJourneyNode, LinkClick, LinkPerformance, RecordClickParams,
-    TrackClickParams,
-};
 use chrono::Utc;
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{
     CampaignId, ContentId, ContextId, LinkClickId, LinkId, SessionId, TaskId, UserId,
+};
+use systemprompt_web_shared::models::{
+    CampaignPerformance, ContentJourneyNode, LinkClick, LinkPerformance, RecordClickParams,
+    TrackClickParams,
 };
 
 #[derive(Debug, Clone)]

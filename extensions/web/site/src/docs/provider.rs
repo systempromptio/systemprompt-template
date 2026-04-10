@@ -24,7 +24,6 @@ impl DocsPageDataProvider {
             return None;
         }
 
-        // Pre-allocate with estimated capacity to avoid intermediate Vec<String> + join
         let mut result = String::with_capacity(children.len() * 128);
         let mut first = true;
 

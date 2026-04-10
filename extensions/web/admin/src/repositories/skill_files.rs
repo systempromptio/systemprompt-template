@@ -1,8 +1,8 @@
-use systemprompt_web_shared::error::MarketplaceError;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sqlx::PgPool;
 use std::path::Path;
+use systemprompt_web_shared::error::MarketplaceError;
 use walkdir::WalkDir;
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
@@ -164,7 +164,9 @@ async fn upsert_skill_file(
 ) -> Result<(), MarketplaceError> {
     let checksum = compute_checksum(content);
     let category = detect_category(rel_path);
-    let filename = path.file_name().map_or("", |name| name.to_str().unwrap_or(""));
+    let filename = path
+        .file_name()
+        .map_or("", |name| name.to_str().unwrap_or(""));
     let language = detect_language(filename);
     let size_bytes = i64::try_from(content.len()).unwrap_or(0);
     let executable = language == "python" || language == "bash";

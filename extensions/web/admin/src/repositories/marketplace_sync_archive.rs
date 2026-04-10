@@ -1,12 +1,10 @@
-use systemprompt_web_shared::error::MarketplaceError;
 use std::path::Path;
+use systemprompt_web_shared::error::MarketplaceError;
 
 const MAX_UPLOAD_SIZE: usize = 10 * 1024 * 1024;
 pub const MAX_FILE_SIZE: usize = 1024 * 1024;
 
-/// Gzip magic number (first two bytes of any gzip stream)
 const GZIP_MAGIC: [u8; 2] = [0x1f, 0x8b];
-/// ZIP local file header signature (first two bytes)
 const ZIP_MAGIC: [u8; 2] = [0x50, 0x4b];
 
 pub fn validate_upload_size(data: &[u8]) -> Result<(), MarketplaceError> {

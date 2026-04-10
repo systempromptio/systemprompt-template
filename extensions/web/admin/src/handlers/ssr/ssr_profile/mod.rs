@@ -51,10 +51,9 @@ pub async fn profile_page(
         profile_reports::fetch_profile_report(pool.as_ref(), user_id.as_str()),
     );
 
-    let hooks_count =
-        crate::repositories::user_hooks::list_user_hooks(&pool, &user_ctx.user_id)
-            .await
-            .map_or(0, |h| h.len());
+    let hooks_count = crate::repositories::user_hooks::list_user_hooks(&pool, &user_ctx.user_id)
+        .await
+        .map_or(0, |h| h.len());
 
     let entity_counts = json!({
         "plugins": mkt_ctx.total_plugins,

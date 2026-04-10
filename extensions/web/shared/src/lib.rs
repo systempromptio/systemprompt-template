@@ -6,7 +6,6 @@ mod utils;
 
 pub use utils::html_escape;
 
-/// Branding configuration for the platform.
 pub mod branding {
     use serde::{Deserialize, Serialize};
 

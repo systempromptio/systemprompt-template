@@ -24,7 +24,6 @@ pub fn get_services_path() -> Result<PathBuf, Box<Response>> {
         })
 }
 
-/// Normalize a user-id path segment that may carry a `.git` suffix from git-smart-http URLs.
 pub fn normalize_user_id(raw: &str) -> &str {
     raw.strip_suffix(".git").unwrap_or(raw)
 }
