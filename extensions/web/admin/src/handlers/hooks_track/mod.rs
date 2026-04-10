@@ -12,6 +12,7 @@ pub mod session_summary;
 use crate::event_hub::EventHub;
 use crate::repositories::webhook;
 use crate::types::webhook::{HookEvent, HookEventPayload};
+use crate::types::EVENT_SESSION_START;
 use auth::extract_and_validate_jwt;
 use axum::{
     extract::{Extension, State},
@@ -78,7 +79,7 @@ async fn check_tier_limits(
     if let Some(resp) = check_event_limit(tier_cache, pool, user_id).await {
         return Some(resp);
     }
-    if payload.event_name() == "SessionStart" {
+    if payload.event_name() == EVENT_SESSION_START {
         return check_session_limit(tier_cache, pool, user_id).await;
     }
     None

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::access_control::{AccessControlRule, AccessDecision, RuleType};
-use crate::types::{MarketplaceContext, PluginOverview, UserContext};
+use crate::types::{MarketplaceContext, PluginOverview, UserContext, ENTITY_PLUGIN};
 use axum::{
     extract::{Extension, State},
     response::Response,
@@ -119,7 +119,7 @@ async fn fetch_plugin_metadata(
 
     let mut rules_map: HashMap<(String, String), Vec<AccessControlRule>> = HashMap::new();
     for rule in all_rules {
-        if rule.entity_type == "plugin" {
+        if rule.entity_type == ENTITY_PLUGIN {
             rules_map
                 .entry((rule.entity_type.clone(), rule.entity_id.clone()))
                 .or_default()

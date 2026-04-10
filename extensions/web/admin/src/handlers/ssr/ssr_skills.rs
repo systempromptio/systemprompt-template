@@ -6,7 +6,7 @@ use systemprompt::identifiers::SkillId;
 use crate::repositories;
 use crate::repositories::plugin_maps::EntityPluginMap;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{AgentSkill, MarketplaceContext, UserContext};
+use crate::types::{AgentSkill, MarketplaceContext, UserContext, SOURCE_CUSTOM, SOURCE_USER};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -66,7 +66,7 @@ fn build_skill_json(
     let agent_count =
         count_entities_via_plugins(skill_id_str, ctx.skill_plugin_map, ctx.agent_plugin_map);
 
-    let source = if skill.source_id.as_str() == "custom" || skill.source_id.as_str() == "user" {
+    let source = if skill.source_id.as_str() == SOURCE_CUSTOM || skill.source_id.as_str() == SOURCE_USER {
         "custom"
     } else {
         "system"

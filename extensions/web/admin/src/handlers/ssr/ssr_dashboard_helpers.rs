@@ -2,6 +2,10 @@ use super::ssr_dashboard_activity::{build_activity_data, build_mcp_health};
 use super::ssr_dashboard_types::{
     DashboardTemplateData, McpErrorView, RangeFlags, TabFlags, TopPageView, TrafficRangeFlags,
 };
+use crate::types::{
+    RANGE_14D, RANGE_24H, RANGE_7D, TAB_GOVERNANCE, TAB_MCP, TAB_REPORT, TRAFFIC_RANGE_30D,
+    TRAFFIC_RANGE_TODAY,
+};
 
 pub(super) struct DashboardCounts {
     pub total_users: usize,
@@ -61,7 +65,7 @@ pub(super) fn build_dashboard_template(
         "30d" => "30d",
         _ => "7d",
     };
-    let active_tab = if tab.is_empty() { "governance" } else { tab };
+    let active_tab = if tab.is_empty() { TAB_GOVERNANCE } else { tab };
     let (top_pages_today, recent_mcp_errors) = build_page_lists(dash);
 
     DashboardTemplateData {
@@ -89,9 +93,9 @@ pub(super) fn build_dashboard_template(
         chart: activity.chart,
         range: range_key.to_string(),
         range_flags: RangeFlags {
-            range_24h: range_key == "24h",
-            range_7d: range_key == "7d",
-            range_14d: range_key == "14d",
+            range_24h: range_key == RANGE_24H,
+            range_7d: range_key == RANGE_7D,
+            range_14d: range_key == RANGE_14D,
         },
         active_users_24h: dash.active_users_24h,
         error_rate_pct: mcp_error_rate_pct,
@@ -99,9 +103,9 @@ pub(super) fn build_dashboard_template(
         traffic: traffic_result.has_traffic,
         traffic_range: traffic_range_key.to_string(),
         traffic_range_flags: TrafficRangeFlags {
-            traffic_range_today: traffic_range_key == "today",
-            traffic_range_7d: traffic_range_key == "7d",
-            traffic_range_30d: traffic_range_key == "30d",
+            traffic_range_today: traffic_range_key == TRAFFIC_RANGE_TODAY,
+            traffic_range_7d: traffic_range_key == RANGE_7D,
+            traffic_range_30d: traffic_range_key == TRAFFIC_RANGE_30D,
         },
         traffic_period_label: period_label,
         traffic_kpis: traffic_result.kpis,
@@ -118,10 +122,10 @@ pub(super) fn build_dashboard_template(
         content_period_label,
         tab: active_tab.to_string(),
         tab_flags: TabFlags {
-            tab_mcp: active_tab == "mcp",
-            tab_traffic: active_tab == "governance"
-                || (active_tab != "mcp" && active_tab != "report"),
-            tab_report: active_tab == "report",
+            tab_mcp: active_tab == TAB_MCP,
+            tab_traffic: active_tab == TAB_GOVERNANCE
+                || (active_tab != TAB_MCP && active_tab != TAB_REPORT),
+            tab_report: active_tab == TAB_REPORT,
         },
         active_tab: active_tab.to_string(),
         mcp_health_status,

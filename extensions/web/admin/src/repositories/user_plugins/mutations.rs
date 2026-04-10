@@ -1,14 +1,16 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 
-use super::super::super::types::{CreateUserPluginRequest, UpdateUserPluginRequest, UserPlugin};
+use super::super::super::types::{
+    CreateUserPluginRequest, UpdateUserPluginRequest, UserPlugin, PLUGIN_ID_SYSTEMPROMPT,
+};
 
 pub async fn create_user_plugin<'e, E: sqlx::Executor<'e, Database = sqlx::Postgres>>(
     pool: E,
     user_id: &UserId,
     req: &CreateUserPluginRequest,
 ) -> Result<UserPlugin, sqlx::Error> {
-    if req.plugin_id == "systemprompt" {
+    if req.plugin_id == PLUGIN_ID_SYSTEMPROMPT {
         return Err(sqlx::Error::Protocol(
             "The plugin_id 'systemprompt' is reserved for the platform plugin".into(),
         ));

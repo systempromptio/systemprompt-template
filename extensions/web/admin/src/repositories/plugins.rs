@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use super::super::types::{PluginOnboardingConfig, PluginOverview};
+use super::super::types::{PluginOnboardingConfig, PluginOverview, ROLE_ADMIN};
 use super::plugin_resolvers::{
     resolve_all_plugin_skill_ids, resolve_plugin_agents, resolve_plugin_skills,
 };
@@ -147,7 +147,7 @@ pub fn count_marketplace_items(
         if !plugin.base.enabled {
             continue;
         }
-        let is_admin = roles.iter().any(|r| r == "admin");
+        let is_admin = roles.iter().any(|r| r == ROLE_ADMIN);
         if !is_admin && !plugin.roles.is_empty() && !plugin.roles.iter().any(|r| roles.contains(r))
         {
             continue;
@@ -228,7 +228,7 @@ fn try_load_plugin_overview(
         Err(_) => return Ok(None),
     };
     let plugin = plugin_file.plugin;
-    let is_admin = roles.iter().any(|r| r == "admin");
+    let is_admin = roles.iter().any(|r| r == ROLE_ADMIN);
     if !plugin.base.enabled && !is_admin {
         return Ok(None);
     }

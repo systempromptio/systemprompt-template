@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::repositories::{self, conversation_analytics};
 use crate::templates::AdminTemplateEngine;
-use crate::types::{HooksQuery, MarketplaceContext, UserContext};
+use crate::types::{HooksQuery, MarketplaceContext, UserContext, HOOK_TYPE_HTTP};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -243,7 +243,7 @@ fn build_hook_views(
     hooks
         .iter()
         .map(|h| {
-            let hook_code_entry = if h.hook_type == "http" {
+            let hook_code_entry = if h.hook_type == HOOK_TYPE_HTTP {
                 HookCodeEntry {
                     matcher: h.matcher.clone(),
                     hooks: vec![HookCodeHook {

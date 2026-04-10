@@ -5,6 +5,7 @@ pub use super::fork_helpers::fork_single_plugin;
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::handlers::shared;
 use crate::repositories;
+use crate::types::PLUGIN_ID_SYSTEMPROMPT;
 use axum::{
     extract::Json,
     http::StatusCode,
@@ -97,7 +98,7 @@ fn find_forkable_plugin(
     roles: &[String],
     org_plugin_id: &str,
 ) -> Result<crate::types::PluginOverview, Box<Response>> {
-    if org_plugin_id == "systemprompt" {
+    if org_plugin_id == PLUGIN_ID_SYSTEMPROMPT {
         return Err(Box::new(shared::error_response(
             StatusCode::FORBIDDEN,
             "Platform plugin cannot be forked",

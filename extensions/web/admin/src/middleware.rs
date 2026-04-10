@@ -113,7 +113,10 @@ pub async fn marketplace_context_middleware(
             user_ctx.email.as_ref(),
             "cowork-bundle",
         )
-        .unwrap_or_default(),
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to generate plugin token");
+            String::new()
+        }),
     };
 
     request.extensions_mut().insert(ctx);

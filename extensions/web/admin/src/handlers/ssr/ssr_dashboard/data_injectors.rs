@@ -1,5 +1,5 @@
 use crate::repositories;
-use crate::types::DECISION_DENY;
+use crate::types::{ACTION_GRANTED, DECISION_DENY};
 use serde_json::json;
 use sqlx::PgPool;
 
@@ -19,7 +19,7 @@ pub(super) async fn inject_mcp_access_and_costs(pool: &PgPool, data: &mut serde_
             json!({
                 "server_name": r.server_name,
                 "action": r.action,
-                "is_granted": r.action == "granted",
+                "is_granted": r.action == ACTION_GRANTED,
                 "description": r.description,
                 "created_at": r.created_at.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string(),
             })

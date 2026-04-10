@@ -6,7 +6,7 @@ use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::access_control::{AccessControlRule, AccessDecision, RuleType};
 use crate::types::marketplaces::OrgMarketplace;
-use crate::types::{MarketplaceContext, UserContext};
+use crate::types::{MarketplaceContext, UserContext, ENTITY_MARKETPLACE};
 use axum::{
     extract::{Extension, State},
     http::StatusCode,
@@ -113,7 +113,7 @@ fn build_rules_map(
 ) -> HashMap<(String, String), Vec<&AccessControlRule>> {
     let mut rules_map: HashMap<(String, String), Vec<&AccessControlRule>> = HashMap::new();
     for rule in all_rules {
-        if rule.entity_type == "marketplace" {
+        if rule.entity_type == ENTITY_MARKETPLACE {
             rules_map
                 .entry((rule.entity_type.clone(), rule.entity_id.clone()))
                 .or_default()
@@ -180,7 +180,10 @@ pub async fn org_marketplace_page(
 
     let known_roles = repositories::fetch_distinct_roles(&pool)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to fetch department users");
+            vec![]
+        });
 
     let all_roles_json: Vec<serde_json::Value> =
         known_roles.iter().map(|r| json!({ "value": r })).collect();

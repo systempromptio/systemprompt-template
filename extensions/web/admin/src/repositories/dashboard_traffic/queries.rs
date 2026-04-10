@@ -2,6 +2,7 @@ use sqlx::PgPool;
 
 use super::super::super::types::{
     ContentPerformanceRow, RealtimePulse, TrafficCountryBucket, TrafficTopPage,
+    TRAFFIC_RANGE_30D, TRAFFIC_RANGE_YESTERDAY,
 };
 
 pub async fn fetch_realtime_pulse(pool: &PgPool) -> Result<RealtimePulse, sqlx::Error> {
@@ -110,7 +111,7 @@ async fn fetch_content_performance_precomputed(
     pool: &PgPool,
     content_range: &str,
 ) -> Result<Vec<ContentPerformanceRow>, sqlx::Error> {
-    let use_30d = content_range == "30d";
+    let use_30d = content_range == TRAFFIC_RANGE_30D;
     let rows = sqlx::query_as!(
         ContentPerfPrecomputed,
         r#"SELECT
@@ -148,7 +149,7 @@ async fn fetch_content_performance_live(
         "yesterday" => "48 hours",
         _ => "24 hours",
     };
-    let is_yesterday = content_range == "yesterday";
+    let is_yesterday = content_range == TRAFFIC_RANGE_YESTERDAY;
 
     let rows = sqlx::query_as!(
         ContentPerfLive,

@@ -2,6 +2,7 @@ use std::path::Path;
 
 use super::super::types::PlatformPluginConfig;
 use super::super::types::PlatformPluginConfigFile;
+use super::super::types::ROLE_ADMIN;
 use systemprompt_web_shared::error::MarketplaceError;
 
 pub fn _load_authorized_plugin_configs(
@@ -10,7 +11,7 @@ pub fn _load_authorized_plugin_configs(
 ) -> Result<Vec<(String, PlatformPluginConfig)>, MarketplaceError> {
     let all_plugins = load_all_plugin_configs(plugins_path)?;
 
-    let is_admin = roles.iter().any(|r| r == "admin");
+    let is_admin = roles.iter().any(|r| r == ROLE_ADMIN);
     let mut authorized: Vec<(String, PlatformPluginConfig)> = all_plugins
         .iter()
         .filter(|(_, plugin)| {

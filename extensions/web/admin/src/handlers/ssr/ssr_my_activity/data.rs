@@ -1,5 +1,5 @@
 use crate::activity::types::{ActivityCategorySummary, ActivityTimelineEvent};
-use crate::types::EventsQuery;
+use crate::types::{EventsQuery, CATEGORY_AI_SESSIONS, CATEGORY_EDITS};
 
 use super::super::types::{AchievementCategoryView, EnrichedAchievementView, MyActivityPageData};
 
@@ -89,11 +89,11 @@ pub(super) fn compute_activity_stats(
         total_activities: total,
         total_edits: category_summary
             .iter()
-            .find(|c| c.category == "Edits")
+            .find(|c| c.category == CATEGORY_EDITS)
             .map_or(0, |c| c.count),
         total_sessions: category_summary
             .iter()
-            .find(|c| c.category == "AI Sessions")
+            .find(|c| c.category == CATEGORY_AI_SESSIONS)
             .map_or(0, |c| c.count),
         xp_progress_pct: gamification.map_or(0, |g| {
             if g.xp_to_next_rank > 0 {

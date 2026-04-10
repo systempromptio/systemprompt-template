@@ -3,6 +3,7 @@ use std::borrow::Cow;
 use super::rate_limit;
 use super::secrets::detect_secrets;
 use super::types::{EvaluatedRule, GovernanceContext, GovernanceDecision, RuleEvaluation};
+use crate::types::{SCOPE_ADMIN, SCOPE_UNKNOWN};
 
 const ADMIN_ONLY_TOOL_PREFIXES: &[&str] = &["mcp__systemprompt__", "mcp__skill-manager__"];
 
@@ -107,7 +108,7 @@ fn evaluate_scope(
         return;
     }
 
-    if ctx.agent_scope == "admin" {
+    if ctx.agent_scope == SCOPE_ADMIN {
         rules.push(EvaluatedRule {
             rule: "scope_check",
             result: "pass",
@@ -116,7 +117,7 @@ fn evaluate_scope(
         return;
     }
 
-    if ctx.agent_scope == "unknown" {
+    if ctx.agent_scope == SCOPE_UNKNOWN {
         rules.push(EvaluatedRule {
             rule: "scope_check",
             result: "warn",
@@ -176,7 +177,7 @@ fn evaluate_blocklist(
         || ctx.tool_name.contains("drop")
         || ctx.tool_name.contains("destroy");
 
-    if is_destructive && ctx.agent_scope != "admin" {
+    if is_destructive && ctx.agent_scope != SCOPE_ADMIN {
         *denied = true;
         *deny_reason = Cow::Owned(format!(
             "Destructive tool '{}' blocked for {} scope",

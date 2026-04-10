@@ -13,7 +13,7 @@ use systemprompt::identifiers::SkillId;
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::handlers::shared;
 use crate::repositories;
-use crate::types::{CreateSkillRequest, ImportPluginRequest, UserContext};
+use crate::types::{CreateSkillRequest, ImportPluginRequest, UserContext, IMPORT_TARGET_USER};
 
 use super::resources::get_services_path;
 use super::responses::ImportUserBundleResponse;
@@ -30,7 +30,7 @@ pub async fn import_plugin_handler(
 
     let import_target = body.import_target.as_deref().unwrap_or("site");
 
-    if import_target == "user" {
+    if import_target == IMPORT_TARGET_USER {
         import_bundle_for_user(&pool, &user_ctx, &bundle).await
     } else {
         import_bundle_for_site(&pool, &bundle)

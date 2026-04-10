@@ -1,4 +1,5 @@
 use crate::cli;
+use crate::error::SystempromptToolError;
 use crate::tools::{self, CliInput, SERVER_NAME};
 use async_trait::async_trait;
 use rmcp::model::{
@@ -31,9 +32,18 @@ pub struct SystempromptServer {
 }
 
 impl SystempromptServer {
-    pub fn new(db_pool: DbPool, service_id: McpServerId) -> Result<Self, crate::error::SystempromptToolError> {
-        let tool_usage_repo = Arc::new(ToolUsageRepository::new(&db_pool).map_err(|e| crate::error::SystempromptToolError::Internal(e.to_string()))?);
-        let artifact_repo = Arc::new(McpArtifactRepository::new(&db_pool).map_err(|e| crate::error::SystempromptToolError::Internal(e.to_string()))?);
+    pub fn new(
+        db_pool: DbPool,
+        service_id: McpServerId,
+    ) -> Result<Self, SystempromptToolError> {
+        let tool_usage_repo = Arc::new(
+            ToolUsageRepository::new(&db_pool)
+                .map_err(|e| SystempromptToolError::Internal(e.to_string()))?,
+        );
+        let artifact_repo = Arc::new(
+            McpArtifactRepository::new(&db_pool)
+                .map_err(|e| SystempromptToolError::Internal(e.to_string()))?,
+        );
         let executor = McpToolExecutor::new(tool_usage_repo, artifact_repo, SERVER_NAME);
 
         Ok(Self {

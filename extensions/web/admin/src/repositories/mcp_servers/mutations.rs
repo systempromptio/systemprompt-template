@@ -1,7 +1,9 @@
 use std::fmt::Write;
 use std::path::Path;
 
-use super::super::super::types::{CreateMcpRequest, McpServerDetail, UpdateMcpRequest};
+use super::super::super::types::{
+    CreateMcpRequest, McpServerDetail, UpdateMcpRequest, SERVER_TYPE_EXTERNAL, SERVER_TYPE_INTERNAL,
+};
 use super::queries::find_mcp_server;
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -27,9 +29,9 @@ pub fn create_mcp_server(
     } else {
         &req.server_type
     };
-    let endpoint = if req.endpoint.is_empty() && server_type == "internal" {
+    let endpoint = if req.endpoint.is_empty() && server_type == SERVER_TYPE_INTERNAL {
         format!("http://localhost:8080/api/v1/mcp/{}/mcp", req.id)
-    } else if req.endpoint.is_empty() && server_type == "external" {
+    } else if req.endpoint.is_empty() && server_type == SERVER_TYPE_EXTERNAL {
         return Err(MarketplaceError::Internal(format!(
             "External MCP server '{}' requires an endpoint URL",
             req.id

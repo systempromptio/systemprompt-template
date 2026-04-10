@@ -13,7 +13,7 @@ use crate::repositories;
 use crate::types::access_control::{
     AccessControlQuery, AccessDecision, BulkAssignRequest, RuleType, UpdateEntityRulesRequest,
 };
-use crate::types::UpdatePluginRequest;
+use crate::types::{UpdatePluginRequest, ENTITY_PLUGIN};
 
 pub async fn list_access_rules_handler(
     State(pool): State<Arc<PgPool>>,
@@ -61,7 +61,7 @@ pub async fn update_entity_rules_handler(
 
     match result {
         Ok(rules) => {
-            if body.sync_yaml && entity_type == "plugin" {
+            if body.sync_yaml && entity_type == ENTITY_PLUGIN {
                 sync_plugin_roles_to_yaml(&entity_id, &body.rules);
             }
             Json(serde_json::json!({ "rules": rules })).into_response()
@@ -91,7 +91,7 @@ pub async fn bulk_assign_handler(
         Ok(count) => {
             if body.sync_yaml {
                 for (et, eid) in &entities {
-                    if et == "plugin" {
+                    if et == ENTITY_PLUGIN {
                         sync_plugin_roles_to_yaml(eid, &body.rules);
                     }
                 }

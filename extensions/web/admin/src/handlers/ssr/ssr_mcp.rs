@@ -5,7 +5,10 @@ use crate::repositories;
 use crate::repositories::plugin_maps::EntityPluginMap;
 use crate::templates::AdminTemplateEngine;
 use crate::types::access_control::{AccessControlRule, AccessDecision, RuleType};
-use crate::types::{DepartmentStats, MarketplaceContext, McpServerDetail, UserContext};
+use crate::types::{
+    DepartmentStats, MarketplaceContext, McpServerDetail, UserContext, ENTITY_MCP_SERVER,
+    SERVER_TYPE_EXTERNAL, SERVER_TYPE_INTERNAL,
+};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -18,7 +21,7 @@ fn build_mcp_rules_map(
 ) -> HashMap<String, Vec<&AccessControlRule>> {
     let mut rules_map: HashMap<String, Vec<&AccessControlRule>> = HashMap::new();
     for rule in all_rules {
-        if rule.entity_type == "mcp_server" {
+        if rule.entity_type == ENTITY_MCP_SERVER {
             rules_map
                 .entry(rule.entity_id.clone())
                 .or_default()
@@ -97,7 +100,7 @@ fn build_mcp_server_json(
     let entity_rules = rules_map.get(&m.id);
     let roles = build_role_badges(entity_rules, known_roles);
     let dept_badges = build_dept_badges(entity_rules, departments);
-    let is_internal = m.server_type == "internal";
+    let is_internal = m.server_type == SERVER_TYPE_INTERNAL;
 
     json!({
         "id": m.id,
@@ -212,8 +215,8 @@ pub async fn mcp_edit_page(
         None
     };
 
-    let is_internal = server.as_ref().is_some_and(|s| s.server_type == "internal");
-    let is_external = server.as_ref().is_none_or(|s| s.server_type == "external");
+    let is_internal = server.as_ref().is_some_and(|s| s.server_type == SERVER_TYPE_INTERNAL);
+    let is_external = server.as_ref().is_none_or(|s| s.server_type == SERVER_TYPE_EXTERNAL);
     let raw_yaml = if let Some(id) = server_id {
         let sp = match super::get_services_path() {
             Ok(p) => p,

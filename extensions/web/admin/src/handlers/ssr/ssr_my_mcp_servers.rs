@@ -5,7 +5,7 @@ use crate::repositories;
 use crate::repositories::conversation_analytics;
 use crate::templates::AdminTemplateEngine;
 use crate::types::conversation_analytics::EntityEffectiveness;
-use crate::types::{MarketplaceContext, UserContext, ENTITY_MCP_TOOL};
+use crate::types::{MarketplaceContext, UserContext, ENTITY_MCP_TOOL, PLUGIN_ID_SYSTEMPROMPT};
 use axum::{
     extract::{Extension, State},
     response::Response,
@@ -129,7 +129,7 @@ fn build_server_views(
                 enabled: s.enabled,
                 plugin_names: mcp_plugin_map.get(&s.id).cloned().unwrap_or_else(Vec::new),
                 base_mcp_server_id: s.base_mcp_server_id.as_ref().map(ToString::to_string),
-                is_system: key == "systemprompt",
+                is_system: key == PLUGIN_ID_SYSTEMPROMPT,
                 total_uses: usage.map_or(0, |u| u.total_uses),
                 session_count: usage.map_or(0, |u| u.session_count),
                 avg_effectiveness: eff.map_or_else(

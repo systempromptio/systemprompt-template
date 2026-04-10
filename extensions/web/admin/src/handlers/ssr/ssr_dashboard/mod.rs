@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{DashboardQuery, MarketplaceContext, UserContext};
+use crate::types::{DashboardQuery, MarketplaceContext, UserContext, TAB_REPORT};
 use axum::{
     extract::{Extension, Query, State},
     response::{IntoResponse, Response},
@@ -206,7 +206,7 @@ fn inject_page_stats(data: &mut serde_json::Value) {
 }
 
 async fn inject_report_if_needed(tab: &str, pool: &PgPool, data: &mut serde_json::Value) {
-    if tab == "report" {
+    if tab == TAB_REPORT {
         if let Ok(Some(report_row)) =
             repositories::admin_traffic_reports::fetch_latest_report(pool).await
         {

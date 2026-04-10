@@ -8,7 +8,7 @@ use crate::event_hub::EventHub;
 use crate::numeric;
 use crate::repositories::{conversation_analytics, hooks_track, usage_aggregations};
 use crate::types::webhook::{HookEvent, HookEventPayload};
-use crate::types::ENTITY_SKILL;
+use crate::types::{ENTITY_SKILL, EVENT_SESSION_END, EVENT_SESSION_START, EVENT_STOP};
 
 use super::{ai_summary, entity, helpers};
 
@@ -57,12 +57,12 @@ pub async fn process_inserted_event(params: &ProcessInsertedEventParams<'_>) {
 
     handle_prompt_title(pool, event_type, session_id, payload).await;
 
-    if event_type == "Stop" && has_session {
+    if event_type == EVENT_STOP && has_session {
         handle_session_analysis(params).await;
         handle_apm_and_concurrent(params).await;
     }
 
-    if event_type == "SessionEnd" && has_session {
+    if event_type == EVENT_SESSION_END && has_session {
         handle_session_end(params).await;
     }
 
@@ -85,7 +85,7 @@ async fn update_session_tracking(params: &ProcessInsertedEventParams<'_>) {
     })
     .await;
 
-    if params.event_type == "SessionStart" {
+    if params.event_type == EVENT_SESSION_START {
         if let HookEvent::SessionStart(ref data) = params.payload.event {
             usage_aggregations::update_session_metadata(
                 params.pool,
@@ -98,7 +98,7 @@ async fn update_session_tracking(params: &ProcessInsertedEventParams<'_>) {
         }
     }
 
-    if !params.payload.common.permission_mode.is_empty() && params.event_type != "SessionStart" {
+    if !params.payload.common.permission_mode.is_empty() && params.event_type != EVENT_SESSION_START {
         usage_aggregations::update_session_permission_mode(
             params.pool,
             params.session_id,

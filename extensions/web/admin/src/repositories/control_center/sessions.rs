@@ -2,6 +2,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
 use crate::types::control_center::RecentSession;
+use crate::types::STATUS_DELETED;
 
 pub async fn fetch_recent_sessions_filtered(
     pool: &PgPool,
@@ -94,7 +95,7 @@ pub async fn update_session_status(
     session_id: &str,
     status: &str,
 ) -> Result<(), sqlx::Error> {
-    if status == "deleted" {
+    if status == STATUS_DELETED {
         sqlx::query!(
             "DELETE FROM session_analyses WHERE session_id = $1 AND user_id = $2",
             session_id,
