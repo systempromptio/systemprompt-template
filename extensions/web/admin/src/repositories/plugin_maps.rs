@@ -4,7 +4,6 @@ use std::sync::Arc;
 
 use super::plugin_resolvers::resolve_all_plugin_skill_ids;
 
-/// A `(plugin_id, plugin_name)` pair shared across map entries via `Arc`.
 pub type PluginEntry = Arc<(String, String)>;
 
 pub type EntityPluginMap = HashMap<String, Vec<PluginEntry>>;

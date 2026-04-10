@@ -65,7 +65,6 @@ fn inject_analysis_data(
                 _ => "low",
             }
             .to_string();
-            // Clone goal_achieved first, then derive goal_icon from the owned copy
             analysis.goal_achieved.clone_into(&mut group.goal_achieved);
             group.goal_icon = match group.goal_achieved.as_str() {
                 "yes" => "\u{2713}",

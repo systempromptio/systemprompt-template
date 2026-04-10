@@ -58,7 +58,6 @@ impl fmt::Display for HookEventType {
 }
 
 impl HookEventType {
-    /// Parse a string into a `HookEventType`, returning `None` for unknown values.
     #[must_use]
     pub fn from_str_opt(s: &str) -> Option<Self> {
         match s {
@@ -84,7 +83,6 @@ impl HookEventType {
         }
     }
 
-    /// Returns the canonical string representation of this event type.
     #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
