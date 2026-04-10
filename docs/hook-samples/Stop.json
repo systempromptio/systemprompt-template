@@ -1,9 +1,0 @@
-{
-  "session_id": "sess_a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "transcript_path": "/home/user/.claude/projects/my-project/transcripts/2026-03-03T10-15-30.jsonl",
-  "cwd": "/home/user/projects/my-project",
-  "permission_mode": "default",
-  "hook_event_name": "Stop",
-  "stop_hook_active": true,
-  "last_assistant_message": "I've completed the refactoring. All 12 files have been updated to use the new naming convention and tests are passing."
-}
