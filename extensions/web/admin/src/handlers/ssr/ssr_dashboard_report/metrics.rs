@@ -8,70 +8,12 @@ pub(super) fn build_metric_rows(metrics: &[MetricTuple]) -> Vec<MetricRowView> {
 fn build_metric_row(
     &(label, today_val, yesterday_val, avg_7d, avg_14d, avg_30d, positive_when_up): &MetricTuple,
 ) -> MetricRowView {
-    let is_time_metric = label.contains("Avg Time");
+    let value_display = format_metric_value(label, today_val);
 
-    let value_display = if is_time_metric {
-        format_time_ms(today_val)
-    } else if (today_val - today_val.floor()).abs() < f64::EPSILON && today_val.abs() < 1_000_000.0
-    {
-        format!("{today_val:.0}")
-    } else {
-        format!("{today_val:.1}")
-    };
-
-    let fmt_delta = |baseline: f64| -> (String, String, String) {
-        if baseline.abs() < f64::EPSILON {
-            if today_val.abs() < f64::EPSILON {
-                (
-                    "--".to_string(),
-                    "\u{2014}".to_string(),
-                    "neutral".to_string(),
-                )
-            } else {
-                (
-                    "+\u{221E}".to_string(),
-                    "\u{25B2}".to_string(),
-                    if positive_when_up {
-                        "positive"
-                    } else {
-                        "negative"
-                    }
-                    .to_string(),
-                )
-            }
-        } else {
-            let pct = ((today_val - baseline) / baseline) * 100.0;
-            let arrow = if pct > 1.0 {
-                "\u{25B2}"
-            } else if pct < -1.0 {
-                "\u{25BC}"
-            } else {
-                "\u{2014}"
-            };
-            let dir = if pct > 1.0 {
-                "up"
-            } else if pct < -1.0 {
-                "down"
-            } else {
-                "flat"
-            };
-            let sentiment = match (dir, positive_when_up) {
-                ("up", true) | ("down", false) => "positive",
-                ("down", true) | ("up", false) => "negative",
-                _ => "neutral",
-            };
-            (
-                format!("{:.1}%", pct.abs()),
-                arrow.to_string(),
-                sentiment.to_string(),
-            )
-        }
-    };
-
-    let (yd, ya, ys) = fmt_delta(yesterday_val);
-    let (wd, wa, ws) = fmt_delta(avg_7d);
-    let (fd, fa, fs) = fmt_delta(avg_14d);
-    let (gd, ga, gs) = fmt_delta(avg_30d);
+    let (yd, ya, ys) = fmt_delta(today_val, yesterday_val, positive_when_up);
+    let (wd, wa, ws) = fmt_delta(today_val, avg_7d, positive_when_up);
+    let (fd, fa, fs) = fmt_delta(today_val, avg_14d, positive_when_up);
+    let (gd, ga, gs) = fmt_delta(today_val, avg_30d, positive_when_up);
 
     MetricRowView {
         label: label.to_string(),
@@ -88,6 +30,62 @@ fn build_metric_row(
         global_delta: gd,
         global_arrow: ga,
         global_sentiment: gs,
+    }
+}
+
+fn format_metric_value(label: &str, today_val: f64) -> String {
+    if label.contains("Avg Time") {
+        format_time_ms(today_val)
+    } else if (today_val - today_val.floor()).abs() < f64::EPSILON && today_val.abs() < 1_000_000.0
+    {
+        format!("{today_val:.0}")
+    } else {
+        format!("{today_val:.1}")
+    }
+}
+
+fn fmt_delta(today_val: f64, baseline: f64, positive_when_up: bool) -> (String, String, String) {
+    if baseline.abs() < f64::EPSILON {
+        return fmt_delta_zero_baseline(today_val, positive_when_up);
+    }
+    let pct = ((today_val - baseline) / baseline) * 100.0;
+    let (arrow, dir) = if pct > 1.0 {
+        ("\u{25B2}", "up")
+    } else if pct < -1.0 {
+        ("\u{25BC}", "down")
+    } else {
+        ("\u{2014}", "flat")
+    };
+    let sentiment = match (dir, positive_when_up) {
+        ("up", true) | ("down", false) => "positive",
+        ("down", true) | ("up", false) => "negative",
+        _ => "neutral",
+    };
+    (
+        format!("{:.1}%", pct.abs()),
+        arrow.to_string(),
+        sentiment.to_string(),
+    )
+}
+
+fn fmt_delta_zero_baseline(today_val: f64, positive_when_up: bool) -> (String, String, String) {
+    if today_val.abs() < f64::EPSILON {
+        (
+            "--".to_string(),
+            "\u{2014}".to_string(),
+            "neutral".to_string(),
+        )
+    } else {
+        (
+            "+\u{221E}".to_string(),
+            "\u{25B2}".to_string(),
+            if positive_when_up {
+                "positive"
+            } else {
+                "negative"
+            }
+            .to_string(),
+        )
     }
 }
 

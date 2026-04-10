@@ -18,7 +18,7 @@ use super::rules;
 use super::scope;
 use super::types::{
     AuditParams, AuditRecord, AuthDenialParams, GovernanceContext, GovernanceResponse,
-    HookSpecificOutput,
+    HookSpecificOutput, RuleEvaluation,
 };
 use crate::handlers::webhook::helpers::{extract_bearer_token, get_jwt_config};
 
@@ -55,10 +55,35 @@ pub async fn govern_tool_use(
         plugin_id,
     };
 
-    let Some(token) = extract_bearer_token(&headers) else {
+    let user_id = match authenticate_request(&headers, &denial_params) {
+        Ok(uid) => uid,
+        Err(resp) => return *resp,
+    };
+
+    let agent_scope = agent_id.map_or_else(|| "unknown".to_string(), scope::resolve_agent_scope);
+
+    let evaluation = evaluate_and_audit(&EvaluateInput {
+        pool: &pool,
+        payload: &payload,
+        tool_name,
+        session_id: &session_id,
+        user_id: &user_id,
+        agent_id,
+        agent_scope: &agent_scope,
+        plugin_id,
+    });
+
+    build_evaluation_response(&evaluation)
+}
+
+fn authenticate_request(
+    headers: &HeaderMap,
+    denial_params: &AuthDenialParams<'_>,
+) -> Result<UserId, Box<Response>> {
+    let Some(token) = extract_bearer_token(headers) else {
         let reason = "Missing Authorization header — tool call blocked";
-        spawn_auth_denial(&denial_params, reason);
-        return build_deny_response(reason);
+        spawn_auth_denial(denial_params, reason);
+        return Err(Box::new(build_deny_response(reason)));
     };
 
     let (jwt_secret, jwt_issuer) = match get_jwt_config() {
@@ -66,12 +91,12 @@ pub async fn govern_tool_use(
         Err(e) => {
             tracing::error!(error = %e, "Failed to load JWT config");
             let reason = "Internal configuration error — tool call blocked";
-            spawn_auth_denial(&denial_params, reason);
-            return build_deny_response(reason);
+            spawn_auth_denial(denial_params, reason);
+            return Err(Box::new(build_deny_response(reason)));
         }
     };
 
-    let claims = match systemprompt::oauth::validate_jwt_token(
+    let claims = systemprompt::oauth::validate_jwt_token(
         token,
         &jwt_secret,
         &jwt_issuer,
@@ -80,41 +105,54 @@ pub async fn govern_tool_use(
             JwtAudience::Resource("plugin".to_string()),
             JwtAudience::Api,
         ],
-    ) {
-        Ok(c) => c,
-        Err(e) => {
-            tracing::warn!(error = %e, "Governance webhook JWT validation failed");
-            let reason = "Invalid or expired token — tool call blocked";
-            spawn_auth_denial(&denial_params, reason);
-            return build_deny_response(reason);
-        }
-    };
+    )
+    .map_err(|e| {
+        tracing::warn!(error = %e, "Governance webhook JWT validation failed");
+        let reason = "Invalid or expired token — tool call blocked";
+        spawn_auth_denial(denial_params, reason);
+        Box::new(build_deny_response(reason))
+    })?;
 
-    let user_id = UserId::new(&claims.sub);
+    Ok(UserId::new(&claims.sub))
+}
 
-    let agent_scope = agent_id.map_or_else(|| "unknown".to_string(), scope::resolve_agent_scope);
+struct EvaluateInput<'a> {
+    pool: &'a Arc<PgPool>,
+    payload: &'a HookEventPayload,
+    tool_name: &'a str,
+    session_id: &'a SessionId,
+    user_id: &'a UserId,
+    agent_id: Option<&'a str>,
+    agent_scope: &'a str,
+    plugin_id: Option<&'a str>,
+}
 
+fn evaluate_and_audit(input: &EvaluateInput<'_>) -> RuleEvaluation {
     let ctx = GovernanceContext {
-        tool_name,
-        agent_scope: &agent_scope,
-        session_id: &session_id,
-        user_id: &user_id,
-        tool_input: payload.tool_input(),
+        tool_name: input.tool_name,
+        agent_scope: input.agent_scope,
+        session_id: input.session_id,
+        user_id: input.user_id,
+        tool_input: input.payload.tool_input(),
     };
 
     let evaluation = rules::evaluate(&ctx);
 
     spawn_audit_recording(&AuditParams {
-        pool: &pool,
-        user_id: &user_id,
-        session_id: &session_id,
-        tool_name,
-        agent_id,
-        agent_scope: &agent_scope,
+        pool: input.pool,
+        user_id: input.user_id,
+        session_id: input.session_id,
+        tool_name: input.tool_name,
+        agent_id: input.agent_id,
+        agent_scope: input.agent_scope,
         evaluation: &evaluation,
-        plugin_id,
+        plugin_id: input.plugin_id,
     });
 
+    evaluation
+}
+
+fn build_evaluation_response(evaluation: &RuleEvaluation) -> Response {
     let deny_reason = if evaluation.decision == "deny" {
         Some(format!("[GOVERNANCE] {}", evaluation.reason))
     } else {

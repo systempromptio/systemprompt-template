@@ -98,7 +98,7 @@ fn build_and_import_plugin(
         tracing::warn!(plugin_id = %plugin_id, error = %e, "Failed to import plugin");
     })?;
 
-    tracing::info!(plugin_id = %plugin_id, "Plugin synced from {log_context}");
+    tracing::info!(plugin_id = %plugin_id, source = log_context, "Plugin synced");
     Ok(plugin_id)
 }
 

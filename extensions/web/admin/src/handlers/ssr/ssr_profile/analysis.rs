@@ -30,8 +30,20 @@ fn collect_all_deviations(
     global: &GlobalAverages,
 ) -> Vec<MetricDeviation> {
     let mut deviations = Vec::new();
+    let entries = build_deviation_entries(user, global);
 
-    let entries: &[DeviationInput] = &[
+    for entry in &entries {
+        push_deviation(&mut deviations, entry);
+    }
+
+    deviations
+}
+
+fn build_deviation_entries<'a>(
+    user: &'a UserAggregateMetrics,
+    global: &'a GlobalAverages,
+) -> Vec<DeviationInput<'a>> {
+    vec![
         DeviationInput {
             metric: "quality",
             label: "Quality Score",
@@ -98,13 +110,7 @@ fn collect_all_deviations(
             positive_up: true,
             format_fn: fmt_decimal,
         },
-    ];
-
-    for entry in entries {
-        push_deviation(&mut deviations, entry);
-    }
-
-    deviations
+    ]
 }
 
 fn partition_and_sort(

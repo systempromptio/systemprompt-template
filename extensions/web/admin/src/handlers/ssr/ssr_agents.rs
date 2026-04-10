@@ -146,65 +146,35 @@ pub async fn agents_page(
         Err(r) => return *r,
     };
 
-    let all_agents = repositories::list_agents(&services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to list agents");
-        vec![]
-    });
-
-    let agents = if user_ctx.is_admin {
-        all_agents
-    } else {
-        let plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
-            .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to list plugins for roles");
-                vec![]
-            });
-        let visible_agent_ids: HashSet<String> = plugins
-            .iter()
-            .flat_map(|p| p.agents.iter().map(|a| a.id.clone()))
-            .collect();
-        all_agents
-            .into_iter()
-            .filter(|a| visible_agent_ids.contains(&a.id))
-            .collect()
-    };
+    let agents = fetch_visible_agents(&services_path, &user_ctx);
 
     let (skill_plugin_map, agent_plugin_map, mcp_plugin_map) =
         repositories::build_entity_plugin_maps(&services_path);
 
-    let all_plugins = repositories::list_plugins_for_roles(&services_path, &["admin".to_string()])
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list all plugins");
-            vec![]
-        });
-
-    let plugin_list: Vec<serde_json::Value> = all_plugins
-        .iter()
-        .map(|p| json!({"id": p.id, "name": p.name}))
-        .collect();
+    let plugin_list: Vec<serde_json::Value> =
+        repositories::list_plugins_for_roles(&services_path, &["admin".to_string()])
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to list all plugins");
+                vec![]
+            })
+            .iter()
+            .map(|p| json!({"id": p.id, "name": p.name}))
+            .collect();
 
     let agent_ids: Vec<AgentId> = agents.iter().map(|a| AgentId::new(&a.id)).collect();
     let usage_counts = repositories::fetch_agent_usage_counts(&pool, &agent_ids).await;
-
     let agent_updated_at = build_agent_updated_at(&services_path.join("agents"));
 
-    let mut filter_plugins: HashSet<String> = HashSet::new();
-
-    let agent_view_ctx = AgentViewContext {
-        agent_plugin_map: &agent_plugin_map,
-        skill_plugin_map: &skill_plugin_map,
-        mcp_plugin_map: &mcp_plugin_map,
-        usage_counts: &usage_counts,
-        agent_updated_at: &agent_updated_at,
-    };
-
-    let agents_data: Vec<serde_json::Value> = agents
-        .iter()
-        .map(|agent| build_agent_json(agent, &agent_view_ctx, &mut filter_plugins))
-        .collect();
-
-    let mut sorted_plugins: Vec<String> = filter_plugins.into_iter().collect();
-    sorted_plugins.sort();
+    let (agents_data, sorted_plugins) = build_agents_with_filters(
+        &agents,
+        &AgentViewContext {
+            agent_plugin_map: &agent_plugin_map,
+            skill_plugin_map: &skill_plugin_map,
+            mcp_plugin_map: &mcp_plugin_map,
+            usage_counts: &usage_counts,
+            agent_updated_at: &agent_updated_at,
+        },
+    );
 
     let data = json!({
         "page": "agents",
@@ -214,6 +184,51 @@ pub async fn agents_page(
         "filter_plugins": sorted_plugins,
     });
     super::render_page(&engine, "agents", &data, &user_ctx, &mkt_ctx)
+}
+
+fn fetch_visible_agents(
+    services_path: &std::path::Path,
+    user_ctx: &UserContext,
+) -> Vec<AgentDetail> {
+    let all_agents = repositories::list_agents(services_path).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to list agents");
+        vec![]
+    });
+
+    if user_ctx.is_admin {
+        return all_agents;
+    }
+
+    let plugins = repositories::list_plugins_for_roles(services_path, &user_ctx.roles)
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list plugins for roles");
+            vec![]
+        });
+    let visible_agent_ids: HashSet<String> = plugins
+        .iter()
+        .flat_map(|p| p.agents.iter().map(|a| a.id.clone()))
+        .collect();
+    all_agents
+        .into_iter()
+        .filter(|a| visible_agent_ids.contains(&a.id))
+        .collect()
+}
+
+fn build_agents_with_filters(
+    agents: &[AgentDetail],
+    ctx: &AgentViewContext<'_>,
+) -> (Vec<serde_json::Value>, Vec<String>) {
+    let mut filter_plugins: HashSet<String> = HashSet::new();
+
+    let agents_data: Vec<serde_json::Value> = agents
+        .iter()
+        .map(|agent| build_agent_json(agent, ctx, &mut filter_plugins))
+        .collect();
+
+    let mut sorted_plugins: Vec<String> = filter_plugins.into_iter().collect();
+    sorted_plugins.sort();
+
+    (agents_data, sorted_plugins)
 }
 
 pub async fn agent_edit_page(

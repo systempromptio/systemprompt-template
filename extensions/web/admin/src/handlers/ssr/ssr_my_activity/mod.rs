@@ -26,41 +26,8 @@ pub async fn my_activity_page(
 ) -> Response {
     let user_id = &user_ctx.user_id;
 
-    let (activities, total) = activity::queries::search_user_entity_activity(
-        &pool,
-        user_id.as_str(),
-        query.search.as_deref(),
-        query.limit,
-        query.offset,
-    )
-    .await
-    .unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to search user entity activity");
-        (vec![], 0)
-    });
-
-    let category_summary = activity::queries::get_user_activity_summary(&pool, user_id.as_str())
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to get user activity summary");
-            vec![]
-        });
-
-    let gamification =
-        crate::gamification::queries::find_user_gamification(&pool, user_ctx.user_id.as_str())
-            .await
-            .map_err(|e| {
-                tracing::warn!(error = %e, "Failed to fetch user gamification");
-            })
-            .ok()
-            .flatten();
-
-    let achievement_stats = crate::gamification::queries::get_achievement_stats(&pool)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to fetch achievement stats");
-            vec![]
-        });
+    let (activities, total, category_summary, gamification, achievement_stats) =
+        fetch_activity_data(&pool, user_id, &query).await;
 
     let achievements_by_category =
         build_achievements_by_category(gamification.as_ref(), &achievement_stats);
@@ -82,7 +49,71 @@ pub async fn my_activity_page(
         total_count,
         stats: &stats,
     });
-    let mut value = serde_json::to_value(&data).unwrap_or_else(|e| {
+    let value = serialize_activity_page(&data, &stats, total);
+    super::render_page(&engine, "my-activity", &value, &user_ctx, &mkt_ctx)
+}
+
+async fn fetch_activity_data(
+    pool: &PgPool,
+    user_id: &systemprompt::identifiers::UserId,
+    query: &EventsQuery,
+) -> (
+    Vec<activity::types::ActivityTimelineEvent>,
+    i64,
+    Vec<activity::types::ActivityCategorySummary>,
+    Option<crate::types::UserGamificationProfile>,
+    Vec<crate::types::AchievementInfo>,
+) {
+    let (activities, total) = activity::queries::search_user_entity_activity(
+        pool,
+        user_id.as_str(),
+        query.search.as_deref(),
+        query.limit,
+        query.offset,
+    )
+    .await
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to search user entity activity");
+        (vec![], 0)
+    });
+
+    let category_summary = activity::queries::get_user_activity_summary(pool, user_id.as_str())
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to get user activity summary");
+            vec![]
+        });
+
+    let gamification = crate::gamification::queries::find_user_gamification(pool, user_id.as_str())
+        .await
+        .map_err(|e| {
+            tracing::warn!(error = %e, "Failed to fetch user gamification");
+        })
+        .ok()
+        .flatten();
+
+    let achievement_stats = crate::gamification::queries::get_achievement_stats(pool)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to fetch achievement stats");
+            vec![]
+        });
+
+    (
+        activities,
+        total,
+        category_summary,
+        gamification,
+        achievement_stats,
+    )
+}
+
+fn serialize_activity_page(
+    data: &crate::handlers::ssr::types::MyActivityPageData,
+    stats: &data::ActivityStats,
+    total: i64,
+) -> serde_json::Value {
+    let mut value = serde_json::to_value(data).unwrap_or_else(|e| {
         tracing::warn!(error = %e, "Failed to serialize my-activity page data");
         serde_json::Value::Null
     });
@@ -96,7 +127,7 @@ pub async fn my_activity_page(
             ]),
         );
     }
-    super::render_page(&engine, "my-activity", &value, &user_ctx, &mkt_ctx)
+    value
 }
 
 struct AchievementLookups<'a> {

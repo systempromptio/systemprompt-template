@@ -55,30 +55,57 @@ pub async fn profile_page(
         .await
         .map_or(0, |h| h.len());
 
-    let entity_counts = json!({
-        "plugins": mkt_ctx.total_plugins,
-        "skills": mkt_ctx.total_skills,
-        "agents": mkt_ctx.agents_count,
-        "mcp_servers": mkt_ctx.mcp_count,
-        "hooks": hooks_count,
+    let gamification_profile = gamification.ok().flatten();
+    let data = build_profile_page_data(&ProfilePageInput {
+        user_metrics: &user_metrics,
+        global_averages: &global_averages,
+        daily_summaries_data: &daily_summaries_data,
+        recent_analyses: &recent_analyses,
+        stored_report: stored_report.as_ref(),
+        gamification_profile: gamification_profile.as_ref(),
+        mkt_ctx: &mkt_ctx,
+        hooks_count,
     });
-    let archetype_result = archetype::classify_archetype(&user_metrics, &global_averages);
+
+    super::render_page(&engine, "profile", &data, &user_ctx, &mkt_ctx)
+}
+
+struct ProfilePageInput<'a> {
+    user_metrics: &'a profile_reports::UserAggregateMetrics,
+    global_averages: &'a daily_summaries::GlobalAverages,
+    daily_summaries_data: &'a [daily_summaries::DailySummaryRow],
+    recent_analyses: &'a [session_analyses::SessionAnalysisRow],
+    stored_report: Option<&'a profile_reports::ProfileReportRow>,
+    gamification_profile: Option<&'a crate::types::UserGamificationProfile>,
+    mkt_ctx: &'a MarketplaceContext,
+    hooks_count: usize,
+}
+
+fn build_profile_page_data(input: &ProfilePageInput<'_>) -> serde_json::Value {
+    let entity_counts = json!({
+        "plugins": input.mkt_ctx.total_plugins,
+        "skills": input.mkt_ctx.total_skills,
+        "agents": input.mkt_ctx.agents_count,
+        "mcp_servers": input.mkt_ctx.mcp_count,
+        "hooks": input.hooks_count,
+    });
+    let archetype_result =
+        archetype::classify_archetype(input.user_metrics, input.global_averages);
     let (strengths, weaknesses) =
-        analysis::compute_strengths_weaknesses(&user_metrics, &global_averages);
-    let trend_data = trends::build_trend_data(&daily_summaries_data, &global_averages);
-    let comparison_grid = data_loading::build_comparison_grid(&user_metrics, &global_averages);
-    let category_breakdown = data_loading::build_category_breakdown(&recent_analyses);
+        analysis::compute_strengths_weaknesses(input.user_metrics, input.global_averages);
+    let trend_data = trends::build_trend_data(input.daily_summaries_data, input.global_averages);
+    let comparison_grid =
+        data_loading::build_comparison_grid(input.user_metrics, input.global_averages);
+    let category_breakdown = data_loading::build_category_breakdown(input.recent_analyses);
 
     let strengths_json =
         serde_json::to_value(&strengths).unwrap_or(serde_json::Value::Array(vec![]));
     let weaknesses_json =
         serde_json::to_value(&weaknesses).unwrap_or(serde_json::Value::Array(vec![]));
-    let metrics_json = serde_json::to_value(&user_metrics)
+    let metrics_json = serde_json::to_value(input.user_metrics)
         .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
-    let gamification_profile = gamification.ok().flatten();
-    let has_gamification = gamification_profile.is_some();
 
-    let data = json!({
+    json!({
         "page": "profile",
         "title": "Profile & Insights",
         "archetype": {
@@ -92,19 +119,17 @@ pub async fn profile_page(
         "weaknesses": weaknesses_json,
         "has_weaknesses": !weaknesses.is_empty(),
         "metrics": metrics_json,
-        "has_metrics": user_metrics.total_days > 0,
+        "has_metrics": input.user_metrics.total_days > 0,
         "comparison": comparison_grid,
         "trends": trend_data,
         "category_breakdown": category_breakdown,
         "has_category_breakdown": !category_breakdown.is_empty(),
         "entity_counts": entity_counts,
-        "has_gamification": has_gamification,
-        "gamification": data_loading::build_gamification_data(gamification_profile.as_ref()),
-        "ai_report": data_loading::build_ai_report_data(stored_report.as_ref()),
-        "has_ai_report": stored_report.as_ref().is_some_and(|r| r.ai_narrative.is_some()),
-    });
-
-    super::render_page(&engine, "profile", &data, &user_ctx, &mkt_ctx)
+        "has_gamification": input.gamification_profile.is_some(),
+        "gamification": data_loading::build_gamification_data(input.gamification_profile),
+        "ai_report": data_loading::build_ai_report_data(input.stored_report),
+        "has_ai_report": input.stored_report.is_some_and(|r| r.ai_narrative.is_some()),
+    })
 }
 
 pub async fn handle_generate_profile_report(
@@ -158,22 +183,13 @@ pub async fn handle_generate_profile_report(
             .into_response();
     };
 
-    let input = profile_reports::ProfileReportInput {
-        archetype: archetype_result.id,
-        archetype_description: archetype_result.description,
-        archetype_confidence: i16::from(archetype_result.confidence),
-        strengths: serde_json::to_value(&strengths).unwrap_or(serde_json::Value::Array(vec![])),
-        weaknesses: serde_json::to_value(&weaknesses).unwrap_or(serde_json::Value::Array(vec![])),
-        ai_narrative: Some(ai_report.narrative),
-        ai_style_analysis: Some(ai_report.style_analysis),
-        ai_comparison: Some(ai_report.comparison),
-        ai_patterns: Some(ai_report.patterns),
-        ai_improvements: Some(ai_report.improvements),
-        ai_tips: Some(ai_report.tips),
-        metrics_snapshot: serde_json::to_value(&user_metrics)
-            .unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
-        period_days: PROFILE_PERIOD_DAYS,
-    };
+    let input = build_profile_report_input(
+        &archetype_result,
+        &strengths,
+        &weaknesses,
+        ai_report,
+        &user_metrics,
+    );
 
     match profile_reports::upsert_profile_report(pool.as_ref(), user_id, &input).await {
         Ok(()) => Json(json!({"status": "ok"})).into_response(),
@@ -185,5 +201,30 @@ pub async fn handle_generate_profile_report(
             )
                 .into_response()
         }
+    }
+}
+
+fn build_profile_report_input(
+    archetype_result: &archetype::ArchetypeResult,
+    strengths: &[analysis::MetricDeviation],
+    weaknesses: &[analysis::MetricDeviation],
+    ai_report: report::AiProfileReport,
+    user_metrics: &profile_reports::UserAggregateMetrics,
+) -> profile_reports::ProfileReportInput {
+    profile_reports::ProfileReportInput {
+        archetype: archetype_result.id.clone(),
+        archetype_description: archetype_result.description.clone(),
+        archetype_confidence: i16::from(archetype_result.confidence),
+        strengths: serde_json::to_value(strengths).unwrap_or(serde_json::Value::Array(vec![])),
+        weaknesses: serde_json::to_value(weaknesses).unwrap_or(serde_json::Value::Array(vec![])),
+        ai_narrative: Some(ai_report.narrative),
+        ai_style_analysis: Some(ai_report.style_analysis),
+        ai_comparison: Some(ai_report.comparison),
+        ai_patterns: Some(ai_report.patterns),
+        ai_improvements: Some(ai_report.improvements),
+        ai_tips: Some(ai_report.tips),
+        metrics_snapshot: serde_json::to_value(user_metrics)
+            .unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
+        period_days: PROFILE_PERIOD_DAYS,
     }
 }

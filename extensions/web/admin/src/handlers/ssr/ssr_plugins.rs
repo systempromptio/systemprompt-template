@@ -21,7 +21,7 @@ struct PluginJsonResult {
 fn build_plugin_json(
     p: &PluginOverview,
     services_path: &Path,
-    entity_rules: Option<&Vec<&AccessControlRule>>,
+    entity_rules: Option<&Vec<AccessControlRule>>,
     marketplace_badges: &[serde_json::Value],
 ) -> PluginJsonResult {
     let detail = repositories::find_plugin_detail(services_path, &p.id)
@@ -80,22 +80,45 @@ pub async fn plugins_page(
         Err(r) => return *r,
     };
 
-    let roles = user_ctx.roles.clone();
-    let plugins =
-        repositories::list_plugins_for_roles_full(&services_path, &roles).unwrap_or_else(|e| {
+    let plugins = repositories::list_plugins_for_roles_full(&services_path, &user_ctx.roles)
+        .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to list plugins for roles");
             vec![]
         });
 
-    let all_rules = repositories::access_control::list_all_rules(&pool)
+    let (rules_map, marketplace_map) = fetch_plugin_metadata(&pool).await;
+
+    let (plugins_json, categories) =
+        build_plugins_with_categories(&plugins, &services_path, &rules_map, &marketplace_map);
+
+    let data = json!({
+        "page": "plugins",
+        "title": "Plugins",
+        "plugins": plugins_json,
+        "categories": categories,
+        "stats": {
+            "plugin_count": plugins.len(),
+            "plugin_enabled": plugins.iter().filter(|p| p.enabled).count(),
+        },
+    });
+    super::render_page(&engine, "plugins", &data, &user_ctx, &mkt_ctx)
+}
+
+async fn fetch_plugin_metadata(
+    pool: &PgPool,
+) -> (
+    HashMap<(String, String), Vec<AccessControlRule>>,
+    HashMap<String, Vec<(String, String)>>,
+) {
+    let all_rules = repositories::access_control::list_all_rules(pool)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to fetch access control rules");
             vec![]
         });
 
-    let mut rules_map: HashMap<(String, String), Vec<&AccessControlRule>> = HashMap::new();
-    for rule in &all_rules {
+    let mut rules_map: HashMap<(String, String), Vec<AccessControlRule>> = HashMap::new();
+    for rule in all_rules {
         if rule.entity_type == "plugin" {
             rules_map
                 .entry((rule.entity_type.clone(), rule.entity_id.clone()))
@@ -104,13 +127,22 @@ pub async fn plugins_page(
         }
     }
 
-    let marketplace_map = repositories::org_marketplaces::list_marketplaces_for_plugins(&pool)
+    let marketplace_map = repositories::org_marketplaces::list_marketplaces_for_plugins(pool)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to fetch marketplace-plugin associations");
             HashMap::new()
         });
 
+    (rules_map, marketplace_map)
+}
+
+fn build_plugins_with_categories(
+    plugins: &[PluginOverview],
+    services_path: &Path,
+    rules_map: &HashMap<(String, String), Vec<AccessControlRule>>,
+    marketplace_map: &HashMap<String, Vec<(String, String)>>,
+) -> (Vec<serde_json::Value>, Vec<String>) {
     let mut categories_set = std::collections::HashSet::new();
 
     let plugins_json: Vec<serde_json::Value> = plugins
@@ -126,7 +158,7 @@ pub async fn plugins_page(
                         .collect()
                 });
 
-            let result = build_plugin_json(p, &services_path, entity_rules, &badges);
+            let result = build_plugin_json(p, services_path, entity_rules, &badges);
             if !result.category.is_empty() {
                 categories_set.insert(result.category);
             }
@@ -134,21 +166,8 @@ pub async fn plugins_page(
         })
         .collect();
 
-    let plugin_count = plugins.len();
-    let plugin_enabled = plugins.iter().filter(|p| p.enabled).count();
-
     let mut categories: Vec<String> = categories_set.into_iter().collect();
     categories.sort();
 
-    let data = json!({
-        "page": "plugins",
-        "title": "Plugins",
-        "plugins": plugins_json,
-        "categories": categories,
-        "stats": {
-            "plugin_count": plugin_count,
-            "plugin_enabled": plugin_enabled,
-        },
-    });
-    super::render_page(&engine, "plugins", &data, &user_ctx, &mkt_ctx)
+    (plugins_json, categories)
 }

@@ -68,7 +68,7 @@ async fn prepare_export_context(
     let user_info = repositories::marketplace_git::lookup_user_basic(pool, &user_id)
         .await
         .map_err(|e| {
-            tracing::error!(error = %e, user_id = %user_id, "User not found for {context_label}");
+            tracing::error!(error = %e, user_id = %user_id, context = context_label, "User not found");
             shared::error_response(StatusCode::NOT_FOUND, "User not found")
         })?;
 
@@ -96,7 +96,7 @@ async fn generate_bundles(
     repositories::generate_export_bundles(&export_params)
         .await
         .map_err(|e| {
-            tracing::error!(error = %e, "Failed to generate export bundles for {context_label}");
+            tracing::error!(error = %e, context = context_label, "Failed to generate export bundles");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Export failed")
         })
 }

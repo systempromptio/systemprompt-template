@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
 use crate::repositories;
-use crate::types::marketplaces::{CreateOrgMarketplaceRequest, UpdateOrgMarketplaceRequest};
+use crate::types::marketplaces::{
+    CreateOrgMarketplaceRequest, OrgMarketplace, UpdateOrgMarketplaceRequest,
+};
 use axum::{
     extract::{Extension, Path, State},
     http::StatusCode,
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     Json,
 };
 use serde::Deserialize;
@@ -144,63 +146,28 @@ pub async fn sync_marketplace_handler(
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> impl IntoResponse {
-    let marketplace = match repositories::org_marketplaces::find_org_marketplace(&pool, &id).await {
-        Ok(Some(m)) => m,
-        Ok(None) => {
-            return (
-                StatusCode::NOT_FOUND,
-                Json(json!({"error": "Marketplace not found"})),
-            )
-                .into_response();
-        }
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to look up marketplace");
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({"error": "Failed to look up marketplace"})),
-            )
-                .into_response();
-        }
+    let (_marketplace, repo_url) = match find_marketplace_with_repo(&pool, &id).await {
+        Ok(pair) => pair,
+        Err(resp) => return resp,
     };
 
-    let Some(ref repo_url) = marketplace.github_repo_url else {
-        return (
-            StatusCode::BAD_REQUEST,
-            Json(json!({"error": "Marketplace has no GitHub repository URL configured"})),
-        )
-            .into_response();
-    };
-
-    match github_sync::sync_marketplace_from_github(&pool, &id, repo_url, user_ctx.user_id.as_str())
-        .await
+    match github_sync::sync_marketplace_from_github(
+        &pool,
+        &id,
+        &repo_url,
+        user_ctx.user_id.as_str(),
+    )
+    .await
     {
-        Ok(result) => (
-            StatusCode::OK,
-            Json(json!({
-                "success": true,
-                "commit_hash": result.commit_hash,
-                "plugins_synced": result.plugins_synced,
-                "errors": result.errors,
-                "changed": result.changed,
-                "duration_ms": result.duration_ms,
-            })),
-        )
-            .into_response(),
+        Ok(result) => build_sync_result_response(&result),
         Err(e) => {
             tracing::error!(error = %e, marketplace_id = %id, "Marketplace sync failed");
-            let _ = repositories::org_marketplaces::insert_sync_log(
+            log_sync_error(
                 &pool,
-                &repositories::org_marketplaces::SyncLogEntry {
-                    marketplace_id: &id,
-                    operation: "sync",
-                    status: "error",
-                    commit_hash: None,
-                    plugins_synced: 0,
-                    errors: 1,
-                    error_message: Some(&e.to_string()),
-                    triggered_by: user_ctx.user_id.as_str(),
-                    duration_ms: None,
-                },
+                &id,
+                "sync",
+                &e.to_string(),
+                user_ctx.user_id.as_str(),
             )
             .await;
             (
@@ -217,68 +184,28 @@ pub async fn publish_marketplace_handler(
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> impl IntoResponse {
-    let marketplace = match repositories::org_marketplaces::find_org_marketplace(&pool, &id).await {
-        Ok(Some(m)) => m,
-        Ok(None) => {
-            return (
-                StatusCode::NOT_FOUND,
-                Json(json!({"error": "Marketplace not found"})),
-            )
-                .into_response();
-        }
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to look up marketplace");
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({"error": "Failed to look up marketplace"})),
-            )
-                .into_response();
-        }
-    };
-
-    let Some(ref repo_url) = marketplace.github_repo_url else {
-        return (
-            StatusCode::BAD_REQUEST,
-            Json(json!({"error": "Marketplace has no GitHub repository URL configured"})),
-        )
-            .into_response();
+    let (_marketplace, repo_url) = match find_marketplace_with_repo(&pool, &id).await {
+        Ok(pair) => pair,
+        Err(resp) => return resp,
     };
 
     match github_sync::publish_marketplace_to_github(
         &pool,
         &id,
-        repo_url,
+        &repo_url,
         user_ctx.user_id.as_str(),
     )
     .await
     {
-        Ok(result) => (
-            StatusCode::OK,
-            Json(json!({
-                "success": true,
-                "commit_hash": result.commit_hash,
-                "plugins_synced": result.plugins_synced,
-                "errors": result.errors,
-                "changed": result.changed,
-                "duration_ms": result.duration_ms,
-            })),
-        )
-            .into_response(),
+        Ok(result) => build_sync_result_response(&result),
         Err(e) => {
             tracing::error!(error = %e, marketplace_id = %id, "Marketplace publish failed");
-            let _ = repositories::org_marketplaces::insert_sync_log(
+            log_sync_error(
                 &pool,
-                &repositories::org_marketplaces::SyncLogEntry {
-                    marketplace_id: &id,
-                    operation: "publish",
-                    status: "error",
-                    commit_hash: None,
-                    plugins_synced: 0,
-                    errors: 1,
-                    error_message: Some(&e.to_string()),
-                    triggered_by: user_ctx.user_id.as_str(),
-                    duration_ms: None,
-                },
+                &id,
+                "publish",
+                &e.to_string(),
+                user_ctx.user_id.as_str(),
             )
             .await;
             (
@@ -288,4 +215,77 @@ pub async fn publish_marketplace_handler(
                 .into_response()
         }
     }
+}
+
+async fn find_marketplace_with_repo(
+    pool: &PgPool,
+    id: &str,
+) -> Result<(OrgMarketplace, String), Response> {
+    let marketplace = match repositories::org_marketplaces::find_org_marketplace(pool, id).await {
+        Ok(Some(m)) => m,
+        Ok(None) => {
+            return Err((
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": "Marketplace not found"})),
+            )
+                .into_response());
+        }
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to look up marketplace");
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": "Failed to look up marketplace"})),
+            )
+                .into_response());
+        }
+    };
+
+    let repo_url = marketplace.github_repo_url.clone().ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "Marketplace has no GitHub repository URL configured"})),
+        )
+            .into_response()
+    })?;
+
+    Ok((marketplace, repo_url))
+}
+
+fn build_sync_result_response(result: &github_sync::SyncResult) -> Response {
+    (
+        StatusCode::OK,
+        Json(json!({
+            "success": true,
+            "commit_hash": result.commit_hash,
+            "plugins_synced": result.plugins_synced,
+            "errors": result.errors,
+            "changed": result.changed,
+            "duration_ms": result.duration_ms,
+        })),
+    )
+        .into_response()
+}
+
+async fn log_sync_error(
+    pool: &PgPool,
+    id: &str,
+    operation: &str,
+    error_msg: &str,
+    triggered_by: &str,
+) {
+    let _ = repositories::org_marketplaces::insert_sync_log(
+        pool,
+        &repositories::org_marketplaces::SyncLogEntry {
+            marketplace_id: id,
+            operation,
+            status: "error",
+            commit_hash: None,
+            plugins_synced: 0,
+            errors: 1,
+            error_message: Some(error_msg),
+            triggered_by,
+            duration_ms: None,
+        },
+    )
+    .await;
 }

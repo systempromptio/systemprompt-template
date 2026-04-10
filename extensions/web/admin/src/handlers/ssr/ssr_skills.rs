@@ -119,54 +119,13 @@ pub async fn skills_page(
         Err(r) => return *r,
     };
 
-    let all_skills = repositories::list_agent_skills(&pool)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list agent skills");
-            vec![]
-        });
-
-    let skills = if user_ctx.is_admin {
-        all_skills
-    } else {
-        let plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
-            .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to list plugins for roles");
-                vec![]
-            });
-        let visible_skill_ids: HashSet<String> = plugins
-            .iter()
-            .flat_map(|p| p.skills.iter().map(|s| s.id.clone()))
-            .collect();
-        all_skills
-            .into_iter()
-            .filter(|s| visible_skill_ids.contains(s.skill_id.as_str()))
-            .collect()
-    };
+    let skills = fetch_visible_skills(&pool, &services_path, &user_ctx).await;
 
     let (skill_plugin_map, agent_plugin_map, _mcp_plugin_map) =
         repositories::build_entity_plugin_maps(&services_path);
 
-    let all_plugins = repositories::list_plugins_for_roles(&services_path, &["admin".to_string()])
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list all plugins");
-            vec![]
-        });
-
-    let plugin_list: Vec<serde_json::Value> = all_plugins
-        .iter()
-        .map(|p| json!({"id": p.id, "name": p.name}))
-        .collect();
-
-    let skill_ids: Vec<SkillId> = skills.iter().map(|s| s.skill_id.clone()).collect();
-    let usage_counts = repositories::fetch_skill_usage_counts(&pool, &skill_ids).await;
-    let avg_ratings = repositories::fetch_skill_avg_ratings(&pool, &skill_ids).await;
-
-    let mut filters = SkillFilters {
-        sources: HashSet::new(),
-        plugins: HashSet::new(),
-        tags: HashSet::new(),
-    };
+    let plugin_list = fetch_plugin_list(&services_path);
+    let (usage_counts, avg_ratings) = fetch_skill_metrics(&pool, &skills).await;
 
     let skill_view_ctx = SkillViewContext {
         skill_plugin_map: &skill_plugin_map,
@@ -175,9 +134,96 @@ pub async fn skills_page(
         avg_ratings: &avg_ratings,
     };
 
+    let result = build_skills_with_filters(&skills, &skill_view_ctx);
+
+    let data = json!({
+        "page": "skills",
+        "title": "Org Skills",
+        "skills": result.skills_data,
+        "all_plugins": plugin_list,
+        "filter_sources": result.sources,
+        "filter_plugins": result.plugins,
+        "filter_tags": result.tags,
+    });
+    super::render_page(&engine, "skills", &data, &user_ctx, &mkt_ctx)
+}
+
+async fn fetch_visible_skills(
+    pool: &PgPool,
+    services_path: &std::path::Path,
+    user_ctx: &UserContext,
+) -> Vec<AgentSkill> {
+    let all_skills = repositories::list_agent_skills(pool)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list agent skills");
+            vec![]
+        });
+
+    if user_ctx.is_admin {
+        return all_skills;
+    }
+
+    let plugins = repositories::list_plugins_for_roles(services_path, &user_ctx.roles)
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list plugins for roles");
+            vec![]
+        });
+    let visible_skill_ids: HashSet<String> = plugins
+        .iter()
+        .flat_map(|p| p.skills.iter().map(|s| s.id.clone()))
+        .collect();
+    all_skills
+        .into_iter()
+        .filter(|s| visible_skill_ids.contains(s.skill_id.as_str()))
+        .collect()
+}
+
+fn fetch_plugin_list(services_path: &std::path::Path) -> Vec<serde_json::Value> {
+    let all_plugins = repositories::list_plugins_for_roles(services_path, &["admin".to_string()])
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list all plugins");
+            vec![]
+        });
+    all_plugins
+        .iter()
+        .map(|p| json!({"id": p.id, "name": p.name}))
+        .collect()
+}
+
+async fn fetch_skill_metrics(
+    pool: &PgPool,
+    skills: &[AgentSkill],
+) -> (
+    std::collections::HashMap<String, i64>,
+    std::collections::HashMap<String, (f64, i64)>,
+) {
+    let skill_ids: Vec<SkillId> = skills.iter().map(|s| s.skill_id.clone()).collect();
+    let usage_counts = repositories::fetch_skill_usage_counts(pool, &skill_ids).await;
+    let avg_ratings = repositories::fetch_skill_avg_ratings(pool, &skill_ids).await;
+    (usage_counts, avg_ratings)
+}
+
+struct SkillsWithFilters {
+    skills_data: Vec<serde_json::Value>,
+    sources: Vec<String>,
+    plugins: Vec<String>,
+    tags: Vec<String>,
+}
+
+fn build_skills_with_filters(
+    skills: &[AgentSkill],
+    ctx: &SkillViewContext<'_>,
+) -> SkillsWithFilters {
+    let mut filters = SkillFilters {
+        sources: HashSet::new(),
+        plugins: HashSet::new(),
+        tags: HashSet::new(),
+    };
+
     let skills_data: Vec<serde_json::Value> = skills
         .iter()
-        .map(|skill| build_skill_json(skill, &skill_view_ctx, &mut filters))
+        .map(|skill| build_skill_json(skill, ctx, &mut filters))
         .collect();
 
     let mut sorted_sources: Vec<String> = filters.sources.into_iter().collect();
@@ -187,16 +233,12 @@ pub async fn skills_page(
     let mut sorted_tags: Vec<String> = filters.tags.into_iter().collect();
     sorted_tags.sort();
 
-    let data = json!({
-        "page": "skills",
-        "title": "Org Skills",
-        "skills": skills_data,
-        "all_plugins": plugin_list,
-        "filter_sources": sorted_sources,
-        "filter_plugins": sorted_plugins,
-        "filter_tags": sorted_tags,
-    });
-    super::render_page(&engine, "skills", &data, &user_ctx, &mkt_ctx)
+    SkillsWithFilters {
+        skills_data,
+        sources: sorted_sources,
+        plugins: sorted_plugins,
+        tags: sorted_tags,
+    }
 }
 
 pub async fn skill_edit_page(

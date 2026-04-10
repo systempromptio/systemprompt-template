@@ -148,38 +148,9 @@ fn build_traffic_breakdowns(
         serde_json::Value::Null
     });
 
-    let max_source = t.sources.first().map_or(1, |s| s.sessions).max(1);
-    let sources: Vec<SourceBar> = t
-        .sources
-        .iter()
-        .map(|s| SourceBar {
-            source: s.source.clone(),
-            sessions: s.sessions,
-            pct: s.sessions.saturating_mul(100) / max_source,
-        })
-        .collect();
-
-    let max_geo = t.geo.first().map_or(1, |g| g.sessions).max(1);
-    let geo: Vec<GeoBar> = t
-        .geo
-        .iter()
-        .map(|g| GeoBar {
-            country: g.country.clone(),
-            sessions: g.sessions,
-            pct: g.sessions.saturating_mul(100) / max_geo,
-        })
-        .collect();
-
-    let max_device = t.devices.first().map_or(1, |d| d.sessions).max(1);
-    let devices: Vec<DeviceBar> = t
-        .devices
-        .iter()
-        .map(|d| DeviceBar {
-            device: d.device.clone(),
-            sessions: d.sessions,
-            pct: d.sessions.saturating_mul(100) / max_device,
-        })
-        .collect();
+    let sources = build_source_bars(&t.sources);
+    let geo = build_geo_bars(&t.geo);
+    let devices = build_device_bars(&t.devices);
 
     let top_pages: Vec<TopPageView> = t
         .top_pages
@@ -203,6 +174,41 @@ fn build_traffic_breakdowns(
         country_chart,
         top_pages_enhanced,
     )
+}
+
+fn build_source_bars(sources: &[crate::types::TrafficSource]) -> Vec<SourceBar> {
+    let max = sources.first().map_or(1, |s| s.sessions).max(1);
+    sources
+        .iter()
+        .map(|s| SourceBar {
+            source: s.source.clone(),
+            sessions: s.sessions,
+            pct: s.sessions.saturating_mul(100) / max,
+        })
+        .collect()
+}
+
+fn build_geo_bars(geo: &[crate::types::TrafficGeo]) -> Vec<GeoBar> {
+    let max = geo.first().map_or(1, |g| g.sessions).max(1);
+    geo.iter()
+        .map(|g| GeoBar {
+            country: g.country.clone(),
+            sessions: g.sessions,
+            pct: g.sessions.saturating_mul(100) / max,
+        })
+        .collect()
+}
+
+fn build_device_bars(devices: &[crate::types::TrafficDevice]) -> Vec<DeviceBar> {
+    let max = devices.first().map_or(1, |d| d.sessions).max(1);
+    devices
+        .iter()
+        .map(|d| DeviceBar {
+            device: d.device.clone(),
+            sessions: d.sessions,
+            pct: d.sessions.saturating_mul(100) / max,
+        })
+        .collect()
 }
 
 pub(super) fn build_traffic_data(

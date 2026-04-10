@@ -104,7 +104,7 @@ pub async fn traces_page(
 
 fn unwrap_or_warn<T>(result: Result<Vec<T>, sqlx::Error>, label: &str) -> Vec<T> {
     result.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch {}", label);
+        tracing::warn!(error = %e, label = label, "Failed to fetch");
         vec![]
     })
 }

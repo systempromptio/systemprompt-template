@@ -25,18 +25,21 @@ async fn main() -> Result<()> {
     );
 
     let service_id = McpServerId::from_env().unwrap_or_else(|_| {
-        tracing::warn!("MCP_SERVICE_ID not set, using default: {DEFAULT_SERVICE_ID}");
+        tracing::warn!(
+            default = DEFAULT_SERVICE_ID,
+            "MCP_SERVICE_ID not set, using default"
+        );
         McpServerId::new(DEFAULT_SERVICE_ID)
     });
 
     let port = env::var("MCP_PORT").map_or_else(
         |_| {
-            tracing::warn!("MCP_PORT not set, using default: {DEFAULT_PORT}");
+            tracing::warn!(default = DEFAULT_PORT, "MCP_PORT not set, using default");
             DEFAULT_PORT
         },
         |p| {
             p.parse::<u16>().unwrap_or_else(|e| {
-                tracing::warn!(error = %e, port = %p, "Invalid MCP_PORT, using default: {DEFAULT_PORT}");
+                tracing::warn!(error = %e, port = %p, default = DEFAULT_PORT, "Invalid MCP_PORT, using default");
                 DEFAULT_PORT
             })
         },

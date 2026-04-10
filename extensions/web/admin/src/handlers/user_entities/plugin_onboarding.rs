@@ -29,15 +29,8 @@ pub async fn select_and_fork_plugins_handler(
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<SelectPluginsRequest>,
 ) -> Response {
-    if req.plugin_ids.len() > MAX_ONBOARDING_PLUGINS {
-        return shared::error_response(
-            StatusCode::BAD_REQUEST,
-            "You can select a maximum of 3 plugins",
-        );
-    }
-
-    if req.plugin_ids.is_empty() {
-        return shared::error_response(StatusCode::BAD_REQUEST, "At least one plugin is required");
+    if let Some(resp) = validate_plugin_selection(&req) {
+        return resp;
     }
 
     let services_path = match shared::get_services_path() {
@@ -45,25 +38,10 @@ pub async fn select_and_fork_plugins_handler(
         Err(r) => return *r,
     };
 
-    let authorized = repositories::org_marketplaces::resolve_authorized_org_plugin_ids(&pool)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to resolve authorized org plugin IDs");
-            std::collections::HashSet::new()
-        });
-
-    let valid_ids: Vec<String> = req
-        .plugin_ids
-        .into_iter()
-        .filter(|id| authorized.contains(id))
-        .collect();
-
-    if valid_ids.is_empty() {
-        return shared::error_response(
-            StatusCode::BAD_REQUEST,
-            "No valid plugins in the selection",
-        );
-    }
+    let valid_ids = match resolve_valid_plugin_ids(&pool, req.plugin_ids).await {
+        Ok(ids) => ids,
+        Err(resp) => return resp,
+    };
 
     if let Err(e) = repositories::user_plugin_selections::set_selected_org_plugins(
         &pool,
@@ -82,8 +60,61 @@ pub async fn select_and_fork_plugins_handler(
     let (forked_count, skipped_count) =
         fork_valid_plugins(&pool, &user_ctx, &valid_ids, &services_path).await;
 
+    spawn_onboarding_activity(&pool, &user_ctx, forked_count);
+
+    Json(SelectAndForkResponse {
+        redirect_url: "/admin/my/marketplace/",
+        forked_count,
+        skipped_count,
+    })
+    .into_response()
+}
+
+fn validate_plugin_selection(req: &SelectPluginsRequest) -> Option<Response> {
+    if req.plugin_ids.len() > MAX_ONBOARDING_PLUGINS {
+        return Some(shared::error_response(
+            StatusCode::BAD_REQUEST,
+            "You can select a maximum of 3 plugins",
+        ));
+    }
+    if req.plugin_ids.is_empty() {
+        return Some(shared::error_response(
+            StatusCode::BAD_REQUEST,
+            "At least one plugin is required",
+        ));
+    }
+    None
+}
+
+async fn resolve_valid_plugin_ids(
+    pool: &PgPool,
+    plugin_ids: Vec<String>,
+) -> Result<Vec<String>, Response> {
+    let authorized = repositories::org_marketplaces::resolve_authorized_org_plugin_ids(pool)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to resolve authorized org plugin IDs");
+            std::collections::HashSet::new()
+        });
+
+    let valid_ids: Vec<String> = plugin_ids
+        .into_iter()
+        .filter(|id| authorized.contains(id))
+        .collect();
+
+    if valid_ids.is_empty() {
+        return Err(shared::error_response(
+            StatusCode::BAD_REQUEST,
+            "No valid plugins in the selection",
+        ));
+    }
+
+    Ok(valid_ids)
+}
+
+fn spawn_onboarding_activity(pool: &Arc<PgPool>, user_ctx: &UserContext, forked_count: usize) {
     if forked_count > 0 {
-        let pool = Arc::clone(&pool);
+        let pool = Arc::clone(pool);
         let uid = user_ctx.user_id.clone();
         let desc = format!("Selected and forked {forked_count} plugin(s) during onboarding");
         tokio::spawn(async move {
@@ -94,13 +125,6 @@ pub async fn select_and_fork_plugins_handler(
             .await;
         });
     }
-
-    Json(SelectAndForkResponse {
-        redirect_url: "/admin/my/marketplace/",
-        forked_count,
-        skipped_count,
-    })
-    .into_response()
 }
 
 async fn fork_valid_plugins(
