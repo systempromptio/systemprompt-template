@@ -48,7 +48,7 @@ fn default_custom() -> String {
     CATEGORY_CUSTOM.to_owned()
 }
 
-pub fn list_file_hooks(services_path: &Path) -> Result<Vec<HookCatalogEntry>, anyhow::Error> {
+pub fn list_file_hooks(services_path: &Path) -> Result<Vec<HookCatalogEntry>, super::HookCatalogError> {
     let hooks_dir = services_path.join("hooks");
     let mut hooks = Vec::new();
     if !hooks_dir.exists() {

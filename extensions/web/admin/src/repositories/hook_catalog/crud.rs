@@ -3,12 +3,12 @@ use std::path::Path;
 
 use super::super::super::types::{CreateHookRequest, HookCatalogEntry, UpdateHookRequest};
 use super::scan::compute_checksum;
-use super::{CATEGORY_CUSTOM, CATEGORY_SYSTEM, DEFAULT_VERSION};
+use super::{HookCatalogError, CATEGORY_CUSTOM, CATEGORY_SYSTEM, DEFAULT_VERSION};
 
 pub async fn get_catalog_hook(
     pool: &PgPool,
     hook_id: &str,
-) -> Result<Option<HookCatalogEntry>, anyhow::Error> {
+) -> Result<Option<HookCatalogEntry>, HookCatalogError> {
     let row = sqlx::query_as::<_, HookCatalogEntry>("SELECT * FROM hook_catalog WHERE id = $1")
         .bind(hook_id)
         .fetch_optional(pool)
@@ -28,7 +28,7 @@ pub async fn get_catalog_hook(
     }
 }
 
-pub async fn list_catalog_hooks(pool: &PgPool) -> Result<Vec<HookCatalogEntry>, anyhow::Error> {
+pub async fn list_catalog_hooks(pool: &PgPool) -> Result<Vec<HookCatalogEntry>, HookCatalogError> {
     let mut hooks = sqlx::query_as::<_, HookCatalogEntry>(
         "SELECT * FROM hook_catalog ORDER BY category, event, id",
     )
@@ -55,7 +55,7 @@ pub async fn create_catalog_hook(
     pool: &PgPool,
     services_path: &Path,
     req: &CreateHookRequest,
-) -> Result<HookCatalogEntry, anyhow::Error> {
+) -> Result<HookCatalogEntry, HookCatalogError> {
     let hook_id = generate_hook_id(&req.name, &req.event);
     let hooks_dir = services_path.join("hooks").join(&hook_id);
     std::fs::create_dir_all(&hooks_dir)?;
@@ -132,13 +132,13 @@ pub async fn update_catalog_hook(
     services_path: &Path,
     hook_id: &str,
     req: &UpdateHookRequest,
-) -> Result<Option<HookCatalogEntry>, anyhow::Error> {
+) -> Result<Option<HookCatalogEntry>, HookCatalogError> {
     let Some(current) = get_catalog_hook(pool, hook_id).await? else {
         return Ok(None);
     };
 
     if current.category == CATEGORY_SYSTEM {
-        anyhow::bail!("Cannot modify system hooks");
+        return Err(HookCatalogError::SystemHookModification);
     }
 
     let name = req.name.clone().unwrap_or(current.name);
@@ -201,13 +201,13 @@ pub async fn delete_catalog_hook(
     pool: &PgPool,
     services_path: &Path,
     hook_id: &str,
-) -> Result<bool, anyhow::Error> {
+) -> Result<bool, HookCatalogError> {
     let Some(current) = get_catalog_hook(pool, hook_id).await? else {
         return Ok(false);
     };
 
     if current.category == CATEGORY_SYSTEM {
-        anyhow::bail!("Cannot delete system hooks");
+        return Err(HookCatalogError::SystemHookModification);
     }
 
     sqlx::query("DELETE FROM hook_catalog WHERE id = $1")

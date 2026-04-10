@@ -18,7 +18,7 @@ pub struct AchievementContext {
 pub async fn check_achievements(
     pool: &PgPool,
     ctx: &AchievementContext,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), super::GamificationError> {
     let (session_count, tool_count, custom_skills_count, error_count) =
         fetch_achievement_counts(pool, &ctx.user_id).await?;
 
@@ -55,7 +55,7 @@ pub async fn check_achievements(
 async fn fetch_achievement_counts(
     pool: &PgPool,
     user_id: &str,
-) -> Result<(i64, i64, i64, i64), anyhow::Error> {
+) -> Result<(i64, i64, i64, i64), super::GamificationError> {
     let session_count: i64 = sqlx::query_scalar(
         "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1 AND event_type = 'claude_code_SessionStart'",
     )
@@ -235,7 +235,7 @@ async fn check_time_based(
     pool: &PgPool,
     user_id: &str,
     to_unlock: &mut Vec<&'static str>,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), super::GamificationError> {
     let has_early: bool = sqlx::query_scalar(
         "SELECT EXISTS(SELECT 1 FROM plugin_usage_events WHERE user_id = $1 AND EXTRACT(HOUR FROM created_at) < 7)",
     )
@@ -273,7 +273,7 @@ async fn insert_achievements(
     pool: &PgPool,
     user_id: &str,
     to_unlock: &[&str],
-) -> Result<(), anyhow::Error> {
+) -> Result<(), super::GamificationError> {
     for achievement_id in to_unlock {
         sqlx::query(
             "INSERT INTO employee_achievements (id, user_id, achievement_id) VALUES (gen_random_uuid()::TEXT, $1, $2) ON CONFLICT (user_id, achievement_id) DO NOTHING",

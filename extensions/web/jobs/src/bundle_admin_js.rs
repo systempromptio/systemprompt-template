@@ -8,7 +8,7 @@ use systemprompt_web_shared::error::MarketplaceError;
 pub struct BundleAdminJsJob;
 
 impl BundleAdminJsJob {
-    pub async fn execute_bundle() -> anyhow::Result<JobResult> {
+    pub async fn execute_bundle() -> Result<JobResult, MarketplaceError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Bundle admin JS job started");
@@ -233,7 +233,7 @@ impl Job for BundleAdminJsJob {
     }
 
     async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
-        Self::execute_bundle().await
+        Ok(Self::execute_bundle().await?)
     }
 }
 

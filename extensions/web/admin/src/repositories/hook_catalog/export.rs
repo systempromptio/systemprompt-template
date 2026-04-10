@@ -7,7 +7,7 @@ pub fn read_hook_template(
     services_path: &Path,
     hook_id: &str,
     template_name: &str,
-) -> Result<Option<String>, anyhow::Error> {
+) -> Result<Option<String>, std::io::Error> {
     let tmpl_path = services_path
         .join("hooks")
         .join(hook_id)

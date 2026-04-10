@@ -1,11 +1,24 @@
 use std::path::Path;
 
 use super::super::types::McpServerDetail;
+use systemprompt_web_shared::error::MarketplaceError;
+
+#[derive(Debug, thiserror::Error)]
+pub enum McpConfigError {
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("YAML error: {0}")]
+    Yaml(#[from] serde_yaml::Error),
+    #[error("YAML must contain mcp_servers.{0} key")]
+    MissingServerKey(String),
+    #[error("{0}")]
+    Marketplace(#[from] MarketplaceError),
+}
 
 pub fn get_mcp_server_raw_yaml(
     services_path: &Path,
     server_id: &str,
-) -> Result<Option<(String, String)>, anyhow::Error> {
+) -> Result<Option<(String, String)>, McpConfigError> {
     let mcp_dir = services_path.join("mcp");
     let Some(file_path) = find_mcp_file(&mcp_dir, server_id)? else {
         return Ok(None);
@@ -23,30 +36,27 @@ pub fn update_mcp_server_raw_yaml(
     services_path: &Path,
     server_id: &str,
     yaml_content: &str,
-) -> Result<Option<McpServerDetail>, anyhow::Error> {
-    use anyhow::Context;
+) -> Result<Option<McpServerDetail>, McpConfigError> {
     let mcp_dir = services_path.join("mcp");
     let Some(file_path) = find_mcp_file(&mcp_dir, server_id)? else {
         return Ok(None);
     };
-    let doc: serde_yaml::Value =
-        serde_yaml::from_str(yaml_content).context("Invalid YAML syntax")?;
+    let doc: serde_yaml::Value = serde_yaml::from_str(yaml_content)?;
     let has_server = doc
         .get("mcp_servers")
         .and_then(|m| m.get(server_id))
         .is_some();
     if !has_server {
-        anyhow::bail!("YAML must contain mcp_servers.{server_id} key");
+        return Err(McpConfigError::MissingServerKey(server_id.to_string()));
     }
-    std::fs::write(&file_path, yaml_content)
-        .with_context(|| format!("Failed to write: {}", file_path.display()))?;
-    super::mcp_servers::get_mcp_server(services_path, server_id)
+    std::fs::write(&file_path, yaml_content)?;
+    Ok(super::mcp_servers::get_mcp_server(services_path, server_id)?)
 }
 
 pub(crate) fn find_mcp_file(
     mcp_dir: &Path,
     server_id: &str,
-) -> Result<Option<std::path::PathBuf>, anyhow::Error> {
+) -> Result<Option<std::path::PathBuf>, McpConfigError> {
     if !mcp_dir.exists() {
         return Ok(None);
     }

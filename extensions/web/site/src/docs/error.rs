@@ -11,6 +11,9 @@ pub enum DocsError {
     #[error("Content not found: {0}")]
     ContentNotFound(String),
 
+    #[error("Content item required for docs page")]
+    ContentItemRequired,
+
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),
 }

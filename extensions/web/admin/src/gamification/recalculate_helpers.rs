@@ -18,7 +18,7 @@ pub(super) struct UserRankParams<'a> {
     pub last_active_date: Option<chrono::NaiveDate>,
 }
 
-pub(super) async fn populate_daily_usage(pool: &PgPool) -> Result<(), anyhow::Error> {
+pub(super) async fn populate_daily_usage(pool: &PgPool) -> Result<(), super::GamificationError> {
     sqlx::query(
         r"
         INSERT INTO employee_daily_usage (user_id, usage_date, event_count)
@@ -37,7 +37,7 @@ pub(super) async fn populate_daily_usage(pool: &PgPool) -> Result<(), anyhow::Er
 pub(super) async fn calculate_user_xp(
     pool: &PgPool,
     uid: &str,
-) -> Result<UserXpResult, anyhow::Error> {
+) -> Result<UserXpResult, super::GamificationError> {
     let base_xp: i64 = sqlx::query_scalar(
         r"
         SELECT COALESCE(SUM(
@@ -151,7 +151,7 @@ pub(super) async fn calculate_user_xp(
 pub(super) async fn calculate_streaks(
     pool: &PgPool,
     uid: &str,
-) -> Result<(i32, i32, Option<chrono::NaiveDate>), anyhow::Error> {
+) -> Result<(i32, i32, Option<chrono::NaiveDate>), super::GamificationError> {
     #[derive(sqlx::FromRow)]
     struct DateRow {
         usage_date: chrono::NaiveDate,
@@ -217,7 +217,7 @@ fn compute_longest_streak(dates_desc: &[chrono::NaiveDate]) -> i32 {
     longest
 }
 
-pub(super) async fn update_user_rank(params: &UserRankParams<'_>) -> Result<(), anyhow::Error> {
+pub(super) async fn update_user_rank(params: &UserRankParams<'_>) -> Result<(), super::GamificationError> {
     sqlx::query(
         r"
         INSERT INTO employee_ranks (user_id, total_xp, rank_level, rank_name, events_count, unique_skills_count, unique_plugins_count, current_streak, longest_streak, last_active_date, updated_at)

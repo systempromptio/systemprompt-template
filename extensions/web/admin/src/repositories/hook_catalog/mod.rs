@@ -13,3 +13,13 @@ pub const CATEGORY_SYSTEM: &str = "system";
 pub const CATEGORY_CUSTOM: &str = "custom";
 pub const DEFAULT_VERSION: &str = "1.0.0";
 pub const DEFAULT_MATCHER: &str = "*";
+
+#[derive(Debug, thiserror::Error)]
+pub enum HookCatalogError {
+    #[error("Database error: {0}")]
+    Database(#[from] sqlx::Error),
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("Cannot modify system hooks")]
+    SystemHookModification,
+}

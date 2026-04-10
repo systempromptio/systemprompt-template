@@ -1,12 +1,13 @@
+mod error;
 mod local_sync;
 mod types;
 
 use std::path::{Path, PathBuf};
 
-use anyhow::Result;
 use sqlx::PgPool;
 use systemprompt::models::ProfileBootstrap;
 
+pub use error::GitSyncError;
 use types::PluginImportTally;
 pub use types::SyncResult;
 
@@ -140,14 +141,14 @@ pub async fn sync_marketplace_from_github(
     marketplace_id: &str,
     repo_url: &str,
     triggered_by: &str,
-) -> Result<SyncResult> {
+) -> Result<SyncResult, GitSyncError> {
     let start = std::time::Instant::now();
 
     tracing::info!(marketplace_id, repo_url, "Starting GitHub marketplace sync");
 
     let services_path = ProfileBootstrap::get()
         .map(|p| PathBuf::from(&p.paths.services))
-        .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
+        .map_err(|e| GitSyncError::Validation(format!("Failed to get profile: {e}")))?;
 
     let local_path = PathBuf::from("storage/github-marketplaces").join(marketplace_id);
 
@@ -194,7 +195,7 @@ pub async fn sync_marketplace_from_github(
     })
 }
 
-fn ensure_repo_up_to_date(repo_url: &str, local_path: &Path) -> Result<()> {
+fn ensure_repo_up_to_date(repo_url: &str, local_path: &Path) -> Result<(), GitSyncError> {
     if local_path.join(".git").exists() {
         git_pull(local_path)?;
     } else {
@@ -233,18 +234,18 @@ fn check_unchanged(
     })
 }
 
-fn read_marketplace_plugins(local_path: &Path) -> Result<Vec<serde_json::Value>> {
+fn read_marketplace_plugins(local_path: &Path) -> Result<Vec<serde_json::Value>, GitSyncError> {
     let marketplace_json_path = local_path.join(".claude-plugin/marketplace.json");
-    let marketplace_content = std::fs::read_to_string(&marketplace_json_path)
-        .map_err(|e| anyhow::anyhow!("Failed to read marketplace.json: {e}"))?;
-    let marketplace: serde_json::Value = serde_json::from_str(&marketplace_content)
-        .map_err(|e| anyhow::anyhow!("Failed to parse marketplace.json: {e}"))?;
+    let marketplace_content = std::fs::read_to_string(&marketplace_json_path)?;
+    let marketplace: serde_json::Value = serde_json::from_str(&marketplace_content)?;
 
     marketplace
         .get("plugins")
         .and_then(|v| v.as_array())
         .cloned()
-        .ok_or_else(|| anyhow::anyhow!("marketplace.json missing 'plugins' array"))
+        .ok_or_else(|| {
+            GitSyncError::Validation("marketplace.json missing 'plugins' array".into())
+        })
 }
 
 struct SyncLogInput<'a> {

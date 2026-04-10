@@ -3,7 +3,7 @@ use std::path::Path;
 use super::super::types::HookDetail;
 use super::export_scripts::TRACKING_EVENTS;
 
-pub fn list_hooks(services_path: &Path) -> Result<Vec<HookDetail>, anyhow::Error> {
+pub fn list_hooks(services_path: &Path) -> Result<Vec<HookDetail>, std::io::Error> {
     let plugins_dir = services_path.join("plugins");
     let mut hooks = Vec::new();
     if !plugins_dir.exists() {
@@ -133,7 +133,7 @@ fn parse_hook_detail(
     }
 }
 
-pub fn get_hook(services_path: &Path, hook_id: &str) -> Result<Option<HookDetail>, anyhow::Error> {
+pub fn get_hook(services_path: &Path, hook_id: &str) -> Result<Option<HookDetail>, std::io::Error> {
     let hooks = list_hooks(services_path)?;
     Ok(hooks.into_iter().find(|h| h.id == hook_id))
 }

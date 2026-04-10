@@ -1,17 +1,19 @@
 use std::path::{Path, PathBuf};
 
-use anyhow::Result;
 use sqlx::PgPool;
 use systemprompt::models::ProfileBootstrap;
 
 use super::export::PluginBundle;
-use super::github_sync::{elapsed_ms, SyncResult};
+use super::github_sync::{elapsed_ms, GitSyncError, SyncResult};
 use super::github_sync_git::{
     build_authenticated_url, git_add_all, git_clone_shallow, git_commit, git_has_changes,
     git_head_hash, git_pull, git_push,
 };
 
-fn write_plugin_bundles_to_repo(bundles: &[PluginBundle], local_path: &Path) -> Result<u64> {
+fn write_plugin_bundles_to_repo(
+    bundles: &[PluginBundle],
+    local_path: &Path,
+) -> Result<u64, GitSyncError> {
     let mut plugin_count = 0u64;
 
     for bundle in bundles {
@@ -47,7 +49,7 @@ pub async fn publish_marketplace_to_github(
     marketplace_id: &str,
     repo_url: &str,
     triggered_by: &str,
-) -> Result<SyncResult> {
+) -> Result<SyncResult, GitSyncError> {
     let start = std::time::Instant::now();
 
     tracing::info!(
@@ -58,7 +60,7 @@ pub async fn publish_marketplace_to_github(
 
     let services_path = ProfileBootstrap::get()
         .map(|p| PathBuf::from(&p.paths.services))
-        .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
+        .map_err(|e| GitSyncError::Validation(format!("Failed to get profile: {e}")))?;
 
     let local_path = PathBuf::from("storage/github-marketplaces").join(marketplace_id);
     ensure_publish_repo(repo_url, &local_path)?;
@@ -95,7 +97,7 @@ async fn prepare_publish_content(
     services_path: &Path,
     local_path: &Path,
     repo_url: &str,
-) -> Result<(u64, String)> {
+) -> Result<(u64, String), GitSyncError> {
     let export = super::export::generate_org_marketplace_export_bundles(
         services_path,
         pool,
@@ -113,7 +115,9 @@ async fn prepare_publish_content(
     Ok((plugin_count, push_url))
 }
 
-async fn commit_and_push_if_changed(ctx: &PublishContext<'_>) -> Result<SyncResult> {
+async fn commit_and_push_if_changed(
+    ctx: &PublishContext<'_>,
+) -> Result<SyncResult, GitSyncError> {
     if !git_has_changes(ctx.local_path)? {
         let duration_ms = elapsed_ms(ctx.start);
         tracing::info!(marketplace_id = ctx.marketplace_id, "No changes to publish");
@@ -156,7 +160,7 @@ async fn commit_and_push_if_changed(ctx: &PublishContext<'_>) -> Result<SyncResu
     })
 }
 
-fn ensure_publish_repo(repo_url: &str, local_path: &Path) -> Result<()> {
+fn ensure_publish_repo(repo_url: &str, local_path: &Path) -> Result<(), GitSyncError> {
     if local_path.join(".git").exists() {
         git_pull(local_path)?;
     } else {
@@ -167,7 +171,10 @@ fn ensure_publish_repo(repo_url: &str, local_path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn write_marketplace_json(local_path: &Path, content: impl AsRef<[u8]>) -> Result<()> {
+fn write_marketplace_json(
+    local_path: &Path,
+    content: impl AsRef<[u8]>,
+) -> Result<(), GitSyncError> {
     let marketplace_json_path = local_path.join(".claude-plugin/marketplace.json");
     if let Some(parent) = marketplace_json_path.parent() {
         std::fs::create_dir_all(parent)?;

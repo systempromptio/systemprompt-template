@@ -64,7 +64,7 @@ fn discover_templates(
 }
 
 impl CompileAdminTemplatesJob {
-    pub async fn execute_compile() -> anyhow::Result<JobResult> {
+    pub async fn execute_compile() -> Result<JobResult, MarketplaceError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Compile admin templates job started");
@@ -143,7 +143,7 @@ impl Job for CompileAdminTemplatesJob {
     }
 
     async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
-        Self::execute_compile().await
+        Ok(Self::execute_compile().await?)
     }
 }
 

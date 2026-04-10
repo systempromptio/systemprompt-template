@@ -1,37 +1,39 @@
 use std::path::PathBuf;
 
-use anyhow::Result;
 use sqlx::PgPool;
 use systemprompt::models::ProfileBootstrap;
 
+use super::error::GitSyncError;
 use super::types::SyncResult;
 use super::{elapsed_ms, finalize_sync, import_plugins_from_entries};
 
 pub async fn sync_marketplace_from_local(
     pool: &PgPool,
     marketplace_id: &str,
-) -> Result<SyncResult> {
+) -> Result<SyncResult, GitSyncError> {
     let start = std::time::Instant::now();
 
     let marketplace_json_path =
         PathBuf::from("storage/files/plugins/.claude-plugin/marketplace.json");
     if !marketplace_json_path.exists() {
-        anyhow::bail!("Local marketplace.json not found");
+        return Err(GitSyncError::Validation(
+            "Local marketplace.json not found".into(),
+        ));
     }
 
     let services_path = ProfileBootstrap::get()
         .map(|p| PathBuf::from(&p.paths.services))
-        .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
+        .map_err(|e| GitSyncError::Validation(format!("Failed to get profile: {e}")))?;
 
-    let content = std::fs::read_to_string(&marketplace_json_path)
-        .map_err(|e| anyhow::anyhow!("Failed to read local marketplace.json: {e}"))?;
-    let marketplace: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| anyhow::anyhow!("Failed to parse local marketplace.json: {e}"))?;
+    let content = std::fs::read_to_string(&marketplace_json_path)?;
+    let marketplace: serde_json::Value = serde_json::from_str(&content)?;
 
     let plugins = marketplace
         .get("plugins")
         .and_then(|v| v.as_array())
-        .ok_or_else(|| anyhow::anyhow!("Local marketplace.json missing 'plugins' array"))?;
+        .ok_or_else(|| {
+            GitSyncError::Validation("Local marketplace.json missing 'plugins' array".into())
+        })?;
 
     let base_path = PathBuf::from(".");
     let mut tally = import_plugins_from_entries(plugins, &base_path, &services_path, "local");

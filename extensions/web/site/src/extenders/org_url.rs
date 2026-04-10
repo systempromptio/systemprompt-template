@@ -1,4 +1,3 @@
-use anyhow::Result;
 use async_trait::async_trait;
 use serde_json::{json, Value};
 use systemprompt::models::Config;
@@ -34,7 +33,7 @@ impl TemplateDataExtender for OrgUrlExtender {
         10
     }
 
-    async fn extend(&self, _ctx: &ExtenderContext<'_>, data: &mut Value) -> Result<()> {
+    async fn extend(&self, _ctx: &ExtenderContext<'_>, data: &mut Value) -> anyhow::Result<()> {
         let config = Config::get()?;
         let org_url = &config.api_external_url;
 

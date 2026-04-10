@@ -1,87 +1,89 @@
 use std::path::Path;
 
-use anyhow::Result;
+use super::github_sync::GitSyncError;
 
-pub fn git_clone_shallow(url: &str, target: &Path) -> Result<()> {
+pub fn git_clone_shallow(url: &str, target: &Path) -> Result<(), GitSyncError> {
     let output = std::process::Command::new("git")
         .args(["clone", "--depth", "1", url, "."])
         .current_dir(target)
         .output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("git clone failed: {stderr}");
+        return Err(GitSyncError::Git(format!("git clone failed: {stderr}")));
     }
     Ok(())
 }
 
-pub fn git_pull(repo_path: &Path) -> Result<()> {
+pub fn git_pull(repo_path: &Path) -> Result<(), GitSyncError> {
     let output = std::process::Command::new("git")
         .args(["pull", "--ff-only"])
         .current_dir(repo_path)
         .output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("git pull failed: {stderr}");
+        return Err(GitSyncError::Git(format!("git pull failed: {stderr}")));
     }
     Ok(())
 }
 
-pub fn git_head_hash(repo_path: &Path) -> Result<String> {
+pub fn git_head_hash(repo_path: &Path) -> Result<String, GitSyncError> {
     let output = std::process::Command::new("git")
         .args(["rev-parse", "HEAD"])
         .current_dir(repo_path)
         .output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("git rev-parse HEAD failed: {stderr}");
+        return Err(GitSyncError::Git(format!(
+            "git rev-parse HEAD failed: {stderr}"
+        )));
     }
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
-pub(super) fn git_add_all(repo_path: &Path) -> Result<()> {
+pub(super) fn git_add_all(repo_path: &Path) -> Result<(), GitSyncError> {
     let output = std::process::Command::new("git")
         .args(["add", "-A"])
         .current_dir(repo_path)
         .output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("git add failed: {stderr}");
+        return Err(GitSyncError::Git(format!("git add failed: {stderr}")));
     }
     Ok(())
 }
 
-pub(super) fn git_has_changes(repo_path: &Path) -> Result<bool> {
+pub(super) fn git_has_changes(repo_path: &Path) -> Result<bool, GitSyncError> {
     let output = std::process::Command::new("git")
         .args(["status", "--porcelain"])
         .current_dir(repo_path)
         .output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("git status failed: {stderr}");
+        return Err(GitSyncError::Git(format!("git status failed: {stderr}")));
     }
     Ok(!output.stdout.is_empty())
 }
 
-pub(super) fn git_commit(repo_path: &Path, message: &str) -> Result<()> {
+pub(super) fn git_commit(repo_path: &Path, message: &str) -> Result<(), GitSyncError> {
     let output = std::process::Command::new("git")
         .args(["commit", "-m", message])
         .current_dir(repo_path)
         .output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("git commit failed: {stderr}");
+        return Err(GitSyncError::Git(format!("git commit failed: {stderr}")));
     }
     Ok(())
 }
 
-pub(super) fn git_push(repo_path: &Path, remote_url: &str) -> Result<()> {
+pub(super) fn git_push(repo_path: &Path, remote_url: &str) -> Result<(), GitSyncError> {
     let output = std::process::Command::new("git")
         .args(["push", remote_url, "HEAD"])
         .current_dir(repo_path)
         .output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("git push failed: {stderr}");
+        return Err(GitSyncError::Git(format!("git push failed: {stderr}")));
     }
     Ok(())
 }

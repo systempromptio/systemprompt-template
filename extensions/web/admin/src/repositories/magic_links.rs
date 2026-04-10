@@ -2,11 +2,19 @@ use rand::Rng;
 use sha2::{Digest, Sha256};
 use sqlx::PgPool;
 
+#[derive(Debug, thiserror::Error)]
+pub enum MagicLinkError {
+    #[error("Database error: {0}")]
+    Database(#[from] sqlx::Error),
+    #[error("Invalid or expired magic link")]
+    InvalidOrExpired,
+}
+
 pub async fn create_magic_link_token(
     pool: &PgPool,
     email: &str,
     ip_address: Option<&str>,
-) -> Result<String, anyhow::Error> {
+) -> Result<String, MagicLinkError> {
     let (raw_token, token_hash) = {
         let mut rng = rand::rng();
         let raw_bytes: [u8; 32] = rng.random();
@@ -33,7 +41,7 @@ pub async fn create_magic_link_token(
 pub async fn consume_magic_link_token(
     pool: &PgPool,
     raw_token: &str,
-) -> Result<String, anyhow::Error> {
+) -> Result<String, MagicLinkError> {
     let token_hash = {
         let mut hasher = Sha256::new();
         hasher.update(raw_token.as_bytes());
@@ -50,10 +58,10 @@ pub async fn consume_magic_link_token(
     .fetch_optional(pool)
     .await?;
 
-    row.ok_or_else(|| anyhow::anyhow!("Invalid or expired magic link"))
+    row.ok_or(MagicLinkError::InvalidOrExpired)
 }
 
-pub async fn count_recent_tokens(pool: &PgPool, email: &str) -> Result<i64, anyhow::Error> {
+pub async fn count_recent_tokens(pool: &PgPool, email: &str) -> Result<i64, MagicLinkError> {
     let count = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM marketplace.magic_link_tokens
          WHERE email = $1 AND created_at > NOW() - INTERVAL '15 minutes'",
@@ -65,7 +73,7 @@ pub async fn count_recent_tokens(pool: &PgPool, email: &str) -> Result<i64, anyh
     Ok(count.unwrap_or(0))
 }
 
-pub async fn count_recent_tokens_by_ip(pool: &PgPool, ip: &str) -> Result<i64, anyhow::Error> {
+pub async fn count_recent_tokens_by_ip(pool: &PgPool, ip: &str) -> Result<i64, MagicLinkError> {
     let count = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM marketplace.magic_link_tokens
          WHERE ip_address = $1 AND created_at > NOW() - INTERVAL '15 minutes'",
@@ -77,7 +85,7 @@ pub async fn count_recent_tokens_by_ip(pool: &PgPool, ip: &str) -> Result<i64, a
     Ok(count.unwrap_or(0))
 }
 
-pub async fn user_exists_by_email(pool: &PgPool, email: &str) -> Result<bool, anyhow::Error> {
+pub async fn user_exists_by_email(pool: &PgPool, email: &str) -> Result<bool, MagicLinkError> {
     let row = sqlx::query_scalar!(
         "SELECT 1::BIGINT FROM users WHERE email = $1 LIMIT 1",
         email

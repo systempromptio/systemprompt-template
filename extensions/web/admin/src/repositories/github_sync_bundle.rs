@@ -1,16 +1,15 @@
 use std::path::Path;
 
-use anyhow::Result;
-
 use super::export::{PluginBundle, PluginBundleCounts, PluginFile};
+use super::github_sync::GitSyncError;
 
-pub fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBundle> {
+pub fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBundle, GitSyncError> {
     let (manifest_content, manifest) = read_plugin_manifest(plugin_dir)?;
 
     let plugin_id = manifest
         .get("name")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| anyhow::anyhow!("plugin.json missing 'name'"))?
+        .ok_or_else(|| GitSyncError::Validation("plugin.json missing 'name'".into()))?
         .to_string();
 
     let description = manifest
@@ -39,19 +38,19 @@ pub fn build_bundle_from_directory(plugin_dir: &Path) -> Result<PluginBundle> {
     })
 }
 
-fn read_plugin_manifest(plugin_dir: &Path) -> Result<(String, serde_json::Value)> {
+fn read_plugin_manifest(
+    plugin_dir: &Path,
+) -> Result<(String, serde_json::Value), GitSyncError> {
     let plugin_json_path = plugin_dir.join(".claude-plugin/plugin.json");
-    let manifest_content = std::fs::read_to_string(&plugin_json_path).map_err(|e| {
-        anyhow::anyhow!(
-            "Failed to read plugin.json at {}: {e}",
-            plugin_json_path.display()
-        )
-    })?;
+    let manifest_content = std::fs::read_to_string(&plugin_json_path)?;
     let manifest: serde_json::Value = serde_json::from_str(&manifest_content)?;
     Ok((manifest_content, manifest))
 }
 
-fn collect_plugin_files(plugin_dir: &Path, manifest_content: &str) -> Result<Vec<PluginFile>> {
+fn collect_plugin_files(
+    plugin_dir: &Path,
+    manifest_content: &str,
+) -> Result<Vec<PluginFile>, GitSyncError> {
     let mut files = Vec::new();
 
     files.push(PluginFile {
@@ -120,20 +119,18 @@ pub fn collect_directory_files(
     dir: &Path,
     prefix: &str,
     files: &mut Vec<PluginFile>,
-) -> Result<()> {
+) -> Result<(), GitSyncError> {
     for entry in walkdir::WalkDir::new(dir)
         .min_depth(1)
         .into_iter()
         .filter_map(Result::ok)
         .filter(|e| e.file_type().is_file())
     {
-        let rel_path = entry
-            .path()
-            .strip_prefix(dir)
-            .map_err(|e| anyhow::anyhow!("Failed to strip prefix: {e}"))?;
+        let rel_path = entry.path().strip_prefix(dir).map_err(|e| {
+            GitSyncError::Validation(format!("Failed to strip prefix: {e}"))
+        })?;
         let path = format!("{prefix}/{}", rel_path.display());
-        let content = std::fs::read_to_string(entry.path())
-            .map_err(|e| anyhow::anyhow!("Failed to read {}: {e}", entry.path().display()))?;
+        let content = std::fs::read_to_string(entry.path())?;
         files.push(PluginFile {
             path,
             content,
@@ -143,7 +140,10 @@ pub fn collect_directory_files(
     Ok(())
 }
 
-pub fn import_or_update_plugin(services_path: &Path, bundle: &PluginBundle) -> Result<()> {
+pub fn import_or_update_plugin(
+    services_path: &Path,
+    bundle: &PluginBundle,
+) -> Result<(), GitSyncError> {
     let plugin_dir = services_path.join("plugins").join(&bundle.id);
 
     if plugin_dir.exists() {

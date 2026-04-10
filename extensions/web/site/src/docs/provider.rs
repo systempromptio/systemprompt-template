@@ -1,11 +1,11 @@
 use std::fmt::Write;
 
-use anyhow::Result;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde_json::Value;
 use systemprompt::extension::prelude::*;
 
+use super::error::DocsError;
 use super::types::DocsLearningContent;
 use systemprompt_web_shared::html_escape;
 
@@ -85,10 +85,10 @@ impl PageDataProvider for DocsPageDataProvider {
         ]
     }
 
-    async fn provide_page_data(&self, ctx: &PageContext<'_>) -> Result<Value> {
+    async fn provide_page_data(&self, ctx: &PageContext<'_>) -> anyhow::Result<Value> {
         let item = ctx
             .content_item()
-            .ok_or_else(|| anyhow::anyhow!("Content item required for docs page"))?;
+            .ok_or(DocsError::ContentItemRequired)?;
 
         let learning_content = DocsLearningContent::from_content_item(item);
         let mut data = learning_content.to_template_data();
