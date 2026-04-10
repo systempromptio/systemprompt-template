@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::access_control::AccessControlRule;
+use crate::types::access_control::{AccessControlRule, AccessDecision, RuleType};
 use crate::types::{DepartmentStats, MarketplaceContext, McpServerDetail, UserContext};
 use axum::{
     extract::{Extension, Query, State},
@@ -36,7 +36,7 @@ fn build_role_badges(
         .filter_map(|role_name| {
             let assigned = entity_rules.is_some_and(|rules| {
                 rules.iter().any(|r| {
-                    r.rule_type == "role" && r.rule_value == *role_name && r.access == "allow"
+                    r.rule_type == RuleType::Role && r.rule_value == *role_name && r.access == AccessDecision::Allow
                 })
             });
             if assigned {
@@ -58,9 +58,9 @@ fn build_dept_badges(
             let rule = entity_rules.and_then(|rules| {
                 rules
                     .iter()
-                    .find(|r| r.rule_type == "department" && r.rule_value == d.department)
+                    .find(|r| r.rule_type == RuleType::Department && r.rule_value == d.department)
             });
-            let assigned = rule.is_some_and(|r| r.access == "allow");
+            let assigned = rule.is_some_and(|r| r.access == AccessDecision::Allow);
             if assigned {
                 let default_included = rule.is_some_and(|r| r.default_included);
                 Some(json!({

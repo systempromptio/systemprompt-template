@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::access_control::AccessControlRule;
+use crate::types::access_control::{AccessControlRule, AccessDecision, RuleType};
 use crate::types::{MarketplaceContext, PluginOverview, UserContext};
 use axum::{
     extract::{Extension, State},
@@ -45,7 +45,7 @@ fn build_plugin_json(
         let from_db = entity_rules.is_some_and(|rules| {
             rules
                 .iter()
-                .any(|r| r.rule_type == "role" && r.rule_value == *role_name && r.access == "allow")
+                .any(|r| r.rule_type == RuleType::Role && r.rule_value == *role_name && r.access == AccessDecision::Allow)
         });
         if from_yaml || from_db {
             role_names.push((*role_name).to_string());

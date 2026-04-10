@@ -17,8 +17,8 @@ use super::audit;
 use super::rules;
 use super::scope;
 use super::types::{
-    AuditParams, AuditRecord, AuthDenialParams, GovernanceContext, GovernanceResponse,
-    HookSpecificOutput, RuleEvaluation,
+    AuditParams, AuditRecord, AuthDenialParams, GovernanceContext, GovernanceDecision,
+    GovernanceResponse, HookSpecificOutput, RuleEvaluation,
 };
 use crate::handlers::webhook::helpers::{extract_bearer_token, get_jwt_config};
 
@@ -26,7 +26,7 @@ fn build_deny_response(reason: &str) -> Response {
     let response = GovernanceResponse {
         hook_specific_output: HookSpecificOutput {
             hook_event_name: "PreToolUse",
-            permission_decision: "deny",
+            permission_decision: GovernanceDecision::Deny,
             permission_decision_reason: Some(format!("[GOVERNANCE] {reason}")),
         },
     };
@@ -153,7 +153,7 @@ fn evaluate_and_audit(input: &EvaluateInput<'_>) -> RuleEvaluation {
 }
 
 fn build_evaluation_response(evaluation: &RuleEvaluation) -> Response {
-    let deny_reason = if evaluation.decision == "deny" {
+    let deny_reason = if evaluation.decision == GovernanceDecision::Deny {
         Some(format!("[GOVERNANCE] {}", evaluation.reason))
     } else {
         None
@@ -178,7 +178,7 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
         tool_name: params.tool_name.to_string(),
         agent_id: params.agent_id.map(str::to_string),
         agent_scope: "unauthenticated".to_string(),
-        decision: "deny".to_string(),
+        decision: GovernanceDecision::Deny.to_string(),
         policy: "auth_failure".to_string(),
         reason: reason.to_string(),
         evaluated_rules: serde_json::json!([{"rule": "authentication", "result": "fail", "detail": reason}]),

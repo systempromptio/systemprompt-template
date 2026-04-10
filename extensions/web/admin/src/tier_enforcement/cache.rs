@@ -1,8 +1,10 @@
 use std::collections::HashMap;
+use std::fmt;
 use std::sync::Arc;
 use std::time::Instant;
 
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use tokio::sync::RwLock;
@@ -10,11 +12,42 @@ use tokio::sync::RwLock;
 use super::super::tier_limits::{TierLimits, UsageSnapshot};
 use super::usage::fetch_usage_from_db;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SubscriptionStatus {
+    Active,
+    PastDue,
+    Cancelled,
+    Free,
+}
+
+impl SubscriptionStatus {
+    fn from_db(s: &str) -> Self {
+        match s {
+            "active" => Self::Active,
+            "past_due" => Self::PastDue,
+            "cancelled" => Self::Cancelled,
+            _ => Self::Free,
+        }
+    }
+}
+
+impl fmt::Display for SubscriptionStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Active => f.write_str("active"),
+            Self::PastDue => f.write_str("past_due"),
+            Self::Cancelled => f.write_str("cancelled"),
+            Self::Free => f.write_str("free"),
+        }
+    }
+}
+
 #[derive(Debug)]
 struct CachedTierContext {
     limits: Arc<TierLimits>,
     plan_name: String,
-    subscription_status: String,
+    subscription_status: SubscriptionStatus,
     _period_end: Option<chrono::DateTime<Utc>>,
     cached_at: Instant,
 }
@@ -66,14 +99,14 @@ pub async fn load_tier_context(
     cache: &TierEnforcementCache,
     pool: &PgPool,
     user_id: &UserId,
-) -> (Arc<TierLimits>, String) {
+) -> (Arc<TierLimits>, SubscriptionStatus) {
     {
         let guard = cache.tier_cache.read().await;
         if let Some(cached) = guard.get(user_id.as_str()) {
             if cached.cached_at.elapsed().as_secs() < TIER_CACHE_TTL_SECS {
                 return (
                     Arc::clone(&cached.limits),
-                    cached.subscription_status.clone(),
+                    cached.subscription_status,
                 );
             }
         }
@@ -89,7 +122,7 @@ pub async fn load_tier_context(
             CachedTierContext {
                 limits: Arc::clone(&limits),
                 plan_name,
-                subscription_status: status.clone(),
+                subscription_status: status,
                 _period_end: period_end,
                 cached_at: Instant::now(),
             },
@@ -102,18 +135,18 @@ pub async fn load_tier_context(
 async fn resolve_tier_for_user(
     pool: &PgPool,
     user_id: &UserId,
-) -> (TierLimits, String, String, Option<chrono::DateTime<Utc>>) {
+) -> (TierLimits, String, SubscriptionStatus, Option<chrono::DateTime<Utc>>) {
     if let Some((limits, plan_name)) = fetch_role_based_plan(pool, user_id).await {
-        return (limits, plan_name, "active".to_string(), None);
+        return (limits, plan_name, SubscriptionStatus::Active, None);
     }
 
     let (limits, plan_name, status, period_end) = fetch_subscription_tier(pool, user_id).await;
-    if status != "free" {
+    if status != SubscriptionStatus::Free {
         return (limits, plan_name, status, period_end);
     }
 
     let (free_limits, free_name) = fetch_free_plan(pool).await;
-    (free_limits, free_name, "free".to_string(), None)
+    (free_limits, free_name, SubscriptionStatus::Free, None)
 }
 
 async fn fetch_role_based_plan(pool: &PgPool, user_id: &UserId) -> Option<(TierLimits, String)> {
@@ -185,7 +218,7 @@ struct TierRow {
 async fn fetch_subscription_tier(
     pool: &PgPool,
     user_id: &UserId,
-) -> (TierLimits, String, String, Option<chrono::DateTime<Utc>>) {
+) -> (TierLimits, String, SubscriptionStatus, Option<chrono::DateTime<Utc>>) {
     let row: Option<TierRow> = sqlx::query_as(
         r"SELECT
             COALESCE(p.display_name, 'Free') AS plan_name,
@@ -208,14 +241,14 @@ async fn fetch_subscription_tier(
     .flatten();
 
     if let Some(r) = row {
-        let status = r.status;
+        let status = SubscriptionStatus::from_db(&r.status);
         let period_end = r.current_period_end;
         let plan_name = r.plan_name;
 
-        let active = match status.as_str() {
-            "active" | "past_due" => true,
-            "cancelled" => period_end.is_some_and(|end| end > Utc::now()),
-            _ => false,
+        let active = match status {
+            SubscriptionStatus::Active | SubscriptionStatus::PastDue => true,
+            SubscriptionStatus::Cancelled => period_end.is_some_and(|end| end > Utc::now()),
+            SubscriptionStatus::Free => false,
         };
 
         if active {
@@ -226,7 +259,7 @@ async fn fetch_subscription_tier(
         }
     } else {
         let (free_limits, free_name) = fetch_free_plan(pool).await;
-        (free_limits, free_name, "free".to_string(), None)
+        (free_limits, free_name, SubscriptionStatus::Free, None)
     }
 }
 

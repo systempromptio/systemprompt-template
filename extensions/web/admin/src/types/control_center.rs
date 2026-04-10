@@ -1,3 +1,5 @@
+use std::fmt;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
@@ -35,16 +37,34 @@ pub struct RecentSession {
     pub model: String,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SessionStatus {
+    Active,
+    Completed,
+    Deleted,
+}
+
+impl fmt::Display for SessionStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Active => f.write_str("active"),
+            Self::Completed => f.write_str("completed"),
+            Self::Deleted => f.write_str("deleted"),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct UpdateSessionStatusRequest {
     pub session_id: String,
-    pub status: String,
+    pub status: SessionStatus,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct BatchUpdateSessionStatusRequest {
     pub session_ids: Vec<String>,
-    pub status: String,
+    pub status: SessionStatus,
 }
 
 #[derive(Debug, Deserialize)]

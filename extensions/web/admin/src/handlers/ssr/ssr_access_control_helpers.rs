@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::types::access_control::AccessControlRule;
+use crate::types::access_control::{AccessControlRule, AccessDecision, RuleType};
 use crate::types::DepartmentStats;
 use serde_json::json;
 
@@ -78,7 +78,7 @@ fn build_roles_json(
             let from_yaml = yaml_roles.is_some_and(|yr| yr.iter().any(|r| r == role_name));
             let from_db = entity_rules.is_some_and(|rules| {
                 rules.iter().any(|r| {
-                    r.rule_type == "role" && r.rule_value == *role_name && r.access == "allow"
+                    r.rule_type == RuleType::Role && r.rule_value == *role_name && r.access == AccessDecision::Allow
                 })
             });
             let assigned = from_yaml || from_db;
@@ -106,9 +106,9 @@ fn build_dept_json(
             let rule = entity_rules.and_then(|rules| {
                 rules
                     .iter()
-                    .find(|r| r.rule_type == "department" && r.rule_value == *dept_name)
+                    .find(|r| r.rule_type == RuleType::Department && r.rule_value == *dept_name)
             });
-            let assigned = rule.is_some_and(|r| r.access == "allow");
+            let assigned = rule.is_some_and(|r| r.access == AccessDecision::Allow);
             let default_included = rule.is_some_and(|r| r.default_included);
             let user_count = departments
                 .iter()

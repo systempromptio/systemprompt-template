@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use super::rate_limit;
 use super::secrets::detect_secrets;
-use super::types::{EvaluatedRule, GovernanceContext, RuleEvaluation};
+use super::types::{EvaluatedRule, GovernanceContext, GovernanceDecision, RuleEvaluation};
 
 const ADMIN_ONLY_TOOL_PREFIXES: &[&str] = &["mcp__systemprompt__", "mcp__skill-manager__"];
 
@@ -43,14 +43,14 @@ pub(super) fn evaluate(ctx: &GovernanceContext<'_>) -> RuleEvaluation {
 
     if denied {
         RuleEvaluation {
-            decision: "deny",
+            decision: GovernanceDecision::Deny,
             reason: deny_reason,
             policy: deny_policy,
             rules,
         }
     } else {
         RuleEvaluation {
-            decision: "allow",
+            decision: GovernanceDecision::Allow,
             reason: Cow::Borrowed("All governance rules passed"),
             policy: Cow::Borrowed("default_allow"),
             rules,

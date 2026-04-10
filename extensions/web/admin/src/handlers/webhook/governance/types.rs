@@ -1,8 +1,25 @@
 use std::borrow::Cow;
+use std::fmt;
 
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum GovernanceDecision {
+    Allow,
+    Deny,
+}
+
+impl fmt::Display for GovernanceDecision {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Allow => f.write_str("allow"),
+            Self::Deny => f.write_str("deny"),
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Clone)]
 pub struct GovernanceResponse {
@@ -15,7 +32,7 @@ pub struct HookSpecificOutput {
     #[serde(rename = "hookEventName")]
     pub hook_event_name: &'static str,
     #[serde(rename = "permissionDecision")]
-    pub permission_decision: &'static str,
+    pub permission_decision: GovernanceDecision,
     #[serde(
         rename = "permissionDecisionReason",
         skip_serializing_if = "Option::is_none"
@@ -31,7 +48,7 @@ pub struct EvaluatedRule {
 }
 
 pub(super) struct RuleEvaluation {
-    pub decision: &'static str,
+    pub decision: GovernanceDecision,
     pub reason: Cow<'static, str>,
     pub policy: Cow<'static, str>,
     pub rules: Vec<EvaluatedRule>,

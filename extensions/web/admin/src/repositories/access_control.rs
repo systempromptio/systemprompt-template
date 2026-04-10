@@ -54,9 +54,9 @@ pub async fn set_entity_rules(
         .bind(&id)
         .bind(entity_type)
         .bind(entity_id)
-        .bind(&rule.rule_type)
+        .bind(rule.rule_type.to_string())
         .bind(&rule.rule_value)
-        .bind(&rule.access)
+        .bind(rule.access.to_string())
         .bind(rule.default_included)
         .fetch_one(&mut *tx)
         .await?;
@@ -91,9 +91,9 @@ pub async fn bulk_set_rules(
             .bind(&id)
             .bind(entity_type)
             .bind(entity_id)
-            .bind(&rule.rule_type)
+            .bind(rule.rule_type.to_string())
             .bind(&rule.rule_value)
-            .bind(&rule.access)
+            .bind(rule.access.to_string())
             .bind(rule.default_included)
             .execute(&mut *tx)
             .await?;

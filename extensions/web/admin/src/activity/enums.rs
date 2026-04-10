@@ -1,8 +1,9 @@
 use std::fmt;
+use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ActivityCategory {
     Login,
@@ -48,7 +49,7 @@ impl AsRef<str> for ActivityCategory {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ActivityAction {
     LoggedIn,
@@ -133,6 +134,105 @@ impl AsRef<str> for ActivityEntity {
             Self::UserHook => "user_hook",
             Self::Tool => "tool",
         }
+    }
+}
+
+impl FromStr for ActivityCategory {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "login" => Ok(Self::Login),
+            "session" => Ok(Self::Session),
+            "prompt" => Ok(Self::Prompt),
+            "skill_usage" => Ok(Self::SkillUsage),
+            "marketplace_edit" => Ok(Self::MarketplaceEdit),
+            "marketplace_connect" => Ok(Self::MarketplaceConnect),
+            "user_management" => Ok(Self::UserManagement),
+            "tool_usage" => Ok(Self::ToolUsage),
+            "error" => Ok(Self::Error),
+            "agent_response" => Ok(Self::AgentResponse),
+            "notification" => Ok(Self::Notification),
+            "task_completion" => Ok(Self::TaskCompletion),
+            "compaction" => Ok(Self::Compaction),
+            "mcp_access" => Ok(Self::McpAccess),
+            other => Err(format!("unknown activity category: {other}")),
+        }
+    }
+}
+
+impl sqlx::Type<sqlx::Postgres> for ActivityCategory {
+    fn type_info() -> sqlx::postgres::PgTypeInfo {
+        <String as sqlx::Type<sqlx::Postgres>>::type_info()
+    }
+
+    fn compatible(ty: &sqlx::postgres::PgTypeInfo) -> bool {
+        <String as sqlx::Type<sqlx::Postgres>>::compatible(ty)
+    }
+}
+
+impl sqlx::Decode<'_, sqlx::Postgres> for ActivityCategory {
+    fn decode(value: sqlx::postgres::PgValueRef<'_>) -> Result<Self, sqlx::error::BoxDynError> {
+        let s = <String as sqlx::Decode<sqlx::Postgres>>::decode(value)?;
+        Self::from_str(&s).map_err(Into::into)
+    }
+}
+
+impl sqlx::Encode<'_, sqlx::Postgres> for ActivityCategory {
+    fn encode_by_ref(
+        &self,
+        buf: &mut sqlx::postgres::PgArgumentBuffer,
+    ) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
+        <&str as sqlx::Encode<sqlx::Postgres>>::encode_by_ref(&self.as_ref(), buf)
+    }
+}
+
+impl FromStr for ActivityAction {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "logged_in" => Ok(Self::LoggedIn),
+            "started" => Ok(Self::Started),
+            "ended" => Ok(Self::Ended),
+            "submitted" => Ok(Self::Submitted),
+            "used" => Ok(Self::Used),
+            "created" => Ok(Self::Created),
+            "updated" => Ok(Self::Updated),
+            "deleted" => Ok(Self::Deleted),
+            "imported" => Ok(Self::Imported),
+            "uploaded" => Ok(Self::Uploaded),
+            "restored" => Ok(Self::Restored),
+            "authenticated" => Ok(Self::Authenticated),
+            "rejected" => Ok(Self::Rejected),
+            other => Err(format!("unknown activity action: {other}")),
+        }
+    }
+}
+
+impl sqlx::Type<sqlx::Postgres> for ActivityAction {
+    fn type_info() -> sqlx::postgres::PgTypeInfo {
+        <String as sqlx::Type<sqlx::Postgres>>::type_info()
+    }
+
+    fn compatible(ty: &sqlx::postgres::PgTypeInfo) -> bool {
+        <String as sqlx::Type<sqlx::Postgres>>::compatible(ty)
+    }
+}
+
+impl sqlx::Decode<'_, sqlx::Postgres> for ActivityAction {
+    fn decode(value: sqlx::postgres::PgValueRef<'_>) -> Result<Self, sqlx::error::BoxDynError> {
+        let s = <String as sqlx::Decode<sqlx::Postgres>>::decode(value)?;
+        Self::from_str(&s).map_err(Into::into)
+    }
+}
+
+impl sqlx::Encode<'_, sqlx::Postgres> for ActivityAction {
+    fn encode_by_ref(
+        &self,
+        buf: &mut sqlx::postgres::PgArgumentBuffer,
+    ) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
+        <&str as sqlx::Encode<sqlx::Postgres>>::encode_by_ref(&self.as_ref(), buf)
     }
 }
 

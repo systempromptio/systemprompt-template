@@ -16,9 +16,34 @@ use crate::tools::shared;
 const MAX_NAME_LEN: usize = 256;
 const MAX_SECRET_VALUE_LEN: usize = 8192;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum SecretAction {
+    List,
+    Set,
+    Delete,
+}
+
+impl SecretAction {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::List => "list",
+            Self::Set => "set",
+            Self::Delete => "delete",
+        }
+    }
+}
+
+impl std::fmt::Display for SecretAction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct ManageSecretsInput {
-    pub action: String,
+    pub action: SecretAction,
     pub plugin_id: String,
     pub var_name: Option<String>,
     pub var_value: Option<String>,
@@ -88,9 +113,9 @@ impl McpToolHandler for ManageSecretsHandler {
             plugin_id: input.plugin_id.clone(),
         };
 
-        match input.action.as_str() {
-            "list" => handle_list(&secret_ctx, ctx).await,
-            "set" => {
+        match input.action {
+            SecretAction::List => handle_list(&secret_ctx, ctx).await,
+            SecretAction::Set => {
                 let var_name = input.var_name.as_deref().ok_or_else(|| {
                     McpError::invalid_params(
                         "var_name is required for set action".to_string(),
@@ -105,7 +130,7 @@ impl McpToolHandler for ManageSecretsHandler {
                 })?;
                 handle_set(&secret_ctx, var_name, var_value, input.is_secret, ctx).await
             }
-            "delete" => {
+            SecretAction::Delete => {
                 let var_name = input.var_name.as_deref().ok_or_else(|| {
                     McpError::invalid_params(
                         "var_name is required for delete action".to_string(),
@@ -114,13 +139,6 @@ impl McpToolHandler for ManageSecretsHandler {
                 })?;
                 handle_delete(&secret_ctx, var_name, ctx).await
             }
-            _ => Err(McpError::invalid_params(
-                format!(
-                    "Invalid action: '{}'. Must be one of: list, set, delete",
-                    input.action
-                ),
-                None,
-            )),
         }
     }
 }

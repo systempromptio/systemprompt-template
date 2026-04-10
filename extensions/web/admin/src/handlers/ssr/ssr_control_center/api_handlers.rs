@@ -72,15 +72,12 @@ pub async fn handle_update_session_status(
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<crate::types::control_center::UpdateSessionStatusRequest>,
 ) -> Response {
-    let valid = ["active", "completed", "deleted"];
-    if !valid.contains(&req.status.as_str()) {
-        return StatusCode::BAD_REQUEST.into_response();
-    }
+    let status_str = req.status.to_string();
     match control_center::update_session_status(
         &pool,
         &user_ctx.user_id,
         &req.session_id,
-        &req.status,
+        &status_str,
     )
     .await
     {
@@ -97,13 +94,13 @@ pub async fn handle_batch_update_session_status(
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<crate::types::control_center::BatchUpdateSessionStatusRequest>,
 ) -> Response {
-    let valid = ["active", "completed", "deleted"];
-    if !valid.contains(&req.status.as_str()) || req.session_ids.is_empty() {
+    if req.session_ids.is_empty() {
         return StatusCode::BAD_REQUEST.into_response();
     }
+    let status_str = req.status.to_string();
     for session_id in &req.session_ids {
         if let Err(e) =
-            control_center::update_session_status(&pool, &user_ctx.user_id, session_id, &req.status)
+            control_center::update_session_status(&pool, &user_ctx.user_id, session_id, &status_str)
                 .await
         {
             tracing::warn!(error = %e, session_id = %session_id, "Failed to batch update session status");

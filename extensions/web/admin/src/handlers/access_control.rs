@@ -11,7 +11,7 @@ use systemprompt::models::ProfileBootstrap;
 
 use crate::repositories;
 use crate::types::access_control::{
-    AccessControlQuery, BulkAssignRequest, UpdateEntityRulesRequest,
+    AccessControlQuery, AccessDecision, BulkAssignRequest, RuleType, UpdateEntityRulesRequest,
 };
 use crate::types::UpdatePluginRequest;
 
@@ -133,7 +133,7 @@ fn sync_plugin_roles_to_yaml(
 ) {
     let allowed_roles: Vec<String> = access_rules
         .iter()
-        .filter(|r| r.rule_type == "role" && r.access == "allow")
+        .filter(|r| r.rule_type == RuleType::Role && r.access == AccessDecision::Allow)
         .map(|r| r.rule_value.clone())
         .collect();
 

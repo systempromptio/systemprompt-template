@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::access_control::AccessControlRule;
+use crate::types::access_control::{AccessControlRule, AccessDecision, RuleType};
 use crate::types::marketplaces::OrgMarketplace;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::{
@@ -81,7 +81,7 @@ fn build_marketplace_json(
         .map(|role_name| {
             let assigned = entity_rules.is_some_and(|rules| {
                 rules.iter().any(|r| {
-                    r.rule_type == "role" && r.rule_value == *role_name && r.access == "allow"
+                    r.rule_type == RuleType::Role && r.rule_value == *role_name && r.access == AccessDecision::Allow
                 })
             });
             if assigned {
