@@ -82,7 +82,7 @@ impl McpToolHandler for CreatePluginHandler {
             .map_err(|e| McpError::internal_error(format!("Failed to create plugin: {e}"), None))?;
 
         shared::set_plugin_associations(&mut shared::PluginAssociationParams {
-            conn: &mut *tx,
+            conn: &mut tx,
             plugin_id: &plugin.id,
             user_id: &user_id,
             skill_slugs: Some(&input.skill_ids),

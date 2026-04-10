@@ -51,7 +51,7 @@ fn validate_input(input: &CreateAgentInput) -> Result<(), McpError> {
 
 fn build_response(
     agent: &systemprompt_web_extension::admin::types::UserAgent,
-    added_to_plugin: &Option<String>,
+    added_to_plugin: Option<&String>,
     ctx: &RequestContext,
 ) -> Result<(TextArtifact, String), McpError> {
     let agent_json = serde_json::to_string_pretty(&serde_json::json!({
@@ -68,14 +68,15 @@ fn build_response(
     }))
     .map_err(|e| McpError::internal_error(format!("Failed to serialize agent: {e}"), None))?;
 
-    let summary = if let Some(ref plugin_id) = added_to_plugin {
-        format!(
-            "Created agent '{}' ({}) and added to plugin '{}'",
-            agent.name, agent.agent_id, plugin_id
-        )
-    } else {
-        format!("Created agent '{}' ({})", agent.name, agent.agent_id)
-    };
+    let summary = added_to_plugin.map_or_else(
+        || format!("Created agent '{}' ({})", agent.name, agent.agent_id),
+        |plugin_id| {
+            format!(
+                "Created agent '{}' ({}) and added to plugin '{}'",
+                agent.name, agent.agent_id, plugin_id
+            )
+        },
+    );
     let content = format!("{summary}\n\n{agent_json}");
     let artifact = TextArtifact::new(&agent_json, ctx).with_title(format!("Agent: {}", agent.name));
 
@@ -132,6 +133,6 @@ impl McpToolHandler for CreateAgentHandler {
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 
-        build_response(&agent, &added_to_plugin, ctx)
+        build_response(&agent, added_to_plugin.as_ref(), ctx)
     }
 }

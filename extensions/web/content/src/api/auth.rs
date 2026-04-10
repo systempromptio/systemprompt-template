@@ -14,10 +14,7 @@ fn is_secure_context() -> bool {
     systemprompt::models::Config::get().map_or(true, |c| c.use_https)
 }
 
-pub async fn set_session(
-    _req_headers: HeaderMap,
-    Json(body): Json<SetSessionRequest>,
-) -> (HeaderMap, Json<serde_json::Value>) {
+fn build_session_cookies(body: &SetSessionRequest) -> HeaderMap {
     let max_age = body.expires_in.unwrap_or(3600);
     let secure_flag = if is_secure_context() { "; Secure" } else { "" };
     let access_cookie = format!(
@@ -40,10 +37,10 @@ pub async fn set_session(
         }
     }
 
-    (headers, Json(serde_json::json!({ "ok": true })))
+    headers
 }
 
-pub async fn clear_session() -> (HeaderMap, Json<serde_json::Value>) {
+fn build_clear_cookies() -> HeaderMap {
     let secure_flag = if is_secure_context() { "; Secure" } else { "" };
     let access_cookie =
         format!("access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}");
@@ -59,5 +56,20 @@ pub async fn clear_session() -> (HeaderMap, Json<serde_json::Value>) {
         headers.append(SET_COOKIE, val);
     }
 
+    headers
+}
+
+pub async fn set_session(
+    _req_headers: HeaderMap,
+    Json(body): Json<SetSessionRequest>,
+) -> (HeaderMap, Json<serde_json::Value>) {
+    std::future::ready(()).await;
+    let headers = build_session_cookies(&body);
+    (headers, Json(serde_json::json!({ "ok": true })))
+}
+
+pub async fn clear_session() -> (HeaderMap, Json<serde_json::Value>) {
+    std::future::ready(()).await;
+    let headers = build_clear_cookies();
     (headers, Json(serde_json::json!({ "ok": true })))
 }

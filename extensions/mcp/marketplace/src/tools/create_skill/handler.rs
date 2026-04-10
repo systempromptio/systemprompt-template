@@ -70,7 +70,7 @@ fn validate_input(input: &CreateSkillInput) -> Result<(), McpError> {
 
 fn build_response(
     skill: &systemprompt_web_extension::admin::types::UserSkill,
-    added_to_plugin: &Option<String>,
+    added_to_plugin: Option<&String>,
     ctx: &RequestContext,
 ) -> Result<(TextArtifact, String), McpError> {
     let skill_json = serde_json::to_string_pretty(&serde_json::json!({
@@ -89,14 +89,15 @@ fn build_response(
     }))
     .map_err(|e| McpError::internal_error(format!("Failed to serialize skill: {e}"), None))?;
 
-    let summary = if let Some(ref plugin_id) = added_to_plugin {
-        format!(
-            "Created skill '{}' ({}) and added to plugin '{}'",
-            skill.name, skill.skill_id, plugin_id
-        )
-    } else {
-        format!("Created skill '{}' ({})", skill.name, skill.skill_id)
-    };
+    let summary = added_to_plugin.map_or_else(
+        || format!("Created skill '{}' ({})", skill.name, skill.skill_id),
+        |plugin_id| {
+            format!(
+                "Created skill '{}' ({}) and added to plugin '{}'",
+                skill.name, skill.skill_id, plugin_id
+            )
+        },
+    );
     let content = format!("{summary}\n\n{skill_json}");
     let artifact = TextArtifact::new(&skill_json, ctx).with_title(format!("Skill: {}", skill.name));
 
@@ -159,6 +160,6 @@ impl McpToolHandler for CreateSkillHandler {
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 
-        build_response(&skill, &added_to_plugin, ctx)
+        build_response(&skill, added_to_plugin.as_ref(), ctx)
     }
 }

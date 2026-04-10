@@ -88,7 +88,7 @@ impl McpToolHandler for UpdatePluginHandler {
             })?;
 
         shared::set_plugin_associations(&mut shared::PluginAssociationParams {
-            conn: &mut *tx,
+            conn: &mut tx,
             plugin_id: &plugin.id,
             user_id: &user_id,
             skill_slugs: input.skill_ids.as_deref(),
