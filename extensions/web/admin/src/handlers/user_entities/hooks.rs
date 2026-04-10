@@ -116,7 +116,7 @@ pub async fn create_user_hook_handler(
     match repositories::user_hooks::create_user_hook(&pool, &user_ctx.user_id, &create_req).await {
         Ok(hook) => {
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
+                tracing::error!(error = %e, "Failed to mark user dirty");
             }
             let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
@@ -166,7 +166,7 @@ pub async fn update_user_hook_handler(
     {
         Ok(Some(_)) => {
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
+                tracing::error!(error = %e, "Failed to mark user dirty");
             }
             let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
@@ -196,7 +196,7 @@ pub async fn delete_user_hook_handler(
     match repositories::user_hooks::delete_user_hook(&pool, &hook_id, &user_ctx.user_id).await {
         Ok(true) => {
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
+                tracing::error!(error = %e, "Failed to mark user dirty");
             }
             let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();
@@ -226,7 +226,7 @@ pub async fn toggle_user_hook_handler(
     match repositories::user_hooks::toggle_user_hook(&pool, &hook_id, &user_ctx.user_id).await {
         Ok(Some(_)) => {
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
+                tracing::error!(error = %e, "Failed to mark user dirty");
             }
             let activity_pool = Arc::clone(&pool);
             let uid = user_ctx.user_id.clone();

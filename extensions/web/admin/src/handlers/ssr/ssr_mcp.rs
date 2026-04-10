@@ -129,13 +129,13 @@ pub async fn mcp_servers_page(
     };
     let mcp_servers = if user_ctx.is_admin {
         repositories::mcp_servers::list_mcp_servers(&services_path).unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list MCP servers");
+            tracing::error!(error = %e, "Failed to list MCP servers");
             vec![]
         })
     } else {
         let plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
             .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to list plugins for roles");
+                tracing::error!(error = %e, "Failed to list plugins for roles");
                 vec![]
             });
         let visible_mcp_ids: std::collections::HashSet<String> = plugins
@@ -144,7 +144,7 @@ pub async fn mcp_servers_page(
             .collect();
         repositories::mcp_servers::list_mcp_servers(&services_path)
             .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to list MCP servers");
+                tracing::error!(error = %e, "Failed to list MCP servers");
                 vec![]
             })
             .into_iter()
@@ -161,12 +161,12 @@ pub async fn mcp_servers_page(
     );
 
     let all_rules = rules_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch access control rules");
+        tracing::error!(error = %e, "Failed to fetch access control rules");
         vec![]
     });
 
     let departments = dept_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch department stats");
+        tracing::error!(error = %e, "Failed to fetch department stats");
         vec![]
     });
 
@@ -201,7 +201,7 @@ pub async fn mcp_edit_page(
         };
         repositories::mcp_servers::find_mcp_server(&services_path, id)
             .map_err(|e| {
-                tracing::warn!(error = %e, server_id = %id, "Failed to fetch MCP server");
+                tracing::error!(error = %e, server_id = %id, "Failed to fetch MCP server");
             })
             .ok()
             .flatten()

@@ -22,51 +22,27 @@ pub async fn list_marketplace_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<MarketplaceQuery>,
 ) -> Response {
-    let services_path = match shared::get_services_path() {
-        Ok(p) => p,
-        Err(r) => return *r,
-    };
+    match build_marketplace_list(&pool, &user_ctx, &query).await {
+        Ok(response) => Json(response).into_response(),
+        Err(r) => r,
+    }
+}
 
-    let plugins = match repositories::list_plugins_for_roles(&services_path, &user_ctx.roles) {
-        Ok(p) => p,
-        Err(e) => {
+async fn build_marketplace_list(
+    pool: &PgPool,
+    user_ctx: &UserContext,
+    query: &MarketplaceQuery,
+) -> Result<MarketplaceListResponse<Vec<MarketplacePlugin>>, Response> {
+    let services_path = shared::get_services_path().map_err(|r| *r)?;
+
+    let plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
+        .map_err(|e| {
             tracing::error!(error = %e, "Failed to list plugins");
-            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error");
-        }
-    };
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        })?;
 
-    let (usage_res, ratings_res, rules_res) = tokio::join!(
-        repositories::get_all_plugin_usage(&pool),
-        repositories::get_all_plugin_ratings(&pool),
-        repositories::get_all_visibility_rules(&pool),
-    );
-
-    let usage_map: HashMap<String, _> = usage_res
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to get plugin usage");
-            vec![]
-        })
-        .into_iter()
-        .map(|u| (u.plugin_id.clone(), u))
-        .collect();
-    let ratings_map: HashMap<String, _> = ratings_res
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to get plugin ratings");
-            vec![]
-        })
-        .into_iter()
-        .map(|r| (r.plugin_id.clone(), r))
-        .collect();
-    let visibility_rules: HashMap<String, Vec<_>> = {
-        let mut m: HashMap<String, Vec<_>> = HashMap::new();
-        for rule in rules_res.unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to get visibility rules");
-            vec![]
-        }) {
-            m.entry(rule.plugin_id.clone()).or_default().push(rule);
-        }
-        m
-    };
+    let (usage_map, ratings_map, visibility_rules) =
+        fetch_marketplace_data(pool).await?;
 
     let mut marketplace_plugins: Vec<MarketplacePlugin> = plugins
         .iter()
@@ -81,12 +57,56 @@ pub async fn list_marketplace_handler(
         })
         .collect();
 
-    sort_and_filter(&mut marketplace_plugins, &query);
+    sort_and_filter(&mut marketplace_plugins, query);
 
-    Json(MarketplaceListResponse {
+    Ok(MarketplaceListResponse {
         plugins: marketplace_plugins,
     })
-    .into_response()
+}
+
+type MarketplaceData = (
+    HashMap<String, crate::types::PluginUsageAggregate>,
+    HashMap<String, crate::types::PluginRatingAggregate>,
+    HashMap<String, Vec<crate::types::VisibilityRule>>,
+);
+
+async fn fetch_marketplace_data(pool: &PgPool) -> Result<MarketplaceData, Response> {
+    let (usage_res, ratings_res, rules_res) = tokio::join!(
+        repositories::get_all_plugin_usage(pool),
+        repositories::get_all_plugin_ratings(pool),
+        repositories::get_all_visibility_rules(pool),
+    );
+
+    let usage_map: HashMap<String, _> = usage_res
+        .map_err(|e| {
+            tracing::error!(error = %e, "Failed to get plugin usage");
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        })?
+        .into_iter()
+        .map(|u| (u.plugin_id.clone(), u))
+        .collect();
+
+    let ratings_map: HashMap<String, _> = ratings_res
+        .map_err(|e| {
+            tracing::error!(error = %e, "Failed to get plugin ratings");
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        })?
+        .into_iter()
+        .map(|r| (r.plugin_id.clone(), r))
+        .collect();
+
+    let visibility_rules: HashMap<String, Vec<_>> = {
+        let mut m: HashMap<String, Vec<_>> = HashMap::new();
+        for rule in rules_res.map_err(|e| {
+            tracing::error!(error = %e, "Failed to get visibility rules");
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        })? {
+            m.entry(rule.plugin_id.clone()).or_default().push(rule);
+        }
+        m
+    };
+
+    Ok((usage_map, ratings_map, visibility_rules))
 }
 
 fn build_marketplace_plugin(

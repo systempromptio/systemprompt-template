@@ -90,11 +90,12 @@ pub async fn control_center_sse(
                 yield Ok(Event::default().event("today-stats").data(data));
             }
 
-            let usage_summary = crate::tier_enforcement::get_usage_summary(
+            if let Some(usage_summary) = crate::tier_enforcement::get_usage_summary(
                 &tier_cache, &pool, &user_id
-            ).await;
-            if let Ok(data) = serde_json::to_string(&usage_summary) {
-                yield Ok(Event::default().event("usage-limits").data(data));
+            ).await {
+                if let Ok(data) = serde_json::to_string(&usage_summary) {
+                    yield Ok(Event::default().event("usage-limits").data(data));
+                }
             }
 
             let activity_data = activity::build_activity_event(
@@ -141,7 +142,7 @@ async fn build_today_stats_event(
     );
 
     let recent_sessions = sessions_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch recent sessions");
+        tracing::error!(error = %e, "Failed to fetch recent sessions");
         Vec::new()
     });
     let active_now = recent_sessions

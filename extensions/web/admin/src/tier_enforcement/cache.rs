@@ -232,7 +232,11 @@ async fn fetch_subscription_tier(
 
 fn parse_limits(limits_json: Option<serde_json::Value>) -> TierLimits {
     limits_json
-        .and_then(|v| serde_json::from_value(v).ok())
+        .and_then(|v| {
+            serde_json::from_value(v).map_err(|e| {
+                tracing::warn!(error = %e, "Failed to parse tier limits JSON, falling back to free defaults");
+            }).ok()
+        })
         .unwrap_or_else(TierLimits::free_default)
 }
 
@@ -240,17 +244,17 @@ pub async fn load_usage_snapshot(
     cache: &TierEnforcementCache,
     pool: &PgPool,
     user_id: &UserId,
-) -> Arc<UsageSnapshot> {
+) -> Result<Arc<UsageSnapshot>, sqlx::Error> {
     {
         let guard = cache.usage_cache.read().await;
         if let Some(cached) = guard.get(user_id.as_str()) {
             if cached.cached_at.elapsed().as_secs() < USAGE_CACHE_TTL_SECS {
-                return Arc::clone(&cached.snapshot);
+                return Ok(Arc::clone(&cached.snapshot));
             }
         }
     }
 
-    let snapshot = Arc::new(fetch_usage_from_db(pool, user_id).await);
+    let snapshot = Arc::new(fetch_usage_from_db(pool, user_id).await?);
 
     {
         let mut guard = cache.usage_cache.write().await;
@@ -263,5 +267,5 @@ pub async fn load_usage_snapshot(
         );
     }
 
-    snapshot
+    Ok(snapshot)
 }

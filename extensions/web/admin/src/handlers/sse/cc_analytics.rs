@@ -124,7 +124,7 @@ async fn fetch_analytics_data(
         skill_eff_res,
         health_metrics,
         unused_skills: unused_skills_res.unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to fetch unused skills");
+            tracing::error!(error = %e, "Failed to fetch unused skills");
             Vec::new()
         }),
         today_summary,
@@ -152,7 +152,7 @@ async fn build_entity_data(
         crate::repositories::conversation_analytics::fetch_entity_usage_summary(pool, user_id)
             .await
             .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to fetch entity usage summary");
+                tracing::error!(error = %e, "Failed to fetch entity usage summary");
                 Vec::new()
             });
 

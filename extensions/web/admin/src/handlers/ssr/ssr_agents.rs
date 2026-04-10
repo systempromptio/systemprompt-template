@@ -154,7 +154,7 @@ pub async fn agents_page(
     let plugin_list: Vec<serde_json::Value> =
         repositories::list_plugins_for_roles(&services_path, &["admin".to_string()])
             .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to list all plugins");
+                tracing::error!(error = %e, "Failed to list all plugins");
                 vec![]
             })
             .iter()
@@ -191,7 +191,7 @@ fn fetch_visible_agents(
     user_ctx: &UserContext,
 ) -> Vec<AgentDetail> {
     let all_agents = repositories::list_agents(services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to list agents");
+        tracing::error!(error = %e, "Failed to list agents");
         vec![]
     });
 
@@ -201,7 +201,7 @@ fn fetch_visible_agents(
 
     let plugins = repositories::list_plugins_for_roles(services_path, &user_ctx.roles)
         .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list plugins for roles");
+            tracing::error!(error = %e, "Failed to list plugins for roles");
             vec![]
         });
     let visible_agent_ids: HashSet<String> = plugins
@@ -246,7 +246,7 @@ pub async fn agent_edit_page(
         };
         repositories::find_agent(&services_path, id)
             .map_err(|e| {
-                tracing::warn!(error = %e, agent_id = %id, "Failed to fetch agent");
+                tracing::error!(error = %e, agent_id = %id, "Failed to fetch agent");
             })
             .ok()
             .flatten()

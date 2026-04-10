@@ -29,7 +29,7 @@ pub async fn my_plugins_page(
             repositories::list_user_plugins_enriched(&pool, &user_ctx.user_id)
                 .await
                 .unwrap_or_else(|e| {
-                    tracing::warn!(error = %e, "Failed to list enriched user plugins");
+                    tracing::error!(error = %e, "Failed to list enriched user plugins");
                     vec![]
                 })
         },
@@ -37,7 +37,7 @@ pub async fn my_plugins_page(
             conversation_analytics::fetch_entity_usage_summary(&pool, &user_ctx.user_id)
                 .await
                 .unwrap_or_else(|e| {
-                    tracing::warn!(error = %e, "Failed to fetch entity usage summary");
+                    tracing::error!(error = %e, "Failed to fetch entity usage summary");
                     vec![]
                 })
         },
@@ -45,7 +45,7 @@ pub async fn my_plugins_page(
             conversation_analytics::fetch_skill_effectiveness(&pool, &user_ctx.user_id)
                 .await
                 .unwrap_or_else(|e| {
-                    tracing::warn!(error = %e, "Failed to fetch skill effectiveness");
+                    tracing::error!(error = %e, "Failed to fetch skill effectiveness");
                     vec![]
                 })
         },
@@ -53,7 +53,7 @@ pub async fn my_plugins_page(
             conversation_analytics::fetch_entity_effectiveness(&pool, &user_ctx.user_id, "agent")
                 .await
                 .unwrap_or_else(|e| {
-                    tracing::warn!(error = %e, "Failed to fetch agent effectiveness");
+                    tracing::error!(error = %e, "Failed to fetch agent effectiveness");
                     vec![]
                 })
         },
@@ -100,7 +100,7 @@ pub async fn my_plugin_edit_page(
         repositories::find_plugin_with_associations(&pool, &user_ctx.user_id, id)
             .await
             .map_err(|e| {
-                tracing::warn!(error = %e, plugin_id = %id, "Failed to fetch user plugin");
+                tracing::error!(error = %e, plugin_id = %id, "Failed to fetch user plugin");
             })
             .ok()
             .flatten()

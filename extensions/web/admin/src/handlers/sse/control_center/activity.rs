@@ -35,7 +35,7 @@ pub(super) async fn build_activity_event(
     let activity_feed = control_center::fetch_session_events(pool, user_id, &session_ids)
         .await
         .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to fetch session events");
+            tracing::error!(error = %e, "Failed to fetch session events");
             Vec::new()
         });
 
@@ -63,11 +63,11 @@ pub(super) async fn build_activity_event(
     enrich_with_ai_summaries(&mut session_groups, &ai_summaries_res, recent_sessions);
 
     let entity_links = entity_links_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch session entity links");
+        tracing::error!(error = %e, "Failed to fetch session entity links");
         Vec::new()
     });
     let session_ratings = session_ratings_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch session ratings");
+        tracing::error!(error = %e, "Failed to fetch session ratings");
         Vec::new()
     });
     enrichment::enrich_session_groups(&mut session_groups, &session_ratings, &entity_links);

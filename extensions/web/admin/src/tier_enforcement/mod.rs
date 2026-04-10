@@ -31,7 +31,17 @@ pub async fn check_limit(
         | LimitCheck::CreatePlugin
         | LimitCheck::CreateMcpServer
         | LimitCheck::CreateHook => {
-            let usage = load_usage_snapshot(cache, pool, user_id).await;
+            let usage = match load_usage_snapshot(cache, pool, user_id).await {
+                Ok(u) => u,
+                Err(e) => {
+                    tracing::error!(
+                        error = %e,
+                        user_id = %user_id.as_str(),
+                        "Failed to load usage for tier enforcement — denying request (fail closed)"
+                    );
+                    return LimitCheckResult::feature_denied("Usage data unavailable — please try again");
+                }
+            };
             check_usage(&limits, &usage, check)
         }
     }
@@ -41,15 +51,25 @@ pub async fn get_usage_summary(
     cache: &TierEnforcementCache,
     pool: &PgPool,
     user_id: &UserId,
-) -> UsageSummary {
+) -> Option<UsageSummary> {
     let (limits, _status) = load_tier_context(cache, pool, user_id).await;
-    let usage = load_usage_snapshot(cache, pool, user_id).await;
+    let usage = match load_usage_snapshot(cache, pool, user_id).await {
+        Ok(u) => u,
+        Err(e) => {
+            tracing::error!(
+                error = %e,
+                user_id = %user_id.as_str(),
+                "Failed to load usage for summary"
+            );
+            return None;
+        }
+    };
     let plan_name = cache.get_plan_name(user_id.as_str()).await;
-    UsageSummary::build(
+    Some(UsageSummary::build(
         Arc::unwrap_or_clone(limits),
         Arc::unwrap_or_clone(usage),
         plan_name,
-    )
+    ))
 }
 
 fn check_feature(limits: &TierLimits, feature: Feature) -> LimitCheckResult {

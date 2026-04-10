@@ -181,7 +181,7 @@ async fn rotate_inner(
         })?;
 
     if let Err(e) = secret_audit::insert_audit_entry(pool, &user_id, plugin_id, "rotated").await {
-        tracing::warn!(error = %e, "Failed to insert secret audit log");
+        tracing::error!(error = %e, "Failed to insert secret audit log");
     }
 
     Ok(Json(ResultOkResponse { result: "ok" }).into_response())

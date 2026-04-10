@@ -60,7 +60,7 @@ pub async fn create_user_secret_handler(
     {
         Ok(()) => {
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
+                tracing::error!(error = %e, "Failed to mark user dirty");
             }
             StatusCode::CREATED.into_response()
         }
@@ -89,7 +89,7 @@ pub async fn update_user_secret_handler(
     {
         Ok(()) => {
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
+                tracing::error!(error = %e, "Failed to mark user dirty");
             }
             StatusCode::NO_CONTENT.into_response()
         }
@@ -109,7 +109,7 @@ pub async fn delete_user_secret_handler(
     {
         Ok(true) => {
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
+                tracing::error!(error = %e, "Failed to mark user dirty");
             }
             StatusCode::NO_CONTENT.into_response()
         }
@@ -157,7 +157,7 @@ pub async fn upsert_skill_secret_handler(
     {
         Ok(()) => {
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
+                tracing::error!(error = %e, "Failed to mark user dirty");
             }
             StatusCode::NO_CONTENT.into_response()
         }
@@ -180,7 +180,7 @@ pub async fn delete_skill_secret_handler(
     match repositories::delete_skill_secret(&pool, &user_ctx.user_id, &skill_id, &var_name).await {
         Ok(true) => {
             if let Err(e) = repositories::mark_user_dirty(&pool, &user_ctx.user_id).await {
-                tracing::warn!(error = %e, "Failed to mark user dirty");
+                tracing::error!(error = %e, "Failed to mark user dirty");
             }
             StatusCode::NO_CONTENT.into_response()
         }

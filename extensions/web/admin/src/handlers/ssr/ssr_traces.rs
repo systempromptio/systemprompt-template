@@ -89,7 +89,7 @@ pub async fn traces_page(
     let governance = unwrap_or_warn(governance_result, "trace governance");
     let entities = unwrap_or_warn(entities_result, "trace entities");
     let summary = summary_result.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch session summary");
+        tracing::error!(error = %e, "Failed to fetch session summary");
         SessionSummaryRow {
             total_events: 0,
             tool_uses: 0,
@@ -104,7 +104,7 @@ pub async fn traces_page(
 
 fn unwrap_or_warn<T>(result: Result<Vec<T>, sqlx::Error>, label: &str) -> Vec<T> {
     result.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, label = label, "Failed to fetch");
+        tracing::error!(error = %e, label = label, "Failed to fetch");
         vec![]
     })
 }

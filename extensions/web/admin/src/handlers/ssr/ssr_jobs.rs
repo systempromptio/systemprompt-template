@@ -25,7 +25,7 @@ pub async fn jobs_page(
     }
 
     let jobs = repositories::list_jobs(&pool).await.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to list jobs");
+        tracing::error!(error = %e, "Failed to list jobs");
         vec![]
     });
     let data = json!({

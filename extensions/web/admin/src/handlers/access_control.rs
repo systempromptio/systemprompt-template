@@ -161,6 +161,6 @@ fn sync_plugin_roles_to_yaml(
     };
 
     if let Err(e) = repositories::update_plugin(&services_path, plugin_id, &req) {
-        tracing::warn!(error = %e, plugin_id, "Failed to sync roles to plugin YAML");
+        tracing::error!(error = %e, plugin_id, "Failed to sync roles to plugin YAML");
     }
 }

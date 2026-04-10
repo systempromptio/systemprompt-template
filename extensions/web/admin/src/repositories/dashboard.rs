@@ -80,14 +80,14 @@ async fn fetch_traffic_section(
             dashboard_traffic::fetch_traffic_data(pool, traffic_range)
                 .await
                 .map_err(|e| {
-                    tracing::warn!(error = %e, "Failed to fetch traffic data for dashboard");
+                    tracing::error!(error = %e, "Failed to fetch traffic data for dashboard");
                     e
                 })
                 .ok()
         },
         async {
             fetch_recent_mcp_errors(pool).await.unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to fetch recent MCP errors");
+                tracing::error!(error = %e, "Failed to fetch recent MCP errors");
                 vec![]
             })
         },
@@ -95,7 +95,7 @@ async fn fetch_traffic_section(
             dashboard_traffic::fetch_top_pages_today(pool)
                 .await
                 .unwrap_or_else(|e| {
-                    tracing::warn!(error = %e, "Failed to fetch top pages today");
+                    tracing::error!(error = %e, "Failed to fetch top pages today");
                     vec![]
                 })
         },
@@ -103,7 +103,7 @@ async fn fetch_traffic_section(
             dashboard_traffic::fetch_realtime_pulse(pool)
                 .await
                 .map_err(|e| {
-                    tracing::warn!(error = %e, "Failed to fetch realtime pulse");
+                    tracing::error!(error = %e, "Failed to fetch realtime pulse");
                     e
                 })
                 .ok()
@@ -112,7 +112,7 @@ async fn fetch_traffic_section(
             dashboard_traffic::fetch_content_performance(pool, content_range)
                 .await
                 .unwrap_or_else(|e| {
-                    tracing::warn!(error = %e, "Failed to fetch content performance");
+                    tracing::error!(error = %e, "Failed to fetch content performance");
                     vec![]
                 })
         },

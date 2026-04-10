@@ -44,7 +44,7 @@ pub async fn my_hooks_page(
         repositories::user_hooks::ensure_default_hooks(&pool, &user_ctx.user_id, &mkt_ctx.site_url)
             .await
     {
-        tracing::warn!(error = %e, "Failed to ensure default hooks");
+        tracing::error!(error = %e, "Failed to ensure default hooks");
     }
 
     let (hooks, user_plugins) = fetch_hooks_and_plugins(&pool, &user_ctx.user_id).await;
@@ -99,13 +99,13 @@ async fn fetch_hooks_and_plugins(
     let hooks = repositories::user_hooks::list_user_hooks(pool, user_id)
         .await
         .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list user hooks");
+            tracing::error!(error = %e, "Failed to list user hooks");
             vec![]
         });
     let user_plugins = repositories::list_user_plugins(pool, user_id)
         .await
         .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list user plugins");
+            tracing::error!(error = %e, "Failed to list user plugins");
             vec![]
         });
     (hooks, user_plugins)
@@ -129,17 +129,17 @@ async fn fetch_hook_analytics(
             conversation_analytics::fetch_hook_session_quality(pool, user_id)
                 .await
                 .unwrap_or_else(|e| {
-                    tracing::warn!(error = %e, "Failed to fetch hook session quality");
+                    tracing::error!(error = %e, "Failed to fetch hook session quality");
                     vec![]
                 })
         },
     );
     let event_breakdown = event_breakdown.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch hook event breakdown");
+        tracing::error!(error = %e, "Failed to fetch hook event breakdown");
         vec![]
     });
     let timeseries = timeseries.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch hook timeseries");
+        tracing::error!(error = %e, "Failed to fetch hook timeseries");
         vec![]
     });
     (event_breakdown, timeseries, summary, hook_quality)

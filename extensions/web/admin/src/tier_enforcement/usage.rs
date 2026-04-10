@@ -9,7 +9,10 @@ struct DailyUsageRow {
     bytes: i64,
 }
 
-pub async fn fetch_usage_from_db(pool: &PgPool, user_id: &UserId) -> UsageSnapshot {
+pub async fn fetch_usage_from_db(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<UsageSnapshot, sqlx::Error> {
     #[derive(sqlx::FromRow)]
     struct EntityCounts {
         skills: i64,
@@ -30,20 +33,14 @@ pub async fn fetch_usage_from_db(pool: &PgPool, user_id: &UserId) -> UsageSnapsh
     )
     .bind(uid)
     .fetch_optional(pool)
-    .await
-    .map_err(|e| {
-        tracing::warn!(error = %e, user_id = %uid, "Failed to fetch daily usage for tier enforcement");
-    })
-    .ok()
-    .flatten();
+    .await?;
 
     let sessions: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM plugin_session_summaries WHERE user_id = $1 AND started_at::date = CURRENT_DATE",
     )
     .bind(uid)
     .fetch_one(pool)
-    .await
-    .unwrap_or(0);
+    .await?;
 
     let counts: EntityCounts = sqlx::query_as(
         r"SELECT
@@ -55,16 +52,9 @@ pub async fn fetch_usage_from_db(pool: &PgPool, user_id: &UserId) -> UsageSnapsh
     )
     .bind(uid)
     .fetch_one(pool)
-    .await
-    .unwrap_or(EntityCounts {
-        skills: 0,
-        agents: 0,
-        plugins: 0,
-        mcp_servers: 0,
-        hooks: 0,
-    });
+    .await?;
 
-    UsageSnapshot {
+    Ok(UsageSnapshot {
         events_today: daily.as_ref().map_or(0, |d| d.events),
         content_bytes_today: daily.as_ref().map_or(0, |d| d.bytes),
         sessions_today: sessions,
@@ -73,5 +63,5 @@ pub async fn fetch_usage_from_db(pool: &PgPool, user_id: &UserId) -> UsageSnapsh
         plugins_count: counts.plugins,
         mcp_servers_count: counts.mcp_servers,
         hooks_count: counts.hooks,
-    }
+    })
 }

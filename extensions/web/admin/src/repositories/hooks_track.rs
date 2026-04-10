@@ -15,7 +15,7 @@ pub async fn count_concurrent_sessions(
     pool: &PgPool,
     user_id: &UserId,
     session_id: &SessionId,
-) -> i64 {
+) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar!(
         "SELECT COUNT(*)::BIGINT FROM plugin_session_summaries WHERE user_id = $1 AND started_at <= NOW() AND (ended_at IS NULL OR ended_at >= NOW()) AND session_id != $2",
         user_id.as_str(),
@@ -23,9 +23,7 @@ pub async fn count_concurrent_sessions(
     )
     .fetch_one(pool)
     .await
-    .ok()
-    .flatten()
-    .unwrap_or(0)
+    .map(|v| v.unwrap_or(0))
 }
 
 #[derive(sqlx::FromRow, Debug)]
