@@ -66,7 +66,7 @@ pub async fn dashboard_handler(State(pool): State<Arc<PgPool>>) -> Response {
         Ok(data) => Json(data).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to load dashboard data");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -76,7 +76,7 @@ pub async fn list_users_handler(State(pool): State<Arc<PgPool>>) -> Response {
         Ok(users) => Json(UsersListResponse { users }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to list users");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -91,7 +91,7 @@ pub async fn user_detail_handler(
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "User not found"),
         Err(e) => {
             tracing::error!(error = %e, user_id = %user_id, "Failed to get user detail");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -105,7 +105,7 @@ pub async fn user_usage_handler(
         Ok(events) => Json(EventsListResponse { events }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, user_id = %user_id, "Failed to get user usage");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -143,7 +143,7 @@ pub async fn create_user_handler(
         }
         Err(e) => {
             tracing::error!(error = %e, "Failed to create user");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -184,7 +184,7 @@ pub async fn update_user_handler(
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "User not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to update user");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -220,7 +220,7 @@ pub async fn delete_user_handler(
         Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "User not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to delete user");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -233,7 +233,7 @@ pub async fn list_events_handler(
         Ok(response) => Json(response).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to list events");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }

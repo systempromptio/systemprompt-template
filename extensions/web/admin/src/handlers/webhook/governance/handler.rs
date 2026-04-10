@@ -199,8 +199,8 @@ fn spawn_audit_recording(params: &AuditParams<'_>) {
         agent_id: params.agent_id.map(str::to_string),
         agent_scope: params.agent_scope.to_string(),
         decision: params.evaluation.decision.to_string(),
-        policy: params.evaluation.policy.clone(),
-        reason: params.evaluation.reason.clone(),
+        policy: params.evaluation.policy.clone().into_owned(),
+        reason: params.evaluation.reason.clone().into_owned(),
         evaluated_rules: serde_json::to_value(&params.evaluation.rules).unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to serialize governance evaluation rules");
             serde_json::Value::Null

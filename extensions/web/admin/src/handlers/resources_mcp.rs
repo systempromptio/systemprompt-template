@@ -29,7 +29,7 @@ pub(crate) async fn list_mcp_servers_handler(
             tracing::error!(error = %e, "Failed to list MCP servers");
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response();
         }
@@ -69,7 +69,7 @@ pub(crate) async fn get_mcp_server_handler(Path(server_id): Path<String>) -> Res
             tracing::error!(error = %e, "Failed to get MCP server");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -103,7 +103,7 @@ pub(crate) async fn create_mcp_server_handler(
             tracing::error!(error = %e, "Failed to create MCP server");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -143,7 +143,7 @@ pub(crate) async fn update_mcp_server_handler(
             tracing::error!(error = %e, "Failed to update MCP server");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -170,7 +170,7 @@ pub(crate) async fn get_mcp_server_yaml_handler(Path(server_id): Path<String>) -
             tracing::error!(error = %e, "Failed to get MCP server YAML");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -273,7 +273,7 @@ pub(crate) async fn delete_mcp_server_handler(
             tracing::error!(error = %e, "Failed to delete MCP server");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }

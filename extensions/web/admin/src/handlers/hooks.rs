@@ -32,7 +32,7 @@ pub(crate) async fn list_hooks_handler(
                 tracing::error!(error = %e, "Failed to list hooks");
                 return (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({"error": e.to_string()})),
+                    Json(serde_json::json!({"error": "Internal server error"})),
                 )
                     .into_response();
             }
@@ -96,7 +96,7 @@ pub(crate) async fn get_hook_handler(
             tracing::error!(error = %e, "Failed to get hook");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -131,7 +131,7 @@ pub(crate) async fn create_hook_handler(
             tracing::error!(error = %e, "Failed to create hook");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -172,7 +172,7 @@ pub(crate) async fn update_hook_handler(
             tracing::error!(error = %e, "Failed to update hook");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -194,7 +194,7 @@ pub(crate) async fn toggle_hook_handler(
             tracing::error!(error = %e, "Failed to toggle hook");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }
@@ -239,7 +239,7 @@ pub(crate) async fn delete_hook_handler(
             tracing::error!(error = %e, "Failed to delete hook");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
         }

@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use sha2::{Digest, Sha256};
 use systemprompt::identifiers::{SessionId, UserId};
 
@@ -16,43 +18,44 @@ pub fn compute_dedup_key(
 fn build_raw_key(user_id: &UserId, session_id: &SessionId, payload: &HookEventPayload) -> String {
     let session = session_id.as_str();
     let uid = user_id.as_str();
+    let mut key = String::with_capacity(128);
 
     match &payload.event {
         HookEvent::PreToolUse(_) => {
             unreachable!("PreToolUse events are dropped before this point")
         }
-        HookEvent::PostToolUse(d) => dedup_post_tool_use(uid, session, d),
-        HookEvent::PostToolUseFailure(d) => dedup_post_tool_failure(uid, session, d),
+        HookEvent::PostToolUse(d) => write_post_tool_use(&mut key, uid, session, d),
+        HookEvent::PostToolUseFailure(d) => write_post_tool_failure(&mut key, uid, session, d),
         HookEvent::PermissionRequest(d) => {
             let ts = chrono::Utc::now().timestamp();
-            format!("{uid}:{session}:PermissionRequest:{}:{ts}", d.tool_name)
+            let _ = write!(key, "{uid}:{session}:PermissionRequest:{}:{ts}", d.tool_name);
         }
         HookEvent::UserPromptSubmit(d) => {
             let h = Sha256::digest(d.prompt.as_bytes());
             let prompt_hash = hex::encode(&h[..8]);
-            format!("{uid}:{session}:UserPromptSubmit:{prompt_hash}")
+            let _ = write!(key, "{uid}:{session}:UserPromptSubmit:{prompt_hash}");
         }
         HookEvent::SessionStart(_) | HookEvent::SessionEnd(_) => {
-            format!("{uid}:{session}:{}", payload.event_name())
+            let _ = write!(key, "{uid}:{session}:{}", payload.event_name());
         }
         HookEvent::TaskCompleted(d) => {
-            format!("{uid}:{session}:TaskCompleted:{}", d.task_id)
+            let _ = write!(key, "{uid}:{session}:TaskCompleted:{}", d.task_id);
         }
         HookEvent::SubagentStop(_) => {
             let agent_id = payload.common.agent_id.as_deref().unwrap_or("");
-            format!("{uid}:{session}:SubagentStop:{agent_id}")
+            let _ = write!(key, "{uid}:{session}:SubagentStop:{agent_id}");
         }
         HookEvent::SubagentStart(_) => {
             let agent_id = payload.common.agent_id.as_deref().unwrap_or("");
-            format!("{uid}:{session}:SubagentStart:{agent_id}")
+            let _ = write!(key, "{uid}:{session}:SubagentStart:{agent_id}");
         }
         HookEvent::Stop(_) => {
             let ts = chrono::Utc::now().timestamp();
-            format!("{uid}:{session}:Stop:{ts}")
+            let _ = write!(key, "{uid}:{session}:Stop:{ts}");
         }
         HookEvent::TeammateIdle(d) => {
             let ts = chrono::Utc::now().timestamp();
-            format!("{uid}:{session}:TeammateIdle:{}:{ts}", d.teammate_name)
+            let _ = write!(key, "{uid}:{session}:TeammateIdle:{}:{ts}", d.teammate_name);
         }
         HookEvent::Notification(_)
         | HookEvent::ConfigChange(_)
@@ -60,32 +63,38 @@ fn build_raw_key(user_id: &UserId, session_id: &SessionId, payload: &HookEventPa
         | HookEvent::WorktreeRemove(_)
         | HookEvent::PreCompact(_)
         | HookEvent::InstructionsLoaded(_)
-        | HookEvent::Unknown(_) => uuid::Uuid::new_v4().to_string(),
+        | HookEvent::Unknown(_) => {
+            let _ = write!(key, "{}", uuid::Uuid::new_v4());
+        }
     }
+
+    key
 }
 
-fn dedup_post_tool_use(
+fn write_post_tool_use(
+    key: &mut String,
     uid: &str,
     session: &str,
     d: &crate::types::webhook::PostToolUseData,
-) -> String {
+) {
     if d.tool_use_id.is_empty() {
         let ts = chrono::Utc::now().timestamp();
-        format!("{uid}:{session}:PostToolUse:{}:{ts}", d.tool_name)
+        let _ = write!(key, "{uid}:{session}:PostToolUse:{}:{ts}", d.tool_name);
     } else {
-        format!("{uid}:{session}:PostToolUse:{}", d.tool_use_id)
+        let _ = write!(key, "{uid}:{session}:PostToolUse:{}", d.tool_use_id);
     }
 }
 
-fn dedup_post_tool_failure(
+fn write_post_tool_failure(
+    key: &mut String,
     uid: &str,
     session: &str,
     d: &crate::types::webhook::PostToolUseFailureData,
-) -> String {
+) {
     if d.tool_use_id.is_empty() {
         let ts = chrono::Utc::now().timestamp();
-        format!("{uid}:{session}:PostToolUseFailure:{}:{ts}", d.tool_name)
+        let _ = write!(key, "{uid}:{session}:PostToolUseFailure:{}:{ts}", d.tool_name);
     } else {
-        format!("{uid}:{session}:PostToolUseFailure:{}", d.tool_use_id)
+        let _ = write!(key, "{uid}:{session}:PostToolUseFailure:{}", d.tool_use_id);
     }
 }

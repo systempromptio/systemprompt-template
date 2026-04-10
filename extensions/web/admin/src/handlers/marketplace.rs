@@ -31,7 +31,7 @@ pub async fn list_marketplace_handler(
         Ok(p) => p,
         Err(e) => {
             tracing::error!(error = %e, "Failed to list plugins");
-            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string());
+            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error");
         }
     };
 
@@ -196,7 +196,7 @@ pub async fn marketplace_plugin_users_handler(
         Ok(users) => Json(UsersListResponse { users }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, plugin_id, "Failed to get plugin users");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -221,7 +221,7 @@ pub async fn submit_rating_handler(
         Ok(rating) => (StatusCode::CREATED, Json(rating)).into_response(),
         Err(e) => {
             tracing::error!(error = %e, plugin_id, "Failed to submit rating");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -235,7 +235,7 @@ pub async fn update_visibility_handler(
         Ok(rules) => Json(RulesResponse { rules }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, plugin_id, "Failed to update visibility rules");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }

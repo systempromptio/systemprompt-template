@@ -31,7 +31,7 @@ pub async fn list_plugins_handler(
         Ok(p) => p,
         Err(e) => {
             tracing::error!(error = %e, "Failed to list plugins");
-            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string());
+            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error");
         }
     };
 
@@ -80,7 +80,7 @@ pub async fn list_skills_handler(
         Ok(s) => s,
         Err(e) => {
             tracing::error!(error = %e, "Failed to list skills");
-            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string());
+            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error");
         }
     };
     if user_ctx.is_admin {
@@ -116,7 +116,7 @@ pub async fn get_skill_handler(
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Skill not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get skill");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -153,7 +153,7 @@ pub async fn create_skill_handler(
         }
         Err(e) => {
             tracing::error!(error = %e, "Failed to create skill");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }

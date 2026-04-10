@@ -26,7 +26,7 @@ pub async fn query_handler(
         }
         Err(e) => {
             tracing::error!(error = %e, "Search error");
-            error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -39,7 +39,10 @@ pub async fn list_content_handler(
 
     match content_service.list_by_source(&source_id).await {
         Ok(content) => Json(content).into_response(),
-        Err(e) => error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to list content");
+            error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        }
     }
 }
 
@@ -55,7 +58,10 @@ pub async fn get_content_handler(
     {
         Ok(Some(content)) => Json(content).into_response(),
         Ok(None) => error_response(StatusCode::NOT_FOUND, "Content not found"),
-        Err(e) => error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to get content");
+            error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        }
     }
 }
 

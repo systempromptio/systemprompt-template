@@ -26,7 +26,7 @@ pub async fn get_plugin_detail_handler(Path(plugin_id): Path<String>) -> Respons
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Plugin not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get plugin");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -56,7 +56,7 @@ pub async fn create_plugin_handler(
         }
         Err(e) => {
             tracing::error!(error = %e, "Failed to create plugin");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -88,7 +88,7 @@ pub async fn update_plugin_handler(
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Plugin not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to update plugin");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -121,7 +121,7 @@ pub async fn delete_plugin_handler(
         Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "Plugin not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to delete plugin");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -134,7 +134,7 @@ pub async fn list_skill_files_handler(
         Ok(files) => Json(FilesListResponse { files }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to list skill files");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -148,7 +148,7 @@ pub async fn get_skill_file_handler(
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "File not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get skill file");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -175,7 +175,7 @@ pub async fn update_skill_file_handler(
         Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "File not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to update skill file");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -189,7 +189,7 @@ pub async fn sync_skill_files_handler(State(pool): State<Arc<PgPool>>) -> Respon
         Ok(result) => Json(result).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to sync skill files");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }

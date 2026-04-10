@@ -87,7 +87,7 @@ fn import_bundle_for_site(pool: &PgPool, bundle: &repositories::export::PluginBu
         }
         Err(e) => {
             tracing::error!(error = %e, "Failed to import plugin");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }

@@ -215,11 +215,11 @@ pub async fn handle_generate_report(
     {
         Ok(()) => Json(json!({"status": "ok"})).into_response(),
         Err(e) => {
-            tracing::warn!(error = %e, "Failed to generate daily report");
+            tracing::error!(error = %e, "Failed to generate daily report");
 
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({"error": "generation_failed", "message": e.to_string()})),
+                Json(json!({"error": "generation_failed", "message": "Internal server error"})),
             )
                 .into_response()
         }

@@ -60,7 +60,10 @@ pub async fn generate_link_handler(
             };
             Json(response).into_response()
         }
-        Err(e) => error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to generate link");
+            error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        }
     }
 }
 
@@ -84,7 +87,10 @@ pub async fn list_links_handler(
             "total": links.len()
         }))
         .into_response(),
-        Err(e) => error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to list links");
+            error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        }
     }
 }
 
@@ -111,8 +117,8 @@ pub async fn record_click_handler(
     match analytics_repo.record_click(&params).await {
         Ok(()) => StatusCode::CREATED.into_response(),
         Err(e) => {
-            tracing::warn!(error = %e, "Failed to record click");
-            error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            tracing::error!(error = %e, "Failed to record click");
+            error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -126,7 +132,10 @@ pub async fn link_performance_handler(
     match service.get_performance(&link_id).await {
         Ok(Some(perf)) => Json(perf).into_response(),
         Ok(None) => error_response(StatusCode::NOT_FOUND, "Link not found"),
-        Err(e) => error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to get link performance");
+            error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        }
     }
 }
 
@@ -138,7 +147,10 @@ pub async fn link_clicks_handler(
 
     match service.get_clicks(&link_id, DEFAULT_CLICK_LIMIT).await {
         Ok(clicks) => Json(clicks).into_response(),
-        Err(e) => error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to get link clicks");
+            error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        }
     }
 }
 
@@ -151,7 +163,10 @@ pub async fn campaign_performance_handler(
     match service.get_campaign_performance(&campaign_id).await {
         Ok(Some(perf)) => Json(perf).into_response(),
         Ok(None) => error_response(StatusCode::NOT_FOUND, "Campaign not found"),
-        Err(e) => error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to get campaign performance");
+            error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        }
     }
 }
 
@@ -163,7 +178,10 @@ pub async fn content_journey_handler(
 
     match service.get_content_journey(query.content_id.as_str()).await {
         Ok(journey) => Json(journey).into_response(),
-        Err(e) => error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to get content journey");
+            error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+        }
     }
 }
 

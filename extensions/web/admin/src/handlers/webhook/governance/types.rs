@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
@@ -25,13 +27,13 @@ pub struct HookSpecificOutput {
 pub struct EvaluatedRule {
     pub rule: &'static str,
     pub result: &'static str,
-    pub detail: String,
+    pub detail: Cow<'static, str>,
 }
 
 pub(super) struct RuleEvaluation {
     pub decision: &'static str,
-    pub reason: String,
-    pub policy: String,
+    pub reason: Cow<'static, str>,
+    pub policy: Cow<'static, str>,
     pub rules: Vec<EvaluatedRule>,
 }
 

@@ -137,7 +137,7 @@ async fn insert_hook_event(pool: &PgPool, user_id: &UserId, payload: &HookEventP
         event_type: payload.event_name(),
         tool_name: payload.tool_name(),
         metadata: &sanitized_metadata,
-        description: Some(&description),
+        description: Some(&*description),
         prompt_preview: prompt_preview.as_deref(),
         cwd: payload.cwd(),
         dedup_key: &dedup_key,

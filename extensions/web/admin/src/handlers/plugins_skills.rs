@@ -50,7 +50,7 @@ pub async fn delete_skill_handler(
         Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "Skill not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to delete skill");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -65,7 +65,7 @@ pub async fn list_all_skills_handler() -> Response {
         Ok(ids) => Json(SkillIdsListResponse { skill_ids: ids }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to list skills");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -80,7 +80,7 @@ pub async fn get_plugin_skills_handler(Path(plugin_id): Path<String>) -> Respons
         Ok(ids) => Json(SkillIdsListResponse { skill_ids: ids }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get plugin skills");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -112,7 +112,7 @@ pub async fn update_plugin_skills_handler(
         }
         Err(e) => {
             tracing::error!(error = %e, plugin_id = %plugin_id, "Failed to update plugin skills");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }

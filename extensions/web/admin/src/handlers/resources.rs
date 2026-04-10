@@ -30,7 +30,7 @@ pub async fn list_agents_handler(Extension(user_ctx): Extension<UserContext>) ->
         Ok(a) => a,
         Err(e) => {
             tracing::error!(error = %e, "Failed to list agents");
-            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string());
+            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error");
         }
     };
     if user_ctx.is_admin {
@@ -62,7 +62,7 @@ pub async fn get_agent_handler(Path(agent_id): Path<String>) -> Response {
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Agent not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get agent");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -92,7 +92,7 @@ pub async fn create_agent_handler(
         }
         Err(e) => {
             tracing::error!(error = %e, "Failed to create agent");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -124,7 +124,7 @@ pub async fn update_agent_handler(
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Agent not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to update agent");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -157,7 +157,7 @@ pub async fn delete_agent_handler(
         Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "Agent not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to delete agent");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -188,7 +188,7 @@ pub async fn create_user_agent_handler(
         }
         Err(e) => {
             tracing::error!(error = %e, "Failed to create user agent");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
@@ -220,7 +220,7 @@ pub async fn delete_user_agent_handler(
         Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "User agent not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to delete user agent");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }

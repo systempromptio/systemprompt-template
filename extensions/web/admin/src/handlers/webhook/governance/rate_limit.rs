@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Write;
 use std::sync::Mutex;
 use std::time::Instant;
 
@@ -39,7 +40,8 @@ impl SlidingWindow {
 }
 
 pub(super) fn check(session_id: &SessionId, user_id: &UserId) -> (usize, usize) {
-    let key = format!("{}:{}", session_id.as_str(), user_id.as_str());
+    let mut key = String::with_capacity(64);
+    write!(key, "{}:{}", session_id.as_str(), user_id.as_str()).ok();
     let count = COUNTERS
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)

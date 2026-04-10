@@ -18,7 +18,7 @@ pub async fn list_jobs_handler(State(pool): State<Arc<PgPool>>) -> Response {
         Ok(jobs) => Json(JobsListResponse { jobs }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to list jobs");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string())
+            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
 }
