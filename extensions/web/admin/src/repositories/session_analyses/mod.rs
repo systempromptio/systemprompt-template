@@ -124,18 +124,27 @@ pub async fn insert_session_analysis(
         "Inserting session analysis"
     );
 
-    if let Err(e) = run_upsert_query(pool, session_id, user_id, &p).await {
+    let ids = UpsertAnalysisIds {
+        session_id,
+        user_id,
+    };
+    if let Err(e) = run_upsert_query(pool, &ids, &p).await {
         tracing::warn!(error = %e, "Failed to insert session analysis");
     }
 }
 
+struct UpsertAnalysisIds<'a> {
+    session_id: &'a str,
+    user_id: &'a str,
+}
+
+#[allow(clippy::cognitive_complexity)]
 async fn run_upsert_query(
     pool: &PgPool,
-    session_id: &str,
-    user_id: &str,
+    ids: &UpsertAnalysisIds<'_>,
     p: &UpsertParams,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query!(
+    let query = sqlx::query!(
         r"INSERT INTO session_analyses
             (session_id, user_id, title, description, summary, tags,
              goal_achieved, quality_score, outcome, error_analysis,
@@ -170,8 +179,8 @@ async fn run_upsert_query(
             plan_mode_used = EXCLUDED.plan_mode_used,
             client_surface = EXCLUDED.client_surface,
             updated_at = NOW()",
-        session_id,
-        user_id,
+        ids.session_id,
+        ids.user_id,
         p.title,
         p.description,
         p.summary,
@@ -194,8 +203,7 @@ async fn run_upsert_query(
         p.automation_ratio,
         p.plan_mode_used,
         p.client_surface,
-    )
-    .execute(pool)
-    .await?;
+    );
+    query.execute(pool).await?;
     Ok(())
 }
