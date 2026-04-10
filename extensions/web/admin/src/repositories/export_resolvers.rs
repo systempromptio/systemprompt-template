@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 use std::path::Path;
 
+use crate::types::DIR_PYCACHE;
+
 use super::plugin_resolvers::collect_agent_skills;
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -175,7 +177,7 @@ fn collect_aux_recursive(
         }
 
         if path.is_dir() {
-            if file_name == "__pycache__" {
+            if file_name == DIR_PYCACHE {
                 continue;
             }
             collect_aux_recursive(base, &path, subdir, ctx, result);

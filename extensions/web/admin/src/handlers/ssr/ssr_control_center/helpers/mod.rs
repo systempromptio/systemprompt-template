@@ -139,6 +139,7 @@ pub(super) struct BuildTemplateDataParams<'a> {
     pub today_stats: &'a crate::types::control_center::TodayStats,
     pub outcome_stats: &'a control_center::TodayOutcomeStats,
     pub session_groups: &'a [SessionGroup],
+    // JSON: template context for Handlebars rendering
     pub tools_with_pct: &'a [serde_json::Value],
     pub skill_effectiveness: &'a [crate::types::conversation_analytics::SkillEffectiveness],
     pub skills_usage: &'a [&'a crate::types::conversation_analytics::EntityUsageSummary],

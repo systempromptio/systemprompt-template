@@ -112,8 +112,11 @@ pub struct AnalysisEntry {
     pub skill_assessment: Option<String>,
     pub recommendations: Option<String>,
     pub category: String,
+    // JSON: AI-generated analysis from jsonb column
     pub goal_outcome_map: Option<serde_json::Value>,
+    // JSON: AI-generated analysis from jsonb column
     pub efficiency_metrics: Option<serde_json::Value>,
+    // JSON: AI-generated analysis from jsonb column
     pub best_practices_checklist: Option<serde_json::Value>,
     pub improvement_hints: Option<String>,
     pub corrections_count: i32,

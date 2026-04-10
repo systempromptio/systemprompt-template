@@ -1,5 +1,7 @@
 use systemprompt::database::DbPool;
 
+const ACTION_USED: &str = "used";
+
 pub async fn record_mcp_access(
     pool: &DbPool,
     user_id: &str,
@@ -13,15 +15,15 @@ pub async fn record_mcp_access(
     };
     let description = match action {
         "authenticated" => format!("Authenticated to {server} for '{tool}'"),
-        "used" => format!("Executed '{tool}' on {server}"),
+        ACTION_USED => format!("Executed '{tool}' on {server}"),
         _ => format!("{action} on {server}"),
     };
-    let entity_type = if action == "used" {
+    let entity_type = if action == ACTION_USED {
         "tool"
     } else {
         "mcp_server"
     };
-    let entity_name = if action == "used" { tool } else { server };
+    let entity_name = if action == ACTION_USED { tool } else { server };
     let metadata = serde_json::json!({ "tool_name": tool, "server": server });
 
     if let Err(e) = sqlx::query(

@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use crate::types::SCRIPT_SOURCE_TRACKING;
+
 use super::export::PluginFile;
 use super::export_resolvers::{
     build_agent_md, build_skill_md, collect_skill_auxiliary_files, resolve_export_agents,
@@ -149,7 +151,7 @@ fn build_script_files(
     files: &mut Vec<PluginFile>,
 ) -> Result<(), MarketplaceError> {
     for script in &ctx.plugin.base.scripts {
-        if script.source == "generated:tracking" {
+        if script.source == SCRIPT_SOURCE_TRACKING {
             continue;
         }
         let source_path = ctx.plugins_path.join(ctx.plugin_id).join(&script.source);

@@ -28,6 +28,7 @@ pub struct AuditLogEntry {
 
 #[derive(Serialize, Debug)]
 pub struct PluginEnvResponse {
+    // JSON: user-defined plugin variable definitions
     pub definitions: Vec<serde_json::Value>,
 
     pub stored: Vec<crate::repositories::plugin_env::PluginEnvVar>,

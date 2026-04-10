@@ -26,7 +26,9 @@ pub struct UpsertPlanParams<'a> {
     pub amount_cents: i32,
     pub currency: &'a str,
     pub billing_interval: &'a str,
+    // JSON: tier plan features from jsonb column
     pub features: &'a serde_json::Value,
+    // JSON: tier plan limits from jsonb column
     pub limits: &'a serde_json::Value,
     pub sort_order: i32,
 }

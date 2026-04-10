@@ -28,6 +28,7 @@ pub struct CreateHookApiRequest {
     #[serde(default)]
     pub command: String,
     #[serde(default)]
+    // JSON: dynamic HTTP headers from hook config
     pub headers: serde_json::Value,
     #[serde(default = "default_timeout")]
     pub timeout: i32,
@@ -54,6 +55,7 @@ pub struct UpdateHookApiRequest {
     pub matcher: Option<String>,
     pub url: Option<String>,
     pub command: Option<String>,
+    // JSON: dynamic HTTP headers from hook config
     pub headers: Option<serde_json::Value>,
     pub timeout: Option<i32>,
     pub is_async: Option<bool>,

@@ -52,6 +52,7 @@ pub struct TemplateData<'a> {
     pub xp_progress_pct: i64,
     pub today: &'a super::super::types::TodayObj,
     pub session_groups: &'a [SessionGroup],
+    // JSON: template context for Handlebars rendering
     pub top_tools: &'a [serde_json::Value],
     pub skill_effectiveness: Vec<SkillEffectivenessEntry>,
     pub skills_usage: &'a [&'a crate::types::conversation_analytics::EntityUsageSummary],

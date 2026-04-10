@@ -28,10 +28,14 @@ pub struct SessionAnalysisRow {
     pub error_analysis: Option<String>,
     pub skill_assessment: Option<String>,
     pub recommendations: Option<String>,
+    // JSON: AI-generated session analysis from jsonb column
     pub skill_scores: Option<serde_json::Value>,
     pub category: String,
+    // JSON: AI-generated session analysis from jsonb column
     pub goal_outcome_map: Option<serde_json::Value>,
+    // JSON: AI-generated session analysis from jsonb column
     pub efficiency_metrics: Option<serde_json::Value>,
+    // JSON: AI-generated session analysis from jsonb column
     pub best_practices_checklist: Option<serde_json::Value>,
     pub improvement_hints: Option<String>,
     pub corrections_count: i32,

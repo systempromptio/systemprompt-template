@@ -1,3 +1,5 @@
+use crate::types::{MCP_CONFIG_PATH, PLUGIN_MANIFEST_PATH};
+
 use super::export::{
     ExportTotals, ManifestAuthor, PluginBundle, PluginBundleCounts, PluginFile, PluginManifest,
 };
@@ -5,7 +7,7 @@ use super::export::{
 pub(super) fn validate_bundle(files: &[PluginFile], expected_skills: usize) {
     let mut warnings = Vec::new();
 
-    if !files.iter().any(|f| f.path == ".claude-plugin/plugin.json") {
+    if !files.iter().any(|f| f.path == PLUGIN_MANIFEST_PATH) {
         warnings.push("Missing .claude-plugin/plugin.json".to_string());
     }
 
@@ -93,7 +95,7 @@ pub(super) fn compute_bundle_counts(files: &[PluginFile]) -> PluginBundleCounts 
         .iter()
         .filter(|f| f.path.starts_with("agents/"))
         .count();
-    let mcp_servers = usize::from(files.iter().any(|f| f.path == ".mcp.json"));
+    let mcp_servers = usize::from(files.iter().any(|f| f.path == MCP_CONFIG_PATH));
     let scripts = files
         .iter()
         .filter(|f| f.path.starts_with("scripts/"))

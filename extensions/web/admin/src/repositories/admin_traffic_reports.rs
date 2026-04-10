@@ -5,6 +5,7 @@ pub struct AdminTrafficReportRow {
     pub id: String,
     pub report_date: chrono::NaiveDate,
     pub report_period: String,
+    // JSON: aggregated traffic report from jsonb column
     pub report_data: serde_json::Value,
     pub generated_at: chrono::DateTime<chrono::Utc>,
 }

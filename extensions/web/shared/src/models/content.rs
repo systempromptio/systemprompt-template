@@ -81,14 +81,19 @@ pub struct Content {
     pub category_id: Option<CategoryId>,
     pub source_id: SourceId,
     pub version_hash: String,
+    // JSON: variable-shape content metadata from jsonb column
     #[serde(default)]
     pub links: JsonValue,
+    // JSON: variable-shape content metadata from jsonb column
     #[serde(default)]
     pub after_reading_this: JsonValue,
+    // JSON: variable-shape content metadata from jsonb column
     #[serde(default)]
     pub related_playbooks: JsonValue,
+    // JSON: variable-shape content metadata from jsonb column
     #[serde(default)]
     pub related_code: JsonValue,
+    // JSON: variable-shape content metadata from jsonb column
     #[serde(default)]
     pub related_docs: JsonValue,
     pub updated_at: Option<DateTime<Utc>>,

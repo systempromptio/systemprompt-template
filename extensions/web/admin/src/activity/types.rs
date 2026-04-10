@@ -18,6 +18,7 @@ pub struct NewActivity {
     pub action: ActivityAction,
     pub entity: Option<ActivityEntityRef>,
     pub description: String,
+    // JSON: dynamic event metadata from jsonb column
     pub metadata: serde_json::Value,
 }
 

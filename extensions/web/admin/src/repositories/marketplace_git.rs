@@ -4,6 +4,8 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::models::ProfileBootstrap;
 
+use crate::types::PLUGIN_MANIFEST_PATH;
+
 use super::export::generate_export_bundles;
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -107,7 +109,7 @@ fn write_export_to_disk(
             if let Some(parent) = file_path.parent() {
                 std::fs::create_dir_all(parent)?;
             }
-            let content = if strip_hooks && file.path == ".claude-plugin/plugin.json" {
+            let content = if strip_hooks && file.path == PLUGIN_MANIFEST_PATH {
                 strip_manifest_hooks(&file.content)
             } else {
                 file.content.clone()

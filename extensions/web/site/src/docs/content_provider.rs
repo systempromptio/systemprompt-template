@@ -7,6 +7,10 @@ use systemprompt::extension::prelude::{ContentDataContext, ContentDataProvider};
 
 use super::error::DocsError;
 
+const KIND_DOCS_INDEX: &str = "docs-index";
+const KIND_DOCS_LIST: &str = "docs-list";
+const SLUG_INDEX: &str = "index";
+
 #[derive(Debug, Clone, Copy)]
 pub struct DocsContentDataProvider;
 
@@ -74,7 +78,7 @@ impl ContentDataProvider for DocsContentDataProvider {
         }
 
         let kind = row.kind.as_str();
-        if kind == "docs-index" || kind == "docs-list" {
+        if kind == KIND_DOCS_INDEX || kind == KIND_DOCS_LIST {
             let children = self.get_children(&pool, &row.source_id, &row.slug).await;
             if let Some(obj) = item.as_object_mut() {
                 obj.insert("children".to_string(), json!(children));
@@ -109,7 +113,7 @@ impl DocsContentDataProvider {
         source_id: &str,
         current_slug: &str,
     ) -> Vec<ChildDoc> {
-        let is_root = current_slug.is_empty() || current_slug == "index";
+        let is_root = current_slug.is_empty() || current_slug == SLUG_INDEX;
 
         if is_root {
             match sqlx::query!(

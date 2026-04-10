@@ -9,6 +9,8 @@ use std::path::Path;
 use systemprompt::identifiers::UserId;
 use systemprompt::models::Config;
 
+use crate::types::PLUGIN_MANIFEST_PATH;
+
 use super::export_auth::load_plugin_configs_by_ids;
 use super::export_builders::{build_plugin_files, PluginBuildContext};
 use super::export_scripts::build_marketplace;
@@ -178,7 +180,7 @@ fn build_org_bundles(
         let counts = compute_bundle_counts(&files);
         let version = files
             .iter()
-            .find(|f| f.path == ".claude-plugin/plugin.json")
+            .find(|f| f.path == PLUGIN_MANIFEST_PATH)
             .and_then(|f| {
                 serde_json::from_str::<PluginManifest>(&f.content)
                     .map_err(|e| {

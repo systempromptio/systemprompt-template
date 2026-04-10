@@ -1,6 +1,8 @@
 use std::path::Path;
 
-use super::super::types::{CreatePluginRequest, PluginDetail};
+use super::super::types::{
+    CreatePluginRequest, PluginDetail, MCP_CONFIG_PATH, PLUGIN_MANIFEST_PATH, SKILL_FILENAME,
+};
 use super::export::{McpConfigFile, PluginManifest};
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -19,7 +21,7 @@ pub fn import_plugin_bundle(
     let manifest = bundle
         .files
         .iter()
-        .find(|f| f.path == ".claude-plugin/plugin.json")
+        .find(|f| f.path == PLUGIN_MANIFEST_PATH)
         .map(|f| serde_json::from_str::<PluginManifest>(&f.content))
         .transpose()
         .map_err(|e| {
@@ -111,7 +113,7 @@ fn import_skill_files(
             continue;
         }
 
-        if parts[1] == "SKILL.md" {
+        if parts[1] == SKILL_FILENAME {
             let (fm_name, fm_description, body) = parse_skill_frontmatter(&file.content);
             std::fs::create_dir_all(&skill_dir).map_err(|e| {
                 MarketplaceError::Internal(format!(
@@ -156,7 +158,7 @@ fn extract_agent_ids(files: &[super::export::PluginFile]) -> Vec<String> {
 }
 
 fn parse_import_mcp_servers(files: &[super::export::PluginFile]) -> Vec<String> {
-    let Some(mcp_file) = files.iter().find(|f| f.path == ".mcp.json") else {
+    let Some(mcp_file) = files.iter().find(|f| f.path == MCP_CONFIG_PATH) else {
         return Vec::new();
     };
     let Ok(mcp_config) = serde_json::from_str::<McpConfigFile>(&mcp_file.content) else {

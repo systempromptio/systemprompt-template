@@ -6,6 +6,7 @@ pub(super) struct ActivityData {
     pub hourly: Vec<HourlyBar>,
     pub skills: Vec<SkillBar>,
     pub tools: Vec<ToolSuccessBar>,
+    // JSON: serialized chart data for Handlebars rendering
     pub chart: serde_json::Value,
 }
 

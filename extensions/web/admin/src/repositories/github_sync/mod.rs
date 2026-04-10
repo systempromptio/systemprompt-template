@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 use sqlx::PgPool;
 use systemprompt::models::ProfileBootstrap;
 
+use crate::types::LOG_CONTEXT_GITHUB;
+
 pub use error::GitSyncError;
 use types::PluginImportTally;
 pub use types::SyncResult;
@@ -78,7 +80,7 @@ fn extract_plugin_source<'a>(
     log_context: &str,
 ) -> Option<&'a str> {
     let source = plugin_entry.get("source").and_then(|v| v.as_str());
-    if source.is_none() && log_context == "github" {
+    if source.is_none() && log_context == LOG_CONTEXT_GITHUB {
         tracing::warn!("Plugin entry missing 'source' field, skipping");
     }
     source
@@ -104,7 +106,7 @@ fn build_and_import_plugin(
 }
 
 fn log_missing_plugin_dir(plugin_dir: &Path, log_context: &str, tally: &mut PluginImportTally) {
-    if log_context == "github" {
+    if log_context == LOG_CONTEXT_GITHUB {
         tracing::warn!(path = %plugin_dir.display(), "Plugin source directory not found");
         tally.error_count += 1;
     } else {

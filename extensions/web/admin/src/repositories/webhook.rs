@@ -9,6 +9,7 @@ pub struct UsageEventParams<'a> {
     pub session_id: &'a SessionId,
     pub event_type: &'a str,
     pub tool_name: Option<&'a str>,
+    // JSON: dynamic webhook event metadata
     pub metadata: &'a serde_json::Value,
     pub description: Option<&'a str>,
     pub prompt_preview: Option<&'a str>,

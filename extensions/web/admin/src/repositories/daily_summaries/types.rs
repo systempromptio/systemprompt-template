@@ -31,6 +31,7 @@ pub struct DailySummaryRow {
     pub achievements_unlocked: String,
     pub highlights: Option<String>,
     pub trends: Option<String>,
+    // JSON: AI-generated summary metrics from jsonb column
     pub category_distribution: Option<serde_json::Value>,
     pub plugins_count: i32,
     pub skills_count: i32,
@@ -38,6 +39,7 @@ pub struct DailySummaryRow {
     pub mcp_servers_count: i32,
     pub hooks_count: i32,
     pub health_score: Option<f32>,
+    // JSON: AI-generated summary metrics from jsonb column
     pub skill_effectiveness: Option<serde_json::Value>,
     pub avg_session_duration_minutes: Option<f32>,
     pub avg_turns_per_session: Option<f32>,
@@ -76,6 +78,7 @@ pub struct DailySummaryInput {
     pub achievements_unlocked: String,
     pub highlights: Option<String>,
     pub trends: Option<String>,
+    // JSON: AI-generated summary metrics from jsonb column
     pub category_distribution: Option<serde_json::Value>,
     pub plugins_count: i32,
     pub skills_count: i32,
@@ -83,6 +86,7 @@ pub struct DailySummaryInput {
     pub mcp_servers_count: i32,
     pub hooks_count: i32,
     pub health_score: Option<f32>,
+    // JSON: AI-generated summary metrics from jsonb column
     pub skill_effectiveness: Option<serde_json::Value>,
     pub avg_session_duration_minutes: Option<f32>,
     pub avg_turns_per_session: Option<f32>,
@@ -111,6 +115,8 @@ pub(super) struct UpsertCloned {
     pub top_recommendation: Option<String>,
     pub highlights: Option<String>,
     pub trends: Option<String>,
+    // JSON: AI-generated summary metrics from jsonb column
     pub category_distribution: Option<serde_json::Value>,
+    // JSON: AI-generated summary metrics from jsonb column
     pub skill_effectiveness: Option<serde_json::Value>,
 }

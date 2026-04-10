@@ -2,6 +2,8 @@ use std::io::Write;
 
 use zip::write::{SimpleFileOptions, ZipWriter};
 
+use crate::types::MCP_CONFIG_PATH;
+
 use super::export::{PluginBundle, SyncPluginsResponse};
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -167,7 +169,7 @@ fn append_merged_mcp_config(
 
     for bundle in &response.plugins {
         for file in &bundle.files {
-            if file.path == ".mcp.json" {
+            if file.path == MCP_CONFIG_PATH {
                 if let Ok(mcp_config) = serde_json::from_str::<McpConfigFile>(&file.content) {
                     merged_servers.extend(mcp_config.mcp_servers);
                 }

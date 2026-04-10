@@ -3,6 +3,8 @@ mod slugs;
 
 use std::sync::Arc;
 
+const ACTION_CREATED: &str = "created";
+
 use sqlx::PgPool;
 
 pub use plugin::{add_to_plugin, auto_add_to_default_plugin};
@@ -165,7 +167,7 @@ pub fn build_plugin_response(
     }))
     .map_err(|e| McpError::internal_error(format!("Failed to serialize plugin: {e}"), None))?;
 
-    let action_past = if input.action == "created" {
+    let action_past = if input.action == ACTION_CREATED {
         "Created"
     } else {
         "Updated"

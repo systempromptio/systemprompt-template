@@ -13,6 +13,7 @@ use systemprompt::identifiers::UserId;
 
 use crate::handlers::shared;
 use crate::repositories;
+use crate::types::{GIT_HEAD, GIT_INFO_REFS, GIT_UPLOAD_PACK};
 
 fn detect_platform(headers: &HeaderMap) -> &'static str {
     if let Some(ua) = headers
@@ -166,9 +167,9 @@ pub async fn cowork_upload_pack_handler(
 }
 
 async fn serve_git_file(repo_path: &PathBuf, file_path: &str, query: &InfoRefsQuery) -> Response {
-    if file_path == "info/refs" {
+    if file_path == GIT_INFO_REFS {
         if let Some(ref service) = query.service {
-            if service == "git-upload-pack" {
+            if service == GIT_UPLOAD_PACK {
                 return smart_info_refs(repo_path).await;
             }
         }
@@ -187,7 +188,7 @@ async fn serve_git_file(repo_path: &PathBuf, file_path: &str, query: &InfoRefsQu
     let ext = std::path::Path::new(file_path)
         .extension()
         .and_then(|e| e.to_str());
-    let content_type = if file_path == "HEAD" || file_path == "info/refs" {
+    let content_type = if file_path == GIT_HEAD || file_path == GIT_INFO_REFS {
         "text/plain"
     } else if ext == Some("pack") {
         "application/x-git-packed-objects"
