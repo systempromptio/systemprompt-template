@@ -214,38 +214,9 @@ pub fn compute_country_traffic_chart(
     let n = cs.time_buckets.len();
     let cumulative = build_cumulative_stacks(&cs.series);
 
-    let peak_f64 = cumulative
-        .last()
-        .map_or(1.0, |top| top.iter().copied().fold(0.0f64, f64::max))
-        .max(1.0);
-    let peak = f64_to_i64(peak_f64);
-    let y_max = peak_f64 * 1.1;
-
+    let (peak, y_max) = compute_peak_and_ymax(&cumulative);
     let countries = build_country_areas(&cs.country_names, &cumulative, n, svg_w, svg_h, y_max);
-
-    let x_fmt = match range {
-        "7d" => "%a %d",
-        "30d" => "%b %d",
-        _ => "%H:%M",
-    };
-    let step = (n / 7).max(1);
-    let x_labels: Vec<XAxisLabel> = cs
-        .time_buckets
-        .iter()
-        .enumerate()
-        .filter_map(|(i, b)| {
-            if i % step == 0 || i == n - 1 {
-                let x = svg_x(i, n, svg_w);
-                Some(XAxisLabel {
-                    label: b.format(x_fmt).to_string(),
-                    x: format!("{x:.1}"),
-                })
-            } else {
-                None
-            }
-        })
-        .collect();
-
+    let x_labels = build_country_x_labels(&cs.time_buckets, n, svg_w, range);
     let y_labels = build_y_labels(peak, svg_h, y_max);
     let tooltips = build_country_tooltips(
         &cs.time_buckets,
@@ -267,4 +238,41 @@ pub fn compute_country_traffic_chart(
             String::new()
         }),
     }
+}
+
+fn compute_peak_and_ymax(cumulative: &[Vec<f64>]) -> (i64, f64) {
+    let peak_f64 = cumulative
+        .last()
+        .map_or(1.0, |top| top.iter().copied().fold(0.0f64, f64::max))
+        .max(1.0);
+    (f64_to_i64(peak_f64), peak_f64 * 1.1)
+}
+
+fn build_country_x_labels(
+    time_buckets: &[chrono::DateTime<chrono::Utc>],
+    n: usize,
+    svg_w: f64,
+    range: &str,
+) -> Vec<XAxisLabel> {
+    let x_fmt = match range {
+        "7d" => "%a %d",
+        "30d" => "%b %d",
+        _ => "%H:%M",
+    };
+    let step = (n / 7).max(1);
+    time_buckets
+        .iter()
+        .enumerate()
+        .filter_map(|(i, b)| {
+            if i % step == 0 || i == n - 1 {
+                let x = svg_x(i, n, svg_w);
+                Some(XAxisLabel {
+                    label: b.format(x_fmt).to_string(),
+                    x: format!("{x:.1}"),
+                })
+            } else {
+                None
+            }
+        })
+        .collect()
 }

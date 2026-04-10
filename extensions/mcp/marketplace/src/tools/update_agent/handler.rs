@@ -27,6 +27,57 @@ pub struct UpdateAgentHandler {
     pub db_pool: DbPool,
 }
 
+fn validate_input(input: &UpdateAgentInput) -> Result<(), McpError> {
+    if let Some(ref name) = input.name {
+        if name.len() > MAX_NAME_LEN {
+            return Err(McpError::invalid_params(
+                format!("name exceeds maximum length of {MAX_NAME_LEN}"),
+                None,
+            ));
+        }
+    }
+    if let Some(ref description) = input.description {
+        if description.len() > MAX_DESCRIPTION_LEN {
+            return Err(McpError::invalid_params(
+                format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
+                None,
+            ));
+        }
+    }
+    if let Some(ref system_prompt) = input.system_prompt {
+        if system_prompt.len() > MAX_SYSTEM_PROMPT_LEN {
+            return Err(McpError::invalid_params(
+                format!("system_prompt exceeds maximum length of {MAX_SYSTEM_PROMPT_LEN}"),
+                None,
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn build_response(
+    agent: &systemprompt_web_extension::admin::types::UserAgent,
+    ctx: &RequestContext,
+) -> Result<(TextArtifact, String), McpError> {
+    let agent_json = serde_json::to_string_pretty(&serde_json::json!({
+        "_display": { "type": "card", "entity": "agent", "action": "updated" },
+        "agent_id": agent.agent_id,
+        "name": agent.name,
+        "description": agent.description,
+        "system_prompt": agent.system_prompt,
+        "base_agent_id": agent.base_agent_id,
+        "created_at": agent.created_at.to_rfc3339(),
+        "updated_at": agent.updated_at.to_rfc3339(),
+    }))
+    .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
+
+    let summary = format!("Updated agent '{}' ({})", agent.name, agent.agent_id);
+    let content = format!("{summary}\n\n{agent_json}");
+    let artifact = TextArtifact::new(&agent_json, ctx).with_title(format!("Agent: {}", agent.name));
+
+    Ok((artifact, content))
+}
+
 #[async_trait]
 impl McpToolHandler for UpdateAgentHandler {
     type Input = UpdateAgentInput;
@@ -48,30 +99,7 @@ impl McpToolHandler for UpdateAgentHandler {
         ctx: &RequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
-        if let Some(ref name) = input.name {
-            if name.len() > MAX_NAME_LEN {
-                return Err(McpError::invalid_params(
-                    format!("name exceeds maximum length of {MAX_NAME_LEN}"),
-                    None,
-                ));
-            }
-        }
-        if let Some(ref description) = input.description {
-            if description.len() > MAX_DESCRIPTION_LEN {
-                return Err(McpError::invalid_params(
-                    format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
-                    None,
-                ));
-            }
-        }
-        if let Some(ref system_prompt) = input.system_prompt {
-            if system_prompt.len() > MAX_SYSTEM_PROMPT_LEN {
-                return Err(McpError::invalid_params(
-                    format!("system_prompt exceeds maximum length of {MAX_SYSTEM_PROMPT_LEN}"),
-                    None,
-                ));
-            }
-        }
+        validate_input(&input)?;
 
         let pool = shared::require_write_pool(&self.db_pool)?;
 
@@ -104,23 +132,6 @@ impl McpToolHandler for UpdateAgentHandler {
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 
-        let agent_json = serde_json::to_string_pretty(&serde_json::json!({
-            "_display": { "type": "card", "entity": "agent", "action": "updated" },
-            "agent_id": agent.agent_id,
-            "name": agent.name,
-            "description": agent.description,
-            "system_prompt": agent.system_prompt,
-            "base_agent_id": agent.base_agent_id,
-            "created_at": agent.created_at.to_rfc3339(),
-            "updated_at": agent.updated_at.to_rfc3339(),
-        }))
-        .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
-
-        let summary = format!("Updated agent '{}' ({})", agent.name, agent.agent_id);
-        let content = format!("{summary}\n\n{agent_json}");
-        let artifact =
-            TextArtifact::new(&agent_json, ctx).with_title(format!("Agent: {}", agent.name));
-
-        Ok((artifact, content))
+        build_response(&agent, ctx)
     }
 }

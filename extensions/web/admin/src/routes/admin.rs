@@ -12,7 +12,16 @@ use super::super::handlers;
 use super::super::middleware;
 
 pub fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<PgPool>) -> Router {
-    let reads = Router::new()
+    let reads = build_admin_read_routes_inner(read_pool);
+    let writes = build_admin_write_routes(write_pool);
+
+    reads.merge(writes).layer(axum_middleware::from_fn(
+        middleware::require_admin_middleware,
+    ))
+}
+
+fn build_admin_read_routes_inner(read_pool: &Arc<PgPool>) -> Router {
+    Router::new()
         .route("/users", get(handlers::list_users_handler))
         .route(
             "/users/{user_id}/detail",
@@ -33,9 +42,11 @@ pub fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<PgPool>
             "/org/marketplaces",
             get(handlers::org_marketplaces::list_org_marketplaces_handler),
         )
-        .with_state(Arc::clone(read_pool));
+        .with_state(Arc::clone(read_pool))
+}
 
-    let writes = Router::new()
+fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
+    Router::new()
         .route("/users", post(handlers::create_user_handler))
         .route(
             "/users/{user_id}",
@@ -82,11 +93,7 @@ pub fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<PgPool>
             "/org/marketplaces/{id}/publish",
             post(handlers::org_marketplaces::publish_marketplace_handler),
         )
-        .with_state(Arc::clone(write_pool));
-
-    reads.merge(writes).layer(axum_middleware::from_fn(
-        middleware::require_admin_middleware,
-    ))
+        .with_state(Arc::clone(write_pool))
 }
 
 pub fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {

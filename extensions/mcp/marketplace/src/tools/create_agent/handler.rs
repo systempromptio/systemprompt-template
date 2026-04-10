@@ -27,6 +27,61 @@ pub struct CreateAgentHandler {
     pub db_pool: DbPool,
 }
 
+fn validate_input(input: &CreateAgentInput) -> Result<(), McpError> {
+    if input.name.len() > MAX_NAME_LEN {
+        return Err(McpError::invalid_params(
+            format!("name exceeds maximum length of {MAX_NAME_LEN}"),
+            None,
+        ));
+    }
+    if input.description.len() > MAX_DESCRIPTION_LEN {
+        return Err(McpError::invalid_params(
+            format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
+            None,
+        ));
+    }
+    if input.system_prompt.len() > MAX_SYSTEM_PROMPT_LEN {
+        return Err(McpError::invalid_params(
+            format!("system_prompt exceeds maximum length of {MAX_SYSTEM_PROMPT_LEN}"),
+            None,
+        ));
+    }
+    Ok(())
+}
+
+fn build_response(
+    agent: &systemprompt_web_extension::admin::types::UserAgent,
+    added_to_plugin: &Option<String>,
+    ctx: &RequestContext,
+) -> Result<(TextArtifact, String), McpError> {
+    let agent_json = serde_json::to_string_pretty(&serde_json::json!({
+        "_display": { "type": "card", "entity": "agent", "action": "created" },
+        "agent_id": agent.agent_id,
+        "name": agent.name,
+        "description": agent.description,
+        "system_prompt": agent.system_prompt,
+        "enabled": agent.enabled,
+        "base_agent_id": agent.base_agent_id,
+        "added_to_plugin": added_to_plugin,
+        "created_at": agent.created_at.to_rfc3339(),
+        "updated_at": agent.updated_at.to_rfc3339(),
+    }))
+    .map_err(|e| McpError::internal_error(format!("Failed to serialize agent: {e}"), None))?;
+
+    let summary = if let Some(ref plugin_id) = added_to_plugin {
+        format!(
+            "Created agent '{}' ({}) and added to plugin '{}'",
+            agent.name, agent.agent_id, plugin_id
+        )
+    } else {
+        format!("Created agent '{}' ({})", agent.name, agent.agent_id)
+    };
+    let content = format!("{summary}\n\n{agent_json}");
+    let artifact = TextArtifact::new(&agent_json, ctx).with_title(format!("Agent: {}", agent.name));
+
+    Ok((artifact, content))
+}
+
 #[async_trait]
 impl McpToolHandler for CreateAgentHandler {
     type Input = CreateAgentInput;
@@ -47,27 +102,9 @@ impl McpToolHandler for CreateAgentHandler {
         ctx: &RequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
-        if input.name.len() > MAX_NAME_LEN {
-            return Err(McpError::invalid_params(
-                format!("name exceeds maximum length of {MAX_NAME_LEN}"),
-                None,
-            ));
-        }
-        if input.description.len() > MAX_DESCRIPTION_LEN {
-            return Err(McpError::invalid_params(
-                format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
-                None,
-            ));
-        }
-        if input.system_prompt.len() > MAX_SYSTEM_PROMPT_LEN {
-            return Err(McpError::invalid_params(
-                format!("system_prompt exceeds maximum length of {MAX_SYSTEM_PROMPT_LEN}"),
-                None,
-            ));
-        }
+        validate_input(&input)?;
 
         let agent_id = shared::generate_slug(&input.name);
-
         let pool = shared::require_write_pool(&self.db_pool)?;
 
         let create_req = systemprompt_web_extension::admin::types::CreateUserAgentRequest {
@@ -95,32 +132,6 @@ impl McpToolHandler for CreateAgentHandler {
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 
-        let agent_json = serde_json::to_string_pretty(&serde_json::json!({
-            "_display": { "type": "card", "entity": "agent", "action": "created" },
-            "agent_id": agent.agent_id,
-            "name": agent.name,
-            "description": agent.description,
-            "system_prompt": agent.system_prompt,
-            "enabled": agent.enabled,
-            "base_agent_id": agent.base_agent_id,
-            "added_to_plugin": added_to_plugin,
-            "created_at": agent.created_at.to_rfc3339(),
-            "updated_at": agent.updated_at.to_rfc3339(),
-        }))
-        .map_err(|e| McpError::internal_error(format!("Failed to serialize agent: {e}"), None))?;
-
-        let summary = if let Some(ref plugin_id) = added_to_plugin {
-            format!(
-                "Created agent '{}' ({}) and added to plugin '{}'",
-                agent.name, agent.agent_id, plugin_id
-            )
-        } else {
-            format!("Created agent '{}' ({})", agent.name, agent.agent_id)
-        };
-        let content = format!("{summary}\n\n{agent_json}");
-        let artifact =
-            TextArtifact::new(&agent_json, ctx).with_title(format!("Agent: {}", agent.name));
-
-        Ok((artifact, content))
+        build_response(&agent, &added_to_plugin, ctx)
     }
 }

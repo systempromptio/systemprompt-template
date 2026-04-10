@@ -10,6 +10,7 @@ mod jobs;
 mod marketplace;
 mod marketplace_upload;
 pub mod marketplaces;
+pub use marketplaces::OrgMarketplace;
 mod plugins;
 mod plugins_config;
 mod plugins_requests;

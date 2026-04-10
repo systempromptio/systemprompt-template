@@ -21,6 +21,14 @@ pub fn compute_strengths_weaknesses(
     user: &UserAggregateMetrics,
     global: &GlobalAverages,
 ) -> (Vec<MetricDeviation>, Vec<MetricDeviation>) {
+    let deviations = collect_all_deviations(user, global);
+    partition_and_sort(deviations)
+}
+
+fn collect_all_deviations(
+    user: &UserAggregateMetrics,
+    global: &GlobalAverages,
+) -> Vec<MetricDeviation> {
     let mut deviations = Vec::new();
 
     push_deviation(
@@ -98,6 +106,12 @@ pub fn compute_strengths_weaknesses(
         fmt_decimal,
     );
 
+    deviations
+}
+
+fn partition_and_sort(
+    deviations: Vec<MetricDeviation>,
+) -> (Vec<MetricDeviation>, Vec<MetricDeviation>) {
     let mut strengths = Vec::new();
     let mut weaknesses = Vec::new();
 

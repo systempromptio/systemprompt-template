@@ -52,65 +52,11 @@ impl Job for GitHubMarketplaceSyncJob {
                 .with_duration(duration_ms));
         }
 
-        let mut total_success = 0u64;
-        let mut total_errors = 0u64;
+        let (github_success, github_errors) = sync_from_github(&pool, &marketplaces).await;
+        let (local_success, local_errors) = sync_from_local(&pool, &marketplaces).await;
 
-        for mkt in &marketplaces {
-            let Some(ref repo_url) = mkt.github_repo_url else {
-                continue;
-            };
-
-            match repositories::github_sync::sync_marketplace_from_github(
-                &pool, &mkt.id, repo_url, "cron",
-            )
-            .await
-            {
-                Ok(result) => {
-                    total_success += result.plugins_synced;
-                    total_errors += result.errors;
-                }
-                Err(e) => {
-                    tracing::error!(
-                        marketplace_id = %mkt.id,
-                        error = %e,
-                        "Failed to sync marketplace from GitHub"
-                    );
-                    let _ = repositories::org_marketplaces::insert_sync_log(
-                        &pool,
-                        &repositories::org_marketplaces::SyncLogEntry {
-                            marketplace_id: &mkt.id,
-                            operation: "sync",
-                            status: "error",
-                            commit_hash: None,
-                            plugins_synced: 0,
-                            errors: 1,
-                            error_message: Some(&e.to_string()),
-                            triggered_by: "cron",
-                            duration_ms: None,
-                        },
-                    )
-                    .await;
-                    total_errors += 1;
-                }
-            }
-        }
-
-        for mkt in &marketplaces {
-            match repositories::github_sync::sync_marketplace_from_local(&pool, &mkt.id).await {
-                Ok(result) => {
-                    total_success += result.plugins_synced;
-                    total_errors += result.errors;
-                }
-                Err(e) => {
-                    tracing::warn!(
-                        marketplace_id = %mkt.id,
-                        error = %e,
-                        "Failed to sync marketplace from local plugins"
-                    );
-                }
-            }
-        }
-
+        let total_success = github_success + local_success;
+        let total_errors = github_errors + local_errors;
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 
         tracing::info!(
@@ -125,6 +71,82 @@ impl Job for GitHubMarketplaceSyncJob {
             .with_stats(total_success, total_errors)
             .with_duration(duration_ms))
     }
+}
+
+async fn sync_from_github(
+    pool: &std::sync::Arc<sqlx::PgPool>,
+    marketplaces: &[systemprompt_web_admin::types::OrgMarketplace],
+) -> (u64, u64) {
+    let mut total_success = 0u64;
+    let mut total_errors = 0u64;
+
+    for mkt in marketplaces {
+        let Some(ref repo_url) = mkt.github_repo_url else {
+            continue;
+        };
+
+        match repositories::github_sync::sync_marketplace_from_github(
+            pool, &mkt.id, repo_url, "cron",
+        )
+        .await
+        {
+            Ok(result) => {
+                total_success += result.plugins_synced;
+                total_errors += result.errors;
+            }
+            Err(e) => {
+                tracing::error!(
+                    marketplace_id = %mkt.id,
+                    error = %e,
+                    "Failed to sync marketplace from GitHub"
+                );
+                let _ = repositories::org_marketplaces::insert_sync_log(
+                    pool,
+                    &repositories::org_marketplaces::SyncLogEntry {
+                        marketplace_id: &mkt.id,
+                        operation: "sync",
+                        status: "error",
+                        commit_hash: None,
+                        plugins_synced: 0,
+                        errors: 1,
+                        error_message: Some(&e.to_string()),
+                        triggered_by: "cron",
+                        duration_ms: None,
+                    },
+                )
+                .await;
+                total_errors += 1;
+            }
+        }
+    }
+
+    (total_success, total_errors)
+}
+
+async fn sync_from_local(
+    pool: &std::sync::Arc<sqlx::PgPool>,
+    marketplaces: &[systemprompt_web_admin::types::OrgMarketplace],
+) -> (u64, u64) {
+    let mut total_success = 0u64;
+    let mut total_errors = 0u64;
+
+    for mkt in marketplaces {
+        match repositories::github_sync::sync_marketplace_from_local(pool, &mkt.id).await {
+            Ok(result) => {
+                total_success += result.plugins_synced;
+                total_errors += result.errors;
+            }
+            Err(e) => {
+                tracing::warn!(
+                    marketplace_id = %mkt.id,
+                    error = %e,
+                    "Failed to sync marketplace from local plugins"
+                );
+            }
+        }
+    }
+
+    (total_success, total_errors)
 }
 
 systemprompt::traits::submit_job!(&GitHubMarketplaceSyncJob);

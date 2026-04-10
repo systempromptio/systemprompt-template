@@ -32,6 +32,77 @@ pub struct CreateSkillHandler {
     pub db_pool: DbPool,
 }
 
+fn validate_input(input: &CreateSkillInput) -> Result<(), McpError> {
+    if input.name.len() > MAX_NAME_LEN {
+        return Err(McpError::invalid_params(
+            format!("name exceeds maximum length of {MAX_NAME_LEN}"),
+            None,
+        ));
+    }
+    if input.description.len() > MAX_DESCRIPTION_LEN {
+        return Err(McpError::invalid_params(
+            format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
+            None,
+        ));
+    }
+    if input.content.len() > MAX_CONTENT_LEN {
+        return Err(McpError::invalid_params(
+            format!("content exceeds maximum length of {MAX_CONTENT_LEN}"),
+            None,
+        ));
+    }
+    if input.tags.len() > MAX_TAGS_COUNT {
+        return Err(McpError::invalid_params(
+            format!("tags count exceeds maximum of {MAX_TAGS_COUNT}"),
+            None,
+        ));
+    }
+    for tag in &input.tags {
+        if tag.len() > MAX_TAG_LEN {
+            return Err(McpError::invalid_params(
+                format!("tag exceeds maximum length of {MAX_TAG_LEN}"),
+                None,
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn build_response(
+    skill: &systemprompt_web_extension::admin::types::UserSkill,
+    added_to_plugin: &Option<String>,
+    ctx: &RequestContext,
+) -> Result<(TextArtifact, String), McpError> {
+    let skill_json = serde_json::to_string_pretty(&serde_json::json!({
+        "_display": { "type": "card", "entity": "skill", "action": "created" },
+        "skill_id": skill.skill_id,
+        "name": skill.name,
+        "description": skill.description,
+        "content": skill.content,
+        "enabled": skill.enabled,
+        "version": skill.version,
+        "tags": skill.tags,
+        "base_skill_id": skill.base_skill_id,
+        "added_to_plugin": added_to_plugin,
+        "created_at": skill.created_at.to_rfc3339(),
+        "updated_at": skill.updated_at.to_rfc3339(),
+    }))
+    .map_err(|e| McpError::internal_error(format!("Failed to serialize skill: {e}"), None))?;
+
+    let summary = if let Some(ref plugin_id) = added_to_plugin {
+        format!(
+            "Created skill '{}' ({}) and added to plugin '{}'",
+            skill.name, skill.skill_id, plugin_id
+        )
+    } else {
+        format!("Created skill '{}' ({})", skill.name, skill.skill_id)
+    };
+    let content = format!("{summary}\n\n{skill_json}");
+    let artifact = TextArtifact::new(&skill_json, ctx).with_title(format!("Skill: {}", skill.name));
+
+    Ok((artifact, content))
+}
+
 #[async_trait]
 impl McpToolHandler for CreateSkillHandler {
     type Input = CreateSkillInput;
@@ -52,41 +123,9 @@ impl McpToolHandler for CreateSkillHandler {
         ctx: &RequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
-        if input.name.len() > MAX_NAME_LEN {
-            return Err(McpError::invalid_params(
-                format!("name exceeds maximum length of {MAX_NAME_LEN}"),
-                None,
-            ));
-        }
-        if input.description.len() > MAX_DESCRIPTION_LEN {
-            return Err(McpError::invalid_params(
-                format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
-                None,
-            ));
-        }
-        if input.content.len() > MAX_CONTENT_LEN {
-            return Err(McpError::invalid_params(
-                format!("content exceeds maximum length of {MAX_CONTENT_LEN}"),
-                None,
-            ));
-        }
-        if input.tags.len() > MAX_TAGS_COUNT {
-            return Err(McpError::invalid_params(
-                format!("tags count exceeds maximum of {MAX_TAGS_COUNT}"),
-                None,
-            ));
-        }
-        for tag in &input.tags {
-            if tag.len() > MAX_TAG_LEN {
-                return Err(McpError::invalid_params(
-                    format!("tag exceeds maximum length of {MAX_TAG_LEN}"),
-                    None,
-                ));
-            }
-        }
+        validate_input(&input)?;
 
         let skill_id = shared::generate_slug(&input.name);
-
         let pool = shared::require_write_pool(&self.db_pool)?;
         let create_req = systemprompt_web_extension::admin::types::CreateSkillRequest {
             skill_id: systemprompt::identifiers::SkillId::new(skill_id.clone()),
@@ -120,34 +159,6 @@ impl McpToolHandler for CreateSkillHandler {
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 
-        let skill_json = serde_json::to_string_pretty(&serde_json::json!({
-            "_display": { "type": "card", "entity": "skill", "action": "created" },
-            "skill_id": skill.skill_id,
-            "name": skill.name,
-            "description": skill.description,
-            "content": skill.content,
-            "enabled": skill.enabled,
-            "version": skill.version,
-            "tags": skill.tags,
-            "base_skill_id": skill.base_skill_id,
-            "added_to_plugin": added_to_plugin,
-            "created_at": skill.created_at.to_rfc3339(),
-            "updated_at": skill.updated_at.to_rfc3339(),
-        }))
-        .map_err(|e| McpError::internal_error(format!("Failed to serialize skill: {e}"), None))?;
-
-        let summary = if let Some(ref plugin_id) = added_to_plugin {
-            format!(
-                "Created skill '{}' ({}) and added to plugin '{}'",
-                skill.name, skill.skill_id, plugin_id
-            )
-        } else {
-            format!("Created skill '{}' ({})", skill.name, skill.skill_id)
-        };
-        let content = format!("{summary}\n\n{skill_json}");
-        let artifact =
-            TextArtifact::new(&skill_json, ctx).with_title(format!("Skill: {}", skill.name));
-
-        Ok((artifact, content))
+        build_response(&skill, &added_to_plugin, ctx)
     }
 }

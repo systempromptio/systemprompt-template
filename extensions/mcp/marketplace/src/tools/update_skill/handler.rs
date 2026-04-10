@@ -30,6 +30,75 @@ pub struct UpdateSkillHandler {
     pub db_pool: DbPool,
 }
 
+fn validate_input(input: &UpdateSkillInput) -> Result<(), McpError> {
+    if let Some(ref name) = input.name {
+        if name.len() > MAX_NAME_LEN {
+            return Err(McpError::invalid_params(
+                format!("name exceeds maximum length of {MAX_NAME_LEN}"),
+                None,
+            ));
+        }
+    }
+    if let Some(ref description) = input.description {
+        if description.len() > MAX_DESCRIPTION_LEN {
+            return Err(McpError::invalid_params(
+                format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
+                None,
+            ));
+        }
+    }
+    if let Some(ref content) = input.content {
+        if content.len() > MAX_CONTENT_LEN {
+            return Err(McpError::invalid_params(
+                format!("content exceeds maximum length of {MAX_CONTENT_LEN}"),
+                None,
+            ));
+        }
+    }
+    if let Some(ref tags) = input.tags {
+        if tags.len() > MAX_TAGS_COUNT {
+            return Err(McpError::invalid_params(
+                format!("tags count exceeds maximum of {MAX_TAGS_COUNT}"),
+                None,
+            ));
+        }
+        for tag in tags {
+            if tag.len() > MAX_TAG_LEN {
+                return Err(McpError::invalid_params(
+                    format!("tag exceeds maximum length of {MAX_TAG_LEN}"),
+                    None,
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn build_response(
+    skill: &systemprompt_web_extension::admin::types::UserSkill,
+    ctx: &RequestContext,
+) -> Result<(TextArtifact, String), McpError> {
+    let skill_json = serde_json::to_string_pretty(&serde_json::json!({
+        "_display": { "type": "card", "entity": "skill", "action": "updated" },
+        "skill_id": skill.skill_id,
+        "name": skill.name,
+        "description": skill.description,
+        "content": skill.content,
+        "version": skill.version,
+        "tags": skill.tags,
+        "base_skill_id": skill.base_skill_id,
+        "created_at": skill.created_at.to_rfc3339(),
+        "updated_at": skill.updated_at.to_rfc3339(),
+    }))
+    .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
+
+    let summary = format!("Updated skill '{}' ({})", skill.name, skill.skill_id);
+    let content = format!("{summary}\n\n{skill_json}");
+    let artifact = TextArtifact::new(&skill_json, ctx).with_title(format!("Skill: {}", skill.name));
+
+    Ok((artifact, content))
+}
+
 #[async_trait]
 impl McpToolHandler for UpdateSkillHandler {
     type Input = UpdateSkillInput;
@@ -51,46 +120,7 @@ impl McpToolHandler for UpdateSkillHandler {
         ctx: &RequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
-        if let Some(ref name) = input.name {
-            if name.len() > MAX_NAME_LEN {
-                return Err(McpError::invalid_params(
-                    format!("name exceeds maximum length of {MAX_NAME_LEN}"),
-                    None,
-                ));
-            }
-        }
-        if let Some(ref description) = input.description {
-            if description.len() > MAX_DESCRIPTION_LEN {
-                return Err(McpError::invalid_params(
-                    format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
-                    None,
-                ));
-            }
-        }
-        if let Some(ref content) = input.content {
-            if content.len() > MAX_CONTENT_LEN {
-                return Err(McpError::invalid_params(
-                    format!("content exceeds maximum length of {MAX_CONTENT_LEN}"),
-                    None,
-                ));
-            }
-        }
-        if let Some(ref tags) = input.tags {
-            if tags.len() > MAX_TAGS_COUNT {
-                return Err(McpError::invalid_params(
-                    format!("tags count exceeds maximum of {MAX_TAGS_COUNT}"),
-                    None,
-                ));
-            }
-            for tag in tags {
-                if tag.len() > MAX_TAG_LEN {
-                    return Err(McpError::invalid_params(
-                        format!("tag exceeds maximum length of {MAX_TAG_LEN}"),
-                        None,
-                    ));
-                }
-            }
-        }
+        validate_input(&input)?;
 
         let pool = shared::require_write_pool(&self.db_pool)?;
         let update_req = systemprompt_web_extension::admin::types::UpdateUserSkillRequest {
@@ -123,25 +153,6 @@ impl McpToolHandler for UpdateSkillHandler {
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 
-        let skill_json = serde_json::to_string_pretty(&serde_json::json!({
-            "_display": { "type": "card", "entity": "skill", "action": "updated" },
-            "skill_id": skill.skill_id,
-            "name": skill.name,
-            "description": skill.description,
-            "content": skill.content,
-            "version": skill.version,
-            "tags": skill.tags,
-            "base_skill_id": skill.base_skill_id,
-            "created_at": skill.created_at.to_rfc3339(),
-            "updated_at": skill.updated_at.to_rfc3339(),
-        }))
-        .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
-
-        let summary = format!("Updated skill '{}' ({})", skill.name, skill.skill_id);
-        let content = format!("{summary}\n\n{skill_json}");
-        let artifact =
-            TextArtifact::new(&skill_json, ctx).with_title(format!("Skill: {}", skill.name));
-
-        Ok((artifact, content))
+        build_response(&skill, ctx)
     }
 }

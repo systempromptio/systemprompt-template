@@ -19,9 +19,49 @@ use systemprompt::mcp::{
     build_artifact_viewer_resource, create_progress_callback, read_artifact_viewer_resource,
     ArtifactViewerConfig,
 };
+use systemprompt::models::execution::context::RequestContext as AppRequestContext;
 use systemprompt_mcp_shared::{record_mcp_access, record_mcp_access_rejected};
 
 const ARTIFACT_VIEWER_TEMPLATE: &str = include_str!("../../templates/artifact-viewer.html");
+
+async fn authenticate_request(
+    db_pool: &DbPool,
+    server_name: &str,
+    tool_name: &str,
+    service_id: &str,
+    ctx: &RequestContext<RoleServer>,
+) -> Result<AppRequestContext, McpError> {
+    let rbac_result = enforce_rbac_from_registry(ctx, service_id);
+
+    match rbac_result {
+        Ok(result) => {
+            match result
+                .expect_authenticated("skill-manager requires OAuth but auth was not enforced")
+            {
+                Ok(authenticated) => {
+                    record_mcp_access(
+                        db_pool,
+                        authenticated.context.user_id().as_ref(),
+                        server_name,
+                        tool_name,
+                        "authenticated",
+                    )
+                    .await;
+                    Ok(authenticated.context.clone())
+                }
+                Err(e) => {
+                    record_mcp_access_rejected(db_pool, server_name, tool_name, e.message.as_ref())
+                        .await;
+                    Err(e)
+                }
+            }
+        }
+        Err(e) => {
+            record_mcp_access_rejected(db_pool, server_name, tool_name, &format!("{e}")).await;
+            Err(e)
+        }
+    }
+}
 
 impl ServerHandler for MarketplaceServer {
     fn get_info(&self) -> ServerInfo {
@@ -115,49 +155,14 @@ impl ServerHandler for MarketplaceServer {
         let tool_name = request.name.to_string();
         let server_name = self.service_id.to_string();
 
-        let rbac_result = enforce_rbac_from_registry(&ctx, self.service_id.as_ref());
-
-        let authenticated_ctx = match rbac_result {
-            Ok(result) => {
-                match result
-                    .expect_authenticated("skill-manager requires OAuth but auth was not enforced")
-                {
-                    Ok(authenticated) => {
-                        record_mcp_access(
-                            &self.db_pool,
-                            authenticated.context.user_id().as_ref(),
-                            &server_name,
-                            &tool_name,
-                            "authenticated",
-                        )
-                        .await;
-                        authenticated
-                    }
-                    Err(e) => {
-                        record_mcp_access_rejected(
-                            &self.db_pool,
-                            &server_name,
-                            &tool_name,
-                            e.message.as_ref(),
-                        )
-                        .await;
-                        return Err(e);
-                    }
-                }
-            }
-            Err(e) => {
-                record_mcp_access_rejected(
-                    &self.db_pool,
-                    &server_name,
-                    &tool_name,
-                    &format!("{e}"),
-                )
-                .await;
-                return Err(e);
-            }
-        };
-
-        let request_context = authenticated_ctx.context.clone();
+        let request_context = authenticate_request(
+            &self.db_pool,
+            &server_name,
+            &tool_name,
+            self.service_id.as_ref(),
+            &ctx,
+        )
+        .await?;
 
         record_mcp_access(
             &self.db_pool,

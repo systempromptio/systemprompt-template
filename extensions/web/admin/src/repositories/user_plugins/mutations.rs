@@ -64,7 +64,7 @@ pub async fn update_user_plugin<'e, E: sqlx::Executor<'e, Database = sqlx::Postg
         req.version.as_deref(),
         req.enabled,
         req.category.as_deref(),
-        &req.keywords as &Option<Vec<String>>,
+        req.keywords.as_deref(),
         req.author_name.as_deref(),
     )
     .fetch_optional(pool)

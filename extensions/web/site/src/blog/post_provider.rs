@@ -45,80 +45,15 @@ impl PageDataProvider for BlogPostPageDataProvider {
         let mut data = json!({});
 
         if let Some(obj) = data.as_object_mut() {
-            if let Some(title) = item.get("title").and_then(|v| v.as_str()) {
-                obj.insert("TITLE".to_string(), Value::String(title.to_string()));
-            }
-            if let Some(desc) = item.get("description").and_then(|v| v.as_str()) {
-                obj.insert("DESCRIPTION".to_string(), Value::String(desc.to_string()));
-            }
-            if let Some(author) = item.get("author").and_then(|v| v.as_str()) {
-                obj.insert("AUTHOR".to_string(), Value::String(author.to_string()));
-            }
-            if let Some(keywords) = item.get("keywords").and_then(|v| v.as_str()) {
-                obj.insert("KEYWORDS".to_string(), Value::String(keywords.to_string()));
-            }
-
-            if let Some(image) = item.get("image").and_then(|v| v.as_str()) {
-                obj.insert(
-                    "FEATURED_IMAGE".to_string(),
-                    Value::String(image.to_string()),
-                );
-                obj.insert("IMAGE".to_string(), Value::String(image.to_string()));
-            }
-
-            if let Some(published) = item.get("published_at").and_then(|v| v.as_str()) {
-                obj.insert("DATE_ISO".to_string(), Value::String(published.to_string()));
-                obj.insert(
-                    "DATE_PUBLISHED".to_string(),
-                    Value::String(published.to_string()),
-                );
-                if let Ok(dt) = DateTime::parse_from_rfc3339(published) {
-                    obj.insert(
-                        "DATE".to_string(),
-                        Value::String(dt.format("%B %d, %Y").to_string()),
-                    );
-                } else if let Ok(dt) = published.parse::<DateTime<Utc>>() {
-                    obj.insert(
-                        "DATE".to_string(),
-                        Value::String(dt.format("%B %d, %Y").to_string()),
-                    );
-                }
-            }
-            if let Some(updated) = item.get("updated_at").and_then(|v| v.as_str()) {
-                obj.insert(
-                    "DATE_MODIFIED_ISO".to_string(),
-                    Value::String(updated.to_string()),
-                );
-            }
-
-            if let Some(content) = item.get("content").and_then(|v| v.as_str()) {
-                let word_count = content.split_whitespace().count();
-                let read_time = (word_count / 200).max(1);
-                obj.insert(
-                    "READ_TIME".to_string(),
-                    Value::String(read_time.to_string()),
-                );
-            }
+            insert_basic_metadata(obj, item);
+            insert_date_metadata(obj, item);
+            insert_read_time(obj, item);
+            insert_social_and_references(obj, item);
 
             let slug = item
                 .get("slug")
                 .and_then(|v| v.as_str())
                 .unwrap_or_default();
-            let title = item
-                .get("title")
-                .and_then(|v| v.as_str())
-                .unwrap_or_default();
-
-            let org_url =
-                Config::get().map_or_else(|_| String::new(), |c| c.api_external_url.clone());
-            let social_bar = render_social_action_bar(slug, title, &org_url);
-            obj.insert("SOCIAL_ACTION_BAR".to_string(), Value::String(social_bar));
-
-            if let Some(links) = item.get("links") {
-                if let Some(refs_html) = render_references(links) {
-                    obj.insert("REFERENCES".to_string(), Value::String(refs_html));
-                }
-            }
 
             if let Some(db) = ctx.db_pool::<Arc<Database>>() {
                 if let Some(pool) = db.pool() {
@@ -153,5 +88,86 @@ impl PageDataProvider for BlogPostPageDataProvider {
 
     fn priority(&self) -> u32 {
         60
+    }
+}
+
+fn insert_basic_metadata(obj: &mut serde_json::Map<String, Value>, item: &Value) {
+    if let Some(title) = item.get("title").and_then(|v| v.as_str()) {
+        obj.insert("TITLE".to_string(), Value::String(title.to_string()));
+    }
+    if let Some(desc) = item.get("description").and_then(|v| v.as_str()) {
+        obj.insert("DESCRIPTION".to_string(), Value::String(desc.to_string()));
+    }
+    if let Some(author) = item.get("author").and_then(|v| v.as_str()) {
+        obj.insert("AUTHOR".to_string(), Value::String(author.to_string()));
+    }
+    if let Some(keywords) = item.get("keywords").and_then(|v| v.as_str()) {
+        obj.insert("KEYWORDS".to_string(), Value::String(keywords.to_string()));
+    }
+    if let Some(image) = item.get("image").and_then(|v| v.as_str()) {
+        obj.insert(
+            "FEATURED_IMAGE".to_string(),
+            Value::String(image.to_string()),
+        );
+        obj.insert("IMAGE".to_string(), Value::String(image.to_string()));
+    }
+}
+
+fn insert_date_metadata(obj: &mut serde_json::Map<String, Value>, item: &Value) {
+    if let Some(published) = item.get("published_at").and_then(|v| v.as_str()) {
+        obj.insert("DATE_ISO".to_string(), Value::String(published.to_string()));
+        obj.insert(
+            "DATE_PUBLISHED".to_string(),
+            Value::String(published.to_string()),
+        );
+        if let Ok(dt) = DateTime::parse_from_rfc3339(published) {
+            obj.insert(
+                "DATE".to_string(),
+                Value::String(dt.format("%B %d, %Y").to_string()),
+            );
+        } else if let Ok(dt) = published.parse::<DateTime<Utc>>() {
+            obj.insert(
+                "DATE".to_string(),
+                Value::String(dt.format("%B %d, %Y").to_string()),
+            );
+        }
+    }
+    if let Some(updated) = item.get("updated_at").and_then(|v| v.as_str()) {
+        obj.insert(
+            "DATE_MODIFIED_ISO".to_string(),
+            Value::String(updated.to_string()),
+        );
+    }
+}
+
+fn insert_read_time(obj: &mut serde_json::Map<String, Value>, item: &Value) {
+    if let Some(content) = item.get("content").and_then(|v| v.as_str()) {
+        let word_count = content.split_whitespace().count();
+        let read_time = (word_count / 200).max(1);
+        obj.insert(
+            "READ_TIME".to_string(),
+            Value::String(read_time.to_string()),
+        );
+    }
+}
+
+fn insert_social_and_references(obj: &mut serde_json::Map<String, Value>, item: &Value) {
+    let slug = item
+        .get("slug")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default();
+    let title = item
+        .get("title")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default();
+
+    let org_url = Config::get().map_or_else(|_| String::new(), |c| c.api_external_url.clone());
+    let social_bar = render_social_action_bar(slug, title, &org_url);
+    obj.insert("SOCIAL_ACTION_BAR".to_string(), Value::String(social_bar));
+
+    if let Some(links) = item.get("links") {
+        if let Some(refs_html) = render_references(links) {
+            obj.insert("REFERENCES".to_string(), Value::String(refs_html));
+        }
     }
 }

@@ -1,4 +1,8 @@
 pub fn demo_help_text(page: &str) -> Option<(&'static str, &'static str)> {
+    demo_help_core_pages(page).or_else(|| demo_help_admin_pages(page))
+}
+
+fn demo_help_core_pages(page: &str) -> Option<(&'static str, &'static str)> {
     match page {
         "control-center" => Some((
             "The <strong>Control Center</strong> is your real-time operations hub. It shows live Claude sessions, APM (Actions Per Minute) metrics, conversation history, skill effectiveness ratings, and session health analytics. In a production deployment, this page streams live updates via SSE as your team uses Claude, giving you instant visibility into AI usage patterns and performance. The Control Center is fully functional in this demo &mdash; connect via <strong>Claude Code</strong> to see live session data populate in real time. Claude Code is the recommended integration for evaluation while Cowork (research preview) stabilises.",
@@ -48,6 +52,12 @@ pub fn demo_help_text(page: &str) -> Option<(&'static str, &'static str)> {
             "<strong>My Activity</strong> tracks your platform engagement across 13 activity categories &mdash; from skill usage and plugin installations to agent interactions and governance events. The activity log provides a chronological record of every interaction, while the achievements system offers milestone-based goals that reward consistent usage and feature exploration. Activity data feeds into your profile insights and leaderboard ranking. Connect via <strong>Claude Code</strong> for the best evaluation experience &mdash; it is the recommended integration while Cowork (research preview) stabilises.",
             "activity-tracking",
         )),
+        _ => None,
+    }
+}
+
+fn demo_help_admin_pages(page: &str) -> Option<(&'static str, &'static str)> {
+    match page {
         "achievements" => Some((
             "<strong>Achievements</strong> displays all available milestones and their unlock status. Achievements are earned by using platform features &mdash; installing plugins, creating skills, running agents, configuring MCP servers, and maintaining usage streaks. Each achievement shows its rarity (how many users have unlocked it), XP reward, and unlock criteria. Achievements encourage feature discovery and consistent platform adoption across teams. Connect via <strong>Claude Code</strong> for the best evaluation experience &mdash; it is the recommended integration while Cowork (research preview) stabilises.",
             "achievements",

@@ -15,67 +15,10 @@ pub struct MetricRowInput {
 }
 
 pub fn make_metric_row(input: &MetricRowInput) -> MetricRow {
-    let fmt_delta = |baseline: Option<f64>| -> (String, String, String) {
-        match baseline {
-            None => (
-                "--".to_string(),
-                "\u{2014}".to_string(),
-                "neutral".to_string(),
-            ),
-            Some(b) if (b).abs() < f64::EPSILON => {
-                if input.today_val.abs() < f64::EPSILON {
-                    (
-                        "--".to_string(),
-                        "\u{2014}".to_string(),
-                        "neutral".to_string(),
-                    )
-                } else {
-                    (
-                        "+\u{221E}".to_string(),
-                        "\u{25B2}".to_string(),
-                        if input.positive_when_up {
-                            "positive"
-                        } else {
-                            "negative"
-                        }
-                        .to_string(),
-                    )
-                }
-            }
-            Some(b) => {
-                let pct = ((input.today_val - b) / b) * 100.0;
-                let arrow = if pct > 1.0 {
-                    "\u{25B2}"
-                } else if pct < -1.0 {
-                    "\u{25BC}"
-                } else {
-                    "\u{2014}"
-                };
-                let dir = if pct > 1.0 {
-                    "up"
-                } else if pct < -1.0 {
-                    "down"
-                } else {
-                    "flat"
-                };
-                let sentiment = match (dir, input.positive_when_up) {
-                    ("up", true) | ("down", false) => "positive",
-                    ("down", true) | ("up", false) => "negative",
-                    _ => "neutral",
-                };
-                (
-                    format!("{:.1}%", pct.abs()),
-                    arrow.to_string(),
-                    sentiment.to_string(),
-                )
-            }
-        }
-    };
-
-    let (yd, ya, ys) = fmt_delta(input.yesterday_val);
-    let (wd, wa, ws) = fmt_delta(input.avg_7d);
-    let (fd, fa, fs) = fmt_delta(input.avg_14d);
-    let (gd, ga, gs) = fmt_delta(input.global_avg);
+    let (yd, ya, ys) = fmt_delta(input.today_val, input.yesterday_val, input.positive_when_up);
+    let (wd, wa, ws) = fmt_delta(input.today_val, input.avg_7d, input.positive_when_up);
+    let (fd, fa, fs) = fmt_delta(input.today_val, input.avg_14d, input.positive_when_up);
+    let (gd, ga, gs) = fmt_delta(input.today_val, input.global_avg, input.positive_when_up);
 
     let value = if (input.today_val - input.today_val.floor()).abs() < f64::EPSILON {
         format!("{:.0}", input.today_val)
@@ -99,6 +42,69 @@ pub fn make_metric_row(input: &MetricRowInput) -> MetricRow {
         global_arrow: ga,
         global_sentiment: gs,
     }
+}
+
+fn fmt_delta(
+    today_val: f64,
+    baseline: Option<f64>,
+    positive_when_up: bool,
+) -> (String, String, String) {
+    match baseline {
+        None => (
+            "--".to_string(),
+            "\u{2014}".to_string(),
+            "neutral".to_string(),
+        ),
+        Some(b) if (b).abs() < f64::EPSILON => {
+            if today_val.abs() < f64::EPSILON {
+                (
+                    "--".to_string(),
+                    "\u{2014}".to_string(),
+                    "neutral".to_string(),
+                )
+            } else {
+                (
+                    "+\u{221E}".to_string(),
+                    "\u{25B2}".to_string(),
+                    if positive_when_up {
+                        "positive"
+                    } else {
+                        "negative"
+                    }
+                    .to_string(),
+                )
+            }
+        }
+        Some(b) => fmt_delta_with_pct(today_val, b, positive_when_up),
+    }
+}
+
+fn fmt_delta_with_pct(today_val: f64, b: f64, positive_when_up: bool) -> (String, String, String) {
+    let pct = ((today_val - b) / b) * 100.0;
+    let arrow = if pct > 1.0 {
+        "\u{25B2}"
+    } else if pct < -1.0 {
+        "\u{25BC}"
+    } else {
+        "\u{2014}"
+    };
+    let dir = if pct > 1.0 {
+        "up"
+    } else if pct < -1.0 {
+        "down"
+    } else {
+        "flat"
+    };
+    let sentiment = match (dir, positive_when_up) {
+        ("up", true) | ("down", false) => "positive",
+        ("down", true) | ("up", false) => "negative",
+        _ => "neutral",
+    };
+    (
+        format!("{:.1}%", pct.abs()),
+        arrow.to_string(),
+        sentiment.to_string(),
+    )
 }
 
 pub fn avg_field(days: &[DailySummaryRow], f: impl Fn(&DailySummaryRow) -> f64) -> Option<f64> {

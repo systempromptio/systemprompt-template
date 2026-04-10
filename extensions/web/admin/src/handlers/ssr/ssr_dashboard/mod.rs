@@ -18,6 +18,7 @@ use data_injectors::{inject_governance_data, inject_mcp_access_and_costs};
 struct ChartParams<'a> {
     interval: &'a str,
     bucket: &'a str,
+    range_key: &'a str,
     traffic_range: &'a str,
     content_range: &'a str,
 }
@@ -107,21 +108,41 @@ pub async fn dashboard_page(
             tracing::warn!("Failed to get services path for dashboard");
         })
         .ok();
-    let user_roles = user_ctx.roles.clone();
 
-    let (interval_sql, bucket_sql, range_key) = match query.range.as_str() {
+    let chart_params = resolve_chart_params(&query);
+    let (dash, counts) = fetch_dashboard_data(
+        &pool,
+        services_path.as_ref(),
+        &user_ctx.roles,
+        &chart_params,
+    )
+    .await;
+
+    let tab = query.tab.as_str();
+    let mut data = build_dashboard_data_json(&dash, &counts, &chart_params, tab);
+
+    inject_page_stats(&mut data);
+    inject_governance_data(&pool, &mut data).await;
+    inject_mcp_access_and_costs(&pool, &mut data).await;
+    inject_report_if_needed(tab, &pool, &mut data).await;
+
+    super::render_page(&engine, "dashboard", &data, &user_ctx, &mkt_ctx)
+}
+
+fn resolve_chart_params(query: &DashboardQuery) -> ChartParams<'_> {
+    let (interval, bucket, range_key) = match query.range.as_str() {
         "24h" => ("24 hours", "1 hour", "24h"),
         "14d" => ("14 days", "1 day", "14d"),
         _ => ("7 days", "4 hours", "7d"),
     };
 
-    let traffic_range_key = match query.traffic_range.as_str() {
+    let traffic_range = match query.traffic_range.as_str() {
         "7d" => "7d",
         "30d" => "30d",
         _ => "today",
     };
 
-    let content_range_key = match query.content_range.as_str() {
+    let content_range = match query.content_range.as_str() {
         "1h" => "1h",
         "24h" => "24h",
         "yesterday" => "yesterday",
@@ -129,29 +150,36 @@ pub async fn dashboard_page(
         _ => "7d",
     };
 
-    let chart_params = ChartParams {
-        interval: interval_sql,
-        bucket: bucket_sql,
-        traffic_range: traffic_range_key,
-        content_range: content_range_key,
-    };
-    let (dash, counts) =
-        fetch_dashboard_data(&pool, services_path.as_ref(), &user_roles, &chart_params).await;
-
-    let tab = query.tab.as_str();
-    let mut data = serde_json::to_value(build_dashboard_template(
-        &dash,
-        &counts,
+    ChartParams {
+        interval,
+        bucket,
         range_key,
-        traffic_range_key,
-        content_range_key,
+        traffic_range,
+        content_range,
+    }
+}
+
+fn build_dashboard_data_json(
+    dash: &crate::types::DashboardData,
+    counts: &DashboardCounts,
+    chart: &ChartParams<'_>,
+    tab: &str,
+) -> serde_json::Value {
+    serde_json::to_value(build_dashboard_template(
+        dash,
+        counts,
+        chart.range_key,
+        chart.traffic_range,
+        chart.content_range,
         tab,
     ))
     .unwrap_or_else(|e| {
         tracing::warn!(error = %e, "Failed to serialize dashboard template data");
         serde_json::Value::Null
-    });
+    })
+}
 
+fn inject_page_stats(data: &mut serde_json::Value) {
     if let Some(obj) = data.as_object_mut() {
         let users_val = obj
             .get("total_users")
@@ -175,13 +203,12 @@ pub async fn dashboard_page(
             ]),
         );
     }
+}
 
-    inject_governance_data(&pool, &mut data).await;
-    inject_mcp_access_and_costs(&pool, &mut data).await;
-
+async fn inject_report_if_needed(tab: &str, pool: &PgPool, data: &mut serde_json::Value) {
     if tab == "report" {
         if let Ok(Some(report_row)) =
-            repositories::admin_traffic_reports::fetch_latest_report(&pool).await
+            repositories::admin_traffic_reports::fetch_latest_report(pool).await
         {
             let report = super::ssr_dashboard_report::build_dashboard_report(&report_row);
             if let Some(obj) = data.as_object_mut() {
@@ -190,6 +217,4 @@ pub async fn dashboard_page(
             }
         }
     }
-
-    super::render_page(&engine, "dashboard", &data, &user_ctx, &mkt_ctx)
 }

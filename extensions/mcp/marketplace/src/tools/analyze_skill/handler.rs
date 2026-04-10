@@ -36,6 +36,75 @@ impl std::fmt::Debug for AnalyzeSkillHandler {
     }
 }
 
+async fn load_skill_content(
+    pool: &sqlx::PgPool,
+    user_id: &UserId,
+    skill_id: &str,
+    skill_loader: &SkillService,
+    ctx: &RequestContext,
+) -> Result<String, McpError> {
+    let from_db = systemprompt_web_extension::admin::repositories::user_skills::list_user_skills(
+        pool, user_id,
+    )
+    .await
+    .ok()
+    .and_then(|skills| {
+        skills
+            .into_iter()
+            .find(|s| s.skill_id.as_ref() == skill_id)
+            .map(|s| {
+                format!(
+                    "Name: {}\nDescription: {}\nContent:\n{}",
+                    s.name, s.description, s.content
+                )
+            })
+    });
+
+    match from_db {
+        Some(content) => Ok(content),
+        None => skill_loader.load_skill(skill_id, ctx).await.map_err(|e| {
+            McpError::internal_error(
+                format!("Skill '{skill_id}' not found in user skills or skill registry: {e}"),
+                None,
+            )
+        }),
+    }
+}
+
+fn build_analysis_request(
+    skill_content: &str,
+    ai_service: &AiService,
+    ctx: &RequestContext,
+) -> AiRequest {
+    let system_prompt = "You are an expert skill analyst for AI system prompts. \
+        Analyze the provided skill and return a detailed assessment covering:\n\
+        1. **Quality Score**: Rate the skill from 1-10 with justification.\n\
+        2. **Clarity Analysis**: How clear and unambiguous are the instructions?\n\
+        3. **Best Practices Check**: Does it follow prompt engineering best practices?\n\
+        4. **Improvement Suggestions**: Specific, actionable improvements.\n\n\
+        Format your response as a structured analysis with clear sections.";
+
+    let user_prompt = format!(
+        "Analyze the following skill:\n\n---\n{skill_content}\n---\n\n\
+         Provide a comprehensive quality assessment, clarity analysis, \
+         best practices evaluation, and improvement suggestions."
+    );
+
+    let messages = vec![
+        AiMessage::system(system_prompt),
+        AiMessage::user(&user_prompt),
+    ];
+
+    AiRequest::builder(
+        messages,
+        ai_service.default_provider(),
+        ai_service.default_model(),
+        4096,
+        ctx.clone(),
+    )
+    .build()
+}
+
 #[async_trait]
 impl McpToolHandler for AnalyzeSkillHandler {
     type Input = AnalyzeSkillInput;
@@ -64,72 +133,13 @@ impl McpToolHandler for AnalyzeSkillHandler {
         let pool = shared::require_pool(&self.db_pool)?;
 
         let skill_content =
-            systemprompt_web_extension::admin::repositories::user_skills::list_user_skills(
-                &pool, &user_id,
-            )
-            .await
-            .ok()
-            .and_then(|skills| {
-                skills
-                    .into_iter()
-                    .find(|s| s.skill_id.as_ref() == input.skill_id)
-                    .map(|s| {
-                        format!(
-                            "Name: {}\nDescription: {}\nContent:\n{}",
-                            s.name, s.description, s.content
-                        )
-                    })
-            });
-
-        let skill_content = match skill_content {
-            Some(content) => content,
-            None => self
-                .skill_loader
-                .load_skill(&input.skill_id, ctx)
-                .await
-                .map_err(|e| {
-                    McpError::internal_error(
-                        format!(
-                            "Skill '{}' not found in user skills or skill registry: {e}",
-                            input.skill_id
-                        ),
-                        None,
-                    )
-                })?,
-        };
+            load_skill_content(&pool, &user_id, &input.skill_id, &self.skill_loader, ctx).await?;
 
         if let Some(ref notify) = self.progress {
             notify(20.0, Some(100.0), Some("Analyzing with AI...".to_string())).await;
         }
 
-        let system_prompt = "You are an expert skill analyst for AI system prompts. \
-            Analyze the provided skill and return a detailed assessment covering:\n\
-            1. **Quality Score**: Rate the skill from 1-10 with justification.\n\
-            2. **Clarity Analysis**: How clear and unambiguous are the instructions?\n\
-            3. **Best Practices Check**: Does it follow prompt engineering best practices?\n\
-            4. **Improvement Suggestions**: Specific, actionable improvements.\n\n\
-            Format your response as a structured analysis with clear sections.";
-
-        let user_prompt = format!(
-            "Analyze the following skill:\n\n---\n{skill_content}\n---\n\n\
-             Provide a comprehensive quality assessment, clarity analysis, \
-             best practices evaluation, and improvement suggestions."
-        );
-
-        let messages = vec![
-            AiMessage::system(system_prompt),
-            AiMessage::user(&user_prompt),
-        ];
-
-        let request = AiRequest::builder(
-            messages,
-            self.ai_service.default_provider(),
-            self.ai_service.default_model(),
-            4096,
-            ctx.clone(),
-        )
-        .build();
-
+        let request = build_analysis_request(&skill_content, &self.ai_service, ctx);
         let response = self.ai_service.generate(&request).await.map_err(|e| {
             McpError::internal_error(format!("Failed to analyze skill with AI: {e}"), None)
         })?;

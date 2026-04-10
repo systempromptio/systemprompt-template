@@ -126,7 +126,26 @@ pub async fn list_user_plugins_enriched(
     }
 
     let plugin_db_ids: Vec<String> = plugins.iter().map(|p| p.id.clone()).collect();
+    let (skill_map, agent_map, mcp_map, hook_map) =
+        fetch_association_maps(pool, &plugin_db_ids).await?;
 
+    Ok(assemble_enriched_plugins(
+        plugins, skill_map, agent_map, mcp_map, hook_map,
+    ))
+}
+
+async fn fetch_association_maps(
+    pool: &PgPool,
+    plugin_db_ids: &[String],
+) -> Result<
+    (
+        std::collections::HashMap<String, Vec<AssociatedEntity>>,
+        std::collections::HashMap<String, Vec<AssociatedEntity>>,
+        std::collections::HashMap<String, Vec<AssociatedEntity>>,
+        std::collections::HashMap<String, Vec<AssociatedHook>>,
+    ),
+    sqlx::Error,
+> {
     let skill_rows: Vec<(String, String, String)> = sqlx::query_as(
         r"SELECT ups.user_plugin_id, us.id, us.name
           FROM user_plugin_skills ups
@@ -134,7 +153,7 @@ pub async fn list_user_plugins_enriched(
           WHERE ups.user_plugin_id = ANY($1)
           ORDER BY ups.sort_order",
     )
-    .bind(&plugin_db_ids)
+    .bind(plugin_db_ids)
     .fetch_all(pool)
     .await?;
 
@@ -145,7 +164,7 @@ pub async fn list_user_plugins_enriched(
           WHERE upa.user_plugin_id = ANY($1)
           ORDER BY upa.sort_order",
     )
-    .bind(&plugin_db_ids)
+    .bind(plugin_db_ids)
     .fetch_all(pool)
     .await?;
 
@@ -156,7 +175,7 @@ pub async fn list_user_plugins_enriched(
           WHERE upm.user_plugin_id = ANY($1)
           ORDER BY upm.sort_order",
     )
-    .bind(&plugin_db_ids)
+    .bind(plugin_db_ids)
     .fetch_all(pool)
     .await?;
 
@@ -167,41 +186,38 @@ pub async fn list_user_plugins_enriched(
           WHERE uph.user_plugin_id = ANY($1)
           ORDER BY uph.sort_order",
     )
-    .bind(&plugin_db_ids)
+    .bind(plugin_db_ids)
     .fetch_all(pool)
     .await?;
 
-    let mut skill_map: std::collections::HashMap<String, Vec<AssociatedEntity>> =
+    let skill_map = build_entity_map(skill_rows);
+    let agent_map = build_entity_map(agent_rows);
+    let mcp_map = build_entity_map(mcp_rows);
+    let hook_map = build_hook_map(hook_rows);
+
+    Ok((skill_map, agent_map, mcp_map, hook_map))
+}
+
+fn build_entity_map(
+    rows: Vec<(String, String, String)>,
+) -> std::collections::HashMap<String, Vec<AssociatedEntity>> {
+    let mut map: std::collections::HashMap<String, Vec<AssociatedEntity>> =
         std::collections::HashMap::new();
-    for (plugin_id, id, name) in skill_rows {
-        skill_map
-            .entry(plugin_id)
+    for (plugin_id, id, name) in rows {
+        map.entry(plugin_id)
             .or_default()
             .push(AssociatedEntity { id, name });
     }
+    map
+}
 
-    let mut agent_map: std::collections::HashMap<String, Vec<AssociatedEntity>> =
+fn build_hook_map(
+    rows: Vec<(String, String, String, String, String, bool)>,
+) -> std::collections::HashMap<String, Vec<AssociatedHook>> {
+    let mut map: std::collections::HashMap<String, Vec<AssociatedHook>> =
         std::collections::HashMap::new();
-    for (plugin_id, id, name) in agent_rows {
-        agent_map
-            .entry(plugin_id)
-            .or_default()
-            .push(AssociatedEntity { id, name });
-    }
-
-    let mut mcp_map: std::collections::HashMap<String, Vec<AssociatedEntity>> =
-        std::collections::HashMap::new();
-    for (plugin_id, id, name) in mcp_rows {
-        mcp_map
-            .entry(plugin_id)
-            .or_default()
-            .push(AssociatedEntity { id, name });
-    }
-
-    let mut hook_map: std::collections::HashMap<String, Vec<AssociatedHook>> =
-        std::collections::HashMap::new();
-    for (plugin_id, id, name, event, matcher, is_async) in hook_rows {
-        hook_map.entry(plugin_id).or_default().push(AssociatedHook {
+    for (plugin_id, id, name, event, matcher, is_async) in rows {
+        map.entry(plugin_id).or_default().push(AssociatedHook {
             id,
             name,
             event,
@@ -209,8 +225,17 @@ pub async fn list_user_plugins_enriched(
             is_async,
         });
     }
+    map
+}
 
-    let enriched = plugins
+fn assemble_enriched_plugins(
+    plugins: Vec<UserPlugin>,
+    mut skill_map: std::collections::HashMap<String, Vec<AssociatedEntity>>,
+    mut agent_map: std::collections::HashMap<String, Vec<AssociatedEntity>>,
+    mut mcp_map: std::collections::HashMap<String, Vec<AssociatedEntity>>,
+    mut hook_map: std::collections::HashMap<String, Vec<AssociatedHook>>,
+) -> Vec<UserPluginEnriched> {
+    plugins
         .into_iter()
         .map(|p| {
             let skills = skill_map.remove(&p.id).unwrap_or_else(Vec::new);
@@ -229,9 +254,7 @@ pub async fn list_user_plugins_enriched(
                 plugin: p,
             }
         })
-        .collect();
-
-    Ok(enriched)
+        .collect()
 }
 
 #[derive(Debug, Clone, serde::Serialize)]

@@ -51,7 +51,20 @@ async fn build_per_page_bundles(
         return Ok(0);
     }
 
-    let mut entries: Vec<_> = std::fs::read_dir(&bundles_dir)
+    let entries = read_bundle_manifests(&bundles_dir)?;
+    let mut total_bundled = 0u64;
+
+    for entry in &entries {
+        total_bundled += process_single_bundle(entry, js_dir, output_dir).await?;
+    }
+
+    Ok(total_bundled)
+}
+
+fn read_bundle_manifests(
+    bundles_dir: &std::path::Path,
+) -> Result<Vec<std::fs::DirEntry>, MarketplaceError> {
+    let mut entries: Vec<_> = std::fs::read_dir(bundles_dir)
         .map_err(|e| {
             MarketplaceError::Internal(format!(
                 "Failed to read bundles dir: {}: {e}",
@@ -62,66 +75,67 @@ async fn build_per_page_bundles(
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "txt"))
         .collect();
     entries.sort_by_key(std::fs::DirEntry::file_name);
+    Ok(entries)
+}
 
-    let mut total_bundled = 0u64;
+async fn process_single_bundle(
+    entry: &std::fs::DirEntry,
+    js_dir: &std::path::Path,
+    output_dir: &std::path::Path,
+) -> Result<u64, MarketplaceError> {
+    let manifest_path = entry.path();
+    let bundle_name = manifest_path
+        .file_stem()
+        .unwrap_or_else(|| std::ffi::OsStr::new(""))
+        .to_string_lossy()
+        .to_string();
 
-    for entry in &entries {
-        let manifest_path = entry.path();
-        let bundle_name = manifest_path
-            .file_stem()
-            .unwrap_or_else(|| std::ffi::OsStr::new(""))
-            .to_string_lossy()
-            .to_string();
+    let manifest = tokio::fs::read_to_string(&manifest_path)
+        .await
+        .map_err(|e| {
+            MarketplaceError::Internal(format!(
+                "Failed to read bundle manifest: {}: {e}",
+                manifest_path.display()
+            ))
+        })?;
 
-        let manifest = tokio::fs::read_to_string(&manifest_path)
-            .await
-            .map_err(|e| {
-                MarketplaceError::Internal(format!(
-                    "Failed to read bundle manifest: {}: {e}",
-                    manifest_path.display()
-                ))
-            })?;
+    let files: Vec<&str> = manifest
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .collect();
 
-        let files: Vec<&str> = manifest
-            .lines()
-            .map(str::trim)
-            .filter(|line| !line.is_empty() && !line.starts_with('#'))
-            .collect();
-
-        if files.is_empty() {
-            tracing::warn!(bundle = %bundle_name, "Bundle manifest is empty, skipping");
-            continue;
-        }
-
-        let (content, bundled, failed) = concatenate_files(js_dir, &files).await;
-
-        if failed > 0 {
-            return Err(MarketplaceError::Internal(format!(
-                "Failed to read {failed} JS file(s) for bundle '{bundle_name}'"
-            )));
-        }
-
-        let bundle_path = output_dir.join(format!("admin-{bundle_name}.js"));
-        tokio::fs::write(&bundle_path, &content)
-            .await
-            .map_err(|e| {
-                MarketplaceError::Internal(format!(
-                    "Failed to write bundle: {}: {e}",
-                    bundle_path.display()
-                ))
-            })?;
-
-        tracing::info!(
-            bundle = %bundle_name,
-            files = bundled,
-            size = content.len(),
-            "Per-page bundle written"
-        );
-
-        total_bundled += bundled;
+    if files.is_empty() {
+        tracing::warn!(bundle = %bundle_name, "Bundle manifest is empty, skipping");
+        return Ok(0);
     }
 
-    Ok(total_bundled)
+    let (content, bundled, failed) = concatenate_files(js_dir, &files).await;
+
+    if failed > 0 {
+        return Err(MarketplaceError::Internal(format!(
+            "Failed to read {failed} JS file(s) for bundle '{bundle_name}'"
+        )));
+    }
+
+    let bundle_path = output_dir.join(format!("admin-{bundle_name}.js"));
+    tokio::fs::write(&bundle_path, &content)
+        .await
+        .map_err(|e| {
+            MarketplaceError::Internal(format!(
+                "Failed to write bundle: {}: {e}",
+                bundle_path.display()
+            ))
+        })?;
+
+    tracing::info!(
+        bundle = %bundle_name,
+        files = bundled,
+        size = content.len(),
+        "Per-page bundle written"
+    );
+
+    Ok(bundled)
 }
 
 async fn build_main_bundle(

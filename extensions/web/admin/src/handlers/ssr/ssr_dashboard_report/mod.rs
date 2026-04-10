@@ -188,9 +188,41 @@ async fn fetch_report_data_inline(
     let (spark_sess_arr, spark_signup_arr, spark_labels) =
         build_sparkline_arrays(today, &spark_sessions, &spark_signups);
 
-    Ok(InlineReportData {
-        traffic_overview: build_traffic_overview(&sessions_row, &pv_row),
-        user_acquisition: build_user_acquisition(&acq_row),
+    Ok(assemble_inline_report(
+        &sessions_row,
+        &pv_row,
+        &acq_row,
+        top_content,
+        &seo,
+        geo,
+        devices,
+        sources,
+        &funnel,
+        landing,
+        spark_sess_arr,
+        spark_signup_arr,
+        spark_labels,
+    ))
+}
+
+fn assemble_inline_report(
+    sessions_row: &data::SessionsRow,
+    pv_row: &data::PageViewsRow,
+    acq_row: &data::AcquisitionRow,
+    top_content: Vec<data::TopContentRow>,
+    seo: &data::SeoRow,
+    geo: Vec<data::GeoRow>,
+    devices: Vec<data::DeviceRow>,
+    sources: Vec<data::SourceRow>,
+    funnel: &data::FunnelRow,
+    landing: Vec<data::LandingRow>,
+    spark_sess_arr: Vec<i64>,
+    spark_signup_arr: Vec<i64>,
+    spark_labels: Vec<String>,
+) -> InlineReportData {
+    InlineReportData {
+        traffic_overview: build_traffic_overview(sessions_row, pv_row),
+        user_acquisition: build_user_acquisition(acq_row),
         top_content: top_content
             .into_iter()
             .map(|r| TopContentItem {
@@ -205,7 +237,7 @@ async fn fetch_report_data_inline(
                 search_clicks: r.search_clicks,
             })
             .collect(),
-        seo_metrics: build_seo_metrics(&seo),
+        seo_metrics: build_seo_metrics(seo),
         geo_breakdown: geo
             .into_iter()
             .map(|r| GeoBreakdownItem {
@@ -248,5 +280,5 @@ async fn fetch_report_data_inline(
                 avg_time_seconds: r.avg_time_seconds,
             })
             .collect(),
-    })
+    }
 }

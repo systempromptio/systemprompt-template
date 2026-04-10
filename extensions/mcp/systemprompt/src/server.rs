@@ -104,6 +104,71 @@ impl McpToolHandler for SystempromptToolHandler {
     }
 }
 
+async fn authenticate_tool_request(
+    db_pool: &DbPool,
+    server_name: &str,
+    tool_name: &str,
+    service_id: &str,
+    ctx: &RequestContext<RoleServer>,
+) -> Result<(SysRequestContext, String), McpError> {
+    let rbac_result = enforce_rbac_from_registry(ctx, service_id);
+
+    match rbac_result {
+        Ok(result) => {
+            match result
+                .expect_authenticated("BUG: systemprompt requires OAuth but auth was not enforced")
+            {
+                Ok(authenticated) => {
+                    record_mcp_access(
+                        db_pool,
+                        authenticated.context.user_id().as_ref(),
+                        server_name,
+                        tool_name,
+                        "authenticated",
+                    )
+                    .await;
+                    let token = authenticated.token().to_string();
+                    Ok((authenticated.context.clone(), token))
+                }
+                Err(e) => {
+                    record_mcp_access_rejected(db_pool, server_name, tool_name, e.message.as_ref())
+                        .await;
+                    Err(e)
+                }
+            }
+        }
+        Err(e) => {
+            record_mcp_access_rejected(db_pool, server_name, tool_name, &format!("{e}")).await;
+            Err(e)
+        }
+    }
+}
+
+async fn dispatch_tool(
+    executor: &McpToolExecutor,
+    tool_name: &str,
+    request: &CallToolRequestParams,
+    request_context: &SysRequestContext,
+    auth_token: &str,
+) -> Result<CallToolResult, McpError> {
+    match tool_name {
+        "systemprompt" => {
+            let handler = SystempromptToolHandler {
+                auth_token: auth_token.to_string(),
+            };
+            executor.execute(&handler, request, request_context).await
+        }
+        _ => Err(McpError::invalid_params(
+            format!(
+                "Unknown tool: '{tool_name}'\n\nMANDATORY FIRST STEP: Run 'core skills show \
+                 systemprompt_cli' before any task.\n\nUse 'systemprompt' tool with command 'core \
+                 skills show systemprompt_cli' to get started."
+            ),
+            None,
+        )),
+    }
+}
+
 impl ServerHandler for SystempromptServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo::new(
@@ -167,49 +232,14 @@ impl ServerHandler for SystempromptServer {
         let tool_name = request.name.to_string();
         let server_name = self.service_id.to_string();
 
-        let rbac_result = enforce_rbac_from_registry(&ctx, self.service_id.as_str());
-
-        let auth_result = match rbac_result {
-            Ok(result) => {
-                match result.expect_authenticated(
-                    "BUG: systemprompt requires OAuth but auth was not enforced",
-                ) {
-                    Ok(authenticated) => {
-                        record_mcp_access(
-                            &self.db_pool,
-                            authenticated.context.user_id().as_ref(),
-                            &server_name,
-                            &tool_name,
-                            "authenticated",
-                        )
-                        .await;
-                        authenticated
-                    }
-                    Err(e) => {
-                        record_mcp_access_rejected(
-                            &self.db_pool,
-                            &server_name,
-                            &tool_name,
-                            e.message.as_ref(),
-                        )
-                        .await;
-                        return Err(e);
-                    }
-                }
-            }
-            Err(e) => {
-                record_mcp_access_rejected(
-                    &self.db_pool,
-                    &server_name,
-                    &tool_name,
-                    &format!("{e}"),
-                )
-                .await;
-                return Err(e);
-            }
-        };
-
-        let request_context = auth_result.context.clone();
+        let (request_context, auth_token) = authenticate_tool_request(
+            &self.db_pool,
+            &server_name,
+            &tool_name,
+            self.service_id.as_str(),
+            &ctx,
+        )
+        .await?;
 
         record_mcp_access(
             &self.db_pool,
@@ -220,24 +250,14 @@ impl ServerHandler for SystempromptServer {
         )
         .await;
 
-        match tool_name.as_str() {
-            "systemprompt" => {
-                let handler = SystempromptToolHandler {
-                    auth_token: auth_result.token().to_string(),
-                };
-                self.executor
-                    .execute(&handler, &request, &request_context)
-                    .await
-            }
-            _ => Err(McpError::invalid_params(
-                format!(
-                    "Unknown tool: '{tool_name}'\n\nMANDATORY FIRST STEP: Run 'core skills show \
-                     systemprompt_cli' before any task.\n\nUse 'systemprompt' tool with command 'core \
-                     skills show systemprompt_cli' to get started."
-                ),
-                None,
-            )),
-        }
+        dispatch_tool(
+            &self.executor,
+            &tool_name,
+            &request,
+            &request_context,
+            &auth_token,
+        )
+        .await
     }
 
     async fn list_resources(

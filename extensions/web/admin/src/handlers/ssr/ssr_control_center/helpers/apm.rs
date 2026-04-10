@@ -1,5 +1,7 @@
 use crate::numeric;
+use crate::repositories::apm_metrics::{HourlyApmBucket, TodayApmLive, TodayPerformanceSummary};
 use crate::repositories::control_center;
+use crate::repositories::session_analyses::TodaySummary;
 
 use super::super::types::{
     ApmMetrics, ApmValues, ConcurrencyValues, HourlyEntry, InitialChartData, PerfSummaryObj,
@@ -16,8 +18,23 @@ pub struct ApmData {
 }
 
 pub fn build_apm_data(params: &BuildTemplateDataParams<'_>) -> ApmData {
-    let ts = params.today_summary;
-    let today_summary_obj = TodaySummaryObj {
+    let today_summary_obj = build_today_summary_obj(params.today_summary);
+    let hourly_json = build_hourly_entries(params.hourly_breakdown);
+    let perf_json = build_perf_summary_obj(params.perf_summary);
+    let today_obj = build_today_obj(params);
+    let cc_initial_json = build_initial_chart_json(&hourly_json, &perf_json, params.apm_live);
+
+    ApmData {
+        today_obj,
+        today_summary_obj,
+        hourly_json,
+        perf_json,
+        cc_initial_json,
+    }
+}
+
+fn build_today_summary_obj(ts: &TodaySummary) -> TodaySummaryObj {
+    TodaySummaryObj {
         sessions_count: ts.sessions_count,
         analysed_count: ts.analysed_count,
         avg_quality: format!("{:.1}", ts.avg_quality),
@@ -28,10 +45,11 @@ pub fn build_apm_data(params: &BuildTemplateDataParams<'_>) -> ApmData {
         has_new_achievements: !ts.new_achievements.is_empty(),
         top_recommendation: ts.top_recommendation.clone(),
         has_top_recommendation: !ts.top_recommendation.is_empty(),
-    };
+    }
+}
 
-    let hourly_json: Vec<HourlyEntry> = params
-        .hourly_breakdown
+fn build_hourly_entries(breakdown: &[HourlyApmBucket]) -> Vec<HourlyEntry> {
+    breakdown
         .iter()
         .map(|b| HourlyEntry {
             hour: b.hour,
@@ -43,31 +61,36 @@ pub fn build_apm_data(params: &BuildTemplateDataParams<'_>) -> ApmData {
             unique_tools: b.unique_tools,
             subagent_spawns: b.subagent_spawns,
         })
-        .collect();
+        .collect()
+}
 
-    let perf_json = PerfSummaryObj {
-        total_sessions: params.perf_summary.total_sessions,
-        total_actions: params.perf_summary.total_actions,
-        total_prompts: params.perf_summary.total_prompts,
-        total_tool_uses: params.perf_summary.total_tool_uses,
-        total_errors: params.perf_summary.total_errors,
-        error_rate_pct: format!("{:.1}", params.perf_summary.error_rate_pct),
-        total_input_bytes: params.perf_summary.total_input_bytes,
-        total_output_bytes: params.perf_summary.total_output_bytes,
-        avg_apm: format!("{:.1}", params.perf_summary.avg_apm),
-        peak_apm: format!("{:.1}", params.perf_summary.peak_apm),
-        peak_concurrency: params.perf_summary.peak_concurrency,
-        tool_diversity: params.perf_summary.tool_diversity,
-        multitasking_score: format!("{:.1}", params.perf_summary.multitasking_score),
-        active_minutes: format!("{:.0}", params.perf_summary.active_minutes),
-    };
+fn build_perf_summary_obj(ps: &TodayPerformanceSummary) -> PerfSummaryObj {
+    PerfSummaryObj {
+        total_sessions: ps.total_sessions,
+        total_actions: ps.total_actions,
+        total_prompts: ps.total_prompts,
+        total_tool_uses: ps.total_tool_uses,
+        total_errors: ps.total_errors,
+        error_rate_pct: format!("{:.1}", ps.error_rate_pct),
+        total_input_bytes: ps.total_input_bytes,
+        total_output_bytes: ps.total_output_bytes,
+        avg_apm: format!("{:.1}", ps.avg_apm),
+        peak_apm: format!("{:.1}", ps.peak_apm),
+        peak_concurrency: ps.peak_concurrency,
+        tool_diversity: ps.tool_diversity,
+        multitasking_score: format!("{:.1}", ps.multitasking_score),
+        active_minutes: format!("{:.0}", ps.active_minutes),
+    }
+}
 
-    let today_obj = build_today_obj(params);
-
-    let apm = params.apm_live;
+fn build_initial_chart_json(
+    hourly: &[HourlyEntry],
+    perf: &PerfSummaryObj,
+    apm: &TodayApmLive,
+) -> String {
     let initial_chart_data = InitialChartData {
-        hourly: hourly_json.clone(),
-        perf: perf_json.clone(),
+        hourly: hourly.to_vec(),
+        perf: perf.clone(),
         apm_metrics: ApmMetrics {
             apm: ApmValues {
                 current: apm.current_apm,
@@ -87,18 +110,10 @@ pub fn build_apm_data(params: &BuildTemplateDataParams<'_>) -> ApmData {
             multitasking_score: apm.multitasking_score,
         },
     };
-    let cc_initial_json = serde_json::to_string(&initial_chart_data).unwrap_or_else(|e| {
+    serde_json::to_string(&initial_chart_data).unwrap_or_else(|e| {
         tracing::warn!(error = %e, "Failed to serialize APM initial chart data");
         String::new()
-    });
-
-    ApmData {
-        today_obj,
-        today_summary_obj,
-        hourly_json,
-        perf_json,
-        cc_initial_json,
-    }
+    })
 }
 
 fn build_today_obj(params: &BuildTemplateDataParams<'_>) -> TodayObj {

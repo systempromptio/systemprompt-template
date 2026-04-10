@@ -34,6 +34,68 @@ pub struct UpdateMcpServerHandler {
     pub db_pool: DbPool,
 }
 
+fn validate_input(input: &UpdateMcpServerInput) -> Result<(), McpError> {
+    if let Some(ref name) = input.name {
+        if name.len() > MAX_NAME_LEN {
+            return Err(McpError::invalid_params(
+                format!("name exceeds maximum length of {MAX_NAME_LEN}"),
+                None,
+            ));
+        }
+    }
+    if let Some(ref description) = input.description {
+        if description.len() > MAX_DESCRIPTION_LEN {
+            return Err(McpError::invalid_params(
+                format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
+                None,
+            ));
+        }
+    }
+    if let Some(ref endpoint) = input.endpoint {
+        if endpoint.len() > MAX_ENDPOINT_LEN {
+            return Err(McpError::invalid_params(
+                format!("endpoint exceeds maximum length of {MAX_ENDPOINT_LEN}"),
+                None,
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn build_response(
+    server: &systemprompt_web_extension::admin::types::UserMcpServer,
+    ctx: &RequestContext,
+) -> Result<(TextArtifact, String), McpError> {
+    let result_json = serde_json::to_string_pretty(&serde_json::json!({
+        "_display": { "type": "card", "entity": "mcp_server", "action": "updated" },
+        "mcp_server_id": server.mcp_server_id,
+        "name": server.name,
+        "description": server.description,
+        "endpoint": server.endpoint,
+        "binary": server.binary,
+        "package_name": server.package_name,
+        "port": server.port,
+        "enabled": server.enabled,
+        "oauth_required": server.oauth_required,
+        "oauth_scopes": server.oauth_scopes,
+        "oauth_audience": server.oauth_audience,
+        "base_mcp_server_id": server.base_mcp_server_id,
+        "created_at": server.created_at.to_rfc3339(),
+        "updated_at": server.updated_at.to_rfc3339(),
+    }))
+    .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
+
+    let summary = format!(
+        "Updated MCP server '{}' ({})",
+        server.name, server.mcp_server_id
+    );
+    let content = format!("{summary}\n\n{result_json}");
+    let artifact =
+        TextArtifact::new(&result_json, ctx).with_title(format!("MCP Server: {}", server.name));
+
+    Ok((artifact, content))
+}
+
 #[async_trait]
 impl McpToolHandler for UpdateMcpServerHandler {
     type Input = UpdateMcpServerInput;
@@ -55,30 +117,7 @@ impl McpToolHandler for UpdateMcpServerHandler {
         ctx: &RequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
-        if let Some(ref name) = input.name {
-            if name.len() > MAX_NAME_LEN {
-                return Err(McpError::invalid_params(
-                    format!("name exceeds maximum length of {MAX_NAME_LEN}"),
-                    None,
-                ));
-            }
-        }
-        if let Some(ref description) = input.description {
-            if description.len() > MAX_DESCRIPTION_LEN {
-                return Err(McpError::invalid_params(
-                    format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
-                    None,
-                ));
-            }
-        }
-        if let Some(ref endpoint) = input.endpoint {
-            if endpoint.len() > MAX_ENDPOINT_LEN {
-                return Err(McpError::invalid_params(
-                    format!("endpoint exceeds maximum length of {MAX_ENDPOINT_LEN}"),
-                    None,
-                ));
-            }
-        }
+        validate_input(&input)?;
 
         let pool = shared::require_write_pool(&self.db_pool)?;
 
@@ -113,33 +152,6 @@ impl McpToolHandler for UpdateMcpServerHandler {
 
         shared::invalidate_marketplace_cache(&pool, &user_id).await;
 
-        let result_json = serde_json::to_string_pretty(&serde_json::json!({
-            "_display": { "type": "card", "entity": "mcp_server", "action": "updated" },
-            "mcp_server_id": server.mcp_server_id,
-            "name": server.name,
-            "description": server.description,
-            "endpoint": server.endpoint,
-            "binary": server.binary,
-            "package_name": server.package_name,
-            "port": server.port,
-            "enabled": server.enabled,
-            "oauth_required": server.oauth_required,
-            "oauth_scopes": server.oauth_scopes,
-            "oauth_audience": server.oauth_audience,
-            "base_mcp_server_id": server.base_mcp_server_id,
-            "created_at": server.created_at.to_rfc3339(),
-            "updated_at": server.updated_at.to_rfc3339(),
-        }))
-        .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
-
-        let summary = format!(
-            "Updated MCP server '{}' ({})",
-            server.name, server.mcp_server_id
-        );
-        let content = format!("{summary}\n\n{result_json}");
-        let artifact =
-            TextArtifact::new(&result_json, ctx).with_title(format!("MCP Server: {}", server.name));
-
-        Ok((artifact, content))
+        build_response(&server, ctx)
     }
 }

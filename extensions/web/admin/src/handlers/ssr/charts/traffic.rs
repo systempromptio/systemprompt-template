@@ -56,13 +56,34 @@ pub fn compute_traffic_chart_data(
     let area_path = build_stacked_area(&sessions, &base, n, svg_w, svg_h, y_max);
     let line_path = build_svg_line(&sessions, n, svg_w, svg_h, y_max);
 
+    let x_labels = build_traffic_x_labels(buckets, n, svg_w, range);
+    let y_labels = build_y_labels(peak, svg_h, y_max);
+    let buckets_json = build_traffic_tooltips_json(buckets, n, svg_w, range);
+
+    TrafficChart {
+        has_data: true,
+        area_path,
+        line_path,
+        x_labels,
+        y_labels,
+        peak,
+        buckets_json,
+    }
+}
+
+fn build_traffic_x_labels(
+    buckets: &[crate::types::TrafficTimeBucket],
+    n: usize,
+    svg_w: f64,
+    range: &str,
+) -> Vec<XAxisLabel> {
     let x_fmt = match range {
         "7d" => "%a %d",
         "30d" => "%b %d",
         _ => "%H:%M",
     };
     let step = (n / 7).max(1);
-    let x_labels: Vec<XAxisLabel> = buckets
+    buckets
         .iter()
         .enumerate()
         .filter_map(|(i, b)| {
@@ -76,10 +97,15 @@ pub fn compute_traffic_chart_data(
                 None
             }
         })
-        .collect();
+        .collect()
+}
 
-    let y_labels = build_y_labels(peak, svg_h, y_max);
-
+fn build_traffic_tooltips_json(
+    buckets: &[crate::types::TrafficTimeBucket],
+    n: usize,
+    svg_w: f64,
+    range: &str,
+) -> String {
     let tooltip_fmt = match range {
         "7d" | "30d" => "%b %d",
         _ => "%H:%M",
@@ -97,17 +123,8 @@ pub fn compute_traffic_chart_data(
             }
         })
         .collect();
-
-    TrafficChart {
-        has_data: true,
-        area_path,
-        line_path,
-        x_labels,
-        y_labels,
-        peak,
-        buckets_json: serde_json::to_string(&tooltips).unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to serialize traffic chart tooltips");
-            String::new()
-        }),
-    }
+    serde_json::to_string(&tooltips).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize traffic chart tooltips");
+        String::new()
+    })
 }

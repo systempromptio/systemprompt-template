@@ -61,28 +61,62 @@ pub async fn publish_marketplace_to_github(
         .map_err(|e| anyhow::anyhow!("Failed to get profile: {e}"))?;
 
     let local_path = PathBuf::from("storage/github-marketplaces").join(marketplace_id);
-
     ensure_publish_repo(repo_url, &local_path)?;
 
+    let (plugin_count, push_url) =
+        prepare_publish_content(pool, marketplace_id, &services_path, &local_path, repo_url)
+            .await?;
+
+    commit_and_push_if_changed(
+        pool,
+        marketplace_id,
+        &local_path,
+        &push_url,
+        plugin_count,
+        triggered_by,
+        start,
+    )
+    .await
+}
+
+async fn prepare_publish_content(
+    pool: &PgPool,
+    marketplace_id: &str,
+    services_path: &Path,
+    local_path: &Path,
+    repo_url: &str,
+) -> Result<(u64, String)> {
     let export = super::export::generate_org_marketplace_export_bundles(
-        &services_path,
+        services_path,
         pool,
         marketplace_id,
         "linux",
     )
     .await?;
 
-    let plugin_count = write_plugin_bundles_to_repo(&export.plugins, &local_path)?;
-    write_marketplace_json(&local_path, &export.marketplace.content)?;
+    let plugin_count = write_plugin_bundles_to_repo(&export.plugins, local_path)?;
+    write_marketplace_json(local_path, &export.marketplace.content)?;
 
     let push_url = build_authenticated_url(repo_url);
-    git_add_all(&local_path)?;
+    git_add_all(local_path)?;
 
-    if !git_has_changes(&local_path)? {
+    Ok((plugin_count, push_url))
+}
+
+async fn commit_and_push_if_changed(
+    pool: &PgPool,
+    marketplace_id: &str,
+    local_path: &Path,
+    push_url: &str,
+    plugin_count: u64,
+    triggered_by: &str,
+    start: std::time::Instant,
+) -> Result<SyncResult> {
+    if !git_has_changes(local_path)? {
         let duration_ms = elapsed_ms(start);
         tracing::info!(marketplace_id, "No changes to publish");
         return Ok(SyncResult {
-            commit_hash: git_head_hash(&local_path)?,
+            commit_hash: git_head_hash(local_path)?,
             plugins_synced: plugin_count,
             errors: 0,
             changed: false,
@@ -91,12 +125,12 @@ pub async fn publish_marketplace_to_github(
     }
 
     git_commit(
-        &local_path,
+        local_path,
         &format!("Marketplace update from admin ({marketplace_id})"),
     )?;
-    git_push(&local_path, &push_url)?;
+    git_push(local_path, push_url)?;
 
-    let current_hash = git_head_hash(&local_path)?;
+    let current_hash = git_head_hash(local_path)?;
     let duration_ms = elapsed_ms(start);
 
     let _ = std::fs::write(local_path.join(".last-commit"), &current_hash);

@@ -8,25 +8,52 @@ pub use super::queries_leaderboard::{
     LeaderboardAverages,
 };
 
+#[derive(sqlx::FromRow)]
+struct RankRow {
+    user_id: String,
+    display_name: Option<String>,
+    rank_level: i32,
+    rank_name: String,
+    total_xp: i64,
+    events_count: i64,
+    unique_skills_count: i32,
+    unique_plugins_count: i32,
+    current_streak: i32,
+    longest_streak: i32,
+}
+
 pub async fn get_user_gamification(
     pool: &PgPool,
     user_id: &str,
 ) -> Result<Option<UserGamificationProfile>, sqlx::Error> {
-    #[derive(sqlx::FromRow)]
-    struct RankRow {
-        user_id: String,
-        display_name: Option<String>,
-        rank_level: i32,
-        rank_name: String,
-        total_xp: i64,
-        events_count: i64,
-        unique_skills_count: i32,
-        unique_plugins_count: i32,
-        current_streak: i32,
-        longest_streak: i32,
-    }
+    let Some(row) = fetch_rank_row(pool, user_id).await? else {
+        return Ok(None);
+    };
 
-    let Some(row) = sqlx::query_as::<_, RankRow>(
+    let achievements = sqlx::query_as::<_, UnlockedAchievement>(
+        "SELECT achievement_id, unlocked_at FROM employee_achievements WHERE user_id = $1 ORDER BY unlocked_at DESC",
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
+
+    let rank_position: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*)::BIGINT FROM employee_ranks WHERE total_xp > (SELECT COALESCE(total_xp, 0) FROM employee_ranks WHERE user_id = $1)",
+    )
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?
+    .unwrap_or(0);
+
+    Ok(Some(build_gamification_profile(
+        row,
+        achievements,
+        rank_position,
+    )))
+}
+
+async fn fetch_rank_row(pool: &PgPool, user_id: &str) -> Result<Option<RankRow>, sqlx::Error> {
+    sqlx::query_as::<_, RankRow>(
         r"
         SELECT
             r.user_id,
@@ -46,29 +73,17 @@ pub async fn get_user_gamification(
     )
     .bind(user_id)
     .fetch_optional(pool)
-    .await?
-    else {
-        return Ok(None);
-    };
+    .await
+}
 
-    let achievements = sqlx::query_as::<_, UnlockedAchievement>(
-        "SELECT achievement_id, unlocked_at FROM employee_achievements WHERE user_id = $1 ORDER BY unlocked_at DESC",
-    )
-    .bind(user_id)
-    .fetch_all(pool)
-    .await?;
-
-    let rank_position: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*)::BIGINT FROM employee_ranks WHERE total_xp > (SELECT COALESCE(total_xp, 0) FROM employee_ranks WHERE user_id = $1)",
-    )
-    .bind(user_id)
-    .fetch_optional(pool)
-    .await?
-    .unwrap_or(0);
-
+fn build_gamification_profile(
+    row: RankRow,
+    achievements: Vec<UnlockedAchievement>,
+    rank_position: i64,
+) -> UserGamificationProfile {
     let (xp_needed, next_name) = xp_to_next_rank(row.total_xp);
 
-    Ok(Some(UserGamificationProfile {
+    UserGamificationProfile {
         user_id: row.user_id.into(),
         display_name: row.display_name,
         rank_level: row.rank_level,
@@ -83,7 +98,7 @@ pub async fn get_user_gamification(
         longest_streak: row.longest_streak,
         achievements,
         rank_position: rank_position + 1,
-    }))
+    }
 }
 
 pub async fn get_achievement_stats(pool: &PgPool) -> Result<Vec<AchievementInfo>, sqlx::Error> {
