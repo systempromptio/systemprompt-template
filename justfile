@@ -403,6 +403,23 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     mkdir -p "$ROOT/web/dist"
     echo "Starting local Postgres via Docker..."
     just db-up local
+    echo "Waiting for Postgres to accept connections on localhost:${PG_PORT}..."
+    for i in $(seq 1 60); do
+        if (exec 3<>/dev/tcp/127.0.0.1/${PG_PORT}) 2>/dev/null; then
+            exec 3<&- 3>&-
+            # Also confirm the server actually answers pg_isready, not just a half-open socket.
+            CONTAINER=$(docker compose -p "$(just _project_name local)" -f .systemprompt/docker/local.yaml ps -q postgres)
+            if [ -n "$CONTAINER" ] && docker exec "$CONTAINER" pg_isready -U systemprompt -d systemprompt >/dev/null 2>&1; then
+                echo "Postgres is ready."
+                break
+            fi
+        fi
+        if [ "$i" = "60" ]; then
+            echo "ERROR: Postgres did not become ready within 60s." >&2
+            exit 1
+        fi
+        sleep 1
+    done
     echo "Publishing assets..."
     just publish
     echo ""
