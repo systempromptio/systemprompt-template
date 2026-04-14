@@ -230,13 +230,45 @@ whoami:
 tenant:
     {{CLI}} cloud tenant
 
-# Set up a local-only profile + Docker Postgres (no cloud, no login required)
-setup-local:
+# Set up a local-only profile + Docker Postgres (no cloud, no login required).
+# Pass keys as positional args, or leave blank to be prompted interactively:
+#   just setup-local sk-ant-... sk-... AIza...
+setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="":
     #!/usr/bin/env bash
     set -euo pipefail
     ROOT="{{justfile_directory()}}"
     PROFILE_DIR="$ROOT/.systemprompt/profiles/local"
     DOCKER_DIR="$ROOT/.systemprompt/docker"
+    ANTHROPIC_KEY="{{ANTHROPIC_KEY}}"
+    OPENAI_KEY="{{OPENAI_KEY}}"
+    GEMINI_KEY="{{GEMINI_KEY}}"
+    if [ -z "$ANTHROPIC_KEY" ] && [ -z "$OPENAI_KEY" ] && [ -z "$GEMINI_KEY" ]; then
+        echo ""
+        echo "================================================================"
+        echo "  setup-local needs at least one AI provider API key"
+        echo "================================================================"
+        echo ""
+        echo "  The marketplace MCP server (skill-manager) will not start"
+        echo "  without at least one of: Anthropic, OpenAI, or Gemini."
+        echo "  Keys are written into the local profile at:"
+        echo "    .systemprompt/profiles/local/secrets.json"
+        echo ""
+        echo "  Press Enter to skip a provider."
+        echo ""
+        if [ ! -t 0 ]; then
+            echo "  ERROR: not running on a TTY — pass keys as recipe args:"
+            echo "    just setup-local <anthropic_key> <openai_key> <gemini_key>"
+            exit 1
+        fi
+        read -r -p "  Anthropic API key: " ANTHROPIC_KEY || true
+        read -r -p "  OpenAI API key:    " OPENAI_KEY || true
+        read -r -p "  Gemini API key:    " GEMINI_KEY || true
+        if [ -z "$ANTHROPIC_KEY" ] && [ -z "$OPENAI_KEY" ] && [ -z "$GEMINI_KEY" ]; then
+            echo ""
+            echo "  ERROR: no key provided. Aborting."
+            exit 1
+        fi
+    fi
     if [ ! -x target/debug/systemprompt ] && [ ! -x target/release/systemprompt ]; then
         echo "Building debug binary..."
         just build
@@ -343,13 +375,17 @@ setup-local:
     if [ ! -f "$PROFILE_DIR/secrets.json" ]; then
         echo "Writing local secrets.json..."
         JWT_SECRET=$(head -c 48 /dev/urandom | base64 | tr -d '+/=' | head -c 64)
+        json_field() { if [ -n "${1:-}" ]; then printf '"%s"' "$1"; else printf 'null'; fi; }
+        ANTHROPIC_JSON=$(json_field "$ANTHROPIC_KEY")
+        OPENAI_JSON=$(json_field "$OPENAI_KEY")
+        GEMINI_JSON=$(json_field "$GEMINI_KEY")
         cat > "$PROFILE_DIR/secrets.json" <<JSON
     {
       "jwt_secret": "$JWT_SECRET",
       "database_url": "postgres://systemprompt:123@localhost:5432/systemprompt",
-      "anthropic": ${ANTHROPIC_API_KEY:+\"$ANTHROPIC_API_KEY\"}${ANTHROPIC_API_KEY:-null},
-      "openai": ${OPENAI_API_KEY:+\"$OPENAI_API_KEY\"}${OPENAI_API_KEY:-null},
-      "gemini": ${GEMINI_API_KEY:+\"$GEMINI_API_KEY\"}${GEMINI_API_KEY:-null}
+      "anthropic": $ANTHROPIC_JSON,
+      "openai": $OPENAI_JSON,
+      "gemini": $GEMINI_JSON
     }
     JSON
     fi
