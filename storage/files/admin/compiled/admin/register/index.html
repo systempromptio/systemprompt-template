@@ -4,58 +4,150 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <title>foodles.com Admin - Create Account</title>
+    <title> Admin - Create Account</title>
     <link rel="stylesheet" href="/css/core/fonts.css?v=0">
     <link rel="stylesheet" href="/css/admin-bundle.css?v=0">
-    <script>(function(){var t;try{t=localStorage.getItem('sp-admin-theme')}catch(e){}if(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)t='dark';if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}})();</script>
-    <style>html,body{margin:0;background:oklch(0.96 0.004 70);color:#1c1917;font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}[data-theme="dark"],[data-theme="dark"] body{background:oklch(0.16 0.01 45);color:#fafaf9}</style>
+    <script>(function(){document.documentElement.style.colorScheme='light';})();</script>
+    <style>
+        html,body{margin:0;background:var(--sp-bg-base);color:var(--sp-text-primary);font-family:"OpenSans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+        .auth-page{display:flex;min-height:100vh;background:radial-gradient(ellipse at 30% 20%,color-mix(in oklch,var(--sp-accent) 6%,transparent) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,color-mix(in oklch,var(--sp-section-plugins) 4%,transparent) 0%,transparent 50%),linear-gradient(180deg,var(--sp-bg-canvas) 0%,var(--sp-bg-base) 100%)}
+        .auth-info{flex:1;padding:3rem 3rem 3rem 4rem;display:flex;flex-direction:column;justify-content:center;max-width:640px}
+        .auth-form-col{display:flex;align-items:center;justify-content:center;padding:2rem;min-width:420px}
+        .auth-info h2{font-size:1.1rem;font-weight:700;color:var(--sp-text-primary);margin:1.5rem 0 0.5rem}
+        .auth-info h3{font-size:0.85rem;font-weight:600;color:var(--sp-text-primary);margin:0.75rem 0 0.25rem}
+        .auth-info p{font-size:0.82rem;color:var(--sp-text-secondary);line-height:1.6;margin:0 0 0.5rem}
+        .auth-info .text-muted{color:var(--sp-text-tertiary)}
+        .auth-badge{display:inline-flex;align-items:center;gap:0.4rem;background:var(--sp-accent-dim);color:var(--sp-accent-hover);font-size:0.75rem;font-weight:600;padding:0.3rem 0.75rem;border-radius:999px;margin-bottom:1rem}
+        .auth-divider{border:none;border-top:1px solid var(--sp-border-default);margin:1.25rem 0}
+        .auth-flow-steps{display:flex;flex-direction:column;gap:0.4rem;margin:0.5rem 0}
+        .auth-flow-step{display:flex;align-items:flex-start;gap:0.5rem;font-size:0.78rem;color:var(--sp-text-secondary);line-height:1.5}
+        .auth-flow-step .step-num{display:inline-flex;align-items:center;justify-content:center;min-width:1.4rem;height:1.4rem;border-radius:50%;background:var(--sp-accent);color:#fff;font-size:0.65rem;font-weight:700;flex-shrink:0;margin-top:0.1rem}
+        @media (max-width: 900px){
+            .auth-page{flex-direction:column}
+            .auth-info{max-width:100%;padding:2rem 1.5rem 1rem}
+            .auth-form-col{min-width:0;padding:1rem 1.5rem 2rem}
+        }
+        /* Force light mode regardless of OS dark-mode preference */
+        .login-logo .logo-light{display:block !important}
+        .login-logo .logo-dark{display:none !important}
+        .login-container .card{background:var(--sp-bg-surface) !important;backdrop-filter:none !important;border:1px solid var(--sp-border-subtle) !important}
+        .card{background:linear-gradient(180deg,var(--sp-bg-surface) 0%,var(--sp-bg-canvas) 60%,var(--sp-bg-base) 100%) !important}
+    </style>
 </head>
 <body>
-    <main class="login-container">
-        <div class="card">
-            <div class="login-logo">
-                <img src="/files/images/logo.svg" alt="foodles.com" height="40" class="logo-light">
-                <img src="/files/images/logo-white.svg" alt="foodles.com" height="40" class="logo-dark">
-            </div>
-            <p class="login-subtitle">Create your account</p>
+    <main class="auth-page">
+        <div class="auth-info">
+            <div>
+                <div class="auth-badge">Demo Environment</div>
+                <h2>User Registration</h2>
+                <p>
+                    This is an open demo environment. Registration creates a real account with a WebAuthn passkey
+                    bound to your device. WebAuthn passkeys are the default authentication mechanism &mdash; the library
+                    itself can act as the identity provider, or optionally integrate with enterprise SSO providers
+                    during implementation. <strong>Emails are not enabled in this demo environment.</strong>
+                </p>
 
-            <div id="error" class="login-error" role="alert" aria-live="polite"></div>
+                <hr class="auth-divider">
 
-            <form id="register-form">
-                <div class="form-group">
-                    <label for="reg-email">Email</label>
-                    <input class="form-input" type="email" id="reg-email" placeholder="you@company.com" required autocomplete="email" aria-describedby="error">
+                <h2>How Registration Works</h2>
+                <p>This platform uses <strong>WebAuthn passkeys</strong> for passwordless authentication &mdash; the same
+                    standard used by Apple, Google, and Microsoft for phishing-resistant sign-in.</p>
+                <div class="auth-flow-steps">
+                    <div class="auth-flow-step"><span class="step-num">1</span><span>You provide your name, email, and role below</span></div>
+                    <div class="auth-flow-step"><span class="step-num">2</span><span>Your browser generates a public/private key pair bound to this domain. The private key stays on your device (or in your password manager). No passwords are created or stored.</span></div>
+                    <div class="auth-flow-step"><span class="step-num">3</span><span>The server stores only the public key and issues an OAuth 2.0 session token via PKCE</span></div>
+                    <div class="auth-flow-step"><span class="step-num">4</span><span>You are signed in automatically</span></div>
                 </div>
-                <div class="form-group">
-                    <label for="reg-name">Full Name</label>
-                    <input class="form-input" type="text" id="reg-name" placeholder="Jane Smith" required autocomplete="name">
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary w-full">Create Account</button>
-                </div>
-            </form>
 
-            <div id="loading" class="login-loading" hidden aria-live="polite">
-                <div class="login-spinner" role="status" aria-label="Loading"></div>
-                <p id="loading-text">Setting up your account...</p>
+                <hr class="auth-divider">
+
+                <h2>Enterprise Integration Options</h2>
+                <p>The library can act as the identity provider using WebAuthn passkeys, or optionally integrate with enterprise identity infrastructure during implementation. There are many options available:</p>
+
+                <h3>SAML 2.0 / OpenID Connect</h3>
+                <p>Optionally redirect authentication to your IdP (Okta, Azure AD, Google Workspace). The platform receives a signed assertion with the user's identity and roles.</p>
+
+                <h3>SCIM Directory Sync</h3>
+                <p>Users and groups can be automatically provisioned and deprovisioned from your corporate directory. When someone joins, they appear here. When they leave, access is revoked immediately.</p>
+
+                <h3>Just-in-Time (JIT) Provisioning</h3>
+                <p>On first SSO login, accounts are created automatically with roles derived from IdP group memberships. No pre-provisioning required.</p>
+
+                <h3>Passkeys + SSO</h3>
+                <p>WebAuthn passkeys complement SSO as a device-binding factor, adding phishing-resistant MFA on top of your IdP authentication.</p>
+
+                <hr class="auth-divider">
+
+                <h2>MCP Server Integration</h2>
+                <p>
+                    After registration, users can connect MCP (Model Context Protocol) servers that extend Claude's capabilities
+                    with external tools and data sources. MCP servers authenticate via API keys stored in encrypted per-user secrets.
+                    Each server exposes tool endpoints that Claude can call during conversations, enabling integration with
+                    your existing infrastructure &mdash; databases, APIs, internal services &mdash; all governed by
+                    per-user permissions and audit logging.
+                </p>
             </div>
+        </div>
 
-            <div id="retry" class="login-retry" hidden>
-                <a href="/admin/register">Try again</a>
+        <div class="auth-form-col">
+            <div class="login-container" style="min-height:auto;padding:0;background:none">
+                <div class="card">
+                    <div class="login-logo">
+                        <img src="/files/images/logo.svg" alt="" height="40" class="logo-light">
+                        <img src="/files/images/logo-white.svg" alt="" height="40" class="logo-dark">
+                    </div>
+                    <p class="login-subtitle">Create your account</p>
+
+                    <div id="error" class="login-error" role="alert" aria-live="polite"></div>
+
+                    <form id="register-form">
+                        <div class="form-group">
+                            <label for="reg-email">Email</label>
+                            <input class="form-input" type="email" id="reg-email" placeholder="you@company.com" required autocomplete="email" aria-describedby="error">
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-name">Full Name</label>
+                            <input class="form-input" type="text" id="reg-name" placeholder="Jane Smith" required autocomplete="name">
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-role">Role</label>
+                            <select class="form-input" id="reg-role">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary w-full">Create Account</button>
+                        </div>
+                    </form>
+
+                    <div id="loading" class="login-loading" hidden aria-live="polite">
+                        <div class="login-spinner" role="status" aria-label="Loading"></div>
+                        <p id="loading-text">Setting up your account...</p>
+                    </div>
+
+                    <div id="retry" class="login-retry" hidden>
+                        <a href="/admin/register">Try again</a>
+                    </div>
+
+                    <p class="text-center mt-4 text-tertiary text-sm">
+                        Already have an account? <a href="/admin/login" class="text-accent">Sign in</a>
+                    </p>
+                </div>
             </div>
-
-            <p class="text-center mt-4 text-tertiary text-sm">
-                Already have an account? <a href="/admin/login" class="text-accent">Sign in</a>
-            </p>
         </div>
     </main>
 
-    <script>
-    (function() {
-        'use strict';
+    <script type="module">
+        import {
+            makeRequest, preparePublicKeyCredentialCreationOptions,
+            preparePublicKeyCredentialRequestOptions,
+        } from '/js/services/webauthn-utils.js';
+        import {
+            buildAuthCredentialPayload, buildCreationCredentialPayload,
+            initPkceAndRedirect, WEBAUTHN_BASE,
+        } from '/js/services/webauthn-passkey-helpers.js';
 
-        const CLIENT_ID = 'marketplace-admin';
-        const WEBAUTHN_BASE = '/api/v1/core/oauth/webauthn';
         const LOGIN_PATH = '/admin/login';
 
         const form = document.getElementById('register-form');
@@ -63,70 +155,6 @@
         const loadingSection = document.getElementById('loading');
         const loadingText = document.getElementById('loading-text');
         const retrySection = document.getElementById('retry');
-
-        // --- PKCE Helpers ---
-
-        function generateRandomString(length) {
-            const array = new Uint8Array(length);
-            crypto.getRandomValues(array);
-            return Array.from(array, b => b.toString(36).padStart(2, '0')).join('').slice(0, length);
-        }
-
-        async function generateCodeChallenge(verifier) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(verifier);
-            const digest = await crypto.subtle.digest('SHA-256', data);
-            return btoa(String.fromCharCode(...new Uint8Array(digest)))
-                .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-        }
-
-        // --- WebAuthn Helpers ---
-
-        function base64urlToArrayBuffer(base64url) {
-            const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-            const padding = '='.repeat((4 - base64.length % 4) % 4);
-            const base64Padded = base64 + padding;
-            const binary = atob(base64Padded);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) {
-                bytes[i] = binary.charCodeAt(i);
-            }
-            return bytes.buffer;
-        }
-
-        function preparePublicKeyCredentialCreationOptions(options) {
-            return {
-                ...options,
-                challenge: base64urlToArrayBuffer(options.challenge),
-                user: {
-                    ...options.user,
-                    id: base64urlToArrayBuffer(options.user.id)
-                },
-                excludeCredentials: options.excludeCredentials?.map(cred => ({
-                    ...cred,
-                    id: base64urlToArrayBuffer(cred.id)
-                }))
-            };
-        }
-
-        async function makeRequest(url, method, body) {
-            const options = {
-                method,
-                headers: { 'Content-Type': 'application/json' }
-            };
-            if (body) {
-                options.body = JSON.stringify(body);
-            }
-            const response = await fetch(url, options);
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error_description || data.error || 'Request failed');
-            }
-            return {
-                data,
-                challengeId: response.headers.get('x-challenge-id')
-            };
-        }
 
         // --- UI Helpers ---
 
@@ -162,110 +190,114 @@
 
         if (hasValidAdminToken()) {
             window.location.href = '/admin/';
-            return;
-        }
+        } else {
+            // --- WebAuthn Check ---
 
-        // --- WebAuthn Check ---
-
-        if (!window.PublicKeyCredential) {
-            errorDiv.textContent = 'Your browser does not support passkeys. Please use a modern browser (Chrome, Firefox, Safari, Edge).';
-            errorDiv.style.display = 'block';
-            form.querySelector('button[type="submit"]').disabled = true;
-        }
-
-        // --- Form Submit: WebAuthn Registration ---
-
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const email = document.getElementById('reg-email').value.trim();
-            const displayName = document.getElementById('reg-name').value.trim();
-
-            if (!email || !displayName) {
-                showError('Please fill in all fields.');
-                return;
+            if (!window.PublicKeyCredential) {
+                errorDiv.textContent = 'Your browser does not support passkeys. Please use a modern browser (Chrome, Firefox, Safari, Edge).';
+                errorDiv.style.display = 'block';
+                form.querySelector('button[type="submit"]').disabled = true;
             }
 
-            try {
-                showLoading('Creating your passkey...');
+            // --- Auto-login after passkey creation ---
 
-                // Step 1: Start WebAuthn registration
-                const username = email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-                const startResponse = await makeRequest(
-                    WEBAUTHN_BASE + '/register/start?username=' + encodeURIComponent(username) + '&email=' + encodeURIComponent(email),
-                    'POST'
-                );
+            async function autoLogin(email) {
+                try {
+                    showLoading('Signing you in...');
+                    const startResponse = await makeRequest(
+                        WEBAUTHN_BASE + '/auth/start?email=' + encodeURIComponent(email), 'POST'
+                    );
+                    const publicKeyOptions = preparePublicKeyCredentialRequestOptions(startResponse.data.publicKey);
+                    const credential = await navigator.credentials.get({ publicKey: publicKeyOptions });
+                    if (!credential) throw new Error('Authentication was cancelled');
+                    showLoading('Verifying...');
+                    const finishResponse = await makeRequest(WEBAUTHN_BASE + '/auth/finish', 'POST', {
+                        challenge_id: startResponse.data.challenge_id,
+                        credential: buildAuthCredentialPayload(credential),
+                    });
+                    await initPkceAndRedirect(
+                        finishResponse.data.user_id,
+                        finishResponse.data.auth_token,
+                        showLoading,
+                        '/admin/',
+                    );
+                } catch (_error) {
+                    showLoading('Passkey created! Redirecting to sign in...');
+                    setTimeout(function() { window.location.href = LOGIN_PATH; }, 2000);
+                }
+            }
 
-                // Step 2: Create credential with browser WebAuthn API
-                const publicKeyOptions = preparePublicKeyCredentialCreationOptions(startResponse.data.publicKey);
-                const credential = await navigator.credentials.create({
-                    publicKey: publicKeyOptions
-                });
+            // --- Form Submit: Registration via link/start + link/finish ---
 
-                if (!credential) {
-                    throw new Error('Passkey creation was cancelled');
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const email = document.getElementById('reg-email').value.trim();
+                const displayName = document.getElementById('reg-name').value.trim();
+                const role = document.getElementById('reg-role').value;
+
+                if (!email || !displayName) {
+                    showError('Please fill in all fields.');
+                    return;
                 }
 
-                showLoading('Finishing registration...');
+                try {
+                    showLoading('Creating your account...');
 
-                // Step 3: Finish registration
-                const finishResponse = await makeRequest(WEBAUTHN_BASE + '/register/finish', 'POST', {
-                    challenge_id: startResponse.challengeId,
-                    username: username,
-                    email: email,
-                    credential: {
-                        id: credential.id,
-                        rawId: Array.from(new Uint8Array(credential.rawId)),
-                        response: {
-                            attestationObject: Array.from(new Uint8Array(credential.response.attestationObject)),
-                            clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON))
-                        },
-                        type: credential.type
+                    // Step 1: Create user and get setup token
+                    const regResponse = await fetch('/admin/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: displayName, email: email, role: role }),
+                    });
+                    const regData = await regResponse.json();
+                    if (!regResponse.ok) {
+                        throw new Error(regData.error || regData.message || 'Registration failed');
                     }
-                });
 
-                // Step 4: Store profile data for post-OAuth completion
-                localStorage.setItem('pending_registration', JSON.stringify({
-                    email: email,
-                    display_name: displayName
-                }));
+                    showLoading('Creating your passkey...');
 
-                // Step 5: Generate PKCE params and complete OAuth flow
-                const codeVerifier = generateRandomString(64);
-                const codeChallenge = await generateCodeChallenge(codeVerifier);
-                const csrfState = generateRandomString(32);
+                    // Step 2: Start credential linking with setup token (GET endpoint)
+                    const setupToken = regData.token;
+                    const startResponse = await makeRequest(
+                        WEBAUTHN_BASE + '/link/start?token=' + encodeURIComponent(setupToken),
+                        'GET'
+                    );
 
-                localStorage.setItem('pkce_code_verifier', codeVerifier);
-                localStorage.setItem('pkce_csrf_state', csrfState);
-                localStorage.setItem('login_redirect', '/admin/');
+                    const publicKeyOptions = preparePublicKeyCredentialCreationOptions(
+                        startResponse.data.challenge ? startResponse.data.challenge.publicKey : startResponse.data.publicKey
+                    );
+                    const credential = await navigator.credentials.create({
+                        publicKey: publicKeyOptions
+                    });
 
-                showLoading('Redirecting...');
+                    if (!credential) {
+                        throw new Error('Passkey creation was cancelled');
+                    }
 
-                const completeParams = new URLSearchParams({
-                    user_id: finishResponse.data.user_id,
-                    auth_token: finishResponse.data.auth_token,
-                    response_type: 'code',
-                    client_id: CLIENT_ID,
-                    redirect_uri: window.location.origin + LOGIN_PATH,
-                    scope: 'user',
-                    state: csrfState,
-                    code_challenge: codeChallenge,
-                    code_challenge_method: 'S256'
-                });
+                    showLoading('Finishing registration...');
 
-                window.location.href = WEBAUTHN_BASE + '/complete?' + completeParams.toString();
+                    // Step 3: Finish credential linking with setup token
+                    await makeRequest(WEBAUTHN_BASE + '/link/finish', 'POST', {
+                        challenge_id: startResponse.data.challenge_id || startResponse.challengeId,
+                        token: setupToken,
+                        credential: buildCreationCredentialPayload(credential),
+                    });
 
-            } catch (error) {
-                if (error.name === 'NotAllowedError') {
-                    showError('Passkey creation was cancelled or not allowed.');
-                } else if (error.name === 'NotSupportedError') {
-                    showError('Passkeys are not supported on this device.');
-                } else {
-                    showError(error.message || 'Registration failed. Please try again.');
+                    // Step 4: Auto-login with the new passkey
+                    await autoLogin(email);
+
+                } catch (error) {
+                    if (error.name === 'NotAllowedError') {
+                        showError('Passkey creation was cancelled or not allowed.');
+                    } else if (error.name === 'NotSupportedError') {
+                        showError('Passkeys are not supported on this device.');
+                    } else {
+                        showError(error.message || 'Registration failed. Please try again.');
+                    }
                 }
-            }
-        });
-    })();
+            });
+        }
     </script>
 </body>
 </html>

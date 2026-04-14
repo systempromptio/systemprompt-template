@@ -25,15 +25,12 @@ related_docs:
     url: "/documentation/mcp-servers"
   - title: "Users"
     url: "/documentation/users"
-  - title: "Presentation"
-    url: "/documentation/presentation"
 ---
 
 # Access Control
 
 **TL;DR:** The Access Control page lets administrators assign role-based and department-based permissions to every plugin, agent, and MCP server in the system. Rules determine which users can see and use each resource, and changes can be applied individually or in bulk across multiple entities at once.
 
-> **See this in the presentation:** [Slide 9: Audit Trail & Access Control](/documentation/presentation#slide-9)
 
 ## What You'll See
 

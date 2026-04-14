@@ -1,19 +1,14 @@
-
-
-
 .site-header {
-  --sp-color-text: #ffffff;
-  --sp-color-text-primary: #ffffff;
-  --sp-color-text-secondary: rgba(255, 255, 255, 0.85);
-  --sp-color-text-muted: rgba(255, 255, 255, 0.6);
-  --sp-color-border: rgba(255, 255, 255, 0.1);
-
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: var(--sp-header-height);
-  background: var(--sp-color-primary);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--sp-color-border);
+  box-shadow: var(--sp-shadow-sm);
   z-index: var(--sp-z-navigation);
 }
 
@@ -35,7 +30,7 @@
 }
 
 .logo-svg {
-  height: 28px;
+  height: 36px;
   width: auto;
 }
 
@@ -44,14 +39,14 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--sp-space-1);
+  gap: var(--sp-space-xs);
 }
 
 .logo-badges {
   display: flex;
   align-items: center;
-  gap: var(--sp-space-2);
-  margin-left: var(--sp-space-1);
+  gap: var(--sp-space-sm);
+  margin-left: var(--sp-space-xs);
 }
 
 .badge {
@@ -81,12 +76,12 @@
 }
 
 .badge-early-access {
-  padding: var(--sp-space-1) var(--sp-space-2);
-  background: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: var(--sp-space-xs) var(--sp-space-sm);
+  background: var(--sp-brand-50);
+  color: var(--sp-color-primary-hover);
+  border: 1px solid var(--sp-brand-200);
   font-family: var(--sp-font-brand);
-  font-weight: 400;
+  font-weight: 500;
 }
 
 
@@ -109,7 +104,7 @@
 }
 
 .nav-links a.nav-link--active {
-  color: var(--sp-color-text);
+  color: var(--sp-color-primary);
 }
 
 
@@ -118,8 +113,8 @@ button.cta-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--sp-space-3) var(--sp-space-5);
-  background: var(--sp-brand-green);
+  padding: var(--sp-space-sm) var(--sp-space-lg);
+  background: var(--sp-color-primary);
   color: var(--sp-color-text-on-primary);
   font-family: var(--sp-font-brand);
   font-size: 0.875rem;
@@ -128,19 +123,34 @@ button.cta-button {
   letter-spacing: 0.05em;
   text-decoration: none;
   border-radius: var(--sp-radius-sm);
-  transition: all var(--sp-transition-fast);
+  border: 0;
+  cursor: pointer;
+  transition: background-color var(--sp-transition-fast), transform var(--sp-transition-fast), box-shadow var(--sp-transition-fast);
 }
 
 a.cta-button:hover,
 button.cta-button:hover {
-  background: var(--sp-client-orange);
+  background: var(--sp-color-primary-hover);
   color: var(--sp-color-text-on-primary);
   transform: translateY(-1px);
+  box-shadow: var(--sp-shadow-md);
 }
 
 
 @media (max-width: 480px) {
   .logo-svg {
-    height: 24px;
+    height: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-links a,
+  a.cta-button,
+  button.cta-button {
+    transition: none;
+  }
+  a.cta-button:hover,
+  button.cta-button:hover {
+    transform: none;
   }
 }

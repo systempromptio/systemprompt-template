@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <title>foodles.com Admin - </title>
+    <title>demo.systemprompt.io Admin - </title>
     <link rel="stylesheet" href="/css/core/fonts.css?v=0">
     <link rel="stylesheet" href="/css/admin-bundle.css?v=0">
     <script data-cfasync="false">(function(){let t;try{t=localStorage.getItem('sp-admin-theme')}catch(e){}if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}})();</script>
@@ -15,9 +15,9 @@
     <div class="admin-layout" data-section="dashboard">
         <aside class="admin-sidebar" id="admin-sidebar">
             <button class="sidebar-close-btn" type="button" aria-label="Close menu">&times;</button>
-            <a href="/control-center" class="admin-sidebar-brand" aria-label="foodles.com - Go to dashboard">
-                <img src="/files/images/logo.svg" alt="foodles.com" class="admin-logo admin-logo--light" />
-                <img src="/files/images/logo-white.svg" alt="foodles.com" class="admin-logo admin-logo--dark" />
+            <a href="/control-center" class="admin-sidebar-brand" aria-label="demo.systemprompt.io - Go to dashboard">
+                <img src="/files/images/logo.svg" alt="demo.systemprompt.io" class="admin-logo admin-logo--light" />
+                <img src="/files/images/logo-white.svg" alt="demo.systemprompt.io" class="admin-logo admin-logo--dark" />
             </a>
             <nav aria-label="Admin navigation">
                 <h2 class="nav-label">General</h2>
@@ -149,18 +149,10 @@
                     <svg class="sp-onboarding-banner__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
                     </svg>
-                    <span>Connect Claude to foodles.com to start tracking conversations.</span>
+                    <span>Connect Claude to demo.systemprompt.io to start tracking conversations.</span>
                     <a href="/admin/setup" class="sp-onboarding-banner__link">Complete setup</a>
                 </div>
                 <button type="button" class="sp-onboarding-banner__dismiss" id="onboarding-banner-dismiss" aria-label="Dismiss">&times;</button>
-            </div>
-            <div class="demo-help-box">
-                <div class="demo-help-box__header">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                    <strong>Demo Environment</strong>
-                </div>
-                <p>The <strong>Admin Dashboard</strong> provides system-wide analytics for platform administrators. It shows web traffic metrics, MCP tool call success rates, user activity timelines, and content performance data. This is the admin-only overview of the entire platform's health and usage.</p>
-                <p class="demo-help-box__footer">This dashboard has been configured for demo and evaluation purposes. Some features may not be fully functional. For a deeper look at any feature, contact <a href="mailto:ed@systemprompt.io">ed@systemprompt.io</a></p>
             </div>
 
                 <section aria-label="Status overview">
@@ -194,97 +186,45 @@
 
                 <div class="dashboard-tabs">
                     <div class="cc-tabs">
-                        <button type="button" class="cc-tab " data-tab="traffic">Web Traffic</button>
+                        <button type="button" class="cc-tab " data-tab="governance">Governance</button>
                         <button type="button" class="cc-tab " data-tab="mcp">MCP & Usage</button>
                         <button type="button" class="cc-tab " data-tab="report">Report</button>
                     </div>
                 </div>
             
-                <div class="cc-tab-panel " id="tab-traffic">
+                <div class="cc-tab-panel " id="tab-governance">
             
-                    <section aria-label="Real-time traffic pulse">
-                    </section>
-            
-                    <section aria-label="Traffic KPI metrics and charts">
-                    <div class="traffic-period-selector">
-                        <a href="?range=&traffic_range=today&tab=traffic" class="chart-range-tab ">Today</a>
-                        <a href="?range=&traffic_range=7d&tab=traffic" class="chart-range-tab ">7 Days</a>
-                        <a href="?range=&traffic_range=30d&tab=traffic" class="chart-range-tab ">30 Days</a>
-                    </div>
-            
-                    <div class="traffic-kpi-grid">
-                        <div class="traffic-kpi-card">
-                            <div class="kpi-label">Sessions</div>
-                            <div class="kpi-value"></div>
-                            <div class="kpi-trend ">
-                                
-                                 <span class="kpi-period"></span>
-                            </div>
+                    <section aria-label="Governance overview">
+                    <div class="metric-ribbon">
+                        <div class="metric-ribbon-item">
+                            <span class="metric-ribbon-value"></span>
+                            <span class="metric-ribbon-label">Total Decisions</span>
                         </div>
-                        <div class="traffic-kpi-card">
-                            <div class="kpi-label">Page Views</div>
-                            <div class="kpi-value"></div>
-                            <div class="kpi-trend ">
-                                
-                                 <span class="kpi-period"></span>
-                            </div>
+                        <div class="metric-ribbon-item metric-ribbon-success">
+                            <span class="metric-ribbon-value"></span>
+                            <span class="metric-ribbon-label">Allowed</span>
                         </div>
-                        <div class="traffic-kpi-card">
-                            <div class="kpi-label">Avg Time on Page</div>
-                            <div class="kpi-value"></div>
-                            <div class="kpi-trend ">
-                                
-                                 <span class="kpi-period"></span>
-                            </div>
-                        </div>
-                        <div class="traffic-kpi-card">
-                            <div class="kpi-label">Unique Visitors</div>
-                            <div class="kpi-value"></div>
-                            <div class="kpi-trend ">
-                                
-                                 <span class="kpi-period"></span>
-                            </div>
+                        <div class="metric-ribbon-item metric-ribbon-danger">
+                            <span class="metric-ribbon-value"></span>
+                            <span class="metric-ribbon-label">Denied</span>
                         </div>
                     </div>
-            
-                    <div class="card p-5 text-center text-tertiary">No traffic data for this period.</div>
                     </section>
             
-                    <section aria-label="Traffic sources and top content">
                     <div class="dashboard-two-col">
                         <div>
-                            <div class="section-title">Traffic Sources</div>
-                            <div class="empty-state" role="status"><p>No traffic source data.</p></div>
+                            <section aria-label="Policy violations">
+                            <div class="section-title">Policy Violations</div>
+                            <div class="empty-state" role="status"><p>No governance decisions recorded yet.</p></div>
+                            </section>
                         </div>
                         <div>
-                            <div class="section-title">Top Content</div>
-                            <div class="content-period-selector">
-                                <a href="?range=&traffic_range=&content_range=1h&tab=traffic" class="chart-range-tab ">1h</a>
-                                <a href="?range=&traffic_range=&content_range=24h&tab=traffic" class="chart-range-tab ">24h</a>
-                                <a href="?range=&traffic_range=&content_range=yesterday&tab=traffic" class="chart-range-tab ">Yesterday</a>
-                                <a href="?range=&traffic_range=&content_range=7d&tab=traffic" class="chart-range-tab ">7d</a>
-                                <a href="?range=&traffic_range=&content_range=30d&tab=traffic" class="chart-range-tab ">30d</a>
-                            </div>
-                            <div class="empty-state" role="status"><p>No content performance data.</p></div>
+                            <section aria-label="Recent governance events">
+                            <div class="section-title">Recent Governance Events</div>
+                            <div class="empty-state" role="status"><p>No governance decisions recorded yet.</p></div>
+                            </section>
                         </div>
                     </div>
-            
-                    <div class="section-title">Top Pages</div>
-                    <div class="empty-state" role="status"><p>No page view data.</p></div>
-                    </section>
-            
-                    <section aria-label="Geographic and device breakdown">
-                    <div class="dashboard-two-col">
-                        <div>
-                            <div class="section-title">Geographic Distribution</div>
-                            <div class="empty-state" role="status"><p>No geographic data.</p></div>
-                        </div>
-                        <div>
-                            <div class="section-title">Device Breakdown</div>
-                            <div class="empty-state" role="status"><p>No device data.</p></div>
-                        </div>
-                    </div>
-                    </section>
                 </div>
             
                 <div class="cc-tab-panel " id="tab-mcp">
@@ -369,6 +309,37 @@
             
                     </section>
             
+                    <section aria-label="MCP server access and cost breakdown">
+                    <div class="dashboard-two-col">
+                        <div>
+                            <div class="section-title">MCP Server Access</div>
+                            <div class="empty-state" role="status"><p>No MCP access events recorded yet.</p></div>
+                        </div>
+                        <div>
+                            <div class="section-title">Token Usage (30d)</div>
+                            <div class="empty-state" role="status"><p>No token usage data yet.</p></div>
+                        </div>
+                    </div>
+                    </section>
+            
+
+                    <section aria-label="Installation guides">
+                    <div class="section-title">Installation Guides</div>
+                    <div class="dashboard-grid dashboard-grid--3">
+                        <a href="/documentation/integration-claude-code" class="card card--link p-5">
+                            <div class="card__title">Claude Code</div>
+                            <div class="card__desc">One-line install via the platform's internal git server. Recommended for developers.</div>
+                        </a>
+                        <a href="/documentation/integration-claude-cowork" class="card card--link p-5">
+                            <div class="card__title">Claude Cowork</div>
+                            <div class="card__desc">ZIP export or GitHub repository sync for Claude Desktop teams.</div>
+                        </a>
+                        <a href="/documentation/distribution-channels" class="card card--link p-5">
+                            <div class="card__title">Distribution Channels</div>
+                            <div class="card__desc">How personalised marketplaces are served and enterprise deployment options.</div>
+                        </a>
+                    </div>
+                    </section>
                 </div>
             
                 <div class="cc-tab-panel " id="tab-report">
@@ -386,7 +357,7 @@
 
             <footer class="admin-footer" role="contentinfo">
                 <div class="admin-footer-inner">
-                    <span class="admin-footer-brand">foodles.com</span>
+                    <span class="admin-footer-brand">Enterprise Demo</span>
                     <span class="admin-footer-sep" aria-hidden="true">&middot;</span>
                     <a href="/platform" class="admin-footer-link">Documentation</a>
                     <span class="admin-footer-sep" aria-hidden="true">&middot;</span>

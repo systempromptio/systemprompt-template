@@ -25,13 +25,10 @@ related_docs:
     url: "/documentation/plugins"
   - title: "MCP Servers"
     url: "/documentation/mcp-servers"
-  - title: "Presentation"
-    url: "/documentation/presentation"
 ---
 
 # Platform Architecture
 
-> **See this in the presentation:** [Slide 11: Personalization & Ownership](/documentation/presentation#slide-11)
 
 **TL;DR:** The platform is a single Rust binary with PostgreSQL as its only dependency. It acts as the **narrow waist** between client stacks (agents, UIs, tools) and backend stacks (LLMs, APIs, data) — governing every AI interaction without imposing a specific framework on either side. Three layers — Core (library), Extensions (Rust), Services (YAML/Markdown) — compile into one binary that deploys as a sidecar, standalone service, centralized gateway, or embedded library. CLI-first design exposes every operation across 8 domains. Profile-based deployment means the same binary runs in local development and production with different YAML configs.
 

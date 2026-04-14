@@ -1,5 +1,7 @@
+mod demos;
 mod sections;
 
+pub use demos::{DemoCategory, DemoStep, DemosConfig, QuickStartStep};
 pub use sections::{
     ComparisonConfig, ComparisonItem, ComparisonSide, DifferentiatorConfig, DifferentiatorItem,
     ExtensionTrait, ExtensionsConfig, FaqConfig, FaqItem, FinalCtaConfig, PricingConfig,
@@ -36,6 +38,8 @@ pub struct HomepageConfig {
     pub faq: Option<FaqConfig>,
     #[serde(default)]
     pub final_cta: Option<FinalCtaConfig>,
+    #[serde(default)]
+    pub demos: Option<DemosConfig>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

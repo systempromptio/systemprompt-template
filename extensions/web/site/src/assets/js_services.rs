@@ -9,10 +9,6 @@ pub(super) fn public_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
         AssetDefinition::js(storage_js.join("terminal-demo.js"), "js/terminal-demo.js"),
         AssetDefinition::js(storage_js.join("blog-images.js"), "js/blog-images.js"),
         AssetDefinition::js(storage_js.join("homepage.js"), "js/homepage.js"),
-        AssetDefinition::js(
-            storage_js.join("presentation-nav.js"),
-            "js/presentation-nav.js",
-        ),
     ]
 }
 
@@ -259,16 +255,9 @@ pub(super) fn admin_assets(storage_css: &Path, storage_js: &Path) -> Vec<AssetDe
 
 pub(super) fn admin_html_assets(compiled_dir: &Path) -> Vec<AssetDefinition> {
     let admin = compiled_dir.join("admin");
-    let presentation = compiled_dir.join("presentation");
 
-    vec![
-        AssetDefinition::html(
-            admin.join("login").join("index.html"),
-            "admin/login/index.html",
-        ),
-        AssetDefinition::html(
-            presentation.join("index.html"),
-            "documentation/presentation/index.html",
-        ),
-    ]
+    vec![AssetDefinition::html(
+        admin.join("login").join("index.html"),
+        "admin/login/index.html",
+    )]
 }

@@ -155,8 +155,6 @@ Three integration paths are available:
 - **Real-time streaming** -- SSE endpoint for live event consumption
 - **CLI queries** -- `systemprompt infra logs view` and `systemprompt analytics` commands for ad-hoc investigation
 
-See [Analytics & Observability](/features/analytics-and-observability) for the full observability feature set.
-
 ## Rate Limiting
 
 Rate limits prevent abuse and ensure fair resource allocation. Limits are tiered by role with a token bucket algorithm:

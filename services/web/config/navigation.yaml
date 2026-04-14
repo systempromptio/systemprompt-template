@@ -3,39 +3,9 @@
 
 header:
   items:
-    - id: features
-      label: "Features"
-      href: "#"
-      dropdown: true
-      sections:
-        - title: "Platform"
-          links:
-            - label: "Agent Governance"
-              href: "/features/agent-governance"
-            - label: "Skills & Plugins"
-              href: "/features/skills-and-plugins"
-            - label: "Analytics & Observability"
-              href: "/features/analytics-and-observability"
-            - label: "DevOps & Deployment"
-              href: "/features/devops-and-deployment"
-        - title: "Capabilities"
-          links:
-            - label: "MCP Integration"
-              href: "/features/mcp-integration"
-            - label: "Granular Management"
-              href: "/features/granular-management"
-            - label: "No Vendor Lock-in"
-              href: "/features/no-vendor-lock-in"
-            - label: "Usage Reports"
-              href: "/features/usage-reports"
-
     - id: docs
       label: "Docs"
       href: "/documentation"
-
-    - id: presentation
-      label: "Presentation"
-      href: "/documentation/presentation"
 
     - id: login
       label: "Login"
@@ -54,7 +24,6 @@ footer:
 # Docs sidebar - rendered dynamically via site.docs_sidebar in templates
 docs_sidebar:
   - title: "Platform"
-    feature_href: "/features/mcp-integration"
     links:
       - label: "Introduction"
         href: "/documentation/introduction"
@@ -119,7 +88,6 @@ docs_sidebar:
         href: "/documentation/demo-terminal-agent-tracing"
 
   - title: "DevOps & Deployment"
-    feature_href: "/features/devops-and-deployment"
     links:
       - label: "Architecture Overview"
         href: "/documentation/architecture"
@@ -135,7 +103,6 @@ docs_sidebar:
         href: "/documentation/ci-cd"
 
   - title: "Governance & Security"
-    feature_href: "/features/agent-governance"
     links:
       - label: "Access Control & RBAC"
         href: "/documentation/access-control"
@@ -172,7 +139,6 @@ docs_sidebar:
         href: "/documentation/distribution-channels"
 
   - title: "Analytics & Observability"
-    feature_href: "/features/analytics-and-observability"
     links:
       - label: "Dashboard"
         href: "/documentation/dashboard"

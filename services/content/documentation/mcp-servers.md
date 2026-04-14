@@ -21,15 +21,12 @@ related_docs:
     url: "/documentation/plugins"
   - title: "Hooks"
     url: "/documentation/hooks"
-  - title: "Presentation"
-    url: "/documentation/presentation"
 ---
 
 # MCP Servers
 
 **TL;DR:** MCP (Model Context Protocol) servers expose tools that AI agents use during conversations. When an agent needs to search a database, call an API, or perform any external action, it invokes a tool through an MCP server. The admin dashboard lets you add, configure, and manage MCP server connections -- including binary paths, ports, endpoints, and OAuth authentication settings.
 
-> **See this in the presentation:** [Slide 9: Audit Trail & Access Control](/documentation/presentation#slide-9)
 
 ## What You'll See
 

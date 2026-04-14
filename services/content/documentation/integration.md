@@ -168,12 +168,3 @@ For rolling out to a team, administrators can:
 The install URL can be included in developer onboarding scripts, device management policies, or distributed through any internal channel.
 
 See [Marketplace](/documentation/marketplace) for marketplace management and [Distribution Channels](/documentation/distribution-channels) for the full distribution guide.
-
-## Feature Pages
-
-For detailed feature information, see:
-
-- [MCP Integration](/features/mcp-integration) — Native protocol support, OAuth2, and tool governance
-- [No Vendor Lock-In](/features/no-vendor-lock-in) — Open standards and portable formats
-- [Agent Governance](/features/agent-governance) — RBAC, audit trails, and secret detection
-- [Skills & Plugins](/features/skills-and-plugins) — Governed bundles and multi-channel distribution

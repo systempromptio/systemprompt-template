@@ -17,13 +17,11 @@ after_reading_this:
 
 # systemprompt.io AI Governance Platform
 
-> **Start with the presentation:** [Enterprise AI Governance Layer](/documentation/presentation)
 
 Welcome to the systemprompt.io AI Governance Platform documentation. This platform provides enterprise-grade governance infrastructure for AI usage — deploying, securing, distributing, and observing AI across your entire organisation.
 
 ## Start Here
 
-- [Presentation](/documentation/presentation) — Interactive slide deck covering the full platform story
 
 ## Introduction & Integration
 

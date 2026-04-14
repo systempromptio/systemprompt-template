@@ -25,7 +25,6 @@ fn output_path_for(page_id: &str) -> String {
         "hook-edit" => "admin/hooks/edit/index.html",
         "mcp-edit" => "admin/mcp-servers/edit/index.html",
         "user-detail" => "admin/user/index.html",
-        "presentation" => "presentation/index.html",
         _ => return format!("admin/{page_id}/index.html"),
     };
     path.to_string()

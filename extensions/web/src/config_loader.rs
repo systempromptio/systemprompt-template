@@ -37,11 +37,39 @@ pub fn load_homepage_config() -> Result<Option<Arc<HomepageConfig>>, ConfigError
         return Ok(None);
     };
 
-    let homepage_config: HomepageConfig =
+    let mut homepage_config: HomepageConfig =
         serde_yaml::from_value(homepage_value).map_err(|e| ConfigError::Parse {
             config_name: "homepage.yaml".to_string(),
             message: e.to_string(),
         })?;
+
+    if let Ok(paths) = AppPaths::get() {
+        let demo_root = paths.system().root().join("demo");
+        match crate::homepage::demo_scanner::scan_demos(&demo_root) {
+            Ok(mut scanned) => {
+                if let Some(existing) = homepage_config.demos.as_ref() {
+                    if existing.title.is_some() {
+                        scanned.title = existing.title.clone();
+                    }
+                    if existing.subtitle.is_some() {
+                        scanned.subtitle = existing.subtitle.clone();
+                    }
+                }
+                tracing::info!(
+                    categories = scanned.categories.len(),
+                    "Scanned demo/ for homepage showcase"
+                );
+                homepage_config.demos = Some(scanned);
+            }
+            Err(e) => {
+                tracing::warn!(
+                    error = %e,
+                    path = %demo_root.display(),
+                    "Failed to scan demo/ directory — homepage will render without demo cards"
+                );
+            }
+        }
+    }
 
     tracing::info!("Loaded homepage config from config/homepage.yaml");
 

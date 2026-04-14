@@ -23,13 +23,10 @@ related_docs:
     url: "/documentation/cost-tracking"
   - title: "Access Control"
     url: "/documentation/access-control"
-  - title: "Presentation"
-    url: "/documentation/presentation"
 ---
 
 # Scaling Architecture
 
-> **See this in the presentation:** [Slide 11: Personalization & Ownership](/documentation/presentation#slide-11)
 
 **TL;DR:** The platform is the narrow waist between your client stacks and your backend stacks. It scales horizontally because it is stateless — JWT tokens carry identity, PostgreSQL holds all persistent state, and application instances are interchangeable. It deploys as a sidecar, a standalone service, a centralized multi-tenant gateway, or an embedded library. AI implementations are fragmented and complex. This adapts to whatever architecture exists.
 

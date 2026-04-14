@@ -23,15 +23,12 @@ related_docs:
     url: "/documentation/access-control"
   - title: "Rate Limiting"
     url: "/documentation/rate-limiting"
-  - title: "Presentation"
-    url: "/documentation/presentation"
 ---
 
 # Tool Governance
 
 **TL;DR:** Every MCP tool call in the platform is governed, logged, and auditable. OAuth scoping controls which agents can use which tools. Execution logging captures every invocation with status, timing, and context. Event hooks fire on tool success and failure, enabling real-time alerts and compliance checks. Rate limiting prevents abuse. This page covers the full governance lifecycle of a tool call from authorization to audit.
 
-> **See this in the presentation:** [Slide 9: Audit Trail & Access Control](/documentation/presentation#slide-9)
 
 ## Overview
 

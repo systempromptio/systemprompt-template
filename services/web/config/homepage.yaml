@@ -1,50 +1,19 @@
 # Homepage Configuration
+#
+# The `demos` section (quick_start + categories) is populated at load time
+# from the demo/ directory on disk — see extensions/web/site/src/homepage/demo_scanner.rs.
+# Only `title` and `subtitle` here are authoritative; anything else is overwritten.
 
 hero:
-  title: "Govern"
-  title_highlight: "Every Agent."
-  subtitle: "Synchronous policy enforcement on every AI prompt, every agent message, every tool invocation, every API request. Structured audit trails piped to your SIEM. Full request tracing across every application of AI. Self-hosted, single binary, zero vendor dependencies."
-  eyebrow: "AI Governance Control Plane"
-  cta: "View Documentation"
-  cta_url: "/documentation"
-  cta_secondary: "Login"
-  cta_secondary_url: "/admin/login"
+  title: "Run the Platform"
+  title_highlight: "in 60 Seconds."
+  subtitle: "Forty-plus runnable demo scripts walk through governance, agents, MCP, analytics, and more. Build the binary, start services, copy a command, and watch the platform work end-to-end."
+  eyebrow: "Enterprise Demo — Interactive Getting Started"
+  cta: "Jump to Quick Start"
+  cta_url: "#quick-start"
+  cta_secondary: "Read the Docs"
+  cta_secondary_url: "/documentation"
 
-features:
-  title: "Platform Features"
-  subtitle: "Governance for every application of AI at scale"
-  categories:
-    - name: "Core Capabilities"
-      features:
-        - title: "Synchronous Governance Pipeline"
-          description: "Every AI prompt, message, tool invocation, and agent request evaluated before execution. RBAC, secret detection across 35+ patterns, scope validation, and tiered rate limiting. Deny-by-default. Sub-millisecond decision latency."
-          icon: "shield"
-          url: "/features/agent-governance"
-        - title: "SIEM-Ready Telemetry"
-          description: "Structured JSON event streams for every governance decision. Pipe directly to Splunk, ELK, or Datadog. 13 event categories, full request context, exportable via CLI. Your SOC sees AI the same way it sees everything else."
-          icon: "chart"
-          url: "/features/analytics-and-observability"
-        - title: "RBAC Control Plane"
-          description: "Role and department-scoped allow/deny rules enforced across MCP tools, AI requests, and REST APIs. One policy definition, every surface governed. Hooks or native library integration."
-          icon: "sliders"
-          url: "/features/granular-management"
-        - title: "Single Binary, Zero Dependencies"
-          description: "One Rust binary, one PostgreSQL connection. Deploy as sidecar, centralized gateway, or embedded library. No runtime interpreter, no external services, no attack surface you don't control."
-          icon: "terminal"
-          url: "/features/devops-and-deployment"
-        - title: "Every AI Interaction Governed"
-          description: "Prompts, messages, tool invocations, agent-to-agent calls — every interaction passes through the governance pipeline. Per-server OAuth2 scoping, payload inspection, secret detection. Nothing executes without authorization."
-          icon: "plug"
-          url: "/features/mcp-integration"
-        - title: "Governed Plugin Distribution"
-          description: "Skills, agents, and MCP servers bundled as governed plugins. Git-distributed, version-controlled, auditable. Access scoped by role and department."
-          icon: "rocket"
-          url: "/features/skills-and-plugins"
-        - title: "Self-Hosted, Air-Gappable"
-          description: "Runs entirely on your infrastructure. No cloud callbacks, no telemetry home, no vendor dependency. Full source available for audit. Data never leaves your compliance boundary."
-          icon: "unlock"
-          url: "/features/no-vendor-lock-in"
-        - title: "Cost Attribution & Chargeback"
-          description: "Token consumption tracked by model, agent, department, and user. Per-request cost attribution. CSV export for finance. Know exactly what AI costs and who is spending it."
-          icon: "file-text"
-          url: "/features/usage-reports"
+demos:
+  title: "Demo Catalogue"
+  subtitle: "Every script below is a real, runnable shell script in demo/. Click a card to see the commands it runs, then copy them into your terminal."

@@ -23,15 +23,12 @@ related_docs:
     url: "/documentation/hooks"
   - title: "Jobs"
     url: "/documentation/jobs"
-  - title: "Presentation"
-    url: "/documentation/presentation"
 ---
 
 # Events
 
 **TL;DR:** The Events page is a paginated, searchable audit log of every AI activity event in your organization. Each event records who did what, when, with which tool, in which session. You can expand any row to inspect full metadata including the raw JSON payload. This page is admin-only.
 
-> **See this in the presentation:** [Slide 9: Audit Trail & Access Control](/documentation/presentation#slide-9)
 
 ## Access Control
 

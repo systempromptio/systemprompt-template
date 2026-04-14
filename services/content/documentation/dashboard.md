@@ -27,15 +27,12 @@ related_docs:
     url: "/documentation/integration-claude-code"
   - title: "Integration: Claude Cowork"
     url: "/documentation/integration-claude-cowork"
-  - title: "Presentation"
-    url: "/documentation/presentation"
 ---
 
 # Dashboard
 
 **TL;DR:** The dashboard is the admin home page. It shows a metric ribbon with today's key numbers, an AI usage chart with selectable time ranges, live activity feed, system health indicators, top users leaderboard, popular skills, event breakdown, model usage, hourly activity, and department activity. Admin access is required — non-admin users are redirected to their profile page.
 
-> **See this in the presentation:** [Slide 8: The Admin Dashboard](/documentation/presentation#slide-8)
 
 ## Access Control
 

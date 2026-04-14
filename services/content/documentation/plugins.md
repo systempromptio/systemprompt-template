@@ -25,15 +25,12 @@ related_docs:
     url: "/documentation/mcp-servers"
   - title: "Hooks"
     url: "/documentation/hooks"
-  - title: "Presentation"
-    url: "/documentation/presentation"
 ---
 
 # Plugins
 
 **TL;DR:** The Plugins page is your central configuration dashboard. It shows every installed plugin alongside a unified view of all agents, MCP servers, and skills across your deployment. From here you can enable or disable any resource, drill into plugin details, customize skills, browse skill files, and export plugin configurations for use with Claude Desktop.
 
-> **See this in the presentation:** [Slide 6: Skills, Plugins & the Marketplace](/documentation/presentation#slide-6)
 
 ## What You'll See
 

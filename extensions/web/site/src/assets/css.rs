@@ -17,7 +17,6 @@ pub(super) fn css_assets(storage_css: &Path) -> Vec<AssetDefinition> {
     v.extend(syntax_css(storage_css));
     v.extend(feature_base_css(storage_css));
     v.extend(playbook_css(storage_css));
-    v.extend(presentation_css(storage_css));
     v
 }
 
@@ -37,6 +36,7 @@ fn core_css(p: &Path) -> Vec<AssetDefinition> {
 fn homepage_css(p: &Path) -> Vec<AssetDefinition> {
     vec![
         css!(p,"homepage-hero.css"),
+        css!(p,"homepage-demos.css"),
         css!(p,"homepage-demo-terminal.css"),
         css!(p,"homepage-demo-responsive.css"),
         css!(p,"homepage-sections-titles.css"),
@@ -149,10 +149,6 @@ fn playbook_css(p: &Path) -> Vec<AssetDefinition> {
         css!(p,"playbook-grid.css"),
         css!(p,"playbook-cards.css"),
     ]
-}
-
-fn presentation_css(p: &Path) -> Vec<AssetDefinition> {
-    vec![css!(p,"presentation.css")]
 }
 
 fn syntax_css(p: &Path) -> Vec<AssetDefinition> {

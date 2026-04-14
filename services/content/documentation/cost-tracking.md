@@ -25,15 +25,12 @@ related_docs:
     url: "/documentation/access-control"
   - title: "Agents"
     url: "/documentation/agents"
-  - title: "Presentation"
-    url: "/documentation/presentation"
 ---
 
 # Cost Tracking & Model Usage
 
 **TL;DR:** The platform tracks every AI request by model, agent, provider, department, and user. Cost data is available through the CLI (`systemprompt analytics costs`) and the admin dashboard. Department-level chargeback, model usage distribution, and CSV export give finance teams the data they need. RBAC controls ensure analysts see only their own department's costs.
 
-> **See this in the presentation:** [Slide 8: The Admin Dashboard](/documentation/presentation#slide-8)
 
 ## Why Cost Visibility Matters at Enterprise Scale
 
