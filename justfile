@@ -393,7 +393,7 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
         cat > "$PROFILE_DIR/secrets.json" <<JSON
     {
       "jwt_secret": "$JWT_SECRET",
-      "database_url": "postgres://systemprompt:123@localhost:5432/systemprompt",
+      "database_url": "postgres://systemprompt:123@localhost:${PG_PORT}/systemprompt",
       "anthropic": $ANTHROPIC_JSON,
       "openai": $OPENAI_JSON,
       "gemini": $GEMINI_JSON
