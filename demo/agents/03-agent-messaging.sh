@@ -85,11 +85,14 @@ echo "      -m \"List all agents running on this platform\" \\"
 echo "      --context-id \"$CONTEXT_ID\" --blocking --timeout 60"
 echo ""
 
+set +e
 MESSAGE_OUTPUT=$("$CLI" admin agents message developer_agent \
   -m "List all agents running on this platform" \
   --context-id "$CONTEXT_ID" \
   --blocking --timeout 60 \
   --profile "$PROFILE" 2>&1)
+MESSAGE_RC=$?
+set -e
 
 echo "  Agent response (truncated):"
 echo "$MESSAGE_OUTPUT" | head -40 | sed 's/^/  /'
@@ -98,6 +101,19 @@ if [[ "$LINES" -gt 40 ]]; then
   echo "  ... ($((LINES - 40)) more lines)"
 fi
 echo ""
+
+# Fail loudly if the agent conversation errored — the CLI sometimes exits 0
+# even when the underlying provider call failed, so grep the output too.
+if [[ "$MESSAGE_RC" -ne 0 ]] \
+   || echo "$MESSAGE_OUTPUT" | grep -qiE "API key not valid|API_KEY_INVALID|Failed to send message|Gemini API error|Agent returned error|Internal error"; then
+  echo "  ERROR: agent conversation failed." >&2
+  if echo "$MESSAGE_OUTPUT" | grep -qiE "API key not valid|API_KEY_INVALID"; then
+    echo "  Cause: Gemini API key is invalid or missing." >&2
+    echo "  Fix:   set a valid key in .systemprompt/profiles/$PROFILE/secrets.json" >&2
+    echo "         under the \"gemini\" field, then restart services (just start)." >&2
+  fi
+  exit 1
+fi
 
 # ──────────────────────────────────────────────
 #  STEP 3: Retrieve artifact
