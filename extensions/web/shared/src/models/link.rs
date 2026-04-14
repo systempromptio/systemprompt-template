@@ -31,7 +31,7 @@ pub struct CampaignLink {
 
 impl CampaignLink {
     #[must_use]
-    pub fn get_full_url(&self) -> String {
+    pub fn full_url(&self) -> String {
         if let Some(ref params_json) = self.utm_params {
             if let Ok(params) = serde_json::from_str::<UtmParams>(params_json) {
                 let query = params.to_query_string();

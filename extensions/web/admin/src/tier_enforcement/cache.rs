@@ -152,7 +152,7 @@ async fn fetch_role_based_plan(pool: &PgPool, user_id: &UserId) -> Option<(TierL
         limits: Option<serde_json::Value>,
     }
 
-    let row: Option<RolePlanRow> = sqlx::query_as(
+    let row: Option<RolePlanRow> = sqlx::query_as::<_, RolePlanRow>(
         r"SELECT p.display_name AS plan_name, p.limits
           FROM marketplace.plans p
           WHERE p.role_name = ANY(
@@ -166,7 +166,7 @@ async fn fetch_role_based_plan(pool: &PgPool, user_id: &UserId) -> Option<(TierL
     .fetch_optional(pool)
     .await
     .map_err(|e| {
-        tracing::warn!(error = %e, user_id = %user_id.as_str(), "Failed to fetch role-based plan");
+        tracing::error!(error = %e, user_id = %user_id.as_str(), "Failed to fetch role-based plan");
     })
     .ok()
     .flatten();
@@ -181,7 +181,7 @@ async fn fetch_free_plan(pool: &PgPool) -> (TierLimits, String) {
         limits: Option<serde_json::Value>,
     }
 
-    let row: Option<FreePlanRow> = sqlx::query_as(
+    let row: Option<FreePlanRow> = sqlx::query_as::<_, FreePlanRow>(
         r"SELECT p.display_name AS plan_name, p.limits
           FROM marketplace.plans p
           WHERE p.name = 'free' AND p.is_active = true
@@ -190,7 +190,7 @@ async fn fetch_free_plan(pool: &PgPool) -> (TierLimits, String) {
     .fetch_optional(pool)
     .await
     .map_err(|e| {
-        tracing::warn!(error = %e, "Failed to fetch free plan from DB");
+        tracing::error!(error = %e, "Failed to fetch free plan from DB");
     })
     .ok()
     .flatten();
@@ -215,7 +215,7 @@ async fn fetch_subscription_tier(
     pool: &PgPool,
     user_id: &UserId,
 ) -> (TierLimits, String, SubscriptionStatus, Option<chrono::DateTime<Utc>>) {
-    let row: Option<TierRow> = sqlx::query_as(
+    let row: Option<TierRow> = sqlx::query_as::<_, TierRow>(
         r"SELECT
             COALESCE(p.display_name, 'Free') AS plan_name,
             s.status,
@@ -231,7 +231,7 @@ async fn fetch_subscription_tier(
     .fetch_optional(pool)
     .await
     .map_err(|e| {
-        tracing::warn!(error = %e, user_id = %user_id.as_str(), "Failed to fetch subscription tier");
+        tracing::error!(error = %e, user_id = %user_id.as_str(), "Failed to fetch subscription tier");
     })
     .ok()
     .flatten();

@@ -15,7 +15,7 @@ pub fn get_cli_path() -> Result<PathBuf, McpError> {
     Ok(PathBuf::from(&profile.paths.bin).join("systemprompt"))
 }
 
-pub fn get_workdir() -> PathBuf {
+pub fn workdir() -> PathBuf {
     if let Ok(path) = std::env::var("SYSTEMPROMPT_WORKDIR") {
         return PathBuf::from(path);
     }
@@ -33,7 +33,7 @@ fn filter_hallucinated_args(args: Vec<String>) -> Vec<String> {
 
 pub fn execute(command: &str, auth_token: &str) -> Result<CliOutput, McpError> {
     let cli_path = get_cli_path()?;
-    let workdir = get_workdir();
+    let workdir = workdir();
 
     let args = shell_words::split(command).map_err(|e| {
         McpError::invalid_params(format!("Failed to parse command arguments: {e}"), None)

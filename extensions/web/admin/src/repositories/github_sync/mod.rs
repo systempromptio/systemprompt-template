@@ -287,7 +287,7 @@ async fn log_sync_result(input: &SyncLogInput<'_>) {
 }
 
 pub(crate) async fn mark_all_users_dirty(pool: &PgPool) -> Result<(), sqlx::Error> {
-    sqlx::query("UPDATE marketplace_sync_status SET dirty = true, last_changed_at = NOW()")
+    sqlx::query!("UPDATE marketplace_sync_status SET dirty = true, last_changed_at = NOW()")
         .execute(pool)
         .await?;
     Ok(())

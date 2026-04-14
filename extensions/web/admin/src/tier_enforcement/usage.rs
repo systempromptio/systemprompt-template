@@ -24,25 +24,27 @@ pub async fn fetch_usage_from_db(
 
     let uid = user_id.as_str();
 
-    let daily: Option<DailyUsageRow> = sqlx::query_as(
-        r"SELECT
-            COALESCE(SUM(event_count), 0)::BIGINT AS events,
-            COALESCE(SUM(content_input_bytes + content_output_bytes), 0)::BIGINT AS bytes
+    let daily: Option<DailyUsageRow> = sqlx::query_as!(
+        DailyUsageRow,
+        r#"SELECT
+            COALESCE(SUM(event_count), 0)::BIGINT AS "events!",
+            COALESCE(SUM(content_input_bytes + content_output_bytes), 0)::BIGINT AS "bytes!"
            FROM plugin_usage_daily
-           WHERE user_id = $1 AND date = CURRENT_DATE",
+           WHERE user_id = $1 AND date = CURRENT_DATE"#,
+        uid,
     )
-    .bind(uid)
     .fetch_optional(pool)
     .await?;
 
-    let sessions: i64 = sqlx::query_scalar(
+    let sessions: i64 = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM plugin_session_summaries WHERE user_id = $1 AND started_at::date = CURRENT_DATE",
+        uid,
     )
-    .bind(uid)
     .fetch_one(pool)
-    .await?;
+    .await?
+    .unwrap_or(0);
 
-    let counts: EntityCounts = sqlx::query_as(
+    let counts: EntityCounts = sqlx::query_as::<_, EntityCounts>(
         r"SELECT
             (SELECT COUNT(*) FROM marketplace.user_skills WHERE user_id = $1) AS skills,
             (SELECT COUNT(*) FROM marketplace.user_agents WHERE user_id = $1) AS agents,

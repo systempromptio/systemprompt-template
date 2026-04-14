@@ -28,10 +28,10 @@ pub async fn ensure_default_hooks(
         return Ok(());
     }
 
-    let existing: Vec<String> = sqlx::query_scalar(
+    let existing: Vec<String> = sqlx::query_scalar!(
         "SELECT event_type FROM user_hooks WHERE user_id = $1 AND is_default = true",
+        user_id.as_str(),
     )
-    .bind(user_id.as_str())
     .fetch_all(pool)
     .await?;
 
@@ -42,18 +42,20 @@ pub async fn ensure_default_hooks(
             continue;
         }
         let id = uuid::Uuid::new_v4().to_string();
-        sqlx::query(
+        let hook_name = format!("Platform: {event}");
+        let description = format!("Default platform hook for {event} events");
+        sqlx::query!(
             r"INSERT INTO user_hooks
                 (id, user_id, hook_name, description, event_type, matcher,
                  hook_type, url, command, headers, timeout, is_async, enabled, is_default)
             VALUES ($1, $2, $3, $4, $5, '*', 'http', $6, '', '{}', 30, false, true, true)",
+            id,
+            user_id.as_str(),
+            hook_name,
+            description,
+            *event,
+            track_url,
         )
-        .bind(&id)
-        .bind(user_id.as_str())
-        .bind(format!("Platform: {event}"))
-        .bind(format!("Default platform hook for {event} events"))
-        .bind(*event)
-        .bind(&track_url)
         .execute(pool)
         .await?;
     }

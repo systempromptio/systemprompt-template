@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            r.user_id,\n            COALESCE(u.display_name, u.full_name, u.name) AS display_name,\n            r.rank_level,\n            r.rank_name,\n            r.total_xp::BIGINT AS \"total_xp!\",\n            r.events_count,\n            r.unique_skills_count,\n            r.unique_plugins_count,\n            r.current_streak,\n            r.longest_streak\n        FROM employee_ranks r\n        JOIN users u ON r.user_id = u.id\n        WHERE r.user_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "rank_level",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "rank_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_xp!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "events_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "unique_skills_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "unique_plugins_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "current_streak",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "longest_streak",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      false,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ba1a85e6f77d23e95c3a7fd5c31d65619bb3589bab788ae14f87b1c70a79836c"
+}

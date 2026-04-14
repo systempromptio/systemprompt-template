@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*)::BIGINT FROM user_activity a\n              JOIN users u ON u.id = a.user_id\n              WHERE a.user_id = $1\n                AND (a.description ILIKE $2 OR a.entity_name ILIKE $2 OR a.category ILIKE $2)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e8bedfbea5f2f83aa1e5550a114f994259954cf110c8d070ea3755cce9666a80"
+}

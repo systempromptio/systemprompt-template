@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            COALESCE(SUM(event_count), 0)::BIGINT AS \"events!\",\n            COALESCE(SUM(content_input_bytes + content_output_bytes), 0)::BIGINT AS \"bytes!\"\n           FROM plugin_usage_daily\n           WHERE user_id = $1 AND date = CURRENT_DATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "events!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "bytes!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "c595eb05fc8b024f2bf08ae7f4c67f8c1ec574dea7e62b86f50e69b65a4494f9"
+}

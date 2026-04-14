@@ -23,7 +23,7 @@ pub fn list_all_skill_ids(services_path: &Path) -> Result<Vec<String>, Marketpla
     Ok(ids)
 }
 
-pub fn get_plugin_skill_ids(
+pub fn list_plugin_skill_ids(
     services_path: &Path,
     plugin_id: &str,
 ) -> Result<Vec<String>, MarketplaceError> {

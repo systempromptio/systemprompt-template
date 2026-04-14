@@ -72,9 +72,9 @@ type MarketplaceData = (
 
 async fn fetch_marketplace_data(pool: &PgPool) -> Result<MarketplaceData, Response> {
     let (usage_res, ratings_res, rules_res) = tokio::join!(
-        repositories::get_all_plugin_usage(pool),
-        repositories::get_all_plugin_ratings(pool),
-        repositories::get_all_visibility_rules(pool),
+        repositories::list_plugin_usage(pool),
+        repositories::list_plugin_ratings(pool),
+        repositories::list_visibility_rules(pool),
     );
 
     let usage_map: HashMap<String, _> = usage_res
@@ -212,7 +212,7 @@ pub async fn marketplace_plugin_users_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
 ) -> Response {
-    match repositories::get_plugin_users(&pool, &plugin_id).await {
+    match repositories::list_plugin_users(&pool, &plugin_id).await {
         Ok(users) => Json(UsersListResponse { users }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, plugin_id, "Failed to get plugin users");

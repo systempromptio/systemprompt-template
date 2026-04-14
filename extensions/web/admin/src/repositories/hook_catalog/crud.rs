@@ -9,17 +9,16 @@ pub async fn get_catalog_hook(
     pool: &PgPool,
     hook_id: &str,
 ) -> Result<Option<HookCatalogEntry>, HookCatalogError> {
-    let row = sqlx::query_as::<_, HookCatalogEntry>("SELECT * FROM hook_catalog WHERE id = $1")
-        .bind(hook_id)
+    let row = sqlx::query_as!(HookCatalogEntry, "SELECT * FROM hook_catalog WHERE id = $1", hook_id)
         .fetch_optional(pool)
         .await?;
 
     match row {
         Some(mut hook) => {
-            hook.plugins = sqlx::query_scalar::<_, String>(
+            hook.plugins = sqlx::query_scalar!(
                 "SELECT plugin_id FROM hook_plugins WHERE hook_id = $1 ORDER BY sort_order",
+                hook.id,
             )
-            .bind(&hook.id)
             .fetch_all(pool)
             .await?;
             Ok(Some(hook))
@@ -29,16 +28,27 @@ pub async fn get_catalog_hook(
 }
 
 pub async fn list_catalog_hooks(pool: &PgPool) -> Result<Vec<HookCatalogEntry>, HookCatalogError> {
-    let mut hooks = sqlx::query_as::<_, HookCatalogEntry>(
+    let mut hooks = sqlx::query_as!(
+        HookCatalogEntry,
         "SELECT * FROM hook_catalog ORDER BY category, event, id",
     )
     .fetch_all(pool)
     .await?;
 
-    let plugin_rows: Vec<(String, String)> =
-        sqlx::query_as("SELECT hook_id, plugin_id FROM hook_plugins ORDER BY hook_id, sort_order")
-            .fetch_all(pool)
-            .await?;
+    struct PluginRow {
+        hook_id: String,
+        plugin_id: String,
+    }
+    let plugin_rows_raw = sqlx::query_as!(
+        PluginRow,
+        "SELECT hook_id, plugin_id FROM hook_plugins ORDER BY hook_id, sort_order",
+    )
+    .fetch_all(pool)
+    .await?;
+    let plugin_rows: Vec<(String, String)> = plugin_rows_raw
+        .into_iter()
+        .map(|r| (r.hook_id, r.plugin_id))
+        .collect();
 
     for hook in &mut hooks {
         hook.plugins = plugin_rows
@@ -77,28 +87,28 @@ pub async fn create_catalog_hook(
     let checksum = compute_checksum(&config_content);
     let now = chrono::Utc::now();
 
-    sqlx::query(
+    sqlx::query!(
         r"INSERT INTO hook_catalog (id, name, description, version, event, matcher, command, is_async, category, enabled, tags, visible_to, checksum)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'custom', true, '{}', '{}', $9)",
+        hook_id,
+        req.name,
+        req.description,
+        DEFAULT_VERSION,
+        req.event,
+        req.matcher,
+        req.command,
+        req.is_async,
+        checksum,
     )
-    .bind(&hook_id)
-    .bind(&req.name)
-    .bind(&req.description)
-    .bind(DEFAULT_VERSION)
-    .bind(&req.event)
-    .bind(&req.matcher)
-    .bind(&req.command)
-    .bind(req.is_async)
-    .bind(&checksum)
     .execute(pool)
     .await?;
 
     if !req.plugin_id.is_empty() {
-        sqlx::query(
+        sqlx::query!(
             "INSERT INTO hook_plugins (hook_id, plugin_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+            hook_id,
+            req.plugin_id,
         )
-        .bind(&hook_id)
-        .bind(&req.plugin_id)
         .execute(pool)
         .await?;
     }
@@ -164,31 +174,30 @@ pub async fn update_catalog_hook(
         std::fs::write(&config_path, &config_content)?;
     }
 
-    sqlx::query(
+    sqlx::query!(
         r"UPDATE hook_catalog SET name = $2, description = $3, event = $4, matcher = $5, command = $6, is_async = $7, updated_at = NOW()
           WHERE id = $1",
+        hook_id,
+        name,
+        description,
+        event,
+        matcher,
+        command,
+        is_async,
     )
-    .bind(hook_id)
-    .bind(&name)
-    .bind(&description)
-    .bind(&event)
-    .bind(&matcher)
-    .bind(&command)
-    .bind(is_async)
     .execute(pool)
     .await?;
 
     if let Some(ref plugin_id) = req.plugin_id {
-        sqlx::query("DELETE FROM hook_plugins WHERE hook_id = $1")
-            .bind(hook_id)
+        sqlx::query!("DELETE FROM hook_plugins WHERE hook_id = $1", hook_id)
             .execute(pool)
             .await?;
         if !plugin_id.is_empty() {
-            sqlx::query(
+            sqlx::query!(
                 "INSERT INTO hook_plugins (hook_id, plugin_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+                hook_id,
+                plugin_id,
             )
-            .bind(hook_id)
-            .bind(plugin_id)
             .execute(pool)
             .await?;
         }
@@ -210,8 +219,7 @@ pub async fn delete_catalog_hook(
         return Err(HookCatalogError::SystemHookModification);
     }
 
-    sqlx::query("DELETE FROM hook_catalog WHERE id = $1")
-        .bind(hook_id)
+    sqlx::query!("DELETE FROM hook_catalog WHERE id = $1", hook_id)
         .execute(pool)
         .await?;
 

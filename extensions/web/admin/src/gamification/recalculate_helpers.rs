@@ -19,7 +19,7 @@ pub(super) struct UserRankParams<'a> {
 }
 
 pub(super) async fn populate_daily_usage(pool: &PgPool) -> Result<(), super::GamificationError> {
-    sqlx::query(
+    sqlx::query!(
         r"
         INSERT INTO employee_daily_usage (user_id, usage_date, event_count)
         SELECT e.user_id, DATE(e.created_at), COUNT(*)::INT
@@ -34,11 +34,12 @@ pub(super) async fn populate_daily_usage(pool: &PgPool) -> Result<(), super::Gam
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 pub(super) async fn calculate_user_xp(
     pool: &PgPool,
     uid: &str,
 ) -> Result<UserXpResult, super::GamificationError> {
-    let base_xp: i64 = sqlx::query_scalar(
+    let base_xp: i64 = sqlx::query_scalar!(
         r"
         SELECT COALESCE(SUM(
             CASE
@@ -53,17 +54,18 @@ pub(super) async fn calculate_user_xp(
         FROM plugin_usage_events
         WHERE user_id = $1
         ",
+        uid,
+        SESSION_XP,
+        TOOL_USE_XP,
+        ERROR_XP,
+        PROMPT_XP,
+        SUBAGENT_XP,
     )
-    .bind(uid)
-    .bind(SESSION_XP)
-    .bind(TOOL_USE_XP)
-    .bind(ERROR_XP)
-    .bind(PROMPT_XP)
-    .bind(SUBAGENT_XP)
     .fetch_one(pool)
-    .await?;
+    .await?
+    .unwrap_or(0);
 
-    let total_tokens: i64 = sqlx::query_scalar(
+    let total_tokens: i64 = sqlx::query_scalar!(
         r"
         SELECT COALESCE(SUM(
             COALESCE((metadata->>'input_tokens')::BIGINT, 0) +
@@ -72,58 +74,65 @@ pub(super) async fn calculate_user_xp(
         FROM plugin_usage_events
         WHERE user_id = $1
         ",
+        uid,
     )
-    .bind(uid)
     .fetch_one(pool)
-    .await?;
+    .await?
+    .unwrap_or(0);
 
     let token_xp = (total_tokens / 1000) * i64::from(TOKEN_XP_PER_1K);
 
-    let bonus_xp: i64 = sqlx::query_scalar(
+    let bonus_xp: i64 = sqlx::query_scalar!(
         "SELECT COALESCE(SUM(xp_amount), 0)::BIGINT FROM employee_xp_ledger WHERE user_id = $1",
+        uid,
     )
-    .bind(uid)
     .fetch_one(pool)
-    .await?;
+    .await?
+    .unwrap_or(0);
 
     let total_xp = base_xp + token_xp + bonus_xp;
 
-    let events_count: i64 = sqlx::query_scalar(
+    let events_count: i64 = sqlx::query_scalar!(
         "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1",
+        uid,
     )
-    .bind(uid)
     .fetch_one(pool)
-    .await?;
+    .await?
+    .unwrap_or(0);
 
-    let unique_skills: i32 = sqlx::query_scalar(
+    let unique_skills: i32 = sqlx::query_scalar!(
         "SELECT COALESCE(COUNT(DISTINCT tool_name), 0)::INT FROM plugin_usage_events WHERE user_id = $1 AND tool_name IS NOT NULL",
+        uid,
     )
-    .bind(uid)
     .fetch_one(pool)
-    .await?;
+    .await?
+    .unwrap_or(0);
 
-    let unique_plugins: i32 = sqlx::query_scalar(
+    let unique_plugins: i32 = sqlx::query_scalar!(
         "SELECT COALESCE(COUNT(DISTINCT plugin_id), 0)::INT FROM plugin_usage_events WHERE user_id = $1 AND plugin_id IS NOT NULL",
+        uid,
     )
-    .bind(uid)
     .fetch_one(pool)
-    .await?;
+    .await?
+    .unwrap_or(0);
 
-    let prompt_count: i64 = sqlx::query_scalar(
+    let prompt_count: i64 = sqlx::query_scalar!(
         "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1 AND event_type = 'claude_code_UserPromptSubmit'",
+        uid,
     )
-    .bind(uid)
     .fetch_one(pool)
-    .await?;
+    .await?
+    .unwrap_or(0);
 
-    let subagent_count: i64 = sqlx::query_scalar(
+    let subagent_count: i64 = sqlx::query_scalar!(
         "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1 AND event_type = 'claude_code_SubagentStart'",
+        uid,
     )
-    .bind(uid)
     .fetch_one(pool)
-    .await?;
+    .await?
+    .unwrap_or(0);
 
-    let models_used: i32 = sqlx::query_scalar(
+    let models_used: i32 = sqlx::query_scalar!(
         r"
         SELECT COALESCE(COUNT(DISTINCT metadata->>'model'), 0)::INT
         FROM plugin_usage_events
@@ -131,10 +140,11 @@ pub(super) async fn calculate_user_xp(
           AND event_type = 'claude_code_SessionStart'
           AND metadata->>'model' IS NOT NULL
         ",
+        uid,
     )
-    .bind(uid)
     .fetch_one(pool)
-    .await?;
+    .await?
+    .unwrap_or(0);
 
     Ok((
         total_xp,
@@ -157,10 +167,11 @@ pub(super) async fn calculate_streaks(
         usage_date: chrono::NaiveDate,
     }
 
-    let rows = sqlx::query_as::<_, DateRow>(
+    let rows = sqlx::query_as!(
+        DateRow,
         "SELECT usage_date FROM employee_daily_usage WHERE user_id = $1 ORDER BY usage_date DESC",
+        uid,
     )
-    .bind(uid)
     .fetch_all(pool)
     .await?;
 
@@ -218,7 +229,8 @@ fn compute_longest_streak(dates_desc: &[chrono::NaiveDate]) -> i32 {
 }
 
 pub(super) async fn update_user_rank(params: &UserRankParams<'_>) -> Result<(), super::GamificationError> {
-    sqlx::query(
+    let total_xp_i32 = i32::try_from(params.total_xp).unwrap_or(i32::MAX);
+    sqlx::query!(
         r"
         INSERT INTO employee_ranks (user_id, total_xp, rank_level, rank_name, events_count, unique_skills_count, unique_plugins_count, current_streak, longest_streak, last_active_date, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
@@ -234,17 +246,17 @@ pub(super) async fn update_user_rank(params: &UserRankParams<'_>) -> Result<(), 
             last_active_date = EXCLUDED.last_active_date,
             updated_at = NOW()
         ",
+        params.uid,
+        total_xp_i32,
+        params.rank_level,
+        params.rank_name,
+        params.events_count,
+        params.unique_skills,
+        params.unique_plugins,
+        params.current_streak,
+        params.longest_streak,
+        params.last_active_date,
     )
-    .bind(params.uid)
-    .bind(i32::try_from(params.total_xp).unwrap_or(i32::MAX))
-    .bind(params.rank_level)
-    .bind(params.rank_name)
-    .bind(params.events_count)
-    .bind(params.unique_skills)
-    .bind(params.unique_plugins)
-    .bind(params.current_streak)
-    .bind(params.longest_streak)
-    .bind(params.last_active_date)
     .execute(params.pool)
     .await?;
     Ok(())

@@ -123,16 +123,17 @@ pub async fn search_user_entity_activity(
 ) -> Result<(Vec<ActivityTimelineEvent>, i64), sqlx::Error> {
     if let Some(q) = search {
         let pattern = format!("%{q}%");
-        let total: i64 = sqlx::query_scalar(
+        let total: i64 = sqlx::query_scalar!(
             r"SELECT COUNT(*)::BIGINT FROM user_activity a
               JOIN users u ON u.id = a.user_id
               WHERE a.user_id = $1
                 AND (a.description ILIKE $2 OR a.entity_name ILIKE $2 OR a.category ILIKE $2)",
+            user_id,
+            pattern,
         )
-        .bind(user_id)
-        .bind(&pattern)
         .fetch_one(pool)
-        .await?;
+        .await?
+        .unwrap_or(0);
 
         let rows = sqlx::query_as::<_, ActivityTimelineEvent>(
             r"SELECT a.id, a.user_id,
@@ -154,10 +155,10 @@ pub async fn search_user_entity_activity(
         Ok((rows, total))
     } else {
         let total: i64 =
-            sqlx::query_scalar("SELECT COUNT(*)::BIGINT FROM user_activity WHERE user_id = $1")
-                .bind(user_id)
+            sqlx::query_scalar!("SELECT COUNT(*)::BIGINT FROM user_activity WHERE user_id = $1", user_id)
                 .fetch_one(pool)
-                .await?;
+                .await?
+                .unwrap_or(0);
 
         let rows = sqlx::query_as::<_, ActivityTimelineEvent>(
             r"SELECT a.id, a.user_id,
@@ -201,8 +202,8 @@ pub async fn get_user_entity_activity(
 }
 
 pub async fn count_user_entity_activity(pool: &PgPool, user_id: &str) -> Result<i64, sqlx::Error> {
-    sqlx::query_scalar("SELECT COUNT(*)::BIGINT FROM user_activity WHERE user_id = $1")
-        .bind(user_id)
+    Ok(sqlx::query_scalar!("SELECT COUNT(*)::BIGINT FROM user_activity WHERE user_id = $1", user_id)
         .fetch_one(pool)
-        .await
+        .await?
+        .unwrap_or(0))
 }

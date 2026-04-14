@@ -19,18 +19,18 @@ pub async fn record(pool: &PgPool, activity: NewActivity) {
             )
         });
 
-    if let Err(e) = sqlx::query(
+    if let Err(e) = sqlx::query!(
         r"INSERT INTO user_activity (id, user_id, category, action, entity_type, entity_id, entity_name, description, metadata)
           VALUES (gen_random_uuid()::TEXT, $1, $2, $3, $4, $5, $6, $7, $8)",
+        activity.user_id,
+        category,
+        action,
+        entity_type,
+        entity_id,
+        entity_name,
+        activity.description,
+        activity.metadata,
     )
-    .bind(&activity.user_id)
-    .bind(category)
-    .bind(action)
-    .bind(&entity_type)
-    .bind(&entity_id)
-    .bind(&entity_name)
-    .bind(&activity.description)
-    .bind(&activity.metadata)
     .execute(pool)
     .await
     {

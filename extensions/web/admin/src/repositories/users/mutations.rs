@@ -107,37 +107,30 @@ pub async fn delete_user(pool: &PgPool, user_id: &UserId) -> Result<bool, sqlx::
     Ok(result.rows_affected() > 0)
 }
 
+#[allow(clippy::cognitive_complexity)]
 pub async fn delete_user_complete(pool: &PgPool, user_id: &UserId) -> Result<bool, sqlx::Error> {
     let mut tx = pool.begin().await?;
     let uid = user_id.as_str();
 
-    let tables_with_user_id = [
-        "skill_secrets",
-        "user_plugins",
-        "user_skills",
-        "user_agents",
-        "user_mcp_servers",
-        "user_hooks",
-        "plugin_usage_events",
-        "plugin_usage_daily",
-        "plugin_session_summaries",
-        "session_analyses",
-        "session_ratings",
-        "skill_ratings",
-        "daily_summaries",
-        "user_profile_reports",
-        "user_settings",
-        "user_encryption_keys",
-        "user_selected_org_plugins",
-    ];
+    sqlx::query!("DELETE FROM skill_secrets WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM user_plugins WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM user_skills WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM user_agents WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM user_mcp_servers WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM user_hooks WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM plugin_usage_events WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM plugin_usage_daily WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM plugin_session_summaries WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM session_analyses WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM session_ratings WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM skill_ratings WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM daily_summaries WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM user_profile_reports WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM user_settings WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM user_encryption_keys WHERE user_id = $1", uid).execute(&mut *tx).await?;
+    sqlx::query!("DELETE FROM user_selected_org_plugins WHERE user_id = $1", uid).execute(&mut *tx).await?;
 
-    for table in tables_with_user_id {
-        sqlx::query(&format!("DELETE FROM {table} WHERE user_id = $1"))
-            .bind(uid)
-            .execute(&mut *tx)
-            .await?;
-    }
-
+    // marketplace schema tables — runtime query (schema not in compile-time search_path)
     for table in ["marketplace.subscriptions", "marketplace.paddle_customers"] {
         sqlx::query(&format!("DELETE FROM {table} WHERE user_id = $1"))
             .bind(uid)
@@ -145,8 +138,7 @@ pub async fn delete_user_complete(pool: &PgPool, user_id: &UserId) -> Result<boo
             .await?;
     }
 
-    let result = sqlx::query("DELETE FROM users WHERE id = $1")
-        .bind(uid)
+    let result = sqlx::query!("DELETE FROM users WHERE id = $1", uid)
         .execute(&mut *tx)
         .await?;
 

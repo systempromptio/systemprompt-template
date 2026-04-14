@@ -2,6 +2,7 @@ use systemprompt::database::DbPool;
 
 const ACTION_USED: &str = "used";
 
+#[allow(clippy::cognitive_complexity)]
 pub async fn record_mcp_access(
     pool: &DbPool,
     user_id: &str,
@@ -26,16 +27,16 @@ pub async fn record_mcp_access(
     let entity_name = if action == ACTION_USED { tool } else { server };
     let metadata = serde_json::json!({ "tool_name": tool, "server": server });
 
-    if let Err(e) = sqlx::query(
+    if let Err(e) = sqlx::query!(
         r"INSERT INTO user_activity (id, user_id, category, action, entity_type, entity_name, description, metadata)
           VALUES (gen_random_uuid()::TEXT, $1, 'mcp_access', $2, $3, $4, $5, $6)",
+        user_id,
+        action,
+        entity_type,
+        entity_name,
+        description,
+        metadata,
     )
-    .bind(user_id)
-    .bind(action)
-    .bind(entity_type)
-    .bind(entity_name)
-    .bind(&description)
-    .bind(&metadata)
     .execute(pg_pool.as_ref())
     .await
     {
@@ -55,13 +56,13 @@ pub async fn record_mcp_access_rejected(pool: &DbPool, server: &str, tool: &str,
     };
     let metadata = serde_json::json!({ "tool_name": tool, "server": server, "reason": reason });
 
-    if let Err(e) = sqlx::query(
+    if let Err(e) = sqlx::query!(
         r"INSERT INTO user_activity (id, user_id, category, action, entity_type, entity_name, description, metadata)
           VALUES (gen_random_uuid()::TEXT, COALESCE((SELECT id FROM users WHERE email LIKE '%@anonymous.local' LIMIT 1), (SELECT id FROM users LIMIT 1)), 'mcp_access', 'rejected', 'mcp_server', $1, $2, $3)",
+        server,
+        description,
+        metadata,
     )
-    .bind(server)
-    .bind(&description)
-    .bind(&metadata)
     .execute(pg_pool.as_ref())
     .await
     {

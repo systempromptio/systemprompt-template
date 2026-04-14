@@ -76,7 +76,7 @@ pub async fn get_plugin_skills_handler(Path(plugin_id): Path<String>) -> Respons
         Err(r) => return *r,
     };
 
-    match repositories::get_plugin_skill_ids(&services_path, &plugin_id) {
+    match repositories::list_plugin_skill_ids(&services_path, &plugin_id) {
         Ok(ids) => Json(SkillIdsListResponse { skill_ids: ids }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get plugin skills");

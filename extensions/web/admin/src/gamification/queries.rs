@@ -30,19 +30,21 @@ pub async fn get_user_gamification(
         return Ok(None);
     };
 
-    let achievements = sqlx::query_as::<_, UnlockedAchievement>(
+    let achievements = sqlx::query_as!(
+        UnlockedAchievement,
         "SELECT achievement_id, unlocked_at FROM employee_achievements WHERE user_id = $1 ORDER BY unlocked_at DESC",
+        user_id,
     )
-    .bind(user_id)
     .fetch_all(pool)
     .await?;
 
-    let rank_position: i64 = sqlx::query_scalar(
+    let rank_position: i64 = sqlx::query_scalar!(
         "SELECT COUNT(*)::BIGINT FROM employee_ranks WHERE total_xp > (SELECT COALESCE(total_xp, 0) FROM employee_ranks WHERE user_id = $1)",
+        user_id,
     )
-    .bind(user_id)
     .fetch_optional(pool)
     .await?
+    .flatten()
     .unwrap_or(0);
 
     Ok(Some(build_gamification_profile(
@@ -53,14 +55,15 @@ pub async fn get_user_gamification(
 }
 
 async fn fetch_rank_row(pool: &PgPool, user_id: &str) -> Result<Option<RankRow>, sqlx::Error> {
-    sqlx::query_as::<_, RankRow>(
-        r"
+    sqlx::query_as!(
+        RankRow,
+        r#"
         SELECT
             r.user_id,
             COALESCE(u.display_name, u.full_name, u.name) AS display_name,
             r.rank_level,
             r.rank_name,
-            r.total_xp::BIGINT AS total_xp,
+            r.total_xp::BIGINT AS "total_xp!",
             r.events_count,
             r.unique_skills_count,
             r.unique_plugins_count,
@@ -69,9 +72,9 @@ async fn fetch_rank_row(pool: &PgPool, user_id: &str) -> Result<Option<RankRow>,
         FROM employee_ranks r
         JOIN users u ON r.user_id = u.id
         WHERE r.user_id = $1
-        ",
+        "#,
+        user_id,
     )
-    .bind(user_id)
     .fetch_optional(pool)
     .await
 }
@@ -109,12 +112,14 @@ pub async fn get_achievement_stats(pool: &PgPool) -> Result<Vec<AchievementInfo>
     }
 
     let total_users: i64 =
-        sqlx::query_scalar("SELECT COALESCE(COUNT(*), 0)::BIGINT FROM employee_ranks")
+        sqlx::query_scalar!("SELECT COALESCE(COUNT(*), 0)::BIGINT FROM employee_ranks")
             .fetch_one(pool)
-            .await?;
+            .await?
+            .unwrap_or(0);
 
-    let counts = sqlx::query_as::<_, AchievementCount>(
-        "SELECT achievement_id, COUNT(*)::BIGINT AS count FROM employee_achievements GROUP BY achievement_id",
+    let counts = sqlx::query_as!(
+        AchievementCount,
+        r#"SELECT achievement_id, COUNT(*)::BIGINT AS "count!" FROM employee_achievements GROUP BY achievement_id"#,
     )
     .fetch_all(pool)
     .await?;

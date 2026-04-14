@@ -231,19 +231,19 @@ pub struct SyncLogEntry<'a> {
 }
 
 pub async fn insert_sync_log(pool: &PgPool, entry: &SyncLogEntry<'_>) -> Result<(), sqlx::Error> {
-    sqlx::query(
+    sqlx::query!(
         "INSERT INTO org_marketplace_sync_logs (marketplace_id, operation, status, commit_hash, plugins_synced, errors, error_message, triggered_by, duration_ms)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+        entry.marketplace_id,
+        entry.operation,
+        entry.status,
+        entry.commit_hash,
+        entry.plugins_synced,
+        entry.errors,
+        entry.error_message,
+        entry.triggered_by,
+        entry.duration_ms,
     )
-    .bind(entry.marketplace_id)
-    .bind(entry.operation)
-    .bind(entry.status)
-    .bind(entry.commit_hash)
-    .bind(entry.plugins_synced)
-    .bind(entry.errors)
-    .bind(entry.error_message)
-    .bind(entry.triggered_by)
-    .bind(entry.duration_ms)
     .execute(pool)
     .await?;
     Ok(())

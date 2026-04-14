@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(COUNT(DISTINCT plugin_id), 0)::INT FROM plugin_usage_events WHERE user_id = $1 AND plugin_id IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "coalesce",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d0c86c00add0409c21ab107afe86bc7005e8d0ce282f8528c20be33e0cc14ffb"
+}

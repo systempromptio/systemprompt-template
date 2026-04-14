@@ -71,7 +71,7 @@ pub use dashboard::{get_dashboard_data, list_event_breakdown, list_events};
 pub use export::{generate_export_bundles, ExportParams};
 pub use jobs::list_jobs;
 pub use marketplace::{
-    get_all_plugin_ratings, get_all_plugin_usage, get_all_visibility_rules, get_plugin_users,
+    list_plugin_ratings, list_plugin_usage, list_plugin_users, list_visibility_rules,
     set_visibility_rules, upsert_rating,
 };
 pub use marketplace_sync_status::mark_user_dirty;
@@ -84,7 +84,7 @@ pub use plugin_env::{
 pub use plugin_maps::build_entity_plugin_maps;
 pub(crate) use plugin_resolvers::read_skill_required_secrets;
 pub use plugins::{
-    count_marketplace_items, get_plugin_skill_ids, list_all_skill_ids, list_plugins_for_roles,
+    count_marketplace_items, list_all_skill_ids, list_plugin_skill_ids, list_plugins_for_roles,
     list_plugins_for_roles_full, update_plugin_skills, MarketplaceCounts,
 };
 pub use skill_files::{

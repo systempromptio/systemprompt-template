@@ -15,7 +15,7 @@ pub enum McpConfigError {
     Marketplace(#[from] MarketplaceError),
 }
 
-pub fn get_mcp_server_raw_yaml(
+pub fn find_mcp_server_raw_yaml(
     services_path: &Path,
     server_id: &str,
 ) -> Result<Option<(String, String)>, McpConfigError> {

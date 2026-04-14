@@ -6,20 +6,20 @@ use super::super::types::{
     VisibilityRuleInput,
 };
 
-pub async fn get_all_plugin_usage(
+pub async fn list_plugin_usage(
     _pool: &PgPool,
 ) -> Result<Vec<PluginUsageAggregate>, sqlx::Error> {
     Ok(vec![])
 }
 
-pub async fn get_plugin_users(
+pub async fn list_plugin_users(
     _pool: &PgPool,
     _plugin_id: &str,
 ) -> Result<Vec<PluginUser>, sqlx::Error> {
     Ok(vec![])
 }
 
-pub async fn get_all_plugin_ratings(
+pub async fn list_plugin_ratings(
     pool: &PgPool,
 ) -> Result<Vec<PluginRatingAggregate>, sqlx::Error> {
     sqlx::query_as!(
@@ -35,7 +35,7 @@ pub async fn get_all_plugin_ratings(
     .await
 }
 
-pub async fn get_all_visibility_rules(pool: &PgPool) -> Result<Vec<VisibilityRule>, sqlx::Error> {
+pub async fn list_visibility_rules(pool: &PgPool) -> Result<Vec<VisibilityRule>, sqlx::Error> {
     sqlx::query_as!(
         VisibilityRule,
         "SELECT id, plugin_id, rule_type, rule_value, access, created_at

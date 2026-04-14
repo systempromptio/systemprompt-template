@@ -83,6 +83,6 @@ impl LinkService {
             .await
             .map_err(BlogError::from)?;
 
-        Ok(link.get_full_url())
+        Ok(link.full_url())
     }
 }

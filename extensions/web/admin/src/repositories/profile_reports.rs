@@ -93,7 +93,7 @@ pub async fn upsert_profile_report(
     user_id: &str,
     input: &ProfileReportInput,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
+    sqlx::query!(
         r"INSERT INTO user_profile_reports
             (user_id, archetype, archetype_description, archetype_confidence,
              strengths, weaknesses,
@@ -117,21 +117,21 @@ pub async fn upsert_profile_report(
             period_days = EXCLUDED.period_days,
             generated_at = NOW(),
             updated_at = NOW()",
+        user_id,
+        input.archetype,
+        input.archetype_description,
+        input.archetype_confidence,
+        input.strengths,
+        input.weaknesses,
+        input.ai_narrative,
+        input.ai_style_analysis,
+        input.ai_comparison,
+        input.ai_patterns,
+        input.ai_improvements,
+        input.ai_tips,
+        input.metrics_snapshot,
+        input.period_days,
     )
-    .bind(user_id)
-    .bind(&input.archetype)
-    .bind(&input.archetype_description)
-    .bind(input.archetype_confidence)
-    .bind(&input.strengths)
-    .bind(&input.weaknesses)
-    .bind(&input.ai_narrative)
-    .bind(&input.ai_style_analysis)
-    .bind(&input.ai_comparison)
-    .bind(&input.ai_patterns)
-    .bind(&input.ai_improvements)
-    .bind(&input.ai_tips)
-    .bind(&input.metrics_snapshot)
-    .bind(input.period_days)
     .execute(pool)
     .await?;
     Ok(())

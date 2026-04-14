@@ -155,7 +155,7 @@ pub(crate) async fn get_mcp_server_yaml_handler(Path(server_id): Path<String>) -
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::get_mcp_server_raw_yaml(&services_path, &server_id) {
+    match repositories::find_mcp_server_raw_yaml(&services_path, &server_id) {
         Ok(Some((yaml, file_name))) => Json(serde_json::json!({
             "yaml_content": yaml,
             "file_name": file_name,

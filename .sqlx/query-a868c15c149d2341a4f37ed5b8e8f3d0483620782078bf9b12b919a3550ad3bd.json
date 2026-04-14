@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_profile_reports\n            (user_id, archetype, archetype_description, archetype_confidence,\n             strengths, weaknesses,\n             ai_narrative, ai_style_analysis, ai_comparison,\n             ai_patterns, ai_improvements, ai_tips,\n             metrics_snapshot, period_days, generated_at, updated_at)\n          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())\n          ON CONFLICT (user_id) DO UPDATE SET\n            archetype = EXCLUDED.archetype,\n            archetype_description = EXCLUDED.archetype_description,\n            archetype_confidence = EXCLUDED.archetype_confidence,\n            strengths = EXCLUDED.strengths,\n            weaknesses = EXCLUDED.weaknesses,\n            ai_narrative = EXCLUDED.ai_narrative,\n            ai_style_analysis = EXCLUDED.ai_style_analysis,\n            ai_comparison = EXCLUDED.ai_comparison,\n            ai_patterns = EXCLUDED.ai_patterns,\n            ai_improvements = EXCLUDED.ai_improvements,\n            ai_tips = EXCLUDED.ai_tips,\n            metrics_snapshot = EXCLUDED.metrics_snapshot,\n            period_days = EXCLUDED.period_days,\n            generated_at = NOW(),\n            updated_at = NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int2",
+        "Jsonb",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a868c15c149d2341a4f37ed5b8e8f3d0483620782078bf9b12b919a3550ad3bd"
+}

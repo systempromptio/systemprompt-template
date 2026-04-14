@@ -85,7 +85,7 @@ pub(crate) async fn get_hook_handler(
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::hooks::get_hook(&services_path, &hook_id) {
+    match repositories::hooks::find_hook(&services_path, &hook_id) {
         Ok(Some(hook)) => Json(hook).into_response(),
         Ok(None) => (
             StatusCode::NOT_FOUND,

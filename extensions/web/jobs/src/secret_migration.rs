@@ -67,17 +67,26 @@ impl Job for SecretMigrationJob {
     }
 }
 
+struct UnencryptedSecretRow {
+    id: String,
+    user_id: String,
+    var_name: String,
+    var_value: String,
+}
+
 async fn fetch_unencrypted_secrets(
     pool: &std::sync::Arc<sqlx::PgPool>,
 ) -> Result<Vec<(String, String, String, String)>, MarketplaceError> {
-    sqlx::query_as::<_, (String, String, String, String)>(
+    let rows = sqlx::query_as!(
+        UnencryptedSecretRow,
         "SELECT id, user_id, var_name, var_value FROM plugin_env_vars \
          WHERE is_secret = true AND (encrypted_value IS NULL OR key_version = 0) \
          AND var_value != '' LIMIT 100",
     )
     .fetch_all(pool.as_ref())
     .await
-    .map_err(MarketplaceError::Database)
+    .map_err(MarketplaceError::Database)?;
+    Ok(rows.into_iter().map(|r| (r.id, r.user_id, r.var_name, r.var_value)).collect())
 }
 
 async fn migrate_secrets(
@@ -124,32 +133,31 @@ async fn encrypt_and_store_secret(
         .map_err(|e| MarketplaceError::Internal(format!("Encryption error: {e}")))?;
 
     let key_version: i32 =
-        sqlx::query_scalar("SELECT key_version FROM user_encryption_keys WHERE user_id = $1")
-            .bind(user_id)
+        sqlx::query_scalar!("SELECT key_version FROM user_encryption_keys WHERE user_id = $1", user_id)
             .fetch_one(pool.as_ref())
             .await
             .unwrap_or(1);
 
-    sqlx::query(
+    sqlx::query!(
         "UPDATE plugin_env_vars SET encrypted_value = $1, value_nonce = $2, \
          key_version = $3, var_value = '', updated_at = NOW() WHERE id = $4",
+        &encrypted,
+        nonce.as_slice(),
+        key_version,
+        id,
     )
-    .bind(&encrypted)
-    .bind(nonce.as_slice())
-    .bind(key_version)
-    .bind(id)
     .execute(pool.as_ref())
     .await
     .map_err(|e| MarketplaceError::Internal(format!("Update error: {e}")))?;
 
     let audit_id = uuid::Uuid::new_v4().to_string();
-    let _ = sqlx::query(
+    let _ = sqlx::query!(
         "INSERT INTO secret_audit_log (id, user_id, plugin_id, var_name, action, actor_id) \
          VALUES ($1, $2, '', $3, 'updated', 'system')",
+        audit_id,
+        user_id,
+        var_name,
     )
-    .bind(&audit_id)
-    .bind(user_id)
-    .bind(var_name)
     .execute(pool.as_ref())
     .await;
 

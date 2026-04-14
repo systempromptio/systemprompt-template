@@ -133,7 +133,7 @@ fn parse_hook_detail(
     }
 }
 
-pub fn get_hook(services_path: &Path, hook_id: &str) -> Result<Option<HookDetail>, std::io::Error> {
+pub fn find_hook(services_path: &Path, hook_id: &str) -> Result<Option<HookDetail>, std::io::Error> {
     let hooks = list_hooks(services_path)?;
     Ok(hooks.into_iter().find(|h| h.id == hook_id))
 }
