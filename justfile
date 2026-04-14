@@ -227,9 +227,139 @@ whoami:
     {{CLI}} cloud auth whoami
 
 # Tenant operations (interactive menu)
-# Builds everything first since cloud tenant creation deploys immediately
 tenant:
-    {{CLI_RELEASE}} cloud tenant
+    {{CLI}} cloud tenant
+
+# Set up a local-only profile + Docker Postgres (no cloud, no login required)
+setup-local:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ROOT="{{justfile_directory()}}"
+    PROFILE_DIR="$ROOT/.systemprompt/profiles/local"
+    DOCKER_DIR="$ROOT/.systemprompt/docker"
+    if [ ! -x target/debug/systemprompt ] && [ ! -x target/release/systemprompt ]; then
+        echo "Building debug binary..."
+        just build
+    fi
+    mkdir -p "$PROFILE_DIR" "$DOCKER_DIR"
+    if [ ! -f "$DOCKER_DIR/local.yaml" ]; then
+        echo "Writing Docker compose for local Postgres..."
+        cat > "$DOCKER_DIR/local.yaml" <<'YAML'
+    services:
+      postgres:
+        image: postgres:18-alpine
+        container_name: systemprompt-postgres-local
+        restart: unless-stopped
+        environment:
+          POSTGRES_USER: systemprompt
+          POSTGRES_PASSWORD: 123
+          POSTGRES_DB: systemprompt
+        ports:
+          - "5432:5432"
+        volumes:
+          - postgres_data:/var/lib/postgresql
+        healthcheck:
+          test: ["CMD-SHELL", "pg_isready -U systemprompt -d systemprompt"]
+          interval: 5s
+          timeout: 5s
+          retries: 5
+    volumes:
+      postgres_data:
+        name: systemprompt-postgres-local-data
+    YAML
+    fi
+    if [ ! -f "$PROFILE_DIR/profile.yaml" ]; then
+        echo "Writing local profile.yaml..."
+        cat > "$PROFILE_DIR/profile.yaml" <<YAML
+    name: local
+    display_name: Local Development
+    target: local
+    site:
+      name: systemprompt.io
+      github_link: null
+    database:
+      type: postgres
+      external_db_access: false
+    server:
+      host: 127.0.0.1
+      port: 8080
+      api_server_url: http://localhost:8080
+      api_internal_url: http://localhost:8080
+      api_external_url: http://localhost:8080
+      use_https: false
+      cors_allowed_origins:
+      - http://localhost:8080
+      - http://localhost:5173
+    paths:
+      system: $ROOT
+      services: $ROOT/services
+      bin: $ROOT/target/debug
+      web_path: null
+      storage: $ROOT/storage
+      geoip_database: null
+    security:
+      jwt_issuer: systemprompt-local
+      jwt_access_token_expiration: 2592000
+      jwt_refresh_token_expiration: 15552000
+      jwt_audiences: [web, api, a2a, mcp]
+    rate_limits:
+      disabled: true
+      oauth_public_per_second: 10
+      oauth_auth_per_second: 10
+      contexts_per_second: 100
+      tasks_per_second: 50
+      artifacts_per_second: 50
+      agent_registry_per_second: 50
+      agents_per_second: 20
+      mcp_registry_per_second: 50
+      mcp_per_second: 200
+      stream_per_second: 100
+      content_per_second: 50
+      burst_multiplier: 3
+      tier_multipliers:
+        admin: 10.0
+        user: 1.0
+        a2a: 5.0
+        mcp: 5.0
+        service: 5.0
+        anon: 0.5
+    runtime:
+      environment: development
+      log_level: verbose
+      output_format: text
+      no_color: false
+      non_interactive: false
+    cloud:
+      tenant_id: local_dev
+      validation: warn
+    secrets:
+      secrets_path: ./secrets.json
+      validation: warn
+      source: file
+    extensions:
+      disabled: []
+    YAML
+    fi
+    if [ ! -f "$PROFILE_DIR/secrets.json" ]; then
+        echo "Writing local secrets.json..."
+        JWT_SECRET=$(head -c 48 /dev/urandom | base64 | tr -d '+/=' | head -c 64)
+        cat > "$PROFILE_DIR/secrets.json" <<JSON
+    {
+      "jwt_secret": "$JWT_SECRET",
+      "database_url": "postgres://systemprompt:123@localhost:5432/systemprompt",
+      "anthropic": ${ANTHROPIC_API_KEY:+\"$ANTHROPIC_API_KEY\"}${ANTHROPIC_API_KEY:-null},
+      "openai": ${OPENAI_API_KEY:+\"$OPENAI_API_KEY\"}${OPENAI_API_KEY:-null},
+      "gemini": ${GEMINI_API_KEY:+\"$GEMINI_API_KEY\"}${GEMINI_API_KEY:-null}
+    }
+    JSON
+    fi
+    mkdir -p "$ROOT/web/dist"
+    echo "Starting local Postgres via Docker..."
+    just db-up local
+    echo "Publishing assets..."
+    just publish
+    echo ""
+    echo "Local setup complete. Run: just start"
 
 # List all tenants
 tenants:
