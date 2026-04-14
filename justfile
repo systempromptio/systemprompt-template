@@ -189,22 +189,31 @@ start-release:
 migrate:
     {{CLI}} infra db migrate
 
+# Per-clone docker compose project name. Derived from the absolute justfile directory
+# so a second clone on the same host gets its own containers and volumes.
+_project_name TENANT:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    HASH=$(printf '%s' "{{justfile_directory()}}" | sha256sum | cut -c1-8)
+    LEAF=$(basename "{{justfile_directory()}}" | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+    printf 'sp-%s-%s-%s\n' "$LEAF" "$HASH" "{{TENANT}}"
+
 # Start PostgreSQL for a specific tenant (default: local)
 db-up TENANT="local":
-    docker compose -f .systemprompt/docker/{{TENANT}}.yaml up -d
+    docker compose -p "$(just _project_name {{TENANT}})" -f .systemprompt/docker/{{TENANT}}.yaml up -d
 
 # Stop PostgreSQL for a specific tenant
 db-down TENANT="local":
-    docker compose -f .systemprompt/docker/{{TENANT}}.yaml down
+    docker compose -p "$(just _project_name {{TENANT}})" -f .systemprompt/docker/{{TENANT}}.yaml down
 
 # Show PostgreSQL logs for a specific tenant
 db-logs TENANT="local":
-    docker compose -f .systemprompt/docker/{{TENANT}}.yaml logs -f
+    docker compose -p "$(just _project_name {{TENANT}})" -f .systemprompt/docker/{{TENANT}}.yaml logs -f
 
 # Reset database (stop, remove volume, start fresh)
 db-reset TENANT="local":
-    docker compose -f .systemprompt/docker/{{TENANT}}.yaml down -v
-    docker compose -f .systemprompt/docker/{{TENANT}}.yaml up -d
+    docker compose -p "$(just _project_name {{TENANT}})" -f .systemprompt/docker/{{TENANT}}.yaml down -v
+    docker compose -p "$(just _project_name {{TENANT}})" -f .systemprompt/docker/{{TENANT}}.yaml up -d
 
 # List all tenant databases
 db-list:
@@ -233,7 +242,9 @@ tenant:
 # Set up a local-only profile + Docker Postgres (no cloud, no login required).
 # Pass keys as positional args, or leave blank to be prompted interactively:
 #   just setup-local sk-ant-... sk-... AIza...
-setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="":
+# Port and Postgres port can be overridden for running multiple clones on one host:
+#   just setup-local sk-ant-... "" "" 8081 5433
+setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_PORT="5432":
     #!/usr/bin/env bash
     set -euo pipefail
     ROOT="{{justfile_directory()}}"
@@ -242,6 +253,8 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="":
     ANTHROPIC_KEY="{{ANTHROPIC_KEY}}"
     OPENAI_KEY="{{OPENAI_KEY}}"
     GEMINI_KEY="{{GEMINI_KEY}}"
+    HTTP_PORT="{{HTTP_PORT}}"
+    PG_PORT="{{PG_PORT}}"
     if [ -z "$ANTHROPIC_KEY" ] && [ -z "$OPENAI_KEY" ] && [ -z "$GEMINI_KEY" ]; then
         echo ""
         echo "================================================================"
@@ -275,19 +288,18 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="":
     fi
     mkdir -p "$PROFILE_DIR" "$DOCKER_DIR"
     if [ ! -f "$DOCKER_DIR/local.yaml" ]; then
-        echo "Writing Docker compose for local Postgres..."
-        cat > "$DOCKER_DIR/local.yaml" <<'YAML'
+        echo "Writing Docker compose for local Postgres (host port $PG_PORT)..."
+        cat > "$DOCKER_DIR/local.yaml" <<YAML
     services:
       postgres:
         image: postgres:18-alpine
-        container_name: systemprompt-postgres-local
         restart: unless-stopped
         environment:
           POSTGRES_USER: systemprompt
           POSTGRES_PASSWORD: 123
           POSTGRES_DB: systemprompt
         ports:
-          - "5432:5432"
+          - "${PG_PORT}:5432"
         volumes:
           - postgres_data:/var/lib/postgresql
         healthcheck:
@@ -296,8 +308,7 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="":
           timeout: 5s
           retries: 5
     volumes:
-      postgres_data:
-        name: systemprompt-postgres-local-data
+      postgres_data: {}
     YAML
     fi
     if [ ! -f "$PROFILE_DIR/profile.yaml" ]; then
@@ -314,13 +325,13 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="":
       external_db_access: false
     server:
       host: 127.0.0.1
-      port: 8080
-      api_server_url: http://localhost:8080
-      api_internal_url: http://localhost:8080
-      api_external_url: http://localhost:8080
+      port: ${HTTP_PORT}
+      api_server_url: http://localhost:${HTTP_PORT}
+      api_internal_url: http://localhost:${HTTP_PORT}
+      api_external_url: http://localhost:${HTTP_PORT}
       use_https: false
       cors_allowed_origins:
-      - http://localhost:8080
+      - http://localhost:${HTTP_PORT}
       - http://localhost:5173
     paths:
       system: $ROOT

@@ -14,15 +14,17 @@
 [![Rust](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18+-336791.svg)](https://www.postgresql.org/)
 
-[Website](https://systemprompt.io) · [About](https://systemprompt.io/about) · [Documentation](https://systemprompt.io/documentation/) · [Live Demo](https://systemprompt.io/features/demo) · [Discord](https://discord.gg/wkAbSuPWpr)
+[Website](https://systemprompt.io) · [About](https://systemprompt.io/about) · [Documentation](https://systemprompt.io/documentation/) · [Discord](https://discord.gg/wkAbSuPWpr)
 
 </div>
 
 ---
 
-This is the evaluation template for [systemprompt.io](https://systemprompt.io), the touchpoint between your AI and everything it does.
+This is the **local evaluation template** for [systemprompt.io](https://systemprompt.io), the touchpoint between your AI and everything it does.
 
-Clone it, build it, run it. Full governance pipeline, admin dashboard, MCP servers, skill marketplace, and demo scripts. No sign-up required.
+Clone it, build it, run it on your own machine. Full governance pipeline, admin dashboard, MCP servers, skill marketplace, and demo scripts. Bring your own AI provider key.
+
+> **Evaluation only.** This template exists so you can run the stack locally and see what it does. Production deployment is a licensed offering — contact [ed@systemprompt.io](mailto:ed@systemprompt.io) for a commercial licence.
 
 The template code is MIT licensed. The underlying [systemprompt-core](https://github.com/systempromptio/systemprompt-core) library is BSL-1.1: free for evaluation, testing, and non-production use. Production use requires a [commercial license](mailto:ed@systemprompt.io).
 
@@ -35,6 +37,9 @@ The template code is MIT licensed. The underlying [systemprompt-core](https://gi
 - **Rust 1.75+**: [rustup.rs](https://rustup.rs/)
 - **just**: command runner (`cargo install just`)
 - **Docker**: for local PostgreSQL ([docker.com](https://www.docker.com/))
+- **`jq`** and **`yq`**: used by `just` recipes to read profile/secrets files
+- **An AI provider API key**: at least one of Anthropic, OpenAI, or Gemini. The marketplace MCP server will not start without a key — you can add more later.
+- **Free ports**: `8080` (HTTP) and `5432` (Postgres) by default. If either is in use, pass overrides to `setup-local` — see [Running multiple clones](#running-multiple-clones).
 
 ### 1. Create Your Project
 
@@ -49,12 +54,13 @@ cd my-project
 just build
 ```
 
-### 3. Login & Setup
+### 3. Set up local profile + Postgres
 
 ```bash
-just login      # Authenticate with systemprompt.io cloud
-just tenant     # Create your tenant
+just setup-local <anthropic_key> <openai_key> <gemini_key>
 ```
+
+Pass only the keys you have — leave the others as empty strings (`""`). Run with no arguments to be prompted interactively. This writes `.systemprompt/profiles/local/{profile.yaml,secrets.json}`, brings up Postgres in Docker, and runs the publish pipeline.
 
 ### 4. Start
 
@@ -63,6 +69,14 @@ just start
 ```
 
 Visit **http://localhost:8080** to see the dashboard, admin panel, and governance pipeline in action.
+
+### Running multiple clones
+
+Each clone gets its own Docker containers and volumes (project name is derived from the clone's absolute path). To run two clones side-by-side, give the second one different ports at setup time:
+
+```bash
+just setup-local <anthropic_key> "" "" 8081 5433
+```
 
 ---
 
@@ -86,24 +100,29 @@ Browse, install, create, and fork skills. Plugin bundles with governed distribut
 
 ### Demo Scripts
 
-The `demo/` directory contains executable scripts demonstrating every aspect of the governance pipeline:
-
-| Script | What it demonstrates |
-|--------|---------------------|
-| `00-preflight.sh` | Environment and connectivity checks |
-| `01-happy-path.sh` | Agent request with governance approval |
-| `02-refused-path.sh` | Governance denial and audit trail |
-| `03-audit-trail.sh` | Full request tracing |
-| `04-governance-happy.sh` | Governance pipeline approval flow |
-| `05-governance-denied.sh` | Governance pipeline denial flow |
-| `06-governance-secret-breach.sh` | Secret detection and blocking |
-| `07-mcp-access-tracking.sh` | MCP server access audit |
-| `08-request-tracing.sh` | End-to-end request tracing |
-| `09-agent-tracing.sh` | Agent execution tracing |
+The `demo/` directory contains 40+ executable scripts organised into categories, each exercising a different surface of the platform. Scripts within a category are numbered — run them in order.
 
 ```bash
-cd demo && bash 00-preflight.sh
+./demo/00-preflight.sh          # Environment and connectivity checks
+./demo/01-seed-data.sh          # Seed analytics/logs/traces
+./demo/governance/01-happy-path.sh
+./demo/agents/01-list-agents.sh
+# ... etc
 ```
+
+| Category | Demonstrates |
+|----------|--------------|
+| `demo/governance/` | Governance pipeline: approvals, denials, secret breach, rate limits, hooks |
+| `demo/agents/` | Agent lifecycle, config, messaging, tracing, registry |
+| `demo/mcp/` | MCP servers, access tracking, tool execution |
+| `demo/skills/` | Skill lifecycle, content, files, plugins, contexts |
+| `demo/infrastructure/` | Services, database, jobs, logs, config |
+| `demo/analytics/` | Overview, agents, cost, requests, sessions, traffic, tools |
+| `demo/users/` | User CRUD, roles, sessions, IP bans |
+| `demo/web/` | Web config, sitemap validation |
+| `demo/performance/` | Request tracing, load testing |
+
+See [`demo/README.md`](demo/README.md) for the full catalogue and [`demo/AGENTS.md`](demo/AGENTS.md) for the LLM-targeted runbook.
 
 ---
 
@@ -136,11 +155,10 @@ your-project/
 | Command | Description |
 |---------|-------------|
 | `just build` | Build the project |
+| `just setup-local [keys] [http_port] [pg_port]` | Create local profile, start Docker Postgres, run publish pipeline |
 | `just start` | Start all services |
 | `just publish` | Compile templates, bundle CSS/JS, copy assets |
-| `just login` | Authenticate with cloud |
-| `just tenant` | Create tenant (database, profile, migrations) |
-| `just deploy` | Build and deploy to cloud |
+| `just db-up` / `just db-down` / `just db-reset` | Manage the local Postgres container |
 
 ---
 
@@ -169,13 +187,13 @@ Read the [full about page](https://systemprompt.io/about) for the story behind t
 
 ---
 
-## License
+## License & Production Use
 
-**This template** is MIT licensed. Fork it, modify it, use it however you like.
+**This template** is MIT licensed. Fork it, modify it, use it however you like — **for local evaluation**.
 
-**systemprompt-core** (the underlying library) is [BSL-1.1](https://github.com/systempromptio/systemprompt-core/blob/main/LICENSE). Free for evaluation, testing, and non-production use. Production use requires a commercial license. Converts to Apache 2.0 four years after each version is published.
+**systemprompt-core** (the underlying library) is [BSL-1.1](https://github.com/systempromptio/systemprompt-core/blob/main/LICENSE). Free for evaluation, testing, and non-production use. **Production use requires a commercial licence.** Converts to Apache 2.0 four years after each version is published.
 
-For licensing enquiries: [ed@systemprompt.io](mailto:ed@systemprompt.io)
+For licensing enquiries and production deployment: [ed@systemprompt.io](mailto:ed@systemprompt.io)
 
 ---
 

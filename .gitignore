@@ -165,3 +165,6 @@ storage/marketplace-versions/
 storage/github-marketplaces/
 .claude/worktrees/
 demo/.token
+
+# Stray Outlook image paste artifacts
+/image*.png
