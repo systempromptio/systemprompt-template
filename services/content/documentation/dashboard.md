@@ -81,7 +81,7 @@ The left column shows a **Live Activity** timeline of recent events. Each entry 
 - A description of the action
 - A relative timestamp (e.g., "2 minutes ago")
 
-Events are color-coded by category: blue for logins, purple for marketplace connections, green for marketplace edits, cyan for sessions, and orange for other events. A link at the bottom takes you to the full [Events](/documentation/events) page.
+Events are color-coded by category: blue for logins, purple for marketplace connections, green for marketplace edits, cyan for sessions, and orange for other events.
 
 Real-time updates are delivered via Server-Sent Events (SSE), indicated by a live dot next to the section title.
 
@@ -130,9 +130,9 @@ When department data is available, a bar chart shows event counts by department.
 
 The dashboard links to other admin pages:
 
-- Click **View all events** in the live activity feed to go to the [Events](/documentation/events) page
-- Use the sidebar to navigate to [Users](/documentation/users), [Jobs](/documentation/jobs), and other management pages
-- The **Share & Install** menu (share icon in the header) provides install commands for [Claude Code](/documentation/integration-claude-code) and export options for [Claude Cowork](/documentation/integration-claude-cowork)
+- Click **View all events** in the live activity feed to jump to the full events view
+- Use the sidebar to navigate to users, jobs, and other management pages
+- The **Share & Install** menu (share icon in the header) provides install commands for Claude Code and export options for Claude Cowork
 - New users see an onboarding panel with step-by-step installation guides for all three Claude surfaces (Claude Code, Cowork, and claude.ai)
 
 ## Enterprise Cost & Usage Visibility

@@ -80,38 +80,54 @@
                     <p class="section-subtitle">{{site.homepage.demos.subtitle}}</p>
                 </header>
 
+                <nav class="demo-jump-nav" aria-label="Jump to demo section">
+                    <span class="demo-jump-nav-label">Jump to</span>
+                    <ul class="demo-jump-nav-list">
+                        {{#each site.homepage.demos.categories}}
+                        <li><a href="#demo-{{this.id}}" class="demo-jump-nav-link">{{this.title}}</a></li>
+                        {{/each}}
+                    </ul>
+                </nav>
+
                 {{#each site.homepage.demos.categories}}
                 <article class="demo-category" id="demo-{{this.id}}">
                     <header class="demo-category-header">
-                        <h3 class="demo-category-title">{{this.title}}</h3>
+                        <div class="demo-category-heading">
+                            <h3 class="demo-category-title">{{this.title}}</h3>
+                            <p class="demo-category-tagline">{{this.tagline}}</p>
+                        </div>
                         <span class="demo-category-cost">{{this.cost}}</span>
                     </header>
-                    <p class="demo-category-desc">{{this.description}}</p>
-                    <div class="demo-card-grid">
-                        {{#each this.scripts}}
-                        <details class="demo-card">
-                            <summary class="demo-card-summary">
-                                <span class="demo-card-name">{{this.name}}</span>
-                                <span class="demo-card-title">{{this.title}}</span>
-                                {{#if this.description}}<span class="demo-card-desc">{{this.description}}</span>{{/if}}
-                            </summary>
-                            <div class="demo-card-body">
-                                <div class="demo-card-path">
-                                    <code>{{this.path}}</code>
-                                    <button type="button" class="copy-btn copy-btn-small" data-code="./{{this.path}}" aria-label="Copy script path">Copy path</button>
-                                </div>
-                                <div class="demo-card-commands">
-                                    {{#each this.commands}}
-                                    <div class="command-row">
-                                        <pre class="command-block"><code>{{this}}</code></pre>
-                                        <button type="button" class="copy-btn copy-btn-small" data-code="{{this}}" aria-label="Copy command">Copy</button>
+                    <p class="demo-category-story">{{this.story}}</p>
+                    <ol class="demo-story-timeline">
+                        {{#each this.steps}}
+                        <li class="demo-step">
+                            <div class="demo-step-body">
+                                <h4 class="demo-step-label">{{this.label}}</h4>
+                                <p class="demo-step-narrative">{{this.narrative}}</p>
+                                <p class="demo-step-outcome"><span class="demo-step-outcome-label">What you see</span> {{this.outcome}}</p>
+                                <details class="demo-step-commands">
+                                    <summary class="demo-step-commands-summary">Run it — {{this.name}}</summary>
+                                    <div class="demo-step-commands-body">
+                                        <div class="demo-step-path">
+                                            <code>./{{this.path}}</code>
+                                            <button type="button" class="copy-btn copy-btn-small" data-code="./{{this.path}}" aria-label="Copy script path">Copy path</button>
+                                        </div>
+                                        {{#if this.commands}}
+                                        <p class="demo-step-commands-hint">Or run the individual commands below:</p>
+                                        {{#each this.commands}}
+                                        <div class="command-row">
+                                            <pre class="command-block"><code>{{this}}</code></pre>
+                                            <button type="button" class="copy-btn copy-btn-small" data-code="{{this}}" aria-label="Copy command">Copy</button>
+                                        </div>
+                                        {{/each}}
+                                        {{/if}}
                                     </div>
-                                    {{/each}}
-                                </div>
+                                </details>
                             </div>
-                        </details>
+                        </li>
                         {{/each}}
-                    </div>
+                    </ol>
                 </article>
                 {{/each}}
             </div>

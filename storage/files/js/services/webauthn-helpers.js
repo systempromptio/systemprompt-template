@@ -30,6 +30,10 @@ export const finishPasskeyAuth = async (startResponse, credential) => {
 };
 
 export const redirectWithPkce = async (finishResponse) => {
+  const { user_id: userId, auth_token: authToken } = finishResponse.data || {};
+  if (!userId || typeof authToken !== 'string' || authToken.length === 0) {
+    throw new Error('Login session invalid — please reload this page and try again.');
+  }
   const codeVerifier = generateRandomString(64);
   const codeChallenge = await generateCodeChallenge(codeVerifier);
   const csrfState = generateRandomString(32);
@@ -39,7 +43,7 @@ export const redirectWithPkce = async (finishResponse) => {
   localStorage.setItem('login_redirect', params.get('redirect') || DEFAULT_REDIRECT);
   showLoading('Redirecting...');
   window.location.href = WEBAUTHN_BASE + '/complete?' + new URLSearchParams({
-    user_id: finishResponse.data.user_id, auth_token: finishResponse.data.auth_token,
+    user_id: userId, auth_token: authToken,
     response_type: 'code', client_id: CLIENT_ID,
     redirect_uri: window.location.origin + LOGIN_PATH, scope: 'user', state: csrfState,
     code_challenge: codeChallenge, code_challenge_method: 'S256',

@@ -34,6 +34,9 @@ export const buildCreationCredentialPayload = (credential) => ({
 });
 
 export async function initPkceAndRedirect(userId, authToken, showLoading) {
+  if (!userId || typeof authToken !== 'string' || authToken.length === 0) {
+    throw new Error('Login session invalid — please reload this page and try again.');
+  }
   const codeVerifier = generateRandomString(64);
   const codeChallenge = await generateCodeChallenge(codeVerifier);
   const csrfState = generateRandomString(32);

@@ -14,15 +14,16 @@
 
 set -e
 
-# Resolve the CLI binary
+# Resolve the CLI binary (script lives at demo/performance/, repo root is two levels up)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+DEMO_DIR="$(dirname "$SCRIPT_DIR")"
+PROJECT_DIR="$(dirname "$DEMO_DIR")"
 CLI="$PROJECT_DIR/target/debug/systemprompt"
 if [[ -x "$PROJECT_DIR/target/release/systemprompt" && "$PROJECT_DIR/target/release/systemprompt" -nt "$CLI" ]]; then
   CLI="$PROJECT_DIR/target/release/systemprompt"
 fi
 if [[ ! -x "$CLI" ]]; then
-  echo "ERROR: CLI binary not found. Run: cargo build" >&2
+  echo "ERROR: CLI binary not found at $CLI. Run: just build" >&2
   exit 1
 fi
 export RUST_LOG=warn
@@ -30,8 +31,8 @@ export RUST_LOG=warn
 PROFILE="${1:-local}"
 BASE_URL="http://localhost:8080"
 
-# Load token
-TOKEN_FILE="$SCRIPT_DIR/.token"
+# Load token (preflight writes it to demo/.token)
+TOKEN_FILE="$DEMO_DIR/.token"
 if [[ ! -f "$TOKEN_FILE" ]]; then
   echo "ERROR: No token file. Run ./demo/00-preflight.sh first." >&2
   exit 1

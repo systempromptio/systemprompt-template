@@ -164,3 +164,4 @@ storage/marketplace-versions/
 .systemprompt/sessions/
 storage/github-marketplaces/
 .claude/worktrees/
+demo/.token
