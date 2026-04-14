@@ -1,0 +1,81 @@
+<svg viewBox="0 0 560 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Five-Point AI Trace: Desktop -->
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <style>
+      @media (prefers-reduced-motion: reduce) {
+        * { animation: none !important; }
+      }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 3.5 L 0 7 z" fill="hsl(28, 91%, 40%)"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="560" height="400" fill="#0a0a0a"/>
+
+  <!-- Main connection line -->
+  <line x1="80" y1="180" x2="490" y2="180" stroke="hsl(28, 91%, 40%)" stroke-width="1" stroke-dasharray="6,4"/>
+
+  <!-- Directional arrows between nodes -->
+  <line x1="120" y1="180" x2="185" y2="180" stroke="hsl(28, 91%, 40%)" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="220" y1="180" x2="285" y2="180" stroke="hsl(28, 91%, 40%)" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="320" y1="180" x2="375" y2="180" stroke="hsl(28, 91%, 40%)" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="420" y1="180" x2="465" y2="180" stroke="hsl(28, 91%, 40%)" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Node 1: Identity (User icon) -->
+  <circle cx="90" cy="180" r="28" fill="hsl(28, 91%, 60%)" fill-opacity="0.06" stroke="hsl(28, 91%, 50%)" stroke-width="1" filter="url(#glow)"/>
+  <circle cx="90" cy="173" r="5" fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+  <path d="M 80 189 Q 90 183 100 189" fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+  <text x="90" y="225" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui" font-size="11">Identity</text>
+
+  <!-- Node 2: Agent Context (Bot icon) -->
+  <circle cx="195" cy="180" r="28" fill="hsl(28, 91%, 60%)" fill-opacity="0.06" stroke="hsl(28, 91%, 50%)" stroke-width="1" filter="url(#glow)"/>
+  <rect x="183" y="170" width="24" height="18" rx="4" fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+  <circle cx="190" cy="177" r="2" fill="hsl(28, 91%, 60%)"/>
+  <circle cx="200" cy="177" r="2" fill="hsl(28, 91%, 60%)"/>
+  <text x="195" y="225" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui" font-size="11">Agent</text>
+
+  <!-- Node 3: Permissions (Shield icon) -->
+  <circle cx="300" cy="180" r="28" fill="hsl(28, 91%, 60%)" fill-opacity="0.06" stroke="hsl(28, 91%, 50%)" stroke-width="1" filter="url(#glow)"/>
+  <path d="M 300 168 L 312 173 L 312 182 Q 312 190 300 194 Q 288 190 288 182 L 288 173 Z" fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+  <text x="300" y="225" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui" font-size="11">Permissions</text>
+
+  <!-- Node 4: Tool Execution (Wrench icon) -->
+  <circle cx="400" cy="180" r="28" fill="hsl(28, 91%, 60%)" fill-opacity="0.06" stroke="hsl(28, 91%, 50%)" stroke-width="1" filter="url(#glow)"/>
+  <path d="M 393 174 L 397 170 L 403 176 L 407 172 L 409 174 L 403 180 L 407 184 L 403 188 L 393 178 Z" fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+  <text x="400" y="225" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui" font-size="11">Tools</text>
+
+  <!-- Node 5: AI Request (Sparkle icon) -->
+  <circle cx="490" cy="180" r="28" fill="hsl(28, 91%, 60%)" fill-opacity="0.08" stroke="hsl(28, 91%, 50%)" stroke-width="1" filter="url(#glow)"/>
+  <path d="M 490 168 L 492 176 L 500 178 L 492 180 L 490 188 L 488 180 L 480 178 L 488 176 Z" fill="hsl(28, 91%, 60%)" fill-opacity="0.4"/>
+  <text x="490" y="225" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui" font-size="11">AI Request</text>
+
+  <!-- Dotted lines down to audit log -->
+  <line x1="90" y1="208" x2="90" y2="280" stroke="hsl(28, 91%, 40%)" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <line x1="195" y1="208" x2="195" y2="280" stroke="hsl(28, 91%, 40%)" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <line x1="300" y1="208" x2="300" y2="280" stroke="hsl(28, 91%, 40%)" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <line x1="400" y1="208" x2="400" y2="280" stroke="hsl(28, 91%, 40%)" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <line x1="490" y1="208" x2="490" y2="280" stroke="hsl(28, 91%, 40%)" stroke-width="0.5" stroke-dasharray="3,3"/>
+
+  <!-- Audit log bar -->
+  <rect x="60" y="285" width="460" height="40" rx="6" fill="hsl(28, 91%, 60%)" fill-opacity="0.05" stroke="hsl(28, 91%, 50%)" stroke-width="0.5"/>
+  <!-- Log icon -->
+  <rect x="270" y="295" width="20" height="20" rx="3" fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+  <line x1="275" y1="301" x2="285" y2="301" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+  <line x1="275" y1="305" x2="285" y2="305" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+  <line x1="275" y1="309" x2="282" y2="309" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+
+  <!-- Step numbers -->
+  <text x="90" y="150" text-anchor="middle" fill="hsl(28, 91%, 50%)" font-family="system-ui" font-size="14" opacity="0.6">1</text>
+  <text x="195" y="150" text-anchor="middle" fill="hsl(28, 91%, 50%)" font-family="system-ui" font-size="14" opacity="0.6">2</text>
+  <text x="300" y="150" text-anchor="middle" fill="hsl(28, 91%, 50%)" font-family="system-ui" font-size="14" opacity="0.6">3</text>
+  <text x="400" y="150" text-anchor="middle" fill="hsl(28, 91%, 50%)" font-family="system-ui" font-size="14" opacity="0.6">4</text>
+  <text x="490" y="150" text-anchor="middle" fill="hsl(28, 91%, 50%)" font-family="system-ui" font-size="14" opacity="0.6">5</text>
+
+  <text x="280" y="345" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui" font-size="12" opacity="0.5">JSONB Audit Log</text>
+</svg>

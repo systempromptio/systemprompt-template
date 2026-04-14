@@ -1,0 +1,22 @@
+<svg viewBox="0 0 560 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circular Arrows: Idempotent, repeatable operations -->
+
+  <!-- Outer circle track -->
+  <circle cx="280" cy="200" r="100" fill="none" stroke="hsl(28, 91%, 40%)" stroke-width="2" stroke-opacity="0.3"/>
+
+  <!-- Circular arrow path (top arc with arrow) -->
+  <path d="M180 200 A100 100 0 0 1 330 110"
+        fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="340,105 325,125 350,120" fill="hsl(28, 91%, 60%)"/>
+
+  <!-- Circular arrow path (bottom arc with arrow) -->
+  <path d="M380 200 A100 100 0 0 1 230 290"
+        fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="220,295 235,275 210,280" fill="hsl(28, 91%, 60%)"/>
+
+  <!-- Center indicator -->
+  <circle cx="280" cy="200" r="30" fill="hsl(28, 91%, 60%)" fill-opacity="0.15" stroke="hsl(28, 91%, 60%)" stroke-width="2"/>
+
+  <!-- Checkmark in center -->
+  <path d="M265 200 L275 212 L298 186" fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

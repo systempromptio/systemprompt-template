@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord community
+    url: https://discord.gg/wkAbSuPWpr
+    about: Ask questions, share evaluation feedback, talk to other operators.
+  - name: Commercial & production support
+    url: https://systemprompt.io/contact
+    about: Book a meeting for production licensing, SLAs, or enterprise support.
+  - name: Security disclosures
+    url: mailto:security@systemprompt.io
+    about: Please report vulnerabilities privately — do not open a public issue.

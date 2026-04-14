@@ -1,0 +1,73 @@
+<svg viewBox="0 0 560 400" xmlns="http://www.w3.org/2000/svg">
+  <title>Four-Layer Evaluation Pipeline</title>
+
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <style>
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; }
+    }
+  </style>
+
+  <!-- Input arrow -->
+  <text x="40" y="175" font-family="'Zepto', system-ui, sans-serif" font-size="11" fill="#a0a0a0" letter-spacing="0.12em">CALL</text>
+  <line x1="40" y1="185" x2="80" y2="185" stroke="hsl(28, 91%, 50%)" stroke-width="1"/>
+  <polygon points="78,181 86,185 78,189" fill="hsl(28, 91%, 50%)"/>
+
+  <!-- Gate 1: Scope Check -->
+  <rect x="90" y="150" width="90" height="70" rx="6" fill="hsl(28, 91%, 55%)" fill-opacity="0.08" stroke="hsl(28, 91%, 50%)" stroke-width="1" filter="url(#glow)"/>
+  <text x="135" y="178" font-family="'Zepto', system-ui, sans-serif" font-size="10" fill="hsl(28, 91%, 60%)" text-anchor="middle" letter-spacing="0.10em">SCOPE</text>
+  <text x="135" y="192" font-family="'Open Sans', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle">check</text>
+
+  <!-- Arrow 1-2 -->
+  <line x1="180" y1="185" x2="210" y2="185" stroke="hsl(28, 91%, 40%)" stroke-width="0.5"/>
+  <polygon points="208,182 214,185 208,188" fill="hsl(28, 91%, 40%)"/>
+
+  <!-- Gate 2: Secret Scan -->
+  <rect x="218" y="150" width="90" height="70" rx="6" fill="hsl(28, 91%, 55%)" fill-opacity="0.08" stroke="hsl(28, 91%, 50%)" stroke-width="1"/>
+  <text x="263" y="178" font-family="'Zepto', system-ui, sans-serif" font-size="10" fill="hsl(28, 91%, 60%)" text-anchor="middle" letter-spacing="0.10em">SECRET</text>
+  <text x="263" y="192" font-family="'Open Sans', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle">scan</text>
+
+  <!-- Arrow 2-3 -->
+  <line x1="308" y1="185" x2="338" y2="185" stroke="hsl(28, 91%, 40%)" stroke-width="0.5"/>
+  <polygon points="336,182 342,185 336,188" fill="hsl(28, 91%, 40%)"/>
+
+  <!-- Gate 3: Blocklist -->
+  <rect x="346" y="150" width="90" height="70" rx="6" fill="hsl(28, 91%, 55%)" fill-opacity="0.08" stroke="hsl(28, 91%, 50%)" stroke-width="1"/>
+  <text x="391" y="178" font-family="'Zepto', system-ui, sans-serif" font-size="10" fill="hsl(28, 91%, 60%)" text-anchor="middle" letter-spacing="0.10em">BLOCK</text>
+  <text x="391" y="192" font-family="'Open Sans', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle">list</text>
+
+  <!-- Arrow 3-4 -->
+  <line x1="436" y1="185" x2="466" y2="185" stroke="hsl(28, 91%, 40%)" stroke-width="0.5"/>
+  <polygon points="464,182 470,185 464,188" fill="hsl(28, 91%, 40%)"/>
+
+  <!-- Gate 4: Rate Limit -->
+  <rect x="474" y="150" width="46" height="70" rx="6" fill="hsl(28, 91%, 55%)" fill-opacity="0.08" stroke="hsl(28, 91%, 50%)" stroke-width="1"/>
+  <text x="497" y="178" font-family="'Zepto', system-ui, sans-serif" font-size="10" fill="hsl(28, 91%, 60%)" text-anchor="middle" letter-spacing="0.10em">RATE</text>
+  <text x="497" y="192" font-family="'Open Sans', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle">limit</text>
+
+  <!-- Output: Execute -->
+  <line x1="520" y1="185" x2="540" y2="185" stroke="hsl(28, 91%, 50%)" stroke-width="1"/>
+  <polygon points="538,181 546,185 538,189" fill="hsl(28, 91%, 50%)"/>
+
+  <!-- Blocked drop-down lines from each gate -->
+  <line x1="135" y1="220" x2="135" y2="270" stroke="#a0a0a0" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.4"/>
+  <text x="135" y="285" font-family="'Open Sans', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle" opacity="0.5">DENY</text>
+
+  <line x1="263" y1="220" x2="263" y2="270" stroke="#a0a0a0" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.4"/>
+  <text x="263" y="285" font-family="'Open Sans', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle" opacity="0.5">DENY</text>
+
+  <line x1="391" y1="220" x2="391" y2="270" stroke="#a0a0a0" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.4"/>
+  <text x="391" y="285" font-family="'Open Sans', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle" opacity="0.5">DENY</text>
+
+  <line x1="497" y1="220" x2="497" y2="270" stroke="#a0a0a0" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.4"/>
+  <text x="497" y="285" font-family="'Open Sans', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle" opacity="0.5">DENY</text>
+</svg>

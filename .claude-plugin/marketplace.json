@@ -9,27 +9,27 @@
   },
   "plugins": [
     {
+      "name": "enterprise-demo",
+      "source": "./services/plugins/enterprise-demo",
+      "description": "Enterprise governance demo: a dangerous skill blocked by policy hooks, and a benign web search skill demonstrating tool governance",
+      "version": "2.0.0"
+    },
+    {
+      "name": "systemprompt",
+      "source": "./services/plugins/systemprompt",
+      "description": "Socratic skill, agent, and secret builder used by the skill-manager MCP server",
+      "version": "2.1.0"
+    },
+    {
       "name": "systemprompt-admin",
       "source": "./services/plugins/systemprompt-admin",
       "description": "CLI administration tools for managing users, analytics, agents, services, jobs, logs, and database",
       "version": "0.1.0"
     },
     {
-      "name": "sales-skills",
-      "source": "./services/plugins/sales-skills",
-      "description": "CRM reports, pipeline health monitoring, diagnostics, and email delivery for the sales team",
-      "version": "1.1.0"
-    },
-    {
       "name": "systemprompt-dev",
       "source": "./services/plugins/systemprompt-dev",
-      "description": "Complete development toolkit: Rust, frontend, architecture standards, extension development guides, and 6 specialized agents",
-      "version": "1.0.0"
-    },
-    {
-      "name": "common-skills",
-      "source": "./services/plugins/common-skills",
-      "description": "Odoo operations, brand guidelines, diagramming, quality gates, and marketing tools for all employees",
+      "description": "Development toolkit: Rust, frontend, architecture standards, extension development guides, and specialized agents",
       "version": "1.0.0"
     }
   ]

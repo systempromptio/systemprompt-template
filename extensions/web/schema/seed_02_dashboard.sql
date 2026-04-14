@@ -16,15 +16,16 @@ DECLARE
     day_offset INT;
     i INT;
     skills TEXT[] := ARRAY[
-        'blog_writing', 'email_composer', 'content_writing', 'code_audit',
-        'crm_query', 'excel_analysis', 'seo_audit', 'copywriting',
-        'competitive_analyst', 'report_generator', 'diagram_architect',
-        'customer_support', 'data_privacy_compliance', 'fact_checker',
-        'deployment_assistant', 'schema_markup', 'social_content',
-        'financial_anomaly_detection', 'pdf', 'screenshot'
+        'use_dangerous_secret', 'example_web_search',
+        'enterprise_agent_governance', 'enterprise_security_compliance', 'enterprise_mcp_management',
+        'systemprompt_admin_logs', 'systemprompt_admin_analytics', 'systemprompt_admin_agent_management',
+        'systemprompt_admin_services', 'systemprompt_admin_jobs', 'systemprompt_admin_database',
+        'dev_rust_standards', 'dev_architecture_standards', 'dev_frontend_standards',
+        'dev_ext_infrastructure', 'dev_ext_providers', 'dev_ext_hooks',
+        'code_review', 'compliance_check', 'general_assistance'
     ];
     plugins TEXT[] := ARRAY[
-        'common', 'marketing', 'sales', 'operations', 'it', 'hr', 'finance', 'ceo'
+        'enterprise-demo', 'systemprompt-admin', 'systemprompt-dev', 'systemprompt'
     ];
     event_types TEXT[] := ARRAY[
         'claude_code_PostToolUse', 'claude_code_PostToolUse', 'claude_code_PostToolUse',

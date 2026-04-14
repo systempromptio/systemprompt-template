@@ -138,6 +138,43 @@
   --sp-client-teal: #006463;
   --sp-client-grey: #F5F5F4;
   --sp-client-cards-card-bg: #F5F5F4;
+
+  /* Compatibility aliases for ported components from systemprompt-web */
+  --sp-space-1: 4px;
+  --sp-space-2: 8px;
+  --sp-space-3: 12px;
+  --sp-space-4: 16px;
+  --sp-space-5: 20px;
+  --sp-space-6: 24px;
+  --sp-space-7: 28px;
+  --sp-space-8: 32px;
+  --sp-space-10: 40px;
+  --sp-space-12: 48px;
+  --sp-space-16: 64px;
+
+  --sp-duration-fast: 150ms;
+  --sp-duration-normal: 250ms;
+  --sp-ease-default: ease;
+  --sp-ease-out: ease-out;
+  --sp-ease-in-out: ease-in-out;
+
+  --sp-color-surface-alt: var(--sp-color-surface-elevated, #FAFAF9);
+  --sp-color-surface-hover: rgba(0, 0, 0, 0.04);
+  --sp-color-primary-text: var(--sp-color-primary);
+  --sp-color-border-subtle: var(--sp-color-border);
+  --sp-color-header-bg: rgba(255, 255, 255, 0.85);
+  --sp-color-header-border: var(--sp-color-border);
+
+  --sp-corners-card-brand: var(--sp-radius-lg, 12px);
+  --sp-corners-sm: var(--sp-radius-sm);
+
+  --sp-z-dropdown: 100;
+  --sp-z-toast: 9999;
+  --sp-z-header: var(--sp-z-navigation, 90);
+
+  --sp-text-xs: 0.75rem;
+  --sp-text-sm: 0.875rem;
+  --sp-font-brand: inherit;
 }
 
 h1, h2, h3, h4, h5, h6 { letter-spacing: -0.03em; }

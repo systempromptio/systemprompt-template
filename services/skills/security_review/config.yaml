@@ -1,4 +1,0 @@
-id: security_review
-name: "Security Review"
-description: "Evaluate code changes against OWASP Top 10 and enterprise security standards"
-enabled: true

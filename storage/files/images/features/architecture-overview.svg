@@ -130,7 +130,7 @@
   </g>
 
   <!-- Bottom label -->
-  <text x="400" y="478" text-anchor="middle" fill="#A2AAB9" font-size="9" letter-spacing="0.5">KNOWBE4 AI AGENT GOVERNANCE</text>
+  <text x="400" y="478" text-anchor="middle" fill="#A2AAB9" font-size="9" letter-spacing="0.5">SYSTEMPROMPT AI AGENT GOVERNANCE</text>
   <line x1="200" y1="485" x2="600" y2="485" stroke="#D6DCE8" stroke-width="1"/>
   <text x="400" y="496" text-anchor="middle" fill="#A2AAB9" font-size="8">systemprompt.io</text>
 </svg>

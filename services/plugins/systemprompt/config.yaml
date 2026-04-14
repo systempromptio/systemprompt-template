@@ -32,5 +32,3 @@ plugin:
   license: proprietary
   roles:
   - viewer
-  depends:
-  - common-skills

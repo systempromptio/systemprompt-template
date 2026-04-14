@@ -1,0 +1,79 @@
+<svg viewBox="0 0 560 400" xmlns="http://www.w3.org/2000/svg">
+  <title>Governed Tool Calls</title>
+
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <style>
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; }
+    }
+  </style>
+
+  <!-- Flow label -->
+  <text x="280" y="130" font-family="'Zepto', system-ui, sans-serif" font-size="11" fill="#a0a0a0" letter-spacing="0.12em" text-anchor="middle">TOOL CALL PIPELINE</text>
+
+  <!-- Step 1: Agent -->
+  <circle cx="60" cy="200" r="28" fill="hsl(28, 91%, 55%)" fill-opacity="0.08" stroke="hsl(28, 91%, 50%)" stroke-width="1"/>
+  <text x="60" y="204" font-family="'SF Mono', 'Fira Code', monospace" font-size="9" fill="hsl(28, 91%, 60%)" text-anchor="middle">AGENT</text>
+  <text x="60" y="245" font-family="'Zepto', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle">invoke</text>
+
+  <!-- Arrow 1 -->
+  <line x1="88" y1="200" x2="132" y2="200" stroke="hsl(28, 91%, 50%)" stroke-width="1" opacity="0.6"/>
+  <polygon points="132,196 140,200 132,204" fill="hsl(28, 91%, 50%)" opacity="0.6"/>
+
+  <!-- Step 2: OAuth2 gate -->
+  <rect x="140" y="175" width="70" height="50" rx="4" fill="hsl(28, 91%, 55%)" fill-opacity="0.08" stroke="hsl(28, 91%, 50%)" stroke-width="1" filter="url(#glow)"/>
+  <!-- Lock icon -->
+  <rect x="169" y="188" width="12" height="9" rx="1" fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+  <path d="M172 188 L172 184 C172 181 178 181 178 184 L178 188" fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+  <text x="175" y="212" font-family="'Zepto', system-ui, sans-serif" font-size="9" fill="hsl(28, 91%, 60%)" text-anchor="middle" letter-spacing="0.08em">OAUTH2</text>
+  <text x="175" y="245" font-family="'Zepto', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle">validate</text>
+
+  <!-- Arrow 2 -->
+  <line x1="210" y1="200" x2="244" y2="200" stroke="hsl(28, 91%, 50%)" stroke-width="1" opacity="0.6"/>
+  <polygon points="244,196 252,200 244,204" fill="hsl(28, 91%, 50%)" opacity="0.6"/>
+
+  <!-- Step 3: Governance gate -->
+  <rect x="252" y="175" width="70" height="50" rx="4" fill="hsl(28, 91%, 55%)" fill-opacity="0.10" stroke="hsl(28, 91%, 50%)" stroke-width="1" filter="url(#glow)"/>
+  <!-- Shield icon -->
+  <path d="M281 185 L287 182 L293 185 L293 193 C293 196 287 199 287 199 C287 199 281 196 281 193 Z" fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+  <text x="287" y="212" font-family="'Zepto', system-ui, sans-serif" font-size="9" fill="hsl(28, 91%, 60%)" text-anchor="middle" letter-spacing="0.08em">POLICY</text>
+  <text x="287" y="245" font-family="'Zepto', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle">enforce</text>
+
+  <!-- Arrow 3 -->
+  <line x1="322" y1="200" x2="356" y2="200" stroke="hsl(28, 91%, 50%)" stroke-width="1" opacity="0.6"/>
+  <polygon points="356,196 364,200 356,204" fill="hsl(28, 91%, 50%)" opacity="0.6"/>
+
+  <!-- Step 4: MCP Server -->
+  <rect x="364" y="175" width="70" height="50" rx="4" fill="hsl(28, 91%, 55%)" fill-opacity="0.06" stroke="hsl(28, 91%, 50%)" stroke-width="1"/>
+  <text x="399" y="197" font-family="'SF Mono', 'Fira Code', monospace" font-size="9" fill="hsl(28, 91%, 60%)" text-anchor="middle">MCP</text>
+  <text x="399" y="212" font-family="'SF Mono', 'Fira Code', monospace" font-size="9" fill="hsl(28, 91%, 60%)" text-anchor="middle">SERVER</text>
+  <text x="399" y="245" font-family="'Zepto', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle">execute</text>
+
+  <!-- Arrow 4 -->
+  <line x1="434" y1="200" x2="468" y2="200" stroke="hsl(28, 91%, 50%)" stroke-width="1" opacity="0.6"/>
+  <polygon points="468,196 476,200 468,204" fill="hsl(28, 91%, 50%)" opacity="0.6"/>
+
+  <!-- Step 5: Audit log -->
+  <rect x="476" y="175" width="60" height="50" rx="4" fill="hsl(28, 91%, 55%)" fill-opacity="0.05" stroke="hsl(28, 91%, 50%)" stroke-width="0.5"/>
+  <!-- Log lines icon -->
+  <line x1="488" y1="192" x2="524" y2="192" stroke="hsl(28, 91%, 50%)" stroke-width="0.5" opacity="0.5"/>
+  <line x1="488" y1="198" x2="520" y2="198" stroke="hsl(28, 91%, 50%)" stroke-width="0.5" opacity="0.5"/>
+  <line x1="488" y1="204" x2="516" y2="204" stroke="hsl(28, 91%, 50%)" stroke-width="0.5" opacity="0.5"/>
+  <text x="506" y="218" font-family="'Zepto', system-ui, sans-serif" font-size="8" fill="hsl(28, 91%, 60%)" text-anchor="middle" letter-spacing="0.08em">AUDIT</text>
+  <text x="506" y="245" font-family="'Zepto', system-ui, sans-serif" font-size="9" fill="#a0a0a0" text-anchor="middle">log</text>
+
+  <!-- Bottom annotations -->
+  <text x="175" y="280" font-family="'SF Mono', 'Fira Code', monospace" font-size="8" fill="#a0a0a0" text-anchor="middle">authenticate</text>
+  <text x="287" y="280" font-family="'SF Mono', 'Fira Code', monospace" font-size="8" fill="#a0a0a0" text-anchor="middle">rate-limit</text>
+  <text x="399" y="280" font-family="'SF Mono', 'Fira Code', monospace" font-size="8" fill="#a0a0a0" text-anchor="middle">rmcp v1.1</text>
+  <text x="506" y="280" font-family="'SF Mono', 'Fira Code', monospace" font-size="8" fill="#a0a0a0" text-anchor="middle">structured</text>
+</svg>

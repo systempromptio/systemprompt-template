@@ -18,33 +18,6 @@ includes:
   - systemprompt_admin_skill_creation/config.yaml
   - systemprompt_admin_user_management/config.yaml
 
-  # Common
-  - common_content_collection/config.yaml
-  - common_email_campaign_builder/config.yaml
-  - common_event_planner/config.yaml
-  - common_enterprise-demo_brand/config.yaml
-  - common_linkedin_content_manager/config.yaml
-  - common_odoo_frontend/config.yaml
-  - common_odoo_importation/config.yaml
-  - common_odoo_pilot/config.yaml
-  - common_odoo_studio_fields/config.yaml
-  - common_quality_gate/config.yaml
-  - common_seo_manager/config.yaml
-  - common_timesheet_report/config.yaml
-
-  # Content
-  - announcement_writing/config.yaml
-  - blog_image_generation/config.yaml
-  - blog_writing/config.yaml
-  - content_writing/config.yaml
-  - edwards_voice/config.yaml
-  - guide_writing/config.yaml
-  - narrative_writing/config.yaml
-  - research_blog/config.yaml
-  - technical_content_writing/config.yaml
-  - technical_writing/config.yaml
-  - update_content/config.yaml
-
   # Dev
   - dev_rust_standards/config.yaml
   - dev_web_standards/config.yaml
@@ -60,24 +33,21 @@ includes:
   # General
   - general_assistance/config.yaml
 
-  # Marketplace
+  # Marketplace builder
   - marketplace_onboarding/config.yaml
   - skill_creator/config.yaml
   - agent_creator/config.yaml
   - secrets_creator/config.yaml
 
-  # Sales
-  - sales_crm_debug/config.yaml
-  - sales_crm_health_monitor/config.yaml
-  - sales_crm_report/config.yaml
-  - sales_crm_send_emails/config.yaml
-
-  # Enterprise
+  # Enterprise governance demo
+  - use_dangerous_secret/config.yaml
+  - example_web_search/config.yaml
   - enterprise_agent_governance/config.yaml
   - enterprise_security_compliance/config.yaml
   - enterprise_mcp_management/config.yaml
 
-  # Leadership
-  - leadership_ai_usage_report/config.yaml
+  # Quality / review
+  - code_review/config.yaml
+  - compliance_check/config.yaml
 
 skills: {}

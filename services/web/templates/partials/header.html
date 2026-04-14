@@ -1,28 +1,43 @@
-<header class="site-header">
+<a href="#main" class="sp-skip-link">Skip to main content</a>
+<header class="site-header" role="banner">
   <nav class="site-nav">
     <a href="/" class="logo-link">
-      <img src="/files/images/logo.svg" alt="{{ORG_NAME}}" class="logo-svg" />
+      <img src="/files/images/logo-dark.svg" alt="{{ORG_NAME}}" class="logo-svg logo-light" width="140" height="32" loading="eager" />
+      <img src="/files/images/logo.svg" alt="{{ORG_NAME}}" class="logo-svg logo-dark" width="140" height="32" loading="eager" />
     </a>
     <button type="button" class="mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
       <span class="hamburger-line"></span>
       <span class="hamburger-line"></span>
       <span class="hamburger-line"></span>
     </button>
+    <div class="mobile-menu-overlay" aria-hidden="true"></div>
     <div class="nav-links">
+      <div class="mobile-menu-header">
+        <a href="/" class="logo-link">
+          <img src="/files/images/logo-dark.svg" alt="{{ORG_NAME}}" class="logo-svg logo-light" width="140" height="32" />
+          <img src="/files/images/logo.svg" alt="{{ORG_NAME}}" class="logo-svg logo-dark" width="140" height="32" />
+        </a>
+        <button type="button" class="mobile-menu-close" aria-label="Close navigation">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
       {{#each site.header_nav.items}}
       {{#if this.dropdown}}
       <div class="nav-dropdown">
         {{#if (eq this.href "#")}}
         <span class="nav-dropdown-trigger">
           {{this.label}}
-          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+          <svg class="dropdown-arrow" aria-hidden="true" viewBox="0 0 12 12" width="12" height="12">
             <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
         {{else}}
-        <a href="{{this.href}}" class="nav-dropdown-trigger">
+        <a href="{{this.href}}" class="nav-dropdown-trigger"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>
           {{this.label}}
-          <svg class="dropdown-arrow" viewBox="0 0 12 12" width="12" height="12">
+          <svg class="dropdown-arrow" aria-hidden="true" viewBox="0 0 12 12" width="12" height="12">
             <path d="M2 4l4 4 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </a>
@@ -32,12 +47,15 @@
           <div class="dropdown-section">
             {{#if this.title}}<h4>{{this.title}}</h4>{{/if}}
             {{#each this.links}}
-            <a href="{{this.href}}">{{this.label}}</a>
+            <a href="{{this.href}}" class="dropdown-link{{#if this.description}} dropdown-link--has-desc{{/if}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>
+              <span class="dropdown-link-label">{{this.label}}</span>
+              {{#if this.description}}<span class="dropdown-link-desc">{{this.description}}</span>{{/if}}
+            </a>
             {{/each}}
           </div>
           {{/each}}
           {{#if this.view_all}}
-          <a href="{{this.view_all.href}}" class="dropdown-view-all">{{this.view_all.label}} &rarr;</a>
+          <a href="{{this.view_all.href}}" class="dropdown-view-all"{{#if this.view_all.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.view_all.label}} &rarr;</a>
           {{/if}}
         </div>
       </div>
@@ -45,6 +63,10 @@
       <a href="{{this.href}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
       {{/if}}
       {{/each}}
+      <div class="mobile-menu-docs-nav" id="mobile-docs-nav"></div>
+      {{#if site.header_nav.cta}}
+      <a href="{{site.header_nav.cta.href}}" class="cta-button"{{#if site.header_nav.cta.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{site.header_nav.cta.label}}</a>
+      {{/if}}
     </div>
   </nav>
 </header>

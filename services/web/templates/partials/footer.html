@@ -1,8 +1,58 @@
-<footer class="site-footer">
+<footer class="site-footer" role="contentinfo">
   <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="/files/images/logo-dark.svg" alt="{{ORG_NAME}}" class="logo-svg logo-light" width="140" height="32" loading="lazy" />
+          <img src="/files/images/logo.svg" alt="{{ORG_NAME}}" class="logo-svg logo-dark" width="140" height="32" loading="lazy" />
+        </div>
+        <p>{{site.branding.tagline}}</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer">
+        <div class="footer-links">
+          <h3>Infrastructure</h3>
+          {{#each site.navigation.footer.infrastructure}}
+          <a href="{{this.path}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
+          {{/each}}
+        </div>
+        <div class="footer-links">
+          <h3>Capabilities</h3>
+          {{#each site.navigation.footer.capabilities}}
+          <a href="{{this.path}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
+          {{/each}}
+        </div>
+        <div class="footer-links">
+          <h3>Integrations</h3>
+          {{#each site.navigation.footer.integrations}}
+          <a href="{{this.path}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
+          {{/each}}
+        </div>
+        <div class="footer-links">
+          <h3>Resources</h3>
+          {{#each site.navigation.footer.resources}}
+          <a href="{{this.path}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
+          {{/each}}
+        </div>
+        <div class="footer-links">
+          <h3>Legal</h3>
+          {{#each site.navigation.footer.legal}}
+          <a href="{{this.path}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
+          {{/each}}
+        </div>
+        <div class="footer-links">
+          <h3>Contact</h3>
+          {{#each site.navigation.footer.contact}}
+          <a href="{{this.href}}" target="_blank" rel="noopener noreferrer">{{this.label}}</a>
+          {{/each}}
+        </div>
+      </nav>
+    </div>
     <div class="footer-bottom">
-      <p>Powered by</p>
-      <a href="https://systemprompt.io" target="_blank" rel="noopener noreferrer"><img src="/files/images/logo.svg" alt="systemprompt.io" class="footer-logo-icon" /></a>
+      <p>&copy; {{site.branding.copyright}}</p>
+      <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Switch to dark mode">
+        <svg aria-hidden="true" class="theme-icon theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg aria-hidden="true" class="theme-icon theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
     </div>
   </div>
 </footer>

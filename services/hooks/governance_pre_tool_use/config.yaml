@@ -9,7 +9,7 @@ command: "${CLAUDE_PLUGIN_ROOT}/scripts/govern-{plugin_id}-tool.sh"
 async: false
 category: system
 plugins:
-  - common-skills
+  - enterprise-demo
 tags:
   - governance
   - security

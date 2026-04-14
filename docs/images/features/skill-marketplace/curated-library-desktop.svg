@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 400" role="img">
+  <title>Curated skill library with governed, version-controlled knowledge assets</title>
+  <style>
+    @media (prefers-reduced-motion: reduce) {
+      .animated-element {
+        animation: none !important;
+        opacity: 1;
+      }
+    }
+  </style>
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Row 1: 4 skill cards -->
+  <g transform="translate(60, 80)">
+    <rect x="0" y="0" width="100" height="120" rx="6"
+          fill="hsl(28, 91%, 55%)" fill-opacity="0.06"
+          stroke="hsl(28, 91%, 50%)" stroke-width="0.5"/>
+    <!-- File icon -->
+    <path d="M38,20 L38,40 L62,40 L62,26 L56,20 Z"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <path d="M56,20 L56,26 L62,26"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <!-- Content lines -->
+    <line x1="20" y1="56" x2="80" y2="56" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.4"/>
+    <line x1="20" y1="66" x2="70" y2="66" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.3"/>
+    <line x1="20" y1="76" x2="60" y2="76" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.25"/>
+    <text x="50" y="100" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui, sans-serif" font-size="11" opacity="0.6">Code Review</text>
+  </g>
+
+  <g transform="translate(180, 80)">
+    <rect x="0" y="0" width="100" height="120" rx="6"
+          fill="hsl(28, 91%, 55%)" fill-opacity="0.06"
+          stroke="hsl(28, 91%, 50%)" stroke-width="0.5"/>
+    <path d="M38,20 L38,40 L62,40 L62,26 L56,20 Z"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <path d="M56,20 L56,26 L62,26"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <line x1="20" y1="56" x2="80" y2="56" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.4"/>
+    <line x1="20" y1="66" x2="65" y2="66" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.3"/>
+    <line x1="20" y1="76" x2="75" y2="76" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.25"/>
+    <text x="50" y="100" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui, sans-serif" font-size="11" opacity="0.6">Deploy</text>
+  </g>
+
+  <!-- Highlighted card with glow -->
+  <g transform="translate(300, 80)">
+    <rect x="0" y="0" width="100" height="120" rx="6" filter="url(#glow)"
+          fill="hsl(28, 91%, 55%)" fill-opacity="0.1"
+          stroke="hsl(28, 91%, 50%)" stroke-width="1"/>
+    <path d="M38,20 L38,40 L62,40 L62,26 L56,20 Z"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <path d="M56,20 L56,26 L62,26"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <line x1="20" y1="56" x2="80" y2="56" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.5"/>
+    <line x1="20" y1="66" x2="72" y2="66" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.4"/>
+    <line x1="20" y1="76" x2="55" y2="76" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.3"/>
+    <text x="50" y="100" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui, sans-serif" font-size="11" opacity="0.8">Brand Voice</text>
+  </g>
+
+  <g transform="translate(420, 80)">
+    <rect x="0" y="0" width="100" height="120" rx="6"
+          fill="hsl(28, 91%, 55%)" fill-opacity="0.06"
+          stroke="hsl(28, 91%, 50%)" stroke-width="0.5"/>
+    <path d="M38,20 L38,40 L62,40 L62,26 L56,20 Z"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <path d="M56,20 L56,26 L62,26"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <line x1="20" y1="56" x2="80" y2="56" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.4"/>
+    <line x1="20" y1="66" x2="60" y2="66" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.3"/>
+    <line x1="20" y1="76" x2="70" y2="76" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.25"/>
+    <text x="50" y="100" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui, sans-serif" font-size="11" opacity="0.6">Testing</text>
+  </g>
+
+  <!-- Row 2: 4 skill cards -->
+  <g transform="translate(60, 220)">
+    <rect x="0" y="0" width="100" height="120" rx="6"
+          fill="hsl(28, 91%, 55%)" fill-opacity="0.06"
+          stroke="hsl(28, 91%, 50%)" stroke-width="0.5"/>
+    <path d="M38,20 L38,40 L62,40 L62,26 L56,20 Z"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <path d="M56,20 L56,26 L62,26"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <line x1="20" y1="56" x2="80" y2="56" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.4"/>
+    <line x1="20" y1="66" x2="68" y2="66" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.3"/>
+    <line x1="20" y1="76" x2="55" y2="76" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.25"/>
+    <text x="50" y="100" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui, sans-serif" font-size="11" opacity="0.6">Security</text>
+  </g>
+
+  <g transform="translate(180, 220)">
+    <rect x="0" y="0" width="100" height="120" rx="6"
+          fill="hsl(28, 91%, 55%)" fill-opacity="0.06"
+          stroke="hsl(28, 91%, 50%)" stroke-width="0.5"/>
+    <path d="M38,20 L38,40 L62,40 L62,26 L56,20 Z"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <path d="M56,20 L56,26 L62,26"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <line x1="20" y1="56" x2="80" y2="56" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.4"/>
+    <line x1="20" y1="66" x2="74" y2="66" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.3"/>
+    <line x1="20" y1="76" x2="62" y2="76" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.25"/>
+    <text x="50" y="100" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui, sans-serif" font-size="11" opacity="0.6">Onboarding</text>
+  </g>
+
+  <g transform="translate(300, 220)">
+    <rect x="0" y="0" width="100" height="120" rx="6"
+          fill="hsl(28, 91%, 55%)" fill-opacity="0.06"
+          stroke="hsl(28, 91%, 50%)" stroke-width="0.5"/>
+    <path d="M38,20 L38,40 L62,40 L62,26 L56,20 Z"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <path d="M56,20 L56,26 L62,26"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <line x1="20" y1="56" x2="80" y2="56" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.4"/>
+    <line x1="20" y1="66" x2="66" y2="66" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.3"/>
+    <line x1="20" y1="76" x2="58" y2="76" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.25"/>
+    <text x="50" y="100" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui, sans-serif" font-size="11" opacity="0.6">API Docs</text>
+  </g>
+
+  <g transform="translate(420, 220)">
+    <rect x="0" y="0" width="100" height="120" rx="6"
+          fill="hsl(28, 91%, 55%)" fill-opacity="0.06"
+          stroke="hsl(28, 91%, 50%)" stroke-width="0.5"/>
+    <path d="M38,20 L38,40 L62,40 L62,26 L56,20 Z"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <path d="M56,20 L56,26 L62,26"
+          fill="none" stroke="hsl(28, 91%, 60%)" stroke-width="0.5"/>
+    <line x1="20" y1="56" x2="80" y2="56" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.4"/>
+    <line x1="20" y1="66" x2="70" y2="66" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.3"/>
+    <line x1="20" y1="76" x2="50" y2="76" stroke="hsl(28, 91%, 60%)" stroke-width="0.5" opacity="0.25"/>
+    <text x="50" y="100" text-anchor="middle" fill="hsl(28, 91%, 60%)" font-family="system-ui, sans-serif" font-size="11" opacity="0.6">Workflows</text>
+  </g>
+</svg>

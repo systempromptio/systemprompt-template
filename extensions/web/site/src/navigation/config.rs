@@ -16,14 +16,30 @@ pub struct NavigationConfig {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct FooterConfig {
     #[serde(default)]
-    pub legal: Vec<FooterLink>,
+    pub infrastructure: Vec<FooterLink>,
+    #[serde(default)]
+    pub capabilities: Vec<FooterLink>,
+    #[serde(default)]
+    pub integrations: Vec<FooterLink>,
     #[serde(default)]
     pub resources: Vec<FooterLink>,
+    #[serde(default)]
+    pub legal: Vec<FooterLink>,
+    #[serde(default)]
+    pub contact: Vec<ContactLink>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FooterLink {
     pub path: String,
+    pub label: String,
+    #[serde(default)]
+    pub external: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContactLink {
+    pub href: String,
     pub label: String,
 }
 
@@ -74,6 +90,10 @@ pub struct NavSection {
 pub struct NavLink {
     pub label: String,
     pub href: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub external: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

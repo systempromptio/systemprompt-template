@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800" height="320" viewBox="0 0 800 320">
+  <style>
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes drawConnector {
+      from { stroke-dashoffset: 200; }
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes pulseOrb {
+      0%, 100% { r: 4; opacity: 0.6; }
+      50% { r: 6; opacity: 0.9; }
+    }
+
+    .card-link { cursor: pointer; }
+    .title-group { animation: fadeIn 0.5s ease both; }
+    .title-line { animation: fadeIn 0.6s ease 0.2s both; }
+    .card-left { animation: fadeSlideUp 0.5s ease 0.3s both; }
+    .card-right { animation: fadeSlideUp 0.5s ease 0.45s both; }
+    .connector { stroke-dasharray: 200; animation: drawConnector 0.8s ease 0.7s both; }
+    .orb { animation: pulseOrb 3s ease-in-out 1s infinite; }
+
+    /* Per-card hover — only the hovered <a> animates */
+    .card-link .card-hit { fill: transparent; pointer-events: all; }
+    .card-link:hover .card-bg { stroke-opacity: 0.45; stroke-width: 1.5; }
+    .card-link:hover .card-title { fill: #f79938; }
+    .card-link:hover .card-accent { filter: brightness(1.15); }
+    .card-link:hover .github-icon { opacity: 0.85; }
+    .card-link:hover .card-cta-bg { fill-opacity: 0.1; stroke-opacity: 0.2; }
+    .card-link:hover .card-cta-text { opacity: 1; fill: #f79938; }
+    .card-link:hover .arrow-hint { opacity: 0; }
+    .card-link:hover .arrow-active { opacity: 1; }
+
+    .card-bg, .card-title, .card-accent, .github-icon,
+    .card-cta-bg, .card-cta-text, .arrow-hint, .arrow-active { transition: all 0.25s ease; }
+    .arrow-active { opacity: 0; }
+  </style>
+
+  <!-- Title -->
+  <text class="title-group" x="400" y="28" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="currentColor" letter-spacing="1.5">GET THE CODE</text>
+  <rect class="title-line" x="340" y="34" width="120" height="3" rx="1.5" fill="#f79938"/>
+
+  <!-- Template Repository Card (left) -->
+  <a xlink:href="https://github.com/systempromptio/systemprompt-template" target="_blank" class="card-link">
+    <g class="card-left">
+      <rect class="card-bg" x="60" y="60" width="320" height="220" rx="8" fill="#000" fill-opacity="0.001" stroke="currentColor" stroke-opacity="0.2" stroke-width="1"/>
+      <rect class="card-accent" x="60" y="60" width="320" height="5" rx="2.5" fill="#f79938"/>
+
+      <g transform="translate(80, 84)">
+        <path class="github-icon" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" fill="currentColor" opacity="0.6"/>
+      </g>
+
+      <text class="card-title" x="112" y="100" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="currentColor">systemprompt-template</text>
+      <text x="112" y="116" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="currentColor" opacity="0.5">systempromptio/systemprompt-template</text>
+
+      <text x="80" y="148" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="currentColor" opacity="0.8">Production-ready evaluation template.</text>
+      <text x="80" y="164" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="currentColor" opacity="0.8">Clone, configure, build, and run governed</text>
+      <text x="80" y="180" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="currentColor" opacity="0.8">AI agents in minutes.</text>
+
+      <rect x="80" y="200" width="44" height="18" rx="9" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.15" stroke-width="0.5"/>
+      <text x="102" y="213" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="#f79938">Rust</text>
+      <rect x="132" y="200" width="72" height="18" rx="9" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.15" stroke-width="0.5"/>
+      <text x="168" y="213" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="currentColor" opacity="0.7">Template</text>
+      <rect x="212" y="200" width="80" height="18" rx="9" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.15" stroke-width="0.5"/>
+      <text x="252" y="213" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="currentColor" opacity="0.7">Evaluation</text>
+
+      <rect class="card-cta-bg" x="80" y="234" width="280" height="30" rx="4" fill="currentColor" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.1" stroke-width="0.5"/>
+      <text class="card-cta-text" x="92" y="253" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="currentColor" opacity="0.7">Clone on GitHub</text>
+      <g class="arrow-hint" transform="translate(340, 242)" opacity="0.3">
+        <path d="M4 12L12 4M12 4H6M12 4V10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g class="arrow-active" transform="translate(340, 242)">
+        <path d="M4 12L12 4M12 4H6M12 4V10" stroke="#f79938" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+
+    </g>
+  </a>
+
+  <!-- Core Repository Card (right, fixed coords) -->
+  <a xlink:href="https://github.com/systempromptio/systemprompt-core" target="_blank" class="card-link">
+    <g class="card-right">
+      <rect class="card-bg" x="420" y="60" width="320" height="220" rx="8" fill="#000" fill-opacity="0.001" stroke="currentColor" stroke-opacity="0.2" stroke-width="1"/>
+      <rect class="card-accent" x="420" y="60" width="320" height="5" rx="2.5" fill="currentColor" fill-opacity="0.35"/>
+
+      <g transform="translate(440, 84)">
+        <path class="github-icon" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" fill="currentColor" opacity="0.6"/>
+      </g>
+
+      <text class="card-title" x="472" y="100" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="currentColor">systemprompt-core</text>
+      <text x="472" y="116" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="currentColor" opacity="0.5">systempromptio/systemprompt-core</text>
+
+      <text x="440" y="148" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="currentColor" opacity="0.8">The core library. AI governance pipeline,</text>
+      <text x="440" y="164" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="currentColor" opacity="0.8">secret scanning, audit trail, MCP server</text>
+      <text x="440" y="180" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="currentColor" opacity="0.8">management, and extension traits.</text>
+
+      <rect x="440" y="200" width="44" height="18" rx="9" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.15" stroke-width="0.5"/>
+      <text x="462" y="213" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="#f79938">Rust</text>
+      <rect x="492" y="200" width="56" height="18" rx="9" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.15" stroke-width="0.5"/>
+      <text x="520" y="213" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="currentColor" opacity="0.7">Library</text>
+      <rect x="556" y="200" width="68" height="18" rx="9" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.15" stroke-width="0.5"/>
+      <text x="590" y="213" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="currentColor" opacity="0.7">BSL-1.1</text>
+
+      <rect class="card-cta-bg" x="440" y="234" width="280" height="30" rx="4" fill="currentColor" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.1" stroke-width="0.5"/>
+      <text class="card-cta-text" x="452" y="253" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="currentColor" opacity="0.7">Browse on GitHub</text>
+      <g class="arrow-hint" transform="translate(700, 242)" opacity="0.3">
+        <path d="M4 12L12 4M12 4H6M12 4V10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g class="arrow-active" transform="translate(700, 242)">
+        <path d="M4 12L12 4M12 4H6M12 4V10" stroke="#f79938" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+
+      <rect x="420" y="60" width="320" height="220" rx="8" fill="#000" fill-opacity="0"/>
+    </g>
+  </a>
+
+  <!-- Decorative connector lines (not part of any link) -->
+  <line class="connector" x1="220" y1="290" x2="400" y2="308" stroke="currentColor" stroke-opacity="0.15" stroke-width="1"/>
+  <line class="connector" x1="580" y1="290" x2="400" y2="308" stroke="currentColor" stroke-opacity="0.15" stroke-width="1"/>
+  <circle class="orb" cx="400" cy="310" r="4" fill="#f79938" opacity="0.6"/>
+</svg>

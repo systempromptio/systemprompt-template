@@ -1,0 +1,49 @@
+name: Feature request
+description: Propose an improvement to the evaluation template
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests against `core/` belong in the closed-source core repo.
+        This template accepts improvements to `extensions/`, `services/`, `demo/`, and docs.
+
+  - type: dropdown
+    id: pillar
+    attributes:
+      label: Governance pillar
+      description: Which pillar does this relate to?
+      options:
+        - Governance Pipeline
+        - Secrets Management
+        - Audit Trail & SIEM
+        - MCP Governance
+        - Skill Marketplace
+        - Unified Control Plane
+        - Demo scripts / evaluation UX
+        - Build / CI / tooling
+        - Documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What's hard or missing today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should change, and roughly how?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

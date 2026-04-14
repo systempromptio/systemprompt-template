@@ -193,8 +193,14 @@ variant_size_differences = "warn"
 name = "systemprompt-template"
 version.workspace = true
 edition.workspace = true
-description = "systemprompt-template — Production AI agent platform built on systemprompt-core"
+description = "systemprompt.io — self-hosted AI governance infrastructure. Local evaluation template: clone, run, and govern AI agents with four-layer policy enforcement, secrets management, audit trails, and MCP governance."
 license = "MIT"
+readme = "README.md"
+repository = "https://github.com/systempromptio/systemprompt-template"
+homepage = "https://systemprompt.io"
+documentation = "https://systemprompt.io/documentation/"
+keywords = ["ai", "governance", "mcp", "agents", "claude"]
+categories = ["command-line-utilities", "web-programming"]
 
 [lib]
 path = "src/lib.rs"

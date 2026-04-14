@@ -9,7 +9,7 @@ command: "${CLAUDE_PLUGIN_ROOT}/scripts/track-{plugin_id}-usage.sh"
 async: true
 category: system
 plugins:
-  - common-skills
+  - enterprise-demo
 tags:
   - tracking
   - analytics

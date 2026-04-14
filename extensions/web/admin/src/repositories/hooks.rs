@@ -10,7 +10,7 @@ pub fn list_hooks(services_path: &Path) -> Result<Vec<HookDetail>, std::io::Erro
         return Ok(hooks);
     }
 
-    collect_system_hooks("common-skills", &mut hooks);
+    collect_system_hooks("enterprise-demo", &mut hooks);
 
     for entry in std::fs::read_dir(&plugins_dir)? {
         let entry = entry?;
