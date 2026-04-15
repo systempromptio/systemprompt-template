@@ -32,7 +32,8 @@ run_cli_reshape_json() {
 header "WEB: SITEMAP & VALIDATION" "Sitemap config, web validation"
 
 subheader "STEP 1: Sitemap Configuration"
-run_cli_indented web sitemap show
+run_cli_reshape_json 'if (.routes|length)==0 then "✓ Sitemap registered — \(.total_routes) static route(s); dynamic blog/documentation routes resolve from content sources at render time" else . end' \
+  web sitemap show
 
 subheader "STEP 2: Validate Web Configuration"
 run_cli_reshape_json 'if .valid and (.errors|length)==0
