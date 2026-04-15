@@ -1,0 +1,80 @@
+[package]
+name = "systemprompt-web-extension"
+version = "1.0.0"
+edition = "2021"
+description = "Web extension for SystemPrompt - content, navigation, and templates"
+license = "MIT"
+repository = "https://github.com/systempromptio/systemprompt-template"
+
+[lints]
+workspace = true
+
+[dependencies]
+# Core facade - provides all systemprompt types via unified API.
+# Audit: uses ai, database, extension, loader, models, traits — requires `full`
+# (ai + loader are gated by the `full` feature).
+systemprompt = { workspace = true, features = ["full"] }
+# Audit: uses ai, database, extension, loader, models, traits — requires `full`
+# (ai + loader are gated by full; database/extension/traits/models are lower).
+
+# Local sub-crates
+systemprompt-web-shared = { workspace = true }
+systemprompt-web-admin = { workspace = true }
+systemprompt-web-content = { workspace = true }
+systemprompt-web-site = { workspace = true }
+systemprompt-web-jobs = { workspace = true }
+
+# Database access
+sqlx = { workspace = true }
+
+# Web framework
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+
+# Async
+tokio = { workspace = true }
+async-trait = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+
+# Markdown processing
+pulldown-cmark = { workspace = true }
+comrak = { workspace = true }
+
+# Utilities
+chrono = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+sha2 = { workspace = true }
+walkdir = { workspace = true }
+anyhow = { workspace = true }
+reqwest = { workspace = true }
+rand = { workspace = true }
+chacha20poly1305 = { workspace = true }
+hex = { workspace = true }
+base64 = { workspace = true }
+inventory = { workspace = true }
+indexmap = { workspace = true }
+chrono-tz = { workspace = true }
+url = { workspace = true }
+urlencoding = { workspace = true }
+handlebars = { workspace = true }
+
+# SSE streaming
+async-stream = { workspace = true }
+tokio-stream = { workspace = true }
+futures = { workspace = true }
+
+# Archive extraction
+flate2 = { workspace = true }
+tar = { workspace = true }
+zip = { workspace = true }
+tempfile = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }

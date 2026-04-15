@@ -1,0 +1,35 @@
+<link rel="preload" href="/files/fonts/Inter/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/files/fonts/OpenSans/OpenSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+
+<style>
+:root {
+  --sp-color-bg: #FAFAF9;
+  --sp-color-surface: #F5F5F4;
+  --sp-color-text: #0F172A;
+  --sp-color-text-secondary: #A8A29E;
+  --sp-brand-500: var(--sp-color-primary, #f79938);
+  --sp-brand-600: var(--sp-color-primary-hover, hsl(28, 91%, 43%));
+}
+html {
+  background-color: var(--sp-color-bg);
+  color: var(--sp-color-text);
+}
+body {
+  margin: 0;
+  font-family: "OpenSans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--sp-color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.header, .site-header {
+  min-height: 64px;
+}
+</style>
+
+<link rel="stylesheet" href="{{CSS_BASE_PATH}}/core/variables.css">
+<link rel="stylesheet" href="{{CSS_BASE_PATH}}/core/fonts.css">
+<link rel="stylesheet" href="{{CSS_BASE_PATH}}/core/reset.css">
+<link rel="stylesheet" href="{{CSS_BASE_PATH}}/components/header-core.css">
+<link rel="stylesheet" href="{{CSS_BASE_PATH}}/components/header-dropdown.css">
+<link rel="stylesheet" href="{{CSS_BASE_PATH}}/components/footer.css">
+<link rel="stylesheet" href="{{CSS_BASE_PATH}}/components/mobile-menu.css">

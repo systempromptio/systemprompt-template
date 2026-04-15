@@ -1,0 +1,183 @@
+.provenance-strategy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-spacing-md);
+}
+
+.provenance-strategy__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-spacing-sm);
+}
+
+.provenance-strategy__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-1);
+  padding: var(--sp-spacing-sm);
+  background: var(--sp-color-surface);
+  border-radius: var(--sp-radius-md);
+}
+
+.provenance-strategy__label {
+  font-size: var(--sp-font-size-xs);
+  color: var(--sp-color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.provenance-strategy__value {
+  font-size: var(--sp-font-size-sm);
+  font-weight: var(--sp-font-weight-medium);
+  color: var(--sp-color-text-primary);
+}
+
+.provenance-themes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-spacing-xs);
+}
+
+.provenance-themes__label {
+  font-size: var(--sp-font-size-xs);
+  color: var(--sp-color-text-secondary);
+}
+
+.provenance-themes__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-spacing-xs);
+}
+
+.provenance-theme {
+  display: inline-block;
+  padding: var(--sp-space-1) var(--sp-space-2);
+  font-size: var(--sp-font-size-xs);
+  background: color-mix(in srgb, var(--sp-color-primary) 10%, transparent);
+  color: var(--sp-color-primary);
+  border-radius: var(--sp-radius-sm);
+}
+
+.provenance-source-link {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-spacing-sm);
+  padding: var(--sp-spacing-sm) var(--sp-spacing-md);
+  background: var(--sp-color-surface);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-md);
+  text-decoration: none;
+  color: var(--sp-color-text-primary);
+  transition: all var(--sp-animation-fast) ease;
+}
+
+.provenance-source-link:hover {
+  border-color: var(--sp-color-primary);
+  background: color-mix(in srgb, var(--sp-color-primary) 5%, var(--sp-color-surface));
+}
+
+.provenance-source-link svg {
+  color: var(--sp-color-primary);
+  flex-shrink: 0;
+}
+
+.provenance-source-link span {
+  font-size: var(--sp-font-size-sm);
+  font-weight: var(--sp-font-weight-medium);
+}
+
+.provenance-adaptations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-spacing-xs);
+}
+
+.provenance-adaptation {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-spacing-sm);
+  padding: var(--sp-spacing-xs) var(--sp-spacing-sm);
+  background: var(--sp-color-surface);
+  border-radius: var(--sp-radius-sm);
+}
+
+.provenance-adaptation__platform {
+  display: inline-flex;
+  padding: var(--sp-space-1) var(--sp-space-2);
+  font-size: var(--sp-font-size-xs);
+  font-weight: var(--sp-font-weight-semibold);
+  text-transform: capitalize;
+  background: var(--sp-color-primary);
+  color: white;
+  border-radius: var(--sp-radius-sm);
+}
+
+.provenance-adaptation__type {
+  font-size: var(--sp-font-size-sm);
+  color: var(--sp-color-text-primary);
+}
+
+.provenance-adaptation__agent {
+  font-size: var(--sp-font-size-xs);
+  color: var(--sp-color-text-secondary);
+  margin-left: auto;
+}
+
+.provenance-task-id {
+  font-family: var(--sp-font-mono);
+  font-size: var(--sp-font-size-xs);
+  word-break: break-all;
+  opacity: 0.7;
+}
+
+.provenance-transparency {
+  font-size: var(--sp-font-size-sm);
+  color: var(--sp-color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.provenance-transparency strong {
+  color: var(--sp-color-text-primary);
+  font-weight: var(--sp-font-weight-semibold);
+}
+
+.provenance-learn-more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-spacing-xs);
+  margin-top: var(--sp-spacing-sm);
+  font-size: var(--sp-font-size-sm);
+  font-weight: var(--sp-font-weight-medium);
+  color: var(--sp-color-primary);
+  text-decoration: none;
+  transition: gap var(--sp-animation-fast) ease;
+}
+
+.provenance-learn-more:hover {
+  gap: var(--sp-spacing-sm);
+}
+
+.provenance-learn-more svg {
+  transition: transform var(--sp-animation-fast) ease;
+}
+
+.provenance-learn-more:hover svg {
+  transform: translateX(2px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .provenance-header {
+    background: linear-gradient(135deg, var(--sp-color-surface) 0%, color-mix(in srgb, var(--sp-color-primary) 12%, var(--sp-color-surface)) 100%);
+  }
+
+  .provenance-strategy__item {
+    background: color-mix(in srgb, var(--sp-color-bg) 50%, var(--sp-color-surface));
+  }
+
+  .provenance-source-link,
+  .provenance-adaptation {
+    background: color-mix(in srgb, var(--sp-color-bg) 50%, var(--sp-color-surface));
+  }
+}

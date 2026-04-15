@@ -1,0 +1,114 @@
+@layer base {
+
+.header-actions-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-md);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-secondary);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color var(--sp-duration-fast), background var(--sp-duration-fast), border-color var(--sp-duration-fast);
+}
+
+.header-actions-toggle:hover {
+    color: var(--sp-text-primary);
+    background: var(--sp-bg-surface-raised);
+    border-color: var(--sp-border-strong);
+}
+
+.header-actions-menu {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+}
+
+.user-widget-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+}
+
+.header-help-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    flex-shrink: 0;
+    border-radius: var(--sp-radius-md);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    color: var(--sp-text-secondary);
+    cursor: pointer;
+    transition: color var(--sp-duration-fast), background var(--sp-duration-fast), border-color var(--sp-duration-fast);
+}
+.header-help-link:hover {
+    color: var(--sp-text-primary);
+    background: var(--sp-bg-surface-raised);
+    border-color: var(--sp-border-strong);
+}
+.header-help-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--sp-bg-canvas), 0 0 0 4px color-mix(in oklch, var(--sp-accent) 50%, transparent);
+}
+.header-help-link svg {
+    display: block;
+}
+
+.admin-layout h1, .admin-layout h2, .admin-layout h3 {
+    font-family: var(--sp-font-heading);
+}
+
+.admin-layout a {
+    color: var(--sp-text-secondary);
+    text-decoration: none;
+    transition: color var(--sp-duration-fast);
+}
+
+.admin-layout a:hover {
+    color: var(--sp-text-primary);
+}
+
+.admin-layout .data-table a,
+.admin-layout .clickable-row a {
+    color: var(--sp-text-primary);
+    font-weight: 500;
+}
+
+.admin-layout .data-table a:hover,
+.admin-layout .clickable-row a:hover {
+    color: var(--sp-accent);
+}
+
+[data-section="dashboard"]                          { --sp-section-color: var(--sp-section-dashboard); }
+[data-section="users"],  [data-section="user-detail"] { --sp-section-color: var(--sp-section-users); }
+[data-section="plugins"],[data-section="plugin-create"],
+[data-section="plugin-edit"]                          { --sp-section-color: var(--sp-section-plugins); }
+[data-section="skills"], [data-section="skill-edit"]  { --sp-section-color: var(--sp-section-skills); }
+[data-section="export"]                               { --sp-section-color: var(--sp-section-export); }
+[data-section="audit"]                                { --sp-section-color: var(--sp-section-audit); }
+[data-section="agents"], [data-section="agent-edit"]  { --sp-section-color: var(--sp-section-dashboard); }
+[data-section="hooks"],  [data-section="hook-edit"]   { --sp-section-color: var(--sp-section-dashboard); }
+[data-section="mcp-servers"],[data-section="mcp-edit"]{ --sp-section-color: var(--sp-section-dashboard); }
+[data-section="jobs"],   [data-section="events"]      { --sp-section-color: var(--sp-section-users); }
+[data-section="leaderboard"],[data-section="achievements"] { --sp-section-color: var(--sp-section-dashboard); }
+
+.section-title {
+    font-size: var(--sp-text-md);
+    font-weight: 600;
+    margin: var(--sp-space-8) 0 var(--sp-space-5);
+    color: var(--sp-text-primary);
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+}
+
+}

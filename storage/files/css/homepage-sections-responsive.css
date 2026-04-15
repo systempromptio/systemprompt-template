@@ -1,0 +1,151 @@
+
+@media (max-width: 1024px) {
+  .standards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .differentiator-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+
+@media (max-width: 768px) {
+
+  .diagonal-features li {
+    color: var(--sp-color-text-secondary);
+  }
+
+  .diagonal-subtitle {
+    opacity: 1;
+  }
+
+
+  .diagonal-hero {
+    grid-template-columns: 1fr;
+    padding: var(--sp-space-lg) var(--sp-space-md);
+  }
+
+  .diagonal-pane {
+    padding: var(--sp-space-md) var(--sp-space-md);
+  }
+
+  .diagonal-content {
+    max-width: 100%;
+  }
+
+  .diagonal-pane--model-agnostic::after,
+  .diagonal-pane--zero-leakage::after {
+    right: 10%;
+    left: 10%;
+    top: auto;
+    bottom: 0;
+    width: 80%;
+    height: 2px;
+    transform: skewX(-12deg);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--sp-brand-500) 30%,
+      var(--sp-brand-400) 50%,
+      var(--sp-brand-500) 70%,
+      transparent 100%
+    );
+    box-shadow: 0 0 10px rgba(0, 113, 206, 0.4);
+  }
+
+  .diagonal-title {
+    font-size: 1.1rem;
+  }
+
+  .diagonal-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .diagonal-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--sp-space-md);
+  }
+
+  .feature-card {
+    padding: var(--sp-space-lg);
+  }
+
+  .feature-card--lg {
+    grid-row: span 1;
+  }
+
+  .steps {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-space-2xl);
+  }
+
+  .steps::before {
+    display: none;
+  }
+
+  .step {
+    padding: var(--sp-space-lg);
+    max-width: 100%;
+  }
+
+  .use-cases-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .standards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trait-panel.active {
+    grid-template-columns: 1fr;
+  }
+
+  .ownership-callout {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .differentiator-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .technical-ctas {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .faq-item summary {
+    font-size: 1rem;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: var(--sp-space-md);
+  }
+
+  .feature-card {
+    padding: var(--sp-space-md);
+  }
+
+  .use-cases-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .faq-item summary {
+    font-size: 1rem;
+  }
+}

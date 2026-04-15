@@ -1,0 +1,102 @@
+
+.playbook-list .content-card.content-card--has-image .card-image,
+.playbook-list .content-card .card-image--placeholder,
+.playbook-grid .content-card .card-image,
+.playbook-grid .content-card .card-image--placeholder {
+  display: none;
+}
+
+.playbook-list .content-card,
+.playbook-grid .content-card {
+  min-height: 180px;
+  position: relative;
+}
+
+.playbook-list .content-card .card-content {
+  padding: var(--sp-spacing-lg);
+}
+
+.playbook-list .content-card .card-title {
+  font-size: var(--sp-font-size-lg);
+  margin-bottom: var(--sp-spacing-sm);
+}
+
+.playbook-list .content-card .card-description {
+  font-size: var(--sp-font-size-md);
+  -webkit-line-clamp: 3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.playbook-list .content-card::before {
+  content: '';
+  position: absolute;
+  top: var(--sp-spacing-md);
+  right: var(--sp-spacing-md);
+  width: 32px;
+  height: 32px;
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+.playbook-list .content-card:hover::before {
+  opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+  .playbook-list .page-header h1 {
+    font-size: 2rem;
+  }
+
+  .playbook-list .page-header {
+    padding: var(--sp-spacing-xl) 0;
+  }
+
+  .playbook-list .page-header::after {
+    width: 48px;
+    height: 48px;
+  }
+
+  .playbook-post .post-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .playbook-list,
+  .playbook-post {
+    padding: var(--sp-spacing-lg) var(--sp-spacing-md);
+    padding-top: calc(var(--sp-header-height) + var(--sp-spacing-lg));
+  }
+
+  .posts--no-images {
+    grid-template-columns: 1fr;
+  }
+
+  .playbook-category__header {
+    flex-wrap: wrap;
+  }
+
+  .playbook-category__count {
+    margin-left: 0;
+    margin-top: var(--sp-spacing-sm);
+  }
+
+  .playbook-category__description {
+    padding-left: 0;
+  }
+
+  .playbook-category__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .playbook-list .page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .playbook-list .content-card {
+    min-height: auto;
+  }
+}
+

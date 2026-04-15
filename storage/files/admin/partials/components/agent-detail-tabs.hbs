@@ -1,0 +1,8 @@
+<nav class="plugin-tabs-container" aria-label="Agent detail sections">
+    <div class="sp-tabs" role="tablist">
+        <a class="sp-tab {{#if (eq active_tab "edit")}}sp-tab--active{{/if}}" role="tab" aria-selected="{{#if (eq active_tab "edit")}}true{{else}}false{{/if}}" href="/admin/agents/edit?id={{agent_id}}">Edit</a>
+        <a class="sp-tab {{#if (eq active_tab "config")}}sp-tab--active{{/if}}" role="tab" aria-selected="{{#if (eq active_tab "config")}}true{{else}}false{{/if}}" href="/admin/agents/config?id={{agent_id}}">Config</a>
+        <a class="sp-tab {{#if (eq active_tab "messages")}}sp-tab--active{{/if}}" role="tab" aria-selected="{{#if (eq active_tab "messages")}}true{{else}}false{{/if}}" href="/admin/agents/messages?id={{agent_id}}">Messages</a>
+        <a class="sp-tab {{#if (eq active_tab "traces")}}sp-tab--active{{/if}}" role="tab" aria-selected="{{#if (eq active_tab "traces")}}true{{else}}false{{/if}}" href="/admin/agents/traces?id={{agent_id}}">Traces</a>
+    </div>
+</nav>

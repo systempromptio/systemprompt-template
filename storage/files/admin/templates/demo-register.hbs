@@ -1,0 +1,202 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+
+    <section aria-label="Demo environment notice" class="mb-6">
+        <div class="card" style="border-left: 4px solid var(--sp-warning);">
+            <div class="card-body">
+                <h2 class="card-title" style="color: var(--sp-warning);">Demo Environment — User Provisioning</h2>
+                <p class="text-sm text-secondary mb-2">
+                    This page allows administrators to create user accounts and generate one-time registration links for this demo environment.
+                    Recipients click the link to register a passkey on their device, which becomes their login credential.
+                </p>
+                <p class="text-sm text-tertiary">
+                    <strong>In production</strong>, user provisioning would be handled automatically through your organisation's identity provider (IdP)
+                    via SAML 2.0, OpenID Connect, or SCIM directory sync. This page would not exist.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <div class="grid grid-2 gap-6 mb-6">
+        <section aria-label="How authentication works">
+            <div class="card h-full">
+                <div class="card-header">
+                    <h2 class="card-title">How Authentication Works</h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-sm text-secondary mb-3">
+                        This platform uses <strong>WebAuthn passkeys</strong> for passwordless authentication, the same standard used by Apple, Google, and Microsoft for phishing-resistant sign-in.
+                    </p>
+                    <h3 class="text-sm text-primary mb-1" style="font-weight:600;">Registration</h3>
+                    <p class="text-sm text-tertiary mb-3">
+                        When a user clicks their registration link, their browser generates a public/private key pair bound to this domain.
+                        The private key stays on the device (or in a password manager). Only the public key is stored server-side. No shared secrets, no passwords.
+                    </p>
+                    <h3 class="text-sm text-primary mb-1" style="font-weight:600;">Login</h3>
+                    <p class="text-sm text-tertiary mb-3">
+                        The server sends a random challenge. The user's device signs it with the private key. The server verifies the signature against the stored public key.
+                        This is wrapped in an OAuth 2.0 PKCE flow to issue a short-lived JWT session token.
+                    </p>
+                    <h3 class="text-sm text-primary mb-1" style="font-weight:600;">Recovery</h3>
+                    <p class="text-sm text-tertiary">
+                        If a user loses their device, an administrator can generate a new registration link from this page.
+                        Magic links (time-limited, single-use tokens) bootstrap the passkey creation process on a new device.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section aria-label="Enterprise integration">
+            <div class="card h-full">
+                <div class="card-header">
+                    <h2 class="card-title">Enterprise IdP Integration</h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-sm text-secondary mb-3">
+                        In production, this manual provisioning is replaced by automated identity federation. Here is how each integration model works:
+                    </p>
+                    <h3 class="text-sm text-primary mb-1" style="font-weight:600;">SAML 2.0 / OpenID Connect</h3>
+                    <p class="text-sm text-tertiary mb-3">
+                        Your IdP (Okta, Azure AD, Google Workspace) authenticates users. The platform receives a signed assertion with the user's identity and roles.
+                        A local session is issued without the user ever entering credentials on this platform.
+                    </p>
+                    <h3 class="text-sm text-primary mb-1" style="font-weight:600;">SCIM Directory Sync</h3>
+                    <p class="text-sm text-tertiary mb-3">
+                        Users and groups are automatically provisioned and deprovisioned from your directory.
+                        When someone joins your organisation, they appear here. When they leave, access is revoked immediately.
+                    </p>
+                    <h3 class="text-sm text-primary mb-1" style="font-weight:600;">Just-in-Time (JIT) Provisioning</h3>
+                    <p class="text-sm text-tertiary mb-3">
+                        On first SSO login, a user account is created automatically with roles derived from IdP group memberships.
+                        No pre-provisioning required.
+                    </p>
+                    <h3 class="text-sm text-primary mb-1" style="font-weight:600;">Passkeys + SSO</h3>
+                    <p class="text-sm text-tertiary">
+                        WebAuthn passkeys can complement SSO as a device-binding factor, adding phishing-resistant MFA on top of your IdP authentication.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <section aria-label="Create demo user">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Create Demo User</h2>
+            </div>
+            <div class="card-body">
+                <form id="demo-register-form">
+                    <div class="grid grid-3 gap-4 mb-4">
+                        <div class="form-group">
+                            <label class="form-label" for="demo-name">Full Name</label>
+                            <input type="text" id="demo-name" class="form-input" placeholder="Jane Smith" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="demo-email">Email</label>
+                            <input type="email" id="demo-email" class="form-input" placeholder="jane@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="demo-role">Role</label>
+                            <select id="demo-role" class="form-input">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="demo-submit-btn">Create User &amp; Generate Registration Link</button>
+                    </div>
+                </form>
+
+                <div id="demo-error" class="login-error mt-4" style="display:none;" role="alert"></div>
+
+                <div id="demo-result" class="mt-4" style="display:none;">
+                    <div class="card" style="border-left: 4px solid var(--sp-success);">
+                        <div class="card-body">
+                            <p class="text-sm text-primary mb-2"><strong>User created successfully.</strong> Share this one-time registration link:</p>
+                            <div style="display:flex; gap:0.5rem; align-items:center;">
+                                <input type="text" id="demo-link" class="form-input" readonly style="flex:1; font-family:monospace; font-size:0.8rem;">
+                                <button type="button" id="demo-copy-btn" class="btn btn-secondary" style="white-space:nowrap;">Copy Link</button>
+                            </div>
+                            <p class="text-xs text-tertiary mt-2">
+                                This link expires in 15 minutes and can only be used once.
+                                The recipient will be prompted to create a passkey on their device.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+    (function() {
+        'use strict';
+
+        var form = document.getElementById('demo-register-form');
+        var errorDiv = document.getElementById('demo-error');
+        var resultDiv = document.getElementById('demo-result');
+        var linkInput = document.getElementById('demo-link');
+        var copyBtn = document.getElementById('demo-copy-btn');
+        var submitBtn = document.getElementById('demo-submit-btn');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            errorDiv.style.display = 'none';
+            resultDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating...';
+
+            var name = document.getElementById('demo-name').value.trim();
+            var email = document.getElementById('demo-email').value.trim();
+            var role = document.getElementById('demo-role').value;
+
+            fetch('/api/public/admin/demo-register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, email: email, role: role })
+            })
+            .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+            .then(function(result) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create User & Generate Registration Link';
+
+                if (!result.ok || !result.data.ok) {
+                    errorDiv.textContent = result.data.error || 'Failed to create user';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                var fullUrl = window.location.origin + result.data.registration_url;
+                linkInput.value = fullUrl;
+                resultDiv.style.display = 'block';
+                form.reset();
+            })
+            .catch(function(err) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create User & Generate Registration Link';
+                errorDiv.textContent = err.message || 'Network error';
+                errorDiv.style.display = 'block';
+            });
+        });
+
+        copyBtn.addEventListener('click', function() {
+            linkInput.select();
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(linkInput.value).then(function() {
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(function() { copyBtn.textContent = 'Copy Link'; }, 2000);
+                });
+            } else {
+                document.execCommand('copy');
+                copyBtn.textContent = 'Copied!';
+                setTimeout(function() { copyBtn.textContent = 'Copy Link'; }, 2000);
+            }
+        });
+    })();
+    </script>
+
+    {{/inline}}
+{{/layout}}

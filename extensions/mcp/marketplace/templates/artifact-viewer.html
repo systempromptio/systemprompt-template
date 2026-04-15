@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<!-- Keep shared logic in sync with extensions/mcp/systemprompt/templates/artifact-viewer.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>systemprompt.io Artifact Viewer</title>
+  <style>
+    :root {
+      --sp-bg-primary: #ffffff;
+      --sp-bg-secondary: #f9f9fb;
+      --sp-bg-tertiary: #f0f0f4;
+      --sp-text-primary: #1a1a2e;
+      --sp-text-secondary: #5a5a72;
+      --sp-text-muted: #8a8a9a;
+      --sp-accent-primary: #f79938;
+      --sp-accent-secondary: #e08520;
+      --sp-accent-glow: rgba(247, 153, 56, 0.10);
+      --sp-action-set: #16a34a;
+      --sp-action-set-glow: rgba(22, 163, 74, 0.08);
+      --sp-action-created: #16a34a;
+      --sp-action-created-glow: rgba(22, 163, 74, 0.08);
+      --sp-action-deleted: #d97706;
+      --sp-action-deleted-glow: rgba(217, 119, 6, 0.08);
+      --sp-action-synced: #2563eb;
+      --sp-action-synced-glow: rgba(37, 99, 235, 0.08);
+      --sp-action-updated: #7c3aed;
+      --sp-action-updated-glow: rgba(124, 58, 237, 0.08);
+      --sp-success: #16a34a;
+      --sp-success-glow: rgba(22, 163, 74, 0.08);
+      --sp-warning: #d97706;
+      --sp-warning-glow: rgba(217, 119, 6, 0.08);
+      --sp-error: #dc2626;
+      --sp-error-glow: rgba(220, 38, 38, 0.08);
+      --sp-border: #e2e2ea;
+      --sp-border-hover: #c8c8d8;
+      --sp-code-bg: #f5f5f8;
+      --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --sp-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --sp-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+      --sp-radius-sm: 4px;
+      --sp-radius-md: 8px;
+      --sp-radius-lg: 12px;
+      --sp-font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Monaco, 'Cascadia Code', monospace;
+      --sp-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--sp-font-sans);
+      background: var(--sp-bg-primary);
+      color: var(--sp-text-primary);
+      line-height: 1.6;
+      padding: 8px;
+    }
+
+    /* Loading state */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      color: var(--sp-text-secondary);
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--sp-border);
+      border-top-color: var(--sp-accent-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-text {
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Base artifact container */
+    .artifact {
+      background: var(--sp-bg-secondary);
+      border: 1px solid var(--sp-border);
+      border-radius: var(--sp-radius-lg);
+      overflow: hidden;
+      box-shadow: var(--sp-shadow-md);
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .artifact-header {
+      padding: 8px 12px;
+      background: var(--sp-bg-secondary);
+      border-bottom: 1px solid var(--sp-border);
+      border-left: 3px solid var(--sp-accent-primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .artifact-title {
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--sp-text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .artifact-title::before {
+      content: '';
+      width: 4px;
+      height: 20px;
+      background: var(--sp-accent-primary);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .artifact-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .artifact-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .artifact-badge-set { background: var(--sp-action-set-glow); color: var(--sp-action-set); }
+    .artifact-badge-created { background: var(--sp-action-created-glow); color: var(--sp-action-created); }
+    .artifact-badge-deleted { background: var(--sp-action-deleted-glow); color: var(--sp-action-deleted); }
+    .artifact-badge-synced { background: var(--sp-action-synced-glow); color: var(--sp-action-synced); }
+    .artifact-badge-updated { background: var(--sp-action-updated-glow); color: var(--sp-action-updated); }
+    .artifact-badge-list { background: var(--sp-accent-glow); color: var(--sp-accent-primary); }
+    .artifact-badge-secrets { background: var(--sp-accent-glow); color: var(--sp-accent-primary); }
+    .artifact-badge-default { background: var(--sp-accent-glow); color: var(--sp-accent-primary); }
+
+    .artifact-content {
+      padding: 10px;
+      overflow: visible;
+    }
+
+    /* Plain text / code content */
+    .text-content {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: var(--sp-font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--sp-text-primary);
+      background: var(--sp-code-bg);
+      padding: 10px;
+      border-radius: var(--sp-radius-md);
+      border: 1px solid var(--sp-border);
+    }
+
+    /* Generic list */
+    .list-content {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .list-item {
+      padding: 10px;
+      background: var(--sp-bg-tertiary);
+      border: 1px solid var(--sp-border);
+      border-radius: var(--sp-radius-md);
+      transition: all 0.2s ease;
+    }
+
+    .list-item:hover {
+      border-color: var(--sp-border-hover);
+      box-shadow: var(--sp-shadow-sm);
+    }
+
+    .list-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .list-item-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--sp-text-primary);
+    }
+
+    .list-item-category {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--sp-accent-secondary);
+      background: var(--sp-accent-glow);
+      padding: 2px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .list-item-description {
+      color: var(--sp-text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+
+    .list-item-link {
+      color: var(--sp-accent-primary);
+      font-size: 13px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.2s ease;
+    }
+
+    .list-item-link:hover {
+      color: var(--sp-accent-secondary);
+      text-decoration: underline;
+    }
+
+    .list-item-link::after {
+      content: '\2192';
+      font-size: 12px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 20px 12px;
+      color: var(--sp-text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    /* Error state */
+    .error {
+      background: var(--sp-error-glow);
+      border: 1px solid rgba(220, 38, 38, 0.25);
+      border-radius: var(--sp-radius-md);
+      padding: 12px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .error-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .error-icon {
+      width: 24px;
+      height: 24px;
+      background: var(--sp-error);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .error-title {
+      font-weight: 600;
+      color: var(--sp-error);
+      font-size: 15px;
+    }
+
+    .error-message {
+      color: var(--sp-text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* JSON syntax highlighting */
+    pre {
+      background: var(--sp-code-bg);
+      padding: 10px;
+      border-radius: var(--sp-radius-md);
+      overflow-x: auto;
+      border: 1px solid var(--sp-border);
+    }
+
+    code {
+      font-family: var(--sp-font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .json-key { color: #0550ae; }
+    .json-string { color: #0a3069; }
+    .json-number { color: #953800; }
+    .json-boolean { color: #cf222e; }
+    .json-null { color: #6e7781; }
+
+    /* ========================================
+       Badges & Pills
+       ======================================== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .badge-success {
+      background: var(--sp-success-glow);
+      color: var(--sp-success);
+    }
+
+    .badge-warning {
+      background: var(--sp-warning-glow);
+      color: var(--sp-warning);
+    }
+
+    .badge-error {
+      background: var(--sp-error-glow);
+      color: var(--sp-error);
+    }
+
+    .badge-muted {
+      background: rgba(106, 106, 120, 0.08);
+      color: var(--sp-text-muted);
+    }
+
+    .badge-accent {
+      background: var(--sp-accent-glow);
+      color: var(--sp-accent-secondary);
+    }
+
+    .tag-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--sp-bg-tertiary);
+      color: var(--sp-text-secondary);
+      border: 1px solid var(--sp-border);
+    }
+
+    .tags-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    /* ========================================
+       Entity Cards (skills, agents)
+       ======================================== */
+    .entity-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .entity-card {
+      background: var(--sp-bg-tertiary);
+      border: 1px solid var(--sp-border);
+      border-radius: var(--sp-radius-md);
+      padding: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .entity-card:hover {
+      border-color: var(--sp-border-hover);
+      box-shadow: var(--sp-shadow-sm);
+    }
+
+    .entity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .entity-name {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--sp-text-primary);
+    }
+
+    .entity-id {
+      font-family: var(--sp-font-mono);
+      font-size: 11px;
+      color: var(--sp-text-muted);
+      margin-top: 2px;
+    }
+
+    .entity-badges {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .entity-description {
+      color: var(--sp-text-secondary);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .entity-footer {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .entity-metric {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--sp-text-muted);
+    }
+
+    .entity-metric-value {
+      font-weight: 600;
+      font-family: var(--sp-font-mono);
+      color: var(--sp-accent-secondary);
+    }
+
+    .entity-count {
+      padding: 10px 0 4px;
+      font-size: 12px;
+      color: var(--sp-text-muted);
+      border-top: 1px solid var(--sp-border);
+      margin-top: 4px;
+    }
+
+    /* ========================================
+       Detail Card (single entity view)
+       ======================================== */
+    .detail-card {
+      background: var(--sp-bg-tertiary);
+      border: 1px solid var(--sp-border);
+      border-radius: var(--sp-radius-md);
+      overflow: hidden;
+    }
+
+    .detail-header {
+      padding: 10px 12px;
+      background: linear-gradient(135deg, rgba(247, 153, 56, 0.1) 0%, transparent 100%);
+      border-bottom: 1px solid var(--sp-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .detail-title {
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--sp-text-primary);
+    }
+
+    .detail-action-badge {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .detail-body {
+      padding: 10px;
+    }
+
+    .kv-grid {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0;
+    }
+
+    .kv-row {
+      display: contents;
+    }
+
+    .kv-key {
+      padding: 6px 8px 6px 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--sp-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid var(--sp-border);
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .kv-value {
+      padding: 6px 0;
+      font-size: 14px;
+      color: var(--sp-text-primary);
+      border-bottom: 1px solid var(--sp-border);
+      word-break: break-word;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .kv-row:last-child .kv-key,
+    .kv-row:last-child .kv-value {
+      border-bottom: none;
+    }
+
+    .kv-code {
+      font-family: var(--sp-font-mono);
+      font-size: 12px;
+      color: var(--sp-text-secondary);
+    }
+
+    .kv-content-block {
+      background: var(--sp-code-bg);
+      padding: 8px 10px;
+      border-radius: var(--sp-radius-sm);
+      border: 1px solid var(--sp-border);
+      font-family: var(--sp-font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 400px;
+      overflow-y: auto;
+      width: 100%;
+    }
+
+    /* ========================================
+       Confirmation / Success state
+       ======================================== */
+    .confirmation {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 10px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .confirmation-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .confirmation-success .confirmation-icon {
+      background: var(--sp-success-glow);
+      border: 1px solid rgba(22, 163, 74, 0.20);
+    }
+
+    .confirmation-deleted .confirmation-icon {
+      background: var(--sp-warning-glow);
+      border: 1px solid rgba(217, 119, 6, 0.20);
+    }
+
+    .confirmation-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .confirmation-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--sp-text-primary);
+      margin-bottom: 4px;
+    }
+
+    .confirmation-detail {
+      font-size: 14px;
+      color: var(--sp-text-secondary);
+      line-height: 1.6;
+    }
+
+    .confirmation-meta {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: var(--sp-bg-tertiary);
+      padding: 8px 10px;
+      border-radius: var(--sp-radius-sm);
+      border: 1px solid var(--sp-border);
+      font-size: 12px;
+      color: var(--sp-text-secondary);
+    }
+
+    .confirmation-meta-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .confirmation-meta-key {
+      color: var(--sp-text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      min-width: 80px;
+    }
+
+    .confirmation-meta-value {
+      font-family: var(--sp-font-mono);
+      font-size: 12px;
+      color: var(--sp-text-primary);
+    }
+
+    /* ========================================
+       Secrets / Environment Variables
+       ======================================== */
+    .secrets-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .secrets-table th {
+      background: var(--sp-bg-tertiary);
+      color: var(--sp-text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 6px 10px;
+      border-bottom: 2px solid var(--sp-border);
+      text-align: left;
+    }
+
+    .secrets-table td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--sp-border);
+      font-size: 13px;
+      vertical-align: middle;
+    }
+
+    .secrets-table tbody tr:hover {
+      background: var(--sp-bg-tertiary);
+    }
+
+    .secret-name {
+      font-family: var(--sp-font-mono);
+      font-weight: 600;
+      color: var(--sp-text-primary);
+    }
+
+    .secret-value {
+      font-family: var(--sp-font-mono);
+      color: var(--sp-text-secondary);
+      word-break: break-all;
+    }
+
+    .secret-masked {
+      color: var(--sp-text-muted);
+      letter-spacing: 2px;
+    }
+
+    .secret-toggle {
+      background: none;
+      border: 1px solid var(--sp-border);
+      color: var(--sp-text-muted);
+      padding: 2px 8px;
+      border-radius: var(--sp-radius-sm);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .secret-toggle:hover {
+      border-color: var(--sp-accent-primary);
+      color: var(--sp-accent-secondary);
+    }
+
+    .secrets-footer {
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--sp-text-muted);
+    }
+
+    /* ========================================
+       Data Table (generic)
+       ======================================== */
+    .data-table-wrapper {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .data-table th {
+      background: var(--sp-bg-tertiary);
+      color: var(--sp-text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 6px 10px;
+      border-bottom: 2px solid var(--sp-border);
+      text-align: left;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .data-table td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--sp-border);
+      color: var(--sp-text-primary);
+      vertical-align: top;
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--sp-bg-tertiary);
+    }
+
+    .data-table-footer {
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--sp-text-muted);
+      border-top: 1px solid var(--sp-border);
+    }
+
+    /* ========================================
+       Presentation Card (content-manager)
+       ======================================== */
+    .pcard {
+      border-radius: var(--sp-radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--sp-border);
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .pcard-header {
+      padding: 14px;
+      background: linear-gradient(135deg, #f79938 0%, #e8841a 100%);
+    }
+
+    .pcard-title {
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .pcard-subtitle {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .pcard-body {
+      padding: 12px;
+      background: var(--sp-bg-secondary);
+    }
+
+    .pcard-section {
+      margin-bottom: 12px;
+    }
+
+    .pcard-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .pcard-section-heading {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--sp-accent-secondary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pcard-section-content {
+      color: var(--sp-text-primary);
+      font-size: 14px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .pcard-ctas {
+      padding: 10px 12px;
+      border-top: 1px solid var(--sp-border);
+      background: var(--sp-bg-secondary);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pcard-cta {
+      padding: 6px 12px;
+      border-radius: var(--sp-radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--sp-border);
+      background: var(--sp-bg-tertiary);
+      color: var(--sp-text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .pcard-cta:hover {
+      border-color: var(--sp-accent-primary);
+      background: var(--sp-accent-glow);
+    }
+
+    .pcard-cta-primary {
+      background: var(--sp-accent-primary);
+      border-color: var(--sp-accent-primary);
+      color: #fff;
+    }
+
+    .pcard-cta-primary:hover {
+      background: var(--sp-accent-secondary);
+    }
+
+    /* ========================================
+       Sources (research artifacts)
+       ======================================== */
+    .sources-section {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--sp-border);
+    }
+
+    .sources-heading {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--sp-text-secondary);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .sources-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .source-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: var(--sp-radius-sm);
+      transition: background 0.15s ease;
+    }
+
+    .source-item:hover {
+      background: var(--sp-bg-tertiary);
+    }
+
+    .source-link {
+      color: var(--sp-accent-primary);
+      text-decoration: none;
+      font-size: 13px;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .source-link:hover {
+      color: var(--sp-accent-secondary);
+      text-decoration: underline;
+    }
+
+    .relevance-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--sp-text-muted);
+      background: var(--sp-bg-tertiary);
+      padding: 2px 8px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    /* ========================================
+       Image artifact
+       ======================================== */
+    .image-figure {
+      text-align: center;
+    }
+
+    .artifact-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: var(--sp-radius-md);
+      border: 1px solid var(--sp-border);
+      box-shadow: var(--sp-shadow-md);
+    }
+
+    .image-caption {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--sp-text-secondary);
+      font-style: italic;
+    }
+
+    /* ========================================
+       Markdown renderer
+       ======================================== */
+    .markdown-content {
+      color: var(--sp-text-primary);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .markdown-content h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 14px 0 8px;
+      color: var(--sp-text-primary);
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--sp-border);
+    }
+
+    .markdown-content h1:first-child {
+      margin-top: 0;
+    }
+
+    .markdown-content h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 12px 0 6px;
+      color: var(--sp-text-primary);
+    }
+
+    .markdown-content h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 10px 0 4px;
+      color: var(--sp-text-secondary);
+    }
+
+    .markdown-content p {
+      margin: 8px 0;
+    }
+
+    .markdown-content strong {
+      color: var(--sp-text-primary);
+      font-weight: 600;
+    }
+
+    .markdown-content em {
+      color: var(--sp-text-secondary);
+      font-style: italic;
+    }
+
+    .markdown-content ul, .markdown-content ol {
+      padding-left: 24px;
+      margin: 8px 0;
+    }
+
+    .markdown-content li {
+      margin: 4px 0;
+    }
+
+    .markdown-content pre {
+      background: var(--sp-code-bg);
+      padding: 10px;
+      border-radius: var(--sp-radius-sm);
+      border: 1px solid var(--sp-border);
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+
+    .markdown-content code {
+      font-family: var(--sp-font-mono);
+      font-size: 13px;
+    }
+
+    .markdown-content .inline-code {
+      background: var(--sp-bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--sp-font-mono);
+      font-size: 12px;
+      border: 1px solid var(--sp-border);
+    }
+
+    .markdown-content blockquote {
+      border-left: 3px solid var(--sp-accent-primary);
+      padding: 6px 12px;
+      margin: 8px 0;
+      background: var(--sp-accent-glow);
+      border-radius: 0 var(--sp-radius-sm) var(--sp-radius-sm) 0;
+      color: var(--sp-text-secondary);
+    }
+
+    .markdown-content hr {
+      border: none;
+      border-top: 1px solid var(--sp-border);
+      margin: 16px 0;
+    }
+
+    /* ========================================
+       Branded Footer
+       ======================================== */
+    .artifact-footer {
+      padding: 4px 12px;
+      text-align: right;
+      border-top: 1px solid var(--sp-border);
+      font-size: 10px;
+      color: var(--sp-text-muted);
+      letter-spacing: 0.3px;
+      opacity: 0.6;
+    }
+
+    .artifact-footer-brand {
+      color: var(--sp-accent-primary);
+      font-weight: 600;
+    }
+
+    /* ========================================
+       Scrollbar
+       ======================================== */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--sp-bg-primary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--sp-border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--sp-border-hover);
+    }
+  </style>
+</head>
+<body>
+  <div id="content" aria-live="polite">
+    <div class="loading" role="status" aria-live="polite">
+      <div class="spinner"></div>
+      <div class="loading-text">Waiting for artifact data...</div>
+    </div>
+  </div>
+
+  <script>
+    let initialized = false;
+
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      const div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return escapeHtml(dateStr);
+        const now = new Date();
+        const diffMs = now - d;
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return diffMins + 'm ago';
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return diffHours + 'h ago';
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays < 7) return diffDays + 'd ago';
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+      } catch (e) {
+        return escapeHtml(String(dateStr));
+      }
+    }
+
+    function formatRating(r) {
+      if (!r || r === 0) return '';
+      const stars = Math.round(r);
+      return '<span style="color: var(--sp-warning);">' + '\u2605'.repeat(stars) + '\u2606'.repeat(5 - stars) + '</span> <span style="font-size:11px; color: var(--sp-text-muted);">' + Number(r).toFixed(1) + '</span>';
+    }
+
+    // ========================================
+    // JSON syntax highlighting
+    // ========================================
+    function syntaxHighlightJson(json) {
+      if (typeof json !== 'string') {
+        json = JSON.stringify(json, null, 2);
+      }
+      return json.replace(
+        /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        function(match) {
+          let cls = 'json-number';
+          if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+              cls = 'json-key';
+              match = match.slice(0, -1);
+              return '<span class="' + cls + '">' + escapeHtml(match) + '</span>:';
+            } else {
+              cls = 'json-string';
+            }
+          } else if (/true|false/.test(match)) {
+            cls = 'json-boolean';
+          } else if (/null/.test(match)) {
+            cls = 'json-null';
+          }
+          return '<span class="' + cls + '">' + escapeHtml(match) + '</span>';
+        }
+      );
+    }
+
+    // ========================================
+    // Markdown renderer (no external deps)
+    // ========================================
+    function renderMarkdown(text) {
+      let html = escapeHtml(text);
+      // Code blocks (must be first)
+      html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function(m, lang, code) {
+        return '<pre><code>' + code + '</code></pre>';
+      });
+      // Blockquotes
+      html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+      // Headers
+      html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+      html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+      // Horizontal rule
+      html = html.replace(/^---$/gm, '<hr>');
+      // Bold and italic
+      html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      // Inline code
+      html = html.replace(/`([^`]+)`/g, '<span class="inline-code">$1</span>');
+      // Unordered lists
+      html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+      // Numbered lists
+      html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+      // Paragraphs (double newlines)
+      html = html.replace(/\n\n+/g, '</p><p>');
+      // Single newlines to <br> inside paragraphs
+      html = html.replace(/\n/g, '<br>');
+      return '<div class="markdown-content"><p>' + html + '</p></div>';
+    }
+
+    // ========================================
+    // Smart badge (replaces meaningless "TEXT")
+    // ========================================
+    function getSmartBadge(parsedData, fallbackType) {
+      if (!parsedData || typeof parsedData !== 'object') {
+        return { label: fallbackType.toUpperCase(), cssClass: 'artifact-badge-default', borderColor: 'var(--sp-accent-primary)' };
+      }
+      const display = parsedData._display;
+      const badgeMap = {
+        'set': { label: 'SET', cssClass: 'artifact-badge-set', borderColor: 'var(--sp-action-set)' },
+        'created': { label: 'CREATED', cssClass: 'artifact-badge-created', borderColor: 'var(--sp-action-created)' },
+        'updated': { label: 'UPDATED', cssClass: 'artifact-badge-updated', borderColor: 'var(--sp-action-updated)' },
+        'deleted': { label: 'DELETED', cssClass: 'artifact-badge-deleted', borderColor: 'var(--sp-action-deleted)' },
+        'synced': { label: 'SYNCED', cssClass: 'artifact-badge-synced', borderColor: 'var(--sp-action-synced)' },
+        'success': { label: 'SUCCESS', cssClass: 'artifact-badge-set', borderColor: 'var(--sp-action-set)' },
+      };
+      if (display) {
+        if (display.action && badgeMap[display.action]) return badgeMap[display.action];
+        if (display.type === 'secrets') return { label: 'SECRETS', cssClass: 'artifact-badge-secrets', borderColor: 'var(--sp-accent-primary)' };
+        if (display.type === 'table') return { label: 'LIST', cssClass: 'artifact-badge-list', borderColor: 'var(--sp-accent-primary)' };
+        if (display.type === 'card' && display.action) return badgeMap[display.action] || { label: 'DETAIL', cssClass: 'artifact-badge-updated', borderColor: 'var(--sp-action-updated)' };
+        if (display.type === 'confirmation') return { label: 'SUCCESS', cssClass: 'artifact-badge-set', borderColor: 'var(--sp-action-set)' };
+      }
+      // Auto-detect from data shape
+      if (parsedData.skills || parsedData.agents) return { label: 'LIST', cssClass: 'artifact-badge-list', borderColor: 'var(--sp-accent-primary)' };
+      if (parsedData.secrets || parsedData.variables) return { label: 'SECRETS', cssClass: 'artifact-badge-secrets', borderColor: 'var(--sp-accent-primary)' };
+      if (parsedData.deleted === true) return badgeMap['deleted'];
+      if (parsedData.success === true) return badgeMap['success'];
+      return { label: fallbackType.toUpperCase(), cssClass: 'artifact-badge-default', borderColor: 'var(--sp-accent-primary)' };
+    }
+
+    // ========================================
+    // Entity List (skills/agents as cards)
+    // ========================================
+    function renderEntityList(items, entityType) {
+      if (!items || items.length === 0) {
+        return '<div class="empty-state"><div class="empty-state-icon">\uD83D\uDCED</div><div>No ' + escapeHtml(entityType) + ' found</div></div>';
+      }
+
+      let html = '<div class="entity-grid">';
+      for (const item of items) {
+        html += '<div class="entity-card">';
+        html += '<div class="entity-header">';
+        html += '<div>';
+        html += '<div class="entity-name">' + escapeHtml(item.name || item.title || 'Untitled') + '</div>';
+        if (item.skill_id || item.agent_id) {
+          html += '<div class="entity-id">' + escapeHtml(item.skill_id || item.agent_id) + '</div>';
+        }
+        html += '</div>';
+        html += '<div class="entity-badges">';
+        if (item.enabled === true) {
+          html += '<span class="badge badge-success">Enabled</span>';
+        } else if (item.enabled === false) {
+          html += '<span class="badge badge-muted">Disabled</span>';
+        }
+        if (item.version !== undefined) {
+          html += '<span class="badge badge-accent">v' + escapeHtml(String(item.version)) + '</span>';
+        }
+        html += '</div>';
+        html += '</div>';
+
+        if (item.description) {
+          html += '<div class="entity-description">' + escapeHtml(item.description) + '</div>';
+        }
+
+        if (item.tags && item.tags.length > 0) {
+          html += '<div class="tags-row">';
+          for (const tag of item.tags) {
+            html += '<span class="tag-pill">' + escapeHtml(tag) + '</span>';
+          }
+          html += '</div>';
+        }
+
+        const hasMetrics = item.usage_count > 0 || item.avg_rating > 0 || item.created_at;
+        if (hasMetrics) {
+          html += '<div class="entity-footer" style="margin-top:10px;">';
+          if (item.usage_count > 0) {
+            html += '<div class="entity-metric">Uses: <span class="entity-metric-value">' + Number(item.usage_count).toLocaleString() + '</span></div>';
+          }
+          if (item.avg_rating > 0) {
+            html += '<div class="entity-metric">' + formatRating(item.avg_rating) + '</div>';
+          }
+          if (item.created_at) {
+            html += '<div class="entity-metric">Created: <span style="color:var(--sp-text-secondary);">' + formatDate(item.created_at) + '</span></div>';
+          }
+          html += '</div>';
+        }
+
+        html += '</div>';
+      }
+      html += '</div>';
+      html += '<div class="entity-count">' + items.length + ' ' + escapeHtml(entityType) + '</div>';
+      return html;
+    }
+
+    // ========================================
+    // Detail Card (single entity CRUD result)
+    // ========================================
+    function renderDetailCard(data, insideWrapper) {
+      const display = data._display || {};
+      const entity = display.entity || 'item';
+      const action = display.action || 'updated';
+      const name = data.name || data.title || entity;
+
+      const actionColors = {
+        created: 'badge-success',
+        updated: 'badge-accent',
+        deleted: 'badge-warning'
+      };
+      const actionClass = actionColors[action] || 'badge-accent';
+
+      let html = '<div class="detail-card">';
+      if (!insideWrapper) {
+        html += '<div class="detail-header">';
+        html += '<div class="detail-title">' + escapeHtml(name) + '</div>';
+        html += '<span class="detail-action-badge ' + actionClass + '">' + escapeHtml(action) + '</span>';
+        html += '</div>';
+      }
+      html += '<div class="detail-body"><div class="kv-grid">';
+
+      const skipKeys = ['_display', 'content', 'system_prompt'];
+      const longKeys = ['content', 'system_prompt'];
+      const displayOrder = ['name', 'skill_id', 'agent_id', 'description', 'enabled', 'version', 'tags', 'base_skill_id', 'base_agent_id', 'id', 'created_at', 'updated_at'];
+
+      const orderedKeys = [];
+      for (const key of displayOrder) {
+        if (data[key] !== undefined && !skipKeys.includes(key)) orderedKeys.push(key);
+      }
+      for (const key of Object.keys(data)) {
+        if (!orderedKeys.includes(key) && !skipKeys.includes(key) && !longKeys.includes(key)) orderedKeys.push(key);
+      }
+
+      for (const key of orderedKeys) {
+        const val = data[key];
+        html += '<div class="kv-row">';
+        html += '<div class="kv-key">' + escapeHtml(key.replace(/_/g, ' ')) + '</div>';
+
+        if (key === 'enabled') {
+          html += '<div class="kv-value">' + (val ? '<span class="badge badge-success">Enabled</span>' : '<span class="badge badge-muted">Disabled</span>') + '</div>';
+        } else if (key === 'tags' && Array.isArray(val)) {
+          html += '<div class="kv-value"><div class="tags-row">';
+          for (const t of val) { html += '<span class="tag-pill">' + escapeHtml(t) + '</span>'; }
+          html += '</div></div>';
+        } else if (key === 'created_at' || key === 'updated_at') {
+          html += '<div class="kv-value">' + formatDate(val) + '</div>';
+        } else if (key === 'id' || key === 'skill_id' || key === 'agent_id' || key === 'base_skill_id' || key === 'base_agent_id') {
+          html += '<div class="kv-value"><span class="kv-code">' + escapeHtml(String(val)) + '</span></div>';
+        } else {
+          html += '<div class="kv-value">' + escapeHtml(String(val)) + '</div>';
+        }
+        html += '</div>';
+      }
+
+      html += '</div>';
+
+      // Show long content fields last
+      for (const key of longKeys) {
+        if (data[key]) {
+          html += '<div style="margin-top:16px;">';
+          html += '<div class="kv-key" style="border:none; padding-bottom:4px;">' + escapeHtml(key.replace(/_/g, ' ')) + '</div>';
+          html += '<div class="kv-content-block">' + escapeHtml(data[key]) + '</div>';
+          html += '</div>';
+        }
+      }
+
+      html += '</div></div>';
+      return html;
+    }
+
+    // ========================================
+    // Confirmation (success/delete/sync)
+    // ========================================
+    function renderConfirmation(data, insideWrapper) {
+      const display = data._display || {};
+      const action = display.action || (data.deleted ? 'deleted' : 'success');
+      const isDelete = action === 'deleted';
+
+      const icons = { deleted: '\uD83D\uDDD1\uFE0F', synced: '\u2705', success: '\u2705', set: '\u2705' };
+      const titles = {
+        deleted: 'Successfully Deleted',
+        synced: 'Sync Complete',
+        success: 'Operation Successful',
+        set: 'Variable Set'
+      };
+
+      let html = '<div class="confirmation ' + (isDelete ? 'confirmation-deleted' : 'confirmation-success') + '">';
+      html += '<div class="confirmation-icon">' + (icons[action] || '\u2705') + '</div>';
+      html += '<div class="confirmation-body">';
+
+      if (!insideWrapper) {
+        html += '<div class="confirmation-title">' + escapeHtml(titles[action] || 'Success') + '</div>';
+      }
+
+      // Build detail rows
+      const details = [];
+      if (data.agent_id) details.push(['Agent ID', data.agent_id]);
+      if (data.skill_id) details.push(['Skill ID', data.skill_id]);
+      if (data.plugin_id) details.push(['Plugin', data.plugin_id]);
+      if (data.var_name) details.push(['Variable', data.var_name]);
+      if (data.skills_synced !== undefined) details.push(['Skills Synced', String(data.skills_synced)]);
+      if (data.timestamp) details.push(['Timestamp', formatDate(data.timestamp)]);
+      if (data.details) details.push(['Details', data.details]);
+
+      if (details.length > 0) {
+        html += '<div class="confirmation-meta">';
+        for (const [key, val] of details) {
+          html += '<div class="confirmation-meta-row">';
+          html += '<span class="confirmation-meta-key">' + escapeHtml(key) + '</span>';
+          html += '<span class="confirmation-meta-value">' + escapeHtml(String(val)) + '</span>';
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+
+      html += '</div></div>';
+      return html;
+    }
+
+    // ========================================
+    // Secrets / Environment Variables
+    // ========================================
+    function renderSecretsList(data) {
+      const items = data.secrets || data.variables || [];
+      const pluginId = data.plugin_id;
+
+      if (items.length === 0) {
+        return '<div class="empty-state"><div class="empty-state-icon">\uD83D\uDD10</div><div>No secrets configured' + (pluginId ? ' for ' + escapeHtml(pluginId) : '') + '</div></div>';
+      }
+
+      let html = '<table class="secrets-table">';
+      html += '<thead><tr><th>Name</th><th>Value</th><th>Type</th></tr></thead>';
+      html += '<tbody>';
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const name = item.name || item.var_name;
+        const value = item.value || item.var_value || '';
+        const isSecret = item.is_secret !== false;
+
+        html += '<tr>';
+        html += '<td><span class="secret-name">' + escapeHtml(name) + '</span></td>';
+        html += '<td>';
+        if (isSecret) {
+          html += '<span class="secret-masked" id="secret-val-' + i + '">\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022</span>';
+          html += '<span style="display:none;" id="secret-real-' + i + '">' + escapeHtml(value) + '</span> ';
+          html += '<button class="secret-toggle" onclick="toggleSecret(' + i + ', this)">Show</button>';
+        } else {
+          html += '<span class="secret-value">' + escapeHtml(value) + '</span>';
+        }
+        html += '</td>';
+        html += '<td>' + (isSecret ? '<span class="badge badge-warning">Secret</span>' : '<span class="badge badge-muted">Plain</span>') + '</td>';
+        html += '</tr>';
+      }
+
+      html += '</tbody></table>';
+      html += '<div class="secrets-footer">' + items.length + ' variable(s)' + (pluginId ? ' for ' + escapeHtml(pluginId) : '') + '</div>';
+      return html;
+    }
+
+    function toggleSecret(idx, btn) {
+      const masked = document.getElementById('secret-val-' + idx);
+      const real = document.getElementById('secret-real-' + idx);
+      if (masked.style.display !== 'none') {
+        masked.style.display = 'none';
+        real.style.display = 'inline';
+        btn.textContent = 'Hide';
+      } else {
+        masked.style.display = 'inline';
+        real.style.display = 'none';
+        btn.textContent = 'Show';
+      }
+    }
+
+    // ========================================
+    // Presentation Card (content-manager)
+    // ========================================
+    function renderPresentationCard(data) {
+      const title = data.title || 'Card';
+      const subtitle = data.subtitle;
+      const sections = data.sections || [];
+      const ctas = data.ctas || [];
+      const sources = data.sources;
+
+      let html = '<div class="pcard">';
+      html += '<div class="pcard-header">';
+      html += '<div class="pcard-title">' + escapeHtml(title) + '</div>';
+      if (subtitle) {
+        html += '<div class="pcard-subtitle">' + escapeHtml(subtitle) + '</div>';
+      }
+      html += '</div>';
+
+      if (sections.length > 0) {
+        html += '<div class="pcard-body">';
+        for (const section of sections) {
+          html += '<div class="pcard-section">';
+          html += '<div class="pcard-section-heading">';
+          if (section.icon) html += '<span>' + escapeHtml(section.icon) + '</span>';
+          html += escapeHtml(section.heading);
+          html += '</div>';
+          // Section content may be markdown
+          const content = section.content || '';
+          if (/^#{1,3} |\*\*|^- |^\d+\. /m.test(content)) {
+            html += renderMarkdown(content);
+          } else {
+            html += '<div class="pcard-section-content">' + escapeHtml(content) + '</div>';
+          }
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+
+      if (ctas.length > 0) {
+        html += '<div class="pcard-ctas">';
+        for (const cta of ctas) {
+          const variant = cta.variant === 'primary' ? ' pcard-cta-primary' : '';
+          html += '<button class="pcard-cta' + variant + '">' + escapeHtml(cta.label || cta.text) + '</button>';
+        }
+        html += '</div>';
+      }
+
+      html += '</div>';
+
+      // If this is a research artifact with sources
+      if (sources && Array.isArray(sources) && sources.length > 0) {
+        html += '<div class="sources-section">';
+        html += '<div class="sources-heading">Sources (' + sources.length + ')</div>';
+        html += '<ul class="sources-list">';
+        for (const source of sources) {
+          const title = source.title || source.name || source.uri;
+          const uri = source.uri || source.url;
+          const relevance = source.relevance;
+          html += '<li class="source-item">';
+          if (uri) {
+            html += '<a href="' + escapeHtml(uri) + '" target="_blank" rel="noopener" class="source-link">' + escapeHtml(title) + '</a>';
+          } else {
+            html += '<span class="source-link" style="cursor:default;">' + escapeHtml(title) + '</span>';
+          }
+          if (relevance !== undefined) {
+            html += '<span class="relevance-badge">' + Math.round(relevance * 100) + '%</span>';
+          }
+          html += '</li>';
+        }
+        html += '</ul></div>';
+      }
+
+      return html;
+    }
+
+    // ========================================
+    // Image artifact
+    // ========================================
+    function renderImage(data) {
+      const src = data.src || data.url || '';
+      const alt = data.alt || 'Generated image';
+      const caption = data.caption;
+
+      let html = '<figure class="image-figure">';
+      html += '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '" class="artifact-image" loading="lazy" />';
+      if (caption) {
+        html += '<figcaption class="image-caption">' + escapeHtml(caption) + '</figcaption>';
+      }
+      html += '</figure>';
+      return html;
+    }
+
+    // ========================================
+    // Smart router (reads _display hints)
+    // ========================================
+    function renderSmart(data) {
+      const display = data._display;
+      if (!display) return renderJson(data);
+
+      switch (display.type) {
+        case 'card':
+          return renderDetailCard(data, true);
+        case 'table': {
+          const entity = display.entity;
+          const items = data[entity + 's'] || data.skills || data.agents || data.items || [];
+          return renderEntityList(items, entity + 's');
+        }
+        case 'confirmation':
+          return renderConfirmation(data, true);
+        case 'secrets':
+          return renderSecretsList(data);
+        default:
+          return renderJson(data);
+      }
+    }
+
+    // ========================================
+    // Core renderers
+    // ========================================
+    function renderText(data) {
+      const content = data.content || data.text || JSON.stringify(data, null, 2);
+
+      // Try parsing as JSON for smart rendering
+      try {
+        const parsed = JSON.parse(content);
+        if (parsed && typeof parsed === 'object') {
+          // Display hint routing
+          if (parsed._display) return renderSmart(parsed);
+          // Auto-detect common shapes
+          if (parsed.skills && Array.isArray(parsed.skills)) return renderEntityList(parsed.skills, 'skills');
+          if (parsed.agents && Array.isArray(parsed.agents)) return renderEntityList(parsed.agents, 'agents');
+          if (parsed.variables && Array.isArray(parsed.variables)) return renderSecretsList(parsed);
+          if (parsed.secrets && Array.isArray(parsed.secrets)) return renderSecretsList(parsed);
+          if (parsed.deleted === true || parsed.success === true) return renderConfirmation(parsed);
+          if (parsed.status === 'success' && parsed.skills_synced !== undefined) return renderConfirmation(parsed);
+          // Single entity with name (create/update result)
+          if (parsed.name && (parsed.skill_id || parsed.agent_id)) return renderDetailCard(parsed);
+          // Fallback to styled JSON
+          return renderJson(parsed);
+        }
+      } catch (e) {
+        // Not JSON
+      }
+
+      // Check for markdown
+      if (/^#{1,3} |\*\*|^- |^\d+\. /m.test(content)) {
+        return renderMarkdown(content);
+      }
+
+      return '<div class="text-content">' + escapeHtml(content) + '</div>';
+    }
+
+    function renderList(data) {
+      const items = data.items || [];
+      if (items.length === 0) {
+        return '<div class="empty-state"><div class="empty-state-icon">\uD83D\uDCED</div><div>No items to display</div></div>';
+      }
+
+      let html = '<ul class="list-content">';
+      for (const item of items) {
+        html += '<li class="list-item">';
+        html += '<div class="list-item-header">';
+        if (item.title) {
+          html += '<div class="list-item-title">' + escapeHtml(item.title) + '</div>';
+        }
+        if (item.category) {
+          html += '<span class="list-item-category">' + escapeHtml(item.category) + '</span>';
+        }
+        html += '</div>';
+        if (item.description) {
+          html += '<div class="list-item-description">' + escapeHtml(item.description) + '</div>';
+        }
+        if (item.url) {
+          html += '<a class="list-item-link" href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener">View resource</a>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+      return html;
+    }
+
+    function renderJson(data) {
+      // Filter out _display hint from JSON view
+      if (data && typeof data === 'object' && data._display) {
+        const filtered = Object.assign({}, data);
+        delete filtered._display;
+        return '<pre><code>' + syntaxHighlightJson(filtered) + '</code></pre>';
+      }
+      return '<pre><code>' + syntaxHighlightJson(data) + '</code></pre>';
+    }
+
+    // ========================================
+    // Main artifact router
+    // ========================================
+    function renderArtifact(result) {
+      const content = document.getElementById('content');
+      const footer = '<div class="artifact-footer"><span class="artifact-footer-brand">systemprompt.io</span></div>';
+
+      if (!result || !result.structuredContent) {
+        const badge = getSmartBadge(null, 'json');
+        content.innerHTML =
+          '<div class="artifact">' +
+            '<div class="artifact-header" style="border-left-color:' + badge.borderColor + ';">' +
+              '<span class="artifact-title">Raw Response</span>' +
+              '<div class="artifact-meta"><span class="artifact-badge ' + badge.cssClass + '">' + badge.label + '</span></div>' +
+            '</div>' +
+            '<div class="artifact-content">' + renderJson(result) + '</div>' +
+            footer +
+          '</div>';
+        return;
+      }
+
+      const structured = result.structuredContent;
+      const artifactData = structured.artifact || structured;
+      const artifactType = artifactData['x-artifact-type'] || structured.artifact_type || 'unknown';
+      const title = structured.title || artifactData.title || 'Artifact';
+
+      // Early-parse JSON content to extract _display for smart badge
+      let parsedInner = null;
+      if (artifactType === 'text') {
+        const rawContent = artifactData.content || artifactData.text || '';
+        try {
+          const p = JSON.parse(rawContent);
+          if (p && typeof p === 'object') parsedInner = p;
+        } catch (e) { /* not JSON */ }
+      }
+
+      const badge = getSmartBadge(parsedInner, artifactType);
+
+      let renderedContent;
+      switch (artifactType) {
+        case 'text':
+          renderedContent = renderText(artifactData);
+          break;
+        case 'list':
+          renderedContent = renderList(artifactData);
+          break;
+        case 'presentation_card':
+          renderedContent = renderPresentationCard(artifactData);
+          break;
+        case 'image':
+          renderedContent = renderImage(artifactData);
+          break;
+        default:
+          renderedContent = renderJson(artifactData);
+      }
+
+      // For presentation cards and images, render without the outer artifact wrapper
+      const needsWrapper = artifactType !== 'presentation_card' && artifactType !== 'image';
+
+      if (needsWrapper) {
+        content.innerHTML =
+          '<div class="artifact">' +
+            '<div class="artifact-header" style="border-left-color:' + badge.borderColor + ';">' +
+              '<span class="artifact-title">' + escapeHtml(title) + '</span>' +
+              '<div class="artifact-meta"><span class="artifact-badge ' + badge.cssClass + '">' + badge.label + '</span></div>' +
+            '</div>' +
+            '<div class="artifact-content">' + renderedContent + '</div>' +
+            footer +
+          '</div>';
+      } else {
+        content.innerHTML = renderedContent + footer;
+      }
+    }
+
+    function renderError(message) {
+      const content = document.getElementById('content');
+      content.innerHTML =
+        '<div class="error">' +
+          '<div class="error-header">' +
+            '<div class="error-icon">!</div>' +
+            '<div class="error-title">Error</div>' +
+          '</div>' +
+          '<div class="error-message">' + escapeHtml(message) + '</div>' +
+        '</div>';
+    }
+
+    // ========================================
+    // Message listener
+    // ========================================
+    window.addEventListener('message', (event) => {
+      try {
+        const data = event.data;
+
+        if (data?.method === 'ui/notifications/tool-result') {
+          renderArtifact(data.params);
+        } else if (data?.jsonrpc === '2.0' && data?.result) {
+          renderArtifact(data.result);
+        } else if (data?.structuredContent) {
+          renderArtifact(data);
+        }
+      } catch (err) {
+        console.error('Error handling message:', err);
+        renderError(err.message);
+      }
+    });
+
+    window.parent.postMessage({
+      jsonrpc: '2.0',
+      method: 'ui/notifications/initialized'
+    }, '*');
+
+    initialized = true;
+  </script>
+</body>
+</html>

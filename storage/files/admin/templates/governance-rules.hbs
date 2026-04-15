@@ -1,0 +1,55 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+
+    {{> components/page-header title=hero_title subtitle=hero_subtitle}}
+    <pre class="code-block"><code>{{cli_command}}</code></pre>
+
+    {{#if has_rules}}
+    <h2>Rule Summary</h2>
+    {{#> components/data-table}}
+        <thead><tr><th>Rule / Policy</th><th>Total</th><th>Allowed</th><th>Denied</th></tr></thead>
+        <tbody>
+        {{#each rules}}
+        <tr>
+            <td><code class="code-inline">{{policy}}</code></td>
+            <td>{{total}}</td>
+            <td class="text-success">{{allowed}}</td>
+            <td class="text-danger">{{denied}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No rule evaluations yet. Run demo/governance/04-governance-happy.sh and 05-governance-denied.sh to generate data."}}
+    {{/if}}
+
+    {{#if has_recent}}
+    <h2>Recent Evaluations</h2>
+    {{#> components/data-table}}
+        <thead><tr><th class="col-date">Time</th><th>Tool</th><th>Agent</th><th class="col-status">Scope</th><th>Policy</th><th class="col-status">Decision</th><th class="col-multiline">Reason</th></tr></thead>
+        <tbody>
+        {{#each recent}}
+        <tr>
+            <td class="col-date">{{created_at}}</td>
+            <td><code class="code-inline">{{tool_name}}</code></td>
+            <td>{{agent_id}}</td>
+            <td class="col-status">{{#if agent_scope}}<span class="badge">{{agent_scope}}</span>{{/if}}</td>
+            <td><code class="code-inline">{{policy}}</code></td>
+            <td class="col-status">
+                {{#if is_denied}}
+                    <span class="mcp-badge mcp-badge-danger">DENY</span>
+                {{else}}
+                    <span class="mcp-badge mcp-badge-success">ALLOW</span>
+                {{/if}}
+            </td>
+            <td class="col-multiline" title="{{reason}}">{{truncate reason 60}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

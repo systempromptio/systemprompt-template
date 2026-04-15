@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  {{{HEAD_ASSETS}}}
+
+  <title>{{TITLE}} | {{ORG_NAME}}</title>
+  <meta name="description" content="{{DESCRIPTION}}" />
+  <meta name="author" content="{{AUTHOR}}" />
+  <meta name="keywords" content="{{KEYWORDS}}" />
+  <link rel="canonical" href="{{ORG_URL}}/legal/{{SLUG}}" />
+
+  <meta property="og:title" content="{{TITLE}}" />
+  <meta property="og:description" content="{{DESCRIPTION}}" />
+  <meta property="og:image" content="{{IMAGE}}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="{{ORG_URL}}/legal/{{SLUG}}" />
+  <meta property="og:site_name" content="{{ORG_NAME}}" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="{{TWITTER_HANDLE}}" />
+  <meta name="twitter:creator" content="{{TWITTER_HANDLE}}" />
+  <meta name="twitter:title" content="{{TITLE}}" />
+  <meta name="twitter:description" content="{{DESCRIPTION}}" />
+  <meta name="twitter:image" content="{{IMAGE}}" />
+
+  <link rel="icon" type="image/svg+xml" href="{{FAVICON_PATH}}" />
+
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-variables.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-background.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-base.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-post-header.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-social-bar.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-featured-image.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-post-content.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-breadcrumb.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-page-header.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-list-controls.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-cards.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-footer.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-references.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-related.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-banner.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-chat-cta.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-social-content.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-hero.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-homepage.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-platforms.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-ai-badges.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-content-sections.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-content-cards.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-provenance-panel.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-provenance-sections.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-provenance-header.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-workflow.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-provenance-details.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-live-dashboard.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-responsive.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/syntax-highlight.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "headline": "{{TITLE}}",
+    "description": "{{DESCRIPTION}}",
+    "image": "{{IMAGE}}",
+    "author": {
+      "@type": "Person",
+      "name": "{{AUTHOR}}"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "{{ORG_NAME}}",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{LOGO_PATH}}"
+      }
+    },
+    "datePublished": "{{DATE_ISO}}",
+    "dateModified": "{{DATE_MODIFIED_ISO}}",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "{{ORG_URL}}/legal/{{SLUG}}"
+    },
+    "keywords": "{{KEYWORDS}}",
+    "articleSection": "{{ARTICLE_SECTION}}",
+    "inLanguage": "{{ARTICLE_LANGUAGE}}"
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "{{ORG_URL}}"},
+      {"@type": "ListItem", "position": 2, "name": "Legal", "item": "{{ORG_URL}}/legal"},
+      {"@type": "ListItem", "position": 3, "name": "{{TITLE}}", "item": "{{ORG_URL}}/legal/{{SLUG}}"}
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="blog-background"></div>
+  <div class="blog-shape-left"></div>
+
+  {{{HEADER}}}
+
+  <main class="blog-post">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="breadcrumb__separator">/</span>
+      <a href="/legal">Legal</a>
+      <span class="breadcrumb__separator">/</span>
+      <span class="breadcrumb__current">{{TITLE}}</span>
+    </nav>
+
+    <article>
+      <header class="post-header">
+        <h1>{{TITLE}}</h1>
+        <div class="post-meta">
+          <div class="author-info">
+            <span class="author-name">{{AUTHOR}}</span>
+            <time datetime="{{DATE_PUBLISHED}}">{{DATE}}</time>
+            <span class="meta-separator">·</span>
+            <span class="read-time">{{READ_TIME}} min read</span>
+          </div>
+        </div>
+        {{{SOCIAL_ACTION_BAR}}}
+      </header>
+
+      {{#if IMAGE}}
+      <figure class="featured-image">
+        <img src="{{IMAGE}}" alt="{{TITLE}}" loading="eager" />
+      </figure>
+      {{/if}}
+
+      <div class="post-content">
+        {{{CONTENT}}}
+      </div>
+
+      {{{REFERENCES}}}
+
+      {{{SOCIAL_CONTENT}}}
+    </article>
+
+  </main>
+
+  {{{FOOTER}}}
+
+  {{{SCRIPTS}}}
+</body>
+</html>

@@ -1,0 +1,144 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+
+    <div class="toolbar">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search marketplaces..." id="mkt-search">
+        </div>
+        <button class="btn btn-primary" data-create-marketplace>+ Create Marketplace</button>
+    </div>
+
+    <div class="config-stats" id="stats-marketplaces">
+        <span class="config-stat"><span class="config-stat-dot blue"></span> <span class="config-stat-value">{{stats.marketplace_count}}</span> marketplaces</span>
+        <span class="config-stat"><span class="config-stat-dot green"></span> <span class="config-stat-value">{{stats.total_plugins}}</span> total plugins</span>
+        <span class="config-stat"><span class="config-stat-dot blue"></span> <span class="config-stat-value">{{stats.total_skills}}</span> total skills</span>
+    </div>
+
+    {{#if marketplaces}}
+    <div class="table-container">
+        <table class="data-table" id="mkt-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th class="col-numeric">Plugins</th>
+                    <th>Resources</th>
+                    <th>Roles</th>
+                    <th class="col-actions"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each marketplaces}}
+                <tr class="clickable-row" data-entity-type="marketplace" data-entity-id="{{id}}" data-name="{{toLowerCase name}}">
+                    {{> components/table-cell-stacked primary=name secondary=(truncate description 80)}}
+                    <td class="col-numeric">
+                        <span class="badge badge-purple">{{plugin_count}} plugin{{#if (not (eq plugin_count 1))}}s{{/if}}</span>
+                    </td>
+                    <td>
+                        <div class="cell-badges">
+                            {{#if (gt skill_count 0)}}<span class="badge badge-green">{{skill_count}} skill{{#if (not (eq skill_count 1))}}s{{/if}}</span>{{/if}}
+                            {{#if (gt agent_count 0)}}<span class="badge badge-blue">{{agent_count}} agent{{#if (not (eq agent_count 1))}}s{{/if}}</span>{{/if}}
+                            {{#if (gt mcp_count 0)}}<span class="badge badge-yellow">{{mcp_count}} MCP</span>{{/if}}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cell-badges">
+                            {{#each roles}}{{#if assigned}}<span class="badge badge-blue">{{name}}</span>{{/if}}{{/each}}
+                            {{#unless role_count}}<span class="badge badge-gray">All</span>{{/unless}}
+                        </div>
+                    </td>
+                    <td class="col-actions" data-no-row-click>
+                        <div class="actions-menu" data-actions-for="{{id}}">
+                            <button class="actions-trigger" data-action="menu" title="Actions">&#8942;</button>
+                            <div class="actions-dropdown">
+                                <button class="actions-item" data-edit-marketplace="{{id}}">Edit</button>
+                                <button class="actions-item" data-manage-plugins="{{id}}">Manage Plugins</button>
+                                <div class="actions-popup-separator"></div>
+                                <button class="actions-item actions-item-danger" data-delete-marketplace="{{id}}">Delete</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="detail-row" data-detail-for="{{id}}" style="display:none">
+                    <td colspan="5">
+                        <div class="detail-row-content">
+                            <div class="detail-section">
+                                <strong>Plugins ({{plugin_count}})</strong>
+                                {{#if (gt plugin_count 0)}}
+                                <table class="detail-sub-table" style="margin-top:var(--sp-space-2)">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Category</th>
+                                            <th>Resources</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{#each plugins}}
+                                        <tr>
+                                            <td>{{name}}</td>
+                                            <td>{{#if category}}<span class="badge badge-purple">{{category}}</span>{{else}}<span class="text-tertiary">--</span>{{/if}}</td>
+                                            <td>
+                                                <div class="cell-badges">
+                                                    {{#if (gt skill_count 0)}}<span class="badge badge-green">{{skill_count}} skills</span>{{/if}}
+                                                    {{#if (gt agent_count 0)}}<span class="badge badge-blue">{{agent_count}} agents</span>{{/if}}
+                                                    {{#if (gt mcp_count 0)}}<span class="badge badge-yellow">{{mcp_count}} MCP</span>{{/if}}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {{/each}}
+                                    </tbody>
+                                </table>
+                                {{else}}
+                                <p class="text-muted text-sm" style="margin-top:var(--sp-space-1)">No plugins assigned</p>
+                                {{/if}}
+                            </div>
+                            <div class="detail-section">
+                                <button class="btn btn-secondary btn-sm text-xs" data-toggle-json="{{id}}">Show JSON</button>
+                                <div data-json-container="{{id}}" style="display:none;margin-top:var(--sp-space-2)"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    {{> components/empty-state message="No marketplaces configured. Create one to group plugins together."}}
+    {{/if}}
+
+    {{#each marketplaces}}
+    <script type="application/json" data-marketplace-detail="{{id}}">{{{json this}}}</script>
+    {{/each}}
+    <script type="application/json" id="mkt-all-roles">{{{json all_roles}}}</script>
+
+    <div class="panel-overlay" id="mkt-panel-overlay"></div>
+    <div class="side-panel" id="mkt-panel" data-overlay="mkt-panel-overlay">
+        <div class="panel-header">
+            <h2 data-panel-title class="mb-0 text-lg"></h2>
+            <button class="panel-close" data-panel-close>&times;</button>
+        </div>
+        <div class="panel-body" data-panel-body></div>
+        <div class="panel-footer" data-panel-footer></div>
+    </div>
+
+    <div class="panel-overlay" id="mkt-edit-panel-overlay"></div>
+    <div class="side-panel" id="mkt-edit-panel" data-overlay="mkt-edit-panel-overlay">
+        <div class="panel-header">
+            <h2 data-panel-title class="mb-0 text-lg"></h2>
+            <button class="panel-close" data-panel-close>&times;</button>
+        </div>
+        <div class="panel-body" data-panel-body></div>
+        <div class="panel-footer" data-panel-footer></div>
+    </div>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" defer>
+        import { initOrgMarketplaces } from '/js/pages/admin-org-marketplaces.js';
+        initOrgMarketplaces();
+    </script>
+    {{/inline}}
+{{/layout}}

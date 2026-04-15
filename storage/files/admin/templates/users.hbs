@@ -1,0 +1,49 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/page-hero}}
+
+    <div class="toolbar" role="toolbar" aria-label="Actions">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search users..." id="user-search" aria-label="Search users...">
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-add-user" data-action="create-user">+ Add User</button>
+    </div>
+    {{> components/create-user-panel}}
+
+    <section aria-label="Users list" data-page="users">
+    {{#if users}}
+    {{#> components/data-table}}
+        <thead><tr><th>User</th><th>Rank</th><th class="numeric col-numeric">XP</th><th class="numeric col-numeric">Logins</th><th class="numeric col-numeric">Prompts</th><th class="numeric col-numeric">Sessions</th><th class="numeric col-numeric">Bytes</th><th class="col-status">Status</th><th class="col-date">Last Active</th><th class="col-actions"></th></tr></thead>
+        <tbody>
+        {{#each users}}
+        <tr data-user-name="{{toLowerCase (default display_name user_id)}}" data-user-email="{{toLowerCase (default email "")}}">
+            <td>
+                <a href="/admin/user/?id={{user_id}}" class="user-cell">
+                    <span class="avatar avatar-sm">{{initials (default display_name user_id)}}</span>
+                    <span>{{default display_name user_id}}</span>
+                </a>
+            </td>
+            <td>{{default rank_name "-"}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{xp}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{logins}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{prompts}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{sessions}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{bytes}}</td>
+            <td class="col-status">{{#if is_active}}<span class="badge badge-success">Active</span>{{else}}<span class="badge badge-secondary">Inactive</span>{{/if}}</td>
+            <td class="col-date">{{#if last_active}}<span title="{{formatDate last_active}}">{{relativeTime last_active}}</span>{{else}}Never{{/if}}</td>
+            <td class="col-actions"><button class="btn-actions-trigger" data-user-id="{{user_id}}" aria-label="Actions for {{default display_name user_id}}" aria-haspopup="true" aria-expanded="false" type="button">&#8943;</button></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No users found."}}
+    {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-users.js"></script>
+    {{/inline}}
+{{/layout}}

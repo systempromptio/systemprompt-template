@@ -1,0 +1,11 @@
+<div class="form-group">
+    <label class="field-label">Roles</label>
+    <div class="role-checklist">
+        {{#each items}}
+        <label class="role-checklist__label">
+            <input type="checkbox" name="roles" value="{{value}}"{{#if checked}} checked{{/if}}>
+            {{value}}
+        </label>
+        {{/each}}
+    </div>
+</div>

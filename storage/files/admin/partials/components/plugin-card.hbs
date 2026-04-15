@@ -1,0 +1,34 @@
+<div class="plugin-card plugin-card--accent" data-plugin-id="{{id}}" data-name="{{toLowerCase name}}">
+    <div class="plugin-header" data-toggle-plugin="{{id}}">
+        <div class="plugin-card__body">
+            <h3 class="plugin-card__title">{{name}}</h3>
+            {{#if description}}<p class="plugin-card__description">{{description}}</p>{{/if}}
+            <div class="plugin-meta">
+                <span class="badge badge-blue">{{skill_count}} skill{{#if (not (eq skill_count 1))}}s{{/if}}</span>
+                <span class="badge badge-gray">{{agent_count}} agent{{#if (not (eq agent_count 1))}}s{{/if}}</span>
+                {{#if (gt mcp_count 0)}}<span class="badge badge-yellow">{{mcp_count}} MCP</span>{{/if}}
+            </div>
+            {{#if depends}}
+            <div class="plugin-depends"><strong>Depends on:</strong> {{#each depends}}<span class="badge badge-yellow">{{this}}</span> {{/each}}<span class="text-muted-inline">(must be installed first)</span></div>
+            {{/if}}
+        </div>
+        <div class="plugin-actions">
+            {{#if (not (eq id "custom"))}}
+            <div class="actions-menu" data-actions-for="{{id}}">
+                <button type="button" class="actions-trigger" data-action="menu" title="Actions" aria-label="Actions menu" aria-expanded="false" aria-haspopup="true">&#8942;</button>
+                <div class="actions-dropdown" role="menu">
+                    <a href="/admin/my/plugins/edit/?id={{id}}" class="actions-item" role="menuitem">Edit</a>
+                    <button type="button" class="actions-item" data-generate-plugin="{{id}}" data-platform="unix" role="menuitem">Generate (macOS/Linux)</button>
+                    <button type="button" class="actions-item" data-generate-plugin="{{id}}" data-platform="windows" role="menuitem">Generate (Windows)</button>
+                    <div class="actions-popup-separator" role="separator"></div>
+                    <button type="button" class="actions-item actions-item-danger" data-delete-plugin="{{id}}" role="menuitem">Delete</button>
+                </div>
+            </div>
+            {{/if}}
+            <span class="expand-icon" aria-hidden="true">&#9660;</span>
+        </div>
+    </div>
+    <div class="plugin-details" style="display:none" data-details-for="{{id}}">
+        {{> components/plugin-tabs pluginId=id skills=skills agents=agents mcp_servers=mcp_servers skill_count=skill_count agent_count=agent_count mcp_count=mcp_count}}
+    </div>
+</div>

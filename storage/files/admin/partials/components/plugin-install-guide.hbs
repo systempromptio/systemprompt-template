@@ -1,0 +1,39 @@
+{{#if marketplace.mcp_url}}
+<section aria-label="Installation guide">
+<div class="card install-guide">
+    <div class="card-header">
+        <h3 class="card-title install-guide__title">Installation Guide</h3>
+    </div>
+
+    <ol class="install-steps" role="list">
+        <li class="install-step">
+            <div class="install-step-number" aria-hidden="true">1</div>
+            <div class="install-step-content">
+                <strong>Add MCP connector</strong>
+                <p class="text-muted text-sm install-step__hint">In Claude Desktop, go to Settings &rarr; Connectors, click Add custom connector, and paste this URL:</p>
+                <div class="install-copybox install-copybox--spaced">
+                    <code class="install-code" id="mcp-url-code">{{marketplace.mcp_url}}</code>
+                    <button type="button" class="btn btn-secondary btn-sm" data-copy="{{marketplace.mcp_url}}" aria-label="Copy MCP URL">Copy</button>
+                </div>
+            </div>
+        </li>
+
+        <li class="install-step">
+            <div class="install-step-number" aria-hidden="true">2</div>
+            <div class="install-step-content">
+                <strong>Export &amp; import plugin</strong>
+                <p class="text-muted text-sm install-step__hint">Go to <a href="/admin/my/marketplace">My Marketplace</a> and click <strong>Export for Cowork</strong> to download your merged plugin. Import the ZIP in Claude Desktop under Settings &rarr; Plugins &rarr; Import.</p>
+            </div>
+        </li>
+
+        <li class="install-step">
+            <div class="install-step-number" aria-hidden="true">3</div>
+            <div class="install-step-content">
+                <strong>Start using skills</strong>
+                <p class="text-muted text-sm install-step__hint">Your skills and agents will be available immediately. Try running <code>/onboarding</code> to create personalised skills.</p>
+            </div>
+        </li>
+    </ol>
+</div>
+</section>
+{{/if}}

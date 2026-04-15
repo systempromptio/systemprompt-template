@@ -1,0 +1,19 @@
+<div class="version-user-group">
+    <div class="version-user-header">
+        <div class="user-group-header-row">
+            <div class="user-avatar--circle">{{initials label}}</div>
+            <div>
+                <div class="user-group-name">{{label}}</div>
+                <div class="user-group-meta">
+                    {{version_count}} version{{#if (not (eq version_count 1))}}s{{/if}}
+                    &middot; Latest: v{{latest_version_number}} ({{relativeTime latest_created_at}})
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="version-timeline">
+        {{#each versions}}
+        {{> components/version-card}}
+        {{/each}}
+    </div>
+</div>

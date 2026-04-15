@@ -1,0 +1,12 @@
+skills:
+  skills:
+    example_web_search:
+      id: example_web_search
+      name: Example Web Search
+      description: A simple demonstration skill that searches the web for information
+      enabled: true
+      tags:
+      - example
+      - demo
+      - web-search
+      instructions: '!include example_web_search.md'

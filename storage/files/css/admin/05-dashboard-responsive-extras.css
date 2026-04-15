@@ -1,0 +1,98 @@
+@layer components {
+
+@media (max-width: 768px) {
+    .traffic-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--sp-space-2);
+    }
+    .traffic-kpi-card {
+        padding: var(--sp-space-3);
+    }
+    .kpi-value {
+        font-size: var(--sp-text-base);
+    }
+    .kpi-label {
+        font-size: var(--sp-text-xs);
+    }
+    .kpi-trend {
+        font-size: var(--sp-text-xs);
+    }
+}
+
+@media (max-width: 640px) {
+    .realtime-pulse-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        margin-bottom: var(--sp-space-4);
+        background: var(--sp-bg-surface-overlay);
+        border: 1px solid var(--sp-border-subtle);
+        border-radius: var(--sp-radius-card-brand);
+        overflow: hidden;
+    }
+    .realtime-pulse-card {
+        background: none;
+        border: none;
+        border-radius: 0;
+        padding: var(--sp-space-3) var(--sp-space-2);
+        box-shadow: none;
+        position: relative;
+    }
+    .realtime-pulse-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    .realtime-pulse-card:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 20%;
+        bottom: 20%;
+        width: 1px;
+        background: linear-gradient(180deg, transparent, var(--sp-border-default), transparent);
+    }
+    .pulse-value {
+        font-size: var(--sp-text-lg);
+    }
+    .pulse-label {
+        font-size: 0.6rem;
+        letter-spacing: 0.02em;
+        line-height: 1.2;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .quick-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid-3col {
+        grid-template-columns: 1fr;
+    }
+
+    .health-cards,
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: var(--sp-space-2) var(--sp-space-3);
+    }
+
+    .cc-hero-title {
+        font-size: var(--sp-text-lg);
+    }
+
+    .cc-hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cc-stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+}

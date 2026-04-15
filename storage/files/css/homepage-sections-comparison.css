@@ -1,0 +1,110 @@
+
+.comparison {
+  padding: var(--sp-space-4xl) 0;
+  border-top: 1px solid var(--sp-color-border);
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--sp-space-xl);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.comparison-col {
+  padding: var(--sp-space-xl);
+  border-radius: var(--sp-card-radius);
+  background: var(--sp-card-bg-glass);
+  border: var(--sp-card-border-width) solid var(--sp-color-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.comparison-col.highlight {
+  background: var(--sp-card-bg-gradient);
+  border-color: var(--sp-brand-600);
+  box-shadow: var(--sp-card-shadow);
+}
+
+.comparison-col h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: var(--sp-space-lg);
+  color: var(--sp-color-text-secondary);
+}
+
+.comparison-col.highlight h3 {
+  color: var(--sp-color-primary);
+}
+
+.comparison-col ul {
+  list-style: none;
+  padding: 0;
+}
+
+.comparison-col li {
+  padding: var(--sp-space-sm) 0;
+  color: var(--sp-color-text-secondary);
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--sp-color-border);
+}
+
+.comparison-col li:last-child {
+  border-bottom: none;
+}
+
+.comparison-col.highlight li {
+  color: var(--sp-color-text);
+}
+
+.comparison-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+}
+
+.comparison-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--sp-color-text-muted);
+}
+
+.comparison-col.highlight .comparison-icon {
+  color: var(--sp-color-primary);
+}
+
+.comparison-text {
+  flex: 1;
+}
+
+.comparison-link {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+  transition: color var(--sp-transition-fast);
+}
+
+.comparison-link:hover {
+  color: var(--sp-brand-400);
+}
+
+.comparison-link:hover .comparison-icon {
+  color: var(--sp-brand-400);
+}
+
+.comparison-arrow {
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity var(--sp-transition-fast), transform var(--sp-transition-fast);
+  font-size: 1rem;
+}
+
+.comparison-link:hover .comparison-arrow {
+  opacity: 1;
+  transform: translateX(2px);
+}

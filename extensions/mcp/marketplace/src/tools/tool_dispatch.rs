@@ -1,0 +1,251 @@
+use std::sync::Arc;
+
+use rmcp::model::{CallToolRequestParams, CallToolResult};
+use rmcp::ErrorData;
+use systemprompt::database::DbPool;
+use systemprompt::mcp::{McpResponseBuilder, ProgressCallback};
+use systemprompt::models::execution::context::RequestContext;
+
+use super::{
+    analyze_skill, create_agent, create_mcp_server, create_plugin, create_skill, delete_agent,
+    delete_mcp_server, delete_plugin, delete_skill, get_plugin, get_secrets, list_agents,
+    list_mcp_servers, list_plugins, list_skills, manage_secrets, sync_skills, update_agent,
+    update_mcp_server, update_plugin, update_skill, ToolServices,
+};
+
+pub async fn handle_tool_call(
+    name: &str,
+    request: CallToolRequestParams,
+    ctx: RequestContext,
+    services: &ToolServices,
+    progress: Option<ProgressCallback>,
+) -> Result<CallToolResult, ErrorData> {
+    handle_tool_call_inner(name, request, ctx, services, progress)
+        .await
+        .map_err(|e| ErrorData::internal_error(e.to_string(), None))
+}
+
+async fn handle_tool_call_inner(
+    name: &str,
+    request: CallToolRequestParams,
+    ctx: RequestContext,
+    services: &ToolServices,
+    progress: Option<ProgressCallback>,
+) -> Result<CallToolResult, systemprompt::mcp::McpError> {
+    let executor = &services.executor;
+
+    match name {
+        "create_skill" | "update_skill" | "list_skills" | "delete_skill" => {
+            dispatch_skill(name, services, executor, &request, &ctx).await
+        }
+        "analyze_skill" => {
+            let handler = analyze_skill::AnalyzeSkillHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+                ai_service: Arc::clone(&services.ai_service),
+                skill_loader: Arc::clone(&services.skill_loader),
+                progress,
+            };
+            executor.execute(&handler, &request, &ctx).await
+        }
+        "sync_skills" => {
+            let handler = sync_skills::SyncSkillsHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+                progress,
+            };
+            executor.execute(&handler, &request, &ctx).await
+        }
+        "create_agent" | "list_agents" | "update_agent" | "delete_agent" => {
+            dispatch_agent(name, services, executor, &request, &ctx).await
+        }
+        "create_mcp_server" | "list_mcp_servers" | "update_mcp_server" | "delete_mcp_server" => {
+            dispatch_mcp_server(name, services, executor, &request, &ctx).await
+        }
+        "create_plugin" | "get_plugin" | "update_plugin" | "delete_plugin" | "list_plugins" => {
+            dispatch_plugin(name, services, executor, &request, &ctx).await
+        }
+        "get_secrets" | "manage_secrets" => {
+            dispatch_secrets(name, services, executor, &request, &ctx).await
+        }
+        _ => Ok(McpResponseBuilder::<()>::build_error(format!(
+            "Unknown tool: '{name}'\n\n\
+            Available tools: create_skill, update_skill, delete_skill, list_skills, analyze_skill, \
+            create_plugin, get_plugin, update_plugin, delete_plugin, list_plugins, \
+            get_secrets, manage_secrets, sync_skills, create_agent, list_agents, update_agent, delete_agent, \
+            create_mcp_server, list_mcp_servers, update_mcp_server, delete_mcp_server"
+        ))),
+    }
+}
+
+async fn dispatch_skill(
+    name: &str,
+    services: &ToolServices,
+    executor: &systemprompt::mcp::McpToolExecutor,
+    request: &CallToolRequestParams,
+    ctx: &RequestContext,
+) -> Result<CallToolResult, systemprompt::mcp::McpError> {
+    match name {
+        "create_skill" => {
+            let handler = create_skill::CreateSkillHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "update_skill" => {
+            let handler = update_skill::UpdateSkillHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "list_skills" => {
+            let handler = list_skills::ListSkillsHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "delete_skill" => {
+            let handler = delete_skill::DeleteSkillHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        _ => unreachable!(),
+    }
+}
+
+async fn dispatch_agent(
+    name: &str,
+    services: &ToolServices,
+    executor: &systemprompt::mcp::McpToolExecutor,
+    request: &CallToolRequestParams,
+    ctx: &RequestContext,
+) -> Result<CallToolResult, systemprompt::mcp::McpError> {
+    match name {
+        "create_agent" => {
+            let handler = create_agent::CreateAgentHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "list_agents" => {
+            let handler = list_agents::ListAgentsHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "update_agent" => {
+            let handler = update_agent::UpdateAgentHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "delete_agent" => {
+            let handler = delete_agent::DeleteAgentHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        _ => unreachable!(),
+    }
+}
+
+async fn dispatch_mcp_server(
+    name: &str,
+    services: &ToolServices,
+    executor: &systemprompt::mcp::McpToolExecutor,
+    request: &CallToolRequestParams,
+    ctx: &RequestContext,
+) -> Result<CallToolResult, systemprompt::mcp::McpError> {
+    match name {
+        "create_mcp_server" => {
+            let handler = create_mcp_server::CreateMcpServerHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "list_mcp_servers" => {
+            let handler = list_mcp_servers::ListMcpServersHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "update_mcp_server" => {
+            let handler = update_mcp_server::UpdateMcpServerHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "delete_mcp_server" => {
+            let handler = delete_mcp_server::DeleteMcpServerHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        _ => unreachable!(),
+    }
+}
+
+async fn dispatch_plugin(
+    name: &str,
+    services: &ToolServices,
+    executor: &systemprompt::mcp::McpToolExecutor,
+    request: &CallToolRequestParams,
+    ctx: &RequestContext,
+) -> Result<CallToolResult, systemprompt::mcp::McpError> {
+    match name {
+        "create_plugin" => {
+            let handler = create_plugin::CreatePluginHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "get_plugin" => {
+            let handler = get_plugin::GetPluginHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "update_plugin" => {
+            let handler = update_plugin::UpdatePluginHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "delete_plugin" => {
+            let handler = delete_plugin::DeletePluginHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "list_plugins" => {
+            let handler = list_plugins::ListPluginsHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        _ => unreachable!(),
+    }
+}
+
+async fn dispatch_secrets(
+    name: &str,
+    services: &ToolServices,
+    executor: &systemprompt::mcp::McpToolExecutor,
+    request: &CallToolRequestParams,
+    ctx: &RequestContext,
+) -> Result<CallToolResult, systemprompt::mcp::McpError> {
+    match name {
+        "get_secrets" => {
+            let handler = get_secrets::GetSecretsHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        "manage_secrets" => {
+            let handler = manage_secrets::ManageSecretsHandler {
+                db_pool: DbPool::clone(&services.db_pool),
+            };
+            executor.execute(&handler, request, ctx).await
+        }
+        _ => unreachable!(),
+    }
+}

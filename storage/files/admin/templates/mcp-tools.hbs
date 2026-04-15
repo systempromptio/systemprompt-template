@@ -1,0 +1,79 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/page-hero}}
+
+    <section aria-label="CLI command" class="mb-4">
+        <p class="text-secondary text-sm">Backed by <code class="code-inline">{{demo_script}}</code></p>
+        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
+    </section>
+
+    <section aria-label="Tool success rates">
+        <h2 class="section-heading">Tool Success Rates</h2>
+        {{#if has_success_rates}}
+        {{#> components/data-table}}
+            <thead><tr><th>Tool</th><th class="col-numeric">Total</th><th class="col-numeric">Successes</th><th class="col-numeric">Failures</th><th class="col-numeric">Success %</th></tr></thead>
+            <tbody>
+            {{#each success_rates}}
+            <tr>
+                <td><code class="code-inline">{{tool_name}}</code></td>
+                <td class="col-numeric numeric">{{total}}</td>
+                <td class="col-numeric numeric">{{successes}}</td>
+                <td class="col-numeric numeric">{{failures}}</td>
+                <td class="col-numeric numeric">{{success_pct}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No tool executions yet."}}
+        {{/if}}
+    </section>
+
+    <section aria-label="Tools by agent" class="mt-6">
+        <h2 class="section-heading">Tool Availability by Agent</h2>
+        {{#if has_tools_by_agent}}
+        {{#> components/data-table}}
+            <thead><tr><th>Agent</th><th>Tool</th><th class="col-numeric">Allowed Calls</th></tr></thead>
+            <tbody>
+            {{#each tools_by_agent}}
+            <tr>
+                <td><code class="code-inline">{{agent_id}}</code></td>
+                <td><code class="code-inline">{{tool_name}}</code></td>
+                <td class="col-numeric numeric">{{usage_count}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No agent-tool usage recorded."}}
+        {{/if}}
+    </section>
+
+    <section aria-label="Recent tool executions" class="mt-6">
+        <h2 class="section-heading">Recent Tool Executions</h2>
+        {{#if has_recent_executions}}
+        {{#> components/data-table}}
+            <thead><tr><th class="col-date">Timestamp</th><th>Tool</th><th>User</th><th class="col-status">Status</th></tr></thead>
+            <tbody>
+            {{#each recent_executions}}
+            <tr>
+                <td class="col-date"><span class="date">{{formatDate created_at}}</span></td>
+                <td><code class="code-inline">{{tool_name}}</code></td>
+                <td>{{#if user_id}}{{user_id}}{{else}}<span class="text-tertiary">-</span>{{/if}}</td>
+                <td class="col-status">
+                    {{#if is_failed}}<span class="badge badge-danger">failed</span>
+                    {{else}}<span class="badge badge-success">{{status}}</span>{{/if}}
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No recent executions. Run demo/mcp/03-mcp-tool-execution.sh."}}
+        {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

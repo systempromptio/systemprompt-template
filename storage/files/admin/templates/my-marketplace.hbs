@@ -1,0 +1,205 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/page-hero}}
+
+    <p class="text-muted mb-4">Your configured collection of plugins, skills, agents, and connectors. This is what gets shared when others install your marketplace.</p>
+
+    <section aria-label="Marketplace statistics">
+    <div class="marketplace-stats-ribbon">
+        <div class="marketplace-stat-card">
+            <div class="marketplace-stat-icon marketplace-stat-icon--plugins">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="marketplace-stat-info">
+                <span class="marketplace-stat-value">{{stats.plugin_count}}</span>
+                <span class="marketplace-stat-label">Plugins</span>
+                {{#if stats.plugin_delta}}<span class="marketplace-stat-delta marketplace-stat-delta--up">{{stats.plugin_delta}}</span>{{/if}}
+                {{#if stats.plugin_period}}<span class="marketplace-stat-period">{{stats.plugin_period}}</span>{{/if}}
+            </div>
+        </div>
+        <div class="marketplace-stat-card">
+            <div class="marketplace-stat-icon marketplace-stat-icon--skills">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </div>
+            <div class="marketplace-stat-info">
+                <span class="marketplace-stat-value">{{stats.total_skills}}</span>
+                <span class="marketplace-stat-label">Skills</span>
+                {{#if stats.skills_delta}}<span class="marketplace-stat-delta marketplace-stat-delta--up">{{stats.skills_delta}}</span>{{/if}}
+                {{#if stats.skills_period}}<span class="marketplace-stat-period">{{stats.skills_period}}</span>{{/if}}
+            </div>
+        </div>
+        <div class="marketplace-stat-card">
+            <div class="marketplace-stat-icon marketplace-stat-icon--agents">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="marketplace-stat-info">
+                <span class="marketplace-stat-value">{{stats.total_agents}}</span>
+                <span class="marketplace-stat-label">Agents</span>
+                {{#if stats.agents_delta}}<span class="marketplace-stat-delta marketplace-stat-delta--up">{{stats.agents_delta}}</span>{{/if}}
+                {{#if stats.agents_period}}<span class="marketplace-stat-period">{{stats.agents_period}}</span>{{/if}}
+            </div>
+        </div>
+        <div class="marketplace-stat-card">
+            <div class="marketplace-stat-icon marketplace-stat-icon--mcp">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            </div>
+            <div class="marketplace-stat-info">
+                <span class="marketplace-stat-value">{{stats.total_mcp}}</span>
+                <span class="marketplace-stat-label">Connectors</span>
+                {{#if stats.mcp_delta}}<span class="marketplace-stat-delta marketplace-stat-delta--up">{{stats.mcp_delta}}</span>{{/if}}
+                {{#if stats.mcp_period}}<span class="marketplace-stat-period">{{stats.mcp_period}}</span>{{/if}}
+            </div>
+        </div>
+        <div class="marketplace-stat-card">
+            <div class="marketplace-stat-icon marketplace-stat-icon--hooks">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <div class="marketplace-stat-info">
+                <span class="marketplace-stat-value">{{stats.total_hooks}}</span>
+                <span class="marketplace-stat-label">Hooks</span>
+                {{#if stats.hooks_delta}}<span class="marketplace-stat-delta marketplace-stat-delta--up">{{stats.hooks_delta}}</span>{{/if}}
+                {{#if stats.hooks_period}}<span class="marketplace-stat-period">{{stats.hooks_period}}</span>{{/if}}
+            </div>
+        </div>
+    </div>
+    </section>
+
+    {{#if has_plugins}}
+    <details class="marketplace-share-section" open>
+        <summary class="marketplace-share-toggle">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            <strong>Connect &amp; Install</strong>
+            <span class="text-muted text-sm">— connect Claude and install your plugins</span>
+        </summary>
+        <div class="marketplace-share-body">
+            <p class="text-sm text-muted mb-3">Connect Claude via the MCP server URL, then export your marketplace as a single plugin for Cowork.</p>
+            <div class="marketplace-share-option">
+                <span class="text-sm text-muted">MCP Server URL</span>
+                <div class="install-copybox">
+                    <code class="install-code">{{marketplace.mcp_url}}</code>
+                    <button type="button" class="btn btn-secondary btn-sm" data-copy="{{marketplace.mcp_url}}">Copy</button>
+                </div>
+            </div>
+            <div class="marketplace-share-option">
+                <span class="text-sm text-muted">Export for Cowork</span>
+                <p class="text-sm text-muted">Download your entire marketplace as a single plugin ZIP. Import in Claude Desktop under Settings &rarr; Plugins &rarr; Import.</p>
+                <a href="/api/public/marketplace/{{marketplace.user_id}}/export/cowork.zip" class="btn btn-primary btn-sm" download>Export for Cowork</a>
+            </div>
+        </div>
+    </details>
+
+    <div class="toolbar">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search plugins..." id="my-marketplace-search" aria-label="Search plugins">
+        </div>
+        <a href="/admin/browse/plugins/" class="btn btn-primary btn-sm">Browse Plugins</a>
+    </div>
+
+    <section aria-label="Marketplace plugins">
+    <div class="plugin-selection-grid" id="my-marketplace-grid">
+        {{#each plugins}}
+        <div class="marketplace-card{{#unless enabled}} plugin-disabled{{/unless}}{{#unless base_plugin_id}} marketplace-card--custom{{/unless}}" data-plugin-id="{{plugin_id}}">
+            <div class="marketplace-card-accent"></div>
+            <div class="marketplace-card-body">
+                <div class="marketplace-card-header">
+                    <div class="marketplace-card-title-row">
+                        <strong class="marketplace-card-name">{{name}}</strong>
+                        {{#if base_plugin_id}}
+                        <span class="marketplace-card-source marketplace-card-source--official"><span class="marketplace-card-source-dot"></span> Official</span>
+                        {{else}}
+                        <span class="marketplace-card-source marketplace-card-source--custom"><span class="marketplace-card-source-dot"></span> Custom</span>
+                        {{/if}}
+                    </div>
+                    {{#if category}}<span class="marketplace-card-category">{{category}}</span>{{/if}}
+                </div>
+
+                {{#if description}}
+                <p class="marketplace-card-desc text-sm">{{description}}</p>
+                {{/if}}
+
+                <div class="marketplace-card-summary">
+                    {{#if (gt skill_count 0)}}<span class="marketplace-summary-pill"><span class="pill-dot pill-dot--skill"></span> {{skill_count}} skill{{#if (not (eq skill_count 1))}}s{{/if}}</span>{{/if}}
+                    {{#if (gt agent_count 0)}}<span class="marketplace-summary-pill"><span class="pill-dot pill-dot--agent"></span> {{agent_count}} agent{{#if (not (eq agent_count 1))}}s{{/if}}</span>{{/if}}
+                    {{#if (gt mcp_count 0)}}<span class="marketplace-summary-pill"><span class="pill-dot pill-dot--mcp"></span> {{mcp_count}} connector{{#if (not (eq mcp_count 1))}}s{{/if}}</span>{{/if}}
+                    {{#if (gt hook_count 0)}}<span class="marketplace-summary-pill"><span class="pill-dot pill-dot--hook"></span> {{hook_count}} hook{{#if (not (eq hook_count 1))}}s{{/if}}</span>{{/if}}
+                </div>
+
+                <div class="marketplace-card-contents">
+                    {{#if (gt skill_count 0)}}
+                    <div class="marketplace-card-section">
+                        <div class="marketplace-card-section-label">Skills</div>
+                        <div class="marketplace-card-tags">
+                            {{#each skills}}
+                            <span class="marketplace-tag marketplace-tag--skill">{{name}}</span>
+                            {{/each}}
+                        </div>
+                    </div>
+                    {{/if}}
+
+                    {{#if (gt agent_count 0)}}
+                    <div class="marketplace-card-section">
+                        <div class="marketplace-card-section-label">Agents</div>
+                        <div class="marketplace-card-tags">
+                            {{#each agents}}
+                            <span class="marketplace-tag marketplace-tag--agent">{{name}}</span>
+                            {{/each}}
+                        </div>
+                    </div>
+                    {{/if}}
+
+                    {{#if (gt mcp_count 0)}}
+                    <details class="marketplace-card-expandable">
+                        <summary class="marketplace-card-expand-trigger">
+                            <span class="marketplace-card-section-label">Connectors</span>
+                            <span class="marketplace-expand-hint">{{mcp_count}} connector{{#if (not (eq mcp_count 1))}}s{{/if}} — show</span>
+                        </summary>
+                        <div class="marketplace-card-tags mt-2">
+                            {{#each mcp_servers}}
+                            <span class="marketplace-tag marketplace-tag--mcp">{{name}}</span>
+                            {{/each}}
+                        </div>
+                    </details>
+                    {{/if}}
+                </div>
+
+                <div class="marketplace-card-footer">
+                    <a href="/admin/my/plugins/view?id={{plugin_id}}" class="marketplace-card-link">View Details &rarr;</a>
+                    {{#if (eq base_plugin_id "systemprompt")}}
+                    <a href="/admin/my/plugins/view?id={{plugin_id}}" class="marketplace-card-action">View</a>
+                    {{else}}
+                    <a href="/admin/my/plugins/edit?id={{plugin_id}}" class="marketplace-card-action">Edit</a>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    </section>
+    {{else}}
+    <div class="marketplace-empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-tertiary mb-4">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+        </svg>
+        <h3 class="marketplace-empty-heading">Build your marketplace</h3>
+        <p class="text-muted marketplace-empty-text">
+            Browse the Plugin Directory to add pre-built plugins with skills, agents, and connectors — or create a custom plugin from scratch.
+        </p>
+        <div class="d-flex gap-3 justify-center">
+            <a href="/admin/browse/plugins/" class="btn btn-primary">Browse Plugins</a>
+            <a href="/admin/my/plugins/edit/" class="btn btn-secondary">Create Custom Plugin</a>
+        </div>
+    </div>
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" src="/js/pages/admin-my-marketplace.js" type="module" defer></script>
+    {{/inline}}
+{{/layout}}

@@ -1,0 +1,20 @@
+import { initDelegation, setCloseMenus } from './events.js';
+import { initDropdown, closeAllMenus } from './dropdown.js';
+import { initSidebar } from './sidebar.js';
+import { initTheme } from './theme.js';
+import { initHeaderActions } from './header-actions.js';
+import { initInstallWidget } from './install-widget.js';
+import { initLogout, initUserDisplay, getUserContext } from './auth.js';
+import { initOnboardingBanner } from './onboarding-banner.js';
+
+setCloseMenus(closeAllMenus);
+initDelegation();
+initDropdown();
+initSidebar();
+initTheme();
+initHeaderActions();
+initInstallWidget();
+initLogout();
+initUserDisplay();
+getUserContext();
+initOnboardingBanner();

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM employee_ranks",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "coalesce",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "8467ce00eae38b7e1f7180139eca1700e9bbf4d1c4d134378e0d9f84ff6b2897"
+}

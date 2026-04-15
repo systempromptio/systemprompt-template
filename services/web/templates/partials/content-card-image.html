@@ -1,0 +1,62 @@
+{{!--
+  Content Card with Image
+  Used for blog posts and other content with featured images.
+
+  Variables:
+  - URL: Link to content
+  - TITLE: Content title
+  - DESCRIPTION: Content description
+  - IMAGE: Featured image URL
+  - KIND: Content type (blog, article, etc.) - used for CSS modifier
+  - CATEGORY: Optional category (guide, cli, build, content, validation)
+  - AUTHOR: Optional author name
+  - DATE: Optional formatted date
+  - DATE_ISO: Optional ISO date for datetime attribute
+  - READ_TIME: Optional read time in minutes
+  - TAGS: Optional array of tags
+--}}
+<a href="{{URL}}" class="blog-card-link" data-category="{{CATEGORY}}">
+  <article class="blog-card content-card content-card--{{KIND}} content-card--has-image{{#if CATEGORY}} content-card--category-{{CATEGORY}}{{/if}}" data-category="{{CATEGORY}}">
+    {{#if IMAGE}}
+    <div class="card-image">
+      <img src="{{IMAGE}}" alt="{{TITLE}}" loading="lazy" />
+    </div>
+    {{else}}
+    <div class="card-image card-image--placeholder">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+    </div>
+    {{/if}}
+
+    <div class="card-content">
+      {{#if CATEGORY}}
+      <span class="card-category card-category--{{CATEGORY}}">{{CATEGORY}}</span>
+      {{/if}}
+      <h2 class="card-title">{{TITLE}}</h2>
+      <p class="card-description">{{DESCRIPTION}}</p>
+
+      {{#if TAGS}}
+      <div class="content-card__tags">
+        {{#each TAGS}}
+        <span class="content-card__tag">{{this}}</span>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      <div class="meta">
+        {{#if AUTHOR}}
+        <span class="meta-author">{{AUTHOR}}</span>
+        {{/if}}
+        {{#if DATE}}
+        <time datetime="{{DATE_ISO}}" class="meta-date">{{DATE}}</time>
+        {{/if}}
+        {{#if READ_TIME}}
+        <span class="meta-read-time">{{READ_TIME}} min read</span>
+        {{/if}}
+      </div>
+    </div>
+  </article>
+</a>

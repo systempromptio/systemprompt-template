@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO employee_ranks (user_id, total_xp, rank_level, rank_name, events_count, unique_skills_count, unique_plugins_count, current_streak, longest_streak, last_active_date, updated_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())\n        ON CONFLICT (user_id) DO UPDATE SET\n            total_xp = EXCLUDED.total_xp,\n            rank_level = EXCLUDED.rank_level,\n            rank_name = EXCLUDED.rank_name,\n            events_count = EXCLUDED.events_count,\n            unique_skills_count = EXCLUDED.unique_skills_count,\n            unique_plugins_count = EXCLUDED.unique_plugins_count,\n            current_streak = EXCLUDED.current_streak,\n            longest_streak = GREATEST(employee_ranks.longest_streak, EXCLUDED.longest_streak),\n            last_active_date = EXCLUDED.last_active_date,\n            updated_at = NOW()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Int4",
+        "Text",
+        "Int8",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Date"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "861652c12983dd1348b89b5ce4a37e12d96af711d99df5c30046b7cbac30dc3f"
+}

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo 08 — Request Tracing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@600;700&family=Roboto:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: oklch(0.16 0.01 45);
+            --bg-surface: oklch(0.21 0.01 48);
+            --bg-elevated: oklch(0.24 0.01 48);
+            --bg-inset: oklch(0.14 0.01 45);
+            --text: oklch(0.98 0.004 70);
+            --text-secondary: oklch(0.86 0.010 60);
+            --text-tertiary: oklch(0.70 0.01 70);
+            --brand-300: oklch(0.52 0.14 48);
+            --brand-400: oklch(0.67 0.18 50);
+            --brand-500: oklch(0.72 0.17 52);
+            --border: oklch(1.00 0 0 / 0.08);
+            --border-strong: oklch(1.00 0 0 / 0.14);
+            --success: oklch(0.78 0.16 165);
+            --success-dim: oklch(0.78 0.16 165 / 0.10);
+            --danger: oklch(0.70 0.17 20);
+            --info: oklch(0.70 0.14 250);
+            --info-dim: oklch(0.70 0.14 250 / 0.10);
+            --purple: oklch(0.75 0.14 300);
+            --purple-dim: oklch(0.68 0.18 300 / 0.10);
+        }
+        [data-theme="light"] {
+            --bg: oklch(0.97 0.003 70);
+            --bg-surface: oklch(1.0 0 0);
+            --bg-elevated: oklch(0.98 0.003 70);
+            --bg-inset: oklch(0.95 0.003 70);
+            --text: oklch(0.20 0.01 50);
+            --text-secondary: oklch(0.41 0.01 60);
+            --text-tertiary: oklch(0.53 0.01 65);
+            --brand-300: oklch(0.78 0.15 53);
+            --brand-400: oklch(0.75 0.16 52);
+            --brand-500: oklch(0.72 0.17 52);
+            --border: oklch(0.20 0.01 50 / 0.08);
+            --border-strong: oklch(0.20 0.01 50 / 0.14);
+            --success-dim: oklch(0.78 0.16 165 / 0.08);
+            --info-dim: oklch(0.70 0.14 250 / 0.08);
+            --purple-dim: oklch(0.68 0.18 300 / 0.08);
+        }
+
+        body { font-family: 'Roboto', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; font-size: 0.8125rem; }
+
+        /* Header */
+        .page-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); }
+        .page-header h1 { font-family: 'Dosis', system-ui, sans-serif; font-size: 1rem; font-weight: 700; color: var(--brand-500); letter-spacing: 0.05em; }
+        .page-header h1 span { color: var(--text-tertiary); font-size: 0.75rem; margin-right: 0.4rem; }
+        .header-controls { display: flex; gap: 0.375rem; }
+        .btn { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 5px; padding: 0.3rem 0.6rem; min-height: 28px; cursor: pointer; font-family: inherit; font-size: 0.75rem; text-decoration: none; transition: border-color 0.1s ease-out, color 0.1s ease-out; display: inline-flex; align-items: center; gap: 0.25rem; }
+        .btn:hover { border-color: var(--brand-500); color: var(--text); }
+
+        /* Content */
+        .content { max-width: 860px; margin: 0 auto; padding: 1.5rem; }
+        .intro { color: var(--text-secondary); font-size: 0.8125rem; margin-bottom: 1.75rem; line-height: 1.6; }
+        .intro strong { color: var(--text); font-weight: 500; }
+
+        /* ── Command Group ── */
+        .cmd-group {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .cmd-header {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.625rem 1rem;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+        }
+        .cmd-step {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: var(--brand-500); color: oklch(0.16 0.01 45);
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-weight: 700; font-size: 0.6875rem;
+            display: inline-flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        [data-theme="light"] .cmd-step { color: white; }
+        .cmd-label {
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-weight: 700; font-size: 0.875rem;
+            color: var(--text);
+        }
+        .cmd-time {
+            margin-left: auto;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.6875rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Command line */
+        .cmd-line {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-inset);
+            border-bottom: 1px solid var(--border);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--brand-300);
+            overflow-x: auto;
+        }
+        .cmd-line .prompt { color: var(--text-tertiary); user-select: none; }
+
+        /* Detail rows inside a group */
+        .cmd-body { padding: 0; }
+        .detail-table {
+            width: 100%; border-collapse: collapse;
+        }
+        .detail-table td {
+            padding: 0.375rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        .detail-table tr:last-child td { border-bottom: none; }
+        .detail-table tr { transition: background 0.1s ease-out; }
+        .detail-table tr:hover { background: oklch(0.72 0.17 52 / 0.03); }
+        .detail-table .dt-label {
+            width: 130px;
+            color: var(--text-tertiary);
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 500;
+            padding-top: 0.4375rem;
+        }
+        .detail-table .dt-value {
+            color: var(--text-secondary);
+        }
+
+        /* Sub-flow within a group */
+        .sub-flow {
+            margin: 0.25rem 0;
+        }
+        .sub-step {
+            display: flex; align-items: flex-start; gap: 0.5rem;
+            padding: 0.25rem 0;
+            font-size: 0.75rem;
+        }
+        .sub-num {
+            color: var(--text-tertiary);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.625rem;
+            width: 14px; text-align: right;
+            flex-shrink: 0;
+            padding-top: 1px;
+        }
+        .sub-text { color: var(--text-secondary); }
+        .sub-text strong { color: var(--text); font-weight: 500; }
+
+        /* Badges */
+        .badge { font-family: 'Dosis', system-ui, sans-serif; font-size: 0.625rem; font-weight: 700; padding: 0.125rem 0.375rem; border-radius: 3px; letter-spacing: 0.03em; display: inline-flex; align-items: center; gap: 0.2rem; white-space: nowrap; vertical-align: middle; }
+        .b-pass { background: var(--success-dim); color: var(--success); border: 1px solid oklch(0.78 0.16 165 / 0.2); }
+        .b-pass::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--success); }
+        .b-id { background: var(--purple-dim); color: var(--purple); border: 1px solid oklch(0.68 0.18 300 / 0.15); font-family: 'Roboto Mono', monospace; font-weight: 400; }
+        .b-info { background: var(--info-dim); color: var(--info); border: 1px solid oklch(0.70 0.14 250 / 0.15); }
+        .b-neutral { background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border); }
+        .b-warn { background: oklch(0.83 0.16 85 / 0.10); color: oklch(0.83 0.16 85); border: 1px solid oklch(0.83 0.16 85 / 0.2); }
+
+        .code { font-family: 'Roboto Mono', monospace; font-size: 0.6875rem; color: var(--brand-300); background: oklch(0.72 0.17 52 / 0.06); padding: 0.1rem 0.3rem; border-radius: 2px; }
+
+        /* ── Review Box ── */
+        .review-box {
+            background: var(--bg-surface);
+            border: 1.5px solid oklch(0.70 0.14 250 / 0.3);
+            border-radius: 10px;
+            margin-top: 1.5rem;
+            overflow: hidden;
+        }
+        .review-header {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--info-dim);
+            border-bottom: 1px solid oklch(0.70 0.14 250 / 0.15);
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-weight: 700; font-size: 0.8125rem;
+            color: var(--info);
+            letter-spacing: 0.03em;
+        }
+        .review-header svg { width: 14px; height: 14px; stroke: var(--info); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .review-body { padding: 0; }
+        .review-cmd {
+            display: flex; align-items: flex-start; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+        }
+        .review-cmd:last-child { border-bottom: none; }
+        .review-cmd-label {
+            color: var(--text-tertiary);
+            font-size: 0.625rem; text-transform: uppercase;
+            letter-spacing: 0.06em; font-weight: 500;
+            min-width: 80px; padding-top: 0.125rem;
+        }
+        .review-cmd-code {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.6875rem;
+            color: var(--info);
+        }
+        .review-cmd-desc {
+            color: var(--text-tertiary);
+            font-size: 0.6875rem;
+            margin-top: 0.125rem;
+        }
+
+        /* Pipeline flow */
+        .pipeline-flow {
+            display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+            padding: 0.25rem 0;
+        }
+        .pipeline-stage {
+            display: inline-flex; align-items: center; gap: 0.25rem;
+            font-size: 0.6875rem;
+        }
+        .pipeline-stage .code { white-space: nowrap; }
+        .pipeline-arrow {
+            color: var(--text-tertiary);
+            font-size: 0.75rem;
+            padding: 0 0.35rem;
+        }
+
+        /* Footer */
+        .page-footer { display: flex; justify-content: space-between; padding: 0.75rem 1.5rem; border-top: 1px solid var(--border); margin-top: 1rem; }
+
+        @media print { body { background: white; color: #1a1a1a; } .btn { display: none; } }
+        @media (max-width: 640px) { .page-header { flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; } .content { padding: 1rem; } .detail-table .dt-label { width: 90px; } }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <h1><span>Demo 08</span> Request Tracing</h1>
+        <div class="header-controls">
+            <a href="07-mcp-access-tracking.html" class="btn">&larr; Prev</a>
+            <a href="index.html" class="btn">Index</a>
+            <button class="btn" onclick="toggleTheme()"><span class="theme-icon">&#9790;</span></button>
+        </div>
+    </header>
+
+    <div class="content">
+        <p class="intro">
+            End-to-end request tracing: typed data flow, all newtype IDs, CLI log commands, system pipeline, and a <strong>200-request benchmark</strong>.
+            Cost: <strong>free</strong> (governance API calls + DB queries, no AI).
+            This is the deep-dive into how every request flows through the typed Rust pipeline.
+        </p>
+
+        <!-- ═══ Step 1: Typed Data Flow ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">1</span>
+                <span class="cmd-label">Typed Data Flow</span>
+            </div>
+            <div class="cmd-line">
+                <span class="prompt">$</span> curl -s -X POST ... -d '{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"demo-trace-...","tool_input":{"file_path":"/src/main.rs"}}'
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">What happens</td>
+                        <td class="dt-value">Governance request + track request, shows full payloads. JSON enters at HTTP boundary, immediately deserialized into Rust structs.</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Sub-flow</td>
+                        <td class="dt-value">
+                            <div class="sub-flow">
+                                <div class="sub-step"><span class="sub-num">1a</span><span class="sub-text"><strong>Governance</strong> &mdash; PreToolUse &rarr; allow/deny, captures HTTP status + response time</span></div>
+                                <div class="sub-step"><span class="sub-num">1b</span><span class="sub-text"><strong>Track</strong> &mdash; PostToolUse &rarr; event recorded, captures HTTP status + response time</span></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Field types</td>
+                        <td class="dt-value">
+                            <span class="code">hook_event_name</span>: String &nbsp;&bull;&nbsp;
+                            <span class="code">tool_name</span>: String &nbsp;&bull;&nbsp;
+                            <span class="code">agent_id</span>: String &nbsp;&bull;&nbsp;
+                            <span class="code">session_id</span> &rarr; <span class="badge b-id">SessionId</span> (newtype) &nbsp;&bull;&nbsp;
+                            <span class="code">tool_input</span> &rarr; serde_json::Value &nbsp;&bull;&nbsp;
+                            <span class="code">permissionDecision</span>: "allow"|"deny"
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Single untyped boundary</strong> &mdash; JSON is untyped ONLY at the HTTP edge. serde deserializes into <span class="code">HookEventPayload</span> immediately. From that point, <span class="code">session_id</span> becomes <span class="badge b-id">SessionId</span> (newtype) &mdash; the compiler prevents passing it where a <span class="badge b-id">UserId</span> is expected. Zero runtime cost for this type safety.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Step 2: All Typed IDs ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">2</span>
+                <span class="cmd-label">All Typed IDs</span>
+            </div>
+            <div class="cmd-line">
+                <span class="prompt">$</span> infra db query "SELECT id, user_id, session_id, agent_id, decision, plugin_id FROM governance_decisions WHERE session_id = '$SESSION_ID' ORDER BY created_at DESC LIMIT 3"
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">IDs in system</td>
+                        <td class="dt-value">
+                            <span class="badge b-id">decision_id</span> UUID PK &nbsp;&bull;&nbsp;
+                            <span class="badge b-id">user_id</span> JWT sub &nbsp;&bull;&nbsp;
+                            <span class="badge b-id">session_id</span> client payload &nbsp;&bull;&nbsp;
+                            <span class="badge b-id">agent_id</span> hook payload &nbsp;&bull;&nbsp;
+                            <span class="badge b-id">plugin_id</span> query param &nbsp;&bull;&nbsp;
+                            <span class="badge b-id">trace_id</span> per-request &nbsp;&bull;&nbsp;
+                            <span class="badge b-id">context_id</span> CLI created
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Rust newtypes</td>
+                        <td class="dt-value">
+                            <span class="code">pub struct UserId(String);</span> &nbsp;&nbsp;
+                            <span class="code">pub struct SessionId(String);</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Compile-time ID safety</strong> &mdash; <span class="code">fn record(user: &amp;UserId, session: &amp;SessionId)</span> &mdash; the compiler enforces correct types at every call site. You cannot pass a <span class="badge b-id">SessionId</span> where a <span class="badge b-id">UserId</span> is expected. Every SQL query that writes these uses <span class="code">sqlx::query!</span> &mdash; checked against the live schema at compile time.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Step 3: Log Commands ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">3</span>
+                <span class="cmd-label">Log Commands</span>
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">Trace list</td>
+                        <td class="dt-value">
+                            <span class="code">infra logs trace list --limit 3</span>
+                            <div class="sub-flow"><div class="sub-step"><span class="sub-text">execution_traces table &mdash; TraceId, AgentName, status, event count</span></div></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Trace detail</td>
+                        <td class="dt-value">
+                            <span class="code">infra logs trace show &lt;id&gt; --all</span>
+                            <div class="sub-flow"><div class="sub-step"><span class="sub-text">Trace events &mdash; AI requests, tool calls, execution steps, skills, governance</span></div></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">AI requests</td>
+                        <td class="dt-value">
+                            <span class="code">infra logs request list --limit 5</span>
+                            <div class="sub-flow"><div class="sub-step"><span class="sub-text">ai_requests table &mdash; model, tokens, cost per request</span></div></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">App logs</td>
+                        <td class="dt-value">
+                            <span class="code">infra logs view --level info --since 5m</span>
+                            <div class="sub-flow"><div class="sub-step"><span class="sub-text">Application logs &mdash; tracing crate structured output</span></div></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Observable by default</strong> &mdash; every request is traced. No special debug mode needed. The CLI provides 4 different views into the same data, from summary (trace list) to full detail (trace show --all).</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Step 4: Request Flow Map ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">4</span>
+                <span class="cmd-label">Request Flow Map</span>
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">Pipeline</td>
+                        <td class="dt-value">
+                            <div class="pipeline-flow">
+                                <span class="pipeline-stage"><span class="badge b-neutral">Client</span></span>
+                                <span class="pipeline-arrow">&rarr;</span>
+                                <span class="pipeline-stage"><span class="badge b-info">Router</span> <span class="code">HookEventPayload via serde</span></span>
+                                <span class="pipeline-arrow">&rarr;</span>
+                                <span class="pipeline-stage"><span class="badge b-info">JWT</span> <span class="code">JwtClaims { sub: UserId }</span></span>
+                                <span class="pipeline-arrow">&rarr;</span>
+                                <span class="pipeline-stage"><span class="badge b-info">Scope</span> <span class="code">GovernanceContext</span></span>
+                                <span class="pipeline-arrow">&rarr;</span>
+                                <span class="pipeline-stage"><span class="badge b-info">Rules</span> <span class="code">Vec&lt;RuleEvaluation&gt;</span></span>
+                                <span class="pipeline-arrow">&rarr;</span>
+                                <span class="pipeline-stage"><span class="badge b-info">Audit</span> <span class="code">sqlx::query! INSERT</span></span>
+                                <span class="pipeline-arrow">&rarr;</span>
+                                <span class="pipeline-stage"><span class="badge b-pass">Response</span> <span class="code">GovernanceResponse</span></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Typed at every stage</strong> &mdash; no dictionaries, no raw strings, no unvalidated JSON passes between stages. If you change a column name in a migration, every query that touches it fails to compile.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Step 5: Production Benchmark ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">5</span>
+                <span class="cmd-label">Production Benchmark</span>
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">Load test</td>
+                        <td class="dt-value">200 requests, 100 concurrent workers via <span class="code">hey</span> load testing tool</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Governance</td>
+                        <td class="dt-value">
+                            <div class="sub-flow">
+                                <div class="sub-step"><span class="sub-text">Throughput (req/s), server time, p10/p50/p90/p99 latencies</span></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Track</td>
+                        <td class="dt-value">
+                            <div class="sub-flow">
+                                <div class="sub-step"><span class="sub-text">Throughput (req/s), p50/p90/p99 latencies</span></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">MCP tool call</td>
+                        <td class="dt-value">5 sequential calls, average latency</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">DB pool</td>
+                        <td class="dt-value">Connections used vs max, <span class="code">synchronous_commit</span> setting</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Capacity</td>
+                        <td class="dt-value">At N req/s, assuming 10 tool calls/min per dev, supports X concurrent developers</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Zero-cost abstractions at runtime</strong> &mdash; newtypes compile to bare strings. No boxing, no indirection. Tokio async runtime handles 100 concurrent connections with work-stealing. In-memory rate limiter: zero DB round-trips in the hot path. <span class="code">OnceLock</span> scope cache: agent config loaded once, not per-request.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Review Box ═══ -->
+        <div class="review-box">
+            <div class="review-header">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Review this trace
+            </div>
+            <div class="review-body">
+                <div class="review-cmd">
+                    <div class="review-cmd-label">Decisions</div>
+                    <div>
+                        <div class="review-cmd-code">infra db query "SELECT decision, COUNT(*) FROM governance_decisions WHERE session_id = '$SESSION_ID' GROUP BY decision"</div>
+                        <div class="review-cmd-desc">Governance decision counts for this session</div>
+                    </div>
+                </div>
+                <div class="review-cmd">
+                    <div class="review-cmd-label">Trace</div>
+                    <div>
+                        <div class="review-cmd-code">infra logs trace list --limit 3</div>
+                        <div class="review-cmd-desc">Recent execution traces with status and event count</div>
+                    </div>
+                </div>
+                <div class="review-cmd">
+                    <div class="review-cmd-label">Dashboard</div>
+                    <div>
+                        <div class="review-cmd-code">http://localhost:8080/admin/</div>
+                        <div class="review-cmd-desc">Admin dashboard with live metrics</div>
+                    </div>
+                </div>
+                <div class="review-cmd">
+                    <div class="review-cmd-label">Benchmark</div>
+                    <div>
+                        <div class="review-cmd-code">./demo/08-request-tracing.sh</div>
+                        <div class="review-cmd-desc">Re-run to see live benchmark numbers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">
+        <a href="07-mcp-access-tracking.html" class="btn">&larr; MCP Access Tracking</a>
+        <span></span>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            document.querySelector('.theme-icon').textContent = next === 'dark' ? '\u263E' : '\u2600';
+            try { localStorage.setItem('arch-theme', next); } catch(e) {}
+        }
+        try { const s = localStorage.getItem('arch-theme'); if (s) { document.documentElement.setAttribute('data-theme', s); document.querySelector('.theme-icon').textContent = s === 'dark' ? '\u263E' : '\u2600'; } } catch(e) {}
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') window.location.href = '07-mcp-access-tracking.html';
+            if (e.key === 'h' || e.key === 'H') window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

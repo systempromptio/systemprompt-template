@@ -1,0 +1,117 @@
+@layer components {
+
+.sf-badge {
+    font-size: var(--sp-text-xs);
+    padding: 0.125rem var(--sp-space-2);
+    border-radius: var(--sp-radius-badge);
+    background: var(--sp-badge-accent-bg);
+    color: var(--sp-badge-accent-fg);
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid color-mix(in oklch, var(--sp-accent) 12%, transparent);
+}
+
+.sf-badge--tools {
+    background: var(--sp-badge-warning-bg);
+    color: var(--sp-badge-warning-fg);
+    border-color: color-mix(in oklch, var(--sp-warning) 12%, transparent);
+}
+
+.sf-badge--error {
+    background: var(--sp-badge-danger-bg);
+    color: var(--sp-badge-danger-fg);
+    border-color: color-mix(in oklch, var(--sp-danger) 12%, transparent);
+}
+
+.sf-session-time {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    white-space: nowrap;
+}
+
+.sf-session-active-label {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-success);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.sf-session-right {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.sf-outcome-chip {
+    font-size: var(--sp-text-xs);
+    font-weight: 500;
+    padding: 0.0625rem var(--sp-space-2);
+    border-radius: var(--sp-radius-full);
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+}
+
+.sf-outcome-chip--success {
+    background: color-mix(in oklch, var(--sp-success) 15%, transparent);
+    color: var(--sp-success);
+}
+
+.sf-outcome-chip--partial {
+    background: color-mix(in oklch, var(--sp-warning) 15%, transparent);
+    color: var(--sp-warning);
+}
+
+.sf-outcome-chip--failed {
+    background: color-mix(in oklch, var(--sp-danger) 15%, transparent);
+    color: var(--sp-danger);
+}
+
+.sf-outcome-chip--learning {
+    background: color-mix(in oklch, var(--sp-accent) 15%, transparent);
+    color: var(--sp-accent);
+}
+
+.sf-session-duration {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sf-tools-bar {
+    display: flex;
+    gap: var(--sp-space-2);
+    flex-wrap: wrap;
+    padding: var(--sp-space-2) var(--sp-space-4);
+    margin-bottom: var(--sp-space-3);
+    background: var(--sp-bg-surface-gradient);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-brand);
+    box-shadow: var(--sp-shadow-xs);
+}
+
+.sf-tool-pill {
+    font-size: var(--sp-text-xs);
+    padding: 0.125rem var(--sp-space-2);
+    border-radius: var(--sp-radius-full);
+    background: color-mix(in oklch, var(--sp-text-tertiary) 8%, transparent);
+    color: var(--sp-text-secondary);
+}
+
+.sf-tool-pill strong {
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+    .sf-session-right {
+        flex-shrink: 1;
+        flex-wrap: wrap;
+        gap: var(--sp-space-1);
+    }
+}
+
+}

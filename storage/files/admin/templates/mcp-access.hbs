@@ -1,0 +1,61 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/page-hero}}
+
+    <section aria-label="CLI command" class="mb-4">
+        <p class="text-secondary text-sm">Backed by <code class="code-inline">{{demo_script}}</code></p>
+        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
+    </section>
+
+    <section aria-label="MCP access events">
+        <h2 class="section-heading">MCP Server Access</h2>
+        {{#if has_access_events}}
+        {{#> components/data-table}}
+            <thead><tr><th class="col-date">Timestamp</th><th>Server</th><th class="col-status">Action</th><th class="col-multiline">Description</th></tr></thead>
+            <tbody>
+            {{#each access_events}}
+            <tr>
+                <td class="col-date"><span class="date">{{formatDate created_at}}</span></td>
+                <td><code class="code-inline">{{server_name}}</code></td>
+                <td class="col-status"><span class="badge badge-info">{{action}}</span></td>
+                <td class="col-multiline">{{description}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No MCP access events yet. Run demo/mcp/02-mcp-access-tracking.sh to generate some."}}
+        {{/if}}
+    </section>
+
+    <section aria-label="Governance decisions" class="mt-6">
+        <h2 class="section-heading">Governance Decisions</h2>
+        {{#if has_governance}}
+        {{#> components/data-table}}
+            <thead><tr><th class="col-date">Timestamp</th><th>User</th><th>Agent</th><th>Tool</th><th class="col-status">Decision</th><th>Policy</th><th class="col-multiline">Reason</th></tr></thead>
+            <tbody>
+            {{#each governance}}
+            <tr>
+                <td class="col-date"><span class="date">{{formatDate created_at}}</span></td>
+                <td>{{user_id}}</td>
+                <td>{{#if agent_id}}<code class="code-inline">{{agent_id}}</code>{{else}}<span class="text-tertiary">-</span>{{/if}}</td>
+                <td><code class="code-inline">{{tool_name}}</code></td>
+                <td class="col-status">
+                    {{#if is_denied}}<span class="badge badge-danger">deny</span>
+                    {{else}}<span class="badge badge-success">allow</span>{{/if}}
+                </td>
+                <td>{{policy}}</td>
+                <td class="col-multiline">{{reason}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No governance decisions recorded."}}
+        {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

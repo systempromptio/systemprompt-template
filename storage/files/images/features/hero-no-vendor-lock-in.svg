@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+  <defs>
+    <marker id="arrowRight" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#A2AAB9"/>
+    </marker>
+    <marker id="arrowLeft" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
+      <path d="M8,0 L0,3 L8,6" fill="#A2AAB9"/>
+    </marker>
+    <marker id="arrowRoundTrip" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#22c55e"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="400" y="28" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#252526" letter-spacing="1.5">FORMAT PORTABILITY</text>
+  <rect x="340" y="33" width="120" height="3" rx="1.5" fill="#EF4623"/>
+
+  <!-- ===== CENTER: systemprompt.io Platform ===== -->
+  <rect x="290" y="90" width="220" height="90" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="290" y="90" width="220" height="4" rx="2" fill="#EF4623"/>
+  <text x="400" y="128" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#252526">systemprompt.io Platform</text>
+  <text x="400" y="148" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#A2AAB9">systemprompt.io</text>
+
+  <!-- ===== LEFT: Standard Formats ===== -->
+  <text x="110" y="58" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#A2AAB9" letter-spacing="1">OPEN FORMATS</text>
+
+  <!-- Markdown -->
+  <rect x="30" y="70" width="160" height="46" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="30" y="70" width="160" height="4" rx="2" fill="#22c55e"/>
+  <text x="110" y="91" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#252526">Markdown</text>
+  <text x="110" y="106" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Skills &amp; docs</text>
+
+  <!-- YAML -->
+  <rect x="30" y="124" width="160" height="46" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="30" y="124" width="160" height="4" rx="2" fill="#0071CE"/>
+  <text x="110" y="145" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#252526">YAML</text>
+  <text x="110" y="160" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Config &amp; plugins</text>
+
+  <!-- Git -->
+  <rect x="30" y="178" width="160" height="46" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="30" y="178" width="160" height="4" rx="2" fill="#EF4623"/>
+  <text x="110" y="199" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#252526">Git</text>
+  <text x="110" y="214" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Version control</text>
+
+  <!-- ===== RIGHT: Compatible Clients ===== -->
+  <text x="690" y="58" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#A2AAB9" letter-spacing="1">AGENTIC CLIENTS</text>
+
+  <!-- Claude Code -->
+  <rect x="610" y="70" width="160" height="46" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="610" y="70" width="160" height="4" rx="2" fill="#0071CE"/>
+  <text x="690" y="91" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#252526">Claude Code</text>
+  <text x="690" y="106" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Agentic coding</text>
+
+  <!-- Codex / Custom Agents -->
+  <rect x="610" y="124" width="160" height="46" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="610" y="124" width="160" height="4" rx="2" fill="#22c55e"/>
+  <text x="690" y="145" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#252526">OpenAI Codex</text>
+  <text x="690" y="160" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Cloud agents</text>
+
+  <!-- Any Agentic Client -->
+  <rect x="610" y="178" width="160" height="46" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="610" y="178" width="160" height="4" rx="2" fill="#f97316"/>
+  <text x="690" y="199" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#252526">Any Agent Client</text>
+  <text x="690" y="214" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Future-compatible</text>
+
+  <!-- ===== ARROWS: Left to Center (bidirectional, horizontal) ===== -->
+  <line x1="190" y1="93" x2="288" y2="115" stroke="#A2AAB9" stroke-width="1.2" marker-end="url(#arrowRight)" marker-start="url(#arrowLeft)"/>
+  <line x1="190" y1="147" x2="288" y2="135" stroke="#A2AAB9" stroke-width="1.2" marker-end="url(#arrowRight)" marker-start="url(#arrowLeft)"/>
+  <line x1="190" y1="201" x2="288" y2="155" stroke="#A2AAB9" stroke-width="1.2" marker-end="url(#arrowRight)" marker-start="url(#arrowLeft)"/>
+
+  <!-- ===== ARROWS: Center to Right (bidirectional, horizontal) ===== -->
+  <line x1="512" y1="115" x2="608" y2="93" stroke="#A2AAB9" stroke-width="1.2" marker-end="url(#arrowRight)" marker-start="url(#arrowLeft)"/>
+  <line x1="512" y1="135" x2="608" y2="147" stroke="#A2AAB9" stroke-width="1.2" marker-end="url(#arrowRight)" marker-start="url(#arrowLeft)"/>
+  <line x1="512" y1="155" x2="608" y2="201" stroke="#A2AAB9" stroke-width="1.2" marker-end="url(#arrowRight)" marker-start="url(#arrowLeft)"/>
+
+  <!-- ===== BOTTOM: Import/Export Round-Trip ===== -->
+  <rect x="240" y="270" width="130" height="50" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="240" y="270" width="130" height="4" rx="2" fill="#22c55e"/>
+  <text x="305" y="300" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#252526">Import</text>
+
+  <rect x="430" y="270" width="130" height="50" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="430" y="270" width="130" height="4" rx="2" fill="#0071CE"/>
+  <text x="495" y="300" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#252526">Export</text>
+
+  <!-- Round-trip arrows (top arc: Import→Export, bottom arc: Export→Import) -->
+  <path d="M372,280 C390,262 410,262 428,280" fill="none" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrowRoundTrip)"/>
+  <path d="M428,310 C410,328 390,328 372,310" fill="none" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrowRoundTrip)"/>
+
+  <text x="400" y="350" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="600" fill="#464E5D">Lossless Round-Trip</text>
+
+  <!-- Bottom left: Versioning info -->
+  <rect x="30" y="275" width="180" height="40" rx="6" fill="#F7F4EF" stroke="#D6DCE8" stroke-width="1"/>
+  <text x="120" y="291" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">VERSIONING</text>
+  <text x="120" y="305" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">JSONB Snapshots | Changelog | Rollback</text>
+
+  <!-- Bottom right: Protocol agnostic badge -->
+  <rect x="590" y="275" width="180" height="40" rx="6" fill="#F7F4EF" stroke="#D6DCE8" stroke-width="1"/>
+  <text x="680" y="291" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">PROTOCOL AGNOSTIC</text>
+  <text x="680" y="305" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">MCP, REST, CLI — any interface</text>
+
+  <!-- Legend -->
+  <circle cx="100" cy="378" r="4" fill="#22c55e"/>
+  <text x="110" y="381" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Markdown</text>
+  <circle cx="190" cy="378" r="4" fill="#0071CE"/>
+  <text x="200" y="381" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">YAML</text>
+  <circle cx="260" cy="378" r="4" fill="#EF4623"/>
+  <text x="270" y="381" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Git</text>
+  <circle cx="320" cy="378" r="4" fill="#f97316"/>
+  <text x="330" y="381" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Clients</text>
+
+  <!-- Bottom right branding -->
+  <text x="760" y="381" text-anchor="end" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#A2AAB9">systemprompt.io portability</text>
+</svg>

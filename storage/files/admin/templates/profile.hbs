@@ -1,0 +1,304 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+
+    <section aria-label="Profile overview">
+    <div class="profile-hero">
+        <div class="profile-hero-left">
+            <div class="profile-archetype-badge profile-archetype-badge--{{archetype.id}}">
+                <span class="profile-archetype-icon">{{> profile-archetype-icon id=archetype.id}}</span>
+                <div class="profile-archetype-info">
+                    <h2 class="profile-archetype-name">{{archetype.name}}</h2>
+                    <p class="profile-archetype-desc">{{archetype.description}}</p>
+                    <div class="profile-archetype-confidence">
+                        <div class="profile-confidence-bar" role="progressbar" aria-valuenow="{{archetype.confidence}}" aria-valuemin="0" aria-valuemax="100" aria-label="Archetype confidence">
+                            <div class="profile-confidence-fill" style="width: {{archetype.confidence}}%"></div>
+                        </div>
+                        <span class="profile-confidence-label">{{archetype.confidence}}% match</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{#if has_gamification}}
+        <div class="profile-hero-right">
+            <div class="profile-rank-card">
+                <span class="profile-rank-level">Rank {{gamification.rank_level}}</span>
+                <span class="profile-rank-name">{{gamification.rank_name}}</span>
+                <div class="profile-xp-bar" role="progressbar" aria-valuenow="{{gamification.xp_pct}}" aria-valuemin="0" aria-valuemax="100" aria-label="XP progress">
+                    <div class="profile-xp-fill" style="width: {{gamification.xp_pct}}%"></div>
+                </div>
+                <span class="profile-xp-label">{{gamification.xp_pct}}% &middot; {{gamification.total_xp}} XP{{#if gamification.next_rank_name}} &middot; Next: {{gamification.next_rank_name}}{{/if}}</span>
+            </div>
+            <div class="profile-streak-row">
+                <span class="profile-streak" title="Current streak">&#128293; {{gamification.current_streak}}d streak</span>
+                <span class="profile-streak-best" title="Longest streak">Best: {{gamification.longest_streak}}d</span>
+                <span class="profile-rank-pos" title="Leaderboard position">#{{gamification.rank_position}}</span>
+            </div>
+        </div>
+        {{/if}}
+    </div>
+    </section>
+
+    {{#if has_metrics}}
+    <div class="profile-tabs">
+        <div class="sp-tabs" role="tablist" aria-label="Profile sections">
+            <button type="button" class="sp-tab sp-tab--active" role="tab" aria-selected="true" data-tab="profile-overview" aria-controls="tab-profile-overview">Profile</button>
+            <button type="button" class="sp-tab" role="tab" aria-selected="false" data-tab="profile-ai" aria-controls="tab-profile-ai">AI Analysis</button>
+        </div>
+    </div>
+
+    <div class="sp-tab-panel" role="tabpanel" id="tab-profile-overview" data-tab-panel="profile-overview">
+
+    <section aria-label="Performance metrics">
+    <div class="profile-grid">
+        <div class="card profile-section">
+            <div class="card-header">
+                <h2 class="card-title">Performance vs Global Average</h2>
+                <span class="profile-period-label">Last 30 days</span>
+            </div>
+            <div class="card-body">
+                <div class="profile-comparison-legend">
+                    <span class="profile-comparison-legend-item profile-comparison-legend-item--user"><span class="profile-comparison-legend-swatch profile-comparison-legend-swatch--user"></span> You</span>
+                    <span class="profile-comparison-legend-item profile-comparison-legend-item--global"><span class="profile-comparison-legend-swatch profile-comparison-legend-swatch--global"></span> Global</span>
+                </div>
+                <div class="profile-comparison-grid">
+                    {{#each comparison}}
+                    <div class="profile-comparison-row">
+                        <span class="profile-comparison-label">{{label}}</span>
+                        <div class="profile-comparison-bars">
+                            <div class="profile-bar-track">
+                                <div class="profile-bar profile-bar--user" style="width: {{bar_pct}}%" title="You: {{user_value}}"></div>
+                                <div class="profile-bar profile-bar--global" style="width: {{global_bar_pct}}%" title="Global: {{global_value}}"></div>
+                            </div>
+                        </div>
+                        <div class="profile-comparison-values">
+                            <span class="profile-val-user">{{user_value}}</span>
+                            <span class="profile-val-sep">vs</span>
+                            <span class="profile-val-global">{{global_value}}</span>
+                        </div>
+                        <span class="profile-comparison-delta profile-comparison-delta--{{sentiment}}">
+                            {{arrow}} {{diff_pct}}
+                        </span>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-sw-grid">
+            {{#if has_strengths}}
+            <div class="card profile-section">
+                <div class="card-header">
+                    <h2 class="card-title">Strengths</h2>
+                </div>
+                <div class="card-body">
+                    {{#each strengths}}
+                    <div class="profile-sw-item profile-sw-item--strength">
+                        <span class="profile-sw-label">{{label}}</span>
+                        <span class="profile-sw-values">{{formatted_user}} vs {{formatted_global}}</span>
+                        <span class="profile-sw-delta profile-sw-delta--positive">+{{deviation_pct}}%</span>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+            {{/if}}
+            {{#if has_weaknesses}}
+            <div class="card profile-section">
+                <div class="card-header">
+                    <h2 class="card-title">Areas for Improvement</h2>
+                </div>
+                <div class="card-body">
+                    {{#each weaknesses}}
+                    <div class="profile-sw-item profile-sw-item--weakness">
+                        <span class="profile-sw-label">{{label}}</span>
+                        <span class="profile-sw-values">{{formatted_user}} vs {{formatted_global}}</span>
+                        <span class="profile-sw-delta profile-sw-delta--negative">{{deviation_pct}}%</span>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+            {{/if}}
+        </div>
+    </div>
+    </section>
+
+    {{#if trends.has_trends}}
+    <section aria-label="Daily trends">
+    <div class="card profile-section">
+        <div class="card-header">
+            <h2 class="card-title">Daily Trends vs Global Average</h2>
+        </div>
+        <div class="card-body">
+            <div class="profile-trends-grid">
+                <div class="profile-trend-item">
+                    <span class="profile-trend-label">Quality</span>
+                    <svg class="profile-sparkline" data-values="{{trends.quality.values}}" data-global="{{trends.quality.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
+                </div>
+                <div class="profile-trend-item">
+                    <span class="profile-trend-label">APM</span>
+                    <svg class="profile-sparkline" data-values="{{trends.apm.values}}" data-global="{{trends.apm.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
+                </div>
+                <div class="profile-trend-item">
+                    <span class="profile-trend-label">Sessions</span>
+                    <svg class="profile-sparkline" data-values="{{trends.sessions.values}}" data-global="{{trends.sessions.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
+                </div>
+                <div class="profile-trend-item">
+                    <span class="profile-trend-label">Error Rate</span>
+                    <svg class="profile-sparkline" data-values="{{trends.error_rate.values}}" data-global="{{trends.error_rate.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
+                </div>
+                <div class="profile-trend-item">
+                    <span class="profile-trend-label">Goal Rate</span>
+                    <svg class="profile-sparkline" data-values="{{trends.goal_rate.values}}" data-global="{{trends.goal_rate.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
+                </div>
+                <div class="profile-trend-item">
+                    <span class="profile-trend-label">Tool Diversity</span>
+                    <svg class="profile-sparkline" data-values="{{trends.tool_diversity.values}}" data-global="{{trends.tool_diversity.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    </section>
+    {{/if}}
+
+    {{#if has_category_breakdown}}
+    <section aria-label="Work distribution and workspace">
+    <div class="profile-grid">
+        <div class="card profile-section">
+            <div class="card-header">
+                <h2 class="card-title">Work Distribution</h2>
+            </div>
+            <div class="card-body">
+                <div class="profile-category-list">
+                    {{#each category_breakdown}}
+                    <div class="profile-category-row">
+                        <span class="profile-category-label">{{label}}</span>
+                        <div class="profile-category-bar-track" role="progressbar" aria-valuenow="{{pct}}" aria-valuemin="0" aria-valuemax="100" aria-label="{{label}} percentage">
+                            <div class="profile-category-bar" style="width: {{bar_width}}%"></div>
+                        </div>
+                        <span class="profile-category-count">{{count}}</span>
+                        <span class="profile-category-pct">{{pct}}%</span>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+
+        {{#if entity_counts}}
+        <div class="card profile-section">
+            <div class="card-header">
+                <h2 class="card-title">Workspace</h2>
+            </div>
+            <div class="card-body">
+                <div class="profile-entity-grid">
+                    <div class="profile-entity-card">
+                        <span class="profile-entity-value">{{entity_counts.plugins}}</span>
+                        <span class="profile-entity-label">Plugins</span>
+                    </div>
+                    <div class="profile-entity-card">
+                        <span class="profile-entity-value">{{entity_counts.skills}}</span>
+                        <span class="profile-entity-label">Skills</span>
+                    </div>
+                    <div class="profile-entity-card">
+                        <span class="profile-entity-value">{{entity_counts.agents}}</span>
+                        <span class="profile-entity-label">Agents</span>
+                    </div>
+                    <div class="profile-entity-card">
+                        <span class="profile-entity-value">{{entity_counts.mcp_servers}}</span>
+                        <span class="profile-entity-label">MCP Servers</span>
+                    </div>
+                    <div class="profile-entity-card">
+                        <span class="profile-entity-value">{{entity_counts.hooks}}</span>
+                        <span class="profile-entity-label">Hooks</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{/if}}
+    </div>
+    </section>
+    {{/if}}
+
+    </div>{{!-- end tab-profile-overview --}}
+
+    <div class="sp-tab-panel" role="tabpanel" id="tab-profile-ai" data-tab-panel="profile-ai" hidden>
+
+    <section aria-label="AI analysis">
+    <div class="card profile-section profile-ai-section">
+        <div class="card-header">
+            <h2 class="card-title">AI Analysis</h2>
+            <div class="d-flex align-center gap-2">
+                {{#if has_ai_report}}
+                <span class="text-secondary text-sm">Generated {{ai_report.generated_at}}</span>
+                {{/if}}
+                {{#if current_user.is_admin}}
+                <button type="button" class="btn btn-primary btn-sm" id="generate-profile-report">
+                    {{#if has_ai_report}}Regenerate{{else}}Generate Analysis{{/if}}
+                </button>
+                {{else}}{{#if marketplace.is_premium}}
+                <button type="button" class="btn btn-primary btn-sm" id="generate-profile-report">
+                    {{#if has_ai_report}}Regenerate{{else}}Generate Analysis{{/if}}
+                </button>
+                {{/if}}{{/if}}
+            </div>
+        </div>
+        <div class="card-body" id="profile-ai-report-body">
+            {{#if has_ai_report}}
+                {{#if ai_report.has_narrative}}
+                <div class="profile-ai-block">
+                    <h3 class="profile-ai-label">Profile Analysis</h3>
+                    <p class="profile-ai-text">{{ai_report.narrative}}</p>
+                </div>
+                {{/if}}
+                {{#if ai_report.has_style}}
+                <div class="profile-ai-block">
+                    <h3 class="profile-ai-label">Your Style</h3>
+                    <p class="profile-ai-text">{{ai_report.style_analysis}}</p>
+                </div>
+                {{/if}}
+                {{#if ai_report.has_comparison}}
+                <div class="profile-ai-block">
+                    <h3 class="profile-ai-label">How You Compare</h3>
+                    <p class="profile-ai-text">{{ai_report.comparison}}</p>
+                </div>
+                {{/if}}
+                {{#if ai_report.has_patterns}}
+                <div class="profile-ai-block">
+                    <h3 class="profile-ai-label">Your Patterns</h3>
+                    <p class="profile-ai-text">{{ai_report.patterns}}</p>
+                </div>
+                {{/if}}
+                {{#if ai_report.has_improvements}}
+                <div class="profile-ai-block profile-ai-block--highlight">
+                    <h3 class="profile-ai-label">How to Improve</h3>
+                    <p class="profile-ai-text">{{ai_report.improvements}}</p>
+                </div>
+                {{/if}}
+                {{#if ai_report.has_tips}}
+                <div class="profile-ai-block profile-ai-block--highlight">
+                    <h3 class="profile-ai-label">Tips for You</h3>
+                    <p class="profile-ai-text">{{ai_report.tips}}</p>
+                </div>
+                {{/if}}
+            {{else}}
+                <p class="profile-ai-empty">No AI analysis generated yet. Click "Generate Analysis" to get a personalised AI-written narrative about your coding style and recommendations.</p>
+            {{/if}}
+        </div>
+    </div>
+    </section>
+
+    </div>{{!-- end tab-profile-ai --}}
+
+    {{else}}
+    <div class="card profile-section">
+        <div class="card-body">
+            <p class="profile-empty-text">No usage data available yet. Start using Claude Code and your profile will populate with insights, comparisons, and personalised recommendations.</p>
+        </div>
+    </div>
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" src="/js/pages/admin-profile.js?v={{css_version}}" type="module" defer></script>
+    {{/inline}}
+{{/layout}}

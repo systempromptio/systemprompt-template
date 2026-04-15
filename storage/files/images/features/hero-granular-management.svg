@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+  <defs>
+    <marker id="arrow-down" viewBox="0 0 10 6" refX="5" refY="6" markerWidth="8" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,0 L5,6 Z" fill="#464E5D"/>
+    </marker>
+    <marker id="arrow-right" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#464E5D"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="400" y="22" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#252526" letter-spacing="1.5">ACCESS CONTROL MATRIX</text>
+  <rect x="320" y="27" width="160" height="3" rx="1.5" fill="#EF4623"/>
+
+  <!-- LEFT COLUMN: Role tiers -->
+  <!-- Admin -->
+  <rect x="20" y="52" width="130" height="38" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="20" y="52" width="4" height="38" rx="2" fill="#ef4444"/>
+  <text x="88" y="68" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#252526">Admin</text>
+  <text x="88" y="82" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">Full access</text>
+
+  <!-- Manager -->
+  <rect x="20" y="96" width="130" height="38" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="20" y="96" width="4" height="38" rx="2" fill="#f97316"/>
+  <text x="88" y="112" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#252526">Manager</text>
+  <text x="88" y="126" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">Department scope</text>
+
+  <!-- User -->
+  <rect x="20" y="140" width="130" height="38" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="20" y="140" width="4" height="38" rx="2" fill="#0071CE"/>
+  <text x="88" y="156" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#252526">User</text>
+  <text x="88" y="170" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">Standard access</text>
+
+  <!-- Agent (A2A) -->
+  <rect x="20" y="184" width="130" height="38" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="20" y="184" width="4" height="38" rx="2" fill="#22c55e"/>
+  <text x="88" y="200" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#252526">Agent (A2A)</text>
+  <text x="88" y="214" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">API scope</text>
+
+  <!-- Guest -->
+  <rect x="20" y="228" width="130" height="38" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="20" y="228" width="4" height="38" rx="2" fill="#A2AAB9"/>
+  <text x="88" y="244" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#252526">Guest</text>
+  <text x="88" y="258" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">Read only</text>
+
+  <!-- Anonymous -->
+  <rect x="20" y="272" width="130" height="38" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="20" y="272" width="4" height="38" rx="2" fill="#D6DCE8"/>
+  <text x="88" y="288" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#252526">Anonymous</text>
+  <text x="88" y="302" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">Public only</text>
+
+  <!-- CENTER: Access Matrix Grid -->
+  <rect x="168" y="42" width="370" height="272" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+
+  <!-- Column headers -->
+  <rect x="168" y="42" width="370" height="26" rx="6" fill="#F7F4EF"/>
+  <rect x="168" y="60" width="370" height="8" fill="#F7F4EF"/>
+  <text x="248" y="58" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#252526">Plugins</text>
+  <text x="338" y="58" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#252526">Agents</text>
+  <text x="428" y="58" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#252526">MCP</text>
+  <text x="498" y="58" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#252526">Skills</text>
+
+  <!-- Grid lines -->
+  <line x1="168" y1="68" x2="538" y2="68" stroke="#D6DCE8" stroke-width="0.5"/>
+  <line x1="293" y1="42" x2="293" y2="314" stroke="#D6DCE8" stroke-width="0.5"/>
+  <line x1="383" y1="42" x2="383" y2="314" stroke="#D6DCE8" stroke-width="0.5"/>
+  <line x1="463" y1="42" x2="463" y2="314" stroke="#D6DCE8" stroke-width="0.5"/>
+
+  <!-- Row separators -->
+  <line x1="168" y1="112" x2="538" y2="112" stroke="#D6DCE8" stroke-width="0.5"/>
+  <line x1="168" y1="156" x2="538" y2="156" stroke="#D6DCE8" stroke-width="0.5"/>
+  <line x1="168" y1="200" x2="538" y2="200" stroke="#D6DCE8" stroke-width="0.5"/>
+  <line x1="168" y1="244" x2="538" y2="244" stroke="#D6DCE8" stroke-width="0.5"/>
+  <line x1="168" y1="270" x2="538" y2="270" stroke="#D6DCE8" stroke-width="0.5"/>
+
+  <!-- Row 1: Admin - all green -->
+  <circle cx="248" cy="90" r="7" fill="#22c55e" opacity="0.15"/><text x="248" y="94" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+  <circle cx="338" cy="90" r="7" fill="#22c55e" opacity="0.15"/><text x="338" y="94" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+  <circle cx="428" cy="90" r="7" fill="#22c55e" opacity="0.15"/><text x="428" y="94" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+  <circle cx="498" cy="90" r="7" fill="#22c55e" opacity="0.15"/><text x="498" y="94" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+
+  <!-- Row 2: Manager - green except MCP -->
+  <circle cx="248" cy="134" r="7" fill="#22c55e" opacity="0.15"/><text x="248" y="138" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+  <circle cx="338" cy="134" r="7" fill="#22c55e" opacity="0.15"/><text x="338" y="138" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+  <circle cx="428" cy="134" r="7" fill="#ef4444" opacity="0.15"/><text x="428" y="138" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#ef4444">&#x2717;</text>
+  <circle cx="498" cy="134" r="7" fill="#22c55e" opacity="0.15"/><text x="498" y="138" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+
+  <!-- Row 3: User - plugins yes, agents yes, MCP no, skills yes -->
+  <circle cx="248" cy="178" r="7" fill="#22c55e" opacity="0.15"/><text x="248" y="182" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+  <circle cx="338" cy="178" r="7" fill="#22c55e" opacity="0.15"/><text x="338" y="182" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+  <circle cx="428" cy="178" r="7" fill="#ef4444" opacity="0.15"/><text x="428" y="182" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#ef4444">&#x2717;</text>
+  <circle cx="498" cy="178" r="7" fill="#22c55e" opacity="0.15"/><text x="498" y="182" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+
+  <!-- Row 4: Agent - plugins no, agents no, MCP yes, skills yes -->
+  <circle cx="248" cy="222" r="7" fill="#ef4444" opacity="0.15"/><text x="248" y="226" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#ef4444">&#x2717;</text>
+  <circle cx="338" cy="222" r="7" fill="#ef4444" opacity="0.15"/><text x="338" y="226" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#ef4444">&#x2717;</text>
+  <circle cx="428" cy="222" r="7" fill="#22c55e" opacity="0.15"/><text x="428" y="226" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+  <circle cx="498" cy="222" r="7" fill="#22c55e" opacity="0.15"/><text x="498" y="226" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+
+  <!-- Row 5: Guest - all deny except skills read -->
+  <circle cx="248" cy="257" r="7" fill="#ef4444" opacity="0.15"/><text x="248" y="261" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#ef4444">&#x2717;</text>
+  <circle cx="338" cy="257" r="7" fill="#ef4444" opacity="0.15"/><text x="338" y="261" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#ef4444">&#x2717;</text>
+  <circle cx="428" cy="257" r="7" fill="#ef4444" opacity="0.15"/><text x="428" y="261" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#ef4444">&#x2717;</text>
+  <circle cx="498" cy="257" r="7" fill="#22c55e" opacity="0.15"/><text x="498" y="261" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#22c55e">&#x2713;</text>
+
+  <!-- Row 6: Anonymous - all deny -->
+  <circle cx="248" cy="292" r="7" fill="#ef4444" opacity="0.15"/><text x="248" y="296" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#ef4444">&#x2717;</text>
+  <circle cx="338" cy="292" r="7" fill="#ef4444" opacity="0.15"/><text x="338" y="296" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#ef4444">&#x2717;</text>
+  <circle cx="428" cy="292" r="7" fill="#ef4444" opacity="0.15"/><text x="428" y="296" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#ef4444">&#x2717;</text>
+  <circle cx="498" cy="292" r="7" fill="#ef4444" opacity="0.15"/><text x="498" y="296" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#ef4444">&#x2717;</text>
+
+  <!-- RIGHT COLUMN: 3-tier marketplace stack -->
+  <text x="672" y="58" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#A2AAB9" letter-spacing="1">MARKETPLACE TIERS</text>
+
+  <!-- Platform -->
+  <rect x="572" y="68" width="200" height="52" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="572" y="68" width="200" height="4" rx="2" fill="#EF4623"/>
+  <text x="672" y="90" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#252526">Platform</text>
+  <text x="672" y="108" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#A2AAB9">Global catalog</text>
+
+  <!-- Arrow down -->
+  <line x1="672" y1="120" x2="672" y2="138" stroke="#464E5D" stroke-width="1" marker-end="url(#arrow-down)"/>
+
+  <!-- Organisation -->
+  <rect x="572" y="140" width="200" height="52" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="572" y="140" width="200" height="4" rx="2" fill="#0071CE"/>
+  <text x="672" y="162" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#252526">Organisation</text>
+  <text x="672" y="180" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#A2AAB9">Curated subset</text>
+
+  <!-- Arrow down -->
+  <line x1="672" y1="192" x2="672" y2="210" stroke="#464E5D" stroke-width="1" marker-end="url(#arrow-down)"/>
+
+  <!-- User tier -->
+  <rect x="572" y="212" width="200" height="52" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="572" y="212" width="200" height="4" rx="2" fill="#22c55e"/>
+  <text x="672" y="234" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#252526">User</text>
+  <text x="672" y="252" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#A2AAB9">Personal fork</text>
+
+  <!-- Bottom: Bulk Assign bar -->
+  <rect x="20" y="328" width="760" height="30" rx="6" fill="#F7F4EF" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="20" y="328" width="760" height="4" rx="2" fill="#0071CE"/>
+  <text x="400" y="349" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#252526">Bulk Assign</text>
+  <text x="570" y="349" text-anchor="start" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#A2AAB9">Department-wide policy application</text>
+  <!-- Arrow spanning the bar -->
+  <line x1="40" y1="354" x2="760" y2="354" stroke="#0071CE" stroke-width="1" marker-end="url(#arrow-right)" opacity="0.4"/>
+
+  <!-- Legend bar -->
+  <rect x="20" y="370" width="760" height="26" rx="6" fill="#F7F4EF" stroke="#D6DCE8" stroke-width="1"/>
+  <circle cx="50" cy="383" r="5" fill="#22c55e"/>
+  <text x="62" y="387" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Allow</text>
+  <circle cx="110" cy="383" r="5" fill="#ef4444"/>
+  <text x="122" y="387" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Deny</text>
+  <circle cx="170" cy="383" r="5" fill="#0071CE"/>
+  <text x="182" y="387" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Organisation</text>
+  <circle cx="262" cy="383" r="5" fill="#EF4623"/>
+  <text x="274" y="387" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#464E5D">Platform</text>
+
+  <text x="760" y="387" text-anchor="end" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">systemprompt.io management</text>
+</svg>

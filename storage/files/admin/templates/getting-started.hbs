@@ -1,0 +1,129 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+
+    {{#if has_selected_plugins}}
+    <script>window.location.href = "/admin/my/marketplace/";</script>
+    {{/if}}
+
+    {{#unless has_selected_plugins}}
+    <div class="gs-banner">
+        <h2 class="gs-banner-title">Welcome to systemprompt.io</h2>
+        <p class="gs-banner-subtitle">Get started by selecting a few plugins below, or <a href="/admin/browse/plugins/" class="link-primary-bold">browse the full plugin directory</a> to find exactly what you need. Each plugin includes pre-built skills, agents, and connectors you can customize.</p>
+    </div>
+
+    <div class="card mb-6">
+        <div class="card-header">
+            <h2 class="card-title">Quick Start — Choose Your Plugins</h2>
+            <span class="text-muted text-sm" id="selection-count">0 of 3 selected</span>
+        </div>
+        <div class="card-body">
+            <div class="plugin-selection-grid" id="plugin-selection-grid">
+                {{#each available_plugins}}
+                <label class="plugin-selection-card" data-plugin-id="{{plugin_id}}">
+                    <input type="checkbox" name="selected_plugins" value="{{plugin_id}}" {{#if selected}}checked{{/if}}>
+                    <div class="plugin-selection-card-body">
+                        <div class="plugin-selection-card-header">
+                            <strong class="plugin-selection-name">{{name}}</strong>
+                            {{#if category}}<span class="badge badge-sm">{{category}}</span>{{/if}}
+                        </div>
+                        {{#if description}}<p class="plugin-selection-desc text-muted text-sm">{{description}}</p>{{/if}}
+                        <div class="plugin-selection-meta text-muted text-xs">
+                            {{#if skill_count}}<span>{{skill_count}} skills</span>{{/if}}
+                            {{#if agent_count}}<span>{{agent_count}} agents</span>{{/if}}
+                            {{#if mcp_count}}<span>{{mcp_count}} connectors</span>{{/if}}
+                        </div>
+                    </div>
+                </label>
+                {{/each}}
+            </div>
+            {{#unless available_plugins}}
+            <p class="text-muted">No plugins are available for selection yet. Contact your administrator.</p>
+            {{/unless}}
+        </div>
+        {{#if available_plugins}}
+        <div class="card-footer d-flex justify-between align-center">
+            <a href="/admin/browse/plugins/" class="btn btn-secondary">Browse All Plugins</a>
+            <button type="button" class="btn btn-primary" id="save-selections-btn" disabled>Add to My Marketplace</button>
+        </div>
+        {{/if}}
+    </div>
+    {{/unless}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script>
+    /* Plugin selection with max-3 enforcement */
+    (function() {
+        var grid = document.getElementById('plugin-selection-grid');
+        if (!grid) return;
+
+        var MAX_PLUGINS = 3;
+        var saveBtn = document.getElementById('save-selections-btn');
+        var countEl = document.getElementById('selection-count');
+        var checkboxes = grid.querySelectorAll('input[type="checkbox"]');
+        var cards = grid.querySelectorAll('.plugin-selection-card');
+
+        function updateState() {
+            var checked = grid.querySelectorAll('input[type="checkbox"]:checked');
+            var count = checked.length;
+            var atLimit = count >= MAX_PLUGINS;
+
+            if (countEl) countEl.textContent = count + ' of ' + MAX_PLUGINS + ' selected';
+            if (saveBtn) saveBtn.disabled = count === 0;
+
+            /* Disable unchecked cards when at limit */
+            cards.forEach(function(card) {
+                var cb = card.querySelector('input[type="checkbox"]');
+                if (!cb) return;
+                if (atLimit && !cb.checked) {
+                    card.classList.add('plugin-selection-card--disabled');
+                    cb.disabled = true;
+                } else {
+                    card.classList.remove('plugin-selection-card--disabled');
+                    cb.disabled = false;
+                }
+            });
+        }
+
+        checkboxes.forEach(function(cb) {
+            cb.addEventListener('change', updateState);
+        });
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function() {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Setting up your marketplace...';
+
+                var selected = [];
+                grid.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) {
+                    selected.push(cb.value);
+                });
+
+                fetch('/api/public/admin/user/onboarding/select-and-fork', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ plugin_ids: selected })
+                }).then(function(res) {
+                    if (res.ok) return res.json();
+                    throw new Error('Request failed');
+                }).then(function(data) {
+                    if (data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        window.location.href = '/admin/my/marketplace/';
+                    }
+                }).catch(function() {
+                    saveBtn.textContent = 'Error — try again';
+                    saveBtn.disabled = false;
+                });
+            });
+        }
+
+        updateState();
+    })();
+    </script>
+    {{/inline}}
+{{/layout}}

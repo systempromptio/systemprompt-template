@@ -1,0 +1,18 @@
+mcp_servers:
+  systemprompt:
+    type: internal
+    binary: systemprompt-mcp-agent
+    package: systemprompt
+    port: 5010
+    # TEMPLATE: Replace http://localhost:8080 with your deployment URL
+    endpoint: http://localhost:8080/api/v1/mcp/systemprompt/mcp
+    enabled: true
+    display_in_web: true
+    removable: false
+    description: systemprompt.io MCP Server - Execute CLI commands (admin only)
+    oauth:
+      required: true
+      scopes:
+      - admin
+      audience: mcp
+      client_id: null

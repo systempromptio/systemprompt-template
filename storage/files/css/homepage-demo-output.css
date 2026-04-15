@@ -1,0 +1,98 @@
+
+.prompt {
+  color: var(--sp-color-primary);
+  font-weight: 600;
+}
+
+.command {
+  color: var(--sp-color-text);
+}
+
+.cursor {
+  color: var(--sp-color-primary);
+  animation: blink-caret 0.75s step-end infinite;
+  margin-left: -2px;
+}
+
+.cursor.hidden {
+  opacity: 0;
+}
+
+.output-bullet {
+  color: var(--sp-color-primary);
+}
+
+.output {
+  color: var(--sp-color-text-secondary);
+}
+
+.output-dim {
+  color: var(--sp-color-text-muted);
+  font-size: 0.72rem;
+}
+
+.output-agent {
+  color: var(--sp-brand-400);
+  font-weight: 600;
+}
+
+.output-user {
+  color: var(--sp-color-text);
+  font-weight: 600;
+}
+
+.output-warn {
+  color: var(--sp-color-warning);
+}
+
+.success-check {
+  color: var(--sp-color-success);
+}
+
+.success {
+  color: var(--sp-color-success);
+}
+
+.terminal-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-space-md);
+  margin-top: var(--sp-space-sm);
+}
+
+.terminal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-button);
+  color: var(--sp-color-text-muted);
+  cursor: pointer;
+  transition: all var(--sp-transition-fast);
+}
+
+.terminal-btn:hover {
+  color: var(--sp-color-primary);
+  border-color: var(--sp-color-primary);
+}
+
+.terminal-btn-replay {
+  margin-left: var(--sp-space-md);
+}
+
+.terminal-indicator {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.85rem;
+  color: var(--sp-color-text-secondary);
+  min-width: 50px;
+  text-align: center;
+}
+
+@keyframes blink-caret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}

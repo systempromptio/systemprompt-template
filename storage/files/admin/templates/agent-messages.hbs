@@ -1,0 +1,40 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/back-button href="/admin/org/agents/" label="Back to Agents"}}
+    <h2>{{title}}{{#if has_agent}} &middot; {{agent.name}}{{/if}}</h2>
+    {{> components/agent-detail-tabs active_tab="messages" agent_id=agent_id}}
+
+    <section aria-label="CLI command" class="detail-content">
+        <div class="text-sm text-tertiary">Equivalent CLI command</div>
+        <pre class="detail-pre"><code>$ {{cli_command}}</code></pre>
+    </section>
+
+    {{#if has_agent}}
+    <section aria-label="Agent message thread">
+        <h3>Message Thread</h3>
+        {{#if has_messages}}
+        {{#> components/data-table}}
+            <thead><tr><th class="col-date">Timestamp</th><th>Session</th><th class="col-status">Event</th><th>Tool</th></tr></thead>
+            <tbody>
+                {{#each messages}}
+                <tr>
+                    <td class="col-date"><span class="date">{{created_at}}</span></td>
+                    <td>{{#if session_id}}<code class="code-inline">{{truncate session_id}}</code>{{else}}-{{/if}}</td>
+                    <td class="col-status"><span class="badge badge-info">{{event_type}}</span></td>
+                    <td>{{#if has_tool}}<code class="code-inline">{{tool_name}}</code>{{else}}<span class="text-tertiary">-</span>{{/if}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No message events recorded for this agent yet. Run demo/agents/03-agent-messaging.sh to generate some."}}
+        {{/if}}
+    </section>
+    {{else}}
+    {{> components/empty-state message="Agent not found. Provide ?id=<agent_id>."}}
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

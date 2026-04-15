@@ -1,0 +1,177 @@
+@layer components {
+
+
+.sf-turns {
+    border-top: 2px solid var(--sp-border-default);
+    padding: var(--sp-space-3) var(--sp-space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-3);
+    background: var(--sp-bg-surface-raised);
+}
+
+.sf-turn {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+}
+
+.sf-turn + .sf-turn {
+    padding-top: var(--sp-space-2);
+    border-top: 1px solid color-mix(in oklch, var(--sp-border-subtle) 50%, transparent);
+}
+
+
+.sf-speaker {
+    display: inline-block;
+    font-size: var(--sp-text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.0625rem var(--sp-space-2);
+    border-radius: var(--sp-radius-sm);
+    flex-shrink: 0;
+    margin-right: var(--sp-space-2);
+}
+
+.sf-speaker--you {
+    background: color-mix(in oklch, var(--sp-accent) 15%, transparent);
+    color: var(--sp-accent);
+}
+
+.sf-speaker--ai {
+    background: color-mix(in oklch, var(--sp-success) 15%, transparent);
+    color: var(--sp-success);
+}
+
+
+.sf-prompt {
+    display: flex;
+    align-items: flex-start;
+    padding: var(--sp-space-2);
+    background: color-mix(in oklch, var(--sp-accent) 5%, var(--sp-bg-surface));
+    border: 1px solid color-mix(in oklch, var(--sp-accent) 15%, transparent);
+    border-radius: var(--sp-radius-md);
+}
+
+.sf-prompt-text {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-primary);
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+
+.sf-response {
+    display: flex;
+    align-items: flex-start;
+    padding: var(--sp-space-2);
+    background: color-mix(in oklch, var(--sp-success) 4%, var(--sp-bg-surface));
+    border: 1px solid color-mix(in oklch, var(--sp-success) 12%, transparent);
+    border-radius: var(--sp-radius-md);
+}
+
+.sf-response-text {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+    line-height: 1.5;
+    word-break: break-word;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+
+.sf-tools-summary {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sf-tools-toggle {
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    padding: var(--sp-space-1) var(--sp-space-2);
+    border-radius: var(--sp-radius-sm);
+    transition: background var(--sp-duration-fast);
+}
+
+
+.sf-tools-toggle:hover {
+    background: color-mix(in oklch, var(--sp-text-tertiary) 8%, transparent);
+}
+
+.sf-tools-arrow {
+    display: inline-block;
+    transition: transform var(--sp-duration-fast);
+    font-size: 0.625rem;
+}
+
+.sf-tools-summary[open] .sf-tools-arrow {
+    transform: rotate(90deg);
+}
+
+.sf-tool-chip {
+    display: inline-block;
+    padding: 0 var(--sp-space-1);
+    margin-left: var(--sp-space-1);
+    background: color-mix(in oklch, var(--sp-warning) 10%, transparent);
+    color: var(--sp-warning);
+    border-radius: var(--sp-radius-sm);
+    font-weight: 500;
+    font-size: var(--sp-text-xs);
+}
+
+
+.sf-error {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-2) var(--sp-space-3);
+    background: color-mix(in oklch, var(--sp-danger) 6%, var(--sp-bg-surface));
+    border: 1px solid color-mix(in oklch, var(--sp-danger) 20%, transparent);
+    border-radius: var(--sp-radius-sm);
+    font-size: var(--sp-text-xs);
+}
+
+.sf-error-icon {
+    color: var(--sp-danger);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.sf-error-tool {
+    color: var(--sp-danger);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sf-error-desc {
+    color: var(--sp-text-secondary);
+    word-break: break-word;
+}
+
+
+.sf-turn {
+    transition: opacity var(--sp-duration-normal) var(--sp-ease-out), transform var(--sp-duration-normal) var(--sp-ease-out);
+}
+
+.sf-turn--entering {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sf-turn {
+        transition: none;
+    }
+    .sf-turn--entering {
+        transform: none;
+    }
+}
+
+}

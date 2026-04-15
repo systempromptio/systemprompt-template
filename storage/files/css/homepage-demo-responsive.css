@@ -1,0 +1,50 @@
+
+@media (max-width: 768px) {
+  .terminal-stack {
+    height: auto;
+  }
+
+  .terminal {
+    position: relative;
+  }
+
+  .terminal.active {
+    display: block;
+  }
+
+  .terminal:not(.active) {
+    display: none;
+  }
+
+  .terminal-body {
+    padding: var(--sp-space-sm) var(--sp-space-md);
+    font-size: 0.68rem;
+    min-height: auto;
+  }
+
+  .terminal-title {
+    font-size: 0.6rem;
+  }
+
+  .output-dim {
+    font-size: 0.62rem;
+  }
+
+  .terminal-controls.terminal-controls {
+    display: flex;
+    position: relative;
+    z-index: var(--sp-z-sticky-header);
+    margin-top: var(--sp-space-lg);
+  }
+
+  .terminal-btn {
+    color: var(--sp-color-text);
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.terminal-tab:focus-visible {
+    outline: 2px solid var(--sp-color-primary);
+    outline-offset: 2px;
+}

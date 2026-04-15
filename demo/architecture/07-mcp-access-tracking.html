@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo 07 — MCP Access Tracking — demo.systemprompt.io</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@600;700&family=Roboto:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: oklch(0.16 0.01 45);
+            --bg-surface: oklch(0.21 0.01 48);
+            --bg-elevated: oklch(0.24 0.01 48);
+            --bg-inset: oklch(0.14 0.01 45);
+            --text: oklch(0.98 0.004 70);
+            --text-secondary: oklch(0.86 0.010 60);
+            --text-tertiary: oklch(0.70 0.01 70);
+            --brand-300: oklch(0.52 0.14 48);
+            --brand-400: oklch(0.67 0.18 50);
+            --brand-500: oklch(0.72 0.17 52);
+            --border: oklch(1.00 0 0 / 0.08);
+            --border-strong: oklch(1.00 0 0 / 0.14);
+            --success: oklch(0.78 0.16 165);
+            --success-dim: oklch(0.78 0.16 165 / 0.10);
+            --danger: oklch(0.70 0.17 20);
+            --danger-dim: oklch(0.70 0.17 20 / 0.10);
+            --info: oklch(0.70 0.14 250);
+            --info-dim: oklch(0.70 0.14 250 / 0.10);
+            --purple: oklch(0.75 0.14 300);
+            --purple-dim: oklch(0.68 0.18 300 / 0.10);
+        }
+        [data-theme="light"] {
+            --bg: oklch(0.97 0.003 70);
+            --bg-surface: oklch(1.0 0 0);
+            --bg-elevated: oklch(0.98 0.003 70);
+            --bg-inset: oklch(0.95 0.003 70);
+            --text: oklch(0.20 0.01 50);
+            --text-secondary: oklch(0.41 0.01 60);
+            --text-tertiary: oklch(0.53 0.01 65);
+            --brand-300: oklch(0.78 0.15 53);
+            --brand-400: oklch(0.75 0.16 52);
+            --brand-500: oklch(0.72 0.17 52);
+            --border: oklch(0.20 0.01 50 / 0.08);
+            --border-strong: oklch(0.20 0.01 50 / 0.14);
+            --success-dim: oklch(0.78 0.16 165 / 0.08);
+            --danger-dim: oklch(0.70 0.17 20 / 0.08);
+            --info-dim: oklch(0.70 0.14 250 / 0.08);
+            --purple-dim: oklch(0.68 0.18 300 / 0.08);
+        }
+
+        body { font-family: 'Roboto', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; font-size: 0.8125rem; }
+
+        /* Header */
+        .page-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); }
+        .page-header h1 { font-family: 'Dosis', system-ui, sans-serif; font-size: 1rem; font-weight: 700; color: var(--brand-500); letter-spacing: 0.05em; }
+        .page-header h1 span { color: var(--text-tertiary); font-size: 0.75rem; margin-right: 0.4rem; }
+        .header-controls { display: flex; gap: 0.375rem; }
+        .btn { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 5px; padding: 0.3rem 0.6rem; min-height: 28px; cursor: pointer; font-family: inherit; font-size: 0.75rem; text-decoration: none; transition: border-color 0.1s ease-out, color 0.1s ease-out; display: inline-flex; align-items: center; gap: 0.25rem; }
+        .btn:hover { border-color: var(--brand-500); color: var(--text); }
+
+        /* Content */
+        .content { max-width: 860px; margin: 0 auto; padding: 1.5rem; }
+        .intro { color: var(--text-secondary); font-size: 0.8125rem; margin-bottom: 1.75rem; line-height: 1.6; }
+        .intro strong { color: var(--text); font-weight: 500; }
+
+        /* ── Command Group ── */
+        .cmd-group {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .cmd-header {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.625rem 1rem;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+        }
+        .cmd-step {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: var(--brand-500); color: oklch(0.16 0.01 45);
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-weight: 700; font-size: 0.6875rem;
+            display: inline-flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        [data-theme="light"] .cmd-step { color: white; }
+        .cmd-label {
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-weight: 700; font-size: 0.875rem;
+            color: var(--text);
+        }
+        .cmd-time {
+            margin-left: auto;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.6875rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Command line */
+        .cmd-line {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-inset);
+            border-bottom: 1px solid var(--border);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--brand-300);
+            overflow-x: auto;
+        }
+        .cmd-line .prompt { color: var(--text-tertiary); user-select: none; }
+
+        /* Detail rows inside a group */
+        .cmd-body { padding: 0; }
+        .detail-table {
+            width: 100%; border-collapse: collapse;
+        }
+        .detail-table td {
+            padding: 0.375rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        .detail-table tr:last-child td { border-bottom: none; }
+        .detail-table tr { transition: background 0.1s ease-out; }
+        .detail-table tr:hover { background: oklch(0.72 0.17 52 / 0.03); }
+        .detail-table .dt-label {
+            width: 130px;
+            color: var(--text-tertiary);
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 500;
+            padding-top: 0.4375rem;
+        }
+        .detail-table .dt-value {
+            color: var(--text-secondary);
+        }
+
+        /* Sub-flow within a group */
+        .sub-flow {
+            margin: 0.25rem 0;
+        }
+        .sub-step {
+            display: flex; align-items: flex-start; gap: 0.5rem;
+            padding: 0.25rem 0;
+            font-size: 0.75rem;
+        }
+        .sub-num {
+            color: var(--text-tertiary);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.625rem;
+            width: 14px; text-align: right;
+            flex-shrink: 0;
+            padding-top: 1px;
+        }
+        .sub-text { color: var(--text-secondary); }
+        .sub-text strong { color: var(--text); font-weight: 500; }
+
+        /* Badges */
+        .badge { font-family: 'Dosis', system-ui, sans-serif; font-size: 0.625rem; font-weight: 700; padding: 0.125rem 0.375rem; border-radius: 3px; letter-spacing: 0.03em; display: inline-flex; align-items: center; gap: 0.2rem; white-space: nowrap; vertical-align: middle; }
+        .b-pass { background: var(--success-dim); color: var(--success); border: 1px solid oklch(0.78 0.16 165 / 0.2); }
+        .b-pass::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--success); }
+        .b-deny { background: var(--danger-dim); color: var(--danger); border: 1px solid oklch(0.70 0.17 20 / 0.2); }
+        .b-deny::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--danger); }
+        .b-id { background: var(--purple-dim); color: var(--purple); border: 1px solid oklch(0.68 0.18 300 / 0.15); font-family: 'Roboto Mono', monospace; font-weight: 400; }
+        .b-info { background: var(--info-dim); color: var(--info); border: 1px solid oklch(0.70 0.14 250 / 0.15); }
+        .b-neutral { background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border); }
+        .b-warn { background: oklch(0.83 0.16 85 / 0.10); color: oklch(0.83 0.16 85); border: 1px solid oklch(0.83 0.16 85 / 0.2); }
+
+        .code { font-family: 'Roboto Mono', monospace; font-size: 0.6875rem; color: var(--brand-300); background: oklch(0.72 0.17 52 / 0.06); padding: 0.1rem 0.3rem; border-radius: 2px; }
+
+        /* ── Review Box ── */
+        .review-box {
+            background: var(--bg-surface);
+            border: 1.5px solid oklch(0.70 0.14 250 / 0.3);
+            border-radius: 10px;
+            margin-top: 1.5rem;
+            overflow: hidden;
+        }
+        .review-header {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--info-dim);
+            border-bottom: 1px solid oklch(0.70 0.14 250 / 0.15);
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-weight: 700; font-size: 0.8125rem;
+            color: var(--info);
+            letter-spacing: 0.03em;
+        }
+        .review-header svg { width: 14px; height: 14px; stroke: var(--info); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .review-body { padding: 0; }
+        .review-cmd {
+            display: flex; align-items: flex-start; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+        }
+        .review-cmd:last-child { border-bottom: none; }
+        .review-cmd-label {
+            color: var(--text-tertiary);
+            font-size: 0.625rem; text-transform: uppercase;
+            letter-spacing: 0.06em; font-weight: 500;
+            min-width: 80px; padding-top: 0.125rem;
+        }
+        .review-cmd-code {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.6875rem;
+            color: var(--info);
+        }
+        .review-cmd-desc {
+            color: var(--text-tertiary);
+            font-size: 0.6875rem;
+            margin-top: 0.125rem;
+        }
+
+        /* Footer */
+        .page-footer { display: flex; justify-content: space-between; padding: 0.75rem 1.5rem; border-top: 1px solid var(--border); margin-top: 1rem; }
+
+        @media print { body { background: white; color: #1a1a1a; } .btn { display: none; } }
+        @media (max-width: 640px) { .page-header { flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; } .content { padding: 1rem; } .detail-table .dt-label { width: 90px; } }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <h1><span>Demo 07</span> MCP Access Tracking</h1>
+        <div class="header-controls">
+            <a href="06-governance-secret-breach.html" class="btn">&larr; Prev</a>
+            <a href="index.html" class="btn">Index</a>
+            <a href="08-request-tracing.html" class="btn">Next &rarr;</a>
+            <button class="btn" onclick="toggleTheme()"><span class="theme-icon">&#9790;</span></button>
+        </div>
+    </header>
+
+    <div class="content">
+        <p class="intro">
+            Demonstrates the full integration: governance allow + deny, a live MCP tool call with <strong>OAuth authentication</strong>,
+            access recording in the database, and a complete audit trail. Cost: <strong>free</strong> (direct API calls + MCP calls, no AI).
+        </p>
+
+        <!-- ═══ Step 1: Governance — ALLOW ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">1</span>
+                <span class="cmd-label">Governance &mdash; ALLOW</span>
+            </div>
+            <div class="cmd-line">
+                <span class="prompt">$</span> curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" ... -d '{"tool_name":"Read","agent_id":"developer_agent","tool_input":{"file_path":"/src/main.rs"}}'
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">What happens</td>
+                        <td class="dt-value">Clean Read tool input, all rules pass.</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Output</td>
+                        <td class="dt-value"><span class="badge b-pass">ALLOW</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Baseline verification</strong> &mdash; before testing denial, confirm the allow path works. This establishes that the rule engine is functioning and clean inputs pass through.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Step 2: Governance — DENY ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">2</span>
+                <span class="cmd-label">Governance &mdash; DENY</span>
+            </div>
+            <div class="cmd-line">
+                <span class="prompt">$</span> curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" ... -d '{"tool_name":"Bash","agent_id":"developer_agent","tool_input":{"command":"curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" ..."}}'
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">What happens</td>
+                        <td class="dt-value">scope_check passes (admin), but secret_injection detects AWS key pattern &rarr; <span class="badge b-deny">DENY</span>.</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Output</td>
+                        <td class="dt-value"><span class="badge b-deny">DENY</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Independent rule enforcement</strong> &mdash; scope doesn't override security. Even though the agent has admin scope, the secret_injection rule blocks the call. Rules are evaluated independently.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Step 3: MCP Tool Call — Authenticated ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">3</span>
+                <span class="cmd-label">MCP Tool Call &mdash; Authenticated</span>
+            </div>
+            <div class="cmd-line">
+                <span class="prompt">$</span> plugins mcp call skill-manager list_plugins --profile local
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">What happens</td>
+                        <td class="dt-value">OAuth client credentials flow &rarr; access token &rarr; tool execution &rarr; result returned &rarr; access recorded in <span class="code">user_activity</span> table (category=<span class="code">'mcp_access'</span>).</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Sub-flow</td>
+                        <td class="dt-value">
+                            <div class="sub-flow">
+                                <div class="sub-step"><span class="sub-num">3a</span><span class="sub-text"><strong>OAuth</strong> &mdash; Client credentials &rarr; access token validated against MCP server</span></div>
+                                <div class="sub-step"><span class="sub-num">3b</span><span class="sub-text"><strong>Execution</strong> &mdash; <span class="code">skill-manager.list_plugins()</span> &rarr; JSON plugin list</span></div>
+                                <div class="sub-step"><span class="sub-num">3c</span><span class="sub-text"><strong>Recording</strong> &mdash; <span class="code">record_mcp_access()</span> &rarr; INSERT INTO <span class="code">user_activity</span></span></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Typed OAuth flow</strong> &mdash; the OAuth exchange returns typed <span class="code">TokenResponse { access_token, token_type, expires_in }</span>, not a raw JSON blob. <span class="code">record_mcp_access()</span> takes typed <span class="code">McpServerId</span> and <span class="code">UserId</span> &mdash; you can't accidentally log the wrong server or user.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Step 4: Audit Trail — Database ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">4</span>
+                <span class="cmd-label">Audit Trail &mdash; Database</span>
+            </div>
+            <div class="cmd-line">
+                <span class="prompt">$</span> infra db query "SELECT decision, tool_name, reason FROM governance_decisions ORDER BY created_at DESC LIMIT 5"
+            </div>
+            <div class="cmd-line">
+                <span class="prompt">$</span> infra db query "SELECT action, entity_name, description FROM user_activity WHERE category = 'mcp_access' ORDER BY created_at DESC LIMIT 5"
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">What happens</td>
+                        <td class="dt-value">Queries two tables &mdash; <span class="code">governance_decisions</span> shows allow/deny from Parts 1&ndash;2, <span class="code">user_activity</span> shows MCP access events from Part 3.</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Dual audit tables</strong> &mdash; governance decisions and MCP access are stored in separate tables with different schemas because they serve different purposes. <span class="code">governance_decisions</span> tracks policy enforcement. <span class="code">user_activity</span> tracks usage patterns. Both use compile-time checked SQL (<span class="code">sqlx::query!</span>).</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Step 5: Dashboard ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">5</span>
+                <span class="cmd-label">Dashboard</span>
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">URL</td>
+                        <td class="dt-value"><span class="code">http://localhost:8080/admin/</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">What appears</td>
+                        <td class="dt-value">
+                            <div class="sub-flow">
+                                <div class="sub-step"><span class="sub-num">&bull;</span><span class="sub-text"><strong>Policy Violations</strong> section &mdash; governance denials</span></div>
+                                <div class="sub-step"><span class="sub-num">&bull;</span><span class="sub-text"><strong>MCP Server Access</strong> section &mdash; auth events + tool calls</span></div>
+                                <div class="sub-step"><span class="sub-num">&bull;</span><span class="sub-text"><strong>Governance Decisions</strong> section &mdash; allow/deny with reasons</span></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Single pane of glass</strong> &mdash; all events from all surfaces (CLI, Claude Code hooks, direct API) appear in one dashboard, linked by the same <span class="code">UserId</span> from the JWT.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Review Box ═══ -->
+        <div class="review-box">
+            <div class="review-header">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Audit this demo
+            </div>
+            <div class="review-body">
+                <div class="review-cmd">
+                    <div class="review-cmd-label">Governance</div>
+                    <div>
+                        <div class="review-cmd-code">infra db query "SELECT decision, tool_name, reason FROM governance_decisions ORDER BY created_at DESC LIMIT 5"</div>
+                        <div class="review-cmd-desc">Shows allow/deny decisions with tool names and reasons</div>
+                    </div>
+                </div>
+                <div class="review-cmd">
+                    <div class="review-cmd-label">MCP access</div>
+                    <div>
+                        <div class="review-cmd-code">infra db query "SELECT action, entity_name, description FROM user_activity WHERE category = 'mcp_access' ORDER BY created_at DESC LIMIT 5"</div>
+                        <div class="review-cmd-desc">Shows MCP tool calls with OAuth auth events and access recordings</div>
+                    </div>
+                </div>
+                <div class="review-cmd">
+                    <div class="review-cmd-label">Dashboard</div>
+                    <div>
+                        <div class="review-cmd-code">http://localhost:8080/admin/</div>
+                        <div class="review-cmd-desc">All governance decisions, MCP access events, and policy violations in one view</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">
+        <a href="06-governance-secret-breach.html" class="btn">&larr; Prev: Secret Breach</a>
+        <a href="08-request-tracing.html" class="btn">Next: Request Tracing &rarr;</a>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            document.querySelector('.theme-icon').textContent = next === 'dark' ? '\u263E' : '\u2600';
+            try { localStorage.setItem('arch-theme', next); } catch(e) {}
+        }
+        try { const s = localStorage.getItem('arch-theme'); if (s) { document.documentElement.setAttribute('data-theme', s); document.querySelector('.theme-icon').textContent = s === 'dark' ? '\u263E' : '\u2600'; } } catch(e) {}
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') window.location.href = '06-governance-secret-breach.html';
+            if (e.key === 'ArrowRight') window.location.href = '08-request-tracing.html';
+            if (e.key === 'h' || e.key === 'H') window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

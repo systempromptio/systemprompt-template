@@ -1,0 +1,175 @@
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-2);
+  padding: var(--sp-space-2) var(--sp-space-4);
+  background: linear-gradient(135deg, rgba(100, 100, 100, 0.15), rgba(150, 150, 150, 0.08));
+  border: 1px solid rgba(150, 150, 150, 0.25);
+  border-radius: var(--sp-radius-xl);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--sp-color-text-secondary);
+  margin-bottom: var(--sp-spacing-lg);
+}
+
+.ai-badge .ai-icon {
+  width: 16px;
+  height: 16px;
+  stroke: var(--sp-color-text-secondary);
+}
+
+.ai-generated-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-2);
+  padding: var(--sp-space-2) var(--sp-space-3);
+  background: rgba(100, 100, 100, 0.1);
+  border: 1px solid rgba(150, 150, 150, 0.2);
+  border-radius: var(--sp-radius-xl);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--sp-color-text-secondary);
+  margin-bottom: var(--sp-spacing-md);
+}
+
+.ai-generated-badge .ai-icon {
+  width: 14px;
+  height: 14px;
+  stroke: var(--sp-color-text-secondary);
+}
+
+.ai-transparency-banner {
+  max-width: 900px;
+  margin: 0 auto var(--sp-spacing-xxl);
+  padding: 0 var(--sp-spacing-lg);
+}
+
+.transparency-content {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-spacing-md);
+  padding: var(--sp-spacing-lg);
+  background: linear-gradient(135deg, rgba(100, 100, 100, 0.08), rgba(150, 150, 150, 0.04));
+  border: 1px solid rgba(150, 150, 150, 0.2);
+  border-radius: var(--sp-radius-lg);
+}
+
+.transparency-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(100, 100, 100, 0.1);
+  border-radius: var(--sp-radius-md);
+}
+
+.transparency-icon svg {
+  stroke: var(--sp-color-text-secondary);
+}
+
+.transparency-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-1);
+}
+
+.transparency-text strong {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--sp-color-text-primary);
+}
+
+.transparency-text span {
+  font-size: 0.875rem;
+  color: var(--sp-color-text-secondary);
+  line-height: 1.5;
+}
+
+.agent-signature {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-2);
+  padding: var(--sp-space-2) var(--sp-space-3);
+  background: linear-gradient(135deg, rgba(100, 100, 100, 0.08), rgba(150, 150, 150, 0.04));
+  border: 1px solid rgba(150, 150, 150, 0.15);
+  border-radius: var(--sp-radius-round);
+}
+
+.agent-signature .agent-icon {
+  stroke: var(--sp-color-text-secondary);
+}
+
+.agent-signature .agent-name {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--sp-color-text-secondary);
+}
+
+.agent-signature--compact {
+  padding: var(--sp-space-1) var(--sp-space-3);
+  gap: var(--sp-space-2);
+}
+
+.agent-signature--compact .agent-name {
+  font-size: 0.75rem;
+}
+
+.agent-signature--minimal {
+  padding: var(--sp-space-1) var(--sp-space-2);
+  gap: var(--sp-space-1);
+  background: transparent;
+  border: none;
+}
+
+.agent-signature--minimal .agent-name {
+  font-size: 0.6875rem;
+}
+
+.agent-reason {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-1);
+  padding: var(--sp-spacing-sm) var(--sp-spacing-md);
+  background: rgba(100, 100, 100, 0.05);
+  border-left: 3px solid rgba(100, 100, 100, 0.2);
+  border-radius: 0 var(--sp-radius-sm) var(--sp-radius-sm) 0;
+  margin-bottom: var(--sp-spacing-md);
+}
+
+.agent-reason .reason-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--sp-color-text-secondary);
+}
+
+.agent-reason .reason-text {
+  font-size: 0.8125rem;
+  color: var(--sp-color-text-secondary);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.agent-reason--compact {
+  padding: var(--sp-spacing-xs) var(--sp-spacing-sm);
+  margin-bottom: 0;
+  margin-top: var(--sp-spacing-sm);
+}
+
+.agent-reason--compact .reason-text {
+  font-size: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .transparency-content {
+    flex-direction: column;
+    text-align: center;
+  }
+}

@@ -1,0 +1,120 @@
+
+.playbook-post .post-header {
+  margin-bottom: var(--sp-spacing-xxl);
+}
+
+.playbook-post .post-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-spacing-md);
+}
+
+.playbook-post .post-header h1 {
+  font-family: var(--sp-font-heading);
+  font-size: 2rem;
+  text-transform: uppercase;
+  color: var(--sp-color-text-primary);
+  margin-bottom: var(--sp-spacing-md);
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+.playbook-copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-color-surface);
+  color: var(--sp-color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.playbook-copy-btn:hover {
+  color: var(--sp-color-primary);
+  border-color: var(--sp-color-primary);
+  background: rgba(0, 113, 206, 0.1);
+}
+
+.playbook-copy-btn.copied {
+  color: var(--sp-color-success);
+  border-color: var(--sp-color-success);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.playbook-copy-btn svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.playbook-copy-btn .check-icon {
+  display: none;
+}
+
+.playbook-copy-btn.copied .copy-icon {
+  display: none;
+}
+
+.playbook-copy-btn.copied .check-icon {
+  display: block;
+}
+
+.playbook-post .post-description {
+  color: var(--sp-color-text-secondary);
+  font-size: var(--sp-font-size-lg);
+  line-height: 1.6;
+  margin-bottom: var(--sp-spacing-md);
+}
+
+.playbook-priority {
+  display: inline-block;
+  font-size: var(--sp-font-size-xs);
+  font-weight: var(--sp-font-weight-semibold);
+  text-transform: uppercase;
+  padding: var(--sp-space-1) var(--sp-space-3);
+  border-radius: var(--sp-radius-sm);
+  margin-bottom: var(--sp-spacing-md);
+  letter-spacing: 0.5px;
+}
+
+.playbook-priority--required {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.playbook-priority--high {
+  background: rgba(var(--sp-color-primary-rgb), 0.2);
+  color: var(--sp-color-primary);
+  border: 1px solid rgba(var(--sp-color-primary-rgb), 0.3);
+}
+
+.playbook-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-spacing-xs);
+  margin-top: var(--sp-spacing-md);
+}
+
+.keyword-tag {
+  font-size: var(--sp-font-size-xs);
+  padding: var(--sp-space-1) var(--sp-space-3);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-color-text-muted);
+  transition: all 0.2s ease;
+}
+
+.keyword-tag:hover {
+  border-color: var(--sp-color-primary);
+  color: var(--sp-color-primary);
+}

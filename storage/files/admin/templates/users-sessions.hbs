@@ -1,0 +1,46 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/page-hero}}
+
+    <section aria-label="CLI command" class="mb-3">
+        <p class="text-tertiary text-sm">This dashboard mirrors <code class="code-inline">{{cli_command}}</code>. Profiles are managed via <code class="code-inline">{{cli_command_list}}</code>.</p>
+    </section>
+
+    <section aria-label="Current session">
+        <h2 class="section-heading">Current Session</h2>
+        {{#if current_session}}
+        {{#> components/data-table}}
+            <thead><tr><th>Field</th><th>Value</th></tr></thead>
+            <tbody>
+                <tr><td>User ID</td><td><code class="code-inline">{{current_session.user_id}}</code></td></tr>
+                <tr><td>Username</td><td>{{current_session.username}}</td></tr>
+                <tr><td>Email</td><td>{{current_session.email}}</td></tr>
+                <tr><td>Admin</td><td>{{#if current_session.is_admin}}<span class="badge badge-success">Yes</span>{{else}}<span class="badge badge-secondary">No</span>{{/if}}</td></tr>
+                <tr><td>Roles</td><td>{{#each current_session.roles}}<span class="badge badge-info">{{this}}</span> {{/each}}</td></tr>
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No active session."}}
+        {{/if}}
+    </section>
+
+    <section aria-label="Available profiles" class="mt-3">
+        <h2 class="section-heading">Available Profiles</h2>
+        {{#if profiles}}
+        {{#> components/data-table}}
+            <thead><tr><th>Profile</th><th class="col-multiline">URL</th><th class="col-status">Active</th></tr></thead>
+            <tbody>
+            {{#each profiles}}
+            <tr><td>{{name}}</td><td class="col-multiline"><code class="code-inline">{{url}}</code></td><td class="col-status">{{#if active}}<span class="badge badge-success">Active</span>{{/if}}</td></tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="Profiles are managed locally via the CLI. Run `systemprompt admin session list` to view them."}}
+        {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

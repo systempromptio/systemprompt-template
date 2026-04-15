@@ -1,0 +1,120 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+
+    {{#if has_any_data}}
+    <section aria-label="Live metrics">
+    <div class="cc-compact-header" aria-live="polite">
+        <div class="cc-compact-col cc-compact-col--stats">
+            <div class="cc-compact-stats">
+                <div class="cc-stat-group cc-stat-group--primary">
+                    <div class="cc-stat-item cc-stat-item--hero" data-stat="active_now">
+                        <span id="cc-sse-indicator" class="live-dot" title="Live updates" aria-label="Live connection status"></span>
+                        <span class="cc-stat-value cc-stat-success">{{today.active_now}}</span>
+                        <span class="cc-stat-label">active</span>
+                    </div>
+                    <a href="/documentation/metrics-apm" target="_blank" rel="noopener noreferrer" class="cc-stat-link">
+                        <div class="cc-stat-item" data-stat="apm">
+                            <span class="cc-stat-value" id="cc-apm-current">--</span>
+                            <span class="cc-stat-label">APM</span>
+                        </div>
+                    </a>
+                    <a href="/documentation/metrics-eapm" target="_blank" rel="noopener noreferrer" class="cc-stat-link">
+                        <div class="cc-stat-item" data-stat="eapm">
+                            <span class="cc-stat-value" id="cc-eapm-current">--</span>
+                            <span class="cc-stat-label">EAPM</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="cc-stat-group cc-stat-group--secondary">
+                    <a href="/documentation/metrics-concurrency" target="_blank" rel="noopener noreferrer" class="cc-stat-link">
+                        <div class="cc-stat-item" data-stat="concurrency">
+                            <span class="cc-stat-value" id="cc-concurrency-current">--</span>
+                            <span class="cc-stat-label">concurrent</span>
+                        </div>
+                    </a>
+                    <a href="/documentation/metrics-throughput" target="_blank" rel="noopener noreferrer" class="cc-stat-link">
+                        <div class="cc-stat-item" data-stat="throughput">
+                            <span class="cc-stat-value" id="cc-throughput-total">--</span>
+                            <span class="cc-stat-label">throughput</span>
+                        </div>
+                    </a>
+                    <a href="/documentation/metrics-tool-diversity" target="_blank" rel="noopener noreferrer" class="cc-stat-link">
+                        <div class="cc-stat-item" data-stat="tool_diversity">
+                            <span class="cc-stat-value" id="cc-tool-diversity">--</span>
+                            <span class="cc-stat-label">tools</span>
+                        </div>
+                    </a>
+                    <a href="/documentation/metrics-multitasking" target="_blank" rel="noopener noreferrer" class="cc-stat-link">
+                        <div class="cc-stat-item" data-stat="multitasking">
+                            <span class="cc-stat-value" id="cc-multitasking">--</span>
+                            <span class="cc-stat-label">multitask</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{#if has_gamification}}
+        <div class="cc-compact-col cc-compact-col--profile">
+            <div class="cc-profile-section">
+                <div class="cc-profile-rank-block">
+                    <span class="cc-rank-badge cc-rank-badge--md rank-{{rank_level}}">{{rank_level}}</span>
+                    <div class="cc-rank-info">
+                        <span class="cc-rank-name">{{rank_name}}</span>
+                        <div class="cc-xp-bar cc-xp-bar--compact">
+                            <div class="cc-xp-fill" style="--xp-pct: {{xp_progress_pct}}%"></div>
+                        </div>
+                        <span class="cc-xp-detail">{{total_xp}} / {{xp_to_next_rank}} XP to {{next_rank_name}}</span>
+                    </div>
+                </div>
+                <div class="cc-profile-meta">
+                    <div class="cc-profile-meta-item">
+                        <span class="cc-profile-meta-icon cc-profile-meta-icon--streak">&#x1F525;</span>
+                        <span class="cc-profile-meta-value">{{current_streak}}</span>
+                        <span class="cc-profile-meta-label">streak</span>
+                    </div>
+                    <div class="cc-profile-meta-item">
+                        <span class="cc-profile-meta-value">{{achievements_count}}/{{achievements_total}}</span>
+                        <span class="cc-profile-meta-label">achievements</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{/if}}
+    </div>
+    </section>
+    {{else}}
+    <div class="cc-getting-started">
+        <div class="cc-getting-started__icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+        </div>
+        <h2>No recent conversations</h2>
+        <p>Start a new Claude session to see live activity, usage analytics, and AI suggestions here.</p>
+    </div>
+    {{/if}}
+
+    <div class="sp-tabs" role="tablist" aria-label="Control Center sections">
+        <button type="button" class="sp-tab sp-tab--active" role="tab" aria-selected="true" data-tab="conversations" aria-controls="tab-conversations">Conversations</button>
+        <button type="button" class="sp-tab" role="tab" aria-selected="false" data-tab="usage" aria-controls="tab-usage">Usage</button>
+        <button type="button" class="sp-tab" role="tab" aria-selected="false" data-tab="suggestions" aria-controls="tab-suggestions">AI Suggestions</button>
+        <button type="button" class="sp-tab" role="tab" aria-selected="false" data-tab="report" aria-controls="tab-report">Report</button>
+    </div>
+
+    {{> control-center-conversations}}
+
+    {{> control-center-insights}}
+
+    {{> control-center-suggestions}}
+
+    {{> control-center-report}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" src="/js/pages/admin-control-center.js" type="module" defer></script>
+    <script type="application/json" id="cc-initial-data">{{{cc_initial_json}}}</script>
+    {{/inline}}
+{{/layout}}

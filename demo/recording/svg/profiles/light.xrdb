@@ -1,0 +1,20 @@
+! Light theme matching systemprompt.io
+*.foreground: #2d2d2d
+*.background: #fafafa
+*.cursorColor: #ea580c
+*.color0: #2d2d2d
+*.color1: #c0392b
+*.color2: #27ae60
+*.color3: #ea580c
+*.color4: #2980b9
+*.color5: #8e44ad
+*.color6: #2980b9
+*.color7: #7f8c8d
+*.color8: #95a5a6
+*.color9: #e74c3c
+*.color10: #2ecc71
+*.color11: #f39c12
+*.color12: #3498db
+*.color13: #9b59b6
+*.color14: #3498db
+*.color15: #2d2d2d

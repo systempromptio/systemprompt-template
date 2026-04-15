@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            metadata->>'task_subject' AS task_subject,\n            metadata->>'task_description' AS task_description,\n            created_at\n        FROM plugin_usage_events\n        WHERE user_id = $1\n          AND event_type LIKE '%TaskCompleted%'\n          AND metadata->>'task_subject' IS NOT NULL\n        ORDER BY created_at DESC\n        LIMIT 5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "task_subject",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "task_description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "6f547a336b3a32ce7ae4f9ccc5f1c8809b2da1f9b0698eb1c0ecbd783c1064b0"
+}

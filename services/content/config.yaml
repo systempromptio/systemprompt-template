@@ -1,0 +1,90 @@
+content:
+  content_sources:
+    blog:
+      path: content/blog
+      source_id: blog
+      category_id: blog
+      enabled: true
+      description: Blog articles and announcements
+      allowed_content_types:
+      - blog
+      branding:
+        name: Blog
+        description: Articles and updates
+        image: /images/blog/og-default.png
+        keywords: blog, articles, announcements, guides
+      indexing:
+        clear_before: false
+        recursive: true
+      sitemap:
+        enabled: true
+        url_pattern: /blog/{slug}
+        priority: 0.8
+        changefreq: weekly
+        fetch_from: database
+        parent_route:
+          enabled: true
+          url: /blog
+          priority: 0.9
+          changefreq: daily
+    documentation:
+      path: content/documentation
+      source_id: documentation
+      category_id: documentation
+      enabled: true
+      description: Documentation and guides
+      allowed_content_types:
+      - guide
+      - reference
+      - tutorial
+      - docs
+      - feature
+      branding:
+        name: Documentation
+        description: Guides and reference documentation
+        image: /files/images/logo.png
+        keywords: docs, documentation, guides
+      indexing:
+        clear_before: false
+        recursive: true
+      sitemap:
+        enabled: true
+        url_pattern: /documentation/{slug}
+        priority: 0.7
+        changefreq: weekly
+        fetch_from: database
+        parent_route:
+          enabled: false
+          url: /documentation
+          priority: 0.9
+          changefreq: daily
+  categories:
+    blog:
+      name: Blog
+      slug: blog
+    documentation:
+      name: Documentation
+      slug: documentation
+    pages:
+      name: Pages
+      slug: pages
+  metadata:
+    default_author: Author
+    language: en
+    structured_data:
+      organization:
+        name: systemprompt.io
+        url: https://systemprompt.io
+        logo: https://systemprompt.io/logo.png
+        description: AI Agent Platform
+      blog:
+        type: Blog
+        name: Blog
+        url: https://systemprompt.io/blog
+        description: Articles and updates
+        article_section: Technology
+        language: en-US
+      article:
+        type: BlogPosting
+        language: en-US
+        article_section: Technology

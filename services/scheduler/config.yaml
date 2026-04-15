@@ -1,0 +1,37 @@
+# Scheduler Configuration
+# Background jobs and scheduled tasks
+
+scheduler:
+  enabled: true
+  jobs:
+    # Core jobs (defined in systemprompt-core)
+    - name: cleanup_anonymous_users
+      extension: core
+      job: cleanup_anonymous_users
+      schedule: "0 0 3 * * *"
+      enabled: true
+
+    - name: cleanup_empty_contexts
+      extension: core
+      job: cleanup_empty_contexts
+      schedule: "0 0 * * * *"
+      enabled: true
+
+    - name: cleanup_inactive_sessions
+      extension: core
+      job: cleanup_inactive_sessions
+      schedule: "0 0 * * * *"
+      enabled: true
+
+    - name: database_cleanup
+      extension: core
+      job: database_cleanup
+      schedule: "0 0 4 * * *"
+      enabled: true
+
+    # Web extension jobs (publishing pipeline)
+    - name: publish_pipeline
+      extension: web
+      job: publish_pipeline
+      schedule: "0 */15 * * * *"
+      enabled: true

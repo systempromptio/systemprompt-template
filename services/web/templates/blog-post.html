@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  {{{HEAD_ASSETS}}}
+
+  <title>{{TITLE}} | {{ORG_NAME}}</title>
+  <meta name="description" content="{{DESCRIPTION}}" />
+  <meta name="author" content="{{AUTHOR}}" />
+  <meta name="keywords" content="{{KEYWORDS}}" />
+  <link rel="canonical" href="{{ORG_URL}}/blog/{{SLUG}}" />
+
+  <meta property="og:title" content="{{TITLE}}" />
+  <meta property="og:description" content="{{DESCRIPTION}}" />
+  <meta property="og:image" content="{{FEATURED_IMAGE}}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="{{ORG_URL}}/blog/{{SLUG}}" />
+  <meta property="og:site_name" content="{{ORG_NAME}}" />
+  <meta property="article:published_time" content="{{DATE_ISO}}" />
+  <meta property="article:modified_time" content="{{DATE_MODIFIED_ISO}}" />
+  <meta property="article:author" content="{{AUTHOR}}" />
+  <meta property="article:section" content="{{ARTICLE_SECTION}}" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="{{TWITTER_HANDLE}}" />
+  <meta name="twitter:creator" content="{{TWITTER_HANDLE}}" />
+  <meta name="twitter:title" content="{{TITLE}}" />
+  <meta name="twitter:description" content="{{DESCRIPTION}}" />
+  <meta name="twitter:image" content="{{FEATURED_IMAGE}}" />
+
+  <link rel="icon" type="image/x-icon" href="{{FAVICON_PATH}}" />
+
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-variables.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-background.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-base.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-post-header.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-social-bar.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-featured-image.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-post-content.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-breadcrumb.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-page-header.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-list-controls.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-cards.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-footer.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-references.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-related.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-banner.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-chat-cta.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-social-content.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-hero.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-homepage.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-platforms.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-ai-badges.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-content-sections.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-content-cards.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-provenance-panel.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-provenance-sections.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-provenance-header.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-workflow.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-provenance-details.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-live-dashboard.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/blog-responsive.css" />
+  <link rel="stylesheet" href="{{CSS_BASE_PATH}}/syntax-highlight.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "{{TITLE}}",
+    "description": "{{DESCRIPTION}}",
+    "image": "{{FEATURED_IMAGE}}",
+    "author": {
+      "@type": "Person",
+      "name": "{{AUTHOR}}"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "{{ORG_NAME}}",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{LOGO_PATH}}"
+      }
+    },
+    "datePublished": "{{DATE_ISO}}",
+    "dateModified": "{{DATE_MODIFIED_ISO}}",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "{{ORG_URL}}/blog/{{SLUG}}"
+    },
+    "keywords": "{{KEYWORDS}}",
+    "articleSection": "{{ARTICLE_SECTION}}",
+    "inLanguage": "{{ARTICLE_LANGUAGE}}"
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "{{ORG_URL}}"},
+      {"@type": "ListItem", "position": 2, "name": "Blog", "item": "{{ORG_URL}}/blog"},
+      {"@type": "ListItem", "position": 3, "name": "{{TITLE}}", "item": "{{ORG_URL}}/blog/{{SLUG}}"}
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="blog-background"></div>
+  <div class="blog-shape-left"></div>
+
+  {{{HEADER}}}
+
+  <main class="blog-post">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="breadcrumb__separator">/</span>
+      <a href="/blog">Blog</a>
+      <span class="breadcrumb__separator">/</span>
+      <span class="breadcrumb__current">{{TITLE}}</span>
+    </nav>
+
+    <article>
+      <header class="post-header">
+        <h1>{{TITLE}}</h1>
+        <div class="post-meta">
+          <div class="author-info">
+            <span class="author-name">{{AUTHOR}}</span>
+            <time datetime="{{DATE_PUBLISHED}}">{{DATE}}</time>
+            <span class="meta-separator">·</span>
+            <span class="read-time">{{READ_TIME}} min read</span>
+          </div>
+        </div>
+        {{{SOCIAL_ACTION_BAR}}}
+      </header>
+
+      {{#if FEATURED_IMAGE}}
+      <figure class="featured-image" data-component="featured-image">
+        <img src="{{FEATURED_IMAGE}}" alt="{{TITLE}}" loading="eager" />
+        <div class="image-placeholder is-hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </div>
+      </figure>
+      {{/if}}
+
+      <div class="post-content">
+        {{{CONTENT}}}
+      </div>
+
+      {{{REFERENCES}}}
+
+      {{{SOCIAL_CONTENT}}}
+    </article>
+  </main>
+
+  {{{FOOTER}}}
+
+  {{{SCRIPTS}}}
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            event_type as \"event_type!\",\n            SUM(event_count)::BIGINT as \"count!\"\n        FROM plugin_usage_daily\n        WHERE user_id = $1\n        GROUP BY event_type\n        ORDER BY 2 DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "event_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "dfd28222064265257c837d6e2b39319bb0277c739553b8d7be932968febe879c"
+}

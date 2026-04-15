@@ -1,0 +1,104 @@
+@layer components {
+
+.sp-tabs {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    border-bottom: 1px solid var(--sp-border-subtle);
+    margin-bottom: var(--sp-space-5);
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.sp-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    top: 1px;
+    transition: color var(--sp-duration-fast), border-color var(--sp-duration-fast), background var(--sp-duration-fast);
+}
+
+.sp-tab:hover {
+    color: var(--sp-text-primary);
+    background: color-mix(in oklch, var(--sp-accent) 5%, transparent);
+}
+
+.sp-tab--active,
+.sp-tab[aria-selected="true"] {
+    color: var(--sp-accent);
+    border-bottom-color: var(--sp-accent);
+}
+
+.sp-tab:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--sp-bg-canvas), 0 0 0 4px color-mix(in oklch, var(--sp-accent) 50%, transparent);
+    border-radius: var(--sp-radius-sm);
+}
+
+.sp-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 var(--sp-space-1);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface-raised);
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    line-height: 1;
+}
+
+.sp-tab--active .sp-tab-count,
+.sp-tab[aria-selected="true"] .sp-tab-count {
+    background: var(--sp-accent-dim);
+    color: var(--sp-accent);
+}
+
+.sp-tabs[data-variant="pill"] {
+    border-bottom: none;
+    gap: var(--sp-space-2);
+}
+
+.sp-tabs[data-variant="pill"] .sp-tab {
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface);
+    top: 0;
+}
+
+.sp-tabs[data-variant="pill"] .sp-tab--active,
+.sp-tabs[data-variant="pill"] .sp-tab[aria-selected="true"] {
+    background: var(--sp-accent);
+    color: var(--sp-text-on-accent);
+    border-color: var(--sp-accent);
+}
+
+.sp-tabs[data-variant="pill"] .sp-tab--active .sp-tab-count,
+.sp-tabs[data-variant="pill"] .sp-tab[aria-selected="true"] .sp-tab-count {
+    background: color-mix(in oklch, var(--sp-text-on-accent) 25%, transparent);
+    color: var(--sp-text-on-accent);
+}
+
+.sp-tab-panel[hidden] {
+    display: none;
+}
+
+.sp-tab-panel--loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+}

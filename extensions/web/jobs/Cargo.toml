@@ -1,0 +1,29 @@
+[package]
+name = "systemprompt-web-jobs"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+
+[dependencies]
+systemprompt-web-shared = { workspace = true }
+systemprompt-web-admin = { workspace = true }
+systemprompt-web-content = { workspace = true }
+# Audit: uses ai, content, database, extension, generator, identifiers, models, traits — requires `full`.
+systemprompt = { workspace = true, features = ["full"] }
+sqlx = { workspace = true }
+tokio = { workspace = true }
+async-trait = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+anyhow = { workspace = true }
+walkdir = { workspace = true }
+handlebars = { workspace = true }
+reqwest = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+inventory = { workspace = true }
+
+[lints]
+workspace = true

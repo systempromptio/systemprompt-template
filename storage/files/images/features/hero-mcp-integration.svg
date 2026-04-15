@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="420" viewBox="0 0 800 420">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#A2AAB9"/>
+    </marker>
+    <marker id="arr-brand" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#EF4623"/>
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#0071CE"/>
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#22c55e"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="400" y="22" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#252526" letter-spacing="2">MCP SERVER TOPOLOGY</text>
+  <line x1="318" y1="28" x2="482" y2="28" stroke="#EF4623" stroke-width="2"/>
+
+  <!-- ===== TOP ROW — 4 External Client Boxes (y~48) ===== -->
+
+  <!-- Client 1: Claude Code -->
+  <rect x="42" y="48" width="150" height="42" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="56" y="58" width="8" height="8" rx="2" fill="#0071CE"/>
+  <text x="70" y="66" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Claude Code</text>
+  <text x="117" y="80" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#A2AAB9">CLI / IDE Plugin</text>
+
+  <!-- Client 2: Claude Cowork -->
+  <rect x="222" y="48" width="150" height="42" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="236" y="58" width="8" height="8" rx="2" fill="#0071CE"/>
+  <text x="250" y="66" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Claude Cowork</text>
+  <text x="297" y="80" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#A2AAB9">Multi-agent</text>
+
+  <!-- Client 3: Claude Desktop -->
+  <rect x="402" y="48" width="150" height="42" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="416" y="58" width="8" height="8" rx="2" fill="#0071CE"/>
+  <text x="430" y="66" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Claude Desktop</text>
+  <text x="477" y="80" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#A2AAB9">Native App</text>
+
+  <!-- Client 4: Custom Client -->
+  <rect x="582" y="48" width="150" height="42" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="596" y="58" width="8" height="8" rx="2" fill="#464E5D"/>
+  <text x="610" y="66" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Custom Client</text>
+  <text x="657" y="80" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#A2AAB9">API / SDK</text>
+
+  <!-- "Non-Trusted Surface" label above clients -->
+  <text x="400" y="43" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="600" fill="#ef4444" letter-spacing="1">EXTERNAL CLIENTS · NON-TRUSTED SURFACE</text>
+
+  <!-- ===== HOOKS LAYER — between clients and gateway (y~100) ===== -->
+
+  <!-- Hooks layer bar -->
+  <rect x="42" y="100" width="690" height="26" rx="5" fill="#ef4444" opacity="0.06" stroke="#ef4444" stroke-width="0.75" stroke-dasharray="4,3"/>
+  <rect x="52" y="106" width="6" height="6" rx="1" fill="#ef4444"/>
+  <text x="64" y="113" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="#ef4444">Hooks Layer</text>
+  <text x="135" y="113" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#464E5D">— Pre-authorise external client requests before they reach the platform</text>
+
+  <!-- PreToolUse badges inside hooks bar -->
+  <rect x="470" y="104" width="62" height="16" rx="3" fill="none" stroke="#ef4444" stroke-width="0.5"/>
+  <text x="501" y="115" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="600" fill="#ef4444">PreToolUse</text>
+
+  <rect x="540" y="104" width="68" height="16" rx="3" fill="none" stroke="#ef4444" stroke-width="0.5"/>
+  <text x="574" y="115" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="600" fill="#ef4444">PostToolUse</text>
+
+  <!-- Arrows from clients down to hooks layer -->
+  <line x1="117" y1="90" x2="117" y2="100" stroke="#A2AAB9" stroke-width="1"/>
+  <line x1="297" y1="90" x2="297" y2="100" stroke="#A2AAB9" stroke-width="1"/>
+  <line x1="477" y1="90" x2="477" y2="100" stroke="#A2AAB9" stroke-width="1"/>
+  <line x1="657" y1="90" x2="657" y2="100" stroke="#A2AAB9" stroke-width="1"/>
+
+  <!-- Arrow from hooks layer down to gateway -->
+  <line x1="387" y1="126" x2="387" y2="148" stroke="#EF4623" stroke-width="1.5" marker-end="url(#arr-brand)"/>
+
+  <!-- ===== MIDDLE SECTION — Gateway + Registry (y~154) ===== -->
+
+  <!-- OAuth2 Gateway -->
+  <rect x="260" y="154" width="200" height="52" rx="6" fill="none" stroke="#EF4623" stroke-width="1.5"/>
+  <rect x="260" y="154" width="200" height="4" rx="6" fill="#EF4623"/>
+  <text x="360" y="175" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#252526">OAuth2 Gateway</text>
+  <text x="360" y="188" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Token validation &amp; session binding</text>
+  <text x="360" y="199" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#A2AAB9">PKCE + Dynamic Client Registration</text>
+
+  <!-- Arrow Gateway → Registry -->
+  <line x1="460" y1="180" x2="510" y2="180" stroke="#0071CE" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+  <!-- Central Registry -->
+  <rect x="512" y="154" width="200" height="52" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="512" y="154" width="200" height="4" rx="6" fill="#0071CE"/>
+  <text x="612" y="175" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#252526">Central Registry</text>
+  <text x="612" y="188" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Server discovery &amp; routing</text>
+  <text x="612" y="199" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#A2AAB9">Scope-based server resolution</text>
+
+  <!-- ===== Arrows from Registry down to servers ===== -->
+  <line x1="612" y1="206" x2="612" y2="228" stroke="#A2AAB9" stroke-width="1"/>
+  <line x1="150" y1="228" x2="712" y2="228" stroke="#A2AAB9" stroke-width="1"/>
+
+  <line x1="150" y1="228" x2="150" y2="248" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr-green)"/>
+  <line x1="400" y1="228" x2="400" y2="248" stroke="#0071CE" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+  <line x1="650" y1="228" x2="650" y2="248" stroke="#f97316" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Protocol labels on connection lines -->
+  <rect x="126" y="217" width="48" height="12" rx="3" fill="#F7F4EF"/>
+  <text x="150" y="226" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="6" fill="#A2AAB9">SSE / HTTP</text>
+
+  <rect x="376" y="217" width="48" height="12" rx="3" fill="#F7F4EF"/>
+  <text x="400" y="226" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="6" fill="#A2AAB9">SSE / HTTP</text>
+
+  <rect x="626" y="217" width="48" height="12" rx="3" fill="#F7F4EF"/>
+  <text x="650" y="226" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="6" fill="#A2AAB9">SSE / HTTP</text>
+
+  <!-- ===== BOTTOM ROW — 3 MCP Server Boxes with integrated RBAC (y~252) ===== -->
+
+  <!-- MCP Server A (green) -->
+  <rect x="50" y="252" width="200" height="92" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="50" y="252" width="200" height="4" rx="6" fill="#22c55e"/>
+  <text x="150" y="272" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#252526">MCP Server A</text>
+  <text x="150" y="286" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Port 5010</text>
+  <text x="150" y="300" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">Admin scope</text>
+  <!-- Integrated RBAC badge -->
+  <rect x="80" y="308" width="140" height="16" rx="4" fill="#22c55e" opacity="0.1" stroke="#22c55e" stroke-width="0.5"/>
+  <rect x="88" y="313" width="6" height="6" rx="1" fill="#22c55e"/>
+  <text x="100" y="319" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="600" fill="#22c55e">RBAC Integrated</text>
+  <text x="167" y="319" font-family="system-ui, -apple-system, sans-serif" font-size="6" fill="#464E5D">12 tools</text>
+  <!-- Tool count badge -->
+  <rect x="110" y="328" width="80" height="12" rx="4" fill="#F7F4EF"/>
+  <text x="150" y="337" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="6" fill="#A2AAB9">Auth · Audit · Rate limit</text>
+
+  <!-- MCP Server B (blue) -->
+  <rect x="300" y="252" width="200" height="92" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="300" y="252" width="200" height="4" rx="6" fill="#0071CE"/>
+  <text x="400" y="272" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#252526">MCP Server B</text>
+  <text x="400" y="286" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Port 5050</text>
+  <text x="400" y="300" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">User scope</text>
+  <!-- Integrated RBAC badge -->
+  <rect x="330" y="308" width="140" height="16" rx="4" fill="#22c55e" opacity="0.1" stroke="#22c55e" stroke-width="0.5"/>
+  <rect x="338" y="313" width="6" height="6" rx="1" fill="#22c55e"/>
+  <text x="350" y="319" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="600" fill="#22c55e">RBAC Integrated</text>
+  <text x="417" y="319" font-family="system-ui, -apple-system, sans-serif" font-size="6" fill="#464E5D">8 tools</text>
+  <!-- Tool count badge -->
+  <rect x="360" y="328" width="80" height="12" rx="4" fill="#F7F4EF"/>
+  <text x="400" y="337" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="6" fill="#A2AAB9">Auth · Audit · Rate limit</text>
+
+  <!-- MCP Server C (orange) -->
+  <rect x="550" y="252" width="200" height="92" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="550" y="252" width="200" height="4" rx="6" fill="#f97316"/>
+  <text x="650" y="272" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#252526">MCP Server C</text>
+  <text x="650" y="286" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Port 5090</text>
+  <text x="650" y="300" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">Custom scope</text>
+  <!-- Integrated RBAC badge -->
+  <rect x="580" y="308" width="140" height="16" rx="4" fill="#22c55e" opacity="0.1" stroke="#22c55e" stroke-width="0.5"/>
+  <rect x="588" y="313" width="6" height="6" rx="1" fill="#22c55e"/>
+  <text x="600" y="319" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="600" fill="#22c55e">RBAC Integrated</text>
+  <text x="667" y="319" font-family="system-ui, -apple-system, sans-serif" font-size="6" fill="#464E5D">6 tools</text>
+  <!-- Tool count badge -->
+  <rect x="610" y="328" width="80" height="12" rx="4" fill="#F7F4EF"/>
+  <text x="650" y="337" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="6" fill="#A2AAB9">Auth · Audit · Rate limit</text>
+
+  <!-- ===== LEGEND ===== -->
+  <line x1="16" y1="360" x2="784" y2="360" stroke="#D6DCE8" stroke-width="0.5"/>
+
+  <!-- Protocol info row -->
+  <text x="50" y="378" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="600" fill="#252526">TRANSPORT</text>
+  <text x="110" y="378" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#464E5D">SSE (Server-Sent Events) over HTTP</text>
+  <text x="340" y="378" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="600" fill="#252526">AUTH</text>
+  <text x="370" y="378" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#464E5D">OAuth2 PKCE + Dynamic Client Registration</text>
+
+  <!-- Color legend -->
+  <circle cx="50" cy="398" r="4" fill="#ef4444"/>
+  <text x="58" y="401" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Hooks (external)</text>
+
+  <circle cx="150" cy="398" r="4" fill="#22c55e"/>
+  <text x="158" y="401" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">RBAC (integrated)</text>
+
+  <circle cx="260" cy="398" r="4" fill="#EF4623"/>
+  <text x="268" y="401" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Gateway</text>
+
+  <circle cx="330" cy="398" r="4" fill="#0071CE"/>
+  <text x="338" y="401" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Registry</text>
+
+  <circle cx="400" cy="398" r="4" fill="#f97316"/>
+  <text x="408" y="401" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Custom scope</text>
+
+  <!-- Bottom right branding -->
+  <text x="784" y="410" text-anchor="end" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">systemprompt.io MCP</text>
+</svg>

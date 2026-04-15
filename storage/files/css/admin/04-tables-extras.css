@@ -1,0 +1,159 @@
+@layer components {
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-space-3) var(--sp-space-4);
+    border-top: 1px solid var(--sp-border-subtle);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-4);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+}
+
+.pagination-controls button {
+    background: none;
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-button);
+    color: var(--sp-text-secondary);
+    padding: var(--sp-space-1) var(--sp-space-3);
+    cursor: pointer;
+    font-size: var(--sp-text-sm);
+    font-family: inherit;
+    transition: background var(--sp-duration-fast), border-color var(--sp-duration-fast), color var(--sp-duration-fast);
+}
+
+.pagination-controls button:hover:not(:disabled) {
+    background: color-mix(in oklch, var(--sp-warm-900) 4%, transparent);
+    border-color: var(--sp-border-strong);
+    color: var(--sp-text-primary);
+}
+
+.pagination-controls button:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.pagination-controls .current-page {
+    padding: var(--sp-space-1) var(--sp-space-3);
+    color: var(--sp-accent);
+    font-weight: 600;
+}
+
+.per-page-select {
+    background: transparent;
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-button);
+    color: var(--sp-text-secondary);
+    padding: var(--sp-space-1) var(--sp-space-2);
+    font-size: var(--sp-text-sm);
+    font-family: inherit;
+}
+
+.per-page-select:focus-visible,
+.pagination-controls button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--sp-bg-canvas), 0 0 0 4px var(--sp-accent);
+}
+
+.data-table tfoot tr {
+    background: var(--sp-bg-surface-raised);
+}
+
+.data-table tfoot td {
+    background: inherit;
+    border-top: 2px solid var(--sp-border-default);
+    border-bottom: none;
+    font-weight: 700;
+    color: var(--sp-text-primary);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    font-size: var(--sp-text-sm);
+    white-space: nowrap;
+}
+
+.data-table tfoot td.col-actions {
+    background: inherit;
+}
+
+.invoice-link {
+    color: var(--sp-accent);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.invoice-link:hover {
+    text-decoration: underline;
+    opacity: 0.85;
+}
+
+.data-table .thumbnail-cell {
+    width: 56px;
+    padding: var(--sp-space-1);
+    text-align: center;
+}
+
+.table-thumbnail {
+    width: 48px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: var(--sp-radius-sm);
+    border: 1px solid var(--sp-border-subtle);
+}
+
+.table-thumbnail-empty {
+    display: inline-block;
+    width: 48px;
+    height: 36px;
+    line-height: 36px;
+    text-align: center;
+    color: var(--sp-text-tertiary);
+}
+
+.data-table .col-checkbox {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    text-align: center;
+    padding: var(--sp-space-2);
+}
+
+.col-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+.data-table .col-multiline {
+    white-space: normal;
+    line-height: 1.4;
+}
+
+.cell-stacked {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+}
+
+.cell-primary {
+    font-weight: 500;
+    color: var(--sp-text-primary);
+}
+
+.cell-secondary {
+    font-size: 0.8em;
+    color: var(--sp-text-tertiary);
+    margin-top: 0.125rem;
+}
+
+}

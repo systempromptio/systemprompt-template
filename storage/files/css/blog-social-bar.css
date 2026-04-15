@@ -1,0 +1,89 @@
+.social-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-spacing-md);
+  margin-top: var(--sp-spacing-lg);
+  padding-top: var(--sp-spacing-lg);
+  border-top: 1px solid var(--sp-color-border);
+}
+
+.social-action-bar__label {
+  font-size: var(--sp-font-size-sm);
+  color: var(--sp-color-text-secondary);
+  font-weight: var(--sp-font-weight-medium);
+}
+
+.social-action-bar__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--sp-radius-round);
+  color: var(--sp-color-text-secondary);
+  background: var(--sp-color-surface-variant);
+  border: 1px solid var(--sp-color-border);
+  transition: all var(--sp-animation-fast) ease;
+  text-decoration: none;
+}
+
+.social-action-bar__link:hover {
+  color: var(--sp-color-text-primary);
+  background: var(--sp-color-surface);
+  border-color: var(--sp-color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--sp-shadow-md);
+}
+
+.social-action-bar__link svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.social-action-bar__link--linkedin:hover {
+  color: #0A66C2;
+  border-color: #0A66C2;
+}
+
+.social-action-bar__link--twitter:hover {
+  color: var(--sp-color-text-primary);
+  border-color: var(--sp-color-text-primary);
+}
+
+.social-action-bar__link--github:hover {
+  color: var(--sp-color-text-primary);
+  border-color: var(--sp-color-text-primary);
+}
+
+.social-action-bar__link--share {
+  cursor: pointer;
+  font: inherit;
+}
+
+.social-action-bar__link--share:hover {
+  color: var(--sp-color-primary);
+  border-color: var(--sp-color-primary);
+}
+
+.social-action-bar--hero {
+  border-top: none;
+  padding-top: 0;
+  margin-top: var(--sp-spacing-md);
+}
+
+.social-action-bar--hero .social-action-bar__link {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.social-action-bar--hero .social-action-bar__link:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.social-action-bar--hero .social-action-bar__label {
+  color: rgba(255, 255, 255, 0.8);
+}

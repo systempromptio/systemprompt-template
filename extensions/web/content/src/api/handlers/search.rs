@@ -1,0 +1,36 @@
+use std::sync::Arc;
+
+use axum::{
+    extract::{Query, State},
+    response::{IntoResponse, Response},
+    Json,
+};
+
+use crate::api::{BlogState, SearchQuery};
+use crate::services::SearchService;
+use systemprompt_web_shared::models::SearchRequest;
+
+pub async fn search_handler(
+    State(state): State<BlogState>,
+    Query(query): Query<SearchQuery>,
+) -> Response {
+    let service = SearchService::new(Arc::clone(&state.pool));
+
+    let request = SearchRequest {
+        query: query.q,
+        filters: None,
+        limit: query.limit,
+    };
+
+    match service.search(&request).await {
+        Ok(response) => Json(response).into_response(),
+        Err(e) => {
+            tracing::error!(error = %e, "Search failed");
+            (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "Internal server error"})),
+            )
+                .into_response()
+        }
+    }
+}

@@ -1,0 +1,71 @@
+@layer components {
+
+
+.cc-tools {
+    background: var(--sp-bg-surface-gradient);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-inner-brand);
+    padding: var(--sp-space-4) var(--sp-space-5);
+    box-shadow: var(--sp-shadow-card), var(--sp-shadow-inner-glow);
+}
+
+.cc-tool-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-2) 0;
+    border-radius: var(--sp-radius-sm);
+    transition: background var(--sp-duration-fast);
+}
+
+.cc-tool-row:hover {
+    background: color-mix(in oklch, var(--sp-accent) 4%, transparent);
+}
+
+.cc-tool-row + .cc-tool-row {
+    border-top: 1px solid var(--sp-border-subtle);
+    padding-top: var(--sp-space-2);
+    margin-top: var(--sp-space-1);
+}
+
+.cc-tool-name {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    font-weight: 500;
+    min-width: 70px;
+    flex-shrink: 0;
+}
+
+.cc-tool-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--sp-bg-base);
+    border-radius: var(--sp-radius-full);
+    overflow: hidden;
+    box-shadow: var(--sp-shadow-inset-sm);
+}
+
+.cc-tool-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--sp-accent), var(--sp-accent-hover));
+    border-radius: var(--sp-radius-full);
+    transition: width var(--sp-duration-slow) var(--sp-ease-out);
+    box-shadow: 0 1px 3px color-mix(in oklch, var(--sp-accent) 30%, transparent);
+}
+
+.cc-tool-count {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+    min-width: 32px;
+    text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-tool-fill {
+        transition: none;
+    }
+}
+
+}

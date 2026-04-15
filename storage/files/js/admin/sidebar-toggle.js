@@ -1,0 +1,41 @@
+function initSidebarToggle() {
+    'use strict';
+
+    const sidebar = document.getElementById('admin-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const toggleBtn = document.querySelector('.sidebar-toggle');
+    const closeBtn = sidebar && sidebar.querySelector('.sidebar-close-btn');
+
+    if (!sidebar || !overlay || !toggleBtn) return;
+
+    const openSidebar = () => {
+        sidebar.classList.add('open');
+        overlay.classList.add('open');
+        toggleBtn.setAttribute('aria-expanded', 'true');
+    };
+
+    const closeSidebar = () => {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+    };
+
+    toggleBtn.addEventListener('click', () => {
+        if (sidebar.classList.contains('open')) {
+            closeSidebar();
+        } else {
+            openSidebar();
+        }
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeSidebar);
+    }
+
+    overlay.addEventListener('click', closeSidebar);
+
+    window.AdminApp = window.AdminApp || {};
+    window.AdminApp._closeSidebar = closeSidebar;
+}
+
+document.addEventListener('DOMContentLoaded', initSidebarToggle);

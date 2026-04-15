@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, encrypted_value, value_nonce FROM plugin_env_vars WHERE user_id = $1 AND is_secret = true AND encrypted_value IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "encrypted_value",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 2,
+        "name": "value_nonce",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "30dff8677ec27d158776fc6508dfb02e7d6fabf47eea91a9a3ab54246f5a5b4b"
+}

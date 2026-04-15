@@ -1,0 +1,46 @@
+<div class="panel-overlay" id="create-user-overlay"></div>
+<div class="side-panel" id="create-user-panel" role="dialog" aria-modal="true" aria-labelledby="create-user-title">
+    <div class="panel-header">
+        <h2 id="create-user-title">Add User</h2>
+        <button type="button" class="panel-close" aria-label="Close panel">&times;</button>
+    </div>
+    <div class="panel-body">
+        <div class="form-group">
+            <label for="new-user-id">User ID</label>
+            <input class="field-input" type="text" id="new-user-id" placeholder="username or email" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label for="new-user-name">Display Name</label>
+            <input class="field-input" type="text" id="new-user-name" placeholder="Full Name" autocomplete="name">
+        </div>
+        <div class="form-group">
+            <label for="new-user-email">Email</label>
+            <input class="field-input" type="email" id="new-user-email" placeholder="user@company.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label for="new-user-dept">Department</label>
+            <select class="field-input" id="new-user-dept">
+                <option value="">-- Select --</option>
+                <option value="ceo">ceo</option>
+                <option value="finance">finance</option>
+                <option value="sales">sales</option>
+                <option value="marketing">marketing</option>
+                <option value="operations">operations</option>
+                <option value="hr">hr</option>
+                <option value="it">it</option>
+                <option value="support">support</option>
+            </select>
+        </div>
+        <div class="form-group" role="group" aria-labelledby="roles-group-label">
+            <label id="roles-group-label">Roles</label>
+            <div class="checkbox-group">
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="user" checked> user</label>
+                <label class="checkbox-label"><input type="checkbox" name="roles" value="admin"> admin</label>
+            </div>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <button type="button" class="btn btn-secondary" data-action="cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" data-action="save">Create User</button>
+    </div>
+</div>

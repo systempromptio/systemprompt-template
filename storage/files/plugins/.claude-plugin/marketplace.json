@@ -1,0 +1,36 @@
+{
+  "name": "systemprompt-marketplace",
+  "owner": {
+    "name": "systemprompt.io"
+  },
+  "metadata": {
+    "description": "systemprompt.io plugin marketplace",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "systemprompt",
+      "source": "./storage/files/plugins/systemprompt",
+      "description": "Your AI consultant for building custom skills, agents, and secrets through guided Socratic interviews",
+      "version": "2.1.0"
+    },
+    {
+      "name": "enterprise-demo",
+      "source": "./storage/files/plugins/enterprise-demo",
+      "description": "Governance examples — a dangerous skill blocked by policy hooks, and a simple web search skill demonstrating tool governance",
+      "version": "2.0.0"
+    },
+    {
+      "name": "systemprompt-admin",
+      "source": "./storage/files/plugins/systemprompt-admin",
+      "description": "CLI administration tools for managing users, analytics, agents, services, jobs, logs, and database",
+      "version": "0.1.0"
+    },
+    {
+      "name": "systemprompt-dev",
+      "source": "./storage/files/plugins/systemprompt-dev",
+      "description": "Complete development toolkit: Rust, frontend, architecture standards, extension development guides, and 6 specialized agents",
+      "version": "1.0.0"
+    }
+  ]
+}

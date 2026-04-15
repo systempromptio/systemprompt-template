@@ -1,0 +1,121 @@
+
+.playbooks-ctas {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-space-lg);
+  flex-wrap: wrap;
+}
+
+.playbooks-ctas .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-space-md) var(--sp-space-xl);
+  font-family: var(--sp-font-brand);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  border-radius: var(--sp-radius-md);
+  transition: all var(--sp-transition-fast);
+  min-width: 200px;
+}
+
+.playbooks-ctas .btn-primary {
+  background: linear-gradient(135deg, var(--sp-brand-600), var(--sp-brand-500));
+  color: var(--sp-color-text-on-primary);
+  border: none;
+  font-weight: 700;
+}
+
+.playbooks-ctas .btn-primary:hover {
+  background: linear-gradient(135deg, var(--sp-brand-500), var(--sp-brand-400));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 113, 206, 0.4);
+}
+
+.playbooks-ctas .btn-secondary {
+  background: transparent;
+  color: var(--sp-color-primary);
+  border: 1px solid var(--sp-color-primary);
+}
+
+.playbooks-ctas .btn-secondary:hover {
+  background: rgba(0, 113, 206, 0.1);
+  transform: translateY(-2px);
+}
+
+
+@media (max-width: 1024px) {
+  .playbooks-categories,
+  .playbooks-differentiators {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .playbooks-section {
+    padding: var(--sp-space-3xl) 0;
+  }
+
+
+  .playbooks-flow-desktop {
+    display: none;
+  }
+
+  .playbooks-flow-mobile {
+    display: block;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  .playbooks-flow {
+    margin-bottom: var(--sp-space-2xl);
+  }
+
+
+  .playbooks-featured::before {
+    display: none;
+  }
+
+  .playbooks-categories {
+    grid-template-columns: 1fr;
+  }
+
+  .playbooks-differentiators {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--sp-space-md);
+  }
+
+  .playbooks-featured {
+    padding: var(--sp-space-lg);
+  }
+
+  .playbooks-featured__code {
+    padding: var(--sp-space-sm) var(--sp-space-md);
+  }
+
+  .playbooks-featured__code code {
+    font-size: 0.75rem;
+  }
+
+  .playbooks-ctas {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .playbooks-ctas .btn {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .playbooks-differentiators {
+    grid-template-columns: 1fr;
+  }
+
+  .playbooks-diff-card {
+    padding: var(--sp-space-md);
+  }
+}

@@ -1,0 +1,130 @@
+
+.playbooks-featured {
+  max-width: 700px;
+  margin: 0 auto var(--sp-space-2xl);
+  background: linear-gradient(135deg, rgba(0, 113, 206, 0.1) 0%, rgba(0, 113, 206, 0.02) 100%);
+  border: 2px solid var(--sp-color-primary);
+  border-radius: var(--sp-card-radius);
+  padding: var(--sp-space-xl) var(--sp-space-2xl);
+  text-align: center;
+  position: relative;
+  box-shadow:
+    0 0 60px rgba(0, 113, 206, 0.08),
+    0 8px 32px rgba(0, 113, 206, 0.15);
+}
+
+
+
+.playbooks-featured__badge {
+  display: inline-block;
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  font-family: var(--sp-font-brand);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  border-radius: var(--sp-radius-sm);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  margin-bottom: var(--sp-space-lg);
+}
+
+.playbooks-featured__title {
+  font-family: var(--sp-font-brand);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--sp-space-md);
+  color: var(--sp-color-text);
+}
+
+.playbooks-featured__description {
+  color: var(--sp-color-text-secondary);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: var(--sp-space-lg);
+}
+
+.playbooks-featured__code {
+  background: var(--sp-color-surface);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-md);
+  padding: var(--sp-space-md) var(--sp-space-lg);
+  margin-bottom: var(--sp-space-lg);
+  position: relative;
+  overflow-x: auto;
+}
+
+.playbooks-featured__code code {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.875rem;
+  color: var(--sp-color-primary);
+  white-space: nowrap;
+  display: block;
+  padding-right: 60px;
+}
+
+.copy-btn {
+  position: absolute;
+  right: var(--sp-space-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  padding: var(--sp-space-2) var(--sp-space-2);
+  cursor: pointer;
+  color: var(--sp-color-text-secondary);
+  transition: all var(--sp-transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--sp-color-primary);
+  color: var(--sp-color-primary);
+}
+
+.copy-btn .check-icon {
+  display: none;
+}
+
+.copy-btn.copied .copy-icon {
+  display: none;
+}
+
+.copy-btn.copied .check-icon {
+  display: block;
+  color: var(--sp-color-success);
+}
+
+.copy-btn.copied {
+  border-color: var(--sp-color-success);
+}
+
+.playbooks-featured__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+  color: var(--sp-color-primary);
+  font-family: var(--sp-font-brand);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  transition: all var(--sp-transition-fast);
+}
+
+.playbooks-featured__cta:hover {
+  color: var(--sp-color-primary-hover);
+}
+
+.playbooks-featured__cta .arrow {
+  transition: transform var(--sp-transition-fast);
+}
+
+.playbooks-featured__cta:hover .arrow {
+  transform: translateX(4px);
+}

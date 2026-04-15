@@ -1,0 +1,51 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+
+    {{> components/page-header title=hero_title subtitle=hero_subtitle}}
+    <pre class="code-block"><code>{{cli_command}}</code></pre>
+
+    <section class="stat-card-grid">
+        {{> components/stat-card label="Total" value=total}}
+        {{> components/stat-card label="Allowed" value=allowed variant="success"}}
+        {{> components/stat-card label="Denied" value=denied variant="error"}}
+    </section>
+
+    <div class="toolbar">
+        <a href="/admin/governance/decisions" class="btn btn-sm {{#if (eq outcome "all")}}btn-primary{{else}}btn-secondary{{/if}}">All</a>
+        <a href="/admin/governance/decisions?outcome=allow" class="btn btn-sm {{#if (eq outcome "allow")}}btn-primary{{else}}btn-secondary{{/if}}">Allowed</a>
+        <a href="/admin/governance/decisions?outcome=deny" class="btn btn-sm {{#if (eq outcome "deny")}}btn-primary{{else}}btn-secondary{{/if}}">Denied</a>
+    </div>
+
+    {{#if has_decisions}}
+    {{#> components/data-table}}
+        <thead><tr>
+            <th>Tool</th><th>Agent</th><th class="col-status">Scope</th><th class="col-status">Decision</th><th>Policy</th><th class="col-multiline">Reason</th><th class="col-date">Time</th>
+        </tr></thead>
+        <tbody>
+        {{#each decisions}}
+        <tr>
+            <td><code class="code-inline">{{tool_name}}</code></td>
+            <td>{{agent_id}}</td>
+            <td class="col-status">{{#if agent_scope}}<span class="badge">{{agent_scope}}</span>{{/if}}</td>
+            <td class="col-status">
+                {{#if is_denied}}
+                    <span class="mcp-badge mcp-badge-danger">DENY</span>
+                {{else}}
+                    <span class="mcp-badge mcp-badge-success">ALLOW</span>
+                {{/if}}
+            </td>
+            <td><code class="code-inline">{{policy}}</code></td>
+            <td class="col-multiline" title="{{reason}}">{{truncate reason 60}}</td>
+            <td class="col-date">{{created_at}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No governance decisions recorded yet. Run demo/governance/01-happy-path.sh to generate data."}}
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

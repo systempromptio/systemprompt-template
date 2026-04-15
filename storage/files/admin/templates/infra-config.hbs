@@ -1,0 +1,33 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/page-hero}}
+
+    <section aria-label="Config CLI">
+        <p class="text-tertiary">CLI: <code class="code-inline">{{cli_command}}</code> &middot; <code class="code-inline">systemprompt admin config validate</code> &middot; <code class="code-inline">systemprompt admin config runtime</code></p>
+        <p class="text-tertiary">Config directory: <code class="code-inline">{{config_dir}}</code></p>
+    </section>
+
+    <section aria-label="Configuration files">
+    {{#if has_files}}
+    {{#> components/data-table}}
+        <thead><tr><th>File</th><th>Type</th><th class="col-numeric">Size</th><th class="col-status">Valid</th></tr></thead>
+        <tbody>
+        {{#each files}}
+        <tr>
+            <td class="cell-primary"><code class="code-inline">{{name}}</code></td>
+            <td>{{extension}}</td>
+            <td class="col-numeric numeric">{{size_bytes}}</td>
+            <td class="col-status">{{#if valid}}<span class="badge badge-success">Valid</span>{{else}}<span class="badge badge-danger">Invalid</span>{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No configuration files found in services/config/."}}
+    {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

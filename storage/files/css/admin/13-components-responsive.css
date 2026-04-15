@@ -1,0 +1,182 @@
+@layer components {
+
+@media (max-width: 768px) {
+
+    .user-widget {
+        width: 38px;
+        height: 38px;
+    }
+
+    .user-widget__avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 0.6rem;
+    }
+
+    .user-widget__xp-ring {
+        width: 38px;
+        height: 38px;
+    }
+
+    .user-widget__level {
+        width: 18px;
+        height: 18px;
+        font-size: 0.55rem;
+    }
+
+    .user-meta {
+        display: none;
+    }
+
+    .toolbar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--sp-space-2);
+        align-items: center;
+    }
+
+    .toolbar .search-group {
+        flex: 1 1 140px;
+        min-width: 140px;
+    }
+
+    .toolbar .search-input,
+    .search-input {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .toolbar .filter-select,
+    .toolbar .filter-group {
+        flex: 0 1 auto;
+        min-width: 100px;
+    }
+
+    .toolbar .btn-primary {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        padding: var(--sp-space-2) var(--sp-space-3);
+        font-size: var(--sp-text-sm);
+    }
+
+    .toolbar .flex-1 {
+        display: none;
+    }
+
+    .btn {
+        min-height: 44px;
+        font-weight: 500;
+    }
+
+    .admin-main > p.text-muted.mb-4 {
+        display: none;
+    }
+
+    .config-stats.mb-4 {
+        margin-bottom: var(--sp-space-2);
+    }
+
+    .btn-sm {
+        min-height: 36px;
+    }
+
+    .actions-trigger,
+    .btn-actions-trigger {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .install-trigger {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .install-dropdown {
+        width: calc(100vw - var(--sp-space-6));
+        right: calc(-1 * var(--sp-space-3));
+    }
+
+    .plugin-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .gs-banner {
+        padding: var(--sp-space-6) var(--sp-space-4);
+    }
+
+    .gs-banner-title {
+        font-size: var(--sp-text-lg);
+    }
+
+    .gs-stat-ribbon {
+        flex-wrap: wrap;
+    }
+
+    .gs-stat-ribbon .card {
+        min-width: calc(50% - var(--sp-space-2));
+    }
+}
+
+@media (max-width: 480px) {
+
+    .toolbar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--sp-space-2);
+    }
+
+    .toolbar .search-group {
+        flex: 1 1 0;
+        min-width: 120px;
+    }
+
+    .toolbar .btn-primary {
+        flex: 0 0 auto;
+        width: auto;
+        min-width: auto;
+    }
+
+    .toolbar .filter-select,
+    .toolbar .filter-group {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+
+    .user-widget {
+        width: 34px;
+        height: 34px;
+    }
+
+    .user-widget__avatar {
+        width: 26px;
+        height: 26px;
+        font-size: 0.55rem;
+    }
+
+    .user-widget__xp-ring {
+        width: 34px;
+        height: 34px;
+    }
+
+    .user-widget__level {
+        width: 16px;
+        height: 16px;
+        font-size: 0.5rem;
+    }
+
+    .install-dropdown {
+        width: calc(100vw - var(--sp-space-4));
+        right: calc(-1 * var(--sp-space-2));
+    }
+
+    .install-dropdown .install-widget-stats {
+        flex-wrap: wrap;
+        gap: var(--sp-space-2) var(--sp-space-3);
+    }
+
+    .gs-stat-ribbon .card {
+        min-width: 100%;
+    }
+}
+
+}

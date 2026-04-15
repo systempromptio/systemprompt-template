@@ -1,0 +1,67 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    <div class="toolbar">
+        <span class="text-tertiary text-sm self-center">
+            {{#if (gt total 0)}}{{add offset 1}}{{else}}0{{/if}}-{{#if (gt total (add offset limit))}}{{add offset limit}}{{else}}{{total}}{{/if}} of {{total}} changes
+        </span>
+        <div class="flex-1"></div>
+        {{#if has_prev}}
+        <a href="/admin/my/versions/?offset={{prev_offset}}" class="btn btn-secondary btn-sm">Newer</a>
+        {{else}}
+        <button type="button" class="btn btn-secondary btn-sm" disabled>Newer</button>
+        {{/if}}
+        {{#if has_next}}
+        <a href="/admin/my/versions/?offset={{next_offset}}" class="btn btn-secondary btn-sm">Older</a>
+        {{else}}
+        <button type="button" class="btn btn-secondary btn-sm" disabled>Older</button>
+        {{/if}}
+    </div>
+    {{#if events}}
+    <section aria-label="Version history">
+    {{#> components/data-table}}
+        <thead>
+            <tr>
+                <th class="col-status">Action</th>
+                <th class="col-status">Type</th>
+                <th>Name</th>
+                <th class="col-multiline">Description</th>
+                <th class="col-date">Time</th>
+            </tr>
+        </thead>
+        <tbody>
+        {{#each events}}
+        <tr>
+            <td class="col-status">
+                {{#if (eq action "created")}}<span class="badge badge-success">created</span>
+                {{else if (eq action "updated")}}<span class="badge badge-warning">updated</span>
+                {{else if (eq action "deleted")}}<span class="badge badge-danger">deleted</span>
+                {{else if (eq action "imported")}}<span class="badge badge-info">imported</span>
+                {{else if (eq action "uploaded")}}<span class="badge badge-info">uploaded</span>
+                {{else if (eq action "restored")}}<span class="badge badge-info">restored</span>
+                {{else if (eq action "forked")}}<span class="badge badge-info">forked</span>
+                {{else if (eq action "added")}}<span class="badge badge-success">added</span>
+                {{else}}<span class="badge badge-gray">{{action}}</span>
+                {{/if}}
+            </td>
+            <td class="col-status">
+                {{#if entity_type}}<span class="badge badge-gray">{{entity_type}}</span>
+                {{else}}<span class="text-tertiary">&mdash;</span>
+                {{/if}}
+            </td>
+            <td>{{#if entity_name}}{{entity_name}}{{else}}<span class="text-tertiary">&mdash;</span>{{/if}}</td>
+            <td class="col-multiline text-secondary">{{description}}</td>
+            <td class="col-date"><span title="{{formatDate created_at}}">{{relativeTime created_at}}</span></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    </section>
+    {{else}}
+    {{> components/empty-state message="No activity recorded yet. Changes to your skills, plugins, and agents will appear here."}}
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    {{/inline}}
+{{/layout}}

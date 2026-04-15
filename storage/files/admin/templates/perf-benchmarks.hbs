@@ -1,0 +1,56 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/page-hero}}
+
+    <section aria-label="CLI command" class="mb-4">
+        <p class="text-secondary text-sm">Backed by <code class="code-inline">{{demo_script}}</code></p>
+        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
+    </section>
+
+    <section aria-label="Benchmark runs">
+        <h2 class="section-heading">Recent Load-Test Runs</h2>
+        {{#if has_runs}}
+        {{#> components/data-table}}
+            <thead><tr><th class="col-date">Started</th><th>Session</th><th class="numeric">Decisions</th><th class="numeric">Allowed</th><th class="numeric">Denied</th><th class="numeric">Duration (s)</th><th class="numeric">Req/s</th></tr></thead>
+            <tbody>
+            {{#each runs}}
+            <tr>
+                <td class="col-date"><span class="date">{{formatDate started_at}}</span></td>
+                <td><code class="code-inline">{{session_id}}</code></td>
+                <td class="numeric">{{total_decisions}}</td>
+                <td class="numeric">{{allowed}}</td>
+                <td class="numeric">{{denied}}</td>
+                <td class="numeric">{{duration_seconds}}</td>
+                <td class="numeric"><strong>{{rps}}</strong></td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No benchmark runs yet. Run demo/performance/02-load-test.sh to populate this view."}}
+        {{/if}}
+    </section>
+
+    <section aria-label="Throughput (24h)" class="mt-6">
+        <h2 class="section-heading">Governance Throughput (last 24h)</h2>
+        {{#if has_hourly}}
+        {{#> components/data-table}}
+            <thead><tr><th class="col-date">Hour</th><th class="numeric">Decisions</th></tr></thead>
+            <tbody>
+            {{#each hourly}}
+            <tr>
+                <td class="col-date"><span class="date">{{formatDate bucket}}</span></td>
+                <td class="numeric">{{decisions}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No governance traffic in the last 24 hours."}}
+        {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

@@ -1,0 +1,14 @@
+<div class="form-group" role="group" aria-labelledby="checklist-label-{{listId}}">
+    <label class="field-label" id="checklist-label-{{listId}}">{{label}}</label>
+    <input type="text" class="field-input checklist-filter" placeholder="Filter {{label}}..." data-filter-list="{{listId}}" aria-label="Filter {{label}}" autocomplete="off">
+    <div class="checklist-container" data-checklist="{{listId}}" role="list">
+        {{#each items}}
+        <div class="checklist-item" data-item-name="{{toLowerCase (default name value)}}" role="listitem">
+            <input type="checkbox" name="{{../inputName}}" value="{{value}}"{{#if checked}} checked aria-checked="true"{{/if}} id="{{../listId}}-chk-{{@index}}">
+            <label for="{{../listId}}-chk-{{@index}}">{{default name value}}</label>
+        </div>
+        {{else}}
+        <div class="empty-state checklist-empty"><p>None available.</p></div>
+        {{/each}}
+    </div>
+</div>

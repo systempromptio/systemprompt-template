@@ -1,0 +1,11 @@
+{
+  "name": "systemprompt-marketplace",
+  "owner": {
+    "name": "systemprompt.io"
+  },
+  "metadata": {
+    "description": "systemprompt.io plugin marketplace",
+    "version": "0.2.0"
+  },
+  "plugins": []
+}

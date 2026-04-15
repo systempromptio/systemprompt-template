@@ -1,0 +1,49 @@
+@layer components {
+.cc-filter-bar {
+    display: flex;
+    gap: var(--sp-space-1);
+    margin-bottom: var(--sp-space-3);
+}
+
+.cc-filter-btn {
+    padding: var(--sp-space-1) var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+    font-weight: 500;
+    font-family: inherit;
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-full);
+    background: transparent;
+    color: var(--sp-text-tertiary);
+    cursor: pointer;
+    transition: background var(--sp-duration-fast),
+                color var(--sp-duration-fast),
+                border-color var(--sp-duration-fast);
+}
+
+.cc-filter-btn:hover {
+    color: var(--sp-text-primary);
+    border-color: var(--sp-border-default);
+}
+
+.cc-filter-btn:focus-visible {
+    outline: 2px solid var(--sp-accent);
+    outline-offset: 2px;
+}
+
+.cc-filter-btn--active {
+    background: var(--sp-accent-dim);
+    color: var(--sp-accent);
+    border-color: var(--sp-accent);
+}
+
+
+.cc-rating {
+    display: inline-flex;
+    gap: 0.125rem;
+    align-items: center;
+}
+
+.cc-rating--small {
+    font-size: var(--sp-text-sm);
+}
+}

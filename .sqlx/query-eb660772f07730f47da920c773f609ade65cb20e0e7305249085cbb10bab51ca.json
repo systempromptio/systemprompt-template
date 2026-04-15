@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            COUNT(*) FILTER (\n                WHERE started_at >= NOW() - $1::text::interval\n                AND NOT is_bot AND NOT is_scanner\n                AND NOT COALESCE(is_behavioral_bot, false)\n                AND request_count > 0\n            )::BIGINT AS \"current_sessions!\",\n            COUNT(*) FILTER (\n                WHERE started_at >= NOW() - $2::text::interval\n                AND started_at < NOW() - $1::text::interval\n                AND NOT is_bot AND NOT is_scanner\n                AND NOT COALESCE(is_behavioral_bot, false)\n                AND request_count > 0\n            )::BIGINT AS \"previous_sessions!\"\n        FROM user_sessions\n        WHERE started_at >= NOW() - $2::text::interval",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "current_sessions!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "previous_sessions!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "eb660772f07730f47da920c773f609ade65cb20e0e7305249085cbb10bab51ca"
+}

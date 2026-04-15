@@ -1,0 +1,15 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    <section aria-label="CLI command" class="hero-cli">
+        <p class="text-tertiary text-sm">Run this on the CLI to see the same data:</p>
+        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
+        <p class="text-tertiary text-sm">Window: {{window_label}}</p>
+    </section>
+    <section aria-label="Cost breakdown">
+    {{> components/empty-state message="Cost data is produced by the CLI. Run `systemprompt analytics costs summary` to see cost by model and agent."}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

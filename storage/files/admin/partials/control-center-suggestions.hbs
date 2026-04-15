@@ -1,0 +1,154 @@
+<div class="sp-tab-panel" role="tabpanel" id="tab-suggestions" data-tab-panel="suggestions" hidden aria-label="AI Suggestions">
+    {{#if recent_analyses}}
+    <div class="cc-suggestions-section">
+        <h3 class="cc-suggestions-section-title">Session Analysis</h3>
+        {{#> components/data-table}}
+            <thead>
+                <tr>
+                    <th>Session</th>
+                    <th>Category</th>
+                    <th>Quality</th>
+                    <th>Goal</th>
+                    <th>Tags</th>
+                    <th>Summary</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each recent_analyses}}
+                <tr class="cc-suggestion-row">
+                    <td><span class="cc-suggestions-session-title">{{title}}</span></td>
+                    <td><span class="cc-category-badge cc-category-badge--{{category}}">{{category}}</span></td>
+                    <td><span class="cc-quality-gauge cc-quality-gauge--{{quality_class}}">{{quality_score}}/5</span></td>
+                    <td><span class="cc-goal-badge cc-goal-badge--{{goal_achieved}}">{{goal_achieved}}</span></td>
+                    <td>{{#if tags_list}}<div class="cc-tag-badges">{{#each tags_list}}<span class="cc-tag-badge">{{this}}</span>{{/each}}</div>{{/if}}</td>
+                    <td><span class="cc-suggestion-summary">{{goal_summary}}</span></td>
+                    <td>
+                        <button type="button" class="cc-detail-btn" data-detail="{{session_id}}"
+                                aria-label="View details for {{title}}">View</button>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        {{/components/data-table}}
+    </div>
+
+    {{#each recent_analyses}}
+    <div class="cc-detail-data" id="detail-{{session_id}}" hidden>
+        <div class="cc-detail-header">
+            <h3 class="cc-detail-title">{{title}}</h3>
+            <div class="cc-detail-meta">
+                <span class="cc-category-badge cc-category-badge--{{category}}">{{category}}</span>
+                <span class="cc-quality-gauge cc-quality-gauge--{{quality_class}}">{{quality_score}}/5</span>
+                <span class="cc-goal-badge cc-goal-badge--{{goal_achieved}}">{{goal_achieved}}</span>
+                {{#if tags_list}}<div class="cc-tag-badges">{{#each tags_list}}<span class="cc-tag-badge">{{this}}</span>{{/each}}</div>{{/if}}
+            </div>
+        </div>
+        {{#if goal_summary}}
+        <div class="cc-detail-section">
+            <h4 class="cc-detail-section-label">Goal Summary</h4>
+            <p class="cc-detail-text">{{goal_summary}}</p>
+        </div>
+        {{/if}}
+        {{#if goal_outcome_map}}
+        <div class="cc-detail-section">
+            <h4 class="cc-detail-section-label">Goal vs Outcome</h4>
+            <div class="cc-goal-outcome-map">
+                {{#each goal_outcome_map}}
+                <div class="cc-goal-outcome-row cc-goal-outcome-row--{{#if achieved}}achieved{{else}}missed{{/if}}">
+                    <span class="cc-goal-outcome-indicator"></span>
+                    <div class="cc-goal-outcome-content">
+                        <span class="cc-goal-text">{{goal}}</span>
+                        <span class="cc-outcome-text">{{outcome}}</span>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        {{/if}}
+        {{#if outcomes}}
+        <div class="cc-detail-section">
+            <h4 class="cc-detail-section-label">Outcomes</h4>
+            <ul class="cc-detail-outcomes">
+                {{#each outcomes}}<li>{{this}}</li>{{/each}}
+            </ul>
+        </div>
+        {{/if}}
+        {{#if efficiency_metrics}}
+        <div class="cc-detail-section">
+            <h4 class="cc-detail-section-label">Efficiency</h4>
+            <div class="cc-efficiency-grid">
+                <div class="cc-eff-metric">
+                    <span class="cc-eff-value">{{efficiency_metrics.total_turns}}</span>
+                    <span class="cc-eff-label">Turns</span>
+                </div>
+                <div class="cc-eff-metric">
+                    <span class="cc-eff-value">{{efficiency_metrics.duration_minutes}}m</span>
+                    <span class="cc-eff-label">Duration</span>
+                </div>
+                <div class="cc-eff-metric">
+                    <span class="cc-eff-value">{{efficiency_metrics.corrections_count}}</span>
+                    <span class="cc-eff-label">Corrections</span>
+                </div>
+                <div class="cc-eff-metric">
+                    <span class="cc-eff-value">{{efficiency_metrics.unnecessary_loops}}</span>
+                    <span class="cc-eff-label">Loops</span>
+                </div>
+            </div>
+        </div>
+        {{/if}}
+        {{#if best_practices_checklist}}
+        <div class="cc-detail-section">
+            <h4 class="cc-detail-section-label">Best Practices</h4>
+            <ul class="cc-best-practices-list">
+                {{#each best_practices_checklist}}
+                <li class="cc-bp-item cc-bp-item--{{score}}">
+                    <span class="cc-bp-indicator"></span>
+                    <span class="cc-bp-practice">{{practice}}</span>
+                    {{#if note}}<span class="cc-bp-note">{{note}}</span>{{/if}}
+                </li>
+                {{/each}}
+            </ul>
+        </div>
+        {{/if}}
+        {{#if improvement_hints}}
+        <div class="cc-detail-section cc-detail-section--hints">
+            <h4 class="cc-detail-section-label">Improvement Hints</h4>
+            <p class="cc-detail-text cc-detail-text--hint">{{improvement_hints}}</p>
+        </div>
+        {{/if}}
+        {{#if error_analysis}}
+        <details class="cc-detail-section cc-detail-section--tool-errors">
+            <summary class="cc-detail-section-label">Tool Errors (not factored into quality)</summary>
+            <p class="cc-detail-text cc-detail-text--muted">{{error_analysis}}</p>
+        </details>
+        {{/if}}
+        {{#if skill_assessment}}
+        <div class="cc-detail-section">
+            <h4 class="cc-detail-section-label">Skill Assessment</h4>
+            <p class="cc-detail-text">{{skill_assessment}}</p>
+        </div>
+        {{/if}}
+        {{#if recommendations}}
+        <div class="cc-detail-section">
+            <h4 class="cc-detail-section-label">Recommendations</h4>
+            <p class="cc-detail-text cc-detail-text--recommendation">{{recommendations}}</p>
+        </div>
+        {{/if}}
+    </div>
+    {{/each}}
+
+    <div class="cc-detail-overlay" id="cc-detail-overlay" hidden>
+        <div class="cc-detail-modal" role="dialog" aria-modal="true">
+            <button type="button" class="cc-detail-close" aria-label="Close">&times;</button>
+            <div class="cc-detail-content" id="cc-detail-content"></div>
+        </div>
+    </div>
+
+    {{else}}
+    <div class="cc-empty-section">
+        <p>No AI analyses yet. Complete a Claude Code session to generate insights.</p>
+        <p class="cc-empty-hint">Session analyses are generated automatically when sessions end.</p>
+    </div>
+    {{/if}}
+</div>

@@ -1,0 +1,37 @@
+@layer tokens {
+:root {
+    --sp-shadow-xs: 0 1px 2px oklch(0.20 0.01 50 / 0.06);
+    --sp-shadow-sm: 0 1px 3px oklch(0.20 0.01 50 / 0.08), 0 1px 2px oklch(0.20 0.01 50 / 0.06);
+    --sp-shadow-md: 0 4px 8px oklch(0.20 0.01 50 / 0.09), 0 2px 4px oklch(0.20 0.01 50 / 0.06);
+    --sp-shadow-lg: 0 10px 25px oklch(0.20 0.01 50 / 0.12), 0 4px 10px oklch(0.20 0.01 50 / 0.07);
+    --sp-shadow-xl: 0 20px 40px oklch(0.20 0.01 50 / 0.14), 0 8px 16px oklch(0.20 0.01 50 / 0.08);
+    --sp-shadow-inset-sm: inset 0 1px 2px oklch(0.20 0.01 50 / 0.06);
+    --sp-shadow-card: 0 1px 3px oklch(0.20 0.01 50 / 0.09), 0 1px 2px oklch(0.20 0.01 50 / 0.06), 0 0 0 1px oklch(0.20 0.01 50 / 0.05);
+    --sp-shadow-card-hover: 0 8px 24px oklch(0.20 0.01 50 / 0.14), 0 2px 6px oklch(0.20 0.01 50 / 0.08), 0 0 0 1px oklch(0.20 0.01 50 / 0.06);
+    --sp-shadow-elevated: 0 4px 16px oklch(0.20 0.01 50 / 0.12), 0 2px 6px oklch(0.20 0.01 50 / 0.07), 0 0 1px oklch(0.20 0.01 50 / 0.15);
+    --sp-shadow-float: 0 12px 40px oklch(0.20 0.01 50 / 0.16), 0 4px 12px oklch(0.20 0.01 50 / 0.08);
+    --sp-shadow-accent-sm: 0 2px 8px color-mix(in oklch, var(--sp-accent) 16%, transparent);
+    --sp-shadow-accent-md: 0 4px 16px color-mix(in oklch, var(--sp-accent) 20%, transparent);
+    --sp-shadow-inner-glow: inset 0 1px 0 oklch(1.00 0 0 / 0.5);
+    --sp-shadow-hero: 0 4px 16px oklch(0.20 0.01 50 / 0.10), 0 2px 4px oklch(0.20 0.01 50 / 0.06), 0 0 0 1px oklch(0.20 0.01 50 / 0.06);
+    --sp-shadow-lift: 0 6px 20px oklch(0.20 0.01 50 / 0.12), 0 2px 6px oklch(0.20 0.01 50 / 0.07), 0 0 0 1px oklch(0.20 0.01 50 / 0.06);
+}
+
+[data-theme="dark"] {
+    --sp-shadow-xs: 0 1px 2px oklch(0 0 0 / 0.2);
+    --sp-shadow-sm: 0 1px 3px oklch(0 0 0 / 0.3), 0 1px 2px oklch(0 0 0 / 0.2);
+    --sp-shadow-md: 0 4px 8px oklch(0 0 0 / 0.35), 0 2px 4px oklch(0 0 0 / 0.2);
+    --sp-shadow-lg: 0 10px 25px oklch(0 0 0 / 0.4), 0 4px 10px oklch(0 0 0 / 0.25);
+    --sp-shadow-xl: 0 20px 40px oklch(0 0 0 / 0.5), 0 8px 16px oklch(0 0 0 / 0.3);
+    --sp-shadow-inset-sm: inset 0 1px 2px oklch(0 0 0 / 0.2);
+    --sp-shadow-card: 0 1px 3px oklch(0 0 0 / 0.4), 0 1px 2px oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1.00 0 0 / 0.03);
+    --sp-shadow-card-hover: 0 8px 24px oklch(0 0 0 / 0.5), 0 2px 6px oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1.00 0 0 / 0.05);
+    --sp-shadow-elevated: 0 4px 16px oklch(0 0 0 / 0.5), 0 2px 6px oklch(0 0 0 / 0.35), 0 0 0 1px oklch(1.00 0 0 / 0.04);
+    --sp-shadow-float: 0 12px 40px oklch(0 0 0 / 0.55), 0 4px 12px oklch(0 0 0 / 0.3);
+    --sp-shadow-accent-sm: 0 2px 8px color-mix(in oklch, var(--sp-accent) 18%, transparent);
+    --sp-shadow-accent-md: 0 4px 20px color-mix(in oklch, var(--sp-accent) 22%, transparent);
+    --sp-shadow-inner-glow: inset 0 1px 0 oklch(1.00 0 0 / 0.04);
+    --sp-shadow-hero: 0 4px 16px oklch(0 0 0 / 0.4), 0 2px 4px oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1.00 0 0 / 0.04);
+    --sp-shadow-lift: 0 6px 20px oklch(0 0 0 / 0.45), 0 2px 6px oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1.00 0 0 / 0.05);
+}
+}

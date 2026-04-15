@@ -1,0 +1,248 @@
+# Navigation Configuration
+# Header, footer, and documentation sidebar
+#
+# All external links point back to https://systemprompt.io.
+# The Login entries are the only local routes (they target the running
+# template instance's admin login page).
+
+header:
+  items:
+    - id: infrastructure
+      label: "Infrastructure"
+      href: "https://systemprompt.io/features/self-hosted-ai-platform"
+      external: true
+      dropdown: true
+      sections:
+        - title: "What It Is"
+          links:
+            - label: "One Binary, Complete Stack"
+              description: "What others assemble from six services, this ships in 50MB of Rust. PostgreSQL is the only dependency."
+              href: "https://systemprompt.io/features/self-hosted-ai-platform"
+              external: true
+        - title: "How You Run It"
+          links:
+            - label: "Deploy Anywhere"
+              description: "The same binary runs in Docker, on bare metal, in the cloud, or in an air-gapped network."
+              href: "https://systemprompt.io/features/deploy-anywhere"
+              external: true
+            - label: "One CLI, Every Environment"
+              description: "Manage agents, servers, and deployments from your terminal across local, staging, and production."
+              href: "https://systemprompt.io/features/unified-control-plane"
+              external: true
+        - title: "Why You Can Trust It"
+          links:
+            - label: "Every Layer, An Open Standard"
+              description: "MCP, OAuth 2.0, WebAuthn, Git, ChaCha20-Poly1305. Zero proprietary protocols at any layer."
+              href: "https://systemprompt.io/features/no-vendor-lock-in"
+              external: true
+
+    - id: capabilities
+      label: "Capabilities"
+      href: "https://systemprompt.io/features/governance-pipeline"
+      external: true
+      dropdown: true
+      sections:
+        - title: "What It Does"
+          links:
+            - label: "Governance Pipeline"
+              description: "Four enforcement layers evaluate every tool call before execution. Scope, secrets, rate limits, and audit."
+              href: "https://systemprompt.io/features/governance-pipeline"
+              external: true
+            - label: "Secrets Management"
+              description: "Credentials are encrypted at rest and blocked from inference. Secrets never reach AI models."
+              href: "https://systemprompt.io/features/secrets-management"
+              external: true
+            - label: "MCP Governance"
+              description: "Every MCP server is registered, authenticated, and governed. Per-server OAuth2 with full audit trail."
+              href: "https://systemprompt.io/features/mcp-governance"
+              external: true
+        - title: "How It Protects You"
+          links:
+            - label: "Analytics & Observability"
+              description: "Every AI request is logged with tokens, cost, latency, model, user, and agent. Exportable to your SIEM."
+              href: "https://systemprompt.io/features/analytics-and-observability"
+              external: true
+            - label: "Closed-Loop Agents"
+              description: "Agents monitor their own performance, detect drift, and adapt automatically."
+              href: "https://systemprompt.io/features/closed-loop-agents"
+              external: true
+        - title: "Why It Passes Audit"
+          links:
+            - label: "Compliance"
+              description: "SOC 2, ISO 27001, HIPAA, and OWASP Agentic Top 10. Built to survive an audit."
+              href: "https://systemprompt.io/features/compliance"
+              external: true
+
+    - id: integrations
+      label: "Integrations"
+      href: "https://systemprompt.io/features/any-ai-agent"
+      external: true
+      dropdown: true
+      sections:
+        - title: "What It Connects To"
+          links:
+            - label: "Any AI Agent"
+              description: "Claude, Codex, Gemini, or your own custom agents. Provider-agnostic governance for all of them."
+              href: "https://systemprompt.io/features/any-ai-agent"
+              external: true
+        - title: "How You Use It"
+          links:
+            - label: "Claude Desktop & Cowork"
+              description: "One-click governed skills inside Claude. The fastest path from install to governed AI."
+              href: "https://systemprompt.io/features/cowork"
+              external: true
+            - label: "Web Server & Publisher"
+              description: "The same binary serves your website, blog, and documentation. CMS and static site generation built in."
+              href: "https://systemprompt.io/features/web-publisher"
+              external: true
+        - title: "Why It Scales"
+          links:
+            - label: "Fully Extensible Architecture"
+              description: "Add routes, tables, jobs, and providers through Rust extension traits. Your code compiles into your binary."
+              href: "https://systemprompt.io/features/extensible-architecture"
+              external: true
+
+    - id: resources
+      label: "Resources"
+      href: "https://systemprompt.io/documentation/"
+      external: true
+      dropdown: true
+      sections:
+        - title: "Learn"
+          links:
+            - label: "Documentation"
+              description: "Deployment guides, API reference, and configuration for every domain."
+              href: "https://systemprompt.io/documentation/"
+              external: true
+            - label: "Guides"
+              description: "Step-by-step tutorials, workflows, and best practices for AI governance."
+              href: "https://systemprompt.io/guides"
+              external: true
+            - label: "Live Demo"
+              description: "Watch four governance layers execute in real time in under six minutes."
+              href: "https://systemprompt.io/features/demo"
+              external: true
+            - label: "About"
+              description: "Founder-led startup building self-hosted AI governance infrastructure."
+              href: "https://systemprompt.io/about"
+              external: true
+
+    - id: login
+      label: "Login"
+      href: "/admin/login"
+
+footer:
+  infrastructure:
+    - path: "https://systemprompt.io/features/self-hosted-ai-platform"
+      label: "Self-Hosted Deployment"
+      external: true
+    - path: "https://systemprompt.io/features/deploy-anywhere"
+      label: "Deploy Anywhere"
+      external: true
+    - path: "https://systemprompt.io/features/unified-control-plane"
+      label: "Unified Control Plane"
+      external: true
+    - path: "https://systemprompt.io/features/no-vendor-lock-in"
+      label: "No Vendor Lock-In"
+      external: true
+  capabilities:
+    - path: "https://systemprompt.io/features/governance-pipeline"
+      label: "Governance Pipeline"
+      external: true
+    - path: "https://systemprompt.io/features/secrets-management"
+      label: "Secrets Management"
+      external: true
+    - path: "https://systemprompt.io/features/mcp-governance"
+      label: "MCP Governance"
+      external: true
+    - path: "https://systemprompt.io/features/analytics-and-observability"
+      label: "Analytics & Observability"
+      external: true
+    - path: "https://systemprompt.io/features/closed-loop-agents"
+      label: "Closed-Loop Agents"
+      external: true
+    - path: "https://systemprompt.io/features/compliance"
+      label: "Compliance"
+      external: true
+  integrations:
+    - path: "https://systemprompt.io/features/any-ai-agent"
+      label: "Any AI Agent"
+      external: true
+    - path: "https://systemprompt.io/features/cowork"
+      label: "Claude Desktop & Cowork"
+      external: true
+    - path: "https://systemprompt.io/features/web-publisher"
+      label: "Web Server & Publisher"
+      external: true
+    - path: "https://systemprompt.io/features/extensible-architecture"
+      label: "Extensible Architecture"
+      external: true
+  resources:
+    - path: "https://systemprompt.io/documentation/"
+      label: "Documentation"
+      external: true
+    - path: "https://systemprompt.io/guides"
+      label: "Guides"
+      external: true
+    - path: "https://systemprompt.io/sitemap.xml"
+      label: "Sitemap"
+      external: true
+    - path: "https://systemprompt.io/llms.txt"
+      label: "llms.txt"
+      external: true
+    - path: "/admin/login"
+      label: "Login"
+  legal:
+    - path: "https://systemprompt.io/legal/privacy-policy"
+      label: "Privacy Policy"
+      external: true
+    - path: "https://systemprompt.io/legal/cookie-policy"
+      label: "Cookie Policy"
+      external: true
+    - path: "https://systemprompt.io/legal/terms-of-service"
+      label: "Terms of Service"
+      external: true
+    - path: "https://systemprompt.io/legal/refund-policy"
+      label: "Refund Policy"
+      external: true
+  contact:
+    - href: "https://discord.gg/wkAbSuPWpr"
+      label: "Discord"
+    - href: "https://www.linkedin.com/in/edjburton/"
+      label: "LinkedIn"
+    - href: "https://github.com/systempromptio"
+      label: "GitHub"
+
+social:
+  - href: "https://github.com/systempromptio"
+    type: "github"
+    label: "GitHub"
+  - href: "https://x.com/tyingshoelaces_"
+    type: "twitter"
+    label: "Twitter"
+
+# Docs sidebar - rendered dynamically via site.docs_sidebar in templates
+docs_sidebar:
+  - title: "Terminal Demos"
+    links:
+      - label: "Setup & Authentication"
+        href: "/documentation/demo-terminal-setup"
+      - label: "Governance Decisions"
+        href: "/documentation/demo-terminal-agents"
+      - label: "Audit Trails & Costs"
+        href: "/documentation/demo-terminal-audit"
+      - label: "Governance API"
+        href: "/documentation/demo-terminal-governance"
+      - label: "MCP Access Tracking"
+        href: "/documentation/demo-terminal-mcp"
+      - label: "Request Tracing & Benchmark"
+        href: "/documentation/demo-terminal-tracing"
+      - label: "Agent Tracing"
+        href: "/documentation/demo-terminal-agent-tracing"
+
+  - title: "Dashboard"
+    links:
+      - label: "Authentication & Login"
+        href: "/documentation/authentication"
+      - label: "Dashboard Usage"
+        href: "/documentation/dashboard"

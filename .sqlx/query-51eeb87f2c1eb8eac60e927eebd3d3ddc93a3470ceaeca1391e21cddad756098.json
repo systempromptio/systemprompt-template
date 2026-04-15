@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT achievement_id, COUNT(*)::BIGINT AS \"count!\" FROM employee_achievements GROUP BY achievement_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "achievement_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "51eeb87f2c1eb8eac60e927eebd3d3ddc93a3470ceaeca1391e21cddad756098"
+}

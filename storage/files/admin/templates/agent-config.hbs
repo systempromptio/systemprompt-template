@@ -1,0 +1,76 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/back-button href="/admin/org/agents/" label="Back to Agents"}}
+    <h2>{{title}}{{#if has_agent}} &middot; {{agent.name}}{{/if}}</h2>
+    {{> components/agent-detail-tabs active_tab="config" agent_id=agent_id}}
+
+    <section aria-label="CLI command" class="detail-content">
+        <div class="text-sm text-tertiary">Equivalent CLI command</div>
+        <pre class="detail-pre"><code>$ {{cli_command}}</code></pre>
+    </section>
+
+    {{#if has_agent}}
+    <section aria-label="Validation">
+        <h3>Validation</h3>
+        {{#if is_valid}}
+        <div class="metric-ribbon"><div class="metric-ribbon-item metric-ribbon-success"><span class="metric-ribbon-value">OK</span><span class="metric-ribbon-label">Config valid</span></div></div>
+        {{else}}
+        {{#if validation_issues}}
+        {{#> components/data-table}}
+            <thead><tr><th>Issue</th></tr></thead>
+            <tbody>
+                {{#each validation_issues}}<tr><td><span class="badge badge-danger">{{this}}</span></td></tr>{{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="Agent not found."}}
+        {{/if}}
+        {{/if}}
+    </section>
+
+    <section aria-label="Availability">
+        <h3>Availability</h3>
+        <div class="metadata-grid">
+            <strong>Agent ID:</strong><span><code class="code-inline">{{agent.id}}</code></span>
+            <strong>Enabled:</strong><span>{{#if agent.enabled}}<span class="badge badge-success">Yes</span>{{else}}<span class="badge badge-secondary">No</span>{{/if}}</span>
+            <strong>Primary:</strong><span>{{#if agent.is_primary}}<span class="badge badge-info">Primary</span>{{else}}<span class="text-tertiary">-</span>{{/if}}</span>
+            <strong>Port:</strong><span>{{#if agent.port}}<code class="code-inline">{{agent.port}}</code>{{else}}<span class="text-tertiary">-</span>{{/if}}</span>
+            <strong>Endpoint:</strong><span>{{#if agent.endpoint}}<code class="code-inline">{{agent.endpoint}}</code>{{else}}<span class="text-tertiary">-</span>{{/if}}</span>
+        </div>
+    </section>
+
+    <section aria-label="MCP tool access">
+        <h3>MCP Tool Access</h3>
+        {{#if has_mcp_servers}}
+        {{#> components/data-table}}
+            <thead><tr><th>MCP Server</th></tr></thead>
+            <tbody>
+                {{#each mcp_servers}}<tr><td><code class="code-inline">{{id}}</code></td></tr>{{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No MCP servers assigned to this agent."}}
+        {{/if}}
+    </section>
+
+    <section aria-label="Skills">
+        <h3>Skills</h3>
+        {{#if has_skills}}
+        {{#> components/data-table}}
+            <thead><tr><th>Skill</th></tr></thead>
+            <tbody>
+                {{#each skills}}<tr><td>{{> components/table-cell-stacked primary=name secondary=description}}</td></tr>{{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No skills declared on this agent."}}
+        {{/if}}
+    </section>
+    {{else}}
+    {{> components/empty-state message="Agent not found. Provide ?id=<agent_id>."}}
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

@@ -1,0 +1,20 @@
+! Dark theme matching systemprompt.io
+*.foreground: #b9c0cb
+*.background: #1a1a1f
+*.cursorColor: #f79938
+*.color0: #1a1a1f
+*.color1: #e06c75
+*.color2: #a8cc8c
+*.color3: #f79938
+*.color4: #66c2cd
+*.color5: #c678dd
+*.color6: #66c2cd
+*.color7: #b9c0cb
+*.color8: #5c6370
+*.color9: #e06c75
+*.color10: #a8cc8c
+*.color11: #f79938
+*.color12: #66c2cd
+*.color13: #c678dd
+*.color14: #66c2cd
+*.color15: #ffffff

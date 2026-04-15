@@ -1,0 +1,232 @@
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-spacing-md);
+  margin-bottom: var(--sp-spacing-lg);
+}
+
+.section-title {
+  font-family: var(--sp-font-family-heading);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--sp-color-text-primary);
+  margin: 0;
+}
+
+.section-subtitle {
+  font-size: 0.9375rem;
+  color: var(--sp-color-text-secondary);
+  margin: 0;
+  margin-top: 4px;
+}
+
+.section-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--sp-color-primary);
+  text-decoration: none;
+  transition: gap var(--sp-animation-fast);
+}
+
+.section-view-all:hover {
+  gap: var(--sp-space-3);
+}
+
+.section-view-all svg {
+  transition: transform var(--sp-animation-fast);
+}
+
+.section-view-all:hover svg {
+  transform: translateX(2px);
+}
+
+.featured-section {
+  max-width: 1200px;
+  margin: 0 auto var(--sp-spacing-xxl);
+  padding: 0 var(--sp-spacing-lg);
+}
+
+.featured-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-spacing-xl);
+  background: var(--sp-color-surface-default);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-lg);
+  overflow: hidden;
+}
+
+.featured-image {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+.featured-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--sp-animation-normal);
+}
+
+.featured-card:hover .featured-image img {
+  transform: scale(1.02);
+}
+
+.featured-content {
+  padding: var(--sp-spacing-xl);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.featured-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-spacing-md);
+  margin-bottom: var(--sp-spacing-md);
+}
+
+.featured-title {
+  font-family: var(--sp-font-family-heading);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0 0 var(--sp-spacing-md);
+}
+
+.featured-title a {
+  color: var(--sp-color-text-primary);
+  text-decoration: none;
+}
+
+.featured-title a:hover {
+  color: var(--sp-color-primary);
+}
+
+.featured-description {
+  font-size: 1rem;
+  color: var(--sp-color-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 var(--sp-spacing-lg);
+}
+
+.featured-read-more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-2);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--sp-color-primary);
+  text-decoration: none;
+  transition: gap var(--sp-animation-fast);
+}
+
+.featured-read-more:hover {
+  gap: var(--sp-space-3);
+}
+
+.platform-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--sp-space-1) var(--sp-space-3);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: var(--sp-radius-sm);
+  background: rgba(100, 100, 100, 0.1);
+  color: var(--sp-color-text-secondary);
+}
+
+.platform-badge--linkedin {
+  background: rgba(10, 102, 194, 0.1);
+  color: #0A66C2;
+}
+
+.platform-badge--twitter {
+  background: rgba(29, 161, 242, 0.1);
+  color: #1DA1F2;
+}
+
+.platform-badge--medium {
+  background: rgba(0, 0, 0, 0.08);
+  color: #000000;
+}
+
+.platform-badge--hackernoon {
+  background: rgba(0, 255, 0, 0.08);
+  color: #00D100;
+}
+
+.platform-badge--substack {
+  background: rgba(255, 103, 25, 0.1);
+  color: #FF6719;
+}
+
+.platform-badge--blog {
+  background: rgba(64, 64, 64, 0.1);
+  color: #404040;
+}
+
+.platform-section {
+  max-width: 1200px;
+  margin: 0 auto var(--sp-spacing-xxl);
+  padding: 0 var(--sp-spacing-lg);
+}
+
+.platform-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-spacing-sm);
+}
+
+.platform-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(100, 100, 100, 0.08);
+  border-radius: var(--sp-radius-md);
+}
+
+.platform-icon--linkedin {
+  background: rgba(10, 102, 194, 0.1);
+  color: #0A66C2;
+}
+
+.platform-icon--twitter {
+  background: rgba(29, 161, 242, 0.1);
+  color: #1DA1F2;
+}
+
+.platform-icon--medium {
+  background: rgba(0, 0, 0, 0.08);
+  color: #000000;
+}
+
+.platform-icon--hackernoon {
+  background: rgba(0, 255, 0, 0.08);
+  color: #00D100;
+}
+
+.platform-icon--substack {
+  background: rgba(255, 103, 25, 0.1);
+  color: #FF6719;
+}
+
+.platform-icon--blog {
+  background: rgba(64, 64, 64, 0.1);
+  color: #404040;
+}
+
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-spacing-lg);
+}

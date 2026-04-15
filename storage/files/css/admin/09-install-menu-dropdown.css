@@ -1,0 +1,102 @@
+@layer components {
+
+
+.install-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: var(--sp-space-3);
+}
+.install-trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-md);
+    color: var(--sp-text-secondary);
+    cursor: pointer;
+    transition: background var(--sp-duration-fast) var(--sp-ease-out),
+                border-color var(--sp-duration-fast) var(--sp-ease-out),
+                color var(--sp-duration-fast) var(--sp-ease-out);
+}
+.plugin-counter {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 0.3125rem;
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    line-height: 18px;
+    text-align: center;
+    color: var(--sp-text-on-accent);
+    background: var(--sp-accent);
+    border-radius: var(--sp-radius-full);
+    pointer-events: none;
+}
+.install-trigger:hover,
+.install-menu.open .install-trigger {
+    background: var(--sp-bg-surface-raised);
+    border-color: var(--sp-border-strong);
+    color: var(--sp-text-primary);
+}
+.install-trigger:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--sp-bg-canvas), 0 0 0 4px var(--sp-accent);
+}
+.install-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: var(--sp-space-2);
+    width: 380px;
+    background: var(--sp-bg-surface-overlay);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-card-inner-brand);
+    box-shadow: var(--sp-shadow-float);
+    z-index: var(--sp-z-dropdown);
+    padding: var(--sp-space-4);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity var(--sp-duration-fast) var(--sp-ease-out), visibility var(--sp-duration-fast), transform var(--sp-duration-fast) var(--sp-ease-out);
+}
+.install-menu.open .install-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.install-dropdown-header {
+    margin-bottom: var(--sp-space-3);
+}
+.install-dropdown-title {
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+    margin-bottom: var(--sp-space-2);
+}
+.install-dropdown .install-widget-stats {
+    display: flex;
+    gap: var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    flex-wrap: wrap;
+}
+.install-dropdown .install-stat strong {
+    color: var(--sp-text-primary);
+}
+.install-dropdown-tabs {
+    display: flex;
+    gap: var(--sp-space-1);
+    margin-bottom: var(--sp-space-3);
+    border-bottom: 1px solid var(--sp-border-subtle);
+    padding-bottom: var(--sp-space-2);
+}
+
+}

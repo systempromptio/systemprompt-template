@@ -1,0 +1,89 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    <div id="marketplace-content" aria-live="polite">
+        <div class="toolbar">
+            <div class="search-group">
+                <input type="text" class="search-input" placeholder="Search marketplace..." id="mkt-search" aria-label="Search marketplace">
+            </div>
+            <select id="mkt-sort" class="btn btn-secondary cursor-pointer">
+                <option value="rank">Rank</option>
+                <option value="rating">Highest Rated</option>
+                <option value="usage">Most Used</option>
+                <option value="name">Alphabetical</option>
+            </select>
+        </div>
+
+        {{#if marketplace_plugins}}
+        <div class="plugins-list mkt-list">
+            {{#each marketplace_plugins}}
+            <div class="plugin-card mkt-card-accent" data-plugin-id="{{id}}" data-search-name="{{toLowerCase name}}" data-search-desc="{{toLowerCase description}}" data-search-cat="{{toLowerCase category}}">
+                <div class="plugin-header" data-toggle-plugin="{{id}}">
+                    <div class="flex-1 min-w-0">
+                        <div class="d-flex align-center gap-2 flex-wrap">
+                            <span class="mkt-rank-badge">#{{add @index 1}}</span>
+                            <h3 class="mkt-card-title">{{name}}</h3>
+                            {{#if version}}<span class="badge badge-gray">{{version}}</span>{{/if}}
+                            {{#if category}}<span class="badge badge-blue">{{category}}</span>{{/if}}
+                        </div>
+                        {{#if description}}<p class="mkt-card-desc">{{description}}</p>{{/if}}
+                        <div class="d-flex align-center gap-2 mt-2 flex-wrap">
+                            {{> components/star-rating avg_rating=avg_rating avg_rating_display=avg_rating_display rating_count=rating_count}}
+                            <span class="badge badge-green">{{default unique_users "0"}} users</span>
+                        </div>
+                        <div class="plugin-meta d-flex gap-2 mt-2 flex-wrap">
+                            <span class="badge badge-blue">{{skill_count}} skill{{#if (not (eq skill_count 1))}}s{{/if}}</span>
+                            <span class="badge badge-gray">{{agent_count}} agent{{#if (not (eq agent_count 1))}}s{{/if}}</span>
+                            {{#if (gt mcp_server_count 0)}}<span class="badge badge-yellow">{{mcp_server_count}} MCP</span>{{/if}}
+                            <span class="badge {{#if enabled}}badge-green{{else}}badge-red{{/if}}">{{#if enabled}}Enabled{{else}}Disabled{{/if}}</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-center gap-2">
+                        <span class="expand-icon mkt-expand-icon" aria-hidden="true">&#9660;</span>
+                    </div>
+                </div>
+                <div class="plugin-details mkt-details d-none">
+                    <div class="mb-3">
+                        <strong class="text-sm text-primary">Visibility</strong>
+                        <div class="mt-2 d-flex flex-wrap gap-1">
+                            {{> components/visibility-badge roles=roles visibility_rules=visibility_rules}}
+                        </div>
+                        <button type="button" class="btn btn-secondary mt-2 text-xs" data-edit-visibility="{{id}}">Edit Visibility</button>
+                    </div>
+                    <div class="mb-3">
+                        <strong class="text-sm text-primary">Users</strong>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-secondary text-xs" data-load-users="{{id}}">Load Users</button>
+                        </div>
+                        <div class="plugin-users-container" data-users-for="{{id}}"></div>
+                    </div>
+                    <div class="mb-3">
+                        <strong class="text-sm text-primary">Stats</strong>
+                        <div class="mt-2 d-flex flex-wrap gap-3 text-xs">
+                            <div><span class="text-tertiary">Total Events:</span> <strong>{{default total_events "0"}}</strong></div>
+                            <div><span class="text-tertiary">Active (7d):</span> <strong>{{default active_users_7d "0"}}</strong></div>
+                            <div><span class="text-tertiary">Active (30d):</span> <strong>{{default active_users_30d "0"}}</strong></div>
+                            <div><span class="text-tertiary">Rank Score:</span> <strong>{{default rank_score_display "0"}}</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+        {{else}}
+        {{> components/empty-state message="No marketplace plugins available."}}
+        {{/if}}
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script id="marketplace-plugins-data" type="application/json">{{{json marketplace_plugins}}}</script>
+    <script data-cfasync="false" type="module" defer>
+      import { initMarketplace } from '/js/pages/admin-marketplace-browse.js';
+      const dataEl = document.getElementById('marketplace-plugins-data');
+      let plugins = null;
+      if (dataEl) { try { plugins = JSON.parse(dataEl.textContent); } catch (e) {} }
+      initMarketplace('#marketplace-content', plugins);
+    </script>
+    {{/inline}}
+{{/layout}}

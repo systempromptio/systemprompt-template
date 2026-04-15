@@ -1,0 +1,28 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+
+    {{> components/page-header title=hero_title subtitle=hero_subtitle}}
+    <pre class="code-block"><code>{{cli_command}}</code></pre>
+    <pre class="code-block"><code>{{cli_compare}}</code></pre>
+
+    {{#if has_tiers}}
+    {{#> components/data-table}}
+        <thead><tr><th class="col-status">Tier</th><th>Requests / Minute</th><th>Burst</th></tr></thead>
+        <tbody>
+        {{#each tiers}}
+        <tr>
+            <td class="col-status"><span class="badge">{{name}}</span></td>
+            <td>{{requests_per_minute}}</td>
+            <td>{{burst}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No rate limit configuration available. See CLI command above."}}
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

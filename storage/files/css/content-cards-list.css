@@ -1,0 +1,114 @@
+
+
+.content-list-header {
+  text-align: center;
+  padding: var(--sp-spacing-3xl) 0;
+  margin-bottom: var(--sp-spacing-xxl);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.content-list-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(var(--sp-color-primary-rgb), 0.12) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+.content-list-header h1 {
+  font-family: var(--sp-font-heading);
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  margin-bottom: var(--sp-spacing-lg);
+  color: var(--sp-color-text-primary);
+}
+
+.content-list-header .subtitle {
+  font-size: var(--sp-font-size-lg);
+  color: var(--sp-color-text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.content-list-header__icon {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--sp-spacing-lg);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.content-list-header__icon--playbook {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f79938' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/%3E%3Cpath d='M8 7h8'/%3E%3Cpath d='M8 11h6'/%3E%3C/svg%3E");
+}
+
+.content-list-header__icon--blog {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f79938' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19l7-7 3 3-7 7-3-3z'/%3E%3Cpath d='M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z'/%3E%3Cpath d='M2 2l7.586 7.586'/%3E%3Ccircle cx='11' cy='11' r='2'/%3E%3C/svg%3E");
+}
+
+.content-list-header__icon--docs {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f79938' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14 2 14 8 20 8'/%3E%3Cline x1='16' y1='13' x2='8' y2='13'/%3E%3Cline x1='16' y1='17' x2='8' y2='17'/%3E%3Cline x1='10' y1='9' x2='8' y2='9'/%3E%3C/svg%3E");
+}
+
+@media (max-width: 768px) {
+  .content-list-header h1 {
+    font-size: 2rem;
+  }
+
+  .content-list-header {
+    padding: var(--sp-spacing-xl) 0;
+  }
+
+  .content-list-header__icon {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-list-header h1 {
+    font-size: 1.75rem;
+  }
+}
+
+
+
+.playbook-grid .blog-card-link,
+.playbook-grid .content-card-link,
+.playbook-list .blog-card-link,
+.playbook-list .content-card-link,
+.blog-list .blog-card-link,
+.blog-list .content-card-link {
+  display: block;
+  height: 100%;
+}
+
+.playbook-grid .blog-card-link .content-card,
+.playbook-grid .content-card-link .content-card,
+.playbook-list .blog-card-link .content-card,
+.playbook-list .content-card-link .content-card,
+.blog-list .blog-card-link .content-card,
+.blog-list .content-card-link .content-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}

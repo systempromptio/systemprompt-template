@@ -1,0 +1,103 @@
+.blog-card,
+.content-card,
+.related-card,
+.featured-card {
+  position: relative;
+}
+
+.blog-card .card-content,
+.content-card .card-content,
+.related-card .card-content {
+  padding-bottom: calc(var(--sp-spacing-md) + 32px);
+}
+
+.provenance-details {
+  position: absolute;
+  bottom: var(--sp-spacing-sm);
+  right: var(--sp-spacing-sm);
+  z-index: var(--sp-z-content);
+}
+
+.provenance-details summary {
+  list-style: none;
+}
+
+.provenance-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.provenance-details summary::marker {
+  display: none;
+}
+
+.provenance-inline {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  width: 280px;
+  margin-bottom: var(--sp-spacing-sm);
+  padding: var(--sp-spacing-md);
+  background: var(--sp-color-surface);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-lg);
+  box-shadow: var(--sp-shadow-lg);
+  animation: provenance-fade-in var(--sp-animation-fast) ease;
+}
+
+@keyframes provenance-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.provenance-inline__header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-spacing-sm);
+  margin-bottom: var(--sp-spacing-sm);
+}
+
+.provenance-inline__header div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-1);
+}
+
+.provenance-inline__header strong {
+  font-family: var(--sp-font-heading);
+  font-size: var(--sp-font-size-sm);
+  color: var(--sp-color-text-primary);
+  text-transform: uppercase;
+}
+
+.provenance-inline__header span {
+  font-size: var(--sp-font-size-xs);
+  color: var(--sp-color-text-secondary);
+  font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.provenance-robot-small {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--sp-color-text-secondary);
+}
+
+.provenance-robot-small .eye {
+  fill: var(--sp-color-primary);
+}
+
+.provenance-inline__reason {
+  font-size: var(--sp-font-size-xs);
+  color: var(--sp-color-text-secondary);
+  font-style: italic;
+  line-height: 1.5;
+  margin: 0;
+  padding-top: var(--sp-spacing-sm);
+  border-top: 1px solid var(--sp-color-border);
+}

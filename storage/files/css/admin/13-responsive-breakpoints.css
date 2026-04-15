@@ -1,0 +1,100 @@
+@layer responsive {
+
+
+@media (max-width: 768px) {
+    .dashboard-two-col {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-main > *:not(.admin-footer) {
+        padding-left: var(--sp-space-2);
+        padding-right: var(--sp-space-2);
+    }
+    .admin-footer {
+        padding-left: var(--sp-space-2);
+        padding-right: var(--sp-space-2);
+        padding-bottom: calc(var(--sp-space-3) + env(safe-area-inset-bottom, 0px));
+    }
+
+    .admin-header {
+        padding: var(--sp-space-2);
+    }
+
+    .admin-header h1 {
+        font-size: var(--sp-text-base);
+    }
+
+    .admin-sidebar {
+        width: 100vw;
+    }
+
+
+    .card, .stat-card, .health-card {
+        --sp-shadow-card: var(--sp-shadow-sm);
+        --sp-shadow-card-hover: var(--sp-shadow-md);
+    }
+    .plugin-card {
+        --sp-shadow-card: var(--sp-shadow-sm);
+        --sp-shadow-card-hover: var(--sp-shadow-md);
+    }
+
+    .sf-session-title {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .sf-session-header {
+        padding-right: var(--sp-space-8);
+    }
+
+    .dashboard-two-col {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@media (hover: none) {
+    .data-table tr:hover td {
+        background: inherit;
+    }
+    .btn-actions-trigger:hover,
+    .actions-trigger:hover {
+        background: transparent;
+        border-color: var(--sp-border-default);
+        color: var(--sp-text-secondary);
+    }
+    .admin-sidebar nav a:hover {
+        background: transparent;
+        color: var(--sp-text-secondary);
+    }
+    .stat-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+
+@media print {
+    .admin-layout .admin-sidebar,
+    .admin-layout .sidebar-toggle,
+    .admin-layout .sidebar-overlay,
+    .admin-layout .toolbar .btn-primary,
+    .admin-layout .pagination,
+    .admin-layout .actions-popup,
+    .admin-layout .col-actions {
+        display: none;
+    }
+
+    .admin-layout .admin-main {
+        padding: 0;
+    }
+
+    .admin-layout .table-container {
+        border: none;
+        margin: 0;
+    }
+}
+
+}

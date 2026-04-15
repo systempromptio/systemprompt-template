@@ -1,0 +1,111 @@
+@layer components {
+
+.achievement-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--sp-space-3);
+    margin-bottom: var(--sp-space-4);
+}
+
+.achievement-category {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-md);
+    overflow: hidden;
+}
+
+.achievement-category__header {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    cursor: pointer;
+    user-select: none;
+}
+
+.achievement-category__icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.achievement-category__name {
+    font-weight: 600;
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-primary);
+    flex: 1;
+}
+
+.achievement-category__count {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.achievement-category__chevron {
+    color: var(--sp-text-tertiary);
+    transition: transform 0.2s ease;
+}
+
+.achievement-category__bar {
+    height: 3px;
+    background: var(--sp-bg-surface-raised);
+}
+
+.achievement-category__bar-fill {
+    height: 100%;
+    background: var(--sp-success);
+    transition: width 0.3s ease;
+}
+
+.achievement-card {
+    display: flex;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    border-top: 1px solid var(--sp-border-default);
+    align-items: flex-start;
+}
+
+.achievement-card.locked {
+    opacity: 0.5;
+}
+
+.achievement-card__header {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    flex: 1;
+}
+
+.achievement-card__name {
+    font-weight: 600;
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-primary);
+}
+
+.achievement-card__desc {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.achievement-card__status {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    flex-shrink: 0;
+}
+
+.achievement-rarity {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-text-secondary);
+}
+
+.achievement-rarity--legendary {
+    color: var(--sp-warning);
+}
+
+.cc-onboarding-notice--warning {
+    background: color-mix(in oklch, var(--sp-warning) 8%, transparent);
+    border: 1px solid color-mix(in oklch, var(--sp-warning) 25%, transparent);
+    color: var(--sp-warning);
+}
+
+}

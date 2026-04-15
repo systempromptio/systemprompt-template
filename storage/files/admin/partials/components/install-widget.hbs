@@ -1,0 +1,32 @@
+{{#if marketplace.user_id}}
+<div class="install-menu" id="install-menu">
+    <button class="install-trigger" type="button" aria-label="Connect to Claude Code" aria-expanded="false" aria-haspopup="true" title="Connect to Claude Code">
+        {{#if (gt marketplace.total_plugins 0)}}<span class="plugin-counter" id="plugin-counter">{{marketplace.total_plugins}}</span>{{/if}}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+    </button>
+    <div class="install-dropdown">
+        <div class="install-dropdown-header">
+            <div class="install-dropdown-title">Connect to Claude Code</div>
+            <div class="install-widget-stats">
+                <span class="install-stat"><strong id="plugin-stat-count">{{marketplace.total_plugins}}</strong> plugins</span>
+                <span class="install-stat"><strong>{{marketplace.total_skills}}</strong> skills</span>
+                <span class="install-stat"><strong>{{marketplace.agents_count}}</strong> agents</span>
+                <span class="install-stat"><strong>{{marketplace.mcp_count}}</strong> MCP servers</span>
+            </div>
+        </div>
+        <div class="install-dropdown-body">
+            <div class="install-tab-content" data-install-panel="claude-code" id="install-panel-claude-code" role="tabpanel">
+                <p class="install-tab-hint">Paste this into any Claude Code conversation &mdash; it installs your personal marketplace with all your plugins, skills, agents, and MCP servers in one step.</p>
+                <div class="install-copybox">
+                    <code class="install-code">{{marketplace.install_cmd}}</code>
+                    <button type="button" class="btn btn-primary" data-copy="{{marketplace.install_cmd}}">Copy command</button>
+                </div>
+                <p class="install-tab-hint" style="margin-top:var(--sp-space-sm);opacity:0.75">Your user identity is embedded in the marketplace URL &mdash; no token setup, no settings to edit.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{{/if}}

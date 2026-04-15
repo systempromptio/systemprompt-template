@@ -1,0 +1,29 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/back-button href="/admin/org/agents/" label="Back to Agents"}}
+    <h2>{{title}}</h2>
+    {{#if is_edit}}{{> components/agent-detail-tabs active_tab="edit" agent_id=agent.id}}{{/if}}
+    <div class="card max-w-lg">
+        <form id="agent-form" data-api-path="/agents/" data-entity="Agent" data-id-field="id" data-list-path="/agents/">
+            {{> components/form-group label="ID" name="id" type="text" value=agent.id placeholder="my-agent-id" required=true readonly=is_edit hint="kebab-case"}}
+            {{> components/form-group label="Name" name="name" type="text" value=agent.name placeholder="Agent name" required=true}}
+            {{> components/form-group label="Description" name="description" type="text" value=agent.description placeholder="Brief description"}}
+            {{> components/form-group label="System Prompt" name="system_prompt" type="textarea" value=agent.system_prompt rows="15" placeholder="System prompt..."}}
+            {{#if is_edit}}
+            {{> components/form-group type="checkbox" name="enabled" checked=agent.enabled checkboxLabel="Enabled"}}
+            {{else}}
+            {{> components/form-group type="checkbox" name="enabled" checked=true checkboxLabel="Enabled"}}
+            {{/if}}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="/admin/org/agents/" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-agent-edit.js" defer></script>
+    {{/inline}}
+{{/layout}}

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT hour as \"hour!\", SUM(cnt)::BIGINT AS \"count!\" FROM (\n            (SELECT EXTRACT(HOUR FROM a.created_at)::INT AS hour, COUNT(*)::BIGINT AS cnt\n            FROM user_activity a\n            WHERE a.created_at >= NOW() - INTERVAL '24 hours'\n            GROUP BY hour)\n            UNION ALL\n            (SELECT EXTRACT(HOUR FROM m.created_at)::INT AS hour, COUNT(*)::BIGINT AS cnt\n            FROM mcp_tool_executions m\n            WHERE m.created_at >= NOW() - INTERVAL '24 hours'\n            GROUP BY hour)\n        ) combined\n        GROUP BY hour ORDER BY hour",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "hour!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "028f4345acfca753a366a8eb732b6991a979b871bda62ee26af379d4e4272f6e"
+}

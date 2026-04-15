@@ -1,0 +1,26 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    <p class="text-tertiary">Read-only view of managed files, upload configuration, and storage statistics. This page mirrors <code class="code-inline">demo/skills/03-file-management.sh</code>.</p>
+
+    <section aria-label="CLI commands">
+    {{#> components/data-table}}
+        <thead><tr><th>Step</th><th>Command</th></tr></thead>
+        <tbody>
+        {{#each cli_commands}}
+        <tr>
+            <td class="cell-primary">{{label}}</td>
+            <td><code class="code-inline">{{cmd}}</code></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    </section>
+
+    <section aria-label="File inventory">
+        {{> components/empty-state message="Files are managed via the CLI. Run the commands above to list files, view upload configuration, or inspect storage stats."}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

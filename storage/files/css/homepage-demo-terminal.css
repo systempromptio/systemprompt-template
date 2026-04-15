@@ -1,0 +1,140 @@
+
+.demo {
+  padding: var(--sp-space-4xl) 0 var(--sp-space-2xl);
+  border-top: 1px solid var(--sp-color-border);
+  overflow: hidden;
+}
+
+.demo-subtitle {
+  text-align: center;
+  color: var(--sp-color-text-secondary);
+  font-size: 1rem;
+  margin-top: calc(-1 * var(--sp-space-2xl));
+  margin-bottom: var(--sp-space-2xl);
+  line-height: 1.6;
+}
+
+.terminal-stack {
+  position: relative;
+  max-width: 900px;
+  height: 480px;
+  margin: 0 auto;
+}
+
+.terminal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: var(--sp-color-surface);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+  opacity: 0;
+  visibility: hidden;
+}
+
+
+.terminal.active {
+  opacity: 1;
+  visibility: visible;
+  border-color: var(--sp-brand-700);
+  box-shadow: 0 8px 40px rgba(0, 113, 206, 0.15), 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-md);
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  background: var(--sp-color-surface-elevated);
+  border-bottom: 1px solid var(--sp-color-border);
+}
+
+.terminal-dots {
+  display: flex;
+  gap: var(--sp-space-2);
+}
+
+.terminal-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--sp-radius-full);
+  background: var(--sp-color-text-muted);
+  opacity: 0.3;
+  transition: all 0.3s ease;
+}
+
+.terminal.active .terminal-dots span {
+  opacity: 1;
+}
+
+.terminal.active .terminal-dots span:nth-child(1) {
+  background: var(--sp-terminal-dot-close);
+}
+
+.terminal.active .terminal-dots span:nth-child(2) {
+  background: var(--sp-terminal-dot-minimize);
+}
+
+.terminal.active .terminal-dots span:nth-child(3) {
+  background: var(--sp-terminal-dot-maximize);
+}
+
+.terminal-title {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.7rem;
+  color: var(--sp-color-text-muted);
+  flex: 1;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.3s ease;
+}
+
+.terminal.active .terminal-title {
+  color: var(--sp-color-text);
+}
+
+.terminal-branding {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--sp-space-xs);
+}
+
+.terminal-logo {
+  width: 80px;
+  height: 80px;
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+.terminal-body {
+  padding: var(--sp-space-lg) var(--sp-space-xl);
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.85rem;
+  line-height: 1.75;
+  min-height: 340px;
+  background: linear-gradient(180deg, var(--sp-color-surface) 0%, rgba(10, 10, 10, 0.95) 100%);
+}
+
+.terminal-line {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-space-sm);
+  margin-bottom: 1px;
+}
+
+.terminal-output {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.terminal-output.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+

@@ -1,0 +1,416 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+
+    {{> components/page-hero}}
+
+    <div class="dashboard-tabs">
+        <div class="sp-tabs" role="tablist" aria-label="Dashboard sections">
+            <button type="button" class="sp-tab {{#if tab_traffic}}sp-tab--active{{/if}}" role="tab" aria-selected="{{#if tab_traffic}}true{{else}}false{{/if}}" data-tab="governance" aria-controls="tab-governance">Governance</button>
+            <button type="button" class="sp-tab {{#if tab_mcp}}sp-tab--active{{/if}}" role="tab" aria-selected="{{#if tab_mcp}}true{{else}}false{{/if}}" data-tab="mcp" aria-controls="tab-mcp">MCP & Usage</button>
+            <button type="button" class="sp-tab {{#if tab_report}}sp-tab--active{{/if}}" role="tab" aria-selected="{{#if tab_report}}true{{else}}false{{/if}}" data-tab="report" aria-controls="tab-report">Report</button>
+        </div>
+    </div>
+
+    <div class="sp-tab-panel" role="tabpanel" id="tab-governance" data-tab-panel="governance"{{#unless tab_traffic}} hidden{{/unless}}>
+
+        <section aria-label="Governance overview">
+        <div class="metric-ribbon">
+            <div class="metric-ribbon-item">
+                <span class="metric-ribbon-value">{{governance_total}}</span>
+                <span class="metric-ribbon-label">Total Decisions</span>
+            </div>
+            <div class="metric-ribbon-item metric-ribbon-success">
+                <span class="metric-ribbon-value">{{governance_allowed}}</span>
+                <span class="metric-ribbon-label">Allowed</span>
+            </div>
+            <div class="metric-ribbon-item metric-ribbon-danger">
+                <span class="metric-ribbon-value">{{governance_denied}}</span>
+                <span class="metric-ribbon-label">Denied</span>
+            </div>
+            {{#if governance_secret_breaches}}
+            <div class="metric-ribbon-item metric-ribbon-danger">
+                <span class="metric-ribbon-value">{{governance_secret_breaches}}</span>
+                <span class="metric-ribbon-label">Secret Breaches</span>
+            </div>
+            {{/if}}
+        </div>
+        </section>
+
+        <div class="dashboard-stack">
+            <div>
+                <section aria-label="Policy violations">
+                <div class="section-title">Policy Violations</div>
+                {{#if has_governance_events}}
+                <div class="card p-5" style="max-height:420px;overflow-y:auto">
+                    {{#each governance_events}}
+                    {{#if is_denied}}
+                    <div class="feed-item">
+                        <div class="feed-icon feed-orange"></div>
+                        <div class="feed-content">
+                            <span class="feed-text"><strong>{{tool_name}}</strong> blocked for <code class="code-inline">{{agent_id}}</code></span>
+                            <span class="feed-time">{{created_at}}</span>
+                            <div class="text-sm text-tertiary">{{truncate reason 80}}</div>
+                        </div>
+                    </div>
+                    {{/if}}
+                    {{/each}}
+                    {{#unless governance_denied}}
+                    <div class="text-sm text-tertiary">No policy violations recorded.</div>
+                    {{/unless}}
+                </div>
+                {{else}}
+                {{> components/empty-state message="No governance decisions recorded yet."}}
+                {{/if}}
+                </section>
+            </div>
+            <div>
+                <section aria-label="Recent governance events">
+                <div class="section-title">Recent Governance Events</div>
+                {{#if has_governance_events}}
+                {{#> components/data-table}}
+                    <thead><tr>
+                        <th>User</th>
+                        <th>Tool</th>
+                        <th class="col-status">Decision</th>
+                        <th class="col-multiline">Reason</th>
+                        <th class="col-date">Time</th>
+                    </tr></thead>
+                    <tbody>
+                    {{#each governance_events}}
+                    <tr>
+                        <td>
+                            {{#> components/table-cell-stacked secondary=agent_id}}
+                                <a href="/admin/user?id={{user_id}}">{{truncate user_id 12}}</a>
+                            {{/components/table-cell-stacked}}
+                        </td>
+                        <td><code class="code-inline">{{tool_name}}</code></td>
+                        <td class="col-status">
+                            {{#if is_denied}}
+                                <span class="mcp-badge mcp-badge-danger">DENIED</span>
+                            {{else}}
+                                <span class="mcp-badge mcp-badge-success">ALLOWED</span>
+                            {{/if}}
+                        </td>
+                        <td class="col-multiline" title="{{reason}}">{{truncate reason 50}}</td>
+                        <td class="col-date text-sm text-tertiary">{{created_at}}</td>
+                    </tr>
+                    {{/each}}
+                    </tbody>
+                {{/components/data-table}}
+                <div class="section-footer"><a href="/admin/governance" class="text-sm">View all governance decisions &rarr;</a></div>
+                {{else}}
+                {{> components/empty-state message="No governance decisions recorded yet."}}
+                {{/if}}
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="sp-tab-panel" role="tabpanel" id="tab-mcp" data-tab-panel="mcp"{{#unless tab_mcp}} hidden{{/unless}}>
+        <section aria-label="AI usage chart">
+        <div class="usage-chart-container">
+            <div class="usage-chart-header">
+                <div class="usage-chart-title">AI Usage</div>
+                <div class="chart-range-tabs">
+                    <a href="?range=24h&tab={{active_tab}}" class="chart-range-tab {{#if range_24h}}active{{/if}}">24h</a>
+                    <a href="?range=7d&tab={{active_tab}}" class="chart-range-tab {{#if range_7d}}active{{/if}}">7d</a>
+                    <a href="?range=14d&tab={{active_tab}}" class="chart-range-tab {{#if range_14d}}active{{/if}}">14d</a>
+                </div>
+                <div class="usage-chart-legend">
+                    <span class="legend-item legend-sessions">Logins</span>
+                    <span class="legend-item legend-active-users">Active Users</span>
+                    <span class="legend-item legend-prompts">Edits</span>
+                    <span class="legend-item legend-tools">MCP Calls</span>
+                    <span class="legend-item legend-errors">MCP Errors</span>
+                </div>
+                <div class="usage-chart-peak">Peak: {{chart.peak}}</div>
+            </div>
+            {{#if chart.has_data}}
+            <div class="usage-chart-body">
+                <svg viewBox="0 0 960 280" preserveAspectRatio="none" class="usage-svg" role="img" aria-labelledby="chart-title-ai-usage">
+                    <title id="chart-title-ai-usage">AI usage metrics over time showing logins, active users, edits, MCP calls, and errors</title>
+                    <defs>
+                        <linearGradient id="grad-sessions" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="var(--sp-chart-purple, #8B5CF6)" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="var(--sp-chart-purple, #8B5CF6)" stop-opacity="0.08"/>
+                        </linearGradient>
+                        <linearGradient id="grad-active-users" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="var(--sp-chart-green, #10B981)" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="var(--sp-chart-green, #10B981)" stop-opacity="0.08"/>
+                        </linearGradient>
+                        <linearGradient id="grad-prompts" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="var(--sp-chart-blue, #3B82F6)" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="var(--sp-chart-blue, #3B82F6)" stop-opacity="0.08"/>
+                        </linearGradient>
+                        <linearGradient id="grad-tools" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="var(--sp-chart-indigo, #6B68FA)" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="var(--sp-chart-indigo, #6B68FA)" stop-opacity="0.08"/>
+                        </linearGradient>
+                        <linearGradient id="grad-errors" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="var(--sp-chart-red, #EF4444)" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="var(--sp-chart-red, #EF4444)" stop-opacity="0.08"/>
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="3" result="blur"/>
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                    </defs>
+                    {{#each chart.y_labels}}
+                    <line x1="40" y1="{{this.y}}" x2="960" y2="{{this.y}}" class="chart-grid-line" stroke-width="1"/>
+                    <text x="36" y="{{this.y}}" class="chart-axis-label" text-anchor="end" dominant-baseline="middle">{{this.label}}</text>
+                    {{/each}}
+                    <path d="{{chart.paths.sessions}}" fill="url(#grad-sessions)" class="area-path area-sessions"/>
+                    <path d="{{chart.paths.active_users}}" fill="url(#grad-active-users)" class="area-path area-active-users"/>
+                    <path d="{{chart.paths.prompts}}" fill="url(#grad-prompts)" class="area-path area-prompts"/>
+                    <path d="{{chart.paths.tools}}" fill="url(#grad-tools)" class="area-path area-tools"/>
+                    <path d="{{chart.paths.errors}}" fill="url(#grad-errors)" class="area-path area-errors"/>
+                    <path d="{{chart.paths.top_line}}" fill="none" stroke="var(--sp-accent)" stroke-width="2" filter="url(#glow)" class="line-path line-top"/>
+                </svg>
+                <div class="usage-chart-x-axis">
+                    {{#each chart.x_labels}}
+                    <span>{{this}}</span>
+                    {{/each}}
+                </div>
+            </div>
+            {{else}}
+            <div class="usage-chart-body usage-chart-empty">
+                <p>No activity data for this time range.</p>
+            </div>
+            {{/if}}
+        </div>
+        </section>
+
+        <section aria-label="Live activity and quick stats">
+        <div class="dashboard-two-col">
+            <div>
+                <div class="section-title">Live Activity <span class="live-dot" id="sse-indicator"></span></div>
+                {{#if timeline}}
+                <div class="live-feed card p-5" id="live-feed" aria-live="polite">
+                    {{#each timeline}}
+                    <div class="feed-item" data-ts="{{created_at}}">
+                        <div class="feed-icon {{#if (eq category "login")}}feed-blue{{else if (eq category "logout")}}feed-cyan{{else if (eq category "marketplace_connect")}}feed-purple{{else if (eq category "marketplace_edit")}}feed-green{{else if (eq category "session")}}feed-indigo{{else if (eq category "session_rated")}}feed-gold{{else if (eq category "user_management")}}feed-teal{{else}}feed-orange{{/if}}"></div>
+                        <div class="feed-content">
+                            <span class="feed-text"><strong>{{default display_name "Anonymous"}}</strong> {{description}}</span>
+                            <span class="feed-time">{{relativeTime created_at}}</span>
+                        </div>
+                    </div>
+                    {{/each}}
+                    <div class="section-footer"><a href="/admin/events/" class="text-sm">View all events &rarr;</a></div>
+                </div>
+                {{else}}
+                {{> components/empty-state message="No activity recorded yet."}}
+                {{/if}}
+            </div>
+            <div>
+                <div class="section-title">Quick Stats</div>
+                <div class="quick-stats-grid">
+                    <div class="quick-stat-card">
+                        <div class="quick-stat-label">Total Users</div>
+                        <div class="quick-stat-value">{{total_users}}</div>
+                    </div>
+                    <div class="quick-stat-card">
+                        <div class="quick-stat-label">Active Users (24h)</div>
+                        <div class="quick-stat-value">{{active_users_24h}}</div>
+                    </div>
+                    <div class="quick-stat-card">
+                        <div class="quick-stat-label">MCP Error Rate</div>
+                        <div class="quick-stat-value {{#if stats.mcp_errors}}text-danger{{else}}text-success{{/if}}">{{error_rate_pct}}%</div>
+                    </div>
+                    <div class="quick-stat-card">
+                        <div class="quick-stat-label">Events This Week</div>
+                        <div class="quick-stat-value">{{stats.events_this_week}}</div>
+                    </div>
+                </div>
+                {{#if top_pages_today}}
+                <div class="section-title mt-5">Top Content Today</div>
+                <div class="card p-5">
+                    {{#each top_pages_today}}
+                    <div class="skill-bar-row">
+                        <div class="skill-bar-label" title="{{page_url}}">{{page_url}}</div>
+                        <div class="skill-bar-count">{{events}} views</div>
+                    </div>
+                    {{/each}}
+                </div>
+                {{/if}}
+            </div>
+        </div>
+        </section>
+
+        <section aria-label="MCP tool usage and reliability">
+        <div class="dashboard-two-col">
+            <div>
+                <div class="section-title">MCP Tool Usage</div>
+                {{#if popular_skills}}
+                <div class="card p-5">
+                    {{#each popular_skills}}
+                    <div class="skill-bar-row">
+                        <div class="skill-bar-label" title="{{tool_name}}">{{tool_name}}</div>
+                        <div class="skill-bar-track">
+                            <div class="progress-bar"><div class="progress-fill progress-blue" style="--fill: {{pct}}%"></div></div>
+                        </div>
+                        <div class="skill-bar-count">{{count}}</div>
+                    </div>
+                    {{/each}}
+                </div>
+                {{else}}
+                {{> components/empty-state message="No MCP tool usage data yet."}}
+                {{/if}}
+            </div>
+            <div>
+                <div class="section-title">MCP Tool Reliability</div>
+                {{#if tool_success_rates}}
+                <div class="card p-5">
+                    {{#each tool_success_rates}}
+                    <div class="skill-bar-row">
+                        <div class="skill-bar-label">{{tool_name}}</div>
+                        <div class="skill-bar-track">
+                            <div class="progress-bar"><div class="progress-fill {{color_class}}" style="--fill: {{success_pct}}%"></div></div>
+                        </div>
+                        <div class="skill-bar-count">{{success_pct}}%</div>
+                    </div>
+                    {{/each}}
+                </div>
+                {{else}}
+                {{> components/empty-state message="No tool reliability data."}}
+                {{/if}}
+            </div>
+        </div>
+        </section>
+
+        <section aria-label="Top users and hourly activity">
+        <div class="dashboard-two-col">
+            <div>
+                <div class="section-title">Top Users</div>
+                {{#if top_users}}
+                {{#> components/data-table}}
+                    <thead><tr><th>#</th><th>User</th><th class="col-numeric">Logins</th><th class="col-numeric">Edits</th><th class="col-numeric">MCP Calls</th></tr></thead>
+                    <tbody>
+                    {{#each top_users}}
+                    <tr>
+                        <td><span class="leaderboard-rank{{#if (eq @index 0)}} leaderboard-rank-1{{else if (eq @index 1)}} leaderboard-rank-2{{else if (eq @index 2)}} leaderboard-rank-3{{/if}}">{{add @index 1}}</span></td>
+                        <td><div class="user-cell"><div class="user-avatar">{{initials (default display_name "A")}}</div><div class="user-info"><span class="user-name">{{default display_name "Anonymous"}}</span></div></div></td>
+                        <td class="col-numeric numeric">{{logins}}</td>
+                        <td class="col-numeric numeric">{{edits}}</td>
+                        <td class="col-numeric numeric">{{mcp_calls}}</td>
+                    </tr>
+                    {{/each}}
+                    </tbody>
+                {{/components/data-table}}
+                {{else}}
+                {{> components/empty-state message="No user activity yet."}}
+                {{/if}}
+            </div>
+            <div>
+                <div class="section-title">Activity (Last 24h)</div>
+                {{#if hourly_activity}}
+                <div class="card p-5">
+                    <div class="mini-chart">
+                        {{#each hourly_activity}}
+                        <div class="mini-chart-bar" title="{{hour}}:00: {{count}} events">
+                            <div class="mini-chart-fill" style="--fill: {{pct}}%"></div>
+                            <div class="mini-chart-label">{{label}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+                {{else}}
+                {{> components/empty-state message="No hourly activity data."}}
+                {{/if}}
+            </div>
+        </div>
+
+        </section>
+
+        <section aria-label="MCP server access and cost breakdown">
+        <div class="dashboard-two-col">
+            <div>
+                <div class="section-title">MCP Server Access</div>
+                {{#if has_mcp_access_events}}
+                <div class="card p-5">
+                    {{#each mcp_access_events}}
+                    <div class="feed-item">
+                        <div class="feed-icon {{#if is_granted}}feed-green{{else}}feed-orange{{/if}}"></div>
+                        <div class="feed-content">
+                            <span class="feed-text"><strong>{{server_name}}</strong>
+                                {{#if is_granted}}
+                                    <span class="mcp-badge mcp-badge-success">Granted</span>
+                                {{else}}
+                                    <span class="mcp-badge mcp-badge-danger">Rejected</span>
+                                {{/if}}
+                            </span>
+                            <span class="feed-time">{{created_at}}</span>
+                            {{#if description}}<div class="text-sm text-tertiary">{{truncate description 60}}</div>{{/if}}
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+                {{else}}
+                {{> components/empty-state message="No MCP access events recorded yet."}}
+                {{/if}}
+            </div>
+            <div>
+                <div class="section-title">Token Usage (30d)</div>
+                {{#if has_token_usage}}
+                <div class="card p-5">
+                    {{#each token_usage}}
+                    <div class="skill-bar-row">
+                        <div class="skill-bar-label" title="{{label}}">{{truncate label 20}}</div>
+                        <div class="skill-bar-track">
+                            <div class="progress-bar"><div class="progress-fill progress-blue" style="--fill: {{pct}}%"></div></div>
+                        </div>
+                        <div class="skill-bar-count" title="{{input_tokens}} in / {{output_tokens}} out">{{total_tokens}}</div>
+                    </div>
+                    {{/each}}
+                </div>
+                {{else}}
+                {{> components/empty-state message="No token usage data yet."}}
+                {{/if}}
+            </div>
+        </div>
+        </section>
+
+        {{#if recent_mcp_errors}}
+        <section aria-label="Recent MCP errors">
+        <div class="section-title">Recent MCP Errors</div>
+        <div class="card p-5">
+            {{#each recent_mcp_errors}}
+            <div class="feed-item">
+                <div class="feed-icon feed-orange"></div>
+                <div class="feed-content">
+                    <span class="feed-text"><strong>{{tool_name}}</strong></span>
+                    <span class="feed-time">{{created_at_display}}</span>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+        </section>
+        {{/if}}
+
+        <section aria-label="Installation guides">
+        <div class="section-title">Installation Guides</div>
+        <div class="dashboard-grid dashboard-grid--3">
+            <a href="/documentation/integration-claude-code" class="card card--link p-5">
+                <div class="card__title">Claude Code</div>
+                <div class="card__desc">One-line install via the platform's internal git server. Recommended for developers.</div>
+            </a>
+            <a href="/documentation/integration-claude-cowork" class="card card--link p-5">
+                <div class="card__title">Claude Cowork</div>
+                <div class="card__desc">ZIP export or GitHub repository sync for Claude Desktop teams.</div>
+            </a>
+            <a href="/documentation/distribution-channels" class="card card--link p-5">
+                <div class="card__title">Distribution Channels</div>
+                <div class="card__desc">How personalised marketplaces are served and enterprise deployment options.</div>
+            </a>
+        </div>
+        </section>
+    </div>
+
+    {{> dashboard-report}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" src="/js/pages/admin-dashboard.js" type="module" defer></script>
+    {{/inline}}
+{{/layout}}

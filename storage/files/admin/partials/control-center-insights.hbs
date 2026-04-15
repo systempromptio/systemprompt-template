@@ -1,0 +1,197 @@
+<div class="sp-tab-panel" role="tabpanel" id="tab-usage" data-tab-panel="usage" hidden aria-label="Usage">
+
+    <div class="cc-usage-limits-card" id="cc-usage-limits">
+      <div class="cc-usage-limits-header">
+        <h3>Usage Limits</h3>
+        <span class="cc-plan-badge" id="cc-plan-name">Loading...</span>
+      </div>
+      <div class="cc-limits-grid" id="cc-limits-grid"></div>
+    </div>
+
+    <div class="cc-hourly-chart-card" id="cc-hourly-charts">
+        <div class="cc-chart-header">
+            <span class="cc-chart-title">Activity</span>
+            <div class="cc-range-tabs">
+                <button type="button" class="cc-range-tab cc-range-tab--active" data-range="24h">24h</button>
+                <button type="button" class="cc-range-tab" data-range="7d">7d</button>
+                <button type="button" class="cc-range-tab" data-range="30d">30d</button>
+            </div>
+            <div class="cc-chart-legend">
+                <span class="cc-legend-item cc-legend--actions">Actions</span>
+                <span class="cc-legend-item cc-legend--apm">APM</span>
+                <span class="cc-legend-item cc-legend--throughput">Throughput</span>
+                <span class="cc-legend-item cc-legend--concurrency">Concurrency</span>
+                <span class="cc-legend-item cc-legend--tools">Tools</span>
+            </div>
+        </div>
+        <div class="cc-hourly-chart-container">
+            <svg id="cc-hourly-svg" viewBox="0 0 960 280" preserveAspectRatio="none" role="img" aria-labelledby="cc-hourly-chart-title">
+                <title id="cc-hourly-chart-title">Activity chart showing actions, APM, throughput, concurrency, and tool usage over time</title>
+                <defs>
+                    <linearGradient id="cc-grad-actions" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="var(--sp-chart-purple, #8B5CF6)" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="var(--sp-chart-purple, #8B5CF6)" stop-opacity="0.05"/>
+                    </linearGradient>
+                    <linearGradient id="cc-grad-apm" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="var(--sp-chart-green, #10B981)" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="var(--sp-chart-green, #10B981)" stop-opacity="0.05"/>
+                    </linearGradient>
+                    <linearGradient id="cc-grad-throughput" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="var(--sp-chart-blue, #3B82F6)" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="var(--sp-chart-blue, #3B82F6)" stop-opacity="0.05"/>
+                    </linearGradient>
+                    <linearGradient id="cc-grad-concurrency" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="var(--sp-chart-indigo, #6B68FA)" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="var(--sp-chart-indigo, #6B68FA)" stop-opacity="0.05"/>
+                    </linearGradient>
+                    <linearGradient id="cc-grad-tools" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="var(--sp-chart-red, #EF4444)" stop-opacity="0.5"/>
+                        <stop offset="100%" stop-color="var(--sp-chart-red, #EF4444)" stop-opacity="0.05"/>
+                    </linearGradient>
+                    <filter id="cc-glow">
+                        <feGaussianBlur stdDeviation="3" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+            </svg>
+            <div class="cc-hourly-x-labels" id="cc-hourly-x-labels"></div>
+        </div>
+    </div>
+
+    <div class="cc-insights-grid">
+
+        {{#if has_skill_adoption}}
+        <div class="cc-insight-card cc-insight-card--adoption" id="cc-adoption-summary">
+            <h3 class="cc-insight-title">Skill Adoption</h3>
+            <div class="cc-adoption-summary">
+                <div class="cc-adoption-gauge">
+                    <div class="cc-adoption-ring" style="--adoption-pct: {{skill_adoption_pct}}">
+                        <span class="cc-adoption-pct">{{skill_adoption_pct}}%</span>
+                    </div>
+                    <span class="cc-adoption-label">{{total_skills_used}}/{{total_skills_available}} skills used</span>
+                </div>
+                {{#if unused_skills}}
+                <div class="cc-unused-skills">
+                    <span class="cc-unused-label">Not yet tried:</span>
+                    {{#each unused_skills}}
+                    <span class="cc-entity-pill cc-entity-pill--skill cc-entity-pill--unused">{{this}}</span>
+                    {{/each}}
+                </div>
+                {{/if}}
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if achievement_progress}}
+        <div class="cc-insight-card" id="cc-achievement-progress">
+            <h3 class="cc-insight-title">Next Achievements</h3>
+            <div class="cc-achievement-progress-list">
+                {{#each achievement_progress}}
+                <div class="cc-achievement-progress-item">
+                    <div class="cc-achievement-progress-info">
+                        <span class="cc-achievement-progress-name">{{name}}</span>
+                        <span class="cc-achievement-progress-count">{{current}}/{{threshold}}</span>
+                    </div>
+                    <div class="cc-bar-track">
+                        <div class="cc-bar-fill" style="--fill: {{pct}}%"></div>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if skill_effectiveness}}
+        <div class="cc-insight-card">
+            <h3 class="cc-insight-title">Skill Effectiveness</h3>
+            {{#> components/data-table}}
+                <thead>
+                    <tr>
+                        <th>Skill</th>
+                        <th>Uses</th>
+                        <th>Sess</th>
+                        <th>AI Score</th>
+                        <th>Goals</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each skill_effectiveness}}
+                    <tr>
+                        <td>
+                            <span class="cc-entity-pill cc-entity-pill--skill">{{skill_name}}</span>
+                            <div class="cc-rating cc-rating--readonly cc-rating--small" role="img" aria-label="Rating: {{avg_effectiveness}} out of 5 stars">
+                                <span class="cc-star {{#if (gt rating 0)}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
+                                <span class="cc-star {{#if (gt rating 1)}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
+                                <span class="cc-star {{#if (gt rating 2)}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
+                                <span class="cc-star {{#if (gt rating 3)}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
+                                <span class="cc-star {{#if (gt rating 4)}}cc-star--filled{{/if}}" aria-hidden="true">&#9733;</span>
+                            </div>
+                        </td>
+                        <td>{{total_uses}}</td>
+                        <td>{{sessions_used_in}}</td>
+                        <td>{{#if has_score}}{{avg_effectiveness}}{{else}}&mdash;{{/if}}</td>
+                        <td>{{#if has_score}}{{goal_achievement_pct}}%{{else}}&mdash;{{/if}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            {{/components/data-table}}
+        </div>
+        {{/if}}
+
+        {{#if agents_usage}}
+        <div class="cc-insight-card">
+            <h3 class="cc-insight-title">Agents</h3>
+            <div class="cc-component-list">
+                {{#each agents_usage}}
+                <div class="cc-component-item">
+                    <span class="cc-entity-pill cc-entity-pill--agent">{{entity_name}}</span>
+                    <span class="cc-component-count">{{total_uses}} uses &middot; {{session_count}} sessions</span>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if mcp_usage}}
+        <div class="cc-insight-card">
+            <h3 class="cc-insight-title">MCP Tools</h3>
+            <div class="cc-component-list">
+                {{#each mcp_usage}}
+                <div class="cc-component-item">
+                    <span class="cc-entity-pill cc-entity-pill--mcp_tool">{{entity_name}}</span>
+                    <span class="cc-component-count">{{total_uses}} uses &middot; {{session_count}} sessions</span>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if top_tools}}
+        <div class="cc-insight-card">
+            <h3 class="cc-insight-title">Top Tools</h3>
+            <div class="cc-insight-bars">
+                {{#each top_tools}}
+                <div class="cc-bar-row">
+                    <span class="cc-bar-label">{{tool_name}}</span>
+                    <div class="cc-bar-track">
+                        <div class="cc-bar-fill" style="--fill: {{pct}}%"></div>
+                    </div>
+                    <span class="cc-bar-value">{{count}}</span>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        {{/if}}
+
+        <div class="cc-insight-card">
+            <h3 class="cc-insight-title">Session Summary</h3>
+            <p class="cc-insight-text">
+                {{#if session_groups}}
+                Rate your sessions to build effectiveness data for your skills and workflows.
+                {{else}}
+                No sessions tracked yet. Start using Claude Code to see analytics here.
+                {{/if}}
+            </p>
+        </div>
+    </div>
+</div>

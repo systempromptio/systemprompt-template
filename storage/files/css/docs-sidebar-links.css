@@ -1,0 +1,190 @@
+
+.docs-learning-objectives {
+  margin: 0 0 var(--sp-spacing-xl) 0;
+  padding: var(--sp-spacing-lg);
+  border-left: 4px solid var(--sp-color-success);
+  background: rgba(34, 197, 94, 0.05);
+  border-radius: 0 var(--sp-radius-md) var(--sp-radius-md) 0;
+}
+
+.docs-learning-objectives h2 {
+  font-family: var(--sp-font-heading);
+  font-size: 1rem;
+  font-weight: var(--sp-font-weight-semibold);
+  margin: 0 0 var(--sp-spacing-xs) 0;
+  padding: 0;
+  border: none;
+  color: var(--sp-color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.docs-learning-objectives .docs-section-intro {
+  font-size: var(--sp-font-size-sm);
+  color: var(--sp-color-text-secondary);
+  margin: 0 0 var(--sp-spacing-sm) 0;
+}
+
+.docs-learning-objectives ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.docs-learning-objectives li {
+  position: relative;
+  padding: var(--sp-spacing-xs) 0 var(--sp-spacing-xs) var(--sp-spacing-lg);
+  color: var(--sp-color-text-secondary);
+  font-size: var(--sp-font-size-sm);
+}
+
+.docs-learning-objectives li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--sp-color-success);
+  font-weight: var(--sp-font-weight-bold);
+}
+
+.docs-related-cta {
+  margin-top: var(--sp-spacing-md);
+  padding-top: var(--sp-spacing-md);
+  border-top: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.docs-related-cta:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.docs-related-title {
+  font-family: var(--sp-font-heading);
+  font-size: var(--sp-font-size-xs);
+  font-weight: var(--sp-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sp-color-text-secondary);
+  margin: 0 0 var(--sp-spacing-sm) 0;
+}
+
+.docs-related-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-spacing-sm);
+}
+
+.docs-cta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-spacing-xs);
+  padding: var(--sp-spacing-xs) var(--sp-spacing-sm);
+  font-size: var(--sp-font-size-sm);
+  font-weight: var(--sp-font-weight-medium);
+  text-decoration: none;
+  border-radius: var(--sp-radius-sm);
+  transition: all 0.2s ease;
+}
+
+.docs-cta-link--playbook {
+  background: rgba(var(--sp-color-primary-rgb), 0.1);
+  color: var(--sp-color-primary);
+  border: 1px solid rgba(var(--sp-color-primary-rgb), 0.2);
+}
+
+.docs-cta-link--playbook:hover {
+  background: rgba(var(--sp-color-primary-rgb), 0.2);
+  border-color: var(--sp-color-primary);
+}
+
+.docs-cta-link--code {
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.docs-cta-link--code:hover {
+  background: rgba(96, 165, 250, 0.2);
+  border-color: #60a5fa;
+}
+
+.docs-cta-link svg {
+  flex-shrink: 0;
+}
+
+.docs-cta-link .external-indicator {
+  font-size: 0.75em;
+  opacity: 0.6;
+}
+
+.docs-cta-link:hover .external-indicator {
+  opacity: 1;
+}
+
+.toc-section {
+  margin-top: var(--sp-spacing-lg);
+  padding-top: var(--sp-spacing-lg);
+  border-top: 1px solid var(--sp-color-border);
+}
+
+.toc-links {
+  list-style: none;
+  margin: var(--sp-spacing-sm) 0 0 0;
+  padding: 0;
+}
+
+.toc-links li {
+  margin: 0;
+}
+
+.toc-links a {
+  display: block;
+  padding: var(--sp-spacing-xs) 0;
+  font-size: var(--sp-font-size-xs);
+  color: var(--sp-color-text-secondary);
+  text-decoration: none;
+  transition: color var(--sp-animation-fast) ease;
+}
+
+.toc-links a:hover {
+  color: var(--sp-color-primary);
+}
+
+.toc-related-playbooks .toc-links a:hover {
+  color: var(--sp-color-primary);
+}
+
+.toc-links--code a {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-spacing-xs);
+}
+
+.toc-links--code a::after {
+  content: '↗';
+  font-size: 0.75em;
+  opacity: 0.5;
+}
+
+.toc-links--code a:hover {
+  color: #60a5fa;
+}
+
+.toc-links--code a:hover::after {
+  opacity: 1;
+}
+
+.toc-mobile-section {
+  margin-top: var(--sp-spacing-md);
+  padding-top: var(--sp-spacing-md);
+  border-top: 1px solid var(--sp-color-border);
+}
+
+.toc-mobile-section-title {
+  font-size: var(--sp-font-size-xs);
+  font-weight: var(--sp-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sp-color-text-tertiary);
+  margin: 0 0 var(--sp-spacing-xs) 0;
+}

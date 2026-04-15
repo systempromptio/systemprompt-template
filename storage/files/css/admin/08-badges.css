@@ -1,0 +1,66 @@
+@layer components {
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem var(--sp-space-2);
+    border-radius: var(--sp-radius-badge);
+    font-size: var(--sp-text-xs);
+    font-weight: 500;
+    border: 1px solid color-mix(in oklch, currentColor 15%, transparent);
+}
+
+.status-active {
+    background: var(--sp-success-dim);
+    color: var(--sp-success);
+}
+
+.status-inactive {
+    background: var(--sp-bg-surface-raised);
+    color: var(--sp-text-tertiary);
+}
+
+.tier-badge {
+    font-size: var(--sp-text-xs);
+    line-height: 1;
+    font-weight: 500;
+    color: var(--sp-text-tertiary);
+}
+
+.tier-badge.tier-premium {
+    color: var(--sp-success);
+    font-weight: 600;
+}
+
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem var(--sp-space-2);
+    border-radius: var(--sp-radius-badge);
+    font-size: var(--sp-text-xs);
+    font-weight: 500;
+    border: 1px solid color-mix(in oklch, currentColor 15%, transparent);
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.badge-subtle {
+    background: var(--sp-bg-surface-raised);
+    padding: 0.125rem var(--sp-space-2);
+    border-radius: var(--sp-radius-xs);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.badge-green,
+.badge-success { color: var(--sp-success); background: var(--sp-success-dim); border-color: color-mix(in oklch, var(--sp-success) 15%, transparent); }
+.badge-red,
+.badge-danger { color: var(--sp-danger); background: var(--sp-danger-dim); border-color: color-mix(in oklch, var(--sp-danger) 15%, transparent); }
+.badge-warning { color: var(--sp-warning); background: color-mix(in oklch, var(--sp-warning) 12%, transparent); border-color: color-mix(in oklch, var(--sp-warning) 15%, transparent); }
+.badge-info { color: var(--sp-accent); background: color-mix(in oklch, var(--sp-accent) 12%, transparent); border-color: color-mix(in oklch, var(--sp-accent) 15%, transparent); }
+.badge-gray,
+.badge-secondary { color: var(--sp-text-secondary); background: var(--sp-bg-tertiary); border-color: var(--sp-border-subtle); }
+.badge-sm { font-size: var(--sp-text-xs); padding: 0.0625rem var(--sp-space-1); }
+
+}

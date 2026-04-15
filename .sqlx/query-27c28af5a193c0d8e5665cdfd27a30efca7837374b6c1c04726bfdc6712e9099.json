@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO org_marketplace_sync_logs (marketplace_id, operation, status, commit_hash, plugins_synced, errors, error_message, triggered_by, duration_ms)\n         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "27c28af5a193c0d8e5665cdfd27a30efca7837374b6c1c04726bfdc6712e9099"
+}

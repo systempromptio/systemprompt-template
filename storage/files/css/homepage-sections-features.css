@@ -1,0 +1,105 @@
+
+.features {
+  padding: var(--sp-space-4xl) 0;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(200px, auto);
+  gap: var(--sp-space-md);
+}
+
+.feature-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--sp-card-bg-glass);
+  border: var(--sp-card-border-width) solid var(--sp-color-border);
+  border-radius: var(--sp-card-radius);
+  padding: var(--sp-space-xl);
+  transition: all var(--sp-transition-normal);
+  position: relative;
+}
+
+.feature-card:hover {
+  text-decoration: none;
+  border-color: var(--sp-brand-600);
+  transform: translateY(-4px);
+  box-shadow: var(--sp-card-shadow-hover);
+}
+
+.feature-link-arrow {
+  position: absolute;
+  bottom: var(--sp-space-lg);
+  right: var(--sp-space-lg);
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all var(--sp-transition-normal);
+  color: var(--sp-color-primary);
+  font-size: 1.25rem;
+}
+
+.feature-card:hover .feature-link-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--sp-space-md);
+  color: var(--sp-color-primary);
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: var(--sp-space-sm);
+  color: var(--sp-color-text);
+}
+
+.feature-card p {
+  font-size: 0.95rem;
+  color: var(--sp-color-text-secondary);
+  line-height: 1.6;
+}
+
+.feature-card--lg {
+  grid-row: span 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-card--lg .feature-icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--sp-space-lg);
+}
+
+.feature-card--lg h4 {
+  font-size: 1.375rem;
+  margin-bottom: var(--sp-space-md);
+}
+
+.feature-card--lg p {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.category-badge {
+  font-family: var(--sp-font-brand);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--sp-color-primary);
+  margin-bottom: var(--sp-space-sm);
+  display: block;
+}
+
+.feature-card h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: var(--sp-space-sm);
+  color: var(--sp-color-text);
+}

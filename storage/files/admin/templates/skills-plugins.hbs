@@ -1,0 +1,52 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    <p class="text-tertiary">Read-only plugin, hook, and extension inventory. CRUD lives on <a href="/admin/plugins">/admin/plugins</a>. This page mirrors <code class="code-inline">demo/skills/04-plugin-management.sh</code>.</p>
+
+    <section aria-label="Plugin statistics" class="stat-grid">
+        {{> components/stat-card label="Plugins" value=stats.plugin_count}}
+        {{> components/stat-card label="Enabled" value=stats.plugin_enabled}}
+        {{> components/stat-card label="Hooks" value=stats.hook_count}}
+        {{> components/stat-card label="Skills" value=stats.skill_count}}
+    </section>
+
+    <section aria-label="CLI commands">
+    {{#> components/data-table}}
+        <thead><tr><th>Step</th><th>Command</th></tr></thead>
+        <tbody>
+        {{#each cli_commands}}
+        <tr>
+            <td class="cell-primary">{{label}}</td>
+            <td><code class="code-inline">{{cmd}}</code></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    </section>
+
+    <section aria-label="Plugins">
+    {{#if plugins}}
+    {{#> components/data-table}}
+        <thead><tr><th>ID</th><th>Name</th><th class="col-status">Enabled</th><th class="col-numeric">Skills</th><th class="col-numeric">Agents</th><th class="col-numeric">MCP</th><th class="col-numeric">Hooks</th></tr></thead>
+        <tbody>
+        {{#each plugins}}
+        <tr>
+            <td class="cell-primary"><code class="code-inline">{{id}}</code></td>
+            <td>{{name}}</td>
+            <td class="col-status">{{#if enabled}}<span class="badge badge-success">Enabled</span>{{else}}<span class="badge badge-secondary">Disabled</span>{{/if}}</td>
+            <td class="col-numeric numeric">{{skill_count}}</td>
+            <td class="col-numeric numeric">{{agent_count}}</td>
+            <td class="col-numeric numeric">{{mcp_count}}</td>
+            <td class="col-numeric numeric">{{hook_count}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No plugins visible to your role."}}
+    {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

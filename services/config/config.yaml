@@ -1,0 +1,28 @@
+# SystemPrompt Services Configuration
+# Thin aggregator — every top-level service file is listed explicitly.
+
+includes:
+  # MCP servers
+  - ../mcp/systemprompt.yaml
+  - ../mcp/skill-manager.yaml
+
+  # AI, scheduler, content
+  # Note: ../web/config.yaml is NOT included here — the web domain validator
+  # reads it directly as WebConfigRaw (branding at top level). Including it
+  # via the aggregator would require a `web:` wrapper, which is incompatible.
+  - ../ai/config.yaml
+  - ../scheduler/config.yaml
+  - ../content/config.yaml
+
+  # Skills (flat)
+  - ../skills/use_dangerous_secret.yaml
+  - ../skills/example_web_search.yaml
+
+  # Plugins (flat)
+  - ../plugins/enterprise-demo.yaml
+
+settings:
+  agentPortRange: [9000, 9999]
+  mcpPortRange: [5000, 5999]
+  autoStartEnabled: true
+  schemaValidationMode: "warn"

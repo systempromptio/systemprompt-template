@@ -1,0 +1,37 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/page-hero}}
+
+    <section aria-label="CLI command" class="mb-4">
+        <p class="text-secondary text-sm">Backed by <code class="code-inline">{{demo_script}}</code></p>
+        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
+    </section>
+
+    <section aria-label="Recent traces">
+        <h2 class="section-heading">Recent Request Traces</h2>
+        {{#if has_traces}}
+        {{#> components/data-table}}
+            <thead><tr><th class="col-date">Started</th><th>Session</th><th class="numeric">Events</th><th class="numeric">Tool Uses</th><th class="numeric">Errors</th><th class="numeric">Duration (ms)</th><th class="col-actions"></th></tr></thead>
+            <tbody>
+            {{#each traces}}
+            <tr>
+                <td class="col-date"><span class="date">{{formatDate started_at}}</span></td>
+                <td><code class="code-inline">{{session_id_short}}</code></td>
+                <td class="numeric">{{event_count}}</td>
+                <td class="numeric">{{tool_uses}}</td>
+                <td class="numeric">{{errors}}</td>
+                <td class="numeric">{{duration_ms}}</td>
+                <td class="col-actions"><a href="/admin/traces?session_id={{session_id}}" class="btn btn-secondary btn-sm">Inspect</a></td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No traces in the last 7 days. Run demo/performance/01-request-tracing.sh to generate one."}}
+        {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

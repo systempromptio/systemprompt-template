@@ -1,0 +1,38 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+
+    {{> components/page-header title=hero_title subtitle=hero_subtitle}}
+    <pre class="code-block"><code>{{cli_command}}</code></pre>
+
+    <section class="stat-card-grid">
+        {{> components/stat-card label="Total Decisions" value=total}}
+        {{> components/stat-card label="Secret Breaches" value=secret_breaches variant="error"}}
+    </section>
+
+    {{#if has_violations}}
+    {{#> components/data-table}}
+        <thead><tr>
+            <th class="col-date">Time</th><th class="col-status">Kind</th><th>User</th><th>Agent</th><th>Tool</th><th>Policy</th><th class="col-multiline">Reason</th>
+        </tr></thead>
+        <tbody>
+        {{#each violations}}
+        <tr>
+            <td class="col-date">{{created_at}}</td>
+            <td class="col-status"><span class="mcp-badge mcp-badge-danger">{{kind}}</span></td>
+            <td>{{truncate user_id 12}}</td>
+            <td>{{agent_id}}</td>
+            <td><code class="code-inline">{{tool_name}}</code></td>
+            <td><code class="code-inline">{{policy}}</code></td>
+            <td class="col-multiline" title="{{reason}}">{{truncate reason 80}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No secret breach events recorded. Run demo/governance/06-secret-breach.sh to generate data."}}
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

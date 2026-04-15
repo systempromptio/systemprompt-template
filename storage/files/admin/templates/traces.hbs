@@ -1,0 +1,170 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+
+    {{#if has_session}}
+    <div class="metric-ribbon">
+        <div class="metric-ribbon-item">
+            <span class="metric-ribbon-value">{{summary.total_events}}</span>
+            <span class="metric-ribbon-label">Events</span>
+        </div>
+        <div class="metric-ribbon-item metric-ribbon-info">
+            <span class="metric-ribbon-value">{{summary.tool_uses}}</span>
+            <span class="metric-ribbon-label">Tool Uses</span>
+        </div>
+        <div class="metric-ribbon-item metric-ribbon-success">
+            <span class="metric-ribbon-value">{{summary.prompts}}</span>
+            <span class="metric-ribbon-label">Prompts</span>
+        </div>
+        <div class="metric-ribbon-item">
+            <span class="metric-ribbon-value">{{summary.governance_decisions}}</span>
+            <span class="metric-ribbon-label">Governance</span>
+        </div>
+        {{#if summary.errors}}
+        <div class="metric-ribbon-item metric-ribbon-danger">
+            <span class="metric-ribbon-value">{{summary.errors}}</span>
+            <span class="metric-ribbon-label">Errors</span>
+        </div>
+        {{/if}}
+        <div class="metric-ribbon-item">
+            <span class="metric-ribbon-value">{{summary.duration_ms}}ms</span>
+            <span class="metric-ribbon-label">Duration</span>
+        </div>
+    </div>
+
+    <div class="trace-session-id" style="margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--color-text-tertiary);">
+        Session: <code class="code-inline">{{session_id}}</code>
+    </div>
+
+    {{#if has_entities}}
+    <div class="trace-entities" style="margin-bottom: var(--space-6);">
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">Entities Used</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+            {{#each entities}}
+            <span class="mcp-badge {{badge_class}}">{{entity_type}}: {{entity_name}} ({{usage_count}})</span>
+            {{/each}}
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if has_governance}}
+    <div class="trace-governance" style="margin-bottom: var(--space-6);">
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">Governance Decisions</h3>
+        {{#> components/data-table}}
+            <thead><tr>
+                <th>Tool</th>
+                <th class="col-status">Decision</th>
+                <th>Policy</th>
+                <th class="col-multiline">Reason</th>
+                <th>Scope</th>
+                <th class="col-date">Time</th>
+            </tr></thead>
+            <tbody>
+            {{#each governance}}
+            <tr>
+                <td><code class="code-inline">{{tool_name}}</code></td>
+                <td class="col-status">
+                    {{#if is_denied}}
+                        {{#if is_secret_breach}}
+                            <span class="mcp-badge mcp-badge-danger">SECRET BREACH</span>
+                        {{else}}
+                            <span class="mcp-badge mcp-badge-danger">DENIED</span>
+                        {{/if}}
+                    {{else}}
+                        <span class="mcp-badge mcp-badge-success">ALLOWED</span>
+                    {{/if}}
+                </td>
+                <td><code class="code-inline">{{policy}}</code></td>
+                <td class="col-multiline" title="{{reason}}">{{truncate reason 60}}</td>
+                <td>
+                    {{#if agent_scope}}
+                    <span class="badge {{#if (eq agent_scope "admin")}}badge-purple{{else}}badge-blue{{/if}}">{{agent_scope}}</span>
+                    {{/if}}
+                </td>
+                <td class="col-date text-sm text-tertiary">{{created_at}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+    </div>
+    {{/if}}
+
+    {{#if has_events}}
+    <div class="trace-timeline">
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">Event Timeline</h3>
+        {{#> components/data-table}}
+            <thead><tr>
+                <th style="width: 70px;">+ms</th>
+                <th class="col-status">Event</th>
+                <th>Tool</th>
+                <th class="col-date">Time</th>
+                <th class="col-actions" style="width: 30px;"></th>
+            </tr></thead>
+            <tbody>
+            {{#each events}}
+            <tr data-detail-for="trace-{{id}}" style="cursor: pointer;">
+                <td class="text-sm" style="font-variant-numeric: tabular-nums;">
+                    {{#if @first}}
+                        <span class="text-tertiary">0</span>
+                    {{else}}
+                        +{{delta_ms}}
+                    {{/if}}
+                </td>
+                <td class="col-status"><span class="mcp-badge {{badge_class}}">{{event_type_short}}</span></td>
+                <td>{{#if has_tool}}<code class="code-inline">{{tool_name}}</code>{{/if}}</td>
+                <td class="col-date text-sm text-tertiary">{{created_at}}</td>
+                <td class="col-actions text-sm text-tertiary">{{#if has_metadata}}<span class="expand-indicator">+</span>{{/if}}</td>
+            </tr>
+            {{#if has_metadata}}
+            <tr class="detail-row" id="trace-{{id}}" style="display: none;">
+                <td colspan="5">
+                    <pre style="font-size: var(--text-xs); max-height: 200px; overflow: auto; margin: 0; padding: var(--space-2); background: var(--color-bg-secondary); border-radius: var(--radius-sm);">{{json metadata}}</pre>
+                </td>
+            </tr>
+            {{/if}}
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+    </div>
+    {{else}}
+    {{> components/empty-state message="No events found for this session."}}
+    {{/if}}
+
+    {{else}}
+
+    <div class="trace-empty" style="text-align: center; padding: var(--space-12) var(--space-4);">
+        <h2 style="font-size: var(--text-xl); margin-bottom: var(--space-4);">Trace Detail</h2>
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-6);">
+            View a session trace by providing a <code class="code-inline">session_id</code> parameter.
+        </p>
+        <p style="color: var(--color-text-tertiary); font-size: var(--text-sm);">
+            Example: <code class="code-inline">/admin/traces?session_id=abc-123</code>
+        </p>
+        <p style="color: var(--color-text-tertiary); font-size: var(--text-sm); margin-top: var(--space-2);">
+            Run <code class="code-inline">demo/09-agent-tracing.sh</code> to generate a traced session, then use the session ID from the output.
+        </p>
+    </div>
+
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('tr[data-detail-for]').forEach(function(row) {
+                row.addEventListener('click', function() {
+                    var id = this.getAttribute('data-detail-for');
+                    var detail = document.getElementById(id);
+                    if (detail) {
+                        var isHidden = detail.style.display === 'none';
+                        detail.style.display = isHidden ? '' : 'none';
+                        var indicator = this.querySelector('.expand-indicator');
+                        if (indicator) indicator.textContent = isHidden ? '-' : '+';
+                    }
+                });
+            });
+        });
+    </script>
+    {{/inline}}
+{{/layout}}

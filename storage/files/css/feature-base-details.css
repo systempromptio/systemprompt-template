@@ -1,0 +1,134 @@
+
+.detail-section {
+  padding: var(--sp-space-4xl) 0;
+  border-bottom: 1px solid var(--sp-color-border);
+  scroll-margin-top: calc(var(--sp-header-height) + var(--sp-space-lg));
+}
+
+.detail-section .container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-space-3xl);
+  align-items: start;
+}
+
+.detail-section--with-visual .container {
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+}
+
+.detail-section--visual-left .detail-visual {
+  order: -1;
+}
+
+.detail-title {
+  font-family: var(--sp-font-brand);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--sp-color-primary);
+  margin-bottom: var(--sp-space-lg);
+}
+
+.detail-text {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: var(--sp-color-text-secondary);
+}
+
+.detail-text p {
+  margin-bottom: var(--sp-space-lg);
+}
+
+.detail-text p:last-child {
+  margin-bottom: 0;
+}
+
+.detail-bullets {
+  margin-top: var(--sp-space-xl);
+  padding-left: 0;
+  list-style: none;
+}
+
+.detail-bullets li {
+  margin-bottom: var(--sp-space-md);
+  color: var(--sp-color-text-secondary);
+  padding-left: var(--sp-space-lg);
+  position: relative;
+}
+
+.detail-bullets li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--sp-color-primary);
+}
+
+.detail-bullets li strong {
+  color: var(--sp-color-text);
+}
+
+.detail-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-visual svg {
+  width: 100%;
+  height: auto;
+}
+
+
+.detail-visual .visual-desktop {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--sp-card-radius);
+  border: 1px solid var(--sp-brand-800);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+
+.detail-visual .visual-mobile {
+  display: none;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--sp-card-radius);
+  border: 1px solid var(--sp-brand-800);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+
+.detail-section:not(.detail-section--with-visual) .container {
+  max-width: 800px;
+}
+
+
+@media (max-width: 768px) {
+  .detail-section--with-visual .container {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-section--visual-left .detail-visual {
+    order: 0;
+  }
+
+  .detail-visual {
+    margin-top: var(--sp-space-xl);
+    width: 100%;
+  }
+
+  .detail-visual svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .detail-visual .visual-desktop {
+    display: none;
+  }
+
+}

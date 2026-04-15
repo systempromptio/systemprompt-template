@@ -1,0 +1,50 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/back-button href="/admin/org/plugins/" label="Back to Plugins"}}
+    {{#if is_edit}}
+    <div class="card">
+        <form id="plugin-edit-form" data-api-path="/plugins/" data-entity="plugin" data-id-field="plugin_id" data-list-path="/plugins/">
+            {{> components/form-group label="Plugin ID" name="plugin_id" type="text" value=plugin.id readonly=true}}
+            {{> components/form-group label="Name" name="name" type="text" value=plugin.name required=true}}
+            {{> components/form-group label="Description" name="description" type="textarea" value=plugin.description rows="3"}}
+            <div class="form-row">
+                <div>
+                    {{> components/form-group label="Version" name="version" type="text" value=(default plugin.version "0.1.0")}}
+                </div>
+                <div>
+                    {{> components/form-group label="Category" name="category" type="text" value=plugin.category}}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="label-flex text-sm">
+                    <input type="checkbox" name="enabled"{{#if plugin.enabled}} checked{{/if}}>
+                    Enabled
+                </label>
+            </div>
+            {{> components/form-group label="Keywords" name="keywords" type="text" value=keywords_csv hint="comma-separated"}}
+            {{> components/form-group label="Author Name" name="author_name" type="text" value=plugin.author_name}}
+            {{> components/role-checklist items=roles_list}}
+            {{> components/entity-checklist label="Skills" listId="skills" inputName="skills" items=skills_list}}
+            {{> components/entity-checklist label="Agents" listId="agents" inputName="agents" items=agents_list}}
+            {{> components/entity-checklist label="MCP Servers" listId="mcp_servers" inputName="mcp_servers" items=mcp_list}}
+            <div class="d-flex gap-3 mt-6">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="/admin/org/plugins/" class="btn btn-secondary">Cancel</a>
+                <button type="button" class="btn btn-danger ml-auto" id="btn-delete-plugin">Delete</button>
+            </div>
+        </form>
+    </div>
+    {{else}}
+    {{> components/empty-state message="No plugin ID specified."}}
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-plugin-edit.js" defer></script>
+    <script data-cfasync="false" type="module">
+        import { initPluginEditForm } from '/js/pages/admin-plugin-edit.js';
+        initPluginEditForm();
+    </script>
+    {{/inline}}
+{{/layout}}

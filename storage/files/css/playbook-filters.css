@@ -1,0 +1,136 @@
+
+.playbook-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-spacing-md);
+  margin-bottom: var(--sp-spacing-xl);
+  padding: var(--sp-spacing-md);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-md);
+}
+
+.playbook-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-spacing-sm);
+  flex: 1;
+}
+
+.playbook-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-2);
+  padding: var(--sp-space-2) var(--sp-space-4);
+  font-size: var(--sp-font-size-sm);
+  font-weight: 500;
+  color: var(--sp-color-text-secondary);
+  background: transparent;
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.playbook-filter-btn:hover {
+  border-color: var(--sp-color-text-muted);
+  color: var(--sp-color-text-primary);
+}
+
+.playbook-filter-btn.active {
+  background: rgba(var(--sp-color-primary-rgb), 0.15);
+  border-color: var(--sp-color-primary);
+  color: var(--sp-color-primary);
+}
+
+.playbook-filter-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.playbook-filter-btn[data-filter="guide"].active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #60a5fa;
+  color: #60a5fa;
+}
+
+.playbook-filter-btn[data-filter="cli"].active {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
+.playbook-filter-btn[data-filter="build"].active {
+  background: rgba(var(--sp-color-primary-rgb), 0.15);
+  border-color: var(--sp-color-primary);
+  color: var(--sp-color-primary);
+}
+
+.playbook-filter-btn[data-filter="content"].active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #60a5fa;
+  color: #60a5fa;
+}
+
+.playbook-filter-btn[data-filter="validation"].active {
+  background: rgba(236, 72, 153, 0.15);
+  border-color: #f472b6;
+  color: #f472b6;
+}
+
+.playbook-sort {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-spacing-sm);
+}
+
+.playbook-sort-label {
+  font-size: var(--sp-font-size-sm);
+  color: var(--sp-color-text-muted);
+}
+
+.playbook-sort-select {
+  padding: var(--sp-space-2) var(--sp-space-8) var(--sp-space-2) var(--sp-space-3);
+  font-size: var(--sp-font-size-sm);
+  color: var(--sp-color-text-primary);
+  background: var(--sp-color-surface);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+
+.playbook-sort-select:hover {
+  border-color: var(--sp-color-text-muted);
+}
+
+.playbook-sort-select:focus {
+  outline: none;
+  border-color: var(--sp-color-primary);
+}
+
+.playbook-grid[data-filter="guide"] a:not([href*="/playbooks/guide-"]),
+.playbook-grid[data-filter="cli"] a:not([href*="/playbooks/cli-"]),
+.playbook-grid[data-filter="build"] a:not([href*="/playbooks/build-"]),
+.playbook-grid[data-filter="content"] a:not([href*="/playbooks/content-"]),
+.playbook-grid[data-filter="validation"] a:not([href*="/playbooks/validation-"]) {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .playbook-controls {
+    flex-direction: column;
+  }
+
+  .playbook-sort {
+    width: 100%;
+  }
+
+  .playbook-sort-select {
+    flex: 1;
+  }
+}

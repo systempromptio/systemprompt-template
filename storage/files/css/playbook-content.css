@@ -1,0 +1,106 @@
+
+.playbook-post .post-content {
+  color: var(--sp-color-text-secondary);
+  line-height: 1.8;
+}
+
+.playbook-post .post-content h1,
+.playbook-post .post-content h2,
+.playbook-post .post-content h3,
+.playbook-post .post-content h4,
+.playbook-post .post-content h5,
+.playbook-post .post-content h6 {
+  font-family: var(--sp-font-heading);
+  color: var(--sp-color-text-primary);
+  margin-top: var(--sp-spacing-xxl);
+  margin-bottom: var(--sp-spacing-md);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.playbook-post .post-content h1 { font-size: 1.75rem; }
+.playbook-post .post-content h2 { font-size: 1.5rem; }
+.playbook-post .post-content h3 { font-size: 1.25rem; }
+.playbook-post .post-content h4 { font-size: 1.125rem; }
+
+.playbook-post .post-content p {
+  margin-bottom: var(--sp-spacing-md);
+}
+
+.playbook-post .post-content a {
+  color: var(--sp-color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.playbook-post .post-content a:hover {
+  color: var(--sp-color-primary-hover);
+  text-decoration: underline;
+}
+
+.playbook-post .post-content ul,
+.playbook-post .post-content ol {
+  margin-bottom: var(--sp-spacing-md);
+  padding-left: var(--sp-spacing-lg);
+}
+
+.playbook-post .post-content li {
+  margin-bottom: var(--sp-spacing-xs);
+}
+
+.playbook-post .post-content blockquote {
+  border-left: 3px solid var(--sp-color-primary);
+  padding-left: var(--sp-spacing-md);
+  margin: var(--sp-spacing-lg) 0;
+  color: var(--sp-color-text-secondary);
+  font-style: italic;
+}
+
+.playbook-post .post-content code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.9em;
+  background: var(--sp-color-surface-variant);
+  padding: var(--sp-space-1) var(--sp-space-2);
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-color-primary);
+}
+
+.playbook-post .post-content pre {
+  background: var(--sp-color-surface-dark);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-md);
+  padding: var(--sp-spacing-md);
+  margin: var(--sp-spacing-lg) 0;
+  overflow-x: auto;
+}
+
+.playbook-post .post-content pre code {
+  background: none;
+  padding: 0;
+  color: var(--sp-color-text-secondary);
+}
+
+.playbook-post .post-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--sp-spacing-lg) 0;
+}
+
+.playbook-post .post-content th,
+.playbook-post .post-content td {
+  padding: var(--sp-spacing-sm) var(--sp-spacing-md);
+  border: 1px solid var(--sp-color-border);
+  text-align: left;
+}
+
+.playbook-post .post-content th {
+  background: var(--sp-color-surface-variant);
+  color: var(--sp-color-text-primary);
+  font-weight: var(--sp-font-weight-semibold);
+}
+
+.playbook-post .post-content hr {
+  border: none;
+  border-top: 1px solid var(--sp-color-border);
+  margin: var(--sp-spacing-xxl) 0;
+}

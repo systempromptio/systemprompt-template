@@ -1,0 +1,30 @@
+<div class="plugin-card version-card {{#if (eq version_type "restore")}}plugin-card--warning{{else}}plugin-card--accent{{/if}}">
+    <div class="plugin-header" data-toggle-version="{{id}}" data-version-user="{{user_id}}">
+        <div class="plugin-card__body">
+            <div class="plugin-card__title-row">
+                <h3 class="plugin-card__title">Version {{version_number}}</h3>
+                {{#if (eq version_type "restore")}}<span class="badge badge-yellow">restore</span>{{else}}<span class="badge badge-blue">upload</span>{{/if}}
+                <span class="badge badge-green">{{skills_count}} skill{{#if (not (eq skills_count 1))}}s{{/if}}</span>
+            </div>
+            <div class="plugin-card__date">
+                {{formatDate created_at}} ({{relativeTime created_at}})
+            </div>
+            {{#if skill_names}}
+            <div class="plugin-card__tags">
+                {{#each skill_names}}
+                <span class="badge {{#if base_skill_id}}badge-yellow{{else}}badge-gray{{/if}}">{{default name skill_id}}</span>
+                {{/each}}
+            </div>
+            {{/if}}
+        </div>
+        <div class="plugin-actions">
+            <button type="button" class="btn btn-secondary btn-sm btn--xs" data-restore-version="{{id}}" data-restore-num="{{version_number}}" data-restore-user="{{user_id}}">Restore</button>
+            <span class="expand-icon" aria-hidden="true">&#9660;</span>
+        </div>
+    </div>
+    <div class="plugin-details" style="display:none" data-details-for="{{id}}">
+        <div class="plugin-tabs-container">
+            <div class="loading-center"><div class="loading-spinner" role="status"><span class="sr-only">Loading...</span></div></div>
+        </div>
+    </div>
+</div>

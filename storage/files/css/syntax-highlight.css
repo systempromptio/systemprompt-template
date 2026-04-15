@@ -1,0 +1,139 @@
+
+.post-content pre code .token.comment,
+.post-content pre code .token.prolog,
+.post-content pre code .token.doctype,
+.post-content pre code .token.cdata,
+.docs-content pre code .token.comment,
+.docs-content pre code .token.prolog,
+.docs-content pre code .token.doctype,
+.docs-content pre code .token.cdata {
+  color: var(--sp-syntax-comment);
+  font-style: italic;
+}
+
+.post-content pre code .token.punctuation,
+.docs-content pre code .token.punctuation {
+  color: var(--sp-syntax-fg);
+}
+
+.post-content pre code .token.property,
+.post-content pre code .token.tag,
+.post-content pre code .token.boolean,
+.post-content pre code .token.number,
+.post-content pre code .token.constant,
+.post-content pre code .token.symbol,
+.post-content pre code .token.deleted,
+.docs-content pre code .token.property,
+.docs-content pre code .token.tag,
+.docs-content pre code .token.boolean,
+.docs-content pre code .token.number,
+.docs-content pre code .token.constant,
+.docs-content pre code .token.symbol,
+.docs-content pre code .token.deleted {
+  color: var(--sp-syntax-number);
+}
+
+.post-content pre code .token.selector,
+.post-content pre code .token.attr-name,
+.post-content pre code .token.string,
+.post-content pre code .token.char,
+.post-content pre code .token.builtin,
+.post-content pre code .token.inserted,
+.docs-content pre code .token.selector,
+.docs-content pre code .token.attr-name,
+.docs-content pre code .token.string,
+.docs-content pre code .token.char,
+.docs-content pre code .token.builtin,
+.docs-content pre code .token.inserted {
+  color: var(--sp-syntax-string);
+}
+
+.post-content pre code .token.operator,
+.post-content pre code .token.entity,
+.post-content pre code .token.url,
+.language-css .post-content pre code .token.string,
+.style .post-content pre code .token.string,
+.docs-content pre code .token.operator,
+.docs-content pre code .token.entity,
+.docs-content pre code .token.url,
+.language-css .docs-content pre code .token.string,
+.style .docs-content pre code .token.string {
+  color: var(--sp-syntax-operator);
+}
+
+.post-content pre code .token.atrule,
+.post-content pre code .token.attr-value,
+.post-content pre code .token.keyword,
+.docs-content pre code .token.atrule,
+.docs-content pre code .token.attr-value,
+.docs-content pre code .token.keyword {
+  color: var(--sp-syntax-keyword);
+  font-weight: 600;
+}
+
+.post-content pre code .token.function,
+.post-content pre code .token.class-name,
+.docs-content pre code .token.function,
+.docs-content pre code .token.class-name {
+  color: var(--sp-syntax-function);
+}
+
+.post-content pre code .token.regex,
+.post-content pre code .token.important,
+.post-content pre code .token.variable,
+.docs-content pre code .token.regex,
+.docs-content pre code .token.important,
+.docs-content pre code .token.variable {
+  color: var(--sp-syntax-variable);
+}
+
+.post-content pre code .token.important,
+.post-content pre code .token.bold,
+.docs-content pre code .token.important,
+.docs-content pre code .token.bold {
+  font-weight: bold;
+}
+
+.post-content pre code .token.italic,
+.docs-content pre code .token.italic {
+  font-style: italic;
+}
+
+.post-content pre code .token.entity,
+.docs-content pre code .token.entity {
+  cursor: help;
+}
+
+.post-content pre code .language-bash .token.function,
+.docs-content pre code .language-bash .token.function {
+  color: var(--sp-syntax-function);
+}
+
+.post-content pre code .language-json .token.property,
+.docs-content pre code .language-json .token.property {
+  color: var(--sp-syntax-variable);
+}
+
+.post-content pre code .language-json .token.string,
+.docs-content pre code .language-json .token.string {
+  color: var(--sp-syntax-string);
+}
+
+.post-content pre code .highlight-line,
+.docs-content pre code .highlight-line {
+  display: block;
+  background-color: rgba(255, 255, 255, 0.05);
+  margin: 0 calc(-1 * var(--sp-space-6));
+  padding: 0 var(--sp-space-6);
+  border-left: 3px solid var(--sp-syntax-function);
+}
+
+.post-content code:not(pre code),
+.docs-content code:not(pre code) {
+  background: var(--sp-color-surface-elevated);
+  color: var(--sp-color-text);
+  padding: 0.2em 0.4em;
+  border-radius: var(--sp-radius-xs);
+  font-size: 0.9em;
+  border: 1px solid var(--sp-color-border);
+}

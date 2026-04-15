@@ -1,0 +1,157 @@
+use async_trait::async_trait;
+use schemars::JsonSchema;
+use serde::Deserialize;
+use systemprompt::database::DbPool;
+use systemprompt::identifiers::{McpExecutionId, McpServerId, UserId};
+use systemprompt::mcp::McpError;
+use systemprompt::mcp::McpToolHandler;
+use systemprompt::models::artifacts::TextArtifact;
+use systemprompt::models::execution::context::RequestContext;
+
+use crate::tools::shared;
+
+const MAX_NAME_LEN: usize = 256;
+const MAX_DESCRIPTION_LEN: usize = 4096;
+const MAX_ENDPOINT_LEN: usize = 2048;
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct UpdateMcpServerInput {
+    pub mcp_server_id: String,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub endpoint: Option<String>,
+    pub binary: Option<String>,
+    pub package_name: Option<String>,
+    pub port: Option<i32>,
+    pub enabled: Option<bool>,
+    pub oauth_required: Option<bool>,
+    pub oauth_scopes: Option<Vec<String>>,
+    pub oauth_audience: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct UpdateMcpServerHandler {
+    pub db_pool: DbPool,
+}
+
+fn validate_input(input: &UpdateMcpServerInput) -> Result<(), McpError> {
+    if let Some(ref name) = input.name {
+        if name.len() > MAX_NAME_LEN {
+            return Err(McpError::invalid_params(
+                format!("name exceeds maximum length of {MAX_NAME_LEN}"),
+                None,
+            ));
+        }
+    }
+    if let Some(ref description) = input.description {
+        if description.len() > MAX_DESCRIPTION_LEN {
+            return Err(McpError::invalid_params(
+                format!("description exceeds maximum length of {MAX_DESCRIPTION_LEN}"),
+                None,
+            ));
+        }
+    }
+    if let Some(ref endpoint) = input.endpoint {
+        if endpoint.len() > MAX_ENDPOINT_LEN {
+            return Err(McpError::invalid_params(
+                format!("endpoint exceeds maximum length of {MAX_ENDPOINT_LEN}"),
+                None,
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn build_response(
+    server: &systemprompt_web_extension::admin::types::UserMcpServer,
+    ctx: &RequestContext,
+) -> Result<(TextArtifact, String), McpError> {
+    let result_json = serde_json::to_string_pretty(&serde_json::json!({
+        "_display": { "type": "card", "entity": "mcp_server", "action": "updated" },
+        "mcp_server_id": server.mcp_server_id,
+        "name": server.name,
+        "description": server.description,
+        "endpoint": server.endpoint,
+        "binary": server.binary,
+        "package_name": server.package_name,
+        "port": server.port,
+        "enabled": server.enabled,
+        "oauth_required": server.oauth_required,
+        "oauth_scopes": server.oauth_scopes,
+        "oauth_audience": server.oauth_audience,
+        "base_mcp_server_id": server.base_mcp_server_id,
+        "created_at": server.created_at.to_rfc3339(),
+        "updated_at": server.updated_at.to_rfc3339(),
+    }))
+    .map_err(|e| McpError::internal_error(format!("Serialization failed: {e}"), None))?;
+
+    let summary = format!(
+        "Updated MCP server '{}' ({})",
+        server.name, server.mcp_server_id
+    );
+    let content = format!("{summary}\n\n{result_json}");
+    let artifact =
+        TextArtifact::new(&result_json, ctx).with_title(format!("MCP Server: {}", server.name));
+
+    Ok((artifact, content))
+}
+
+#[async_trait]
+impl McpToolHandler for UpdateMcpServerHandler {
+    type Input = UpdateMcpServerInput;
+    type Output = TextArtifact;
+
+    fn tool_name(&self) -> &'static str {
+        "update_mcp_server"
+    }
+
+    fn description(&self) -> &'static str {
+        "Update an existing MCP server configuration. Requires mcp_server_id. All other \
+         fields (name, description, endpoint, enabled, etc.) are optional - only provided \
+         fields will be updated."
+    }
+
+    async fn handle(
+        &self,
+        input: Self::Input,
+        ctx: &RequestContext,
+        _exec_id: &McpExecutionId,
+    ) -> Result<(Self::Output, String), McpError> {
+        validate_input(&input)?;
+
+        let pool = shared::require_write_pool(&self.db_pool)?;
+
+        let update_req = systemprompt_web_extension::admin::types::UpdateUserMcpServerRequest {
+            name: input.name,
+            description: input.description,
+            binary: input.binary,
+            package_name: input.package_name,
+            port: input.port,
+            endpoint: input.endpoint,
+            enabled: input.enabled,
+            oauth_required: input.oauth_required,
+            oauth_scopes: input.oauth_scopes,
+            oauth_audience: input.oauth_audience,
+        };
+
+        let user_id = UserId::new(ctx.user_id().to_string());
+        let mcp_server_id = McpServerId::new(&input.mcp_server_id);
+        let server = systemprompt_web_extension::admin::repositories::user_mcp_servers::update_user_mcp_server(
+            &pool,
+            &user_id,
+            &mcp_server_id,
+            &update_req,
+        )
+        .await
+        .map_err(|e| McpError::internal_error(format!("Failed to update MCP server: {e}"), None))?
+        .ok_or_else(|| {
+            McpError::invalid_params(
+                format!("MCP server '{}' not found or does not belong to you", input.mcp_server_id), None
+            )
+        })?;
+
+        shared::invalidate_marketplace_cache(&pool, &user_id).await;
+
+        build_response(&server, ctx)
+    }
+}

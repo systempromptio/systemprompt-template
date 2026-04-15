@@ -1,0 +1,130 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id as \"id: ContentId\", slug, title, description, body, author,\n                   published_at, keywords, kind, image,\n                   category_id as \"category_id: CategoryId\",\n                   source_id as \"source_id: SourceId\",\n                   version_hash,\n                   COALESCE(links, '[]'::jsonb) as \"links!\",\n                   COALESCE(after_reading_this, '[]'::jsonb) as \"after_reading_this!\",\n                   COALESCE(related_playbooks, '[]'::jsonb) as \"related_playbooks!\",\n                   COALESCE(related_code, '[]'::jsonb) as \"related_code!\",\n                   COALESCE(related_docs, '[]'::jsonb) as \"related_docs!\",\n                   updated_at\n            FROM markdown_content\n            WHERE slug = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: ContentId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "body",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "author",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "published_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "keywords",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "image",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "category_id: CategoryId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "source_id: SourceId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "version_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "links!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 14,
+        "name": "after_reading_this!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 15,
+        "name": "related_playbooks!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 16,
+        "name": "related_code!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 17,
+        "name": "related_docs!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 18,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "983b91870b756d2c67cc585ff4ce10469b0cbd74cc4995097f8d5a68b842c8a9"
+}

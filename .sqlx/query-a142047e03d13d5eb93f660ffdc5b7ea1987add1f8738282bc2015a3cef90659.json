@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, user_id, paddle_subscription_id, paddle_customer_id, plan_id, status,\n                current_period_start, current_period_end, cancel_at, paddle_data,\n                created_at, updated_at\n         FROM marketplace.subscriptions\n         WHERE paddle_subscription_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "paddle_subscription_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "paddle_customer_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "plan_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "current_period_start",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "current_period_end",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "cancel_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "paddle_data",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "a142047e03d13d5eb93f660ffdc5b7ea1987add1f8738282bc2015a3cef90659"
+}

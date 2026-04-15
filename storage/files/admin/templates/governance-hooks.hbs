@@ -1,0 +1,55 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+
+    {{> components/page-header title=hero_title subtitle=hero_subtitle}}
+    <pre class="code-block"><code>{{cli_command}}</code></pre>
+    <pre class="code-block"><code>{{cli_validate}}</code></pre>
+    <p class="text-secondary">Read-only view. Use <a href="/admin/hooks">/admin/hooks</a> to edit.</p>
+
+    <section class="stat-card-grid">
+        {{> components/stat-card label="Total Hooks" value=total}}
+        {{> components/stat-card label="System" value=system}}
+        {{> components/stat-card label="Enabled" value=enabled variant="success"}}
+    </section>
+
+    {{#if has_hooks}}
+    {{#> components/data-table}}
+        <thead><tr>
+            <th class="col-multiline">Hook</th><th>Plugin</th><th class="col-status">Event</th><th>Matcher</th><th>Async</th><th class="col-status">Enabled</th><th class="col-status">Valid</th>
+        </tr></thead>
+        <tbody>
+        {{#each hooks}}
+        <tr>
+            <td class="col-multiline">
+                {{> components/table-cell-stacked primary=id secondary=name}}
+            </td>
+            <td>{{plugin_id}}</td>
+            <td class="col-status"><span class="badge badge-info">{{event}}</span></td>
+            <td><code class="code-inline">{{matcher}}</code></td>
+            <td>{{#if is_async}}yes{{else}}no{{/if}}</td>
+            <td class="col-status">
+                {{#if enabled}}
+                    <span class="mcp-badge mcp-badge-success">ENABLED</span>
+                {{else}}
+                    <span class="mcp-badge">DISABLED</span>
+                {{/if}}
+            </td>
+            <td class="col-status">
+                {{#if valid}}
+                    <span class="mcp-badge mcp-badge-success">VALID</span>
+                {{else}}
+                    <span class="mcp-badge mcp-badge-danger">INVALID</span>
+                {{/if}}
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No hooks configured."}}
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

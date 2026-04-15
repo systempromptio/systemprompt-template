@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE marketplace.paddle_webhook_events SET status = 'failed', error_message = $2, processed_at = now() WHERE event_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "96f73543b7b7fc9855ac413aa7cf6520ed027d8ce73b7171986d745ba4357d6a"
+}

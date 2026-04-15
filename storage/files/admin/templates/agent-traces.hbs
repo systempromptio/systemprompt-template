@@ -1,0 +1,42 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/back-button href="/admin/org/agents/" label="Back to Agents"}}
+    <h2>{{title}}{{#if has_agent}} &middot; {{agent.name}}{{/if}}</h2>
+    {{> components/agent-detail-tabs active_tab="traces" agent_id=agent_id}}
+
+    <section aria-label="CLI command" class="detail-content">
+        <div class="text-sm text-tertiary">Equivalent CLI command</div>
+        <pre class="detail-pre"><code>$ {{cli_command}}</code></pre>
+    </section>
+
+    {{#if has_agent}}
+    <section aria-label="Execution traces">
+        <h3>Execution Traces</h3>
+        {{#if has_traces}}
+        {{#> components/data-table}}
+            <thead><tr><th class="col-date">Timestamp</th><th>Session</th><th>Tool</th><th class="col-status">Decision</th><th>Policy</th><th class="col-multiline">Reason</th></tr></thead>
+            <tbody>
+                {{#each traces}}
+                <tr>
+                    <td class="col-date"><span class="date">{{created_at}}</span></td>
+                    <td><a href="/admin/traces?session_id={{session_id}}"><code class="code-inline">{{session_id_short}}</code></a></td>
+                    <td><code class="code-inline">{{tool_name}}</code></td>
+                    <td class="col-status">{{#if is_denied}}<span class="badge badge-danger">deny</span>{{else}}<span class="badge badge-success">allow</span>{{/if}}</td>
+                    <td>{{policy}}</td>
+                    <td class="col-multiline">{{reason}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No execution traces recorded for this agent yet. Run demo/agents/03-agent-messaging.sh to generate some."}}
+        {{/if}}
+    </section>
+    {{else}}
+    {{> components/empty-state message="Agent not found. Provide ?id=<agent_id>."}}
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

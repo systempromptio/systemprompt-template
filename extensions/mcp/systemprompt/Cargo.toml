@@ -1,0 +1,38 @@
+[package]
+name = "systemprompt-mcp-agent"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "systemprompt-mcp-agent"
+path = "src/main.rs"
+
+[dependencies]
+# Audit: uses database, identifiers, logging, mcp, models, system (api), traits — requires `full`.
+systemprompt = { workspace = true, features = ["full"] }
+
+anyhow.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+rmcp.workspace = true
+
+axum.workspace = true
+
+schemars.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+async-trait.workspace = true
+
+tracing.workspace = true
+
+shell-words.workspace = true
+
+sqlx.workspace = true
+systemprompt-mcp-shared.workspace = true
+
+[lints]
+workspace = true

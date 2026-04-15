@@ -1,0 +1,20 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    <section aria-label="CLI command" class="hero-cli">
+        <p class="text-tertiary text-sm">Run this on the CLI to see the same data:</p>
+        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
+        <p class="text-tertiary text-sm">Window: {{window_label}}</p>
+    </section>
+    <section aria-label="Overview stats">
+        <div class="stat-grid">
+            {{> components/stat-card label="Requests (events)" value=stats.total_events}}
+            {{> components/stat-card label="Sessions" value=stats.total_sessions}}
+            {{> components/stat-card label="Tool Uses" value=stats.tool_uses}}
+            {{> components/stat-card label="Errors" value=stats.errors variant="danger"}}
+        </div>
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(m.tool_name, 'unknown') AS \"tool_name!\", COUNT(*)::BIGINT AS \"count!\"\n        FROM mcp_tool_executions m\n        WHERE m.tool_name IS NOT NULL\n        GROUP BY m.tool_name ORDER BY 2 DESC LIMIT 10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tool_name!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "d0970461a4cd25b5385f68771ce6120bb35fe173ccf0e9b322a70d0e48798e65"
+}

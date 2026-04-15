@@ -1,0 +1,182 @@
+
+.quick-actions {
+  display: flex;
+  gap: var(--sp-space-lg);
+  margin-top: var(--sp-space-2xl);
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  padding: 0 5%;
+  box-sizing: border-box;
+}
+
+.quick-action-card {
+  flex: 1;
+  min-width: 0;
+  background: var(--sp-card-bg-glass);
+  border: 1px solid var(--sp-color-border);
+  border-left: 3px solid var(--sp-color-primary);
+  border-radius: var(--sp-card-radius);
+  padding: var(--sp-space-lg);
+  transition: all var(--sp-transition-normal);
+}
+
+.quick-action-card:hover {
+  border-color: var(--sp-color-primary);
+  transform: translateY(-2px);
+}
+
+.quick-action-card[data-category="level-1"] {
+  border-left-color: var(--sp-color-success);
+}
+.quick-action-card[data-category="level-1"] .quick-action-card__name {
+  color: var(--sp-color-success);
+}
+
+.quick-action-card[data-category="level-2"] {
+  border-left-color: #06b6d4;
+}
+.quick-action-card[data-category="level-2"] .quick-action-card__name {
+  color: #06b6d4;
+}
+
+.quick-action-card[data-category="level-3"] {
+  border-left-color: var(--sp-color-primary);
+}
+.quick-action-card[data-category="level-3"] .quick-action-card__name {
+  color: var(--sp-color-primary);
+}
+
+.quick-action-card[data-category="level-4"] {
+  border-left-color: #3b82f6;
+}
+.quick-action-card[data-category="level-4"] .quick-action-card__name {
+  color: #3b82f6;
+}
+
+.quick-action-card__name {
+  font-family: var(--sp-font-brand);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sp-color-primary);
+  margin-bottom: var(--sp-space-sm);
+  display: block;
+}
+
+.quick-action-card__code {
+  background: var(--sp-color-surface);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  padding-right: 48px;
+  margin-bottom: var(--sp-space-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-action-card__code code {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.8rem;
+  color: var(--sp-color-primary);
+  white-space: nowrap;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-action-card__code .copy-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: var(--sp-space-2) var(--sp-space-2);
+}
+
+.quick-action-card__desc {
+  font-size: 0.85rem;
+  color: var(--sp-color-text-secondary);
+  line-height: 1.5;
+}
+
+.evolution-section-title {
+  text-align: center;
+  font-family: var(--sp-font-brand);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: var(--sp-space-xs);
+  color: var(--sp-color-text);
+}
+
+.evolution-section-subtitle {
+  text-align: center;
+  color: var(--sp-color-text-secondary);
+  font-size: 1.1rem;
+  margin-bottom: var(--sp-space-xl);
+}
+
+.quick-action-card__header {
+  margin-bottom: var(--sp-space-md);
+}
+
+.quick-action-card__subtitle {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--sp-color-text-secondary);
+  font-style: italic;
+  margin-top: var(--sp-space-xs);
+}
+
+.quick-action-card__narrative {
+  font-size: 0.75rem;
+  color: var(--sp-color-text-muted);
+  font-style: italic;
+  line-height: 1.4;
+  margin-bottom: var(--sp-space-sm);
+}
+
+.quick-action-card__traits {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--sp-space-md);
+}
+
+.quick-action-card__traits li {
+  font-size: 0.7rem;
+  color: var(--sp-color-text-muted);
+  padding: var(--sp-space-1) 0 var(--sp-space-1) var(--sp-space-3);
+  position: relative;
+}
+
+.quick-action-card__traits li::before {
+  content: "›";
+  position: absolute;
+  left: 0;
+}
+
+.quick-action-card[data-category="level-1"] .quick-action-card__traits li::before { color: var(--sp-color-success); }
+.quick-action-card[data-category="level-2"] .quick-action-card__traits li::before { color: #06b6d4; }
+.quick-action-card[data-category="level-3"] .quick-action-card__traits li::before { color: var(--sp-color-primary); }
+.quick-action-card[data-category="level-4"] .quick-action-card__traits li::before { color: #3b82f6; }
+
+.quick-action-card--highlight {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+@media (max-width: 1024px) {
+  .quick-actions {
+    flex-wrap: wrap;
+  }
+  .quick-actions .quick-action-card {
+    flex: 1 1 calc(50% - var(--sp-space-lg));
+  }
+}
+
+@media (max-width: 640px) {
+  .quick-actions {
+    flex-direction: column;
+  }
+  .quick-actions .quick-action-card {
+    flex: 1 1 100%;
+  }
+}

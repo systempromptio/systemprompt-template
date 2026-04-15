@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#A2AAB9"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#22c55e"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#ef4444"/>
+    </marker>
+    <marker id="arrow-dashed" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#D6DCE8"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="400" y="22" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#252526" letter-spacing="2">GOVERNANCE PIPELINE</text>
+  <line x1="330" y1="28" x2="470" y2="28" stroke="#EF4623" stroke-width="2"/>
+
+  <!-- ===== TOP ROW (y~42) ===== -->
+
+  <!-- 1. Agent / Tool Call -->
+  <rect x="12" y="42" width="100" height="40" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <text x="62" y="58" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Agent / Tool</text>
+  <text x="62" y="70" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Call</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="112" y1="62" x2="132" y2="62" stroke="#A2AAB9" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- 2. PreToolUse / Hook Intercept -->
+  <rect x="134" y="42" width="130" height="40" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="134" y="42" width="130" height="4" rx="6" fill="#0071CE"/>
+  <text x="199" y="60" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">PreToolUse</text>
+  <text x="199" y="72" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Hook Intercept</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="264" y1="62" x2="284" y2="62" stroke="#A2AAB9" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- 3. Governance Engine (prominent) -->
+  <rect x="286" y="38" width="186" height="48" rx="6" fill="none" stroke="#EF4623" stroke-width="1.5"/>
+  <rect x="286" y="38" width="186" height="4" rx="6" fill="#EF4623"/>
+  <text x="379" y="55" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#252526">Governance Engine</text>
+  <text x="379" y="67" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">4 evaluation layers</text>
+  <text x="379" y="78" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">sequential pass-through</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="472" y1="62" x2="496" y2="62" stroke="#A2AAB9" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- 4. Decision (pill shape) -->
+  <rect x="498" y="46" width="110" height="32" rx="16" fill="none" stroke="#f97316" stroke-width="1.5"/>
+  <text x="553" y="59" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Decision</text>
+  <text x="553" y="70" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">allow | deny</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="608" y1="62" x2="632" y2="62" stroke="#A2AAB9" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- 5. Audit Log -->
+  <rect x="634" y="42" width="152" height="40" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="634" y="42" width="152" height="4" rx="6" fill="#6366f1"/>
+  <text x="710" y="60" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Audit Log</text>
+  <text x="710" y="72" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Every request recorded</text>
+
+  <!-- ===== Vertical connector from Governance Engine to middle row ===== -->
+  <line x1="379" y1="86" x2="379" y2="100" stroke="#D6DCE8" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- Horizontal spread line -->
+  <line x1="104" y1="100" x2="700" y2="100" stroke="#D6DCE8" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- Vertical drops to each layer box -->
+  <line x1="104" y1="100" x2="104" y2="112" stroke="#D6DCE8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-dashed)"/>
+  <line x1="302" y1="100" x2="302" y2="112" stroke="#D6DCE8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-dashed)"/>
+  <line x1="500" y1="100" x2="500" y2="112" stroke="#D6DCE8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-dashed)"/>
+  <line x1="700" y1="100" x2="700" y2="112" stroke="#D6DCE8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-dashed)"/>
+
+  <!-- ===== MIDDLE ROW — 4 Governance Layers (y~116) ===== -->
+
+  <!-- Layer 1: Scope Check (green) -->
+  <rect x="16" y="116" width="176" height="68" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="16" y="116" width="176" height="4" rx="6" fill="#22c55e"/>
+  <text x="22" y="134" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="700" fill="#22c55e">1</text>
+  <text x="34" y="134" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Scope Check</text>
+  <text x="104" y="152" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">admin | user | a2a</text>
+  <text x="104" y="164" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">Role-based access control</text>
+  <text x="104" y="176" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#A2AAB9">Validates caller permissions</text>
+
+  <!-- Arrow Layer 1→2 -->
+  <line x1="192" y1="150" x2="212" y2="150" stroke="#D6DCE8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-dashed)"/>
+
+  <!-- Layer 2: Secret Detection (red) -->
+  <rect x="214" y="116" width="176" height="68" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="214" y="116" width="176" height="4" rx="6" fill="#ef4444"/>
+  <text x="220" y="134" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="700" fill="#ef4444">2</text>
+  <text x="232" y="134" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Secret Detection</text>
+  <text x="302" y="152" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">35+ regex patterns</text>
+  <text x="302" y="164" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">Keys, tokens, credentials</text>
+  <text x="302" y="176" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#A2AAB9">Blocks sensitive data leaks</text>
+
+  <!-- Arrow Layer 2→3 -->
+  <line x1="390" y1="150" x2="410" y2="150" stroke="#D6DCE8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-dashed)"/>
+
+  <!-- Layer 3: Blocklist (orange) -->
+  <rect x="412" y="116" width="176" height="68" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="412" y="116" width="176" height="4" rx="6" fill="#f97316"/>
+  <text x="418" y="134" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="700" fill="#f97316">3</text>
+  <text x="430" y="134" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Blocklist</text>
+  <text x="500" y="152" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Destructive ops blocked</text>
+  <text x="500" y="164" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">rm -rf, DROP TABLE, etc.</text>
+  <text x="500" y="176" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#A2AAB9">Pattern-matched commands</text>
+
+  <!-- Arrow Layer 3→4 -->
+  <line x1="588" y1="150" x2="608" y2="150" stroke="#D6DCE8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-dashed)"/>
+
+  <!-- Layer 4: Rate Limiting (blue) -->
+  <rect x="610" y="116" width="176" height="68" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="610" y="116" width="176" height="4" rx="6" fill="#0071CE"/>
+  <text x="616" y="134" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="700" fill="#0071CE">4</text>
+  <text x="628" y="134" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Rate Limiting</text>
+  <text x="698" y="152" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">300/min/session</text>
+  <text x="698" y="164" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">Sliding window counter</text>
+  <text x="698" y="176" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="7" fill="#A2AAB9">Per-session throttle</text>
+
+  <!-- ===== BOTTOM ROW — Decision Fork (y~220) ===== -->
+
+  <!-- Vertical line from Decision pill down -->
+  <line x1="553" y1="78" x2="553" y2="218" stroke="#A2AAB9" stroke-width="1"/>
+
+  <!-- Fork point -->
+  <circle cx="553" cy="218" r="3" fill="#A2AAB9"/>
+
+  <!-- ALLOW path (left) -->
+  <line x1="553" y1="218" x2="280" y2="218" stroke="#22c55e" stroke-width="1.5"/>
+  <line x1="280" y1="218" x2="280" y2="238" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+  <!-- ALLOW label -->
+  <rect x="330" y="208" width="50" height="16" rx="8" fill="#22c55e"/>
+  <text x="355" y="219" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="none">ALLOW</text>
+
+  <!-- Tool Executes box -->
+  <rect x="194" y="242" width="172" height="46" rx="6" fill="none" stroke="#22c55e" stroke-width="1"/>
+  <rect x="194" y="242" width="172" height="4" rx="6" fill="#22c55e"/>
+  <text x="280" y="262" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Tool Executes</text>
+  <text x="280" y="276" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Normal operation proceeds</text>
+
+  <!-- Arrow to PostToolUse -->
+  <line x1="280" y1="288" x2="280" y2="304" stroke="#22c55e" stroke-width="1" marker-end="url(#arrow-green)"/>
+
+  <!-- PostToolUse box -->
+  <rect x="194" y="308" width="172" height="40" rx="6" fill="none" stroke="#D6DCE8" stroke-width="1"/>
+  <rect x="194" y="308" width="172" height="4" rx="6" fill="#0071CE"/>
+  <text x="280" y="326" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">PostToolUse</text>
+  <text x="280" y="338" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Usage tracking &amp; metrics</text>
+
+  <!-- DENY path (right) -->
+  <line x1="553" y1="218" x2="680" y2="218" stroke="#ef4444" stroke-width="1.5"/>
+  <line x1="680" y1="218" x2="680" y2="238" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+
+  <!-- DENY label -->
+  <rect x="590" y="208" width="44" height="16" rx="8" fill="#ef4444"/>
+  <text x="612" y="219" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="none">DENY</text>
+
+  <!-- Blocked box -->
+  <rect x="594" y="242" width="172" height="46" rx="6" fill="none" stroke="#ef4444" stroke-width="1"/>
+  <rect x="594" y="242" width="172" height="4" rx="6" fill="#ef4444"/>
+  <text x="680" y="262" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="600" fill="#252526">Blocked</text>
+  <text x="680" y="276" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Reason logged to audit trail</text>
+
+  <!-- ===== LEGEND ===== -->
+  <line x1="16" y1="370" x2="784" y2="370" stroke="#D6DCE8" stroke-width="0.5"/>
+
+  <!-- Legend items -->
+  <circle cx="30" cy="384" r="4" fill="#22c55e"/>
+  <text x="38" y="387" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Scope</text>
+
+  <circle cx="90" cy="384" r="4" fill="#ef4444"/>
+  <text x="98" y="387" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Secrets</text>
+
+  <circle cx="160" cy="384" r="4" fill="#f97316"/>
+  <text x="168" y="387" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Blocklist</text>
+
+  <circle cx="240" cy="384" r="4" fill="#0071CE"/>
+  <text x="248" y="387" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Rate Limit</text>
+
+  <circle cx="330" cy="384" r="4" fill="#6366f1"/>
+  <text x="338" y="387" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#464E5D">Audit</text>
+
+  <!-- Bottom right branding -->
+  <text x="784" y="394" text-anchor="end" font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#A2AAB9">systemprompt.io governance</text>
+</svg>

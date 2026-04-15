@@ -1,0 +1,70 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/back-button href="/admin/my/skills/" label="Back to My Skills"}}
+    <section aria-label="Edit Skill">
+    <h2>{{title}}</h2>
+    {{#if is_forked}}
+    <div class="fork-indicator">
+        <span class="badge badge-yellow">forked</span> This skill was forked from <code class="code-inline">{{skill.base_skill_id}}</code>
+    </div>
+    {{/if}}
+    <div class="card max-w-xl">
+        <form id="my-skill-form" data-api-path="/user/skills/" data-entity="Skill" data-id-field="skill_id" data-list-path="/my/skills/">
+            {{> components/form-group label="Skill ID" name="skill_id" type="text" value=skill.skill_id placeholder="my-skill-id" required=true readonly=is_edit hint="kebab-case"}}
+            {{> components/form-group label="Name" name="name" type="text" value=skill.name placeholder="Skill name" required=true}}
+            {{> components/form-group label="Description" name="description" type="text" value=skill.description placeholder="Brief description"}}
+            {{> components/form-group label="Content" name="content" type="textarea" value=skill.content rows="15" placeholder="Skill content (markdown)..."}}
+            {{> components/form-group label="Tags" name="tags" type="text" value=skill.tags_csv placeholder="tag1, tag2, tag3" hint="comma-separated"}}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{{#if is_edit}}Save Changes{{else}}Create Skill{{/if}}</button>
+                <a href="/admin/my/skills/" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+    </section>
+    {{#if required_secrets}}
+    <div class="card max-w-xl mt-4">
+        <h3>Required Secrets</h3>
+        <p class="text-secondary text-sm mb-3">This skill requires the following secrets to function. Values are encrypted at rest.</p>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th class="col-multiline">Description</th>
+                    <th class="col-status">Status</th>
+                    <th>Value</th>
+                    <th class="col-actions"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each required_secrets}}
+                <tr data-secret-name="{{this.name}}">
+                    <td><code class="code-inline">{{this.name}}</code>{{#if this.optional}} <span class="badge badge-gray text-xs">optional</span>{{/if}}</td>
+                    <td class="col-multiline text-sm text-secondary">{{this.description}}</td>
+                    <td class="col-status">
+                        {{#if this.is_configured}}
+                        <span class="badge badge-green">Configured</span>
+                        {{else}}
+                        <span class="badge badge-red">Missing</span>
+                        {{/if}}
+                    </td>
+                    <td><input type="password" class="form-input secret-value-input input-narrow" placeholder="Enter value..." aria-label="Secret value"></td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-primary save-secret-btn">Save</button>
+                        {{#if this.is_configured}}
+                        <button type="button" class="btn btn-sm btn-danger delete-secret-btn ml-1">Delete</button>
+                        {{/if}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-my-skill-edit.js" defer></script>
+    {{/inline}}
+{{/layout}}

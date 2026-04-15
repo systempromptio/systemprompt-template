@@ -1,0 +1,55 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/page-hero}}
+
+    <section aria-label="Logs CLI">
+        <p class="text-tertiary">CLI: <code class="code-inline">{{cli_command}}</code></p>
+    </section>
+
+    <nav class="toolbar" aria-label="Log tabs">
+        <a href="/admin/infrastructure/logs?tab=view" class="btn btn-sm {{#if is_tab_view}}btn-primary{{else}}btn-secondary{{/if}}">View</a>
+        <a href="/admin/infrastructure/logs?tab=trace" class="btn btn-sm {{#if is_tab_trace}}btn-primary{{else}}btn-secondary{{/if}}">Traces</a>
+        <a href="/admin/infrastructure/logs?tab=request" class="btn btn-sm {{#if is_tab_request}}btn-primary{{else}}btn-secondary{{/if}}">Requests</a>
+        <a href="/admin/infrastructure/logs?tab=tools" class="btn btn-sm {{#if is_tab_tools}}btn-primary{{else}}btn-secondary{{/if}}">Tools</a>
+    </nav>
+
+    <form class="toolbar" method="get" action="/admin/infrastructure/logs">
+        <input type="hidden" name="tab" value="{{tab}}">
+        <input type="text" name="search" class="search-input search-narrow" placeholder="Search logs..." value="{{default search ""}}" aria-label="Search logs">
+        <input type="text" name="event_type" class="search-input search-narrow" placeholder="Event type / level..." value="{{default event_type ""}}" aria-label="Filter by event type">
+        <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+    </form>
+
+    {{#if is_tab_view}}
+    <section aria-label="Recent events">
+    {{#if has_events}}
+    {{#> components/data-table}}
+        <thead><tr><th class="col-date">Timestamp</th><th class="col-status">Event Type</th><th class="col-multiline">User</th><th class="col-multiline">Tool</th><th class="col-multiline">Session</th></tr></thead>
+        <tbody>
+        {{#each events}}
+        <tr>
+            <td class="col-date">{{#> components/table-cell-stacked primary=(formatDate created_at) secondary=(relativeTime created_at)}}{{/components/table-cell-stacked}}</td>
+            <td class="col-status"><span class="badge badge-secondary">{{event_type}}</span></td>
+            <td class="col-multiline">{{default display_name user_id}}</td>
+            <td class="col-multiline">{{#if tool_name}}<code class="code-inline">{{tool_name}}</code>{{else}}<span class="text-tertiary">&mdash;</span>{{/if}}</td>
+            <td class="col-multiline">{{#if session_id}}<code class="code-inline">{{truncate session_id}}</code>{{else}}&mdash;{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No log entries. Run systemprompt infra logs view from the CLI."}}
+    {{/if}}
+    </section>
+    {{else if is_tab_trace}}
+    {{> components/empty-state message="Execution traces — run: systemprompt infra logs trace list --limit 5"}}
+    {{else if is_tab_request}}
+    {{> components/empty-state message="AI request logs — run: systemprompt infra logs request list --limit 5"}}
+    {{else}}
+    {{> components/empty-state message="MCP tool executions — run: systemprompt infra logs tools list --limit 5"}}
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

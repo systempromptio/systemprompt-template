@@ -1,0 +1,97 @@
+@layer components {
+
+.plugin-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--sp-space-4);
+}
+
+.plugin-card {
+    background: var(--sp-bg-surface-gradient);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-brand);
+    overflow: visible;
+    box-shadow: var(--sp-shadow-card), var(--sp-shadow-inner-glow);
+    transition: border-color var(--sp-duration-fast), box-shadow var(--sp-duration-fast);
+}
+
+.plugin-card:hover {
+    border-color: var(--sp-border-default);
+    box-shadow: var(--sp-shadow-card-hover);
+}
+
+.plugin-header {
+    padding: var(--sp-space-5) var(--sp-space-6);
+    cursor: pointer;
+    transition: background var(--sp-duration-fast);
+    overflow: visible;
+    position: relative;
+}
+
+.plugin-header:hover {
+    background: color-mix(in oklch, var(--sp-warm-900) 2%, transparent);
+}
+
+.plugin-details {
+    padding: 0 var(--sp-space-6) var(--sp-space-6);
+}
+
+.plugin-section-title {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: var(--sp-space-2);
+}
+
+.plugin-skill-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-space-2) 0;
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+    border-bottom: 1px solid var(--sp-border-subtle);
+}
+
+.plugin-skill-item:last-child {
+    border-bottom: none;
+}
+
+.skill-source-badge {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    padding: 0.125rem var(--sp-space-2);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-accent-dim);
+    color: var(--sp-accent);
+}
+
+.property-cell {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+}
+
+.property-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--sp-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--sp-text-sm);
+    font-weight: 700;
+    color: var(--sp-text-on-dark);
+    flex-shrink: 0;
+}
+
+.property-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+}

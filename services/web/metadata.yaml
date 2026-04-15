@@ -1,0 +1,21 @@
+# Site Metadata
+# SEO, branding, and metadata configuration
+# ===== CUSTOMIZE THESE =====
+
+site:
+  name: "systemprompt.io"
+  title: "systemprompt.io — AI Agent Platform"
+  description: "One platform to deploy, secure, distribute, and observe AI usage across your entire organization. Role-based access, audit trails, and cost visibility from day one."
+  author: "systemprompt.io"
+  baseUrl: "https://systemprompt.io"
+
+seo:
+  defaultImage: "/files/images/logo.png"
+  twitterHandle: "@systempromptio"
+  keywords: "systemprompt.io, AI governance, AI usage governance, enterprise security, MCP, Claude Code, AI management, audit trails, RBAC"
+
+copyright:
+  holder: "systemprompt.io"
+  year: 2026
+  link: "https://systemprompt.io"
+  notice: "2026 systemprompt.io"

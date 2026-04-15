@@ -1,0 +1,32 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    <section aria-label="CLI command" class="hero-cli">
+        <p class="text-tertiary text-sm">Run this on the CLI to see the same data:</p>
+        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
+        <p class="text-tertiary text-sm">Window: {{window_label}}</p>
+    </section>
+    <section aria-label="Agent rankings">
+    {{#if has_agents}}
+    {{#> components/data-table}}
+        <thead><tr><th>Agent</th><th class="col-numeric">Calls</th><th class="col-numeric">Errors</th><th class="col-numeric">Sessions</th><th class="col-numeric">Success Rate</th></tr></thead>
+        <tbody>
+        {{#each agents}}
+        <tr>
+            <td><code class="code-inline">{{agent_id}}</code></td>
+            <td class="numeric">{{calls}}</td>
+            <td class="numeric">{{errors}}</td>
+            <td class="numeric">{{sessions}}</td>
+            <td class="numeric">{{success_rate}}%</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No agent activity in the window. Run the CLI command above to populate this view."}}
+    {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

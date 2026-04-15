@@ -1,0 +1,117 @@
+
+
+
+.site-footer {
+  padding: var(--sp-space-16) 0 var(--sp-space-8);
+  border-top: none;
+  background: var(--sp-color-surface-alt);
+}
+
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 4fr);
+  gap: var(--sp-space-12);
+  margin-bottom: var(--sp-space-12);
+  align-items: start;
+}
+
+.footer-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-space-10) var(--sp-space-8);
+}
+
+@media (max-width: 900px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: var(--sp-space-10);
+  }
+}
+
+
+.footer-brand .footer-logo {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--sp-space-2);
+}
+
+.footer-brand .logo-svg {
+  height: 24px;
+  width: auto;
+}
+
+.footer-brand p {
+  color: var(--sp-color-text-secondary);
+  font-size: 0.875rem;
+}
+
+
+.footer-links h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sp-color-text);
+  margin-bottom: var(--sp-space-4);
+}
+
+.footer-links a {
+  display: block;
+  color: var(--sp-color-text-secondary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  padding: var(--sp-space-1) 0;
+  transition: color var(--sp-duration-fast) var(--sp-ease-default);
+}
+
+.footer-links a:hover {
+  color: var(--sp-color-primary);
+}
+
+
+
+.footer-bottom {
+  padding-top: var(--sp-space-8);
+  border-top: 1px solid var(--sp-color-border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--sp-space-4);
+}
+
+.footer-bottom p {
+  font-size: 0.875rem;
+  color: var(--sp-color-text-muted);
+  margin: 0;
+}
+
+
+@media (max-width: 640px) {
+  .footer-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-space-8);
+  }
+
+  .footer-links a {
+    padding: var(--sp-space-2) 0;
+  }
+}
+
+
+@media (max-width: 420px) {
+  .site-footer {
+    padding-bottom: max(var(--sp-space-8), env(safe-area-inset-bottom));
+  }
+
+  .footer-nav {
+    grid-template-columns: 1fr;
+    gap: var(--sp-space-6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-links a.footer-links a {
+    transition: none;
+  }
+}

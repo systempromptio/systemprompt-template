@@ -1,0 +1,35 @@
+@layer tokens {
+:root {
+    --sp-bg-surface-gradient: linear-gradient(180deg, oklch(1.0 0 0) 0%, oklch(0.98 0.004 70) 60%, oklch(0.96 0.005 70) 100%);
+    --sp-bg-surface-raised-gradient: linear-gradient(135deg, oklch(1.0 0 0) 0%, oklch(0.97 0.004 70) 100%);
+    --sp-bg-card-header: linear-gradient(180deg, oklch(0.97 0.005 65) 0%, oklch(0.95 0.006 65) 100%);
+    --sp-bg-accent-wash: linear-gradient(135deg, color-mix(in oklch, var(--sp-accent) 6%, oklch(0.99 0.003 70)) 0%, oklch(0.99 0.003 70) 100%);
+    --sp-bg-main: light-dark(oklch(0.95 0.005 70), oklch(0.18 0.01 45));
+    --sp-bg-main-gradient: var(--sp-bg-main);
+    --sp-bg-main-accent-tl: none;
+    --sp-bg-main-accent-br: none;
+    --sp-bg-glass: light-dark(oklch(1.00 0 0 / 0.65), oklch(0.21 0.01 48 / 0.78));
+    --sp-bg-glass-border: light-dark(oklch(0.20 0.01 50 / 0.08), oklch(1.00 0 0 / 0.06));
+    --sp-bg-hero-gradient: linear-gradient(180deg, oklch(1.0 0 0) 0%, oklch(0.98 0.004 70) 100%);
+
+    --sp-scrollbar-width: 6px;
+    --sp-scrollbar-track: transparent;
+    --sp-scrollbar-thumb: light-dark(var(--sp-warm-300), var(--sp-warm-300));
+    --sp-scrollbar-thumb-hover: light-dark(var(--sp-warm-400), var(--sp-warm-400));
+    --sp-toggle-knob: light-dark(var(--sp-primitive-white), var(--sp-primitive-warm-50));
+    --sp-shimmer-from: light-dark(var(--sp-warm-100), var(--sp-warm-100));
+    --sp-shimmer-via:  light-dark(var(--sp-warm-50), var(--sp-warm-50));
+    --sp-shimmer-to:   light-dark(var(--sp-warm-100), var(--sp-warm-100));
+}
+
+[data-theme="dark"] {
+    --sp-bg-surface-gradient: linear-gradient(180deg, oklch(0.23 0.01 48) 0%, oklch(0.21 0.01 48) 60%, oklch(0.19 0.01 47) 100%);
+    --sp-bg-surface-raised-gradient: linear-gradient(135deg, oklch(0.25 0.01 48) 0%, oklch(0.23 0.01 48) 100%);
+    --sp-bg-card-header: linear-gradient(180deg, oklch(0.24 0.01 48) 0%, oklch(0.22 0.01 47) 100%);
+    --sp-bg-accent-wash: linear-gradient(135deg, color-mix(in oklch, var(--sp-accent) 5%, oklch(0.21 0.01 48)) 0%, oklch(0.21 0.01 48) 100%);
+    --sp-bg-main-gradient: var(--sp-bg-main);
+    --sp-bg-main-accent-tl: none;
+    --sp-bg-main-accent-br: none;
+    --sp-bg-hero-gradient: var(--sp-bg-surface-raised-gradient);
+}
+}

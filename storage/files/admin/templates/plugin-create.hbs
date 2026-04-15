@@ -1,0 +1,147 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    <div id="plugin-create-content">
+        <div class="detail-header d-flex gap-3 align-center">
+            <a href="/admin/org/plugins/" class="btn btn-secondary btn-sm">&larr; Back to Plugins</a>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-import-url">Import from URL</button>
+        </div>
+        <h2 class="wizard-heading-xl">Create Plugin</h2>
+        <div id="wizard-step-indicator"></div>
+        <div class="card wizard-card">
+            <div id="wizard-step-content"></div>
+            <div id="wizard-nav"></div>
+        </div>
+
+        <div id="import-modal" class="confirm-overlay d-none">
+            <div class="confirm-dialog max-w-md">
+                <h3 class="wizard-heading">Import Plugin from URL</h3>
+                <p class="mb-4 text-secondary text-sm">Enter the URL of a plugin bundle JSON file (Anthropic marketplace format).</p>
+                <input type="text" id="import-url" class="field-input w-full box-border" placeholder="https://example.com/plugin-bundle.json" aria-label="Plugin bundle URL">
+                <div class="form-group mt-4">
+                    <label class="field-label">Import target</label>
+                    <select id="import-target" class="field-input">
+                        <option value="site">Site (shared plugin)</option>
+                        <option value="user">Current user only</option>
+                    </select>
+                </div>
+                <div id="import-error" class="d-none mt-2 text-danger text-sm"></div>
+                <div class="confirm-actions">
+                    <button type="button" class="btn btn-secondary btn-sm" id="import-cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="import-submit">Import</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <template id="tpl-step-1">
+        <h3 class="wizard-heading">Basic Info</h3>
+        {{> components/form-group label="Plugin ID" name="plugin_id" type="text" placeholder="my-plugin" required=true hint="kebab-case"}}
+        {{> components/form-group label="Name" name="name" type="text" placeholder="My Plugin" required=true}}
+        {{> components/form-group label="Description" name="description" type="textarea" rows="3" placeholder="What this plugin does..."}}
+        <div class="form-row">
+            <div>{{> components/form-group label="Version" name="version" type="text" value="0.1.0"}}</div>
+            <div>{{> components/form-group label="Category" name="category" type="text" placeholder="productivity"}}</div>
+        </div>
+    </template>
+
+    <template id="tpl-step-2">
+        <h3 class="wizard-heading">Select Skills</h3>
+        <div class="form-group">
+            <label class="field-label">Available Skills</label>
+            <div class="checklist-filter-row">
+                <input type="text" class="field-input flex-1" placeholder="Search..." data-filter-list="wizard-skills" aria-label="Filter skills">
+                <button type="button" class="btn btn-secondary btn-sm" data-select-all="wizard-skills">Select All</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-deselect-all="wizard-skills">Deselect All</button>
+            </div>
+            <div class="checklist-container checklist-scroll" data-checklist="wizard-skills">
+                {{#each skills_list}}
+                <div class="checklist-item" data-item-name="{{toLowerCase value}}">
+                    <input type="checkbox" name="wizard-skills" value="{{value}}" id="wizard-skills-chk-{{@index}}">
+                    <label for="wizard-skills-chk-{{@index}}">{{default name value}}</label>
+                </div>
+                {{else}}
+                <div class="empty-state checklist-empty"><p>None available.</p></div>
+                {{/each}}
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-step-3">
+        <h3 class="wizard-heading">Select Agents</h3>
+        <div class="form-group">
+            <label class="field-label">Available Agents</label>
+            <div class="checklist-filter-row">
+                <input type="text" class="field-input flex-1" placeholder="Search..." data-filter-list="wizard-agents" aria-label="Filter agents">
+                <button type="button" class="btn btn-secondary btn-sm" data-select-all="wizard-agents">Select All</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-deselect-all="wizard-agents">Deselect All</button>
+            </div>
+            <div class="checklist-container checklist-scroll" data-checklist="wizard-agents">
+                {{#each agents_list}}
+                <div class="checklist-item" data-item-name="{{toLowerCase (default name value)}}">
+                    <input type="checkbox" name="wizard-agents" value="{{value}}" id="wizard-agents-chk-{{@index}}">
+                    <label for="wizard-agents-chk-{{@index}}">{{default name value}}</label>
+                </div>
+                {{else}}
+                <div class="empty-state checklist-empty"><p>None available.</p></div>
+                {{/each}}
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-step-4">
+        <h3 class="wizard-heading">MCP Servers</h3>
+        <div class="form-group">
+            <label class="field-label">Available MCP Servers</label>
+            <div class="checklist-filter-row">
+                <input type="text" class="field-input flex-1" placeholder="Search..." data-filter-list="wizard-mcp" aria-label="Filter MCP servers">
+                <button type="button" class="btn btn-secondary btn-sm" data-select-all="wizard-mcp">Select All</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-deselect-all="wizard-mcp">Deselect All</button>
+            </div>
+            <div class="checklist-container checklist-scroll" data-checklist="wizard-mcp">
+                {{#each mcp_list}}
+                <div class="checklist-item" data-item-name="{{toLowerCase (default name value)}}">
+                    <input type="checkbox" name="wizard-mcp" value="{{value}}" id="wizard-mcp-chk-{{@index}}">
+                    <label for="wizard-mcp-chk-{{@index}}">{{default name value}}</label>
+                </div>
+                {{else}}
+                <div class="empty-state checklist-empty"><p>None available.</p></div>
+                {{/each}}
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-step-5">
+        <h3 class="wizard-heading">Roles & Access</h3>
+        <div class="form-group">
+            <label class="field-label">Roles</label>
+            <div class="d-flex flex-wrap gap-1 p-2">
+                {{#each roles_list}}
+                <label class="label-flex text-sm">
+                    <input type="checkbox" name="wizard-roles" value="{{value}}">
+                    {{value}}
+                </label>
+                {{/each}}
+            </div>
+        </div>
+        {{> components/form-group label="Author Name" name="author_name" type="text" placeholder="Your name"}}
+        {{> components/form-group label="Keywords" name="keywords" type="text" placeholder="automation, workflow" hint="comma-separated"}}
+    </template>
+
+    <template id="tpl-step-6">
+        <h3 class="wizard-heading">Review & Create</h3>
+        <div class="card p-4">
+            <div id="wizard-review" class="review-grid text-sm"></div>
+        </div>
+    </template>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-plugin-wizard.js" defer></script>
+    <script data-cfasync="false" type="module">
+        import { initPluginWizard } from '/js/pages/admin-plugin-wizard.js';
+        initPluginWizard();
+    </script>
+    {{/inline}}
+{{/layout}}

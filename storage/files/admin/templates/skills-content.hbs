@@ -1,0 +1,26 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    <p class="text-tertiary">Read-only view of content listing, search, popularity, and health. This page mirrors <code class="code-inline">demo/skills/02-content-management.sh</code>.</p>
+
+    <section aria-label="CLI commands">
+    {{#> components/data-table}}
+        <thead><tr><th>Step</th><th>Command</th></tr></thead>
+        <tbody>
+        {{#each cli_commands}}
+        <tr>
+            <td class="cell-primary">{{label}}</td>
+            <td><code class="code-inline">{{cmd}}</code></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    </section>
+
+    <section aria-label="Content inventory">
+        {{> components/empty-state message="Content is managed via the CLI. Run the commands above to list, search, rank, or check health of content sources."}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

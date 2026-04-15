@@ -1,0 +1,14 @@
+{{#if roles}}
+    {{#each roles}}
+    <span class="badge badge-blue">{{this}}</span>
+    {{/each}}
+{{else}}
+    <span class="badge badge-green">All roles</span>
+{{/if}}
+{{#each visibility_rules}}
+    {{#if (eq rule_type "department")}}
+    <span class="badge {{#if (eq access "allow")}}badge-yellow{{else}}badge-red{{/if}}">{{rule_type}}: {{rule_value}} ({{access}})</span>
+    {{else if (eq rule_type "user")}}
+    <span class="badge badge-gray">{{rule_type}}: {{rule_value}} ({{access}})</span>
+    {{/if}}
+{{/each}}

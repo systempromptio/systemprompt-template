@@ -1,0 +1,19 @@
+# Homepage Configuration
+#
+# The `demos` section (quick_start + categories) is populated at load time
+# from the demo/ directory on disk — see extensions/web/site/src/homepage/demo_scanner.rs.
+# Only `title` and `subtitle` here are authoritative; anything else is overwritten.
+
+hero:
+  title: "Own how your organization"
+  title_highlight: "uses AI."
+  subtitle: "This is the local evaluation for systemprompt.io — self-hosted AI governance in a single Rust binary. Clone the repo, bring your own provider key, and exercise the full governance pipeline, secrets management, MCP governance, and audit trail end-to-end on your own machine."
+  eyebrow: "systemprompt.io · Local Evaluation"
+  cta: "Quick Start"
+  cta_url: "#quick-start"
+  cta_secondary: "Read the Docs"
+  cta_secondary_url: "/documentation"
+
+demos:
+  title: "Demo Catalogue"
+  subtitle: "Every script below is a real, runnable shell script in demo/. Click a card to see the commands it runs, then copy them into your terminal."

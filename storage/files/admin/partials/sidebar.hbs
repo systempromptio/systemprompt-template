@@ -1,0 +1,215 @@
+<aside class="admin-sidebar" id="admin-sidebar">
+    <button class="sidebar-close-btn" type="button" aria-label="Close menu">&times;</button>
+    <a href="/control-center" class="admin-sidebar-brand" aria-label="{{default branding.domain "demo.systemprompt.io"}} - Go to dashboard">
+        <img src="{{default branding.logo_light "/files/images/logo.svg"}}" alt="{{default branding.domain "demo.systemprompt.io"}}" class="admin-logo admin-logo--light" />
+        <img src="{{default branding.logo_dark "/files/images/logo-white.svg"}}" alt="{{default branding.domain "demo.systemprompt.io"}}" class="admin-logo admin-logo--dark" />
+    </a>
+    <nav aria-label="Admin navigation">
+        <h2 class="nav-label">General</h2>
+        <a href="/admin/setup"{{#if (eq page "setup")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8z"/><path d="M11.28 5.72a.75.75 0 010 1.06l-4 4a.75.75 0 01-1.06 0l-2-2a.75.75 0 111.06-1.06L6.75 9.19l3.47-3.47a.75.75 0 011.06 0z"/></svg>
+            Setup Guide
+        </a>
+        <a href="/control-center"{{#if (eq page "control-center")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM8 4v4l3 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="8" r="1.5"/></svg>
+            Control Center
+        </a>
+        <a href="/admin/profile"{{#if (eq page "profile")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+            Profile & Insights
+        </a>
+        {{#if current_user.is_admin}}
+        <h2 class="nav-label">Management</h2>
+        <a href="/admin/dashboard"{{#if (eq page "dashboard")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+            Admin Dashboard
+        </a>
+        <a href="/admin/users/"{{#if (eq page "users")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+            Users
+        </a>
+        <a href="/admin/users/sessions"{{#if (eq page "users-sessions")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 4v4l2.5 2.5" stroke-linecap="round"/></svg>
+            Sessions
+        </a>
+        <a href="/admin/users/ip-bans"{{#if (eq page "users-ip-bans")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zM2.5 8a5.5 5.5 0 019.3-4L4 11.8A5.47 5.47 0 012.5 8zm5.5 5.5a5.47 5.47 0 01-3.8-1.5L12 4.2A5.5 5.5 0 018 13.5z"/></svg>
+            IP Bans
+        </a>
+        <a href="/admin/jobs/"{{#if (eq page "jobs")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4v4l2.5 2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Jobs
+        </a>
+        <a href="/admin/events/"{{#if (eq page "events")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12M2 6h10M2 9h12M2 12h8"/></svg>
+            Events
+        </a>
+        <a href="/admin/access-control"{{#if (eq page "access-control")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L2 4v4c0 3.3 2.6 6.4 6 7 3.4-.6 6-3.7 6-7V4L8 1zm0 2.2L12 5.5v2.8c0 2.4-1.7 4.6-4 5.2-2.3-.6-4-2.8-4-5.2V5.5L8 3.2z"/></svg>
+            Access Control
+        </a>
+        <a href="/admin/governance"{{#if (eq page "governance")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm0 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM8 3a.75.75 0 01.75.75v3.5h2.5a.75.75 0 010 1.5h-3.25A.75.75 0 017.25 8V3.75A.75.75 0 018 3z"/></svg>
+            Governance
+        </a>
+        <a href="/admin/governance/decisions"{{#if (eq page "governance-decisions")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v2H2zM2 7h12v2H2zM2 12h12v2H2z"/></svg>
+            Decisions
+        </a>
+        <a href="/admin/governance/audit"{{#if (eq page "governance-audit")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M3 1h7l3 3v11H3V1zm1 1v12h8V5H9V2H4z"/></svg>
+            Audit Trail
+        </a>
+        <a href="/admin/governance/rules"{{#if (eq page "governance-rules")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zM4 7h8v2H4zM6 11h4v2H6z"/></svg>
+            Rules
+        </a>
+        <a href="/admin/governance/violations"{{#if (eq page "governance-violations")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l7 13H1L8 1z"/></svg>
+            Violations
+        </a>
+        <a href="/admin/governance/rate-limits"{{#if (eq page "governance-rate-limits")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 4v4l3 2"/></svg>
+            Rate Limits
+        </a>
+        <a href="/admin/governance/hooks"{{#if (eq page "governance-hooks")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3 3 0 00-3 3v5a3 3 0 106 0V4a1 1 0 112 0v5a5 5 0 11-10 0V4a5 5 0 0110 0"/></svg>
+            Hooks
+        </a>
+        <a href="/admin/org-marketplace"{{#if (eq page "org-marketplace")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h14a1 1 0 011 1v10a1 1 0 01-1 1H1a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v3h5V4H2zm7 0v3h5V4H9zM2 9v3h5V9H2zm7 0v3h5V9H9z"/></svg>
+            Marketplace
+        </a>
+        <h2 class="nav-label">Analytics</h2>
+        <a href="/admin/analytics"{{#if (eq page "analytics-overview")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="8" width="2" height="6"/><rect x="6" y="4" width="2" height="10"/><rect x="10" y="6" width="2" height="8"/><rect x="14" y="2" width="2" height="12"/></svg>
+            Overview
+        </a>
+        <a href="/admin/analytics/agents"{{#if (eq page "analytics-agents")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">Agents</a>
+        <a href="/admin/analytics/costs"{{#if (eq page "analytics-costs")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">Costs</a>
+        <a href="/admin/analytics/requests"{{#if (eq page "analytics-requests")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">Requests</a>
+        <a href="/admin/analytics/sessions"{{#if (eq page "analytics-sessions")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">Sessions</a>
+        <a href="/admin/analytics/conversations"{{#if (eq page "analytics-conversations")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">Conversations</a>
+        <a href="/admin/analytics/tools"{{#if (eq page "analytics-tools")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">Tools</a>
+        <a href="/admin/analytics/content"{{#if (eq page "analytics-content")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">Content &amp; Traffic</a>
+        <h2 class="nav-label">Infrastructure</h2>
+        <a href="/admin/infrastructure/services"{{#if (eq page "infra-services")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="9" y="9" width="5" height="5"/></svg>
+            Services
+        </a>
+        <a href="/admin/infrastructure/database"{{#if (eq page "infra-database")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><ellipse cx="8" cy="3" rx="6" ry="2"/><path d="M2 3v4c0 1.1 2.7 2 6 2s6-.9 6-2V3M2 7v4c0 1.1 2.7 2 6 2s6-.9 6-2V7M2 11v2c0 1.1 2.7 2 6 2s6-.9 6-2v-2" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+            Database
+        </a>
+        <a href="/admin/infrastructure/logs"{{#if (eq page "infra-logs")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12M2 6h12M2 9h12M2 12h12"/></svg>
+            Logs
+        </a>
+        <a href="/admin/infrastructure/config"{{#if (eq page "infra-config")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 100 6.492 3.246 3.246 0 000-6.492z"/></svg>
+            Config
+        </a>
+        <h2 class="nav-label">MCP</h2>
+        <a href="/admin/mcp-servers"{{#if (eq page "mcp-servers")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12a1 1 0 011 1v3a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1zm0 7h12a1 1 0 011 1v3a1 1 0 01-1 1H2a1 1 0 01-1-1v-3a1 1 0 011-1z"/></svg>
+            MCP Servers
+        </a>
+        <a href="/admin/mcp/access"{{#if (eq page "mcp-access")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">Access Tracking</a>
+        <a href="/admin/mcp/tools"{{#if (eq page "mcp-tools")}} class="active" aria-current="page"{{/if}} style="padding-left: 2.25rem;">Tool Execution</a>
+        <h2 class="nav-label">Performance</h2>
+        <a href="/admin/performance/traces"{{#if (eq page "perf-traces")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 13l3-6 3 4 3-8 5 10" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Request Traces
+        </a>
+        <a href="/admin/performance/benchmarks"{{#if (eq page "perf-benchmarks")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 00-7 7h2a5 5 0 1110 0h2A7 7 0 008 1z"/></svg>
+            Benchmarks
+        </a>
+        <h2 class="nav-label">Skills Data</h2>
+        <a href="/admin/skills/content"{{#if (eq page "skills-content")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v1H2zm0 3h10v1H2zm0 3h12v1H2zm0 3h8v1H2z"/></svg>
+            Content
+        </a>
+        <a href="/admin/skills/files"{{#if (eq page "skills-files")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M3 1a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V5l-4-4H3zm6 0v4h4"/></svg>
+            Files
+        </a>
+        <a href="/admin/skills/plugins"{{#if (eq page "skills-plugins")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M5 1v3H2v4a3 3 0 003 3v3h2v-3a3 3 0 003-3V4h-3V1H5z"/></svg>
+            Plugin Inspection
+        </a>
+        <a href="/admin/skills/contexts"{{#if (eq page "skills-contexts")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v8a1 1 0 01-1 1H6l-3 3v-3H3a1 1 0 01-1-1V3z"/></svg>
+            Contexts
+        </a>
+        {{/if}}
+        <h2 class="nav-label">My Workspace</h2>
+        <a href="/admin/my/marketplace/"{{#if (eq page "my-marketplace")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M1 3a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H2a1 1 0 01-1-1V3zm0 5a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H2a1 1 0 01-1-1V8zm0 5a1 1 0 011-1h12a1 1 0 011 1v.5a.5.5 0 01-.5.5h-11a.5.5 0 01-.5-.5V13z"/></svg>
+            My Marketplace
+        </a>
+        <a href="/admin/my/plugins/"{{#if (eq page "my-plugins")}} class="active" aria-current="page"{{else}}{{#if (eq page "my-plugin-edit")}} class="active" aria-current="page"{{/if}}{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L2 4v4c0 3.3 2.6 6.4 6 7 3.4-.6 6-3.7 6-7V4L8 1zm0 2.2L12 5.5v2.8c0 2.4-1.7 4.6-4 5.2-2.3-.6-4-2.8-4-5.2V5.5L8 3.2z"/></svg>
+            My Plugins
+        </a>
+        <a href="/admin/my/skills/"{{#if (eq page "my-skills")}} class="active" aria-current="page"{{else}}{{#if (eq page "my-skill-edit")}} class="active" aria-current="page"{{/if}}{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v1H2V3zm0 3h8v1H2V6zm0 3h10v1H2V9zm0 3h6v1H2v-1z"/></svg>
+            My Skills
+        </a>
+        <a href="/admin/my/agents/"{{#if (eq page "my-agents")}} class="active" aria-current="page"{{else}}{{#if (eq page "my-agent-edit")}} class="active" aria-current="page"{{/if}}{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a4 4 0 014 4v1h1a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1h1V5a4 4 0 014-4zm0 2a2 2 0 00-2 2v1h4V5a2 2 0 00-2-2z"/></svg>
+            My Agents
+        </a>
+        <a href="/admin/my/mcp-servers/"{{#if (eq page "my-mcp-servers")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12a1 1 0 011 1v3a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1zm0 7h12a1 1 0 011 1v3a1 1 0 01-1 1H2a1 1 0 01-1-1v-3a1 1 0 011-1zm9 1.5a1 1 0 100 2 1 1 0 000-2zm0-7a1 1 0 100 2 1 1 0 000-2z"/></svg>
+            My MCP Servers
+        </a>
+        <a href="/admin/my/hooks/"{{#if (eq page "my-hooks")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a2.5 2.5 0 00-2.5 2.5v2a.5.5 0 01-.5.5H3.5A2.5 2.5 0 001 8.5v0A2.5 2.5 0 003.5 11H5a.5.5 0 01.5.5v1A2.5 2.5 0 008 15a2.5 2.5 0 002.5-2.5v-1a.5.5 0 01.5-.5h1.5A2.5 2.5 0 0015 8.5v0A2.5 2.5 0 0012.5 6H11a.5.5 0 01-.5-.5v-2A2.5 2.5 0 008 1z"/></svg>
+            My Hooks
+        </a>
+        <a href="/admin/my/secrets/"{{#if (eq page "my-secrets")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a5 5 0 015 5c0 1.5-.7 2.9-1.7 3.9L13 10.6l1.7 1.7a1 1 0 01-1.4 1.4L11.6 12l-1.7 1.7A5 5 0 118 0zm0 2a3 3 0 100 6 3 3 0 000-6z"/></svg>
+            My Secrets
+        </a>
+        <a href="/admin/my/activity"{{#if (eq page "my-activity")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v6l4 2M14 8A6 6 0 112 8a6 6 0 0112 0z"/><path d="M1 12l2 2 2-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Activity
+        </a>
+        <h2 class="nav-label">Plugin Directory</h2>
+        <a href="/admin/browse/plugins/"{{#if (eq page "browse-plugins")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM8 4a.75.75 0 01.75.75v2.5h2.5a.75.75 0 010 1.5h-2.5v2.5a.75.75 0 01-1.5 0v-2.5h-2.5a.75.75 0 010-1.5h2.5v-2.5A.75.75 0 018 4z"/></svg>
+            Browse Plugins
+        </a>
+        <h2 class="nav-label">Account</h2>
+        <a href="/admin/settings"{{#if (eq page "settings")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 100 6.492 3.246 3.246 0 000-6.492zM5.754 8a2.246 2.246 0 114.492 0 2.246 2.246 0 01-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0a1.97 1.97 0 01-2.93 1.116c-1.583-.966-3.393.844-2.426 2.426a1.97 1.97 0 01-1.116 2.93c-1.79.527-1.79 3.065 0 3.592a1.97 1.97 0 011.116 2.93c-.966 1.583.844 3.393 2.426 2.426a1.97 1.97 0 012.93 1.116c.527 1.79 3.065 1.79 3.592 0a1.97 1.97 0 012.93-1.116c1.583.966 3.393-.844 2.426-2.426a1.97 1.97 0 011.116-2.93c1.79-.527 1.79-3.065 0-3.592a1.97 1.97 0 01-1.116-2.93c.966-1.583-.844-3.393-2.426-2.426a1.97 1.97 0 01-2.93-1.116zM8 0c.424 0 .79.292.892.702l.153.52a2.97 2.97 0 004.416 1.681l.471-.287a.926.926 0 011.264.852v.066a.926.926 0 01-.412.77l-.471.287A2.97 2.97 0 0013 8c0 1.252.764 2.326 1.852 2.78l.007.004.454.277a.926.926 0 01-.852 1.636l-.472-.287a2.97 2.97 0 00-4.416 1.681l-.153.52A.926.926 0 018 15a.926.926 0 01-.892-.702l-.153-.52a2.97 2.97 0 00-4.416-1.681l-.471.287a.926.926 0 01-1.264-.852v-.066c0-.318.163-.614.412-.77l.471-.287A2.97 2.97 0 003 8c0-1.252-.764-2.326-1.852-2.78l-.007-.004-.454-.277a.926.926 0 01.852-1.636l.472.287a2.97 2.97 0 004.416-1.681l.153-.52A.926.926 0 018 0z"/></svg>
+            Settings
+        </a>
+        <h2 class="nav-label">Achievements</h2>
+        <a href="/admin/achievements/"{{#if (eq page "achievements")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0l2 5h5l-4 3.5 1.5 5L8 10.5 3.5 13.5 5 8.5 1 5h5z"/></svg>
+            Achievements
+        </a>
+        <a href="/admin/leaderboard"{{#if (eq page "leaderboard")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 11h3v4H2v-4zm4.5-4h3v8h-3V7zM11 3h3v12h-3V3z"/></svg>
+            Leaderboard
+        </a>
+        <h2 class="nav-label">Support</h2>
+        <a href="/documentation" target="_blank" rel="noopener noreferrer"{{#if (eq page "help")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M6 6a2 2 0 113.5 1.8c-.5.3-.5.5-.5 1.2M8 12v.5" stroke-linecap="round"/></svg>
+            Help & Docs
+        </a>
+        <a href="https://discord.gg/wkAbSuPWpr" target="_blank" rel="noopener noreferrer">
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M13.5 3.4A13 13 0 0010.3 2.5a.05.05 0 00-.05.02c-.14.25-.3.57-.4.83a12 12 0 00-3.7 0 8 8 0 00-.42-.83.05.05 0 00-.05-.02A13 13 0 002.5 3.4a.04.04 0 00-.02.02C.9 6.1.5 8.7.7 11.3a.05.05 0 00.02.04 13.2 13.2 0 004 2 .05.05 0 00.06-.02c.3-.43.58-.88.82-1.35a.05.05 0 00-.03-.07 8.7 8.7 0 01-1.25-.6.05.05 0 01-.004-.08c.08-.06.17-.13.25-.19a.05.05 0 01.05-.01c2.6 1.2 5.4 1.2 8 0a.05.05 0 01.05 0c.08.07.17.13.25.2a.05.05 0 01-.003.08c-.4.23-.82.43-1.25.6a.05.05 0 00-.03.07c.24.47.52.92.82 1.35a.05.05 0 00.05.02 13.2 13.2 0 004-2 .05.05 0 00.02-.03c.24-2.56-.4-5.14-1.78-7.87a.04.04 0 00-.02-.02zM5.7 9.7c-.7 0-1.26-.63-1.26-1.4s.55-1.4 1.26-1.4c.7 0 1.27.64 1.26 1.4 0 .78-.56 1.4-1.26 1.4zm4.6 0c-.7 0-1.26-.63-1.26-1.4s.55-1.4 1.26-1.4c.7 0 1.27.64 1.26 1.4 0 .78-.55 1.4-1.26 1.4z"/></svg>
+            Contact Us
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Toggle dark mode">
+            <svg class="theme-icon theme-icon--light" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5a.5.5 0 01.5.5v1a.5.5 0 01-1 0V2a.5.5 0 01.5-.5zm0 11a.5.5 0 01.5.5v1a.5.5 0 01-1 0v-1a.5.5 0 01.5-.5zm6.5-5.5a.5.5 0 010 1h-1a.5.5 0 010-1h1zm-12 0a.5.5 0 010 1H1.5a.5.5 0 010-1h1zm10.45-3.95a.5.5 0 010 .7l-.7.7a.5.5 0 11-.7-.7l.7-.7a.5.5 0 01.7 0zM4.45 11.55a.5.5 0 010 .7l-.7.7a.5.5 0 01-.7-.7l.7-.7a.5.5 0 01.7 0zm7.8.7a.5.5 0 01-.7 0l-.7-.7a.5.5 0 01.7-.7l.7.7a.5.5 0 010 .7zM4.45 4.45a.5.5 0 01-.7 0l-.7-.7a.5.5 0 01.7-.7l.7.7a.5.5 0 010 .7z"/></svg>
+            <svg class="theme-icon theme-icon--dark" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6 1a7 7 0 009.37 9.32A7 7 0 116 1z"/></svg>
+            <span class="theme-label">Dark mode</span>
+        </button>
+    </div>
+</aside>

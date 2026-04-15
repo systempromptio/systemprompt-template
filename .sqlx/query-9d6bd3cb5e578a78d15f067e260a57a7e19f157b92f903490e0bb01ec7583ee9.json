@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(SELECT 1 FROM plugin_usage_events WHERE user_id = $1 AND EXTRACT(HOUR FROM created_at) < 7)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9d6bd3cb5e578a78d15f067e260a57a7e19f157b92f903490e0bb01ec7583ee9"
+}

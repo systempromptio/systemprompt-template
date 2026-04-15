@@ -1,0 +1,130 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/toolbar searchId="skill-search" searchPlaceholder="Search skills..." newHref="/admin/org/skills/edit/" newLabel="+ New Skill"}}
+    <div class="filter-toolbar">
+        <select class="filter-select" id="source-filter">
+            <option value="">All Sources</option>
+            {{#each filter_sources}}<option value="{{this}}">{{this}}</option>{{/each}}
+        </select>
+        <select class="filter-select" id="plugin-filter">
+            <option value="">All Plugins</option>
+            {{#each filter_plugins}}<option value="{{this}}">{{this}}</option>{{/each}}
+        </select>
+        <select class="filter-select" id="tag-filter">
+            <option value="">All Tags</option>
+            {{#each filter_tags}}<option value="{{this}}">{{this}}</option>{{/each}}
+        </select>
+    </div>
+    {{#if skills}}
+    {{#> components/data-table}}
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Skill ID</th>
+                <th class="col-status">Source</th>
+                <th>Assigned Plugins</th>
+                <th class="col-numeric">Agents</th>
+                <th class="col-numeric">Usage</th>
+                <th>Rating</th>
+                <th class="col-date">Updated</th>
+                <th class="col-actions"></th>
+            </tr>
+        </thead>
+        <tbody>
+        {{#each skills}}
+        <tr class="clickable-row" data-name="{{toLowerCase name}}" data-skill-id="{{skill_id}}" data-description="{{toLowerCase description}}" data-source="{{source}}" data-plugins="{{#each assigned_plugins}}{{name}},{{/each}}" data-tags="{{#each tags}}{{this}},{{/each}}">
+            {{> components/table-cell-stacked primary=name secondary=(truncate description 80)}}
+            <td><code class="code-inline">{{skill_id}}</code></td>
+            <td>
+                {{#if (eq source "custom")}}<span class="badge badge-green">custom</span>{{else}}<span class="badge badge-blue">system</span>{{/if}}
+            </td>
+            <td>
+                <div class="badge-row">
+                {{#if (gt plugin_count 0)}}
+                    {{#each assigned_plugins}}
+                    <span class="badge badge-purple">{{name}}</span>
+                    {{/each}}
+                {{else}}
+                    <span class="text-tertiary">—</span>
+                {{/if}}
+                </div>
+            </td>
+            <td class="numeric">
+                {{#if (gt agent_count 0)}}
+                <span class="badge badge-blue">{{agent_count}}</span>
+                {{else}}
+                <span class="text-tertiary">—</span>
+                {{/if}}
+            </td>
+            <td class="numeric">{{#if usage_count}}<span class="usage-badge">{{usage_count}}</span>{{else}}<span class="text-muted">--</span>{{/if}}</td>
+            <td>{{#if avg_rating}}<span class="rating-display">{{avg_rating}} <span class="text-muted">({{rating_count}})</span></span>{{else}}<span class="text-muted">--</span>{{/if}}</td>
+            <td class="col-date"><span class="metadata-timestamp" title="{{updated_at}}">{{updated_at}}</span></td>
+            <td class="col-actions" data-no-row-click>
+                <div class="actions-menu" data-actions-for="{{skill_id}}">
+                    <button type="button" class="actions-trigger" data-action="menu" title="Actions" aria-label="Actions menu">&#8942;</button>
+                    <div class="actions-dropdown">
+                        <button type="button" class="actions-item" data-edit-skill="{{skill_id}}">Edit</button>
+                        <button type="button" class="actions-item" data-browse-skill="{{skill_id}}" data-skill-name="{{name}}">Files</button>
+                        {{#if (eq source "system")}}<button type="button" class="actions-item" data-fork-skill="{{skill_id}}">Customize</button>{{/if}}
+                        <button type="button" class="actions-item" data-assign-skill="{{skill_id}}" data-skill-name="{{name}}">Assign to Plugin</button>
+                        {{#if (eq source "custom")}}
+                        <div class="actions-popup-separator"></div>
+                        <button type="button" class="actions-item actions-item-danger" data-delete-skill="{{skill_id}}">Delete</button>
+                        {{/if}}
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr class="detail-row">
+            <td colspan="9">
+                <div class="detail-row-content" data-skill-expand="{{skill_id}}"></div>
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No skills found."}}
+    {{/if}}
+
+    {{#each skills}}
+    <script type="application/json" data-skill-detail="{{skill_id}}">
+        {{{json this}}}
+    </script>
+    {{/each}}
+
+    <div class="panel-overlay" id="assign-overlay"></div>
+    <div class="assign-panel" id="assign-panel" data-overlay="assign-overlay">
+        <div class="assign-panel-header">
+            <h3 data-panel-title class="mb-0 text-lg">Assign Skill</h3>
+            <button type="button" class="btn btn-icon text-lg" data-panel-close aria-label="Close panel">&times;</button>
+        </div>
+        <div class="assign-panel-body" data-panel-body></div>
+        <div class="assign-panel-footer" data-panel-footer></div>
+    </div>
+
+    <div class="panel-overlay" id="edit-overlay"></div>
+    <div class="edit-panel" id="edit-panel" data-overlay="edit-overlay">
+        <div class="edit-panel-header">
+            <h3 data-panel-title class="mb-0 text-lg">Edit</h3>
+            <button type="button" class="btn btn-icon text-lg" data-panel-close aria-label="Close panel">&times;</button>
+        </div>
+        <div class="edit-panel-body" data-panel-body></div>
+        <div class="edit-panel-footer" data-panel-footer></div>
+    </div>
+
+    <script type="application/json" id="all-plugins-data">
+        {{{json all_plugins}}}
+    </script>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-org-skills.js" defer></script>
+    <script data-cfasync="false" type="module">
+        import { initOrgSkills } from '/js/pages/admin-org-skills.js';
+        initOrgSkills();
+    </script>
+    {{/inline}}
+{{/layout}}

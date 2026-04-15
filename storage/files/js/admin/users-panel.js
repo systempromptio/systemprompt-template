@@ -1,0 +1,81 @@
+(function(app) {
+    'use strict';
+
+    const openCreatePanel = () => {
+        const overlay = document.getElementById('create-user-overlay');
+        const panel = document.getElementById('create-user-panel');
+        if (!overlay || !panel) return;
+        overlay.classList.add('open');
+        panel.classList.add('open');
+        const first = panel.querySelector('input');
+        if (first) setTimeout(() => { first.focus(); }, 350);
+    };
+    const closeCreatePanel = () => {
+        const overlay = document.getElementById('create-user-overlay');
+        const panel = document.getElementById('create-user-panel');
+        if (panel) panel.classList.remove('open');
+        if (overlay) overlay.classList.remove('open');
+    };
+    const resetForm = () => {
+        const fields = ['new-user-id', 'new-user-name', 'new-user-email'];
+        for (let i = 0; i < fields.length; i++) {
+            const el = document.getElementById(fields[i]);
+            if (el) el.value = '';
+        }
+        const dept = document.getElementById('new-user-dept');
+        if (dept) dept.value = '';
+        const boxes = document.querySelectorAll('#create-user-panel input[name="roles"]');
+        for (let j = 0; j < boxes.length; j++) {
+            boxes[j].checked = false;
+        }
+    };
+    const bindCreatePanelEvents = (refreshFn) => {
+        app.events.on('click', '#create-user-overlay', () => {
+            closeCreatePanel();
+        });
+
+        app.events.on('click', '#create-user-panel .panel-close', () => {
+            closeCreatePanel();
+        });
+
+        app.events.on('click', '#create-user-panel [data-action="cancel"]', () => {
+            closeCreatePanel();
+        });
+
+        app.events.on('click', '#create-user-panel [data-action="save"]', async () => {
+            const userId = document.getElementById('new-user-id').value.trim();
+            const displayName = document.getElementById('new-user-name').value.trim();
+            const email = document.getElementById('new-user-email').value.trim();
+            const deptVal = document.getElementById('new-user-dept').value;
+            const roleBoxes = document.querySelectorAll('#create-user-panel input[name="roles"]:checked');
+            const roles = Array.from(roleBoxes).map((cb) => cb.value);
+            if (!userId) {
+                app.Toast.show('User ID is required', 'error');
+                return;
+            }
+            try {
+                await app.api('/users', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        user_id: userId,
+                        display_name: displayName || userId,
+                        email: email,
+                        department: deptVal,
+                        roles: roles
+                    })
+                });
+                app.Toast.show('User created', 'success');
+                closeCreatePanel();
+                resetForm();
+                refreshFn();
+            } catch (err) {
+                app.Toast.show(err.message || 'Failed to create user', 'error');
+            }
+        });
+    };
+    app.usersPanel = {
+        open: openCreatePanel,
+        close: closeCreatePanel,
+        bindEvents: bindCreatePanelEvents
+    };
+})(window.AdminApp);

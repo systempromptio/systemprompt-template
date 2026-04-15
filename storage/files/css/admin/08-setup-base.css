@@ -1,0 +1,115 @@
+@layer components {
+.setup-page {
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: var(--sp-space-6) var(--sp-space-4);
+}
+
+.setup-hero {
+    margin-bottom: var(--sp-space-8);
+}
+
+.setup-hero h2 {
+    font-size: var(--sp-text-xl);
+    font-weight: 700;
+    margin: 0 0 var(--sp-space-2);
+    color: var(--sp-text-primary);
+}
+
+.setup-hero p {
+    color: var(--sp-text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.setup-stepper {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.setup-phase {
+    display: flex;
+    gap: var(--sp-space-4);
+    position: relative;
+}
+
+.setup-phase-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 2.5rem;
+}
+
+.setup-phase-number {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--sp-radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: var(--sp-text-sm);
+    flex-shrink: 0;
+    border: 2px solid var(--sp-border-default);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-secondary);
+    transition: all 0.2s ease;
+}
+
+.setup-phase--complete .setup-phase-number {
+    background: var(--sp-success);
+    border-color: var(--sp-success);
+    color: var(--sp-text-on-accent);
+}
+
+.setup-phase--current .setup-phase-number {
+    background: var(--sp-accent);
+    border-color: var(--sp-accent);
+    color: var(--sp-text-on-accent);
+}
+
+.setup-phase-connector {
+    width: 2px;
+    flex: 1;
+    min-height: 1.5rem;
+    background: var(--sp-border-default);
+    transition: background 0.2s ease;
+}
+
+.setup-phase--complete .setup-phase-connector {
+    background: var(--sp-success);
+}
+
+.setup-phase-content {
+    padding-bottom: var(--sp-space-6);
+    flex: 1;
+    min-width: 0;
+}
+
+.setup-phase-header {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin-bottom: var(--sp-space-1);
+}
+
+.setup-phase-content h3 {
+    font-size: var(--sp-text-base);
+    font-weight: 600;
+    margin: 0;
+    color: var(--sp-text-primary);
+}
+
+.setup-phase--upcoming .setup-phase-content h3 {
+    color: var(--sp-text-secondary);
+}
+
+.setup-phase-content p {
+    color: var(--sp-text-secondary);
+    line-height: 1.5;
+    margin: 0 0 var(--sp-space-2);
+    font-size: var(--sp-text-sm);
+}
+}

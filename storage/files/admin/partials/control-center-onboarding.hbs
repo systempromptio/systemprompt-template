@@ -1,0 +1,124 @@
+<div class="cc-onboarding" id="cc-onboarding">
+    {{#unless setup_context}}
+    <div class="cc-onboarding-header">
+        <h2>Welcome to your Control Center</h2>
+        <p>This is where you'll see live conversations, skill usage, and analytics. To get started, connect Claude to {{marketplace.site_url}} by following the steps below for your preferred client.</p>
+        <p class="cc-onboarding-guide-links">For a detailed walkthrough, see <a href="/documentation/integration-claude-code" target="_blank" rel="noopener noreferrer">Claude Code installation</a>, <a href="/documentation/integration-claude-cowork" target="_blank" rel="noopener noreferrer">Cowork installation</a>, or view your complete <a href="/admin/setup">Setup Guide</a>.</p>
+    </div>
+    {{/unless}}
+
+    <div class="cc-onboarding-tabs">
+        <button type="button" class="cc-onboarding-tab cc-onboarding-tab--active" data-onboard="code">Claude Code</button>
+        <button type="button" class="cc-onboarding-tab" data-onboard="cowork">Cowork (Claude Desktop)</button>
+        <button type="button" class="cc-onboarding-tab" data-onboard="web">claude.ai</button>
+    </div>
+
+    <div class="cc-onboarding-panel cc-onboarding-panel--active" id="onboard-code">
+        <div class="cc-onboarding-notice">
+            <strong>Recommended:</strong> Claude Code is the fastest way to get started. Your marketplace URL contains your personalized authentication token, so all plugins, skills, agents, hooks, and MCP servers are automatically authenticated. No whitelisting or manual connector setup required.
+        </div>
+        <div class="cc-onboarding-steps">
+            <div class="cc-onboarding-step">
+                <span class="cc-step-number">1</span>
+                <div class="cc-step-content">
+                    <h3>Add your marketplace (recommended)</h3>
+                    <p>This is the preferred method — it permanently registers the marketplace so plugins stay up to date across sessions.</p>
+                    <ol>
+                        <li>In a Claude Code conversation, type <code>/plugins</code></li>
+                        <li>Go to <strong>Marketplaces</strong> and click <strong>Add marketplace</strong></li>
+                        <li>Paste your marketplace URL:</li>
+                    </ol>
+                    <div class="cc-onboarding-code">
+                        <code>{{marketplace.git_url}}</code>
+                        <button type="button" class="btn-copy" data-copy="{{marketplace.git_url}}">Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cc-onboarding-step">
+                <span class="cc-step-number">2</span>
+                <div class="cc-step-content">
+                    <h3>Enable and install the plugin</h3>
+                    <p>Once the marketplace is added, browse it in the <strong>Marketplaces</strong> tab, enable the plugin you want, and choose <strong>Install globally</strong> so it's available in every conversation.</p>
+                </div>
+            </div>
+
+            <div class="cc-onboarding-step">
+                <span class="cc-step-number">3</span>
+                <div class="cc-step-content">
+                    <h3>Reload plugins</h3>
+                    <p>Type <code>/reload plugins</code> to activate your newly installed plugins. Events will appear here automatically.</p>
+                </div>
+            </div>
+
+            <div class="cc-onboarding-step cc-onboarding-step--alt">
+                <div class="cc-step-content">
+                    <h3>Alternative: command-line install</h3>
+                    <p>You can also install directly from your terminal or a Claude Code conversation:</p>
+                    <p><strong>From your terminal:</strong></p>
+                    <div class="cc-onboarding-code">
+                        <code>claude plugin marketplace add {{marketplace.git_url}}</code>
+                        <button type="button" class="btn-copy" data-copy="claude plugin marketplace add {{marketplace.git_url}}">Copy</button>
+                    </div>
+                    <p><strong>From inside a Claude Code conversation:</strong></p>
+                    <div class="cc-onboarding-code">
+                        <code>/plugin marketplace add {{marketplace.git_url}}</code>
+                        <button type="button" class="btn-copy" data-copy="/plugin marketplace add {{marketplace.git_url}}">Copy</button>
+                    </div>
+                    <p>This is also available from the <strong>Share &amp; Install</strong> icon in the header.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cc-onboarding-panel" id="onboard-cowork">
+        <!-- COWORK-RESEARCH-PREVIEW: Remove when Anthropic stabilises Cowork -->
+        <div class="cc-onboarding-notice cc-onboarding-notice--warning">
+            <strong>Research Preview:</strong> Claude Cowork is in research preview. While it has been working reliably in recent weeks, the platform has experienced intermittent issues. Even if Cowork is the primary integration point for your business, we recommend evaluating with <a href="/documentation/integration-claude-code">Claude Code</a> while Anthropic stabilises the Cowork platform. See <a href="/documentation/integration-claude-cowork" target="_blank" rel="noopener noreferrer">Cowork integration status</a>.
+        </div>
+        <div class="cc-onboarding-steps">
+            <div class="cc-onboarding-step">
+                <span class="cc-step-number">1</span>
+                <div class="cc-step-content">
+                    <h3>Export &amp; import plugin</h3>
+                    <p>Go to <a href="/admin/my/marketplace">My Marketplace</a> and click <strong>Export for Cowork</strong> to download your merged plugin ZIP. In Claude Desktop, go to <strong>Settings &rarr; Plugins &rarr; Import</strong> and upload the ZIP file. This single plugin contains all your skills, agents, and connectors.</p>
+                </div>
+            </div>
+
+            <div class="cc-onboarding-step">
+                <span class="cc-step-number">2</span>
+                <div class="cc-step-content">
+                    <h3>Enterprise plugin sync</h3>
+                    <p>Cowork does not support the one-line install path used by Claude Code due to Anthropic restrictions. For teams, we support enterprise plugins synced through a GitHub repository. You can embed authentication tokens by enforcing the use of settings files through company policy.</p>
+                    <p>Anthropic's <strong>Enterprise plan</strong> provides a managed solution for plugin distribution and settings enforcement. This can also be achieved with corporate device management tools without the Enterprise plan.</p>
+                    <p>See the <a href="/documentation/integration-claude-cowork" target="_blank" rel="noopener noreferrer">full Cowork installation guide</a> for step-by-step instructions.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="cc-onboarding-panel" id="onboard-web">
+        <div class="cc-onboarding-steps">
+            <div class="cc-onboarding-step">
+                <span class="cc-step-number">1</span>
+                <div class="cc-step-content">
+                    <h3>Add remote MCP integration</h3>
+                    <p>On <strong>claude.ai</strong>, go to <strong>Settings &rarr; Integrations</strong> and click <strong>Add more</strong>. Enter this URL as a custom integration:</p>
+                    <div class="cc-onboarding-code">
+                        <code>{{marketplace.mcp_url}}</code>
+                        <button type="button" class="btn-copy" data-copy="{{marketplace.mcp_url}}">Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cc-onboarding-step">
+                <span class="cc-step-number">2</span>
+                <div class="cc-step-content">
+                    <h3>Authorize and use</h3>
+                    <p>When prompted, authorize with your systemprompt.io account. Your skills, agents, and tools will then be available in claude.ai conversations. Events will appear here automatically.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

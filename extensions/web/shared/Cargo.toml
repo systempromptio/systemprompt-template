@@ -1,0 +1,23 @@
+[package]
+name = "systemprompt-web-shared"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+
+[dependencies]
+# Audit: uses only identifiers, models, traits — `core` (default) is sufficient.
+systemprompt = { workspace = true }
+sqlx = { workspace = true }
+axum = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+url = { workspace = true }
+urlencoding = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[lints]
+workspace = true

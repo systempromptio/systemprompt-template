@@ -1,0 +1,58 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/page-hero}}
+
+    <section aria-label="Database CLI commands">
+        <p class="text-tertiary">CLI: <code class="code-inline">{{cli_command}}</code> &middot; <code class="code-inline">systemprompt infra db info</code> &middot; <code class="code-inline">systemprompt infra db migrations status</code></p>
+    </section>
+
+    <section aria-label="Database summary" class="stat-card-grid">
+        {{> components/stat-card label="Database" value=db_name}}
+        {{> components/stat-card label="Size" value=db_size}}
+        {{> components/stat-card label="Tables" value=table_count}}
+        {{> components/stat-card label="Indexes" value=index_count}}
+    </section>
+
+    <section aria-label="Tables">
+        <h2>Tables</h2>
+    {{#if has_tables}}
+    {{#> components/data-table}}
+        <thead><tr><th>Schema</th><th>Table</th><th class="col-numeric">Columns</th></tr></thead>
+        <tbody>
+        {{#each tables}}
+        <tr>
+            <td>{{schema}}</td>
+            <td class="cell-primary"><code class="code-inline">{{name}}</code></td>
+            <td class="col-numeric numeric">{{column_count}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No tables found."}}
+    {{/if}}
+    </section>
+
+    <section aria-label="Indexes">
+        <h2>Indexes</h2>
+    {{#if has_indexes}}
+    {{#> components/data-table}}
+        <thead><tr><th>Table</th><th>Index</th></tr></thead>
+        <tbody>
+        {{#each indexes}}
+        <tr>
+            <td><code class="code-inline">{{table}}</code></td>
+            <td><code class="code-inline">{{name}}</code></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No indexes found."}}
+    {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

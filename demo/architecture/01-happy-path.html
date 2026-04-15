@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo 01: Happy Path — demo.systemprompt.io</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@600;700&family=Roboto:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: oklch(0.16 0.01 45);
+            --bg-surface: oklch(0.21 0.01 48);
+            --bg-elevated: oklch(0.24 0.01 48);
+            --bg-inset: oklch(0.14 0.01 45);
+            --text: oklch(0.98 0.004 70);
+            --text-secondary: oklch(0.86 0.010 60);
+            --text-tertiary: oklch(0.70 0.01 70);
+            --brand-300: oklch(0.52 0.14 48);
+            --brand-400: oklch(0.67 0.18 50);
+            --brand-500: oklch(0.72 0.17 52);
+            --border: oklch(1.00 0 0 / 0.08);
+            --border-strong: oklch(1.00 0 0 / 0.14);
+            --success: oklch(0.78 0.16 165);
+            --success-dim: oklch(0.78 0.16 165 / 0.10);
+            --danger: oklch(0.70 0.17 20);
+            --info: oklch(0.70 0.14 250);
+            --info-dim: oklch(0.70 0.14 250 / 0.10);
+            --purple: oklch(0.75 0.14 300);
+            --purple-dim: oklch(0.68 0.18 300 / 0.10);
+        }
+        [data-theme="light"] {
+            --bg: oklch(0.97 0.003 70);
+            --bg-surface: oklch(1.0 0 0);
+            --bg-elevated: oklch(0.98 0.003 70);
+            --bg-inset: oklch(0.95 0.003 70);
+            --text: oklch(0.20 0.01 50);
+            --text-secondary: oklch(0.41 0.01 60);
+            --text-tertiary: oklch(0.53 0.01 65);
+            --brand-300: oklch(0.78 0.15 53);
+            --brand-400: oklch(0.75 0.16 52);
+            --brand-500: oklch(0.72 0.17 52);
+            --border: oklch(0.20 0.01 50 / 0.08);
+            --border-strong: oklch(0.20 0.01 50 / 0.14);
+            --success-dim: oklch(0.78 0.16 165 / 0.08);
+            --info-dim: oklch(0.70 0.14 250 / 0.08);
+            --purple-dim: oklch(0.68 0.18 300 / 0.08);
+        }
+
+        body { font-family: 'Roboto', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; font-size: 0.8125rem; }
+
+        /* Header */
+        .page-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); }
+        .page-header h1 { font-family: 'Dosis', system-ui, sans-serif; font-size: 1rem; font-weight: 700; color: var(--brand-500); letter-spacing: 0.05em; }
+        .page-header h1 span { color: var(--text-tertiary); font-size: 0.75rem; margin-right: 0.4rem; }
+        .header-controls { display: flex; gap: 0.375rem; }
+        .btn { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 5px; padding: 0.3rem 0.6rem; min-height: 28px; cursor: pointer; font-family: inherit; font-size: 0.75rem; text-decoration: none; transition: border-color 0.1s ease-out, color 0.1s ease-out; display: inline-flex; align-items: center; gap: 0.25rem; }
+        .btn:hover { border-color: var(--brand-500); color: var(--text); }
+
+        /* Content */
+        .content { max-width: 860px; margin: 0 auto; padding: 1.5rem; }
+        .intro { color: var(--text-secondary); font-size: 0.8125rem; margin-bottom: 1.75rem; line-height: 1.6; }
+        .intro strong { color: var(--text); font-weight: 500; }
+
+        /* ── Command Group ── */
+        .cmd-group {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .cmd-header {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.625rem 1rem;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+        }
+        .cmd-step {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: var(--brand-500); color: oklch(0.16 0.01 45);
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-weight: 700; font-size: 0.6875rem;
+            display: inline-flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        [data-theme="light"] .cmd-step { color: white; }
+        .cmd-label {
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-weight: 700; font-size: 0.875rem;
+            color: var(--text);
+        }
+        .cmd-time {
+            margin-left: auto;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.6875rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Command line */
+        .cmd-line {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-inset);
+            border-bottom: 1px solid var(--border);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--brand-300);
+            overflow-x: auto;
+        }
+        .cmd-line .prompt { color: var(--text-tertiary); user-select: none; }
+
+        /* Detail rows inside a group */
+        .cmd-body { padding: 0; }
+        .detail-table {
+            width: 100%; border-collapse: collapse;
+        }
+        .detail-table td {
+            padding: 0.375rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        .detail-table tr:last-child td { border-bottom: none; }
+        .detail-table tr { transition: background 0.1s ease-out; }
+        .detail-table tr:hover { background: oklch(0.72 0.17 52 / 0.03); }
+        .detail-table .dt-label {
+            width: 130px;
+            color: var(--text-tertiary);
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 500;
+            padding-top: 0.4375rem;
+        }
+        .detail-table .dt-value {
+            color: var(--text-secondary);
+        }
+
+        /* Sub-flow within a group */
+        .sub-flow {
+            margin: 0.25rem 0;
+        }
+        .sub-step {
+            display: flex; align-items: flex-start; gap: 0.5rem;
+            padding: 0.25rem 0;
+            font-size: 0.75rem;
+        }
+        .sub-num {
+            color: var(--text-tertiary);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.625rem;
+            width: 14px; text-align: right;
+            flex-shrink: 0;
+            padding-top: 1px;
+        }
+        .sub-text { color: var(--text-secondary); }
+        .sub-text strong { color: var(--text); font-weight: 500; }
+
+        /* Badges */
+        .badge { font-family: 'Dosis', system-ui, sans-serif; font-size: 0.625rem; font-weight: 700; padding: 0.125rem 0.375rem; border-radius: 3px; letter-spacing: 0.03em; display: inline-flex; align-items: center; gap: 0.2rem; white-space: nowrap; vertical-align: middle; }
+        .b-pass { background: var(--success-dim); color: var(--success); border: 1px solid oklch(0.78 0.16 165 / 0.2); }
+        .b-pass::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--success); }
+        .b-id { background: var(--purple-dim); color: var(--purple); border: 1px solid oklch(0.68 0.18 300 / 0.15); font-family: 'Roboto Mono', monospace; font-weight: 400; }
+        .b-info { background: var(--info-dim); color: var(--info); border: 1px solid oklch(0.70 0.14 250 / 0.15); }
+        .b-neutral { background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border); }
+        .b-warn { background: oklch(0.83 0.16 85 / 0.10); color: oklch(0.83 0.16 85); border: 1px solid oklch(0.83 0.16 85 / 0.2); }
+
+        .code { font-family: 'Roboto Mono', monospace; font-size: 0.6875rem; color: var(--brand-300); background: oklch(0.72 0.17 52 / 0.06); padding: 0.1rem 0.3rem; border-radius: 2px; }
+
+        /* ── Review Box ── */
+        .review-box {
+            background: var(--bg-surface);
+            border: 1.5px solid oklch(0.70 0.14 250 / 0.3);
+            border-radius: 10px;
+            margin-top: 1.5rem;
+            overflow: hidden;
+        }
+        .review-header {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--info-dim);
+            border-bottom: 1px solid oklch(0.70 0.14 250 / 0.15);
+            font-family: 'Dosis', system-ui, sans-serif;
+            font-weight: 700; font-size: 0.8125rem;
+            color: var(--info);
+            letter-spacing: 0.03em;
+        }
+        .review-header svg { width: 14px; height: 14px; stroke: var(--info); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .review-body { padding: 0; }
+        .review-cmd {
+            display: flex; align-items: flex-start; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+        }
+        .review-cmd:last-child { border-bottom: none; }
+        .review-cmd-label {
+            color: var(--text-tertiary);
+            font-size: 0.625rem; text-transform: uppercase;
+            letter-spacing: 0.06em; font-weight: 500;
+            min-width: 80px; padding-top: 0.125rem;
+        }
+        .review-cmd-code {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.6875rem;
+            color: var(--info);
+        }
+        .review-cmd-desc {
+            color: var(--text-tertiary);
+            font-size: 0.6875rem;
+            margin-top: 0.125rem;
+        }
+
+        /* Footer */
+        .page-footer { display: flex; justify-content: space-between; padding: 0.75rem 1.5rem; border-top: 1px solid var(--border); margin-top: 1rem; }
+
+        @media print { body { background: white; color: #1a1a1a; } .btn { display: none; } }
+        @media (max-width: 640px) { .page-header { flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; } .content { padding: 1rem; } .detail-table .dt-label { width: 90px; } }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <h1><span>Demo 01</span> Happy Path</h1>
+        <div class="header-controls">
+            <a href="index.html" class="btn">Index</a>
+            <a href="04-governance-happy.html" class="btn">Next &rarr;</a>
+            <button class="btn" onclick="toggleTheme()"><span class="theme-icon">&#9790;</span></button>
+        </div>
+    </header>
+
+    <div class="content">
+        <p class="intro">
+            Simulates a Claude Code PreToolUse hook workflow. Governance <strong>ALLOWS</strong> an admin-scope tool call,
+            then the MCP tool executes and returns real data. Cost: <strong>Free</strong> (direct API calls, no AI).
+        </p>
+
+        <!-- ═══ Step 1: Create Context ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">1</span>
+                <span class="cmd-label">Create Context</span>
+                <span class="cmd-time">~2ms</span>
+            </div>
+            <div class="cmd-line">
+                <span class="prompt">$</span> core contexts create --name "Demo 1 - Happy Path"
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">What happens</td>
+                        <td class="dt-value">Creates an isolated execution context. All subsequent messages, tool calls, and artifacts are scoped to this context.</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Output</td>
+                        <td class="dt-value"><span class="badge b-id">ContextId</span> <span class="code">ctx_a1b2c3d4</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Rust type</td>
+                        <td class="dt-value"><span class="code">ContextId(String)</span> &mdash; newtype, cannot be confused with other IDs</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Context isolation</strong> &mdash; every agent conversation gets its own ContextId. This prevents cross-contamination between sessions and enables per-context artifact retrieval, cost tracking, and trace linking. Without it, concurrent agent sessions would share state.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Step 2: Message Agent ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">2</span>
+                <span class="cmd-label">Message Agent</span>
+                <span class="cmd-time">~3.2s</span>
+            </div>
+            <div class="cmd-line">
+                <span class="prompt">$</span> admin agents message developer_agent -m "List all agents" --context-id $CONTEXT_ID --blocking --timeout 60
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">Agent</td>
+                        <td class="dt-value"><strong>developer_agent</strong> &mdash; scope: <span class="badge b-pass">admin</span> &mdash; MCP: <span class="code">systemprompt</span> <span class="code">skill-manager</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">IDs created</td>
+                        <td class="dt-value"><span class="badge b-id">SessionId</span> <span class="badge b-id">TraceId</span> <span class="badge b-id">UserId</span> <span class="code" style="font-size:0.625rem">(from JWT)</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Internal flow</td>
+                        <td class="dt-value">
+                            <div class="sub-flow">
+                                <div class="sub-step"><span class="sub-num">2a</span><span class="sub-text"><strong>AI Request #1</strong> &mdash; model receives message + tool list, decides to call <span class="code">mcp__systemprompt__list_agents</span></span></div>
+                                <div class="sub-step"><span class="sub-num">2b</span><span class="sub-text"><strong>PreToolUse Hook</strong> &mdash; <span class="code">POST /api/public/hooks/govern</span> &rarr; scope=admin &rarr; <span class="badge b-pass">ALLOW</span> <span class="cmd-time">~12ms</span></span></div>
+                                <div class="sub-step"><span class="sub-num">2c</span><span class="sub-text"><strong>MCP Execution</strong> &mdash; systemprompt server runs <span class="code">admin agents list</span> &rarr; JSON result <span class="cmd-time">~180ms</span></span></div>
+                                <div class="sub-step"><span class="sub-num">2d</span><span class="sub-text"><strong>AI Request #2</strong> &mdash; model processes tool output, formats response, creates artifact</span></div>
+                                <div class="sub-step"><span class="sub-num">2e</span><span class="sub-text"><strong>PostToolUse Hook</strong> &mdash; <span class="code">POST /api/public/hooks/track</span> &rarr; records tool_name, timing, bytes <span class="cmd-time">~8ms</span></span></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Timing</td>
+                        <td class="dt-value">
+                            AI: ~2.8s &nbsp;&bull;&nbsp; Governance: ~12ms &nbsp;&bull;&nbsp; MCP: ~180ms &nbsp;&bull;&nbsp; Tracking: ~8ms
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Trace events</td>
+                        <td class="dt-value">~11 events &mdash; 3 AI requests, 1 MCP call, governance decisions, execution steps</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Governance is synchronous</strong> &mdash; the PreToolUse hook blocks tool execution until the backend returns allow/deny. This is the enforcement point. If governance were async, tools could execute before the decision arrives. The PostToolUse hook is fire-and-forget (tracking only).</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Typed IDs everywhere</strong> &mdash; UserId, SessionId, TraceId are newtypes. The compiler prevents passing a SessionId where a UserId is expected. This eliminates an entire class of audit-linking bugs and means every trace event is guaranteed to carry the correct IDs.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Step 3: Retrieve Artifact ═══ -->
+        <div class="cmd-group">
+            <div class="cmd-header">
+                <span class="cmd-step">3</span>
+                <span class="cmd-label">Retrieve Artifact</span>
+                <span class="cmd-time">~1ms</span>
+            </div>
+            <div class="cmd-line">
+                <span class="prompt">$</span> core artifacts show $ARTIFACT_ID --full
+            </div>
+            <div class="cmd-body">
+                <table class="detail-table">
+                    <tr>
+                        <td class="dt-label">What happens</td>
+                        <td class="dt-value">Retrieves the typed artifact the agent produced. Artifacts are structured JSON data that any surface can render &mdash; web dashboard, mobile app, Slack bot, or CLI.</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Output</td>
+                        <td class="dt-value"><span class="badge b-info">JSON</span> Structured agent list with names, scopes, MCP server mappings</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label">Linked by</td>
+                        <td class="dt-value"><span class="badge b-id">ContextId</span> &mdash; same context from step 1 links message &rarr; trace &rarr; artifact</td>
+                    </tr>
+                    <tr>
+                        <td class="dt-label" style="color:var(--brand-400)">Why</td>
+                        <td class="dt-value"><strong>Surface-agnostic artifacts</strong> &mdash; the agent produces typed JSON, not formatted text. Any surface (web dashboard, CLI, mobile app, Slack bot) can render the same artifact differently. This is why the artifact is stored with ContextId, not embedded in the chat response.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ Review Box ═══ -->
+        <div class="review-box">
+            <div class="review-header">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Audit this trace
+            </div>
+            <div class="review-body">
+                <div class="review-cmd">
+                    <div class="review-cmd-label">Full trace</div>
+                    <div>
+                        <div class="review-cmd-code">infra logs trace show &lt;trace_id&gt; --all</div>
+                        <div class="review-cmd-desc">Shows all 11 events: AI requests, MCP calls, execution steps, skills loaded, governance decisions</div>
+                    </div>
+                </div>
+                <div class="review-cmd">
+                    <div class="review-cmd-label">Cost</div>
+                    <div>
+                        <div class="review-cmd-code">analytics costs breakdown --by agent</div>
+                        <div class="review-cmd-desc">developer_agent: ~$0.01 (3 AI requests on Gemini Flash)</div>
+                    </div>
+                </div>
+                <div class="review-cmd">
+                    <div class="review-cmd-label">Artifact</div>
+                    <div>
+                        <div class="review-cmd-code">core artifacts list --context-id &lt;context_id&gt;</div>
+                        <div class="review-cmd-desc">Lists all artifacts produced in this context</div>
+                    </div>
+                </div>
+                <div class="review-cmd">
+                    <div class="review-cmd-label">Governance</div>
+                    <div>
+                        <div class="review-cmd-code">tail /tmp/systemprompt-governance-*.log</div>
+                        <div class="review-cmd-desc">Shows the governance decision: scope=admin, all rules passed, decision=allow</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">
+        <span></span>
+        <a href="04-governance-happy.html" class="btn">Next: Governance Allow &rarr;</a>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            document.querySelector('.theme-icon').textContent = next === 'dark' ? '\u263E' : '\u2600';
+            try { localStorage.setItem('arch-theme', next); } catch(e) {}
+        }
+        try { const s = localStorage.getItem('arch-theme'); if (s) { document.documentElement.setAttribute('data-theme', s); document.querySelector('.theme-icon').textContent = s === 'dark' ? '\u263E' : '\u2600'; } } catch(e) {}
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight') window.location.href = '04-governance-happy.html';
+            if (e.key === 'h' || e.key === 'H') window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

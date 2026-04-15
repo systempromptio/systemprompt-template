@@ -1,0 +1,151 @@
+@layer components {
+
+
+.marketplace-stats-ribbon {
+    display: flex;
+    gap: var(--sp-space-3);
+    margin-bottom: var(--sp-space-5);
+}
+.marketplace-stat-card {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    background: var(--sp-bg-surface-gradient);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-brand);
+    box-shadow: var(--sp-shadow-card), var(--sp-shadow-inner-glow);
+}
+.marketplace-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--sp-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--sp-text-lg);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.marketplace-stat-icon--plugins {
+    background: color-mix(in oklch, var(--sp-section-plugins) 12%, transparent);
+    color: var(--sp-section-plugins);
+}
+.marketplace-stat-icon--skills {
+    background: color-mix(in oklch, var(--sp-success) 12%, transparent);
+    color: var(--sp-success);
+}
+.marketplace-stat-icon--agents {
+    background: color-mix(in oklch, var(--sp-section-users) 12%, transparent);
+    color: var(--sp-section-users);
+}
+.marketplace-stat-icon--mcp {
+    background: color-mix(in oklch, var(--sp-accent) 12%, transparent);
+    color: var(--sp-accent);
+}
+.marketplace-stat-icon--hooks {
+    background: color-mix(in oklch, var(--sp-section-audit) 12%, transparent);
+    color: var(--sp-section-audit);
+}
+.marketplace-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+.marketplace-stat-value {
+    font-size: var(--sp-text-lg);
+    font-weight: 700;
+    color: var(--sp-text-primary);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+.marketplace-stat-label {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-weight: 500;
+}
+.marketplace-stat-delta {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--sp-text-tertiary);
+    line-height: 1.2;
+}
+.marketplace-stat-delta--up {
+    color: var(--sp-success);
+}
+.marketplace-stat-delta--down {
+    color: var(--sp-danger);
+}
+.marketplace-stat-period {
+    font-size: 0.625rem;
+    color: var(--sp-text-tertiary);
+    font-weight: 400;
+}
+
+@media (max-width: 768px) {
+    .marketplace-stats-ribbon {
+        flex-wrap: wrap;
+    }
+    .marketplace-stat-card {
+        min-width: calc(50% - var(--sp-space-2));
+    }
+}
+@media (max-width: 480px) {
+    .marketplace-stat-card {
+        min-width: 100%;
+    }
+}
+
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    margin: var(--sp-space-6) 0 var(--sp-space-4);
+}
+.section-header h3 {
+    margin: 0;
+    font-size: var(--sp-text-lg);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+}
+
+
+.selection-save-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-space-3) var(--sp-space-4);
+    background: color-mix(in oklch, var(--sp-accent) 8%, var(--sp-bg-surface));
+    border: 1px solid var(--sp-accent);
+    border-radius: var(--sp-radius-md);
+    margin-bottom: var(--sp-space-4);
+    font-size: var(--sp-text-sm);
+}
+
+
+.plugin-card-actions {
+    display: flex;
+    gap: var(--sp-space-2);
+    margin-top: var(--sp-space-2);
+}
+.btn-fork {
+    font-size: var(--sp-text-xs);
+    padding: 0.125rem var(--sp-space-2);
+    color: var(--sp-text-tertiary);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-sm);
+    background: transparent;
+    cursor: pointer;
+    transition: color var(--sp-duration-fast),
+                border-color var(--sp-duration-fast),
+                background var(--sp-duration-fast);
+}
+.btn-fork:hover {
+    color: var(--sp-accent);
+    border-color: var(--sp-accent);
+    background: color-mix(in oklch, var(--sp-accent) 8%, transparent);
+}
+
+}

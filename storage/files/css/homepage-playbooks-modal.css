@@ -1,0 +1,152 @@
+
+.mcp-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--sp-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+
+.mcp-modal__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: var(--sp-z-sticky);
+}
+
+.mcp-modal__content {
+  position: relative;
+  z-index: var(--sp-z-sticky-header);
+  background: #001433;
+  background: var(--sp-color-bg-elevated);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-lg);
+  padding: var(--sp-space-xl);
+  max-width: 560px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.mcp-modal__close {
+  position: absolute;
+  top: var(--sp-space-md);
+  right: var(--sp-space-md);
+  background: none;
+  border: none;
+  color: var(--sp-color-text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: var(--sp-space-xs);
+}
+
+.mcp-modal__close:hover {
+  color: var(--sp-color-text-primary);
+}
+
+.mcp-modal__title {
+  font-family: var(--sp-font-brand);
+  font-size: 1.25rem;
+  margin-bottom: var(--sp-space-sm);
+  color: var(--sp-color-text-primary);
+}
+
+.mcp-modal__desc {
+  color: var(--sp-color-text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: var(--sp-space-lg);
+}
+
+.mcp-modal__url-row {
+  display: flex;
+  gap: var(--sp-space-sm);
+  margin-bottom: var(--sp-space-xl);
+}
+
+.mcp-modal__url {
+  flex: 1;
+  background: var(--sp-color-bg-secondary);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.8rem;
+  color: var(--sp-color-primary);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.mcp-modal__copy {
+  background: var(--sp-color-primary);
+  color: var(--sp-color-bg-primary);
+  border: none;
+  border-radius: var(--sp-radius-sm);
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity var(--sp-transition-fast);
+  white-space: nowrap;
+}
+
+.mcp-modal__copy:hover {
+  opacity: 0.9;
+}
+
+.mcp-modal__instructions h4 {
+  font-size: 0.9rem;
+  color: var(--sp-color-text-primary);
+  margin-bottom: var(--sp-space-sm);
+  margin-top: var(--sp-space-lg);
+}
+
+.mcp-modal__instructions h4:first-child {
+  margin-top: 0;
+}
+
+.mcp-modal__instructions p {
+  color: var(--sp-color-text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: var(--sp-space-sm);
+}
+
+.mcp-modal__instructions pre {
+  background: var(--sp-color-bg-secondary);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  padding: var(--sp-space-md);
+  overflow-x: auto;
+}
+
+.mcp-modal__instructions code {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.75rem;
+  color: var(--sp-color-text-secondary);
+}
+
+.mcp-modal__instructions pre::-webkit-scrollbar,
+.mcp-modal__url::-webkit-scrollbar {
+  height: 6px;
+}
+
+.mcp-modal__instructions pre::-webkit-scrollbar-track,
+.mcp-modal__url::-webkit-scrollbar-track {
+  background: var(--sp-color-bg-primary);
+  border-radius: var(--sp-radius-xs);
+}
+
+.mcp-modal__instructions pre::-webkit-scrollbar-thumb,
+.mcp-modal__url::-webkit-scrollbar-thumb {
+  background: var(--sp-color-border);
+  border-radius: var(--sp-radius-xs);
+}
+

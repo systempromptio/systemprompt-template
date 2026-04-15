@@ -1,0 +1,105 @@
+@layer components {
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-space-4);
+}
+
+.form-group-wide {
+    grid-column: 1 / -1;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2) var(--sp-space-4);
+}
+
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    font-size: var(--sp-text-sm);
+    cursor: pointer;
+}
+
+.toolbar {
+    display: flex;
+    gap: var(--sp-space-3);
+    align-items: flex-end;
+    margin-bottom: var(--sp-space-4);
+    flex-wrap: wrap;
+}
+
+.search-input {
+    width: 100%;
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-button);
+    padding: var(--sp-space-2) var(--sp-space-4);
+    color: var(--sp-text-primary);
+    font-size: var(--sp-text-base);
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--sp-duration-fast), box-shadow var(--sp-duration-fast);
+}
+
+.search-input:focus-visible {
+    border-color: var(--sp-accent);
+    outline: 2px solid var(--sp-accent-dim);
+    outline-offset: -1px;
+}
+
+.search-input::placeholder {
+    color: var(--sp-text-disabled);
+}
+
+.search-group {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.filter-select {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-button);
+    padding: var(--sp-space-2) var(--sp-space-4);
+    color: var(--sp-text-primary);
+    font-size: var(--sp-text-sm);
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: border-color var(--sp-duration-fast);
+}
+
+.filter-select:focus-visible {
+    border-color: var(--sp-accent);
+    outline: 2px solid var(--sp-accent-dim);
+    outline-offset: -1px;
+}
+
+.filter-select option {
+    background: var(--sp-bg-surface-overlay);
+    color: var(--sp-text-primary);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.filter-label {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1;
+}
+
+}

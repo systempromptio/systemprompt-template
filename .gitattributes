@@ -1,0 +1,20 @@
+# Generated compiled output
+storage/files/admin/compiled/** linguist-generated
+storage/files/js/**             linguist-generated
+storage/files/css/**            linguist-generated
+web/dist/**                     linguist-generated
+
+# Vendored third-party / bundled assets
+storage/files/fonts/**          linguist-vendored
+storage/files/images/**         linguist-vendored
+storage/files/plugins/**        linguist-vendored
+
+# Skill support scripts/templates/examples (not primary app code)
+services/skills/**/scripts/**   linguist-generated
+services/skills/**/templates/** linguist-generated
+services/skills/**/examples/**  linguist-generated
+services/skills/**/assets/**    linguist-vendored
+
+# Preserve skill metadata as primary content
+services/skills/**/*.yaml       -linguist-generated
+services/skills/**/*.md         -linguist-generated

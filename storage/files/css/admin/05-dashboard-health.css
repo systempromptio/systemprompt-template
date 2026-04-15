@@ -1,0 +1,121 @@
+@layer components {
+
+
+.health-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-space-3);
+    margin-bottom: var(--sp-space-4);
+}
+
+.health-card {
+    background: var(--sp-bg-surface-gradient);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-card-inner-brand);
+    padding: var(--sp-space-5) var(--sp-space-4);
+    text-align: center;
+    box-shadow: var(--sp-shadow-card), var(--sp-shadow-inner-glow);
+    position: relative;
+    overflow: hidden;
+    transition: transform var(--sp-duration-fast) var(--sp-ease-out),
+                box-shadow var(--sp-duration-fast);
+}
+
+.health-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 15%;
+    right: 15%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--sp-border-strong), transparent);
+    border-radius: 0 0 var(--sp-radius-xs) var(--sp-radius-xs);
+}
+
+.health-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--sp-shadow-md);
+}
+
+.health-label {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    letter-spacing: 0.02em;
+    margin-bottom: var(--sp-space-2);
+}
+
+.health-value {
+    font-size: var(--sp-text-xl);
+    font-weight: 700;
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    margin-bottom: var(--sp-space-1);
+}
+
+.health-bar {
+    height: 4px;
+    background: color-mix(in oklch, var(--sp-warm-900) 6%, transparent);
+    border-radius: var(--sp-radius-xs);
+    margin-top: var(--sp-space-2);
+    overflow: hidden;
+}
+
+.health-bar-fill {
+    height: 100%;
+    width: var(--sp-fill);
+    border-radius: var(--sp-radius-xs);
+    transition: width 600ms var(--sp-ease-out);
+}
+
+.health-bar-success {
+    background: linear-gradient(90deg, var(--sp-progress-green-from), var(--sp-progress-green-to));
+    box-shadow: 0 0 6px color-mix(in oklch, var(--sp-progress-green-from) 40%, transparent);
+}
+
+.health-bar-danger {
+    background: linear-gradient(90deg, var(--sp-progress-red-from), var(--sp-progress-red-to));
+    box-shadow: 0 0 6px color-mix(in oklch, var(--sp-progress-red-from) 40%, transparent);
+}
+
+
+.mini-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.125rem;
+    height: 120px;
+    padding-bottom: var(--sp-space-4);
+}
+
+.mini-chart-bar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    position: relative;
+}
+
+.mini-chart-fill {
+    width: 100%;
+    height: var(--sp-fill);
+    background: linear-gradient(180deg, var(--sp-accent), var(--sp-primary-700));
+    border-radius: var(--sp-radius-xs) var(--sp-radius-xs) 1px 1px;
+    min-height: 2px;
+    transition: height 600ms var(--sp-ease-out);
+}
+
+.mini-chart-bar:hover .mini-chart-fill {
+    background: linear-gradient(180deg, var(--sp-primary-400), var(--sp-accent));
+    box-shadow: 0 -3px 8px color-mix(in oklch, var(--sp-accent) 35%, transparent);
+}
+
+.mini-chart-label {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    margin-top: var(--sp-space-1);
+    height: 14px;
+}
+
+}

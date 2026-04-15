@@ -1,0 +1,41 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    {{> components/page-hero}}
+
+    <section aria-label="Services CLI commands">
+        <p class="text-tertiary">Run these CLI commands for live process details:</p>
+        <p><code class="code-inline">{{cli_command}}</code></p>
+        <p><code class="code-inline">{{registry_command}}</code></p>
+    </section>
+
+    <section aria-label="Service summary" class="stat-card-grid">
+        {{> components/stat-card label="Agents" value=agent_count}}
+        {{> components/stat-card label="Enabled" value=enabled_count}}
+    </section>
+
+    <section aria-label="Agent registry">
+    {{#if has_agents}}
+    {{#> components/data-table}}
+        <thead><tr><th>Agent</th><th class="col-numeric">Port</th><th class="col-status">Enabled</th><th class="col-numeric">MCP</th><th class="col-numeric">Skills</th><th>Endpoint</th></tr></thead>
+        <tbody>
+        {{#each agents}}
+        <tr>
+            <td>{{> components/table-cell-stacked primary=id secondary=name}}</td>
+            <td class="col-numeric numeric">{{#if port}}{{port}}{{else}}&mdash;{{/if}}</td>
+            <td class="col-status">{{#if enabled}}<span class="badge badge-success">Enabled</span>{{else}}<span class="badge badge-secondary">Disabled</span>{{/if}}</td>
+            <td class="col-numeric numeric">{{mcp_server_count}}</td>
+            <td class="col-numeric numeric">{{skill_count}}</td>
+            <td>{{#if endpoint}}<code class="code-inline">{{endpoint}}</code>{{else}}&mdash;{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No agents registered. Run the CLI command above for live service status."}}
+    {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}
