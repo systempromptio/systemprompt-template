@@ -12,7 +12,7 @@
 # CLI commands used:
 #   - systemprompt infra logs view --since 1h --limit 10
 #   - systemprompt infra logs summary --since 24h
-#   - systemprompt infra logs search "governance" --since 24h
+#   - systemprompt infra logs search "extension" --since 24h
 #   - systemprompt infra logs trace list --limit 5
 #   - systemprompt infra logs request list --limit 5
 #   - systemprompt infra logs tools list --limit 5
@@ -32,7 +32,7 @@ subheader "STEP 2: Log Summary"
 run_cli_indented infra logs summary --since 24h
 
 subheader "STEP 3: Search Logs"
-run_cli_head 15 infra logs search "governance" --since 24h
+run_cli_head 15 infra logs search "extension" --since 24h
 
 subheader "STEP 4: Execution Traces"
 run_cli_head 20 infra logs trace list --limit 5
