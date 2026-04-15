@@ -5,7 +5,11 @@
 #   1. asciinema rec --command ./svg-*.sh            → recordings/<name>.cast
 #   2. svg-term --profile dark.xrdb                   → dark SVG
 #   3. svg-term --profile light.xrdb                  → light SVG
-#   4. svgo --config svgo.config.json (in place)      → minified
+#
+# NOTE: svgo is intentionally NOT run here. svgo's preset-default strips the
+# inline style="" attribute that svg-term puts the animation-* properties on,
+# freezing every animation at frame 0. The files are served gzipped anyway —
+# the 1–2% savings aren't worth broken animations.
 #
 # Two classes of scripts:
 #   - Template-facing: svg-NN-*.sh at the recorder root.
@@ -14,7 +18,7 @@
 #     Output: ../systemprompt-core/assets/readme/terminals/{dark,light}/<layer>-<name>.svg
 #             AND demo/recording/svg/output/crates/{dark,light}/<layer>-<name>.svg (reference copy)
 #
-# Prerequisites: asciinema, svg-term-cli, svgo, live server on :8080, demo/.token.
+# Prerequisites: asciinema, svg-term-cli, live server on :8080, demo/.token.
 #
 # Usage:
 #   ./record.sh                         # everything (template + crates)
@@ -31,8 +35,6 @@ OUTPUT_CRATES_DARK="$SCRIPT_DIR/output/crates/dark"
 OUTPUT_CRATES_LIGHT="$SCRIPT_DIR/output/crates/light"
 DARK_PROFILE="$SCRIPT_DIR/profiles/dark.xrdb"
 LIGHT_PROFILE="$SCRIPT_DIR/profiles/light.xrdb"
-SVGO_CONFIG="$SCRIPT_DIR/svgo.config.json"
-
 CORE_REPO="$(cd "$SCRIPT_DIR/../../.." && pwd)/../systemprompt-core"
 CORE_DARK="$CORE_REPO/assets/readme/terminals/dark"
 CORE_LIGHT="$CORE_REPO/assets/readme/terminals/light"
@@ -61,7 +63,6 @@ need() { command -v "$1" >/dev/null 2>&1 || { echo "ERROR: $1 not found. $2" >&2
 if [[ $DRY_RUN -eq 0 ]]; then
   need asciinema "Install with: pipx install asciinema"
   need svg-term  "Install with: npm i -g svg-term-cli"
-  need svgo      "Install with: npm i -g svgo"
 
   if ! curl -sf -o /dev/null http://localhost:8080/; then
     echo "ERROR: server not responding at http://localhost:8080 — run: just start" >&2
@@ -123,11 +124,6 @@ if [[ $TOTAL -eq 0 ]]; then
   exit 1
 fi
 
-minify() {
-  local svg="$1"
-  svgo --config="$SVGO_CONFIG" --input="$svg" --output="$svg" --quiet
-}
-
 capture() {
   local script="$1" cast="$2"
   asciinema rec \
@@ -152,7 +148,6 @@ render() {
     --width "$WIDTH" \
     --height "$HEIGHT" \
     --padding "$PADDING"
-  minify "$out"
 }
 
 record_template() {
