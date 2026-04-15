@@ -1,5 +1,10 @@
 # SystemPrompt Services Configuration
-# Thin aggregator — every top-level service file is listed explicitly.
+# Thin aggregator — every top-level resource file is listed here explicitly.
+# Skills and plugins are auto-discovered from nested directories
+# (services/skills/<id>/config.yaml, services/plugins/<id>/config.yaml).
+# Agents are included as flat files because the runtime loader reads the
+# wrapped `agents: {<name>: AgentConfig}` shape, not the DiskAgentConfig
+# directory form used by `admin agents create`.
 
 includes:
   # MCP servers
@@ -14,12 +19,9 @@ includes:
   - ../scheduler/config.yaml
   - ../content/config.yaml
 
-  # Skills (flat)
-  - ../skills/use_dangerous_secret.yaml
-  - ../skills/example_web_search.yaml
-
-  # Plugins (flat)
-  - ../plugins/enterprise-demo.yaml
+  # Agents (flat, wrapped in `agents:` map)
+  - ../agents/developer_agent.yaml
+  - ../agents/associate_agent.yaml
 
 settings:
   agentPortRange: [9000, 9999]

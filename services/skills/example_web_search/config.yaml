@@ -1,0 +1,10 @@
+id: example_web_search
+name: Example Web Search
+description: "A simple demonstration skill that searches the web for information"
+enabled: true
+file: index.md
+tags:
+  - example
+  - demo
+  - web-search
+category: research

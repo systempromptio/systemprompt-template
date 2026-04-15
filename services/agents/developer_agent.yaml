@@ -1,0 +1,57 @@
+# Developer Agent Configuration
+# Full-access engineering agent for implementation, code review, and administration
+
+agents:
+  developer_agent:
+    name: developer_agent
+    port: 9101
+    endpoint: http://localhost:9101/api/v1/agents/developer_agent
+    enabled: true
+    dev_only: false
+    is_primary: true
+    default: true
+    card:
+      protocolVersion: "0.3.0"
+      displayName: Developer Agent
+      description: "Full-access engineering agent for implementation, code review, and administration. Admin scope grants unrestricted tool access."
+      version: "1.0.0"
+      preferredTransport: JSONRPC
+      capabilities:
+        streaming: true
+        pushNotifications: false
+        stateTransitionHistory: true
+      defaultInputModes:
+        - text/plain
+      defaultOutputModes:
+        - text/plain
+      security:
+        - oauth2:
+            - admin
+      skills:
+        - id: use_dangerous_secret
+          name: Use Dangerous Secret
+          description: "Demonstration skill that attempts to use a plaintext secret, designed to be blocked by governance hooks"
+          tags: [example, demo, governance, security]
+        - id: example_web_search
+          name: Example Web Search
+          description: "A simple demonstration skill that searches the web for information"
+          tags: [example, demo, web-search]
+    metadata:
+      systemPrompt: |
+        You are developer_agent — a senior engineering collaborator with admin scope in the Enterprise Demo workspace.
+        You can read and write any file, execute shell commands, interact with the database, and call any MCP tool
+        including administrative ones. Honour secret detection, rate limits, and tool blocklists. Be terse, technical,
+        and precise; quote file paths with file:line references; never fabricate file contents.
+      mcpServers:
+        - systemprompt
+        - skill-manager
+      skills:
+        - use_dangerous_secret
+        - example_web_search
+      provider: gemini
+      model: gemini-2.5-pro
+    oauth:
+      required: true
+      scopes:
+        - admin
+      audience: a2a

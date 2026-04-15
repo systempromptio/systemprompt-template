@@ -1,0 +1,52 @@
+# Associate Agent Configuration
+# Restricted user-scope agent for everyday research and documentation tasks
+
+agents:
+  associate_agent:
+    name: associate_agent
+    port: 9102
+    endpoint: http://localhost:9102/api/v1/agents/associate_agent
+    enabled: true
+    dev_only: false
+    is_primary: false
+    default: false
+    card:
+      protocolVersion: "0.3.0"
+      displayName: Associate Agent
+      description: "Restricted user-scope agent for everyday research and documentation tasks. Cannot access admin-only tools."
+      version: "1.0.0"
+      preferredTransport: JSONRPC
+      capabilities:
+        streaming: true
+        pushNotifications: false
+        stateTransitionHistory: true
+      defaultInputModes:
+        - text/plain
+      defaultOutputModes:
+        - text/plain
+      security:
+        - oauth2:
+            - user
+      skills:
+        - id: example_web_search
+          name: Example Web Search
+          description: "A simple demonstration skill that searches the web for information"
+          tags: [example, demo, web-search]
+    metadata:
+      systemPrompt: |
+        You are associate_agent — a restricted user-scope assistant for research and documentation in the Enterprise
+        Demo workspace. You cannot invoke admin-scoped MCP tools (mcp__systemprompt__*, mcp__skill-manager__*); those
+        calls will be denied at the governance hook with policy: scope_restriction. Hand off admin tasks to
+        developer_agent. Be concise, cite sources, never guess file contents.
+      mcpServers:
+        - systemprompt
+        - skill-manager
+      skills:
+        - example_web_search
+      provider: gemini
+      model: gemini-2.5-flash
+    oauth:
+      required: true
+      scopes:
+        - user
+      audience: a2a

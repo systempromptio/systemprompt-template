@@ -1,0 +1,33 @@
+plugin:
+  id: enterprise-demo
+  name: Enterprise Governance Demo
+  description: "Governance examples — a dangerous skill blocked by policy hooks, and a simple web search skill demonstrating tool governance"
+  version: "2.0.0"
+  enabled: true
+  author:
+    name: systemprompt.io
+    email: support@systemprompt.io
+  keywords:
+    - governance
+    - demo
+    - enterprise
+  license: proprietary
+  category: governance
+  skills:
+    source: explicit
+    include:
+      - use_dangerous_secret
+      - example_web_search
+    exclude: []
+  agents:
+    source: explicit
+    include:
+      - developer_agent
+      - associate_agent
+    exclude: []
+  mcp_servers:
+    - systemprompt
+    - skill-manager
+  content_sources: []
+  hooks: {}
+  scripts: []
