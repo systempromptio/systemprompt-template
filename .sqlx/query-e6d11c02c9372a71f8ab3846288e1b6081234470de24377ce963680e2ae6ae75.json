@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n             COALESCE(p.display_name, 'Free') AS \"plan_name!\",\n             s.status,\n             s.current_period_end,\n             p.limits AS \"limits?: serde_json::Value\"\n           FROM marketplace.subscriptions s\n           LEFT JOIN marketplace.plans p ON p.id = s.plan_id\n           WHERE s.user_id = $1\n           ORDER BY s.created_at DESC\n           LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "plan_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "current_period_end",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "limits?: serde_json::Value",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "e6d11c02c9372a71f8ab3846288e1b6081234470de24377ce963680e2ae6ae75"
+}

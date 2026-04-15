@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO banned_ips (\n                ip_address, reason, expires_at, is_permanent,\n                source_fingerprint, ban_source\n            )\n            VALUES ($1, $2, $3, $4, $5, $6)\n            ON CONFLICT (ip_address) DO UPDATE SET\n                reason = $2,\n                expires_at = CASE\n                    WHEN banned_ips.is_permanent THEN banned_ips.expires_at\n                    ELSE COALESCE($3, banned_ips.expires_at)\n                END,\n                ban_count = banned_ips.ban_count + 1,\n                is_permanent = banned_ips.is_permanent OR $4,\n                source_fingerprint = COALESCE($5, banned_ips.source_fingerprint),\n                ban_source = $6\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Timestamptz",
+        "Bool",
+        "Text",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "667398c505fdf365322468e1137da6aee2b02d8c9e2665451b65022249868142"
+}

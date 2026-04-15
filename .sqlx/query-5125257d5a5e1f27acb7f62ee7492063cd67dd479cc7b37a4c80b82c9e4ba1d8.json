@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE mcp_sessions\n            SET status = 'expired'\n            WHERE status = 'active' AND expires_at < NOW()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "5125257d5a5e1f27acb7f62ee7492063cd67dd479cc7b37a4c80b82c9e4ba1d8"
+}

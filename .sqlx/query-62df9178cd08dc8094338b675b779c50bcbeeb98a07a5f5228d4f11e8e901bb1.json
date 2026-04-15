@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT mc.id as \"id!\"\n        FROM markdown_content mc\n        LEFT JOIN analytics_events ae ON\n            ae.event_type = 'page_view'\n            AND ae.event_category = 'content'\n            AND ae.endpoint = 'GET /' || mc.source_id || '/' || mc.slug\n            AND ae.timestamp >= CURRENT_TIMESTAMP - ($2 || ' days')::INTERVAL\n        LEFT JOIN users u ON ae.user_id = u.id\n        WHERE mc.source_id = $1\n        GROUP BY mc.id, mc.published_at\n        ORDER BY COUNT(DISTINCT CASE\n            WHEN u.id IS NOT NULL AND u.is_bot = FALSE AND u.is_scanner = FALSE\n            THEN ae.user_id\n        END) DESC, mc.published_at DESC\n        LIMIT $3\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "62df9178cd08dc8094338b675b779c50bcbeeb98a07a5f5228d4f11e8e901bb1"
+}

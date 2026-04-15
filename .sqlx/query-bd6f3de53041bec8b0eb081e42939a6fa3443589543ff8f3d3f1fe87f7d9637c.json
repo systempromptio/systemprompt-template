@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COALESCE(at.agent_name, CASE WHEN mte.task_id IS NULL THEN 'Direct Call' ELSE 'Unlinked Task' END) as \"agent_name\",\n                COUNT(*)::bigint as \"usage_count!\"\n            FROM mcp_tool_executions mte\n            LEFT JOIN agent_tasks at ON at.task_id = mte.task_id\n            WHERE mte.tool_name ILIKE $1 AND mte.created_at >= $2 AND mte.created_at < $3\n            GROUP BY COALESCE(at.agent_name, CASE WHEN mte.task_id IS NULL THEN 'Direct Call' ELSE 'Unlinked Task' END)\n            ORDER BY 2 DESC\n            LIMIT 10\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "agent_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "usage_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "bd6f3de53041bec8b0eb081e42939a6fa3443589543ff8f3d3f1fe87f7d9637c"
+}

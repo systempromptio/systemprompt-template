@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            COALESCE(metadata->>'agent_id', plugin_id, 'unknown') AS \"agent_id!\",\n            COUNT(*)::bigint AS \"calls!\",\n            COUNT(*) FILTER (WHERE event_type LIKE '%Failure%' OR event_type LIKE '%Error%')::bigint AS \"errors!\",\n            COUNT(DISTINCT session_id)::bigint AS \"sessions!\"\n          FROM plugin_usage_events\n          WHERE created_at >= NOW() - INTERVAL '7 days'\n            AND (metadata->>'agent_id' IS NOT NULL OR plugin_id IS NOT NULL)\n          GROUP BY COALESCE(metadata->>'agent_id', plugin_id, 'unknown')\n          ORDER BY COUNT(*) DESC\n          LIMIT 50",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "agent_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "calls!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "errors!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "sessions!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "41fba3461a6e893c616268e552a496a27747486e720669cf38f02b5f42883bce"
+}

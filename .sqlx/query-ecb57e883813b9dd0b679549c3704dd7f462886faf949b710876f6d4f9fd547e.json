@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE user_sessions\n        SET request_count = request_count + 1,\n            last_activity_at = CURRENT_TIMESTAMP,\n            duration_seconds = EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - started_at))::INTEGER\n        WHERE session_id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ecb57e883813b9dd0b679549c3704dd7f462886faf949b710876f6d4f9fd547e"
+}

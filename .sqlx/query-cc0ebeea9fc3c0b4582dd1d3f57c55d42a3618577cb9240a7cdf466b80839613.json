@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO funnel_steps (funnel_id, step_order, name, match_pattern, match_type)\n                SELECT * FROM UNNEST($1::text[], $2::int4[], $3::text[], $4::text[], $5::text[])\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int4Array",
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cc0ebeea9fc3c0b4582dd1d3f57c55d42a3618577cb9240a7cdf466b80839613"
+}

@@ -1,0 +1,100 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            artifact_id as \"artifact_id!: ArtifactId\",\n            task_id as \"task_id!: TaskId\",\n            context_id as \"context_id?: ContextId\",\n            name,\n            description,\n            artifact_type as \"artifact_type!\",\n            source,\n            tool_name,\n            mcp_execution_id as \"mcp_execution_id?: McpExecutionId\",\n            fingerprint,\n            skill_id as \"skill_id?: SkillId\",\n            skill_name,\n            metadata,\n            created_at as \"created_at!\"\n        FROM task_artifacts WHERE task_id = ANY($1) ORDER BY task_id, created_at ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "artifact_id!: ArtifactId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "task_id!: TaskId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "context_id?: ContextId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "artifact_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "source",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "tool_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "mcp_execution_id?: McpExecutionId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "fingerprint",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "skill_id?: SkillId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "skill_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 13,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "7606fab864341d527e8b3915b83e651e3467e87c2e083a39629d4163a4169e15"
+}

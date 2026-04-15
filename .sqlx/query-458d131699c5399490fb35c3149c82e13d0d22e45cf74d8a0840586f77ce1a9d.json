@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT session_id, tool_name, decision, policy, reason, created_at\n           FROM governance_decisions\n           WHERE agent_id = $1\n           ORDER BY created_at DESC\n           LIMIT 100",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "tool_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "decision",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "policy",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "458d131699c5399490fb35c3149c82e13d0d22e45cf74d8a0840586f77ce1a9d"
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT pg_size_pretty(pg_database_size(current_database())) AS \"size!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "size!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "5ec93fc9f832055f3a13f9413fbb6d39bb63374b6bc7ff81eb0ad6e4431660c9"
+}

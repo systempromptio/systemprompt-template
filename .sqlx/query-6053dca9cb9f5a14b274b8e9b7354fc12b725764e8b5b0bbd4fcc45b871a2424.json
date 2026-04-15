@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.display_name AS \"plan_name!\", p.limits\n           FROM marketplace.plans p\n           WHERE p.role_name = ANY(\n               SELECT UNNEST(roles) FROM users WHERE id = $1\n           )\n           AND p.is_active = true\n           ORDER BY p.sort_order DESC\n           LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "plan_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "limits",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "6053dca9cb9f5a14b274b8e9b7354fc12b725764e8b5b0bbd4fcc45b871a2424"
+}
