@@ -127,23 +127,6 @@ One CLI, one binary, one database — the same surface local and remote. Registe
 
 > `./demo/agents/*.sh` — discover, configure, message, trace, and register agents. MCP and A2A at the protocol layer.
 
-### Admin dashboard
-
-<details>
-<summary><b>See the dashboard (2 screenshots)</b></summary>
-
-<br>
-
-<img src="docs/images/admin-dashboard-overview.png" alt="Admin dashboard overview" width="900">
-
-<br><br>
-
-<img src="docs/images/admin-dashboard-governance.png" alt="Governance panel" width="900">
-
-</details>
-
----
-
 ## How it's built
 
 One language. One database. One binary. One CLI.
@@ -162,7 +145,6 @@ my-eval/
 ├── services/         # Config-only (YAML/Markdown): agents, skills, plugins, AI providers
 ├── demo/             # 40+ runnable evaluation scripts, 10 categories
 ├── storage/files/    # Static assets (CSS, JS, images)
-├── docs/images/      # README screenshots
 ├── Cargo.toml        # Workspace manifest
 ├── justfile          # Development commands
 └── CLAUDE.md         # AI assistant instructions
