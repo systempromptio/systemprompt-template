@@ -13,7 +13,8 @@ R='\033[0m'
 
 # ── Project setup ──
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEMO_DIR="$(dirname "$SCRIPT_DIR")"
+RECORDING_DIR="$(dirname "$SCRIPT_DIR")"
+DEMO_DIR="$(dirname "$RECORDING_DIR")"
 PROJECT_DIR="$(dirname "$DEMO_DIR")"
 CLI="$PROJECT_DIR/target/debug/systemprompt"
 if [[ -x "$PROJECT_DIR/target/release/systemprompt" && "$PROJECT_DIR/target/release/systemprompt" -nt "$CLI" ]]; then

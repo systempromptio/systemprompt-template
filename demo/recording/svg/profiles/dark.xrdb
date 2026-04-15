@@ -2,6 +2,8 @@
 *.foreground: #b9c0cb
 *.background: #1a1a1f
 *.cursorColor: #f79938
+*.colorBD: #ffffff
+*.colorUL: #b9c0cb
 *.color0: #1a1a1f
 *.color1: #e06c75
 *.color2: #a8cc8c

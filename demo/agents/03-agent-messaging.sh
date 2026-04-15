@@ -1,25 +1,12 @@
 #!/bin/bash
-# DEMO 9: AGENT TRACING — Full Pipeline with Artifacts & MCP
-# Platform agent runtime: messaging, AI reasoning, MCP tool calls, artifacts, tracing.
+# DEMO: AGENT TRACING — Full Pipeline with Artifacts & MCP
 #
-# This is the ONLY demo that calls `admin agents message`.
+# Messages an agent, captures its MCP tool use, artifact, and execution
+# trace. Requires at least one agent configured in services/agents/. If
+# none exist (the default template state), the demo prints an explanation
+# and exits cleanly.
 #
-# What this does:
-#   1. Creates a context for the demo session
-#   2. Messages the developer_agent asking it to list all agents
-#   3. The agent reasons, calls MCP tools, and produces an artifact
-#   4. Retrieves the artifact created by the agent
-#   5. Shows the full execution trace (events, AI requests, tool calls)
-#   6. Shows cost breakdown by agent
-#
-# This demo shows the platform agent runtime — separate from the governance
-# hook workflow. It demonstrates: agent messaging, AI reasoning, MCP tool
-# calls, artifact creation, and full execution tracing.
-#
-# Usage:
-#   ./demo/09-agent-tracing.sh [profile]
-#
-# Cost: ~$0.01 (one AI call)
+# Cost: ~$0.01 (one AI call) when agents are configured, else free.
 
 set -e
 
@@ -27,35 +14,41 @@ source "$(cd "$(dirname "$0")/.." && pwd)/_common.sh"
 
 PROFILE="${1:-local}"
 
-echo ""
-echo "=========================================="
-echo "  DEMO 9: AGENT TRACING"
-echo "  Full Pipeline with Artifacts & MCP"
-echo ""
-echo "  This demo shows the platform agent runtime — separate"
-echo "  from the governance hook workflow. It demonstrates:"
-echo "    - Agent messaging"
-echo "    - AI reasoning"
-echo "    - MCP tool calls"
-echo "    - Artifact creation"
-echo "    - Full execution tracing"
-echo "=========================================="
+header "DEMO: AGENT TRACING" "Full Pipeline with Artifacts & MCP"
+
+# ──────────────────────────────────────────────
+#  Preflight: is any agent configured?
+# ──────────────────────────────────────────────
+LIST_OUTPUT=$("$CLI" admin agents list --profile "$PROFILE" 2>&1)
+TARGET_AGENT=$(echo "$LIST_OUTPUT" | grep -oP '"(name|id)":\s*"\K[^"]+' | head -1 || true)
+
+if [[ -z "$TARGET_AGENT" ]]; then
+  info "No agents configured in services/agents/ (empty template state)."
+  info ""
+  info "This demo exercises the platform agent runtime — messaging, AI"
+  info "reasoning, MCP tool use, artifacts, and tracing. It requires at"
+  info "least one agent YAML at services/agents/<id>.yaml and the id"
+  info "listed in a plugin under services/plugins/<plugin>.yaml."
+  info ""
+  info "To enable this demo, add an agent YAML and run: just start"
+  header "DEMO SKIPPED — no agents configured"
+  exit 0
+fi
+
+echo "  Target agent: $TARGET_AGENT"
 echo ""
 
 # ──────────────────────────────────────────────
 #  STEP 1: Create a context
 # ──────────────────────────────────────────────
-echo "------------------------------------------"
-echo "  STEP 1: Create a context"
-echo "------------------------------------------"
-echo ""
+subheader "STEP 1: Create a context"
 
-CONTEXT_NAME="Demo 9 - Agent Tracing $(date +%H:%M:%S)"
+CONTEXT_NAME="Demo agent tracing $(date +%H:%M:%S)"
 echo "  \$ systemprompt core contexts create --name \"$CONTEXT_NAME\""
 echo ""
 
 CONTEXT_OUTPUT=$("$CLI" core contexts create --name "$CONTEXT_NAME" --profile "$PROFILE" 2>&1)
-echo "  $CONTEXT_OUTPUT"
+echo "$CONTEXT_OUTPUT" | sed 's/^/  /'
 echo ""
 
 CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep -oP '"id":\s*"\K[^"]+' | head -1 || true)
@@ -72,21 +65,17 @@ echo "  Context ID: $CONTEXT_ID"
 echo ""
 
 # ──────────────────────────────────────────────
-#  STEP 2: Message the developer_agent
+#  STEP 2: Message the agent
 # ──────────────────────────────────────────────
-echo "------------------------------------------"
-echo "  STEP 2: Message the developer_agent"
-echo "  Asking it to list all agents on the platform"
-echo "------------------------------------------"
-echo ""
+subheader "STEP 2: Message $TARGET_AGENT" "Asking it to list all agents on the platform"
 
-echo "  \$ systemprompt admin agents message developer_agent \\"
+echo "  \$ systemprompt admin agents message $TARGET_AGENT \\"
 echo "      -m \"List all agents running on this platform\" \\"
 echo "      --context-id \"$CONTEXT_ID\" --blocking --timeout 60"
 echo ""
 
 set +e
-MESSAGE_OUTPUT=$("$CLI" admin agents message developer_agent \
+MESSAGE_OUTPUT=$("$CLI" admin agents message "$TARGET_AGENT" \
   -m "List all agents running on this platform" \
   --context-id "$CONTEXT_ID" \
   --blocking --timeout 60 \
@@ -102,8 +91,6 @@ if [[ "$LINES" -gt 40 ]]; then
 fi
 echo ""
 
-# Fail loudly if the agent conversation errored — the CLI sometimes exits 0
-# even when the underlying provider call failed, so grep the output too.
 if [[ "$MESSAGE_RC" -ne 0 ]] \
    || echo "$MESSAGE_OUTPUT" | grep -qiE "API key not valid|API_KEY_INVALID|Failed to send message|Gemini API error|Agent returned error|Internal error"; then
   echo "  ERROR: agent conversation failed." >&2
@@ -118,10 +105,7 @@ fi
 # ──────────────────────────────────────────────
 #  STEP 3: Retrieve artifact
 # ──────────────────────────────────────────────
-echo "------------------------------------------"
-echo "  STEP 3: Retrieve artifact"
-echo "------------------------------------------"
-echo ""
+subheader "STEP 3: Retrieve artifact"
 
 echo "  \$ systemprompt core artifacts list --context-id \"$CONTEXT_ID\""
 echo ""
@@ -138,110 +122,31 @@ fi
 if [[ -n "$ARTIFACT_ID" ]]; then
   echo "  Artifact ID: $ARTIFACT_ID"
   echo ""
-  echo "  \$ systemprompt core artifacts show \"$ARTIFACT_ID\" --full"
-  echo ""
   "$CLI" core artifacts show "$ARTIFACT_ID" --full --profile "$PROFILE" 2>&1 | head -50 | sed 's/^/  /'
-  echo ""
-else
-  echo "  No artifact found for this context (agent may not have created one)."
   echo ""
 fi
 
 # ──────────────────────────────────────────────
-#  STEP 4: Show trace
+#  STEP 4: Execution trace
 # ──────────────────────────────────────────────
-echo "------------------------------------------"
-echo "  STEP 4: Execution trace"
-echo "------------------------------------------"
-echo ""
-
-echo "  \$ systemprompt infra logs trace list --limit 3"
-echo ""
+subheader "STEP 4: Execution trace"
 
 TRACE_OUTPUT=$("$CLI" infra logs trace list --limit 3 --profile "$PROFILE" 2>&1)
 echo "$TRACE_OUTPUT" | head -20 | sed 's/^/  /'
 echo ""
 
 TRACE_ID=$(echo "$TRACE_OUTPUT" | grep -oP '"trace_id":\s*"\K[0-9a-f-]+' | head -1 || true)
-if [[ -z "$TRACE_ID" ]]; then
-  TRACE_ID=$(echo "$MESSAGE_OUTPUT" | grep -oP '"trace_id":\s*"\K[0-9a-f-]+' | head -1 || true)
-fi
-
 if [[ -n "$TRACE_ID" ]]; then
   echo "  Trace ID: $TRACE_ID"
   echo ""
-  echo "  \$ systemprompt infra logs trace show \"$TRACE_ID\" --all"
-  echo ""
   "$CLI" infra logs trace show "$TRACE_ID" --all --profile "$PROFILE" 2>&1 | head -60 | sed 's/^/  /'
-  echo ""
-else
-  echo "  Could not extract trace_id — check infra logs trace list manually."
-  echo ""
 fi
-
-echo "  Expected: ~11 events, 3 AI requests, 1 MCP tool call, structured artifact"
-echo ""
 
 # ──────────────────────────────────────────────
 #  STEP 5: Cost breakdown
 # ──────────────────────────────────────────────
-echo "------------------------------------------"
-echo "  STEP 5: Cost breakdown by agent"
-echo "------------------------------------------"
-echo ""
-
-echo "  \$ systemprompt analytics costs breakdown --by agent"
-echo ""
+subheader "STEP 5: Cost breakdown by agent"
 "$CLI" analytics costs breakdown --by agent --profile "$PROFILE" 2>&1 | head -30 | sed 's/^/  /'
 echo ""
 
-# ──────────────────────────────────────────────
-#  STEP 6: Dashboard URL
-# ──────────────────────────────────────────────
-echo "------------------------------------------"
-echo "  STEP 6: Dashboard"
-echo "------------------------------------------"
-echo ""
-
-SESSION_ID=$(echo "$MESSAGE_OUTPUT" | grep -oP '"session_id":\s*"\K[^"]+' | head -1 || true)
-if [[ -n "$SESSION_ID" ]]; then
-  echo "  Dashboard: http://localhost:8080/admin/traces?session_id=$SESSION_ID"
-else
-  echo "  Dashboard: http://localhost:8080/admin/events"
-  echo "  (Check /admin/events for the latest agent execution traces)"
-fi
-echo ""
-
-# ──────────────────────────────────────────────
-#  WHY 3 AI REQUESTS?
-# ──────────────────────────────────────────────
-echo "=========================================="
-echo "  WHY 3 AI REQUESTS?"
-echo ""
-echo "  1. AI receives the message, sees MCP tools available,"
-echo "     decides to call the systemprompt tool (list_agents)"
-echo ""
-echo "  2. MCP tool returns the result, AI processes the"
-echo "     tool output and determines the response"
-echo ""
-echo "  3. AI formats the final response with the agent"
-echo "     listing and creates a structured artifact"
-echo ""
-echo "  This is normal multi-turn tool use. Each step is"
-echo "  traced and costed separately in the platform."
-echo "=========================================="
-echo ""
-
-echo "=========================================="
-echo "  DEMO 9 COMPLETE"
-echo ""
-echo "  What we showed:"
-echo "    1. Created a context for the agent session"
-echo "    2. Messaged developer_agent (admin agents message)"
-echo "    3. Agent called MCP tools, produced an artifact"
-echo "    4. Retrieved the structured artifact"
-echo "    5. Full execution trace with events and AI requests"
-echo "    6. Cost breakdown by agent"
-echo ""
-echo "  Cost: ~\$0.01 (one AI call with tool use)"
-echo "=========================================="
+header "AGENT TRACING DEMO COMPLETE"

@@ -551,6 +551,14 @@ update-anthropic-plugins:
     {{CLI}} infra jobs run import_anthropic_plugins
 
 # ══════════════════════════════════════════════════════════════════════════════
+# TERMINAL RECORDINGS (README SVGs)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Regenerate terminal SVG recordings. Pass numbers to limit scope, e.g. `just record-svgs 3 7`.
+record-svgs *NUMBERS:
+    ./demo/recording/svg/record.sh {{NUMBERS}}
+
+# ══════════════════════════════════════════════════════════════════════════════
 # BENCHMARKS
 # ══════════════════════════════════════════════════════════════════════════════
 

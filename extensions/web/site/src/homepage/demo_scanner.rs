@@ -42,8 +42,8 @@ const CATEGORIES: &[CategoryMeta] = &[
             StepMeta {
                 script: "01-happy-path.sh",
                 label: "Walk the full hook → allow → execute path",
-                narrative: "POSTs a PreToolUse hook for developer_agent calling mcp__systemprompt__list_agents, sees governance return allow, then actually invokes the MCP tool via the CLI so you watch the same request land in the real agent runtime. This is the Claude Code hook workflow end to end.",
-                outcome: "An allow response from /hooks/govern, a live list_agents result from the systemprompt MCP server, and a matching row in governance_decisions tied to session demo-happy-path.",
+                narrative: "POSTs a PreToolUse hook for developer_agent calling mcp__systemprompt__systemprompt — the CLI-wrapper tool exposed by the systemprompt MCP server — sees governance return allow, then actually invokes the tool via the CLI with {command: \"admin agents list\"} so you watch the same request land in the real agent runtime. This is the Claude Code hook workflow end to end.",
+                outcome: "An allow response from /hooks/govern, a live agents listing returned by the systemprompt MCP server, and a matching row in governance_decisions tied to session demo-happy-path.",
             },
             StepMeta {
                 script: "02-refused-path.sh",
@@ -99,20 +99,20 @@ const CATEGORIES: &[CategoryMeta] = &[
             StepMeta {
                 script: "01-list-agents.sh",
                 label: "Discover the agents the platform ships with",
-                narrative: "Lists every configured agent from both the admin and core CLI views, then prints the full config for developer_agent and associate_agent side by side. The two views exist because admin sees scopes and process state while core sees the raw definition.",
-                outcome: "You see the agent roster, confirm developer_agent runs with admin scope and associate_agent with user scope, and get the exact identifiers used by every later step.",
+                narrative: "Lists every configured agent via admin agents list, then shows process status and — when at least one agent is defined in services/agents/ — prints the full config for the first one. The template ships with an empty agent registry so you can see the commands, the data shapes, and the exact path where new agent YAMLs would drop in.",
+                outcome: "You see the agent roster (empty by default), the running-agent status table, and either a concrete agent config or a pointer to services/agents/<id>.yaml as the place to add one.",
             },
             StepMeta {
                 script: "02-agent-config.sh",
                 label: "Validate configs and inspect tool scopes",
-                narrative: "Runs the validator against each agent definition, then enumerates the MCP tools each agent is actually allowed to call, and finishes with live process status. This is where you prove the privilege boundary is real and not just documentation.",
-                outcome: "Both configs validate, the developer agent's tool list is visibly larger than the associate agent's, and the status table shows which agent processes are running right now.",
+                narrative: "Shows live process status, then validates the first configured agent (if any) and enumerates the MCP tools it can call. When no agents are configured, falls back to listing every MCP tool across both servers so you still see the concrete tool surface the runtime exposes.",
+                outcome: "A process status table plus either a validated agent config and its tool list, or the full cross-server MCP tool inventory.",
             },
             StepMeta {
                 script: "03-agent-messaging.sh",
                 label: "Send a real message and let the agent work",
-                narrative: "Creates a context, messages developer_agent with \"List all agents running on this platform\" in blocking mode, then retrieves the structured artifact the agent produced. This is the only step that spends money and the only one that exercises the full runtime.",
-                outcome: "The agent replies, an artifact is attached to the context, and the script prints a dashboard link scoped to the exact session_id so you can open it in the browser.",
+                narrative: "Creates a context, picks the first configured agent, messages it with \"List all agents running on this platform\" in blocking mode, then retrieves the structured artifact it produced. This is the only step that spends money and the only one that exercises the full runtime. When the template has no agents configured, the script prints a clear explanation and exits cleanly.",
+                outcome: "When an agent is configured: a reply, an artifact attached to the context, and a dashboard link scoped to the exact session_id. Otherwise: a skip notice pointing at services/agents/ with instructions for adding one.",
             },
             StepMeta {
                 script: "04-agent-tracing.sh",
@@ -124,7 +124,7 @@ const CATEGORIES: &[CategoryMeta] = &[
                 script: "05-agent-registry.sh",
                 label: "See the agents as discoverable services",
                 narrative: "Queries the A2A gateway registry so you can see how other agents and external callers discover these workers, then tails the process logs for each agent. A2A is what makes this a platform rather than a single chatbot.",
-                outcome: "The registry lists developer_agent and associate_agent as addressable endpoints, and the per-agent logs show the live stdout from the processes serving them.",
+                outcome: "The registry shows every agent currently registered with the A2A gateway, and the per-agent logs pull live stdout from the processes serving them (empty in the default template until you add an agent YAML).",
             },
         ],
     },
@@ -150,8 +150,8 @@ const CATEGORIES: &[CategoryMeta] = &[
             StepMeta {
                 script: "03-mcp-tool-execution.sh",
                 label: "Zoom out to the execution analytics",
-                narrative: "Lists the tools currently granted to developer_agent, pulls the last ten MCP tool execution log entries, and prints usage stats and seven-day trends. This closes the loop from \"a call happened\" to \"here is how the fleet is being used.\"",
-                outcome: "You get a per-agent tool roster, a chronological tool execution log with latencies, and aggregate counts and trends broken down by tool name.",
+                narrative: "Lists the tools exposed by the systemprompt and skill-manager MCP servers, pulls the last ten MCP tool execution log entries, and prints usage stats and seven-day trends. This closes the loop from \"a call happened\" to \"here is how the fleet is being used.\"",
+                outcome: "A per-server tool inventory, a chronological tool execution log with latencies, and aggregate counts and trends broken down by tool name.",
             },
         ],
     },
@@ -165,8 +165,8 @@ const CATEGORIES: &[CategoryMeta] = &[
             StepMeta {
                 script: "01-skill-lifecycle.sh",
                 label: "Walk the skill lifecycle",
-                narrative: "Lists every skill registered with the platform, opens general_assistance to show the structured prompt and metadata, then prints sync status so you can see local versus remote state. This is the fastest way to answer \"what does a skill look like on disk?\".",
-                outcome: "You see the full skill catalog, one skill's rendered definition, and a sync report that tells you whether the cloud and local copies match.",
+                narrative: "Lists every database-synced skill, prints local-vs-remote sync status, and then walks services/skills/ on disk so you see each skill YAML that ships with the template and the structured header of the first one. This is the fastest way to answer \"what does a skill look like on disk?\".",
+                outcome: "You see the synced skill catalog, a sync report telling you whether cloud and local copies match, and the concrete on-disk YAMLs under services/skills/ with the first one previewed.",
             },
             StepMeta {
                 script: "02-content-management.sh",
@@ -183,8 +183,8 @@ const CATEGORIES: &[CategoryMeta] = &[
             StepMeta {
                 script: "04-plugin-management.sh",
                 label: "Package skills into a plugin",
-                narrative: "Lists core plugins, opens enterprise-demo to show how skills, hooks, and MCP servers are bundled, validates the plugin and its hooks, then lists loaded extensions and their capabilities. Plugins are the unit of distribution — this is how a skill reaches other installations.",
-                outcome: "You see the plugin manifest for enterprise-demo, validator output with zero errors, and the extension capability table that tells you exactly what the runtime exposes.",
+                narrative: "Lists core plugins, walks services/plugins/ on disk to preview each plugin YAML (including enterprise-demo and how it bundles skills, MCP servers, and hooks), lists and validates hooks, then lists loaded extensions and their capabilities. Plugins are the unit of distribution — this is how a skill reaches other installations.",
+                outcome: "You see the plugin manifests on disk, the hook inventory with a green validation result, and the extension capability table that tells you exactly what the runtime exposes.",
             },
             StepMeta {
                 script: "05-contexts.sh",
@@ -205,7 +205,7 @@ const CATEGORIES: &[CategoryMeta] = &[
                 script: "01-services.sh",
                 label: "Check service health",
                 narrative: "Runs infra services status and then --detailed to show the agent and MCP server processes the platform supervises, with pids, ports, and health. This is the first thing you reach for when something feels wrong.",
-                outcome: "You see 3 agents and 2 MCP servers running as supervised processes, with health and lifecycle hooks for start/stop/restart/cleanup.",
+                outcome: "You see 2 MCP servers (systemprompt and skill-manager) running as supervised processes, plus any configured agents, with health and lifecycle hooks for start/stop/restart/cleanup.",
             },
             StepMeta {
                 script: "02-database.sh",

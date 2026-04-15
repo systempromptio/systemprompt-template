@@ -11,7 +11,7 @@
 #   1. Loads auth token from demo/.token
 #   2. POSTs to /api/public/hooks/govern simulating a PreToolUse hook
 #      - agent_id=developer_agent (admin scope, allowed to use MCP tools)
-#      - tool_name=mcp__systemprompt__list_agents (clean tool input)
+#      - tool_name=mcp__systemprompt__systemprompt (clean tool input)
 #      - Governance evaluates all rules → ALLOW
 #   3. Calls the actual MCP tool via CLI to show what executes after ALLOW
 #   4. Audits the governance_decisions table for the allow record
@@ -54,7 +54,7 @@ echo "  PART 1: Governance check (PreToolUse)"
 echo ""
 echo "  Simulating Claude Code PreToolUse hook:"
 echo "    agent_id:   developer_agent"
-echo "    tool_name:  mcp__systemprompt__list_agents"
+echo "    tool_name:  mcp__systemprompt__systemprompt"
 echo "    tool_input: {}"
 echo ""
 echo "  developer_agent has admin scope — this"
@@ -67,7 +67,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
   -H "Content-Type: application/json" \
   -d '{
     "hook_event_name": "PreToolUse",
-    "tool_name": "mcp__systemprompt__list_agents",
+    "tool_name": "mcp__systemprompt__systemprompt",
     "agent_id": "developer_agent",
     "session_id": "demo-happy-path",
     "tool_input": {}
@@ -82,11 +82,12 @@ echo "  PART 2: MCP tool execution"
 echo ""
 echo "  Governance returned ALLOW, so Claude Code"
 echo "  proceeds to execute the tool. Running:"
-echo "    plugins mcp call systemprompt list_agents"
+echo "    plugins mcp call systemprompt systemprompt \\"
+echo "      -a '{\"command\":\"admin agents list\"}'"
 echo "------------------------------------------"
 echo ""
 
-"$CLI" plugins mcp call systemprompt list_agents 2>&1
+"$CLI" plugins mcp call systemprompt systemprompt -a '{"command":"admin agents list"}' 2>&1
 
 # ──────────────────────────────────────────────
 #  AUDIT: Verify governance decision
