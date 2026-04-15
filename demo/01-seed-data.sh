@@ -52,16 +52,21 @@ if [[ -z "$CONTEXT_ID" ]]; then
   warn "No context id found; using 'demo-review' literal"
   CONTEXT_ID="demo-review"
 fi
-for f in "$DEMO_ROOT/fixtures/"*.{md,txt}; do
+for f in "$DEMO_ROOT/fixtures/"*.{md,txt,png,wav}; do
   [[ -f "$f" ]] || continue
   info "Uploading: $(basename "$f")"
   "$CLI" core files upload "$f" --context "$CONTEXT_ID" --profile "$PROFILE" > /dev/null 2>&1 || true
 done
-pass "Fixture files uploaded"
+pass "Fixture files uploaded (documents, images, audio)"
 echo ""
 
 # ── STEP 4: Governance decisions ───────────────
 subheader "STEP 4: Generate governance decisions"
+
+# Truncate first so the LIMIT 5 window in governance-03 only sees fresh
+# rows written against the current agent-scope resolver, not stale
+# "unknown"-scope rows from earlier seed runs.
+"$CLI" infra db query "TRUNCATE governance_decisions" --profile "$PROFILE" > /dev/null 2>&1 || true
 
 gov() {
   local session="$1" agent="$2" tool="$3" input="$4"

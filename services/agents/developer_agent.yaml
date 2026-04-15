@@ -10,6 +10,10 @@ agents:
     dev_only: false
     is_primary: true
     default: true
+    tags:
+      - governance
+      - admin
+      - engineering
     card:
       protocolVersion: "0.3.0"
       displayName: Developer Agent

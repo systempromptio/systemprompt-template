@@ -1,13 +1,10 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::OnceLock;
 
 use systemprompt::models::ProfileBootstrap;
 
-static SCOPE_CACHE: OnceLock<HashMap<String, String>> = OnceLock::new();
-
 pub(super) fn resolve_agent_scope(agent_id: &str) -> String {
-    let map = SCOPE_CACHE.get_or_init(load_all_agent_scopes);
+    let map = load_all_agent_scopes();
     map.get(agent_id)
         .cloned()
         .unwrap_or_else(|| "unknown".to_string())

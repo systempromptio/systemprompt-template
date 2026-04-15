@@ -29,5 +29,25 @@ plugin:
     - systemprompt
     - skill-manager
   content_sources: []
-  hooks: {}
-  scripts: []
+  hooks:
+    PreToolUse:
+      - matcher: "*"
+        hooks:
+          - type: command
+            command: "curl -s -X POST http://localhost:3000/api/public/hooks/govern?plugin_id=enterprise-demo"
+            async: false
+            timeout: 5000
+            statusMessage: "Governance check: validating tool call against policy"
+    PostToolUse:
+      - matcher: "*"
+        hooks:
+          - type: command
+            command: "curl -s -X POST http://localhost:3000/api/public/hooks/track?plugin_id=enterprise-demo"
+            async: true
+            timeout: 3000
+            statusMessage: "Tracking tool usage for analytics"
+  scripts:
+    - name: seed-demo
+      source: "demo/01-seed-data.sh"
+    - name: sweep
+      source: "demo/sweep.sh"

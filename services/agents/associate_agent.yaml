@@ -10,6 +10,10 @@ agents:
     dev_only: false
     is_primary: false
     default: false
+    tags:
+      - research
+      - user
+      - documentation
     card:
       protocolVersion: "0.3.0"
       displayName: Associate Agent
