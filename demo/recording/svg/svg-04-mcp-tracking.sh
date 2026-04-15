@@ -14,7 +14,7 @@ pause 0.5
 type_cmd "systemprompt plugins mcp call skill-manager list_plugins"
 pause 0.5
 
-OUTPUT=$("$CLI" plugins mcp call skill-manager list_plugins '{}' --profile "$PROFILE" 2>&1 | grep -v "^\[profile")
+OUTPUT=$("$CLI" plugins mcp call skill-manager list_plugins --args '{}' --profile "$PROFILE" 2>&1 | grep -v "^\[profile")
 
 echo "$OUTPUT" | color_json
 echo ""
@@ -30,7 +30,7 @@ pause 0.5
 type_cmd "systemprompt plugins mcp call systemprompt list_agents"
 pause 0.5
 
-OUTPUT=$("$CLI" plugins mcp call systemprompt list_agents '{}' --profile "$PROFILE" 2>&1 | grep -v "^\[profile")
+OUTPUT=$("$CLI" plugins mcp call systemprompt list_agents --args '{}' --profile "$PROFILE" 2>&1 | grep -v "^\[profile")
 
 echo "$OUTPUT" | color_json
 echo ""

@@ -50,9 +50,20 @@ fi
 
 export RUST_LOG="${RUST_LOG:-warn}"
 
-BASE_URL="http://localhost:8080"
 TOKEN_FILE="$SCRIPT_DIR/.token"
-PROFILE="local"
+PROFILE="${PROFILE:-local}"
+# Honour the port configured in the active profile.yaml so preflight works
+# when setup-local was run with non-default ports. Override with BASE_URL env.
+_preflight_base_url() {
+  local profile_yaml="$PROJECT_DIR/.systemprompt/profiles/$PROFILE/profile.yaml"
+  if [[ -f "$profile_yaml" ]]; then
+    local url
+    url=$(grep -E '^[[:space:]]*api_server_url:' "$profile_yaml" | head -1 | sed -E 's/.*api_server_url:[[:space:]]*//; s/[[:space:]]*$//; s/^"//; s/"$//')
+    [[ -n "$url" && "$url" != "null" ]] && { echo "$url"; return; }
+  fi
+  echo "http://localhost:8080"
+}
+BASE_URL="${BASE_URL:-$(_preflight_base_url)}"
 
 # Helper: decode JWT payload and print selected claims
 decode_jwt() {
@@ -133,11 +144,16 @@ if [[ -z "$ADMIN_TOKEN" || ! "$ADMIN_TOKEN" == eyJ* ]]; then
   echo "  Admin user not found — creating automatically..."
   echo ""
 
-  # Extract email from cloud credentials
+  # Extract email from cloud credentials if present; otherwise accept an
+  # ADMIN_EMAIL env var so a fresh clone can bootstrap without running
+  # `systemprompt cloud auth login` first.
   CLOUD_EMAIL=$(python3 -c "import json; print(json.load(open('$PROJECT_DIR/.systemprompt/credentials.json')).get('email',''))" 2>/dev/null || true)
+  CLOUD_EMAIL="${CLOUD_EMAIL:-${ADMIN_EMAIL:-}}"
 
   if [[ -z "$CLOUD_EMAIL" ]]; then
-    echo "  ERROR: No cloud credentials found at .systemprompt/credentials.json" >&2
+    echo "  ERROR: No admin identity available." >&2
+    echo "  Either run 'systemprompt cloud auth login' to populate" >&2
+    echo "  .systemprompt/credentials.json, or re-run with ADMIN_EMAIL=you@example.com" >&2
     exit 1
   fi
 

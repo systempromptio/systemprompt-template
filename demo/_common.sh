@@ -36,8 +36,20 @@ fi
 
 # ── Token loading ──────────────────────────────
 TOKEN_FILE="$DEMO_ROOT/.token"
-BASE_URL="http://localhost:8080"
 PROFILE="${PROFILE:-local}"
+# Derive BASE_URL from the active profile so demos work when setup-local was
+# invoked with non-default ports. Precedence: BASE_URL env > profile.yaml
+# api_server_url > localhost:8080.
+_derive_base_url() {
+  local profile_yaml="$PROJECT_DIR/.systemprompt/profiles/$PROFILE/profile.yaml"
+  if [[ -f "$profile_yaml" ]]; then
+    local url
+    url=$(grep -E '^[[:space:]]*api_server_url:' "$profile_yaml" | head -1 | sed -E 's/.*api_server_url:[[:space:]]*//; s/[[:space:]]*$//; s/^"//; s/"$//')
+    [[ -n "$url" && "$url" != "null" ]] && { echo "$url"; return; }
+  fi
+  echo "http://localhost:8080"
+}
+BASE_URL="${BASE_URL:-$(_derive_base_url)}"
 
 load_token() {
   TOKEN="${1:-}"

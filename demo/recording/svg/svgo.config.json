@@ -1,0 +1,30 @@
+{
+  "multipass": true,
+  "js2svg": { "pretty": false, "indent": 0 },
+  "plugins": [
+    {
+      "name": "preset-default",
+      "params": {
+        "overrides": {
+          "removeViewBox": false,
+          "cleanupIds": false,
+          "collapseGroups": false,
+          "mergePaths": false,
+          "convertStyleToAttrs": false,
+          "inlineStyles": false,
+          "minifyStyles": false,
+          "removeUnknownsAndDefaults": false,
+          "removeHiddenElems": false
+        }
+      }
+    },
+    "removeDoctype",
+    "removeXMLProcInst",
+    "removeComments",
+    "removeMetadata",
+    "removeEditorsNSData",
+    "removeEmptyAttrs",
+    "removeEmptyText",
+    "removeEmptyContainers"
+  ]
+}

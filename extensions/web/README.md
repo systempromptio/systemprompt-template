@@ -1,4 +1,22 @@
+<div align="center">
+  <a href="https://systemprompt.io">
+    <img src="https://systemprompt.io/logo.svg" alt="systemprompt.io" width="150" />
+  </a>
+  <p><strong>Production infrastructure for AI agents</strong></p>
+  <p><a href="https://systemprompt.io">systemprompt.io</a> • <a href="https://systemprompt.io/documentation">Documentation</a> • <a href="https://github.com/systempromptio/systemprompt-core">Core</a> • <a href="https://github.com/systempromptio/systemprompt-template">Template</a></p>
+</div>
+
+---
+
 # SystemPrompt Blog Extension
+
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="../../demo/recording/svg/output/dark/11-web-config.svg">
+    <source media="(prefers-color-scheme: light)" srcset="../../demo/recording/svg/output/light/11-web-config.svg">
+    <img alt="web extension terminal demo" src="../../demo/recording/svg/output/dark/11-web-config.svg" width="100%">
+  </picture>
+</div>
 
 A full-featured blog and content management extension for SystemPrompt. This serves as the reference implementation demonstrating how to build extensions with database schemas, API routes, background jobs, and type-safe dependencies.
 

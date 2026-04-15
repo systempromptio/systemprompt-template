@@ -11,8 +11,8 @@
 #      tool_blocklist — across 5 sessions, both agents, 6 tool names
 #      (governance_decisions)
 #   5. PostToolUse tracking events across sessions (plugin_usage_events)
-#   6. Synthetic page view traffic (user_activity: 100 rows across
-#      varied paths / referers / countries / user agents)
+#   6. Synthetic page view traffic — 100 rows into engagement_events +
+#      user_sessions (real analytics tables that power the traffic dashboard)
 #   7. Content ingestion (markdown_content)
 #
 # Optional:
@@ -124,25 +124,65 @@ echo ""
 
 # ── STEP 5: Synthetic page view traffic ────────
 subheader "STEP 5: Generate synthetic page view traffic"
-paths=(/dashboard /admin/plugins /admin/agents /admin/skills /admin/governance /content/guides/ai-governance /content/guides/claude-code /analytics/costs /analytics/traffic /infra/logs)
-referers=(https://news.ycombinator.com/ https://www.google.com/ https://twitter.com/ https://reddit.com/r/LocalLLaMA direct)
-countries=(US GB DE FR JP AU CA SE IN BR)
-agents_ua=("Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) Chrome/126" "Mozilla/5.0 (Windows NT 10.0) Firefox/125" "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4) Safari/604.1" "Mozilla/5.0 (Linux; Android 14) Chrome/125")
-
-posted=0
-for i in $(seq 1 100); do
-  p=${paths[$((RANDOM % ${#paths[@]}))]}
-  r=${referers[$((RANDOM % ${#referers[@]}))]}
-  c=${countries[$((RANDOM % ${#countries[@]}))]}
-  ua=${agents_ua[$((RANDOM % ${#agents_ua[@]}))]}
-  curl -s -X POST "$BASE_URL/api/public/hooks/track?plugin_id=enterprise-demo" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "{\"hook_event_name\":\"PageView\",\"tool_name\":\"page_view\",\"agent_id\":\"browser\",\"session_id\":\"traffic-$i\",\"tool_input\":{\"path\":\"$p\",\"referer\":\"$r\",\"country\":\"$c\",\"user_agent\":\"$ua\"},\"tool_result\":\"ok\",\"duration_ms\":$((120 + RANDOM % 800))}" \
-    > /dev/null 2>&1 || true
-  posted=$((posted + 1))
-done
-pass "$posted synthetic page_view events recorded"
+# Inserts directly into the real analytics tables that power the traffic
+# dashboard (engagement_events + user_sessions) so every KPI — top pages,
+# referrer split, geo split, device breakdown — has live data. Uses psql
+# because `infra db query` is read-only.
+DB_URL="$(grep database_url "$PROJECT_DIR/.systemprompt/profiles/$PROFILE/secrets.json" 2>/dev/null \
+  | head -1 \
+  | sed 's/.*"database_url".*"\(postgres[^"]*\)".*/\1/')"
+if [[ -z "$DB_URL" ]] || ! command -v psql >/dev/null 2>&1; then
+  warn "Skipping traffic seed (psql or database_url unavailable)"
+else
+  psql "$DB_URL" -v ON_ERROR_STOP=1 -q <<'SQL' > /dev/null
+  WITH dims AS (
+    SELECT
+      (SELECT id FROM users WHERE email = 'demo@systemprompt.io' LIMIT 1) AS demo_user_id,
+      ARRAY['/dashboard','/admin/plugins','/admin/agents','/admin/skills','/admin/governance','/content/guides/ai-governance','/content/guides/claude-code','/analytics/costs','/analytics/traffic','/infra/logs']::text[] AS paths,
+      ARRAY['google','hackernews','twitter','reddit','Direct']::text[] AS sources,
+      ARRAY['US','GB','DE','FR','JP','AU','CA','SE','IN','BR']::text[] AS countries,
+      ARRAY['desktop','desktop','mobile','tablet']::text[] AS devices,
+      ARRAY['Chrome','Firefox','Safari','Edge']::text[] AS browsers
+  ),
+  pick AS (
+    SELECT
+      i,
+      d.demo_user_id,
+      'traffic-' || i AS sid,
+      d.paths[1 + (random()*(array_length(d.paths,1)-1))::int] AS page_url,
+      d.sources[1 + (random()*(array_length(d.sources,1)-1))::int] AS ref_source,
+      d.countries[1 + (random()*(array_length(d.countries,1)-1))::int] AS country,
+      d.devices[1 + (random()*(array_length(d.devices,1)-1))::int] AS device_type,
+      d.browsers[1 + (random()*(array_length(d.browsers,1)-1))::int] AS browser,
+      NOW() - (random() * interval '24 hours') AS ts,
+      (30000 + (random()*270000)::int) AS time_on_page_ms,
+      (20 + (random()*80)::int) AS scroll_depth
+    FROM generate_series(1,100) AS i
+    CROSS JOIN dims d
+  ),
+  ins_sessions AS (
+    INSERT INTO user_sessions
+      (session_id, user_id, started_at, last_activity_at, client_id, client_type,
+       request_count, is_bot, is_scanner, country, device_type, browser,
+       referrer_source, landing_page, session_source)
+    SELECT
+      sid, demo_user_id, ts, ts + interval '2 minutes', 'sp_web', 'firstparty',
+      3, false, false, country, device_type, browser,
+      ref_source, page_url, 'web'
+    FROM pick
+    ON CONFLICT (session_id) DO NOTHING
+    RETURNING 1
+  )
+  INSERT INTO engagement_events
+    (session_id, user_id, page_url, event_type, time_on_page_ms,
+     max_scroll_depth, created_at, updated_at)
+  SELECT
+    sid, demo_user_id, page_url, 'page_exit', time_on_page_ms,
+    scroll_depth, ts, ts
+  FROM pick;
+SQL
+  pass "100 engagement_events + user_sessions rows seeded"
+fi
 echo ""
 
 # ── STEP 6: Content ingestion ──────────────────

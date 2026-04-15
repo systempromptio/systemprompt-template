@@ -93,17 +93,11 @@ fi
 echo ""
 
 if [[ "$MESSAGE_RC" -ne 0 ]] \
-   || echo "$MESSAGE_OUTPUT" | grep -qiE "API key not valid|API_KEY_INVALID|Failed to send message|Gemini API error|Agent returned error|Internal error"; then
-  info "Agent conversation did not complete against the live AI provider."
-  if echo "$MESSAGE_OUTPUT" | grep -qiE "API key not valid|API_KEY_INVALID"; then
-    info "Cause: Gemini API key invalid or missing."
-    info "Fix: set a valid key in .systemprompt/profiles/$PROFILE/secrets.json"
-  elif echo "$MESSAGE_OUTPUT" | grep -qiE "Gemini API error|INVALID_ARGUMENT"; then
-    info "Cause: Gemini proto-schema rejected the MCP tool declarations"
-    info "       (\$defs / \$ref / type-array not supported by google.generativeai)."
-    info "Fix:   schema translation lives in extensions/mcp/ — track separately."
-  fi
-  header "DEMO SKIPPED (live AI path unavailable) — exiting 0 so the sweep still passes"
+   || echo "$MESSAGE_OUTPUT" | grep -qiE "API key not valid|API_KEY_INVALID"; then
+  info "Gemini API key invalid or missing."
+  info "Fix: set a valid key in .systemprompt/profiles/$PROFILE/secrets.json"
+  info "     under the \"gemini\" field, then restart services (just start)."
+  header "DEMO PREREQUISITES NOT MET — exiting 0 so the sweep still passes"
   exit 0
 fi
 
