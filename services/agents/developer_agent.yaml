@@ -53,7 +53,7 @@ agents:
         - use_dangerous_secret
         - example_web_search
       provider: gemini
-      model: gemini-2.5-pro
+      model: gemini-2.5-flash
     oauth:
       required: true
       scopes:

@@ -26,7 +26,7 @@
 
 **systemprompt.io is AI Governance Infrastructure** — the governance layer for AI agents. A single compiled Rust binary that authenticates, authorises, rate-limits, logs, and costs every AI interaction. Self-hosted, air-gap capable, provider-agnostic.
 
-This repo is how you evaluate it. Clone it, run it on your own machine, bring your own AI key, and watch every claim below execute against 40+ scripted demos. **The terminal recordings are real captures of those demos running — not mockups.** Regenerate them yourself with `just record-svgs`.
+This repo is how you evaluate it. Clone it, run it on your own machine, bring your own AI key, and watch every claim below execute against 40+ scripted demos. **The terminal recordings are real captures of those demos running — not mockups.**
 
 > Template: MIT. [systemprompt-core](https://github.com/systempromptio/systemprompt-core): BSL-1.1 — free for evaluation and non-production use. Production requires a commercial license.
 
@@ -42,7 +42,19 @@ just start                                               # 3. serve governance, 
 
 Open **http://localhost:8080** and run `systemprompt --help`. Point Claude Code, Claude Desktop, or any MCP client at it — permissions follow the user, not the client.
 
-**Prerequisites.** Rust 1.75+ · [`just`](https://just.systems) · Docker · `jq` · `yq` · one of an Anthropic, OpenAI, or Gemini API key · free ports `8080` and `5432`. Running a second clone side-by-side? `just setup-local <key> "" "" 8081 5433`.
+### Prerequisites
+
+| Requirement | Purpose | Install |
+|---|---|---|
+| **Docker** | PostgreSQL runs in a container — `just setup-local` starts it automatically | [docker.com](https://docs.docker.com/get-docker/) |
+| **Rust 1.75+** | Compiles the workspace binary | [rustup.rs](https://rustup.rs/) |
+| **`just`** | Task runner for build, setup, and start commands | [just.systems](https://just.systems/) |
+| **`jq`** | JSON processing for config and session management | `brew install jq` / `apt install jq` |
+| **`yq`** | YAML processing for profile and secrets config | `brew install yq` / `pip install yq` |
+| **AI API key** | At least one of: Anthropic, OpenAI, or Gemini | Provider dashboard |
+| **Ports `8080` + `5432`** | HTTP server + PostgreSQL | Free on localhost |
+
+Running a second clone side-by-side? `just setup-local <key> "" "" 8081 5433`.
 
 ---
 
@@ -191,66 +203,6 @@ Provider-agnostic. Protocol-native. Fully extensible.
 </picture>
 
 > Measure it yourself with `just benchmark`. Author's laptop: **3,308 req/s** on the burst run, p50 13.5 ms / p99 22.7 ms. Governance adds <1% to AI response time. → [`svg-int-benchmark.sh`](demo/recording/svg/svg-int-benchmark.sh)
-
----
-
-## How it's built
-
-One language. One database. One binary. One CLI.
-
-- **Rust workspace** — `core/` is a read-only BSL-1.1 submodule; your code lives in `extensions/`.
-- **PostgreSQL 18+** — the only runtime dependency. Air-gap deploys are a `docker run` away.
-- **Thousands of req/s** — the pipeline is synchronous and in-process, not a sidecar. 3.3k req/s on a laptop, p50 ~13 ms.
-- **Provider-agnostic** — Anthropic, OpenAI, Gemini — swap at the profile level.
-- **MCP · A2A · OAuth2 · WebAuthn** — governed at the protocol layer, not bolted on.
-
-```
-my-eval/
-├── extensions/       # Your Rust code (compile-time extensions)
-├── services/         # Config-only (YAML/Markdown): agents, skills, plugins, providers
-├── demo/             # 40+ runnable evaluation scripts + recording pipeline
-├── storage/files/    # Static assets (CSS, JS, images)
-├── Cargo.toml        # Workspace manifest
-├── justfile          # Development commands
-└── CLAUDE.md         # AI assistant instructions
-```
-
----
-
-## Demo index
-
-40+ executable evaluation scripts across ten categories. Each script is numbered — run them in order.
-
-| Pillar | Category | Scripts | Exercises | Recording |
-|---|---|---|---|---|
-| Infrastructure | [`demo/infrastructure/`](demo/infrastructure/) | 5 | Services, database, jobs, logs, config | `infra-self-hosted`, `infra-control-plane` |
-| Infrastructure | [`demo/cloud/`](demo/cloud/) | 1 | Auth, profiles, deployment info | `infra-deploy-anywhere` |
-| Capabilities | [`demo/governance/`](demo/governance/) | 8 | Tool-call approvals, denials, secret breach, rate limits, hooks | `cap-governance`, `cap-secrets` |
-| Capabilities | [`demo/mcp/`](demo/mcp/) | 3 | MCP servers, access tracking, tool execution | `cap-mcp` |
-| Capabilities | [`demo/analytics/`](demo/analytics/) | 8 | Overview, agents, costs, requests, sessions, content/traffic, conversations, tools | `cap-analytics` |
-| Capabilities | [`demo/agents/`](demo/agents/) | 5 | Agent lifecycle, config, messaging, tracing, A2A registry | `cap-agents` |
-| Capabilities | [`demo/users/`](demo/users/) | 4 | User CRUD, roles, sessions, IP bans | `cap-compliance` |
-| Integrations | [`demo/skills/`](demo/skills/) | 5 | Skills, content, files, plugins, contexts | `int-extensions` |
-| Integrations | [`demo/performance/`](demo/performance/) | 2 | Request tracing, benchmarks, load testing | `int-benchmark` |
-| Integrations | [`demo/web/`](demo/web/) | 2 | Content types, templates, sitemaps, validation | – |
-
-See [`demo/README.md`](demo/README.md) for the full catalogue, [`demo/AGENTS.md`](demo/AGENTS.md) for the LLM-targeted runbook, and [`demo/recording/svg/README.md`](demo/recording/svg/README.md) for how to regenerate the terminal SVGs above.
-
----
-
-## Reference
-
-| `just` target | Description |
-|---|---|
-| `just build` | Build the workspace |
-| `just setup-local [keys] [http_port] [pg_port]` | Seed local profile, start Docker Postgres, run publish pipeline |
-| `just start` | Start all services |
-| `just publish` | Compile templates, bundle CSS/JS, copy assets |
-| `just record-svgs [N…]` | Regenerate the terminal SVGs above |
-| `just db-up` / `db-down` / `db-reset` | Manage the local Postgres container |
-| `just clippy` | Lint the workspace (pedantic, deny-all) |
-
-`systemprompt --help` is the entry point for the CLI. Every domain — `core`, `infra`, `admin`, `cloud`, `analytics`, `web`, `plugins`, `build` — is discoverable with `systemprompt <domain> --help`.
 
 ---
 
