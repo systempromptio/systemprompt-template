@@ -12,7 +12,7 @@
 # the 1–2% savings aren't worth broken animations.
 #
 # Two classes of scripts:
-#   - Template-facing: svg-NN-*.sh at the recorder root.
+#   - Template-facing: svg-{infra,cap,int}-*.sh at the recorder root.
 #     Output: demo/recording/svg/output/{dark,light}/<name>.svg
 #   - Core-facing:     crates/svg-<layer>-<name>.sh.
 #     Output: ../systemprompt-core/assets/readme/terminals/{dark,light}/<layer>-<name>.svg
@@ -22,7 +22,8 @@
 #
 # Usage:
 #   ./record.sh                         # everything (template + crates)
-#   ./record.sh 03 07                   # template scenes 03 and 07 only
+#   ./record.sh governance secrets      # template scenes matching these names
+#   ./record.sh infra                   # all infrastructure pillar scenes
 #   ./record.sh --crates domain-ai      # crate scenes matching these names
 #   ./record.sh --dry-run               # list what would be recorded, no execution
 set -euo pipefail
@@ -83,18 +84,18 @@ if [[ $DRY_RUN -eq 0 ]]; then
 fi
 
 shopt -s nullglob
-TEMPLATE_SCRIPTS=("$SCRIPT_DIR"/svg-[0-9][0-9]-*.sh)
+TEMPLATE_SCRIPTS=("$SCRIPT_DIR"/svg-{infra,cap,int}-*.sh)
 CRATE_SCRIPTS=("$SCRIPT_DIR"/crates/svg-*.sh)
 shopt -u nullglob
 
-# Apply template numeric filter
+# Apply template filter (accepts pillar prefixes or name fragments, e.g. "governance" "infra")
 SELECTED_TEMPLATE=()
 if [[ ${#NUMERIC_FILTER[@]} -gt 0 ]]; then
-  FILTER=""
-  for n in "${NUMERIC_FILTER[@]}"; do FILTER="$FILTER|svg-$(printf '%02d' "$n")-"; done
-  FILTER="${FILTER#|}"
   for s in "${TEMPLATE_SCRIPTS[@]}"; do
-    [[ "$(basename "$s")" =~ $FILTER ]] && SELECTED_TEMPLATE+=("$s")
+    base="$(basename "$s" .sh)"; base="${base#svg-}"
+    for pat in "${NUMERIC_FILTER[@]}"; do
+      [[ "$base" == *"$pat"* ]] && SELECTED_TEMPLATE+=("$s") && break
+    done
   done
 elif [[ $CRATES_MODE -eq 0 ]]; then
   SELECTED_TEMPLATE=("${TEMPLATE_SCRIPTS[@]}")

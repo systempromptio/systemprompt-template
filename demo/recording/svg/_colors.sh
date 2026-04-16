@@ -62,6 +62,10 @@ fail() {
   printf "${RED}${BOLD}>>> DENY${R}  ${RED}%s${R}\n" "$1"
 }
 
+check() {
+  printf "${GREEN}${BOLD}>>>   OK${R}  ${GREEN}%s${R}\n" "$1"
+}
+
 info() {
   printf "${DIM}%s${R}\n" "$1"
 }

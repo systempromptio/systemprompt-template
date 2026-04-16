@@ -46,121 +46,151 @@ Open **http://localhost:8080** and run `systemprompt --help`. Point Claude Code,
 
 ---
 
-## Govern. Every tool call.
+## Infrastructure
 
-Four layers of synchronous in-process enforcement on every tool call: **scope** check → **secret** scan → **block**list → **rate** limit. No sidecar. No proxy. Deny reasons are structured and auditable.
+One binary. One database. Deploys anywhere.
 
-### Four-layer governance pipeline
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/01-governance.svg?v=2">
-  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/01-governance.svg?v=2">
-  <img src="demo/recording/svg/output/dark/01-governance.svg?v=2" alt="Governance pipeline — terminal recording" width="820">
-</picture>
-
-> Every tool call hits `PreToolUse → govern`. Scope, secret scan, blocklist, rate limit — all synchronous, all in-process, all audited. → [`demo/recording/svg/svg-01-governance.sh`](demo/recording/svg/svg-01-governance.sh)
-
-### Secrets never touch inference
+### Self-hosted deployment
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/02-secrets.svg">
-  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/02-secrets.svg">
-  <img src="demo/recording/svg/output/dark/02-secrets.svg" alt="Secrets management — terminal recording" width="820">
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-self-hosted.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-self-hosted.svg">
+  <img src="demo/recording/svg/output/dark/infra-self-hosted.svg" alt="Self-hosted deployment — terminal recording" width="820">
 </picture>
 
-> Even admin-scope agents can't leak an AWS key, a GitHub PAT, or an RSA private key. Credentials are injected server-side at tool-call time. → [`svg-02-secrets.sh`](demo/recording/svg/svg-02-secrets.sh)
+> 50MB Rust binary, 4 in-process services, 144 database tables, zero sidecars. → [`svg-infra-self-hosted.sh`](demo/recording/svg/svg-infra-self-hosted.sh) · [Learn more](https://systemprompt.io/features/self-hosted-ai-platform)
 
-### Thousands of governed requests per second
+### Deploy anywhere
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/06-benchmark.svg?v=2">
-  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/06-benchmark.svg?v=2">
-  <img src="demo/recording/svg/output/dark/06-benchmark.svg?v=2" alt="Governance benchmark — terminal recording" width="820">
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-deploy-anywhere.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-deploy-anywhere.svg">
+  <img src="demo/recording/svg/output/dark/infra-deploy-anywhere.svg" alt="Deploy anywhere — terminal recording" width="820">
 </picture>
 
-> Measure it yourself with `just benchmark`. Author's laptop: **3,308 req/s** on the burst run, p50 13.5 ms / p99 22.7 ms — every request running JWT validation, scope resolution, three rule evaluations, and an async audit write. Governance adds <1% to AI response time. → [`svg-06-benchmark.sh`](demo/recording/svg/svg-06-benchmark.sh)
+> Same binary runs local, Docker, cloud, or air-gapped. Config follows the profile. → [`svg-infra-deploy-anywhere.sh`](demo/recording/svg/svg-infra-deploy-anywhere.sh) · [Learn more](https://systemprompt.io/features/self-hosted-ai-platform)
+
+### One CLI, every domain
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-control-plane.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-control-plane.svg">
+  <img src="demo/recording/svg/output/dark/infra-control-plane.svg" alt="Unified control plane — terminal recording" width="820">
+</picture>
+
+> 8 domains — govern, observe, manage — all from one binary, one CLI. → [`svg-infra-control-plane.sh`](demo/recording/svg/svg-infra-control-plane.sh)
+
+### Every layer, an open standard
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-open-standards.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-open-standards.svg">
+  <img src="demo/recording/svg/output/dark/infra-open-standards.svg" alt="Open standards — terminal recording" width="820">
+</picture>
+
+> MCP, OAuth 2.0, JWT, PostgreSQL, YAML — zero proprietary protocols at any layer. → [`svg-infra-open-standards.sh`](demo/recording/svg/svg-infra-open-standards.sh) · [Learn more](https://systemprompt.io/features/no-vendor-lock-in)
 
 ---
 
-## Prove. Every decision.
+## Capabilities
 
-Structured evidence for every interaction. Every tool call produces a five-point audit trace — the shape auditors ask for, not the shape your logging framework happens to emit.
+Four enforcement layers. Full audit trail. Zero blind spots.
 
-### Queryable audit trail
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/03-audit.svg?v=2">
-  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/03-audit.svg?v=2">
-  <img src="demo/recording/svg/output/dark/03-audit.svg?v=2" alt="Audit trail — terminal recording" width="820">
-</picture>
-
-> Identity → Agent Context → Permissions → Tool Execution → Result. Queryable, SIEM-ready, cost-attributed. → [`svg-03-audit.sh`](demo/recording/svg/svg-03-audit.sh)
-
-### Replay any request, end to end
+### Governance pipeline
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/05-tracing.svg">
-  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/05-tracing.svg">
-  <img src="demo/recording/svg/output/dark/05-tracing.svg" alt="Request tracing — terminal recording" width="820">
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-governance.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-governance.svg">
+  <img src="demo/recording/svg/output/dark/cap-governance.svg" alt="Governance pipeline — terminal recording" width="820">
 </picture>
 
-> Reconstruct any request as the model, the permission engine, and the operator saw it. → [`svg-05-tracing.sh`](demo/recording/svg/svg-05-tracing.sh)
+> Every tool call hits `PreToolUse → govern`. Scope, secret scan, blocklist, rate limit — all synchronous, all in-process, all audited. → [`svg-cap-governance.sh`](demo/recording/svg/svg-cap-governance.sh) · [Learn more](https://systemprompt.io/features/governance-pipeline)
+
+### Secrets management
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-secrets.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-secrets.svg">
+  <img src="demo/recording/svg/output/dark/cap-secrets.svg" alt="Secrets management — terminal recording" width="820">
+</picture>
+
+> Even admin-scope agents can't leak an AWS key, a GitHub PAT, or an RSA private key. Credentials are injected server-side at tool-call time. → [`svg-cap-secrets.sh`](demo/recording/svg/svg-cap-secrets.sh) · [Learn more](https://systemprompt.io/features/secrets-management)
+
+### MCP governance
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-mcp.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-mcp.svg">
+  <img src="demo/recording/svg/output/dark/cap-mcp.svg" alt="MCP governance — terminal recording" width="820">
+</picture>
+
+> Central registry, per-server OAuth2, scoped tool exposure, end-to-end access logs. → [`svg-cap-mcp.sh`](demo/recording/svg/svg-cap-mcp.sh) · [Learn more](https://systemprompt.io/features/mcp-governance)
+
+### Analytics & observability
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-analytics.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-analytics.svg">
+  <img src="demo/recording/svg/output/dark/cap-analytics.svg" alt="Analytics and observability — terminal recording" width="820">
+</picture>
+
+> Audit trail, execution traces, cost attribution, dashboard overview — every decision queryable, every token costed. → [`svg-cap-analytics.sh`](demo/recording/svg/svg-cap-analytics.sh) · [Learn more](https://systemprompt.io/features/analytics-and-observability)
+
+### Closed-loop agents
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-agents.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-agents.svg">
+  <img src="demo/recording/svg/output/dark/cap-agents.svg" alt="Closed-loop agents — terminal recording" width="820">
+</picture>
+
+> A2A discovery, AI reasoning with MCP tools, self-observation via analytics, full execution trace. → [`svg-cap-agents.sh`](demo/recording/svg/svg-cap-agents.sh) · [Learn more](https://systemprompt.io/features/closed-loop-agents)
+
+### Compliance
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-compliance.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-compliance.svg">
+  <img src="demo/recording/svg/output/dark/cap-compliance.svg" alt="Compliance — terminal recording" width="820">
+</picture>
+
+> Identity-bound audit table, structured log retention, config validation. Built for SOC 2, ISO 27001, HIPAA, and OWASP Agentic Top 10. → [`svg-cap-compliance.sh`](demo/recording/svg/svg-cap-compliance.sh) · [Learn more](https://systemprompt.io/features/compliance)
 
 ---
 
-## Standardise. Every team.
+## Integrations
 
-One CLI, one binary, one database — the same surface local and remote. Register agents, distribute skills by role, run them under identical policy everywhere.
+Provider-agnostic. Protocol-native. Fully extensible.
 
-### Multi-agent orchestration
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/07-agent.svg">
-  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/07-agent.svg">
-  <img src="demo/recording/svg/output/dark/07-agent.svg" alt="Agent orchestration — terminal recording" width="820">
-</picture>
-
-> Discover, configure, message, trace, and register agents. MCP and A2A at the protocol layer. → [`svg-07-agent.sh`](demo/recording/svg/svg-07-agent.sh)
-
-### MCP servers under central governance
+### Any AI agent
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/04-mcp-tracking.svg">
-  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/04-mcp-tracking.svg">
-  <img src="demo/recording/svg/output/dark/04-mcp-tracking.svg" alt="MCP tool tracking — terminal recording" width="820">
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-any-agent.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-any-agent.svg">
+  <img src="demo/recording/svg/output/dark/int-any-agent.svg" alt="Any AI agent — terminal recording" width="820">
 </picture>
 
-> Central registry, per-server OAuth2, scoped tool exposure, end-to-end access logs. → [`svg-04-mcp-tracking.sh`](demo/recording/svg/svg-04-mcp-tracking.sh)
+> Anthropic, OpenAI, Gemini — any provider, any agent. One governance layer governs them all. → [`svg-int-any-agent.sh`](demo/recording/svg/svg-int-any-agent.sh) · [Learn more](https://systemprompt.io/features/any-ai-agent)
 
-### One binary, every capability compiled in
+### Extensible architecture
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/08-skills.svg">
-  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/08-skills.svg">
-  <img src="demo/recording/svg/output/dark/08-skills.svg" alt="Extensions and capabilities — terminal recording" width="820">
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-extensions.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-extensions.svg">
+  <img src="demo/recording/svg/output/dark/int-extensions.svg" alt="Extensions and capabilities — terminal recording" width="820">
 </picture>
 
-> 12 extensions, 71 sqlx-checked schemas, 13 jobs — all in one process, all discoverable via the CLI. → [`svg-08-skills.sh`](demo/recording/svg/svg-08-skills.sh)
+> 12 extensions, 71 sqlx-checked schemas, 13 jobs — all compiled into one binary, all discoverable via the CLI. → [`svg-int-extensions.sh`](demo/recording/svg/svg-int-extensions.sh) · [Learn more](https://systemprompt.io/features/extensible-architecture)
 
-### Services, database, and logs in one CLI
+### Governance at scale
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/09-infrastructure.svg">
-  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/09-infrastructure.svg">
-  <img src="demo/recording/svg/output/dark/09-infrastructure.svg" alt="Infrastructure overview — terminal recording" width="820">
+  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-benchmark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-benchmark.svg">
+  <img src="demo/recording/svg/output/dark/int-benchmark.svg" alt="Governance benchmark — terminal recording" width="820">
 </picture>
 
-> `infra services status` → `infra db status` → `infra logs view`. No sidecars, no sprawl. → [`svg-09-infrastructure.sh`](demo/recording/svg/svg-09-infrastructure.sh)
-
-### Identity, roles, and network-layer bans
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/10-users.svg">
-  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/10-users.svg">
-  <img src="demo/recording/svg/output/dark/10-users.svg" alt="Users and identity — terminal recording" width="820">
-</picture>
-
-> Users are first-class; roles scope every tool call; IP bans are audited. Governance follows the user, not the client. → [`svg-10-users.sh`](demo/recording/svg/svg-10-users.sh)
+> Measure it yourself with `just benchmark`. Author's laptop: **3,308 req/s** on the burst run, p50 13.5 ms / p99 22.7 ms. Governance adds <1% to AI response time. → [`svg-int-benchmark.sh`](demo/recording/svg/svg-int-benchmark.sh)
 
 ---
 
@@ -191,18 +221,18 @@ my-eval/
 
 40+ executable evaluation scripts across ten categories. Each script is numbered — run them in order.
 
-| Category | Scripts | Exercises | Recording |
-|---|---|---|---|
-| [`demo/governance/`](demo/governance/) | 8 | Tool-call approvals, denials, secret breach, rate limits, hooks | ✓ `01`, `02` |
-| [`demo/agents/`](demo/agents/) | 5 | Agent lifecycle, config, messaging, tracing, A2A registry | ✓ `07` |
-| [`demo/mcp/`](demo/mcp/) | 3 | MCP servers, access tracking, tool execution | ✓ `04` |
-| [`demo/skills/`](demo/skills/) | 5 | Skills, content, files, plugins, contexts | ✓ `08` |
-| [`demo/infrastructure/`](demo/infrastructure/) | 5 | Services, database, jobs, logs, config | ✓ `09` |
-| [`demo/analytics/`](demo/analytics/) | 8 | Overview, agents, costs, requests, sessions, content/traffic, conversations, tools | ✓ `03` |
-| [`demo/users/`](demo/users/) | 4 | User CRUD, roles, sessions, IP bans | ✓ `10` |
-| [`demo/performance/`](demo/performance/) | 2 | Request tracing, benchmarks, load testing | ✓ `05`, `06` |
-| [`demo/web/`](demo/web/) | 2 | Content types, templates, sitemaps, validation | – |
-| [`demo/cloud/`](demo/cloud/) | 1 | Auth, profiles, deployment info | – |
+| Pillar | Category | Scripts | Exercises | Recording |
+|---|---|---|---|---|
+| Infrastructure | [`demo/infrastructure/`](demo/infrastructure/) | 5 | Services, database, jobs, logs, config | `infra-self-hosted`, `infra-control-plane` |
+| Infrastructure | [`demo/cloud/`](demo/cloud/) | 1 | Auth, profiles, deployment info | `infra-deploy-anywhere` |
+| Capabilities | [`demo/governance/`](demo/governance/) | 8 | Tool-call approvals, denials, secret breach, rate limits, hooks | `cap-governance`, `cap-secrets` |
+| Capabilities | [`demo/mcp/`](demo/mcp/) | 3 | MCP servers, access tracking, tool execution | `cap-mcp` |
+| Capabilities | [`demo/analytics/`](demo/analytics/) | 8 | Overview, agents, costs, requests, sessions, content/traffic, conversations, tools | `cap-analytics` |
+| Capabilities | [`demo/agents/`](demo/agents/) | 5 | Agent lifecycle, config, messaging, tracing, A2A registry | `cap-agents` |
+| Capabilities | [`demo/users/`](demo/users/) | 4 | User CRUD, roles, sessions, IP bans | `cap-compliance` |
+| Integrations | [`demo/skills/`](demo/skills/) | 5 | Skills, content, files, plugins, contexts | `int-extensions` |
+| Integrations | [`demo/performance/`](demo/performance/) | 2 | Request tracing, benchmarks, load testing | `int-benchmark` |
+| Integrations | [`demo/web/`](demo/web/) | 2 | Content types, templates, sitemaps, validation | – |
 
 See [`demo/README.md`](demo/README.md) for the full catalogue, [`demo/AGENTS.md`](demo/AGENTS.md) for the LLM-targeted runbook, and [`demo/recording/svg/README.md`](demo/recording/svg/README.md) for how to regenerate the terminal SVGs above.
 

@@ -103,11 +103,12 @@ echo ""
 # ──────────────────────────────────────────────
 echo "------------------------------------------"
 echo "  PART 3: MCP tool call — AUTHENTICATED"
-echo "  Admin calls skill-manager list_plugins"
+echo "  Admin calls systemprompt core skills list"
 echo "------------------------------------------"
 echo ""
 
-"$CLI" plugins mcp call skill-manager list_plugins --profile "$PROFILE" 2>&1 \
+"$CLI" plugins mcp call systemprompt systemprompt \
+  --args '{"command":"core skills list"}' --profile "$PROFILE" 2>&1 \
   | grep -E '"success"|"server"|"tool"|"execution_time_ms"'
 
 echo ""
