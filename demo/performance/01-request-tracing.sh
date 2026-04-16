@@ -91,6 +91,7 @@ GOVERN_PAYLOAD='{
   "tool_name": "Read",
   "agent_id": "developer_agent",
   "session_id": "'$SESSION_ID'",
+  "cwd": "/var/www/html/systemprompt-template",
   "tool_input": {"file_path": "/src/main.rs"}
 }'
 echo "  $GOVERN_PAYLOAD" | python3 -m json.tool 2>/dev/null || echo "  $GOVERN_PAYLOAD"
@@ -134,8 +135,9 @@ TRACK_PAYLOAD='{
   "tool_name": "Read",
   "agent_id": "developer_agent",
   "session_id": "'$SESSION_ID'",
+  "cwd": "/var/www/html/systemprompt-template",
   "tool_input": {"file_path": "/src/main.rs"},
-  "tool_result": "fn main() { println!(\"Hello\"); }"
+  "tool_response": "fn main() { println!(\"Hello\"); }"
 }'
 
 TRACK_STATUS=$(curl -s -o /dev/null -w "%{http_code} %{time_total}" \
@@ -325,8 +327,8 @@ if [[ ! -x "$HEY" ]]; then
 fi
 
 BENCH_SESSION="bench-$(date +%s)"
-GOVERN_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-govern","tool_input":{"file_path":"/src/main.rs"}}'
-TRACK_PAYLOAD='{"hook_event_name":"PostToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-track","tool_input":{"file_path":"/src/main.rs"},"tool_result":{"stdout":"ok"}}'
+GOVERN_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-govern","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/src/main.rs"}}'
+TRACK_PAYLOAD='{"hook_event_name":"PostToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-track","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/src/main.rs"},"tool_response":{"stdout":"ok"}}'
 
 echo "  5a. Governance endpoint (PreToolUse)"
 echo "      JWT validation → scope resolution → 3 rule evaluations → async DB audit"

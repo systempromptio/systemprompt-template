@@ -66,7 +66,7 @@ echo "  WARM UP: 10 requests to prime caches"
 echo "------------------------------------------"
 echo ""
 
-WARMUP_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-warmup","tool_input":{"file_path":"/src/main.rs"}}'
+WARMUP_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-warmup","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/src/main.rs"}}'
 
 "$HEY" -n 10 -c 5 -m POST \
   -H "Authorization: Bearer $TOKEN" \
@@ -88,7 +88,7 @@ echo "  Each request: JWT → scope → 3 rules → audit"
 echo "=========================================="
 echo ""
 
-GOVERN_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-govern","tool_input":{"file_path":"/src/main.rs"}}'
+GOVERN_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-govern","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/src/main.rs"}}'
 
 GOVERN_OUTPUT=$("$HEY" -n 500 -c 50 -m POST \
   -H "Authorization: Bearer $TOKEN" \
@@ -132,7 +132,7 @@ echo "  Each request: JWT → async DB write"
 echo "=========================================="
 echo ""
 
-TRACK_PAYLOAD='{"hook_event_name":"PostToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-track","tool_input":{"file_path":"/src/main.rs"},"tool_result":{"stdout":"ok"}}'
+TRACK_PAYLOAD='{"hook_event_name":"PostToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-track","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/src/main.rs"},"tool_response":{"stdout":"ok"}}'
 
 TRACK_OUTPUT=$("$HEY" -n 500 -c 50 -m POST \
   -H "Authorization: Bearer $TOKEN" \
@@ -174,7 +174,7 @@ echo "  Mixed: governance + tracking"
 echo "=========================================="
 echo ""
 
-SUSTAINED_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-sustained","tool_input":{"command":"ls -la"}}'
+SUSTAINED_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-sustained","cwd":"/var/www/html/systemprompt-template","tool_input":{"command":"ls -la"}}'
 
 SUSTAINED_OUTPUT=$("$HEY" -n 1000 -c 100 -m POST \
   -H "Authorization: Bearer $TOKEN" \

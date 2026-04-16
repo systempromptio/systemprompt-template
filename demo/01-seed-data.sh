@@ -68,7 +68,7 @@ gov() {
   curl -s -X POST "$BASE_URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
-    -d "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"$tool\",\"agent_id\":\"$agent\",\"session_id\":\"$session\",\"tool_input\":$input}" \
+    -d "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"$tool\",\"agent_id\":\"$agent\",\"session_id\":\"$session\",\"cwd\":\"$PROJECT_DIR\",\"tool_input\":$input}" \
     > /dev/null 2>&1 || true
 }
 
@@ -77,7 +77,7 @@ track() {
   curl -s -X POST "$BASE_URL/api/public/hooks/track?plugin_id=enterprise-demo" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
-    -d "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"$tool\",\"agent_id\":\"$agent\",\"session_id\":\"$session\",\"tool_input\":$input,\"tool_result\":\"ok\",\"duration_ms\":$latency}" \
+    -d "{\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"$tool\",\"agent_id\":\"$agent\",\"session_id\":\"$session\",\"cwd\":\"$PROJECT_DIR\",\"tool_input\":$input,\"tool_response\":\"ok\"}" \
     > /dev/null 2>&1 || true
 }
 

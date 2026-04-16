@@ -15,7 +15,7 @@ BENCH_SESSION="svg-bench-$(date +%s)"
 header "LOAD TEST" "Governance throughput under production load"
 
 # ── Warm up silently ──
-WARMUP_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-warmup","tool_input":{"file_path":"/src/main.rs"}}'
+WARMUP_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-warmup","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/src/main.rs"}}'
 "$HEY" -n 10 -c 5 -m POST \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -27,7 +27,7 @@ subheader "500 requests, 50 concurrent" "JWT → scope → 3 rules → audit wri
 echo ""
 pause 0.5
 
-GOVERN_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-govern","tool_input":{"file_path":"/src/main.rs"}}'
+GOVERN_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-govern","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/src/main.rs"}}'
 
 info "Running benchmark..."
 echo ""
@@ -61,7 +61,7 @@ subheader "1000 requests, 100 concurrent" "Doubled concurrency, sustained load"
 echo ""
 pause 0.5
 
-SUSTAINED_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-sustained","tool_input":{"command":"ls -la"}}'
+SUSTAINED_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-sustained","cwd":"/var/www/html/systemprompt-template","tool_input":{"command":"ls -la"}}'
 
 info "Running benchmark..."
 echo ""

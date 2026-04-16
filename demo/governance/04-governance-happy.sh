@@ -66,7 +66,8 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
     "tool_name": "Read",
     "tool_input": {"file_path": "/src/main.rs"},
     "agent_id": "developer_agent",
-    "session_id": "demo-governance-happy"
+    "session_id": "demo-governance-happy",
+    "cwd": "/var/www/html/systemprompt-template"
   }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
 
 # ──────────────────────────────────────────────

@@ -59,6 +59,7 @@ curl -s -w "\nHTTP %{http_code} in %{time_total}s" \
     "tool_name": "Read",
     "agent_id": "developer_agent",
     "session_id": "'$SESSION_ID'",
+    "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {"file_path": "/src/main.rs"}
   }' | python3 -m json.tool
 ```
@@ -75,8 +76,9 @@ curl -s -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" \
     "tool_name": "Read",
     "agent_id": "developer_agent",
     "session_id": "'$SESSION_ID'",
+    "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {"file_path": "/src/main.rs"},
-    "tool_result": "fn main() { println!(\"Hello\"); }"
+    "tool_response": "fn main() { println!(\"Hello\"); }"
   }'
 ```
 

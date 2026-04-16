@@ -65,6 +65,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
     "tool_name": "mcp__systemprompt__list_agents",
     "agent_id": "associate_agent",
     "session_id": "demo-refused-path",
+    "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {}
   }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
 

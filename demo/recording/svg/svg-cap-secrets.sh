@@ -17,7 +17,7 @@ pause 0.3
 RESPONSE=$(curl -s -X POST "$BASE_URL/api/public/hooks/govern?plugin_id=svg-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"svg-secrets","tool_input":{"command":"curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://api.example.com"}}' 2>/dev/null)
+  -d '{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"svg-secrets","cwd":"/var/www/html/systemprompt-template","tool_input":{"command":"curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://api.example.com"}}' 2>/dev/null)
 
 echo "$RESPONSE" | color_json
 echo ""
@@ -36,7 +36,7 @@ pause 0.3
 RESPONSE=$(curl -s -X POST "$BASE_URL/api/public/hooks/govern?plugin_id=svg-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"svg-secrets","tool_input":{"command":"curl -H \"Authorization: token ghp_ABCDEFghijklmnop12345678\" https://api.github.com"}}' 2>/dev/null)
+  -d '{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"svg-secrets","cwd":"/var/www/html/systemprompt-template","tool_input":{"command":"curl -H \"Authorization: token ghp_ABCDEFghijklmnop12345678\" https://api.github.com"}}' 2>/dev/null)
 
 echo "$RESPONSE" | color_json
 echo ""
@@ -55,7 +55,7 @@ pause 0.3
 RESPONSE=$(curl -s -X POST "$BASE_URL/api/public/hooks/govern?plugin_id=svg-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"hook_event_name":"PreToolUse","tool_name":"Write","agent_id":"developer_agent","session_id":"svg-secrets","tool_input":{"file_path":"/tmp/key.pem","content":"-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA..."}}' 2>/dev/null)
+  -d '{"hook_event_name":"PreToolUse","tool_name":"Write","agent_id":"developer_agent","session_id":"svg-secrets","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/tmp/key.pem","content":"-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA..."}}' 2>/dev/null)
 
 echo "$RESPONSE" | color_json
 echo ""
@@ -74,7 +74,7 @@ pause 0.3
 RESPONSE=$(curl -s -X POST "$BASE_URL/api/public/hooks/govern?plugin_id=svg-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"svg-secrets","tool_input":{"file_path":"/home/user/project/src/main.rs"}}' 2>/dev/null)
+  -d '{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"svg-secrets","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/home/user/project/src/main.rs"}}' 2>/dev/null)
 
 echo "$RESPONSE" | color_json
 echo ""

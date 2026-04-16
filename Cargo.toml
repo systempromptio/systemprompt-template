@@ -25,7 +25,7 @@ strip = true
 
 [workspace.package]
 edition = "2021"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["systemprompt.io <support@systemprompt.io>"]
 license = "MIT"
 
@@ -33,7 +33,7 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.2.0", default-features = false, features = ["core"] }
+systemprompt = { version = "0.2.1", default-features = false, features = ["core"] }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -107,45 +107,6 @@ async-stream = "0.3"
 
 # MCP Protocol
 rmcp = { version = "1.1", features = ["server", "client", "transport-io", "transport-streamable-http-server", "transport-streamable-http-server-session", "transport-streamable-http-client", "transport-streamable-http-client-reqwest", "macros", "auth"] }
-
-# Temporary override: the published systemprompt-ai 0.2.0 ships an MCP→Gemini
-# schema translator that emits `$ref`/`$defs` and nullable `type: [...]` arrays
-# which Gemini's OpenAPI-subset FunctionDeclaration schema rejects (400
-# INVALID_ARGUMENT). Local core has the fix; patch the facade plus every
-# transitively-consumed core crate so trait types resolve to a single copy.
-# Remove this block once core ships a release containing the fix and bump the
-# facade version above.
-[patch.crates-io]
-systemprompt = { path = "../systemprompt-core/systemprompt" }
-systemprompt-identifiers = { path = "../systemprompt-core/crates/shared/identifiers" }
-systemprompt-provider-contracts = { path = "../systemprompt-core/crates/shared/provider-contracts" }
-systemprompt-traits = { path = "../systemprompt-core/crates/shared/traits" }
-systemprompt-extension = { path = "../systemprompt-core/crates/shared/extension" }
-systemprompt-models = { path = "../systemprompt-core/crates/shared/models" }
-systemprompt-client = { path = "../systemprompt-core/crates/shared/client" }
-systemprompt-template-provider = { path = "../systemprompt-core/crates/shared/template-provider" }
-systemprompt-database = { path = "../systemprompt-core/crates/infra/database" }
-systemprompt-logging = { path = "../systemprompt-core/crates/infra/logging" }
-systemprompt-config = { path = "../systemprompt-core/crates/infra/config" }
-systemprompt-events = { path = "../systemprompt-core/crates/infra/events" }
-systemprompt-security = { path = "../systemprompt-core/crates/infra/security" }
-systemprompt-cloud = { path = "../systemprompt-core/crates/infra/cloud" }
-systemprompt-loader = { path = "../systemprompt-core/crates/infra/loader" }
-systemprompt-users = { path = "../systemprompt-core/crates/domain/users" }
-systemprompt-oauth = { path = "../systemprompt-core/crates/domain/oauth" }
-systemprompt-files = { path = "../systemprompt-core/crates/domain/files" }
-systemprompt-analytics = { path = "../systemprompt-core/crates/domain/analytics" }
-systemprompt-content = { path = "../systemprompt-core/crates/domain/content" }
-systemprompt-mcp = { path = "../systemprompt-core/crates/domain/mcp" }
-systemprompt-ai = { path = "../systemprompt-core/crates/domain/ai" }
-systemprompt-agent = { path = "../systemprompt-core/crates/domain/agent" }
-systemprompt-templates = { path = "../systemprompt-core/crates/domain/templates" }
-systemprompt-runtime = { path = "../systemprompt-core/crates/app/runtime" }
-systemprompt-scheduler = { path = "../systemprompt-core/crates/app/scheduler" }
-systemprompt-generator = { path = "../systemprompt-core/crates/app/generator" }
-systemprompt-sync = { path = "../systemprompt-core/crates/app/sync" }
-systemprompt-api = { path = "../systemprompt-core/crates/entry/api" }
-systemprompt-cli = { path = "../systemprompt-core/crates/entry/cli" }
 
 [workspace.lints.clippy]
 all = { level = "deny", priority = -1 }

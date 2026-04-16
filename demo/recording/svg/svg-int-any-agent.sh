@@ -44,7 +44,7 @@ pause 0.3
 curl -s -X POST "$BASE_URL/api/public/hooks/govern?plugin_id=svg-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"hook_event_name":"PreToolUse","tool_name":"mcp__systemprompt__list_agents","agent_id":"developer_agent","session_id":"svg-any-agent","tool_input":{}}' 2>/dev/null \
+  -d '{"hook_event_name":"PreToolUse","tool_name":"mcp__systemprompt__list_agents","agent_id":"developer_agent","session_id":"svg-any-agent","cwd":"/var/www/html/systemprompt-template","tool_input":{}}' 2>/dev/null \
   | color_json
 echo ""
 pass "admin scope — all rules passed"
@@ -61,7 +61,7 @@ pause 0.3
 curl -s -X POST "$BASE_URL/api/public/hooks/govern?plugin_id=svg-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"hook_event_name":"PreToolUse","tool_name":"mcp__systemprompt__list_agents","agent_id":"associate_agent","session_id":"svg-any-agent","tool_input":{}}' 2>/dev/null \
+  -d '{"hook_event_name":"PreToolUse","tool_name":"mcp__systemprompt__list_agents","agent_id":"associate_agent","session_id":"svg-any-agent","cwd":"/var/www/html/systemprompt-template","tool_input":{}}' 2>/dev/null \
   | color_json
 echo ""
 fail "user scope — admin tool blocked"

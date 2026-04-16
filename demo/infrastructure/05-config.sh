@@ -19,12 +19,12 @@ subheader "STEP 3: Validate Configuration"
 run_cli_indented admin config validate
 
 subheader "STEP 4: Runtime Configuration"
-run_cli_indented admin config runtime
+run_cli_indented admin config runtime show
 
 subheader "STEP 5: Paths Configuration"
-run_cli_indented admin config paths
+run_cli_indented admin config paths show
 
 subheader "STEP 6: AI Provider Configuration"
-run_cli_indented admin config provider
+run_cli_indented admin config provider list
 
 header "CONFIGURATION DEMO COMPLETE"

@@ -70,6 +70,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
     "tool_name": "Bash",
     "agent_id": "developer_agent",
     "session_id": "demo-secret-breach",
+    "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {
       "command": "curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://s3.amazonaws.com/bucket",
       "description": "Fetch S3 object"
@@ -90,6 +91,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
     "tool_name": "Write",
     "agent_id": "developer_agent",
     "session_id": "demo-secret-breach",
+    "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {
       "file_path": "/home/user/.env",
       "content": "GITHUB_TOKEN=ghp_ABCDEFghijklmnop1234567890abcdef\nDATABASE_URL=postgres://localhost/db"
@@ -110,6 +112,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
     "tool_name": "Write",
     "agent_id": "developer_agent",
     "session_id": "demo-secret-breach",
+    "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {
       "file_path": "/home/user/.ssh/id_rsa",
       "content": "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA..."
@@ -130,6 +133,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
     "tool_name": "Read",
     "agent_id": "developer_agent",
     "session_id": "demo-secret-breach",
+    "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {
       "file_path": "/home/user/project/src/main.rs"
     }

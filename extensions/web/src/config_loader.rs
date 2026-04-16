@@ -66,8 +66,7 @@ fn populate_demo_showcase(homepage_config: &mut HomepageConfig, demo_root: &std:
                     scanned.subtitle.clone_from(&existing.subtitle);
                 }
             }
-            let total_categories: usize =
-                scanned.pillars.iter().map(|p| p.categories.len()).sum();
+            let total_categories: usize = scanned.pillars.iter().map(|p| p.categories.len()).sum();
             tracing::info!(
                 pillars = scanned.pillars.len(),
                 categories = total_categories,
