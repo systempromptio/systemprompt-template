@@ -78,7 +78,7 @@ pub const fn to_i64(v: f64) -> i64 {
     clippy::cast_possible_truncation,
     reason = "f64→i64 after rounding; values are display counters well within i64 range"
 )]
-pub const fn round_to_i64(v: f64) -> i64 {
+pub fn round_to_i64(v: f64) -> i64 {
     v.round() as i64
 }
 
@@ -108,7 +108,7 @@ pub fn saturating_i16(v: i64) -> i16 {
     clippy::cast_possible_truncation,
     reason = "f64→i16 narrowing for clamped score values (1-5 range)"
 )]
-pub const fn f64_rounded_to_i16(v: f64) -> i16 {
+pub fn f64_rounded_to_i16(v: f64) -> i16 {
     v.round() as i16
 }
 
