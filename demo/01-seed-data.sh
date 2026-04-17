@@ -209,7 +209,7 @@ subheader "Verify seed data"
 
 count() {
   "$CLI" infra db query "SELECT COUNT(*) as count FROM $1" --profile "$PROFILE" 2>&1 \
-    | grep -oP '"count":\s*\K[0-9]+' | head -1 || echo "0"
+    | sed -n 's/.*"count":[[:space:]]*\([0-9]*\).*/\1/p' | head -1 || echo "0"
 }
 
 DECISIONS=$(count governance_decisions)

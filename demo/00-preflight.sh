@@ -137,38 +137,32 @@ echo "  For local dev, the CLI shortcut uses your cloud identity."
 echo "------------------------------------------"
 echo ""
 
+# Resolve admin email: ADMIN_EMAIL env > credentials.json user_email > default
+CLOUD_EMAIL="${ADMIN_EMAIL:-}"
+if [[ -z "$CLOUD_EMAIL" && -f "$PROJECT_DIR/.systemprompt/credentials.json" ]]; then
+  CLOUD_EMAIL=$(python3 -c "import json; print(json.load(open('$PROJECT_DIR/.systemprompt/credentials.json')).get('user_email',''))" 2>/dev/null || true)
+fi
+CLOUD_EMAIL="${CLOUD_EMAIL:-admin@localhost.dev}"
+
 # Try login first; if user not found, auto-create and retry
-ADMIN_TOKEN=$("$CLI" admin session login --token-only --profile "$PROFILE" 2>/dev/null | tail -1)
+ADMIN_TOKEN=$("$CLI" admin session login --email "$CLOUD_EMAIL" --token-only --profile "$PROFILE" 2>/dev/null | tail -1)
 
 if [[ -z "$ADMIN_TOKEN" || ! "$ADMIN_TOKEN" == eyJ* ]]; then
   echo "  Admin user not found — creating automatically..."
   echo ""
 
-  # Extract email from cloud credentials if present; otherwise accept an
-  # ADMIN_EMAIL env var so a fresh clone can bootstrap without running
-  # `systemprompt cloud auth login` first.
-  CLOUD_EMAIL=$(python3 -c "import json; print(json.load(open('$PROJECT_DIR/.systemprompt/credentials.json')).get('email',''))" 2>/dev/null || true)
-  CLOUD_EMAIL="${CLOUD_EMAIL:-${ADMIN_EMAIL:-}}"
-
-  if [[ -z "$CLOUD_EMAIL" ]]; then
-    echo "  ERROR: No admin identity available." >&2
-    echo "  Either run 'systemprompt cloud auth login' to populate" >&2
-    echo "  .systemprompt/credentials.json, or re-run with ADMIN_EMAIL=you@example.com" >&2
-    exit 1
-  fi
-
   # Create user and promote to admin
-  "$CLI" admin users create --name "admin" --email "$CLOUD_EMAIL" --profile "$PROFILE" 2>/dev/null || true
+  "$CLI" admin users create --name "admin" --email "$CLOUD_EMAIL" --profile "$PROFILE" 2>&1 || true
   USER_ID=$("$CLI" admin users search "$CLOUD_EMAIL" --profile "$PROFILE" 2>/dev/null \
-    | grep -oP '"id":\s*"\K[^"]+' | head -1 || true)
+    | sed -n 's/.*"id":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1 || true)
   if [[ -n "$USER_ID" ]]; then
-    "$CLI" admin users role promote "$USER_ID" --profile "$PROFILE" 2>/dev/null || true
+    "$CLI" admin users role promote "$USER_ID" --profile "$PROFILE" 2>&1 || true
     echo "  Created admin user: $CLOUD_EMAIL ($USER_ID)"
     echo ""
   fi
 
   # Retry login
-  ADMIN_TOKEN=$("$CLI" admin session login --token-only --profile "$PROFILE" 2>/dev/null | tail -1)
+  ADMIN_TOKEN=$("$CLI" admin session login --email "$CLOUD_EMAIL" --token-only --profile "$PROFILE" 2>/dev/null | tail -1)
 
   if [[ -z "$ADMIN_TOKEN" || ! "$ADMIN_TOKEN" == eyJ* ]]; then
     echo "  ERROR: Could not obtain admin session token after user creation." >&2
@@ -198,7 +192,7 @@ echo "------------------------------------------"
 echo ""
 
 PLUGIN_TOKEN=$(curl -s -b "access_token=$ADMIN_TOKEN" "$BASE_URL/admin/profile" \
-  | grep -oP 'data-copy="(eyJ[^"]+)"' | head -1 | sed 's/data-copy="//;s/"$//')
+  | sed -n 's/.*data-copy="\(eyJ[^"]*\)".*/\1/p' | head -1)
 
 if [[ -z "$PLUGIN_TOKEN" || ! "$PLUGIN_TOKEN" == eyJ* ]]; then
   echo "  WARNING: Could not extract plugin token from dashboard."

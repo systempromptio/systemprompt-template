@@ -19,9 +19,9 @@ CONTEXT_OUTPUT=$("$CLI" core contexts create --name "Demo Context $(date +%H:%M:
 echo "$CONTEXT_OUTPUT" | sed 's/^/  /'
 echo ""
 
-CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep -oP '"id":\s*"\K[^"]+' | head -1 || true)
+CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | sed -n 's/.*"id":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1 || true)
 if [[ -z "$CONTEXT_ID" ]]; then
-  CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep -oP '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1 || true)
+  CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1 || true)
 fi
 
 if [[ -n "$CONTEXT_ID" ]]; then

@@ -19,7 +19,7 @@ run_cli_head 20 admin users list
 
 subheader "STEP 2: User Details"
 info "Showing first user's details..."
-USER_ID=$("$CLI" admin users list --profile "$PROFILE" 2>&1 | grep -oP '"id":\s*"\K[^"]+' | head -1 || true)
+USER_ID=$("$CLI" admin users list --profile "$PROFILE" 2>&1 | sed -n 's/.*"id":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1 || true)
 if [[ -n "$USER_ID" ]]; then
   run_cli_head 30 admin users show "$USER_ID"
 else

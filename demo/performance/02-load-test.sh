@@ -103,7 +103,7 @@ GOVERN_P90=$(echo "$GOVERN_OUTPUT" | grep "90% in" | awk '{printf "%.1f", $3 * 1
 GOVERN_P99=$(echo "$GOVERN_OUTPUT" | grep "99% in" | awk '{printf "%.1f", $3 * 1000}')
 GOVERN_FASTEST=$(echo "$GOVERN_OUTPUT" | grep "Fastest:" | awk '{printf "%.1f", $2 * 1000}')
 GOVERN_SLOWEST=$(echo "$GOVERN_OUTPUT" | grep "Slowest:" | awk '{printf "%.1f", $2 * 1000}')
-GOVERN_STATUS=$(echo "$GOVERN_OUTPUT" | grep "200" | grep -oP '\d+' | tail -1 || echo "?")
+GOVERN_STATUS=$(echo "$GOVERN_OUTPUT" | grep "200" | grep -o '[0-9]*' | tail -1 || echo "?")
 
 echo "  ┌────────────────────────────────────────────────────┐"
 echo "  │  GOVERNANCE: POST /api/public/hooks/govern         │"
@@ -146,7 +146,7 @@ TRACK_P50=$(echo "$TRACK_OUTPUT" | grep "50% in" | awk '{printf "%.1f", $3 * 100
 TRACK_P90=$(echo "$TRACK_OUTPUT" | grep "90% in" | awk '{printf "%.1f", $3 * 1000}')
 TRACK_P99=$(echo "$TRACK_OUTPUT" | grep "99% in" | awk '{printf "%.1f", $3 * 1000}')
 TRACK_FASTEST=$(echo "$TRACK_OUTPUT" | grep "Fastest:" | awk '{printf "%.1f", $2 * 1000}')
-TRACK_STATUS=$(echo "$TRACK_OUTPUT" | grep "200" | grep -oP '\d+' | tail -1 || echo "?")
+TRACK_STATUS=$(echo "$TRACK_OUTPUT" | grep "200" | grep -o '[0-9]*' | tail -1 || echo "?")
 
 echo "  ┌────────────────────────────────────────────────────┐"
 echo "  │  TRACKING: POST /api/public/hooks/track            │"
@@ -187,7 +187,7 @@ SUSTAINED_P50=$(echo "$SUSTAINED_OUTPUT" | grep "50% in" | awk '{printf "%.1f", 
 SUSTAINED_P90=$(echo "$SUSTAINED_OUTPUT" | grep "90% in" | awk '{printf "%.1f", $3 * 1000}')
 SUSTAINED_P99=$(echo "$SUSTAINED_OUTPUT" | grep "99% in" | awk '{printf "%.1f", $3 * 1000}')
 SUSTAINED_FASTEST=$(echo "$SUSTAINED_OUTPUT" | grep "Fastest:" | awk '{printf "%.1f", $2 * 1000}')
-SUSTAINED_STATUS=$(echo "$SUSTAINED_OUTPUT" | grep "200" | grep -oP '\d+' | tail -1 || echo "?")
+SUSTAINED_STATUS=$(echo "$SUSTAINED_OUTPUT" | grep "200" | grep -o '[0-9]*' | tail -1 || echo "?")
 
 echo "  ┌────────────────────────────────────────────────────┐"
 echo "  │  SUSTAINED: 1000 governance decisions              │"

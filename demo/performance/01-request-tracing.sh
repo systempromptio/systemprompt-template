@@ -104,7 +104,7 @@ GOVERN_RESPONSE=$(curl -s -w "\n%{http_code} %{time_total}" \
   -H "Content-Type: application/json" \
   -d "$GOVERN_PAYLOAD")
 
-GOVERN_BODY=$(echo "$GOVERN_RESPONSE" | head -n -1)
+GOVERN_BODY=$(echo "$GOVERN_RESPONSE" | sed '$d')
 GOVERN_STATUS=$(echo "$GOVERN_RESPONSE" | tail -1 | awk '{print $1}')
 GOVERN_TIME=$(echo "$GOVERN_RESPONSE" | tail -1 | awk '{print $2}')
 
@@ -218,7 +218,7 @@ echo ""
 
 # Try to get a trace ID for detailed view
 TRACE_ID=$("$CLI" infra logs trace list --limit 1 --profile "$PROFILE" 2>&1 \
-  | grep -oP '"trace_id":\s*"\K[0-9a-f-]+' | head -1 || true)
+  | sed -n 's/.*"trace_id":[[:space:]]*"\([0-9a-f-]*\)".*/\1/p' | head -1 || true)
 
 if [[ -n "$TRACE_ID" ]]; then
   echo "  \$ systemprompt infra logs trace show $TRACE_ID --all"
