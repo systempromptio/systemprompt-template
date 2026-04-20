@@ -49,7 +49,6 @@ source "$(cd "$(dirname "$0")/.." && pwd)/_common.sh"
 
 TOKEN="${1:-}"
 PROFILE="${2:-local}"
-BASE_URL="http://localhost:8080"
 SESSION_ID="demo-trace-$(date +%s)"
 DASHBOARD_URL="$BASE_URL/admin/"
 
