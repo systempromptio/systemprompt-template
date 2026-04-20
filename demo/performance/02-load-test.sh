@@ -14,30 +14,12 @@
 
 set -e
 
-# Resolve the CLI binary (script lives at demo/performance/, repo root is two levels up)
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-DEMO_DIR="$(dirname "$SCRIPT_DIR")"
-PROJECT_DIR="$(dirname "$DEMO_DIR")"
-CLI="$PROJECT_DIR/target/debug/systemprompt"
-if [[ -x "$PROJECT_DIR/target/release/systemprompt" && "$PROJECT_DIR/target/release/systemprompt" -nt "$CLI" ]]; then
-  CLI="$PROJECT_DIR/target/release/systemprompt"
-fi
-if [[ ! -x "$CLI" ]]; then
-  echo "ERROR: CLI binary not found at $CLI. Run: just build" >&2
-  exit 1
-fi
-export RUST_LOG=warn
+# Pick up shared CLI / token / BASE_URL resolution and the portable
+# install_hey helper. DEMO_ROOT/PROJECT_DIR are set by _common.sh.
+source "$(cd "$(dirname "$0")/.." && pwd)/_common.sh"
 
 PROFILE="${1:-local}"
-BASE_URL="http://localhost:8080"
-
-# Load token (preflight writes it to demo/.token)
-TOKEN_FILE="$DEMO_DIR/.token"
-if [[ ! -f "$TOKEN_FILE" ]]; then
-  echo "ERROR: No token file. Run ./demo/00-preflight.sh first." >&2
-  exit 1
-fi
-TOKEN=$(cat "$TOKEN_FILE")
+load_token
 
 echo ""
 echo "=========================================="
@@ -47,14 +29,9 @@ echo "=========================================="
 echo ""
 
 # ──────────────────────────────────────────────
-#  Install hey
+#  Install hey (platform-detecting)
 # ──────────────────────────────────────────────
-HEY="/tmp/hey"
-if [[ ! -x "$HEY" ]]; then
-  echo "  Installing hey (HTTP load testing tool)..."
-  curl -sL https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64 -o "$HEY" && chmod +x "$HEY"
-  echo ""
-fi
+install_hey || exit 1
 
 BENCH_SESSION="loadtest-$(date +%s)"
 

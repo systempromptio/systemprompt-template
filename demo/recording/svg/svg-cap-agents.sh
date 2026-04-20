@@ -24,7 +24,7 @@ divider
 # ── Message ──
 info "Creating context..."
 CONTEXT_ID=$("$CLI" core contexts create --name "SVG Agents $(date +%H:%M:%S)" --profile "$PROFILE" 2>&1 \
-  | grep -oP '"id":\s*"\K[^"]+' | head -1)
+  | sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
 echo -e "  ${CYAN}Context: $CONTEXT_ID${R}"
 
 subheader "Agent Messaging" "developer_agent with MCP tool access"

@@ -52,9 +52,9 @@ CONTEXT_OUTPUT=$("$CLI" core contexts create --name "$CONTEXT_NAME" --profile "$
 echo "$CONTEXT_OUTPUT" | sed 's/^/  /'
 echo ""
 
-CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep -oP '"id":\s*"\K[^"]+' | head -1 || true)
+CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1 || true)
 if [[ -z "$CONTEXT_ID" ]]; then
-  CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep -oP '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1 || true)
+  CONTEXT_ID=$(echo "$CONTEXT_OUTPUT" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1 || true)
 fi
 
 if [[ -z "$CONTEXT_ID" ]]; then
@@ -113,9 +113,9 @@ ARTIFACTS_OUTPUT=$("$CLI" core artifacts list --context-id "$CONTEXT_ID" --profi
 echo "$ARTIFACTS_OUTPUT" | head -20 | sed 's/^/  /'
 echo ""
 
-ARTIFACT_ID=$(echo "$ARTIFACTS_OUTPUT" | grep -oP '"id":\s*"\K[^"]+' | head -1 || true)
+ARTIFACT_ID=$(echo "$ARTIFACTS_OUTPUT" | sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1 || true)
 if [[ -z "$ARTIFACT_ID" ]]; then
-  ARTIFACT_ID=$(echo "$ARTIFACTS_OUTPUT" | grep -oP '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1 || true)
+  ARTIFACT_ID=$(echo "$ARTIFACTS_OUTPUT" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1 || true)
 fi
 
 if [[ -n "$ARTIFACT_ID" ]]; then
@@ -134,7 +134,7 @@ TRACE_OUTPUT=$("$CLI" infra logs trace list --limit 3 --profile "$PROFILE" 2>&1)
 echo "$TRACE_OUTPUT" | head -20 | sed 's/^/  /'
 echo ""
 
-TRACE_ID=$(echo "$TRACE_OUTPUT" | grep -oP '"trace_id":\s*"\K[0-9a-f-]+' | head -1 || true)
+TRACE_ID=$(echo "$TRACE_OUTPUT" | sed -n 's/.*"trace_id"[[:space:]]*:[[:space:]]*"\([0-9a-f-]*\)".*/\1/p' | head -1 || true)
 if [[ -n "$TRACE_ID" ]]; then
   echo "  Trace ID: $TRACE_ID"
   echo ""

@@ -25,7 +25,7 @@ Run `../00-preflight.sh` first. Run some governance demos first for trace data.
 
 ## Notes
 
-- Both scripts download `hey` (HTTP load testing tool) to `/tmp/hey` on first run
+- Both scripts download `hey` (HTTP load testing tool) to `/tmp/hey` on first run, picking the `hey_darwin_amd64` or `hey_linux_amd64` build for the host. On Apple Silicon the amd64 build runs under Rosetta 2 (`softwareupdate --install-rosetta`); alternatively `brew install hey`.
 - No AI calls — pure infrastructure benchmarking
 
 

@@ -200,7 +200,7 @@ migrate:
 _project_name TENANT:
     #!/usr/bin/env bash
     set -euo pipefail
-    HASH=$(printf '%s' "{{justfile_directory()}}" | sha256sum | cut -c1-8)
+    HASH=$(printf '%s' "{{justfile_directory()}}" | { sha256sum 2>/dev/null || shasum -a 256; } | cut -c1-8)
     LEAF=$(basename "{{justfile_directory()}}" | tr '_' '-' | tr '[:upper:]' '[:lower:]')
     printf 'sp-%s-%s-%s\n' "$LEAF" "$HASH" "{{TENANT}}"
 
@@ -379,7 +379,11 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
       no_color: false
       non_interactive: false
     cloud:
-      tenant_id: local_dev
+      # tenant_id must be null for local profiles. Any non-null value (even
+      # "local") makes systemprompt-cloud's SessionKey::from_tenant_id treat
+      # the profile as a remote tenant, which gates every CLI subcommand
+      # behind 'systemprompt cloud auth login' — breaking all demos.
+      tenant_id: null
       validation: warn
     secrets:
       secrets_path: ./secrets.json
@@ -562,14 +566,25 @@ record-svgs *NUMBERS:
 # BENCHMARKS
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Benchmark governance endpoint (requires hey: curl -sL https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64 -o /tmp/hey && chmod +x /tmp/hey)
+# Benchmark governance endpoint. Downloads `hey` for the host OS/arch on first run.
 benchmark REQUESTS="200" CONCURRENCY="100":
     #!/usr/bin/env bash
     set -e
     HEY="/tmp/hey"
-    if [[ ! -x "$HEY" ]]; then
-        echo "Installing hey..."
-        curl -sL https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64 -o "$HEY" && chmod +x "$HEY"
+    # Re-download if the cached binary can't execute here (e.g. Linux hey on a Mac).
+    if ! { [[ -x "$HEY" ]] && "$HEY" --help >/dev/null 2>&1; }; then
+        rm -f "$HEY"
+        case "$(uname -s)/$(uname -m)" in
+            Darwin/*)                 HEY_URL="https://hey-release.s3.us-east-2.amazonaws.com/hey_darwin_amd64" ;;
+            Linux/x86_64|Linux/amd64) HEY_URL="https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64" ;;
+            *) echo "ERROR: no prebuilt hey for $(uname -s)/$(uname -m). Install with 'brew install hey' or 'go install github.com/rakyll/hey@latest'." >&2; exit 1 ;;
+        esac
+        echo "Installing hey from $HEY_URL..."
+        curl -fsSL "$HEY_URL" -o "$HEY" && chmod +x "$HEY"
+        if ! "$HEY" --help >/dev/null 2>&1; then
+            echo "ERROR: hey won't run on $(uname -s)/$(uname -m). Apple Silicon: 'softwareupdate --install-rosetta' or 'brew install hey'." >&2
+            rm -f "$HEY"; exit 1
+        fi
     fi
     TOKEN_FILE="demo/.token"
     if [[ ! -f "$TOKEN_FILE" ]]; then

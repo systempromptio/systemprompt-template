@@ -320,11 +320,7 @@ echo "  (No AI cost — pure infrastructure)"
 echo "------------------------------------------"
 echo ""
 
-HEY="/tmp/hey"
-if [[ ! -x "$HEY" ]]; then
-  echo "  Installing hey (HTTP load testing tool)..."
-  curl -sL https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64 -o "$HEY" && chmod +x "$HEY"
-fi
+install_hey || exit 1
 
 BENCH_SESSION="bench-$(date +%s)"
 GOVERN_PAYLOAD='{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"'$BENCH_SESSION'-govern","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/src/main.rs"}}'

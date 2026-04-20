@@ -4,10 +4,22 @@
 set -e
 source "$(dirname "$0")/_colors.sh"
 
-# Ensure hey is installed
+# Ensure hey is installed — pick the binary that matches this host.
+# A stale hey_linux_amd64 on a Mac is the usual reason benchmarks silently
+# "do nothing" (the call fails, stderr is swallowed, stats come back empty).
 HEY="/tmp/hey"
-if [[ ! -x "$HEY" ]]; then
-  curl -sL https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64 -o "$HEY" && chmod +x "$HEY"
+if ! { [[ -x "$HEY" ]] && "$HEY" --help >/dev/null 2>&1; }; then
+  rm -f "$HEY"
+  case "$(uname -s)/$(uname -m)" in
+    Darwin/*)                 HEY_URL="https://hey-release.s3.us-east-2.amazonaws.com/hey_darwin_amd64" ;;
+    Linux/x86_64|Linux/amd64) HEY_URL="https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64" ;;
+    *) echo "ERROR: no prebuilt hey for $(uname -s)/$(uname -m) — 'brew install hey' or 'go install github.com/rakyll/hey@latest'" >&2; exit 1 ;;
+  esac
+  curl -fsSL "$HEY_URL" -o "$HEY" && chmod +x "$HEY"
+  if ! "$HEY" --help >/dev/null 2>&1; then
+    echo "ERROR: hey won't run on $(uname -s)/$(uname -m). On Apple Silicon run 'softwareupdate --install-rosetta' or 'brew install hey'." >&2
+    rm -f "$HEY"; exit 1
+  fi
 fi
 
 BENCH_SESSION="svg-bench-$(date +%s)"

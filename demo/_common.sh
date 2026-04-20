@@ -146,6 +146,49 @@ run_cli_indented() {
   "$CLI" "$@" --profile "$PROFILE" 2>&1 | sed 's/^/  /'
 }
 
+# ── Load-testing helper ───────────────────────
+# Installs the `hey` HTTP benchmarking tool into $HEY (default /tmp/hey),
+# picking the binary that matches this host. Callers: load-test demos.
+#
+# Supported:  Darwin/x86_64, Darwin/arm64 (via Rosetta 2), Linux/x86_64.
+# Unsupported: Linux/arm64 and everything else — prints a clear install hint.
+install_hey() {
+  HEY="${HEY:-/tmp/hey}"
+  # Re-use a cached binary only if it actually executes on this host
+  # (a stale hey_linux_amd64 left over on a Mac is the common failure mode).
+  if [[ -x "$HEY" ]] && "$HEY" --help >/dev/null 2>&1; then
+    return 0
+  fi
+  rm -f "$HEY"
+  local os arch url
+  os="$(uname -s)"
+  arch="$(uname -m)"
+  case "$os/$arch" in
+    Darwin/*)                  url="https://hey-release.s3.us-east-2.amazonaws.com/hey_darwin_amd64" ;;
+    Linux/x86_64|Linux/amd64)  url="https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64" ;;
+    *)
+      echo "ERROR: no prebuilt 'hey' binary for $os/$arch." >&2
+      echo "       Install manually: 'brew install hey' or 'go install github.com/rakyll/hey@latest'" >&2
+      return 1
+      ;;
+  esac
+  echo "  Installing hey from $url ..."
+  if ! curl -fsSL "$url" -o "$HEY"; then
+    echo "ERROR: failed to download hey from $url" >&2
+    return 1
+  fi
+  chmod +x "$HEY"
+  if ! "$HEY" --help >/dev/null 2>&1; then
+    echo "ERROR: downloaded hey cannot execute on $os/$arch." >&2
+    if [[ "$os/$arch" == "Darwin/arm64" ]]; then
+      echo "       Apple Silicon needs Rosetta 2: 'softwareupdate --install-rosetta'" >&2
+      echo "       or install a native build: 'brew install hey'" >&2
+    fi
+    rm -f "$HEY"
+    return 1
+  fi
+}
+
 # Runs a CLI command, indents, and limits output
 run_cli_head() {
   local lines="${1:-20}"
