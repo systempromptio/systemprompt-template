@@ -8,7 +8,7 @@
 
 # Own how your organization uses AI.
 
-### The narrow waist between your AI and everything it touches. Self-hosted. Air-gapped. Every interaction governed and provable.
+### Self-hosted governance for every AI tool call. One Rust binary. One Postgres. Every decision audited before execution.
 
 [![Built on systemprompt-core](https://img.shields.io/badge/built%20on-systemprompt--core-2b6cb0?style=flat-square)](https://github.com/systempromptio/systemprompt-core)
 [![Template · MIT](https://img.shields.io/badge/template-MIT-16a34a?style=flat-square)](LICENSE)
@@ -22,112 +22,128 @@
 
 ---
 
-**AI governance infrastructure for agentic systems.** A single compiled Rust binary that authenticates, authorises, rate-limits, logs, and costs every AI interaction before it reaches a tool, a database, or an external service. Self-hosted, air-gap capable, provider-agnostic. One binary (~50 MB). One database (PostgreSQL). No microservices. No Kubernetes. No Redis. No Kafka.
+## What this is
 
-This repo is how you evaluate it. Clone it, run it on your own machine, bring your own AI key, and watch every claim on this page execute against 40+ scripted demos. The terminal recordings below are real captures of those demos running, not mockups.
+A single Rust binary that sits between your AI agents and every tool, database, or API they touch. It authenticates the caller, checks scope, scans for secrets, blocklists destructive operations, and rate-limits — synchronously, in-process, before the call executes. Every allow/deny lands in an 18-column Postgres audit table. No sidecars. No Kubernetes. No Redis. No Kafka. One binary, one database, one PID.
 
-> **Ready to evaluate?** Three commands from fresh clone to running platform. Every recording on this page is a real script you can run yourself.
->
-> **Looking at the source?** This template is MIT. The engine is [systemprompt-core](https://github.com/systempromptio/systemprompt-core) (BSL-1.1), a 30-crate Rust workspace published on crates.io under `systemprompt-*`.
+This repo is the evaluation template. Fork it, clone it, compile it, and every claim below runs against 43 scripted demos on your own laptop.
 
 ```
   LLM Agent
-      |
-      v
-  [Governance Pipeline — in-process, synchronous]
-      |
-      +-- 1. JWT validation
-      +-- 2. RBAC scope check  (Admin/User/Service/A2A/MCP/Anonymous)
-      +-- 3. Secret detection  (35+ regex patterns — API keys, PATs, PEM headers)
-      +-- 4. Blocklist         (destructive operation categories)
-      +-- 5. Rate limiting     (300 req/min per session, role-based multipliers)
-      |
-      v
-  ALLOW or DENY  (every decision written to 18-column audit table)
-      |
-      v (ALLOW only)
+      │
+      ▼
+  Governance pipeline  (in-process, synchronous, <5 ms p99)
+      │
+      ├─ 1. JWT validation       (HS256, verified locally)
+      ├─ 2. RBAC scope check     (Admin · User · Service · A2A · MCP · Anonymous)
+      ├─ 3. Secret detection     (35+ regex: API keys, PATs, PEM, AWS prefixes)
+      ├─ 4. Blocklist            (destructive operation categories)
+      └─ 5. Rate limiting        (300 req/min per session, role multipliers)
+      │
+      ▼
+  ALLOW or DENY   →  18-column audit row, always
+      │
+      ▼ (ALLOW)
   spawn_server()
-      |
-      +-- load secrets from encrypted store (ChaCha20-Poly1305)
-      +-- inject into subprocess environment variables only
-      |
-      v
-  [MCP Tool Process]  <-- credentials live here, passed via env at spawn time
-
-  The parent process (LLM context path) never writes credential values.
+      │
+      ├─ decrypt secrets from ChaCha20-Poly1305 store
+      └─ inject into subprocess env vars only (never parent)
+      │
+      ▼
+  MCP tool process     credentials live here, never in the LLM context path
 ```
-
-## Table of Contents
-
-- [Get started](#get-started)
-- [How credential injection works](#how-credential-injection-works)
-- [Infrastructure](#infrastructure) — Self-hosted deployment, deploy anywhere, unified control plane, open standards
-- [Capabilities](#capabilities) — Governance pipeline, secrets management, MCP governance, analytics, agents, compliance
-- [Integrations](#integrations) — Any AI agent, Claude Desktop & Cowork, web publisher, extensible architecture
-- [Performance](#performance)
-- [Configuration](#configuration)
-- [Compared to alternatives](#compared-to-alternatives)
-- [License](#license)
 
 ---
 
-## Get started
+## Quick start
+
+Three commands from fresh clone to a running governance binary. A fourth runs every demo.
 
 ```bash
 just build                                               # 1. compile the workspace
 just setup-local <anthropic> <openai> <gemini>           # 2. profile + Postgres + publish
 just start                                               # 3. serve governance, agents, MCP, admin, API
+./demo/sweep.sh                                          # 4. run all 43 demos against the live binary
 ```
 
-Open **http://localhost:8080** and run `systemprompt --help`. Point Claude Code, Claude Desktop, or any MCP client at it. Permissions follow the user, not the client.
+### What you'll see in the first five minutes
+
+- **http://localhost:8080** — admin UI, live audit table, session viewer.
+- **`systemprompt analytics overview`** — conversations, tool calls, costs in microdollars, anomalies flagged above 2x/3x of rolling average.
+- **`systemprompt infra logs audit <request-id> --full`** — the full trace for any request: identity, scope, rule evaluations, tool call, model output, cost. One query, one row, one answer.
+- **Point Claude Code, Claude Desktop, or any MCP client at it.** Permissions follow the user, not the client. Try to exfiltrate a key through a tool argument and watch the secret-detection layer deny it before the tool process spawns.
+- **`./demo/governance/06-secret-breach.sh`** — a scripted version of that denial, running against the same binary you just started.
+
+If any of those five land, you have enough to decide whether this belongs in your stack.
+
+### Run the demos
+
+Each recording below has a script that produced it. Every script runs against the live binary. No mocks.
+
+```bash
+./demo/00-preflight.sh                    # acquire token, verify services, create admin
+./demo/01-seed-data.sh                    # populate analytics + trace data
+
+# Capabilities — governance, secrets, audit
+./demo/governance/01-happy-path.sh        # allowed tool call, trace chain
+./demo/governance/05-governance-denied.sh # scope check rejects out-of-role call
+./demo/governance/06-secret-breach.sh     # secret-detection blocks exfiltration
+./demo/governance/07-rate-limiting.sh     # 300 req/min per session enforced
+./demo/governance/08-hooks.sh             # PreToolUse policy-as-code
+
+# Infrastructure — one binary, CLI control plane
+./demo/infrastructure/02-database.sh      # 144 tables, schema introspection
+./demo/infrastructure/04-logs.sh          # structured JSON events
+./demo/analytics/01-overview.sh           # conversations, costs, anomalies
+
+# Integrations — MCP, agents, A2A
+./demo/mcp/01-servers.sh                  # per-server OAuth2, manifest validation
+./demo/agents/02-messaging.sh             # governed A2A handoff (~$0.01)
+./demo/performance/02-load-test.sh        # 3,308 req/s burst, p99 22.7 ms
+```
+
+Full index: [`demo/README.md`](demo/README.md). 41 of 43 scripts are free; two cost ~$0.01 each (real model calls).
 
 ### Prerequisites
 
 | Requirement | Purpose | Install |
 |---|---|---|
-| **Docker** | PostgreSQL runs in a container. `just setup-local` starts it automatically | [docker.com](https://docs.docker.com/get-docker/) |
+| **Docker** | PostgreSQL runs in a container; `just setup-local` starts it | [docker.com](https://docs.docker.com/get-docker/) |
 | **Rust 1.75+** | Compiles the workspace binary | [rustup.rs](https://rustup.rs/) |
-| **`just`** | Task runner for build, setup, and start commands | [just.systems](https://just.systems/) |
-| **`jq`** | JSON processing for config and session management | `brew install jq` / `apt install jq` |
-| **`yq`** | YAML processing for profile and secrets config | `brew install yq` / `pip install yq` |
-| **AI API keys** | Keys for every provider enabled in `services/ai/config.yaml`. The shipped config enables all three (Anthropic, OpenAI, Gemini) with `default_provider: gemini`, so the marketplace MCP server will refuse to boot unless each enabled provider has a real key. Disable the ones you don't want in the AI config, or pass all three. | Provider dashboards |
-| **Ports `8080` + `5432`** | HTTP server + PostgreSQL | Free on localhost |
+| **`just`** | Task runner | [just.systems](https://just.systems/) |
+| **`jq`, `yq`** | JSON and YAML processing in the scripts | `brew install jq yq` / `apt install jq yq` |
+| **AI API keys** | One key per provider enabled in `services/ai/config.yaml`. Shipped config enables Anthropic, OpenAI, Gemini (default `gemini`). Disable providers you don't want or pass all three. | Provider dashboards |
+| **Ports 8080 + 5432** | HTTP + PostgreSQL | Free on localhost |
 
-Running a second clone side-by-side? `just setup-local <anthropic> <openai> <gemini> 8081 5433`.
+Running a second clone side-by-side: `just setup-local <anthropic> <openai> <gemini> 8081 5433`.
 
 ---
 
 ## How credential injection works
 
-When a tool call passes the governance pipeline, `spawn_server()` loads credentials from the encrypted store and injects them directly into the child process environment — never into the parent process that handles LLM communication.
+When a tool call passes the pipeline, `spawn_server()` decrypts credentials from the ChaCha20-Poly1305 store and injects them into the child process environment. The parent process — which owns the LLM context window — never writes the value.
 
-The mechanism is about 30 lines in [`systemprompt-core/crates/domain/mcp/src/services/process/spawner.rs`](https://github.com/systempromptio/systemprompt-core/blob/main/crates/domain/mcp/src/services/process/spawner.rs):
+Source: [`systemprompt-core/crates/domain/mcp/src/services/process/spawner.rs`](https://github.com/systempromptio/systemprompt-core/blob/main/crates/domain/mcp/src/services/process/spawner.rs).
 
 ```rust
-// Secrets are decrypted from ChaCha20-Poly1305 encrypted store
 let secrets = SecretsBootstrap::get()?;
 
 let mut child_command = Command::new(&binary_path);
 
-// Injected into subprocess env vars only — never the LLM context path
+// Child env only. The parent process (LLM context path) never touches the value.
 if let Some(key) = &secrets.anthropic {
     child_command.env("ANTHROPIC_API_KEY", key);
-}
-if let Some(key) = &secrets.openai {
-    child_command.env("OPENAI_API_KEY", key);
 }
 if let Some(key) = &secrets.github {
     child_command.env("GITHUB_TOKEN", key);
 }
 
-// Subprocess is detached — parent process forgets it after spawn
+// Detach; parent forgets the child after spawn.
 let child = child_command.spawn()?;
 std::mem::forget(child);
 ```
 
-The parent process — which owns the LLM context window — never touches these values. `std::mem::forget(child)` detaches the subprocess so the governance binary does not wait on it; the tool process runs independently with credentials in its own environment only.
-
-**The second defence layer** is a secret detection pipeline that runs *before* spawn: 35+ regex patterns catch API key formats, GitHub PATs, PEM headers, AWS access key prefixes, and more. A tool call that passes a secret through the context window is blocked even if the agent has sufficient scope. Try it:
+Before the spawn, a secret-detection pipeline scans the tool arguments for 35+ credential patterns. A tool call that tries to pass a secret through the context window is blocked even if the agent has scope to run the tool. Run it:
 
 ```bash
 ./demo/governance/06-secret-breach.sh
@@ -137,11 +153,7 @@ The parent process — which owns the LLM context window — never touches these
 
 ## Infrastructure
 
-**One binary. One database. Deploys anywhere.** What others assemble from six services, this ships as a single 50MB Rust binary with PostgreSQL as the only dependency. Four in-process services, 144 database tables, zero sidecars, one PID to monitor. The same artifact runs on Docker, bare metal, cloud, or an air-gapped network without modification.
-
-Configuration is profile-based YAML checked into version control. Agents, MCP servers, skills, AI providers, content sources, scheduler jobs, and web themes all live as flat files under `services/`. Environment drift is a diff, not a mystery. Every operation that works against localhost takes a `--profile` flag and works identically against staging or production.
-
-Eight CLI domains cover every operational surface. No dashboard required for any task:
+One binary, one database, deploys anywhere. 144 schema-checked Postgres tables. 12 extensions compiled in at link time via `register_extension!`. Eight CLI domains cover every operational surface.
 
 | Domain | Purpose |
 |---|---|
@@ -154,7 +166,7 @@ Eight CLI domains cover every operational surface. No dashboard required for any
 | `plugins` | Extensions, MCP servers, capabilities |
 | `build` | Build core workspace and MCP extensions |
 
-Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0** and **WebAuthn** for identity, **ChaCha20-Poly1305** for encryption at rest, **PostgreSQL** for storage, **Git** for distribution. No proprietary protocols at any layer. You can leave without a migration.
+Every layer is an open standard: **MCP** for tools, **OAuth 2.0** and **WebAuthn** for identity, **ChaCha20-Poly1305** for encryption at rest, **PostgreSQL** for storage, **Git** for distribution. You can leave without a migration.
 
 ### Self-hosted deployment
 
@@ -164,7 +176,7 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/infra-self-hosted.svg" alt="Self-hosted deployment — terminal recording" width="820">
 </picture>
 
-> One binary, one process, one database. All data stays on your infrastructure. No outbound telemetry. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-self--hosted-2b6cb0?style=flat-square)](https://systemprompt.io/features/self-hosted-ai-platform)
+One binary, one process, one database. All data stays on your infrastructure. Zero outbound telemetry by default. Run: `./demo/infrastructure/01-services.sh` · [Learn more](https://systemprompt.io/features/self-hosted-ai-platform)
 
 ### Deploy anywhere
 
@@ -174,7 +186,7 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/infra-deploy-anywhere.svg" alt="Deploy anywhere — terminal recording" width="820">
 </picture>
 
-> Profile-based config means the same binary promotes from laptop to production without rebuilding. JWT validation and rate limiting execute locally per process without distributed infrastructure. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-deploy%20anywhere-2b6cb0?style=flat-square)](https://systemprompt.io/features/deploy-anywhere)
+Same binary runs laptop, VM, Kubernetes pod, and air-gapped box. Profile YAML promotes environments without rebuilding. Run: `./demo/cloud/01-cloud-auth.sh` · [Learn more](https://systemprompt.io/features/deploy-anywhere)
 
 ### Unified control plane
 
@@ -184,7 +196,7 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/infra-control-plane.svg" alt="Unified control plane — terminal recording" width="820">
 </picture>
 
-> Govern, observe, and manage from one binary. `systemprompt <domain> --help` works everywhere. The same CLI surface drives local dev and production operations. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-control%20plane-2b6cb0?style=flat-square)](https://systemprompt.io/features/unified-control-plane)
+Every operational surface has a CLI verb. No dashboard is required for any task. `systemprompt <domain> --help` works everywhere. Run: `./demo/infrastructure/03-jobs.sh` · [Learn more](https://systemprompt.io/features/unified-control-plane)
 
 ### Open standards
 
@@ -194,17 +206,13 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/infra-open-standards.svg" alt="Open standards — terminal recording" width="820">
 </picture>
 
-> MCP for tools, OAuth 2.0 for identity, PostgreSQL for storage, Git for distribution. Zero proprietary protocols at any layer. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-open%20standards-2b6cb0?style=flat-square)](https://systemprompt.io/features/no-vendor-lock-in)
+MCP for tools, OAuth 2.0 for identity, PostgreSQL for storage, Git for distribution. Zero proprietary protocols at any layer. Run: `./demo/mcp/01-servers.sh` · [Learn more](https://systemprompt.io/features/no-vendor-lock-in)
 
 ---
 
 ## Capabilities
 
-**Every tool call governed. Synchronous evaluation before execution, not after.** Four layers of enforcement in the request path: scope check against a six-tier RBAC hierarchy (Admin 10x, User 1x, Service 5x, A2A 5x, MCP 5x, Anonymous 0.5x), secret detection with 35+ regex patterns, blocklist for destructive operations, and rate limiting at 300 requests per minute per session with role-based multipliers. Deny reasons are structured and auditable. Single-digit milliseconds overhead. No sidecar. No proxy.
-
-**Secrets never touch inference.** The agent calls the tool, the MCP service injects the credential server-side via subprocess environment variables, and the LLM never sees it. Per-user key hierarchy encrypted with ChaCha20-Poly1305 AEAD. 12 dangerous file extensions blocked at the edge. 20+ scanner tool signatures identified before they reach the application layer.
-
-**Every decision lands in an 18-column audit table** with 17 indexes, queryable from the CLI or exportable to your SIEM via structured JSON events. Cost tracking in integer microdollars by model, agent, and department. Nothing is sampled. Nothing is approximate. A single TraceId correlates every event from login through model output. Six correlation columns (UserId, SessionId, TaskId, TraceId, ContextId, ClientId) bind identity at construction time so a row that reaches the database without a trace is a programming error.
+Four layers of enforcement per request. Six-tier RBAC (Admin 10x · User 1x · Service 5x · A2A 5x · MCP 5x · Anonymous 0.5x). 35+ regex secret patterns. 300 req/min base rate per session with role multipliers. Sub-5 ms p99 overhead. Every decision lands in an 18-column audit row with six correlation columns (UserId, SessionId, TaskId, TraceId, ContextId, ClientId). Nothing sampled. Cost tracked in integer microdollars.
 
 ### Governance pipeline
 
@@ -214,7 +222,7 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/cap-governance.svg" alt="Governance pipeline — terminal recording" width="820">
 </picture>
 
-> Scope, secret scan, blocklist, rate limit. All synchronous, all in-process, all audited. The backup line of defense behind tool mapping. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-governance-2b6cb0?style=flat-square)](https://systemprompt.io/features/governance-pipeline)
+Scope check, secret scan, blocklist, rate limit. Synchronous and in-process on every tool call. Run: `./demo/governance/05-governance-denied.sh` · [Learn more](https://systemprompt.io/features/governance-pipeline)
 
 ### Secrets management
 
@@ -224,7 +232,7 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/cap-secrets.svg" alt="Secrets management — terminal recording" width="820">
 </picture>
 
-> Credentials encrypted at rest with ChaCha20-Poly1305 and injected server-side at tool-call time. They never enter the context window, never appear in logs, never transit the inference path. Even an admin-scope agent cannot exfiltrate an AWS key, a GitHub PAT, or a PEM private key. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-secrets-2b6cb0?style=flat-square)](https://systemprompt.io/features/secrets-management)
+Credentials encrypted at rest with ChaCha20-Poly1305 and injected into the tool subprocess at spawn time. They never enter the context window, never appear in logs, never transit the inference path. An admin-scope agent cannot exfiltrate an AWS key, a GitHub PAT, or a PEM block. Run: `./demo/governance/06-secret-breach.sh` · [Learn more](https://systemprompt.io/features/secrets-management)
 
 ### MCP governance
 
@@ -234,9 +242,9 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/cap-mcp.svg" alt="MCP governance — terminal recording" width="820">
 </picture>
 
-> Each MCP server operates as an independent OAuth2 resource server with isolated credentials and per-server scope validation. If a tool is not declared in the plugin manifest, it does not exist for that agent. Four-pass deploy-time validation catches port conflicts, missing configs, empty OAuth scopes, and malformed server types before anything starts. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-MCP-2b6cb0?style=flat-square)](https://systemprompt.io/features/mcp-governance)
+Each MCP server runs as an independent OAuth2 resource server with isolated credentials and per-server scope validation. If a tool is not in the plugin manifest, it does not exist for the agent. Four-pass deploy-time validation catches port conflicts, missing configs, empty OAuth scopes, and malformed server types before anything starts. Run: `./demo/mcp/02-access-tracking.sh` · [Learn more](https://systemprompt.io/features/mcp-governance)
 
-### Analytics & observability
+### Analytics and observability
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-analytics.svg">
@@ -244,7 +252,7 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/cap-analytics.svg" alt="Analytics and observability — terminal recording" width="820">
 </picture>
 
-> Nine CLI subcommands cover overview, conversations, agents, tools, requests, sessions, content, traffic, and costs. Anomaly detection flags values exceeding 2x (warning) or 3x (critical) of the rolling average. SIEM-ready JSON event streaming for Splunk, ELK, Datadog, Sumo Logic. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-analytics-2b6cb0?style=flat-square)](https://systemprompt.io/features/analytics-and-observability)
+Nine analytics subcommands: overview, conversations, agents, tools, requests, sessions, content, traffic, costs. Anomaly detection flags values past 2x (warn) or 3x (critical) of rolling average. JSON event streaming feeds Splunk, ELK, Datadog, Sumo. Run: `./demo/analytics/01-overview.sh` · [Learn more](https://systemprompt.io/features/analytics-and-observability)
 
 ### Closed-loop agents
 
@@ -254,7 +262,7 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/cap-agents.svg" alt="Closed-loop agents — terminal recording" width="820">
 </picture>
 
-> Agents query their own error rate, cost, and latency through exposed MCP tools and adjust without a human in the loop. Every logged event carries eight correlation fields for complete request lineage reconstruction. A2A protocol enables multi-provider agent workflows with full governance on every hop. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-agents-2b6cb0?style=flat-square)](https://systemprompt.io/features/closed-loop-agents)
+Agents query their own error rate, cost, and latency through exposed MCP tools and adjust without a human in the loop. A2A protocol carries governance on every hop of a multi-provider workflow. Run: `./demo/agents/03-tracing.sh` · [Learn more](https://systemprompt.io/features/closed-loop-agents)
 
 ### Compliance
 
@@ -264,17 +272,13 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/cap-compliance.svg" alt="Compliance — terminal recording" width="820">
 </picture>
 
-> Identity-bound audit trails via JWT with 10 lifecycle event variants. Tiered log retention from debug (1 day) through error (90 days). Policy-as-code on PreToolUse hooks. All data on-premises, no outbound telemetry. Built for **SOC 2 Type II**, **ISO 27001**, **HIPAA**, and **OWASP Agentic Top 10**. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-compliance-2b6cb0?style=flat-square)](https://systemprompt.io/features/compliance)
+JWT-bound audit trails, 10 lifecycle event variants, tiered retention (debug 1 day through error 90 days). Policy-as-code on PreToolUse hooks. All data on-premises by default. Built for **SOC 2 Type II**, **ISO 27001**, **HIPAA**, and **OWASP Agentic Top 10**. Run: `./demo/users/03-session-management.sh` · [Learn more](https://systemprompt.io/features/compliance)
 
 ---
 
 ## Integrations
 
-**Provider-agnostic by trait, not by adapter.** The `AiProvider` trait abstracts 19 methods so switching between Anthropic, OpenAI, and Gemini changes config, not code. Cost attribution tracks spend across providers, models, and agents with microdollar precision. Same RBAC, same audit trail, same enforcement pipeline regardless of which model is behind the call.
-
-**Extensions compile into the binary.** The `Extension` trait exposes routes, schemas, migrations, jobs, LLM providers, tool providers, page prerenderers, roles, and config namespaces. Registration happens at link time via `register_extension!` with no runtime reflection and no dynamic loading. 12 extensions, 71 sqlx-checked schemas, and 13 background jobs ship by default.
-
-**Skills persist across sessions.** Claude Desktop and Cowork users install once via OAuth2 and get governed slash commands in every session. The same binary that governs AI agents also serves your website, blog, and documentation with Markdown content, PostgreSQL full-text search, and engagement analytics. systemprompt.io itself runs on this binary.
+The `AiProvider` trait abstracts 19 methods, so swapping Anthropic, OpenAI, and Gemini is a config change, not a rewrite. The `Extension` trait contributes routes, schemas, migrations, jobs, LLM providers, tool providers, page prerenderers, roles, and config namespaces. 71 sqlx-checked schemas and 13 background jobs ship by default. Same RBAC, same audit, same pipeline on every provider.
 
 ### Any AI agent
 
@@ -284,7 +288,7 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/int-any-agent.svg" alt="Any AI agent — terminal recording" width="820">
 </picture>
 
-> One governance layer for every provider. Swap Anthropic, OpenAI, or Gemini at the profile level. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-any%20agent-2b6cb0?style=flat-square)](https://systemprompt.io/features/any-ai-agent)
+One governance layer for every provider. Swap Anthropic, OpenAI, or Gemini at the profile level. Cost attribution tracks spend per provider, model, and agent in integer microdollars. Run: `./demo/agents/01-agents.sh` · [Learn more](https://systemprompt.io/features/any-ai-agent)
 
 ### Claude Desktop & Cowork
 
@@ -294,9 +298,9 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/int-cowork.svg" alt="Claude Desktop & Cowork — terminal recording" width="820">
 </picture>
 
-> Skills persist across sessions via OAuth2. Slash commands activate business skills governed by the same four-layer pipeline. Install once, sync forever. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-cowork-2b6cb0?style=flat-square)](https://systemprompt.io/features/cowork)
+Skills persist across sessions via OAuth2. Slash commands activate business skills governed by the four-layer pipeline. Install once, sync forever. Run: `./demo/skills/01-skills.sh` · [Learn more](https://systemprompt.io/features/cowork)
 
-### Web Server & Publisher
+### Web server & publisher
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-web-publisher.svg">
@@ -304,7 +308,7 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/int-web-publisher.svg" alt="Web Server & Publisher — terminal recording" width="820">
 </picture>
 
-> The same binary that governs AI agents serves your website, blog, and documentation. Markdown content, PostgreSQL full-text search, engagement analytics. No separate web tier, no CMS. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-web%20publisher-2b6cb0?style=flat-square)](https://systemprompt.io/features/web-publisher)
+The same binary that governs AI agents serves your website, blog, and documentation. Markdown content, PostgreSQL full-text search, engagement analytics. systemprompt.io itself runs on this binary. Run: `./demo/web/01-web-config.sh` · [Learn more](https://systemprompt.io/features/web-publisher)
 
 ### Extensible architecture
 
@@ -314,13 +318,13 @@ Every layer uses an open standard: **MCP** for tool communication, **OAuth 2.0**
   <img src="demo/recording/svg/output/dark/int-extensions.svg" alt="Extensions and capabilities — terminal recording" width="820">
 </picture>
 
-> Your code compiles into your binary. Add routes, tables, jobs, and providers through Rust extension traits. No runtime reflection, no dynamic loading. &nbsp; [![Learn more](https://img.shields.io/badge/learn%20more-extensions-2b6cb0?style=flat-square)](https://systemprompt.io/features/extensible-architecture)
+Your code compiles into your binary via the `Extension` trait. Routes, tables, jobs, and providers register at link time. No runtime reflection, no dynamic loading. Run: `./demo/skills/05-plugins.sh` · [Learn more](https://systemprompt.io/features/extensible-architecture)
 
 ---
 
 ## Performance
 
-Sub-5 ms governance overhead, benchmarked. Each request performs JWT validation, scope resolution, three rule evaluations, and an async database write. The enforcement pipeline is not a bottleneck.
+Sub-5 ms governance overhead, benchmarked. Each request performs JWT validation, scope resolution, three rule evaluations, and an async audit write.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-benchmark.svg">
@@ -330,66 +334,58 @@ Sub-5 ms governance overhead, benchmarked. Each request performs JWT validation,
 
 | Metric | Result |
 |---|---|
-| **Throughput** | 3,308 req/s (burst), sustained under 100 concurrent workers |
-| **p50 latency** | 13.5 ms |
-| **p99 latency** | 22.7 ms |
-| **Overhead** | <1% added to AI response time |
-| **GC pauses** | Zero. Hundreds of concurrent developers on a single instance. |
+| Throughput | 3,308 req/s burst, sustained under 100 concurrent workers |
+| p50 latency | 13.5 ms |
+| p99 latency | 22.7 ms |
+| Added to AI response time | <1% |
+| GC pauses | Zero |
 
-Reproduce with `just benchmark`. Numbers measured on the author's laptop.
+Reproduce: `just benchmark`. Numbers measured on the author's laptop.
 
 ---
 
 ## Configuration
 
-All runtime configuration lives as flat YAML files under `services/`. The root `services/config/config.yaml` is a thin aggregator. Unknown YAML keys cause loud errors at load time (`#[serde(deny_unknown_fields)]`).
+Runtime configuration is flat YAML under `services/`, loaded through `services/config/config.yaml`. Unknown keys fail loudly (`#[serde(deny_unknown_fields)]`).
 
 ```
 services/
-  config/config.yaml        Root aggregator (includes all resource files)
-  agents/<id>.yaml          Agent definitions with scope, model, and tool access
-  mcp/<name>.yaml           MCP server definitions with OAuth2 config
-  skills/<id>.yaml          Skill definitions (config + markdown instruction body)
-  plugins/<name>.yaml       Plugin bindings referencing agents, skills, MCP servers
+  config/config.yaml        Root aggregator
+  agents/<id>.yaml          Agent: scope, model, tool access
+  mcp/<name>.yaml           MCP server: OAuth2 config, scopes
+  skills/<id>.yaml          Skill: config + markdown instruction body
+  plugins/<name>.yaml       Plugin bindings (references agents, skills, MCP)
   ai/config.yaml            AI provider config (Anthropic, OpenAI, Gemini)
   scheduler/config.yaml     Background job schedule
   web/config.yaml           Web frontend, navigation, theme
   content/config.yaml       Content sources and indexing
 ```
 
-Every resource is a flat file you can diff, review, and version. No database-stored config. No admin UI required for any configuration change.
+No database-stored config, no admin UI required. Every change is a diff.
 
 ---
 
 ## Compared to alternatives
 
-These are architectural differences, not marketing comparisons.
+Architectural differences, not marketing comparisons.
 
-**Shell environment variables (`~/.claude/settings.json` DENY lists, per-developer key config)**
+**Shell environment variables (`~/.claude/settings.json`, per-developer key config).** Each developer configures themselves. No team-level enforcement, no audit trail, no per-agent scope, no anomaly detection. A new hire with a misconfigured environment goes uncaught.
 
-The most common approach: each developer sets up their own environment. No enforcement at the team level, no audit trail, no per-agent scope, no anomaly detection. A developer can add or remove keys without any visibility. If a new hire configures their environment incorrectly, nothing catches it.
+**Proxy-layer gateways (Microsoft Azure AI Gateway, Kong AI Gateway, nginx variants).** Intercept HTTP between the client and the model. Can observe and block, but do not own the execution context of tools. Credential injection through a proxy requires the credential to transit the proxy as a value; the proxy process can log it, and a misconfigured proxy can leak it. Azure-native gateways need Azure infrastructure and are not air-gap capable.
 
-**Proxy-layer gateways (Microsoft Azure AI Gateway, Kong AI Gateway, nginx-based approaches)**
+**Vault + Kubernetes Secrets.** Stores credentials well, but enforcement is not at the point of LLM tool use. When an MCP tool needs a secret it makes a network call to retrieve it, and an LLM agent can observe, manipulate (via prompt injection), or mis-time that call. Vault does not know what the LLM is doing or why.
 
-These intercept HTTP between the LLM client and its destination. They can observe and block traffic but do not own the execution context of tools. Credential injection through a proxy requires the credential to transit the proxy as a value (in headers or request transformation) — the proxy process can log it, and a misconfigured proxy can leak it. Microsoft AGT is also Azure-native: not self-hostable on bare metal, not air-gap capable, requires Azure infrastructure.
-
-**Vault + Kubernetes Secrets**
-
-Manages credential storage well but is not enforcement at the point of LLM tool use. When an MCP tool needs a secret, it makes a network call to retrieve it — a call the LLM agent can observe, manipulate via prompt injection, or trigger at an unintended time. Vault does not know what the LLM is doing or why; it only knows a service account authenticated and requested a secret.
-
-**This implementation**
-
-The governance binary is the parent process of every MCP tool subprocess. `Command::spawn()` injects credentials directly into the child's environment. No network round-trip. No side-channel. No secondary auth flow. The parent process (LLM context) never writes credential values. The subprocess (tool execution) never makes an outbound credential request. Enforcement happens at the transport layer, not the proxy layer.
+**This binary.** The governance process is the parent of every MCP tool subprocess. `Command::spawn()` writes credentials directly into the child's environment. No network round-trip, no side channel, no secondary auth flow. The parent (LLM context) never writes the value.
 
 | | Shell env | Proxy gateway | Vault + k8s | systemprompt.io |
 |---|---|---|---|---|
-| **Credentials in LLM context** | Risk | Risk | Risk | No |
-| **Team-enforced policies** | No | Yes | No | Yes |
-| **Air-gap capable** | Yes | No (Azure/cloud) | Partial | Yes |
-| **Per-agent scope** | No | Partial | No | Yes |
-| **Audit trail** | No | Partial | Yes | Yes |
-| **Single binary** | — | No | No | Yes |
-| **Kubernetes required** | No | Yes | Yes | No |
+| Credentials absent from LLM context | Risk | Risk | Risk | Yes |
+| Team-enforced policies | No | Yes | No | Yes |
+| Air-gap capable | Yes | No | Partial | Yes |
+| Per-agent scope | No | Partial | No | Yes |
+| Audit trail | No | Partial | Yes | Yes |
+| Single binary | — | No | No | Yes |
+| Kubernetes required | No | Yes | Yes | No |
 
 ---
 
