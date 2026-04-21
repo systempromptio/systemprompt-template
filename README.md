@@ -18,7 +18,7 @@
 
 [**systemprompt.io**](https://systemprompt.io) · [**Documentation**](https://systemprompt.io/documentation/) · [**Guides**](https://systemprompt.io/guides) · [**Discord**](https://discord.gg/wkAbSuPWpr)
 
-If this saves you time, [⭐ star the repo](https://github.com/systempromptio/systemprompt-template) — it helps others find it.
+Got your AI governance question answered? [⭐ Star it](https://github.com/systempromptio/systemprompt-template) — helps other security teams find it.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-secrets.svg">
