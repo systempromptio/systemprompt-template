@@ -29,15 +29,46 @@ This repo is how you evaluate it. Clone it, run it on your own machine, bring yo
 > **Ready to evaluate?** Three commands from fresh clone to running platform. Every recording on this page is a real script you can run yourself.
 >
 > **Looking at the source?** This template is MIT. The engine is [systemprompt-core](https://github.com/systempromptio/systemprompt-core) (BSL-1.1), a 30-crate Rust workspace published on crates.io under `systemprompt-*`.
+>
+> **Active:** 635 unique cloners in the first 14 days with zero paid acquisition — engineers who found it via crates.io and GitHub search.
+
+```
+  LLM Agent
+      |
+      v
+  [Governance Pipeline — in-process, synchronous]
+      |
+      +-- 1. JWT validation
+      +-- 2. RBAC scope check  (Admin/User/Service/A2A/MCP/Anonymous)
+      +-- 3. Secret detection  (35+ regex patterns — API keys, PATs, PEM headers)
+      +-- 4. Blocklist         (destructive operation categories)
+      +-- 5. Rate limiting     (300 req/min per session, role-based multipliers)
+      |
+      v
+  ALLOW or DENY  (every decision written to 18-column audit table)
+      |
+      v (ALLOW only)
+  spawn_server()
+      |
+      +-- load secrets from encrypted store (ChaCha20-Poly1305)
+      +-- inject into subprocess environment variables only
+      |
+      v
+  [MCP Tool Process]  <-- credentials live here, passed via env at spawn time
+
+  The parent process (LLM context path) never writes credential values.
+```
 
 ## Table of Contents
 
 - [Get started](#get-started)
+- [How credential injection works](#how-credential-injection-works)
 - [Infrastructure](#infrastructure) — Self-hosted deployment, deploy anywhere, unified control plane, open standards
 - [Capabilities](#capabilities) — Governance pipeline, secrets management, MCP governance, analytics, agents, compliance
 - [Integrations](#integrations) — Any AI agent, Claude Desktop & Cowork, web publisher, extensible architecture
 - [Performance](#performance)
 - [Configuration](#configuration)
+- [Compared to alternatives](#compared-to-alternatives)
 - [License](#license)
 
 ---
@@ -65,6 +96,44 @@ Open **http://localhost:8080** and run `systemprompt --help`. Point Claude Code,
 | **Ports `8080` + `5432`** | HTTP server + PostgreSQL | Free on localhost |
 
 Running a second clone side-by-side? `just setup-local <anthropic> <openai> <gemini> 8081 5433`.
+
+---
+
+## How credential injection works
+
+When a tool call passes the governance pipeline, `spawn_server()` loads credentials from the encrypted store and injects them directly into the child process environment — never into the parent process that handles LLM communication.
+
+The mechanism is about 30 lines in [`systemprompt-core/crates/domain/mcp/src/services/process/spawner.rs`](https://github.com/systempromptio/systemprompt-core/blob/main/crates/domain/mcp/src/services/process/spawner.rs):
+
+```rust
+// Secrets are decrypted from ChaCha20-Poly1305 encrypted store
+let secrets = SecretsBootstrap::get()?;
+
+let mut child_command = Command::new(&binary_path);
+
+// Injected into subprocess env vars only — never the LLM context path
+if let Some(key) = &secrets.anthropic {
+    child_command.env("ANTHROPIC_API_KEY", key);
+}
+if let Some(key) = &secrets.openai {
+    child_command.env("OPENAI_API_KEY", key);
+}
+if let Some(key) = &secrets.github {
+    child_command.env("GITHUB_TOKEN", key);
+}
+
+// Subprocess is detached — parent process forgets it after spawn
+let child = child_command.spawn()?;
+std::mem::forget(child);
+```
+
+The parent process — which owns the LLM context window — never touches these values. `std::mem::forget(child)` detaches the subprocess so the governance binary does not wait on it; the tool process runs independently with credentials in its own environment only.
+
+**The second defence layer** is a secret detection pipeline that runs *before* spawn: 35+ regex patterns catch API key formats, GitHub PATs, PEM headers, AWS access key prefixes, and more. A tool call that passes a secret through the context window is blocked even if the agent has sufficient scope. Try it:
+
+```bash
+./demo/governance/06-secret-breach.sh
+```
 
 ---
 
@@ -291,6 +360,38 @@ services/
 ```
 
 Every resource is a flat file you can diff, review, and version. No database-stored config. No admin UI required for any configuration change.
+
+---
+
+## Compared to alternatives
+
+These are architectural differences, not marketing comparisons.
+
+**Shell environment variables (`~/.claude/settings.json` DENY lists, per-developer key config)**
+
+The most common approach: each developer sets up their own environment. No enforcement at the team level, no audit trail, no per-agent scope, no anomaly detection. A developer can add or remove keys without any visibility. If a new hire configures their environment incorrectly, nothing catches it.
+
+**Proxy-layer gateways (Microsoft Azure AI Gateway, Kong AI Gateway, nginx-based approaches)**
+
+These intercept HTTP between the LLM client and its destination. They can observe and block traffic but do not own the execution context of tools. Credential injection through a proxy requires the credential to transit the proxy as a value (in headers or request transformation) — the proxy process can log it, and a misconfigured proxy can leak it. Microsoft AGT is also Azure-native: not self-hostable on bare metal, not air-gap capable, requires Azure infrastructure.
+
+**Vault + Kubernetes Secrets**
+
+Manages credential storage well but is not enforcement at the point of LLM tool use. When an MCP tool needs a secret, it makes a network call to retrieve it — a call the LLM agent can observe, manipulate via prompt injection, or trigger at an unintended time. Vault does not know what the LLM is doing or why; it only knows a service account authenticated and requested a secret.
+
+**This implementation**
+
+The governance binary is the parent process of every MCP tool subprocess. `Command::spawn()` injects credentials directly into the child's environment. No network round-trip. No side-channel. No secondary auth flow. The parent process (LLM context) never writes credential values. The subprocess (tool execution) never makes an outbound credential request. Enforcement happens at the transport layer, not the proxy layer.
+
+| | Shell env | Proxy gateway | Vault + k8s | systemprompt.io |
+|---|---|---|---|---|
+| **Credentials in LLM context** | Risk | Risk | Risk | No |
+| **Team-enforced policies** | No | Yes | No | Yes |
+| **Air-gap capable** | Yes | No (Azure/cloud) | Partial | Yes |
+| **Per-agent scope** | No | Partial | No | Yes |
+| **Audit trail** | No | Partial | Yes | Yes |
+| **Single binary** | — | No | No | Yes |
+| **Kubernetes required** | No | Yes | Yes | No |
 
 ---
 
