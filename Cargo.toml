@@ -33,7 +33,7 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.3.0", default-features = false, features = ["core"] }
+systemprompt = { version = "0.3.0", default-features = false, features = ["core", "database"] }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -237,9 +237,4 @@ serde_yaml = "0.9"
 [lints]
 workspace = true
 
-# Local-dev override: consume the sibling systemprompt-core workspace so the
-# template can build against unreleased core APIs (e.g. cowork device auth).
-# Remove when the required core version is published on crates.io.
-[patch.crates-io]
-systemprompt = { path = "../systemprompt-core/systemprompt" }
 

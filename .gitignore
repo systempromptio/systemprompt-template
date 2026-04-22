@@ -116,7 +116,7 @@ docker-compose.override.yml
 /data/GeoLite2-*.tar.gz
 /data/news_cache/GeoLite2-*.tar.gz
 
-.cargo/config.toml
+.cargo/config.local.toml
 
 # Sensitive data directories
 backup/
