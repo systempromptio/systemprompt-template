@@ -1,7 +1,11 @@
 pub mod manifest;
+pub mod plugin_walker;
+pub mod types;
 pub mod whoami;
 
+use axum::body::Body;
 use axum::http::{HeaderMap, Response, StatusCode};
+use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::models::{Config, SecretsBootstrap};
@@ -9,7 +13,11 @@ use systemprompt::oauth::validate_jwt_token;
 
 use crate::handlers::shared;
 
-pub(super) fn validate_cowork_jwt(headers: &HeaderMap) -> Result<UserId, Box<Response<axum::body::Body>>> {
+use self::types::UserSection;
+
+pub(super) fn validate_cowork_jwt(
+    headers: &HeaderMap,
+) -> Result<UserId, Box<Response<Body>>> {
     let token = headers
         .get("authorization")
         .and_then(|v| v.to_str().ok())
@@ -44,4 +52,27 @@ pub(super) fn validate_cowork_jwt(headers: &HeaderMap) -> Result<UserId, Box<Res
         })?;
 
     Ok(UserId::new(&claims.sub))
+}
+
+pub(super) async fn load_user_section(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<Option<UserSection>, sqlx::Error> {
+    sqlx::query!(
+        r#"SELECT id, name, email, display_name,
+                  COALESCE(roles, '{}') as "roles!: Vec<String>"
+           FROM users WHERE id = $1"#,
+        user_id.as_str(),
+    )
+    .fetch_optional(pool)
+    .await
+    .map(|opt| {
+        opt.map(|r| UserSection {
+            id: r.id,
+            name: r.name,
+            email: r.email,
+            display_name: r.display_name,
+            roles: r.roles,
+        })
+    })
 }

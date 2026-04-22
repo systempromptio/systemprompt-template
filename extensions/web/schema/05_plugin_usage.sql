@@ -17,6 +17,10 @@ CREATE TABLE IF NOT EXISTS plugin_usage_events (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE plugin_usage_events ADD COLUMN IF NOT EXISTS plugin_id TEXT;
+ALTER TABLE plugin_usage_events ADD COLUMN IF NOT EXISTS content_input_bytes BIGINT DEFAULT 0;
+ALTER TABLE plugin_usage_events ADD COLUMN IF NOT EXISTS content_output_bytes BIGINT DEFAULT 0;
+
 CREATE INDEX IF NOT EXISTS idx_plugin_usage_user ON plugin_usage_events(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_plugin_usage_session ON plugin_usage_events(session_id);
 CREATE INDEX IF NOT EXISTS idx_plugin_usage_event_type ON plugin_usage_events(event_type);

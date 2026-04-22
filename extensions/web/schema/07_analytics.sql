@@ -76,6 +76,7 @@ CREATE INDEX IF NOT EXISTS idx_session_summary_user ON plugin_session_summaries(
 CREATE INDEX IF NOT EXISTS idx_session_summary_session ON plugin_session_summaries(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_summary_source ON plugin_session_summaries(user_id, client_source);
 CREATE INDEX IF NOT EXISTS idx_session_summary_mode ON plugin_session_summaries(user_id, permission_mode);
+ALTER TABLE plugin_session_summaries ALTER COLUMN subagent_spawns TYPE BIGINT;
 
 CREATE TABLE IF NOT EXISTS session_transcripts (
     id TEXT PRIMARY KEY,

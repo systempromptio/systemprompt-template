@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS org_marketplaces (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE org_marketplaces ADD COLUMN IF NOT EXISTS github_repo_url TEXT;
 
 CREATE TABLE IF NOT EXISTS org_marketplace_plugins (
     marketplace_id TEXT NOT NULL REFERENCES org_marketplaces(id) ON DELETE CASCADE,
@@ -125,18 +126,3 @@ CREATE TABLE IF NOT EXISTS plugin_installation_history (
 CREATE INDEX IF NOT EXISTS idx_install_history_user ON plugin_installation_history(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_install_history_plugin ON plugin_installation_history(plugin_id, created_at DESC);
 
-CREATE TABLE IF NOT EXISTS github_marketplace_sync_log (
-    id BIGSERIAL PRIMARY KEY,
-    marketplace_id TEXT NOT NULL REFERENCES org_marketplaces(id) ON DELETE CASCADE,
-    action TEXT NOT NULL CHECK (action IN ('sync', 'publish')),
-    status TEXT NOT NULL CHECK (status IN ('started', 'success', 'error')),
-    commit_hash TEXT,
-    plugin_count INT NOT NULL DEFAULT 0,
-    error_count INT NOT NULL DEFAULT 0,
-    error_message TEXT,
-    triggered_by TEXT,
-    duration_ms BIGINT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_gms_marketplace ON github_marketplace_sync_log(marketplace_id);
-CREATE INDEX IF NOT EXISTS idx_gms_created ON github_marketplace_sync_log(created_at DESC);
