@@ -113,6 +113,36 @@ systemprompt infra logs trace list --agent <agent-name> --status failed
 
 ---
 
+## Viewing Governance
+
+Every inference call (`/v1/messages`) and every MCP tool call lands a row in the governance spine. Same CLI surface for both — no separate "gateway logs" vs "tool logs":
+
+```bash
+# Every AI request — user, model, token counts, cost, latency, status
+systemprompt infra logs request list --limit 20
+systemprompt infra logs request list --status failed        # only denials / upstream errors
+
+# Full audit for one request — identity, policy evals, prompt, response, cost
+systemprompt infra logs audit <request-id> --full
+
+# Tool-call traces (PreToolUse → decision → spawn → result)
+systemprompt infra logs trace list --limit 20
+systemprompt infra logs trace list --agent <name> --status failed
+systemprompt infra logs trace show <trace-id>
+
+# Cost + usage rollups (hits the same audit table)
+systemprompt analytics costs
+systemprompt analytics requests
+systemprompt analytics agents
+systemprompt analytics tools
+```
+
+`logs request list` shows one row per `/v1/messages` hit — the gateway path Cowork / any Anthropic-SDK client uses. `logs trace list` shows MCP tool calls. Both are backed by the same 18-column `ai_requests` / trace tables with `user_id`, `tenant_id`, `session_id`, `trace_id` — so `audit <id> --full` reconstructs the chain from identity to cost.
+
+For live tailing while reproducing an issue: `infra logs view --follow --since 30s`.
+
+---
+
 ## Services Configuration
 
 All runtime configuration lives as flat YAML files under `services/`. The root `services/config/config.yaml` is a thin aggregator with an explicit `includes:` list — every resource file must be listed.
