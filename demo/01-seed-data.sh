@@ -204,6 +204,38 @@ else
   echo ""
 fi
 
+# ── Install demo plugin for the authenticated user ─────
+# Cowork sync is scoped per-user. Without this step, a freshly set-up template
+# shows zero plugins/skills/agents/MCP in the manifest, and the Cowork desktop
+# app receives an empty bundle. Forking enterprise-demo materialises
+# user_plugins + user_plugin_skills + user_plugin_agents + user_plugin_mcp_servers
+# rows for the current session's user.
+subheader "Install enterprise-demo plugin for current user"
+EXISTING=$(curl -s "$BASE_URL/api/public/admin/user/plugins" \
+  -H "Authorization: Bearer $TOKEN" \
+  | grep -o '"base_plugin_id":"enterprise-demo"' | head -1)
+if [[ -n "$EXISTING" ]]; then
+  info "enterprise-demo already installed for this user (skipping fork)"
+else
+  FORK_RESP=$(curl -s -o /tmp/fork_resp.json -w '%{http_code}' \
+    -X POST "$BASE_URL/api/public/admin/user/fork/plugin" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"org_plugin_id":"enterprise-demo"}')
+  if [[ "$FORK_RESP" == "201" ]]; then
+    FORK_JSON=$(cat /tmp/fork_resp.json)
+    FSKILLS=$(printf '%s' "$FORK_JSON" | sed -n 's/.*"forked_skills":[[:space:]]*\([0-9]*\).*/\1/p' | head -1)
+    FAGENTS=$(printf '%s' "$FORK_JSON" | sed -n 's/.*"forked_agents":[[:space:]]*\([0-9]*\).*/\1/p' | head -1)
+    pass "Forked enterprise-demo (skills=${FSKILLS:-?}, agents=${FAGENTS:-?})"
+  else
+    warn "Fork returned HTTP $FORK_RESP"
+    cat /tmp/fork_resp.json 2>/dev/null | head -c 500
+    echo ""
+  fi
+  rm -f /tmp/fork_resp.json
+fi
+echo ""
+
 # ── Verify ─────────────────────────────────────
 subheader "Verify seed data"
 

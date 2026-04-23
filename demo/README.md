@@ -122,6 +122,59 @@ Organized by the three pillars of [systemprompt.io](https://systemprompt.io): **
 | `web/01-web-config.sh` | Content types, templates, assets |
 | `web/02-sitemap-validate.sh` | Sitemap config, web validation |
 
+## Connecting the Cowork desktop app
+
+The `enterprise-demo` plugin, its skills, agents, and MCP servers ship with the
+template, but plugin assignment is **per-user** — `setup-local` populates the
+global registry and `01-seed-data.sh` forks `enterprise-demo` into the active
+session's user. Whoever is authenticated when you run the seed gets the plugin.
+
+Full flow to route Cowork through a locally-running template:
+
+```bash
+# 1. Bring the template up (from systemprompt-template)
+just setup-local <anthropic_key> [openai_key] [gemini_key]
+just start
+
+# 2. Seed — this ALSO forks enterprise-demo for the current admin session.
+./demo/00-preflight.sh        # admin session + /demo/.token
+./demo/01-seed-data.sh        # + fork enterprise-demo for that user
+
+# 3. Issue a PAT for the user you want Cowork to connect as.
+#    Open http://localhost:8080/admin/devices → sign in → create device →
+#    copy the sp-live-... PAT. (CLI PAT issuance isn't wired yet.)
+#    If this is a different user than the seed target, fork for them too:
+#      curl -X POST http://localhost:8080/api/public/admin/user/fork/plugin \
+#        -H "Authorization: Bearer <their-JWT>" \
+#        -H 'Content-Type: application/json' \
+#        -d '{"org_plugin_id":"enterprise-demo"}'
+
+# 4. Wire up the cowork helper (from systemprompt-core)
+cargo build --release --manifest-path bin/cowork/Cargo.toml
+BIN=bin/cowork/target/release/systemprompt-cowork
+"$BIN" login sp-live-... --gateway http://localhost:8080
+"$BIN" install --apply    # writes MDM keys for com.anthropic.claudefordesktop
+"$BIN" sync               # pulls manifest → ~/Library/Application Support/Claude/org-plugins/
+
+# 5. Cmd+Q Cowork and relaunch. It now reads inferenceProvider=gateway from
+#    the MDM keys and routes every request through http://localhost:8080 with
+#    a JWT minted by the helper.
+```
+
+Verify the gateway is wired:
+
+```bash
+"$BIN" status     # paths + gateway + last-sync timestamp
+"$BIN" whoami     # identity JSON from the gateway
+```
+
+If `sync` reports `0 plugins / 0 skills / 0 agents / 0 MCP`, the authenticated
+user has no forked plugin. Re-run the fork POST in step 3 with the correct
+user's token.
+
+To revert Cowork to direct Anthropic: `systemprompt-cowork uninstall` then
+Cmd+Q and relaunch.
+
 ## Troubleshooting
 
 ```bash
