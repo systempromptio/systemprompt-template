@@ -261,7 +261,11 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     GEMINI_KEY="{{GEMINI_KEY}}"
     HTTP_PORT="{{HTTP_PORT}}"
     PG_PORT="{{PG_PORT}}"
-    if [ -z "$ANTHROPIC_KEY" ] && [ -z "$OPENAI_KEY" ] && [ -z "$GEMINI_KEY" ]; then
+    # Only demand keys when there's nothing to preserve. A developer who keeps
+    # .systemprompt/ across reclones (the documented key-preservation pattern)
+    # should be able to re-run setup-local with no args to bring Postgres +
+    # web/dist back up without being asked for keys again.
+    if [ ! -f "$PROFILE_DIR/secrets.json" ] && [ -z "$ANTHROPIC_KEY" ] && [ -z "$OPENAI_KEY" ] && [ -z "$GEMINI_KEY" ]; then
         echo ""
         echo "================================================================"
         echo "  setup-local needs at least one AI provider API key"
