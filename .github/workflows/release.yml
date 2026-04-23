@@ -10,9 +10,13 @@ on:
         description: "Template tag to (re)publish"
         required: true
       cowork_tag:
-        description: "systemprompt-core cowork release tag to bundle"
+        description: "systemprompt-core cowork release tag to bundle (Linux/Win/aarch64-mac)"
         required: true
         default: "v0.3.3"
+      cowork_mac_x64_tag:
+        description: "systemprompt-core cowork-mac release tag for Intel macOS zip"
+        required: true
+        default: "cowork-mac-v0.3.2"
 
 permissions:
   contents: write
@@ -34,6 +38,8 @@ jobs:
           fi
           cowork_tag="${{ inputs.cowork_tag }}"
           echo "cowork_tag=${cowork_tag:-v0.3.3}" >> "$GITHUB_OUTPUT"
+          mac_tag="${{ inputs.cowork_mac_x64_tag }}"
+          echo "cowork_mac_x64_tag=${mac_tag:-cowork-mac-v0.3.2}" >> "$GITHUB_OUTPUT"
 
       - name: Download cowork artifacts from systemprompt-core
         env:
@@ -45,6 +51,10 @@ jobs:
             --dir dist \
             --pattern 'systemprompt-cowork-*' \
             --pattern 'SHA256SUMS*'
+          gh release download "${{ steps.tags.outputs.cowork_mac_x64_tag }}" \
+            --repo systempromptio/systemprompt-core \
+            --dir dist \
+            --pattern 'systemprompt-cowork-macos-x64*' || echo "no macOS x64 zip in ${{ steps.tags.outputs.cowork_mac_x64_tag }}"
           ls -la dist
 
       - name: Generate release notes
@@ -53,7 +63,9 @@ jobs:
           cat > notes.md <<EOF
           systemprompt-template ${{ steps.tags.outputs.template_tag }}
 
-          Bundles cowork binaries from [systemprompt-core ${{ steps.tags.outputs.cowork_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.cowork_tag }}).
+          Bundles cowork binaries from systemprompt-core:
+          - Linux x86_64, Windows x86_64, macOS aarch64 (cosign-signed) — [${{ steps.tags.outputs.cowork_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.cowork_tag }})
+          - macOS x86_64 zip — [${{ steps.tags.outputs.cowork_mac_x64_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.cowork_mac_x64_tag }})
 
           Binaries are cosign-signed (keyless, OIDC). Verify with:
 
