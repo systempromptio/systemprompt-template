@@ -1,0 +1,17 @@
+target/
+.git/
+node_modules/
+web/dist/
+storage/data/
+.systemprompt/profiles/
+.systemprompt/sessions/
+.systemprompt/credentials.json
+.systemprompt/tenants.json
+reports/
+docs/
+logs/
+*.log
+.env
+.env.*
+!.env.example
+Screenshot*.png

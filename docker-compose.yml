@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: systemprompt
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-systemprompt}
+      POSTGRES_DB: systemprompt
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${PG_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U systemprompt -d systemprompt"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    # Default: build from source. To use a pre-published image, comment `build:`
+    # and uncomment `image:` below (requires GHCR publishing workflow).
+    build: .
+    # image: ghcr.io/systempromptio/systemprompt-template:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD:-systemprompt}@postgres:5432/systemprompt
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+    volumes:
+      - app_web:/app/web
+      - app_storage_data:/app/storage/data
+      - app_profiles:/app/services/profiles/docker
+
+volumes:
+  postgres_data:
+  app_web:
+  app_storage_data:
+  app_profiles:
