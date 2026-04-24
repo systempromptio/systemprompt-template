@@ -1,4 +1,6 @@
-# Install via binary (GitHub Releases)
+# Install the gateway binary (from GitHub Releases)
+
+Installs the `systemprompt-gateway` server binary. For the cowork client CLI, see [../cowork/](../cowork/).
 
 Single-shell installer:
 

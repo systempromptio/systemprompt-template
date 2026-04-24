@@ -1,4 +1,6 @@
-# Install via Helm
+# Install the gateway via Helm
+
+Deploys the `systemprompt-gateway` server to Kubernetes. For the cowork client CLI, see [../cowork/](../cowork/).
 
 The chart is published to [`charts.systemprompt.io`](https://charts.systemprompt.io) and indexed on [Artifact Hub](https://artifacthub.io/packages/helm/systemprompt/gateway).
 

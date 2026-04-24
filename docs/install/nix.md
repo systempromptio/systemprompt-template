@@ -1,4 +1,6 @@
-# Install via Nix
+# Install the gateway via Nix
+
+Builds the `systemprompt-gateway` server from the flake at the root of this repo. For the cowork client CLI, see [../cowork/](../cowork/).
 
 The repo ships a flake at the root, so no external registry — you consume it straight from GitHub.
 

@@ -1,6 +1,6 @@
-# Deploy to Render
+# Deploy the gateway to Render
 
-One-click deploy on [Render](https://render.com) via Blueprint.
+One-click deploy of the `systemprompt-gateway` server on [Render](https://render.com) via Blueprint. For the cowork client CLI, see [../cowork/](../cowork/).
 
 ## Deploy
 

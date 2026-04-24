@@ -1,13 +1,25 @@
-name: Release (bundle cowork binaries)
+name: Release (cowork client bundle)
+
+# Publishes the cowork client CLI bundle — precompiled binaries downloaded from
+# systempromptio/systemprompt-core and re-attached to a template GH Release.
+# Cowork is the CLIENT-side CLI that runs on developer workstations (macOS,
+# Windows, Linux) and talks to a running systemprompt-gateway.
+#
+# The gateway itself (the server) is a SEPARATE product published by the
+# private systemprompt-deploy repo on `v*` tags. This workflow does not
+# produce gateway assets.
+#
+# Triggered on tags matching `cowork-v*` so the two product streams never
+# collide on the same release.
 
 on:
   push:
     tags:
-      - "v*"
+      - "cowork-v*"
   workflow_dispatch:
     inputs:
       tag:
-        description: "Template tag to (re)publish"
+        description: "Template tag to (re)publish (e.g. cowork-v0.3.3)"
         required: true
       cowork_tag:
         description: "systemprompt-core cowork release tag to bundle (Linux/Win/aarch64-mac)"
@@ -23,7 +35,7 @@ permissions:
 
 jobs:
   publish:
-    name: Publish template release with cowork bundle
+    name: Publish cowork client bundle release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,30 +67,54 @@ jobs:
             --repo systempromptio/systemprompt-core \
             --dir dist \
             --pattern 'systemprompt-cowork-macos-x64*' || echo "no macOS x64 zip in ${{ steps.tags.outputs.cowork_mac_x64_tag }}"
-          ls -la dist
+          # Rename anything SHA256SUMS* → SHA256SUMS.cowork* so the cowork release
+          # never collides semantically with the gateway SHA256SUMS.gateway series.
+          cd dist
+          [ -f SHA256SUMS ] && mv SHA256SUMS SHA256SUMS.cowork || true
+          [ -f SHA256SUMS.sig ] && mv SHA256SUMS.sig SHA256SUMS.cowork.sig || true
+          [ -f SHA256SUMS.pem ] && mv SHA256SUMS.pem SHA256SUMS.cowork.pem || true
+          ls -la
 
       - name: Generate release notes
         id: notes
         run: |
-          cat > notes.md <<EOF
-          systemprompt-template ${{ steps.tags.outputs.template_tag }}
+          cat > notes.md <<'EOF'
+          # systemprompt-cowork ${{ steps.tags.outputs.template_tag }}
 
-          Bundles cowork binaries from systemprompt-core:
+          **Client install bundle for macOS + Windows + Linux.** Installs the `cowork`
+          CLI on a developer workstation. Cowork talks to a running
+          **systemprompt-gateway** for device auth + code-worktree operations.
+
+          > Looking for the **gateway** server (to deploy into Kubernetes / Docker /
+          > a Linux VM / PaaS)? It's a separate product published under `v*` tags —
+          > see [latest gateway release](https://github.com/systempromptio/systemprompt-template/releases?q=%22systemprompt-gateway%22).
+
+          ## What's in this release
+
+          Bundles cowork binaries from [systempromptio/systemprompt-core](https://github.com/systempromptio/systemprompt-core):
           - Linux x86_64, Windows x86_64, macOS aarch64 (cosign-signed) — [${{ steps.tags.outputs.cowork_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.cowork_tag }})
           - macOS x86_64 zip — [${{ steps.tags.outputs.cowork_mac_x64_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.cowork_mac_x64_tag }})
 
-          Binaries are cosign-signed (keyless, OIDC). Verify with:
+          ## Install
 
-          \`\`\`
-          cosign verify-blob \\
-            --certificate-identity-regexp='https://github.com/systempromptio/systemprompt-core/' \\
-            --certificate-oidc-issuer='https://token.actions.githubusercontent.com' \\
-            --signature <file>.sig \\
-            --certificate <file>.pem \\
+          See [docs/cowork/install-macos.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/cowork/install-macos.md)
+          and [docs/cowork/install-windows.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/cowork/install-windows.md).
+
+          ## Verify
+
+          Cosign-signed (keyless OIDC, upstream at `systemprompt-core`):
+
+          ```
+          cosign verify-blob \
+            --certificate-identity-regexp='https://github.com/systempromptio/systemprompt-core/' \
+            --certificate-oidc-issuer='https://token.actions.githubusercontent.com' \
+            --signature <file>.sig \
+            --certificate <file>.pem \
             <file>
-          \`\`\`
+          ```
 
-          SHA256SUMS is also signed. See \`bin/cowork/CHANGELOG.md\` in systemprompt-core for cowork changelog.
+          `SHA256SUMS.cowork` is also signed. See `bin/cowork/CHANGELOG.md` in
+          systemprompt-core for the cowork changelog.
           EOF
 
       - name: Create or update template release
@@ -86,11 +122,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${{ steps.tags.outputs.template_tag }}"
+          title="systemprompt-cowork $tag"
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release edit "$tag" --notes-file notes.md
+            gh release edit "$tag" --title "$title" --notes-file notes.md
           else
             gh release create "$tag" \
-              --title "systemprompt-template $tag" \
+              --title "$title" \
               --notes-file notes.md
           fi
           gh release upload "$tag" --clobber dist/*

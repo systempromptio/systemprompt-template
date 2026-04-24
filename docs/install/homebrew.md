@@ -1,6 +1,8 @@
-# Install via Homebrew
+# Install the gateway via Homebrew
 
-For macOS and Linuxbrew. Uses the [`systempromptio/tap`](https://github.com/systempromptio/homebrew-tap) tap — faster iteration than Homebrew core, and avoids pinning our release cadence to homebrew/core review queues. The compiled binary is `MIT AND BUSL-1.1` (template MIT + linked BSL-1.1 core).
+Installs the `systemprompt-gateway` server on macOS (or Linuxbrew). For the cowork client CLI, see [../cowork/install-macos.md](../cowork/install-macos.md).
+
+Uses the [`systempromptio/tap`](https://github.com/systempromptio/homebrew-tap) tap — faster iteration than Homebrew core, and avoids pinning our release cadence to homebrew/core review queues. The compiled binary is `MIT AND BUSL-1.1` (template MIT + linked BSL-1.1 core).
 
 ## Install
 

@@ -123,9 +123,12 @@ fi
 
 export SYSTEMPROMPT_PROFILE="$PROFILE_FILE"
 
-echo "Waiting for Postgres..."
+PG_HOST="${PG_HOST:-postgres}"
+PG_USER="${PG_USER:-systemprompt}"
+PG_DB="${PG_DB:-systemprompt}"
+echo "Waiting for Postgres at ${PG_HOST}..."
 i=0
-until pg_isready -h postgres -U systemprompt -d systemprompt >/dev/null 2>&1; do
+until pg_isready -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB" >/dev/null 2>&1; do
     i=$((i + 1))
     if [ "$i" -ge 60 ]; then
         echo "ERROR: Postgres did not become ready within 60s." >&2

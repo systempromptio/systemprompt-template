@@ -36,19 +36,32 @@ Got your AI governance question answered? [⭐ Star it](https://github.com/syste
 
 ## Install
 
-Pick the channel that matches your environment — each links to a copy-paste recipe in [`docs/install/`](docs/install):
+Two distinct products ship out of this repo — pick the right one.
+
+### Install the **gateway** (server)
+
+The AI governance gateway — a Rust HTTP server for Kubernetes / Docker / a Linux VM / PaaS. Tag series: `v*`. Each row links to a copy-paste recipe in [`docs/install/`](docs/install):
 
 | | Channel | Command |
 |---|---|---|
 | 🐙 | [GHCR](docs/install/ghcr.md) | `docker run ghcr.io/systempromptio/systemprompt-template` |
 | 📦 | [Binary](docs/install/binary.md) | `curl -sSL https://get.systemprompt.io \| sh` |
-| 🍺 | [Homebrew](docs/install/homebrew.md) | `brew install systempromptio/tap/gateway` |
-| 🪣 | [Scoop](docs/install/scoop.md) | `scoop install systempromptio/gateway` |
+| 🍺 | [Homebrew (macOS/Linux)](docs/install/homebrew.md) | `brew install systempromptio/tap/gateway` |
 | ☸️  | [Helm](docs/install/helm.md) | `helm install gateway systemprompt/gateway` |
 | ❄️  | [Nix](docs/install/nix.md) | `nix run github:systempromptio/systemprompt-template` |
 | 🚂 | [Railway](docs/install/railway.md) | One-click deploy |
 | 🎨 | [Render](docs/install/render.md) | One-click blueprint |
 | 🛟 | [Coolify](docs/install/coolify.md) | Community template |
+
+### Install **cowork** (client CLI)
+
+The `cowork` CLI runs on a developer workstation and talks to a running gateway — device auth, code-worktree ops, Claude-for-Work credential helper. Tag series: `cowork-v*`. Docs in [`docs/cowork/`](docs/cowork):
+
+| | Platform | Command |
+|---|---|---|
+| 🍏 | [macOS (Homebrew)](docs/cowork/install-macos.md) | `brew install systempromptio/tap/cowork` |
+| 🪟 | [Windows (Scoop)](docs/cowork/scoop.md) | `scoop install systempromptio/cowork` |
+| 🐧 | [Linux (direct download)](docs/cowork/install-macos.md#option-2--direct-download-from-github-releases) | Download from `cowork-v*` release |
 
 ## Quick start (Docker Compose — dev / evaluation)
 

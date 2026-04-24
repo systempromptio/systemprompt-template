@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# systemprompt installer — https://get.systemprompt.io
+# systemprompt-gateway installer — https://get.systemprompt.io
+#
+# Installs the gateway SERVER binary. For the cowork client CLI, use
+# scripts/install-cowork.sh or see docs/cowork/.
 #
 # Usage:   curl -sSL get.systemprompt.io | sh
-#          curl -sSL get.systemprompt.io | sh -s -- --version 0.3.0
+#          curl -sSL get.systemprompt.io | sh -s -- --version v0.3.5
 #          curl -sSL get.systemprompt.io | sh -s -- --prefix /usr/local --verify
-#
-# Detects OS + arch, downloads the matching tarball from GitHub Releases,
-# verifies SHA256, optionally cosign-verifies, and installs the binary.
 
 set -euo pipefail
 
@@ -26,7 +26,7 @@ while [ $# -gt 0 ]; do
     --prefix)  PREFIX="$2";  shift 2 ;;
     --verify)  VERIFY_COSIGN="true"; shift ;;
     -h|--help)
-      sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
+      sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     *) die "unknown flag: $1" ;;
@@ -44,7 +44,8 @@ uname_m=$(uname -m)
 case "$uname_s" in
   linux)  os="linux" ;;
   darwin) os="darwin" ;;
-  msys*|mingw*|cygwin*) die "Windows — use Scoop or winget (see docs/install/scoop.md or docs/install/winget.md)" ;;
+  msys*|mingw*|cygwin*)
+    die "The gateway is Linux/macOS-only. On Windows install cowork instead: docs/cowork/scoop.md" ;;
   *) die "unsupported OS: $uname_s" ;;
 esac
 
@@ -57,17 +58,22 @@ esac
 target="${os}-${arch}"
 
 if [ "$VERSION" = "latest" ]; then
-  log "resolving latest release..."
-  VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
+  log "resolving latest gateway release..."
+  # List releases and pick the first tag that does NOT start with cowork-v
+  VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases" \
     | grep -oE '"tag_name"\s*:\s*"[^"]+"' \
-    | head -n1 \
-    | sed -E 's/.*"([^"]+)"$/\1/')
-  [ -n "$VERSION" ] || die "could not resolve latest release"
+    | sed -E 's/.*"([^"]+)"$/\1/' \
+    | grep -v '^cowork-' \
+    | head -n1)
+  [ -n "$VERSION" ] || die "could not resolve latest gateway release (v*, excluding cowork-v*)"
 fi
 
-log "installing ${BIN_NAME} ${VERSION} for ${target}"
+# Strip leading 'v' for filename: v0.3.5 → 0.3.5
+ver_noprefix="${VERSION#v}"
 
-tarball="${BIN_NAME}-${VERSION}-${target}.tar.gz"
+log "installing systemprompt-gateway ${VERSION} for ${target}"
+
+tarball="systemprompt-gateway-${ver_noprefix}-${target}.tar.gz"
 base="https://github.com/${REPO}/releases/download/${VERSION}"
 
 tmp=$(mktemp -d)
@@ -75,22 +81,22 @@ trap 'rm -rf "$tmp"' EXIT
 
 log "downloading ${tarball}..."
 curl -fsSL "${base}/${tarball}" -o "${tmp}/${tarball}"
-curl -fsSL "${base}/SHA256SUMS" -o "${tmp}/SHA256SUMS"
+curl -fsSL "${base}/SHA256SUMS.gateway" -o "${tmp}/SHA256SUMS.gateway"
 
 log "verifying SHA256..."
-(cd "$tmp" && grep " ${tarball}$" SHA256SUMS | sha256sum -c -)
+(cd "$tmp" && grep " ${tarball}$" SHA256SUMS.gateway | sha256sum -c -)
 
 if [ "$VERIFY_COSIGN" = "true" ]; then
   need cosign
   log "verifying cosign signature..."
-  curl -fsSL "${base}/SHA256SUMS.sig" -o "${tmp}/SHA256SUMS.sig"
-  curl -fsSL "${base}/SHA256SUMS.pem" -o "${tmp}/SHA256SUMS.pem"
+  curl -fsSL "${base}/SHA256SUMS.gateway.sig" -o "${tmp}/SHA256SUMS.gateway.sig"
+  curl -fsSL "${base}/SHA256SUMS.gateway.pem" -o "${tmp}/SHA256SUMS.gateway.pem"
   cosign verify-blob \
-    --certificate-identity-regexp="https://github.com/${REPO}/" \
+    --certificate-identity-regexp="https://github.com/systempromptio/systemprompt-deploy/" \
     --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-    --signature "${tmp}/SHA256SUMS.sig" \
-    --certificate "${tmp}/SHA256SUMS.pem" \
-    "${tmp}/SHA256SUMS"
+    --signature "${tmp}/SHA256SUMS.gateway.sig" \
+    --certificate "${tmp}/SHA256SUMS.gateway.pem" \
+    "${tmp}/SHA256SUMS.gateway"
 fi
 
 log "extracting..."
@@ -107,15 +113,17 @@ fi
 dest="${PREFIX}/bin"
 mkdir -p "$dest"
 
+stage_dir="${tmp}/systemprompt-gateway-${ver_noprefix}-${target}"
+
 installed=""
 for b in systemprompt systemprompt-mcp-agent systemprompt-mcp-marketplace; do
-  if [ -f "${tmp}/${b}" ]; then
-    install -m 0755 "${tmp}/${b}" "${dest}/${b}"
+  if [ -f "${stage_dir}/${b}" ]; then
+    install -m 0755 "${stage_dir}/${b}" "${dest}/${b}"
     installed="${installed} ${b}"
   fi
 done
 
-[ -n "$installed" ] || die "no binaries found in tarball"
+[ -n "$installed" ] || die "no binaries found in tarball (stage dir: ${stage_dir})"
 
 log "installed:${installed}"
 log "location: ${dest}"
