@@ -2,6 +2,7 @@ services:
   - type: web
     name: systemprompt-gateway
     runtime: image
+    plan: free
     image:
       url: ghcr.io/systempromptio/systemprompt-template:latest
     healthCheckPath: /api/v1/health
@@ -23,5 +24,5 @@ services:
 
 databases:
   - name: systemprompt-postgres
-    plan: starter
-    postgresMajorVersion: "16"
+    plan: free               # Render's free Postgres tier — 90-day lifespan, auto-deletes after
+    postgresMajorVersion: "17"
