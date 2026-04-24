@@ -41,14 +41,10 @@ Pick the channel that matches your environment — each links to a copy-paste re
 | | Channel | Command |
 |---|---|---|
 | 🐙 | [GHCR](docs/install/ghcr.md) | `docker run ghcr.io/systempromptio/systemprompt-template` |
-| 🐳 | [Docker Hub](docs/install/docker.md) *(soon)* | *coming — use GHCR today* |
 | 📦 | [Binary](docs/install/binary.md) | `curl -sSL https://get.systemprompt.io \| sh` |
 | 🍺 | [Homebrew](docs/install/homebrew.md) | `brew install systempromptio/tap/gateway` |
-| 🪣 | [Scoop](docs/install/scoop.md) | `scoop install systemprompt/gateway` |
+| 🪣 | [Scoop](docs/install/scoop.md) | `scoop install systempromptio/gateway` |
 | ☸️  | [Helm](docs/install/helm.md) | `helm install gateway systemprompt/gateway` |
-| 🐧 | [APT](docs/install/apt.md) *(deferred)* | *planned — use binary or Helm* |
-| 🎩 | [RPM](docs/install/rpm.md) *(deferred)* | *planned — use binary or Helm* |
-| 🪟 | [Winget](docs/install/winget.md) *(deferred)* | *planned — use Scoop on Windows* |
 | ❄️  | [Nix](docs/install/nix.md) | `nix run github:systempromptio/systemprompt-template` |
 | 🚂 | [Railway](docs/install/railway.md) | One-click deploy |
 | 🎨 | [Render](docs/install/render.md) | One-click blueprint |
@@ -505,21 +501,6 @@ Each recording is a live capture of the named script running against the binary.
 <sub>3,308 req/s burst, p99 22.7 ms · <code>just benchmark</code></sub>
 
 </details>
-
----
-
-## Distribution roadmap
-
-Published today: **GHCR, GitHub Releases binary, Homebrew, Scoop, Helm, Nix, Railway, Render, Coolify**.
-
-Deferred — workflows exist but are manual-dispatch until there's user demand:
-
-- **Docker Hub** (`systemprompt/gateway`) — blocked on Docker Team subscription ($15/user/mo). Flip `DOCKERHUB_ENABLED=true` repo variable + add secrets to enable.
-- **APT repo** (`deb.systemprompt.io`) — needs `APT_REPO_TOKEN` + GPG signing bundle.
-- **RPM repo** (`rpm.systemprompt.io`) — needs `RPM_REPO_TOKEN` + GPG signing bundle.
-- **Winget** (`microsoft/winget-pkgs`) — needs `WINGET_TOKEN`. Slow reviewer queue.
-
-Enablement instructions are in [`docs-internal/distribution-implementation-plan.md`](docs-internal/distribution-implementation-plan.md) (local-only; see section §3 of the plan).
 
 ---
 
