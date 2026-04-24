@@ -14,9 +14,9 @@ Choose the channel that fits your environment. Each doc is a copy-paste recipe.
 | Homebrew tap | [install/homebrew.md](install/homebrew.md) | macOS + Linuxbrew |
 | Scoop bucket | [install/scoop.md](install/scoop.md) | Windows developers |
 | Helm chart | [install/helm.md](install/helm.md) | Kubernetes |
-| APT repo | [install/apt.md](install/apt.md) | Debian / Ubuntu |
-| RPM repo | [install/rpm.md](install/rpm.md) | RHEL / Rocky / Fedora |
-| Winget | [install/winget.md](install/winget.md) | Windows 11 |
+| APT repo *(deferred)* | [install/apt.md](install/apt.md) | Debian / Ubuntu — planned |
+| RPM repo *(deferred)* | [install/rpm.md](install/rpm.md) | RHEL / Rocky / Fedora — planned |
+| Winget *(deferred)* | [install/winget.md](install/winget.md) | Windows 11 — planned |
 | Nix flake | [install/nix.md](install/nix.md) | NixOS / Nix users |
 | Railway template | [install/railway.md](install/railway.md) | Railway PaaS |
 | Render blueprint | [install/render.md](install/render.md) | Render PaaS |

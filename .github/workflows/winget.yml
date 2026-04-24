@@ -1,8 +1,10 @@
 name: Winget — submit manifest PR
 
+# DEFERRED — Winget channel parked. PR-to-microsoft/winget-pkgs is slow (24-72h)
+# and reviewer-gated; enable only when we have Windows enterprise demand.
+# Requires: WINGET_TOKEN (classic PAT with public_repo scope).
+# Re-enable by restoring the `release: published` trigger below.
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:

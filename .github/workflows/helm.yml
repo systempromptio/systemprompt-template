@@ -39,7 +39,9 @@ jobs:
       - name: Install chart into kind
         if: github.event_name != 'release'
         run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
           helm dependency update helm/gateway
+          ls -la helm/gateway/charts/
           helm install gateway helm/gateway \
             --set postgresql.auth.password=testpw \
             --set secrets.anthropicApiKey=dummy \

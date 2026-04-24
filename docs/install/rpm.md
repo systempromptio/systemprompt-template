@@ -1,5 +1,9 @@
 # Install via DNF / YUM (RHEL, Rocky, Fedora, Amazon Linux)
 
+> **Status: deferred.** RPM publishing is parked until a RHEL/Fedora user asks for it.
+> The `rpm.yml` workflow exists but is triggered manually only.
+> In the meantime, use [binary](binary.md), [GHCR](ghcr.md), or [Helm](helm.md).
+
 Packages are published to [`rpm.systemprompt.io`](https://rpm.systemprompt.io) — a GPG-signed RPM repo for `x86_64` and `aarch64` on RHEL 9 / Rocky 9 / Fedora 40+.
 
 ## Add the repo

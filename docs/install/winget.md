@@ -1,5 +1,9 @@
 # Install via Winget (Windows 11)
 
+> **Status: deferred.** Winget publishing is parked until there's Windows enterprise demand.
+> The `winget.yml` workflow exists but is triggered manually only.
+> In the meantime, use [Scoop](scoop.md) or [binary](binary.md) on Windows.
+
 [Winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) is the official Windows Package Manager, pre-installed on Windows 11.
 
 ## Install

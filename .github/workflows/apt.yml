@@ -1,8 +1,9 @@
 name: APT — publish deb repo
 
+# DEFERRED — APT channel parked until a Linux-sysadmin user asks for it.
+# Requires: APT_REPO_TOKEN, APT_GPG_PRIVATE_KEY, APT_GPG_PASSPHRASE, APT_GPG_KEYID.
+# Re-enable by restoring the `release: published` trigger below.
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:

@@ -89,37 +89,7 @@ jobs:
             --wait --timeout 300s
           kubectl wait --for=condition=Available deployment/gateway-gateway --timeout=180s
 
-  apt:
-    needs: version
-    strategy:
-      fail-fast: false
-      matrix:
-        image: ["debian:bookworm", "ubuntu:22.04", "ubuntu:24.04"]
-    runs-on: ubuntu-latest
-    container: ${{ matrix.image }}
-    steps:
-      - run: |
-          apt-get update && apt-get install -y curl gnupg ca-certificates
-          curl -fsSL https://deb.systemprompt.io/gpg.key | gpg --dearmor -o /usr/share/keyrings/systemprompt.gpg
-          echo "deb [signed-by=/usr/share/keyrings/systemprompt.gpg] https://deb.systemprompt.io stable main" \
-            > /etc/apt/sources.list.d/systemprompt.list
-          apt-get update && apt-get install -y systemprompt
-          systemprompt --version
-
-  rpm:
-    needs: version
-    strategy:
-      fail-fast: false
-      matrix:
-        image: ["rockylinux:9", "fedora:40"]
-    runs-on: ubuntu-latest
-    container: ${{ matrix.image }}
-    steps:
-      - run: |
-          curl -fsSL -o /etc/yum.repos.d/systemprompt.repo https://rpm.systemprompt.io/systemprompt.repo
-          rpm --import https://rpm.systemprompt.io/gpg.key
-          dnf install -y systemprompt
-          systemprompt --version
+  # apt, rpm smoke tests — deferred along with the publish workflows.
 
   nix:
     needs: version

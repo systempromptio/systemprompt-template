@@ -1,0 +1,2 @@
+# This directory is populated at server startup by the `publish_pipeline` job
+# (see CLAUDE.md). Kept tracked so `COPY web /app/web` in Dockerfile succeeds.

@@ -1,8 +1,9 @@
 name: RPM — publish yum repo
 
+# DEFERRED — RPM channel parked until a RHEL/Fedora user asks for it.
+# Requires: RPM_REPO_TOKEN, RPM_GPG_PRIVATE_KEY, RPM_GPG_KEYID.
+# Re-enable by restoring the `release: published` trigger below.
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:

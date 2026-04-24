@@ -1,5 +1,9 @@
 # Install via APT (Debian / Ubuntu)
 
+> **Status: deferred.** APT publishing is parked until a Linux-sysadmin user asks for it.
+> The `apt.yml` workflow exists but is triggered manually only.
+> In the meantime, use [binary](binary.md), [GHCR](ghcr.md), or [Helm](helm.md).
+
 Packages are published to [`deb.systemprompt.io`](https://deb.systemprompt.io) — a GPG-signed APT repo for `amd64` and `arm64` on Debian 12+ and Ubuntu 22.04+.
 
 ## Add the repo
