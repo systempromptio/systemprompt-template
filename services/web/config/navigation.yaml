@@ -36,6 +36,45 @@ header:
               href: "https://systemprompt.io/features/no-vendor-lock-in"
               external: true
 
+    - id: use-cases
+      label: "Claude Cowork"
+      href: "https://systemprompt.io/features/claude-cowork-integration"
+      external: true
+      dropdown: true
+      sections:
+        - title: "Own your Cowork deployment"
+          links:
+            - label: "Claude Cowork on Your Infrastructure"
+              description: "Your /v1/messages gateway, signed MCP allowlist, and org-plugins supply chain. Route inference to any upstream you operate. Every tool call governed, every prompt logged, nothing leaves your network."
+              href: "https://systemprompt.io/features/claude-cowork-integration"
+              external: true
+            - label: "CTO / CISO Brief"
+              description: "The strategic case for Cowork-on-your-infrastructure. Why Anthropic's April 2026 opening is a procurement inflection, the five things you now own, RFI/RFP question bank, and a 90-day delivery plan."
+              href: "https://systemprompt.io/guides/claude-cowork-plugins-enterprise"
+              external: true
+            - label: "Enterprise Factsheet (PDF)"
+              description: "Two-page brief: govern and own Claude Cowork on self-hosted infrastructure. For CISO/CTO review."
+              href: "https://systemprompt.io/files/documents/systemprompt-io-enterprise-factsheet.pdf"
+              external: true
+        - title: "Technical documentation"
+          links:
+            - label: "Deployment Reference"
+              description: "Five-move architecture, three auth tiers (PAT, session, mTLS), Ed25519 signed manifest, audit schema. The platform-agnostic reference that underpins the install guides."
+              href: "https://systemprompt.io/documentation/services/cowork-deployment"
+              external: true
+            - label: "Install on macOS"
+              description: ".mobileconfig payload, Jamf and Intune for Mac, Secure Enclave mTLS. Step-by-step."
+              href: "https://systemprompt.io/documentation/services/cowork-deployment-macos"
+              external: true
+            - label: "Install on Windows"
+              description: "Registry policy, Intune Custom OMA-URI, Group Policy ADMX, TPM-backed mTLS. Step-by-step."
+              href: "https://systemprompt.io/documentation/services/cowork-deployment-windows"
+              external: true
+            - label: "Gateway Service"
+              description: "/v1/messages and /v1/auth/cowork/* endpoint reference, provider routing, MCP allowlist routes."
+              href: "https://systemprompt.io/documentation/services/gateway"
+              external: true
+
     - id: capabilities
       label: "Capabilities"
       href: "https://systemprompt.io/features/governance-pipeline"
@@ -89,7 +128,7 @@ header:
           links:
             - label: "Claude Desktop & Cowork"
               description: "One-click governed skills inside Claude. The fastest path from install to governed AI."
-              href: "https://systemprompt.io/features/cowork"
+              href: "https://systemprompt.io/features/claude-cowork-integration"
               external: true
             - label: "Web Server & Publisher"
               description: "The same binary serves your website, blog, and documentation. CMS and static site generation built in."
@@ -168,7 +207,7 @@ footer:
     - path: "https://systemprompt.io/features/any-ai-agent"
       label: "Any AI Agent"
       external: true
-    - path: "https://systemprompt.io/features/cowork"
+    - path: "https://systemprompt.io/features/claude-cowork-integration"
       label: "Claude Desktop & Cowork"
       external: true
     - path: "https://systemprompt.io/features/web-publisher"
@@ -183,6 +222,9 @@ footer:
       external: true
     - path: "https://systemprompt.io/guides"
       label: "Guides"
+      external: true
+    - path: "https://systemprompt.io/files/documents/systemprompt-io-enterprise-factsheet.pdf"
+      label: "Enterprise Factsheet (PDF)"
       external: true
     - path: "https://systemprompt.io/sitemap.xml"
       label: "Sitemap"

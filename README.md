@@ -6,11 +6,11 @@
   <img src="https://systemprompt.io/files/images/logo-dark.svg" alt="systemprompt.io" width="380">
 </picture>
 
-# Run your AI agent fleet on your own infrastructure, with your own choice of inference.
+# Own how your organization uses AI.
 
-Install this binary, point Claude for Work, Claude Code, any Anthropic-SDK client, or any MCP host at it, and every request lands on a host **you operate** — on your network, in your air-gap, under your audit table. Pick the upstream per model pattern: Anthropic, OpenAI, Gemini, Moonshot (Kimi), Qwen, MiniMax, or a custom provider you register yourself. One YAML block swaps it.
+One self-hosted binary governs inference, auditing, evals, and every tool call across your AI fleet. Native integration with Claude Cowork. Works with any agent, any model, any provider.
 
-Every tool call authenticated, scoped, secret-scanned, rate-limited, and audited before the tool process spawns. ~50 MB Rust binary, one PostgreSQL, four commands from `git clone` to serving inference. Built for SOC 2, ISO 27001, HIPAA, and the OWASP Agentic Top 10.
+This repository is the evaluation template: clone it, compile it, point Claude for Work, Claude Code, or any Anthropic-SDK client at `http://localhost:8080`, and every request lands on a host you operate — on your network, in your air-gap, under your audit table. Single Rust binary, one PostgreSQL, four commands from `git clone` to serving inference. Built for SOC 2, ISO 27001, HIPAA, and the OWASP Agentic Top 10.
 
 [![Built on systemprompt-core](https://img.shields.io/badge/built%20on-systemprompt--core-2b6cb0?style=flat-square)](https://github.com/systempromptio/systemprompt-core)
 [![Template · MIT](https://img.shields.io/badge/template-MIT-16a34a?style=flat-square)](LICENSE)
@@ -19,8 +19,6 @@ Every tool call authenticated, scoped, secret-scanned, rate-limited, and audited
 [![PostgreSQL 18+](https://img.shields.io/badge/postgres-18+-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
 [**systemprompt.io**](https://systemprompt.io) · [**Documentation**](https://systemprompt.io/documentation/) · [**Guides**](https://systemprompt.io/guides) · [**Enterprise factsheet (PDF)**](https://systemprompt.io/files/documents/systemprompt-io-enterprise-factsheet.pdf) · [**Discord**](https://discord.gg/wkAbSuPWpr)
-
-Got your AI governance question answered? [![Star on GitHub](https://img.shields.io/github/stars/systempromptio/systemprompt-template?style=flat-square&logo=github&logoColor=white&label=Star&color=f97316)](https://github.com/systempromptio/systemprompt-template) helps other security teams find it.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-secrets.svg">
@@ -116,163 +114,6 @@ This repo is the evaluation template. Fork it, clone it, compile it. 43 scripted
 ```
 
 Full index: [`demo/README.md`](demo/README.md). 41 of 43 scripts are free; two cost ~$0.01 each (real model calls).
-
-</details>
-
-<details>
-<summary><strong>Advanced — Claude for Work / LLM Gateway + Cowork credential helper (experimental)</strong></summary>
-
-<br>
-
-Distribution channels beyond source build, and the Claude-for-Work credential-helper wire-up, are in active development — treat this section as reference for the path forward, not a promise of today's behaviour. The local path above (`just setup-local` + `just start`) is what works end-to-end today.
-
-### `/v1/messages` inference gateway
-
-Anthropic defined the socket; systemprompt is the plug. v0.3.0 turns the binary into a `/v1/messages` inference gateway that a Claude-for-Work fleet (or any Anthropic-SDK client, Claude Desktop included) can point at as `api_external_url`. Every inference request flows through the same governance pipeline as every tool call — on infrastructure you operate.
-
-- **`POST /v1/messages` at the Anthropic wire format.** SDK-compatible. Claude Desktop-compatible. Authenticated with a systemprompt JWT in `x-api-key` (falls back to `Authorization: Bearer`). No new credential type — existing user JWTs serve as the gateway credential.
-- **Routes by `model_pattern` to the upstream of your choice.** Built-in provider tags: `anthropic`, `openai`, `moonshot` (Kimi), `qwen`, `gemini`, `minimax`. Anthropic is a transparent byte proxy (extended thinking, cache-control headers, and SSE events preserved verbatim). OpenAI-compatible providers get full request/response/SSE conversion to and from the Anthropic format. Upstream API keys resolve from the existing secrets file by secret name.
-- **Zero overhead when disabled.** The `/v1` router mounts only if `gateway.enabled: true` in the active profile.
-
-Profile YAML:
-
-```yaml
-gateway:
-  enabled: true
-  routes:
-    - model_pattern: "claude-*"
-      provider: anthropic
-      endpoint: "https://api.anthropic.com/v1"
-      api_key_secret: "anthropic_api_key"
-    - model_pattern: "moonshot-*"
-      provider: moonshot
-      endpoint: "https://api.moonshot.cn/v1"
-      api_key_secret: "kimi_api_key"
-      upstream_model: "moonshot-v1-8k"
-    - model_pattern: "MiniMax-*"
-      provider: minimax
-      endpoint: "https://api.minimax.io/anthropic"
-      api_key_secret: "minimax"
-    - model_pattern: "*"
-      provider: anthropic
-      endpoint: "https://api.anthropic.com/v1"
-      api_key_secret: "anthropic_api_key"
-```
-
-Routes evaluate in order; first `model_pattern` match wins. `upstream_model` lets you alias a client-requested model to a different upstream name without the client knowing.
-
-**Cowork credential helper.** Claude for Work's "credential helper script" slot is filled by `systemprompt-cowork` — a standalone ~2.4 MB Rust binary (no `tokio`, no `sqlx`, no `axum`) that exchanges a lower-privilege credential for a short-lived JWT. Progressive capability ladder: mTLS → dashboard session → PAT. Gateway endpoints mounted under `/v1/gateway/auth/cowork/`:
-
-- `POST /pat` — `Authorization: Bearer <pat>` → `{token, ttl, headers}` with a fresh JWT and the canonical identity header map (`x-user-id`, `x-session-id`, `x-trace-id`, `x-client-id`, `x-tenant-id`, `x-policy-version`, `x-call-source`).
-- `POST /session` — `501` (dashboard-cookie exchange not yet wired).
-- `POST /mtls` — `501` (device-cert exchange not yet wired).
-- `GET /capabilities` — `{"modes":["pat"]}`; probes advertise which exchange modes this deployment accepts.
-
-The helper writes the signed JWT + expiry to the OS cache dir with mode `0600`. Stdout contract is exactly one JSON object; all diagnostics go to stderr. Released out-of-band as `cowork-v*` tags. Install / configure / wire-up steps below.
-
-**Extensible provider registry.** `GatewayRoute.provider` is a free-form string resolved at dispatch time against a startup-built registry. Extension crates register new upstreams with:
-
-```rust
-inventory::submit! {
-    systemprompt_api::services::gateway::GatewayUpstreamRegistration {
-        tag: "my-provider",
-        factory: || std::sync::Arc::new(MyUpstream),
-    }
-}
-```
-
-The `GatewayUpstream` trait (`async fn proxy(&self, ctx: UpstreamCtx<'_>)`) is the single integration seam. Built-in tags seeded automatically; extension tags may shadow built-ins (logged as a warning). Full detail: [`core/CHANGELOG.md`](https://github.com/systempromptio/systemprompt-core/blob/main/CHANGELOG.md#030---2026-04-22).
-
----
-
-### Install the Cowork credential helper
-
-The `systemprompt-cowork` binary is the **Credential helper script** slot in Claude for Work. It turns a PAT into a short-lived JWT that Claude Desktop merges into every inference request routed at this binary. Download the prebuilt Windows or Linux binary from [systempromptio/systemprompt-core releases](https://github.com/systempromptio/systemprompt-core/releases/tag/cowork-v0.2.0); macOS builds from source on any Mac.
-
-Current release: **[cowork-v0.2.0](https://github.com/systempromptio/systemprompt-core/releases/tag/cowork-v0.2.0)** — Linux x86_64 + Windows x86_64 (mingw ABI). macOS build is pending a Mac-hosted CI.
-
-#### 1. Download
-
-**Linux x86_64**
-
-```bash
-curl -fsSL -o /usr/local/bin/systemprompt-cowork \
-  https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.2.0/systemprompt-cowork-x86_64-unknown-linux-gnu
-chmod +x /usr/local/bin/systemprompt-cowork
-curl -fsSL https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.2.0/systemprompt-cowork-x86_64-unknown-linux-gnu.sha256 \
-  | sha256sum -c --ignore-missing
-```
-
-**Windows x86_64** (PowerShell as Administrator):
-
-```powershell
-$dir = "C:\Program Files\systemprompt"
-New-Item -ItemType Directory -Force -Path $dir | Out-Null
-Invoke-WebRequest `
-  -Uri "https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.2.0/systemprompt-cowork-x86_64-pc-windows-gnu.exe" `
-  -OutFile "$dir\systemprompt-cowork.exe"
-[Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$dir", "User")
-```
-
-Windows Smart Screen will flag the unsigned binary on first run → "More info" → "Run anyway".
-
-**macOS** (source build):
-
-```bash
-git clone https://github.com/systempromptio/systemprompt-core.git
-cd systemprompt-core
-cargo build --manifest-path bin/cowork/Cargo.toml --release \
-  --target "$(rustc -vV | awk '/host:/ {print $2}')"
-sudo install -m 755 \
-  "bin/cowork/target/$(rustc -vV | awk '/host:/ {print $2}')/release/systemprompt-cowork" \
-  /usr/local/bin/
-```
-
-#### 2. Configure
-
-Linux/macOS: `~/.config/systemprompt/systemprompt-cowork.toml`
-Windows: `%APPDATA%\systemprompt\systemprompt-cowork.toml`
-
-```toml
-[gateway]
-url = "http://localhost:8080"   # for the local-trial template; swap to your production host
-
-[pat]
-token = "sp-live-your-personal-access-token"
-```
-
-Issue a PAT from the running binary with `systemprompt admin users pat issue <user-id> --name cowork-laptop`. Absent config sections are silently skipped. Dev overrides: `SP_COWORK_GATEWAY_URL`, `SP_COWORK_PAT`.
-
-#### 3. Verify
-
-```bash
-systemprompt-cowork           # prints exactly one JSON {token, ttl, headers}
-systemprompt-cowork --check   # exits 0 if a token can be issued
-```
-
-Diagnostics go to stderr only. The stdout JSON matches Anthropic's `inferenceCredentialHelper` contract byte-for-byte.
-
-#### 4. Point Claude Desktop at it
-
-In Claude Desktop **Enterprise → Settings → Inference**:
-
-- **Credential helper script**: `/usr/local/bin/systemprompt-cowork` (or `C:\Program Files\systemprompt\systemprompt-cowork.exe`).
-- **API base URL**: the `gateway.url` from your TOML.
-
-Every Claude Desktop request now lands a row in `ai_requests` with `user_id`, `tenant_id`, `session_id`, `trace_id`, tokens, cost, and latency — identical governance to every other tool call. Run `systemprompt infra logs audit <request-id> --full` after a prompt to see the trace end-to-end.
-
-#### 5. (Optional) Install the `org-plugins/` sync agent
-
-The same binary manages Cowork's signed plugin / managed-MCP mount:
-
-```bash
-systemprompt-cowork install     # register launchd (macOS) / scheduled task (Windows) / systemd --user (Linux)
-systemprompt-cowork sync        # pull signed plugin manifest + allowlist now
-systemprompt-cowork validate    # verify the ed25519 signature
-systemprompt-cowork uninstall   # remove
-```
-
-Mount targets: `/Library/Application Support/Claude/org-plugins/` (macOS), `C:\ProgramData\Claude\org-plugins\` (Windows), `${XDG_DATA_HOME:-$HOME/.local/share}/Claude/org-plugins/` (Linux).
 
 </details>
 
@@ -471,6 +312,206 @@ Each recording is a live capture of the named script running against the binary.
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-benchmark.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-benchmark.svg"><img src="demo/recording/svg/output/dark/int-benchmark.svg" alt="Governance benchmark" width="820"></picture>
 
 <sub>3,308 req/s burst, p99 22.7 ms · <code>just benchmark</code></sub>
+
+</details>
+
+<details>
+<summary><strong>Claude for Work, on your infrastructure</strong></summary>
+
+<br>
+
+Claude for Work ships with extension points for inference, identity, and audit. Point them at this binary and every prompt, tool call, and cost line lands in a Postgres row you own.
+
+```
+  Managed Device                 Enterprise Gateway              Upstream Inference
+  (Cowork via MDM)               (this binary, your VPC)         (pluggable)
+  ───────────────── ──────────▶  ─────────────────────  ──────▶  ─────────────────
+  Credential helper              /v1/messages                    Anthropic direct
+  Managed MCP list               Governance pipeline             Bedrock / Vertex
+  Signed plugins                 Audit to Postgres               OpenAI / Groq
+                                                                 On-prem vLLM / Qwen
+                                                                 Air-gap capable
+```
+
+Four governance layers enforce before a byte leaves your network:
+
+- **Scope** — RBAC resolved from the JWT at request construction. Admin · User · Service · A2A · MCP · Anonymous.
+- **Secrets** — 35+ regex patterns scan every tool argument and every prompt. A credential in the context path is denied before the tool process spawns.
+- **Policy** — Blocklists, destructive-operation categories, tenant rules, PreToolUse hooks as code.
+- **Quota** — 300 req/min per session with role multipliers; per-tool and per-budget limits.
+
+In-process evaluation against a cached entitlement table. Governance stays out of the latency budget — p99 **22.7 ms**, <1% of AI response time.
+
+### How it compares
+
+| Dimension | Claude Enterprise | Cloud Custom | + systemprompt.io |
+|---|---|---|---|
+| **Data residency** | Anthropic infra | Cloud region | Your datacenter or air-gap |
+| **Audit trail** | Anthropic-held | OTLP only | Prompt → tool → MCP → cost in your Postgres |
+| **User revocation** | SSO / seat removal | Cloud IAM | IDP disable; next TTL fails closed |
+| **Inference provider** | Anthropic only | Bedrock / Vertex (Claude) | Any `/v1/messages`, per-call routing |
+| **MCP allowlist** | Anthropic-curated | Device-local config | One registry, per-principal policy |
+| **Plugin catalogue** | Anthropic-hosted | Files on disk | Signed, scoped, versioned distribution |
+
+Manual install is tested and works end-to-end today; signed installers, MDM packages, and Homebrew / winget distribution land in a later release. Install steps in the **Advanced** fold below.
+
+</details>
+
+<details>
+<summary><strong>Advanced — gateway routes, Cowork install, org-plugins sync</strong></summary>
+
+<br>
+
+Manual install is tested end-to-end. Automated distribution — signed installers, MDM packages, Homebrew / winget — is in progress; today you download a binary and drop a TOML file, documented below.
+
+### `/v1/messages` inference gateway
+
+`POST /v1/messages` at the Anthropic wire format. Every inference request flows through the same governance pipeline as every tool call — on infrastructure you operate.
+
+- **SDK- and Claude-Desktop-compatible.** Authenticated with a systemprompt JWT in `x-api-key` (falls back to `Authorization: Bearer`). No new credential type — existing user JWTs serve as the gateway credential.
+- **Routes by `model_pattern`.** Built-in tags: `anthropic`, `openai`, `moonshot` (Kimi), `qwen`, `gemini`, `minimax`. Anthropic is a transparent byte proxy (extended thinking, cache-control headers, SSE events preserved verbatim). OpenAI-compatible providers get full Anthropic↔OpenAI request/response/SSE conversion. Upstream API keys resolve from the secrets file by name.
+- **Zero overhead when disabled.** The `/v1` router mounts only if `gateway.enabled: true` in the active profile.
+
+
+Profile YAML:
+
+```yaml
+gateway:
+  enabled: true
+  routes:
+    - model_pattern: "claude-*"
+      provider: anthropic
+      endpoint: "https://api.anthropic.com/v1"
+      api_key_secret: "anthropic_api_key"
+    - model_pattern: "moonshot-*"
+      provider: moonshot
+      endpoint: "https://api.moonshot.cn/v1"
+      api_key_secret: "kimi_api_key"
+      upstream_model: "moonshot-v1-8k"
+    - model_pattern: "MiniMax-*"
+      provider: minimax
+      endpoint: "https://api.minimax.io/anthropic"
+      api_key_secret: "minimax"
+    - model_pattern: "*"
+      provider: anthropic
+      endpoint: "https://api.anthropic.com/v1"
+      api_key_secret: "anthropic_api_key"
+```
+
+Routes evaluate in order; first `model_pattern` match wins. `upstream_model` aliases a client-requested model to a different upstream name without the client knowing.
+
+**Cowork credential helper endpoints.** `systemprompt-cowork` is a standalone ~2.4 MB Rust binary (no `tokio`, no `sqlx`, no `axum`) that trades a lower-privilege credential for a short-lived JWT. Progressive capability ladder — mTLS → dashboard session → PAT — mounted under `/v1/gateway/auth/cowork/`:
+
+- `POST /pat` — `Authorization: Bearer <pat>` → `{token, ttl, headers}` with a fresh JWT and the canonical identity header map (`x-user-id`, `x-session-id`, `x-trace-id`, `x-client-id`, `x-tenant-id`, `x-policy-version`, `x-call-source`).
+- `POST /session` — `501` (dashboard-cookie exchange not yet wired).
+- `POST /mtls` — `501` (device-cert exchange not yet wired).
+- `GET /capabilities` — `{"modes":["pat"]}`; probes advertise which exchange modes this deployment accepts.
+
+The helper writes the signed JWT + expiry to the OS cache dir with mode `0600`. Stdout contract is exactly one JSON object; all diagnostics go to stderr. Released out-of-band as `cowork-v*` tags. Install / configure / wire-up steps below.
+
+**Extensible provider registry.** `GatewayRoute.provider` is a free-form string resolved at dispatch time against a startup-built registry. Extension crates register new upstreams with:
+
+```rust
+inventory::submit! {
+    systemprompt_api::services::gateway::GatewayUpstreamRegistration {
+        tag: "my-provider",
+        factory: || std::sync::Arc::new(MyUpstream),
+    }
+}
+```
+
+The `GatewayUpstream` trait (`async fn proxy(&self, ctx: UpstreamCtx<'_>)`) is the single integration seam. Built-in tags seeded automatically; extension tags may shadow built-ins (logged as a warning). Full detail: [`core/CHANGELOG.md`](https://github.com/systempromptio/systemprompt-core/blob/main/CHANGELOG.md#030---2026-04-22).
+
+---
+
+### Install the Cowork credential helper
+
+The `systemprompt-cowork` binary is the **Credential helper script** slot in Claude for Work. It turns a PAT into a short-lived JWT that Claude Desktop merges into every inference request routed at this binary. Download the prebuilt Windows or Linux binary from [systempromptio/systemprompt-core releases](https://github.com/systempromptio/systemprompt-core/releases/tag/cowork-v0.2.0); macOS builds from source on any Mac.
+
+Current release: **[cowork-v0.2.0](https://github.com/systempromptio/systemprompt-core/releases/tag/cowork-v0.2.0)** — Linux x86_64 + Windows x86_64 (mingw ABI). macOS build is pending a Mac-hosted CI.
+
+#### 1. Download
+
+**Linux x86_64**
+
+```bash
+curl -fsSL -o /usr/local/bin/systemprompt-cowork \
+  https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.2.0/systemprompt-cowork-x86_64-unknown-linux-gnu
+chmod +x /usr/local/bin/systemprompt-cowork
+curl -fsSL https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.2.0/systemprompt-cowork-x86_64-unknown-linux-gnu.sha256 \
+  | sha256sum -c --ignore-missing
+```
+
+**Windows x86_64** (PowerShell as Administrator):
+
+```powershell
+$dir = "C:\Program Files\systemprompt"
+New-Item -ItemType Directory -Force -Path $dir | Out-Null
+Invoke-WebRequest `
+  -Uri "https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.2.0/systemprompt-cowork-x86_64-pc-windows-gnu.exe" `
+  -OutFile "$dir\systemprompt-cowork.exe"
+[Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$dir", "User")
+```
+
+Windows Smart Screen will flag the unsigned binary on first run → "More info" → "Run anyway".
+
+**macOS** (source build):
+
+```bash
+git clone https://github.com/systempromptio/systemprompt-core.git
+cd systemprompt-core
+cargo build --manifest-path bin/cowork/Cargo.toml --release \
+  --target "$(rustc -vV | awk '/host:/ {print $2}')"
+sudo install -m 755 \
+  "bin/cowork/target/$(rustc -vV | awk '/host:/ {print $2}')/release/systemprompt-cowork" \
+  /usr/local/bin/
+```
+
+#### 2. Configure
+
+Linux/macOS: `~/.config/systemprompt/systemprompt-cowork.toml`
+Windows: `%APPDATA%\systemprompt\systemprompt-cowork.toml`
+
+```toml
+[gateway]
+url = "http://localhost:8080"   # for the local-trial template; swap to your production host
+
+[pat]
+token = "sp-live-your-personal-access-token"
+```
+
+Issue a PAT from the running binary with `systemprompt admin users pat issue <user-id> --name cowork-laptop`. Absent config sections are silently skipped. Dev overrides: `SP_COWORK_GATEWAY_URL`, `SP_COWORK_PAT`.
+
+#### 3. Verify
+
+```bash
+systemprompt-cowork           # prints exactly one JSON {token, ttl, headers}
+systemprompt-cowork --check   # exits 0 if a token can be issued
+```
+
+Diagnostics go to stderr only. The stdout JSON matches Anthropic's `inferenceCredentialHelper` contract byte-for-byte.
+
+#### 4. Point Claude Desktop at it
+
+In Claude Desktop **Enterprise → Settings → Inference**:
+
+- **Credential helper script**: `/usr/local/bin/systemprompt-cowork` (or `C:\Program Files\systemprompt\systemprompt-cowork.exe`).
+- **API base URL**: the `gateway.url` from your TOML.
+
+Every Claude Desktop request now lands a row in `ai_requests` with `user_id`, `tenant_id`, `session_id`, `trace_id`, tokens, cost, and latency — identical governance to every other tool call. Run `systemprompt infra logs audit <request-id> --full` after a prompt to see the trace end-to-end.
+
+#### 5. (Optional) Install the `org-plugins/` sync agent
+
+The same binary manages Cowork's signed plugin / managed-MCP mount:
+
+```bash
+systemprompt-cowork install     # register launchd (macOS) / scheduled task (Windows) / systemd --user (Linux)
+systemprompt-cowork sync        # pull signed plugin manifest + allowlist now
+systemprompt-cowork validate    # verify the ed25519 signature
+systemprompt-cowork uninstall   # remove
+```
+
+Mount targets: `/Library/Application Support/Claude/org-plugins/` (macOS), `C:\ProgramData\Claude\org-plugins\` (Windows), `${XDG_DATA_HOME:-$HOME/.local/share}/Claude/org-plugins/` (Linux).
 
 </details>
 
