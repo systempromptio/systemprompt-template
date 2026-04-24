@@ -20,7 +20,7 @@ Every tool call authenticated, scoped, secret-scanned, rate-limited, and audited
 
 [**systemprompt.io**](https://systemprompt.io) · [**Documentation**](https://systemprompt.io/documentation/) · [**Guides**](https://systemprompt.io/guides) · [**Enterprise factsheet (PDF)**](https://systemprompt.io/files/documents/systemprompt-io-enterprise-factsheet.pdf) · [**Discord**](https://discord.gg/wkAbSuPWpr)
 
-Got your AI governance question answered? [⭐ Star it](https://github.com/systempromptio/systemprompt-template) — helps other security teams find it.
+Got your AI governance question answered? [![Star on GitHub](https://img.shields.io/github/stars/systempromptio/systemprompt-template?style=flat-square&logo=github&logoColor=white&label=Star&color=f97316)](https://github.com/systempromptio/systemprompt-template) helps other security teams find it.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-secrets.svg">
