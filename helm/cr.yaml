@@ -1,7 +1,0 @@
-owner: systempromptio
-git-repo: charts
-pages-branch: gh-pages
-package-path: .cr-release-packages
-index-path: index.yaml
-sign: true
-key: "systemprompt.io"

@@ -40,7 +40,7 @@ helm install gateway systemprompt/gateway \
 | `ingress.enabled` | `false` | Enable Ingress |
 | `resources.*` | 250m / 512Mi req | Tune per tenant |
 
-Full reference: [`helm/gateway/values.yaml`](https://github.com/systempromptio/systemprompt-template/blob/main/helm/gateway/values.yaml).
+Full reference: [`values.yaml` on Artifact Hub](https://artifacthub.io/packages/helm/systemprompt/gateway?modal=values).
 
 ## Upgrade
 

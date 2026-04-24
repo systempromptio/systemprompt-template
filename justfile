@@ -643,42 +643,12 @@ benchmark REQUESTS="200" CONCURRENCY="100":
         -d '{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"bench","tool_input":{"file_path":"/src/main.rs"}}' \
         "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo"
 
-# ══════════════════════════════════════════════════════════════════════════════
-# DISTRIBUTION (Helm, Nix, install.sh, release packaging)
-# ══════════════════════════════════════════════════════════════════════════════
-
-# Lint the Helm chart
-helm-lint:
-    helm lint helm/gateway
-
-# Package the Helm chart locally
-helm-package:
-    helm dependency update helm/gateway
-    helm package helm/gateway -d .cr-release-packages
-
-# Install the Helm chart into a local kind cluster for smoke-test
-helm-install-test:
-    helm dependency update helm/gateway
-    helm upgrade --install gateway helm/gateway \
-        --set postgresql.auth.password=testpw \
-        --set secrets.anthropicApiKey=dummy \
-        --wait --timeout 300s
+# Syntax-check install.sh (install.sh is the user-facing installer)
+install-sh-test:
+    bash -n scripts/install.sh
+    shellcheck scripts/install.sh 2>/dev/null || echo "(install shellcheck to lint: apt install shellcheck)"
 
 # Check the Nix flake builds + runs
 flake-check:
     nix flake check
     nix run .# -- --version
-
-# Syntax-check install.sh
-install-sh-test:
-    bash -n scripts/install.sh
-    shellcheck scripts/install.sh 2>/dev/null || echo "(install shellcheck to lint: apt install shellcheck)"
-
-# Build a .deb locally (requires cargo-deb)
-build-deb:
-    cargo deb -p systemprompt-template
-
-# Build a .rpm locally (requires cargo-generate-rpm)
-build-rpm:
-    cargo build --release -p systemprompt-template
-    cargo generate-rpm -p systemprompt-template

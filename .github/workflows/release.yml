@@ -1,4 +1,4 @@
-name: Release
+name: Release (bundle cowork binaries)
 
 on:
   push:
@@ -20,156 +20,11 @@ on:
 
 permissions:
   contents: write
-  id-token: write     # cosign keyless OIDC
 
 jobs:
-  build-gateway:
-    name: Build gateway (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-unknown-linux-gnu
-            name: linux-amd64
-            os: ubuntu-latest
-            use_cross: true
-            ext: tar.gz
-          - target: aarch64-unknown-linux-gnu
-            name: linux-arm64
-            os: ubuntu-latest
-            use_cross: true
-            ext: tar.gz
-          - target: x86_64-apple-darwin
-            name: darwin-amd64
-            os: macos-13
-            use_cross: false
-            ext: tar.gz
-          - target: aarch64-apple-darwin
-            name: darwin-arm64
-            os: macos-14
-            use_cross: false
-            ext: tar.gz
-          - target: x86_64-pc-windows-msvc
-            name: windows-amd64
-            os: windows-latest
-            use_cross: false
-            ext: zip
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-
-      - name: Install cross
-        if: matrix.use_cross
-        run: cargo install cross --locked
-
-      - name: Build (cross)
-        if: matrix.use_cross
-        env:
-          SQLX_OFFLINE: "true"
-        run: cross build --release --workspace --target ${{ matrix.target }}
-
-      - name: Build (native)
-        if: ${{ !matrix.use_cross }}
-        shell: bash
-        env:
-          SQLX_OFFLINE: "true"
-        run: cargo build --release --workspace --target ${{ matrix.target }}
-
-      - name: Stage artefacts
-        shell: bash
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          [ "${{ github.event_name }}" = "workflow_dispatch" ] && version="${{ inputs.tag }}" && version="${version#v}"
-          stage="systemprompt-${version}-${{ matrix.name }}"
-          mkdir -p "dist/${stage}"
-          ext=""
-          [ "${{ matrix.name }}" = "windows-amd64" ] && ext=".exe"
-          for b in systemprompt systemprompt-mcp-agent systemprompt-mcp-marketplace; do
-            cp "target/${{ matrix.target }}/release/${b}${ext}" "dist/${stage}/"
-          done
-          cp -r services migrations "dist/${stage}/"
-          [ -d web/dist ] && cp -r web/dist "dist/${stage}/web"
-          cp LICENSE README.md "dist/${stage}/"
-          echo "STAGE=${stage}" >> "$GITHUB_ENV"
-
-      - name: Package (tar.gz)
-        if: matrix.ext == 'tar.gz'
-        shell: bash
-        run: |
-          cd dist
-          tar -czf "${STAGE}.tar.gz" "${STAGE}"
-
-      - name: Package (zip)
-        if: matrix.ext == 'zip'
-        shell: pwsh
-        run: |
-          cd dist
-          Compress-Archive -Path $env:STAGE -DestinationPath "$env:STAGE.zip"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: gateway-${{ matrix.name }}
-          path: dist/${{ env.STAGE }}.${{ matrix.ext }}
-          if-no-files-found: error
-
-  build-packages:
-    name: Build ${{ matrix.kind }} (${{ matrix.arch }})
+  publish:
+    name: Publish template release with cowork bundle
     runs-on: ubuntu-latest
-    needs: build-gateway
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - kind: deb
-            arch: amd64
-            target: x86_64-unknown-linux-gnu
-          - kind: deb
-            arch: arm64
-            target: aarch64-unknown-linux-gnu
-          - kind: rpm
-            arch: x86_64
-            target: x86_64-unknown-linux-gnu
-          - kind: rpm
-            arch: aarch64
-            target: aarch64-unknown-linux-gnu
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-      - name: Install cross
-        run: cargo install cross --locked
-      - name: Build release binary
-        env:
-          SQLX_OFFLINE: "true"
-        run: cross build --release -p systemprompt-template --target ${{ matrix.target }}
-      - name: Install packager
-        run: |
-          if [ "${{ matrix.kind }}" = "deb" ]; then
-            cargo install cargo-deb --locked
-          else
-            cargo install cargo-generate-rpm --locked
-          fi
-      - name: Package
-        run: |
-          if [ "${{ matrix.kind }}" = "deb" ]; then
-            cargo deb --no-build --target ${{ matrix.target }} --output "dist/systemprompt_${{ matrix.arch }}.deb"
-          else
-            cargo generate-rpm --target ${{ matrix.target }} --output "dist/systemprompt-${{ matrix.arch }}.rpm"
-          fi
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pkg-${{ matrix.kind }}-${{ matrix.arch }}
-          path: dist/*
-
-  sign-and-release:
-    name: Sign + Release
-    runs-on: ubuntu-latest
-    needs: [build-gateway, build-packages]
     steps:
       - uses: actions/checkout@v4
 
@@ -186,83 +41,47 @@ jobs:
           mac_tag="${{ inputs.cowork_mac_x64_tag }}"
           echo "cowork_mac_x64_tag=${mac_tag:-cowork-mac-v0.3.2}" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
-
-      - name: Download cowork artefacts
+      - name: Download cowork artifacts from systemprompt-core
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          mkdir -p dist
           gh release download "${{ steps.tags.outputs.cowork_tag }}" \
             --repo systempromptio/systemprompt-core \
             --dir dist \
             --pattern 'systemprompt-cowork-*' \
-            --pattern 'SHA256SUMS*' || true
+            --pattern 'SHA256SUMS*'
           gh release download "${{ steps.tags.outputs.cowork_mac_x64_tag }}" \
             --repo systempromptio/systemprompt-core \
             --dir dist \
-            --pattern 'systemprompt-cowork-macos-x64*' || echo "no macOS x64 zip"
-
-      - name: Compute SHA256SUMS (gateway + packages)
-        working-directory: dist
-        run: |
-          ( for f in systemprompt-*-*.tar.gz systemprompt-*-*.zip systemprompt_*.deb systemprompt-*.rpm; do
-              [ -f "$f" ] && sha256sum "$f"
-            done ) > SHA256SUMS.gateway
-          cat SHA256SUMS.gateway
-
-      - uses: sigstore/cosign-installer@v3
-
-      - name: Sign SHA256SUMS (keyless)
-        working-directory: dist
-        env:
-          COSIGN_EXPERIMENTAL: "1"
-        run: |
-          cosign sign-blob --yes \
-            --output-signature SHA256SUMS.gateway.sig \
-            --output-certificate SHA256SUMS.gateway.pem \
-            SHA256SUMS.gateway
+            --pattern 'systemprompt-cowork-macos-x64*' || echo "no macOS x64 zip in ${{ steps.tags.outputs.cowork_mac_x64_tag }}"
+          ls -la dist
 
       - name: Generate release notes
+        id: notes
         run: |
           cat > notes.md <<EOF
-          systemprompt ${{ steps.tags.outputs.template_tag }}
+          systemprompt-template ${{ steps.tags.outputs.template_tag }}
 
-          ## Gateway binaries
-          Multi-target tarballs / zips (linux amd64/arm64, darwin amd64/arm64, windows amd64).
-          Contents: \`systemprompt\`, \`systemprompt-mcp-agent\`, \`systemprompt-mcp-marketplace\`, \`services/\`, \`migrations/\`, \`web/\`.
+          Bundles cowork binaries from systemprompt-core:
+          - Linux x86_64, Windows x86_64, macOS aarch64 (cosign-signed) — [${{ steps.tags.outputs.cowork_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.cowork_tag }})
+          - macOS x86_64 zip — [${{ steps.tags.outputs.cowork_mac_x64_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.cowork_mac_x64_tag }})
 
-          Install with:
-
-          \`\`\`
-          curl -sSL https://get.systemprompt.io | sh
-          \`\`\`
-
-          Or manually: download the tarball, verify against \`SHA256SUMS.gateway\`, extract.
-
-          Verify the SHA256SUMS signature (cosign keyless):
+          Binaries are cosign-signed (keyless, OIDC). Verify with:
 
           \`\`\`
           cosign verify-blob \\
-            --certificate-identity-regexp='https://github.com/systempromptio/systemprompt-template/' \\
+            --certificate-identity-regexp='https://github.com/systempromptio/systemprompt-core/' \\
             --certificate-oidc-issuer='https://token.actions.githubusercontent.com' \\
-            --signature SHA256SUMS.gateway.sig \\
-            --certificate SHA256SUMS.gateway.pem \\
-            SHA256SUMS.gateway
+            --signature <file>.sig \\
+            --certificate <file>.pem \\
+            <file>
           \`\`\`
 
-          ## Linux packages
-          - \`systemprompt_amd64.deb\`, \`systemprompt_arm64.deb\` — see [docs/install/apt.md](docs/install/apt.md)
-          - \`systemprompt-x86_64.rpm\`, \`systemprompt-aarch64.rpm\` — see [docs/install/rpm.md](docs/install/rpm.md)
-
-          ## Cowork bundle
-          Bundles cowork binaries from systemprompt-core [${{ steps.tags.outputs.cowork_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.cowork_tag }})
-          and macOS x86_64 zip from [${{ steps.tags.outputs.cowork_mac_x64_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.cowork_mac_x64_tag }}).
+          SHA256SUMS is also signed. See \`bin/cowork/CHANGELOG.md\` in systemprompt-core for cowork changelog.
           EOF
 
-      - name: Create or update release
+      - name: Create or update template release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -271,7 +90,7 @@ jobs:
             gh release edit "$tag" --notes-file notes.md
           else
             gh release create "$tag" \
-              --title "systemprompt $tag" \
+              --title "systemprompt-template $tag" \
               --notes-file notes.md
           fi
           gh release upload "$tag" --clobber dist/*
