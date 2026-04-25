@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APT repository | systemprompt.io</title>
+<meta name="description" content="APT repository for the systemprompt AI governance gateway. Debian 12+, Ubuntu 22.04+, signed for amd64 and arm64.">
+<meta name="keywords" content="ai governance, llm gateway, claude, openai, mcp, self-hosted ai, rust">
+<link rel="canonical" href="https://deb.systemprompt.io/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="APT repository | systemprompt.io">
+<meta property="og:description" content="APT repository for the systemprompt AI governance gateway. Debian 12+, Ubuntu 22.04+, signed for amd64 and arm64.">
+<meta property="og:url" content="https://deb.systemprompt.io/">
+<meta property="og:image" content="https://systemprompt.io/files/images/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 16px/1.5 -apple-system, Segoe UI, Roboto, sans-serif; max-width: 720px; margin: 3rem auto; padding: 0 1.5rem; color: #111; background: #fff; }
+  @media (prefers-color-scheme: dark) { body { background: #0b0e14; color: #e5e7eb; } a { color: #93c5fd; } pre { background: #111827 !important; color: #e5e7eb; } }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  .sub { color: #6b7280; margin: 0 0 2rem; }
+  pre { background: #f3f4f6; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+  a { color: #2563eb; }
+  nav { margin: 1.5rem 0 2rem; }
+  nav a { margin-right: 1rem; }
+  footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; font-size: 0.9rem; color: #6b7280; }
+</style>
+</head>
+<body>
+<h1><a href="https://systemprompt.io">systemprompt.io</a> — APT repository</h1>
+<p class="sub">APT repository for the systemprompt AI governance gateway. Debian 12+, Ubuntu 22.04+, signed for amd64 and arm64.</p>
+
+<nav>
+  <a href="https://systemprompt.io">Website</a>
+  <a href="https://systemprompt.io/documentation/">Documentation</a>
+  <a href="https://github.com/systempromptio/systemprompt-template">Main repo</a>
+  <a href="https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/apt.md">Install guide</a>
+  <a href="https://discord.gg/wkAbSuPWpr">Discord</a>
+</nav>
+
+<h2>Install</h2>
+<pre><code>curl -fsSL https://deb.systemprompt.io/gpg.key \
+  | sudo gpg --dearmor -o /usr/share/keyrings/systemprompt.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/systemprompt.gpg] https://deb.systemprompt.io stable main" \
+  | sudo tee /etc/apt/sources.list.d/systemprompt.list
+
+sudo apt-get update
+sudo apt-get install systemprompt</code></pre>
+
+<footer>
+Source-available under <a href="https://github.com/systempromptio/systemprompt-template/blob/main/LICENSE">MIT</a> for the template, <a href="https://github.com/systempromptio/systemprompt-core/blob/main/LICENSE">BSL-1.1</a> for the core dependency. Compiled binary declares <code>MIT AND BUSL-1.1</code>.
+</footer>
+</body>
+</html>
+

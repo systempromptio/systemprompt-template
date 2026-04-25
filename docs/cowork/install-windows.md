@@ -17,20 +17,21 @@ cowork --version
 Cowork bundles are published on the template repo under the `cowork-v*` tag series:
 
 ```powershell
+# Raw .exe binary (no zip wrapper)
 Invoke-WebRequest `
-  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.3.3/systemprompt-cowork-windows-x64.zip `
-  -OutFile cowork.zip
-Expand-Archive .\cowork.zip -DestinationPath .
-Move-Item .\systemprompt-cowork-windows-x64\cowork.exe C:\Windows\System32\cowork.exe
+  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.4.0/systemprompt-cowork-x86_64-pc-windows-msvc.exe `
+  -OutFile cowork.exe
+Move-Item .\cowork.exe C:\Windows\System32\cowork.exe
 ```
 
 Verify the SHA256:
 
 ```powershell
 Invoke-WebRequest `
-  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.3.3/SHA256SUMS.cowork `
+  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.4.0/SHA256SUMS.cowork `
   -OutFile SHA256SUMS.cowork
-Get-FileHash .\systemprompt-cowork-windows-x64.zip -Algorithm SHA256
+Get-FileHash C:\Windows\System32\cowork.exe -Algorithm SHA256
+# Compare against the line ending in `systemprompt-cowork-x86_64-pc-windows-msvc.exe` in SHA256SUMS.cowork
 ```
 
 Verify the cosign signature (requires cosign.exe):

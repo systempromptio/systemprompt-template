@@ -37,7 +37,7 @@ On first boot the entrypoint writes `/app/services/profiles/docker/{profile.yaml
 ## Tags
 
 - `latest` — most recent release.
-- `<major>.<minor>.<patch>` (e.g. `0.3.4`), `<major>.<minor>` (e.g. `0.3`), `<major>` (e.g. `0`) — published when a `v*` tag ships through the release pipeline.
+- `<major>.<minor>.<patch>` (e.g. `0.4.0`), `<major>.<minor>` (e.g. `0.3`), `<major>` (e.g. `0`) — published when a `v*` tag ships through the release pipeline.
 
 If a version tag is missing from GHCR, the release workflow hasn't completed for it yet — pin to `latest` or a tag you can see on the [package page](https://github.com/systempromptio/systemprompt-template/pkgs/container/systemprompt-template).
 

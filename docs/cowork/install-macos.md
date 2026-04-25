@@ -17,23 +17,23 @@ cowork --version
 Cowork bundles are published on the template repo under the `cowork-v*` tag series. Pick the matching architecture:
 
 ```bash
-# Apple Silicon (M1/M2/M3/M4)
-curl -sSL -o cowork.tar.gz \
-  https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.3.3/systemprompt-cowork-macos-aarch64.tar.gz
-tar -xzf cowork.tar.gz
-install -m 0755 systemprompt-cowork-macos-aarch64/cowork /usr/local/bin/cowork
+# Apple Silicon (M1/M2/M3/M4) — raw binary
+curl -sSL -o cowork \
+  https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.4.0/systemprompt-cowork-aarch64-apple-darwin
+chmod +x cowork
+sudo install -m 0755 cowork /usr/local/bin/cowork
 
-# Intel Mac
+# Intel Mac (zip bundle)
 curl -sSL -o cowork.zip \
-  https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.3.3/systemprompt-cowork-macos-x64.zip
+  https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.4.0/systemprompt-cowork-macos-x64.zip
 unzip cowork.zip
-install -m 0755 systemprompt-cowork-macos-x64/cowork /usr/local/bin/cowork
+sudo install -m 0755 systemprompt-cowork-macos-x64/cowork /usr/local/bin/cowork
 ```
 
 Verify the SHA256:
 
 ```bash
-curl -sSL -O https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.3.3/SHA256SUMS.cowork
+curl -sSL -O https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.4.0/SHA256SUMS.cowork
 shasum -a 256 -c SHA256SUMS.cowork --ignore-missing
 ```
 
