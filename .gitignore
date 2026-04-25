@@ -5,7 +5,9 @@
 /target/
 **/target/
 **/*.rs.bk
-Cargo.lock
+# Cargo.lock — for a workspace with binaries (this is one), committing the
+# lockfile is the convention. It pins exact transitive versions for
+# reproducible builds + makes `nix flake check` resolve. Keep tracked.
 
 # Generated files and assets
 /files/
