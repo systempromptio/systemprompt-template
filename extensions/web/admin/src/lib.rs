@@ -25,6 +25,10 @@ use sqlx::PgPool;
 pub use routes::{admin_ssr_router, cowork_auth_ssr_router, workspace_ssr_router};
 pub use types::{CreateUserRequest, MarketplaceContext, UsageEvent, UserContext, UserSummary};
 
+pub mod test_support {
+    pub use crate::handlers::cowork::plugin_file::resolve_within;
+}
+
 pub fn hooks_webhook_router(pool: Arc<PgPool>) -> Router {
     Router::new()
         .route(
@@ -65,6 +69,10 @@ pub fn cowork_router(pool: Arc<PgPool>) -> Router {
     Router::new()
         .route("/v1/cowork/manifest", get(handlers::cowork::manifest::handle))
         .route("/v1/cowork/whoami", get(handlers::cowork::whoami::handle))
+        .route(
+            "/v1/cowork/plugins/{plugin_id}/{*path}",
+            get(handlers::cowork::plugin_file::handle),
+        )
         .with_state(pool)
 }
 

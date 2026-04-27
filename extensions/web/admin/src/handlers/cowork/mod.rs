@@ -1,4 +1,5 @@
 pub mod manifest;
+pub mod plugin_file;
 pub mod plugin_walker;
 pub mod types;
 pub mod whoami;
