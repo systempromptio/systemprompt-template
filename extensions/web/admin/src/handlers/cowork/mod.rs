@@ -16,7 +16,6 @@ use crate::handlers::shared;
 
 use self::types::UserSection;
 
-/// Legacy `JwtAudience::Api` fallback below is a 30-day grace window; remove after 2026-05-27.
 pub(super) fn validate_cowork_jwt(
     headers: &HeaderMap,
 ) -> Result<UserId, Box<Response<Body>>> {
@@ -47,29 +46,11 @@ pub(super) fn validate_cowork_jwt(
         .jwt_issuer
         .clone();
 
-    let claims = match validate_jwt_token(token, jwt_secret, &jwt_issuer, &[JwtAudience::Cowork]) {
-        Ok(c) => c,
-        Err(primary_err) => {
-            match validate_jwt_token(token, jwt_secret, &jwt_issuer, &[JwtAudience::Api]) {
-                Ok(legacy) => {
-                    let user_id = legacy.sub.clone();
-                    tracing::warn!(
-                        audience = ?legacy.aud,
-                        user_id = %user_id,
-                        "legacy cowork audience accepted (Api); rotate by 2026-05-27"
-                    );
-                    legacy
-                }
-                Err(_) => {
-                    tracing::warn!(error = %primary_err, "Cowork JWT validation failed");
-                    return Err(shared::boxed_error_response(
-                        StatusCode::UNAUTHORIZED,
-                        "Invalid or expired token",
-                    ));
-                }
-            }
-        }
-    };
+    let claims = validate_jwt_token(token, jwt_secret, &jwt_issuer, &[JwtAudience::Cowork])
+        .map_err(|err| {
+            tracing::warn!(error = %err, "Cowork JWT validation failed");
+            shared::boxed_error_response(StatusCode::UNAUTHORIZED, "Invalid or expired token")
+        })?;
 
     Ok(UserId::new(&claims.sub))
 }
