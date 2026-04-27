@@ -5,7 +5,7 @@ use axum::{
     body::Body,
     extract::{Path as AxumPath, State},
     http::{HeaderMap, HeaderValue, StatusCode, header},
-    response::{IntoResponse, Response},
+    response::Response,
 };
 use sqlx::PgPool;
 use systemprompt::identifiers::PluginId;
@@ -94,17 +94,6 @@ pub async fn handle(
         response.headers_mut().insert(header::CONTENT_TYPE, value);
     }
     response
-}
-
-pub async fn legacy_gone(
-    AxumPath((plugin_id, relative_path)): AxumPath<(String, String)>,
-) -> Response {
-    tracing::warn!(
-        plugin_id = %plugin_id,
-        relative_path = %relative_path,
-        "legacy unscoped plugin route hit; client must upgrade",
-    );
-    (StatusCode::GONE, "Use /v1/cowork/plugins/{plugin_id}/{path}").into_response()
 }
 
 pub fn resolve_within(base: &Path, relative: &str) -> Result<PathBuf, &'static str> {

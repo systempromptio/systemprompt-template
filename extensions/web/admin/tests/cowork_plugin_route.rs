@@ -1,12 +1,7 @@
 use std::fs;
 
-use axum::body::Body;
-use axum::http::{Request, StatusCode};
-use axum::routing::get;
-use axum::Router;
-use systemprompt_web_admin::test_support::{legacy_gone, resolve_within};
+use systemprompt_web_admin::test_support::resolve_within;
 use tempfile::TempDir;
-use tower::ServiceExt;
 
 #[test]
 fn resolves_normal_relative_path() {
@@ -60,19 +55,3 @@ fn rejects_directory_target() {
     assert_eq!(err, "not a file");
 }
 
-#[tokio::test]
-async fn legacy_route_returns_410_gone() {
-    let app: Router = Router::new().route("/plugins/{plugin_id}/{*path}", get(legacy_gone));
-
-    let response = app
-        .oneshot(
-            Request::builder()
-                .uri("/plugins/planner/agents/main.md")
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    assert_eq!(response.status(), StatusCode::GONE);
-}
