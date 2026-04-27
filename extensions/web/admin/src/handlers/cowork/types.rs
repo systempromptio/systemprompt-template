@@ -53,6 +53,8 @@ pub struct ManagedMcpServer {
 pub struct Manifest {
     pub manifest_version: String,
     pub issued_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub not_before: Option<String>,
     pub user_id: String,
     pub tenant_id: Option<String>,
     pub user: UserSection,

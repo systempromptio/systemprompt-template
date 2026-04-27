@@ -92,6 +92,7 @@ pub async fn handle(State(pool): State<Arc<PgPool>>, headers: HeaderMap) -> Resp
     let mut manifest = Manifest {
         manifest_version,
         issued_at,
+        not_before: None,
         user_id: user_id_str,
         tenant_id: None,
         user,
