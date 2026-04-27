@@ -104,18 +104,7 @@ pub async fn handle(State(pool): State<Arc<PgPool>>, headers: HeaderMap) -> Resp
         signature: None,
     };
 
-    let canonical = match serde_json::to_string(&manifest) {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::error!(error = %e, "canonical serialise failed");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Manifest serialisation failed",
-            );
-        },
-    };
-
-    match manifest_signing::sign_payload(canonical.as_bytes()) {
+    match manifest_signing::sign_value(&manifest) {
         Ok(sig) => manifest.signature = Some(sig),
         Err(e) => {
             tracing::error!(error = %e, "manifest signing failed");
