@@ -111,8 +111,8 @@ fn hash_file_list(files: &[PluginFileEntry]) -> String {
 
 fn read_version(plugin_dir: &Path) -> Option<String> {
     let candidates = [
-        plugin_dir.join("claude-plugin").join("version.json"),
-        plugin_dir.join("claude-plugin").join("plugin.json"),
+        plugin_dir.join(".claude-plugin").join("version.json"),
+        plugin_dir.join(".claude-plugin").join("plugin.json"),
         plugin_dir.join("plugin.json"),
     ];
     for p in &candidates {
