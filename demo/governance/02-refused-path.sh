@@ -42,7 +42,7 @@ fi
 if [[ -z "$TOKEN" ]]; then
   echo ""
   echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument:"
-  echo "  ./demo/02-refused-path.sh <TOKEN>"
+  echo "  ./demo/governance/02-refused-path.sh <TOKEN>"
   echo ""
   exit 1
 fi
@@ -124,5 +124,5 @@ echo ""
 echo "  associate_agent (user scope) was DENIED access to"
 echo "  mcp__systemprompt__list_agents by scope_restriction rule."
 echo ""
-echo "  Now run: ./demo/03-audit-trail.sh"
+echo "  Now run: ./demo/governance/03-audit-trail.sh"
 echo "=========================================="

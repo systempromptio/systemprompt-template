@@ -41,7 +41,7 @@ fi
 if [[ -z "$TOKEN" ]]; then
   echo ""
   echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument:"
-  echo "  ./demo/01-happy-path.sh <TOKEN>"
+  echo "  ./demo/governance/01-happy-path.sh <TOKEN>"
   echo ""
   exit 1
 fi
@@ -118,5 +118,5 @@ echo ""
 echo "  Part 1: ALLOWED (admin scope, clean input)"
 echo "  Part 2: MCP tool returned real agent data"
 echo ""
-echo "  Now run: ./demo/02-refused-path.sh"
+echo "  Now run: ./demo/governance/02-refused-path.sh"
 echo "=========================================="

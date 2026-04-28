@@ -67,7 +67,7 @@
 
 ### Segment 2: Governance Allow (0:30 — 1:15) | 45 seconds
 
-**Demo script:** `./demo/01-happy-path.sh`
+**Demo script:** `./demo/governance/01-happy-path.sh`
 
 **NARRATOR (before running):**
 
@@ -85,7 +85,7 @@
 
 ### Segment 3: Governance Deny (1:15 — 1:45) | 30 seconds
 
-**Demo script:** `./demo/02-refused-path.sh`
+**Demo script:** `./demo/governance/02-refused-path.sh`
 
 **NARRATOR (before running):**
 
@@ -103,7 +103,7 @@
 
 ### Segment 4: Audit Trail (1:45 — 2:15) | 30 seconds
 
-**Demo script:** `./demo/03-audit-trail.sh`
+**Demo script:** `./demo/governance/03-audit-trail.sh`
 
 **NARRATOR (before running):**
 
@@ -121,7 +121,7 @@
 
 ### Segment 5: Secret Detection (2:15 — 3:15) | 60 seconds
 
-**Demo script:** `./demo/06-governance-secret-breach.sh`
+**Demo script:** `./demo/governance/06-secret-breach.sh`
 
 **NARRATOR (before running):**
 
@@ -149,7 +149,7 @@
 
 ### Segment 6: MCP Access Tracking (3:15 — 4:15) | 60 seconds
 
-**Demo script:** `./demo/07-mcp-access-tracking.sh`  
+**Demo script:** `./demo/mcp/02-mcp-access-tracking.sh`  
 **Layout:** Switch to split screen — terminal left, dashboard right
 
 **NARRATOR (before running):**
@@ -172,7 +172,7 @@
 
 ### Segment 7: Request Tracing & Benchmark (4:15 — 5:30) | 75 seconds
 
-**Demo script:** `./demo/08-request-tracing.sh`
+**Demo script:** `./demo/performance/01-request-tracing.sh`
 
 **NARRATOR (before running):**
 
@@ -198,7 +198,7 @@
 
 ### Segment 8: Live AI Agent (5:30 — 6:30) | 60 seconds
 
-**Demo script:** `./demo/09-agent-tracing.sh`  
+**Demo script:** `./demo/agents/04-agent-tracing.sh`  
 **Layout:** Split screen — terminal left, dashboard traces right
 
 **NARRATOR (before running):**
@@ -221,7 +221,7 @@
 
 ### Segment 9: Load Test (6:30 — 8:00) | 90 seconds
 
-**Demo script:** `./demo/10-load-test.sh`
+**Demo script:** `./demo/performance/02-load-test.sh`
 
 **NARRATOR (before running):**
 

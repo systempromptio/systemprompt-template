@@ -50,7 +50,7 @@ pub async fn handle(
     }
 
     let plugins_root = match AppPaths::get() {
-        Ok(p) => p.system().services().join("plugins"),
+        Ok(p) => p.storage().files().join("plugins"),
         Err(e) => {
             tracing::error!(error = %e, "AppPaths::get failed");
             return shared::error_response(

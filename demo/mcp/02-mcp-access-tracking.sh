@@ -27,7 +27,7 @@
 #     - Governance Decisions section (allow/deny with reasons)
 #
 # Usage:
-#   ./demo/07-mcp-access-tracking.sh <TOKEN> [profile]
+#   ./demo/mcp/02-mcp-access-tracking.sh <TOKEN> [profile]
 #
 # TOKEN: The plugin token from the dashboard install widget (top-right of /admin/).
 #        Click the key icon, reveal, and copy.
@@ -49,7 +49,7 @@ fi
 if [[ -z "$TOKEN" ]]; then
   echo ""
   echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument:"
-  echo "  ./demo/07-mcp-access-tracking.sh <TOKEN> [profile]"
+  echo "  ./demo/mcp/02-mcp-access-tracking.sh <TOKEN> [profile]"
   echo ""
   exit 1
 fi

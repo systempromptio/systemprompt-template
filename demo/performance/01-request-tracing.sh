@@ -36,7 +36,7 @@
 #   - The benchmark shows what typed, zero-cost abstractions deliver at runtime
 #
 # Usage:
-#   ./demo/08-request-tracing.sh <TOKEN> [profile]
+#   ./demo/performance/01-request-tracing.sh <TOKEN> [profile]
 #
 # TOKEN: The plugin token from the dashboard install widget (top-right of /admin/).
 #        Click the key icon, reveal, and copy.
@@ -59,7 +59,7 @@ fi
 if [[ -z "$TOKEN" ]]; then
   echo ""
   echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument:"
-  echo "  ./demo/08-request-tracing.sh <TOKEN> [profile]"
+  echo "  ./demo/performance/01-request-tracing.sh <TOKEN> [profile]"
   echo ""
   exit 1
 fi
