@@ -426,9 +426,9 @@ The `GatewayUpstream` trait (`async fn proxy(&self, ctx: UpstreamCtx<'_>)`) is t
 
 ### Install the Cowork credential helper
 
-The `systemprompt-cowork` binary is the **Credential helper script** slot in Claude for Work. It turns a PAT into a short-lived JWT that Claude Desktop merges into every inference request routed at this binary. Download the prebuilt Windows or Linux binary from [systempromptio/systemprompt-core releases](https://github.com/systempromptio/systemprompt-core/releases/tag/cowork-v0.2.0); macOS builds from source on any Mac.
+The `systemprompt-cowork` binary is the **Credential helper script** slot in Claude for Work. It turns a PAT into a short-lived JWT that Claude Desktop merges into every inference request routed at this binary. Download the prebuilt Windows or Linux binary from [systempromptio/systemprompt-core releases](https://github.com/systempromptio/systemprompt-core/releases/tag/cowork-v0.3.0); macOS builds from source on any Mac.
 
-Current release: **[cowork-v0.2.0](https://github.com/systempromptio/systemprompt-core/releases/tag/cowork-v0.2.0)** — Linux x86_64 + Windows x86_64 (mingw ABI). macOS build is pending a Mac-hosted CI.
+Current release: **[cowork-v0.3.0](https://github.com/systempromptio/systemprompt-core/releases/tag/cowork-v0.3.0)** — Linux x86_64 + Windows x86_64 (mingw ABI). macOS build is pending a Mac-hosted CI.
 
 #### 1. Download
 
@@ -436,9 +436,9 @@ Current release: **[cowork-v0.2.0](https://github.com/systempromptio/systempromp
 
 ```bash
 curl -fsSL -o /usr/local/bin/systemprompt-cowork \
-  https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.2.0/systemprompt-cowork-x86_64-unknown-linux-gnu
+  https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.3.0/systemprompt-cowork-x86_64-unknown-linux-gnu
 chmod +x /usr/local/bin/systemprompt-cowork
-curl -fsSL https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.2.0/systemprompt-cowork-x86_64-unknown-linux-gnu.sha256 \
+curl -fsSL https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.3.0/systemprompt-cowork-x86_64-unknown-linux-gnu.sha256 \
   | sha256sum -c --ignore-missing
 ```
 
@@ -448,7 +448,7 @@ curl -fsSL https://github.com/systempromptio/systemprompt-core/releases/download
 $dir = "C:\Program Files\systemprompt"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 Invoke-WebRequest `
-  -Uri "https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.2.0/systemprompt-cowork-x86_64-pc-windows-gnu.exe" `
+  -Uri "https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.3.0/systemprompt-cowork-x86_64-pc-windows-gnu.exe" `
   -OutFile "$dir\systemprompt-cowork.exe"
 [Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$dir", "User")
 ```
