@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE webauthn_setup_tokens\n            SET used_at = CURRENT_TIMESTAMP\n            WHERE id = $1 AND used_at IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9b2acee6dd6560402fab639d3978644a0d77fc27e3e0db5cb60230ba75508452"
+}

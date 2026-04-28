@@ -1,0 +1,61 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id as \"id!\",\n            trace_id as \"trace_id!\",\n            timestamp as \"timestamp!\",\n            level as \"level!\",\n            module as \"module!\",\n            message as \"message!\",\n            metadata\n        FROM logs\n        WHERE message ILIKE $1\n          AND ($2::timestamptz IS NULL OR timestamp >= $2)\n          AND ($3::text IS NULL OR UPPER(level) = $3)\n        ORDER BY timestamp DESC\n        LIMIT $4\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "trace_id!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "timestamp!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "level!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "module!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "message!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "metadata",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "c12f6ff285a867ffaf2a32b709a3d4330e8054ff618e0b093294e61a7a5af1a5"
+}

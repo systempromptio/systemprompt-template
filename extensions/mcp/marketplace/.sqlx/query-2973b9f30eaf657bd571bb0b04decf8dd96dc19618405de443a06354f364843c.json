@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT mv.id, mv.user_id AS \"user_id: _\", u.email AS \"email: _\", u.display_name,\n               mv.version_number, mv.version_type,\n               COALESCE(jsonb_array_length(mv.skills_snapshot), 0)::INT AS \"skills_count!\",\n               COALESCE(\n                   (SELECT jsonb_agg(jsonb_build_object('skill_id', elem->>'skill_id', 'name', elem->>'name', 'base_skill_id', elem->>'base_skill_id'))\n                    FROM jsonb_array_elements(mv.skills_snapshot) AS elem),\n                   '[]'::jsonb\n               ) AS \"skill_names!\",\n               mv.created_at\n        FROM marketplace_versions mv\n        JOIN users u ON u.id = mv.user_id\n        ORDER BY mv.created_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "email: _",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "version_number",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "version_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "skills_count!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "skill_names!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "2973b9f30eaf657bd571bb0b04decf8dd96dc19618405de443a06354f364843c"
+}

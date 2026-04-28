@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE user_sessions\n        SET throttle_level = $1,\n            throttle_escalated_at = CURRENT_TIMESTAMP\n        WHERE session_id = $2\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "418c29126a3a9f427831ccbf661832fcb064849c62e25b64cb8c366833d8158e"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COALESCE(SUM(\n            COALESCE((metadata->>'input_tokens')::BIGINT, 0) +\n            COALESCE((metadata->>'output_tokens')::BIGINT, 0)\n        ), 0)::BIGINT\n        FROM plugin_usage_events\n        WHERE user_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "coalesce",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "dbd1021e0f385455134690872b3736f9b6697d34ae77189ac5a8b7a97ae5f34e"
+}

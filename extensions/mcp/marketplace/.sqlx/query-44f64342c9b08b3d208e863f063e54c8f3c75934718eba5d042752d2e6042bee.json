@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO secret_resolution_tokens (id, user_id, plugin_id, token_hash, expires_at) VALUES ($1, $2, $3, $4, NOW() + INTERVAL '5 minutes')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "44f64342c9b08b3d208e863f063e54c8f3c75934718eba5d042752d2e6042bee"
+}

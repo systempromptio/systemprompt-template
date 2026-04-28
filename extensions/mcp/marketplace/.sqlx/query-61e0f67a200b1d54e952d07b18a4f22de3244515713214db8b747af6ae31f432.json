@@ -1,0 +1,80 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id,\n            job_name,\n            schedule,\n            enabled,\n            last_run,\n            next_run,\n            last_status,\n            last_error,\n            run_count,\n            created_at,\n            updated_at\n        FROM scheduled_jobs\n        ORDER BY job_name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "job_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "schedule",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "enabled",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_run",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "next_run",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "last_error",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "run_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "61e0f67a200b1d54e952d07b18a4f22de3244515713214db8b747af6ae31f432"
+}

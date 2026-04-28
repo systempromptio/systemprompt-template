@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            (\n                SELECT\n                    at.agent_name as \"name!\",\n                    COALESCE(SUM(r.cost_microdollars), 0)::bigint as \"cost!\",\n                    COUNT(*)::bigint as \"requests!\",\n                    COALESCE(SUM(r.tokens_used), 0)::bigint as \"tokens!\"\n                FROM ai_requests r\n                INNER JOIN agent_tasks at ON at.task_id = r.task_id\n                WHERE r.created_at >= $1 AND r.created_at < $2\n                  AND at.agent_name IS NOT NULL\n                GROUP BY at.agent_name\n                ORDER BY SUM(r.cost_microdollars) DESC NULLS LAST\n                LIMIT $3\n            )\n            UNION ALL\n            (\n                SELECT\n                    'unattributed' as \"name!\",\n                    COALESCE(SUM(r.cost_microdollars), 0)::bigint as \"cost!\",\n                    COUNT(*)::bigint as \"requests!\",\n                    COALESCE(SUM(r.tokens_used), 0)::bigint as \"tokens!\"\n                FROM ai_requests r\n                LEFT JOIN agent_tasks at ON at.task_id = r.task_id\n                WHERE r.created_at >= $1 AND r.created_at < $2\n                  AND (r.task_id IS NULL OR at.agent_name IS NULL)\n                HAVING COUNT(*) > 0\n            )\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "cost!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "requests!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "tokens!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "34daebaccde633af6a096f7a772472eb3fc020e90064c0fcedfbb98d23d8033e"
+}

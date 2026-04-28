@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            COUNT(*)::BIGINT AS \"total!\",\n            AVG(quality_score::DOUBLE PRECISION) AS avg_quality,\n            COUNT(*) FILTER (WHERE goal_achieved = 'yes')::BIGINT AS \"achieved!\",\n            COUNT(*) FILTER (WHERE goal_achieved = 'no')::BIGINT AS \"failed!\",\n            COUNT(*) FILTER (WHERE error_analysis IS NOT NULL AND error_analysis != '')::BIGINT AS \"sessions_with_errors!\"\n          FROM session_analyses\n          WHERE user_id = $1\n            AND created_at > NOW() - INTERVAL '30 days'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "avg_quality",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 2,
+        "name": "achieved!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "failed!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "sessions_with_errors!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "3a5cbfd8d68b2f46f23c5f72769000736d68856352c612ddb91c4df9952c0e80"
+}

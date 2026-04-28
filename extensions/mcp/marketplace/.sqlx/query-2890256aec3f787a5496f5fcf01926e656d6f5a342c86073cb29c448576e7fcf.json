@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT us.skill_id\n          FROM user_skills us\n          WHERE us.user_id = $1 AND us.enabled = true\n            AND us.skill_id NOT IN (\n                SELECT DISTINCT COALESCE(entity_id, entity_name) FROM session_entity_links\n                WHERE user_id = $1 AND entity_type = 'skill'\n            )\n          ORDER BY us.skill_id ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "skill_id",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2890256aec3f787a5496f5fcf01926e656d6f5a342c86073cb29c448576e7fcf"
+}

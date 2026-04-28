@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM org_marketplace_plugins WHERE marketplace_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "34464e87d12e88b1be33b54e3afae5c07e73a409f254876261f76d346fc8907f"
+}

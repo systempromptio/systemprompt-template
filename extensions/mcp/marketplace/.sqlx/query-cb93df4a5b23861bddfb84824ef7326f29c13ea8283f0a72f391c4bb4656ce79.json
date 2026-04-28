@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO marketplace.magic_link_tokens (email, token_hash, expires_at, ip_address)\n         VALUES ($1, $2, NOW() + INTERVAL '15 minutes', $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cb93df4a5b23861bddfb84824ef7326f29c13ea8283f0a72f391c4bb4656ce79"
+}

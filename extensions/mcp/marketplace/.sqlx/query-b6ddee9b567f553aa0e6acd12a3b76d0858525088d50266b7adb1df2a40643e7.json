@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.table_schema AS \"schema_name!\",\n                  c.table_name AS \"table_name!\",\n                  COUNT(*)::bigint AS \"column_count!\"\n           FROM information_schema.columns c\n           JOIN information_schema.tables t\n             ON t.table_schema = c.table_schema AND t.table_name = c.table_name\n           WHERE c.table_schema = 'public' AND t.table_type = 'BASE TABLE'\n           GROUP BY c.table_schema, c.table_name\n           ORDER BY c.table_name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "schema_name!",
+        "type_info": "Name"
+      },
+      {
+        "ordinal": 1,
+        "name": "table_name!",
+        "type_info": "Name"
+      },
+      {
+        "ordinal": 2,
+        "name": "column_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "b6ddee9b567f553aa0e6acd12a3b76d0858525088d50266b7adb1df2a40643e7"
+}

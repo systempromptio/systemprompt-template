@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM mcp_sessions\n            WHERE status IN ('expired', 'closed')\n              AND last_activity_at < NOW() - make_interval(days => $1)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2f05a8bc2bdcf7707e8b14228500ea2c27f6912ac2d342e8b39f6814c2e6c028"
+}

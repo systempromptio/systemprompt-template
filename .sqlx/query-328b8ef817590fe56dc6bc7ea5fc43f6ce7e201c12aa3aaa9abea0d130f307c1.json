@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, user_id, credential_id, public_key, counter, display_name,\n                    device_type, transports, created_at, last_used_at\n             FROM webauthn_credentials WHERE user_id = $1 ORDER BY created_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "credential_id",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 3,
+        "name": "public_key",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 4,
+        "name": "counter",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "device_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "transports",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "last_used_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "328b8ef817590fe56dc6bc7ea5fc43f6ce7e201c12aa3aaa9abea0d130f307c1"
+}

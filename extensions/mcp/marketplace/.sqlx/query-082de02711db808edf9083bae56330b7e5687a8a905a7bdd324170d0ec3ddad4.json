@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE agent_tasks SET status = $1, updated_at = $2 WHERE task_id = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "082de02711db808edf9083bae56330b7e5687a8a905a7bdd324170d0ec3ddad4"
+}

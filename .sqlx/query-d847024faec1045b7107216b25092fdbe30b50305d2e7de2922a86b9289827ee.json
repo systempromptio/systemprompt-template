@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_activity (id, user_id, category, action, entity_type, entity_name, description, metadata)\n          VALUES (gen_random_uuid()::TEXT, COALESCE((SELECT id FROM users WHERE email LIKE '%@anonymous.local' LIMIT 1), (SELECT id FROM users LIMIT 1)), 'mcp_access', 'rejected', 'mcp_server', $1, $2, $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d847024faec1045b7107216b25092fdbe30b50305d2e7de2922a86b9289827ee"
+}

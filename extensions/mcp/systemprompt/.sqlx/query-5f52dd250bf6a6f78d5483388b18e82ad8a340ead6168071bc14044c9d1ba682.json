@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE user_api_keys\n            SET last_used_at = CURRENT_TIMESTAMP\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5f52dd250bf6a6f78d5483388b18e82ad8a340ead6168071bc14044c9d1ba682"
+}

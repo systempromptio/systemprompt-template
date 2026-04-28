@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH agent_convs AS (\n                SELECT\n                    uc.context_id,\n                    uc.name,\n                    (SELECT COUNT(*) FROM agent_tasks at WHERE at.context_id = uc.context_id)::bigint as task_count,\n                    (SELECT COUNT(*) FROM task_messages tm\n                     JOIN agent_tasks at ON at.task_id = tm.task_id\n                     WHERE at.context_id = uc.context_id)::bigint as message_count,\n                    uc.created_at,\n                    uc.updated_at\n                FROM user_contexts uc\n                WHERE uc.created_at >= $1 AND uc.created_at < $2\n            ),\n            gateway_convs AS (\n                SELECT\n                    ar.session_id as context_id,\n                    NULL::text as name,\n                    0::bigint as task_count,\n                    COUNT(arm.id)::bigint as message_count,\n                    MIN(ar.created_at) as created_at,\n                    MAX(ar.created_at) as updated_at\n                FROM ai_requests ar\n                LEFT JOIN ai_request_messages arm ON arm.request_id = ar.id\n                WHERE ar.task_id IS NULL\n                  AND ar.session_id IS NOT NULL\n                  AND ar.created_at >= $1 AND ar.created_at < $2\n                  AND NOT EXISTS (\n                      SELECT 1 FROM user_contexts uc2 WHERE uc2.context_id = ar.session_id\n                  )\n                GROUP BY ar.session_id\n            )\n            SELECT\n                context_id as \"context_id!\",\n                name,\n                task_count as \"task_count!\",\n                message_count as \"message_count!\",\n                created_at as \"created_at!\",\n                updated_at as \"updated_at!\"\n            FROM (\n                SELECT * FROM agent_convs\n                UNION ALL\n                SELECT * FROM gateway_convs\n            ) combined\n            ORDER BY updated_at DESC\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "task_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "message_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "f96c575443c98844488abfa4eacc826c1283fe032b9a2beb50f005d7eebac8ff"
+}
