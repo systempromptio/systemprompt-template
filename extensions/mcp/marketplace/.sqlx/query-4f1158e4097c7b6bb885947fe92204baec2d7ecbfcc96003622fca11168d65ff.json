@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n             user_id AS \"user_id!: UserId\",\n             display_name,\n             avatar_url,\n             notify_daily_summary,\n             notify_achievements,\n             leaderboard_opt_in,\n             timezone,\n             achievement_email_sent_date,\n             daily_report_email_sent_date,\n             created_at,\n             updated_at\n           FROM user_settings WHERE user_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "avatar_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "notify_daily_summary",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "notify_achievements",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "leaderboard_opt_in",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "timezone",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "achievement_email_sent_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 8,
+        "name": "daily_report_email_sent_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "4f1158e4097c7b6bb885947fe92204baec2d7ecbfcc96003622fca11168d65ff"
+}

@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT session_id, ai_summary, ai_tags, ai_title\n              FROM plugin_session_summaries\n              WHERE session_id = ANY($1) AND ai_summary IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "ai_summary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "ai_tags",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "ai_title",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "3cb7a3ae22e350c1d5d93abe96775da1dc27dfbf415885edaae4a68f51ad93ec"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COALESCE(COUNT(DISTINCT metadata->>'model'), 0)::INT\n        FROM plugin_usage_events\n        WHERE user_id = $1\n          AND event_type = 'claude_code_SessionStart'\n          AND metadata->>'model' IS NOT NULL\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "coalesce",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "eac369adeaec3d36cab6cfca05872eb2247d4234da0eae4907dea7e61cb64f8c"
+}

@@ -77,10 +77,25 @@ build *FLAGS:
     fi
     SECRETS_FILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
     USE_OFFLINE=false
+    db_reachable() {
+        local url="$1"
+        local pgcmd=""
+        if command -v pg_isready >/dev/null 2>&1; then pgcmd="pg_isready"
+        elif [ -x /opt/homebrew/opt/libpq/bin/pg_isready ]; then pgcmd="/opt/homebrew/opt/libpq/bin/pg_isready"
+        elif [ -x /usr/local/opt/libpq/bin/pg_isready ]; then pgcmd="/usr/local/opt/libpq/bin/pg_isready"
+        fi
+        if [ -n "$pgcmd" ]; then
+            "$pgcmd" -d "$url" -t 2 >/dev/null 2>&1 && return 0 || return 1
+        fi
+        local hostport="${url#*@}"; hostport="${hostport%%/*}"
+        local host="${hostport%:*}"; local port="${hostport##*:}"
+        [ "$port" = "$host" ] && port=5432
+        (exec 3<>/dev/tcp/"$host"/"$port") >/dev/null 2>&1 && { exec 3<&-; exec 3>&-; return 0; } || return 1
+    }
     if [ -f "$SECRETS_FILE" ]; then
         DB_URL=$(sed -n 's/.*"database_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$SECRETS_FILE" 2>/dev/null | head -1)
         if [ -n "$DB_URL" ] && [ "$DB_URL" != "null" ]; then
-            if pg_isready -d "$DB_URL" -t 2 >/dev/null 2>&1; then
+            if db_reachable "$DB_URL"; then
                 export DATABASE_URL="$DB_URL"
                 echo "Using database: $DB_URL"
             else
@@ -107,7 +122,7 @@ build *FLAGS:
     if [ "$USE_OFFLINE" = "true" ]; then
         SQLX_OFFLINE=true cargo build --workspace {{FLAGS}}
     else
-        cargo build --workspace {{FLAGS}}
+        SQLX_OFFLINE=false cargo build --workspace {{FLAGS}}
     fi
 
 # Clippy (Windows) - always uses offline mode
@@ -122,10 +137,25 @@ clippy *FLAGS:
     set -euo pipefail
     SECRETS_FILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
     USE_OFFLINE=false
+    db_reachable() {
+        local url="$1"
+        local pgcmd=""
+        if command -v pg_isready >/dev/null 2>&1; then pgcmd="pg_isready"
+        elif [ -x /opt/homebrew/opt/libpq/bin/pg_isready ]; then pgcmd="/opt/homebrew/opt/libpq/bin/pg_isready"
+        elif [ -x /usr/local/opt/libpq/bin/pg_isready ]; then pgcmd="/usr/local/opt/libpq/bin/pg_isready"
+        fi
+        if [ -n "$pgcmd" ]; then
+            "$pgcmd" -d "$url" -t 2 >/dev/null 2>&1 && return 0 || return 1
+        fi
+        local hostport="${url#*@}"; hostport="${hostport%%/*}"
+        local host="${hostport%:*}"; local port="${hostport##*:}"
+        [ "$port" = "$host" ] && port=5432
+        (exec 3<>/dev/tcp/"$host"/"$port") >/dev/null 2>&1 && { exec 3<&-; exec 3>&-; return 0; } || return 1
+    }
     if [ -f "$SECRETS_FILE" ]; then
         DB_URL=$(sed -n 's/.*"database_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$SECRETS_FILE" 2>/dev/null | head -1)
         if [ -n "$DB_URL" ] && [ "$DB_URL" != "null" ]; then
-            if pg_isready -d "$DB_URL" -t 2 >/dev/null 2>&1; then
+            if db_reachable "$DB_URL"; then
                 export DATABASE_URL="$DB_URL"
             else
                 USE_OFFLINE=true
@@ -139,7 +169,7 @@ clippy *FLAGS:
     if [ "$USE_OFFLINE" = "true" ]; then
         SQLX_OFFLINE=true cargo clippy --workspace {{FLAGS}} -- -D warnings
     else
-        cargo clippy --workspace {{FLAGS}} -- -D warnings
+        SQLX_OFFLINE=false cargo clippy --workspace {{FLAGS}} -- -D warnings
     fi
 
 # Prepare SQLx offline query cache (requires running database)
@@ -157,7 +187,12 @@ prepare:
         echo "Error: No database_url in secrets"
         exit 1
     fi
-    if ! pg_isready -d "$DB_URL" -t 2 >/dev/null 2>&1; then
+    PG_ISREADY=""
+    if command -v pg_isready >/dev/null 2>&1; then PG_ISREADY="pg_isready"
+    elif [ -x /opt/homebrew/opt/libpq/bin/pg_isready ]; then PG_ISREADY="/opt/homebrew/opt/libpq/bin/pg_isready"
+    elif [ -x /usr/local/opt/libpq/bin/pg_isready ]; then PG_ISREADY="/usr/local/opt/libpq/bin/pg_isready"
+    fi
+    if [ -z "$PG_ISREADY" ] || ! "$PG_ISREADY" -d "$DB_URL" -t 2 >/dev/null 2>&1; then
         echo "Error: Database not reachable at $DB_URL"
         echo "Run 'just db-up' first to start the database"
         exit 1

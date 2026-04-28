@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE marketplace_sync_status SET dirty = true, last_changed_at = NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "f29553ea36027c9d8c4f8a1fa7cd2527d56faeef27a57e33a0408ed0b622e383"
+}

@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_hooks\n                (id, user_id, hook_name, description, event_type, matcher,\n                 hook_type, url, command, headers, timeout, is_async, enabled, is_default)\n            VALUES ($1, $2, $3, $4, $5, '*', 'http', $6, '', '{}', 30, false, true, true)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7fdf4139e3481553082c741068cbc96ef0a5b9ef68b8f0cac126556ddbd4be6a"
+}

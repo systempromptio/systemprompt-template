@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO employee_daily_usage (user_id, usage_date, event_count)\n        SELECT e.user_id, DATE(e.created_at), COUNT(*)::INT\n        FROM plugin_usage_events e\n        INNER JOIN users u ON u.id = e.user_id\n        GROUP BY e.user_id, DATE(e.created_at)\n        ON CONFLICT (user_id, usage_date) DO UPDATE SET event_count = EXCLUDED.event_count\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "6b409819893aeb262c45d2f49d13ab6ef93f723139cf63d7a58ec885e8541311"
+}
