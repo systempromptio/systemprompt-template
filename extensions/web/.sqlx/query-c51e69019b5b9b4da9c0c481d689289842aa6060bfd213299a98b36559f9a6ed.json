@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE scheduled_jobs SET run_count = run_count + 1 WHERE job_name = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c51e69019b5b9b4da9c0c481d689289842aa6060bfd213299a98b36559f9a6ed"
+}

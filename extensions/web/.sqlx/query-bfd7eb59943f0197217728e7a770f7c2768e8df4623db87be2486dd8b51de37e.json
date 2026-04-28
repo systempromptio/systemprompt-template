@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE cowork_exchange_codes\n            SET consumed_at = CURRENT_TIMESTAMP\n            WHERE code_hash = $1\n              AND consumed_at IS NULL\n              AND expires_at > CURRENT_TIMESTAMP\n            RETURNING user_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "bfd7eb59943f0197217728e7a770f7c2768e8df4623db87be2486dd8b51de37e"
+}

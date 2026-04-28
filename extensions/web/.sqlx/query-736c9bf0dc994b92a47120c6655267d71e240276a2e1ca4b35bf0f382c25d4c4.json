@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE mcp_sessions\n            SET last_event_id = $2, last_activity_at = NOW()\n            WHERE session_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "736c9bf0dc994b92a47120c6655267d71e240276a2e1ca4b35bf0f382c25d4c4"
+}

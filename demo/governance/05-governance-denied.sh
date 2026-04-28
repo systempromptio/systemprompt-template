@@ -153,5 +153,5 @@ echo "    2. blocklist/scope_check: destructive tool mcp__systemprompt__delete_a
 
 echo ""
 echo "=========================================="
-echo "  Now run: ./demo/06-governance-secret-breach.sh"
+echo "  Now run: ./demo/governance/06-secret-breach.sh"
 echo "=========================================="

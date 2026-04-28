@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO cowork_exchange_codes (code_hash, user_id, expires_at)\n            VALUES ($1, $2, $3)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ba2885fb71bb2910e289703d1d0dfabd1a2fdfa2e8fe861171e41a2a5ad03128"
+}

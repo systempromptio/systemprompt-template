@@ -52,7 +52,7 @@ fi
 if [[ -z "$TOKEN" ]]; then
   echo ""
   echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument:"
-  echo "  ./demo/06-governance-secret-breach.sh <TOKEN>"
+  echo "  ./demo/governance/06-secret-breach.sh <TOKEN>"
   echo ""
   exit 1
 fi
@@ -174,5 +174,5 @@ echo "  The governance layer blocks plaintext"
 echo "  secrets BEFORE they reach the tool —"
 echo "  even for admin-scope agents."
 echo ""
-echo "  Now run: ./demo/07-mcp-access-tracking.sh"
+echo "  Now run: ./demo/mcp/02-mcp-access-tracking.sh"
 echo "=========================================="

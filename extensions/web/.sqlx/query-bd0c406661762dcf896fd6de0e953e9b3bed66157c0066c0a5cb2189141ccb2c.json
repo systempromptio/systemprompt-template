@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id as \"id!: AiGatewayPolicyId\", tenant_id, name, spec, enabled\n            FROM ai_gateway_policies\n            WHERE enabled = TRUE\n              AND (tenant_id = $1 OR tenant_id IS NULL)\n            ORDER BY CASE WHEN tenant_id = $1 THEN 0 ELSE 1 END ASC, name ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: AiGatewayPolicyId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "tenant_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "spec",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
+        "name": "enabled",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "bd0c406661762dcf896fd6de0e953e9b3bed66157c0066c0a5cb2189141ccb2c"
+}

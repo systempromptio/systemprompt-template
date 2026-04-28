@@ -8,7 +8,7 @@
 # progressive results, visual tables.
 #
 # Usage:
-#   ./demo/10-load-test.sh [profile]
+#   ./demo/performance/02-load-test.sh [profile]
 #
 # Cost: Free (no AI calls)
 

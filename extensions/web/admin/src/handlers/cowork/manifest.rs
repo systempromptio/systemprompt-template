@@ -42,7 +42,7 @@ pub async fn handle(State(pool): State<Arc<PgPool>>, headers: HeaderMap) -> Resp
     };
 
     let plugins_root = match AppPaths::get() {
-        Ok(p) => p.system().services().join("plugins"),
+        Ok(p) => p.storage().files().join("plugins"),
         Err(e) => {
             tracing::error!(error = %e, "AppPaths::get failed");
             return shared::error_response(

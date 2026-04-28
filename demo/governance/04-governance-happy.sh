@@ -90,5 +90,5 @@ echo "  (scope_check: PASS, secret_injection: PASS, rate_limit: PASS)"
 
 echo ""
 echo "=========================================="
-echo "  Now run: ./demo/05-governance-denied.sh"
+echo "  Now run: ./demo/governance/05-governance-denied.sh"
 echo "=========================================="
