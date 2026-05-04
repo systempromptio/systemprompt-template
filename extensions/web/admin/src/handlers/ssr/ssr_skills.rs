@@ -6,7 +6,9 @@ use systemprompt::identifiers::SkillId;
 use crate::repositories;
 use crate::repositories::plugin_maps::EntityPluginMap;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{AgentSkill, MarketplaceContext, UserContext, SOURCE_CUSTOM, SOURCE_USER};
+use crate::types::{
+    AgentSkill, IdQuery, MarketplaceContext, UserContext, SOURCE_CUSTOM, SOURCE_USER,
+};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -249,9 +251,9 @@ pub async fn skill_edit_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
+    Query(params): Query<IdQuery>,
 ) -> Response {
-    let skill_id = params.get("id");
+    let skill_id = params.id();
     let is_edit = skill_id.is_some();
     let skill = if let Some(id) = skill_id {
         repositories::find_agent_skill(&pool, &SkillId::new(id))

@@ -4,7 +4,7 @@ use crate::templates::AdminTemplateEngine;
 use crate::types::conversation_analytics::{
     EntityEffectiveness, EntityUsageSummary, SkillEffectiveness,
 };
-use crate::types::{MarketplaceContext, UserContext, ENTITY_SKILL};
+use crate::types::{IdQuery, MarketplaceContext, UserContext, ENTITY_SKILL};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -89,9 +89,9 @@ pub async fn my_plugin_edit_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(params): Query<HashMap<String, String>>,
+    Query(params): Query<IdQuery>,
 ) -> Response {
-    let plugin_id = params.get("id");
+    let plugin_id = params.id();
     let is_edit = plugin_id.is_some();
 
     let plugin_with_assoc = if let Some(id) = plugin_id {

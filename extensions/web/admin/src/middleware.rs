@@ -90,17 +90,17 @@ pub async fn marketplace_context_middleware(
     let (counts, site_url) = get_cached_marketplace(&user_ctx.roles).await;
 
     let ctx = MarketplaceContext {
-        user_id: user_ctx.user_id.to_string(),
+        user_id: user_ctx.user_id.clone(),
         site_url,
         total_plugins: counts.total_plugins,
         total_skills: counts.total_skills,
         agents_count: counts.agents_count,
         mcp_count: counts.mcp_count,
-        tier_name: String::from("Free"),
+        tier_name: systemprompt_web_shared::TierLevel::Free,
         is_premium: false,
         rank_level: 1,
         rank_name: String::from("Beginner"),
-        rank_tier: String::from("bronze"),
+        rank_tier: systemprompt_web_shared::RankTier::Bronze,
         total_xp: 0,
         xp_progress_pct: 0.0,
         has_completed_onboarding: true,

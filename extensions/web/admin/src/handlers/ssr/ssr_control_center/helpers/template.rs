@@ -109,7 +109,7 @@ pub fn assemble_template<'a>(input: &'a AssembleInput<'a>) -> TemplateData<'a> {
         title: "Control Center",
         cc_initial_json: &apm.cc_initial_json,
         username: &params.user_ctx.username,
-        tier_name: &params.mkt_ctx.tier_name,
+        tier_name: params.mkt_ctx.tier_name.as_str(),
         has_any_data: counts.has_any_data,
         status_filter: params.status_filter,
         active_count: counts.active,

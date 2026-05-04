@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
+use crate::types::{IdQuery, MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, Query, State},
     response::{IntoResponse, Response},
@@ -18,9 +18,9 @@ pub async fn my_plugin_view_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
+    Query(params): Query<IdQuery>,
 ) -> Response {
-    let Some(plugin_id) = params.get("id") else {
+    let Some(plugin_id) = params.id() else {
         return axum::response::Redirect::to("/admin/my/marketplace").into_response();
     };
 
@@ -31,7 +31,7 @@ pub async fn my_plugin_view_page(
             vec![]
         });
 
-    let plugin_data = enriched.iter().find(|ep| ep.plugin.plugin_id == *plugin_id);
+    let plugin_data = enriched.iter().find(|ep| ep.plugin.plugin_id == plugin_id);
 
     let Some(plugin_data) = plugin_data else {
         return axum::response::Redirect::to("/admin/my/marketplace").into_response();

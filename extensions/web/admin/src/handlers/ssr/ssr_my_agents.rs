@@ -5,7 +5,9 @@ use crate::repositories;
 use crate::repositories::conversation_analytics;
 use crate::templates::AdminTemplateEngine;
 use crate::types::conversation_analytics::{EntityLastUsed, EntityQualityTrend};
-use crate::types::{EntityEffectiveness, MarketplaceContext, UserAgent, UserContext, ENTITY_AGENT};
+use crate::types::{
+    EntityEffectiveness, IdQuery, MarketplaceContext, UserAgent, UserContext, ENTITY_AGENT,
+};
 
 const PROMPT_PREVIEW_LEN: usize = 200;
 use axum::{
@@ -188,9 +190,9 @@ pub async fn my_agent_edit_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(params): Query<HashMap<String, String>>,
+    Query(params): Query<IdQuery>,
 ) -> Response {
-    let agent_id = params.get("id");
+    let agent_id = params.id();
     let is_edit = agent_id.is_some();
 
     let agent = if let Some(id) = agent_id {
@@ -200,9 +202,7 @@ pub async fn my_agent_edit_page(
                 tracing::warn!(error = %e, "Failed to list user agents for edit page");
                 vec![]
             });
-        agents
-            .into_iter()
-            .find(|a| a.agent_id.as_str() == id.as_str())
+        agents.into_iter().find(|a| a.agent_id.as_str() == id)
     } else {
         None
     };

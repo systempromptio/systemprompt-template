@@ -4,7 +4,7 @@ use systemprompt::identifiers::UserId;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
+use crate::types::{IdQuery, MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, Query, State},
     response::{IntoResponse, Response},
@@ -111,10 +111,9 @@ pub async fn user_detail_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
+    Query(params): Query<IdQuery>,
 ) -> Response {
-    if !user_ctx.is_admin && Some(user_ctx.user_id.as_str()) != params.get("id").map(String::as_str)
-    {
+    if !user_ctx.is_admin && Some(user_ctx.user_id.as_str()) != params.id() {
         return (
             axum::http::StatusCode::FORBIDDEN,
             axum::response::Html(
@@ -124,7 +123,7 @@ pub async fn user_detail_page(
             .into_response();
     }
 
-    let Some(id) = params.get("id") else {
+    let Some(id) = params.id() else {
         let data = UserDetailPageData {
             page: "user-detail",
             title: "User Detail",
@@ -137,7 +136,7 @@ pub async fn user_detail_page(
         let value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Null);
         return super::render_page(&engine, "user-detail", &value, &user_ctx, &mkt_ctx);
     };
-    let user_id = UserId::new(id.as_str());
+    let user_id = UserId::new(id);
 
     let detail = repositories::find_user_detail(&pool, &user_id)
         .await
