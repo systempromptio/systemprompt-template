@@ -1,6 +1,8 @@
 pub mod agents;
 pub mod dashboard_report;
+pub mod mcp_tools;
 pub mod overview;
+pub mod perf;
 pub mod requests;
 pub mod sessions;
 pub mod tools;

@@ -7,18 +7,10 @@ use axum::{
     extract::{Extension, Query, State},
     response::Response,
 };
-use chrono::{DateTime, Utc};
 use serde_json::json;
 use sqlx::PgPool;
 
-struct AgentTraceRow {
-    session_id: String,
-    tool_name: String,
-    decision: String,
-    policy: String,
-    reason: String,
-    created_at: DateTime<Utc>,
-}
+use crate::repositories::analytics_grp::agents::{list_agent_traces, AgentTraceRow};
 
 pub async fn agent_traces_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -84,31 +76,8 @@ pub async fn agent_traces_page(
 }
 
 async fn fetch_agent_traces(pool: &PgPool, agent_id: &str) -> Vec<AgentTraceRow> {
-    let result = sqlx::query!(
-        r#"SELECT session_id, tool_name, decision, policy, reason, created_at
-           FROM governance_decisions
-           WHERE agent_id = $1
-           ORDER BY created_at DESC
-           LIMIT 100"#,
-        agent_id,
-    )
-    .fetch_all(pool)
-    .await;
-    match result {
-        Ok(rows) => rows
-            .into_iter()
-            .map(|r| AgentTraceRow {
-                session_id: r.session_id,
-                tool_name: r.tool_name,
-                decision: r.decision,
-                policy: r.policy,
-                reason: r.reason,
-                created_at: r.created_at,
-            })
-            .collect(),
-        Err(e) => {
-            tracing::warn!(error = %e, agent_id = %agent_id, "Failed to fetch agent traces");
-            vec![]
-        }
-    }
+    list_agent_traces(pool, agent_id).await.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, agent_id = %agent_id, "Failed to fetch agent traces");
+        vec![]
+    })
 }

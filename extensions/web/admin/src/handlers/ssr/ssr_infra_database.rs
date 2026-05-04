@@ -9,19 +9,9 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
-#[derive(Debug)]
-struct TableRow {
-    schema_name: String,
-    table_name: String,
-    column_count: i64,
-}
-
-#[derive(Debug)]
-struct IndexRow {
-    schema: String,
-    table: String,
-    index: String,
-}
+use crate::repositories::infra_grp::{
+    get_db_name, get_db_size, list_indexes, list_tables, IndexRow, TableRow,
+};
 
 pub async fn infra_database_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -91,45 +81,17 @@ pub async fn infra_database_page(
 }
 
 async fn fetch_tables(pool: &PgPool) -> Result<Vec<TableRow>, sqlx::Error> {
-    sqlx::query_as!(
-        TableRow,
-        r#"SELECT c.table_schema AS "schema_name!",
-                  c.table_name AS "table_name!",
-                  COUNT(*)::bigint AS "column_count!"
-           FROM information_schema.columns c
-           JOIN information_schema.tables t
-             ON t.table_schema = c.table_schema AND t.table_name = c.table_name
-           WHERE c.table_schema = 'public' AND t.table_type = 'BASE TABLE'
-           GROUP BY c.table_schema, c.table_name
-           ORDER BY c.table_name"#,
-    )
-    .fetch_all(pool)
-    .await
+    list_tables(pool).await
 }
 
 async fn fetch_indexes(pool: &PgPool) -> Result<Vec<IndexRow>, sqlx::Error> {
-    sqlx::query_as!(
-        IndexRow,
-        r#"SELECT schemaname::text AS "schema!",
-                  tablename::text AS "table!",
-                  indexname::text AS "index!"
-           FROM pg_indexes
-           WHERE schemaname = 'public'
-           ORDER BY tablename, indexname
-           LIMIT 200"#,
-    )
-    .fetch_all(pool)
-    .await
+    list_indexes(pool).await
 }
 
 async fn fetch_db_size(pool: &PgPool) -> Result<String, sqlx::Error> {
-    sqlx::query_scalar!(r#"SELECT pg_size_pretty(pg_database_size(current_database())) AS "size!""#)
-        .fetch_one(pool)
-        .await
+    get_db_size(pool).await
 }
 
 async fn fetch_db_name(pool: &PgPool) -> Result<String, sqlx::Error> {
-    sqlx::query_scalar!(r#"SELECT current_database() AS "name!""#)
-        .fetch_one(pool)
-        .await
+    get_db_name(pool).await
 }

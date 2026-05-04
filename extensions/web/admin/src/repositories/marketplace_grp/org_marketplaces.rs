@@ -6,6 +6,31 @@ use crate::types::marketplaces::{
     CreateOrgMarketplaceRequest, OrgMarketplace, UpdateOrgMarketplaceRequest,
 };
 
+#[derive(Debug)]
+pub struct OrgMarketplacePluginAssoc {
+    pub marketplace_id: String,
+    pub plugin_id: String,
+}
+
+pub async fn list_org_marketplace_plugin_assocs(
+    pool: &PgPool,
+) -> Result<Vec<OrgMarketplacePluginAssoc>, sqlx::Error> {
+    let rows = sqlx::query!(
+        "SELECT marketplace_id, plugin_id
+         FROM org_marketplace_plugins
+         ORDER BY marketplace_id, position, created_at",
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| OrgMarketplacePluginAssoc {
+            marketplace_id: r.marketplace_id,
+            plugin_id: r.plugin_id,
+        })
+        .collect())
+}
+
 pub async fn list_org_marketplaces(pool: &PgPool) -> Result<Vec<OrgMarketplace>, sqlx::Error> {
     sqlx::query_as!(
         OrgMarketplace,
