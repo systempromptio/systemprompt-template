@@ -85,7 +85,7 @@ pub(crate) async fn create_mcp_server_handler(
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::create_mcp_server(&services_path, &body) {
+    match repositories::create_mcp_server(&services_path, body) {
         Ok(server) => {
             let name = server.id.clone();
             let sid = server.id.clone();
@@ -120,7 +120,7 @@ pub(crate) async fn update_mcp_server_handler(
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::update_mcp_server(&services_path, &server_id, &body) {
+    match repositories::update_mcp_server(&services_path, &server_id, body) {
         Ok(Some(server)) => {
             let name = server.id.clone();
             let sid = server_id.clone();

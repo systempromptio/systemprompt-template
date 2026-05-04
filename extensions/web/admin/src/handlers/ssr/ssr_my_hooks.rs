@@ -60,22 +60,27 @@ pub async fn my_hooks_page(
         .iter()
         .map(|q| (q.event_type.as_str(), q))
         .collect();
-    let event_breakdown_views = build_event_breakdown_views(&event_breakdown, &quality_map);
+    let event_breakdown_views = build_event_breakdown_views(event_breakdown, &quality_map);
 
     let plugin_name_map: std::collections::HashMap<String, String> = user_plugins
         .iter()
         .map(|p| (p.plugin_id.clone(), p.name.clone()))
         .collect();
 
-    let data = build_hooks_page_data(&HooksPageInput {
-        hooks: &hooks,
-        user_plugins: &user_plugins,
-        plugin_name_map: &plugin_name_map,
+    let total_count = hooks.len();
+    let enabled_count = hooks.iter().filter(|h| h.enabled).count();
+
+    let data = build_hooks_page_data(HooksPageInput {
+        hooks,
+        user_plugins,
+        plugin_name_map,
         event_breakdown_views,
         summary: &summary,
         avg_session_quality,
         chart,
         range,
+        total_count,
+        enabled_count,
     });
 
     super::render_typed_page(&engine, "my-hooks", &data, &user_ctx, &mkt_ctx)
@@ -146,24 +151,26 @@ fn compute_avg_session_quality(
 }
 
 struct HooksPageInput<'a> {
-    hooks: &'a [crate::types::UserHook],
-    user_plugins: &'a [crate::types::UserPlugin],
-    plugin_name_map: &'a std::collections::HashMap<String, String>,
+    hooks: Vec<crate::types::UserHook>,
+    user_plugins: Vec<crate::types::UserPlugin>,
+    plugin_name_map: std::collections::HashMap<String, String>,
     event_breakdown_views: Vec<EventBreakdownView>,
     summary: &'a crate::types::HookSummaryStats,
     avg_session_quality: f64,
     chart: serde_json::Value,
     range: &'a str,
+    total_count: usize,
+    enabled_count: usize,
 }
 
-fn build_hooks_page_data(input: &HooksPageInput<'_>) -> MyHooksPageData {
-    let hooks_views = build_hook_views(input.hooks, input.plugin_name_map);
+fn build_hooks_page_data(input: HooksPageInput<'_>) -> MyHooksPageData {
+    let hooks_views = build_hook_views(input.hooks, &input.plugin_name_map);
     let plugins: Vec<NamedEntity> = input
         .user_plugins
-        .iter()
+        .into_iter()
         .map(|p| NamedEntity {
-            id: p.plugin_id.clone(),
-            name: p.name.clone(),
+            id: p.plugin_id,
+            name: p.name,
         })
         .collect();
 
@@ -173,23 +180,23 @@ fn build_hooks_page_data(input: &HooksPageInput<'_>) -> MyHooksPageData {
         hooks: hooks_views,
         plugins,
         stats: HooksStats {
-            total_count: input.hooks.len(),
-            enabled_count: input.hooks.iter().filter(|h| h.enabled).count(),
+            total_count: input.total_count,
+            enabled_count: input.enabled_count,
             total_events: input.summary.total_events,
             total_errors: input.summary.total_errors,
             content_input_bytes: input.summary.content_input_bytes,
             content_output_bytes: input.summary.content_output_bytes,
             avg_session_quality: format!("{:.1}", input.avg_session_quality),
         },
-        event_breakdown: input.event_breakdown_views.clone(),
-        chart: input.chart.clone(),
+        event_breakdown: input.event_breakdown_views,
+        chart: input.chart,
         range: input.range.to_string(),
         hook_event_types: hook_event_type_names(),
     }
 }
 
 fn build_event_breakdown_views(
-    event_breakdown: &[crate::types::HookEventTypeStat],
+    event_breakdown: Vec<crate::types::HookEventTypeStat>,
     quality_map: &std::collections::HashMap<
         &str,
         &crate::types::conversation_analytics::HookSessionQuality,
@@ -202,12 +209,12 @@ fn build_event_breakdown_views(
         .unwrap_or(1)
         .max(1);
     event_breakdown
-        .iter()
+        .into_iter()
         .map(|e| {
             let pct = e.event_count.saturating_mul(100) / max_event_count;
-            let quality = quality_map.get(e.event_type.as_str());
+            let quality = quality_map.get(e.event_type.as_str()).copied();
             EventBreakdownView {
-                event_type: e.event_type.clone(),
+                event_type: e.event_type,
                 event_count: e.event_count,
                 error_count: e.error_count,
                 content_input_bytes: e.content_input_bytes,
@@ -226,64 +233,70 @@ fn build_event_breakdown_views(
 }
 
 fn build_hook_views(
-    hooks: &[crate::types::UserHook],
+    hooks: Vec<crate::types::UserHook>,
     plugin_name_map: &std::collections::HashMap<String, String>,
 ) -> Vec<HookView> {
     hooks
-        .iter()
-        .map(|h| {
-            let hook_code_entry = if h.hook_type == HOOK_TYPE_HTTP {
-                HookCodeEntry {
-                    matcher: h.matcher.clone(),
-                    hooks: vec![HookCodeHook {
-                        hook_type: "http".to_string(),
-                        url: Some(h.url.clone()),
-                        headers: Some(h.headers.clone()),
-                        command: None,
-                        is_async: None,
-                        timeout: Some(h.timeout),
-                    }],
-                }
-            } else {
-                HookCodeEntry {
-                    matcher: h.matcher.clone(),
-                    hooks: vec![HookCodeHook {
-                        hook_type: "command".to_string(),
-                        url: None,
-                        headers: None,
-                        command: Some(h.command.clone()),
-                        is_async: Some(h.is_async),
-                        timeout: Some(h.timeout),
-                    }],
-                }
-            };
-            let hook_code = serde_json::to_string_pretty(&[&hook_code_entry]).unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to serialize hook code entry");
-                String::new()
-            });
-            HookView {
-                id: h.id.clone(),
-                hook_name: h.hook_name.clone(),
-                description: h.description.clone(),
-                event_type: h.event_type.clone(),
-                hook_type: h.hook_type.clone(),
-                matcher: h.matcher.clone(),
-                url: h.url.clone(),
-                command: h.command.clone(),
-                headers: h.headers.clone(),
-                timeout: h.timeout,
-                is_async: h.is_async,
-                enabled: h.enabled,
-                is_default: h.is_default,
-                plugin_id: h.plugin_id.clone(),
-                plugin_name: h
-                    .plugin_id
-                    .as_ref()
-                    .and_then(|pid| plugin_name_map.get(pid))
-                    .unwrap_or(&String::new())
-                    .clone(),
-                hook_code,
-            }
-        })
+        .into_iter()
+        .map(|h| build_hook_view(h, plugin_name_map))
         .collect()
+}
+
+fn build_hook_view(
+    h: crate::types::UserHook,
+    plugin_name_map: &std::collections::HashMap<String, String>,
+) -> HookView {
+    let hook_code_entry = if h.hook_type == HOOK_TYPE_HTTP {
+        HookCodeEntry {
+            matcher: h.matcher.clone(),
+            hooks: vec![HookCodeHook {
+                hook_type: "http".to_string(),
+                url: Some(h.url.clone()),
+                headers: Some(h.headers.clone()),
+                command: None,
+                is_async: None,
+                timeout: Some(h.timeout),
+            }],
+        }
+    } else {
+        HookCodeEntry {
+            matcher: h.matcher.clone(),
+            hooks: vec![HookCodeHook {
+                hook_type: "command".to_string(),
+                url: None,
+                headers: None,
+                command: Some(h.command.clone()),
+                is_async: Some(h.is_async),
+                timeout: Some(h.timeout),
+            }],
+        }
+    };
+    let hook_code = serde_json::to_string_pretty(&[&hook_code_entry]).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to serialize hook code entry");
+        String::new()
+    });
+    let plugin_name = h
+        .plugin_id
+        .as_ref()
+        .and_then(|pid| plugin_name_map.get(pid))
+        .cloned()
+        .unwrap_or_default();
+    HookView {
+        id: h.id,
+        hook_name: h.hook_name,
+        description: h.description,
+        event_type: h.event_type,
+        hook_type: h.hook_type,
+        matcher: h.matcher,
+        url: h.url,
+        command: h.command,
+        headers: h.headers,
+        timeout: h.timeout,
+        is_async: h.is_async,
+        enabled: h.enabled,
+        is_default: h.is_default,
+        plugin_id: h.plugin_id,
+        plugin_name,
+        hook_code,
+    }
 }

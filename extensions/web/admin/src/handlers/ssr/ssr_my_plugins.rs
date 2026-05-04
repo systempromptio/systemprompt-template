@@ -69,7 +69,7 @@ pub async fn my_plugins_page(
         .map(|a| (a.entity_name.as_str(), a))
         .collect();
     let (plugins_json, categories) =
-        collect_my_plugins(&enriched, &skill_usage_map, &skill_eff_map, &agent_eff_map);
+        collect_my_plugins(enriched, &skill_usage_map, &skill_eff_map, &agent_eff_map);
     let plugin_count = plugins_json.len();
     let data = MyPluginsPageData {
         page: "my-plugins",

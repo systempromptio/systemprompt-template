@@ -16,6 +16,15 @@ impl From<&AssociatedEntity> for NamedEntity {
     }
 }
 
+impl From<AssociatedEntity> for NamedEntity {
+    fn from(e: AssociatedEntity) -> Self {
+        Self {
+            id: e.id,
+            name: e.name,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct CheckableEntity {
     pub value: String,

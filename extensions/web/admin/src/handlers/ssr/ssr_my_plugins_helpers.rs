@@ -12,7 +12,7 @@ use std::collections::{HashMap, HashSet};
 use super::types::{CheckableEntity, NamedEntity, PluginEditData, PluginView, SkillWithStats};
 
 pub(super) fn collect_my_plugins(
-    enriched: &[repositories::user_plugins::UserPluginEnriched],
+    enriched: Vec<repositories::user_plugins::UserPluginEnriched>,
     skill_usage_map: &HashMap<&str, &EntityUsageSummary>,
     skill_eff_map: &HashMap<&str, &SkillEffectiveness>,
     agent_eff_map: &HashMap<&str, &EntityEffectiveness>,
@@ -21,9 +21,8 @@ pub(super) fn collect_my_plugins(
     let mut plugins_json: Vec<serde_json::Value> = Vec::new();
 
     for ep in enriched {
-        let p = &ep.plugin;
-        if !p.category.is_empty() {
-            categories_set.insert(p.category.clone());
+        if !ep.plugin.category.is_empty() {
+            categories_set.insert(ep.plugin.category.clone());
         }
         let view = enriched_plugin_to_view(ep, skill_usage_map, skill_eff_map, agent_eff_map);
         if let Ok(v) = serde_json::to_value(&view) {
@@ -46,7 +45,7 @@ struct PluginAggregates {
 }
 
 fn enriched_plugin_to_view(
-    ep: &repositories::user_plugins::UserPluginEnriched,
+    ep: repositories::user_plugins::UserPluginEnriched,
     skill_usage_map: &HashMap<&str, &EntityUsageSummary>,
     skill_eff_map: &HashMap<&str, &SkillEffectiveness>,
     agent_eff_map: &HashMap<&str, &EntityEffectiveness>,
@@ -60,28 +59,52 @@ fn enriched_plugin_to_view(
         total_scored_sessions: 0,
     };
 
-    let skills = collect_skill_stats(ep, skill_usage_map, skill_eff_map, &mut agg);
-    let agents = collect_agent_stats(ep, agent_eff_map, &mut agg);
-    let mcp_servers: Vec<NamedEntity> = ep.mcp_servers.iter().map(NamedEntity::from).collect();
+    let repositories::user_plugins::UserPluginEnriched {
+        plugin,
+        skills,
+        agents,
+        mcp_servers,
+        skill_count,
+        agent_count,
+        mcp_count,
+    } = ep;
 
-    build_plugin_view(ep, skills, agents, mcp_servers, &agg)
+    let skills_view = collect_skill_stats(skills, skill_usage_map, skill_eff_map, &mut agg);
+    let agents_view = collect_agent_stats(agents, agent_eff_map, &mut agg);
+    let mcp_servers_view: Vec<NamedEntity> =
+        mcp_servers.into_iter().map(NamedEntity::from).collect();
+
+    build_plugin_view(
+        plugin,
+        PluginCounts {
+            skills: skill_count,
+            agents: agent_count,
+            mcp: mcp_count,
+        },
+        PluginViewEntities {
+            skills: skills_view,
+            agents: agents_view,
+            mcp_servers: mcp_servers_view,
+        },
+        &agg,
+    )
 }
 
 fn collect_skill_stats(
-    ep: &repositories::user_plugins::UserPluginEnriched,
+    skills: Vec<repositories::user_plugins::AssociatedEntity>,
     skill_usage_map: &HashMap<&str, &EntityUsageSummary>,
     skill_eff_map: &HashMap<&str, &SkillEffectiveness>,
     agg: &mut PluginAggregates,
 ) -> Vec<SkillWithStats> {
-    ep.skills
-        .iter()
+    skills
+        .into_iter()
         .map(|s| {
-            let usage = skill_usage_map.get(s.id.as_str());
+            let usage = skill_usage_map.get(s.id.as_str()).copied();
             let uses = usage.map_or(0, |u| u.total_uses);
             agg.total_uses += uses;
             agg.session_count += usage.map_or(0, |u| u.session_count);
 
-            let eff = skill_eff_map.get(s.name.as_str());
+            let eff = skill_eff_map.get(s.name.as_str()).copied();
             let avg_effectiveness = eff.map_or(0.0, |e| e.avg_effectiveness);
             let goal_pct = eff.map_or(0.0, |e| e.goal_achievement_pct);
             let scored = eff.map_or(0, |e| e.scored_sessions);
@@ -93,8 +116,8 @@ fn collect_skill_stats(
             }
 
             SkillWithStats {
-                id: SkillId::new(s.id.clone()),
-                name: s.name.clone(),
+                id: SkillId::new(s.id),
+                name: s.name,
                 uses,
                 avg_effectiveness: format!("{avg_effectiveness:.1}"),
                 goal_pct: format!("{goal_pct:.0}"),
@@ -105,14 +128,14 @@ fn collect_skill_stats(
 }
 
 fn collect_agent_stats(
-    ep: &repositories::user_plugins::UserPluginEnriched,
+    agents: Vec<repositories::user_plugins::AssociatedEntity>,
     agent_eff_map: &HashMap<&str, &EntityEffectiveness>,
     agg: &mut PluginAggregates,
 ) -> Vec<NamedEntity> {
-    ep.agents
-        .iter()
+    agents
+        .into_iter()
         .map(|a| {
-            let eff = agent_eff_map.get(a.name.as_str());
+            let eff = agent_eff_map.get(a.name.as_str()).copied();
             let scored = eff.map_or(0, |e| e.scored_sessions);
             if scored > 0 {
                 agg.weighted_quality_sum +=
@@ -127,14 +150,25 @@ fn collect_agent_stats(
         .collect()
 }
 
-fn build_plugin_view(
-    ep: &repositories::user_plugins::UserPluginEnriched,
+#[derive(Clone, Copy)]
+struct PluginCounts {
+    skills: usize,
+    agents: usize,
+    mcp: usize,
+}
+
+struct PluginViewEntities {
     skills: Vec<SkillWithStats>,
     agents: Vec<NamedEntity>,
     mcp_servers: Vec<NamedEntity>,
+}
+
+fn build_plugin_view(
+    plugin: crate::types::UserPlugin,
+    counts: PluginCounts,
+    entities: PluginViewEntities,
     agg: &PluginAggregates,
 ) -> PluginView {
-    let p = &ep.plugin;
     let plugin_avg_quality = if agg.quality_weight_total > 0 {
         agg.weighted_quality_sum / numeric::to_f64(agg.quality_weight_total)
     } else {
@@ -147,24 +181,24 @@ fn build_plugin_view(
     };
 
     PluginView {
-        plugin_id: p.plugin_id.clone(),
-        name: p.name.clone(),
-        description: p.description.clone(),
-        category: p.category.clone(),
-        version: p.version.clone(),
-        base_plugin_id: p.base_plugin_id.clone(),
-        author_name: p.author_name.clone(),
-        skill_count: ep.skill_count,
-        agent_count: ep.agent_count,
-        mcp_count: ep.mcp_count,
+        plugin_id: plugin.plugin_id,
+        name: plugin.name,
+        description: plugin.description,
+        category: plugin.category,
+        version: plugin.version,
+        base_plugin_id: plugin.base_plugin_id,
+        author_name: plugin.author_name,
+        skill_count: counts.skills,
+        agent_count: counts.agents,
+        mcp_count: counts.mcp,
         total_uses: agg.total_uses,
         session_count: agg.session_count,
         avg_quality_score: format!("{plugin_avg_quality:.1}"),
         goal_achievement_pct: format!("{plugin_goal_pct:.0}"),
         scored_sessions: agg.total_scored_sessions,
-        skills,
-        agents,
-        mcp_servers,
+        skills: entities.skills,
+        agents: entities.agents,
+        mcp_servers: entities.mcp_servers,
     }
 }
 
