@@ -1,4 +1,5 @@
 use std::fmt::Write as FmtWrite;
+use std::sync::Arc;
 
 use systemprompt::database::DbPool;
 use systemprompt::generator::ContentConfigRaw;
@@ -37,10 +38,11 @@ impl Job for LlmsTxtGenerationJob {
             "Database not available in job context".to_string(),
         ))?;
         let paths = ctx
-            .app_paths::<AppPaths>()
+            .app_paths::<Arc<AppPaths>>()
             .ok_or(MarketplaceError::Internal(
                 "AppPaths not available in job context".to_string(),
-            ))?;
+            ))?
+            .as_ref();
 
         generate_llms_txt(DbPool::clone(db_pool), paths).await?;
 

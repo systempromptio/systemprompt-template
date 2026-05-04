@@ -223,10 +223,11 @@ impl Job for PublishPipelineJob {
             "Database not available in job context".to_string(),
         ))?;
         let paths = ctx
-            .app_paths::<AppPaths>()
+            .app_paths::<Arc<AppPaths>>()
             .ok_or(MarketplaceError::Internal(
                 "AppPaths not available in job context".to_string(),
-            ))?;
+            ))?
+            .as_ref();
 
         tracing::info!("Publish pipeline started");
 

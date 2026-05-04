@@ -1,4 +1,5 @@
 use std::fmt::Write as FmtWrite;
+use std::sync::Arc;
 
 use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
@@ -32,10 +33,11 @@ impl Job for RobotsTxtGenerationJob {
         tracing::info!("robots.txt generation started");
 
         let paths = ctx
-            .app_paths::<AppPaths>()
+            .app_paths::<Arc<AppPaths>>()
             .ok_or(MarketplaceError::Internal(
                 "AppPaths not available in job context".to_string(),
-            ))?;
+            ))?
+            .as_ref();
         generate_robots_txt(paths).await?;
 
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);

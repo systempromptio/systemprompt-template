@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::sync::Arc;
 
 use systemprompt::extension::{AssetDefinition, ExtensionRegistry};
 use systemprompt::models::AppPaths;
@@ -123,8 +124,9 @@ impl Job for CopyExtensionAssetsJob {
 
     async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
         let paths = ctx
-            .app_paths::<AppPaths>()
-            .ok_or_else(|| anyhow::anyhow!("AppPaths missing from JobContext"))?;
+            .app_paths::<Arc<AppPaths>>()
+            .ok_or_else(|| anyhow::anyhow!("AppPaths missing from JobContext"))?
+            .as_ref();
         Ok(Self::execute_copy(paths).await?)
     }
 }
