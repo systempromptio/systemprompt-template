@@ -6,7 +6,7 @@ use systemprompt::generator::ContentConfigRaw;
 use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use systemprompt_web_shared::error::MarketplaceError;
+use crate::error::JobError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct LlmsTxtGenerationJob;
@@ -30,46 +30,45 @@ impl Job for LlmsTxtGenerationJob {
     }
 
     async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
-        let start = std::time::Instant::now();
-
-        tracing::info!("llms.txt generation started");
-
-        let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-            "Database not available in job context".to_string(),
-        ))?;
-        let paths = ctx
-            .app_paths::<Arc<AppPaths>>()
-            .ok_or(MarketplaceError::Internal(
-                "AppPaths not available in job context".to_string(),
-            ))?
-            .as_ref();
-
-        generate_llms_txt(DbPool::clone(db_pool), paths).await?;
-
-        let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
-
-        tracing::info!(duration_ms, "llms.txt generation completed");
-
-        Ok(JobResult::success().with_duration(duration_ms))
+        Ok(execute_inner(ctx).await?)
     }
+}
+
+async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
+    let start = std::time::Instant::now();
+
+    tracing::info!("llms.txt generation started");
+
+    let db_pool = ctx
+        .db_pool::<DbPool>()
+        .ok_or(JobError::MissingContext("DbPool"))?;
+    let paths = ctx
+        .app_paths::<Arc<AppPaths>>()
+        .ok_or(JobError::MissingContext("AppPaths"))?
+        .as_ref();
+
+    generate_llms_txt(DbPool::clone(db_pool), paths).await?;
+
+    let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+
+    tracing::info!(duration_ms, "llms.txt generation completed");
+
+    Ok(JobResult::success().with_duration(duration_ms))
 }
 
 systemprompt::traits::submit_job!(&LlmsTxtGenerationJob);
 
-pub async fn generate_llms_txt(db_pool: DbPool, paths: &AppPaths) -> Result<(), MarketplaceError> {
+pub async fn generate_llms_txt(db_pool: DbPool, paths: &AppPaths) -> Result<(), JobError> {
     use systemprompt::models::Config;
     use tokio::fs;
 
     let global_config =
-        Config::get().map_err(|e| MarketplaceError::Internal(format!("Config error: {e}")))?;
+        Config::get().map_err(|e| JobError::config(format!("Config error: {e}")))?;
 
     let config_path = paths.system().content_config();
-    let yaml_content = fs::read_to_string(&config_path)
-        .await
-        .map_err(|e| MarketplaceError::Internal(format!("Failed to read content config: {e}")))?;
+    let yaml_content = fs::read_to_string(&config_path).await?;
 
-    let content_config: ContentConfigRaw =
-        serde_yaml::from_str(&yaml_content).map_err(MarketplaceError::Yaml)?;
+    let content_config: ContentConfigRaw = serde_yaml::from_str(&yaml_content)?;
 
     let web_dir = paths.web().dist().to_path_buf();
     let base_url = &global_config.api_external_url;
@@ -114,33 +113,29 @@ async fn build_llms_txt_content(
     db_pool: DbPool,
     config: &ContentConfigRaw,
     base_url: &str,
-) -> Result<String, MarketplaceError> {
+) -> Result<String, JobError> {
     use systemprompt::content::ContentRepository;
 
     let mut content = String::new();
 
-    write_header(&mut content, base_url)
-        .map_err(|e| MarketplaceError::Internal(format!("Failed to write header: {e}")))?;
+    write_header(&mut content, base_url)?;
 
     let repo = ContentRepository::new(&db_pool)
-        .map_err(|e| MarketplaceError::Internal(format!("ContentRepository error: {e}")))?;
+        .map_err(|e| JobError::other(format!("ContentRepository error: {e}")))?;
 
     write_documentation_section(&mut content, config, &repo, base_url).await?;
     write_blog_section(&mut content, config, &repo, base_url).await?;
 
-    writeln!(content, "## Resources")
-        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
-    writeln!(content).map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content, "## Resources")?;
+    writeln!(content)?;
     writeln!(
         content,
         "- [Sitemap]({base_url}/sitemap.xml): Complete URL index"
-    )
-    .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    )?;
     writeln!(
         content,
         "- [Documentation]({base_url}/documentation): All documentation"
-    )
-    .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    )?;
 
     Ok(content)
 }
@@ -166,15 +161,13 @@ async fn write_documentation_section(
     config: &ContentConfigRaw,
     repo: &systemprompt::content::ContentRepository,
     base_url: &str,
-) -> Result<(), MarketplaceError> {
+) -> Result<(), JobError> {
     use systemprompt::identifiers::SourceId;
 
-    writeln!(content, "## Documentation")
-        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
-    writeln!(content).map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
-    writeln!(content, "Technical documentation and guides.")
-        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
-    writeln!(content).map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content, "## Documentation")?;
+    writeln!(content)?;
+    writeln!(content, "Technical documentation and guides.")?;
+    writeln!(content)?;
 
     if let Some(source) = config.content_sources.get("documentation") {
         if source.enabled {
@@ -198,8 +191,7 @@ async fn write_documentation_section(
                         })
                         .collect();
                     sort_entries_in_place(&mut filtered);
-                    write_section(content, heading, &filtered)
-                        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+                    write_section(content, heading, &filtered)?;
                 }
                 let mut other: Vec<_> = docs
                     .iter()
@@ -217,8 +209,7 @@ async fn write_documentation_section(
                     })
                     .collect();
                 sort_entries_in_place(&mut other);
-                write_section(content, "General", &other)
-                    .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+                write_section(content, "General", &other)?;
             }
         }
     }
@@ -230,15 +221,13 @@ async fn write_blog_section(
     config: &ContentConfigRaw,
     repo: &systemprompt::content::ContentRepository,
     base_url: &str,
-) -> Result<(), MarketplaceError> {
+) -> Result<(), JobError> {
     use systemprompt::identifiers::SourceId;
 
-    writeln!(content, "## Blog")
-        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
-    writeln!(content).map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
-    writeln!(content, "Articles and updates.")
-        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
-    writeln!(content).map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content, "## Blog")?;
+    writeln!(content)?;
+    writeln!(content, "Articles and updates.")?;
+    writeln!(content)?;
 
     if let Some(source) = config.content_sources.get("blog") {
         if source.enabled {
@@ -246,12 +235,11 @@ async fn write_blog_section(
             if let Ok(posts) = repo.list_by_source(&source_id).await {
                 for post in posts.iter().take(15) {
                     let url = format!("{}/blog/{}", base_url, post.slug);
-                    writeln!(content, "- [{}]({}): {}", post.title, url, post.description)
-                        .map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+                    writeln!(content, "- [{}]({}): {}", post.title, url, post.description)?;
                 }
             }
         }
     }
-    writeln!(content).map_err(|e| MarketplaceError::Internal(format!("fmt error: {e}")))?;
+    writeln!(content)?;
     Ok(())
 }

@@ -5232,6 +5232,7 @@ dependencies = [
  "systemprompt-identifiers",
  "systemprompt-provider-contracts",
  "thiserror 2.0.18",
+ "tracing",
  "uuid",
  "xxhash-rust",
 ]
@@ -5392,6 +5393,7 @@ dependencies = [
  "systemprompt-web-admin",
  "systemprompt-web-content",
  "systemprompt-web-shared",
+ "thiserror 2.0.18",
  "tokio",
  "tracing",
  "uuid",

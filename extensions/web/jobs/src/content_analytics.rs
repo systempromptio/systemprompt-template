@@ -2,7 +2,7 @@ use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use systemprompt_web_shared::error::MarketplaceError;
+use crate::error::JobError;
 
 #[derive(Debug)]
 struct ContentAnalyticsRow {
@@ -18,7 +18,7 @@ struct ContentAnalyticsRow {
 pub struct ContentAnalyticsAggregationJob;
 
 impl ContentAnalyticsAggregationJob {
-    pub async fn execute_with_pool(pool: &PgPool) -> anyhow::Result<JobResult> {
+    pub async fn execute_with_pool(pool: &PgPool) -> Result<JobResult, JobError> {
         let start = std::time::Instant::now();
 
         tracing::info!("Content analytics aggregation started");
@@ -73,7 +73,7 @@ impl ContentAnalyticsAggregationJob {
 
     async fn aggregate_engagement_stats(
         pool: &PgPool,
-    ) -> Result<Vec<ContentAnalyticsRow>, MarketplaceError> {
+    ) -> Result<Vec<ContentAnalyticsRow>, JobError> {
         let rows = sqlx::query_as!(
             ContentAnalyticsRow,
             r#"
@@ -102,16 +102,12 @@ impl ContentAnalyticsAggregationJob {
             "#
         )
         .fetch_all(pool)
-        .await
-        .map_err(MarketplaceError::Database)?;
+        .await?;
 
         Ok(rows)
     }
 
-    async fn upsert_metrics(
-        pool: &PgPool,
-        stats: &ContentAnalyticsRow,
-    ) -> Result<(), MarketplaceError> {
+    async fn upsert_metrics(pool: &PgPool, stats: &ContentAnalyticsRow) -> Result<(), JobError> {
         let id = format!("cpm_{}", uuid::Uuid::new_v4());
 
         let previous_23d = stats.views_30d - stats.views_7d;
@@ -157,8 +153,7 @@ impl ContentAnalyticsAggregationJob {
             trend_direction
         )
         .execute(pool)
-        .await
-        .map_err(MarketplaceError::Database)?;
+        .await?;
 
         Ok(())
     }
@@ -179,15 +174,15 @@ impl Job for ContentAnalyticsAggregationJob {
     }
 
     async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
-        let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-            "Database not available in job context".to_string(),
-        ))?;
+        let db = ctx
+            .db_pool::<DbPool>()
+            .ok_or(JobError::MissingContext("DbPool"))?;
 
-        let pool = db.write_pool().ok_or(MarketplaceError::Internal(
-            "Write PgPool not available from database".to_string(),
-        ))?;
+        let pool = db
+            .write_pool()
+            .ok_or(JobError::MissingContext("write PgPool"))?;
 
-        Self::execute_with_pool(&pool).await
+        Ok(Self::execute_with_pool(&pool).await?)
     }
 }
 
