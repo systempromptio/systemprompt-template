@@ -10,7 +10,7 @@ use crate::types::{
 pub async fn fetch_timeline(
     pool: &PgPool,
 ) -> Result<Vec<activity::ActivityTimelineEvent>, sqlx::Error> {
-    activity::queries::fetch_timeline(pool, None).await
+    activity::queries::list_timeline(pool, None).await
 }
 
 pub async fn fetch_top_users(pool: &PgPool) -> Result<Vec<TopUser>, sqlx::Error> {

@@ -8,35 +8,14 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
+use crate::repositories::analytics_grp::{list_tools, ToolRow};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
 
-struct ToolRow {
-    tool_name: String,
-    calls: i64,
-    errors: i64,
-    sessions: i64,
-}
-
 async fn fetch_tools(pool: &PgPool) -> Result<Vec<ToolRow>, sqlx::Error> {
-    sqlx::query_as!(
-        ToolRow,
-        r#"SELECT
-            tool_name AS "tool_name!",
-            COUNT(*)::bigint AS "calls!",
-            COUNT(*) FILTER (WHERE event_type LIKE '%Failure%' OR event_type LIKE '%Error%')::bigint AS "errors!",
-            COUNT(DISTINCT session_id)::bigint AS "sessions!"
-          FROM plugin_usage_events
-          WHERE tool_name IS NOT NULL
-            AND created_at >= NOW() - INTERVAL '7 days'
-          GROUP BY tool_name
-          ORDER BY COUNT(*) DESC
-          LIMIT 50"#,
-    )
-    .fetch_all(pool)
-    .await
+    list_tools(pool).await
 }
 
 pub async fn analytics_tools_page(

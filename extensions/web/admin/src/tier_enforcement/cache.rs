@@ -148,41 +148,24 @@ async fn resolve_tier_for_user(
 }
 
 async fn fetch_role_based_plan(pool: &PgPool, user_id: &UserId) -> Option<(TierLimits, String)> {
-    sqlx::query!(
-        r#"SELECT p.display_name AS "plan_name!", p.limits
-           FROM marketplace.plans p
-           WHERE p.role_name = ANY(
-               SELECT UNNEST(roles) FROM users WHERE id = $1
-           )
-           AND p.is_active = true
-           ORDER BY p.sort_order DESC
-           LIMIT 1"#,
-        user_id.as_str(),
-    )
-    .fetch_optional(pool)
-    .await
-    .map_err(|e| {
-        tracing::error!(error = %e, user_id = %user_id.as_str(), "Failed to fetch role-based plan");
-    })
-    .ok()
-    .flatten()
-    .map(|r| (parse_limits(Some(r.limits)), r.plan_name))
+    crate::repositories::tier_grp::find_role_based_plan(pool, user_id.as_str())
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, user_id = %user_id.as_str(), "Failed to fetch role-based plan");
+        })
+        .ok()
+        .flatten()
+        .map(|r| (parse_limits(Some(r.limits)), r.plan_name))
 }
 
 async fn fetch_free_plan(pool: &PgPool) -> (TierLimits, String) {
-    let row = sqlx::query!(
-        r#"SELECT p.display_name AS "plan_name!", p.limits
-           FROM marketplace.plans p
-           WHERE p.name = 'free' AND p.is_active = true
-           LIMIT 1"#,
-    )
-    .fetch_optional(pool)
-    .await
-    .map_err(|e| {
-        tracing::error!(error = %e, "Failed to fetch free plan from DB");
-    })
-    .ok()
-    .flatten();
+    let row = crate::repositories::tier_grp::find_free_plan(pool)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "Failed to fetch free plan from DB");
+        })
+        .ok()
+        .flatten();
 
     if let Some(r) = row {
         (parse_limits(Some(r.limits)), r.plan_name)
@@ -201,26 +184,13 @@ async fn fetch_subscription_tier(
     SubscriptionStatus,
     Option<chrono::DateTime<Utc>>,
 ) {
-    let row = sqlx::query!(
-        r#"SELECT
-             COALESCE(p.display_name, 'Free') AS "plan_name!",
-             s.status,
-             s.current_period_end,
-             p.limits AS "limits?: serde_json::Value"
-           FROM marketplace.subscriptions s
-           LEFT JOIN marketplace.plans p ON p.id = s.plan_id
-           WHERE s.user_id = $1
-           ORDER BY s.created_at DESC
-           LIMIT 1"#,
-        user_id.as_str(),
-    )
-    .fetch_optional(pool)
-    .await
-    .map_err(|e| {
-        tracing::error!(error = %e, user_id = %user_id.as_str(), "Failed to fetch subscription tier");
-    })
-    .ok()
-    .flatten();
+    let row = crate::repositories::tier_grp::find_subscription_tier(pool, user_id.as_str())
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, user_id = %user_id.as_str(), "Failed to fetch subscription tier");
+        })
+        .ok()
+        .flatten();
 
     if let Some(r) = row {
         let status = SubscriptionStatus::from_db(&r.status);

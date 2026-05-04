@@ -8,31 +8,14 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
+use crate::repositories::analytics_grp::{get_overview, OverviewRow};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
 
-struct OverviewRow {
-    total_events: i64,
-    total_sessions: i64,
-    tool_uses: i64,
-    errors: i64,
-}
-
 async fn fetch_overview(pool: &PgPool) -> Result<OverviewRow, sqlx::Error> {
-    sqlx::query_as!(
-        OverviewRow,
-        r#"SELECT
-            COUNT(*)::bigint AS "total_events!",
-            COUNT(DISTINCT session_id)::bigint AS "total_sessions!",
-            COUNT(*) FILTER (WHERE event_type LIKE '%ToolUse%')::bigint AS "tool_uses!",
-            COUNT(*) FILTER (WHERE event_type LIKE '%Failure%' OR event_type LIKE '%Error%')::bigint AS "errors!"
-          FROM plugin_usage_events
-          WHERE created_at >= NOW() - INTERVAL '24 hours'"#,
-    )
-    .fetch_one(pool)
-    .await
+    get_overview(pool).await
 }
 
 pub async fn analytics_overview_page(

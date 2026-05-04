@@ -1,3 +1,5 @@
+pub mod activity_grp;
+pub mod analytics_grp;
 pub mod cowork_grp;
 pub mod dashboard_grp;
 pub mod effective_plugins;
@@ -7,6 +9,7 @@ pub mod mcp_grp;
 pub mod plugins_grp;
 pub mod publishing_grp;
 pub mod secrets_grp;
+pub mod tier_grp;
 pub mod users_grp;
 
 pub use cowork_grp::*;
@@ -71,7 +74,8 @@ pub use user_skills::{
 };
 pub use users::{
     create_user, delete_user, delete_user_complete, fetch_distinct_roles, fetch_user_ranks,
-    fetch_user_roles, find_user_detail, get_user_event_type_counts, get_user_sessions,
-    get_user_top_tools, get_user_usage, list_user_events, list_users, update_user, UserRank,
+    fetch_user_roles, find_user_detail, get_user_event_type_counts, get_user_roles_department,
+    get_user_sessions, get_user_top_tools, get_user_usage, list_user_events, list_users,
+    update_user, UserRank,
 };
 pub use webhook::{insert_plugin_usage_event, UsageEventParams};
