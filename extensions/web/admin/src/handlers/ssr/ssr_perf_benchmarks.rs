@@ -7,27 +7,14 @@ use axum::{
     http::StatusCode,
     response::{Html, IntoResponse, Response},
 };
-use chrono::{DateTime, Utc};
 use serde_json::json;
 use sqlx::PgPool;
 
+use crate::repositories::analytics_grp::perf::{
+    list_bench_runs, list_hourly_throughput, BenchRunRow, HourThroughputRow,
+};
+
 use super::ACCESS_DENIED_HTML;
-
-#[derive(Debug)]
-struct BenchRunRow {
-    session_id: String,
-    total_decisions: i64,
-    allowed: i64,
-    denied: i64,
-    duration_seconds: f64,
-    first_at: DateTime<Utc>,
-}
-
-#[derive(Debug)]
-struct HourThroughputRow {
-    bucket: DateTime<Utc>,
-    decisions: i64,
-}
 
 pub async fn perf_benchmarks_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -104,58 +91,9 @@ pub async fn perf_benchmarks_page(
 }
 
 async fn fetch_bench_runs(pool: &PgPool) -> Result<Vec<BenchRunRow>, sqlx::Error> {
-    let rows = sqlx::query!(
-        r#"SELECT
-            session_id,
-            COUNT(*)::bigint AS "total_decisions!",
-            COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS "allowed!",
-            COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS "denied!",
-            GREATEST(
-                EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))),
-                0.001
-            )::float8 AS "duration_seconds!",
-            MIN(created_at) AS "first_at!"
-        FROM governance_decisions
-        WHERE session_id LIKE 'bench-%'
-          OR session_id LIKE '%-govern'
-          OR session_id LIKE '%-track'
-        GROUP BY session_id
-        HAVING COUNT(*) >= 10
-        ORDER BY MIN(created_at) DESC
-        LIMIT 10"#,
-    )
-    .fetch_all(pool)
-    .await?;
-    Ok(rows
-        .into_iter()
-        .map(|r| BenchRunRow {
-            session_id: r.session_id,
-            total_decisions: r.total_decisions,
-            allowed: r.allowed,
-            denied: r.denied,
-            duration_seconds: r.duration_seconds,
-            first_at: r.first_at,
-        })
-        .collect())
+    list_bench_runs(pool).await
 }
 
 async fn fetch_hourly_throughput(pool: &PgPool) -> Result<Vec<HourThroughputRow>, sqlx::Error> {
-    let rows = sqlx::query!(
-        r#"SELECT
-            date_trunc('hour', created_at) AS "bucket!",
-            COUNT(*)::bigint AS "decisions!"
-        FROM governance_decisions
-        WHERE created_at >= NOW() - INTERVAL '24 hours'
-        GROUP BY date_trunc('hour', created_at)
-        ORDER BY date_trunc('hour', created_at) ASC"#,
-    )
-    .fetch_all(pool)
-    .await?;
-    Ok(rows
-        .into_iter()
-        .map(|r| HourThroughputRow {
-            bucket: r.bucket,
-            decisions: r.decisions,
-        })
-        .collect())
+    list_hourly_throughput(pool).await
 }

@@ -7,18 +7,10 @@ use axum::{
     extract::{Extension, Query, State},
     response::Response,
 };
-use chrono::{DateTime, Utc};
 use serde_json::json;
 use sqlx::PgPool;
 
-struct AgentMessageRow {
-    id: String,
-    session_id: String,
-    event_type: String,
-    tool_name: Option<String>,
-    metadata: serde_json::Value,
-    created_at: DateTime<Utc>,
-}
+use crate::repositories::analytics_grp::agents::{list_agent_messages, AgentMessageRow};
 
 pub async fn agent_messages_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -83,36 +75,8 @@ pub async fn agent_messages_page(
 }
 
 async fn fetch_agent_messages(pool: &PgPool, agent_id: &str) -> Vec<AgentMessageRow> {
-    let pattern = format!("%{agent_id}%");
-    let result = sqlx::query!(
-        r#"SELECT id, session_id, event_type, tool_name,
-                  COALESCE(metadata, '{}'::jsonb) AS "metadata!", created_at
-           FROM plugin_usage_events
-           WHERE metadata->>'agent_id' = $1
-              OR metadata->>'agent' = $1
-              OR tool_name LIKE $2
-           ORDER BY created_at DESC
-           LIMIT 100"#,
-        agent_id,
-        &pattern,
-    )
-    .fetch_all(pool)
-    .await;
-    match result {
-        Ok(rows) => rows
-            .into_iter()
-            .map(|r| AgentMessageRow {
-                id: r.id,
-                session_id: r.session_id,
-                event_type: r.event_type,
-                tool_name: r.tool_name,
-                metadata: r.metadata,
-                created_at: r.created_at,
-            })
-            .collect(),
-        Err(e) => {
-            tracing::warn!(error = %e, agent_id = %agent_id, "Failed to fetch agent messages");
-            vec![]
-        }
-    }
+    list_agent_messages(pool, agent_id).await.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, agent_id = %agent_id, "Failed to fetch agent messages");
+        vec![]
+    })
 }

@@ -1,16 +1,19 @@
 pub mod activity_grp;
 pub mod analytics_grp;
+pub mod control_center_grp;
 pub mod cowork_grp;
 pub mod dashboard_grp;
 pub mod effective_plugins;
 pub mod gamification_grp;
 pub mod governance_grp;
+pub mod infra_grp;
 pub mod marketplace_grp;
 pub mod mcp_grp;
 pub mod plugins_grp;
 pub mod publishing_grp;
 pub mod secrets_grp;
 pub mod tier_grp;
+pub mod traces_grp;
 pub mod users_grp;
 
 pub use cowork_grp::*;

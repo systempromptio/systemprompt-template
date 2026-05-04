@@ -58,21 +58,12 @@ pub(super) async fn load_user_section(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Option<UserSection>, sqlx::Error> {
-    sqlx::query!(
-        r#"SELECT id, name, email, display_name,
-                  COALESCE(roles, '{}') as "roles!: Vec<String>"
-           FROM users WHERE id = $1"#,
-        user_id.as_str(),
-    )
-    .fetch_optional(pool)
-    .await
-    .map(|opt| {
-        opt.map(|r| UserSection {
-            id: r.id,
-            name: r.name,
-            email: r.email,
-            display_name: r.display_name,
-            roles: r.roles,
-        })
-    })
+    let row = crate::repositories::cowork_grp::find_cowork_user(pool, user_id.as_str()).await?;
+    Ok(row.map(|r| UserSection {
+        id: r.id,
+        name: r.name,
+        email: r.email,
+        display_name: r.display_name,
+        roles: r.roles,
+    }))
 }

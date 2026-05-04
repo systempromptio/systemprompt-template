@@ -114,39 +114,14 @@ pub async fn control_center_page(
 }
 
 async fn fetch_entity_counts(pool: &PgPool, user_id: &str) -> EntityCounts {
-    struct ControlCenterCounts {
-        plugins: Option<i64>,
-        skills: Option<i64>,
-        agents: Option<i64>,
-        mcp_servers: Option<i64>,
-        hooks: Option<i64>,
-    }
-
-    let counts = sqlx::query_as!(
-        ControlCenterCounts,
-        r"SELECT
-            (SELECT COUNT(*) FROM user_plugins WHERE user_id = $1) AS plugins,
-            (SELECT COUNT(*) FROM user_skills WHERE user_id = $1) AS skills,
-            (SELECT COUNT(*) FROM user_agents WHERE user_id = $1) AS agents,
-            (SELECT COUNT(*) FROM user_mcp_servers WHERE user_id = $1) AS mcp_servers,
-            (SELECT COUNT(*) FROM user_hooks WHERE user_id = $1) AS hooks",
-        user_id,
-    )
-    .fetch_one(pool)
-    .await
-    .unwrap_or(ControlCenterCounts {
-        plugins: Some(0),
-        skills: Some(0),
-        agents: Some(0),
-        mcp_servers: Some(0),
-        hooks: Some(0),
-    });
-
+    let counts = crate::repositories::control_center_grp::get_entity_counts(pool, user_id)
+        .await
+        .unwrap_or_default();
     EntityCounts {
-        plugins: counts.plugins.unwrap_or(0),
-        skills: counts.skills.unwrap_or(0),
-        agents: counts.agents.unwrap_or(0),
-        mcp_servers: counts.mcp_servers.unwrap_or(0),
-        hooks: counts.hooks.unwrap_or(0),
+        plugins: counts.plugins,
+        skills: counts.skills,
+        agents: counts.agents,
+        mcp_servers: counts.mcp_servers,
+        hooks: counts.hooks,
     }
 }
