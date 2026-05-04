@@ -107,7 +107,7 @@ pub async fn list_available_plugins_handler(
         });
     }
 
-    plugins.sort_unstable_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    plugins.sort_unstable_by_key(|p| p.name.to_lowercase());
 
     Json(AvailablePluginsResponse { plugins }).into_response()
 }

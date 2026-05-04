@@ -23,7 +23,7 @@ struct CachedMarketplace {
 
 static MARKETPLACE_CACHE: LazyLock<RwLock<Option<CachedMarketplace>>> =
     LazyLock::new(|| RwLock::new(None));
-const MARKETPLACE_CACHE_TTL: Duration = Duration::from_secs(300);
+const MARKETPLACE_CACHE_TTL: Duration = Duration::from_mins(5);
 
 pub async fn user_context_middleware(
     State(pool): State<Arc<PgPool>>,
@@ -125,7 +125,8 @@ pub async fn marketplace_context_middleware(
 
 async fn get_cached_marketplace(roles: &[String]) -> (MarketplaceCounts, String) {
     use super::repositories;
-    use systemprompt::models::{Config, ProfileBootstrap};
+    use systemprompt::config::ProfileBootstrap;
+    use systemprompt::models::Config;
 
     {
         let cache = MARKETPLACE_CACHE.read().await;

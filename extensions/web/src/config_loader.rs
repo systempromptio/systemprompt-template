@@ -1,7 +1,13 @@
 use std::sync::Arc;
 
+use systemprompt::config::ProfileBootstrap;
 use systemprompt::models::AppPaths;
 use thiserror::Error;
+
+fn load_app_paths() -> Result<AppPaths, String> {
+    let profile = ProfileBootstrap::get().map_err(|e| e.to_string())?;
+    AppPaths::from_profile(&profile.paths).map_err(|e| e.to_string())
+}
 
 use crate::features::{FeaturePage, FeaturesConfig};
 use crate::homepage::HomepageConfig;
@@ -43,7 +49,7 @@ pub fn load_homepage_config() -> Result<Option<Arc<HomepageConfig>>, ConfigError
             message: e.to_string(),
         })?;
 
-    if let Ok(paths) = AppPaths::get() {
+    if let Ok(paths) = load_app_paths() {
         populate_demo_showcase(
             &mut homepage_config,
             paths.system().root().join("demo").as_path(),
@@ -105,7 +111,7 @@ pub fn load_branding_config() -> Result<Option<BrandingConfig>, ConfigError> {
 }
 
 pub fn load_features_config() -> Result<Option<Arc<FeaturesConfig>>, ConfigError> {
-    let paths = match AppPaths::get() {
+    let paths = match load_app_paths() {
         Ok(p) => p,
         Err(e) => {
             tracing::debug!(error = %e, "AppPaths not available for features config");
@@ -183,7 +189,7 @@ fn parse_feature_pages(entries: std::fs::ReadDir) -> Result<Vec<FeaturePage>, Co
 }
 
 fn load_config_section(filename: &str) -> Result<Option<serde_yaml::Value>, ConfigError> {
-    let paths = match AppPaths::get() {
+    let paths = match load_app_paths() {
         Ok(p) => p,
         Err(e) => {
             tracing::debug!(error = %e, "AppPaths not available for config section");

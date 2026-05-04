@@ -63,11 +63,7 @@ fn collect_files(root: &Path) -> Result<Vec<PluginFileEntry>, std::io::Error> {
     Ok(out)
 }
 
-fn walk(
-    base: &Path,
-    dir: &Path,
-    out: &mut Vec<PluginFileEntry>,
-) -> Result<(), std::io::Error> {
+fn walk(base: &Path, dir: &Path, out: &mut Vec<PluginFileEntry>) -> Result<(), std::io::Error> {
     for entry in std::fs::read_dir(dir)? {
         let entry = entry?;
         let ft = entry.file_type()?;

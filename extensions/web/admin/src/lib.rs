@@ -67,7 +67,10 @@ pub fn secrets_router(pool: Arc<PgPool>) -> Router {
 
 pub fn cowork_router(pool: Arc<PgPool>) -> Router {
     Router::new()
-        .route("/v1/cowork/manifest", get(handlers::cowork::manifest::handle))
+        .route(
+            "/v1/cowork/manifest",
+            get(handlers::cowork::manifest::handle),
+        )
         .route("/v1/cowork/whoami", get(handlers::cowork::whoami::handle))
         .route(
             "/v1/cowork/plugins/{plugin_id}/{*path}",

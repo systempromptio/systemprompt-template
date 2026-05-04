@@ -1,18 +1,18 @@
 use std::sync::Arc;
 
 use axum::{
-    Json,
     extract::State,
-    http::StatusCode,
     http::HeaderMap,
+    http::StatusCode,
     response::{IntoResponse, Response},
+    Json,
 };
 use sqlx::PgPool;
 
 use crate::handlers::shared;
 
 use super::load_user_section;
-use super::types::{COWORK_CAPABILITIES, WhoamiResponse};
+use super::types::{WhoamiResponse, COWORK_CAPABILITIES};
 
 pub async fn handle(State(pool): State<Arc<PgPool>>, headers: HeaderMap) -> Response {
     let user_id = match super::validate_cowork_jwt(&headers) {
@@ -24,14 +24,11 @@ pub async fn handle(State(pool): State<Arc<PgPool>>, headers: HeaderMap) -> Resp
         Ok(Some(u)) => u,
         Ok(None) => {
             return shared::error_response(StatusCode::NOT_FOUND, "User not found");
-        },
+        }
         Err(e) => {
             tracing::error!(error = %e, "user lookup failed");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "User lookup failed",
-            );
-        },
+            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "User lookup failed");
+        }
     };
 
     Json(WhoamiResponse {

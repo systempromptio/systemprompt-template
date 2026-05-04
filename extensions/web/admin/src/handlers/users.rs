@@ -7,8 +7,9 @@ use axum::{
     Json,
 };
 use sqlx::PgPool;
+use systemprompt::config::SecretsBootstrap;
 use systemprompt::models::auth::JwtAudience;
-use systemprompt::models::{Config, SecretsBootstrap};
+use systemprompt::models::Config;
 use systemprompt::oauth::validate_jwt_token;
 
 use systemprompt::identifiers::{Email, UserId};

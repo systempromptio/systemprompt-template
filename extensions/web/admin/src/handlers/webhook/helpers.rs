@@ -1,5 +1,6 @@
 use axum::http::HeaderMap;
-use systemprompt::models::{Config, SecretsBootstrap};
+use systemprompt::config::SecretsBootstrap;
+use systemprompt::models::Config;
 
 #[derive(Debug, thiserror::Error)]
 pub(super) enum JwtConfigError {

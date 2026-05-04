@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use systemprompt::models::ProfileBootstrap;
+use systemprompt::config::ProfileBootstrap;
 
 pub(super) fn resolve_agent_scope(agent_id: &str) -> String {
     let map = load_all_agent_scopes();

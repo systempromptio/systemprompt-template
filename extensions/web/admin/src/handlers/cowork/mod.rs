@@ -7,18 +7,17 @@ pub mod whoami;
 use axum::body::Body;
 use axum::http::{HeaderMap, Response, StatusCode};
 use sqlx::PgPool;
+use systemprompt::config::SecretsBootstrap;
 use systemprompt::identifiers::UserId;
 use systemprompt::models::auth::JwtAudience;
-use systemprompt::models::{Config, SecretsBootstrap};
+use systemprompt::models::Config;
 use systemprompt::oauth::validate_jwt_token;
 
 use crate::handlers::shared;
 
 use self::types::UserSection;
 
-pub(super) fn validate_cowork_jwt(
-    headers: &HeaderMap,
-) -> Result<UserId, Box<Response<Body>>> {
+pub(super) fn validate_cowork_jwt(headers: &HeaderMap) -> Result<UserId, Box<Response<Body>>> {
     let token = headers
         .get("authorization")
         .and_then(|v| v.to_str().ok())

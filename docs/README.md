@@ -28,17 +28,21 @@ Choose the channel that fits your environment. Each doc is a copy-paste recipe.
 | Render blueprint | [install/render.md](install/render.md) | Render PaaS |
 | Coolify template | [install/coolify.md](install/coolify.md) | Coolify self-host |
 
-## Install cowork (client)
+## Install Cowork (client)
+
+The Cowork Desktop app — a single `systemprompt-bridge` binary with a native GUI on macOS and Windows. Renamed from `cowork → bridge` in v0.7.0; user-facing branding ("Systemprompt Cowork", `cowork-v*` release tag series, Scoop package `cowork`) is unchanged.
 
 | Platform | Doc |
 |---|---|
-| macOS | [cowork/install-macos.md](cowork/install-macos.md) |
-| Windows | [cowork/install-windows.md](cowork/install-windows.md) |
-| Scoop bucket (Windows) | [install/scoop.md](install/scoop.md) |
+| Overview / GUI tour | [cowork/desktop-app.md](cowork/desktop-app.md) |
+| macOS (`.app` bundle) | [cowork/install-macos.md](cowork/install-macos.md) |
+| Windows (`.exe`) | [cowork/install-windows.md](cowork/install-windows.md) |
+| Scoop bucket (Windows) | [cowork/scoop.md](cowork/scoop.md) |
 
-## Operating cowork
+## Operating Cowork
 
-- [cowork/device-auth.md](cowork/device-auth.md) — Authentication modes for Claude for Work → gateway (PAT, session, mTLS).
+- [cowork/desktop-app.md](cowork/desktop-app.md) — Setup wizard, agents tab (per-agent enable/disable, Codex CLI alongside Claude Desktop), marketplace, settings, activity drawer, diagnostics export.
+- [cowork/device-auth.md](cowork/device-auth.md) — Authentication modes for Claude for Work → gateway (PAT, session, mTLS). Updated for `SP_BRIDGE_*` env vars and the new `systemprompt-bridge.toml` config path.
 - [cowork/windows-minimax-demo.md](cowork/windows-minimax-demo.md) — End-to-end Windows + gateway + MiniMax demo runbook.
 
 ## Licence

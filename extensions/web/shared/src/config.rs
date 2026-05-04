@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock};
 
 use serde::Deserialize;
+use systemprompt::config::ProfileBootstrap;
 use systemprompt::identifiers::{CategoryId, SourceId};
 use systemprompt::models::AppPaths;
 use url::Url;
@@ -234,13 +235,16 @@ fn resolve_content_source_path(path: &str, base_path: &Path) -> PathBuf {
     if Path::new(path).is_absolute() {
         PathBuf::from(path)
     } else if path.starts_with("./") {
-        let services_dir = AppPaths::get().map_or_else(
-            |e| {
-                tracing::warn!(error = %e, "Failed to get app paths, using fallback services dir");
-                PathBuf::from("./services")
-            },
-            |p| p.system().services().to_path_buf(),
-        );
+        let services_dir = ProfileBootstrap::get()
+            .map_err(|e| e.to_string())
+            .and_then(|profile| AppPaths::from_profile(&profile.paths).map_err(|e| e.to_string()))
+            .map_or_else(
+                |e| {
+                    tracing::warn!(error = %e, "Failed to get app paths, using fallback services dir");
+                    PathBuf::from("./services")
+                },
+                |p| p.system().services().to_path_buf(),
+            );
         let clean_path = path.strip_prefix("./services/").unwrap_or(path);
         services_dir.join(clean_path)
     } else {

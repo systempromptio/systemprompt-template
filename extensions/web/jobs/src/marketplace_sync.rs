@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
 use sqlx::PgPool;
+use systemprompt::config::ProfileBootstrap;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
-use systemprompt::models::ProfileBootstrap;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use systemprompt_web_admin::repositories;

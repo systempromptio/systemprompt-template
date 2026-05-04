@@ -51,7 +51,8 @@ pub struct ManagedMcpServer {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Manifest {
-    pub manifest_version: String,
+    #[serde(rename = "manifest_version")]
+    pub version: String,
     pub issued_at: String,
     pub not_before: String,
     pub user_id: String,

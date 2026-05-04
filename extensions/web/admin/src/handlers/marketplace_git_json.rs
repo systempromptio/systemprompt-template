@@ -19,7 +19,7 @@ pub(crate) async fn org_marketplace_json_handler(
     let marketplace_id = crate::handlers::shared::normalize_user_id(&marketplace_id_raw).to_string();
     let platform = detect_platform(&headers);
 
-    let services_path = match systemprompt::models::ProfileBootstrap::get() {
+    let services_path = match systemprompt::config::ProfileBootstrap::get() {
         Ok(profile) => std::path::PathBuf::from(&profile.paths.services),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get profile bootstrap");
@@ -91,7 +91,7 @@ pub(crate) async fn marketplace_json_handler(
         }
     }
 
-    let services_path = match systemprompt::models::ProfileBootstrap::get() {
+    let services_path = match systemprompt::config::ProfileBootstrap::get() {
         Ok(profile) => std::path::PathBuf::from(&profile.paths.services),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get profile bootstrap");

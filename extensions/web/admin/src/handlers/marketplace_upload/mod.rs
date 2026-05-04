@@ -4,8 +4,9 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::Response,
 };
+use systemprompt::config::SecretsBootstrap;
 use systemprompt::models::auth::JwtAudience;
-use systemprompt::models::{Config, SecretsBootstrap};
+use systemprompt::models::Config;
 use systemprompt::oauth::validate_jwt_token;
 
 use super::shared;

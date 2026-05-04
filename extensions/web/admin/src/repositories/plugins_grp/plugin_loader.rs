@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
-use systemprompt::models::{PluginConfig, PluginConfigFile, ProfileBootstrap};
+use systemprompt::config::ProfileBootstrap;
+use systemprompt::models::{PluginConfig, PluginConfigFile};
 
 use crate::types::PlatformPluginConfig;
 use systemprompt_web_shared::error::MarketplaceError;
@@ -17,9 +18,8 @@ fn parse_plugin_config_file(path: &std::path::Path) -> Result<PluginConfigFile, 
     let content = std::fs::read_to_string(path).map_err(|e| {
         MarketplaceError::Internal(format!("Failed to read {}: {e}", path.display()))
     })?;
-    serde_yaml::from_str::<PluginConfigFile>(&content).map_err(|e| {
-        MarketplaceError::Internal(format!("Failed to parse {}: {e}", path.display()))
-    })
+    serde_yaml::from_str::<PluginConfigFile>(&content)
+        .map_err(|e| MarketplaceError::Internal(format!("Failed to parse {}: {e}", path.display())))
 }
 
 pub fn load_all_plugins() -> Result<Vec<(String, PlatformPluginConfig)>, MarketplaceError> {

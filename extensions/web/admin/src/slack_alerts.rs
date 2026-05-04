@@ -1,4 +1,4 @@
-use systemprompt::models::SecretsBootstrap;
+use systemprompt::config::SecretsBootstrap;
 
 const SLACK_MAX_LENGTH: usize = 39_000;
 

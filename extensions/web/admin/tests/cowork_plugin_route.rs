@@ -54,4 +54,3 @@ fn rejects_directory_target() {
     let err = resolve_within(&plugin_dir, "agents").expect_err("must reject");
     assert_eq!(err, "not a file");
 }
-

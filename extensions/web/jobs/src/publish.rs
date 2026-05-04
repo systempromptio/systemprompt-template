@@ -48,8 +48,8 @@ impl PublishPipelineJob {
         }
     }
 
-    async fn run_asset_copy(&self, stats: &mut PipelineStats) {
-        match CopyExtensionAssetsJob::execute_copy().await {
+    async fn run_asset_copy(&self, paths: &AppPaths, stats: &mut PipelineStats) {
+        match CopyExtensionAssetsJob::execute_copy(paths).await {
             Ok(result) => {
                 tracing::debug!(
                     copied = result.items_processed.unwrap_or(0),
@@ -78,8 +78,13 @@ impl PublishPipelineJob {
         }
     }
 
-    async fn run_page_prerender(&self, db_pool: &DbPool, stats: &mut PipelineStats) {
-        match prerender_pages(Arc::clone(db_pool)).await {
+    async fn run_page_prerender(
+        &self,
+        paths: &AppPaths,
+        db_pool: &DbPool,
+        stats: &mut PipelineStats,
+    ) {
+        match prerender_pages(Arc::clone(db_pool), paths).await {
             Ok(results) => {
                 tracing::debug!(page_count = results.len(), "Page prerendering completed");
                 stats.record_success();
@@ -117,8 +122,8 @@ impl PublishPipelineJob {
         }
     }
 
-    async fn run_feed(&self, db_pool: &DbPool, stats: &mut PipelineStats) {
-        match generate_feed(Arc::clone(db_pool)).await {
+    async fn run_feed(&self, paths: &AppPaths, db_pool: &DbPool, stats: &mut PipelineStats) {
+        match generate_feed(Arc::clone(db_pool), paths).await {
             Ok(()) => {
                 tracing::debug!("RSS feed generation completed");
                 stats.record_success();
@@ -147,22 +152,17 @@ impl PublishPipelineJob {
         }
     }
 
-    async fn run_plugin_autofork(&self, db_pool: &DbPool, stats: &mut PipelineStats) {
-        let services_path = match AppPaths::get() {
-            Ok(paths) => paths.system().services().to_path_buf(),
-            Err(e) => {
-                tracing::warn!(error = %e, "plugin autofork skipped: AppPaths unavailable");
-                stats.record_failure();
-                return;
-            }
-        };
-        let pool = match db_pool.pool() {
-            Some(p) => p,
-            None => {
-                tracing::warn!("plugin autofork skipped: db pool unavailable");
-                stats.record_failure();
-                return;
-            }
+    async fn run_plugin_autofork(
+        &self,
+        paths: &AppPaths,
+        db_pool: &DbPool,
+        stats: &mut PipelineStats,
+    ) {
+        let services_path = paths.system().services().to_path_buf();
+        let Some(pool) = db_pool.pool() else {
+            tracing::warn!("plugin autofork skipped: db pool unavailable");
+            stats.record_failure();
+            return;
         };
         let report = systemprompt_web_admin::autofork::autofork_declared_plugins_for_admins(
             &pool,
@@ -183,18 +183,16 @@ impl PublishPipelineJob {
         }
     }
 
-    async fn run_asset_organization(&self, stats: &mut PipelineStats) {
-        if let Ok(paths) = AppPaths::get() {
-            let dist_dir = paths.web().dist().to_path_buf();
-            match organize_dist_assets(&dist_dir).await {
-                Ok((css_count, js_count)) => {
-                    tracing::debug!(css = css_count, js = js_count, "Assets organized");
-                    stats.record_success();
-                }
-                Err(e) => {
-                    tracing::error!(error = %e, "Asset organization failed");
-                    stats.record_failure();
-                }
+    async fn run_asset_organization(&self, paths: &AppPaths, stats: &mut PipelineStats) {
+        let dist_dir = paths.web().dist().to_path_buf();
+        match organize_dist_assets(&dist_dir).await {
+            Ok((css_count, js_count)) => {
+                tracing::debug!(css = css_count, js = js_count, "Assets organized");
+                stats.record_success();
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "Asset organization failed");
+                stats.record_failure();
             }
         }
     }
@@ -224,21 +222,26 @@ impl Job for PublishPipelineJob {
         let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
             "Database not available in job context".to_string(),
         ))?;
+        let paths = ctx
+            .app_paths::<AppPaths>()
+            .ok_or(MarketplaceError::Internal(
+                "AppPaths not available in job context".to_string(),
+            ))?;
 
         tracing::info!("Publish pipeline started");
 
         let mut stats = PipelineStats::default();
 
         self.run_ingestion(ctx, &mut stats).await;
-        self.run_asset_copy(&mut stats).await;
+        self.run_asset_copy(paths, &mut stats).await;
         self.run_prerender(ctx, &mut stats).await;
-        self.run_page_prerender(db_pool, &mut stats).await;
+        self.run_page_prerender(paths, db_pool, &mut stats).await;
         self.run_sitemap(ctx, &mut stats).await;
         self.run_llms_txt(ctx, &mut stats).await;
         self.run_robots_txt(ctx, &mut stats).await;
-        self.run_feed(db_pool, &mut stats).await;
-        self.run_plugin_autofork(db_pool, &mut stats).await;
-        self.run_asset_organization(&mut stats).await;
+        self.run_feed(paths, db_pool, &mut stats).await;
+        self.run_plugin_autofork(paths, db_pool, &mut stats).await;
+        self.run_asset_organization(paths, &mut stats).await;
 
         let duration_ms = u64::try_from(start_time.elapsed().as_millis()).unwrap_or(u64::MAX);
 

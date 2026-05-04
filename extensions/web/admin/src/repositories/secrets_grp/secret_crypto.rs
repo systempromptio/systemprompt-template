@@ -58,7 +58,7 @@ pub fn load_master_key() -> Result<[u8; 32], SecretCryptoError> {
     let hex_key = std::env::var("ENCRYPTION_MASTER_KEY")
         .ok()
         .or_else(|| {
-            systemprompt::models::SecretsBootstrap::get()
+            systemprompt::config::SecretsBootstrap::get()
                 .ok()
                 .and_then(|s| s.get("encryption_master_key").cloned())
         })

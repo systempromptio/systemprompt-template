@@ -5,7 +5,7 @@ mod types;
 use std::path::{Path, PathBuf};
 
 use sqlx::PgPool;
-use systemprompt::models::ProfileBootstrap;
+use systemprompt::config::ProfileBootstrap;
 
 use crate::types::LOG_CONTEXT_GITHUB;
 

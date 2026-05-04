@@ -95,8 +95,7 @@ impl Job for ContentIngestionJob {
             .map_err(|e| MarketplaceError::Internal(format!("Failed to load blog config: {e}")))?;
 
         let delete_orphans = std::env::var("CONTENT_INGESTION_DELETE_ORPHANS")
-            .map(|v| v.eq_ignore_ascii_case("true") || v == "1")
-            .unwrap_or(false);
+            .is_ok_and(|v| v.eq_ignore_ascii_case("true") || v == "1");
 
         let options = IngestionOptions::default().with_delete_orphans(delete_orphans);
 

@@ -1,8 +1,8 @@
 use std::path::{Path, PathBuf};
 
 use sqlx::PgPool;
+use systemprompt::config::ProfileBootstrap;
 use systemprompt::identifiers::UserId;
-use systemprompt::models::ProfileBootstrap;
 
 use crate::types::PLUGIN_MANIFEST_PATH;
 

@@ -10,7 +10,8 @@ use sqlx::PgPool;
 use systemprompt::models::auth::JwtAudience;
 
 const RESOLUTION_TOKEN_EXPIRY_SECS: u32 = 300;
-use systemprompt::models::{Config, SecretsBootstrap};
+use systemprompt::config::SecretsBootstrap;
+use systemprompt::models::Config;
 use systemprompt::oauth::validate_jwt_token;
 
 use systemprompt::identifiers::UserId;

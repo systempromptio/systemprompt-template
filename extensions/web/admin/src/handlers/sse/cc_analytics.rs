@@ -167,11 +167,9 @@ async fn build_entity_data(
 
     let total_skills_available = skills_usage.len() + unused_skills.len();
     let total_skills_used = skills_usage.len();
-    let adoption_pct = if total_skills_available > 0 {
-        (total_skills_used * 100) / total_skills_available
-    } else {
-        0
-    };
+    let adoption_pct = (total_skills_used * 100)
+        .checked_div(total_skills_available)
+        .unwrap_or(0);
 
     let achievement_progress = build_achievement_progress(gam, &skills_usage, &mcp_usage);
 
