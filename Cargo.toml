@@ -240,7 +240,7 @@ workspace = true
 
 # Local development patch: route systemprompt-* crates to the local
 # systemprompt-core checkout so changes there are picked up without a
-# crates.io release. Comment out to use the published 0.4.2 versions.
+# crates.io release. Comment out to use the published 0.5.0 versions.
 [patch.crates-io]
 systemprompt = { path = "../systemprompt-core/systemprompt" }
 systemprompt-models = { path = "../systemprompt-core/crates/shared/models" }
