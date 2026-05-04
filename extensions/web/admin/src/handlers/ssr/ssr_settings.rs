@@ -60,7 +60,7 @@ pub async fn settings_page(
         user_email: user_ctx.email.to_string(),
         user_id: user_ctx.user_id.to_string(),
         username: user_ctx.username.clone(),
-        tier_name: mkt_ctx.tier_name.clone(),
+        tier_name: mkt_ctx.tier_name.to_string(),
         is_premium: mkt_ctx.is_premium,
         usage_items,
     };

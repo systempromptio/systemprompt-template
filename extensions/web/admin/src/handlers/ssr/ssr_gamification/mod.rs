@@ -4,6 +4,13 @@ use std::sync::Arc;
 
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
+use serde::Deserialize;
+
+#[derive(Debug, Default, Deserialize)]
+pub struct LeaderboardQuery {
+    #[serde(default)]
+    pub sort: Option<String>,
+}
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -249,9 +256,9 @@ pub async fn leaderboard_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
+    Query(params): Query<LeaderboardQuery>,
 ) -> Response {
-    let sort = params.get("sort").map_or("xp", |s| s.as_str());
+    let sort = params.sort.as_deref().unwrap_or("xp");
     let sort = match sort {
         "sessions" | "prompts" | "tools" | "subagents" | "streak" | "achievements" => sort,
         _ => "xp",

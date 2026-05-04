@@ -8,7 +8,7 @@ use crate::repositories::plugin_maps::EntityPluginMap;
 use crate::templates::AdminTemplateEngine;
 use crate::types::access_control::{AccessControlRule, AccessDecision, RuleType};
 use crate::types::{
-    DepartmentStats, MarketplaceContext, McpServerDetail, UserContext, ENTITY_MCP_SERVER,
+    DepartmentStats, IdQuery, MarketplaceContext, McpServerDetail, UserContext, ENTITY_MCP_SERVER,
     SERVER_TYPE_EXTERNAL, SERVER_TYPE_INTERNAL,
 };
 use axum::{
@@ -198,9 +198,9 @@ pub async fn mcp_edit_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
-    Query(params): Query<HashMap<String, String>>,
+    Query(params): Query<IdQuery>,
 ) -> Response {
-    let server_id = params.get("id");
+    let server_id = params.id();
     let is_edit = server_id.is_some();
     let server = if let Some(id) = server_id {
         let services_path = match super::get_services_path() {

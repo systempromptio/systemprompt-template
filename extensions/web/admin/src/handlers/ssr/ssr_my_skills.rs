@@ -7,7 +7,7 @@ use crate::repositories;
 use crate::repositories::conversation_analytics;
 use crate::templates::AdminTemplateEngine;
 use crate::types::conversation_analytics::{SkillEffectiveness, SkillRating};
-use crate::types::{MarketplaceContext, UserContext};
+use crate::types::{IdQuery, MarketplaceContext, UserContext};
 
 const CONTENT_PREVIEW_LEN: usize = 200;
 use axum::{
@@ -186,9 +186,9 @@ pub async fn my_skill_edit_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(params): Query<HashMap<String, String>>,
+    Query(params): Query<IdQuery>,
 ) -> Response {
-    let skill_id = params.get("id");
+    let skill_id = params.id();
     let is_edit = skill_id.is_some();
 
     let skill = if let Some(id) = skill_id {
@@ -198,9 +198,7 @@ pub async fn my_skill_edit_page(
                 tracing::warn!(error = %e, "Failed to list user skills for edit page");
                 vec![]
             });
-        skills
-            .into_iter()
-            .find(|s| s.skill_id.as_str() == id.as_str())
+        skills.into_iter().find(|s| s.skill_id.as_str() == id)
     } else {
         None
     };
@@ -261,7 +259,7 @@ fn build_skill_edit_json(skill: Option<&crate::types::UserSkill>) -> serde_json:
 async fn build_required_secrets(
     pool: &PgPool,
     user_ctx: &UserContext,
-    skill_id: Option<&String>,
+    skill_id: Option<&str>,
 ) -> Vec<RequiredSecretView> {
     let Some(sid) = skill_id else {
         return vec![];

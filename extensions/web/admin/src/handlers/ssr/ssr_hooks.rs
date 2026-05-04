@@ -4,7 +4,7 @@ use systemprompt::identifiers::HookId;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{HookDetail, MarketplaceContext, UserContext};
+use crate::types::{HookDetail, IdQuery, MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -239,9 +239,9 @@ pub async fn hook_edit_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(_pool): State<Arc<PgPool>>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
+    Query(params): Query<IdQuery>,
 ) -> Response {
-    let hook_id = params.get("id");
+    let hook_id = params.id();
     let is_edit = hook_id.is_some();
     let services_path = match super::get_services_path() {
         Ok(p) => p,

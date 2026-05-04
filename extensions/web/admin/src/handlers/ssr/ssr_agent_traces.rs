@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
+use crate::types::{IdQuery, MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -25,14 +25,14 @@ pub async fn agent_traces_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
+    Query(params): Query<IdQuery>,
 ) -> Response {
     let services_path = match super::get_services_path() {
         Ok(p) => p,
         Err(r) => return *r,
     };
 
-    let agent_id_param = params.get("id").cloned().unwrap_or_default();
+    let agent_id_param = params.id().unwrap_or_default().to_owned();
     let agent = if agent_id_param.is_empty() {
         None
     } else {

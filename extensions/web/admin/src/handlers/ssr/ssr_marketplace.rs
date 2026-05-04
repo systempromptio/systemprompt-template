@@ -6,23 +6,26 @@ use axum::{
     extract::{Extension, Query, State},
     response::Response,
 };
+use serde::Deserialize;
 use serde_json::json;
 use sqlx::PgPool;
+
+#[derive(Debug, Default, Deserialize)]
+pub struct MarketplaceVersionsQuery {
+    #[serde(default)]
+    pub offset: Option<i64>,
+}
 
 pub async fn marketplace_versions_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
+    Query(params): Query<MarketplaceVersionsQuery>,
 ) -> Response {
     let user_id = user_ctx.user_id.as_str();
     let limit: i64 = 50;
-    let offset: i64 = params
-        .get("offset")
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(0)
-        .max(0);
+    let offset: i64 = params.offset.unwrap_or(0).max(0);
 
     let total = crate::activity::queries::count_user_entity_activity(&pool, user_id)
         .await

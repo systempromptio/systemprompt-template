@@ -6,7 +6,7 @@ use systemprompt::identifiers::AgentId;
 use crate::repositories;
 use crate::repositories::plugin_maps::EntityPluginMap;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{AgentDetail, MarketplaceContext, UserContext};
+use crate::types::{AgentDetail, IdQuery, MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, Query, State},
     response::Response,
@@ -245,9 +245,9 @@ pub async fn agent_edit_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
-    Query(params): Query<std::collections::HashMap<String, String>>,
+    Query(params): Query<IdQuery>,
 ) -> Response {
-    let agent_id = params.get("id");
+    let agent_id = params.id();
     let is_edit = agent_id.is_some();
     let agent = if let Some(id) = agent_id {
         let services_path = match super::get_services_path() {

@@ -59,19 +59,32 @@ pub use plugins_requests::{
 };
 pub use user_context::UserContext;
 
+#[derive(Debug, Default, Clone, serde::Deserialize)]
+pub struct IdQuery {
+    #[serde(default)]
+    pub id: Option<String>,
+}
+
+impl IdQuery {
+    #[must_use]
+    pub fn id(&self) -> Option<&str> {
+        self.id.as_deref()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct MarketplaceContext {
-    pub user_id: String,
+    pub user_id: systemprompt_web_shared::UserId,
     pub site_url: String,
     pub total_plugins: usize,
     pub total_skills: usize,
     pub agents_count: usize,
     pub mcp_count: usize,
-    pub tier_name: String,
+    pub tier_name: systemprompt_web_shared::TierLevel,
     pub is_premium: bool,
     pub rank_level: i32,
     pub rank_name: String,
-    pub rank_tier: String,
+    pub rank_tier: systemprompt_web_shared::RankTier,
     pub total_xp: i64,
     pub xp_progress_pct: f64,
     pub has_completed_onboarding: bool,
