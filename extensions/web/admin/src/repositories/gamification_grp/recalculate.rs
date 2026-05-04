@@ -145,10 +145,7 @@ struct UserEventCounts {
     models_used: i32,
 }
 
-async fn fetch_user_event_counts(
-    pool: &PgPool,
-    uid: &str,
-) -> Result<UserEventCounts, sqlx::Error> {
+async fn fetch_user_event_counts(pool: &PgPool, uid: &str) -> Result<UserEventCounts, sqlx::Error> {
     let row = sqlx::query!(
         r#"
         SELECT

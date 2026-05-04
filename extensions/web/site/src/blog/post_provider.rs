@@ -8,7 +8,7 @@ use systemprompt::extension::prelude::*;
 use systemprompt::models::Config;
 
 use super::renderers::{render_references, render_related_posts, render_social_action_bar};
-use super::types::RelatedPost;
+use crate::repositories::blog::list_related_posts;
 use systemprompt_web_shared::error::BlogError;
 
 #[derive(Debug, Clone, Copy)]
@@ -57,21 +57,7 @@ impl PageDataProvider for BlogPostPageDataProvider {
 
             if let Some(db) = ctx.db_pool::<Arc<Database>>() {
                 if let Some(pool) = db.pool() {
-                    let related = sqlx::query_as!(
-                        RelatedPost,
-                        r#"
-                        SELECT slug, title
-                        FROM markdown_content
-                        WHERE source_id = 'blog'
-                        AND slug != $1
-                        ORDER BY published_at DESC
-                        LIMIT 3
-                        "#,
-                        slug
-                    )
-                    .fetch_all(&*pool)
-                    .await
-                    .unwrap_or_else(|e| {
+                    let related = list_related_posts(&pool, slug).await.unwrap_or_else(|e| {
                         tracing::warn!(error = %e, "Failed to fetch related posts");
                         Vec::new()
                     });

@@ -6,7 +6,7 @@ use systemprompt::database::Database;
 use systemprompt::extension::prelude::*;
 
 use super::renderers::render_blog_cards;
-use super::types::BlogPost;
+use crate::repositories::blog::list_blog_posts;
 use systemprompt_web_shared::error::BlogError;
 
 #[derive(Debug, Clone, Copy)]
@@ -46,24 +46,7 @@ impl PageDataProvider for BlogListPageDataProvider {
             return Ok(json!({ "POSTS": "" }));
         };
 
-        let posts = sqlx::query_as!(
-            BlogPost,
-            r#"
-            SELECT
-                slug,
-                title,
-                description,
-                image,
-                category,
-                published_at
-            FROM markdown_content
-            WHERE source_id = 'blog'
-            ORDER BY published_at DESC
-            "#
-        )
-        .fetch_all(&*pool)
-        .await
-        .map_err(BlogError::Database)?;
+        let posts = list_blog_posts(&pool).await.map_err(BlogError::Database)?;
 
         tracing::debug!(count = posts.len(), "Fetched blog posts");
 

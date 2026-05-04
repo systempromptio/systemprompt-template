@@ -126,13 +126,12 @@ fn build_rules_map(
 }
 
 async fn fetch_plugin_map(pool: &PgPool) -> HashMap<String, Vec<String>> {
-    let all_assoc =
-        repositories::org_marketplaces::list_org_marketplace_plugin_assocs(pool)
-            .await
-            .unwrap_or_else(|e| {
-                tracing::error!(error = %e, "Failed to list marketplace plugin associations");
-                vec![]
-            });
+    let all_assoc = repositories::org_marketplaces::list_org_marketplace_plugin_assocs(pool)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::error!(error = %e, "Failed to list marketplace plugin associations");
+            vec![]
+        });
 
     let mut plugin_map: HashMap<String, Vec<String>> = HashMap::new();
     for row in all_assoc {
