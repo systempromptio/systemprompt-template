@@ -1,4 +1,5 @@
 pub mod agents;
+pub mod dashboard_report;
 pub mod overview;
 pub mod requests;
 pub mod sessions;
