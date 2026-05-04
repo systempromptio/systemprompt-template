@@ -5,7 +5,7 @@ use systemprompt::generator::generate_sitemap;
 use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use systemprompt_web_shared::error::MarketplaceError;
+use crate::error::JobError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct SitemapGenerationJob;
@@ -29,28 +29,30 @@ impl Job for SitemapGenerationJob {
     }
 
     async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
-        let start = std::time::Instant::now();
-
-        tracing::info!("Sitemap generation started");
-
-        let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-            "Database not available in job context".to_string(),
-        ))?;
-        let paths = ctx
-            .app_paths::<Arc<AppPaths>>()
-            .ok_or(MarketplaceError::Internal(
-                "AppPaths not available in job context".to_string(),
-            ))?
-            .as_ref();
-
-        generate_sitemap(DbPool::clone(db_pool), paths).await?;
-
-        let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
-
-        tracing::info!(duration_ms, "Sitemap generation completed");
-
-        Ok(JobResult::success().with_duration(duration_ms))
+        Ok(execute_inner(ctx).await?)
     }
+}
+
+async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
+    let start = std::time::Instant::now();
+
+    tracing::info!("Sitemap generation started");
+
+    let db_pool = ctx
+        .db_pool::<DbPool>()
+        .ok_or(JobError::MissingContext("DbPool"))?;
+    let paths = ctx
+        .app_paths::<Arc<AppPaths>>()
+        .ok_or(JobError::MissingContext("AppPaths"))?
+        .as_ref();
+
+    generate_sitemap(DbPool::clone(db_pool), paths).await?;
+
+    let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+
+    tracing::info!(duration_ms, "Sitemap generation completed");
+
+    Ok(JobResult::success().with_duration(duration_ms))
 }
 
 systemprompt::traits::submit_job!(&SitemapGenerationJob);

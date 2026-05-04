@@ -2,13 +2,13 @@ use std::path::PathBuf;
 
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use systemprompt_web_shared::error::MarketplaceError;
+use crate::error::JobError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BundleAdminCssJob;
 
 impl BundleAdminCssJob {
-    pub async fn execute_bundle() -> Result<JobResult, MarketplaceError> {
+    pub async fn execute_bundle() -> Result<JobResult, JobError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Bundle admin CSS job started");
@@ -32,17 +32,12 @@ impl BundleAdminCssJob {
         let (bundle, bundled, failed) = concatenate_css_files(&css_files).await;
 
         if failed > 0 {
-            return Err(MarketplaceError::Internal(format!(
+            return Err(JobError::other(format!(
                 "Failed to read {failed} CSS file(s) during bundling"
             )));
         }
 
-        tokio::fs::write(&bundle_path, &bundle).await.map_err(|e| {
-            MarketplaceError::Internal(format!(
-                "Failed to write bundle: {}: {e}",
-                bundle_path.display()
-            ))
-        })?;
+        tokio::fs::write(&bundle_path, &bundle).await?;
 
         let duration_ms = u64::try_from(start_time.elapsed().as_millis()).unwrap_or(u64::MAX);
 
@@ -59,20 +54,11 @@ impl BundleAdminCssJob {
     }
 }
 
-async fn collect_css_files(css_dir: &std::path::Path) -> Result<Vec<PathBuf>, MarketplaceError> {
+async fn collect_css_files(css_dir: &std::path::Path) -> Result<Vec<PathBuf>, JobError> {
     let mut css_files: Vec<PathBuf> = Vec::new();
-    let mut read_dir = tokio::fs::read_dir(css_dir).await.map_err(|e| {
-        MarketplaceError::Internal(format!(
-            "Failed to read CSS directory: {}: {e}",
-            css_dir.display()
-        ))
-    })?;
+    let mut read_dir = tokio::fs::read_dir(css_dir).await?;
 
-    while let Some(entry) = read_dir
-        .next_entry()
-        .await
-        .map_err(|e| MarketplaceError::Internal(format!("Failed to read directory entry: {e}")))?
-    {
+    while let Some(entry) = read_dir.next_entry().await? {
         let path = entry.path();
         if path.extension().and_then(|e| e.to_str()) == Some("css") {
             css_files.push(path);

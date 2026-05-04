@@ -5,13 +5,13 @@ use systemprompt::extension::{AssetDefinition, ExtensionRegistry};
 use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use systemprompt_web_shared::error::MarketplaceError;
+use crate::error::JobError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CopyExtensionAssetsJob;
 
 impl CopyExtensionAssetsJob {
-    pub async fn execute_copy(paths: &AppPaths) -> Result<JobResult, MarketplaceError> {
+    pub async fn execute_copy(paths: &AppPaths) -> Result<JobResult, JobError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Copy extension assets job started");
@@ -47,7 +47,7 @@ impl CopyExtensionAssetsJob {
 async fn copy_all_assets(
     dist_dir: &Path,
     assets: Vec<(&str, AssetDefinition)>,
-) -> Result<(u64, u64), MarketplaceError> {
+) -> Result<(u64, u64), JobError> {
     let mut copied = 0u64;
     let mut failed = 0u64;
 
@@ -76,27 +76,14 @@ async fn copy_asset(
     dist_dir: &Path,
     ext_id: &str,
     asset: &AssetDefinition,
-) -> Result<(), MarketplaceError> {
+) -> Result<(), JobError> {
     let dest_path = dist_dir.join(asset.destination());
 
     if let Some(parent) = dest_path.parent() {
-        tokio::fs::create_dir_all(parent).await.map_err(|e| {
-            MarketplaceError::Internal(format!(
-                "Failed to create directory: {}: {e}",
-                parent.display()
-            ))
-        })?;
+        tokio::fs::create_dir_all(parent).await?;
     }
 
-    tokio::fs::copy(asset.source(), &dest_path)
-        .await
-        .map_err(|e| {
-            MarketplaceError::Internal(format!(
-                "Failed to copy asset from {} to {}: {e}",
-                asset.source().display(),
-                dest_path.display()
-            ))
-        })?;
+    tokio::fs::copy(asset.source(), &dest_path).await?;
 
     tracing::debug!(
         extension = %ext_id,
@@ -125,7 +112,7 @@ impl Job for CopyExtensionAssetsJob {
     async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
         let paths = ctx
             .app_paths::<Arc<AppPaths>>()
-            .ok_or_else(|| anyhow::anyhow!("AppPaths missing from JobContext"))?
+            .ok_or(JobError::MissingContext("AppPaths"))?
             .as_ref();
         Ok(Self::execute_copy(paths).await?)
     }

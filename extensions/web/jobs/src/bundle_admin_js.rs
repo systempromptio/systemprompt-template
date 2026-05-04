@@ -2,13 +2,13 @@ use std::path::PathBuf;
 
 use systemprompt::traits::{Job, JobContext, JobResult};
 
-use systemprompt_web_shared::error::MarketplaceError;
+use crate::error::JobError;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BundleAdminJsJob;
 
 impl BundleAdminJsJob {
-    pub async fn execute_bundle() -> Result<JobResult, MarketplaceError> {
+    pub async fn execute_bundle() -> Result<JobResult, JobError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Bundle admin JS job started");
@@ -45,7 +45,7 @@ impl BundleAdminJsJob {
 async fn build_per_page_bundles(
     js_dir: &std::path::Path,
     output_dir: &std::path::Path,
-) -> Result<u64, MarketplaceError> {
+) -> Result<u64, JobError> {
     let bundles_dir = js_dir.join("bundles");
     if !bundles_dir.is_dir() {
         return Ok(0);
@@ -63,14 +63,8 @@ async fn build_per_page_bundles(
 
 fn read_bundle_manifests(
     bundles_dir: &std::path::Path,
-) -> Result<Vec<std::fs::DirEntry>, MarketplaceError> {
-    let mut entries: Vec<_> = std::fs::read_dir(bundles_dir)
-        .map_err(|e| {
-            MarketplaceError::Internal(format!(
-                "Failed to read bundles dir: {}: {e}",
-                bundles_dir.display()
-            ))
-        })?
+) -> Result<Vec<std::fs::DirEntry>, JobError> {
+    let mut entries: Vec<_> = std::fs::read_dir(bundles_dir)?
         .filter_map(Result::ok)
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "txt"))
         .collect();
@@ -82,7 +76,7 @@ async fn process_single_bundle(
     entry: &std::fs::DirEntry,
     js_dir: &std::path::Path,
     output_dir: &std::path::Path,
-) -> Result<u64, MarketplaceError> {
+) -> Result<u64, JobError> {
     let manifest_path = entry.path();
     let bundle_name = manifest_path
         .file_stem()
@@ -90,14 +84,7 @@ async fn process_single_bundle(
         .to_string_lossy()
         .to_string();
 
-    let manifest = tokio::fs::read_to_string(&manifest_path)
-        .await
-        .map_err(|e| {
-            MarketplaceError::Internal(format!(
-                "Failed to read bundle manifest: {}: {e}",
-                manifest_path.display()
-            ))
-        })?;
+    let manifest = tokio::fs::read_to_string(&manifest_path).await?;
 
     let files: Vec<&str> = manifest
         .lines()
@@ -113,20 +100,13 @@ async fn process_single_bundle(
     let (content, bundled, failed) = concatenate_files(js_dir, &files).await;
 
     if failed > 0 {
-        return Err(MarketplaceError::Internal(format!(
+        return Err(JobError::other(format!(
             "Failed to read {failed} JS file(s) for bundle '{bundle_name}'"
         )));
     }
 
     let bundle_path = output_dir.join(format!("admin-{bundle_name}.js"));
-    tokio::fs::write(&bundle_path, &content)
-        .await
-        .map_err(|e| {
-            MarketplaceError::Internal(format!(
-                "Failed to write bundle: {}: {e}",
-                bundle_path.display()
-            ))
-        })?;
+    tokio::fs::write(&bundle_path, &content).await?;
 
     tracing::info!(
         bundle = %bundle_name,
@@ -141,18 +121,11 @@ async fn process_single_bundle(
 async fn build_main_bundle(
     js_dir: &std::path::Path,
     output_dir: &std::path::Path,
-) -> Result<(u64, u64), MarketplaceError> {
+) -> Result<(u64, u64), JobError> {
     let manifest_path = js_dir.join("bundle-order.txt");
     let bundle_path = output_dir.join("admin-bundle.js");
 
-    let manifest = tokio::fs::read_to_string(&manifest_path)
-        .await
-        .map_err(|e| {
-            MarketplaceError::Internal(format!(
-                "Failed to read manifest: {}: {e}",
-                manifest_path.display()
-            ))
-        })?;
+    let manifest = tokio::fs::read_to_string(&manifest_path).await?;
 
     let files: Vec<&str> = manifest
         .lines()
@@ -168,19 +141,12 @@ async fn build_main_bundle(
     let (content, bundled, failed) = concatenate_files(js_dir, &files).await;
 
     if failed > 0 {
-        return Err(MarketplaceError::Internal(format!(
+        return Err(JobError::other(format!(
             "Failed to read {failed} JS file(s) during bundling"
         )));
     }
 
-    tokio::fs::write(&bundle_path, &content)
-        .await
-        .map_err(|e| {
-            MarketplaceError::Internal(format!(
-                "Failed to write bundle: {}: {e}",
-                bundle_path.display()
-            ))
-        })?;
+    tokio::fs::write(&bundle_path, &content).await?;
 
     Ok((bundled, failed))
 }
