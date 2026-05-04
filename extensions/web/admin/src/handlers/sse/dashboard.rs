@@ -24,7 +24,7 @@ pub async fn dashboard_sse(
         loop {
             interval.tick().await;
 
-            if let Ok(events) = activity::queries::fetch_new_events(&pool, last_event_id.as_deref()).await {
+            if let Ok(events) = activity::queries::list_new_events(&pool, last_event_id.as_deref()).await {
                 if !events.is_empty() {
                     last_event_id = Some(events[0].id.clone());
                     if let Ok(json) = serde_json::to_string(&events) {

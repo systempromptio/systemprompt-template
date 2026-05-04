@@ -8,35 +8,14 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
+use crate::repositories::analytics_grp::{list_agents, AgentRow};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
 
-struct AgentRow {
-    agent_id: String,
-    calls: i64,
-    errors: i64,
-    sessions: i64,
-}
-
 async fn fetch_agents(pool: &PgPool) -> Result<Vec<AgentRow>, sqlx::Error> {
-    sqlx::query_as!(
-        AgentRow,
-        r#"SELECT
-            COALESCE(metadata->>'agent_id', plugin_id, 'unknown') AS "agent_id!",
-            COUNT(*)::bigint AS "calls!",
-            COUNT(*) FILTER (WHERE event_type LIKE '%Failure%' OR event_type LIKE '%Error%')::bigint AS "errors!",
-            COUNT(DISTINCT session_id)::bigint AS "sessions!"
-          FROM plugin_usage_events
-          WHERE created_at >= NOW() - INTERVAL '7 days'
-            AND (metadata->>'agent_id' IS NOT NULL OR plugin_id IS NOT NULL)
-          GROUP BY COALESCE(metadata->>'agent_id', plugin_id, 'unknown')
-          ORDER BY COUNT(*) DESC
-          LIMIT 50"#,
-    )
-    .fetch_all(pool)
-    .await
+    list_agents(pool).await
 }
 
 pub async fn analytics_agents_page(

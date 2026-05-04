@@ -31,7 +31,7 @@ pub async fn marketplace_versions_page(
         .await
         .unwrap_or(0);
 
-    let events = crate::activity::queries::get_user_entity_activity(&pool, user_id, limit, offset)
+    let events = crate::activity::queries::list_user_entity_activity(&pool, user_id, limit, offset)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to load user entity activity");

@@ -8,31 +8,14 @@ use axum::{
 use serde_json::json;
 use sqlx::PgPool;
 
+use crate::repositories::analytics_grp::{get_request_stats, RequestStatsRow};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
 
-struct RequestStatsRow {
-    total: i64,
-    tool_uses: i64,
-    errors: i64,
-    sessions: i64,
-}
-
 async fn fetch_stats(pool: &PgPool) -> Result<RequestStatsRow, sqlx::Error> {
-    sqlx::query_as!(
-        RequestStatsRow,
-        r#"SELECT
-            COUNT(*)::bigint AS "total!",
-            COUNT(*) FILTER (WHERE event_type LIKE '%ToolUse%')::bigint AS "tool_uses!",
-            COUNT(*) FILTER (WHERE event_type LIKE '%Failure%' OR event_type LIKE '%Error%')::bigint AS "errors!",
-            COUNT(DISTINCT session_id)::bigint AS "sessions!"
-          FROM plugin_usage_events
-          WHERE created_at >= NOW() - INTERVAL '24 hours'"#,
-    )
-    .fetch_one(pool)
-    .await
+    get_request_stats(pool).await
 }
 
 pub async fn analytics_requests_page(

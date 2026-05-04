@@ -77,7 +77,7 @@ async fn fetch_activity_data(
         (vec![], 0)
     });
 
-    let category_summary = activity::queries::get_user_activity_summary(pool, user_id.as_str())
+    let category_summary = activity::queries::list_user_activity_summary(pool, user_id.as_str())
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to get user activity summary");

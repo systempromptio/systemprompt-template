@@ -62,22 +62,13 @@ async fn fetch_user_roles_department(
     pool: &PgPool,
     user_id: &str,
 ) -> Option<(Vec<String>, String)> {
-    #[derive(sqlx::FromRow)]
-    struct UserRoleRow {
-        roles: Vec<String>,
-        department: Option<String>,
-    }
-
-    sqlx::query_as::<_, UserRoleRow>("SELECT roles, department FROM users WHERE id = $1")
-        .bind(user_id)
-        .fetch_optional(pool)
+    super::repositories::get_user_roles_department(pool, user_id)
         .await
         .map_err(|e| {
             tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user roles");
         })
         .ok()
         .flatten()
-        .map(|row| (row.roles, row.department.unwrap_or_else(String::new)))
 }
 
 pub async fn marketplace_context_middleware(

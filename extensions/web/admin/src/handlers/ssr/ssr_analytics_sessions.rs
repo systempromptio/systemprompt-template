@@ -5,41 +5,17 @@ use axum::{
     http::StatusCode,
     response::{Html, IntoResponse, Response},
 };
-use chrono::{DateTime, Utc};
 use serde_json::json;
 use sqlx::PgPool;
 
+use crate::repositories::analytics_grp::{list_sessions, SessionRow};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
 
-struct SessionRow {
-    session_id: String,
-    user_id: Option<String>,
-    events: i64,
-    first_seen: Option<DateTime<Utc>>,
-    last_seen: Option<DateTime<Utc>>,
-}
-
 async fn fetch_sessions(pool: &PgPool) -> Result<Vec<SessionRow>, sqlx::Error> {
-    sqlx::query_as!(
-        SessionRow,
-        r#"SELECT
-            session_id AS "session_id!",
-            MAX(user_id) AS "user_id?",
-            COUNT(*)::bigint AS "events!",
-            MIN(created_at) AS "first_seen?",
-            MAX(created_at) AS "last_seen?"
-          FROM plugin_usage_events
-          WHERE session_id IS NOT NULL
-            AND created_at >= NOW() - INTERVAL '24 hours'
-          GROUP BY session_id
-          ORDER BY MAX(created_at) DESC
-          LIMIT 50"#,
-    )
-    .fetch_all(pool)
-    .await
+    list_sessions(pool).await
 }
 
 pub async fn analytics_sessions_page(

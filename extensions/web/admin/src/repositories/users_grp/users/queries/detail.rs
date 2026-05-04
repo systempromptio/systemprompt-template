@@ -82,13 +82,13 @@ async fn build_user_detail(
             tracing::warn!(user_id = %user_id, error = %e, "Failed to load user skills");
             Vec::new()
         });
-    let recent_activity = activity::queries::get_user_recent_activity(pool, user_id.as_str())
+    let recent_activity = activity::queries::list_user_recent_activity(pool, user_id.as_str())
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(user_id = %user_id, error = %e, "Failed to load user activity");
             Vec::new()
         });
-    let activity_summary = activity::queries::get_user_activity_summary(pool, user_id.as_str())
+    let activity_summary = activity::queries::list_user_activity_summary(pool, user_id.as_str())
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(user_id = %user_id, error = %e, "Failed to load activity summary");
