@@ -224,7 +224,7 @@ impl Extension for WebExtension {
     }
 
     fn migration_weight(&self) -> u32 {
-        100
+        1000
     }
 
     fn config_prefix(&self) -> Option<&str> {

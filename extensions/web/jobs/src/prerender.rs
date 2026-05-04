@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use systemprompt::database::DbPool;
 use systemprompt::generator::prerender_content;
 use systemprompt::models::AppPaths;
@@ -35,10 +36,11 @@ impl Job for ContentPrerenderJob {
             "Database not available in job context".to_string(),
         ))?;
         let paths = ctx
-            .app_paths::<AppPaths>()
+            .app_paths::<Arc<AppPaths>>()
             .ok_or(MarketplaceError::Internal(
                 "AppPaths not available in job context".to_string(),
-            ))?;
+            ))?
+            .as_ref();
 
         prerender_content(DbPool::clone(db_pool), paths).await?;
 

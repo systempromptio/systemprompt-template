@@ -5,25 +5,16 @@ use super::rank_for_xp;
 use super::recalculate_helpers::{
     calculate_streaks, calculate_user_xp, populate_daily_usage, update_user_rank, UserRankParams,
 };
+use crate::repositories::gamification_grp::list_distinct_event_user_ids;
 
 pub async fn recalculate_all(pool: &PgPool) -> Result<u64, super::GamificationError> {
-    #[derive(sqlx::FromRow)]
-    struct UserRow {
-        user_id: String,
-    }
-
     populate_daily_usage(pool).await?;
 
-    let users = sqlx::query_as::<_, UserRow>(
-        "SELECT DISTINCT e.user_id FROM plugin_usage_events e INNER JOIN users u ON u.id = e.user_id",
-    )
-    .fetch_all(pool)
-    .await?;
+    let user_ids = list_distinct_event_user_ids(pool).await?;
 
     let mut updated = 0u64;
 
-    for user in &users {
-        let uid = &user.user_id;
+    for uid in &user_ids {
         let (
             total_xp,
             events_count,

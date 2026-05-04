@@ -1,5 +1,9 @@
 use sqlx::PgPool;
 
+use crate::repositories::gamification_grp::{
+    fetch_achievement_counts, fetch_time_based_flags, insert_achievements,
+};
+
 #[derive(Debug)]
 pub struct AchievementContext {
     pub user_id: String,
@@ -19,15 +23,14 @@ pub async fn check_achievements(
     pool: &PgPool,
     ctx: &AchievementContext,
 ) -> Result<(), super::GamificationError> {
-    let (session_count, tool_count, custom_skills_count, error_count) =
-        fetch_achievement_counts(pool, &ctx.user_id).await?;
+    let counts = fetch_achievement_counts(pool, &ctx.user_id).await?;
 
     let mut to_unlock = Vec::new();
 
     let usage_counts = UsageCounts {
-        sessions: session_count,
-        tools: tool_count,
-        custom_skills: custom_skills_count,
+        sessions: counts.session_count,
+        tools: counts.tool_count,
+        custom_skills: counts.custom_skills_count,
         prompts: ctx.prompt_count,
         subagents: ctx.subagent_count,
         total_xp: ctx.total_xp,
@@ -40,55 +43,16 @@ pub async fn check_achievements(
         ctx.unique_plugins,
         ctx.models_used,
     );
-    check_creation(&mut to_unlock, custom_skills_count);
+    check_creation(&mut to_unlock, counts.custom_skills_count);
     check_streaks(&mut to_unlock, ctx.current_streak, ctx.longest_streak);
     check_ranks(&mut to_unlock, ctx.rank_level);
-    check_special(&mut to_unlock, error_count);
+    check_special(&mut to_unlock, counts.error_count);
     check_tokens(&mut to_unlock, ctx.total_tokens);
     check_time_based(pool, &ctx.user_id, &mut to_unlock).await?;
 
     insert_achievements(pool, &ctx.user_id, &to_unlock).await?;
 
     Ok(())
-}
-
-async fn fetch_achievement_counts(
-    pool: &PgPool,
-    user_id: &str,
-) -> Result<(i64, i64, i64, i64), super::GamificationError> {
-    let session_count: i64 = sqlx::query_scalar!(
-        "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1 AND event_type = 'claude_code_SessionStart'",
-        user_id,
-    )
-    .fetch_one(pool)
-    .await?
-    .unwrap_or(0);
-
-    let tool_count: i64 = sqlx::query_scalar!(
-        "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1 AND event_type = 'claude_code_PostToolUse'",
-        user_id,
-    )
-    .fetch_one(pool)
-    .await?
-    .unwrap_or(0);
-
-    let custom_skills_count: i64 = sqlx::query_scalar!(
-        "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM user_skills WHERE user_id = $1",
-        user_id,
-    )
-    .fetch_one(pool)
-    .await?
-    .unwrap_or(0);
-
-    let error_count: i64 = sqlx::query_scalar!(
-        "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events WHERE user_id = $1 AND event_type = 'claude_code_PostToolUseFailure'",
-        user_id,
-    )
-    .fetch_one(pool)
-    .await?
-    .unwrap_or(0);
-
-    Ok((session_count, tool_count, custom_skills_count, error_count))
 }
 
 struct UsageCounts {
@@ -240,56 +204,15 @@ async fn check_time_based(
     user_id: &str,
     to_unlock: &mut Vec<&'static str>,
 ) -> Result<(), super::GamificationError> {
-    let has_early: bool = sqlx::query_scalar!(
-        "SELECT EXISTS(SELECT 1 FROM plugin_usage_events WHERE user_id = $1 AND EXTRACT(HOUR FROM created_at) < 7)",
-        user_id,
-    )
-    .fetch_one(pool)
-    .await?
-    .unwrap_or(false);
-    if has_early {
+    let flags = fetch_time_based_flags(pool, user_id).await?;
+    if flags.has_early {
         to_unlock.push("early_bird");
     }
-
-    let has_late: bool = sqlx::query_scalar!(
-        "SELECT EXISTS(SELECT 1 FROM plugin_usage_events WHERE user_id = $1 AND EXTRACT(HOUR FROM created_at) >= 22)",
-        user_id,
-    )
-    .fetch_one(pool)
-    .await?
-    .unwrap_or(false);
-    if has_late {
+    if flags.has_late {
         to_unlock.push("night_owl");
     }
-
-    let has_weekend: bool = sqlx::query_scalar!(
-        "SELECT EXISTS(SELECT 1 FROM plugin_usage_events WHERE user_id = $1 AND EXTRACT(DOW FROM created_at) IN (0, 6))",
-        user_id,
-    )
-    .fetch_one(pool)
-    .await?
-    .unwrap_or(false);
-    if has_weekend {
+    if flags.has_weekend {
         to_unlock.push("weekend_warrior");
     }
-
-    Ok(())
-}
-
-async fn insert_achievements(
-    pool: &PgPool,
-    user_id: &str,
-    to_unlock: &[&str],
-) -> Result<(), super::GamificationError> {
-    for achievement_id in to_unlock {
-        sqlx::query!(
-            "INSERT INTO employee_achievements (id, user_id, achievement_id) VALUES (gen_random_uuid()::TEXT, $1, $2) ON CONFLICT (user_id, achievement_id) DO NOTHING",
-            user_id,
-            *achievement_id,
-        )
-        .execute(pool)
-        .await?;
-    }
-
     Ok(())
 }

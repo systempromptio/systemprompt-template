@@ -3,6 +3,7 @@ pub mod analytics_grp;
 pub mod cowork_grp;
 pub mod dashboard_grp;
 pub mod effective_plugins;
+pub mod gamification_grp;
 pub mod governance_grp;
 pub mod marketplace_grp;
 pub mod mcp_grp;
