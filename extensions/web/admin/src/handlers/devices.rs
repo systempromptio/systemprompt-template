@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use crate::repositories::cowork_grp;
+use crate::services::device_service;
 use crate::types::UserContext;
 
 #[derive(Debug, Deserialize)]
@@ -33,7 +33,7 @@ pub async fn issue_pat(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<IssueApiKeyRequest>,
 ) -> Response {
-    match cowork_grp::issue_api_key(&pool, &user_ctx.user_id, &body.name, body.expires_at).await {
+    match device_service::issue_pat(&pool, &user_ctx.user_id, &body.name, body.expires_at).await {
         Ok(issued) => Json(IssueApiKeyResponse {
             id: issued.id,
             name: issued.name,
@@ -43,13 +43,7 @@ pub async fn issue_pat(
             expires_at: issued.expires_at,
         })
         .into_response(),
-        Err(cowork_grp::CoworkRepoError::Validation(msg)) => {
-            (StatusCode::BAD_REQUEST, msg).into_response()
-        }
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to issue PAT");
-            (StatusCode::INTERNAL_SERVER_ERROR, "failed to issue PAT").into_response()
-        }
+        Err(e) => e.into_response(),
     }
 }
 
@@ -58,13 +52,9 @@ pub async fn revoke_pat(
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> Response {
-    match cowork_grp::revoke_api_key(&pool, &user_ctx.user_id, &id).await {
-        Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => (StatusCode::NOT_FOUND, "PAT not found").into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to revoke PAT");
-            (StatusCode::INTERNAL_SERVER_ERROR, "failed to revoke PAT").into_response()
-        }
+    match device_service::revoke_pat(&pool, &user_ctx.user_id, &id).await {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(e) => e.into_response(),
     }
 }
 
@@ -73,12 +63,8 @@ pub async fn revoke_cert(
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> Response {
-    match cowork_grp::revoke_device_cert(&pool, &user_ctx.user_id, &id).await {
-        Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => (StatusCode::NOT_FOUND, "cert not found").into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to revoke device cert");
-            (StatusCode::INTERNAL_SERVER_ERROR, "failed to revoke cert").into_response()
-        }
+    match device_service::revoke_device_cert(&pool, &user_ctx.user_id, &id).await {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(e) => e.into_response(),
     }
 }
