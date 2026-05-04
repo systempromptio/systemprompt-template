@@ -6,6 +6,9 @@ use systemprompt::database::Database;
 use systemprompt::extension::prelude::{ContentDataContext, ContentDataProvider};
 
 use super::error::DocsError;
+use crate::repositories::docs::{
+    get_doc_content, list_nested_doc_children, list_root_doc_children,
+};
 
 const KIND_DOCS_INDEX: &str = "docs-index";
 const KIND_DOCS_LIST: &str = "docs-list";
@@ -50,26 +53,12 @@ impl ContentDataProvider for DocsContentDataProvider {
 
         let content_id = ctx.content_id();
 
-        let row = sqlx::query!(
-            r#"
-            SELECT
-                slug,
-                kind,
-                source_id,
-                COALESCE(after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                COALESCE(related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                COALESCE(related_code, '[]'::jsonb) as "related_code!"
-            FROM markdown_content
-            WHERE id = $1
-            "#,
-            content_id
-        )
-        .fetch_one(&*pool)
-        .await
-        .map_err(|e| match e {
-            sqlx::Error::RowNotFound => DocsError::ContentNotFound(content_id.to_string()),
-            other => DocsError::Database(other),
-        })?;
+        let row = get_doc_content(&pool, content_id)
+            .await
+            .map_err(|e| match e {
+                sqlx::Error::RowNotFound => DocsError::ContentNotFound(content_id.to_string()),
+                other => DocsError::Database(other),
+            })?;
 
         if let Some(obj) = item.as_object_mut() {
             obj.insert("after_reading_this".to_string(), row.after_reading_this);
@@ -116,21 +105,7 @@ impl DocsContentDataProvider {
         let is_root = current_slug.is_empty() || current_slug == SLUG_INDEX;
 
         if is_root {
-            match sqlx::query!(
-                r#"
-                SELECT slug, title, description
-                FROM markdown_content
-                WHERE source_id = $1
-                  AND slug != ''
-                  AND slug != 'index'
-                  AND slug NOT LIKE '%/%'
-                ORDER BY title
-                "#,
-                source_id
-            )
-            .fetch_all(pool)
-            .await
-            {
+            match list_root_doc_children(pool, source_id).await {
                 Ok(rows) => rows
                     .into_iter()
                     .map(|row| ChildDoc {
@@ -149,22 +124,7 @@ impl DocsContentDataProvider {
             let slug_prefix = format!("{current_slug}%");
             let parent_depth = current_slug.matches('/').count();
 
-            match sqlx::query!(
-                r#"
-                SELECT slug, title, description
-                FROM markdown_content
-                WHERE source_id = $1
-                  AND slug LIKE $2
-                  AND slug != $3
-                ORDER BY title
-                "#,
-                source_id,
-                slug_prefix,
-                current_slug
-            )
-            .fetch_all(pool)
-            .await
-            {
+            match list_nested_doc_children(pool, source_id, &slug_prefix, current_slug).await {
                 Ok(rows) => rows
                     .into_iter()
                     .filter(|row| row.slug.matches('/').count() == parent_depth + 1)

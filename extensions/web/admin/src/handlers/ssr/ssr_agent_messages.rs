@@ -75,8 +75,10 @@ pub async fn agent_messages_page(
 }
 
 async fn fetch_agent_messages(pool: &PgPool, agent_id: &str) -> Vec<AgentMessageRow> {
-    list_agent_messages(pool, agent_id).await.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, agent_id = %agent_id, "Failed to fetch agent messages");
-        vec![]
-    })
+    list_agent_messages(pool, agent_id)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, agent_id = %agent_id, "Failed to fetch agent messages");
+            vec![]
+        })
 }

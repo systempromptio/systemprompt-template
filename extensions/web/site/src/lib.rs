@@ -7,5 +7,6 @@ pub mod homepage;
 pub mod navigation;
 pub mod partials;
 mod partials_animations;
+mod repositories;
 
 pub use assets::web_assets;
