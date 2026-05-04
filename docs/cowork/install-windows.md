@@ -1,70 +1,106 @@
-# Install cowork on Windows
+# Install Cowork on Windows
 
-`cowork` is the **client-side CLI** that runs on a developer workstation and talks to a running [systemprompt-gateway](../install/ghcr.md). It handles device auth (Claude for Work / MCP device flow) and code-worktree operations.
+The Cowork Desktop app is the **client-side companion** to a running [systemprompt-gateway](../install/ghcr.md). On Windows it ships as `systemprompt-bridge.exe` — a single native binary that exposes both a credential-helper CLI and a Desktop GUI (winit + wry, MSVC build).
 
-If you're looking to deploy the **server** (the gateway), see [../install/](../install/) instead — cowork is a separate product.
+If you're looking to deploy the **server** (the gateway), see [../install/](../install/) instead.
+
+For the full GUI tour, see [desktop-app.md](desktop-app.md).
+
+> **v0.7.0 rename note.** The crate and binary were renamed `cowork → bridge` in the v0.7.0 release. The Windows executable is `systemprompt-bridge.exe`. The Claude Desktop host integration is still labelled "Cowork".
 
 ## Option 1 — Scoop bucket (recommended)
 
 ```powershell
 scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket
 scoop install systemprompt/cowork
-cowork --version
+systemprompt-bridge --version
+systemprompt-bridge gui      # opens the Desktop app
 ```
 
 ## Option 2 — direct download
 
-Cowork bundles are published on the template repo under the `cowork-v*` tag series:
+Bundles are published on the template repo under the `cowork-v*` tag series (artifact names retained for backward compatibility):
 
 ```powershell
-# Raw .exe binary (no zip wrapper)
+$dir = "C:\Program Files\systemprompt"
+New-Item -ItemType Directory -Force -Path $dir | Out-Null
+
 Invoke-WebRequest `
-  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.4.0/systemprompt-cowork-x86_64-pc-windows-msvc.exe `
-  -OutFile cowork.exe
-Move-Item .\cowork.exe C:\Windows\System32\cowork.exe
+  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.7.0/systemprompt-bridge-x86_64-pc-windows-msvc.exe `
+  -OutFile "$dir\systemprompt-bridge.exe"
+
+[Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$dir", "User")
 ```
+
+Open a new terminal so the PATH change takes effect. Windows SmartScreen will flag the unsigned binary on first run → **More info** → **Run anyway**. (The binary is cosign-signed but not Authenticode-signed yet.)
 
 Verify the SHA256:
 
 ```powershell
 Invoke-WebRequest `
-  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.4.0/SHA256SUMS.cowork `
-  -OutFile SHA256SUMS.cowork
-Get-FileHash C:\Windows\System32\cowork.exe -Algorithm SHA256
-# Compare against the line ending in `systemprompt-cowork-x86_64-pc-windows-msvc.exe` in SHA256SUMS.cowork
+  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.7.0/SHA256SUMS.bridge `
+  -OutFile SHA256SUMS.bridge
+Get-FileHash "$dir\systemprompt-bridge.exe" -Algorithm SHA256
+# Compare against the line ending in `systemprompt-bridge-x86_64-pc-windows-msvc.exe`
 ```
 
-Verify the cosign signature (requires cosign.exe):
+Verify the cosign signature (requires `cosign.exe`):
 
 ```powershell
 cosign verify-blob `
   --certificate-identity-regexp 'https://github.com/systempromptio/systemprompt-core/' `
   --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' `
-  --signature SHA256SUMS.cowork.sig `
-  --certificate SHA256SUMS.cowork.pem `
-  SHA256SUMS.cowork
+  --signature SHA256SUMS.bridge.sig `
+  --certificate SHA256SUMS.bridge.pem `
+  SHA256SUMS.bridge
 ```
 
-## Configure against a running gateway
+## First-run
+
+Launch the Desktop GUI:
 
 ```powershell
-cowork config set gateway.url https://your-gateway.example.com
-cowork login
+systemprompt-bridge gui
+```
+
+The **Setup wizard** opens automatically on first run. Two steps:
+
+1. Paste the gateway URL and a PAT (or pick session / mTLS).
+2. Enable each host integration you want managed (Claude Desktop, Codex CLI, …). Hosts default to **disabled** — nothing is silently probed.
+
+The wizard can be re-run any time from **Settings → Re-run setup**. Once setup completes, the proxy starts on `127.0.0.1:48217` and the activity drawer shows live request flow.
+
+CLI alternative (no GUI — for CI or headless service install):
+
+```powershell
+systemprompt-bridge login sp-live-... --gateway https://your-gateway.example.com
+systemprompt-bridge install --apply --pubkey <base64>
+systemprompt-bridge status
 ```
 
 See [device-auth.md](device-auth.md) for the auth-mode options.
 
-See [windows-minimax-demo.md](windows-minimax-demo.md) for an end-to-end demo runbook.
+For a full Windows runbook against a MiniMax-routed gateway, see [windows-minimax-demo.md](windows-minimax-demo.md).
 
 ## Uninstall
 
 ```powershell
-scoop uninstall cowork                 # Scoop
-Remove-Item C:\Windows\System32\cowork.exe   # manual install
+scoop uninstall cowork                                    # Scoop
+Remove-Item "C:\Program Files\systemprompt\systemprompt-bridge.exe"   # manual install
 ```
+
+To also wipe credentials and cache:
+
+```powershell
+systemprompt-bridge uninstall --purge
+```
+
+This removes `%APPDATA%\systemprompt\systemprompt-bridge.toml`, `%LOCALAPPDATA%\systemprompt-bridge\cache.json`, and `%APPDATA%\systemprompt\agents.json`.
 
 ## Links
 
+- [Desktop app overview](desktop-app.md)
+- [Device auth modes](device-auth.md)
 - [systemprompt.io](https://systemprompt.io/?utm_source=cowork-windows&utm_medium=install_doc)
 - [Documentation](https://systemprompt.io/documentation/?utm_source=cowork-windows&utm_medium=install_doc)
 - [systemprompt-template on GitHub](https://github.com/systempromptio/systemprompt-template)

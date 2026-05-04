@@ -4,11 +4,12 @@ use std::sync::Arc;
 use axum::{
     body::Body,
     extract::{Path as AxumPath, State},
-    http::{HeaderMap, HeaderValue, StatusCode, header},
+    http::{header, HeaderMap, HeaderValue, StatusCode},
     response::Response,
 };
 use sqlx::PgPool;
-use systemprompt::identifiers::PluginId;
+use systemprompt::config::ProfileBootstrap;
+use systemprompt::identifiers::{PluginId, UserId};
 use systemprompt::models::AppPaths;
 
 use crate::handlers::shared;
@@ -26,43 +27,16 @@ pub async fn handle(
 
     let plugin_id = PluginId::new(plugin_id);
 
-    let enrolled = match list_user_plugins(&pool, &user_id).await {
-        Ok(rs) => rs,
-        Err(e) => {
-            tracing::error!(error = %e, "list_user_plugins failed");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Plugin listing failed",
-            );
-        },
-    };
-
-    if !enrolled
-        .iter()
-        .any(|p| p.enabled && p.plugin_id == plugin_id.as_str())
-    {
-        tracing::warn!(
-            user_id = %user_id.as_str(),
-            plugin_id = %plugin_id.as_str(),
-            "plugin file requested for non-enrolled plugin",
-        );
-        return shared::error_response(StatusCode::NOT_FOUND, "Plugin not found");
+    if let Err(r) = ensure_enrolled(&pool, &user_id, &plugin_id).await {
+        return *r;
     }
 
-    let plugins_root = match AppPaths::get() {
-        Ok(p) => p.storage().files().join("plugins"),
-        Err(e) => {
-            tracing::error!(error = %e, "AppPaths::get failed");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Service paths unavailable",
-            );
-        },
+    let plugin_dir = match resolve_plugin_dir(&plugin_id) {
+        Ok(p) => p,
+        Err(r) => return *r,
     };
 
-    let plugin_root = plugins_root.join(plugin_id.as_str());
-
-    let resolved = match resolve_within(&plugin_root, &relative_path) {
+    let resolved = match resolve_within(&plugin_dir, &relative_path) {
         Ok(p) => p,
         Err(reason) => {
             tracing::warn!(
@@ -73,21 +47,68 @@ pub async fn handle(
                 "rejected plugin file request",
             );
             return shared::error_response(StatusCode::BAD_REQUEST, "Invalid path");
-        },
+        }
     };
 
     let bytes = match std::fs::read(&resolved) {
         Ok(b) => b,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             return shared::error_response(StatusCode::NOT_FOUND, "File not found");
-        },
+        }
         Err(e) => {
             tracing::error!(error = %e, path = %resolved.display(), "plugin file read failed");
             return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "File read failed");
-        },
+        }
     };
 
-    let content_type = guess_content_type(&resolved);
+    build_file_response(&resolved, bytes)
+}
+
+async fn ensure_enrolled(
+    pool: &PgPool,
+    user_id: &UserId,
+    plugin_id: &PluginId,
+) -> Result<(), Box<Response>> {
+    let enrolled = list_user_plugins(pool, user_id).await.map_err(|e| {
+        tracing::error!(error = %e, "list_user_plugins failed");
+        Box::new(shared::error_response(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Plugin listing failed",
+        ))
+    })?;
+    if enrolled
+        .iter()
+        .any(|p| p.enabled && p.plugin_id == plugin_id.as_str())
+    {
+        return Ok(());
+    }
+    tracing::warn!(
+        user_id = %user_id.as_str(),
+        plugin_id = %plugin_id.as_str(),
+        "plugin file requested for non-enrolled plugin",
+    );
+    Err(Box::new(shared::error_response(
+        StatusCode::NOT_FOUND,
+        "Plugin not found",
+    )))
+}
+
+fn resolve_plugin_dir(plugin_id: &PluginId) -> Result<PathBuf, Box<Response>> {
+    ProfileBootstrap::get()
+        .map_err(|e| e.to_string())
+        .and_then(|profile| AppPaths::from_profile(&profile.paths).map_err(|e| e.to_string()))
+        .map(|p| p.storage().files().join("plugins").join(plugin_id.as_str()))
+        .map_err(|e| {
+            tracing::error!(error = %e, "AppPaths derivation failed");
+            Box::new(shared::error_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Service paths unavailable",
+            ))
+        })
+}
+
+fn build_file_response(resolved: &Path, bytes: Vec<u8>) -> Response {
+    let content_type = guess_content_type(resolved);
     let mut response = Response::new(Body::from(bytes));
     *response.status_mut() = StatusCode::OK;
     if let Ok(value) = HeaderValue::from_str(content_type) {
@@ -103,8 +124,7 @@ pub fn resolve_within(base: &Path, relative: &str) -> Result<PathBuf, &'static s
     let candidate = Path::new(relative);
     for comp in candidate.components() {
         match comp {
-            Component::Normal(_) => {},
-            Component::CurDir => {},
+            Component::Normal(_) | Component::CurDir => {}
             _ => return Err("non-canonical component"),
         }
     }
@@ -126,7 +146,7 @@ fn guess_content_type(path: &Path) -> &'static str {
     let ext = path
         .extension()
         .and_then(|e| e.to_str())
-        .map(|s| s.to_ascii_lowercase());
+        .map(str::to_ascii_lowercase);
     match ext.as_deref() {
         Some("md") => "text/markdown; charset=utf-8",
         Some("txt") => "text/plain; charset=utf-8",

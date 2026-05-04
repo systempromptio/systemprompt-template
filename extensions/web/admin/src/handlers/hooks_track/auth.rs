@@ -3,9 +3,10 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::Response,
 };
+use systemprompt::config::SecretsBootstrap;
 use systemprompt::identifiers::UserId;
 use systemprompt::models::auth::JwtAudience;
-use systemprompt::models::{Config, SecretsBootstrap};
+use systemprompt::models::Config;
 use systemprompt::oauth::validate_jwt_token;
 
 pub fn extract_and_validate_jwt(

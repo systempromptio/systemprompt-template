@@ -1,5 +1,6 @@
 use std::fmt::Write as FmtWrite;
 
+use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use systemprompt_web_shared::error::MarketplaceError;
@@ -25,12 +26,17 @@ impl Job for RobotsTxtGenerationJob {
         true
     }
 
-    async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
         let start = std::time::Instant::now();
 
         tracing::info!("robots.txt generation started");
 
-        generate_robots_txt().await?;
+        let paths = ctx
+            .app_paths::<AppPaths>()
+            .ok_or(MarketplaceError::Internal(
+                "AppPaths not available in job context".to_string(),
+            ))?;
+        generate_robots_txt(paths).await?;
 
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 
@@ -42,14 +48,12 @@ impl Job for RobotsTxtGenerationJob {
 
 systemprompt::traits::submit_job!(&RobotsTxtGenerationJob);
 
-pub async fn generate_robots_txt() -> Result<(), MarketplaceError> {
-    use systemprompt::models::{AppPaths, Config};
+pub async fn generate_robots_txt(paths: &AppPaths) -> Result<(), MarketplaceError> {
+    use systemprompt::models::Config;
     use tokio::fs;
 
     let global_config =
         Config::get().map_err(|e| MarketplaceError::Internal(format!("Config error: {e}")))?;
-    let paths =
-        AppPaths::get().map_err(|e| MarketplaceError::Internal(format!("AppPaths error: {e}")))?;
 
     let web_dir = paths.web().dist().to_path_buf();
     let base_url = &global_config.api_external_url;

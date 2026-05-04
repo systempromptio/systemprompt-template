@@ -77,7 +77,11 @@ pub async fn device_link_approve(
         }
     };
 
-    let sep = if form.redirect.contains('?') { '&' } else { '?' };
+    let sep = if form.redirect.contains('?') {
+        '&'
+    } else {
+        '?'
+    };
     let location = format!("{}{}code={}", form.redirect, sep, issued.code);
     Redirect::to(&location).into_response()
 }
@@ -86,7 +90,11 @@ pub async fn device_link_deny(Form(form): Form<DeviceLinkApproveForm>) -> Respon
     if validate_loopback_redirect(&form.redirect).is_none() {
         return bad_redirect_response(&form.redirect);
     }
-    let sep = if form.redirect.contains('?') { '&' } else { '?' };
+    let sep = if form.redirect.contains('?') {
+        '&'
+    } else {
+        '?'
+    };
     let location = format!("{}{}error=denied", form.redirect, sep);
     Redirect::to(&location).into_response()
 }
@@ -105,7 +113,10 @@ fn validate_loopback_redirect(redirect: &str) -> Option<String> {
 }
 
 fn bad_redirect_response(redirect: &str) -> Response {
-    tracing::warn!(redirect, "Rejected cowork device-link redirect (non-loopback)");
+    tracing::warn!(
+        redirect,
+        "Rejected cowork device-link redirect (non-loopback)"
+    );
     (
         StatusCode::BAD_REQUEST,
         Html(format!(

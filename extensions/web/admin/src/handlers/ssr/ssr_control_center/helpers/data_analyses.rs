@@ -76,10 +76,9 @@ pub const fn build_skill_adoption(
 ) -> SkillAdoption {
     let total_available = skills_usage.len() + unused_skills.len();
     let total_used = skills_usage.len();
-    let adoption_pct = if total_available > 0 {
-        (total_used * 100) / total_available
-    } else {
-        0
+    let adoption_pct = match (total_used * 100).checked_div(total_available) {
+        Some(pct) => pct,
+        None => 0,
     };
     SkillAdoption {
         adoption_pct,

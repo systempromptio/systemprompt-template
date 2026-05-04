@@ -13,18 +13,12 @@ use super::super::{handlers, middleware, templates::AdminTemplateEngine};
 pub fn cowork_auth_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Router {
     let inner = Router::new()
         .route("/setup", get(handlers::ssr::cowork_setup_page))
-        .route(
-            "/device-link",
-            get(handlers::ssr::device_link_page),
-        )
+        .route("/device-link", get(handlers::ssr::device_link_page))
         .route(
             "/device-link/approve",
             post(handlers::ssr::device_link_approve),
         )
-        .route(
-            "/device-link/deny",
-            post(handlers::ssr::device_link_deny),
-        )
+        .route("/device-link/deny", post(handlers::ssr::device_link_deny))
         .layer(Extension(engine))
         .layer(axum_middleware::from_fn(
             middleware::marketplace_context_middleware,

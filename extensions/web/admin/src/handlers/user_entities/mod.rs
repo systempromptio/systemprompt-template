@@ -2,7 +2,7 @@ mod agents;
 mod batch_delete;
 mod delete_account;
 mod fork;
-pub(crate) mod fork_helpers;
+pub mod fork_helpers;
 mod fork_lists;
 mod hooks;
 mod mcp_servers;

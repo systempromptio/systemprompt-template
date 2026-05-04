@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use sqlx::PgPool;
-use systemprompt::models::ProfileBootstrap;
+use systemprompt::config::ProfileBootstrap;
 
 use crate::repositories::export::PluginBundle;
 use crate::repositories::github_sync::{elapsed_ms, GitSyncError, SyncResult};

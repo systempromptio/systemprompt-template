@@ -10,13 +10,10 @@ use systemprompt_web_shared::error::MarketplaceError;
 pub struct CopyExtensionAssetsJob;
 
 impl CopyExtensionAssetsJob {
-    pub async fn execute_copy() -> Result<JobResult, MarketplaceError> {
+    pub async fn execute_copy(paths: &AppPaths) -> Result<JobResult, MarketplaceError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Copy extension assets job started");
-
-        let paths = AppPaths::get()
-            .map_err(|e| MarketplaceError::Internal(format!("AppPaths not initialized: {e}")))?;
 
         let registry = ExtensionRegistry::discover();
         let assets = registry.all_required_assets(paths);
@@ -124,8 +121,11 @@ impl Job for CopyExtensionAssetsJob {
         "0 */15 * * * *"
     }
 
-    async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
-        Ok(Self::execute_copy().await?)
+    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
+        let paths = ctx
+            .app_paths::<AppPaths>()
+            .ok_or_else(|| anyhow::anyhow!("AppPaths missing from JobContext"))?;
+        Ok(Self::execute_copy(paths).await?)
     }
 }
 

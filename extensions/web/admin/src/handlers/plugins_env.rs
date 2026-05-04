@@ -7,7 +7,7 @@ use axum::{
     Json,
 };
 use sqlx::PgPool;
-use systemprompt::models::ProfileBootstrap;
+use systemprompt::config::ProfileBootstrap;
 
 use systemprompt::identifiers::UserId;
 

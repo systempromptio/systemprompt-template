@@ -184,7 +184,7 @@ fn sort_and_filter(marketplace_plugins: &mut Vec<MarketplacePlugin>, query: &Mar
                 .partial_cmp(&a.avg_rating)
                 .unwrap_or(std::cmp::Ordering::Equal)
         }),
-        "usage" => marketplace_plugins.sort_unstable_by(|a, b| b.total_events.cmp(&a.total_events)),
+        "usage" => marketplace_plugins.sort_unstable_by_key(|p| std::cmp::Reverse(p.total_events)),
         "name" => marketplace_plugins.sort_unstable_by(|a, b| a.name.cmp(&b.name)),
         _ => marketplace_plugins.sort_unstable_by(|a, b| {
             b.rank_score

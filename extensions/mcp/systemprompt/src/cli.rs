@@ -2,7 +2,7 @@ use crate::tools::CliOutput;
 use rmcp::ErrorData as McpError;
 use std::path::PathBuf;
 use std::process::Command;
-use systemprompt::models::ProfileBootstrap;
+use systemprompt::config::ProfileBootstrap;
 
 pub fn get_cli_path() -> Result<PathBuf, McpError> {
     if let Ok(path) = std::env::var("SYSTEMPROMPT_CLI_PATH") {

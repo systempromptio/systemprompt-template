@@ -149,11 +149,10 @@ fn build_usage_item(label: &str, current: usize, max: Option<i64>) -> UsageItemV
         0
     } else {
         let max_val = usize::try_from(max.unwrap_or(1)).unwrap_or(1);
-        if max_val == 0 {
-            100
-        } else {
-            usize::min(current.saturating_mul(100) / max_val, 100)
-        }
+        current
+            .saturating_mul(100)
+            .checked_div(max_val)
+            .map_or(100, |pct| usize::min(pct, 100))
     };
     let is_at_limit =
         !is_unlimited && max.is_some_and(|m| i64::try_from(current).unwrap_or(i64::MAX) >= m);

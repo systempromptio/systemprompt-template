@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use sqlx::PgPool;
-use systemprompt::models::ProfileBootstrap;
+use systemprompt::config::ProfileBootstrap;
 
 use super::error::GitSyncError;
 use super::types::SyncResult;

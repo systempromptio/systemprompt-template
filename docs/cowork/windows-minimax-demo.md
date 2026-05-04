@@ -31,7 +31,7 @@ Every model string — including `claude-*` strings that Claude Desktop sends �
 
 The `minimax` secret slot exists in `.systemprompt/profiles/local/secrets.json`; you just need to make sure it holds a real key.
 
-The Windows helper CLI is **`sp-cowork-auth`** (binary is published as `systemprompt-cowork-*` in the release artifacts — rename on install). Config lives in `%APPDATA%\systemprompt\cowork-auth.toml`. PATs are issued via the web UI at `/admin/devices`, not a CLI subcommand.
+The Windows helper is **`systemprompt-bridge.exe`** (renamed from `sp-cowork-auth` / `systemprompt-cowork` in v0.7.0). It runs both as a credential-helper CLI (Claude Desktop's Inference slot) and as a Desktop GUI (`systemprompt-bridge gui`). Config lives in `%APPDATA%\systemprompt\systemprompt-bridge.toml`. PATs are issued via the web UI at `/admin/devices`, not a CLI subcommand.
 
 ---
 
@@ -71,19 +71,19 @@ If step 4 fails, stop — the server build is broken and no Windows flow will wo
 
 ---
 
-## 4. Install the helper on the Windows machine
+## 4. Install the bridge on the Windows machine
 
-Latest Windows build is in **[cowork-v0.3.0](https://github.com/systempromptio/systemprompt-core/releases/tag/cowork-v0.3.0)** — asset `systemprompt-cowork-x86_64-pc-windows-gnu.exe`. Renaming to `sp-cowork-auth.exe` on install keeps it consistent with the CLI name used in these docs.
+Latest Windows build is in **[cowork-v0.7.0](https://github.com/systempromptio/systemprompt-template/releases/tag/cowork-v0.7.0)** — asset `systemprompt-bridge-x86_64-pc-windows-msvc.exe`.
 
-PowerShell (Admin):
+Easiest: `scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket && scoop install cowork`. Manual:
 
 ```powershell
 $dir = "C:\Program Files\systemprompt"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 
 Invoke-WebRequest `
-  -Uri "https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.3.0/systemprompt-cowork-x86_64-pc-windows-gnu.exe" `
-  -OutFile "$dir\sp-cowork-auth.exe"
+  -Uri "https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.7.0/systemprompt-bridge-x86_64-pc-windows-msvc.exe" `
+  -OutFile "$dir\systemprompt-bridge.exe"
 
 [Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$dir", "User")
 ```
@@ -92,27 +92,36 @@ Open a new terminal so the PATH change takes effect. Windows SmartScreen will fl
 
 ## 5. Store the PAT on the Windows box
 
+**GUI path** (recommended for live demos — visible feedback):
+
 ```powershell
-sp-cowork-auth login sp-live-PASTE_YOUR_SECRET --gateway http://<host>:8080
-sp-cowork-auth status
+systemprompt-bridge gui
+```
+
+The Setup wizard opens. Paste the gateway URL and PAT, then enable Claude Desktop on the agents step. The status pill goes green when the proxy is up and the PAT is verified. Skip to step 7.
+
+**CLI path** (scriptable):
+
+```powershell
+systemprompt-bridge login sp-live-PASTE_YOUR_SECRET --gateway http://<host>:8080
+systemprompt-bridge status
 ```
 
 `login` writes:
 
-- `%APPDATA%\systemprompt\cowork-auth.toml` (gateway URL)
-- `%APPDATA%\systemprompt\cowork-auth.pat` (the secret, user-scoped NTFS ACL)
+- `%APPDATA%\systemprompt\systemprompt-bridge.toml` (gateway URL + PAT, user-scoped NTFS ACL)
 
 Env-only alternative (no secret on disk, good for CI):
 
 ```powershell
-$env:SP_COWORK_PAT = "sp-live-..."
-$env:SP_COWORK_GATEWAY_URL = "http://<host>:8080"
+$env:SP_BRIDGE_PAT = "sp-live-..."
+$env:SP_BRIDGE_GATEWAY_URL = "http://<host>:8080"
 ```
 
-## 6. Verify the helper issues a JWT
+## 6. Verify the bridge issues a JWT
 
 ```powershell
-sp-cowork-auth
+systemprompt-bridge
 ```
 
 Expect one JSON object on stdout:
@@ -124,17 +133,19 @@ Expect one JSON object on stdout:
 Prove the JWT is accepted downstream before Claude Desktop is in the loop:
 
 ```powershell
-$env:TOKEN = (sp-cowork-auth | ConvertFrom-Json).token
+$env:TOKEN = (systemprompt-bridge | ConvertFrom-Json).token
 curl -H "Authorization: Bearer $env:TOKEN" http://<host>:8080/api/v1/core/oauth/userinfo
 # expect: your user profile JSON
 ```
 
 ## 7. Point Claude for Work at the gateway
 
-In Claude Desktop → **Enterprise → Settings → Inference**:
+The simplest path: in the Cowork Desktop GUI, open the **Agents** tab and click **Enable** on the Claude Desktop card, then **Generate profile** and **Install profile**. The bridge writes the credential-helper config and the inference base URL into Claude Desktop's managed profile in one click.
 
-- **Credential helper script**: `C:\Program Files\systemprompt\sp-cowork-auth.exe`
-- **API base URL**: `http://<host>:8080` (must match the `--gateway` from step 5)
+Manual fallback — Claude Desktop → **Enterprise → Settings → Inference**:
+
+- **Credential helper script**: `C:\Program Files\systemprompt\systemprompt-bridge.exe`
+- **API base URL**: `http://127.0.0.1:48217` (the local proxy; the bridge swaps the loopback secret for a fresh JWT and forwards to the gateway URL configured in step 5)
 
 ---
 
@@ -158,10 +169,11 @@ In Claude Desktop → **Enterprise → Settings → Inference**:
 
 ## Gotchas — pre-flight 10 minutes before
 
-- **Confirm the exact Windows asset filename** on the release page. README and internal docs have used two names (`systemprompt-cowork` vs `sp-cowork-auth`); what you install locally is what Claude Desktop's helper-script path points at.
+- **Confirm the exact Windows asset filename** on the release page (currently `systemprompt-bridge-x86_64-pc-windows-msvc.exe`). What you install locally is what Claude Desktop's helper-script path points at.
 - **First-run SmartScreen** — trigger it once yourself so it doesn't interrupt the live demo.
 - **Clock skew** breaks JWT verification. Sync the Windows clock.
-- **Cached JWT** — after re-issuing the PAT, delete `%LOCALAPPDATA%\systemprompt\cowork-auth.json` so the helper fetches fresh.
+- **Cached JWT** — after re-issuing the PAT, delete `%LOCALAPPDATA%\systemprompt-bridge\cache.json` so the bridge fetches fresh. (Or: GUI → Settings → Re-run setup.)
+- **Diagnostics** — if anything goes sideways, the activity drawer's **Help & Support → Export diagnostic bundle** drops a redacted zip on the Desktop with logs, activity JSONL, crash dumps, and config.
 - **The catch-all is MiniMax for *everything*.** Calling it out on slide one prevents the "why did my `claude-opus` request go to MiniMax?" question.
 - **PAT scoping.** The user who issued the PAT must have permission for the gateway route. Step 6's `userinfo` call is the cheapest way to verify.
 
@@ -170,8 +182,9 @@ In Claude Desktop → **Enterprise → Settings → Inference**:
 ## Cleanup after the demo
 
 ```powershell
-sp-cowork-auth logout                                      # removes PAT file + strips [pat]
-Remove-Item "$env:LOCALAPPDATA\systemprompt\cowork-auth.json" -ErrorAction Ignore
+systemprompt-bridge logout                                          # removes PAT + strips [pat]
+Remove-Item "$env:LOCALAPPDATA\systemprompt-bridge\cache.json" -ErrorAction Ignore
+# or wipe everything: systemprompt-bridge uninstall --purge
 ```
 
 Revoke the PAT from `/admin/devices` on the gateway.

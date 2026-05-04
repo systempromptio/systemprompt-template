@@ -1,7 +1,8 @@
 use chrono::Duration;
+use systemprompt::config::SecretsBootstrap;
 use systemprompt::identifiers::{SessionId, UserId};
 use systemprompt::models::auth::{Permission, RateLimitTier, UserType};
-use systemprompt::models::{Config, SecretsBootstrap};
+use systemprompt::models::Config;
 use systemprompt::security::{SessionGenerator, SessionParams};
 
 const PLUGIN_TOKEN_DURATION_DAYS: i64 = 365;

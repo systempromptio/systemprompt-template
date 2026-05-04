@@ -54,7 +54,10 @@ pub fn scan_demos(demo_root: &Path) -> anyhow::Result<DemosConfig> {
     let quick_start = scan_quick_start(demo_root);
 
     let mut category_map: Vec<(String, DemoCategory)> = Vec::new();
-    for meta in CAPABILITY_CATEGORIES.iter().chain(PLATFORM_CATEGORIES.iter()) {
+    for meta in CAPABILITY_CATEGORIES
+        .iter()
+        .chain(PLATFORM_CATEGORIES.iter())
+    {
         let dir = demo_root.join(meta.id);
         if !dir.is_dir() {
             tracing::warn!(

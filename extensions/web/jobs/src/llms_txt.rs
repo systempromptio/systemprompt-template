@@ -2,6 +2,7 @@ use std::fmt::Write as FmtWrite;
 
 use systemprompt::database::DbPool;
 use systemprompt::generator::ContentConfigRaw;
+use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use systemprompt_web_shared::error::MarketplaceError;
@@ -35,8 +36,13 @@ impl Job for LlmsTxtGenerationJob {
         let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
             "Database not available in job context".to_string(),
         ))?;
+        let paths = ctx
+            .app_paths::<AppPaths>()
+            .ok_or(MarketplaceError::Internal(
+                "AppPaths not available in job context".to_string(),
+            ))?;
 
-        generate_llms_txt(DbPool::clone(db_pool)).await?;
+        generate_llms_txt(DbPool::clone(db_pool), paths).await?;
 
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 
@@ -48,14 +54,12 @@ impl Job for LlmsTxtGenerationJob {
 
 systemprompt::traits::submit_job!(&LlmsTxtGenerationJob);
 
-pub async fn generate_llms_txt(db_pool: DbPool) -> Result<(), MarketplaceError> {
-    use systemprompt::models::{AppPaths, Config};
+pub async fn generate_llms_txt(db_pool: DbPool, paths: &AppPaths) -> Result<(), MarketplaceError> {
+    use systemprompt::models::Config;
     use tokio::fs;
 
     let global_config =
         Config::get().map_err(|e| MarketplaceError::Internal(format!("Config error: {e}")))?;
-    let paths =
-        AppPaths::get().map_err(|e| MarketplaceError::Internal(format!("AppPaths error: {e}")))?;
 
     let config_path = paths.system().content_config();
     let yaml_content = fs::read_to_string(&config_path)

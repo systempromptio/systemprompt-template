@@ -1,5 +1,6 @@
 use systemprompt::database::DbPool;
 use systemprompt::generator::generate_sitemap;
+use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use systemprompt_web_shared::error::MarketplaceError;
@@ -33,8 +34,13 @@ impl Job for SitemapGenerationJob {
         let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
             "Database not available in job context".to_string(),
         ))?;
+        let paths = ctx
+            .app_paths::<AppPaths>()
+            .ok_or(MarketplaceError::Internal(
+                "AppPaths not available in job context".to_string(),
+            ))?;
 
-        generate_sitemap(DbPool::clone(db_pool)).await?;
+        generate_sitemap(DbPool::clone(db_pool), paths).await?;
 
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 
