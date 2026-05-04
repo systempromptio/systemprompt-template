@@ -31,9 +31,6 @@ pub async fn fork_single_plugin(
         base_plugin_id: Some(org_plugin.id.clone()),
     };
 
-    // Idempotent: if the user already has this plugin bound (unique key on
-    // user_id+plugin_id), reuse the existing row instead of raising 500 on the
-    // duplicate-key violation. Child fork helpers below are already get-or-create.
     let plugin = match repositories::find_user_plugin(pool, user_id, &plugin_id).await {
         Ok(Some(existing)) => existing,
         Ok(None) => repositories::create_user_plugin(pool, user_id, &create_plugin_req)
@@ -46,28 +43,31 @@ pub async fn fork_single_plugin(
     let forked_agent_ids = fork_plugin_agents(pool, user_id, org_plugin, services_path).await;
     let forked_mcp_ids = fork_plugin_mcp_servers(pool, user_id, org_plugin, services_path).await;
 
+    let forked_skills = forked_skill_ids.len();
+    let forked_agents = forked_agent_ids.len();
+
     link_forked_entities(
         pool,
         &plugin.id,
-        &forked_skill_ids,
-        &forked_agent_ids,
-        &forked_mcp_ids,
+        forked_skill_ids,
+        forked_agent_ids,
+        forked_mcp_ids,
     )
     .await;
 
     Ok(ForkSinglePluginResult {
-        forked_skills: forked_skill_ids.len(),
-        forked_agents: forked_agent_ids.len(),
         plugin,
+        forked_skills,
+        forked_agents,
     })
 }
 
 async fn link_forked_entities(
     pool: &PgPool,
     plugin_id: &str,
-    forked_skill_ids: &[String],
-    forked_agent_ids: &[String],
-    forked_mcp_ids: &[String],
+    forked_skill_ids: Vec<String>,
+    forked_agent_ids: Vec<String>,
+    forked_mcp_ids: Vec<String>,
 ) {
     link_skills_and_agents(pool, plugin_id, forked_skill_ids, forked_agent_ids).await;
     link_mcp_servers(pool, plugin_id, forked_mcp_ids).await;
@@ -76,17 +76,11 @@ async fn link_forked_entities(
 async fn link_skills_and_agents(
     pool: &PgPool,
     plugin_id: &str,
-    forked_skill_ids: &[String],
-    forked_agent_ids: &[String],
+    forked_skill_ids: Vec<String>,
+    forked_agent_ids: Vec<String>,
 ) {
-    let skill_ids: Vec<SkillId> = forked_skill_ids
-        .iter()
-        .map(|s| SkillId::from(s.clone()))
-        .collect();
-    let agent_ids: Vec<AgentId> = forked_agent_ids
-        .iter()
-        .map(|s| AgentId::from(s.clone()))
-        .collect();
+    let skill_ids: Vec<SkillId> = forked_skill_ids.into_iter().map(SkillId::from).collect();
+    let agent_ids: Vec<AgentId> = forked_agent_ids.into_iter().map(AgentId::from).collect();
     if let Err(e) = repositories::set_plugin_skills(pool, plugin_id, &skill_ids).await {
         tracing::warn!(error = %e, "Failed to set plugin skills");
     }
@@ -95,14 +89,11 @@ async fn link_skills_and_agents(
     }
 }
 
-async fn link_mcp_servers(pool: &PgPool, plugin_id: &str, forked_mcp_ids: &[String]) {
+async fn link_mcp_servers(pool: &PgPool, plugin_id: &str, forked_mcp_ids: Vec<String>) {
     if forked_mcp_ids.is_empty() {
         return;
     }
-    let mcp_ids: Vec<McpServerId> = forked_mcp_ids
-        .iter()
-        .map(|s| McpServerId::new(s.clone()))
-        .collect();
+    let mcp_ids: Vec<McpServerId> = forked_mcp_ids.into_iter().map(McpServerId::new).collect();
     if let Err(e) =
         repositories::user_plugins::set_plugin_mcp_servers(pool, plugin_id, &mcp_ids).await
     {
@@ -240,10 +231,11 @@ async fn fork_single_mcp_server(
         }
     };
 
+    let mcp_id = McpServerId::new(mcp_server_id.to_string());
     let create_req = crate::types::CreateUserMcpServerRequest {
-        mcp_server_id: McpServerId::new(mcp_server_id.to_string()),
+        mcp_server_id: mcp_id.clone(),
         name: server_detail.description.clone(),
-        description: server_detail.description.clone(),
+        description: server_detail.description,
         binary: server_detail.binary,
         package_name: server_detail.package_name,
         port: i32::from(server_detail.port),
@@ -251,7 +243,7 @@ async fn fork_single_mcp_server(
         oauth_required: server_detail.oauth_required,
         oauth_scopes: server_detail.oauth_scopes,
         oauth_audience: server_detail.oauth_audience,
-        base_mcp_server_id: Some(McpServerId::new(mcp_server_id.to_string())),
+        base_mcp_server_id: Some(mcp_id),
     };
 
     match repositories::user_mcp_servers::get_or_create_user_mcp_server(pool, user_id, &create_req)

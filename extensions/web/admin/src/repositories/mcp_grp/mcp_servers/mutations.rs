@@ -9,7 +9,7 @@ use systemprompt_web_shared::error::MarketplaceError;
 
 pub fn create_mcp_server(
     services_path: &Path,
-    req: &CreateMcpRequest,
+    req: CreateMcpRequest,
 ) -> Result<McpServerDetail, MarketplaceError> {
     let mcp_dir = services_path.join("mcp");
     std::fs::create_dir_all(&mcp_dir)?;
@@ -22,12 +22,12 @@ pub fn create_mcp_server(
     }
     let server_type = if req.server_type.is_empty() {
         if req.binary.is_empty() {
-            "external"
+            "external".to_string()
         } else {
-            "internal"
+            "internal".to_string()
         }
     } else {
-        &req.server_type
+        req.server_type
     };
     let endpoint = if req.endpoint.is_empty() && server_type == SERVER_TYPE_INTERNAL {
         format!("http://localhost:8080/api/v1/mcp/{}/mcp", req.id)
@@ -37,7 +37,7 @@ pub fn create_mcp_server(
             req.id
         )));
     } else {
-        req.endpoint.clone()
+        req.endpoint
     };
     let mut yaml_content = format!(
         "mcp_servers:\n  {}:\n    type: {}\n    binary: \"{}\"\n    package: \"{}\"\n    port: {}\n    endpoint: \"{}\"\n    enabled: {}\n    display_in_web: true\n    description: \"{}\"\n",
@@ -60,17 +60,17 @@ pub fn create_mcp_server(
         MarketplaceError::Internal(format!("Failed to write: {}: {e}", file_path.display()))
     })?;
     Ok(McpServerDetail {
-        id: req.id.clone(),
-        server_type: server_type.to_string(),
-        binary: req.binary.clone(),
-        package_name: req.package_name.clone(),
+        id: req.id,
+        server_type,
+        binary: req.binary,
+        package_name: req.package_name,
         port: req.port,
         endpoint,
-        description: req.description.clone(),
+        description: req.description,
         enabled: req.enabled,
         oauth_required: req.oauth_required,
-        oauth_scopes: req.oauth_scopes.clone(),
-        oauth_audience: req.oauth_audience.clone(),
+        oauth_scopes: req.oauth_scopes,
+        oauth_audience: req.oauth_audience,
         removable: true,
     })
 }
@@ -78,7 +78,7 @@ pub fn create_mcp_server(
 pub fn update_mcp_server(
     services_path: &Path,
     server_id: &str,
-    req: &UpdateMcpRequest,
+    req: UpdateMcpRequest,
 ) -> Result<Option<McpServerDetail>, MarketplaceError> {
     let mcp_dir = services_path.join("mcp");
     let Some(file_path) = super::find_mcp_file(&mcp_dir, server_id)? else {
@@ -98,24 +98,24 @@ pub fn update_mcp_server(
     find_mcp_server(services_path, server_id)
 }
 
-fn apply_update_fields(sv: &mut serde_yaml::Value, req: &UpdateMcpRequest) {
-    if let Some(ref t) = req.server_type {
-        sv["type"] = serde_yaml::Value::String(t.clone());
+fn apply_update_fields(sv: &mut serde_yaml::Value, req: UpdateMcpRequest) {
+    if let Some(t) = req.server_type {
+        sv["type"] = serde_yaml::Value::String(t);
     }
-    if let Some(ref b) = req.binary {
-        sv["binary"] = serde_yaml::Value::String(b.clone());
+    if let Some(b) = req.binary {
+        sv["binary"] = serde_yaml::Value::String(b);
     }
-    if let Some(ref p) = req.package_name {
-        sv["package"] = serde_yaml::Value::String(p.clone());
+    if let Some(p) = req.package_name {
+        sv["package"] = serde_yaml::Value::String(p);
     }
     if let Some(p) = req.port {
         sv["port"] = serde_yaml::Value::Number(serde_yaml::Number::from(p));
     }
-    if let Some(ref e) = req.endpoint {
-        sv["endpoint"] = serde_yaml::Value::String(e.clone());
+    if let Some(e) = req.endpoint {
+        sv["endpoint"] = serde_yaml::Value::String(e);
     }
-    if let Some(ref d) = req.description {
-        sv["description"] = serde_yaml::Value::String(d.clone());
+    if let Some(d) = req.description {
+        sv["description"] = serde_yaml::Value::String(d);
     }
     if let Some(e) = req.enabled {
         sv["enabled"] = serde_yaml::Value::Bool(e);
@@ -124,15 +124,12 @@ fn apply_update_fields(sv: &mut serde_yaml::Value, req: &UpdateMcpRequest) {
         if let Some(r) = req.oauth_required {
             oauth_val["required"] = serde_yaml::Value::Bool(r);
         }
-        if let Some(ref s) = req.oauth_scopes {
-            oauth_val["scopes"] = serde_yaml::Value::Sequence(
-                s.iter()
-                    .map(|s| serde_yaml::Value::String(s.clone()))
-                    .collect(),
-            );
+        if let Some(s) = req.oauth_scopes {
+            oauth_val["scopes"] =
+                serde_yaml::Value::Sequence(s.into_iter().map(serde_yaml::Value::String).collect());
         }
-        if let Some(ref a) = req.oauth_audience {
-            oauth_val["audience"] = serde_yaml::Value::String(a.clone());
+        if let Some(a) = req.oauth_audience {
+            oauth_val["audience"] = serde_yaml::Value::String(a);
         }
     }
 }

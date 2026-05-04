@@ -43,21 +43,21 @@ pub async fn list_forkable_plugins_handler(
         });
 
     let forked_base_ids: HashSet<String> = user_plugins
-        .iter()
-        .filter_map(|p| p.base_plugin_id.clone())
+        .into_iter()
+        .filter_map(|p| p.base_plugin_id)
         .collect();
 
     let items: Vec<ForkablePluginItem> = org_plugins
-        .iter()
+        .into_iter()
         .filter(|p| !p.id.is_empty())
         .map(|p| ForkablePluginItem {
-            id: p.id.clone(),
-            name: p.name.clone(),
-            description: p.description.clone(),
+            already_forked: forked_base_ids.contains(&p.id),
             skill_count: p.skills.len(),
             agent_count: p.agents.len(),
             mcp_count: p.mcp_servers.len(),
-            already_forked: forked_base_ids.contains(&p.id),
+            id: p.id,
+            name: p.name,
+            description: p.description,
         })
         .collect();
 
@@ -87,24 +87,27 @@ pub async fn list_forkable_skills_handler(
         });
 
     let forked_base_ids: HashSet<String> = user_skills
-        .iter()
-        .filter_map(|s| s.base_skill_id.as_ref().map(ToString::to_string))
+        .into_iter()
+        .filter_map(|s| s.base_skill_id.map(|id| id.to_string()))
         .collect();
 
-    let mut seen = HashSet::new();
+    let mut seen: HashSet<String> = HashSet::new();
     let mut items = Vec::new();
-    for plugin in &org_plugins {
-        for skill in &plugin.skills {
-            if seen.insert(skill.id.clone()) {
-                items.push(ForkableSkillItem {
-                    id: skill.id.to_string(),
-                    name: skill.name.clone(),
-                    description: skill.description.clone(),
-                    plugin_id: plugin.id.clone(),
-                    plugin_name: plugin.name.clone(),
-                    already_forked: forked_base_ids.contains(skill.id.as_str()),
-                });
+    for plugin in org_plugins {
+        for skill in plugin.skills {
+            let skill_id_str = skill.id.to_string();
+            if !seen.insert(skill_id_str.clone()) {
+                continue;
             }
+            let already_forked = forked_base_ids.contains(&skill_id_str);
+            items.push(ForkableSkillItem {
+                id: skill_id_str,
+                name: skill.name,
+                description: skill.description,
+                plugin_id: plugin.id.clone(),
+                plugin_name: plugin.name.clone(),
+                already_forked,
+            });
         }
     }
 
@@ -134,24 +137,27 @@ pub async fn list_forkable_agents_handler(
         });
 
     let forked_base_ids: HashSet<String> = user_agents
-        .iter()
-        .filter_map(|a| a.base_agent_id.as_ref().map(ToString::to_string))
+        .into_iter()
+        .filter_map(|a| a.base_agent_id.map(|id| id.to_string()))
         .collect();
 
-    let mut seen = HashSet::new();
+    let mut seen: HashSet<String> = HashSet::new();
     let mut items = Vec::new();
-    for plugin in &org_plugins {
-        for agent in &plugin.agents {
-            if seen.insert(agent.id.clone()) {
-                items.push(ForkableAgentItem {
-                    id: agent.id.to_string(),
-                    name: agent.name.clone(),
-                    description: agent.description.clone(),
-                    plugin_id: plugin.id.clone(),
-                    plugin_name: plugin.name.clone(),
-                    already_forked: forked_base_ids.contains(agent.id.as_str()),
-                });
+    for plugin in org_plugins {
+        for agent in plugin.agents {
+            let agent_id_str = agent.id.to_string();
+            if !seen.insert(agent_id_str.clone()) {
+                continue;
             }
+            let already_forked = forked_base_ids.contains(&agent_id_str);
+            items.push(ForkableAgentItem {
+                id: agent_id_str,
+                name: agent.name,
+                description: agent.description,
+                plugin_id: plugin.id.clone(),
+                plugin_name: plugin.name.clone(),
+                already_forked,
+            });
         }
     }
 
