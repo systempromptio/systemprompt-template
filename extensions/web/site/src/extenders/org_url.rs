@@ -33,8 +33,14 @@ impl TemplateDataExtender for OrgUrlExtender {
         10
     }
 
-    async fn extend(&self, _ctx: &ExtenderContext<'_>, data: &mut Value) -> anyhow::Result<()> {
-        let config = Config::get()?;
+    async fn extend(
+        &self,
+        _ctx: &ExtenderContext<'_>,
+        data: &mut Value,
+    ) -> Result<(), systemprompt::traits::ProviderError> {
+        let config = Config::get().map_err(|e| {
+            systemprompt::traits::ProviderError::from(anyhow::Error::from(e))
+        })?;
         let org_url = &config.api_external_url;
 
         let default_image = format!("{org_url}/files/images/logo.png");

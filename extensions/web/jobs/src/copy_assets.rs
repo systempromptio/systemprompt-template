@@ -109,7 +109,7 @@ impl Job for CopyExtensionAssetsJob {
         "0 */15 * * * *"
     }
 
-    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
         let paths = ctx
             .app_paths::<Arc<AppPaths>>()
             .ok_or(JobError::MissingContext("AppPaths"))?

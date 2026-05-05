@@ -2,6 +2,7 @@ use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
+use crate::error::JobError;
 use systemprompt_web_admin::repositories::{secret_crypto, secret_keys};
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -26,7 +27,12 @@ impl Job for SecretMigrationJob {
         false
     }
 
-    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
+        Ok(execute_inner(ctx).await?)
+    }
+}
+
+async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         let start = std::time::Instant::now();
 
         let Ok(master_key) = secret_crypto::load_master_key() else {
@@ -64,7 +70,6 @@ impl Job for SecretMigrationJob {
         Ok(JobResult::success()
             .with_stats(success_count, error_count)
             .with_duration(duration_ms))
-    }
 }
 
 struct UnencryptedSecretRow {

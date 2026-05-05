@@ -1,3 +1,5 @@
+use systemprompt::generator::PublishError;
+use systemprompt::traits::ProviderError;
 use systemprompt_web_shared::error::MarketplaceError;
 use thiserror::Error;
 
@@ -27,6 +29,9 @@ pub enum JobError {
     #[error("Marketplace error: {0}")]
     Marketplace(#[from] MarketplaceError),
 
+    #[error("Publish error: {0}")]
+    Publish(#[from] PublishError),
+
     #[error("Pipeline failed: {failed} sub-job(s) reported errors")]
     Pipeline { failed: u64 },
 
@@ -37,6 +42,12 @@ pub enum JobError {
 impl From<anyhow::Error> for JobError {
     fn from(err: anyhow::Error) -> Self {
         Self::Other(err.to_string())
+    }
+}
+
+impl From<JobError> for ProviderError {
+    fn from(err: JobError) -> Self {
+        Self::Internal(anyhow::Error::from(err))
     }
 }
 

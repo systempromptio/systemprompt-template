@@ -119,7 +119,7 @@ impl Job for BundleAdminCssJob {
         true
     }
 
-    async fn execute(&self, _ctx: &JobContext) -> anyhow::Result<JobResult> {
+    async fn execute(&self, _ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
         Ok(Self::execute_bundle().await?)
     }
 }

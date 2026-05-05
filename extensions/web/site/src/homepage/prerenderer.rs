@@ -5,7 +5,6 @@ use async_trait::async_trait;
 use systemprompt::extension::prelude::*;
 
 use super::config::HomepageConfig;
-use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug)]
 pub struct HomepagePrerenderer {
@@ -32,8 +31,8 @@ impl PagePrerenderer for HomepagePrerenderer {
     async fn prepare(
         &self,
         _ctx: &PagePrepareContext<'_>,
-    ) -> anyhow::Result<Option<PageRenderSpec>> {
-        let config_value = serde_json::to_value(&*self.config).map_err(MarketplaceError::Json)?;
+    ) -> Result<Option<PageRenderSpec>, systemprompt::traits::ProviderError> {
+        let config_value = serde_json::to_value(&*self.config)?;
 
         let base_data = serde_json::json!({
             "site": {

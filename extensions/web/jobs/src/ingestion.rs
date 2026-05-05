@@ -4,6 +4,7 @@ use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
+use crate::error::JobError;
 use systemprompt_web_content::services::IngestionService;
 use systemprompt_web_shared::config::BlogConfigValidated;
 use systemprompt_web_shared::error::MarketplaceError;
@@ -82,25 +83,29 @@ impl Job for ContentIngestionJob {
         "0 0 * * * *"
     }
 
-    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
-        let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-            "Database not available in job context".to_string(),
-        ))?;
-
-        let pool = db.write_pool().ok_or(MarketplaceError::Internal(
-            "Write PgPool not available from database".to_string(),
-        ))?;
-
-        let config = BlogConfigValidated::load_from_env_or_default()
-            .map_err(|e| MarketplaceError::Internal(format!("Failed to load blog config: {e}")))?;
-
-        let delete_orphans = std::env::var("CONTENT_INGESTION_DELETE_ORPHANS")
-            .is_ok_and(|v| v.eq_ignore_ascii_case("true") || v == "1");
-
-        let options = IngestionOptions::default().with_delete_orphans(delete_orphans);
-
-        Ok(Self::execute_with_options(pool, &config, options).await?)
+    async fn execute(&self, ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
+        Ok(execute_inner(ctx).await?)
     }
+}
+
+async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
+    let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
+        "Database not available in job context".to_string(),
+    ))?;
+
+    let pool = db.write_pool().ok_or(MarketplaceError::Internal(
+        "Write PgPool not available from database".to_string(),
+    ))?;
+
+    let config = BlogConfigValidated::load_from_env_or_default()
+        .map_err(|e| MarketplaceError::Internal(format!("Failed to load blog config: {e}")))?;
+
+    let delete_orphans = std::env::var("CONTENT_INGESTION_DELETE_ORPHANS")
+        .is_ok_and(|v| v.eq_ignore_ascii_case("true") || v == "1");
+
+    let options = IngestionOptions::default().with_delete_orphans(delete_orphans);
+
+    Ok(ContentIngestionJob::execute_with_options(pool, &config, options).await?)
 }
 
 async fn ingest_source(

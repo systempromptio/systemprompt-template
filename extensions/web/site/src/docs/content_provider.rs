@@ -44,12 +44,16 @@ impl ContentDataProvider for DocsContentDataProvider {
         &self,
         ctx: &ContentDataContext<'_>,
         item: &mut serde_json::Value,
-    ) -> anyhow::Result<()> {
+    ) -> Result<(), systemprompt::traits::ProviderError> {
         let db = ctx
             .db_pool::<Arc<Database>>()
-            .ok_or(DocsError::NoDatabaseInContext)?;
+            .ok_or(DocsError::NoDatabaseInContext)
+            .map_err(|e| systemprompt::traits::ProviderError::from(anyhow::Error::from(e)))?;
 
-        let pool = db.pool().ok_or(DocsError::PoolNotInitialized)?;
+        let pool = db
+            .pool()
+            .ok_or(DocsError::PoolNotInitialized)
+            .map_err(|e| systemprompt::traits::ProviderError::from(anyhow::Error::from(e)))?;
 
         let content_id = ctx.content_id();
 
@@ -58,7 +62,8 @@ impl ContentDataProvider for DocsContentDataProvider {
             .map_err(|e| match e {
                 sqlx::Error::RowNotFound => DocsError::ContentNotFound(content_id.to_string()),
                 other => DocsError::Database(other),
-            })?;
+            })
+            .map_err(|e| systemprompt::traits::ProviderError::from(anyhow::Error::from(e)))?;
 
         if let Some(obj) = item.as_object_mut() {
             obj.insert("after_reading_this".to_string(), row.after_reading_this);

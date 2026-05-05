@@ -6,6 +6,7 @@ use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
+use crate::error::JobError;
 use systemprompt_web_admin::repositories;
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -30,7 +31,12 @@ impl Job for MarketplaceSyncJob {
         false
     }
 
-    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
+        Ok(execute_inner(ctx).await?)
+    }
+}
+
+async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         let start = std::time::Instant::now();
 
         tracing::info!("Marketplace sync job started");
@@ -93,7 +99,6 @@ impl Job for MarketplaceSyncJob {
         Ok(JobResult::success()
             .with_stats(success_count, error_count)
             .with_duration(duration_ms))
-    }
 }
 
 pub async fn generate_and_persist_marketplace(
