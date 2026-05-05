@@ -9,6 +9,7 @@ use super::{
     ContentIngestionJob, ContentPrerenderJob, CopyExtensionAssetsJob, LlmsTxtGenerationJob,
     RobotsTxtGenerationJob, SitemapGenerationJob,
 };
+use crate::error::JobError;
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Default)]
@@ -216,7 +217,13 @@ impl Job for PublishPipelineJob {
         true
     }
 
-    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
+        Ok(self.execute_inner(ctx).await?)
+    }
+}
+
+impl PublishPipelineJob {
+    async fn execute_inner(&self, ctx: &JobContext) -> Result<JobResult, JobError> {
         let start_time = std::time::Instant::now();
 
         let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(

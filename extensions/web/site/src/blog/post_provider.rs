@@ -37,10 +37,13 @@ impl PageDataProvider for BlogPostPageDataProvider {
         vec!["blog".to_string()]
     }
 
-    async fn provide_page_data(&self, ctx: &PageContext<'_>) -> anyhow::Result<Value> {
-        let item = ctx.content_item().ok_or_else(|| {
-            BlogError::InvalidRequest("Content item required for blog post".to_string())
-        })?;
+    async fn provide_page_data(&self, ctx: &PageContext<'_>) -> Result<Value, systemprompt::traits::ProviderError> {
+        let item = ctx
+            .content_item()
+            .ok_or_else(|| {
+                BlogError::InvalidRequest("Content item required for blog post".to_string())
+            })
+            .map_err(|e| systemprompt::traits::ProviderError::from(anyhow::Error::from(e)))?;
 
         let mut data = json!({});
 

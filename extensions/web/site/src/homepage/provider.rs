@@ -5,7 +5,6 @@ use serde_json::Value;
 use systemprompt::extension::prelude::*;
 
 use super::config::HomepageConfig;
-use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug)]
 pub struct HomepagePageDataProvider {
@@ -29,9 +28,9 @@ impl PageDataProvider for HomepagePageDataProvider {
         vec!["homepage".to_string()]
     }
 
-    async fn provide_page_data(&self, _ctx: &PageContext<'_>) -> anyhow::Result<Value> {
+    async fn provide_page_data(&self, _ctx: &PageContext<'_>) -> Result<Value, systemprompt::traits::ProviderError> {
         let config = (*self.config).clone();
-        let config_value = serde_json::to_value(&config).map_err(MarketplaceError::Json)?;
+        let config_value = serde_json::to_value(&config)?;
         Ok(serde_json::json!({ "site": { "homepage": config_value } }))
     }
 

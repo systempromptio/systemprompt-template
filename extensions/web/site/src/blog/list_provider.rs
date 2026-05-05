@@ -35,7 +35,7 @@ impl PageDataProvider for BlogListPageDataProvider {
         vec!["blog-list".to_string()]
     }
 
-    async fn provide_page_data(&self, ctx: &PageContext<'_>) -> anyhow::Result<Value> {
+    async fn provide_page_data(&self, ctx: &PageContext<'_>) -> Result<Value, systemprompt::traits::ProviderError> {
         let Some(db) = ctx.db_pool::<Arc<Database>>() else {
             tracing::warn!("BlogListPageDataProvider: No database in context");
             return Ok(json!({ "POSTS": "" }));
@@ -46,7 +46,10 @@ impl PageDataProvider for BlogListPageDataProvider {
             return Ok(json!({ "POSTS": "" }));
         };
 
-        let posts = list_blog_posts(&pool).await.map_err(BlogError::Database)?;
+        let posts = list_blog_posts(&pool)
+            .await
+            .map_err(BlogError::Database)
+            .map_err(|e| systemprompt::traits::ProviderError::from(anyhow::Error::from(e)))?;
 
         tracing::debug!(count = posts.len(), "Fetched blog posts");
 

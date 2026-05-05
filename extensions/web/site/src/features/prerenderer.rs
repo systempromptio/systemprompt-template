@@ -4,7 +4,6 @@ use async_trait::async_trait;
 use systemprompt::extension::prelude::*;
 
 use super::config::FeaturePage;
-use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug)]
 pub struct FeaturePagePrerenderer {
@@ -33,8 +32,8 @@ impl PagePrerenderer for FeaturePagePrerenderer {
     async fn prepare(
         &self,
         ctx: &PagePrepareContext<'_>,
-    ) -> anyhow::Result<Option<PageRenderSpec>> {
-        let page_data = serde_json::to_value(&self.page).map_err(MarketplaceError::Json)?;
+    ) -> Result<Option<PageRenderSpec>, systemprompt::traits::ProviderError> {
+        let page_data = serde_json::to_value(&self.page)?;
 
         let base_data = serde_json::json!({
             "feature": page_data,

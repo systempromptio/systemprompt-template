@@ -46,7 +46,11 @@ async fn main() -> Result<()> {
 
     let server = SystempromptServer::new(Arc::clone(ctx.db_pool()), service_id.clone())
         .context("Failed to initialize SystempromptServer")?;
-    let router = systemprompt::mcp::create_router(server, ctx.db_pool());
+    let router = systemprompt::mcp::create_router(
+        server,
+        ctx.db_pool(),
+        systemprompt::mcp::McpHttpConfig::default(),
+    );
     let addr = format!("0.0.0.0:{port}");
     let listener = TcpListener::bind(&addr).await?;
 

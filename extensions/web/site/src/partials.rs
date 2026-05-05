@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use systemprompt::template_provider::{
     ComponentContext, ComponentRenderer, PartialTemplate, RenderedComponent,
 };
+use systemprompt::traits::ProviderError;
 
 pub(crate) const PRIORITY_CRITICAL: u32 = 5;
 pub(crate) const PRIORITY_HIGH: u32 = 10;
@@ -41,7 +42,7 @@ impl ComponentRenderer for HeadAssetsPartialRenderer {
         Some(PartialTemplate::embedded("head-assets", Self::TEMPLATE))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> anyhow::Result<RenderedComponent> {
+    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent, ProviderError> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 
@@ -75,7 +76,7 @@ impl ComponentRenderer for HeaderPartialRenderer {
         Some(PartialTemplate::embedded("header", Self::TEMPLATE))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> anyhow::Result<RenderedComponent> {
+    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent, ProviderError> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 
@@ -109,7 +110,7 @@ impl ComponentRenderer for FooterPartialRenderer {
         Some(PartialTemplate::embedded("footer", Self::TEMPLATE))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> anyhow::Result<RenderedComponent> {
+    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent, ProviderError> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 
@@ -143,7 +144,7 @@ impl ComponentRenderer for ScriptsPartialRenderer {
         Some(PartialTemplate::embedded("scripts", Self::TEMPLATE))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> anyhow::Result<RenderedComponent> {
+    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent, ProviderError> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 

@@ -27,7 +27,7 @@ impl Job for ContentPrerenderJob {
         false
     }
 
-    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
         Ok(execute_inner(ctx).await?)
     }
 }

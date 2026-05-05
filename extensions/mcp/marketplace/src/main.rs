@@ -52,7 +52,11 @@ async fn main() -> Result<()> {
     )
     .context("Failed to initialize MarketplaceServer")?;
 
-    let router = systemprompt::mcp::create_router(server, ctx.db_pool());
+    let router = systemprompt::mcp::create_router(
+        server,
+        ctx.db_pool(),
+        systemprompt::mcp::McpHttpConfig::default(),
+    );
     let addr = format!("0.0.0.0:{port}");
     let listener = TcpListener::bind(&addr).await?;
 

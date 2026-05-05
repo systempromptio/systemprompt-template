@@ -173,7 +173,7 @@ impl Job for ContentAnalyticsAggregationJob {
         "0 */15 * * * *"
     }
 
-    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
         let db = ctx
             .db_pool::<DbPool>()
             .ok_or(JobError::MissingContext("DbPool"))?;

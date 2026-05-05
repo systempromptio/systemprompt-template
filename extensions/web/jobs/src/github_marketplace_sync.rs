@@ -1,6 +1,7 @@
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
+use crate::error::JobError;
 use systemprompt_web_admin::repositories;
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -25,7 +26,12 @@ impl Job for GitHubMarketplaceSyncJob {
         true
     }
 
-    async fn execute(&self, ctx: &JobContext) -> anyhow::Result<JobResult> {
+    async fn execute(&self, ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
+        Ok(execute_inner(ctx).await?)
+    }
+}
+
+async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         let start = std::time::Instant::now();
 
         tracing::info!("GitHub marketplace sync job started");
@@ -70,7 +76,6 @@ impl Job for GitHubMarketplaceSyncJob {
         Ok(JobResult::success()
             .with_stats(total_success, total_errors)
             .with_duration(duration_ms))
-    }
 }
 
 async fn sync_from_github(
