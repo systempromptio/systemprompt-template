@@ -16,16 +16,12 @@ marketplace:
 
   # All ids must resolve to top-level resources defined in services/.
   # Loader (in core) validates referential integrity at startup.
-  plugins:
-    include:
-      - enterprise-demo
+  # Skills/agents/mcp_servers/plugins live in the database — the YAML
+  # bootstrap loader (commit 1803f2d) seeds them at startup. Keeping the
+  # marketplace shell empty avoids needing every entity declared in
+  # services/config/config.yaml's `includes:` list.
   skills:
-    include:
-      - example_web_search
-      - use_dangerous_secret
-  mcp_servers:
-    - systemprompt
+    include: []
+  mcp_servers: []
   agents:
-    include:
-      - developer_agent
-      - associate_agent
+    include: []
