@@ -74,6 +74,7 @@ fn access_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route("/access/users", get(handlers::ssr::users_page))
         .route("/access/user", get(handlers::ssr::user_detail_page))
+        .route("/user", get(handlers::ssr::user_detail_page))
         .route(
             "/access/departments",
             get(handlers::ssr::management_departments_page),
