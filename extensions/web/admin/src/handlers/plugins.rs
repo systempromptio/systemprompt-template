@@ -13,7 +13,7 @@ use systemprompt::identifiers::{SkillId, UserId};
 
 use crate::handlers::shared;
 use crate::repositories;
-use crate::types::{CreateSkillRequest, UserContext, UserQuery};
+use crate::types::{UserContext, UserQuery};
 
 use super::responses::{PluginsListResponse, SkillsListResponse};
 
@@ -127,39 +127,3 @@ pub async fn get_skill_handler(
     }
 }
 
-pub async fn create_skill_handler(
-    State(pool): State<Arc<PgPool>>,
-    Query(query): Query<UserQuery>,
-    Json(body): Json<CreateSkillRequest>,
-) -> Response {
-    let default_user_id = UserId::new("admin");
-    let user_id = query
-        .user_id
-        .as_ref()
-        .map_or_else(|| default_user_id.clone(), UserId::new);
-    match repositories::create_user_skill(&pool, &user_id, &body).await {
-        Ok(skill) => {
-            let name = body.name.clone();
-            let skill_id_clone = skill.skill_id.clone();
-            let uid = user_id.clone();
-            let p = Arc::clone(&pool);
-            tokio::spawn(async move {
-                crate::activity::record(
-                    &p,
-                    crate::activity::NewActivity::entity_created(
-                        &uid,
-                        crate::activity::ActivityEntity::UserSkill,
-                        skill_id_clone.as_str(),
-                        &name,
-                    ),
-                )
-                .await;
-            });
-            (StatusCode::CREATED, Json(skill)).into_response()
-        }
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to create skill");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
-    }
-}

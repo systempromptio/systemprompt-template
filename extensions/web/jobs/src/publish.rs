@@ -194,14 +194,6 @@ impl PublishPipelineJob {
         }
     }
 
-    async fn run_plugin_autofork(
-        &self,
-        _paths: &AppPaths,
-        _db_pool: &DbPool,
-        stats: &mut PipelineStats,
-    ) {
-        stats.record_success();
-    }
 
     async fn run_asset_organization(&self, paths: &AppPaths, stats: &mut PipelineStats) {
         let dist_dir = paths.web().dist().to_path_buf();
@@ -265,7 +257,8 @@ impl PublishPipelineJob {
         self.run_prerender(ctx, &mut stats).await;
         self.run_page_prerender(paths, db_pool, &mut stats).await;
         self.run_derived_files(ctx, paths, db_pool, &mut stats).await;
-        self.run_plugin_autofork(paths, db_pool, &mut stats).await;
+        let _ = (paths, db_pool);
+        stats.record_success();
         self.run_asset_organization(paths, &mut stats).await;
 
         let duration_ms = u64::try_from(start_time.elapsed().as_millis()).unwrap_or(u64::MAX);

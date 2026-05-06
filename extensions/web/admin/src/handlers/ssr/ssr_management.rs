@@ -34,90 +34,6 @@ fn url_escape(s: &str) -> String {
 }
 
 #[derive(Debug, Serialize)]
-struct OverviewStat {
-    label: &'static str,
-    value: i64,
-    href: &'static str,
-}
-
-#[derive(Debug, Serialize)]
-struct ManagementOverviewData {
-    page: &'static str,
-    title: &'static str,
-    stats: Vec<OverviewStat>,
-    departments: Vec<DepartmentSummary>,
-}
-
-pub async fn management_overview_page(
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
-    State(pool): State<Arc<PgPool>>,
-) -> Response {
-    if !user_ctx.is_admin {
-        return forbidden();
-    }
-
-    let users = repositories::list_users(&pool).await.unwrap_or_default();
-    let departments = repositories::list_departments(&pool)
-        .await
-        .unwrap_or_default();
-
-    let device_count: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM user_api_keys WHERE revoked_at IS NULL",
-    )
-    .fetch_one(&*pool)
-    .await
-    .unwrap_or(0);
-    let skill_count: i64 = sqlx::query_scalar("SELECT COUNT(DISTINCT skill_id) FROM user_skills")
-        .fetch_one(&*pool)
-        .await
-        .unwrap_or(0);
-    // Marketplaces are now defined as YAML at services/marketplaces/<id>/config.yaml.
-    // Count by walking that directory; replace with ServicesConfig.marketplaces.len() when threaded.
-    let marketplace_count: i64 = std::fs::read_dir("services/marketplaces")
-        .map(|it| it.filter_map(Result::ok).count() as i64)
-        .unwrap_or(0);
-
-    let stats = vec![
-        OverviewStat {
-            label: "Users",
-            value: users.len() as i64,
-            href: "/admin/management/users",
-        },
-        OverviewStat {
-            label: "Departments",
-            value: departments.len() as i64,
-            href: "/admin/management/departments",
-        },
-        OverviewStat {
-            label: "Devices",
-            value: device_count,
-            href: "/admin/management/devices",
-        },
-        OverviewStat {
-            label: "Skills",
-            value: skill_count,
-            href: "/admin/management/skills",
-        },
-        OverviewStat {
-            label: "Marketplaces",
-            value: marketplace_count,
-            href: "/admin/management/marketplaces",
-        },
-    ];
-
-    let data = ManagementOverviewData {
-        page: "management-overview",
-        title: "Management",
-        stats,
-        departments,
-    };
-
-    render_typed_page(&engine, "management-overview", &data, &user_ctx, &mkt_ctx)
-}
-
-#[derive(Debug, Serialize)]
 struct DepartmentsPageData {
     page: &'static str,
     title: &'static str,
@@ -333,9 +249,7 @@ async fn fetch_assigned_items(pool: &PgPool, entity_type: &str, kind: &str) -> V
             ORDER BY base.name
             "
         }
-        // Marketplaces are now YAML-defined (services/marketplaces/<id>/config.yaml).
-        // Access-control listing for marketplaces lives in core's read APIs.
-        "marketplace" => return Vec::new(),
+        // Marketplaces are YAML-defined (services/marketplaces/) — no DB list.
         _ => return Vec::new(),
     };
 

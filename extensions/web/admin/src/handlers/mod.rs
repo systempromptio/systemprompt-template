@@ -32,25 +32,13 @@ pub use gateway::{
 };
 pub use jobs::list_jobs_handler;
 pub use marketplace::{
-    list_marketplace_handler, marketplace_plugin_users_handler, submit_rating_handler,
-    update_visibility_handler,
+    list_marketplace_handler, marketplace_plugin_users_handler, update_visibility_handler,
 };
-pub use plugins::{
-    create_skill_handler, get_skill_handler, list_plugins_handler, list_skills_handler,
-};
-pub use plugins_crud::{
-    create_plugin_handler, delete_plugin_handler, get_plugin_detail_handler,
-    update_plugin_handler,
-};
-pub use plugins_env::{list_plugin_env_handler, update_plugin_env_handler};
-pub use plugins_skills::{
-    delete_skill_handler, get_plugin_skills_handler, list_all_skills_handler,
-    update_plugin_skills_handler,
-};
-pub use resources::{
-    create_agent_handler, create_user_agent_handler, delete_agent_handler,
-    delete_user_agent_handler, get_agent_handler, list_agents_handler, update_agent_handler,
-};
+pub use plugins::{get_skill_handler, list_plugins_handler, list_skills_handler};
+pub use plugins_crud::get_plugin_detail_handler;
+pub use plugins_env::list_plugin_env_handler;
+pub use plugins_skills::{get_plugin_skills_handler, list_all_skills_handler};
+pub use resources::{get_agent_handler, list_agents_handler};
 pub use users::extract_user_from_cookie;
 pub use users::{
     create_user_handler, dashboard_handler, delete_user_handler, list_events_handler,

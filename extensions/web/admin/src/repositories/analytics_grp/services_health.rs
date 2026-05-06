@@ -2,9 +2,9 @@
 //!
 //! Aggregates request/error/latency over the four "service" entity classes
 //! shown on the page:
-//! - **Agents** (governance_decisions, plugin_usage_events keyed by agent_id)
-//! - **MCP servers** (mcp_tool_executions keyed by server_name)
-//! - **Gateway** (ai_requests, single logical entity)
+//! - **Agents** (`governance_decisions`, `plugin_usage_events` keyed by `agent_id`)
+//! - **MCP servers** (`mcp_tool_executions` keyed by `server_name`)
+//! - **Gateway** (`ai_requests`, single logical entity)
 //!
 //! External agents have no runtime traffic table — they get an inventory-only
 //! view from `external_agents_grp::list_external_agents`.
