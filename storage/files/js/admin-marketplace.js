@@ -1,11 +1,10 @@
 (function(app) {
     'use strict';
 
-    const escapeHtml = app.escapeHtml;
     let plugins = [];
 
     function showVisibilityModal(pluginId) {
-        const plugin = plugins.find(function(p) { return p.id === pluginId; });
+        const plugin = plugins.find((p) => p.id === pluginId);
         if (!plugin) return;
         const rules = plugin.visibility_rules || [];
 
@@ -13,31 +12,84 @@
         overlay.className = 'confirm-overlay';
         overlay.id = 'visibility-modal';
 
-        const rulesListHtml = renderRulesList(rules);
+        const dialog = document.createElement('div');
+        dialog.className = 'confirm-dialog';
+        dialog.style.maxWidth = '500px';
 
-        overlay.innerHTML = '<div class="confirm-dialog" style="max-width:500px">' +
-            '<h3 style="margin:0 0 var(--sp-space-3)">Edit Visibility - ' + escapeHtml(plugin.name) + '</h3>' +
-            '<div id="visibility-rules-list">' + rulesListHtml + '</div>' +
-            '<div style="margin-top:var(--sp-space-4);padding-top:var(--sp-space-3);border-top:1px solid var(--sp-border-primary)">' +
-                '<strong style="font-size:var(--sp-text-sm)">Add Rule</strong>' +
-                '<div style="display:flex;gap:var(--sp-space-2);margin-top:var(--sp-space-2);flex-wrap:wrap">' +
-                    '<select id="vis-rule-type" class="btn btn-secondary" style="cursor:pointer;font-size:var(--sp-text-sm)">' +
-                        '<option value="department">Department</option>' +
-                        '<option value="user">User</option>' +
-                    '</select>' +
-                    '<input type="text" id="vis-rule-value" class="search-input" placeholder="Value..." style="flex:1;min-width:120px;font-size:var(--sp-text-sm)">' +
-                    '<select id="vis-rule-access" class="btn btn-secondary" style="cursor:pointer;font-size:var(--sp-text-sm)">' +
-                        '<option value="allow">Allow</option>' +
-                        '<option value="deny">Deny</option>' +
-                    '</select>' +
-                    '<button class="btn btn-secondary" id="vis-add-rule" style="font-size:var(--sp-text-sm)">Add</button>' +
-                '</div>' +
-            '</div>' +
-            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)">' +
-                '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
-                '<button class="btn btn-primary" id="vis-save">Save</button>' +
-            '</div>' +
-        '</div>';
+        const heading = document.createElement('h3');
+        heading.style.margin = '0 0 var(--sp-space-3)';
+        heading.textContent = 'Edit Visibility - ' + plugin.name;
+
+        const rulesList = document.createElement('div');
+        rulesList.id = 'visibility-rules-list';
+        renderRulesListDOM(rulesList, rules);
+
+        const addSection = document.createElement('div');
+        addSection.style.cssText = 'margin-top:var(--sp-space-4);padding-top:var(--sp-space-3);border-top:1px solid var(--sp-border-primary)';
+
+        const addLabel = document.createElement('strong');
+        addLabel.style.fontSize = 'var(--sp-text-sm)';
+        addLabel.textContent = 'Add Rule';
+
+        const addRow = document.createElement('div');
+        addRow.style.cssText = 'display:flex;gap:var(--sp-space-2);margin-top:var(--sp-space-2);flex-wrap:wrap';
+
+        const ruleTypeSelect = document.createElement('select');
+        ruleTypeSelect.id = 'vis-rule-type';
+        ruleTypeSelect.className = 'btn btn-secondary';
+        ruleTypeSelect.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm)';
+        const opt1 = document.createElement('option');
+        opt1.value = 'department';
+        opt1.textContent = 'Department';
+        const opt2 = document.createElement('option');
+        opt2.value = 'user';
+        opt2.textContent = 'User';
+        ruleTypeSelect.append(opt1, opt2);
+
+        const ruleValueInput = document.createElement('input');
+        ruleValueInput.type = 'text';
+        ruleValueInput.id = 'vis-rule-value';
+        ruleValueInput.className = 'search-input';
+        ruleValueInput.placeholder = 'Value...';
+        ruleValueInput.style.cssText = 'flex:1;min-width:120px;font-size:var(--sp-text-sm)';
+
+        const ruleAccessSelect = document.createElement('select');
+        ruleAccessSelect.id = 'vis-rule-access';
+        ruleAccessSelect.className = 'btn btn-secondary';
+        ruleAccessSelect.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm)';
+        const optAllow = document.createElement('option');
+        optAllow.value = 'allow';
+        optAllow.textContent = 'Allow';
+        const optDeny = document.createElement('option');
+        optDeny.value = 'deny';
+        optDeny.textContent = 'Deny';
+        ruleAccessSelect.append(optAllow, optDeny);
+
+        const addRuleBtn = document.createElement('button');
+        addRuleBtn.className = 'btn btn-secondary';
+        addRuleBtn.id = 'vis-add-rule';
+        addRuleBtn.style.fontSize = 'var(--sp-text-sm)';
+        addRuleBtn.textContent = 'Add';
+
+        addRow.append(ruleTypeSelect, ruleValueInput, ruleAccessSelect, addRuleBtn);
+        addSection.append(addLabel, addRow);
+
+        const btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-4)';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.setAttribute('data-confirm-cancel', '');
+        cancelBtn.textContent = 'Cancel';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-primary';
+        saveBtn.id = 'vis-save';
+        saveBtn.textContent = 'Save';
+
+        btnRow.append(cancelBtn, saveBtn);
+        dialog.append(heading, rulesList, addSection, btnRow);
+        overlay.append(dialog);
 
         document.body.append(overlay);
 
@@ -45,10 +97,10 @@
 
         function refreshRulesList() {
             const container = overlay.querySelector('#visibility-rules-list');
-            if (container) container.innerHTML = renderRulesList(modalRules);
+            if (container) renderRulesListDOM(container, modalRules);
         }
 
-        overlay.addEventListener('click', async function(e) {
+        overlay.addEventListener('click', async (e) => {
             if (e.target === overlay || e.target.closest('[data-confirm-cancel]')) {
                 overlay.remove();
                 return;
@@ -93,17 +145,32 @@
         });
     }
 
-    function renderRulesList(rules) {
-        if (!rules.length) return '<p style="font-size:var(--sp-text-sm);color:var(--sp-text-tertiary)">No rules configured</p>';
-        return rules.map(function(rule, idx) {
-            return '<div style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;font-size:var(--sp-text-sm)">' +
-                '<span class="badge ' + (rule.access === 'allow' ? 'badge-yellow' : 'badge-red') + '">' + escapeHtml(rule.rule_type) + ': ' + escapeHtml(rule.rule_value) + ' (' + escapeHtml(rule.access) + ')</span>' +
-                '<button class="btn btn-danger" style="font-size:var(--sp-text-xs);padding:2px 6px" data-remove-rule="' + idx + '">Remove</button>' +
-            '</div>';
-        }).join('');
+    function renderRulesListDOM(container, rules) {
+        container.replaceChildren();
+        if (!rules.length) {
+            const emptyP = document.createElement('p');
+            emptyP.style.cssText = 'font-size:var(--sp-text-sm);color:var(--sp-text-tertiary)';
+            emptyP.textContent = 'No rules configured';
+            container.append(emptyP);
+            return;
+        }
+        rules.forEach(function(rule, idx) {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;font-size:var(--sp-text-sm)';
+            const badge = document.createElement('span');
+            badge.className = 'badge ' + (rule.access === 'allow' ? 'badge-yellow' : 'badge-red');
+            badge.textContent = rule.rule_type + ': ' + rule.rule_value + ' (' + rule.access + ')';
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'btn btn-danger';
+            removeBtn.style.cssText = 'font-size:var(--sp-text-xs);padding:2px 6px';
+            removeBtn.setAttribute('data-remove-rule', idx);
+            removeBtn.textContent = 'Remove';
+            row.append(badge, removeBtn);
+            container.append(row);
+        });
     }
 
-    app.initMarketplace = function(selector, pluginsData) {
+    app.initMarketplace = (selector, pluginsData) => {
         const root = document.querySelector(selector);
         if (!root) return;
         plugins = pluginsData || [];
@@ -111,9 +178,9 @@
         const searchInput = document.getElementById('mkt-search');
         if (searchInput) {
             let debounceTimer = null;
-            searchInput.addEventListener('input', function() {
+            searchInput.addEventListener('input', () => {
                 clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(function() {
+                debounceTimer = setTimeout(() => {
                     const q = searchInput.value.toLowerCase().trim();
                     const cards = root.querySelectorAll('.plugin-card[data-plugin-id]');
                     for (let i = 0; i < cards.length; i++) {
@@ -128,14 +195,14 @@
 
         const sortSelect = document.getElementById('mkt-sort');
         if (sortSelect) {
-            sortSelect.addEventListener('change', function() {
+            sortSelect.addEventListener('change', () => {
                 const url = new URL(window.location.href);
                 url.searchParams.set('sort', sortSelect.value);
                 window.location.href = url.toString();
             });
         }
 
-        root.addEventListener('click', async function(e) {
+        root.addEventListener('click', async (e) => {
             const toggleBtn = e.target.closest('[data-toggle-plugin]');
             if (toggleBtn) {
                 const card = toggleBtn.closest('.plugin-card');
@@ -151,14 +218,12 @@
 
             const visBtn = e.target.closest('[data-edit-visibility]');
             if (visBtn) {
-                e.stopPropagation();
                 showVisibilityModal(visBtn.getAttribute('data-edit-visibility'));
                 return;
             }
 
             const loadUsersBtn = e.target.closest('[data-load-users]');
             if (loadUsersBtn) {
-                e.stopPropagation();
                 const pluginId = loadUsersBtn.getAttribute('data-load-users');
                 loadUsersBtn.disabled = true;
                 loadUsersBtn.textContent = 'Loading...';
@@ -167,19 +232,41 @@
                     const users = usersData.users || usersData || [];
                     const container = root.querySelector('[data-users-for="' + pluginId + '"]');
                     if (container) {
+                        container.replaceChildren();
                         if (users.length === 0) {
-                            container.innerHTML = '<div style="margin-top:var(--sp-space-2);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)">No users found</div>';
+                            const noUsers = document.createElement('div');
+                            noUsers.style.cssText = 'margin-top:var(--sp-space-2);font-size:var(--sp-text-xs);color:var(--sp-text-tertiary)';
+                            noUsers.textContent = 'No users found';
+                            container.append(noUsers);
                         } else {
-                            container.innerHTML = '<div style="margin-top:var(--sp-space-2);display:flex;flex-direction:column;gap:var(--sp-space-1)">' +
-                                users.map(function(u) {
-                                    return '<div style="display:flex;align-items:center;gap:var(--sp-space-2);font-size:var(--sp-text-xs);padding:var(--sp-space-1) 0;border-bottom:1px solid var(--sp-border-primary)">' +
-                                        '<span style="font-weight:600;color:var(--sp-text-primary)">' + escapeHtml(u.display_name || 'Unknown') + '</span>' +
-                                        (u.department ? '<span class="badge badge-blue">' + escapeHtml(u.department) + '</span>' : '') +
-                                        '<span class="badge badge-gray">' + (u.event_count || 0) + ' events</span>' +
-                                        (u.last_used ? '<span style="color:var(--sp-text-tertiary)">' + new Date(u.last_used).toLocaleDateString() + '</span>' : '') +
-                                    '</div>';
-                                }).join('') +
-                            '</div>';
+                            const userList = document.createElement('div');
+                            userList.style.cssText = 'margin-top:var(--sp-space-2);display:flex;flex-direction:column;gap:var(--sp-space-1)';
+                            users.forEach(function(u) {
+                                const userRow = document.createElement('div');
+                                userRow.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);font-size:var(--sp-text-xs);padding:var(--sp-space-1) 0;border-bottom:1px solid var(--sp-border-primary)';
+                                const nameSpan = document.createElement('span');
+                                nameSpan.style.cssText = 'font-weight:600;color:var(--sp-text-primary)';
+                                nameSpan.textContent = u.display_name || 'Unknown';
+                                userRow.append(nameSpan);
+                                if (u.department) {
+                                    const deptBadge = document.createElement('span');
+                                    deptBadge.className = 'badge badge-blue';
+                                    deptBadge.textContent = u.department;
+                                    userRow.append(deptBadge);
+                                }
+                                const eventBadge = document.createElement('span');
+                                eventBadge.className = 'badge badge-gray';
+                                eventBadge.textContent = (u.event_count || 0) + ' events';
+                                userRow.append(eventBadge);
+                                if (u.last_used) {
+                                    const dateSpan = document.createElement('span');
+                                    dateSpan.style.color = 'var(--sp-text-tertiary)';
+                                    dateSpan.textContent = new Date(u.last_used).toLocaleDateString();
+                                    userRow.append(dateSpan);
+                                }
+                                userList.append(userRow);
+                            });
+                            container.append(userList);
                         }
                     }
                     loadUsersBtn.style.display = 'none';
@@ -197,7 +284,6 @@
 (function(app) {
     'use strict';
 
-    const escapeHtml = app.escapeHtml;
     const versionDetails = {};
     const diffCache = {};
     let activeDiff = null;
@@ -205,91 +291,230 @@
     function marketplaceApi(userId, path) {
         const url = '/api/public/marketplace/' + encodeURIComponent(userId) + path;
         return fetch(url, { headers: { 'Content-Type': 'application/json' } })
-            .then(function(resp) {
-                if (!resp.ok) return resp.text().then(function(t) { throw new Error(t || resp.statusText); });
+            .then((resp) => {
+                if (!resp.ok) return resp.text().then((t) => { throw new Error(t || resp.statusText); });
                 return resp.json();
             });
     }
 
     function renderSkillRow(skill, versionId) {
         const hasBase = skill.base_skill_id && skill.base_skill_id !== 'null';
-        let compareBtn = '';
+
+        const row = document.createElement('div');
+        row.className = 'detail-item';
+
+        const info = document.createElement('div');
+        info.className = 'detail-item-info';
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'detail-item-name';
+        nameDiv.append(document.createTextNode((skill.name || skill.skill_id) + ' '));
+
+        const baseBadge = document.createElement('span');
+        baseBadge.className = hasBase ? 'badge badge-yellow' : 'badge badge-gray';
+        baseBadge.textContent = hasBase ? 'customized' : 'custom';
+        nameDiv.append(baseBadge, document.createTextNode(' '));
+
+        const enabledBadge = document.createElement('span');
+        enabledBadge.className = skill.enabled === false ? 'badge badge-red' : 'badge badge-green';
+        enabledBadge.textContent = skill.enabled === false ? 'disabled' : 'enabled';
+        nameDiv.append(enabledBadge);
+
+        const metaDiv = document.createElement('div');
+        metaDiv.style.cssText = 'font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:2px';
+
+        const codeEl = document.createElement('code');
+        codeEl.style.cssText = 'background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs)';
+        codeEl.textContent = skill.skill_id;
+        metaDiv.append(codeEl);
+
+        if (skill.version) {
+            const vSpan = document.createElement('span');
+            vSpan.textContent = ' v' + skill.version;
+            metaDiv.append(vSpan);
+        }
+        if (skill.description) {
+            metaDiv.append(document.createTextNode(' \u2014 ' + app.shared.truncate(skill.description, 80)));
+        }
+
+        info.append(nameDiv, metaDiv);
+        row.append(info);
+
         if (hasBase) {
             const isActive = activeDiff && activeDiff.versionId === versionId && activeDiff.skillId === skill.skill_id;
-            compareBtn = '<button class="btn btn-secondary btn-sm" data-compare-skill="' + escapeHtml(skill.skill_id) +
-                '" data-compare-version="' + escapeHtml(versionId) +
-                '" data-base-skill="' + escapeHtml(skill.base_skill_id) +
-                '" style="font-size:var(--sp-text-xs);padding:2px 8px;white-space:nowrap"' +
-                (isActive ? ' disabled' : '') + '>' +
-                (isActive ? 'Viewing Diff' : 'Compare to Core') + '</button>';
+            const cmpBtn = document.createElement('button');
+            cmpBtn.className = 'btn btn-secondary btn-sm';
+            cmpBtn.setAttribute('data-compare-skill', skill.skill_id);
+            cmpBtn.setAttribute('data-compare-version', versionId);
+            cmpBtn.setAttribute('data-base-skill', skill.base_skill_id);
+            cmpBtn.style.cssText = 'font-size:var(--sp-text-xs);padding:2px 8px;white-space:nowrap';
+            if (isActive) cmpBtn.disabled = true;
+            cmpBtn.textContent = isActive ? 'Viewing Diff' : 'Compare to Core';
+            row.append(cmpBtn);
         }
-        const enabledBadge = skill.enabled === false
-            ? '<span class="badge badge-red">disabled</span>'
-            : '<span class="badge badge-green">enabled</span>';
-        const baseBadge = hasBase
-            ? '<span class="badge badge-yellow">customized</span>'
-            : '<span class="badge badge-gray">custom</span>';
 
-        return '<div class="detail-item">' +
-            '<div class="detail-item-info">' +
-                '<div class="detail-item-name">' +
-                    escapeHtml(skill.name || skill.skill_id) +
-                    ' ' + baseBadge + ' ' + enabledBadge +
-                '</div>' +
-                '<div style="font-size:var(--sp-text-xs);color:var(--sp-text-tertiary);margin-top:2px">' +
-                    '<code style="background:var(--sp-bg-surface-raised);padding:1px 6px;border-radius:var(--sp-radius-xs)">' + escapeHtml(skill.skill_id) + '</code>' +
-                    (skill.version ? ' <span>v' + escapeHtml(skill.version) + '</span>' : '') +
-                    (skill.description ? ' &mdash; ' + escapeHtml(app.shared.truncate(skill.description, 80)) : '') +
-                '</div>' +
-            '</div>' +
-            compareBtn +
-        '</div>';
+        return row;
     }
 
     function renderDiffPanel(userSkill, coreSkill) {
         const userLines = (userSkill.content || '').split('\n');
         const coreLines = (coreSkill.content || '').split('\n');
         const maxLen = Math.max(userLines.length, coreLines.length);
-        let diffHtml = '';
+
+        const panel = document.createElement('div');
+        panel.className = 'diff-panel';
+
+        const header = document.createElement('div');
+        header.className = 'diff-panel-header';
+
+        const h4 = document.createElement('h4');
+        h4.style.cssText = 'margin:0;font-size:var(--sp-text-sm);font-weight:600';
+        h4.textContent = 'Diff: ' + userSkill.skill_id;
+
+        const legendDiv = document.createElement('div');
+        legendDiv.style.cssText = 'display:flex;gap:var(--sp-space-3);font-size:var(--sp-text-xs)';
+
+        const coreLabel = document.createElement('span');
+        const coreBadge = document.createElement('span');
+        coreBadge.className = 'badge badge-blue';
+        coreBadge.textContent = 'core';
+        coreLabel.append(coreBadge, document.createTextNode(' Base skill'));
+
+        const userLabel = document.createElement('span');
+        const userBadge = document.createElement('span');
+        userBadge.className = 'badge badge-green';
+        userBadge.textContent = 'user';
+        userLabel.append(userBadge, document.createTextNode(' User version'));
+
+        legendDiv.append(coreLabel, userLabel);
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'btn btn-secondary btn-sm';
+        closeBtn.setAttribute('data-close-diff', '');
+        closeBtn.style.cssText = 'margin-left:auto;font-size:var(--sp-text-xs);padding:2px 8px';
+        closeBtn.textContent = 'Close';
+
+        header.append(h4, legendDiv, closeBtn);
+        panel.append(header);
+
+        let hasMetaDiff = false;
+        if ((userSkill.name || '') !== (coreSkill.name || '') || (userSkill.description || '') !== (coreSkill.description || '')) {
+            hasMetaDiff = true;
+            const metaSection = document.createElement('div');
+            metaSection.style.cssText = 'padding:var(--sp-space-3) var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);font-size:var(--sp-text-sm)';
+
+            if ((userSkill.name || '') !== (coreSkill.name || '')) {
+                const nameRow = document.createElement('div');
+                nameRow.style.marginBottom = 'var(--sp-space-2)';
+                const nameLabel = document.createElement('strong');
+                nameLabel.textContent = 'Name:';
+                const nameOld = document.createElement('span');
+                nameOld.className = 'diff-removed';
+                nameOld.style.padding = '1px 4px';
+                nameOld.textContent = coreSkill.name || '';
+                const nameNew = document.createElement('span');
+                nameNew.className = 'diff-added';
+                nameNew.style.padding = '1px 4px';
+                nameNew.textContent = userSkill.name || '';
+                nameRow.append(nameLabel, document.createTextNode(' '), nameOld, document.createTextNode(' \u2192 '), nameNew);
+                metaSection.append(nameRow);
+            }
+
+            if ((userSkill.description || '') !== (coreSkill.description || '')) {
+                const descRow = document.createElement('div');
+                descRow.style.marginBottom = 'var(--sp-space-2)';
+                const descLabel = document.createElement('strong');
+                descLabel.textContent = 'Description:';
+                const descOld = document.createElement('span');
+                descOld.className = 'diff-removed';
+                descOld.style.padding = '1px 4px';
+                descOld.textContent = coreSkill.description || '';
+                const descNew = document.createElement('span');
+                descNew.className = 'diff-added';
+                descNew.style.padding = '1px 4px';
+                descNew.textContent = userSkill.description || '';
+                descRow.append(descLabel, document.createTextNode(' '), descOld, document.createTextNode(' \u2192 '), descNew);
+                metaSection.append(descRow);
+            }
+
+            panel.append(metaSection);
+        }
+
+        const diffContent = document.createElement('div');
+        diffContent.className = 'diff-content';
+
+        let hasDiff = false;
         for (let i = 0; i < maxLen; i++) {
             const coreLine = i < coreLines.length ? coreLines[i] : '';
             const userLine = i < userLines.length ? userLines[i] : '';
             const lineNum = i + 1;
             if (coreLine === userLine) {
-                diffHtml += '<div class="diff-line diff-unchanged"><span class="diff-linenum">' + lineNum + '</span><span class="diff-text">' + escapeHtml(coreLine) + '</span></div>';
+                const unchangedLine = document.createElement('div');
+                unchangedLine.className = 'diff-line diff-unchanged';
+                const numSpan = document.createElement('span');
+                numSpan.className = 'diff-linenum';
+                numSpan.textContent = lineNum;
+                const textSpan = document.createElement('span');
+                textSpan.className = 'diff-text';
+                textSpan.textContent = coreLine;
+                unchangedLine.append(numSpan, textSpan);
+                diffContent.append(unchangedLine);
+                hasDiff = true;
             } else {
-                if (coreLine) diffHtml += '<div class="diff-line diff-removed"><span class="diff-linenum">' + lineNum + '</span><span class="diff-text">- ' + escapeHtml(coreLine) + '</span></div>';
-                if (userLine) diffHtml += '<div class="diff-line diff-added"><span class="diff-linenum">' + lineNum + '</span><span class="diff-text">+ ' + escapeHtml(userLine) + '</span></div>';
+                if (coreLine) {
+                    const removedLine = document.createElement('div');
+                    removedLine.className = 'diff-line diff-removed';
+                    const rNumSpan = document.createElement('span');
+                    rNumSpan.className = 'diff-linenum';
+                    rNumSpan.textContent = lineNum;
+                    const rTextSpan = document.createElement('span');
+                    rTextSpan.className = 'diff-text';
+                    rTextSpan.textContent = '- ' + coreLine;
+                    removedLine.append(rNumSpan, rTextSpan);
+                    diffContent.append(removedLine);
+                    hasDiff = true;
+                }
+                if (userLine) {
+                    const addedLine = document.createElement('div');
+                    addedLine.className = 'diff-line diff-added';
+                    const aNumSpan = document.createElement('span');
+                    aNumSpan.className = 'diff-linenum';
+                    aNumSpan.textContent = lineNum;
+                    const aTextSpan = document.createElement('span');
+                    aTextSpan.className = 'diff-text';
+                    aTextSpan.textContent = '+ ' + userLine;
+                    addedLine.append(aNumSpan, aTextSpan);
+                    diffContent.append(addedLine);
+                    hasDiff = true;
+                }
             }
         }
 
-        let metaDiff = '';
-        if ((userSkill.name || '') !== (coreSkill.name || '')) {
-            metaDiff += '<div style="margin-bottom:var(--sp-space-2)"><strong>Name:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.name || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.name || '') + '</span></div>';
-        }
-        if ((userSkill.description || '') !== (coreSkill.description || '')) {
-            metaDiff += '<div style="margin-bottom:var(--sp-space-2)"><strong>Description:</strong> <span class="diff-removed" style="padding:1px 4px">' + escapeHtml(coreSkill.description || '') + '</span> &rarr; <span class="diff-added" style="padding:1px 4px">' + escapeHtml(userSkill.description || '') + '</span></div>';
+        if (!hasDiff) {
+            const identicalMsg = document.createElement('div');
+            identicalMsg.style.cssText = 'padding:var(--sp-space-4);color:var(--sp-text-tertiary);text-align:center';
+            identicalMsg.textContent = 'Content is identical';
+            diffContent.append(identicalMsg);
         }
 
-        return '<div class="diff-panel">' +
-            '<div class="diff-panel-header">' +
-                '<h4 style="margin:0;font-size:var(--sp-text-sm);font-weight:600">Diff: ' + escapeHtml(userSkill.skill_id) + '</h4>' +
-                '<div style="display:flex;gap:var(--sp-space-3);font-size:var(--sp-text-xs)">' +
-                    '<span><span class="badge badge-blue">core</span> Base skill</span>' +
-                    '<span><span class="badge badge-green">user</span> User version</span>' +
-                '</div>' +
-                '<button class="btn btn-secondary btn-sm" data-close-diff style="margin-left:auto;font-size:var(--sp-text-xs);padding:2px 8px">Close</button>' +
-            '</div>' +
-            (metaDiff ? '<div style="padding:var(--sp-space-3) var(--sp-space-4);border-bottom:1px solid var(--sp-border-subtle);font-size:var(--sp-text-sm)">' + metaDiff + '</div>' : '') +
-            '<div class="diff-content">' + (diffHtml || '<div style="padding:var(--sp-space-4);color:var(--sp-text-tertiary);text-align:center">Content is identical</div>') + '</div>' +
-        '</div>';
+        panel.append(diffContent);
+        return panel;
     }
 
     function renderVersionDetails(detailsContainer, versionId) {
         const detail = versionDetails[versionId];
         if (!detail || detail === 'loading') return;
+        detailsContainer.replaceChildren();
         if (detail === 'error') {
-            detailsContainer.innerHTML = '<div style="padding:var(--sp-space-4)"><div class="empty-state"><p>Failed to load version details.</p></div></div>';
+            const errWrap = document.createElement('div');
+            errWrap.style.padding = 'var(--sp-space-4)';
+            const errState = document.createElement('div');
+            errState.className = 'empty-state';
+            const errP = document.createElement('p');
+            errP.textContent = 'Failed to load version details.';
+            errState.append(errP);
+            errWrap.append(errState);
+            detailsContainer.append(errWrap);
             return;
         }
         let skills = [];
@@ -298,22 +523,35 @@
         } else if (typeof detail.skills_snapshot === 'string') {
             try { skills = JSON.parse(detail.skills_snapshot); } catch(e) { skills = []; }
         }
-        const skillsHtml = skills.length
-            ? skills.map(function(s) { return renderSkillRow(s, versionId); }).join('')
-            : '<div class="empty-state" style="padding:var(--sp-space-4)"><p>No skills in this snapshot.</p></div>';
 
-        let diffHtml = '';
-        if (activeDiff && activeDiff.versionId === versionId && diffCache[activeDiff.cacheKey]) {
-            const userSkill = skills.find(function(s) { return s.skill_id === activeDiff.skillId; });
-            if (userSkill) diffHtml = renderDiffPanel(userSkill, diffCache[activeDiff.cacheKey]);
+        const skillsWrap = document.createElement('div');
+        skillsWrap.style.padding = 'var(--sp-space-4)';
+
+        const skillsLabel = document.createElement('div');
+        skillsLabel.style.cssText = 'font-size:var(--sp-text-sm);font-weight:600;margin-bottom:var(--sp-space-2);color:var(--sp-text-secondary)';
+        skillsLabel.textContent = 'Skills Snapshot (' + skills.length + ')';
+        skillsWrap.append(skillsLabel);
+
+        if (skills.length) {
+            skills.forEach(function(s) {
+                skillsWrap.append(renderSkillRow(s, versionId));
+            });
+        } else {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            emptyState.style.padding = 'var(--sp-space-4)';
+            const emptyP = document.createElement('p');
+            emptyP.textContent = 'No skills in this snapshot.';
+            emptyState.append(emptyP);
+            skillsWrap.append(emptyState);
         }
 
-        detailsContainer.innerHTML =
-            '<div style="padding:var(--sp-space-4)">' +
-                '<div style="font-size:var(--sp-text-sm);font-weight:600;margin-bottom:var(--sp-space-2);color:var(--sp-text-secondary)">Skills Snapshot (' + skills.length + ')</div>' +
-                skillsHtml +
-            '</div>' +
-            diffHtml;
+        detailsContainer.append(skillsWrap);
+
+        if (activeDiff && activeDiff.versionId === versionId && diffCache[activeDiff.cacheKey]) {
+            const userSkill = skills.find(function(s) { return s.skill_id === activeDiff.skillId; });
+            if (userSkill) detailsContainer.append(renderDiffPanel(userSkill, diffCache[activeDiff.cacheKey]));
+        }
     }
 
     async function loadVersionDetail(versionId, userId, detailsContainer) {
@@ -362,20 +600,20 @@
         }
     }
 
-    app.initMarketplaceVersions = function(selector) {
+    app.initMarketplaceVersions = (selector) => {
         const root = document.querySelector(selector);
         if (!root) return;
 
         let activeTab = 'versions';
         const changelogLoaded = {};
 
-        root.addEventListener('click', async function(e) {
+        root.addEventListener('click', async (e) => {
             const tabBtn = e.target.closest('[data-tab]');
             if (tabBtn) {
                 const newTab = tabBtn.getAttribute('data-tab');
                 if (activeTab === newTab) return;
                 activeTab = newTab;
-                root.querySelectorAll('[data-tab]').forEach(function(btn) {
+                root.querySelectorAll('[data-tab]').forEach((btn) => {
                     btn.className = btn.getAttribute('data-tab') === activeTab ? 'btn btn-primary' : 'btn btn-secondary';
                 });
                 document.getElementById('mv-versions-tab').style.display = activeTab === 'versions' ? '' : 'none';
@@ -409,7 +647,6 @@
 
             const compareBtn = e.target.closest('[data-compare-skill]');
             if (compareBtn) {
-                e.stopPropagation();
                 const skillId = compareBtn.getAttribute('data-compare-skill');
                 const baseSkillId = compareBtn.getAttribute('data-base-skill');
                 const compareVersionId = compareBtn.getAttribute('data-compare-version');
@@ -420,7 +657,6 @@
             }
 
             if (e.target.closest('[data-close-diff]')) {
-                e.stopPropagation();
                 const diffVersionCard = e.target.closest('.version-card');
                 const diffDetails = diffVersionCard && diffVersionCard.querySelector('.plugin-details');
                 activeDiff = null;
@@ -433,7 +669,6 @@
 
             const restoreBtn = e.target.closest('[data-restore-version]');
             if (restoreBtn) {
-                e.stopPropagation();
                 await handleRestore(
                     restoreBtn.getAttribute('data-restore-version'),
                     restoreBtn.getAttribute('data-restore-num'),
@@ -443,14 +678,14 @@
             }
         });
 
-        root.addEventListener('change', function(e) {
+        root.addEventListener('change', (e) => {
             if (e.target.id === 'mv-user-select') {
                 const userId = e.target.value;
                 const groups = root.querySelectorAll('.version-user-group');
-                groups.forEach(function(group) {
+                groups.forEach((group) => {
                     const versions = group.querySelectorAll('[data-version-user]');
                     let hasMatch = !userId;
-                    versions.forEach(function(v) {
+                    versions.forEach((v) => {
                         if (v.getAttribute('data-version-user') === userId) hasMatch = true;
                     });
                     group.style.display = hasMatch ? '' : 'none';
@@ -461,46 +696,101 @@
             }
         });
 
+        function setEmptyState(container, message) {
+            container.replaceChildren();
+            const state = document.createElement('div');
+            state.className = 'empty-state';
+            const p = document.createElement('p');
+            p.textContent = message;
+            state.append(p);
+            container.append(state);
+        }
+
         async function loadChangelog(userId) {
             const container = document.getElementById('mv-changelog-tab');
             if (!container) return;
             if (!userId) {
-                container.innerHTML = '<div class="empty-state"><p>Select a user to view changelog.</p></div>';
+                setEmptyState(container, 'Select a user to view changelog.');
                 return;
             }
-            container.innerHTML = '<div class="loading-center"><div class="loading-spinner" role="status"><span class="sr-only">Loading...</span></div></div>';
+            container.replaceChildren();
+            const loadingCenter = document.createElement('div');
+            loadingCenter.className = 'loading-center';
+            const spinner = document.createElement('div');
+            spinner.className = 'loading-spinner';
+            spinner.setAttribute('role', 'status');
+            const srOnly = document.createElement('span');
+            srOnly.className = 'sr-only';
+            srOnly.textContent = 'Loading...';
+            spinner.append(srOnly);
+            loadingCenter.append(spinner);
+            container.append(loadingCenter);
             try {
                 const changelog = await marketplaceApi(userId, '/changelog');
                 changelogLoaded[userId] = true;
                 if (!changelog || !changelog.length) {
-                    container.innerHTML = '<div class="empty-state"><p>No changelog entries found for this user.</p></div>';
+                    setEmptyState(container, 'No changelog entries found for this user.');
                     return;
                 }
-                const rows = changelog.map(function(entry) {
-                    let actionClass = '';
+                container.replaceChildren();
+                const tableContainer = document.createElement('div');
+                tableContainer.className = 'table-container';
+                const tableScroll = document.createElement('div');
+                tableScroll.className = 'table-scroll';
+                const table = document.createElement('table');
+                table.className = 'data-table';
+                const thead = document.createElement('thead');
+                const headRow = document.createElement('tr');
+                ['Action', 'Skill ID', 'Name', 'Detail', 'Time'].forEach(function(text) {
+                    const th = document.createElement('th');
+                    th.textContent = text;
+                    headRow.append(th);
+                });
+                thead.append(headRow);
+                const tbody = document.createElement('tbody');
+                changelog.forEach(function(entry) {
+                    let actionClass = 'badge-gray';
                     switch(entry.action) {
                         case 'added': actionClass = 'badge-green'; break;
                         case 'updated': actionClass = 'badge-yellow'; break;
                         case 'deleted': actionClass = 'badge-red'; break;
                         case 'restored': actionClass = 'badge-blue'; break;
-                        default: actionClass = 'badge-gray';
                     }
-                    return '<tr>' +
-                        '<td><span class="badge ' + actionClass + '">' + escapeHtml(entry.action) + '</span></td>' +
-                        '<td><code style="background:var(--sp-bg-surface-raised);padding:1px 4px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)">' + escapeHtml(entry.skill_id) + '</code></td>' +
-                        '<td>' + escapeHtml(entry.skill_name) + '</td>' +
-                        '<td style="color:var(--sp-text-secondary)">' + escapeHtml(entry.detail) + '</td>' +
-                        '<td><span title="' + escapeHtml(app.formatDate(entry.created_at)) + '">' + escapeHtml(app.formatRelativeTime(entry.created_at)) + '</span></td>' +
-                    '</tr>';
-                }).join('');
-                container.innerHTML = '<div class="table-container"><div class="table-scroll">' +
-                    '<table class="data-table">' +
-                        '<thead><tr><th>Action</th><th>Skill ID</th><th>Name</th><th>Detail</th><th>Time</th></tr></thead>' +
-                        '<tbody>' + rows + '</tbody>' +
-                    '</table>' +
-                '</div></div>';
+                    const tr = document.createElement('tr');
+                    const td1 = document.createElement('td');
+                    const actionBadge = document.createElement('span');
+                    actionBadge.className = 'badge ' + actionClass;
+                    actionBadge.textContent = entry.action;
+                    td1.append(actionBadge);
+
+                    const td2 = document.createElement('td');
+                    const codeEl = document.createElement('code');
+                    codeEl.style.cssText = 'background:var(--sp-bg-surface-raised);padding:1px 4px;border-radius:var(--sp-radius-xs);font-size:var(--sp-text-xs)';
+                    codeEl.textContent = entry.skill_id;
+                    td2.append(codeEl);
+
+                    const td3 = document.createElement('td');
+                    td3.textContent = entry.skill_name;
+
+                    const td4 = document.createElement('td');
+                    td4.style.color = 'var(--sp-text-secondary)';
+                    td4.textContent = entry.detail;
+
+                    const td5 = document.createElement('td');
+                    const timeSpan = document.createElement('span');
+                    timeSpan.title = app.formatDate(entry.created_at);
+                    timeSpan.textContent = app.formatRelativeTime(entry.created_at);
+                    td5.append(timeSpan);
+
+                    tr.append(td1, td2, td3, td4, td5);
+                    tbody.append(tr);
+                });
+                table.append(thead, tbody);
+                tableScroll.append(table);
+                tableContainer.append(tableScroll);
+                container.append(tableContainer);
             } catch(err) {
-                container.innerHTML = '<div class="empty-state"><p>Failed to load changelog.</p></div>';
+                setEmptyState(container, 'Failed to load changelog.');
             }
         }
 
@@ -520,7 +810,7 @@
 
     const mktFetch = (url, opts = {}) => fetch(url, { credentials: 'include', ...opts });
 
-    app.initOrgMarketplaces = function() {
+    app.initOrgMarketplaces = () => {
         const searchInput = document.getElementById('mkt-search');
         const deptFilter = document.getElementById('mkt-dept-filter');
         const table = document.getElementById('mkt-table');
@@ -530,22 +820,22 @@
         }
 
         const mktDepts = {};
-        document.querySelectorAll('script[data-marketplace-detail]').forEach(function(el) {
+        document.querySelectorAll('script[data-marketplace-detail]').forEach((el) => {
             try {
                 const data = JSON.parse(el.textContent);
                 const id = el.getAttribute('data-marketplace-detail');
                 mktDepts[id] = (data.departments || [])
-                    .filter(function(d) { return d.assigned; })
-                    .map(function(d) { return d.name; });
+                    .filter((d) => d.assigned)
+                    .map((d) => d.name);
             } catch (e) {}
         });
 
-        function filterRows() {
+        const filterRows = () => {
             if (!table) return;
             const query = (searchInput ? searchInput.value : '').toLowerCase();
             const dept = deptFilter ? deptFilter.value : '';
             const rows = table.querySelectorAll('tbody tr.clickable-row');
-            rows.forEach(function(row) {
+            rows.forEach((row) => {
                 const name = row.getAttribute('data-name') || '';
                 const entityId = row.getAttribute('data-entity-id') || '';
                 const matchName = !query || name.includes(query);
@@ -558,11 +848,11 @@
                     detailRow.style.display = 'none';
                 }
             });
-        }
+        };
 
         if (searchInput) {
             let debounceTimer;
-            searchInput.addEventListener('input', function() {
+            searchInput.addEventListener('input', () => {
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(filterRows, 200);
             });
@@ -571,7 +861,7 @@
             deptFilter.addEventListener('change', filterRows);
         }
 
-        app.events.on('click', '[data-toggle-json]', function(e, jsonBtn) {
+        app.events.on('click', '[data-toggle-json]', (e, jsonBtn) => {
             const id = jsonBtn.getAttribute('data-toggle-json');
             const container = document.querySelector('[data-json-container="' + id + '"]');
             if (container) {
@@ -580,9 +870,19 @@
                     if (dataEl) {
                         try {
                             const data = JSON.parse(dataEl.textContent);
-                            container.innerHTML = AdminApp.OrgCommon ? AdminApp.OrgCommon.formatJson(data) : '<pre>' + app.escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
+                            container.replaceChildren();
+                            if (AdminApp.OrgCommon) {
+                                container.append(AdminApp.OrgCommon.formatJson(data));
+                            } else {
+                                const pre = document.createElement('pre');
+                                pre.textContent = JSON.stringify(data, null, 2);
+                                container.append(pre);
+                            }
                         } catch (err) {
-                            container.innerHTML = '<p>Error parsing JSON</p>';
+                            container.replaceChildren();
+                            const errP = document.createElement('p');
+                            errP.textContent = 'Error parsing JSON';
+                            container.append(errP);
                         }
                     }
                     container.style.display = 'block';
@@ -594,8 +894,7 @@
             }
         });
 
-        app.events.on('click', '.actions-trigger', function(e, trigger) {
-            e.stopPropagation();
+        app.events.on('click', '.actions-trigger', (e, trigger) => {
             const menu = trigger.closest('.actions-menu');
             const dd = menu ? menu.querySelector('.actions-dropdown') : null;
             if (dd) {
@@ -605,18 +904,18 @@
             }
         });
 
-        app.events.on('click', '[data-delete-marketplace]', function(e, deleteBtn) {
+        app.events.on('click', '[data-delete-marketplace]', (e, deleteBtn) => {
             const id = deleteBtn.getAttribute('data-delete-marketplace');
             showDeleteConfirm(id);
         });
 
-        app.events.on('click', '[data-copy-install-link]', function(e, btn) {
+        app.events.on('click', '[data-copy-install-link]', (e, btn) => {
             const id = btn.getAttribute('data-copy-install-link');
             const siteUrl = window.location.origin;
             const installUrl = siteUrl + '/api/public/marketplace/org/' + encodeURIComponent(id) + '.git';
-            navigator.clipboard.writeText(installUrl).then(function() {
+            navigator.clipboard.writeText(installUrl).then(() => {
                 app.Toast.show('Install link copied to clipboard', 'success');
-            }).catch(function() {
+            }).catch(() => {
                 const textarea = document.createElement('textarea');
                 textarea.value = installUrl;
                 document.body.append(textarea);
@@ -628,7 +927,7 @@
             app.shared.closeAllMenus();
         });
 
-        app.events.on('click', '[data-sync-marketplace]', function(e, btn) {
+        app.events.on('click', '[data-sync-marketplace]', (e, btn) => {
             const id = btn.getAttribute('data-sync-marketplace');
             btn.disabled = true;
             const origText = btn.textContent;
@@ -637,41 +936,54 @@
             mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/sync', {
                 method: 'POST'
             })
-            .then(function(resp) { return resp.json().then(function(data) { return { ok: resp.ok, data: data }; }); })
-            .then(function(result) {
+            .then((resp) => resp.json().then((data) => ({ ok: resp.ok, data: data })))
+            .then((result) => {
                 if (result.ok) {
                     let msg = 'Sync completed: ' + (result.data.plugins_synced || 0) + ' plugins';
                     if (!result.data.changed) msg = 'Already up to date';
                     app.Toast.show(msg, 'success');
-                    if (result.data.changed) setTimeout(function() { window.location.reload(); }, 1000);
+                    if (result.data.changed) setTimeout(() => { window.location.reload(); }, 1000);
                 } else {
                     app.Toast.show(result.data.error || 'Sync failed', 'error');
                 }
                 btn.disabled = false;
                 btn.textContent = origText;
             })
-            .catch(function() {
+            .catch(() => {
                 app.Toast.show('Network error during sync', 'error');
                 btn.disabled = false;
                 btn.textContent = origText;
             });
         });
 
-        app.events.on('click', '[data-publish-marketplace]', function(e, btn) {
+        app.events.on('click', '[data-publish-marketplace]', (e, btn) => {
             const id = btn.getAttribute('data-publish-marketplace');
             app.shared.closeAllMenus();
             const overlay = document.createElement('div');
             overlay.className = 'confirm-overlay';
-            overlay.innerHTML = '<div class="confirm-dialog">' +
-                '<h3 style="margin:0 0 var(--sp-space-3)">Publish to GitHub?</h3>' +
-                '<p style="margin:0 0 var(--sp-space-4);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">This will push the current marketplace plugins to the linked GitHub repository. Any remote changes will be overwritten.</p>' +
-                '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end">' +
-                    '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
-                    '<button class="btn btn-primary" data-confirm-publish>Publish</button>' +
-                '</div>' +
-            '</div>';
+            const pubDialog = document.createElement('div');
+            pubDialog.className = 'confirm-dialog';
+            const pubH3 = document.createElement('h3');
+            pubH3.style.margin = '0 0 var(--sp-space-3)';
+            pubH3.textContent = 'Publish to GitHub?';
+            const pubP = document.createElement('p');
+            pubP.style.cssText = 'margin:0 0 var(--sp-space-4);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
+            pubP.textContent = 'This will push the current marketplace plugins to the linked GitHub repository. Any remote changes will be overwritten.';
+            const pubBtnRow = document.createElement('div');
+            pubBtnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end';
+            const pubCancelBtn = document.createElement('button');
+            pubCancelBtn.className = 'btn btn-secondary';
+            pubCancelBtn.setAttribute('data-confirm-cancel', '');
+            pubCancelBtn.textContent = 'Cancel';
+            const pubConfirmBtn = document.createElement('button');
+            pubConfirmBtn.className = 'btn btn-primary';
+            pubConfirmBtn.setAttribute('data-confirm-publish', '');
+            pubConfirmBtn.textContent = 'Publish';
+            pubBtnRow.append(pubCancelBtn, pubConfirmBtn);
+            pubDialog.append(pubH3, pubP, pubBtnRow);
+            overlay.append(pubDialog);
             document.body.append(overlay);
-            overlay.addEventListener('click', function(ev) {
+            overlay.addEventListener('click', (ev) => {
                 if (ev.target === overlay || ev.target.closest('[data-confirm-cancel]')) {
                     overlay.remove();
                     return;
@@ -683,19 +995,19 @@
                     mktFetch(app.API_BASE + '/org/marketplaces/' + encodeURIComponent(id) + '/publish', {
                         method: 'POST'
                     })
-                    .then(function(resp) { return resp.json().then(function(data) { return { ok: resp.ok, data: data }; }); })
-                    .then(function(result) {
+                    .then((resp) => resp.json().then((data) => ({ ok: resp.ok, data: data })))
+                    .then((result) => {
                         overlay.remove();
                         if (result.ok) {
                             let msg = 'Published: ' + (result.data.plugins_synced || 0) + ' plugins';
                             if (!result.data.changed) msg = 'No changes to publish';
                             app.Toast.show(msg, 'success');
-                            if (result.data.changed) setTimeout(function() { window.location.reload(); }, 1000);
+                            if (result.data.changed) setTimeout(() => { window.location.reload(); }, 1000);
                         } else {
                             app.Toast.show(result.data.error || 'Publish failed', 'error');
                         }
                     })
-                    .catch(function() {
+                    .catch(() => {
                         overlay.remove();
                         app.Toast.show('Network error during publish', 'error');
                     });
@@ -710,18 +1022,36 @@
     function showDeleteConfirm(marketplaceId) {
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
-        overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3 style="margin:0 0 var(--sp-space-3)">Delete Marketplace?</h3>' +
-            '<p style="margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">You are about to delete <strong>' + app.escapeHtml(marketplaceId) + '</strong>.</p>' +
-            '<p style="margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">This will remove the marketplace and all plugin associations. This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end">' +
-                '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
-                '<button class="btn btn-danger" data-confirm-delete="' + app.escapeHtml(marketplaceId) + '">Delete Marketplace</button>' +
-            '</div>' +
-        '</div>';
+        const delDialog = document.createElement('div');
+        delDialog.className = 'confirm-dialog';
+        const delH3 = document.createElement('h3');
+        delH3.style.margin = '0 0 var(--sp-space-3)';
+        delH3.textContent = 'Delete Marketplace?';
+        const delP1 = document.createElement('p');
+        delP1.style.cssText = 'margin:0 0 var(--sp-space-2);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
+        delP1.append(document.createTextNode('You are about to delete '));
+        const delStrong = document.createElement('strong');
+        delStrong.textContent = marketplaceId;
+        delP1.append(delStrong, document.createTextNode('.'));
+        const delP2 = document.createElement('p');
+        delP2.style.cssText = 'margin:0 0 var(--sp-space-5);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
+        delP2.textContent = 'This will remove the marketplace and all plugin associations. This action cannot be undone.';
+        const delBtnRow = document.createElement('div');
+        delBtnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end';
+        const delCancelBtn = document.createElement('button');
+        delCancelBtn.className = 'btn btn-secondary';
+        delCancelBtn.setAttribute('data-confirm-cancel', '');
+        delCancelBtn.textContent = 'Cancel';
+        const delConfirmBtn = document.createElement('button');
+        delConfirmBtn.className = 'btn btn-danger';
+        delConfirmBtn.setAttribute('data-confirm-delete', marketplaceId);
+        delConfirmBtn.textContent = 'Delete Marketplace';
+        delBtnRow.append(delCancelBtn, delConfirmBtn);
+        delDialog.append(delH3, delP1, delP2, delBtnRow);
+        overlay.append(delDialog);
         document.body.append(overlay);
 
-        overlay.addEventListener('click', async function(e) {
+        overlay.addEventListener('click', async (e) => {
             if (e.target === overlay || e.target.closest('[data-confirm-cancel]')) {
                 overlay.remove();
                 return;
@@ -737,9 +1067,9 @@
                     });
                     if (resp.ok) {
                         app.Toast.show('Marketplace deleted', 'success');
-                        setTimeout(function() { window.location.reload(); }, 500);
+                        setTimeout(() => { window.location.reload(); }, 500);
                     } else {
-                        const data = await resp.json().catch(function() { return {}; });
+                        const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                         app.Toast.show(data.error || 'Failed to delete', 'error');
                     }
                 } catch (err) {
@@ -755,7 +1085,7 @@
         const panelApi = AdminApp.OrgCommon.initSidePanel('mkt-panel');
         if (!panelApi) return;
 
-        app.events.on('click', '[data-manage-plugins]', function(e, btn) {
+        app.events.on('click', '[data-manage-plugins]', (e, btn) => {
             const id = btn.getAttribute('data-manage-plugins');
 
             const dataEl = document.querySelector('script[data-marketplace-detail="' + id + '"]');
@@ -766,31 +1096,49 @@
             panelApi.setTitle('Manage Plugins - ' + (mktData.name || id));
 
             mktFetch(app.API_BASE + '/plugins')
-                .then(function(r) { return r.json(); })
-                .then(function(allPlugins) {
+                .then((r) => r.json())
+                .then((allPlugins) => {
                     const currentIds = {};
-                    (mktData.plugin_ids || []).forEach(function(pid) { currentIds[pid] = true; });
+                    (mktData.plugin_ids || []).forEach((pid) => { currentIds[pid] = true; });
 
-                    let html = '<div class="assign-panel-checklist">';
+                    const checklist = document.createElement('div');
+                    checklist.className = 'assign-panel-checklist';
                     if (!allPlugins.length) {
-                        html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No plugins available.</p>';
+                        const noPlugins = document.createElement('p');
+                        noPlugins.style.cssText = 'color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
+                        noPlugins.textContent = 'No plugins available.';
+                        checklist.append(noPlugins);
                     } else {
                         allPlugins.forEach(function(p) {
                             const pid = p.id || p.plugin_id;
                             const pname = p.name || pid;
-                            const checked = currentIds[pid] ? ' checked' : '';
-                            html += '<label class="acl-checkbox-row" style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;cursor:pointer">' +
-                                '<input type="checkbox" name="plugin_id" value="' + app.escapeHtml(pid) + '"' + checked + '>' +
-                                '<span>' + app.escapeHtml(pname) + '</span>' +
-                                '</label>';
+                            const label = document.createElement('label');
+                            label.className = 'acl-checkbox-row';
+                            label.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-1) 0;cursor:pointer';
+                            const cb = document.createElement('input');
+                            cb.type = 'checkbox';
+                            cb.name = 'plugin_id';
+                            cb.value = pid;
+                            if (currentIds[pid]) cb.checked = true;
+                            const nameSpan = document.createElement('span');
+                            nameSpan.textContent = pname;
+                            label.append(cb, nameSpan);
+                            checklist.append(label);
                         });
                     }
-                    html += '</div>';
-                    panelApi.setBody(html);
-                    panelApi.setFooter(
-                        '<button class="btn btn-secondary" data-panel-close>Cancel</button> ' +
-                        '<button class="btn btn-primary" id="mkt-save-plugins">Save</button>'
-                    );
+                    panelApi.setBodyDom(checklist);
+
+                    const footerFrag = document.createDocumentFragment();
+                    const panelCancelBtn = document.createElement('button');
+                    panelCancelBtn.className = 'btn btn-secondary';
+                    panelCancelBtn.setAttribute('data-panel-close', '');
+                    panelCancelBtn.textContent = 'Cancel';
+                    const panelSaveBtn = document.createElement('button');
+                    panelSaveBtn.className = 'btn btn-primary';
+                    panelSaveBtn.id = 'mkt-save-plugins';
+                    panelSaveBtn.textContent = 'Save';
+                    footerFrag.append(panelCancelBtn, document.createTextNode(' '), panelSaveBtn);
+                    panelApi.setFooterDom(footerFrag);
 
                     const footer = panelApi.panel.querySelector('[data-panel-footer]');
                     if (footer) {
@@ -800,10 +1148,10 @@
 
                     const saveBtn = document.getElementById('mkt-save-plugins');
                     if (saveBtn) {
-                        saveBtn.addEventListener('click', async function() {
+                        saveBtn.addEventListener('click', async () => {
                             const checked = panelApi.panel.querySelectorAll('input[name="plugin_id"]:checked');
                             const ids = [];
-                            checked.forEach(function(cb) { ids.push(cb.value); });
+                            checked.forEach((cb) => { ids.push(cb.value); });
                             saveBtn.disabled = true;
                             saveBtn.textContent = 'Saving...';
                             try {
@@ -815,9 +1163,9 @@
                                 if (resp.ok) {
                                     app.Toast.show('Plugins updated', 'success');
                                     panelApi.close();
-                                    setTimeout(function() { window.location.reload(); }, 500);
+                                    setTimeout(() => { window.location.reload(); }, 500);
                                 } else {
-                                    const data = await resp.json().catch(function() { return {}; });
+                                    const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                                     app.Toast.show(data.error || 'Failed to update', 'error');
                                     saveBtn.disabled = false;
                                     saveBtn.textContent = 'Save';
@@ -832,7 +1180,7 @@
 
                     panelApi.open();
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to load plugins', 'error');
                 });
         });
@@ -843,16 +1191,16 @@
         const panelApi = AdminApp.OrgCommon.initSidePanel('mkt-edit-panel');
         if (!panelApi) return;
 
-        function readJsonEl(id) {
+        const readJsonEl = (id) => {
             const el = document.getElementById(id);
             if (!el) return [];
             try { return JSON.parse(el.textContent); } catch (e) { return []; }
-        }
+        };
 
         const allRoles = readJsonEl('mkt-all-roles');
         const allDepts = readJsonEl('mkt-all-departments');
 
-        function openEdit(marketplaceId) {
+        const openEdit = (marketplaceId) => {
             const isEdit = !!marketplaceId;
             let mktData = {};
 
@@ -866,110 +1214,217 @@
             panelApi.setTitle(isEdit ? 'Edit Marketplace' : 'Create Marketplace');
 
             mktFetch(app.API_BASE + '/plugins')
-                .then(function(r) { return r.json(); })
-                .then(function(allPlugins) {
+                .then((r) => r.json())
+                .then((allPlugins) => {
                     const currentPluginIds = {};
-                    (mktData.plugin_ids || []).forEach(function(pid) { currentPluginIds[pid] = true; });
+                    (mktData.plugin_ids || []).forEach((pid) => { currentPluginIds[pid] = true; });
 
                     const currentRoles = {};
-                    (mktData.roles || []).forEach(function(r) {
+                    (mktData.roles || []).forEach((r) => {
                         if (r.assigned) currentRoles[r.name] = true;
                     });
 
                     const currentDepts = {};
                     const deptDefaults = {};
-                    (mktData.departments || []).forEach(function(d) {
+                    (mktData.departments || []).forEach((d) => {
                         if (d.assigned) {
                             currentDepts[d.name] = true;
                             deptDefaults[d.name] = d.default_included;
                         }
                     });
 
-                    let html = '<form id="panel-edit-form">';
+                    const form = document.createElement('form');
+                    form.id = 'panel-edit-form';
 
-                    if (!isEdit) {
-                        html += '<div class="form-group">' +
-                            '<label class="field-label">Marketplace ID</label>' +
-                            '<input type="text" class="field-input" name="marketplace_id" required placeholder="e.g. my-marketplace">' +
-                            '</div>';
+                    function makeFormGroup(labelText, inputEl) {
+                        const group = document.createElement('div');
+                        group.className = 'form-group';
+                        const lbl = document.createElement('label');
+                        lbl.className = 'field-label';
+                        lbl.textContent = labelText;
+                        group.append(lbl, inputEl);
+                        return group;
                     }
 
-                    html += '<div class="form-group">' +
-                        '<label class="field-label">Name</label>' +
-                        '<input type="text" class="field-input" name="name" required value="' + app.escapeHtml(mktData.name || '') + '">' +
-                        '</div>';
+                    if (!isEdit) {
+                        const idInput = document.createElement('input');
+                        idInput.type = 'text';
+                        idInput.className = 'field-input';
+                        idInput.name = 'marketplace_id';
+                        idInput.required = true;
+                        idInput.placeholder = 'e.g. my-marketplace';
+                        form.append(makeFormGroup('Marketplace ID', idInput));
+                    }
 
-                    html += '<div class="form-group">' +
-                        '<label class="field-label">Description</label>' +
-                        '<textarea class="field-input" name="description" rows="3">' + app.escapeHtml(mktData.description || '') + '</textarea>' +
-                        '</div>';
+                    const nameInput = document.createElement('input');
+                    nameInput.type = 'text';
+                    nameInput.className = 'field-input';
+                    nameInput.name = 'name';
+                    nameInput.required = true;
+                    nameInput.value = mktData.name || '';
+                    form.append(makeFormGroup('Name', nameInput));
 
-                    html += '<div class="form-group">' +
-                        '<label class="field-label">GitHub Repository URL</label>' +
-                        '<input type="url" class="field-input" name="github_repo_url" placeholder="https://github.com/org/repo" value="' + app.escapeHtml(mktData.github_repo_url || '') + '">' +
-                        '<span class="field-hint">Link to a GitHub repository to enable sync/publish</span>' +
-                        '</div>';
+                    const descTextarea = document.createElement('textarea');
+                    descTextarea.className = 'field-input';
+                    descTextarea.name = 'description';
+                    descTextarea.rows = 3;
+                    descTextarea.textContent = mktData.description || '';
+                    form.append(makeFormGroup('Description', descTextarea));
 
-                    html += '<div class="form-group">' +
-                        '<label class="field-label">Roles</label>' +
-                        '<div style="display:flex;flex-wrap:wrap;gap:var(--sp-space-1);padding:var(--sp-space-2) 0">';
+                    const ghGroup = document.createElement('div');
+                    ghGroup.className = 'form-group';
+                    const ghLabel = document.createElement('label');
+                    ghLabel.className = 'field-label';
+                    ghLabel.textContent = 'GitHub Repository URL';
+                    const ghInput = document.createElement('input');
+                    ghInput.type = 'url';
+                    ghInput.className = 'field-input';
+                    ghInput.name = 'github_repo_url';
+                    ghInput.placeholder = 'https://github.com/org/repo';
+                    ghInput.value = mktData.github_repo_url || '';
+                    const ghHint = document.createElement('span');
+                    ghHint.className = 'field-hint';
+                    ghHint.textContent = 'Link to a GitHub repository to enable sync/publish';
+                    ghGroup.append(ghLabel, ghInput, ghHint);
+                    form.append(ghGroup);
+
+                    const rolesGroup = document.createElement('div');
+                    rolesGroup.className = 'form-group';
+                    const rolesLabel = document.createElement('label');
+                    rolesLabel.className = 'field-label';
+                    rolesLabel.textContent = 'Roles';
+                    const rolesWrap = document.createElement('div');
+                    rolesWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:var(--sp-space-1);padding:var(--sp-space-2) 0';
                     allRoles.forEach(function(r) {
                         const val = r.value || r;
-                        const checked = currentRoles[val] ? ' checked' : '';
-                        html += '<label style="display:inline-flex;align-items:center;gap:var(--sp-space-2);margin-right:var(--sp-space-3);font-size:var(--sp-text-sm);cursor:pointer">' +
-                            '<input type="checkbox" name="roles" value="' + app.escapeHtml(val) + '"' + checked + '> ' +
-                            app.escapeHtml(val) + '</label>';
+                        const rLabel = document.createElement('label');
+                        rLabel.style.cssText = 'display:inline-flex;align-items:center;gap:var(--sp-space-2);margin-right:var(--sp-space-3);font-size:var(--sp-text-sm);cursor:pointer';
+                        const rCb = document.createElement('input');
+                        rCb.type = 'checkbox';
+                        rCb.name = 'roles';
+                        rCb.value = val;
+                        if (currentRoles[val]) rCb.checked = true;
+                        rLabel.append(rCb, document.createTextNode(' ' + val));
+                        rolesWrap.append(rLabel);
                     });
-                    html += '</div></div>';
+                    rolesGroup.append(rolesLabel, rolesWrap);
+                    form.append(rolesGroup);
 
-                    html += '<div class="form-group">' +
-                        '<label class="field-label">Departments</label>' +
-                        '<div class="checklist-container" style="max-height:300px;overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">' +
-                        '<div class="checklist-item" style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2);border-bottom:1px solid var(--sp-border-subtle)">' +
-                        '<input type="checkbox" id="panel-dept-check-all">' +
-                        '<label for="panel-dept-check-all" style="flex:1;font-size:var(--sp-text-sm);cursor:pointer;color:var(--sp-text-primary);font-weight:600">Check all</label>' +
-                        '</div>';
+                    const deptGroup = document.createElement('div');
+                    deptGroup.className = 'form-group';
+                    const deptLabel = document.createElement('label');
+                    deptLabel.className = 'field-label';
+                    deptLabel.textContent = 'Departments';
+                    const deptContainer = document.createElement('div');
+                    deptContainer.className = 'checklist-container';
+                    deptContainer.style.cssText = 'max-height:300px;overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)';
+
+                    const checkAllItem = document.createElement('div');
+                    checkAllItem.className = 'checklist-item';
+                    checkAllItem.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2);border-bottom:1px solid var(--sp-border-subtle)';
+                    const checkAllCb = document.createElement('input');
+                    checkAllCb.type = 'checkbox';
+                    checkAllCb.id = 'panel-dept-check-all';
+                    const checkAllLabel = document.createElement('label');
+                    checkAllLabel.htmlFor = 'panel-dept-check-all';
+                    checkAllLabel.style.cssText = 'flex:1;font-size:var(--sp-text-sm);cursor:pointer;color:var(--sp-text-primary);font-weight:600';
+                    checkAllLabel.textContent = 'Check all';
+                    checkAllItem.append(checkAllCb, checkAllLabel);
+                    deptContainer.append(checkAllItem);
+
                     allDepts.forEach(function(d, i) {
                         const val = d.value || d.name || d;
-                        const checked = currentDepts[val] ? ' checked' : '';
-                        const defaultChecked = deptDefaults[val] ? ' checked' : '';
-                        html += '<div class="checklist-item" style="display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2)">' +
-                            '<input type="checkbox" name="departments" value="' + app.escapeHtml(val) + '"' + checked + ' id="panel-dept-' + i + '">' +
-                            '<label for="panel-dept-' + i + '" style="flex:1;font-size:var(--sp-text-sm);cursor:pointer;color:var(--sp-text-primary)">' + app.escapeHtml(val) + '</label>' +
-                            '<span class="badge badge-gray" style="font-size:var(--sp-text-xs)">' + (d.user_count || 0) + ' users</span>' +
-                            '<label style="display:inline-flex;align-items:center;gap:4px;font-size:var(--sp-text-xs);color:var(--sp-text-secondary);cursor:pointer;white-space:nowrap">' +
-                            '<input type="checkbox" name="dept_default_' + val + '"' + defaultChecked + '> Default</label>' +
-                            '</div>';
+                        const dItem = document.createElement('div');
+                        dItem.className = 'checklist-item';
+                        dItem.style.cssText = 'display:flex;align-items:center;gap:var(--sp-space-2);padding:var(--sp-space-2)';
+                        const dCb = document.createElement('input');
+                        dCb.type = 'checkbox';
+                        dCb.name = 'departments';
+                        dCb.value = val;
+                        if (currentDepts[val]) dCb.checked = true;
+                        dCb.id = 'panel-dept-' + i;
+                        const dLabel = document.createElement('label');
+                        dLabel.htmlFor = 'panel-dept-' + i;
+                        dLabel.style.cssText = 'flex:1;font-size:var(--sp-text-sm);cursor:pointer;color:var(--sp-text-primary)';
+                        dLabel.textContent = val;
+                        const countBadge = document.createElement('span');
+                        countBadge.className = 'badge badge-gray';
+                        countBadge.style.fontSize = 'var(--sp-text-xs)';
+                        countBadge.textContent = (d.user_count || 0) + ' users';
+                        const defaultLabel = document.createElement('label');
+                        defaultLabel.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:var(--sp-text-xs);color:var(--sp-text-secondary);cursor:pointer;white-space:nowrap';
+                        const defaultCb = document.createElement('input');
+                        defaultCb.type = 'checkbox';
+                        defaultCb.name = 'dept_default_' + val;
+                        if (deptDefaults[val]) defaultCb.checked = true;
+                        defaultLabel.append(defaultCb, document.createTextNode(' Default'));
+                        dItem.append(dCb, dLabel, countBadge, defaultLabel);
+                        deptContainer.append(dItem);
                     });
-                    html += '</div>' +
-                        '<span class="field-hint" style="margin-top:var(--sp-space-2);display:block">At least one department is required.</span>' +
-                        '</div>';
 
-                    html += '<div class="form-group">' +
-                        '<label class="field-label">Plugins</label>' +
-                        '<input type="text" class="field-input" placeholder="Filter plugins..." id="panel-plugin-filter" style="margin-bottom:var(--sp-space-2)">' +
-                        '<div class="checklist-container" style="max-height:200px;overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">';
+                    const deptHint = document.createElement('span');
+                    deptHint.className = 'field-hint';
+                    deptHint.style.cssText = 'margin-top:var(--sp-space-2);display:block';
+                    deptHint.textContent = 'At least one department is required.';
+                    deptGroup.append(deptLabel, deptContainer, deptHint);
+                    form.append(deptGroup);
+
+                    const pluginGroup = document.createElement('div');
+                    pluginGroup.className = 'form-group';
+                    const pluginLabel = document.createElement('label');
+                    pluginLabel.className = 'field-label';
+                    pluginLabel.textContent = 'Plugins';
+                    const pluginFilterInput = document.createElement('input');
+                    pluginFilterInput.type = 'text';
+                    pluginFilterInput.className = 'field-input';
+                    pluginFilterInput.placeholder = 'Filter plugins...';
+                    pluginFilterInput.id = 'panel-plugin-filter';
+                    pluginFilterInput.style.marginBottom = 'var(--sp-space-2)';
+                    const pluginContainer = document.createElement('div');
+                    pluginContainer.className = 'checklist-container';
+                    pluginContainer.style.cssText = 'max-height:200px;overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)';
                     allPlugins.forEach(function(p, i) {
                         const pid = p.id || p.plugin_id;
                         const pname = p.name || pid;
-                        const checked = currentPluginIds[pid] ? ' checked' : '';
-                        html += '<div class="checklist-item" data-item-name="' + app.escapeHtml((pname).toLowerCase()) + '">' +
-                            '<input type="checkbox" name="plugin_ids" value="' + app.escapeHtml(pid) + '"' + checked + ' id="panel-plugin-' + i + '">' +
-                            '<label for="panel-plugin-' + i + '">' + app.escapeHtml(pname) + '</label>' +
-                            '</div>';
+                        const pItem = document.createElement('div');
+                        pItem.className = 'checklist-item';
+                        pItem.setAttribute('data-item-name', pname.toLowerCase());
+                        const pCb = document.createElement('input');
+                        pCb.type = 'checkbox';
+                        pCb.name = 'plugin_ids';
+                        pCb.value = pid;
+                        if (currentPluginIds[pid]) pCb.checked = true;
+                        pCb.id = 'panel-plugin-' + i;
+                        const pLabel = document.createElement('label');
+                        pLabel.htmlFor = 'panel-plugin-' + i;
+                        pLabel.textContent = pname;
+                        pItem.append(pCb, pLabel);
+                        pluginContainer.append(pItem);
                     });
-                    html += '</div></div>';
+                    pluginGroup.append(pluginLabel, pluginFilterInput, pluginContainer);
+                    form.append(pluginGroup);
 
-                    html += '</form>';
+                    panelApi.setBodyDom(form);
 
-                    panelApi.setBody(html);
-
-                    let footerHtml = '<button class="btn btn-secondary" data-panel-close>Cancel</button> ' +
-                        '<button class="btn btn-primary" id="mkt-edit-save">' + (isEdit ? 'Save Changes' : 'Create Marketplace') + '</button>';
+                    const editFooter = document.createDocumentFragment();
                     if (isEdit) {
-                        footerHtml = '<button class="btn btn-danger" id="mkt-edit-delete" style="margin-right:auto">Delete</button> ' + footerHtml;
+                        const editDelBtn = document.createElement('button');
+                        editDelBtn.className = 'btn btn-danger';
+                        editDelBtn.id = 'mkt-edit-delete';
+                        editDelBtn.style.marginRight = 'auto';
+                        editDelBtn.textContent = 'Delete';
+                        editFooter.append(editDelBtn, document.createTextNode(' '));
                     }
-                    panelApi.setFooter(footerHtml);
+                    const editCancelBtn = document.createElement('button');
+                    editCancelBtn.className = 'btn btn-secondary';
+                    editCancelBtn.setAttribute('data-panel-close', '');
+                    editCancelBtn.textContent = 'Cancel';
+                    const editSaveBtn = document.createElement('button');
+                    editSaveBtn.className = 'btn btn-primary';
+                    editSaveBtn.id = 'mkt-edit-save';
+                    editSaveBtn.textContent = isEdit ? 'Save Changes' : 'Create Marketplace';
+                    editFooter.append(editCancelBtn, document.createTextNode(' '), editSaveBtn);
+                    panelApi.setFooterDom(editFooter);
 
                     const footer = panelApi.panel.querySelector('[data-panel-footer]');
                     if (footer) {
@@ -979,19 +1434,19 @@
 
                     const checkAll = document.getElementById('panel-dept-check-all');
                     if (checkAll) {
-                        checkAll.addEventListener('change', function() {
+                        checkAll.addEventListener('change', () => {
                             const boxes = panelApi.panel.querySelectorAll('input[name="departments"]');
-                            boxes.forEach(function(cb) { cb.checked = checkAll.checked; });
+                            boxes.forEach((cb) => { cb.checked = checkAll.checked; });
                         });
                         const boxes = panelApi.panel.querySelectorAll('input[name="departments"]');
                         let allChecked = boxes.length > 0;
-                        boxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
+                        boxes.forEach((cb) => { if (!cb.checked) allChecked = false; });
                         checkAll.checked = allChecked;
-                        panelApi.panel.addEventListener('change', function(e) {
+                        panelApi.panel.addEventListener('change', (e) => {
                             if (e.target.name === 'departments') {
                                 const boxes = panelApi.panel.querySelectorAll('input[name="departments"]');
                                 let all = boxes.length > 0;
-                                boxes.forEach(function(cb) { if (!cb.checked) all = false; });
+                                boxes.forEach((cb) => { if (!cb.checked) all = false; });
                                 checkAll.checked = all;
                             }
                         });
@@ -999,9 +1454,9 @@
 
                     const pluginFilter = document.getElementById('panel-plugin-filter');
                     if (pluginFilter) {
-                        pluginFilter.addEventListener('input', function() {
+                        pluginFilter.addEventListener('input', () => {
                             const q = pluginFilter.value.toLowerCase();
-                            panelApi.panel.querySelectorAll('.checklist-item[data-item-name]').forEach(function(item) {
+                            panelApi.panel.querySelectorAll('.checklist-item[data-item-name]').forEach((item) => {
                                 const name = item.getAttribute('data-item-name') || '';
                                 item.style.display = (!q || name.includes(q)) ? '' : 'none';
                             });
@@ -1010,14 +1465,14 @@
 
                     const saveBtn = document.getElementById('mkt-edit-save');
                     if (saveBtn) {
-                        saveBtn.addEventListener('click', function() {
+                        saveBtn.addEventListener('click', () => {
                             handlePanelSave(isEdit, marketplaceId, saveBtn, panelApi);
                         });
                     }
 
                     const deleteBtn = document.getElementById('mkt-edit-delete');
                     if (deleteBtn) {
-                        deleteBtn.addEventListener('click', function() {
+                        deleteBtn.addEventListener('click', () => {
                             panelApi.close();
                             showDeleteConfirm(marketplaceId);
                         });
@@ -1025,16 +1480,16 @@
 
                     panelApi.open();
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to load plugins', 'error');
                 });
-        }
+        };
 
-        app.events.on('click', '[data-edit-marketplace]', function(e, btn) {
+        app.events.on('click', '[data-edit-marketplace]', (e, btn) => {
             openEdit(btn.getAttribute('data-edit-marketplace'));
         });
 
-        app.events.on('click', '[data-create-marketplace]', function(e, btn) {
+        app.events.on('click', '[data-create-marketplace]', (e, btn) => {
             e.preventDefault();
             openEdit(null);
         });
@@ -1054,13 +1509,13 @@
         saveBtn.textContent = 'Saving...';
 
         const pluginIds = [];
-        form.querySelectorAll('input[name="plugin_ids"]:checked').forEach(function(cb) { pluginIds.push(cb.value); });
+        form.querySelectorAll('input[name="plugin_ids"]:checked').forEach((cb) => { pluginIds.push(cb.value); });
 
         const selectedRoles = [];
-        form.querySelectorAll('input[name="roles"]:checked').forEach(function(cb) { selectedRoles.push(cb.value); });
+        form.querySelectorAll('input[name="roles"]:checked').forEach((cb) => { selectedRoles.push(cb.value); });
 
         const deptRules = [];
-        form.querySelectorAll('input[name="departments"]').forEach(function(cb) {
+        form.querySelectorAll('input[name="departments"]').forEach((cb) => {
             if (cb.checked) {
                 const defaultToggle = form.querySelector('input[name="dept_default_' + cb.value + '"]');
                 deptRules.push({
@@ -1073,7 +1528,7 @@
         });
 
         let aclRules = [];
-        selectedRoles.forEach(function(role) {
+        selectedRoles.forEach((role) => {
             aclRules.push({ rule_type: 'role', rule_value: role, access: 'allow', default_included: false });
         });
         aclRules = aclRules.concat(deptRules);
@@ -1102,9 +1557,9 @@
                     });
                     app.Toast.show('Marketplace updated', 'success');
                     panelApi.close();
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 } else {
-                    const data = await resp.json().catch(function() { return {}; });
+                    const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                     app.Toast.show(data.error || 'Failed to update', 'error');
                 }
             } else {
@@ -1121,7 +1576,7 @@
                     body: JSON.stringify(body)
                 });
                 if (resp.ok || resp.status === 201) {
-                    const created = await resp.json().catch(function() { return {}; });
+                    const created = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                     const createdId = created.id || body.id;
                     if (aclRules.length > 0 && createdId) {
                         await mktFetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
@@ -1132,9 +1587,9 @@
                     }
                     app.Toast.show('Marketplace created', 'success');
                     panelApi.close();
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 } else {
-                    const data = await resp.json().catch(function() { return {}; });
+                    const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                     app.Toast.show(data.error || 'Failed to create', 'error');
                 }
             }
@@ -1146,13 +1601,13 @@
         saveBtn.textContent = isEdit ? 'Save Changes' : 'Create Marketplace';
     }
 
-    app.initMarketplaceEditForm = function() {
+    app.initMarketplaceEditForm = () => {
         const form = document.getElementById('marketplace-edit-form');
         if (!form) return;
 
         const isEdit = !!form.querySelector('input[name="marketplace_id"][readonly]');
 
-        form.addEventListener('submit', async function(e) {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn) {
@@ -1172,15 +1627,15 @@
 
             const pluginCheckboxes = form.querySelectorAll('input[name="plugin_ids"]:checked');
             const pluginIds = [];
-            pluginCheckboxes.forEach(function(cb) { pluginIds.push(cb.value); });
+            pluginCheckboxes.forEach((cb) => { pluginIds.push(cb.value); });
 
             const roleCheckboxes = form.querySelectorAll('input[name="roles"]:checked');
             const selectedRoles = [];
-            roleCheckboxes.forEach(function(cb) { selectedRoles.push(cb.value); });
+            roleCheckboxes.forEach((cb) => { selectedRoles.push(cb.value); });
 
             const deptCheckboxes = form.querySelectorAll('input[name="departments"]');
             const deptRules = [];
-            deptCheckboxes.forEach(function(cb) {
+            deptCheckboxes.forEach((cb) => {
                 if (cb.checked) {
                     const defaultToggle = form.querySelector('input[name="dept_default_' + cb.value + '"]');
                     deptRules.push({
@@ -1193,7 +1648,7 @@
             });
 
             let aclRules = [];
-            selectedRoles.forEach(function(role) {
+            selectedRoles.forEach((role) => {
                 aclRules.push({ rule_type: 'role', rule_value: role, access: 'allow', default_included: false });
             });
             aclRules = aclRules.concat(deptRules);
@@ -1223,9 +1678,9 @@
                             body: JSON.stringify({ rules: aclRules, sync_yaml: false })
                         });
                         app.Toast.show('Marketplace updated', 'success');
-                        setTimeout(function() { window.location.href = '/admin/org/marketplaces/'; }, 500);
+                        setTimeout(() => { window.location.href = '/admin/org/marketplaces/'; }, 500);
                     } else {
-                        const data = await resp.json().catch(function() { return {}; });
+                        const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                         app.Toast.show(data.error || 'Failed to update', 'error');
                     }
                 } catch (err) {
@@ -1247,7 +1702,7 @@
                         body: JSON.stringify(body)
                     });
                     if (resp.ok || resp.status === 201) {
-                        const created = await resp.json().catch(function() { return {}; });
+                        const created = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                         const createdId = created.id || body.id;
                         if (aclRules.length > 0 && createdId) {
                             await mktFetch(app.API_BASE + '/access-control/entity/marketplace/' + encodeURIComponent(createdId), {
@@ -1257,9 +1712,9 @@
                             });
                         }
                         app.Toast.show('Marketplace created', 'success');
-                        setTimeout(function() { window.location.href = '/admin/org/marketplaces/'; }, 500);
+                        setTimeout(() => { window.location.href = '/admin/org/marketplaces/'; }, 500);
                     } else {
-                        const data = await resp.json().catch(function() { return {}; });
+                        const data = await (resp.headers.get('content-type')?.includes('json') ? resp.json() : Promise.resolve({}));
                         app.Toast.show(data.error || 'Failed to create', 'error');
                     }
                 } catch (err) {
@@ -1275,7 +1730,7 @@
 
         const deleteBtn = document.getElementById('btn-delete-marketplace');
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
+            deleteBtn.addEventListener('click', () => {
                 const idInput = form.querySelector('input[name="marketplace_id"]');
                 if (idInput) showDeleteConfirm(idInput.value);
             });
@@ -1283,21 +1738,21 @@
 
         const checkAllDept = form.querySelector('#dept-check-all');
         if (checkAllDept) {
-            checkAllDept.addEventListener('change', function() {
+            checkAllDept.addEventListener('change', () => {
                 const boxes = form.querySelectorAll('input[name="departments"]');
-                boxes.forEach(function(cb) { cb.checked = checkAllDept.checked; });
+                boxes.forEach((cb) => { cb.checked = checkAllDept.checked; });
             });
-            form.addEventListener('change', function(e) {
+            form.addEventListener('change', (e) => {
                 if (e.target.name === 'departments') {
                     const boxes = form.querySelectorAll('input[name="departments"]');
                     let allChecked = boxes.length > 0;
-                    boxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
+                    boxes.forEach((cb) => { if (!cb.checked) allChecked = false; });
                     checkAllDept.checked = allChecked;
                 }
             });
             const boxes = form.querySelectorAll('input[name="departments"]');
             let allChecked = boxes.length > 0;
-            boxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
+            boxes.forEach((cb) => { if (!cb.checked) allChecked = false; });
             checkAllDept.checked = allChecked;
         }
     };

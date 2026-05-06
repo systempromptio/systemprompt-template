@@ -2,7 +2,6 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/page-header title=title}}
-    {{> components/page-hero}}
 
     <div class="toolbar" role="toolbar" aria-label="Actions">
         <div class="search-group">
@@ -15,7 +14,7 @@
     <section aria-label="Users list" data-page="users">
     {{#if users}}
     {{#> components/data-table}}
-        <thead><tr><th>User</th><th>Rank</th><th class="numeric col-numeric">XP</th><th class="numeric col-numeric">Logins</th><th class="numeric col-numeric">Prompts</th><th class="numeric col-numeric">Sessions</th><th class="numeric col-numeric">Bytes</th><th class="col-status">Status</th><th class="col-date">Last Active</th><th class="col-actions"></th></tr></thead>
+        <thead><tr><th>User</th><th>Department</th><th class="numeric col-numeric" title="Effective skills (direct + department)">Skills</th><th class="numeric col-numeric" title="Marketplaces (direct + department)">Marketplaces</th><th class="numeric col-numeric" title="Active PATs / enrolled devices">Devices</th><th>Rank</th><th class="numeric col-numeric">Sessions</th><th class="col-status">Status</th><th class="col-date">Last Active</th><th class="col-actions"></th></tr></thead>
         <tbody>
         {{#each users}}
         <tr data-user-name="{{toLowerCase (default display_name user_id)}}" data-user-email="{{toLowerCase (default email "")}}">
@@ -25,12 +24,12 @@
                     <span>{{default display_name user_id}}</span>
                 </a>
             </td>
+            <td>{{#if department}}<a href="/admin/access-control?department={{department}}" class="badge badge-blue">{{department}}</a>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{assigned_skills_count}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{assigned_marketplaces_count}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{#if devices_count}}<span class="badge badge-green" title="{{devices_count}} active device{{#unless (eq devices_count 1)}}s{{/unless}}">{{devices_count}}</span>{{else}}<span class="text-tertiary">0</span>{{/if}}</td>
             <td>{{default rank_name "-"}}</td>
-            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{xp}}</td>
-            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{logins}}</td>
-            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{prompts}}</td>
             <td class="numeric" style="font-variant-numeric: tabular-nums;">{{sessions}}</td>
-            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{bytes}}</td>
             <td class="col-status">{{#if is_active}}<span class="badge badge-success">Active</span>{{else}}<span class="badge badge-secondary">Inactive</span>{{/if}}</td>
             <td class="col-date">{{#if last_active}}<span title="{{formatDate last_active}}">{{relativeTime last_active}}</span>{{else}}Never{{/if}}</td>
             <td class="col-actions"><button class="btn-actions-trigger" data-user-id="{{user_id}}" aria-label="Actions for {{default display_name user_id}}" aria-haspopup="true" aria-expanded="false" type="button">&#8943;</button></td>

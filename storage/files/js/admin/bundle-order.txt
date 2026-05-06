@@ -10,6 +10,10 @@ form-utils.js
 interactions.js
 install-widget.js
 org-common.js
+json-tree.js
+chain-drawer.js
+heatmap.js
+requests-charts.js
 # Pages
 users-panel.js
 users.js
@@ -32,3 +36,10 @@ mcp-servers.js
 access-control.js
 marketplaces.js
 my-workspace.js
+time-range.js
+filter-ribbon.js
+sparkline.js
+portfolio-area-chart.js
+conversations.js
+waterfall.js
+event-stream.js

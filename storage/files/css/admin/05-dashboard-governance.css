@@ -1,0 +1,216 @@
+/* Governance live-pulse styles: posture strip, action queue, window pills,
+   incident grouping. Companion to 05-dashboard-metrics.css and -tables.css. */
+
+.posture-strip {
+    display: flex;
+    align-items: stretch;
+    gap: var(--sp-space-4);
+    padding: var(--sp-space-4) var(--sp-space-5);
+    border-radius: var(--sp-radius-lg);
+    border: 1px solid var(--sp-border-subtle);
+    margin-bottom: var(--sp-space-5);
+    background: var(--sp-surface-1);
+}
+.posture-strip__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border-radius: var(--sp-radius-md);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #fff;
+}
+.posture-strip__body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--sp-space-1);
+    flex: 1;
+}
+.posture-strip__headline {
+    font-size: var(--sp-font-size-lg);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+}
+.posture-strip__sub {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2);
+    font-size: var(--sp-font-size-sm);
+    color: var(--sp-text-secondary);
+}
+.posture-strip--green {
+    background: color-mix(in oklch, var(--sp-color-success) 8%, var(--sp-surface-1));
+    border-color: color-mix(in oklch, var(--sp-color-success) 35%, transparent);
+}
+.posture-strip--green .posture-strip__badge {
+    background: var(--sp-color-success, #10B981);
+}
+.posture-strip--amber {
+    background: color-mix(in oklch, var(--sp-color-warning) 10%, var(--sp-surface-1));
+    border-color: color-mix(in oklch, var(--sp-color-warning) 40%, transparent);
+}
+.posture-strip--amber .posture-strip__badge {
+    background: var(--sp-color-warning, #F59E0B);
+}
+.posture-strip--red {
+    background: color-mix(in oklch, var(--sp-color-danger) 12%, var(--sp-surface-1));
+    border-color: color-mix(in oklch, var(--sp-color-danger) 45%, transparent);
+}
+.posture-strip--red .posture-strip__badge {
+    background: var(--sp-color-danger, #EF4444);
+    animation: posture-pulse 1.6s ease-in-out infinite;
+}
+@keyframes posture-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--sp-color-danger) 60%, transparent); }
+    50%      { box-shadow: 0 0 0 8px color-mix(in oklch, var(--sp-color-danger) 0%,  transparent); }
+}
+
+.action-queue-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    text-decoration: none;
+    color: inherit;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border-radius: var(--sp-radius-md);
+    transition: background 120ms ease;
+}
+.action-queue-item:hover {
+    background: var(--sp-surface-2);
+}
+.action-queue-chevron {
+    margin-left: auto;
+    color: var(--sp-text-tertiary);
+    font-size: 1.25rem;
+}
+.action-queue-item--danger .feed-text { color: var(--sp-color-danger); font-weight: 600; }
+.action-queue-item--warning .feed-text { font-weight: 600; }
+
+.window-pills {
+    display: inline-flex;
+    gap: var(--sp-space-1);
+    padding: 4px;
+    border-radius: var(--sp-radius-md);
+    background: var(--sp-surface-2);
+    margin-bottom: var(--sp-space-3);
+}
+.window-pill {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: var(--sp-space-1) var(--sp-space-3);
+    font-size: var(--sp-font-size-sm);
+    font-weight: 500;
+    color: var(--sp-text-secondary);
+    border-radius: calc(var(--sp-radius-md) - 2px);
+    cursor: pointer;
+}
+.window-pill--active {
+    background: var(--sp-surface-1);
+    color: var(--sp-text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+.window-metric-ribbon .metric-ribbon-delta {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--sp-font-size-xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.incident-group-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+}
+.incident-group {
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-md);
+    background: var(--sp-surface-1);
+}
+.incident-group--danger {
+    border-color: color-mix(in oklch, var(--sp-color-danger) 45%, transparent);
+    background: color-mix(in oklch, var(--sp-color-danger) 6%, var(--sp-surface-1));
+}
+.incident-group__summary {
+    display: grid;
+    grid-template-columns: auto auto auto 1fr auto;
+    gap: var(--sp-space-3);
+    align-items: center;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    cursor: pointer;
+    list-style: none;
+    font-size: var(--sp-font-size-sm);
+}
+.incident-group__summary::-webkit-details-marker { display: none; }
+.incident-group__attempts {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    padding: 2px 6px;
+    border-radius: var(--sp-radius-sm);
+    background: var(--sp-surface-2);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+.incident-group--danger .incident-group__attempts {
+    background: var(--sp-color-danger);
+    color: #fff;
+}
+.incident-group__actor {
+    color: var(--sp-text-secondary);
+}
+.incident-group__time {
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+    font-size: var(--sp-font-size-xs);
+}
+.incident-group__body {
+    padding: var(--sp-space-3);
+    border-top: 1px solid var(--sp-border-subtle);
+    background: var(--sp-surface-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+}
+.incident-group__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-3);
+    font-size: var(--sp-font-size-xs);
+    color: var(--sp-text-tertiary);
+}
+.incident-group__reason {
+    margin: 0;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    background: var(--sp-surface-1);
+    border-radius: var(--sp-radius-sm);
+    font-size: var(--sp-font-size-xs);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.raw-event-stream {
+    margin-top: var(--sp-space-4);
+}
+.raw-event-stream__summary {
+    cursor: pointer;
+    list-style: none;
+}
+.raw-event-stream__summary::-webkit-details-marker { display: none; }
+.raw-event-stream__summary::before {
+    content: "▸ ";
+    color: var(--sp-text-tertiary);
+}
+.raw-event-stream[open] .raw-event-stream__summary::before {
+    content: "▾ ";
+}
+
+.row-danger {
+    background: color-mix(in oklch, var(--sp-color-danger) 6%, transparent);
+}

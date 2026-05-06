@@ -5,6 +5,7 @@ pub mod conversation_analytics;
 mod dashboard;
 mod dashboard_enterprise;
 mod dashboard_traffic;
+pub mod gateway;
 pub mod hooks;
 pub mod hooks_export;
 mod jobs;
@@ -17,6 +18,8 @@ mod plugins_config;
 mod plugins_requests;
 mod user_context;
 pub mod user_entities;
+pub mod departments;
+pub use departments::{Department, DepartmentInput, DepartmentMember, DepartmentSummary};
 mod users;
 pub mod webhook;
 
@@ -24,11 +27,16 @@ pub use dashboard::{
     AchievementInfo, ActivityStats, ContentPerformanceRow, DashboardData, DashboardQuery,
     DepartmentActivity, DepartmentQuery, DepartmentScore, EventBreakdown, EventRow,
     EventTypeBreakdown, EventsQuery, EventsResponse, GovernanceDecisionRow, GovernanceEvent,
-    HourlyActivity, LeaderboardEntry, McpAccessEvent, McpAccessSummary, ModelUsage,
+    HourlyActivity, IncidentGroup, LeaderboardEntry, McpAccessEvent, McpAccessSummary, ModelUsage,
     PaginationQuery, ProjectActivity, RealtimePulse, RecentMcpError, SkillCount, TimeSeriesBucket,
-    TokenUsageRow, ToolSuccessRate, TopPageDailyBucket, TopUser, TrafficCountryBucket, TrafficData,
+    TokenUsageRow, ToolSuccessRate, TopActor, TopPageDailyBucket, TopPolicy, TopUser,
+    TrafficCountryBucket, TrafficData,
     TrafficDevice, TrafficGeo, TrafficKpis, TrafficReadingPattern, TrafficSource,
     TrafficTimeBucket, TrafficTopPage, UnlockedAchievement, UserGamificationProfile,
+    WindowedCounts,
+};
+pub use gateway::{
+    GatewayConfigView, GatewayRouteView, ReorderRoutesRequest, UpdateGatewaySettingsRequest,
 };
 pub use hooks::{
     CreateUserHookRequest, HookEventTypeStat, HookSummaryStats, HookTimeSeriesBucket, HooksQuery,
@@ -109,7 +117,8 @@ pub use users::{
     CreateUserRequest, DepartmentStats, DetectedEntity, EventTypeCount, JwtIdentity, SkillSecret,
     ToolUsageCount, UpdateSkillRequest, UpdateUserAgentRequest, UpdateUserRequest,
     UpdateUserSkillRequest, UpsertSkillSecretRequest, UsageEvent, UserAgent, UserBasicInfo,
-    UserDetail, UserPluginCounts, UserSession, UserSkill, UserSummary, UserTier, UsersQuery,
+    UserDetail, UserIdentityRow, UserPluginCounts, UserSession, UserSkill, UserSummary, UserTier,
+    UsersQuery,
 };
 pub use webhook::{
     GovernQuery, HookEventPayload, StatusLinePayload, StatusLineQuery, TrackQuery,

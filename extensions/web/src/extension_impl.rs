@@ -24,9 +24,9 @@ use crate::{
     assets::web_assets,
     jobs::{
         BundleAdminCssJob, BundleAdminJsJob, ContentAnalyticsAggregationJob, ContentIngestionJob,
-        ContentPrerenderJob, CopyExtensionAssetsJob, GitHubMarketplaceSyncJob,
-        LlmsTxtGenerationJob, MarketplaceSyncJob, PublishPipelineJob, RecalculateGamificationJob,
-        RobotsTxtGenerationJob, SitemapGenerationJob,
+        ContentPrerenderJob, CopyExtensionAssetsJob,
+        GitHubMarketplaceSyncJob, LlmsTxtGenerationJob, MarketplaceSyncJob, PublishPipelineJob,
+        RecalculateGamificationJob, RobotsTxtGenerationJob, SitemapGenerationJob,
     },
     schemas::schema_definitions,
 };

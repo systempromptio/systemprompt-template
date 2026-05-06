@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            entity_type,\n            entity_name,\n            COALESCE(entity_id, entity_name) AS \"entity_id!\",\n            COALESCE(SUM(usage_count), 0)::BIGINT AS \"total_uses!\",\n            COUNT(DISTINCT session_id)::BIGINT AS \"session_count!\"\n        FROM session_entity_links\n        WHERE user_id = $1\n        GROUP BY entity_type, entity_name, entity_id\n        ORDER BY 4 DESC\n        LIMIT 200",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "entity_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "entity_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "entity_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_uses!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "session_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "f3b8b6559ed4204cf71b692c105ff9b8b61eb155c911a489076d343ef60872da"
+}

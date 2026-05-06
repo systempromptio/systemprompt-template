@@ -2,11 +2,6 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/page-header title=title}}
-    {{> components/page-hero}}
-
-    <section aria-label="Logs CLI">
-        <p class="text-tertiary">CLI: <code class="code-inline">{{cli_command}}</code></p>
-    </section>
 
     <nav class="toolbar" aria-label="Log tabs">
         <a href="/admin/infrastructure/logs?tab=view" class="btn btn-sm {{#if is_tab_view}}btn-primary{{else}}btn-secondary{{/if}}">View</a>
@@ -40,15 +35,15 @@
         </tbody>
     {{/components/data-table}}
     {{else}}
-    {{> components/empty-state message="No log entries. Run systemprompt infra logs view from the CLI."}}
+    {{> components/empty-state message="No log entries."}}
     {{/if}}
     </section>
     {{else if is_tab_trace}}
-    {{> components/empty-state message="Execution traces — run: systemprompt infra logs trace list --limit 5"}}
+    {{> components/empty-state message="No execution traces recorded."}}
     {{else if is_tab_request}}
-    {{> components/empty-state message="AI request logs — run: systemprompt infra logs request list --limit 5"}}
+    {{> components/empty-state message="No AI request logs recorded."}}
     {{else}}
-    {{> components/empty-state message="MCP tool executions — run: systemprompt infra logs tools list --limit 5"}}
+    {{> components/empty-state message="No MCP tool executions recorded."}}
     {{/if}}
     {{/inline}}
     {{#*inline "scripts"}}{{/inline}}

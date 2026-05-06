@@ -24,6 +24,15 @@ pub fn get_services_path() -> Result<PathBuf, Box<Response>> {
         })
 }
 
+pub fn get_profile_path() -> Result<PathBuf, Box<Response>> {
+    ProfileBootstrap::get_path()
+        .map(PathBuf::from)
+        .map_err(|e| {
+            tracing::error!(error = %e, "Failed to get profile path");
+            boxed_error_response(StatusCode::INTERNAL_SERVER_ERROR, "Failed to load profile path")
+        })
+}
+
 pub fn normalize_user_id(raw: &str) -> &str {
     raw.strip_suffix(".git").unwrap_or(raw)
 }

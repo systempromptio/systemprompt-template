@@ -56,7 +56,6 @@ pub struct Manifest {
     pub issued_at: String,
     pub not_before: String,
     pub user_id: String,
-    pub tenant_id: Option<String>,
     pub user: UserSection,
     pub plugins: Vec<PluginEntry>,
     pub skills: Vec<SkillEntry>,

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            COUNT(*)::BIGINT AS \"mcp_tool_calls!\",\n            COALESCE(COUNT(*) FILTER (WHERE status = 'failed'), 0)::BIGINT AS \"mcp_errors!\"\n        FROM mcp_tool_executions",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "mcp_tool_calls!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "mcp_errors!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "5f8dd702b08b215ef1072581a7e2d265e497b8a29afa077877f842856c05a1af"
+}

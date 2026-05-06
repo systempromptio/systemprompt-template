@@ -1,0 +1,29 @@
+# Role-scoped access control rules.
+#
+# This file is the BOOTSTRAP source of truth. On startup the publish pipeline
+# reads it and upserts each rule into `access_control_rules` (rule_type=role).
+# Dashboard edits write to the database only — there is NO write-back to this
+# file. To make a rule permanent across deployments, edit this file in the
+# source repo and redeploy.
+#
+# Schema:
+#   rules:
+#     - entity_type: gateway_route | mcp_server | plugin | agent | marketplace
+#       entity_id:   string id of the entity
+#       access:      allow | deny  (default: allow)
+#       default_included: bool     (default: false)
+#       roles:       list of role names to grant (or deny) access
+#
+# Example:
+#
+# rules:
+#   - entity_type: gateway_route
+#     entity_id: claude-star-3cbb7d
+#     access: allow
+#     roles: [admin, developer]
+#   - entity_type: mcp_server
+#     entity_id: systemprompt
+#     access: allow
+#     roles: [admin]
+
+rules: []

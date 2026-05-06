@@ -1,0 +1,99 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header
+        title="Identity & Violations"
+        subtitle="Who is violating what. Group by user, tenant, agent, or scope; click any cell to drill into the audit trail."}}
+
+    {{> components/time-range time_range}}
+
+    <nav class="group-by-toggle" aria-label="Group identities by">
+        {{#each group_options}}
+            <a href="?group_by={{this.id}}"
+               class="group-by-toggle__btn{{#if this.active}} group-by-toggle__btn--active{{/if}}"
+               {{#if this.active}}aria-current="true"{{/if}}>
+                {{this.label}}
+            </a>
+        {{/each}}
+    </nav>
+
+    {{#if has_data}}
+    <section class="identity-section">
+        <h2 class="identity-section__title">Top violators</h2>
+        <table class="data-table identity-top">
+            <thead><tr>
+                <th>Identity</th>
+                <th class="col-num">Risk</th>
+                <th class="col-num">Denies</th>
+                <th class="col-num">Secret</th>
+                <th class="col-num">Scope</th>
+                <th class="col-num">Activity</th>
+            </tr></thead>
+            <tbody>
+            {{#each top_violators}}
+            <tr>
+                <td>
+                    <a href="/admin/governance/identity/{{this.identity_id}}?group_by={{../group_by}}">
+                        <code class="code-inline">{{this.identity_id}}</code>
+                    </a>
+                </td>
+                <td class="col-num">
+                    <span class="risk-pill risk-pill--{{this.risk_band}}">{{this.risk_score}}</span>
+                </td>
+                <td class="col-num">{{this.deny_count}}</td>
+                <td class="col-num">{{this.secret_breach_count}}</td>
+                <td class="col-num">{{this.scope_violation_count}}</td>
+                <td class="col-num">{{this.activity_volume}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    </section>
+
+    <section class="identity-section">
+        <h2 class="identity-section__title">Heatmap — denies by policy</h2>
+        <div class="heatmap" data-max-cell="{{max_cell}}" role="table"
+             aria-label="Identity violations heatmap">
+            <div class="heatmap__head" role="row">
+                <span class="heatmap__corner" role="columnheader">Identity</span>
+                {{#each policies}}
+                  <span class="heatmap__col" role="columnheader" title="{{this}}">{{this}}</span>
+                {{/each}}
+                <span class="heatmap__col heatmap__col--total" role="columnheader">Total</span>
+            </div>
+            {{#each heatmap}}
+            <div class="heatmap__row" role="row">
+                <a class="heatmap__rowhead" role="rowheader" href="{{this.profile_url}}"
+                   title="Open profile for {{this.identity_id}}">
+                    {{truncate this.identity_id 24}}
+                </a>
+                {{#each this.cells}}
+                    {{#if this.deny_count}}
+                        <a class="heatmap__cell" role="cell"
+                           href="{{this.audit_url}}"
+                           data-count="{{this.deny_count}}"
+                           data-policy="{{this.policy}}"
+                           title="{{this.policy}}: {{this.deny_count}} denies">
+                            <span class="heatmap__cell-count">{{this.deny_count}}</span>
+                        </a>
+                    {{else}}
+                        <span class="heatmap__cell heatmap__cell--empty" role="cell"
+                              data-count="0"></span>
+                    {{/if}}
+                {{/each}}
+                <a class="heatmap__cell heatmap__cell--total" role="cell"
+                   href="{{this.audit_url}}" title="All denies for {{this.identity_id}}">
+                    <span class="heatmap__cell-count">{{this.total_deny}}</span>
+                </a>
+            </div>
+            {{/each}}
+        </div>
+    </section>
+    {{else}}
+    {{> components/empty-state
+        message="No violations in the current time range. Widen the window or run a demo to populate data."}}
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

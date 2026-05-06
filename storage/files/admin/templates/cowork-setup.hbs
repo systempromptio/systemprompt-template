@@ -1,99 +1,108 @@
-{{#> layout title="Cowork device setup" page="cowork-setup"}}
+{{#> layout title="Connect your workstation" page="cowork-setup"}}
     {{#*inline "head_extra"}}
     <style>
-      .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem; }
-      .mode-card { border: 1px solid var(--border, #ddd); border-radius: 8px; padding: 1rem; }
-      .mode-card h3 { margin-top: 0; }
-      .mode-card.unsupported { opacity: 0.5; }
-      .mode-badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
-      .mode-badge.ok { background: #d4f5e0; color: #0f5132; }
-      .mode-badge.off { background: #f5d4d4; color: #5a1f1f; }
-      .toml-snippet { position: relative; }
-      .toml-copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; }
-      .steps { padding-left: 1.25rem; }
-      .steps li { margin-bottom: 0.5rem; }
-      .callout { border-left: 4px solid var(--brand-accent, #2a75f3); background: var(--surface-2, #f5f7ff); padding: 0.75rem 1rem; border-radius: 4px; margin: 1rem 0; }
+      .setup-step { display: grid; grid-template-columns: 3rem 1fr; gap: 1rem; align-items: start; padding: 1.25rem 0; border-bottom: 1px solid var(--border, #e5e7eb); }
+      .setup-step:last-child { border-bottom: none; }
+      .setup-step .step-num { display: flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; border-radius: 999px; background: var(--brand-accent, #2a75f3); color: #fff; font-weight: 700; font-size: 1.125rem; }
+      .setup-step h2 { margin: 0 0 0.5rem; font-size: 1.125rem; }
+      .setup-step p { margin: 0.25rem 0; }
+      .download-cta { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; border-radius: 6px; background: var(--brand-accent, #2a75f3); color: #fff; font-weight: 600; text-decoration: none; }
+      .download-cta:hover { filter: brightness(1.05); }
+      .download-other { margin-top: 0.5rem; font-size: 0.875rem; }
+      .download-other summary { cursor: pointer; color: var(--text-secondary, #555); }
+      .download-other ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+      .pill { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.125rem 0.625rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+      .pill.ok { background: #d4f5e0; color: #0f5132; }
+      .pill.err { background: #f5d4d4; color: #5a1f1f; }
+      .pill.pending { background: #f0f0f0; color: #555; }
+      .tabs { display: flex; gap: 0.25rem; margin: 0.75rem 0 0; border-bottom: 1px solid var(--border, #e5e7eb); }
+      .tabs button { background: none; border: none; padding: 0.5rem 0.875rem; cursor: pointer; font: inherit; color: var(--text-secondary, #555); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+      .tabs button.active { color: var(--brand-accent, #2a75f3); border-bottom-color: var(--brand-accent, #2a75f3); }
+      .tab-panel { padding: 0.75rem 0; }
+      .tab-panel[hidden] { display: none; }
+      .snippet { position: relative; }
+      .snippet pre { margin: 0; }
+      .snippet .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; }
+      .advanced { margin-top: 2rem; }
+      .advanced summary { cursor: pointer; font-weight: 600; padding: 0.5rem 0; }
+      .advanced > div { padding: 0.75rem 0; }
     </style>
     {{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title="Cowork device setup"}}
+    {{> components/page-header title="Connect your workstation"}}
 
-    <section aria-label="Authentication prerequisites">
-        <div class="card mb-6">
-            <div class="card-header">
-                <h2 class="card-title">How authentication works</h2>
-            </div>
-            <div class="card-body">
-                <p>There is a <strong>single login</strong> for this platform: <a href="/admin/login"><code>/admin/login</code></a>. You are signed in right now as <strong>{{user_email}}</strong>.</p>
-                <div class="callout">
-                    <strong>Prerequisite &mdash; you must be signed in via this browser before any device flow works.</strong>
-                    <br>The consent page the helper opens (<code>/cowork-auth/device-link</code>) checks the same session cookie used by the rest of the dashboard. If the cookie is missing, the browser is bounced to <code>/admin/login</code> first, then back.
+    <div class="card mb-6">
+        <div class="card-body">
+            <p>Three steps. About a minute. Signed in as <strong>{{user_email}}</strong>.
+               <span id="gateway-pill" class="pill pending">Checking gateway&hellip;</span>
+            </p>
+
+            <div class="setup-step">
+                <div class="step-num">1</div>
+                <div>
+                    <h2>Download the bridge</h2>
+                    <p class="text-tertiary">Double-click to launch. A tray icon appears in your menu bar.</p>
+                    <p>
+                        <a id="download-cta" class="download-cta" href="#" rel="noopener">Download&hellip;</a>
+                    </p>
+                    <details class="download-other">
+                        <summary>Other platforms</summary>
+                        <ul>
+                            <li><a href="{{download_base_url}}/systemprompt-bridge-macos.dmg">macOS (.dmg)</a></li>
+                            <li><a href="{{download_base_url}}/systemprompt-bridge-windows.exe">Windows (.exe)</a></li>
+                            <li><a href="{{download_base_url}}/systemprompt-bridge-linux.tar.gz">Linux (.tar.gz)</a></li>
+                        </ul>
+                    </details>
                 </div>
-                <p>The <code>sp-cowork-auth</code> CLI cannot share your browser cookie. The three modes below are three ways the CLI can obtain its own credential, each set up by you (the logged-in user) once:</p>
-                <ul>
-                    <li><strong>PAT</strong> &mdash; paste a long-lived bearer token into a config file.</li>
-                    <li><strong>Session</strong> &mdash; per-use browser consent; nothing persistent on disk.</li>
-                    <li><strong>mTLS</strong> &mdash; present an OS-keystore certificate whose fingerprint is pre-enrolled.</li>
-                </ul>
             </div>
-        </div>
 
-        <div class="card mb-6">
-            <div class="card-header">
-                <h2 class="card-title">Server capabilities</h2>
-                <p class="card-subtitle">Live from <code>{{gateway_url}}/v1/auth/cowork/capabilities</code>.</p>
+            <div class="setup-step">
+                <div class="step-num">2</div>
+                <div>
+                    <h2>Get your access token</h2>
+                    <p>Open <a href="/admin/devices" class="download-cta" style="background:var(--surface-2,#f5f7ff);color:var(--brand-accent,#2a75f3);">/admin/devices &rarr;</a></p>
+                    <p class="text-tertiary">Click <strong>Issue PAT</strong>, copy the <code>sp-live-&hellip;</code> token. It is shown once.</p>
+                </div>
             </div>
-            <div class="card-body">
-                <div id="capabilities-grid" class="mode-grid"><span class="text-tertiary">Loading&hellip;</span></div>
-            </div>
-        </div>
 
-        <div class="card mb-6">
-            <div class="card-header">
-                <h2 class="card-title">1. Install the helper</h2>
-            </div>
-            <div class="card-body">
-                <p>Build <code>sp-cowork-auth</code> from the <code>systemprompt-core</code> repo:</p>
-                <pre><code>cd systemprompt-core/bin/cowork-auth
-cargo build --release
-./target/release/sp-cowork-auth --help</code></pre>
-                <p>Release binaries are also tagged under <code>cowork-auth-v*</code> on GitHub.</p>
-            </div>
-        </div>
-
-        <div class="card mb-6">
-            <div class="card-header">
-                <h2 class="card-title">2. Store a PAT with one command (recommended)</h2>
-                <p class="card-subtitle">The helper writes a locked-down config file for you &mdash; no editing TOML by hand.</p>
-            </div>
-            <div class="card-body">
-                <ol class="steps">
-                    <li>Issue a PAT on <a href="/admin/devices">Devices</a> and copy the <code>sp-live-&hellip;</code> secret.</li>
-                    <li>Run:
-                        <div class="toml-snippet">
-                            <button type="button" class="btn btn-sm toml-copy-btn" id="login-copy-btn">Copy</button>
-                            <pre><code id="login-snippet">sp-cowork-auth login sp-live-YOUR_SECRET --gateway {{gateway_url}}</code></pre>
+            <div class="setup-step">
+                <div class="step-num">3</div>
+                <div>
+                    <h2>Paste it into the bridge</h2>
+                    <div class="tabs" role="tablist">
+                        <button type="button" class="active" role="tab" data-tab="tray">Tray app (macOS / Windows)</button>
+                        <button type="button" role="tab" data-tab="terminal">Terminal (any OS)</button>
+                    </div>
+                    <div class="tab-panel" id="tab-tray" role="tabpanel">
+                        <ol>
+                            <li>Click the systemprompt tray icon.</li>
+                            <li>Paste your <code>sp-live-&hellip;</code> token.</li>
+                            <li>Click <strong>Sign in</strong>. The icon turns green.</li>
+                        </ol>
+                    </div>
+                    <div class="tab-panel" id="tab-terminal" role="tabpanel" hidden>
+                        <div class="snippet">
+                            <button type="button" class="btn btn-sm copy-btn" id="cli-copy-btn">Copy</button>
+                            <pre><code id="cli-snippet">systemprompt-bridge login sp-live-YOUR_TOKEN --gateway {{gateway_url}}</code></pre>
                         </div>
-                    </li>
-                    <li>Verify with <code>sp-cowork-auth status</code>.</li>
-                </ol>
-                <p class="text-tertiary text-sm">
-                    Stored at <code>$XDG_CONFIG_HOME/systemprompt/</code> on Linux/WSL,
-                    <code>~/Library/Application Support/systemprompt/</code> on macOS,
-                    <code>%APPDATA%\systemprompt\</code> on Windows.
-                    Unix: dir 0700, secret file 0600. Windows: inherits user-scoped NTFS ACL.
-                </p>
-                <p class="text-tertiary text-sm">To revoke locally: <code>sp-cowork-auth logout</code>. To revoke server-side: hit <strong>Revoke</strong> on <a href="/admin/devices">Devices</a>.</p>
+                        <p class="text-tertiary text-sm">Replace <code>sp-live-YOUR_TOKEN</code> with the token from step 2.</p>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
 
-        <details class="card mb-6">
-            <summary class="card-header" style="cursor:pointer;"><h2 class="card-title" style="display:inline;">Manual config (advanced)</h2></summary>
-            <div class="card-body">
-                <p>Skip the <code>login</code> command if you need to hand-edit the config &mdash; for example to enable session or mTLS mode:</p>
-                <div class="toml-snippet">
-                    <button type="button" class="btn btn-sm toml-copy-btn" id="toml-copy-btn">Copy</button>
-                    <pre><code id="toml-snippet">gateway_url = "{{gateway_url}}"
+    <details class="advanced card">
+        <summary class="card-header">Advanced &mdash; manual config, session &amp; mTLS modes, revoke</summary>
+        <div class="card-body">
+            <h3>Revoke a token</h3>
+            <p>On <a href="/admin/devices">/admin/devices</a> click <strong>Revoke</strong> on the device row. Locally, run <code>systemprompt-bridge logout</code> to wipe the on-disk credential.</p>
+
+            <h3>Hand-edit the config</h3>
+            <p>The bridge writes its own config; only edit by hand if you need session or mTLS mode.</p>
+            <div class="snippet">
+                <button type="button" class="btn btn-sm copy-btn" id="toml-copy-btn">Copy</button>
+                <pre><code id="toml-snippet">gateway_url = "{{gateway_url}}"
 
 # Pick one section. Providers probe in order: mtls -> session -> pat.
 
@@ -107,87 +116,60 @@ enabled = true
 # cert_path = "/etc/systemprompt/device.pem"  # Linux
 # cert_label = "systemprompt-device"          # macOS keystore
 # cert_sha256 = "&lt;64-hex&gt;"                   # Windows cert store</code></pre>
-                </div>
             </div>
-        </details>
+            <p class="text-tertiary text-sm">
+                Stored at <code>$XDG_CONFIG_HOME/systemprompt/</code> on Linux,
+                <code>~/Library/Application Support/systemprompt/</code> on macOS,
+                <code>%APPDATA%\systemprompt\</code> on Windows.
+            </p>
 
-        <div class="card mb-6">
-            <div class="card-header">
-                <h2 class="card-title">3. Set up the credential for your chosen mode</h2>
-            </div>
-            <div class="card-body">
-                <h3>Session mode (no setup)</h3>
-                <p>Works out of the box. First run opens a browser to this dashboard's consent page. Keep <strong>this</strong> browser signed in.</p>
-
-                <h3>PAT mode</h3>
-                <ol class="steps">
-                    <li>Go to <a href="/admin/devices">Devices</a>.</li>
-                    <li>Enter a name and click <strong>Issue PAT</strong>. Copy the <code>sp-live-&hellip;</code> secret &mdash; it is shown once.</li>
-                    <li>Paste it under <code>[pat] token = "&hellip;"</code> in <code>cowork-auth.toml</code>.</li>
-                </ol>
-
-                <h3>mTLS mode</h3>
-                <ol class="steps">
-                    <li>Generate a device certificate on the workstation.</li>
-                    <li>Compute the DER SHA-256 fingerprint (64 hex chars, lowercase).</li>
-                    <li>Enroll it from a shell with admin access:
-                        <pre><code>systemprompt admin cowork enroll-cert \
-  --user-id &lt;UID&gt; \
-  --fingerprint &lt;SHA256&gt; \
-  --label "laptop-m1"</code></pre>
-                    </li>
-                    <li>Point <code>[mtls] cert_path</code> (Linux) or <code>cert_label</code> (macOS) / <code>cert_sha256</code> (Windows) at the keystore entry.</li>
-                </ol>
-            </div>
+            <h3>Session &amp; mTLS modes</h3>
+            <p>See <code>systemprompt-core/bin/bridge/README.md</code> for browser-consent (session) and OS-keystore-certificate (mTLS) flows, including the <code>systemprompt admin cowork enroll-cert</code> step required for mTLS.</p>
         </div>
-
-        <div class="card mb-6">
-            <div class="card-header">
-                <h2 class="card-title">4. Run it</h2>
-            </div>
-            <div class="card-body">
-                <pre><code>./target/release/sp-cowork-auth session   # browser consent
-./target/release/sp-cowork-auth pat       # bearer token
-./target/release/sp-cowork-auth mtls      # keystore cert</code></pre>
-                <p>Success prints a JSON envelope with <code>token</code> (JWT), <code>ttl</code>, and canonical <code>x-user-id</code> / <code>x-session-id</code> / <code>x-trace-id</code> headers.</p>
-                <p>Sanity: <code>./demo/users/05-cowork-device-roundtrip.sh</code> exercises the session flow end-to-end without a browser.</p>
-            </div>
-        </div>
-    </section>
+    </details>
 
     <script>
     (function () {
         const GATEWAY = {{{json gateway_url}}};
-        const CAP_URL = GATEWAY + "/v1/auth/cowork/capabilities";
-        const grid = document.getElementById("capabilities-grid");
+        const DOWNLOAD_BASE = {{{json download_base_url}}};
 
-        const LABELS = {
-            pat:     { title: "PAT", desc: "Long-lived bearer token. Issue from /admin/devices." },
-            session: { title: "Session", desc: "Per-use browser consent. No secrets on disk." },
-            mtls:    { title: "mTLS", desc: "OS-keystore certificate; fingerprint pre-enrolled." },
+        const ua = navigator.userAgent;
+        const platform = /Mac/i.test(ua) ? "macos"
+                       : /Win/i.test(ua) ? "windows"
+                       : /Linux/i.test(ua) ? "linux"
+                       : "macos";
+        const ARTIFACTS = {
+            macos:   { label: "Download for macOS",   file: "systemprompt-bridge-macos.dmg" },
+            windows: { label: "Download for Windows", file: "systemprompt-bridge-windows.exe" },
+            linux:   { label: "Download for Linux",   file: "systemprompt-bridge-linux.tar.gz" },
         };
+        const cta = document.getElementById("download-cta");
+        cta.href = DOWNLOAD_BASE + "/" + ARTIFACTS[platform].file;
+        cta.textContent = ARTIFACTS[platform].label;
 
-        fetch(CAP_URL)
-            .then(r => r.ok ? r.json() : Promise.reject(r.status))
-            .then(data => {
-                const supported = new Set(data.modes || []);
-                grid.innerHTML = "";
-                ["pat", "session", "mtls"].forEach(mode => {
-                    const ok = supported.has(mode);
-                    const meta = LABELS[mode];
-                    const card = document.createElement("div");
-                    card.className = "mode-card" + (ok ? "" : " unsupported");
-                    card.innerHTML =
-                        "<h3>" + meta.title + " " +
-                        "<span class='mode-badge " + (ok ? "ok" : "off") + "'>" +
-                        (ok ? "supported" : "not enabled") + "</span></h3>" +
-                        "<p class='text-tertiary'>" + meta.desc + "</p>";
-                    grid.appendChild(card);
-                });
+        const pill = document.getElementById("gateway-pill");
+        fetch(GATEWAY + "/v1/auth/cowork/capabilities")
+            .then(r => {
+                if (r.ok) {
+                    pill.className = "pill ok";
+                    pill.textContent = "Gateway reachable";
+                } else {
+                    pill.className = "pill err";
+                    pill.textContent = "Gateway error " + r.status;
+                }
             })
-            .catch(err => {
-                grid.innerHTML = "<span class='text-error'>Failed to load capabilities: " + err + "</span>";
+            .catch(() => {
+                pill.className = "pill err";
+                pill.textContent = "Gateway unreachable";
             });
+
+        const tabs = document.querySelectorAll(".tabs button");
+        tabs.forEach(btn => btn.addEventListener("click", () => {
+            tabs.forEach(b => b.classList.toggle("active", b === btn));
+            const target = btn.dataset.tab;
+            document.getElementById("tab-tray").hidden = target !== "tray";
+            document.getElementById("tab-terminal").hidden = target !== "terminal";
+        }));
 
         function wireCopy(btnId, srcId) {
             const btn = document.getElementById(btnId);
@@ -200,7 +182,7 @@ enabled = true
                 });
             });
         }
-        wireCopy("login-copy-btn", "login-snippet");
+        wireCopy("cli-copy-btn", "cli-snippet");
         wireCopy("toml-copy-btn", "toml-snippet");
     })();
     </script>

@@ -12,6 +12,7 @@ path = "src/main.rs"
 [dependencies]
 # Audit: uses database, identifiers, logging, mcp, models, system (api), traits — requires `full`.
 systemprompt = { workspace = true, features = ["full"] }
+systemprompt-security = { workspace = true }
 
 anyhow.workspace = true
 thiserror.workspace = true

@@ -2,57 +2,28 @@ import { createSSEClient } from '../services/sse-client.js';
 import { initTrafficChart, initCountryChart, initSparklines } from './admin-dashboard-charts.js';
 import { rawFetch } from '../services/api.js';
 
-const initTabs = () => {
-  for (const tab of document.querySelectorAll('.dashboard-tabs .sp-tab')) {
-    tab.addEventListener('click', () => {
-      const target = tab.getAttribute('data-tab');
-
-      if (target === 'report') {
-        const url = new URL(window.location);
-        url.searchParams.set('tab', 'report');
-        window.location.href = url.toString();
-        return;
-      }
-
-      for (const t of document.querySelectorAll('.dashboard-tabs .sp-tab')) {
-        t.classList.remove('sp-tab--active');
-        t.setAttribute('aria-selected', 'false');
-      }
-      for (const p of document.querySelectorAll('.sp-tab-panel')) p.hidden = true;
-      tab.classList.add('sp-tab--active');
-      tab.setAttribute('aria-selected', 'true');
-      const panel = document.getElementById('tab-' + target);
-      if (panel) panel.hidden = false;
-
-      const url = new URL(window.location);
-      url.searchParams.set('tab', target);
-      history.replaceState(null, '', url);
-    });
-  }
-};
-
-const initReportTab = () => {
+const initReport = () => {
   const btn = document.getElementById('dashboard-report-regenerate');
   if (btn) {
     btn.addEventListener('click', async () => {
       btn.disabled = true;
-      btn.querySelector('span').textContent = 'Generating...';
+      const lbl = btn.querySelector('span');
+      if (lbl) lbl.textContent = 'Generating...';
       try {
         await rawFetch('/admin/api/generate-traffic-report', { method: 'POST' });
-        const url = new URL(window.location);
-        url.searchParams.set('tab', 'report');
-        window.location.href = url.toString();
+        window.location.reload();
       } catch {
-        btn.querySelector('span').textContent = 'Error';
-        setTimeout(() => { btn.querySelector('span').textContent = 'Regenerate'; btn.disabled = false; }, 2000);
+        if (lbl) lbl.textContent = 'Error';
+        setTimeout(() => {
+          if (lbl) lbl.textContent = 'Regenerate';
+          btn.disabled = false;
+        }, 2000);
       }
     });
   }
 
   const printBtn = document.getElementById('dashboard-report-print');
-  if (printBtn) {
-    printBtn.addEventListener('click', () => window.print());
-  }
+  if (printBtn) printBtn.addEventListener('click', () => window.print());
 
   const countdownEl = document.getElementById('dashboard-report-countdown-value');
   if (countdownEl) {
@@ -74,54 +45,28 @@ const initReportTab = () => {
   initSparklines();
 };
 
-const initFilterAjax = () => {
-  document.addEventListener('click', async (e) => {
-    const link = e.target.closest('.traffic-period-selector a.chart-range-tab, .chart-range-tabs a.chart-range-tab, .content-period-selector a.chart-range-tab');
-    if (!link || link.classList.contains('active')) return;
-
-    e.preventDefault();
-    const url = link.href;
-
-    const isTrafficFilter = !!link.closest('.traffic-period-selector') || !!link.closest('.content-period-selector');
-    const targetPanelId = isTrafficFilter ? 'tab-traffic' : 'tab-mcp';
-    const targetPanel = document.getElementById(targetPanelId);
-
-    if (targetPanel) targetPanel.classList.add('sp-tab-panel--loading');
-
-    const siblingLinks = link.parentElement.querySelectorAll('a.chart-range-tab');
-    siblingLinks.forEach(s => s.classList.remove('active'));
-    link.classList.add('active');
-
-    try {
-      const resp = await fetch(url, { headers: { 'Accept': 'text/html' }, credentials: 'same-origin' });
-      if (!resp.ok) throw new Error(resp.statusText);
-      const html = await resp.text();
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-
-      const newPanel = doc.getElementById(targetPanelId);
-      if (newPanel && targetPanel) {
-        targetPanel.innerHTML = newPanel.innerHTML;
+const initWindowPills = () => {
+  const pills = document.querySelectorAll('.window-pill[data-window]');
+  if (!pills.length) return;
+  for (const pill of pills) {
+    pill.addEventListener('click', () => {
+      const win = pill.getAttribute('data-window');
+      for (const p of pills) {
+        const active = p === pill;
+        p.classList.toggle('window-pill--active', active);
+        p.setAttribute('aria-selected', active ? 'true' : 'false');
       }
-
-      if (isTrafficFilter) {
-        initTrafficChart();
-        initCountryChart();
+      for (const panel of document.querySelectorAll('[data-window-panel]')) {
+        panel.hidden = panel.getAttribute('data-window-panel') !== win;
       }
-
-      history.replaceState(null, '', url);
-    } catch (err) {
-      window.location.href = url;
-    } finally {
-      if (targetPanel) targetPanel.classList.remove('sp-tab-panel--loading');
-    }
-  });
+    });
+  }
 };
 
-initTabs();
+initWindowPills();
 initTrafficChart();
 initCountryChart();
-initReportTab();
-initFilterAjax();
+initReport();
 
 if (document.getElementById('sse-indicator')) {
   createSSEClient('/admin/api/sse/dashboard', {

@@ -82,25 +82,6 @@
         </div>
         {{/if}}
 
-        {{#if achievement_progress}}
-        <div class="cc-insight-card" id="cc-achievement-progress">
-            <h3 class="cc-insight-title">Next Achievements</h3>
-            <div class="cc-achievement-progress-list">
-                {{#each achievement_progress}}
-                <div class="cc-achievement-progress-item">
-                    <div class="cc-achievement-progress-info">
-                        <span class="cc-achievement-progress-name">{{name}}</span>
-                        <span class="cc-achievement-progress-count">{{current}}/{{threshold}}</span>
-                    </div>
-                    <div class="cc-bar-track">
-                        <div class="cc-bar-fill" style="--fill: {{pct}}%"></div>
-                    </div>
-                </div>
-                {{/each}}
-            </div>
-        </div>
-        {{/if}}
-
         {{#if skill_effectiveness}}
         <div class="cc-insight-card">
             <h3 class="cc-insight-title">Skill Effectiveness</h3>

@@ -2,7 +2,7 @@ import { createSSEClient } from '../services/sse-client.js';
 import {
   setStatValue, updateSkillCards, updateHealthScore,
   updateSessionRatings, updateSkillAdoption,
-  updateDailySummary, updateAchievementProgress,
+  updateDailySummary,
   updateApmMetrics, updatePerformanceSummary,
   updateHourlyCharts, update7dData, update30dData,
 } from '../services/control-center-stats.js';
@@ -35,8 +35,6 @@ export const initSSE = () => {
             if (rankName) rankName.textContent = g.rank_name;
             const streakVal = banner.querySelector('.cc-profile-stat:first-child .cc-profile-stat-value');
             if (streakVal) streakVal.textContent = g.current_streak;
-            const achVal = banner.querySelector('.cc-profile-stat:last-child .cc-profile-stat-value');
-            if (achVal) achVal.textContent = g.achievements_count + '/' + g.achievements_total;
           }
         }
       },
@@ -50,7 +48,6 @@ export const initSSE = () => {
         if (d.health) updateHealthScore(d.health);
         if (d.skill_adoption) updateSkillAdoption(d.skill_adoption);
         if (d.today_summary) updateDailySummary(d.today_summary);
-        if (d.achievement_progress) updateAchievementProgress(d.achievement_progress);
         if (d.hourly_breakdown) updateHourlyCharts(d.hourly_breakdown);
         if (d.daily_7d) update7dData(d.daily_7d);
         if (d.daily_30d) update30dData(d.daily_30d);

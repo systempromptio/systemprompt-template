@@ -31,7 +31,7 @@ async fn authenticate_request(
     service_id: &str,
     ctx: &RequestContext<RoleServer>,
 ) -> Result<AppRequestContext, McpError> {
-    let rbac_result = enforce_rbac_from_registry(ctx, service_id);
+    let rbac_result = enforce_rbac_from_registry(ctx, service_id).await;
 
     match rbac_result {
         Ok(result) => {

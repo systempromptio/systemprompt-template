@@ -2,18 +2,12 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/page-header title=title}}
-    {{> components/page-hero}}
-
-    <section aria-label="CLI command" class="mb-4">
-        <p class="text-secondary text-sm">Backed by <code class="code-inline">{{demo_script}}</code></p>
-        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
-    </section>
 
     <section aria-label="Tool success rates">
-        <h2 class="section-heading">Tool Success Rates</h2>
+        <h2 class="section-heading">Tool success rates</h2>
         {{#if has_success_rates}}
         {{#> components/data-table}}
-            <thead><tr><th>Tool</th><th class="col-numeric">Total</th><th class="col-numeric">Successes</th><th class="col-numeric">Failures</th><th class="col-numeric">Success %</th></tr></thead>
+            <thead><tr><th>Tool</th><th class="col-numeric">Total</th><th class="col-numeric">Successes</th><th class="col-numeric">Failures</th><th class="col-numeric">Success %</th><th></th></tr></thead>
             <tbody>
             {{#each success_rates}}
             <tr>
@@ -22,6 +16,7 @@
                 <td class="col-numeric numeric">{{successes}}</td>
                 <td class="col-numeric numeric">{{failures}}</td>
                 <td class="col-numeric numeric">{{success_pct}}</td>
+                <td><a href="{{detail_url}}" class="btn btn-xs btn-outline">Drill</a></td>
             </tr>
             {{/each}}
             </tbody>
@@ -31,11 +26,119 @@
         {{/if}}
     </section>
 
+    <section aria-label="Tool calls" class="mt-6">
+        <h2 class="section-heading">Tool calls
+            <span class="text-muted">({{total_count}} in window)</span>
+        </h2>
+        {{> components/time-range time_range}}
+        <form method="get" action="/admin/mcp/tools" class="toolbar audit-toolbar">
+            <input type="hidden" name="preset" value="{{time_range.preset}}">
+            <input type="hidden" name="from" value="{{time_range.from}}">
+            <input type="hidden" name="to" value="{{time_range.to}}">
+            <input type="text" name="tool_name" placeholder="Tool name"
+                   value="{{filter.tool_name}}" class="search-input" style="max-width:14rem">
+            <select name="decision" class="search-input" style="max-width:9rem">
+                <option value=""{{#unless filter.decision}} selected{{/unless}}>Any verdict</option>
+                <option value="allow"{{#if (eq filter.decision "allow")}} selected{{/if}}>allow</option>
+                <option value="deny"{{#if (eq filter.decision "deny")}} selected{{/if}}>deny</option>
+            </select>
+            <input type="text" name="q" placeholder="Search user / plugin / reason..."
+                   value="{{search_query}}" class="search-input">
+            <button type="submit" class="btn btn-sm">Filter</button>
+        </form>
+
+        {{#if has_tool_calls}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th class="col-date">Time</th>
+                <th>Tool</th>
+                <th>Identity</th>
+                <th class="col-num">Bytes in/out</th>
+                <th class="col-status">Decision</th>
+                <th class="col-multiline">Rule / reason</th>
+                <th class="col-num">Latency</th>
+                <th>trace_id</th>
+            </tr></thead>
+            <tbody>
+            {{#each tool_calls}}
+            <tr data-chain-id="{{#if this.trace_id}}{{this.trace_id}}{{else}}{{this.session_id}}{{/if}}" class="audit-row" tabindex="0"
+                role="button" aria-label="Open chain of custody for {{this.id}}">
+                <td class="col-date" title="{{this.created_at}}">{{this.created_at_local}}</td>
+                <td>
+                    {{#if this.tool_name}}
+                      <a href="{{this.tool_detail_url}}"><code class="code-inline">{{this.tool_name}}</code></a>
+                    {{else}}—{{/if}}
+                    {{#if this.plugin_id}}
+                      <span class="text-muted text-xs">{{this.plugin_id}}</span>
+                    {{/if}}
+                    {{#if this.metadata_present}}
+                      <details class="mcp-tool-metadata">
+                        <summary class="text-muted text-xs">metadata</summary>
+                        <div class="json-tree" data-json="{{json this.metadata}}" data-collapsed="1" data-root-label="metadata"></div>
+                      </details>
+                    {{/if}}
+                </td>
+                <td>
+                    <div class="audit-identity">
+                        <a href="/admin/user?id={{this.user_id}}">{{truncate this.user_id 16}}</a>
+                        {{#if this.agent_scope}}
+                          <span class="audit-identity__agent">{{this.agent_scope}}</span>
+                        {{/if}}
+                    </div>
+                </td>
+                <td class="col-num">{{this.content_input_bytes}} / {{this.content_output_bytes}}</td>
+                <td class="col-status">
+                    {{#if this.is_denied}}
+                      <span class="mcp-badge mcp-badge-danger">DENY</span>
+                    {{else}}
+                      {{#if this.is_allowed}}
+                        <span class="mcp-badge mcp-badge-success">ALLOW</span>
+                      {{else}}—{{/if}}
+                    {{/if}}
+                </td>
+                <td class="col-multiline">
+                    {{#if this.rule_name}}<code class="code-inline">{{this.rule_name}}</code>{{/if}}
+                    <div class="audit-evidence__detail" title="{{this.reason}}">
+                      {{#if this.policy}}<span class="text-muted">{{this.policy}}:</span>{{/if}}
+                      {{truncate this.reason 60}}
+                    </div>
+                </td>
+                <td class="col-num">{{#if this.latency_ms}}{{this.latency_ms}} ms{{else}}—{{/if}}</td>
+                <td>
+                    {{#if this.trace_id}}
+                      <code class="code-inline">{{truncate this.trace_id 8}}</code>
+                    {{else}}—{{/if}}
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+
+        <nav class="audit-pagination" aria-label="Tool calls pagination">
+            {{#if pagination.has_prev}}
+                <a href="{{pagination.prev_url}}" class="btn btn-sm btn-outline">&larr; Previous</a>
+            {{else}}
+                <span class="btn btn-sm btn-outline is-disabled">&larr; Previous</span>
+            {{/if}}
+            <span class="audit-pagination__pos">
+                Page {{pagination.current_page}} of {{pagination.total_pages}}
+            </span>
+            {{#if pagination.has_next}}
+                <a href="{{pagination.next_url}}" class="btn btn-sm btn-outline">Next &rarr;</a>
+            {{else}}
+                <span class="btn btn-sm btn-outline is-disabled">Next &rarr;</span>
+            {{/if}}
+        </nav>
+        {{else}}
+        {{> components/empty-state message="No tool calls in window. Try widening the range or running a demo."}}
+        {{/if}}
+    </section>
+
     <section aria-label="Tools by agent" class="mt-6">
-        <h2 class="section-heading">Tool Availability by Agent</h2>
+        <h2 class="section-heading">Tool availability by agent</h2>
         {{#if has_tools_by_agent}}
         {{#> components/data-table}}
-            <thead><tr><th>Agent</th><th>Tool</th><th class="col-numeric">Allowed Calls</th></tr></thead>
+            <thead><tr><th>Agent</th><th>Tool</th><th class="col-numeric">Allowed calls</th></tr></thead>
             <tbody>
             {{#each tools_by_agent}}
             <tr>
@@ -51,29 +154,6 @@
         {{/if}}
     </section>
 
-    <section aria-label="Recent tool executions" class="mt-6">
-        <h2 class="section-heading">Recent Tool Executions</h2>
-        {{#if has_recent_executions}}
-        {{#> components/data-table}}
-            <thead><tr><th class="col-date">Timestamp</th><th>Tool</th><th>User</th><th class="col-status">Status</th></tr></thead>
-            <tbody>
-            {{#each recent_executions}}
-            <tr>
-                <td class="col-date"><span class="date">{{formatDate created_at}}</span></td>
-                <td><code class="code-inline">{{tool_name}}</code></td>
-                <td>{{#if user_id}}{{user_id}}{{else}}<span class="text-tertiary">-</span>{{/if}}</td>
-                <td class="col-status">
-                    {{#if is_failed}}<span class="badge badge-danger">failed</span>
-                    {{else}}<span class="badge badge-success">{{status}}</span>{{/if}}
-                </td>
-            </tr>
-            {{/each}}
-            </tbody>
-        {{/components/data-table}}
-        {{else}}
-        {{> components/empty-state message="No recent executions. Run demo/mcp/03-mcp-tool-execution.sh."}}
-        {{/if}}
-    </section>
     {{/inline}}
     {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

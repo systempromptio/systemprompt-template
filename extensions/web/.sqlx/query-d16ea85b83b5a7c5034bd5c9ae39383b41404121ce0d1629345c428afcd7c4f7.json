@@ -1,0 +1,95 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT id, user_id AS \"user_id: _\", plugin_id, name, description, version, enabled, category, COALESCE(keywords, '{}') as \"keywords!\", author_name, base_plugin_id, created_at, updated_at\n        FROM user_plugins\n        WHERE user_id = $1 AND plugin_id = $2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "plugin_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "version",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "enabled",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "category",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "keywords!",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 9,
+        "name": "author_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "base_plugin_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "d16ea85b83b5a7c5034bd5c9ae39383b41404121ce0d1629345c428afcd7c4f7"
+}

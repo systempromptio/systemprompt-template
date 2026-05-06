@@ -1,0 +1,18 @@
+# Claude Desktop — external-agent (super-agent) catalog entry.
+#
+# Distinct from A2A agents under services/agents/. External agents are native
+# apps and CLI tools that run off our infrastructure and connect to this
+# gateway via the systemprompt-bridge binary.
+#
+# The `id` field MUST equal the bridge's HostApp::id() string for this host
+# (see systemprompt-core/bin/bridge/src/integration/claude_desktop/).
+
+external_agents:
+  claude_desktop:
+    id: claude_desktop
+    display_name: "Claude Desktop"
+    kind: desktop_app
+    enabled: true
+    description: "Anthropic's native macOS/Windows desktop app for Claude. Connects to the gateway via systemprompt-bridge."
+    platforms: [macos, windows]
+    docs_url: "https://claude.ai/download"

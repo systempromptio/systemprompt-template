@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COALESCE(COUNT(*), 0)::BIGINT AS \"events_count!\",\n            COALESCE(COUNT(DISTINCT tool_name) FILTER (WHERE tool_name IS NOT NULL), 0)::INT AS \"unique_skills!\",\n            COALESCE(COUNT(DISTINCT plugin_id) FILTER (WHERE plugin_id IS NOT NULL), 0)::INT AS \"unique_plugins!\",\n            COALESCE(COUNT(*) FILTER (WHERE event_type = 'claude_code_UserPromptSubmit'), 0)::BIGINT AS \"prompt_count!\",\n            COALESCE(COUNT(*) FILTER (WHERE event_type = 'claude_code_SubagentStart'), 0)::BIGINT AS \"subagent_count!\",\n            COALESCE(COUNT(DISTINCT metadata->>'model') FILTER (WHERE event_type = 'claude_code_SessionStart' AND metadata->>'model' IS NOT NULL), 0)::INT AS \"models_used!\"\n        FROM plugin_usage_events\n        WHERE user_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "events_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "unique_skills!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "unique_plugins!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "prompt_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "subagent_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "models_used!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "a174bbd23f19af819d1098509b57f6634797d8fce1ef0f21546ecab8750c31c0"
+}

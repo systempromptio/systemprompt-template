@@ -1,0 +1,174 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE ai_requests\n            SET status = $1, error_message = $2, completed_at = CURRENT_TIMESTAMP,\n                updated_at = CURRENT_TIMESTAMP\n            WHERE id = $3\n            RETURNING id as \"id!: AiRequestId\",\n                      request_id as \"request_id!: AiRequestId\",\n                      user_id as \"user_id!: UserId\",\n                      session_id as \"session_id: SessionId\",\n                      task_id as \"task_id: TaskId\",\n                      context_id as \"context_id: ContextId\",\n                      trace_id as \"trace_id: TraceId\",\n                      provider, model, temperature, top_p, max_tokens, tokens_used,\n                      input_tokens, output_tokens, cost_microdollars, latency_ms, cache_hit,\n                      cache_read_tokens, cache_creation_tokens, is_streaming, status,\n                      error_message, created_at, updated_at, completed_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: AiRequestId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "request_id!: AiRequestId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id!: UserId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "session_id: SessionId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "task_id: TaskId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "context_id: ContextId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "trace_id: TraceId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "provider",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "model",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "temperature",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 10,
+        "name": "top_p",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 11,
+        "name": "max_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "tokens_used",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "input_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "output_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "cost_microdollars",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 16,
+        "name": "latency_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 17,
+        "name": "cache_hit",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 18,
+        "name": "cache_read_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 19,
+        "name": "cache_creation_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 20,
+        "name": "is_streaming",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 21,
+        "name": "status",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 22,
+        "name": "error_message",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 23,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 24,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 25,
+        "name": "completed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "70f8146df76797ae9df1e4b4e25cf94ef01f41d1da62201c514abdb4a004caac"
+}

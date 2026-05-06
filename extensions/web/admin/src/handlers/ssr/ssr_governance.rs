@@ -1,88 +1,117 @@
+//! `/admin/governance` — Policies dashboard.
+//!
+//! Lists every policy registered via `inventory::submit!` together with its
+//! enabled state (from `services/governance/config.yaml`) and recent
+//! allow/deny counts from `governance_decisions`. This is the "modular
+//! framework" view: the user sees the full chain at a glance and can drill
+//! into any policy to inspect or tune it.
+
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::{
-    extract::{Extension, Query, State},
+    extract::{Extension, State},
     http::StatusCode,
     response::{Html, IntoResponse, Response},
 };
-use serde::Deserialize;
 use serde_json::json;
 use sqlx::PgPool;
 
+use crate::handlers::webhook::governance;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext, DECISION_DENY, POLICY_SECRET_INJECTION};
+use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
-
-#[derive(Debug, Deserialize)]
-pub struct GovernanceQuery {
-    pub q: Option<String>,
-}
 
 pub async fn governance_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Query(query): Query<GovernanceQuery>,
 ) -> Response {
     if !user_ctx.is_admin {
         return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
     }
 
-    let search = query.q.as_deref();
-    let (rows, counts) = tokio::join!(
-        repositories::governance::list_governance_decisions(&pool, search),
+    let (counts, per_policy) = tokio::join!(
         repositories::governance::fetch_governance_counts(&pool),
+        repositories::governance::fetch_per_policy_counts(&pool),
     );
-    let rows = rows.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch governance decisions");
-        vec![]
-    });
     let counts = counts.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch governance counts");
-        repositories::governance::GovernanceCounts {
-            total: 0,
-            allowed: 0,
-            denied: 0,
-            secret_breaches: 0,
-        }
+        tracing::warn!(error = %e, "governance counts query failed");
+        repositories::governance::GovernanceCounts::default()
     });
-    let total = counts.total;
-    let denied = counts.denied;
-    let allowed = counts.allowed;
-    let secret_breaches = counts.secret_breaches;
+    let per_policy_rows = per_policy.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "per-policy counts query failed");
+        Vec::new()
+    });
+    let mut by_id: HashMap<String, repositories::governance::PerPolicyCounts> = per_policy_rows
+        .into_iter()
+        .map(|r| (r.policy.clone(), r))
+        .collect();
 
-    let decisions_json: Vec<serde_json::Value> = rows
-        .iter()
-        .map(|r| {
+    let policies_json: Vec<serde_json::Value> = {
+        let chain = governance::chain();
+        chain
+            .iter()
+            .map(|(cfg, p)| {
+                let stats = by_id.remove(p.id());
+                let allowed = stats.as_ref().map_or(0, |s| s.allowed);
+                let denied = stats.as_ref().map_or(0, |s| s.denied);
+                let last_at = stats
+                    .as_ref()
+                    .and_then(|s| s.last_at)
+                    .map(|t| {
+                        t.with_timezone(&chrono::Local)
+                            .format("%Y-%m-%d %H:%M:%S")
+                            .to_string()
+                    })
+                    .unwrap_or_default();
+                json!({
+                    "id": p.id(),
+                    "name": p.name(),
+                    "description": p.description(),
+                    "enabled": cfg.enabled,
+                    "allowed": allowed,
+                    "denied": denied,
+                    "has_recent_denies": denied > 0,
+                    "last_at": last_at,
+                    "edit_url": format!("/admin/governance/{}", p.id()),
+                })
+            })
+            .collect()
+    };
+
+    // Anything left in `by_id` is a policy that produced decisions in the
+    // past but is no longer registered (renamed / removed). Surface it so
+    // operators don't lose sight of it.
+    let orphan_json: Vec<serde_json::Value> = by_id
+        .values()
+        .map(|s| {
             json!({
-                "id": r.id,
-                "user_id": r.user_id,
-                "tool_name": r.tool_name,
-                "agent_id": r.agent_id,
-                "agent_scope": r.agent_scope,
-                "decision": r.decision,
-                "is_denied": r.decision == DECISION_DENY,
-                "is_secret_breach": r.policy == POLICY_SECRET_INJECTION,
-                "policy": r.policy,
-                "reason": r.reason,
-                "created_at": r.created_at.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string(),
+                "id": s.policy,
+                "allowed": s.allowed,
+                "denied": s.denied,
+                "last_at": s.last_at
+                    .map(|t| t.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string())
+                    .unwrap_or_default(),
             })
         })
         .collect();
 
     let data = json!({
         "page": "governance",
-        "title": "Governance",
-        "total": total,
-        "denied": denied,
-        "allowed": allowed,
-        "secret_breaches": secret_breaches,
-        "decisions": decisions_json,
-        "has_decisions": !decisions_json.is_empty(),
-        "search_query": search.unwrap_or(""),
+        "title": "Governance Policies",
+        "total": counts.total,
+        "allowed": counts.allowed,
+        "denied": counts.denied,
+        "secret_breaches": counts.secret_breaches,
+        "policies": policies_json,
+        "has_policies": !policies_json.is_empty(),
+        "orphans": orphan_json,
+        "has_orphans": !orphan_json.is_empty(),
+        "config_path": "services/governance/config.yaml",
     });
 
     super::render_page(&engine, "governance", &data, &user_ctx, &mkt_ctx)

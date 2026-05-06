@@ -1,6 +1,5 @@
 mod activity;
 mod common;
-mod gamification;
 mod hooks;
 mod marketplace;
 mod mcp;
@@ -11,7 +10,6 @@ mod users;
 
 pub use activity::*;
 pub use common::*;
-pub use gamification::*;
 pub use hooks::*;
 pub use marketplace::*;
 pub use mcp::*;

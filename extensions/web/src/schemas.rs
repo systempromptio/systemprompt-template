@@ -10,6 +10,8 @@ pub const SCHEMA_ANALYTICS: &str = include_str!("../schema/07_analytics.sql");
 pub const SCHEMA_GAMIFICATION: &str = include_str!("../schema/08_gamification.sql");
 pub const SCHEMA_SECRETS: &str = include_str!("../schema/09_secrets.sql");
 pub const SCHEMA_ADMIN_DASHBOARD: &str = include_str!("../schema/10_admin_dashboard.sql");
+pub const SCHEMA_AUDIT_EVENT_NOTIFY: &str = include_str!("../schema/11_audit_event_notify.sql");
+pub const SCHEMA_MANAGEMENT: &str = include_str!("../schema/12_management.sql");
 
 pub const SEED_OAUTH: &str = include_str!("../schema/seed_01_oauth.sql");
 pub const SEED_DASHBOARD: &str = include_str!("../schema/seed_02_dashboard.sql");
@@ -28,6 +30,8 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::inline("", SCHEMA_GAMIFICATION),
         SchemaDefinition::inline("", SCHEMA_SECRETS),
         SchemaDefinition::inline("", SCHEMA_ADMIN_DASHBOARD),
+        SchemaDefinition::inline("", SCHEMA_AUDIT_EVENT_NOTIFY),
+        SchemaDefinition::inline("", SCHEMA_MANAGEMENT),
         SchemaDefinition::inline("", SEED_OAUTH),
         SchemaDefinition::inline("", SEED_DASHBOARD),
         SchemaDefinition::inline("", SEED_GAMIFICATION),

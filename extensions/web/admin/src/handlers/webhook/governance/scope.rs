@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use systemprompt::config::ProfileBootstrap;
 
-pub(super) fn resolve_agent_scope(agent_id: &str) -> String {
+pub fn resolve_agent_scope(agent_id: &str) -> String {
     let map = load_all_agent_scopes();
     map.get(agent_id)
         .cloned()

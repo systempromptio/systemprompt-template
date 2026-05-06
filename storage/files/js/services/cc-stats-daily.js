@@ -27,19 +27,6 @@ export const updateDailySummary = (data) => {
     const rec = el.querySelector('.cc-daily-recommendation');
     if (rec && data.top_recommendation) rec.textContent = data.top_recommendation;
 
-    const achSection = document.getElementById('cc-achievements-today-section');
-    const achList = document.getElementById('cc-achievements-today-list');
-    if (achSection && achList && Array.isArray(data.achievements_today) && data.achievements_today.length > 0) {
-      achSection.hidden = false;
-      achList.innerHTML = '';
-      for (const a of data.achievements_today) {
-        const badge = document.createElement('span');
-        badge.className = 'cc-achievement-badge';
-        badge.textContent = a;
-        achList.append(badge);
-      }
-    }
-
     const corrSection = document.getElementById('cc-apm-correlation-section');
     const corrEl = document.getElementById('cc-apm-correlation');
     if (corrSection && corrEl && data.apm_correlation) {

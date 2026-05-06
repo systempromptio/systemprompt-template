@@ -1,0 +1,174 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    <a href="{{back_url}}" class="back-link">&larr; All decisions</a>
+
+    {{> components/page-header
+        title=title
+        subtitle="Single-request audit chain — identity, policy evaluations, model traffic, and linked trace."}}
+
+    <section class="trace-detail__summary" aria-label="Request summary">
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">User</span>
+        <code class="code-inline" title="{{summary.user_id}}">{{summary.user_id}}</code>
+      </div>
+      {{#if summary.tenant_id}}
+        <div class="trace-detail__field">
+          <span class="trace-detail__label">Tenant</span>
+          <span>{{summary.tenant_id}}</span>
+        </div>
+      {{/if}}
+      {{#if summary.agent_id}}
+        <div class="trace-detail__field">
+          <span class="trace-detail__label">Agent</span>
+          <span>{{summary.agent_id}}{{#if summary.agent_scope}} <em>({{summary.agent_scope}})</em>{{/if}}</span>
+        </div>
+      {{/if}}
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Session</span>
+        <code class="code-inline" title="{{summary.session_id}}">{{summary.session_id_short}}</code>
+      </div>
+      {{#if summary.trace_url}}
+        <div class="trace-detail__field">
+          <span class="trace-detail__label">Trace</span>
+          <a href="{{summary.trace_url}}">Open waterfall &rarr;</a>
+        </div>
+      {{/if}}
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Decisions</span>
+        <span>{{summary.decision_count}}</span>
+      </div>
+      {{#if summary.deny_count}}
+        <div class="trace-detail__field">
+          <span class="trace-detail__label">Denies</span>
+          <span class="text-danger">{{summary.deny_count}}</span>
+        </div>
+      {{/if}}
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Tokens</span>
+        <span>{{summary.input_tokens}} in · {{summary.output_tokens}} out</span>
+      </div>
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Cost</span>
+        <span>${{summary.cost_usd}}</span>
+      </div>
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Latency</span>
+        <span>{{summary.latency_ms}} ms</span>
+      </div>
+    </section>
+
+    <section aria-labelledby="policy-chain-title">
+      <div class="portfolio-section__header">
+        <h2 class="portfolio-section__title" id="policy-chain-title">Policy chain</h2>
+      </div>
+      {{#if decisions}}
+        {{#> components/data-table}}
+          <thead><tr>
+            <th>Policy</th>
+            <th>Tool</th>
+            <th class="col-status">Decision</th>
+            <th>Reason</th>
+            <th class="col-date">When</th>
+          </tr></thead>
+          <tbody>
+          {{#each decisions}}
+            <tr>
+              <td><code class="code-inline">{{this.policy}}</code></td>
+              <td>{{this.tool_name}}</td>
+              <td class="col-status">
+                {{#if (eq this.decision "deny")}}<span class="mcp-badge mcp-badge-danger">DENY</span>{{/if}}
+                {{#if (eq this.decision "allow")}}<span class="mcp-badge mcp-badge-success">ALLOW</span>{{/if}}
+                {{#if (eq this.decision "warn")}}<span class="mcp-badge mcp-badge-warning">WARN</span>{{/if}}
+              </td>
+              <td>{{this.reason}}</td>
+              <td class="col-date">{{this.created_at}}</td>
+            </tr>
+          {{/each}}
+          </tbody>
+        {{/components/data-table}}
+      {{else}}
+        <p class="empty-state">No policy decisions recorded for this session.</p>
+      {{/if}}
+    </section>
+
+    <section aria-labelledby="requests-title">
+      <div class="portfolio-section__header">
+        <h2 class="portfolio-section__title" id="requests-title">AI requests</h2>
+      </div>
+      {{#if requests}}
+        {{#> components/data-table}}
+          <thead><tr>
+            <th>Request</th>
+            <th>Provider</th>
+            <th>Model</th>
+            <th class="col-status">Status</th>
+            <th class="col-num">Tokens</th>
+            <th class="col-num">Cost</th>
+            <th class="col-num">Latency</th>
+            <th class="col-actions"></th>
+          </tr></thead>
+          <tbody>
+          {{#each requests}}
+            <tr>
+              <td><code class="code-inline">{{this.request_id}}</code></td>
+              <td>{{this.provider}}</td>
+              <td>{{this.model}}</td>
+              <td class="col-status">
+                {{#if (eq this.status "success")}}<span class="mcp-badge mcp-badge-success">OK</span>{{else}}<span class="mcp-badge mcp-badge-warning">{{this.status}}</span>{{/if}}
+              </td>
+              <td class="col-num">{{this.input_tokens}} / {{this.output_tokens}}</td>
+              <td class="col-num">${{this.cost_microdollars}} µ</td>
+              <td class="col-num">{{this.latency_ms}} ms</td>
+              <td class="col-actions">
+                <button type="button" class="btn btn-sm btn-outline" data-chain-id="{{this.id}}">Chain</button>
+              </td>
+            </tr>
+          {{/each}}
+          </tbody>
+        {{/components/data-table}}
+      {{else}}
+        <p class="empty-state">No model traffic recorded for this session.</p>
+      {{/if}}
+    </section>
+
+    {{#if events}}
+    <section aria-labelledby="events-title">
+      <div class="portfolio-section__header">
+        <h2 class="portfolio-section__title" id="events-title">Plugin events</h2>
+      </div>
+      {{#> components/data-table}}
+        <thead><tr>
+          <th>Type</th>
+          <th>Tool</th>
+          <th>Plugin</th>
+          <th>Description</th>
+          <th class="col-date">When</th>
+        </tr></thead>
+        <tbody>
+        {{#each events}}
+          <tr>
+            <td>{{this.event_type}}</td>
+            <td>{{this.tool_name}}</td>
+            <td>{{this.plugin_id}}</td>
+            <td>{{this.description}}</td>
+            <td class="col-date">{{this.created_at}}</td>
+          </tr>
+        {{/each}}
+        </tbody>
+      {{/components/data-table}}
+    </section>
+    {{/if}}
+
+    {{#if transcript}}
+    <section aria-labelledby="transcript-title">
+      <div class="portfolio-section__header">
+        <h2 class="portfolio-section__title" id="transcript-title">Transcript</h2>
+      </div>
+      <details class="code-collapsible">
+        <summary>Show transcript ({{transcript.entries_counted}} entries)</summary>
+        <pre class="code-block"><code>{{transcript.transcript}}</code></pre>
+      </details>
+    </section>
+    {{/if}}
+    {{/inline}}
+{{/layout}}

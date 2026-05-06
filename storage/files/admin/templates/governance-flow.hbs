@@ -1,0 +1,81 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header
+        title="Decision Flow"
+        subtitle="Live timeline of governance decisions. Subscribes to the audit SSE stream and prepends new events as they arrive."}}
+
+    <section class="flow-controls" aria-label="Replay window">
+      <form method="get" action="/admin/governance/flow" class="toolbar">
+        <label class="toolbar-field">
+          <span>Replay window</span>
+          <select name="replay" onchange="this.form.submit()">
+            {{#each replay_options}}
+              <option value="{{this.value}}"{{#if this.active}} selected{{/if}}>{{this.label}}</option>
+            {{/each}}
+          </select>
+        </label>
+        <span class="toolbar-spacer"></span>
+        <span class="flow-live-pill" id="flow-live-pill" aria-live="polite">
+          <span class="flow-live-dot"></span>
+          <span class="flow-live-label">live</span>
+        </span>
+      </form>
+    </section>
+
+    <section class="flow-timeline" aria-label="Decision timeline">
+      <div class="flow-timeline-header">
+        <h2>Timeline</h2>
+        <span class="text-muted" id="flow-row-count">{{row_count}} decision{{#unless (eq row_count 1)}}s{{/unless}}</span>
+      </div>
+      <ol class="flow-rows" id="flow-rows">
+        {{!-- Server-rendered initial set; JS prepends new rows here --}}
+      </ol>
+      <div class="flow-empty" id="flow-empty"{{#if row_count}} hidden{{/if}}>
+        <p class="text-muted">No decisions in this window yet.</p>
+      </div>
+    </section>
+
+    <section class="flow-breakdown">
+      <div class="flow-breakdown-col">
+        <h2>Top denied subjects</h2>
+        {{#if top_denied_subjects}}
+          <ol class="flow-rank">
+            {{#each top_denied_subjects}}
+              <li><span class="flow-rank-label">{{this.label}}</span><span class="flow-rank-count">{{this.count}}</span></li>
+            {{/each}}
+          </ol>
+        {{else}}
+          <p class="text-muted">No denies in window.</p>
+        {{/if}}
+      </div>
+      <div class="flow-breakdown-col">
+        <h2>Top denied entities</h2>
+        {{#if top_denied_entities}}
+          <ol class="flow-rank">
+            {{#each top_denied_entities}}
+              <li><span class="flow-rank-label"><code>{{this.label}}</code></span><span class="flow-rank-count">{{this.count}}</span></li>
+            {{/each}}
+          </ol>
+        {{else}}
+          <p class="text-muted">No denies in window.</p>
+        {{/if}}
+      </div>
+    </section>
+
+    {{!-- Drawer for full evaluated_rules JSON when a row is clicked --}}
+    <aside class="flow-drawer" id="flow-drawer" aria-hidden="true">
+      <div class="flow-drawer-inner">
+        <button class="flow-drawer-close" id="flow-drawer-close" aria-label="Close drawer">&times;</button>
+        <h2 id="flow-drawer-title">Decision detail</h2>
+        <pre class="flow-drawer-json" id="flow-drawer-json"></pre>
+        <a class="btn btn-sm btn-outline" id="flow-drawer-trace" href="#" hidden>Open trace &rarr;</a>
+      </div>
+    </aside>
+
+    <script type="application/json" id="flow-initial-data">{{{initial_json}}}</script>
+    <script data-cfasync="false" type="module">
+      import { initFlowPage } from '/js/pages/admin-governance-flow.js';
+      initFlowPage();
+    </script>
+    {{/inline}}
+{{/layout}}

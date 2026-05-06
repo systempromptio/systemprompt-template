@@ -1,7 +1,15 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title}}
+    {{> components/page-header title="Governance Policies" subtitle="The modular policy chain that gates every tool call. Each policy is a Rust impl registered via inventory; their order and config live in services/governance/config.yaml."}}
+
+    <nav class="tab-nav" aria-label="Governance sections">
+        <a href="/admin/governance" class="tab-nav__item tab-nav__item--active">Policies</a>
+        <a href="/admin/governance/decisions" class="tab-nav__item">Decisions</a>
+        <a href="/admin/governance/identity" class="tab-nav__item">Identity</a>
+        <a href="/admin/governance/users" class="tab-nav__item">Users</a>
+        <a href="/admin/governance/hooks" class="tab-nav__item">Hooks</a>
+    </nav>
 
     <div class="metric-ribbon">
         <div class="metric-ribbon-item">
@@ -25,86 +33,80 @@
     </div>
 
     <div class="governance-section">
-        <form method="get" action="/admin/governance/" class="toolbar">
-            <div class="search-box">
-                <input type="text" name="q" id="governance-search" placeholder="Search by user, tool, decision, policy..." value="{{search_query}}" class="search-input" />
-            </div>
-            <button type="submit" class="btn btn-sm">Search</button>
-            {{#if search_query}}
-            <a href="/admin/governance/" class="btn btn-sm btn-outline">Clear</a>
-            {{/if}}
-        </form>
+        <p class="text-muted" style="margin-bottom: var(--space-4);">
+            Policies execute top-to-bottom; first deny short-circuits the rest. To add a policy:
+            create a new file under <code>extensions/web/admin/src/handlers/webhook/governance/policies/</code>,
+            implement the <code>Policy</code> trait, submit a <code>PolicyRegistration</code>, then list its id in
+            <code>{{config_path}}</code>.
+        </p>
 
-        {{#if has_decisions}}
+        {{#if has_policies}}
         {{#> components/data-table}}
             <thead><tr>
-                <th class="col-multiline">User</th>
-                <th>Tool</th>
-                <th class="col-status">Decision</th>
+                <th>Order</th>
                 <th>Policy</th>
-                <th class="col-multiline">Reason</th>
-                <th class="col-status">Scope</th>
-                <th class="col-date">Time</th>
+                <th class="col-multiline">Description</th>
+                <th class="col-status">State</th>
+                <th>Allowed</th>
+                <th>Denied</th>
+                <th class="col-date">Last seen</th>
+                <th class="col-status">Actions</th>
             </tr></thead>
             <tbody>
-            {{#each decisions}}
-            <tr data-name="{{toLowerCase user_id}} {{toLowerCase tool_name}} {{toLowerCase decision}} {{toLowerCase reason}}">
-                <td class="col-multiline">
-                    {{#if agent_id}}
-                        {{#> components/table-cell-stacked secondary=(concat "via " agent_id)}}
-                            <a href="/admin/user?id={{user_id}}">{{truncate user_id 12}}</a>
-                        {{/components/table-cell-stacked}}
-                    {{else}}
-                        {{#> components/table-cell-stacked}}
-                            <a href="/admin/user?id={{user_id}}">{{truncate user_id 12}}</a>
-                        {{/components/table-cell-stacked}}
-                    {{/if}}
+            {{#each policies}}
+            <tr>
+                <td>{{add @index 1}}</td>
+                <td>
+                    <a href="{{edit_url}}"><strong>{{name}}</strong></a><br>
+                    <code class="code-inline">{{id}}</code>
                 </td>
-                <td><code class="code-inline">{{tool_name}}</code></td>
+                <td class="col-multiline text-muted">{{description}}</td>
                 <td class="col-status">
-                    {{#if is_denied}}
-                        {{#if is_secret_breach}}
-                            <span class="mcp-badge mcp-badge-danger">SECRET BREACH</span>
-                        {{else}}
-                            <span class="mcp-badge mcp-badge-danger">DENIED</span>
-                        {{/if}}
+                    {{#if enabled}}
+                    <span class="mcp-badge mcp-badge-success">ENABLED</span>
                     {{else}}
-                        <span class="mcp-badge mcp-badge-success">ALLOWED</span>
+                    <span class="mcp-badge">DISABLED</span>
                     {{/if}}
                 </td>
-                <td><code class="code-inline">{{policy}}</code></td>
-                <td class="col-multiline" title="{{reason}}">{{truncate reason 50}}</td>
+                <td class="text-success">{{allowed}}</td>
+                <td>
+                    {{#if has_recent_denies}}
+                    <a href="/admin/governance/decisions?policy={{id}}&outcome=deny" class="text-danger"><strong>{{denied}}</strong></a>
+                    {{else}}
+                    {{denied}}
+                    {{/if}}
+                </td>
+                <td class="col-date">{{last_at}}</td>
                 <td class="col-status">
-                    {{#if agent_scope}}
-                        <span class="badge {{#if (eq agent_scope "admin")}}badge-purple{{else}}badge-blue{{/if}}">{{agent_scope}}</span>
-                    {{/if}}
+                    <a href="{{edit_url}}" class="btn btn-sm btn-outline">Open</a>
                 </td>
-                <td class="col-date">{{created_at}}</td>
             </tr>
             {{/each}}
             </tbody>
         {{/components/data-table}}
         {{else}}
-        {{> components/empty-state message="No governance decisions recorded yet."}}
+        {{> components/empty-state message="No policies registered. Build the workspace and check that extensions/web/admin/src/handlers/webhook/governance/policies/ submits at least one PolicyRegistration."}}
+        {{/if}}
+
+        {{#if has_orphans}}
+        <h2 style="margin-top: var(--space-6);">Historical (no longer registered)</h2>
+        <p class="text-muted">These policy ids appear in <code>governance_decisions</code> but no Rust impl is currently registered for them — likely renamed or removed.</p>
+        {{#> components/data-table}}
+            <thead><tr><th>Policy id</th><th>Allowed</th><th>Denied</th><th class="col-date">Last seen</th></tr></thead>
+            <tbody>
+            {{#each orphans}}
+            <tr>
+                <td><code class="code-inline">{{id}}</code></td>
+                <td>{{allowed}}</td>
+                <td>{{denied}}</td>
+                <td class="col-date">{{last_at}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
         {{/if}}
     </div>
 
     {{/inline}}
-    {{#*inline "scripts"}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var searchInput = document.getElementById('governance-search');
-            if (searchInput) {
-                searchInput.addEventListener('input', function() {
-                    var filter = this.value.toLowerCase();
-                    var rows = document.querySelectorAll('tbody tr[data-name]');
-                    rows.forEach(function(row) {
-                        var name = row.getAttribute('data-name') || '';
-                        row.style.display = name.includes(filter) ? '' : 'none';
-                    });
-                });
-            }
-        });
-    </script>
-    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

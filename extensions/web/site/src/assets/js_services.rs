@@ -34,6 +34,7 @@ fn service_core_js(p: &Path) -> Vec<AssetDefinition> {
         AssetDefinition::js(p.join("dropdown.js"), "js/services/dropdown.js"),
         AssetDefinition::js(p.join("events.js"), "js/services/events.js"),
         AssetDefinition::js(p.join("header-actions.js"), "js/services/header-actions.js"),
+        AssetDefinition::js(p.join("header-search.js"), "js/services/header-search.js"),
         AssetDefinition::js(p.join("install-widget.js"), "js/services/install-widget.js"),
         AssetDefinition::js(
             p.join("onboarding-banner.js"),
@@ -238,10 +239,6 @@ pub(super) fn admin_assets(storage_css: &Path, storage_js: &Path) -> Vec<AssetDe
         AssetDefinition::js(storage_js.join("admin-access.js"), "js/admin-access.js"),
         AssetDefinition::js(storage_js.join("admin-audit.js"), "js/admin-audit.js"),
         AssetDefinition::js(
-            storage_js.join("admin-achievements.js"),
-            "js/admin-achievements.js",
-        ),
-        AssetDefinition::js(
             storage_js.join("admin-my-workspace.js"),
             "js/admin-my-workspace.js",
         ),
@@ -253,6 +250,26 @@ pub(super) fn admin_assets(storage_css: &Path, storage_js: &Path) -> Vec<AssetDe
         AssetDefinition::js(
             storage_js.join("admin/sidebar-toggle.js"),
             "js/admin/sidebar-toggle.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("admin/json-tree.js"),
+            "js/admin/json-tree.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("admin/chain-drawer.js"),
+            "js/admin/chain-drawer.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("admin/heatmap.js"),
+            "js/admin/heatmap.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("admin/requests-charts.js"),
+            "js/admin/requests-charts.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("admin/conversations.js"),
+            "js/admin/conversations.js",
         ),
     ]
 }

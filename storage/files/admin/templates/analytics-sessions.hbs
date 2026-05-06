@@ -2,11 +2,6 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/page-header title=title}}
-    <section aria-label="CLI command" class="hero-cli">
-        <p class="text-tertiary text-sm">Run this on the CLI to see the same data:</p>
-        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
-        <p class="text-tertiary text-sm">Window: {{window_label}} &middot; {{total_sessions}} sessions</p>
-    </section>
     <section aria-label="Sessions">
     {{#if has_sessions}}
     {{#> components/data-table}}
@@ -23,7 +18,7 @@
         </tbody>
     {{/components/data-table}}
     {{else}}
-    {{> components/empty-state message="No active sessions. Run the CLI command above to populate this view."}}
+    {{> components/empty-state message="No active sessions."}}
     {{/if}}
     </section>
     {{/inline}}

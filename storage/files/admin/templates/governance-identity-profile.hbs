@@ -1,0 +1,133 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header
+        title=title
+        subtitle="Identity profile — risk score, decision timeline, and sessions."}}
+
+    <p class="breadcrumbs">
+        <a href="{{back_url}}">&larr; Identity &amp; Violations</a>
+        &middot;
+        <a href="{{audit_url}}">Open in Audit Trail</a>
+    </p>
+
+    {{> components/time-range time_range}}
+
+    <section class="identity-profile__risk">
+        <div class="identity-profile__risk-card">
+            <span class="identity-profile__risk-label">Risk score</span>
+            <span class="risk-pill risk-pill--{{risk.band}} risk-pill--xl">{{risk.score}}</span>
+        </div>
+        <dl class="identity-profile__risk-breakdown">
+            <div><dt>Identity</dt><dd><code class="code-inline">{{identity_id}}</code> ({{group_label}})</dd></div>
+            <div><dt>Denies</dt><dd>{{risk.deny_count}}</dd></div>
+            <div><dt>Secret breaches</dt><dd>{{risk.secret_breach_count}}</dd></div>
+            <div><dt>Scope violations</dt><dd>{{risk.scope_violation_count}}</dd></div>
+            <div><dt>Activity volume</dt><dd>{{risk.activity_volume}}</dd></div>
+            <div><dt>Raw weighted</dt><dd>{{risk.raw}}</dd></div>
+            <div><dt>Normalised</dt><dd>{{risk.normalised}}</dd></div>
+        </dl>
+        <details class="identity-profile__formula">
+            <summary>Formula &amp; weights</summary>
+            <pre class="code-block"><code>raw = deny*{{risk.weights.deny_weight}} + secret*{{risk.weights.secret_breach_weight}} + scope*{{risk.weights.scope_violation_weight}}
+normalised = raw / max(activity_volume, {{risk.weights.normalization_floor}})
+score      = clamp(normalised * {{risk.weights.scale}}, 0, 100)
+            </code></pre>
+        </details>
+    </section>
+
+    <section class="identity-section">
+        <h2 class="identity-section__title">Top fired rules</h2>
+        {{#if top_rules}}
+        <table class="data-table">
+            <thead><tr>
+                <th>Policy</th>
+                <th class="col-num">Total</th>
+                <th class="col-num">Denies</th>
+            </tr></thead>
+            <tbody>
+            {{#each top_rules}}
+            <tr>
+                <td><code class="code-inline">{{this.policy}}</code></td>
+                <td class="col-num">{{this.total}}</td>
+                <td class="col-num">{{this.deny}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        </table>
+        {{else}}
+        <p class="text-muted">No decisions in window.</p>
+        {{/if}}
+    </section>
+
+    <section class="identity-section">
+        <h2 class="identity-section__title">Recent sessions</h2>
+        {{#if sessions}}
+        <table class="data-table">
+            <thead><tr>
+                <th>Session</th>
+                <th>Last activity</th>
+                <th class="col-num">Total</th>
+                <th class="col-num">Denies</th>
+            </tr></thead>
+            <tbody>
+            {{#each sessions}}
+            <tr>
+                <td>
+                    <a href="{{this.audit_url}}">
+                        <code class="code-inline">{{truncate this.session_id 16}}</code>
+                    </a>
+                </td>
+                <td>{{this.last_at}}</td>
+                <td class="col-num">{{this.total}}</td>
+                <td class="col-num">{{this.deny}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        </table>
+        {{else}}
+        <p class="text-muted">No sessions in window.</p>
+        {{/if}}
+    </section>
+
+    <section class="identity-section">
+        <h2 class="identity-section__title">
+            Decision timeline
+            <span class="text-muted">({{total_count}} total)</span>
+        </h2>
+        {{#if has_timeline}}
+        <ol class="identity-timeline">
+            {{#each timeline}}
+            <li class="identity-timeline__item identity-timeline__item--{{#if this.is_denied}}deny{{else}}allow{{/if}}"
+                data-chain-id="{{this.id}}" tabindex="0" role="button"
+                aria-label="Open chain of custody for {{this.id}}">
+                <time class="identity-timeline__time" datetime="{{this.created_at}}">
+                    {{this.created_at_local}}
+                </time>
+                <span class="identity-timeline__decision">
+                    {{#if this.is_denied}}
+                      <span class="mcp-badge mcp-badge-danger">DENY</span>
+                    {{else}}
+                      <span class="mcp-badge mcp-badge-success">ALLOW</span>
+                    {{/if}}
+                </span>
+                <span class="identity-timeline__policy">
+                    <code class="code-inline">{{this.policy}}</code>
+                </span>
+                <span class="identity-timeline__tool">
+                    <code class="code-inline">{{this.tool_name}}</code>
+                </span>
+                <span class="identity-timeline__reason" title="{{this.reason}}">
+                    {{truncate this.reason 80}}
+                </span>
+            </li>
+            {{/each}}
+        </ol>
+        {{else}}
+        <p class="text-muted">No decisions in window.</p>
+        {{/if}}
+    </section>
+
+    {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

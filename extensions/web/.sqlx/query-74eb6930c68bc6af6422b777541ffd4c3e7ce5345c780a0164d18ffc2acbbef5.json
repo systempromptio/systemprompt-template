@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH top AS (\n                SELECT DISTINCT ON (u.department)\n                    u.department,\n                    COALESCE(u.display_name, u.full_name, u.name) AS top_user_name,\n                    r.total_xp::BIGINT AS top_user_xp\n                FROM employee_ranks r\n                JOIN users u ON r.user_id = u.id\n                WHERE u.department IS NOT NULL AND u.department != ''\n                ORDER BY u.department, r.total_xp DESC\n            )\n            SELECT\n                u.department AS \"department\",\n                COALESCE(SUM(r.total_xp), 0)::BIGINT AS \"total_xp!\",\n                COALESCE(AVG(r.total_xp), 0)::FLOAT8 AS \"avg_xp!\",\n                COUNT(DISTINCT r.user_id)::BIGINT AS \"user_count!\",\n                MAX(top.top_user_name) AS \"top_user_name\",\n                COALESCE(MAX(top.top_user_xp), 0)::BIGINT AS \"top_user_xp!\"\n            FROM employee_ranks r\n            JOIN users u ON r.user_id = u.id\n            LEFT JOIN top ON top.department = u.department\n            WHERE u.department IS NOT NULL AND u.department != ''\n              AND u.department = $1\n            GROUP BY u.department\n            ORDER BY 2 DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "department",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_xp!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "avg_xp!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "top_user_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "top_user_xp!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "74eb6930c68bc6af6422b777541ffd4c3e7ce5345c780a0164d18ffc2acbbef5"
+}

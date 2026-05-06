@@ -1,0 +1,119 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            s.session_id, s.started_at, s.ended_at,\n            COALESCE(s.total_events, 0)::BIGINT AS \"total_events!\",\n            COALESCE(s.tool_uses, 0)::BIGINT AS \"tool_uses!\",\n            COALESCE(s.prompts, 0)::BIGINT AS \"prompts!\",\n            COALESCE(s.errors, 0)::BIGINT AS \"errors!\",\n            COALESCE(s.content_input_bytes, 0)::BIGINT AS \"content_input_bytes!\",\n            COALESCE(s.content_output_bytes, 0)::BIGINT AS \"content_output_bytes!\",\n            COALESCE(s.subagent_spawns, 0)::BIGINT AS \"subagent_spawns!\",\n            COALESCE(s.status, 'active') AS \"status!\",\n            s.updated_at AS \"updated_at!\",\n            COALESCE(s.client_source, '') AS \"client_source!\",\n            COALESCE(s.permission_mode, '') AS \"permission_mode!\",\n            COALESCE(s.user_prompts, 0)::INT AS \"user_prompts!\",\n            COALESCE(s.automated_actions, 0)::INT AS \"automated_actions!\",\n            COALESCE(s.model, '') AS \"model!\"\n        FROM plugin_session_summaries s\n        WHERE s.user_id = $1\n          AND s.ended_at IS NULL\n          AND COALESCE(s.status, 'active') = 'active'\n          AND (COALESCE(s.prompts, 0) > 0 OR COALESCE(s.tool_uses, 0) > 0 OR COALESCE(s.total_events, 0) > 1)\n        ORDER BY s.updated_at DESC\n        LIMIT $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "started_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "ended_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_events!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "tool_uses!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "prompts!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "errors!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "content_input_bytes!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "content_output_bytes!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "subagent_spawns!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
+        "name": "status!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "client_source!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "permission_mode!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "user_prompts!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "automated_actions!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 16,
+        "name": "model!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "d4a41dc3495625be32c567b8694cfb3fb5c224738c2d8d7ec9f5c26916f51483"
+}

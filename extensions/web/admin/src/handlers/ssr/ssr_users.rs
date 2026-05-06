@@ -11,15 +11,18 @@ use axum::{
 };
 use sqlx::PgPool;
 
-use super::types::{EnrichedAchievementView, EnrichedUserView, UserDetailPageData, UsersPageData};
+use super::types::{EnrichedUserView, UserDetailPageData, UsersPageData};
 use crate::repositories::UserRank;
 
 fn enrich_users_with_ranks(
     users: &[crate::types::UserSummary],
     rank_rows: &[UserRank],
+    aggregates: &[repositories::UserManagementAggregate],
 ) -> Vec<EnrichedUserView> {
     let rank_map: std::collections::HashMap<&str, &UserRank> =
         rank_rows.iter().map(|r| (r.user_id.as_str(), r)).collect();
+    let agg_map: std::collections::HashMap<&str, &repositories::UserManagementAggregate> =
+        aggregates.iter().map(|a| (a.user_id.as_str(), a)).collect();
 
     users
         .iter()
@@ -28,6 +31,7 @@ fn enrich_users_with_ranks(
                 || ("-".to_string(), 0),
                 |rank| (rank.rank_name.clone(), rank.total_xp),
             );
+            let agg = agg_map.get(u.user_id.as_str());
             EnrichedUserView {
                 user_id: u.user_id.to_string(),
                 display_name: u.display_name.clone(),
@@ -45,6 +49,10 @@ fn enrich_users_with_ranks(
                 logins: u.logins,
                 rank_name,
                 xp,
+                department: agg.map(|a| a.department.clone()).unwrap_or_default(),
+                assigned_skills_count: agg.map_or(0, |a| a.assigned_skills_count),
+                assigned_marketplaces_count: agg.map_or(0, |a| a.assigned_marketplaces_count),
+                devices_count: agg.map_or(0, |a| a.devices_count),
             }
         })
         .collect()
@@ -81,7 +89,14 @@ pub async fn users_page(
                 Vec::new()
             });
 
-    let enriched_users = enrich_users_with_ranks(&users, &rank_rows);
+    let aggregates = repositories::list_user_management_aggregates(&pool)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to fetch user management aggregates");
+            Vec::new()
+        });
+
+    let enriched_users = enrich_users_with_ranks(&users, &rank_rows, &aggregates);
 
     let data = UsersPageData {
         page: "users",
@@ -104,6 +119,86 @@ pub async fn users_page(
         );
     }
     super::render_page(&engine, "users", &value, &user_ctx, &mkt_ctx)
+}
+
+type UserDetailExtras = (
+    String,
+    super::types::UserAssignmentSummary,
+    Vec<super::types::UserDeviceView>,
+    i64,
+    Option<repositories::governance_grp::effective::EffectivePermissions>,
+);
+
+async fn collect_user_detail_extras(
+    pool: &PgPool,
+    d: &crate::types::UserDetail,
+) -> UserDetailExtras {
+    let (roles, department) = repositories::get_user_roles_department(pool, d.user_id.as_str())
+        .await
+        .ok()
+        .flatten()
+        .unwrap_or_else(|| (Vec::new(), String::new()));
+
+    let mut assignments = super::types::UserAssignmentSummary::default();
+    let mut devices_count = 0i64;
+    if let Ok(rows) = repositories::list_user_management_aggregates(pool).await {
+        if let Some(row) = rows.into_iter().find(|r| r.user_id == d.user_id.as_str()) {
+            assignments.skills_count = row.assigned_skills_count;
+            assignments.marketplaces_count = row.assigned_marketplaces_count;
+            devices_count = row.devices_count;
+        }
+    }
+
+    let devices = collect_user_devices(pool, d).await;
+
+    let effective = Some(
+        repositories::governance_grp::effective::compute_effective_permissions(
+            pool,
+            d.user_id.as_str(),
+            &roles,
+            &department,
+        )
+        .await,
+    );
+
+    (department, assignments, devices, devices_count, effective)
+}
+
+async fn collect_user_devices(
+    pool: &PgPool,
+    d: &crate::types::UserDetail,
+) -> Vec<super::types::UserDeviceView> {
+    let Ok(pats) = repositories::cowork_grp::list_api_keys_for_user(pool, &d.user_id).await else {
+        return Vec::new();
+    };
+    let app_links: std::collections::HashMap<
+        String,
+        (String, String, Option<chrono::DateTime<chrono::Utc>>),
+    > = sqlx::query_as::<_, (String, String, String, Option<chrono::DateTime<chrono::Utc>>)>(
+        "SELECT device_id, app_platform, app_version, last_seen_at FROM device_app_links WHERE user_id = $1",
+    )
+    .bind(d.user_id.as_str())
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default()
+    .into_iter()
+    .map(|(id, p, v, ts)| (id, (p, v, ts)))
+    .collect();
+
+    pats.into_iter()
+        .map(|row| {
+            let link = app_links.get(&row.id);
+            super::types::UserDeviceView {
+                id: row.id,
+                name: row.name,
+                key_prefix: row.key_prefix,
+                platform: link.map(|(p, _, _)| p.clone()),
+                app_version: link.map(|(_, v, _)| v.clone()).filter(|v| !v.is_empty()),
+                last_seen_at: link.and_then(|(_, _, ts)| *ts).or(row.last_used_at),
+                revoked: row.revoked_at.is_some(),
+            }
+        })
+        .collect()
 }
 
 pub async fn user_detail_page(
@@ -129,9 +224,11 @@ pub async fn user_detail_page(
             title: "User Detail",
             user: None,
             gamification: None,
-            enriched_achievements: vec![],
-            achievements_count: 0,
             not_found: true,
+            user_department: String::new(),
+            user_assignments: super::types::UserAssignmentSummary::default(),
+            user_devices: Vec::new(),
+            user_devices_count: 0,
         };
         let value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Null);
         return super::render_page(&engine, "user-detail", &value, &user_ctx, &mkt_ctx);
@@ -154,41 +251,43 @@ pub async fn user_detail_page(
             .ok()
             .flatten();
 
-    let enriched_achievements = enrich_achievements(gamification.as_ref());
-    let achievements_count = enriched_achievements.len();
     let not_found = detail.is_none();
+
+    let (user_department, user_assignments, user_devices, user_devices_count, effective) =
+        match detail.as_ref() {
+            Some(d) => collect_user_detail_extras(&pool, d).await,
+            None => (
+                String::new(),
+                super::types::UserAssignmentSummary::default(),
+                Vec::new(),
+                0,
+                None,
+            ),
+        };
 
     let data = UserDetailPageData {
         page: "user-detail",
         title: "User Detail",
         user: detail,
         gamification,
-        enriched_achievements,
-        achievements_count,
         not_found,
+        user_department,
+        user_assignments,
+        user_devices,
+        user_devices_count,
     };
-    let value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Null);
+    let mut value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Null);
+    if let (serde_json::Value::Object(ref mut map), Some(eff)) = (&mut value, effective) {
+        map.insert(
+            "effective_permissions".to_string(),
+            serde_json::to_value(&eff).unwrap_or(serde_json::Value::Null),
+        );
+        map.insert(
+            "has_effective_permissions".to_string(),
+            serde_json::Value::Bool(
+                !eff.gateway_routes.is_empty() || !eff.mcp_servers.is_empty(),
+            ),
+        );
+    }
     super::render_page(&engine, "user-detail", &value, &user_ctx, &mkt_ctx)
-}
-
-fn enrich_achievements(
-    gamification: Option<&crate::types::UserGamificationProfile>,
-) -> Vec<EnrichedAchievementView> {
-    gamification.map_or_else(Vec::new, |g| {
-        let defs = crate::gamification::ACHIEVEMENTS;
-        g.achievements
-            .iter()
-            .filter_map(|ua| {
-                defs.iter()
-                    .find(|d| d.id == ua.achievement_id)
-                    .map(|d| EnrichedAchievementView {
-                        achievement_id: ua.achievement_id.clone(),
-                        name: d.name,
-                        description: d.description,
-                        category: d.category,
-                        unlocked_at: ua.unlocked_at,
-                    })
-            })
-            .collect()
-    })
 }

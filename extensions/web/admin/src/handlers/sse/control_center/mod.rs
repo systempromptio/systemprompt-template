@@ -109,7 +109,6 @@ pub async fn control_center_sse(
             let analytics_input = cc_analytics::AnalyticsInput {
                 entity_links: &activity_data.entity_links,
                 session_ratings: &activity_data.session_ratings,
-                gam: today_event.gam.as_ref(),
                 apm_live: &today_event.apm_live,
             };
             if let Some(data) = cc_analytics::build_analytics_event(
@@ -126,7 +125,6 @@ pub async fn control_center_sse(
 struct TodayStatsEvent {
     today_stats: TodayStats,
     recent_sessions: Vec<RecentSession>,
-    gam: Option<crate::types::UserGamificationProfile>,
     apm_live: crate::repositories::apm_metrics::TodayApmLive,
 }
 
@@ -196,7 +194,6 @@ async fn build_today_stats_event(
     TodayStatsEvent {
         today_stats,
         recent_sessions,
-        gam,
         apm_live,
     }
 }

@@ -140,4 +140,70 @@ h2.nav-label {
     border-radius: var(--sp-radius-full);
 }
 
+/* Collapsible nav groups (Explore drawer) */
+.admin-sidebar nav .nav-group {
+    margin: 0;
+}
+
+.admin-sidebar nav .nav-group > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-2) var(--sp-space-5);
+    margin: 0.0625rem var(--sp-space-2);
+    color: var(--sp-sidebar-text);
+    font-size: var(--sp-text-sm);
+    font-weight: 500;
+    border-radius: var(--sp-radius-sm);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.admin-sidebar nav .nav-group > summary::-webkit-details-marker { display: none; }
+.admin-sidebar nav .nav-group > summary::marker { content: ''; }
+
+.admin-sidebar nav .nav-group > summary:hover {
+    background: var(--sp-sidebar-hover-bg);
+    color: var(--sp-sidebar-text-hover);
+}
+
+.admin-sidebar nav .nav-group > summary .icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    opacity: 0.6;
+}
+
+.nav-group-chevron {
+    width: 12px;
+    height: 12px;
+    margin-left: auto;
+    opacity: 0.5;
+    transition: transform var(--sp-duration-fast) var(--sp-ease-in-out);
+}
+
+.admin-sidebar nav .nav-group[open] > summary .nav-group-chevron {
+    transform: rotate(180deg);
+}
+
+.admin-sidebar nav .nav-group > a {
+    padding-left: calc(var(--sp-space-5) + 16px + var(--sp-space-3));
+    font-size: var(--sp-text-sm);
+    color: var(--sp-sidebar-text-muted, var(--sp-sidebar-text));
+    opacity: 0.85;
+}
+
+.admin-sidebar nav .nav-group > a:hover {
+    opacity: 1;
+}
+
+/* Account footer group — visually demoted */
+.nav-label--account {
+    margin-top: var(--sp-space-6);
+    border-top: 1px solid var(--sp-sidebar-border);
+    padding-top: var(--sp-space-5);
+    color: var(--sp-sidebar-text-muted) !important;
+}
+
 }

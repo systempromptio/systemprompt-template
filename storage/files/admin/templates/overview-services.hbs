@@ -1,0 +1,105 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header
+        title="Services &amp; tools"
+        subtitle="Upstream provider health and live MCP tool execution."}}
+
+    <section class="kpi-strip" aria-label="Services KPIs">
+        <div class="kpi-card">
+            <span class="kpi-card__label">Providers</span>
+            <span class="kpi-card__value" data-kpi="providers">{{kpis.providers}}</span>
+            <span class="kpi-card__sub">active</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-card__label">Models</span>
+            <span class="kpi-card__value" data-kpi="models">{{kpis.models}}</span>
+            <span class="kpi-card__sub">in use</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-card__label">Throughput</span>
+            <span class="kpi-card__value" data-kpi="rpm">{{kpis.requests_per_min}}</span>
+            <span class="kpi-card__sub">requests / min</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-card__label">Avg latency</span>
+            <span class="kpi-card__value" data-kpi="latency">{{kpis.avg_latency_display}}</span>
+            <span class="kpi-card__sub">across models</span>
+        </div>
+        <div class="kpi-card{{#if kpis.errors}} kpi-card--danger{{/if}}">
+            <span class="kpi-card__label">Errors</span>
+            <span class="kpi-card__value" data-kpi="errors">{{kpis.errors}}</span>
+            <span class="kpi-card__sub">last 60 min</span>
+        </div>
+    </section>
+
+    <section class="overview-pane">
+        <h3 class="section-title">Provider health</h3>
+        <div class="provider-grid">
+            {{#each providers}}
+            <div class="provider-card" data-provider="{{this.name}}">
+                <span class="provider-card__name">{{this.name}}</span>
+                <span class="provider-card__metric">{{this.calls}}</span>
+                <span class="provider-card__sub">{{this.avg_latency_display}}{{#if this.errors}} · <span class="text-danger">{{this.errors}} err</span>{{/if}}</span>
+            </div>
+            {{/each}}
+            {{#unless providers}}
+            <p class="text-tertiary">No upstream traffic in the last hour.</p>
+            {{/unless}}
+        </div>
+    </section>
+
+    {{#if has_models}}
+    <section class="overview-pane">
+        <h3 class="section-title">Top models by traffic</h3>
+        {{#> components/data-table}}
+            <thead><tr>
+                <th>Model</th>
+                <th>Provider</th>
+                <th class="col-num">Calls</th>
+                <th class="col-num">Latency</th>
+                <th class="col-num">Errors</th>
+            </tr></thead>
+            <tbody>
+            {{#each models}}
+            <tr>
+                <td><code class="code-inline">{{this.model}}</code></td>
+                <td><span class="text-muted">{{this.provider}}</span></td>
+                <td class="col-num">{{this.calls}}</td>
+                <td class="col-num">{{this.avg_latency_display}}</td>
+                <td class="col-num">{{#if this.errors}}<span class="mcp-badge mcp-badge-danger">{{this.errors}}</span>{{else}}—{{/if}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+    </section>
+    {{/if}}
+
+    <section class="overview-pane">
+        <h3 class="section-title">Live tool stream
+            <span class="live-dot" aria-hidden="true"></span>
+        </h3>
+        <ul class="live-ticker" id="services-ticker" data-max="50" aria-live="polite">
+            {{#each recent_requests}}
+            <li>
+                <span class="live-ticker__time">{{time}}</span>
+                <span class="live-ticker__msg">{{msg}}</span>
+                <span class="live-ticker__tag{{#if is_error}} live-ticker__tag--deny{{/if}}">{{#if is_error}}ERROR{{else}}REQ{{/if}}</span>
+            </li>
+            {{/each}}
+        </ul>
+    </section>
+
+    <p class="text-tertiary text-sm overview-help">
+        Deep-link: <a href="/admin/infrastructure/services">Services</a> ·
+        <a href="/admin/mcp/tools">MCP tools</a> ·
+        <a href="/admin/analytics/requests">Requests</a>
+    </p>
+    {{/inline}}
+    {{#*inline "head_extra"}}
+    <link rel="stylesheet" href="/css/overview-live.css?v={{css_version}}">
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script type="module" src="/js/pages/admin-overview-services.js?v={{css_version}}"
+            data-sse-url="{{sse_url}}" defer></script>
+    {{/inline}}
+{{/layout}}

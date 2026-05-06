@@ -6,11 +6,6 @@
     <h2>{{title}}{{#if has_agent}} &middot; {{agent.name}}{{/if}}</h2>
     {{> components/agent-detail-tabs active_tab="messages" agent_id=agent_id}}
 
-    <section aria-label="CLI command" class="detail-content">
-        <div class="text-sm text-tertiary">Equivalent CLI command</div>
-        <pre class="detail-pre"><code>$ {{cli_command}}</code></pre>
-    </section>
-
     {{#if has_agent}}
     <section aria-label="Agent message thread">
         <h3>Message Thread</h3>
@@ -29,7 +24,7 @@
             </tbody>
         {{/components/data-table}}
         {{else}}
-        {{> components/empty-state message="No message events recorded for this agent yet. Run demo/agents/03-agent-messaging.sh to generate some."}}
+        {{> components/empty-state message="No message events recorded for this agent yet."}}
         {{/if}}
     </section>
     {{else}}

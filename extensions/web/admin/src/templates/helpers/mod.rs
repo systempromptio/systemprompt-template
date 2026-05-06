@@ -2,8 +2,9 @@ mod helpers_format;
 mod helpers_logic;
 
 use helpers_format::{
-    ConcatHelper, CssVersionHelper, DefaultHelper, FormatDateHelper, InitialsHelper, JsonHelper,
-    RelativeTimeHelper, ToLowerCaseHelper, ToUpperCaseHelper, TruncateHelper,
+    ConcatHelper, CssVersionHelper, DefaultHelper, FormatDateHelper, GovernanceColorHelper,
+    InitialsHelper, JsonHelper, RelativeTimeHelper, ToLowerCaseHelper, ToUpperCaseHelper,
+    TruncateHelper,
 };
 use helpers_logic::{AddHelper, EqHelper, GtHelper, NotHelper, SubHelper};
 
@@ -17,6 +18,7 @@ pub fn register_helpers(hbs: &mut handlebars::Handlebars<'static>) {
     hbs.register_helper("toLowerCase", Box::new(ToLowerCaseHelper));
     hbs.register_helper("toUpperCase", Box::new(ToUpperCaseHelper));
     hbs.register_helper("default", Box::new(DefaultHelper));
+    hbs.register_helper("governanceColor", Box::new(GovernanceColorHelper));
     hbs.register_helper("css_version", Box::new(CssVersionHelper));
     hbs.register_helper("eq", Box::new(EqHelper));
     hbs.register_helper("gt", Box::new(GtHelper));

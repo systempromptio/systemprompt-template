@@ -1,51 +1,75 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
+    {{> components/page-header title="Decisions" subtitle="Unified audit log of every governance evaluation. Filter by outcome, policy, or free-text search across user, tool, scope, and reason."}}
 
-    {{> components/page-header title=hero_title subtitle=hero_subtitle}}
-    <pre class="code-block"><code>{{cli_command}}</code></pre>
-
-    <section class="stat-card-grid">
-        {{> components/stat-card label="Total" value=total}}
-        {{> components/stat-card label="Allowed" value=allowed variant="success"}}
-        {{> components/stat-card label="Denied" value=denied variant="error"}}
-    </section>
-
-    <div class="toolbar">
-        <a href="/admin/governance/decisions" class="btn btn-sm {{#if (eq outcome "all")}}btn-primary{{else}}btn-secondary{{/if}}">All</a>
-        <a href="/admin/governance/decisions?outcome=allow" class="btn btn-sm {{#if (eq outcome "allow")}}btn-primary{{else}}btn-secondary{{/if}}">Allowed</a>
-        <a href="/admin/governance/decisions?outcome=deny" class="btn btn-sm {{#if (eq outcome "deny")}}btn-primary{{else}}btn-secondary{{/if}}">Denied</a>
+    <div class="metric-ribbon">
+        <div class="metric-ribbon-item"><span class="metric-ribbon-value">{{total}}</span><span class="metric-ribbon-label">Total</span></div>
+        <div class="metric-ribbon-item metric-ribbon-success"><span class="metric-ribbon-value">{{allowed}}</span><span class="metric-ribbon-label">Allowed</span></div>
+        <div class="metric-ribbon-item metric-ribbon-danger"><span class="metric-ribbon-value">{{denied}}</span><span class="metric-ribbon-label">Denied</span></div>
+        {{#if secret_breaches}}
+        <div class="metric-ribbon-item metric-ribbon-danger"><span class="metric-ribbon-value">{{secret_breaches}}</span><span class="metric-ribbon-label">Secret Breaches</span></div>
+        {{/if}}
     </div>
+
+    <form method="get" action="/admin/governance/decisions" class="toolbar">
+        <select name="outcome">
+            <option value="all"{{#if outcome_all}} selected{{/if}}>All outcomes</option>
+            <option value="allow"{{#if outcome_allow}} selected{{/if}}>Allowed only</option>
+            <option value="deny"{{#if outcome_deny}} selected{{/if}}>Denied only</option>
+        </select>
+        <select name="policy">
+            <option value="">All policies</option>
+            {{#each policy_options}}
+            <option value="{{id}}"{{#if selected}} selected{{/if}}>{{id}}</option>
+            {{/each}}
+        </select>
+        <input type="text" name="q" placeholder="Search user/tool/reason..." value="{{search_query}}" class="search-input">
+        <button type="submit" class="btn btn-sm">Filter</button>
+        <a href="/admin/governance/decisions" class="btn btn-sm btn-outline">Reset</a>
+    </form>
 
     {{#if has_decisions}}
     {{#> components/data-table}}
         <thead><tr>
-            <th>Tool</th><th>Agent</th><th class="col-status">Scope</th><th class="col-status">Decision</th><th>Policy</th><th class="col-multiline">Reason</th><th class="col-date">Time</th>
+            <th class="col-date">Time</th>
+            <th>User</th>
+            <th>Tool</th>
+            <th>Agent</th>
+            <th class="col-status">Scope</th>
+            <th class="col-status">Decision</th>
+            <th>Policy</th>
+            <th class="col-multiline">Reason</th>
         </tr></thead>
         <tbody>
         {{#each decisions}}
         <tr>
+            <td class="col-date">{{created_at}}</td>
+            <td><a href="/admin/user?id={{user_id}}">{{truncate user_id 12}}</a></td>
             <td><code class="code-inline">{{tool_name}}</code></td>
             <td>{{agent_id}}</td>
-            <td class="col-status">{{#if agent_scope}}<span class="badge">{{agent_scope}}</span>{{/if}}</td>
+            <td class="col-status">{{#if agent_scope}}<span class="badge {{#if (eq agent_scope "admin")}}badge-purple{{else}}badge-blue{{/if}}">{{agent_scope}}</span>{{/if}}</td>
             <td class="col-status">
                 {{#if is_denied}}
-                    <span class="mcp-badge mcp-badge-danger">DENY</span>
+                {{#if is_secret_breach}}
+                <span class="mcp-badge mcp-badge-danger">SECRET BREACH</span>
                 {{else}}
-                    <span class="mcp-badge mcp-badge-success">ALLOW</span>
+                <span class="mcp-badge mcp-badge-danger">DENIED</span>
+                {{/if}}
+                {{else}}
+                <span class="mcp-badge mcp-badge-success">ALLOWED</span>
                 {{/if}}
             </td>
-            <td><code class="code-inline">{{policy}}</code></td>
-            <td class="col-multiline" title="{{reason}}">{{truncate reason 60}}</td>
-            <td class="col-date">{{created_at}}</td>
+            <td><a href="/admin/governance/{{policy}}"><code class="code-inline">{{policy}}</code></a></td>
+            <td class="col-multiline" title="{{reason}}">{{truncate reason 80}}</td>
         </tr>
         {{/each}}
         </tbody>
     {{/components/data-table}}
     {{else}}
-    {{> components/empty-state message="No governance decisions recorded yet. Run demo/governance/01-happy-path.sh to generate data."}}
+    {{> components/empty-state message="No decisions match the current filters."}}
     {{/if}}
 
     {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

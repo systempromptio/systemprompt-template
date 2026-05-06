@@ -1,0 +1,36 @@
+{{!--
+  Single multi-select group inside the identity filter ribbon.
+  Inputs: param (URL param name), title (label), options ([{id,label,count,selected}])
+--}}
+{{#if options}}
+<details class="filter-ribbon__group" data-filter-group="{{param}}">
+  <summary class="filter-ribbon__group-summary">
+    <span class="filter-ribbon__group-title">{{title}}</span>
+    <span class="filter-ribbon__group-caret" aria-hidden="true">&#9662;</span>
+  </summary>
+  <div class="filter-ribbon__group-panel" role="group" aria-label="{{title}} filter">
+    <input type="search" class="filter-ribbon__group-search"
+           placeholder="Filter {{title}}..." data-filter-typeahead
+           aria-label="Filter {{title}} options">
+    <ul class="filter-ribbon__group-list" data-filter-list>
+      {{#each options}}
+        <li class="filter-ribbon__group-item" data-label="{{this.label}}">
+          <label class="filter-ribbon__option">
+            <input type="checkbox" name="{{../param}}" value="{{this.id}}"
+                   {{#if this.selected}}checked{{/if}}>
+            <span class="filter-ribbon__option-label">{{this.label}}</span>
+            {{#if this.count}}
+              <span class="filter-ribbon__option-count">{{this.count}}</span>
+            {{/if}}
+          </label>
+        </li>
+      {{/each}}
+    </ul>
+  </div>
+</details>
+{{else}}
+<div class="filter-ribbon__group filter-ribbon__group--empty" aria-disabled="true">
+  <span class="filter-ribbon__group-title">{{title}}</span>
+  <span class="filter-ribbon__group-empty-text">none</span>
+</div>
+{{/if}}

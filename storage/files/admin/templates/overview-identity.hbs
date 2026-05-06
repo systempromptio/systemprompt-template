@@ -1,0 +1,111 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title subtitle=subtitle}}
+
+    <section class="kpi-strip" aria-label="Identity KPIs">
+        <div class="kpi-card">
+            <span class="kpi-card__label">Users</span>
+            <span class="kpi-card__value">{{kpis.users}}</span>
+            <span class="kpi-card__sub">total identities</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-card__label">Active</span>
+            <span class="kpi-card__value">{{kpis.active}}</span>
+            <span class="kpi-card__sub">in current page</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-card__label">Tokens</span>
+            <span class="kpi-card__value">{{kpis.tokens}}</span>
+            <span class="kpi-card__sub">visible</span>
+        </div>
+        <div class="kpi-card{{#if kpis.denies}} kpi-card--danger{{/if}}">
+            <span class="kpi-card__label">Denies</span>
+            <span class="kpi-card__value">{{kpis.denies}}</span>
+            <span class="kpi-card__sub">{{kpis.cost_display}} spend</span>
+        </div>
+    </section>
+
+    <form class="toolbar" role="search" method="get" action="/admin/overview/identity">
+        <div class="search-group">
+            <input type="search" class="search-input" name="q" value="{{q}}"
+                   placeholder="Search by name, email, or department" aria-label="Search users">
+        </div>
+        <input type="hidden" name="sort" value="{{sort}}">
+        <input type="hidden" name="dir" value="{{dir}}">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    <section aria-label="Users" data-page="overview-identity">
+    {{#if has_rows}}
+    {{#> components/data-table}}
+        <thead><tr>
+            {{#each sort_links}}
+            <th{{#unless (eq slug "name")}} class="numeric col-numeric"{{/unless}}>
+                <a href="?sort={{slug}}&dir={{next_dir}}&q={{../q}}"
+                   class="sort-link{{#if active}} sort-link--active{{/if}}"
+                   aria-label="Sort by {{label}}">{{label}} <span class="sort-link__indicator">{{indicator}}</span></a>
+            </th>
+            {{/each}}
+            <th>Status</th>
+        </tr></thead>
+        <tbody>
+        {{#each rows}}
+        <tr>
+            <td>
+                <a href="/admin/user/?id={{user_id}}" class="user-cell" title="Open profile">
+                    <span class="avatar avatar-sm">{{initials display_name}}</span>
+                    <span>
+                        <strong>{{display_name}}</strong>
+                        {{#if email}}<span class="text-tertiary text-xs">{{email}}</span>{{/if}}
+                    </span>
+                </a>
+            </td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">
+                {{#if sessions}}<a href="/admin/analytics/sessions?user_id={{user_id}}">{{sessions}}</a>{{else}}<span class="text-tertiary">0</span>{{/if}}
+            </td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">
+                {{#if contexts}}<a href="/admin/analytics/conversations?user_id={{user_id}}">{{contexts}}</a>{{else}}<span class="text-tertiary">0</span>{{/if}}
+            </td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{tokens}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{cost_display}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">
+                {{#if has_denies}}
+                    <a href="/admin/governance/identity/{{user_id}}?group_by=user" class="badge badge-danger" title="Risk profile">{{denies}}</a>
+                {{else}}
+                    <span class="text-tertiary">0</span>
+                {{/if}}
+            </td>
+            <td class="col-date">
+                {{#if last_active}}<span title="{{formatDate last_active}}">{{relativeTime last_active}}</span>{{else}}<span class="text-tertiary">Never</span>{{/if}}
+            </td>
+            <td class="col-status">
+                {{#if is_active}}<span class="badge badge-success">Active</span>{{else}}<span class="badge badge-secondary">Inactive</span>{{/if}}
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+
+    <nav class="pagination" aria-label="Pagination">
+        <span class="pagination__count">{{pagination.page_start}}–{{pagination.page_end}} of {{pagination.total}}</span>
+        {{#if pagination.has_prev}}
+        <a class="btn btn-secondary btn-sm" href="?sort={{sort}}&dir={{dir}}&q={{q}}&limit={{pagination.limit}}&offset={{pagination.prev_offset}}">← Prev</a>
+        {{/if}}
+        {{#if pagination.has_next}}
+        <a class="btn btn-secondary btn-sm" href="?sort={{sort}}&dir={{dir}}&q={{q}}&limit={{pagination.limit}}&offset={{pagination.next_offset}}">Next →</a>
+        {{/if}}
+    </nav>
+
+    {{else}}
+    {{> components/empty-state message="No users match the current filter."}}
+    {{/if}}
+    </section>
+
+    <p class="text-tertiary text-sm overview-help">
+        Drill-down: click a user to open their profile,
+        click <em>Sessions</em> to see model + agent + origin per session,
+        click <em>Contexts</em> to read inference messages,
+        click <em>Denies</em> to open the governance violation profile.
+    </p>
+    {{/inline}}
+{{/layout}}

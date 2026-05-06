@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{DashboardQuery, MarketplaceContext, UserContext, TAB_REPORT};
+use crate::types::{DashboardQuery, MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, Query, State},
     response::{IntoResponse, Response},
@@ -13,7 +13,7 @@ use serde_json::json;
 use sqlx::PgPool;
 
 use super::ssr_dashboard_helpers::{build_dashboard_template, DashboardCounts};
-use data_injectors::{inject_governance_data, inject_mcp_access_and_costs};
+use data_injectors::{inject_governance_data, inject_mcp_access_and_costs, inject_services_data};
 
 struct ChartParams<'a> {
     interval: &'a str,
@@ -124,7 +124,8 @@ pub async fn dashboard_page(
     inject_page_stats(&mut data);
     inject_governance_data(&pool, &mut data).await;
     inject_mcp_access_and_costs(&pool, &mut data).await;
-    inject_report_if_needed(tab, &pool, &mut data).await;
+    inject_services_data(&pool, services_path.as_ref(), &mut data).await;
+    inject_report(&pool, &mut data).await;
 
     super::render_page(&engine, "dashboard", &data, &user_ctx, &mkt_ctx)
 }
@@ -205,16 +206,14 @@ fn inject_page_stats(data: &mut serde_json::Value) {
     }
 }
 
-async fn inject_report_if_needed(tab: &str, pool: &PgPool, data: &mut serde_json::Value) {
-    if tab == TAB_REPORT {
-        if let Ok(Some(report_row)) =
-            repositories::admin_traffic_reports::fetch_latest_report(pool).await
-        {
-            let report = super::ssr_dashboard_report::build_dashboard_report(&report_row);
-            if let Some(obj) = data.as_object_mut() {
-                obj.insert("has_dashboard_report".to_string(), json!(true));
-                obj.insert("dashboard_report".to_string(), report);
-            }
+async fn inject_report(pool: &PgPool, data: &mut serde_json::Value) {
+    if let Ok(Some(report_row)) =
+        repositories::admin_traffic_reports::fetch_latest_report(pool).await
+    {
+        let report = super::ssr_dashboard_report::build_dashboard_report(&report_row);
+        if let Some(obj) = data.as_object_mut() {
+            obj.insert("has_dashboard_report".to_string(), json!(true));
+            obj.insert("dashboard_report".to_string(), report);
         }
     }
 }

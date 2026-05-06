@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_sessions SET task_count = task_count + 1, last_activity_at = CURRENT_TIMESTAMP WHERE session_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "108d2153536f6b7d56ab336fcc79ee33efda098ea1d17b30cc06df7000d8256d"
+}

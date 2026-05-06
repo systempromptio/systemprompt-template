@@ -1,7 +1,5 @@
 use serde::Serialize;
 
-use super::gamification::{AchievementCategoryView, EnrichedAchievementView};
-
 #[derive(Debug, Clone, Serialize)]
 pub struct MyActivityPageData {
     pub page: &'static str,
@@ -17,11 +15,6 @@ pub struct MyActivityPageData {
     pub search: Option<String>,
     pub category_summary: Vec<crate::activity::types::ActivityCategorySummary>,
     pub gamification: Option<crate::types::UserGamificationProfile>,
-    pub enriched_achievements: Vec<EnrichedAchievementView>,
-    pub achievements_count: usize,
-    pub achievements_by_category: Vec<AchievementCategoryView>,
-    pub unlocked_achievements: usize,
-    pub total_achievements: usize,
     pub total_activities: i64,
     pub total_edits: i64,
     pub total_sessions: i64,

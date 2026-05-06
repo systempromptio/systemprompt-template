@@ -2,13 +2,6 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/page-header title=title}}
-    {{> components/page-hero}}
-
-    <section aria-label="CLI command" class="mb-3">
-        <p class="text-tertiary text-sm">This dashboard mirrors <code class="code-inline">{{cli_command}}</code>.</p>
-        <p class="text-tertiary text-sm">Add: <code class="code-inline">{{cli_command_add}}</code></p>
-        <p class="text-tertiary text-sm">Remove: <code class="code-inline">{{cli_command_remove}}</code></p>
-    </section>
 
     <section aria-label="Banned IPs">
         <h2 class="section-heading">Banned IPs</h2>
@@ -22,7 +15,7 @@
             </tbody>
         {{/components/data-table}}
         {{else}}
-        {{> components/empty-state message="No IP bans configured. Use the CLI commands above to manage the ban list."}}
+        {{> components/empty-state message="No IP bans configured."}}
         {{/if}}
     </section>
     {{/inline}}

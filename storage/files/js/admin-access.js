@@ -5,7 +5,7 @@
     let selectedEntities = {};
     let currentPanelEntity = null;
 
-    app.initAccessControl = function() {
+    app.initAccessControl = () => {
         initTabs();
         initSearch();
         initFilters();
@@ -19,14 +19,16 @@
     function initTabs() {
         const tabBar = document.getElementById('acl-tabs');
         if (!tabBar) return;
-        tabBar.addEventListener('click', function(e) {
+        tabBar.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-acl-tab]');
             if (!btn) return;
             activeTab = btn.getAttribute('data-acl-tab');
-            tabBar.querySelectorAll('.sp-tab').forEach(function(b) {
-                b.classList.toggle('sp-tab--active', b === btn);
+            tabBar.querySelectorAll('.sp-tab').forEach((b) => {
+                const isActive = b === btn;
+                b.classList.toggle('sp-tab--active', isActive);
+                b.setAttribute('aria-selected', isActive ? 'true' : 'false');
             });
-            document.querySelectorAll('[data-acl-panel]').forEach(function(panel) {
+            document.querySelectorAll('[data-acl-panel]').forEach((panel) => {
                 panel.style.display = panel.getAttribute('data-acl-panel') === activeTab ? '' : 'none';
             });
             clearSelection();
@@ -37,7 +39,7 @@
     function initSearch() {
         const input = document.getElementById('acl-search');
         if (!input) return;
-        input.addEventListener('input', debounce(function() {
+        input.addEventListener('input', debounce(() => {
             filterRows();
         }, 200));
     }
@@ -57,7 +59,7 @@
         const panel = document.querySelector('[data-acl-panel="' + activeTab + '"]');
         if (!panel) return;
 
-        panel.querySelectorAll('.acl-entity-row').forEach(function(row) {
+        panel.querySelectorAll('.acl-entity-row').forEach((row) => {
             const name = row.getAttribute('data-name') || '';
             const matchesSearch = !query || name.includes(query);
 
@@ -70,12 +72,12 @@
                 const data = getEntityData(entityType, entityId);
                 if (data) {
                     if (roleFilter) {
-                        matchesRole = data.roles && data.roles.some(function(r) {
+                        matchesRole = data.roles && data.roles.some((r) => {
                             return r.name === roleFilter && r.assigned;
                         });
                     }
                     if (deptFilter) {
-                        matchesDept = data.departments && data.departments.some(function(d) {
+                        matchesDept = data.departments && data.departments.some((d) => {
                             return d.name === deptFilter && d.assigned;
                         });
                     }
@@ -87,7 +89,7 @@
     }
 
     function initRowClicks() {
-        app.events.on('click', '.acl-entity-row', function(e, row) {
+        app.events.on('click', '.acl-entity-row', (e, row) => {
             if (e.target.closest('[data-no-row-click]') || e.target.tagName === 'INPUT') return;
             const entityType = row.getAttribute('data-entity-type');
             const entityId = row.getAttribute('data-entity-id');
@@ -96,11 +98,11 @@
     }
 
     function initCheckboxes() {
-        app.events.on('change', '.acl-select-all', function(e, selectAll) {
+        app.events.on('change', '.acl-select-all', (e, selectAll) => {
             const tabTarget = selectAll.getAttribute('data-acl-tab-target');
             const panel = document.querySelector('[data-acl-panel="' + tabTarget + '"]');
             if (!panel) return;
-            panel.querySelectorAll('.acl-entity-checkbox').forEach(function(cb) {
+            panel.querySelectorAll('.acl-entity-checkbox').forEach((cb) => {
                 cb.checked = selectAll.checked;
                 const key = cb.getAttribute('data-entity-type') + ':' + cb.getAttribute('data-entity-id');
                 if (cb.checked) {
@@ -112,7 +114,7 @@
             updateSelectionCount();
         });
 
-        app.events.on('change', '.acl-entity-checkbox', function(e, cb) {
+        app.events.on('change', '.acl-entity-checkbox', (e, cb) => {
             const key = cb.getAttribute('data-entity-type') + ':' + cb.getAttribute('data-entity-id');
             if (cb.checked) {
                 selectedEntities[key] = true;
@@ -125,7 +127,7 @@
 
     function clearSelection() {
         selectedEntities = {};
-        document.querySelectorAll('.acl-entity-checkbox, .acl-select-all').forEach(function(cb) {
+        document.querySelectorAll('.acl-entity-checkbox, .acl-select-all').forEach((cb) => {
             cb.checked = false;
         });
         updateSelectionCount();
@@ -162,12 +164,13 @@
 
         const body = document.getElementById('acl-panel-body');
         if (body) {
-            body.replaceChildren(buildPanelContent(data, entityType));
+            body.replaceChildren();
+            body.append(buildPanelContent(data, entityType));
         }
 
         if (body) {
-            body.querySelectorAll('input[name="department"]').forEach(function(cb) {
-                cb.addEventListener('change', function() {
+            body.querySelectorAll('input[name="department"]').forEach((cb) => {
+                cb.addEventListener('change', () => {
                     const row = cb.closest('.acl-dept-row');
                     if (!row) return;
                     const toggle = row.querySelector('.acl-default-toggle');
@@ -191,87 +194,38 @@
         if (panel) panel.classList.remove('open');
     }
 
-    function createRoleCheckbox(role) {
-        const label = document.createElement('label');
-        label.className = 'acl-checkbox-row';
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.name = 'role';
-        input.value = role.name;
-        if (role.assigned) input.checked = true;
-        const span = document.createElement('span');
-        span.className = 'acl-checkbox-label';
-        span.textContent = role.name;
-        label.append(input, span);
-        return label;
-    }
-
-    function createDeptRow(dept) {
-        const row = document.createElement('div');
-        row.className = 'acl-dept-row';
-
-        const label = document.createElement('label');
-        label.className = 'acl-checkbox-row';
-        label.style.flex = '1';
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.name = 'department';
-        input.value = dept.name;
-        if (dept.assigned) input.checked = true;
-        const span = document.createElement('span');
-        span.className = 'acl-checkbox-label';
-        span.textContent = dept.name + ' ';
-        const countSpan = document.createElement('span');
-        countSpan.className = 'acl-dept-count';
-        countSpan.textContent = '(' + dept.user_count + ' members)';
-        span.append(countSpan);
-        label.append(input, span);
-
-        const toggleLabel = document.createElement('label');
-        toggleLabel.className = 'acl-default-toggle' + (dept.assigned ? '' : ' disabled');
-        const defaultInput = document.createElement('input');
-        defaultInput.type = 'checkbox';
-        defaultInput.name = 'default_included';
-        defaultInput.value = dept.name;
-        if (dept.default_included) defaultInput.checked = true;
-        if (!dept.assigned) defaultInput.disabled = true;
-        const toggleSpan = document.createElement('span');
-        toggleSpan.className = 'acl-toggle-label';
-        toggleSpan.textContent = 'Default';
-        toggleLabel.append(defaultInput, toggleSpan);
-
-        row.append(label, toggleLabel);
-        return row;
-    }
-
     function buildPanelContent(entity, entityType) {
         const frag = document.createDocumentFragment();
 
-        const info = document.createElement('div');
-        info.className = 'acl-entity-info';
-        const primary = document.createElement('div');
-        primary.className = 'cell-primary';
-        primary.textContent = entity.name || entity.id;
-        info.append(primary);
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'acl-entity-info';
+        const primaryDiv = document.createElement('div');
+        primaryDiv.className = 'cell-primary';
+        primaryDiv.textContent = entity.name || entity.id;
+        infoDiv.append(primaryDiv);
         if (entity.description) {
-            const secondary = document.createElement('div');
-            secondary.className = 'cell-secondary';
-            secondary.textContent = entity.description;
-            info.append(secondary);
+            const secondaryDiv = document.createElement('div');
+            secondaryDiv.className = 'cell-secondary';
+            secondaryDiv.textContent = entity.description;
+            infoDiv.append(secondaryDiv);
         }
-        const badgeRow = document.createElement('div');
-        badgeRow.style.marginTop = 'var(--sp-space-2)';
+        const badgeWrap = document.createElement('div');
+        badgeWrap.style.marginTop = 'var(--sp-space-2)';
         const typeBadge = document.createElement('span');
         typeBadge.className = 'badge badge-blue';
         typeBadge.textContent = entityType.replace('_', ' ');
-        badgeRow.append(typeBadge);
-        badgeRow.append(document.createTextNode(' '));
+        badgeWrap.append(typeBadge, document.createTextNode(' '));
         const statusBadge = document.createElement('span');
-        statusBadge.className = entity.enabled ? 'badge badge-green' : 'badge badge-gray';
-        statusBadge.textContent = entity.enabled ? 'Active' : 'Disabled';
-        badgeRow.append(statusBadge);
-        info.append(badgeRow);
-        frag.append(info);
+        if (entity.enabled) {
+            statusBadge.className = 'badge badge-green';
+            statusBadge.textContent = 'Active';
+        } else {
+            statusBadge.className = 'badge badge-gray';
+            statusBadge.textContent = 'Disabled';
+        }
+        badgeWrap.append(statusBadge);
+        infoDiv.append(badgeWrap);
+        frag.append(infoDiv);
 
         const rolesSection = document.createElement('div');
         rolesSection.className = 'acl-panel-section';
@@ -283,8 +237,19 @@
         rolesDesc.textContent = 'Select which roles can access this entity. Empty means accessible to all.';
         rolesSection.append(rolesTitle, rolesDesc);
         if (entity.roles && entity.roles.length) {
-            entity.roles.forEach(function(role) {
-                rolesSection.append(createRoleCheckbox(role));
+            entity.roles.forEach((role) => {
+                const label = document.createElement('label');
+                label.className = 'acl-checkbox-row';
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.name = 'role';
+                input.value = role.name;
+                if (role.assigned) input.checked = true;
+                const span = document.createElement('span');
+                span.className = 'acl-checkbox-label';
+                span.textContent = role.name;
+                label.append(input, span);
+                rolesSection.append(label);
             });
         } else {
             const noRoles = document.createElement('p');
@@ -304,8 +269,39 @@
         deptDesc.textContent = 'Assign to departments. "Default" means auto-enabled and enforced for all department members.';
         deptSection.append(deptTitle, deptDesc);
         if (entity.departments && entity.departments.length) {
-            entity.departments.forEach(function(dept) {
-                deptSection.append(createDeptRow(dept));
+            entity.departments.forEach((dept) => {
+                const row = document.createElement('div');
+                row.className = 'acl-dept-row';
+                const label = document.createElement('label');
+                label.className = 'acl-checkbox-row';
+                label.style.flex = '1';
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.name = 'department';
+                input.value = dept.name;
+                if (dept.assigned) input.checked = true;
+                const span = document.createElement('span');
+                span.className = 'acl-checkbox-label';
+                span.textContent = dept.name + ' ';
+                const countSpan = document.createElement('span');
+                countSpan.className = 'acl-dept-count';
+                countSpan.textContent = '(' + dept.user_count + ' members)';
+                span.append(countSpan);
+                label.append(input, span);
+                const toggleLabel = document.createElement('label');
+                toggleLabel.className = 'acl-default-toggle' + (dept.assigned ? '' : ' disabled');
+                const defaultInput = document.createElement('input');
+                defaultInput.type = 'checkbox';
+                defaultInput.name = 'default_included';
+                defaultInput.value = dept.name;
+                if (dept.default_included) defaultInput.checked = true;
+                if (!dept.assigned) defaultInput.disabled = true;
+                const toggleSpan = document.createElement('span');
+                toggleSpan.className = 'acl-toggle-label';
+                toggleSpan.textContent = 'Default';
+                toggleLabel.append(defaultInput, toggleSpan);
+                row.append(label, toggleLabel);
+                deptSection.append(row);
             });
         } else {
             const noDepts = document.createElement('p');
@@ -326,7 +322,7 @@
 
         const rules = [];
 
-        body.querySelectorAll('input[name="role"]:checked').forEach(function(cb) {
+        body.querySelectorAll('input[name="role"]:checked').forEach((cb) => {
             rules.push({
                 rule_type: 'role',
                 rule_value: cb.value,
@@ -335,7 +331,7 @@
             });
         });
 
-        body.querySelectorAll('input[name="department"]:checked').forEach(function(cb) {
+        body.querySelectorAll('input[name="department"]:checked').forEach((cb) => {
             const deptName = cb.value;
             const defaultCb = body.querySelector('input[name="default_included"][value="' + deptName + '"]');
             rules.push({
@@ -358,11 +354,11 @@
         app.api('/access-control/entity/' + encodeURIComponent(entityType) + '/' + encodeURIComponent(entityId), {
             method: 'PUT',
             body: JSON.stringify({ rules: rules, sync_yaml: entityType === 'plugin' })
-        }).then(function() {
+        }).then(() => {
             if (app.Toast) app.Toast.show('Access rules updated', 'success');
             closeSidePanel();
             window.location.reload();
-        }).catch(function(err) {
+        }).catch((err) => {
             if (app.Toast) app.Toast.show(err.message || 'Failed to save rules', 'error');
             if (saveBtn) {
                 saveBtn.disabled = false;
@@ -396,16 +392,14 @@
         const body = document.getElementById('acl-bulk-body');
         if (!body) return;
 
-        const frag = document.createDocumentFragment();
+        body.replaceChildren();
 
         const intro = document.createElement('p');
         intro.style.cssText = 'margin-bottom:var(--sp-space-4);color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
-        const introStrong = document.createElement('strong');
-        introStrong.textContent = count;
-        intro.append(document.createTextNode('Applying to '));
-        intro.append(introStrong);
-        intro.append(document.createTextNode(' selected entities. This will replace existing rules.'));
-        frag.append(intro);
+        const strong = document.createElement('strong');
+        strong.textContent = count;
+        intro.append('Applying to ', strong, ' selected entities. This will replace existing rules.');
+        body.append(intro);
 
         const rolesSection = document.createElement('div');
         rolesSection.className = 'acl-panel-section';
@@ -414,30 +408,66 @@
         rolesTitle.textContent = 'Roles';
         rolesSection.append(rolesTitle);
         if (data && data.roles) {
-            data.roles.forEach(function(role) {
-                rolesSection.append(createRoleCheckbox(role));
+            data.roles.forEach((role) => {
+                const label = document.createElement('label');
+                label.className = 'acl-checkbox-row';
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.name = 'role';
+                input.value = role.name;
+                const span = document.createElement('span');
+                span.className = 'acl-checkbox-label';
+                span.textContent = role.name;
+                label.append(input, span);
+                rolesSection.append(label);
             });
         }
-        frag.append(rolesSection);
+        body.append(rolesSection);
 
         const deptSection = document.createElement('div');
         deptSection.className = 'acl-panel-section';
-        const deptTitle = document.createElement('h3');
-        deptTitle.className = 'acl-panel-section-title';
-        deptTitle.textContent = 'Departments';
-        deptSection.append(deptTitle);
+        const deptSectionTitle = document.createElement('h3');
+        deptSectionTitle.className = 'acl-panel-section-title';
+        deptSectionTitle.textContent = 'Departments';
+        deptSection.append(deptSectionTitle);
         if (data && data.departments) {
-            data.departments.forEach(function(dept) {
-                const deptCopy = { name: dept.name, user_count: dept.user_count, assigned: false, default_included: false };
-                deptSection.append(createDeptRow(deptCopy));
+            data.departments.forEach((dept) => {
+                const row = document.createElement('div');
+                row.className = 'acl-dept-row';
+                const label = document.createElement('label');
+                label.className = 'acl-checkbox-row';
+                label.style.flex = '1';
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.name = 'department';
+                input.value = dept.name;
+                const span = document.createElement('span');
+                span.className = 'acl-checkbox-label';
+                span.textContent = dept.name + ' ';
+                const countSpan = document.createElement('span');
+                countSpan.className = 'acl-dept-count';
+                countSpan.textContent = '(' + dept.user_count + ' members)';
+                span.append(countSpan);
+                label.append(input, span);
+                const toggleLabel = document.createElement('label');
+                toggleLabel.className = 'acl-default-toggle disabled';
+                const defaultInput = document.createElement('input');
+                defaultInput.type = 'checkbox';
+                defaultInput.name = 'default_included';
+                defaultInput.value = dept.name;
+                defaultInput.disabled = true;
+                const toggleSpan = document.createElement('span');
+                toggleSpan.className = 'acl-toggle-label';
+                toggleSpan.textContent = 'Default';
+                toggleLabel.append(defaultInput, toggleSpan);
+                row.append(label, toggleLabel);
+                deptSection.append(row);
             });
         }
-        frag.append(deptSection);
+        body.append(deptSection);
 
-        body.replaceChildren(frag);
-
-        body.querySelectorAll('input[name="department"]').forEach(function(cb) {
-            cb.addEventListener('change', function() {
+        body.querySelectorAll('input[name="department"]').forEach((cb) => {
+            cb.addEventListener('change', () => {
                 const row = cb.closest('.acl-dept-row');
                 if (!row) return;
                 const toggle = row.querySelector('.acl-default-toggle');
@@ -464,16 +494,16 @@
         if (!body) return;
 
         const entities = [];
-        Object.keys(selectedEntities).forEach(function(key) {
+        Object.keys(selectedEntities).forEach((key) => {
             const parts = key.split(':');
             entities.push({ entity_type: parts[0], entity_id: parts[1] });
         });
 
         const rules = [];
-        body.querySelectorAll('input[name="role"]:checked').forEach(function(cb) {
+        body.querySelectorAll('input[name="role"]:checked').forEach((cb) => {
             rules.push({ rule_type: 'role', rule_value: cb.value, access: 'allow', default_included: false });
         });
-        body.querySelectorAll('input[name="department"]:checked').forEach(function(cb) {
+        body.querySelectorAll('input[name="department"]:checked').forEach((cb) => {
             const deptName = cb.value;
             const defaultCb = body.querySelector('input[name="default_included"][value="' + deptName + '"]');
             rules.push({
@@ -484,7 +514,7 @@
             });
         });
 
-        const hasPlugins = entities.some(function(e) { return e.entity_type === 'plugin'; });
+        const hasPlugins = entities.some((e) => { return e.entity_type === 'plugin'; });
 
         const applyBtn = document.getElementById('acl-bulk-apply');
         if (applyBtn) {
@@ -495,11 +525,11 @@
         app.api('/access-control/bulk', {
             method: 'PUT',
             body: JSON.stringify({ entities: entities, rules: rules, sync_yaml: hasPlugins })
-        }).then(function() {
+        }).then(() => {
             if (app.Toast) app.Toast.show('Bulk assign complete', 'success');
             closeBulkPanel();
             window.location.reload();
-        }).catch(function(err) {
+        }).catch((err) => {
             if (app.Toast) app.Toast.show(err.message || 'Bulk assign failed', 'error');
             if (applyBtn) {
                 applyBtn.disabled = false;
@@ -514,7 +544,7 @@
         const rows = panel.querySelectorAll('.acl-entity-row');
         const total = rows.length;
         let covered = 0;
-        rows.forEach(function(r) {
+        rows.forEach((r) => {
             const indicator = r.querySelector('.acl-coverage-indicator');
             if (indicator) {
                 const parts = indicator.textContent.trim().split('/');
@@ -544,7 +574,7 @@
             clearTimeout(timer);
             const args = arguments;
             const ctx = this;
-            timer = setTimeout(function() { fn.apply(ctx, args); }, ms);
+            timer = setTimeout(() => { fn.apply(ctx, args); }, ms);
         };
     }
 

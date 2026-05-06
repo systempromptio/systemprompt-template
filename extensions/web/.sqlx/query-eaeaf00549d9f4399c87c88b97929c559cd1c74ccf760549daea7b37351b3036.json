@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT upa.user_plugin_id AS \"plugin_id!\", ua.agent_id AS \"entity_id!\", ua.name AS \"entity_name!\"\n          FROM user_plugin_agents upa\n          JOIN user_agents ua ON ua.id = upa.user_agent_id\n          WHERE upa.user_plugin_id = ANY($1)\n          ORDER BY upa.sort_order",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "plugin_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "entity_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "entity_name!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "eaeaf00549d9f4399c87c88b97929c559cd1c74ccf760549daea7b37351b3036"
+}

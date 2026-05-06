@@ -1,37 +1,94 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title}}
-    {{> components/page-hero}}
+    {{> components/page-header
+        title="Trace Explorer"
+        subtitle="Every gateway call, governance decision, and tool invocation grouped into a trace. Click any row to see the full waterfall."}}
 
-    <section aria-label="CLI command" class="mb-4">
-        <p class="text-secondary text-sm">Backed by <code class="code-inline">{{demo_script}}</code></p>
-        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
+    {{> components/time-range time_range}}
+    {{> components/identity-filter-ribbon filter_ribbon}}
+
+    <section class="trace-stats" aria-label="Trace summary">
+      <div class="trace-stats__row">
+        <div class="trace-stats__cell">
+          <span class="trace-stats__label">Traces</span>
+          <span class="trace-stats__value">{{stats.total_traces}}</span>
+        </div>
+        <div class="trace-stats__cell">
+          <span class="trace-stats__label">With errors</span>
+          <span class="trace-stats__value trace-stats__value--bad">{{stats.error_count}}</span>
+        </div>
+        <div class="trace-stats__cell">
+          <span class="trace-stats__label">With denies</span>
+          <span class="trace-stats__value trace-stats__value--bad">{{stats.deny_count}}</span>
+        </div>
+        <div class="trace-stats__cell">
+          <span class="trace-stats__label">p50</span>
+          <span class="trace-stats__value">{{stats.p50_ms}} ms</span>
+        </div>
+        <div class="trace-stats__cell">
+          <span class="trace-stats__label">p95</span>
+          <span class="trace-stats__value">{{stats.p95_ms}} ms</span>
+        </div>
+        <div class="trace-stats__cell">
+          <span class="trace-stats__label">p99</span>
+          <span class="trace-stats__value">{{stats.p99_ms}} ms</span>
+        </div>
+      </div>
     </section>
 
-    <section aria-label="Recent traces">
-        <h2 class="section-heading">Recent Request Traces</h2>
-        {{#if has_traces}}
-        {{#> components/data-table}}
-            <thead><tr><th class="col-date">Started</th><th>Session</th><th class="numeric">Events</th><th class="numeric">Tool Uses</th><th class="numeric">Errors</th><th class="numeric">Duration (ms)</th><th class="col-actions"></th></tr></thead>
-            <tbody>
-            {{#each traces}}
-            <tr>
-                <td class="col-date"><span class="date">{{formatDate started_at}}</span></td>
-                <td><code class="code-inline">{{session_id_short}}</code></td>
-                <td class="numeric">{{event_count}}</td>
-                <td class="numeric">{{tool_uses}}</td>
-                <td class="numeric">{{errors}}</td>
-                <td class="numeric">{{duration_ms}}</td>
-                <td class="col-actions"><a href="/admin/traces?session_id={{session_id}}" class="btn btn-secondary btn-sm">Inspect</a></td>
-            </tr>
-            {{/each}}
-            </tbody>
-        {{/components/data-table}}
-        {{else}}
-        {{> components/empty-state message="No traces in the last 7 days. Run demo/performance/01-request-tracing.sh to generate one."}}
-        {{/if}}
-    </section>
+    {{#if has_traces}}
+      {{#> components/data-table}}
+        <thead><tr>
+          <th class="col-date">Started</th>
+          <th>Trace</th>
+          <th>Identity</th>
+          <th>Model</th>
+          <th class="col-num">Spans</th>
+          <th class="col-num">Duration</th>
+          <th class="col-status">Flags</th>
+          <th class="col-actions"></th>
+        </tr></thead>
+        <tbody>
+        {{#each traces}}
+        <tr>
+          <td class="col-date" title="{{this.started_at}}">{{this.started_at_local}}</td>
+          <td>
+            <a href="{{this.detail_url}}" class="trace-row__id">
+              <code class="code-inline">{{this.session_id_short}}</code>
+            </a>
+            {{#if this.trace_id}}<div class="trace-row__trace">trace {{truncate this.trace_id 10}}</div>{{/if}}
+          </td>
+          <td>
+            {{#if this.user_id}}<code class="code-inline">{{truncate this.user_id 16}}</code>{{else}}—{{/if}}
+            {{#if this.agent_id}}<div class="trace-row__agent">{{this.agent_id}}</div>{{/if}}
+          </td>
+          <td>{{#if this.model}}<code class="code-inline">{{this.model}}</code>{{else}}—{{/if}}</td>
+          <td class="col-num">{{this.span_count}}</td>
+          <td class="col-num">{{this.duration_display}}</td>
+          <td class="col-status">
+            {{#if this.has_deny}}<span class="mcp-badge mcp-badge-danger">DENY</span>{{/if}}
+            {{#if this.has_error}}<span class="mcp-badge mcp-badge-warning">ERROR</span>{{/if}}
+            {{#unless this.has_deny}}{{#unless this.has_error}}<span class="mcp-badge mcp-badge-success">OK</span>{{/unless}}{{/unless}}
+          </td>
+          <td class="col-actions">
+            <a href="{{this.detail_url}}" class="btn btn-sm btn-outline">Waterfall</a>
+          </td>
+        </tr>
+        {{/each}}
+        </tbody>
+      {{/components/data-table}}
+
+      {{#if pagination.has_prev}}
+        <a href="{{pagination.prev_url}}" class="btn btn-sm">&larr; Prev</a>
+      {{/if}}
+      <span class="trace-paginate__info">
+        Page {{pagination.current_page}} of {{pagination.total_pages}} &middot; {{total_count}} traces
+      </span>
+      {{#if pagination.has_next}}
+        <a href="{{pagination.next_url}}" class="btn btn-sm">Next &rarr;</a>
+      {{/if}}
+    {{else}}
+      {{> components/empty-state message="No traces in the selected window. Adjust the time range or filters."}}
+    {{/if}}
     {{/inline}}
-    {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

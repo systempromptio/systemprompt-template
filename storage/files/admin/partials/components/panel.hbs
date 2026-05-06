@@ -1,0 +1,17 @@
+<article class="gf-panel{{#if span}} gf-panel--span-{{span}}{{/if}}">
+    <header class="gf-panel__header">
+        {{#if href}}
+        <a class="gf-panel__title" href="{{href}}">{{title}}</a>
+        {{else}}
+        <span class="gf-panel__title">{{title}}</span>
+        {{/if}}
+        {{#if subtitle}}<span class="gf-panel__subtitle">{{subtitle}}</span>{{/if}}
+        <span class="gf-panel__spacer"></span>
+        {{#if href}}
+        <a class="gf-panel__open" href="{{href}}" aria-label="Open {{title}}" title="Open {{title}}">&#x2197;</a>
+        {{/if}}
+    </header>
+    <div class="gf-panel__body">
+        {{> @partial-block}}
+    </div>
+</article>

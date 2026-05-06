@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE user_sessions\n        SET is_behavioral_bot = true,\n            behavioral_bot_reason = $1\n        WHERE session_id = $2\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "af31d0aa8c5dd6704a0ce5c5f529694f4dd38f0f996feb2606fabf8224068688"
+}

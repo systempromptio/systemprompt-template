@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM plugin_env_vars WHERE user_id = $1 AND plugin_id = $2 AND var_name = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e160d41d83ea41e6f964c5db955d1207cf05b267732a46cee2921596df68a50c"
+}

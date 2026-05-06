@@ -36,6 +36,7 @@ pub fn generate_plugin_token(
         permissions: vec![Permission::Service],
         roles: vec![],
         rate_limit_tier: RateLimitTier::Service,
+        department: None,
     };
 
     let token = generator.generate(&params).map_err(|e| {

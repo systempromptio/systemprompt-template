@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT entity_type, entity_id, rule_type, rule_value, access, justification\n        FROM access_control_rules\n        WHERE rule_type IN ('role', 'department')\n          AND rule_value <> '__default__'\n        ORDER BY entity_type, entity_id, access, rule_type, rule_value\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "entity_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "entity_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "rule_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "rule_value",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "access",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "justification",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "de8488b64f1e2b8c529a5be6a122372b1e65f7f6c4225d891e0892d72b953a13"
+}

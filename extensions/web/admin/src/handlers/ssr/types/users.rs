@@ -1,7 +1,5 @@
 use serde::Serialize;
 
-use super::gamification::EnrichedAchievementView;
-
 #[derive(Debug, Clone, Serialize)]
 pub struct EnrichedUserView {
     pub user_id: String,
@@ -20,6 +18,14 @@ pub struct EnrichedUserView {
     pub logins: i64,
     pub rank_name: String,
     pub xp: i64,
+    #[serde(default)]
+    pub department: String,
+    #[serde(default)]
+    pub assigned_skills_count: i64,
+    #[serde(default)]
+    pub assigned_marketplaces_count: i64,
+    #[serde(default)]
+    pub devices_count: i64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -38,7 +44,30 @@ pub struct UserDetailPageData {
     pub title: &'static str,
     pub user: Option<crate::types::UserDetail>,
     pub gamification: Option<crate::types::UserGamificationProfile>,
-    pub enriched_achievements: Vec<EnrichedAchievementView>,
-    pub achievements_count: usize,
     pub not_found: bool,
+    #[serde(default)]
+    pub user_department: String,
+    #[serde(default)]
+    pub user_assignments: UserAssignmentSummary,
+    #[serde(default)]
+    pub user_devices: Vec<UserDeviceView>,
+    #[serde(default)]
+    pub user_devices_count: i64,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct UserAssignmentSummary {
+    pub skills_count: i64,
+    pub marketplaces_count: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct UserDeviceView {
+    pub id: String,
+    pub name: String,
+    pub key_prefix: String,
+    pub platform: Option<String>,
+    pub app_version: Option<String>,
+    pub last_seen_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub revoked: bool,
 }

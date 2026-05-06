@@ -92,23 +92,16 @@ CREATE TABLE IF NOT EXISTS session_transcripts (
 );
 CREATE INDEX IF NOT EXISTS idx_session_transcripts_user ON session_transcripts(user_id, captured_at DESC);
 CREATE INDEX IF NOT EXISTS idx_session_transcripts_session ON session_transcripts(session_id, captured_at DESC);
+-- jsonb_path_ops over to_tsvector: we filter transcripts by structural containment
+-- (`transcript @> '[{"role":"user"}]'`-style) and substring search against textual
+-- content, not by linguistic relevance. jsonb_path_ops gives ~30% smaller indexes
+-- than the default jsonb_ops and is sufficient for @>; full-text ranking is not
+-- a requirement for the conversations page, so we skip the generated tsvector
+-- column and the trigger maintenance it would imply.
+CREATE INDEX IF NOT EXISTS idx_session_transcripts_jsonb ON session_transcripts USING GIN (transcript jsonb_path_ops);
 
-CREATE TABLE IF NOT EXISTS governance_decisions (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    session_id TEXT NOT NULL,
-    tool_name TEXT NOT NULL,
-    agent_id TEXT,
-    agent_scope TEXT,
-    decision TEXT NOT NULL CHECK (decision IN ('allow', 'deny')),
-    policy TEXT NOT NULL,
-    reason TEXT NOT NULL,
-    evaluated_rules JSONB DEFAULT '[]',
-    plugin_id TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_governance_decisions_user ON governance_decisions(user_id);
-CREATE INDEX IF NOT EXISTS idx_governance_decisions_session ON governance_decisions(session_id);
-CREATE INDEX IF NOT EXISTS idx_governance_decisions_decision ON governance_decisions(decision);
-CREATE INDEX IF NOT EXISTS idx_governance_decisions_created ON governance_decisions(created_at);
-CREATE INDEX IF NOT EXISTS idx_governance_decisions_rate_limit ON governance_decisions(session_id, user_id, created_at DESC);
+-- `governance_decisions` schema is owned by core's authz extension
+-- (`systemprompt_security::authz::AuthzExtension`). The table and its indexes
+-- are created from `crates/infra/security/src/authz/schema/governance_decisions.sql`
+-- before this analytics extension runs (migration_weight 110 vs analytics ~200).
+-- Triggers that depend on the table live in 11_audit_event_notify.sql.

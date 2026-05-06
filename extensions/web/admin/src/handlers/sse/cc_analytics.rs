@@ -1,21 +1,17 @@
-use std::collections::HashSet;
-
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::numeric;
 use crate::repositories::{apm_metrics, hooks_track, session_analyses};
 use crate::types::{
     conversation_analytics::{SessionEntityLink, SessionRating},
-    UserGamificationProfile, ENTITY_MCP_TOOL, ENTITY_SKILL,
+    ENTITY_SKILL,
 };
 
-use super::cc_types::{self, AchievementProgressEntry, EntityLinkEntry};
+use super::cc_types::{self, EntityLinkEntry};
 
 pub(super) struct AnalyticsInput<'a> {
     pub entity_links: &'a [(String, SessionEntityLink)],
     pub session_ratings: &'a [SessionRating],
-    pub gam: Option<&'a UserGamificationProfile>,
     pub apm_live: &'a apm_metrics::TodayApmLive,
 }
 
@@ -30,7 +26,6 @@ struct AnalyticsEvent<'a> {
     total_skills_available: usize,
     total_skills_used: usize,
     today_summary: cc_types::TodaySummaryEntry,
-    achievement_progress: Vec<AchievementProgressEntry>,
     hourly_breakdown: Vec<cc_types::HourlyEntry>,
     performance_summary: cc_types::PerformanceEntry,
 }
@@ -53,7 +48,7 @@ pub(super) async fn build_analytics_event(
     let hourly_breakdown = cc_types::build_hourly(&fetched.hourly_breakdown);
     let performance_summary = cc_types::build_performance(&fetched.perf_summary);
 
-    let entity_data = build_entity_data(pool, user_id, &fetched.unused_skills, input.gam).await;
+    let entity_data = build_entity_data(pool, user_id, &fetched.unused_skills).await;
 
     let entity_links: Vec<EntityLinkEntry<'_>> = input
         .entity_links
@@ -76,7 +71,6 @@ pub(super) async fn build_analytics_event(
         total_skills_available: entity_data.total_skills_available,
         total_skills_used: entity_data.total_skills_used,
         today_summary,
-        achievement_progress: entity_data.achievement_progress,
         hourly_breakdown,
         performance_summary,
     };
@@ -139,14 +133,12 @@ struct EntityData {
     adoption_pct: usize,
     total_skills_available: usize,
     total_skills_used: usize,
-    achievement_progress: Vec<AchievementProgressEntry>,
 }
 
 async fn build_entity_data(
     pool: &PgPool,
     user_id: &systemprompt::identifiers::UserId,
     unused_skills: &[String],
-    gam: Option<&UserGamificationProfile>,
 ) -> EntityData {
     let entity_usage =
         crate::repositories::conversation_analytics::fetch_entity_usage_summary(pool, user_id)
@@ -160,10 +152,6 @@ async fn build_entity_data(
         .iter()
         .filter(|e| e.entity_type == ENTITY_SKILL)
         .collect();
-    let mcp_usage: Vec<_> = entity_usage
-        .iter()
-        .filter(|e| e.entity_type == ENTITY_MCP_TOOL)
-        .collect();
 
     let total_skills_available = skills_usage.len() + unused_skills.len();
     let total_skills_used = skills_usage.len();
@@ -171,67 +159,9 @@ async fn build_entity_data(
         .checked_div(total_skills_available)
         .unwrap_or(0);
 
-    let achievement_progress = build_achievement_progress(gam, &skills_usage, &mcp_usage);
-
     EntityData {
         adoption_pct,
         total_skills_available,
         total_skills_used,
-        achievement_progress,
     }
-}
-
-fn build_achievement_progress(
-    gam: Option<&UserGamificationProfile>,
-    skills_usage: &[&crate::types::conversation_analytics::EntityUsageSummary],
-    mcp_usage: &[&crate::types::conversation_analytics::EntityUsageSummary],
-) -> Vec<AchievementProgressEntry> {
-    let mut result = Vec::new();
-    let Some(g) = gam else {
-        return result;
-    };
-
-    let unlocked_ids: HashSet<&str> = g
-        .achievements
-        .iter()
-        .map(|a| a.achievement_id.as_str())
-        .collect();
-    let skill_total: i64 = skills_usage.iter().map(|s| s.total_uses).sum();
-    let unique_skills = numeric::usize_to_i64(skills_usage.len());
-    let mcp_total: i64 = mcp_usage.iter().map(|m| m.total_uses).sum();
-    let unique_mcp = numeric::usize_to_i64(mcp_usage.len());
-
-    let milestones: Vec<(&str, &str, i64, i64)> = vec![
-        ("skill_use_1", "Skill Invoker", skill_total, 1),
-        ("skill_use_25", "Skill Enthusiast", skill_total, 25),
-        ("skill_use_100", "Skill Virtuoso", skill_total, 100),
-        ("skill_unique_5", "Skill Explorer", unique_skills, 5),
-        ("skill_unique_10", "Skill Polymath", unique_skills, 10),
-        ("mcp_use_1", "Server Link", mcp_total, 1),
-        ("mcp_use_25", "Server Regular", mcp_total, 25),
-        ("mcp_use_100", "Server Power User", mcp_total, 100),
-        ("mcp_use_500", "Server Master", mcp_total, 500),
-        ("mcp_unique_3", "Server Collector", unique_mcp, 3),
-        ("mcp_unique_5", "Server Network", unique_mcp, 5),
-    ];
-
-    for (id, name, current, threshold) in milestones {
-        if !unlocked_ids.contains(id) {
-            let remaining = (threshold - current).max(0);
-            let pct = if threshold > 0 {
-                ((current * 100) / threshold).min(100)
-            } else {
-                0
-            };
-            result.push(AchievementProgressEntry {
-                id,
-                name,
-                current,
-                threshold,
-                remaining,
-                pct,
-            });
-        }
-    }
-    result
 }

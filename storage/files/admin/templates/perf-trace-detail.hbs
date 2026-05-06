@@ -1,0 +1,98 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    <a href="{{back_url}}" class="back-link">&larr; All traces</a>
+
+    {{> components/page-header
+        title=title
+        subtitle="Span-by-span waterfall of one trace. Each bar is colored by its kind; click for the chain envelope."}}
+
+    <section class="trace-detail__summary" aria-label="Trace summary">
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Session</span>
+        <code class="code-inline" title="{{summary.session_id}}">{{summary.session_id_short}}</code>
+      </div>
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Started</span>
+        <span title="{{summary.started_at}}">{{summary.started_at_local}}</span>
+      </div>
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Duration</span>
+        <span>{{summary.duration_display}}</span>
+      </div>
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Identity</span>
+        <span>{{summary.identity}}</span>
+      </div>
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Spans</span>
+        <span>{{summary.span_count}}</span>
+      </div>
+      {{#if summary.deny_count}}
+        <div class="trace-detail__field">
+          <span class="trace-detail__label">Denies</span>
+          <span class="text-danger">{{summary.deny_count}}</span>
+        </div>
+      {{/if}}
+      {{#if summary.error_count}}
+        <div class="trace-detail__field">
+          <span class="trace-detail__label">Errors</span>
+          <span class="text-warning">{{summary.error_count}}</span>
+        </div>
+      {{/if}}
+    </section>
+
+    <section class="waterfall" aria-labelledby="waterfall-title">
+      <div class="portfolio-section__header">
+        <h2 class="portfolio-section__title" id="waterfall-title">Waterfall</h2>
+        <ul class="waterfall__legend" aria-hidden="true">
+          <li><span class="waterfall__swatch waterfall__swatch--gateway"></span> Gateway</li>
+          <li><span class="waterfall__swatch waterfall__swatch--governance"></span> Governance</li>
+          <li><span class="waterfall__swatch waterfall__swatch--tool"></span> Tool</li>
+          <li><span class="waterfall__swatch waterfall__swatch--model"></span> Model</li>
+          <li><span class="waterfall__swatch waterfall__swatch--spawn"></span> Spawn</li>
+        </ul>
+      </div>
+      <div id="waterfall-root" class="waterfall__root" data-waterfall></div>
+      <script type="application/json" id="trace-spans">{{{spans_payload}}}</script>
+    </section>
+
+    <section aria-labelledby="span-list-title">
+      <div class="portfolio-section__header">
+        <h2 class="portfolio-section__title" id="span-list-title">Span list</h2>
+      </div>
+      {{#> components/data-table}}
+        <thead><tr>
+          <th class="col-date">Started</th>
+          <th>Kind</th>
+          <th>Name</th>
+          <th class="col-num">Duration</th>
+          <th class="col-status">Status</th>
+          <th class="col-actions"></th>
+        </tr></thead>
+        <tbody>
+        {{#each spans}}
+          <tr>
+            <td class="col-date">{{this.started_at}}</td>
+            <td>
+              <span class="waterfall__swatch waterfall__swatch--{{this.kind}}"></span>
+              {{this.kind}}
+            </td>
+            <td><code class="code-inline">{{this.name}}</code></td>
+            <td class="col-num">{{this.duration_ms}} ms</td>
+            <td class="col-status">
+              {{#if (eq this.status "deny")}}<span class="mcp-badge mcp-badge-danger">DENY</span>{{/if}}
+              {{#if (eq this.status "error")}}<span class="mcp-badge mcp-badge-warning">ERROR</span>{{/if}}
+              {{#if (eq this.status "ok")}}<span class="mcp-badge mcp-badge-success">OK</span>{{/if}}
+              {{#if (eq this.status "pending")}}<span class="mcp-badge">PENDING</span>{{/if}}
+            </td>
+            <td class="col-actions">
+              <button type="button" class="btn btn-sm btn-outline"
+                      data-chain-id="{{this.id}}">Chain</button>
+            </td>
+          </tr>
+        {{/each}}
+        </tbody>
+      {{/components/data-table}}
+    </section>
+    {{/inline}}
+{{/layout}}

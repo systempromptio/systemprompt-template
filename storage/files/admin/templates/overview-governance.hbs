@@ -1,0 +1,204 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header
+        title="Governance cockpit"
+        subtitle="What came in, what was allowed or denied, which policies and hooks are enforcing — at a glance."}}
+
+    <section class="gov-toolbar" aria-label="Time window">
+        <span class="gov-toolbar__label">Window</span>
+        <div class="gov-toolbar__presets" role="tablist">
+            {{#each time_presets}}
+            <a class="gov-toolbar__preset{{#if active}} is-active{{/if}}"
+               href="{{href}}"
+               role="tab"
+               aria-selected="{{#if active}}true{{else}}false{{/if}}">{{label}}</a>
+            {{/each}}
+        </div>
+    </section>
+
+    <section class="kpi-strip" aria-label="Governance KPIs">
+        <div class="kpi-card">
+            <span class="kpi-card__label">Requests in</span>
+            <span class="kpi-card__value" data-kpi="total">{{kpis.total}}</span>
+            <span class="kpi-card__sub">decisions in window</span>
+        </div>
+        <div class="kpi-card kpi-card--ok">
+            <span class="kpi-card__label">Allowed</span>
+            <span class="kpi-card__value" data-kpi="allowed">{{kpis.allowed}}</span>
+            <span class="kpi-card__sub" data-kpi="allow_rate">{{kpis.allow_rate_display}}</span>
+        </div>
+        <div class="kpi-card{{#if kpis.denied_raw}} kpi-card--danger{{/if}}">
+            <span class="kpi-card__label">Denied</span>
+            <span class="kpi-card__value" data-kpi="denied">{{kpis.denied}}</span>
+            <span class="kpi-card__sub" data-kpi="deny_rate">{{kpis.deny_rate_display}}</span>
+        </div>
+        <div class="kpi-card{{#if kpis.secret_breaches_raw}} kpi-card--danger{{/if}}">
+            <span class="kpi-card__label">Secret breaches</span>
+            <span class="kpi-card__value" data-kpi="secret_breaches">{{kpis.secret_breaches}}</span>
+            <span class="kpi-card__sub">blocked by secret_scan</span>
+        </div>
+    </section>
+
+    <section class="overview-pane gov-chart-pane">
+        <h3 class="section-title">Allow vs deny over time</h3>
+        {{#if chart.has_data}}
+        <div class="gov-chart" role="img" aria-label="Allow vs deny across the selected window">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="gov-chart__svg">
+                {{#each chart.buckets}}
+                <rect class="gov-chart__bar gov-chart__bar--allow"
+                      x="{{x}}" y="{{allow_y}}" width="{{w}}" height="{{allow_h}}">
+                    <title>bucket {{i}} — allow {{allow}} · deny {{deny}}</title>
+                </rect>
+                {{#if deny}}
+                <rect class="gov-chart__bar gov-chart__bar--deny"
+                      x="{{x}}" y="{{deny_y}}" width="{{w}}" height="{{deny_h}}">
+                    <title>bucket {{i}} — deny {{deny}}</title>
+                </rect>
+                {{/if}}
+                {{/each}}
+            </svg>
+            <div class="gov-chart__legend">
+                <span class="gov-chart__legend-item gov-chart__legend-item--allow">Allow</span>
+                <span class="gov-chart__legend-item gov-chart__legend-item--deny">Deny</span>
+            </div>
+        </div>
+        {{else}}
+        <p class="gov-empty">No decisions recorded in this window. Run <code class="code-inline">./demo/governance/04-governance-happy.sh</code> to populate the cockpit.</p>
+        {{/if}}
+    </section>
+
+    <section class="overview-pane">
+        <div class="gov-section-head">
+            <h3 class="section-title">Policies enforcing</h3>
+            <a class="gov-section-head__link" href="/admin/governance/decisions">All decisions →</a>
+        </div>
+        {{#if has_policies}}
+        <table class="gov-table" data-table="policies">
+            <thead>
+                <tr>
+                    <th scope="col">Policy</th>
+                    <th scope="col" class="num">Allowed</th>
+                    <th scope="col" class="num">Denied</th>
+                    <th scope="col" class="num">Deny rate</th>
+                    <th scope="col">Last fired</th>
+                    <th scope="col" class="num">Detail</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each policies}}
+                <tr data-policy-row="{{policy}}" class="gov-table__row gov-table__row--{{tone}}">
+                    <td><code class="code-inline">{{policy}}</code></td>
+                    <td class="num">{{allowed}}</td>
+                    <td class="num{{#if denied_raw}} num--danger{{/if}}">{{denied}}</td>
+                    <td class="num">{{deny_rate}}</td>
+                    <td><span class="gov-table__time" title="{{last_at}}">{{last_fired}}</span></td>
+                    <td class="num"><a class="gov-table__link" href="{{detail_href}}">→</a></td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        {{else}}
+        <p class="gov-empty">No policy decisions recorded yet.</p>
+        {{/if}}
+    </section>
+
+    <section class="overview-pane">
+        <div class="gov-section-head">
+            <h3 class="section-title">Hooks installed
+                <span class="gov-section-head__count">{{hooks_enabled}} / {{hooks_total}} enabled</span>
+            </h3>
+            <a class="gov-section-head__link" href="/admin/governance/hooks">All hooks →</a>
+        </div>
+        {{#if has_hooks}}
+        <table class="gov-table" data-table="hooks">
+            <thead>
+                <tr>
+                    <th scope="col">Hook</th>
+                    <th scope="col">Plugin</th>
+                    <th scope="col">Event</th>
+                    <th scope="col">Matcher</th>
+                    <th scope="col">Mode</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="num">Detail</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each hooks}}
+                <tr data-hook-row="{{id}}" class="gov-table__row{{#unless valid}} gov-table__row--danger{{/unless}}">
+                    <td>{{name}}</td>
+                    <td><code class="code-inline">{{plugin_id}}</code></td>
+                    <td>{{event}}</td>
+                    <td><code class="code-inline">{{matcher}}</code></td>
+                    <td>{{#if is_async}}async{{else}}sync{{/if}}</td>
+                    <td>
+                        {{#if enabled}}
+                        <span class="gov-pill gov-pill--ok">enabled</span>
+                        {{else}}
+                        <span class="gov-pill gov-pill--muted">disabled</span>
+                        {{/if}}
+                        {{#unless valid}}<span class="gov-pill gov-pill--danger">invalid</span>{{/unless}}
+                    </td>
+                    <td class="num"><a class="gov-table__link" href="{{detail_href}}">→</a></td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        {{else}}
+        <p class="gov-empty">No hooks configured. Hooks live under <code class="code-inline">services/plugins/&lt;plugin&gt;/config.yaml</code>.</p>
+        {{/if}}
+    </section>
+
+    <div class="overview-row">
+        <section class="overview-pane">
+            <h3 class="section-title">Top denied tools</h3>
+            {{#if has_denies}}
+            <ul class="rank-list">
+                {{#each top_denies}}
+                <li class="rank-list__row">
+                    <span class="rank-list__label"><code class="code-inline">{{label}}</code></span>
+                    <span class="mcp-badge mcp-badge-danger">{{count}}</span>
+                </li>
+                {{/each}}
+            </ul>
+            {{else}}
+            <p class="gov-empty">No denials in this window.</p>
+            {{/if}}
+        </section>
+
+        <section class="overview-pane">
+            <h3 class="section-title">Recent denials
+                <span class="live-dot live-dot--danger" aria-hidden="true"></span>
+            </h3>
+            {{#if has_denials}}
+            <ul class="live-ticker live-ticker--denials" id="gov-denials" data-max="50" aria-live="polite">
+                {{#each recent_denials}}
+                <li>
+                    <span class="live-ticker__time">{{time}}</span>
+                    <span class="live-ticker__msg">{{user_id}} → <code class="code-inline">{{tool}}</code> · {{policy}}</span>
+                    <a class="live-ticker__tag {{#if is_breach}}live-ticker__tag--breach{{else}}live-ticker__tag--deny{{/if}}"
+                       href="{{detail_href}}"
+                       title="{{reason}}">{{#if is_breach}}BREACH{{else}}DENY{{/if}}</a>
+                </li>
+                {{/each}}
+            </ul>
+            {{else}}
+            <p class="gov-empty">No denials in this window.</p>
+            {{/if}}
+        </section>
+    </div>
+
+    <p class="text-tertiary text-sm overview-help">
+        Deep-link: <a href="/admin/governance/decisions">Audit trail</a> ·
+        <a href="/admin/governance/flow">Decision flow</a> ·
+        <a href="/admin/governance/decisions/portfolio">Portfolio</a> ·
+        <a href="/admin/governance/hooks">Hooks</a>
+    </p>
+    {{/inline}}
+    {{#*inline "head_extra"}}
+    <link rel="stylesheet" href="/css/overview-live.css?v={{css_version}}">
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script type="module" src="/js/pages/admin-overview-governance.js?v={{css_version}}"
+            data-sse-url="{{sse_url}}" defer></script>
+    {{/inline}}
+{{/layout}}

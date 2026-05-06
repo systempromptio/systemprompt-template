@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE marketplace_sync_status\n        SET sync_error = $2, dirty = false\n        WHERE user_id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7cd747bdb11ebc50b4f0fdeafe5a454fe150445f4ddfcb94416d5bfadd35719e"
+}

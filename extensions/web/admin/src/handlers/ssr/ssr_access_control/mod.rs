@@ -1,12 +1,17 @@
+//! SSR for `/admin/access-control` — unified Access Control page.
+//!
+//! Three-pane layout:
+//!   - Left: Departments tree (DB) with member chips.
+//!   - Center: department editor or user permission matrix (matrix loads via JS).
+//!   - Toolbar: source-of-truth status + "Show as YAML" + filters.
+
 mod builders;
 
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::access_control::AccessControlRule;
-use crate::types::{DepartmentStats, MarketplaceContext, UserContext};
+use crate::types::{MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, State},
     http::StatusCode,
@@ -16,74 +21,37 @@ use serde_json::json;
 use sqlx::PgPool;
 
 use super::ACCESS_DENIED_HTML;
-use builders::{build_agents_json, build_departments_json, build_mcp_json, build_plugins_json};
 
-struct AccessControlData {
-    all_rules: Vec<AccessControlRule>,
-    departments: Vec<DepartmentStats>,
+#[derive(Debug, sqlx::FromRow)]
+struct UserListRow {
+    id: String,
+    email: String,
+    display_name: Option<String>,
+    roles: Vec<String>,
+    department: String,
+    is_active: bool,
 }
 
-fn load_filesystem_entities(
-    services_path: &std::path::Path,
-) -> (
-    Vec<crate::types::PluginOverview>,
-    Vec<crate::types::AgentDetail>,
-    Vec<crate::types::McpServerDetail>,
-) {
-    let admin_roles = vec!["admin".to_string()];
-    let plugins =
-        repositories::list_plugins_for_roles(services_path, &admin_roles).unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list plugins");
-            vec![]
-        });
-
-    let agents = repositories::list_agents(services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to list agents");
-        vec![]
-    });
-
-    let mcp_servers =
-        repositories::mcp_servers::list_mcp_servers(services_path).unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list MCP servers");
-            vec![]
-        });
-
-    (plugins, agents, mcp_servers)
-}
-
-async fn load_access_control_data(pool: &PgPool) -> AccessControlData {
-    let (rules_res, dept_res) = tokio::join!(
-        repositories::access_control::list_all_rules(pool),
-        repositories::fetch_department_stats(pool),
-    );
-
-    let all_rules = rules_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch access control rules");
-        vec![]
-    });
-
-    let departments = dept_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch department stats");
-        vec![]
-    });
-
-    AccessControlData {
-        all_rules,
-        departments,
-    }
-}
-
-fn build_rules_map(
-    all_rules: &[AccessControlRule],
-) -> HashMap<(String, String), Vec<&AccessControlRule>> {
-    let mut rules_map: HashMap<(String, String), Vec<&AccessControlRule>> = HashMap::new();
-    for rule in all_rules {
-        rules_map
-            .entry((rule.entity_type.clone(), rule.entity_id.clone()))
-            .or_default()
-            .push(rule);
-    }
-    rules_map
+async fn fetch_users_for_tree(pool: &PgPool) -> Vec<UserListRow> {
+    sqlx::query_as::<_, UserListRow>(
+        r"SELECT
+              u.id,
+              u.email,
+              COALESCE(u.display_name, u.full_name, u.name) AS display_name,
+              u.roles,
+              COALESCE(u.department, '') AS department,
+              (u.status = 'active') AS is_active
+           FROM users u
+           WHERE NOT ('anonymous' = ANY(u.roles))
+             AND u.email NOT LIKE '%@anonymous.local'
+           ORDER BY COALESCE(u.department, ''), COALESCE(u.display_name, u.email)",
+    )
+    .fetch_all(pool)
+    .await
+    .unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to fetch users for access-control tree");
+        Vec::new()
+    })
 }
 
 pub async fn access_control_page(
@@ -101,64 +69,67 @@ pub async fn access_control_page(
         Err(r) => return *r,
     };
 
-    let (plugins, agents, mcp_servers) = load_filesystem_entities(&services_path);
-    let ac_data = load_access_control_data(&pool).await;
-    let data = assemble_page_data(&services_path, &plugins, &agents, &mcp_servers, &ac_data);
+    let dept_stats = repositories::fetch_department_stats(&pool)
+        .await
+        .unwrap_or_default();
+    let users = fetch_users_for_tree(&pool).await;
+    let known_roles = vec!["admin", "developer", "analyst", "viewer"];
+
+    // Lightweight catalogue of every entity admins might want to assign
+    // department/role rules to. The user-permission matrix loads its own rich
+    // data via the `/api/admin/access-control/users/{id}/matrix` endpoint.
+    let entity_catalogue = builders::build_entity_catalogue(&services_path);
+
+    // Department buckets: render as { department: "...", users: [...] }.
+    let mut buckets: std::collections::BTreeMap<String, Vec<&UserListRow>> =
+        std::collections::BTreeMap::new();
+    for u in &users {
+        buckets.entry(u.department.clone()).or_default().push(u);
+    }
+    let dept_groups: Vec<serde_json::Value> = dept_stats
+        .iter()
+        .map(|d| {
+            let users_in: &[&UserListRow] = buckets
+                .get(&d.department)
+                .map_or(&[][..], Vec::as_slice);
+            json!({
+                "name": d.department,
+                "user_count": d.user_count,
+                "active_count": d.active_count,
+                "users": users_in.iter().map(serialize_user).collect::<Vec<_>>(),
+            })
+        })
+        .collect();
+
+    let unassigned_users: Vec<serde_json::Value> = buckets
+        .get("")
+        .map(|v| v.iter().map(serialize_user).collect())
+        .unwrap_or_default();
+
+    let unassigned_count = unassigned_users.len();
+    let data = json!({
+        "page": "access-control",
+        "title": "Access Control",
+        "known_roles": known_roles,
+        "departments": dept_groups,
+        "unassigned_users": unassigned_users,
+        "unassigned_count": unassigned_count,
+        "entity_catalogue": entity_catalogue,
+        "stats": {
+            "department_count": dept_stats.len(),
+            "user_count": users.len(),
+        },
+    });
 
     super::render_page(&engine, "access-control", &data, &user_ctx, &mkt_ctx)
 }
 
-fn assemble_page_data(
-    services_path: &std::path::Path,
-    plugins: &[crate::types::PluginOverview],
-    agents: &[crate::types::AgentDetail],
-    mcp_servers: &[crate::types::McpServerDetail],
-    ac_data: &AccessControlData,
-) -> serde_json::Value {
-    let rules_map = build_rules_map(&ac_data.all_rules);
-    let known_roles = vec!["admin", "developer", "analyst", "viewer"];
-    let dept_names: Vec<&str> = ac_data
-        .departments
-        .iter()
-        .map(|d| d.department.as_str())
-        .collect();
-
-    let plugins_json = build_plugins_json(
-        services_path,
-        plugins,
-        &rules_map,
-        &known_roles,
-        &dept_names,
-        &ac_data.departments,
-    );
-    let agents_json = build_agents_json(
-        agents,
-        &rules_map,
-        &known_roles,
-        &dept_names,
-        &ac_data.departments,
-    );
-    let mcp_json = build_mcp_json(
-        mcp_servers,
-        &rules_map,
-        &known_roles,
-        &dept_names,
-        &ac_data.departments,
-    );
-
+fn serialize_user(u: &&UserListRow) -> serde_json::Value {
     json!({
-        "page": "access-control",
-        "title": "Access Control",
-        "plugins": plugins_json,
-        "agents": agents_json,
-        "mcp_servers": mcp_json,
-        "departments": build_departments_json(&ac_data.departments),
-        "known_roles": known_roles,
-        "stats": {
-            "plugin_count": plugins.len(),
-            "agent_count": agents.len(),
-            "mcp_count": mcp_servers.len(),
-            "department_count": ac_data.departments.len(),
-        },
+        "id": u.id,
+        "email": u.email,
+        "display_name": u.display_name.clone().unwrap_or_else(|| u.email.clone()),
+        "roles": u.roles,
+        "is_active": u.is_active,
     })
 }

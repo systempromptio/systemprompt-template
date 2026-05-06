@@ -1,0 +1,83 @@
+{{!-- Chain-of-custody drawer. Empty shell; populated by chain-drawer.js after
+      fetching /admin/api/chain/:id. Triggered by any [data-chain-id] click or
+      ?chain=<id> URL param. --}}
+<div class="chain-drawer" id="chain-drawer" hidden role="dialog" aria-modal="true"
+     aria-labelledby="chain-drawer-title" tabindex="-1">
+  <div class="chain-drawer__overlay" data-chain-close></div>
+  <aside class="chain-drawer__panel" role="document">
+    <header class="chain-drawer__header">
+      <div class="chain-drawer__header-row">
+        <h2 class="chain-drawer__title" id="chain-drawer-title">Chain of custody</h2>
+        <button type="button" class="chain-drawer__close" data-chain-close
+                aria-label="Close">&times;</button>
+      </div>
+      <div class="chain-drawer__ids">
+        <span class="chain-drawer__id-label">trace_id</span>
+        <code class="chain-drawer__id" data-chain-trace-id>—</code>
+        <button type="button" class="chain-drawer__copy" data-chain-copy="trace_id"
+                aria-label="Copy trace id">⧉</button>
+      </div>
+      <div class="chain-drawer__status-row">
+        <span class="chain-drawer__pill" data-chain-status>—</span>
+        <span class="chain-drawer__identity" data-chain-identity></span>
+      </div>
+      <dl class="chain-drawer__totals">
+        <div><dt>Decisions</dt><dd data-chain-total="decisions">—</dd></div>
+        <div><dt>Denies</dt><dd data-chain-total="denies">—</dd></div>
+        <div><dt>Cost</dt><dd data-chain-total="cost">—</dd></div>
+        <div><dt>Tokens in/out</dt><dd data-chain-total="tokens">—</dd></div>
+      </dl>
+    </header>
+
+    <ol class="chain-drawer__stepper" data-chain-stepper>
+      <li class="chain-drawer__stage" data-stage="scope">
+        <span class="chain-drawer__stage-name">Scope</span>
+        <span class="chain-drawer__stage-state">pending</span>
+      </li>
+      <li class="chain-drawer__stage" data-stage="secret_scan">
+        <span class="chain-drawer__stage-name">Secret-Scan</span>
+        <span class="chain-drawer__stage-state">pending</span>
+      </li>
+      <li class="chain-drawer__stage" data-stage="blocklist">
+        <span class="chain-drawer__stage-name">Blocklist</span>
+        <span class="chain-drawer__stage-state">pending</span>
+      </li>
+      <li class="chain-drawer__stage" data-stage="rate_limit">
+        <span class="chain-drawer__stage-name">Rate-Limit</span>
+        <span class="chain-drawer__stage-state">pending</span>
+      </li>
+    </ol>
+
+    <section class="chain-drawer__section">
+      <h3>Prompt &amp; Response</h3>
+      <div class="chain-drawer__transcript" data-chain-transcript>
+        <p class="chain-drawer__empty">No transcript captured.</p>
+      </div>
+    </section>
+
+    <section class="chain-drawer__section">
+      <h3>Tool calls</h3>
+      <ul class="chain-drawer__events" data-chain-events>
+        <li class="chain-drawer__empty">No tool calls.</li>
+      </ul>
+    </section>
+
+    <section class="chain-drawer__section">
+      <h3>AI requests &amp; cost</h3>
+      <table class="chain-drawer__requests" data-chain-requests>
+        <thead>
+          <tr>
+            <th>Time</th><th>Model</th><th>Status</th>
+            <th>Tokens</th><th>Latency</th><th>Cost</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <details class="chain-drawer__raw">
+      <summary>Raw envelope</summary>
+      <div class="chain-drawer__raw-tree" data-chain-raw></div>
+    </details>
+  </aside>
+</div>

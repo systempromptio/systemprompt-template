@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     middleware as axum_middleware,
-    routing::{get, post, put},
+    routing::{get, patch, post, put},
     Router,
 };
 use sqlx::PgPool;
@@ -22,6 +22,15 @@ pub fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<PgPool>
 
 fn build_admin_read_routes_inner(read_pool: &Arc<PgPool>) -> Router {
     Router::new()
+        .route("/gateway", get(handlers::get_gateway_handler))
+        .route(
+            "/gateway/catalog/for-user/{user_id}",
+            get(handlers::gateway_catalog::for_user_handler),
+        )
+        .route(
+            "/gateway/acl/detect",
+            get(handlers::gateway_catalog::detect_handler),
+        )
         .route("/users", get(handlers::list_users_handler))
         .route(
             "/users/{user_id}/detail",
@@ -39,14 +48,56 @@ fn build_admin_read_routes_inner(read_pool: &Arc<PgPool>) -> Router {
             get(handlers::access_control::access_control_departments_handler),
         )
         .route(
+            "/access-control/users/{user_id}/matrix",
+            get(handlers::access_control::user_matrix_handler),
+        )
+        .route(
+            "/access-control/yaml-snapshot",
+            get(handlers::access_control::yaml_snapshot_handler),
+        )
+        .route(
+            "/users/roles",
+            get(handlers::gateway_access::list_distinct_roles_handler),
+        )
+        .route(
+            "/users/search",
+            get(handlers::gateway_access::search_users_handler),
+        )
+        .route(
+            "/access-control/entity/{entity_type}/{entity_id}/access",
+            get(handlers::entity_access::list_entity_access_handler),
+        )
+        .route(
+            "/access-control/entity-access/all",
+            get(handlers::entity_access::list_all_entity_access_handler),
+        )
+        .route(
             "/org/marketplaces",
             get(handlers::org_marketplaces::list_org_marketplaces_handler),
+        )
+        .route(
+            "/management/departments",
+            get(handlers::departments::list_departments_handler),
         )
         .with_state(Arc::clone(read_pool))
 }
 
 fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
     Router::new()
+        .route("/gateway", patch(handlers::update_gateway_settings_handler))
+        .route(
+            "/gateway/routes",
+            post(handlers::create_gateway_route_handler),
+        )
+        .route(
+            "/gateway/routes/{idx}",
+            patch(handlers::update_gateway_route_handler)
+                .delete(handlers::delete_gateway_route_handler),
+        )
+        .route(
+            "/gateway/routes/reorder",
+            post(handlers::reorder_gateway_routes_handler),
+        )
         .route("/users", post(handlers::create_user_handler))
         .route(
             "/users/{user_id}",
@@ -73,6 +124,22 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             put(handlers::access_control::bulk_assign_handler),
         )
         .route(
+            "/access-control/entity/{entity_type}/{entity_id}/rules",
+            post(handlers::entity_access::upsert_entity_rule_handler),
+        )
+        .route(
+            "/access-control/entity/{entity_type}/{entity_id}/rules/{rule_id}",
+            axum::routing::delete(handlers::entity_access::delete_entity_rule_handler),
+        )
+        .route(
+            "/access-control/entity/{entity_type}/{entity_id}/default",
+            patch(handlers::entity_access::set_entity_default_handler),
+        )
+        .route(
+            "/access-control/bulk-template",
+            post(handlers::entity_access::apply_template_handler),
+        )
+        .route(
             "/org/marketplaces",
             post(handlers::org_marketplaces::create_org_marketplace_handler),
         )
@@ -92,6 +159,19 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
         .route(
             "/org/marketplaces/{id}/publish",
             post(handlers::org_marketplaces::publish_marketplace_handler),
+        )
+        .route(
+            "/management/departments",
+            post(handlers::departments::create_department_handler),
+        )
+        .route(
+            "/management/departments/{id}",
+            put(handlers::departments::update_department_handler)
+                .delete(handlers::departments::delete_department_handler),
+        )
+        .route(
+            "/management/users/{user_id}/department",
+            put(handlers::departments::assign_user_to_department_handler),
         )
         .with_state(Arc::clone(write_pool))
 }

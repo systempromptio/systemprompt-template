@@ -1,0 +1,69 @@
+{{!-- transcript-turn: one chat-bubble row in the Page-4 right pane.
+      Expects @root.can_view_pii to gate the optional raw block. --}}
+<article class="transcript-turn transcript-turn--{{turn.role}}{{#if turn.governance.decision}} is-{{turn.governance.decision}}{{/if}}"
+         data-turn-id="{{turn.id}}"
+         data-ordinal="{{turn.ordinal}}"
+         id="turn-{{turn.ordinal}}">
+
+    <header class="transcript-turn__meta">
+        <span class="transcript-turn__role-pill transcript-turn__role-pill--{{turn.role}}">{{turn.role}}</span>
+        <span class="transcript-turn__ordinal">#{{turn.ordinal}}</span>
+        {{#if turn.model}}<span class="transcript-turn__model">{{turn.model}}</span>{{/if}}
+        {{#if turn.ts}}
+            <time class="transcript-turn__ts" datetime="{{turn.ts}}" title="{{turn.ts}}">{{relativeTime turn.ts}}</time>
+        {{/if}}
+        {{#if turn.latency_ms}}
+            <span class="transcript-turn__latency">{{turn.latency_ms}}ms</span>
+        {{/if}}
+        {{#if turn.governance}}
+            {{> components/badge color=(governanceColor turn.governance.decision) text=turn.governance.decision}}
+        {{/if}}
+        {{#if turn.anomaly_count}}
+            <span class="transcript-turn__anomaly" title="{{turn.anomaly_count}} anomalies">&#9888; {{turn.anomaly_count}}</span>
+        {{/if}}
+        <span class="transcript-turn__spacer"></span>
+        {{#if turn.governance.trace_id}}
+            <a class="transcript-turn__chain-link" href="{{turn.chain_url}}" data-chain-id="{{turn.governance.trace_id}}">Open chain &rarr;</a>
+        {{/if}}
+    </header>
+
+    <div class="transcript-turn__bubble">
+        <div class="transcript-turn__content transcript-turn__content--redacted" data-mode="redacted">{{turn.content_redacted}}</div>
+        {{#if @root.can_view_pii}}
+            {{#if turn.content}}
+                <div class="transcript-turn__content transcript-turn__content--raw" data-mode="raw" hidden>{{turn.content}}</div>
+            {{/if}}
+        {{/if}}
+        {{#if turn.governance.redactions_applied}}
+            <p class="transcript-turn__redaction-note">
+                <span data-chain-id="{{turn.governance.trace_id}}">{{turn.governance.redactions_applied}} field(s) redacted</span>
+            </p>
+        {{else if turn.redactions_applied}}
+            <p class="transcript-turn__redaction-note">{{turn.redactions_applied}} secret(s) masked in display</p>
+        {{/if}}
+    </div>
+
+    {{#if turn.tool_calls_len}}
+        <ol class="transcript-turn__tool-calls">
+            {{#each turn.tool_calls}}
+                <li class="transcript-turn__tool transcript-turn__tool--{{this.status}}">
+                    <details>
+                        <summary>
+                            <code class="transcript-turn__tool-name">{{this.name}}</code>
+                            <span class="transcript-turn__tool-status">{{this.status}}</span>
+                            {{#if this.duration_ms}}<span class="transcript-turn__tool-duration">{{this.duration_ms}}ms</span>{{/if}}
+                        </summary>
+                        <div class="transcript-turn__tool-body">
+                            <h5>args</h5>
+                            <div class="json-tree" data-json="{{json this.args_json}}" data-collapsed="1" data-root-label="{{concat this.name '.args'}}"></div>
+                            {{#if this.result_json}}
+                                <h5>result</h5>
+                                <div class="json-tree" data-json="{{json this.result_json}}" data-collapsed="1" data-root-label="{{concat this.name '.result'}}"></div>
+                            {{/if}}
+                        </div>
+                    </details>
+                </li>
+            {{/each}}
+        </ol>
+    {{/if}}
+</article>

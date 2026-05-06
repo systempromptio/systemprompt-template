@@ -1,0 +1,14 @@
+# Codex CLI — external-agent (super-agent) catalog entry.
+#
+# The `id` field MUST equal the bridge's HostApp::id() string for this host
+# (see systemprompt-core/bin/bridge/src/integration/codex_cli/).
+
+external_agents:
+  codex_cli:
+    id: codex_cli
+    display_name: "Codex CLI"
+    kind: cli_tool
+    enabled: true
+    description: "OpenAI Codex CLI tool. Connects to the gateway via systemprompt-bridge."
+    platforms: [macos, windows, linux]
+    docs_url: "https://github.com/openai/codex"

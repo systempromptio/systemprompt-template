@@ -16,16 +16,16 @@ fn page_admin_core_js(pages: &Path) -> Vec<AssetDefinition> {
     vec![
         AssetDefinition::js(pages.join("admin-access.js"), "js/pages/admin-access.js"),
         AssetDefinition::js(
+            pages.join("admin-access-control.js"),
+            "js/pages/admin-access-control.js",
+        ),
+        AssetDefinition::js(
             pages.join("admin-access-bulk.js"),
             "js/pages/admin-access-bulk.js",
         ),
         AssetDefinition::js(
             pages.join("admin-access-panel.js"),
             "js/pages/admin-access-panel.js",
-        ),
-        AssetDefinition::js(
-            pages.join("admin-achievements.js"),
-            "js/pages/admin-achievements.js",
         ),
         AssetDefinition::js(
             pages.join("admin-agent-edit.js"),
@@ -46,12 +46,24 @@ fn page_admin_core_js(pages: &Path) -> Vec<AssetDefinition> {
             "js/pages/admin-dashboard.js",
         ),
         AssetDefinition::js(pages.join("admin-events.js"), "js/pages/admin-events.js"),
-        AssetDefinition::js(pages.join("admin-export.js"), "js/pages/admin-export.js"),
-        AssetDefinition::js(pages.join("admin-jobs.js"), "js/pages/admin-jobs.js"),
         AssetDefinition::js(
-            pages.join("admin-leaderboard.js"),
-            "js/pages/admin-leaderboard.js",
+            pages.join("admin-governance-flow.js"),
+            "js/pages/admin-governance-flow.js",
         ),
+        AssetDefinition::js(
+            pages.join("admin-governance-audit.js"),
+            "js/pages/admin-governance-audit.js",
+        ),
+        AssetDefinition::js(pages.join("admin-export.js"), "js/pages/admin-export.js"),
+        AssetDefinition::js(
+            pages.join("admin-entity-access.js"),
+            "js/pages/admin-entity-access.js",
+        ),
+        AssetDefinition::js(
+            pages.join("admin-access-matrix.js"),
+            "js/pages/admin-access-matrix.js",
+        ),
+        AssetDefinition::js(pages.join("admin-jobs.js"), "js/pages/admin-jobs.js"),
         AssetDefinition::js(pages.join("admin-profile.js"), "js/pages/admin-profile.js"),
         AssetDefinition::js(
             pages.join("admin-settings.js"),
@@ -66,6 +78,34 @@ fn page_admin_core_js(pages: &Path) -> Vec<AssetDefinition> {
             "js/pages/admin-users-actions.js",
         ),
         AssetDefinition::js(pages.join("admin-users.js"), "js/pages/admin-users.js"),
+        AssetDefinition::js(
+            pages.join("admin-overview-shared.js"),
+            "js/pages/admin-overview-shared.js",
+        ),
+        AssetDefinition::js(
+            pages.join("admin-overview-index.js"),
+            "js/pages/admin-overview-index.js",
+        ),
+        AssetDefinition::js(
+            pages.join("admin-overview-pulse.js"),
+            "js/pages/admin-overview-pulse.js",
+        ),
+        AssetDefinition::js(
+            pages.join("admin-overview-identity.js"),
+            "js/pages/admin-overview-identity.js",
+        ),
+        AssetDefinition::js(
+            pages.join("admin-overview-cost.js"),
+            "js/pages/admin-overview-cost.js",
+        ),
+        AssetDefinition::js(
+            pages.join("admin-overview-governance.js"),
+            "js/pages/admin-overview-governance.js",
+        ),
+        AssetDefinition::js(
+            pages.join("admin-overview-services.js"),
+            "js/pages/admin-overview-services.js",
+        ),
     ]
 }
 

@@ -1,0 +1,93 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_skills SET\n            name = COALESCE($3, name),\n            description = COALESCE($4, description),\n            content = COALESCE($5, content),\n            tags = COALESCE($6, tags),\n            updated_at = NOW()\n        WHERE user_id = $1 AND skill_id = $2\n        RETURNING id, user_id as \"user_id: UserId\", skill_id as \"skill_id: SkillId\",\n            name, description, content, enabled, version, COALESCE(tags, '{}') as \"tags!\",\n            base_skill_id as \"base_skill_id: SkillId\",\n            created_at, updated_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id: UserId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "skill_id: SkillId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "enabled",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "version",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "tags!",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 9,
+        "name": "base_skill_id: SkillId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "0cb4933b29f6d7a9d4314ed1da70a79b8493f9b241e9fcb054e0f38f2799eaa2"
+}

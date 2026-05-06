@@ -1,0 +1,99 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO users (\n                id, name, email, status, email_verified, roles,\n                is_bot, created_at, updated_at\n            )\n            VALUES ($1, $2, $3, $4, false, ARRAY[$5]::TEXT[], false, $6, $6)\n            ON CONFLICT (email) DO UPDATE SET updated_at = $6\n            RETURNING id, name, email, full_name, display_name, status, email_verified,\n                      roles, avatar_url, is_bot, is_scanner, created_at, updated_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "full_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "email_verified",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "roles",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 8,
+        "name": "avatar_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "is_bot",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "is_scanner",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c05991db4970ada5fb7d39b6c9d2cfd1db94df42d12f3785569700fca723de1a"
+}

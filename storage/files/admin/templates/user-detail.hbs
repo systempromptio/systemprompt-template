@@ -28,33 +28,6 @@
         </tbody></table>
     </div>
 
-    {{#if gamification}}
-    <div class="gamification-profile mb-6">
-        <h3>Achievements</h3>
-        <div class="dashboard-stats mb-6">
-            {{> components/stat-card label="Total XP" value=(default gamification.total_xp 0)}}
-            {{> components/stat-card label="Rank" value=(default gamification.rank_name "Spark")}}
-            {{> components/stat-card label="Current Streak" value=(concat (default gamification.current_streak 0) "d")}}
-            {{> components/stat-card label="Leaderboard" value=(concat "#" (default gamification.rank_position "-"))}}
-        </div>
-    </div>
-    {{#if enriched_achievements}}
-    <div class="card mb-6">
-        <h3>Achievements ({{achievements_count}})</h3>
-        <div class="achievement-grid">
-            {{#each enriched_achievements}}
-            <div class="achievement-card unlocked">
-                <div class="achievement-icon">{{#if (eq category "First Steps")}}&#x26A1;{{else if (eq category "Milestones")}}&#x1F4CA;{{else if (eq category "Exploration")}}&#x1F50D;{{else if (eq category "Creation")}}&#x2728;{{else if (eq category "Streaks")}}&#x1F525;{{else if (eq category "Ranks")}}&#x1F3C6;{{else if (eq category "Bytes")}}&#x1FA99;{{else if (eq category "Special")}}&#x2B50;{{else}}&#x2B50;{{/if}}</div>
-                <div class="achievement-name">{{name}}</div>
-                <div class="achievement-detail">{{description}}</div>
-                <div class="achievement-detail"><span class="badge badge-blue">{{category}}</span></div>
-            </div>
-            {{/each}}
-        </div>
-    </div>
-    {{/if}}
-    {{/if}}
-
     <div class="card mb-6 text-center">
         <a href="/admin/my/activity" class="btn btn-primary">View Full Activity Dashboard</a>
     </div>
@@ -92,6 +65,117 @@
         {{else}}
         {{> components/empty-state message="No custom skills."}}
         {{/if}}
+    </div>
+
+    {{#if has_effective_permissions}}
+    <div class="card">
+        <h3>Effective Permissions</h3>
+        <p class="text-muted">Computed live by the authz resolver against this user's roles and department. Click any decision to jump to the matrix cell that controls it.</p>
+
+        <h4>Gateway Routes</h4>
+        {{#if effective_permissions.gateway_routes}}
+        <table class="table table-compact">
+            <thead><tr><th>Route</th><th>Decision</th><th>Decided by</th></tr></thead>
+            <tbody>
+            {{#each effective_permissions.gateway_routes}}
+              <tr>
+                <td><code>{{this.entity_id}}</code></td>
+                <td>
+                  {{#if (eq this.decision "allow")}}
+                    <span class="badge badge-green">ALLOW</span>
+                  {{else}}
+                    <span class="badge badge-red">DENY</span>
+                  {{/if}}
+                </td>
+                <td><a href="{{this.matrix_url}}">{{this.reason}}</a></td>
+              </tr>
+            {{/each}}
+            </tbody>
+        </table>
+        {{else}}
+        {{> components/empty-state message="No gateway routes configured."}}
+        {{/if}}
+
+        <h4>MCP Servers</h4>
+        {{#if effective_permissions.mcp_servers}}
+        <table class="table table-compact">
+            <thead><tr><th>Server</th><th>Decision</th><th>Decided by</th></tr></thead>
+            <tbody>
+            {{#each effective_permissions.mcp_servers}}
+              <tr>
+                <td><code>{{this.entity_id}}</code></td>
+                <td>
+                  {{#if (eq this.decision "allow")}}
+                    <span class="badge badge-green">ALLOW</span>
+                  {{else}}
+                    <span class="badge badge-red">DENY</span>
+                  {{/if}}
+                </td>
+                <td><a href="{{this.matrix_url}}">{{this.reason}}</a></td>
+              </tr>
+            {{/each}}
+            </tbody>
+        </table>
+        {{else}}
+        {{> components/empty-state message="No MCP servers configured."}}
+        {{/if}}
+    </div>
+    {{/if}}
+
+    <div class="card">
+        <h3>Department &amp; assignments</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
+            <div>
+                <span class="kpi-label">Department</span>
+                <div style="margin-top:.25rem;">
+                    {{#if user_department}}
+                        <a href="/admin/access-control?department={{user_department}}" class="badge badge-blue">{{user_department}}</a>
+                    {{else}}<span class="text-tertiary">Unassigned</span>{{/if}}
+                </div>
+            </div>
+            <div>
+                <span class="kpi-label">Effective skills</span>
+                <div style="margin-top:.25rem;font-size:1.25rem;">{{default user_assignments.skills_count 0}}</div>
+            </div>
+            <div>
+                <span class="kpi-label">Marketplaces</span>
+                <div style="margin-top:.25rem;font-size:1.25rem;">{{default user_assignments.marketplaces_count 0}}</div>
+            </div>
+            <div>
+                <span class="kpi-label">Active devices</span>
+                <div style="margin-top:.25rem;font-size:1.25rem;">{{default user_devices_count 0}}</div>
+            </div>
+        </div>
+        <p class="text-muted" style="font-size:.875rem;margin-top:.75rem;">
+            Assignments are stored in <code>access_control_rules</code>. Manage in the
+            <a href="/admin/access-control?user_id={{user.user_id}}">access matrix</a>.
+        </p>
+    </div>
+
+    <div class="card">
+        <h3>Devices</h3>
+        {{#if user_devices}}
+        <table class="table table-compact">
+            <thead><tr><th>Name</th><th>Prefix</th><th>Platform</th><th>Last seen</th><th></th></tr></thead>
+            <tbody>
+            {{#each user_devices}}
+            <tr>
+                <td><code>{{name}}</code></td>
+                <td><code class="code-inline">{{key_prefix}}</code></td>
+                <td>{{#if platform}}<span class="badge">{{platform}}{{#if app_version}} {{app_version}}{{/if}}</span>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+                <td>{{#if last_seen_at}}<span title="{{formatDate last_seen_at}}">{{relativeTime last_seen_at}}</span>{{else}}<span class="text-tertiary">Never</span>{{/if}}</td>
+                <td>{{#if revoked}}<span class="badge badge-gray">Revoked</span>{{else}}<span class="badge badge-green">Active</span>{{/if}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        </table>
+        {{else}}
+        {{> components/empty-state message="No devices linked."}}
+        {{/if}}
+        <div style="margin-top:.75rem;display:flex;gap:.5rem;">
+            <a class="btn btn-sm btn-primary" href="/admin/devices">Issue PAT</a>
+            <a class="btn btn-sm btn-outline" href="/cowork-auth/device-link?prefill_user={{user.user_id}}">Link desktop app</a>
+        </div>
     </div>
 
     <div class="card">

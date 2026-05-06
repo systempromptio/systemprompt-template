@@ -9,6 +9,7 @@ license = "MIT"
 systemprompt-web-shared = { workspace = true }
 # Audit: uses ai, identifiers, models, oauth, security — requires `full`.
 systemprompt = { workspace = true, features = ["full"] }
+systemprompt-security = { workspace = true }
 
 # Database
 sqlx = { workspace = true }
@@ -62,6 +63,8 @@ reqwest = { workspace = true }
 walkdir = { workspace = true }
 url = { workspace = true }
 urlencoding = { workspace = true }
+inventory = { workspace = true }
+once_cell = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

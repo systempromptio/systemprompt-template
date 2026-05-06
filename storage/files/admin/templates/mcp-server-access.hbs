@@ -1,0 +1,29 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h2 style="margin-top: 0;">
+            <code class="code-inline">{{server_id}}</code>
+        </h2>
+        <p class="text-muted" style="font-size: 0.875rem; margin: 0;">
+            Type: {{server_type}}{{#if endpoint}} · Endpoint: <code class="code-inline">{{endpoint}}</code>{{/if}}<br>
+            Matrix view: <a href="/admin/access?tab=mcp">/admin/access?tab=mcp</a>
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="gw-access-panel" data-entity-type="mcp_server" data-entity-id="{{server_id}}" data-loaded="false" data-load-on-init="true">
+            <div class="gw-access-panel__loading text-muted">Loading…</div>
+        </div>
+    </div>
+    {{/inline}}
+
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module">
+        import { initEntityAccess } from '/js/pages/admin-entity-access.js';
+        initEntityAccess();
+    </script>
+    {{/inline}}
+{{/layout}}

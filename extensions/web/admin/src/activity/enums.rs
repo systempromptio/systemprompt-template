@@ -109,6 +109,7 @@ pub enum ActivityEntity {
     UserAgent,
     UserHook,
     Tool,
+    GatewayRoute,
 }
 
 impl fmt::Display for ActivityEntity {
@@ -133,6 +134,7 @@ impl AsRef<str> for ActivityEntity {
             Self::UserAgent => "user_agent",
             Self::UserHook => "user_hook",
             Self::Tool => "tool",
+            Self::GatewayRoute => "gateway_route",
         }
     }
 }
@@ -252,5 +254,6 @@ pub const fn entity_label(entity: ActivityEntity) -> &'static str {
         ActivityEntity::UserAgent => "user agent",
         ActivityEntity::UserHook => "user hook",
         ActivityEntity::Tool => "tool",
+        ActivityEntity::GatewayRoute => "gateway route",
     }
 }

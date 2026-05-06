@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT e.user_id AS \"user_id!\"\n           FROM plugin_usage_events e\n           INNER JOIN users u ON u.id = e.user_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "969997f5f607e6d96da2d8017f09a623027771a4f6ce635dc5dc24a579acf17b"
+}
