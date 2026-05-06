@@ -79,7 +79,6 @@ fn check_feature(limits: &TierLimits, feature: Feature) -> LimitCheckResult {
         Feature::AiSessionAnalysis => limits.features.ai.session_analysis,
         Feature::AiDailySummaries => limits.features.ai.daily_summaries,
         Feature::ApmMetrics => limits.features.apm_metrics,
-        Feature::ExportZip => limits.features.export_zip,
     };
     if allowed {
         LimitCheckResult::allowed()
@@ -88,7 +87,6 @@ fn check_feature(limits: &TierLimits, feature: Feature) -> LimitCheckResult {
             Feature::AiSessionAnalysis => "AI Session Analysis",
             Feature::AiDailySummaries => "AI Daily Summaries",
             Feature::ApmMetrics => "APM Metrics",
-            Feature::ExportZip => "Export ZIP",
         };
         LimitCheckResult::feature_denied(name)
     }

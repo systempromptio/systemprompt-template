@@ -52,7 +52,6 @@ pub struct FeatureFlags {
     pub ai: AiFeatures,
     pub apm_metrics: bool,
     pub gamification: bool,
-    pub export_zip: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Copy)]
@@ -104,7 +103,6 @@ impl FeatureFlags {
             },
             apm_metrics: false,
             gamification: true,
-            export_zip: false,
         }
     }
 }
@@ -135,7 +133,6 @@ pub enum Feature {
     AiSessionAnalysis,
     AiDailySummaries,
     ApmMetrics,
-    ExportZip,
 }
 
 #[derive(Debug, Clone, Serialize)]

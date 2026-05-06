@@ -101,7 +101,7 @@ curl -s -X POST "$URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
 Execute a real MCP tool call. This goes through OAuth authentication and is tracked in the database:
 
 ```bash
-systemprompt plugins mcp call skill-manager list_plugins
+systemprompt plugins mcp call systemprompt list_plugins
 ```
 
 The output shows the tool execution result including server name, tool name, execution time, and success status. This call is authenticated via the platform's OAuth layer and recorded as an MCP access event.

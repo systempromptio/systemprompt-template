@@ -5,7 +5,7 @@ Demonstrates enterprise governance for Claude Code using HTTP hooks, MCP servers
 ## What's Inside
 
 - **2 skills**: `example-web-search` (allowed) and `use-dangerous-secret` (blocked by governance)
-- **2 MCP servers**: `systemprompt` (admin tools) and `skill-manager` (user tools)
+- **1 MCP server**: `systemprompt` (platform tools)
 - **HTTP hooks**: PreToolUse governance hook that blocks plaintext secrets, plus tracking hooks for all events
 
 ## Install
@@ -47,10 +47,9 @@ The `Authorization` header uses `$SYSTEMPROMPT_PLUGIN_TOKEN` — Claude Code res
 
 ### MCP Servers
 
-Both MCP servers authenticate via OAuth. Claude Code handles the OAuth flow automatically when you first use a tool from either server.
+The MCP server authenticates via OAuth. Claude Code handles the OAuth flow automatically when you first use one of its tools.
 
-- **systemprompt**: Platform administration tools (admin scope)
-- **skill-manager**: Skill and agent management tools (user scope)
+- **systemprompt**: Platform tools spanning skills, agents, and admin operations
 
 ### Governance Rules
 

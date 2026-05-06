@@ -76,8 +76,6 @@ pub async fn marketplace_context_middleware(
     mut request: Request,
     next: Next,
 ) -> Response {
-    use super::repositories::plugin_jwt::generate_plugin_token;
-
     let (counts, site_url) = get_cached_marketplace(&user_ctx.roles).await;
 
     let ctx = MarketplaceContext {
@@ -99,15 +97,6 @@ pub async fn marketplace_context_middleware(
         longest_streak: 0,
         next_rank_name: String::from("Apprentice"),
         xp_to_next_rank: 100,
-        plugin_token: generate_plugin_token(
-            &user_ctx.user_id,
-            user_ctx.email.as_ref(),
-            "cowork-bundle",
-        )
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to generate plugin token");
-            String::new()
-        }),
     };
 
     request.extensions_mut().insert(ctx);

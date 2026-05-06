@@ -11,11 +11,9 @@ use sqlx::PgPool;
 
 use crate::handlers::shared;
 use crate::repositories;
-use crate::types::{
-    MarketplacePlugin, MarketplaceQuery, UpdateVisibilityRequest, UserContext,
-};
+use crate::types::{MarketplacePlugin, MarketplaceQuery, UpdateVisibilityRequest, UserContext};
 
-use super::responses::{MarketplaceListResponse, RulesResponse, UsersListResponse};
+use super::responses::{MarketplaceListResponse, RulesResponse};
 
 pub async fn list_marketplace_handler(
     Extension(user_ctx): Extension<UserContext>,
@@ -41,18 +39,12 @@ async fn build_marketplace_list(
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         })?;
 
-    let (usage_map, ratings_map, visibility_rules) = fetch_marketplace_data(pool).await?;
+    let (ratings_map, visibility_rules) = fetch_marketplace_data(pool).await?;
 
     let mut marketplace_plugins: Vec<MarketplacePlugin> = plugins
         .iter()
         .map(|plugin| {
-            build_marketplace_plugin(
-                plugin,
-                &services_path,
-                &usage_map,
-                &ratings_map,
-                &visibility_rules,
-            )
+            build_marketplace_plugin(plugin, &services_path, &ratings_map, &visibility_rules)
         })
         .collect();
 
@@ -64,26 +56,15 @@ async fn build_marketplace_list(
 }
 
 type MarketplaceData = (
-    HashMap<String, crate::types::PluginUsageAggregate>,
     HashMap<String, crate::types::PluginRatingAggregate>,
     HashMap<String, Vec<crate::types::VisibilityRule>>,
 );
 
 async fn fetch_marketplace_data(pool: &PgPool) -> Result<MarketplaceData, Response> {
-    let (usage_res, ratings_res, rules_res) = tokio::join!(
-        repositories::list_plugin_usage(pool),
+    let (ratings_res, rules_res) = tokio::join!(
         repositories::list_plugin_ratings(pool),
         repositories::list_visibility_rules(pool),
     );
-
-    let usage_map: HashMap<String, _> = usage_res
-        .map_err(|e| {
-            tracing::error!(error = %e, "Failed to get plugin usage");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        })?
-        .into_iter()
-        .map(|u| (u.plugin_id.clone(), u))
-        .collect();
 
     let ratings_map: HashMap<String, _> = ratings_res
         .map_err(|e| {
@@ -105,13 +86,12 @@ async fn fetch_marketplace_data(pool: &PgPool) -> Result<MarketplaceData, Respon
         m
     };
 
-    Ok((usage_map, ratings_map, visibility_rules))
+    Ok((ratings_map, visibility_rules))
 }
 
 fn build_marketplace_plugin(
     plugin: &crate::types::PluginOverview,
     services_path: &std::path::Path,
-    usage_map: &HashMap<String, crate::types::PluginUsageAggregate>,
     ratings_map: &HashMap<String, crate::types::PluginRatingAggregate>,
     visibility_rules: &HashMap<String, Vec<crate::types::VisibilityRule>>,
 ) -> MarketplacePlugin {
@@ -135,21 +115,14 @@ fn build_marketplace_plugin(
         ),
     };
 
-    let usage = usage_map.get(&plugin.id);
     let rating = ratings_map.get(&plugin.id);
     let plugin_rules = visibility_rules
         .get(&plugin.id)
         .cloned()
         .unwrap_or_else(Vec::new);
 
-    let total_events = usage.map_or(0, |u| u.total_events);
-    let unique_users = usage.map_or(0, |u| u.unique_users);
-    let active_7d = usage.map_or(0, |u| u.active_users_7d);
-    let active_30d = usage.map_or(0, |u| u.active_users_30d);
     let avg_rating = rating.map_or(0.0, |r| r.avg_rating);
     let rating_count = rating.map_or(0, |r| r.rating_count);
-
-    let rank_score = compute_rank_score(total_events, active_30d, avg_rating, rating_count);
 
     MarketplacePlugin {
         id: plugin.id.clone(),
@@ -166,29 +139,18 @@ fn build_marketplace_plugin(
         hook_count: 0,
         roles,
         visibility_rules: plugin_rules,
-        total_events,
-        unique_users,
-        active_users_7d: active_7d,
-        active_users_30d: active_30d,
         avg_rating,
         rating_count,
-        rank_score,
     }
 }
 
 fn sort_and_filter(marketplace_plugins: &mut Vec<MarketplacePlugin>, query: &MarketplaceQuery) {
-    let sort = query.sort.as_deref().unwrap_or("rank");
+    let sort = query.sort.as_deref().unwrap_or("rating");
     match sort {
-        "rating" => marketplace_plugins.sort_unstable_by(|a, b| {
-            b.avg_rating
-                .partial_cmp(&a.avg_rating)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        }),
-        "usage" => marketplace_plugins.sort_unstable_by_key(|p| std::cmp::Reverse(p.total_events)),
         "name" => marketplace_plugins.sort_unstable_by(|a, b| a.name.cmp(&b.name)),
         _ => marketplace_plugins.sort_unstable_by(|a, b| {
-            b.rank_score
-                .partial_cmp(&a.rank_score)
+            b.avg_rating
+                .partial_cmp(&a.avg_rating)
                 .unwrap_or(std::cmp::Ordering::Equal)
         }),
     }
@@ -207,19 +169,6 @@ fn sort_and_filter(marketplace_plugins: &mut Vec<MarketplacePlugin>, query: &Mar
     }
 }
 
-pub async fn marketplace_plugin_users_handler(
-    State(pool): State<Arc<PgPool>>,
-    Path(plugin_id): Path<String>,
-) -> Response {
-    match repositories::list_plugin_users(&pool, &plugin_id).await {
-        Ok(users) => Json(UsersListResponse { users }).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, plugin_id, "Failed to get plugin users");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
-    }
-}
-
 pub async fn update_visibility_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
@@ -232,20 +181,4 @@ pub async fn update_visibility_handler(
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }
-}
-
-fn compute_rank_score(
-    total_events: i64,
-    active_30d: i64,
-    avg_rating: f64,
-    rating_count: i64,
-) -> f64 {
-    let usage_score = f64::from(i32::try_from(total_events).unwrap_or(0)).ln_1p();
-    let active_score = f64::from(i32::try_from(active_30d).unwrap_or(0)).ln_1p();
-    let rc_f = f64::from(i32::try_from(rating_count).unwrap_or(0));
-    let bayesian_rating = avg_rating.mul_add(rc_f, 3.0 * 5.0) / (rc_f + 5.0);
-    0.4f64.mul_add(
-        usage_score,
-        0.3f64.mul_add(active_score, 0.3 * bayesian_rating),
-    )
 }

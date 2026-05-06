@@ -170,35 +170,11 @@ CREATE TABLE IF NOT EXISTS user_plugin_hooks (
 CREATE INDEX IF NOT EXISTS idx_user_plugin_hooks_plugin ON user_plugin_hooks(user_plugin_id);
 CREATE INDEX IF NOT EXISTS idx_user_plugin_hooks_hook ON user_plugin_hooks(user_hook_id);
 
-CREATE TABLE IF NOT EXISTS marketplace_sync_status (
-    user_id TEXT PRIMARY KEY,
-    dirty BOOLEAN NOT NULL DEFAULT true,
-    last_synced_at TIMESTAMPTZ,
-    last_changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    sync_error TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_marketplace_sync_status_dirty ON marketplace_sync_status(dirty) WHERE dirty = true;
-
-CREATE OR REPLACE FUNCTION mark_marketplace_dirty() RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO marketplace_sync_status (user_id, dirty, last_changed_at)
-    VALUES (COALESCE(NEW.user_id, OLD.user_id), true, NOW())
-    ON CONFLICT (user_id) DO UPDATE SET dirty = true, last_changed_at = NOW();
-    RETURN COALESCE(NEW, OLD);
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trg_user_skills_sync ON user_skills;
-CREATE TRIGGER trg_user_skills_sync AFTER INSERT OR UPDATE OR DELETE ON user_skills FOR EACH ROW EXECUTE FUNCTION mark_marketplace_dirty();
-DROP TRIGGER IF EXISTS trg_user_agents_sync ON user_agents;
-CREATE TRIGGER trg_user_agents_sync AFTER INSERT OR UPDATE OR DELETE ON user_agents FOR EACH ROW EXECUTE FUNCTION mark_marketplace_dirty();
-DROP TRIGGER IF EXISTS trg_user_hooks_sync ON user_hooks;
-CREATE TRIGGER trg_user_hooks_sync AFTER INSERT OR UPDATE OR DELETE ON user_hooks FOR EACH ROW EXECUTE FUNCTION mark_marketplace_dirty();
-DROP TRIGGER IF EXISTS trg_user_plugins_sync ON user_plugins;
-CREATE TRIGGER trg_user_plugins_sync AFTER INSERT OR UPDATE OR DELETE ON user_plugins FOR EACH ROW EXECUTE FUNCTION mark_marketplace_dirty();
-DROP TRIGGER IF EXISTS trg_user_mcp_servers_sync ON user_mcp_servers;
-CREATE TRIGGER trg_user_mcp_servers_sync AFTER INSERT OR UPDATE OR DELETE ON user_mcp_servers FOR EACH ROW EXECUTE FUNCTION mark_marketplace_dirty();
+-- marketplace_sync_status + mark_marketplace_dirty triggers removed:
+-- marketplaces are YAML-defined under services/marketplaces/, no per-user
+-- DB→git sync remains. Drop legacy state if present.
+DROP TABLE IF EXISTS marketplace_sync_status CASCADE;
+DROP FUNCTION IF EXISTS mark_marketplace_dirty() CASCADE;
 
 CREATE TABLE IF NOT EXISTS user_selected_org_plugins (
     user_id TEXT NOT NULL,
