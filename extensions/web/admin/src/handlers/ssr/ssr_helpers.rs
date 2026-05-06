@@ -91,16 +91,6 @@ fn inject_user_and_marketplace(
 }
 
 fn build_marketplace_json(mkt_ctx: &MarketplaceContext) -> serde_json::Value {
-    let git_url = format!(
-        "{}/api/public/marketplace/{}.git",
-        mkt_ctx.site_url, mkt_ctx.user_id
-    );
-    let cowork_git_url = format!(
-        "{}/api/public/marketplace/{}/cowork.git",
-        mkt_ctx.site_url, mkt_ctx.user_id
-    );
-    let install_cmd = format!("/plugin marketplace add {git_url}");
-    let mcp_url = format!("{}/api/v1/mcp/skill-manager/mcp", mkt_ctx.site_url);
     json!({
         "user_id": mkt_ctx.user_id,
         "site_url": mkt_ctx.site_url,
@@ -108,10 +98,6 @@ fn build_marketplace_json(mkt_ctx: &MarketplaceContext) -> serde_json::Value {
         "total_skills": mkt_ctx.total_skills,
         "agents_count": mkt_ctx.agents_count,
         "mcp_count": mkt_ctx.mcp_count,
-        "git_url": git_url,
-        "cowork_git_url": cowork_git_url,
-        "install_cmd": install_cmd,
-        "mcp_url": mcp_url,
         "tier_name": mkt_ctx.tier_name,
         "is_premium": mkt_ctx.is_premium,
         "rank_level": mkt_ctx.rank_level,
@@ -124,6 +110,5 @@ fn build_marketplace_json(mkt_ctx: &MarketplaceContext) -> serde_json::Value {
         "longest_streak": mkt_ctx.longest_streak,
         "next_rank_name": mkt_ctx.next_rank_name,
         "xp_to_next_rank": mkt_ctx.xp_to_next_rank,
-        "plugin_token": mkt_ctx.plugin_token,
     })
 }

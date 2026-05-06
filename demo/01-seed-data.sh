@@ -87,7 +87,7 @@ for i in 1 2 3 4 5; do
   gov "$s" developer_agent Read '{"file":"src/main.rs"}'
   gov "$s" developer_agent Bash '{"command":"cargo check"}'
   gov "$s" developer_agent mcp__systemprompt__list_agents '{"filter":"all"}'
-  gov "$s" developer_agent mcp__skill-manager__list_skills '{}'
+  gov "$s" developer_agent mcp__systemprompt__list_skills '{}'
   track "$s" developer_agent Read '{"file":"src/main.rs"}' $((50 + i * 30))
   track "$s" developer_agent Bash '{"command":"cargo check"}' $((1200 + i * 250))
 done
@@ -99,7 +99,7 @@ for i in 1 2 3 4 5; do
   gov "$s" associate_agent Read '{"file":"README.md"}'
   gov "$s" associate_agent WebSearch '{"query":"ai governance"}'
   gov "$s" associate_agent mcp__systemprompt__list_agents '{"filter":"enabled"}'
-  gov "$s" associate_agent mcp__skill-manager__delete_agent '{"agent":"x"}'
+  gov "$s" associate_agent mcp__systemprompt__delete_agent '{"agent":"x"}'
   track "$s" associate_agent Read '{"file":"README.md"}' $((40 + i * 20))
   track "$s" associate_agent WebSearch '{"query":"ai governance"}' $((800 + i * 150))
 done

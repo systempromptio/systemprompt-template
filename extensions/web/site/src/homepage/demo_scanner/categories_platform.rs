@@ -13,7 +13,7 @@ pub(super) const PLATFORM_CATEGORIES: &[CategoryMeta] = &[
                 script: "01-services.sh",
                 label: "Check service health",
                 narrative: "Runs infra services status and then --detailed to show the agent and MCP server processes the platform supervises, with pids, ports, and health. This is the first thing you reach for when something feels wrong.",
-                outcome: "You see 2 MCP servers (systemprompt and skill-manager) running as supervised processes, plus any configured agents, with health and lifecycle hooks for start/stop/restart/cleanup.",
+                outcome: "You see the systemprompt MCP server running as a supervised process, plus any configured agents, with health and lifecycle hooks for start/stop/restart/cleanup.",
             },
             StepMeta {
                 script: "02-database.sh",

@@ -174,9 +174,5 @@ pub fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
             "/marketplace-plugins",
             get(handlers::list_marketplace_handler),
         )
-        .route(
-            "/marketplace-plugins/{plugin_id}/users",
-            get(handlers::marketplace_plugin_users_handler),
-        )
         .with_state(Arc::clone(read_pool))
 }

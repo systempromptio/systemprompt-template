@@ -2,9 +2,6 @@
   "mcpServers": {
     "systemprompt": {
       "url": "http://localhost:5000/api/v1/mcp/systemprompt/mcp"
-    },
-    "skill-manager": {
-      "url": "http://localhost:5000/api/v1/mcp/skill-manager/mcp"
     }
   }
 }

@@ -50,7 +50,7 @@ systemprompt infra services status
 You should see:
 
 - **3 agents** running
-- **2 MCP servers** running (systemprompt, skill-manager)
+- **1 MCP server** running (systemprompt)
 
 The agents map to the demo scenarios as follows:
 

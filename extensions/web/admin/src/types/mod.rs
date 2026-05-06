@@ -92,7 +92,6 @@ pub struct MarketplaceContext {
     pub longest_streak: i64,
     pub next_rank_name: String,
     pub xp_to_next_rank: i64,
-    pub plugin_token: String,
 }
 pub use constants::*;
 pub use conversation_analytics::{

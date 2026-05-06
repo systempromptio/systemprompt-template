@@ -24,8 +24,7 @@ marketplace:
       - example_web_search
       - use_dangerous_secret
   mcp_servers:
-    include:
-      - systemprompt
+    - systemprompt
   agents:
     include:
       - developer_agent

@@ -31,9 +31,7 @@ pub use gateway::{
     reorder_gateway_routes_handler, update_gateway_route_handler, update_gateway_settings_handler,
 };
 pub use jobs::list_jobs_handler;
-pub use marketplace::{
-    list_marketplace_handler, marketplace_plugin_users_handler, update_visibility_handler,
-};
+pub use marketplace::{list_marketplace_handler, update_visibility_handler};
 pub use plugins::{get_skill_handler, list_plugins_handler, list_skills_handler};
 pub use plugins_crud::get_plugin_detail_handler;
 pub use plugins_env::list_plugin_env_handler;

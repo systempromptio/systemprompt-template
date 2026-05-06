@@ -110,19 +110,19 @@ pub(super) const CAPABILITY_CATEGORIES: &[CategoryMeta] = &[
             StepMeta {
                 script: "01-mcp-servers.sh",
                 label: "Inventory the connected MCP servers",
-                narrative: "Prints runtime status for every MCP server the platform is connected to, then lists the tools exposed by each one, filtered down to the systemprompt and skill-manager servers so you can see what an agent actually has on its tool bar.",
+                narrative: "Prints runtime status for every MCP server the platform is connected to, then lists the tools exposed by each one — anchored on the systemprompt server — so you can see what an agent actually has on its tool bar.",
                 outcome: "You see which MCP servers are live, their transport and health, and the exact tool names and schemas available to any agent wired into them.",
             },
             StepMeta {
                 script: "02-mcp-access-tracking.sh",
                 label: "Fire the governance hook, clean then dirty",
-                narrative: "POSTs to /hooks/govern twice — once with a benign Read on /src/main.rs and once with a Bash command containing an AWS access key — then calls skill-manager list_plugins through the authenticated MCP path and queries the governance_decisions and user_activity tables directly.",
+                narrative: "POSTs to /hooks/govern twice — once with a benign Read on /src/main.rs and once with a Bash command containing an AWS access key — then calls a tool through the authenticated MCP path and queries the governance_decisions and user_activity tables directly.",
                 outcome: "The first call returns permissionDecision allow, the second returns deny with the secret_injection rule as the reason, and the audit tables show both decisions plus the MCP access event rows the dashboard renders.",
             },
             StepMeta {
                 script: "03-mcp-tool-execution.sh",
                 label: "Zoom out to the execution analytics",
-                narrative: "Lists the tools exposed by the systemprompt and skill-manager MCP servers, pulls the last ten MCP tool execution log entries, and prints usage stats and seven-day trends. This closes the loop from \"a call happened\" to \"here is how the fleet is being used.\"",
+                narrative: "Lists the tools exposed by the systemprompt MCP server, pulls the last ten MCP tool execution log entries, and prints usage stats and seven-day trends. This closes the loop from \"a call happened\" to \"here is how the fleet is being used.\"",
                 outcome: "A per-server tool inventory, a chronological tool execution log with latencies, and aggregate counts and trends broken down by tool name.",
             },
         ],
