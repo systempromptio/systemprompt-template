@@ -27,13 +27,13 @@
 
         {{!-- CATALOG — what's installed / available --}}
         <h2 class="nav-label">Catalog</h2>
-        <a href="/admin/catalog/agents"{{#if (eq page "agents")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a4 4 0 014 4v1h1a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1h1V5a4 4 0 014-4zm0 2a2 2 0 00-2 2v1h4V5a2 2 0 00-2-2z"/></svg>
-            Agents
+        <a href="/admin/catalog/marketplaces"{{#if (eq page "marketplaces")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6l1-3h10l1 3M2 6v8h12V6M2 6h12M6 9h4"/></svg>
+            Marketplaces
         </a>
-        <a href="/admin/catalog/external-agents"{{#if (eq page "external-agents")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="8" rx="1"/><path d="M5 14h6M8 11v3"/></svg>
-            Superagents
+        <a href="/admin/catalog/plugins"{{#if (eq page "plugins")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM9 9h4v4H9z"/></svg>
+            Plugins
         </a>
         <a href="/admin/catalog/skills"{{#if (eq page "skills")}} class="active" aria-current="page"{{/if}}>
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1l2 4 4 .5-3 3 1 4-4-2-4 2 1-4-3-3 4-.5z" stroke-linejoin="round"/></svg>
@@ -43,13 +43,13 @@
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h3M11 8h3M5 5l3 3-3 3M11 5L8 8l3 3"/></svg>
             MCP servers
         </a>
-        <a href="/admin/catalog/plugins"{{#if (eq page "plugins")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM9 9h4v4H9z"/></svg>
-            Plugins
+        <a href="/admin/catalog/agents"{{#if (eq page "agents")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a4 4 0 014 4v1h1a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1h1V5a4 4 0 014-4zm0 2a2 2 0 00-2 2v1h4V5a2 2 0 00-2-2z"/></svg>
+            Agents
         </a>
-        <a href="/admin/catalog/marketplaces"{{#if (eq page "marketplaces")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6l1-3h10l1 3M2 6v8h12V6M2 6h12M6 9h4"/></svg>
-            Marketplaces
+        <a href="/admin/catalog/external-agents"{{#if (eq page "external-agents")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="8" rx="1"/><path d="M5 14h6M8 11v3"/></svg>
+            External agents
         </a>
 
         {{#if current_user.is_admin}}
