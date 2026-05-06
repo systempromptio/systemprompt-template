@@ -11,11 +11,13 @@ pub(super) fn build_entity_catalogue(services_path: &Path) -> serde_json::Value 
     let mcp_servers = build_mcp_servers(services_path);
     let plugins = build_plugins(services_path);
     let agents = build_agents(services_path);
+    let marketplaces = build_marketplaces();
     json!({
         "gateway_routes": gateway_routes,
         "mcp_servers": mcp_servers,
         "plugins": plugins,
         "agents": agents,
+        "marketplaces": marketplaces,
     })
 }
 
@@ -71,6 +73,19 @@ fn build_plugins(services_path: &Path) -> Vec<serde_json::Value> {
                 "id": p.id,
                 "label": p.name,
                 "description": p.description,
+            })
+        })
+        .collect()
+}
+
+fn build_marketplaces() -> Vec<serde_json::Value> {
+    crate::services::marketplaces::load_marketplaces()
+        .into_iter()
+        .map(|mp| {
+            json!({
+                "id": mp.id.as_str(),
+                "label": mp.name,
+                "description": mp.description,
             })
         })
         .collect()

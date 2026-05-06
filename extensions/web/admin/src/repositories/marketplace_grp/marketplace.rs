@@ -1,21 +1,6 @@
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
 
-use crate::types::{
-    PluginRating, PluginRatingAggregate, PluginUsageAggregate, PluginUser, VisibilityRule,
-    VisibilityRuleInput,
-};
-
-pub async fn list_plugin_usage(_pool: &PgPool) -> Result<Vec<PluginUsageAggregate>, sqlx::Error> {
-    Ok(vec![])
-}
-
-pub async fn list_plugin_users(
-    _pool: &PgPool,
-    _plugin_id: &str,
-) -> Result<Vec<PluginUser>, sqlx::Error> {
-    Ok(vec![])
-}
+use crate::types::{PluginRatingAggregate, VisibilityRule, VisibilityRuleInput};
 
 pub async fn list_plugin_ratings(pool: &PgPool) -> Result<Vec<PluginRatingAggregate>, sqlx::Error> {
     sqlx::query_as!(
@@ -39,33 +24,6 @@ pub async fn list_visibility_rules(pool: &PgPool) -> Result<Vec<VisibilityRule>,
          ORDER BY plugin_id, rule_type, rule_value",
     )
     .fetch_all(pool)
-    .await
-}
-
-pub async fn upsert_rating(
-    pool: &PgPool,
-    plugin_id: &str,
-    user_id: &UserId,
-    rating: i16,
-    review: Option<&str>,
-) -> Result<PluginRating, sqlx::Error> {
-    let id = uuid::Uuid::new_v4().to_string();
-    sqlx::query_as!(
-        PluginRating,
-        r"INSERT INTO plugin_ratings (id, plugin_id, user_id, rating, review)
-          VALUES ($1, $2, $3, $4, $5)
-          ON CONFLICT (plugin_id, user_id) DO UPDATE
-            SET rating = EXCLUDED.rating,
-                review = EXCLUDED.review,
-                updated_at = NOW()
-          RETURNING id, plugin_id, user_id, rating, review, created_at, updated_at",
-        id,
-        plugin_id,
-        user_id.as_str(),
-        rating,
-        review,
-    )
-    .fetch_one(pool)
     .await
 }
 

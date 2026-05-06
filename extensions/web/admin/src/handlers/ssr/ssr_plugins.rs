@@ -130,9 +130,7 @@ async fn fetch_plugin_metadata(
     }
 
     let _ = pool;
-    // Marketplace badges are now sourced from ServicesConfig.marketplaces (core).
-    // Wire that through AppState to populate this map; empty for now.
-    let marketplace_map: HashMap<String, Vec<(String, String)>> = HashMap::new();
+    let marketplace_map = crate::services::marketplaces::plugin_to_marketplaces();
 
     (rules_map, marketplace_map)
 }

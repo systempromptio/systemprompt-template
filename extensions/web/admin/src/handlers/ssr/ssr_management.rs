@@ -220,38 +220,32 @@ struct ManagementListPageData {
     total: usize,
 }
 
-async fn fetch_assigned_items(pool: &PgPool, entity_type: &str, kind: &str) -> Vec<AssignedItem> {
-    let query = match kind {
-        "skill" => {
-            r"
-            SELECT
-                base.id,
-                base.name,
-                base.description,
-                COALESCE(d.cnt, 0)::BIGINT,
-                COALESCE(u.cnt, 0)::BIGINT
-            FROM (
-                SELECT DISTINCT skill_id AS id, name, description
-                FROM user_skills
-            ) base
-            LEFT JOIN (
-                SELECT entity_id, COUNT(*)::BIGINT AS cnt
-                FROM access_control_rules
-                WHERE entity_type = 'skill' AND rule_type = 'department' AND access = 'allow'
-                GROUP BY entity_id
-            ) d ON d.entity_id = base.id
-            LEFT JOIN (
-                SELECT entity_id, COUNT(*)::BIGINT AS cnt
-                FROM access_control_rules
-                WHERE entity_type = 'skill' AND rule_type = 'user' AND access = 'allow'
-                GROUP BY entity_id
-            ) u ON u.entity_id = base.id
-            ORDER BY base.name
-            "
-        }
-        // Marketplaces are YAML-defined (services/marketplaces/) — no DB list.
-        _ => return Vec::new(),
-    };
+async fn fetch_assigned_skills(pool: &PgPool) -> Vec<AssignedItem> {
+    let query = r"
+        SELECT
+            base.id,
+            base.name,
+            base.description,
+            COALESCE(d.cnt, 0)::BIGINT,
+            COALESCE(u.cnt, 0)::BIGINT
+        FROM (
+            SELECT DISTINCT skill_id AS id, name, description
+            FROM user_skills
+        ) base
+        LEFT JOIN (
+            SELECT entity_id, COUNT(*)::BIGINT AS cnt
+            FROM access_control_rules
+            WHERE entity_type = 'skill' AND rule_type = 'department' AND access = 'allow'
+            GROUP BY entity_id
+        ) d ON d.entity_id = base.id
+        LEFT JOIN (
+            SELECT entity_id, COUNT(*)::BIGINT AS cnt
+            FROM access_control_rules
+            WHERE entity_type = 'skill' AND rule_type = 'user' AND access = 'allow'
+            GROUP BY entity_id
+        ) u ON u.entity_id = base.id
+        ORDER BY base.name
+        ";
 
     let rows: Vec<(String, String, Option<String>, i64, i64)> = sqlx::query_as(query)
         .fetch_all(pool)
@@ -259,25 +253,50 @@ async fn fetch_assigned_items(pool: &PgPool, entity_type: &str, kind: &str) -> V
         .unwrap_or_default();
 
     rows.into_iter()
-        .map(|(id, name, description, departments, users)| {
-            let coverage_label = if departments == 0 && users == 0 {
-                format!("Unassigned · open via access matrix to assign this {entity_type}")
-            } else {
-                format!(
-                    "{} dept{} · {} user{}",
-                    departments,
-                    if departments == 1 { "" } else { "s" },
-                    users,
-                    if users == 1 { "" } else { "s" }
-                )
-            };
+        .map(|(id, name, description, departments, users)| AssignedItem {
+            coverage_label: coverage_label("skill", departments, users),
+            id,
+            name,
+            description,
+            departments,
+            users,
+        })
+        .collect()
+}
+
+fn coverage_label(entity_type: &str, departments: i64, users: i64) -> String {
+    if departments == 0 && users == 0 {
+        format!("Unassigned · open via access matrix to assign this {entity_type}")
+    } else {
+        format!(
+            "{} dept{} · {} user{}",
+            departments,
+            if departments == 1 { "" } else { "s" },
+            users,
+            if users == 1 { "" } else { "s" }
+        )
+    }
+}
+
+fn fetch_marketplace_items() -> Vec<AssignedItem> {
+    crate::services::marketplaces::load_marketplaces()
+        .into_iter()
+        .map(|mp| {
+            let members = (mp.plugins.include.len()
+                + mp.skills.include.len()
+                + mp.agents.include.len()
+                + mp.mcp_servers.len()) as i64;
             AssignedItem {
-                id,
-                name,
-                description,
-                departments,
-                users,
-                coverage_label,
+                id: mp.id.as_str().to_string(),
+                name: mp.name,
+                description: Some(mp.description),
+                departments: members,
+                users: 0,
+                coverage_label: format!(
+                    "{} member{}",
+                    members,
+                    if members == 1 { "" } else { "s" }
+                ),
             }
         })
         .collect()
@@ -292,7 +311,7 @@ pub async fn management_skills_page(
     if !user_ctx.is_admin {
         return forbidden();
     }
-    let items = fetch_assigned_items(&pool, "skill", "skill").await;
+    let items = fetch_assigned_skills(&pool).await;
     let total = items.len();
     let data = ManagementListPageData {
         page: "management-skills",
@@ -307,12 +326,12 @@ pub async fn management_marketplaces_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
-    State(pool): State<Arc<PgPool>>,
+    State(_pool): State<Arc<PgPool>>,
 ) -> Response {
     if !user_ctx.is_admin {
         return forbidden();
     }
-    let items = fetch_assigned_items(&pool, "marketplace", "marketplace").await;
+    let items = fetch_marketplace_items();
     let total = items.len();
     let data = ManagementListPageData {
         page: "management-marketplaces",
