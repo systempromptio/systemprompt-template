@@ -10,7 +10,7 @@ import { showLoading } from '/js/services/webauthn-login-ui.js';
 const CLIENT_ID = 'marketplace-admin';
 const WEBAUTHN_BASE = '/api/v1/core/oauth/webauthn';
 const LOGIN_PATH = '/admin/login';
-const DEFAULT_REDIRECT = '/control-center';
+const DEFAULT_REDIRECT = '/admin/access/users';
 
 export const startPasskeyAuth = async (email) => {
   showLoading('Authenticating...');
