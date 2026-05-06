@@ -1,0 +1,31 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+    <section aria-label="MCP servers intro" class="hero-cli">
+        <p class="text-tertiary text-sm">MCP servers registered in <code class="code-inline">services/mcp/&lt;id&gt;.yaml</code>. Edit YAML and restart to change configuration.</p>
+    </section>
+
+    <section aria-label="MCP servers">
+        {{#if mcp_servers.length}}
+        {{#> components/data-table}}
+            <thead><tr><th>ID</th><th>Type</th><th>Endpoint</th><th>Description</th><th>Enabled</th></tr></thead>
+            <tbody>
+            {{#each mcp_servers}}
+            <tr>
+                <td><code class="code-inline">{{id}}</code></td>
+                <td>{{server_type}}</td>
+                <td>{{#if endpoint}}<code class="code-inline">{{endpoint}}</code>{{else}}{{#if port}}<code class="code-inline">:{{port}}</code>{{else}}-{{/if}}{{/if}}</td>
+                <td>{{description}}</td>
+                <td>{{#if enabled}}yes{{else}}no{{/if}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No MCP servers registered."}}
+        {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}
