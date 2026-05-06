@@ -46,15 +46,12 @@ pub async fn search_resolve(
 
     match resolve_id(&pool, trimmed).await {
         Ok(Some(r)) => {
+            let encoded = urlencoding::encode(&r.id);
             let (kind, url) = match r.kind {
-                ResolvedKind::Request => (
-                    "request",
-                    format!("/admin/governance/decisions/{}", urlencoding::encode(&r.id)),
-                ),
-                ResolvedKind::Trace => (
-                    "trace",
-                    format!("/admin/performance/traces/{}", urlencoding::encode(&r.id)),
-                ),
+                ResolvedKind::Request => ("request", format!("/admin/requests/{encoded}")),
+                ResolvedKind::Trace => ("trace", format!("/admin/traces/{encoded}")),
+                ResolvedKind::Session => ("session", format!("/admin/sessions/{encoded}")),
+                ResolvedKind::Context => ("context", format!("/admin/contexts/{encoded}")),
             };
             Json(SearchResponse { kind, url: Some(url) }).into_response()
         }

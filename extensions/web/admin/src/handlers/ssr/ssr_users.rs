@@ -242,14 +242,7 @@ pub async fn user_detail_page(
         })
         .ok()
         .flatten();
-    let gamification =
-        crate::gamification::queries::find_user_gamification(&pool, user_id.as_str())
-            .await
-            .map_err(|e| {
-                tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user gamification");
-            })
-            .ok()
-            .flatten();
+    let gamification: Option<crate::types::UserGamificationProfile> = None;
 
     let not_found = detail.is_none();
 

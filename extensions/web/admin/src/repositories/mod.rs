@@ -4,8 +4,6 @@ pub mod control_center_grp;
 pub mod cowork_grp;
 pub mod dashboard_grp;
 pub mod departments_grp;
-pub mod effective_plugins;
-pub mod gamification_grp;
 pub mod governance_grp;
 pub mod external_agents_grp;
 pub mod infra_grp;
@@ -13,7 +11,6 @@ pub mod marketplace_grp;
 pub mod mcp_grp;
 pub mod perf_grp;
 pub mod plugins_grp;
-pub mod publishing_grp;
 pub mod secrets_grp;
 pub mod tier_grp;
 pub mod traces_grp;
@@ -26,12 +23,10 @@ pub use departments_grp::{
     get_department_by_name, list_department_members, list_departments,
     list_user_management_aggregates, update_department, UserManagementAggregate,
 };
-pub use effective_plugins::{count_org_entity_additions, list_effective_enriched_plugins};
 pub use governance_grp::*;
 pub use marketplace_grp::*;
 pub use mcp_grp::*;
 pub use plugins_grp::*;
-pub use publishing_grp::*;
 pub use secrets_grp::*;
 pub use users_grp::*;
 
@@ -43,16 +38,12 @@ pub use governance_grp::gateway::{
     update_route as update_gateway_route,
 };
 pub use dashboard::{get_dashboard_data, list_event_breakdown, list_events};
-pub use export::{generate_export_bundles, ExportParams};
 pub use jobs::list_jobs;
 pub use marketplace::{
     list_plugin_ratings, list_plugin_usage, list_plugin_users, list_visibility_rules,
     set_visibility_rules, upsert_rating,
 };
-pub use marketplace_sync_status::mark_user_dirty;
-pub use plugin_crud::{
-    create_plugin, delete_plugin, find_plugin_detail, import_plugin_bundle, update_plugin,
-};
+pub use plugin_crud::{create_plugin, delete_plugin, find_plugin_detail, update_plugin};
 pub use plugin_env::{
     delete_plugin_env_var, list_all_user_env_vars, list_plugin_env_vars, upsert_plugin_env_var,
 };
@@ -61,13 +52,6 @@ pub(crate) use plugin_resolvers::read_skill_required_secrets;
 pub use plugins::{
     count_marketplace_items, list_all_skill_ids, list_plugin_skill_ids, list_plugins_for_roles,
     list_plugins_for_roles_full, update_plugin_skills, MarketplaceCounts,
-};
-pub use skill_files::{
-    find_skill_file, list_skill_files, sync_skill_files, update_skill_file_content,
-};
-pub use skill_secrets::{
-    delete_skill_secret, list_all_user_skill_secrets, list_skill_secrets,
-    resolve_secrets_for_skill, upsert_skill_secret,
 };
 pub use user_agents::{
     create_user_agent, delete_user_agent, fetch_agent_plugin_assignments, get_or_create_user_agent,

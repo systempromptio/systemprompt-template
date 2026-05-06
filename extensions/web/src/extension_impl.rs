@@ -24,9 +24,8 @@ use crate::{
     assets::web_assets,
     jobs::{
         BundleAdminCssJob, BundleAdminJsJob, ContentAnalyticsAggregationJob, ContentIngestionJob,
-        ContentPrerenderJob, CopyExtensionAssetsJob,
-        GitHubMarketplaceSyncJob, LlmsTxtGenerationJob, MarketplaceSyncJob, PublishPipelineJob,
-        RecalculateGamificationJob, RobotsTxtGenerationJob, SitemapGenerationJob,
+        ContentPrerenderJob, CopyExtensionAssetsJob, LlmsTxtGenerationJob, PublishPipelineJob,
+        RobotsTxtGenerationJob, SitemapGenerationJob,
     },
     schemas::schema_definitions,
 };
@@ -124,9 +123,7 @@ impl Extension for WebExtension {
             Arc::clone(&pool)
         });
 
-        let event_hub = admin::event_hub::EventHub::new();
         let tier_cache = admin::tier_enforcement::TierEnforcementCache::new();
-        let ai_service: Option<Arc<systemprompt::ai::AiService>> = init_ai_service();
 
         let admin_api = admin::admin_router(
             Arc::clone(&pool),
@@ -136,7 +133,6 @@ impl Extension for WebExtension {
         let webhook_api = admin::hooks_webhook_router(Arc::clone(&write_pool));
         let secrets_api = admin::secrets_router(Arc::clone(&write_pool));
         let cowork_api = admin::cowork_router(Arc::clone(&pool));
-        let marketplace_git = admin::marketplace_git_router(Arc::clone(&pool));
         let links_router = api::router(Arc::clone(&pool), self.validated_config.clone());
 
         let api_router = Router::new()
@@ -147,7 +143,6 @@ impl Extension for WebExtension {
             .merge(links_router)
             .merge(webhook_api)
             .merge(secrets_api)
-            .merge(marketplace_git)
             .nest("/admin", admin_api);
 
         let admin_dir = std::env::current_dir()
@@ -172,18 +167,11 @@ impl Extension for WebExtension {
                 return Some(ExtensionRouter::public(api_router, "/api/public"));
             }
         };
-        let workspace_router = admin::workspace_ssr_router(
-            Arc::clone(&pool),
-            engine.clone(),
-            event_hub,
-            ai_service,
-            tier_cache,
-        );
+        let _ = tier_cache;
         let cowork_auth_router = admin::cowork_auth_ssr_router(Arc::clone(&pool), engine.clone());
         let ssr_router = admin::admin_ssr_router(pool, engine);
 
         let combined = Router::new()
-            .nest_service("/control-center", workspace_router)
             .nest_service("/admin", ssr_router)
             .nest_service("/cowork-auth", cowork_auth_router)
             .merge(cowork_api)
@@ -195,7 +183,7 @@ impl Extension for WebExtension {
     fn site_auth(&self) -> Option<SiteAuthConfig> {
         Some(SiteAuthConfig {
             login_path: "/admin/login",
-            protected_prefixes: &["/admin", "/control-center", "/cowork-auth"],
+            protected_prefixes: &["/admin", "/cowork-auth"],
             public_prefixes: &["/admin/login", "/admin/add-passkey"],
             required_scope: "user",
         })
@@ -213,9 +201,6 @@ impl Extension for WebExtension {
             Arc::new(ContentAnalyticsAggregationJob),
             Arc::new(BundleAdminCssJob),
             Arc::new(BundleAdminJsJob),
-            Arc::new(RecalculateGamificationJob),
-            Arc::new(GitHubMarketplaceSyncJob),
-            Arc::new(MarketplaceSyncJob),
         ]
     }
 

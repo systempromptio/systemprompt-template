@@ -1,0 +1,32 @@
+marketplace:
+  id: enterprise-demo
+  name: "Enterprise Demo Marketplace"
+  description: "Reference marketplace shipping the governance demo plugin, its skills, agents, and MCP servers."
+  version: "2.0.0"
+  visibility: public
+  author:
+    name: systemprompt.io
+    email: support@systemprompt.io
+  keywords:
+    - governance
+    - demo
+    - enterprise
+  license: proprietary
+  category: governance
+
+  # All ids must resolve to top-level resources defined in services/.
+  # Loader (in core) validates referential integrity at startup.
+  plugins:
+    include:
+      - enterprise-demo
+  skills:
+    include:
+      - example_web_search
+      - use_dangerous_secret
+  mcp_servers:
+    include:
+      - systemprompt
+  agents:
+    include:
+      - developer_agent
+      - associate_agent

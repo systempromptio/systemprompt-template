@@ -8206,6 +8206,190 @@ a.gf-panel__title:hover { color: var(--sp-accent); }
 }
 }
 
+/* Governance cockpit (/admin/overview/governance) — toolbar, allow/deny chart,
+   policies + hooks tables, and supporting pills. Companion to
+   05-dashboard-governance.css (general governance views) and overview-live.css
+   (shared overview KPI/ticker scaffolding). */
+
+.gov-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    margin-bottom: var(--sp-space-4);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-lg);
+    background: var(--sp-surface-1);
+}
+.gov-toolbar__label {
+    font-size: var(--sp-font-size-sm);
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+.gov-toolbar__presets {
+    display: flex;
+    gap: var(--sp-space-1);
+    flex-wrap: wrap;
+}
+.gov-toolbar__preset {
+    padding: var(--sp-space-1) var(--sp-space-3);
+    border-radius: var(--sp-radius-md);
+    font-size: var(--sp-font-size-sm);
+    color: var(--sp-text-secondary);
+    text-decoration: none;
+    border: 1px solid transparent;
+}
+.gov-toolbar__preset:hover {
+    background: var(--sp-surface-2);
+    color: var(--sp-text-primary);
+}
+.gov-toolbar__preset.is-active {
+    background: var(--sp-surface-3, var(--sp-surface-2));
+    color: var(--sp-text-primary);
+    border-color: var(--sp-border-strong, var(--sp-border-subtle));
+    font-weight: 600;
+}
+
+/* ── Allow/deny chart ─────────────────────────────────────────────────────── */
+
+.gov-chart-pane {
+    overflow: hidden;
+}
+.gov-chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+}
+.gov-chart__svg {
+    width: 100%;
+    height: 160px;
+    display: block;
+    background: linear-gradient(
+        to top,
+        var(--sp-surface-2) 0%,
+        var(--sp-surface-2) 1px,
+        transparent 1px,
+        transparent 100%
+    );
+    background-size: 100% 25%;
+}
+.gov-chart__bar--allow {
+    fill: var(--sp-color-success, #22c55e);
+    opacity: 0.85;
+}
+.gov-chart__bar--deny {
+    fill: var(--sp-color-danger, #ef4444);
+    opacity: 0.95;
+}
+.gov-chart__legend {
+    display: flex;
+    gap: var(--sp-space-4);
+    font-size: var(--sp-font-size-sm);
+    color: var(--sp-text-secondary);
+}
+.gov-chart__legend-item {
+    position: relative;
+    padding-left: 18px;
+}
+.gov-chart__legend-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+}
+.gov-chart__legend-item--allow::before { background: var(--sp-color-success, #22c55e); }
+.gov-chart__legend-item--deny::before  { background: var(--sp-color-danger,  #ef4444); }
+
+/* ── Section headers ──────────────────────────────────────────────────────── */
+
+.gov-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-space-3);
+    margin-bottom: var(--sp-space-3);
+    flex-wrap: wrap;
+}
+.gov-section-head__count {
+    margin-left: var(--sp-space-2);
+    font-size: var(--sp-font-size-sm);
+    color: var(--sp-text-tertiary);
+    font-weight: 400;
+}
+.gov-section-head__link {
+    font-size: var(--sp-font-size-sm);
+    color: var(--sp-text-link, var(--sp-text-secondary));
+    text-decoration: none;
+}
+.gov-section-head__link:hover { text-decoration: underline; }
+
+/* ── Tables ───────────────────────────────────────────────────────────────── */
+
+.gov-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--sp-font-size-sm);
+}
+.gov-table thead th {
+    text-align: left;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    font-weight: 600;
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: var(--sp-font-size-xs);
+    border-bottom: 1px solid var(--sp-border-subtle);
+}
+.gov-table tbody td {
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border-bottom: 1px solid var(--sp-border-subtle);
+    color: var(--sp-text-primary);
+    vertical-align: middle;
+}
+.gov-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.gov-table .num--danger { color: var(--sp-color-danger, #ef4444); font-weight: 600; }
+.gov-table__row:hover { background: var(--sp-surface-2); }
+.gov-table__row--danger { background: color-mix(in srgb, var(--sp-color-danger, #ef4444) 8%, transparent); }
+.gov-table__row--warn   { background: color-mix(in srgb, var(--sp-color-warning, #f59e0b) 6%, transparent); }
+.gov-table__row--ok     { /* default */ }
+.gov-table__time {
+    color: var(--sp-text-tertiary);
+}
+.gov-table__link {
+    color: var(--sp-text-link, var(--sp-text-secondary));
+    text-decoration: none;
+    font-weight: 600;
+}
+.gov-table__link:hover { text-decoration: underline; }
+
+/* ── Pills (hook status, etc) ─────────────────────────────────────────────── */
+
+.gov-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: var(--sp-font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.gov-pill--ok      { background: color-mix(in srgb, var(--sp-color-success, #22c55e) 18%, transparent); color: var(--sp-color-success, #15803d); }
+.gov-pill--muted   { background: var(--sp-surface-2); color: var(--sp-text-tertiary); }
+.gov-pill--danger  { background: color-mix(in srgb, var(--sp-color-danger,  #ef4444) 18%, transparent); color: var(--sp-color-danger, #b91c1c); margin-left: 4px; }
+
+.gov-empty {
+    padding: var(--sp-space-3);
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-font-size-sm);
+    background: var(--sp-surface-2);
+    border-radius: var(--sp-radius-md);
+}
+
 @layer components {
 
 /* ─────────────────────────────────────────────────────────────────────────

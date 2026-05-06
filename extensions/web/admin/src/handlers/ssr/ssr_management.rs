@@ -73,9 +73,10 @@ pub async fn management_overview_page(
         .fetch_one(&*pool)
         .await
         .unwrap_or(0);
-    let marketplace_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM org_marketplaces")
-        .fetch_one(&*pool)
-        .await
+    // Marketplaces are now defined as YAML at services/marketplaces/<id>/config.yaml.
+    // Count by walking that directory; replace with ServicesConfig.marketplaces.len() when threaded.
+    let marketplace_count: i64 = std::fs::read_dir("services/marketplaces")
+        .map(|it| it.filter_map(Result::ok).count() as i64)
         .unwrap_or(0);
 
     let stats = vec![
@@ -332,30 +333,9 @@ async fn fetch_assigned_items(pool: &PgPool, entity_type: &str, kind: &str) -> V
             ORDER BY base.name
             "
         }
-        "marketplace" => {
-            r"
-            SELECT
-                m.id,
-                m.name,
-                NULLIF(m.description, '') AS description,
-                COALESCE(d.cnt, 0)::BIGINT,
-                COALESCE(u.cnt, 0)::BIGINT
-            FROM org_marketplaces m
-            LEFT JOIN (
-                SELECT entity_id, COUNT(*)::BIGINT AS cnt
-                FROM access_control_rules
-                WHERE entity_type = 'marketplace' AND rule_type = 'department' AND access = 'allow'
-                GROUP BY entity_id
-            ) d ON d.entity_id = m.id
-            LEFT JOIN (
-                SELECT entity_id, COUNT(*)::BIGINT AS cnt
-                FROM access_control_rules
-                WHERE entity_type = 'marketplace' AND rule_type = 'user' AND access = 'allow'
-                GROUP BY entity_id
-            ) u ON u.entity_id = m.id
-            ORDER BY m.name
-            "
-        }
+        // Marketplaces are now YAML-defined (services/marketplaces/<id>/config.yaml).
+        // Access-control listing for marketplaces lives in core's read APIs.
+        "marketplace" => return Vec::new(),
         _ => return Vec::new(),
     };
 

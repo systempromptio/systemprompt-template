@@ -9,7 +9,6 @@
 includes:
   # MCP servers
   - ../mcp/systemprompt.yaml
-  - ../mcp/skill-manager.yaml
 
   # AI, scheduler, content
   # Note: ../web/config.yaml is NOT included here — the web domain validator

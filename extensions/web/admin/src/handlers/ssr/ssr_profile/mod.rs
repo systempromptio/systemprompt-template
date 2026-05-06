@@ -35,7 +35,6 @@ pub async fn profile_page(
         daily_summaries_data,
         global_averages,
         user_metrics,
-        gamification,
         recent_analyses,
         stored_report,
     ) = tokio::join!(
@@ -46,7 +45,6 @@ pub async fn profile_page(
             user_id.as_str(),
             PROFILE_PERIOD_DAYS
         ),
-        crate::gamification::queries::find_user_gamification(&pool, user_id.as_str()),
         session_analyses::fetch_recent_analyses(&pool, user_id, 50),
         profile_reports::fetch_profile_report(pool.as_ref(), user_id.as_str()),
     );
@@ -55,7 +53,7 @@ pub async fn profile_page(
         .await
         .map_or(0, |h| h.len());
 
-    let gamification_profile = gamification.ok().flatten();
+    let gamification_profile: Option<crate::types::UserGamificationProfile> = None;
     let data = build_profile_page_data(&ProfilePageInput {
         user_metrics: &user_metrics,
         global_averages: &global_averages,

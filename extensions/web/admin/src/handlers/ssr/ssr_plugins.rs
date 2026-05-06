@@ -129,12 +129,10 @@ async fn fetch_plugin_metadata(
         }
     }
 
-    let marketplace_map = repositories::org_marketplaces::list_marketplaces_for_plugins(pool)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to fetch marketplace-plugin associations");
-            HashMap::new()
-        });
+    let _ = pool;
+    // Marketplace badges are now sourced from ServicesConfig.marketplaces (core).
+    // Wire that through AppState to populate this map; empty for now.
+    let marketplace_map: HashMap<String, Vec<(String, String)>> = HashMap::new();
 
     (rules_map, marketplace_map)
 }

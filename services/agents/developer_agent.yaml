@@ -48,7 +48,6 @@ agents:
         and precise; quote file paths with file:line references; never fabricate file contents.
       mcpServers:
         - systemprompt
-        - skill-manager
       skills:
         - use_dangerous_secret
         - example_web_search

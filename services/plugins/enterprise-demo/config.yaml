@@ -27,7 +27,6 @@ plugin:
     exclude: []
   mcp_servers:
     - systemprompt
-    - skill-manager
   content_sources: []
   hooks:
     PreToolUse:

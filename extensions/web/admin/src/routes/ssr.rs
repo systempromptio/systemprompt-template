@@ -8,82 +8,16 @@ use axum::{
 use sqlx::PgPool;
 use tower_http::normalize_path::NormalizePathLayer;
 
-use super::super::{
-    event_hub, handlers, middleware, templates::AdminTemplateEngine, tier_enforcement,
-};
-
-pub fn workspace_ssr_router(
-    pool: Arc<PgPool>,
-    engine: AdminTemplateEngine,
-    hub: event_hub::EventHub,
-    ai_service: Option<Arc<systemprompt::ai::AiService>>,
-    tier_cache: tier_enforcement::TierEnforcementCache,
-) -> Router {
-    let inner = workspace_routes()
-        .layer(Extension(hub))
-        .layer(Extension(ai_service))
-        .layer(Extension(tier_cache))
-        .layer(Extension(engine))
-        .layer(axum_middleware::from_fn(
-            middleware::marketplace_context_middleware,
-        ))
-        .layer(axum_middleware::from_fn(
-            middleware::require_user_middleware,
-        ))
-        .layer(axum_middleware::from_fn_with_state(
-            Arc::clone(&pool),
-            middleware::user_context_middleware,
-        ))
-        .with_state(pool);
-
-    Router::new().fallback_service(
-        tower::ServiceBuilder::new()
-            .layer(NormalizePathLayer::trim_trailing_slash())
-            .service(inner),
-    )
-}
-
-fn workspace_routes() -> Router<Arc<PgPool>> {
-    Router::new()
-        .route("/", get(handlers::ssr::control_center_page))
-        .route("/api/sse", get(handlers::sse::control_center_sse))
-        .route(
-            "/api/rate-session",
-            post(handlers::ssr::handle_rate_session),
-        )
-        .route("/api/rate-skill", post(handlers::ssr::handle_rate_skill))
-        .route(
-            "/api/session-status",
-            post(handlers::ssr::handle_update_session_status),
-        )
-        .route(
-            "/api/batch-session-status",
-            post(handlers::ssr::handle_batch_update_session_status),
-        )
-        .route(
-            "/api/analyse-session",
-            post(handlers::ssr::handle_analyse_session),
-        )
-        .route(
-            "/api/generate-report",
-            post(handlers::ssr::handle_generate_report),
-        )
-        .route(
-            "/api/generate-profile-report",
-            post(handlers::ssr::handle_generate_profile_report),
-        )
-}
+use super::super::{handlers, middleware, templates::AdminTemplateEngine};
 
 pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Router {
-    let inner = dashboard_routes()
-        .merge(user_page_routes())
-        .merge(my_routes())
+    let inner = root_routes()
+        .merge(access_routes())
+        .merge(catalog_routes())
+        .merge(governance_routes())
         .merge(entity_routes())
-        .merge(org_routes())
-        .merge(management_routes())
-        .route("/setup", get(handlers::ssr::setup_page))
-        .route("/demo-register", get(handlers::ssr::demo_register_page))
-        .route("/auth/me", get(middleware::auth_me_handler))
+        .merge(account_routes())
+        .merge(api_routes())
         .layer(Extension(engine.clone()))
         .layer(axum_middleware::from_fn(
             middleware::marketplace_context_middleware,
@@ -129,106 +63,30 @@ fn public_routes() -> Router<Arc<PgPool>> {
         )
 }
 
-fn dashboard_routes() -> Router<Arc<PgPool>> {
-    Router::new()
-        .route(
-            "/",
-            get(|| async { axum::response::Redirect::to("/admin/overview") }),
-        )
-        .route("/dashboard", get(handlers::ssr::dashboard_page))
-        .route("/overview", get(handlers::ssr::overview_index_page))
-        .route("/overview/pulse", get(handlers::ssr::overview_pulse_page))
-        .route(
-            "/overview/identity",
-            get(handlers::ssr::overview_identity_page),
-        )
-        .route("/overview/cost", get(handlers::ssr::overview_cost_page))
-        .route(
-            "/overview/governance",
-            get(handlers::ssr::overview_governance_page),
-        )
-        .route(
-            "/overview/services",
-            get(handlers::ssr::overview_services_page),
-        )
-        .route(
-            "/api/generate-traffic-report",
-            post(handlers::ssr::handle_generate_traffic_report),
-        )
-        .route("/api/sse/dashboard", get(handlers::sse::dashboard_sse))
-        .route("/api/sse/audit", get(handlers::sse::audit_sse))
-        .route(
-            "/api/sse/overview/{pane}",
-            get(handlers::sse::overview_sse),
-        )
+fn root_routes() -> Router<Arc<PgPool>> {
+    Router::new().route(
+        "/",
+        get(|| async { axum::response::Redirect::to("/admin/access/users") }),
+    )
 }
 
-fn governance_routes() -> Router<Arc<PgPool>> {
+fn access_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route("/governance", get(handlers::ssr::governance_page))
+        .route("/access/users", get(handlers::ssr::users_page))
+        .route("/access/user", get(handlers::ssr::user_detail_page))
         .route(
-            "/governance/decisions",
-            get(handlers::ssr::governance_audit_page),
+            "/access/departments",
+            get(handlers::ssr::management_departments_page),
         )
         .route(
-            "/governance/decisions/portfolio",
-            get(handlers::ssr::governance_portfolio_page),
+            "/access/departments/{id}",
+            get(handlers::ssr::management_department_detail_page),
         )
         .route(
-            "/governance/flow",
-            get(handlers::ssr::governance_flow_page),
+            "/access/devices",
+            get(handlers::ssr::management_devices_page),
         )
-        .route(
-            "/governance/decisions/{id}",
-            get(handlers::ssr::governance_audit_detail_page),
-        )
-        .route(
-            "/api/governance/decisions.csv",
-            get(handlers::ssr::governance_audit_csv),
-        )
-        .route(
-            "/governance/hooks",
-            get(handlers::ssr::governance_hooks_page),
-        )
-        .route(
-            "/governance/users",
-            get(handlers::ssr::governance_users_page),
-        )
-        .route(
-            "/governance/identity",
-            get(handlers::ssr::governance_identity_page),
-        )
-        .route(
-            "/governance/identity/{id}",
-            get(handlers::ssr::governance_identity_profile_page),
-        )
-        .route(
-            "/governance/{policy_id}",
-            get(handlers::ssr::governance_policy_edit_page),
-        )
-        .route(
-            "/governance/{policy_id}/toggle",
-            post(handlers::ssr::governance_policy_toggle),
-        )
-        .route("/api/chain/{id}", get(handlers::ssr::chain_envelope))
-        .route("/api/search/resolve", get(handlers::ssr::search_resolve))
-}
-
-fn user_page_routes() -> Router<Arc<PgPool>> {
-    Router::new()
-        .route("/users", get(handlers::ssr::users_page))
-        .route("/jobs", get(handlers::ssr::jobs_page))
-        .route("/events", get(handlers::ssr::events_page))
-        .route("/profile", get(handlers::ssr::profile_page))
-        .route("/settings", get(handlers::ssr::settings_page))
-        .route("/user", get(handlers::ssr::user_detail_page))
-        .merge(governance_routes())
-        .route(
-            "/api/conversations/{session_id}/raw",
-            get(handlers::ssr::conversations_raw),
-        )
-        .route("/traces", get(handlers::ssr::traces_page))
-        .route("/devices", get(handlers::ssr::devices_page))
+        .route("/access/matrix", get(handlers::ssr::access_control_page))
         .route("/devices/pats", post(handlers::devices::issue_pat))
         .route(
             "/devices/pats/{id}",
@@ -238,173 +96,111 @@ fn user_page_routes() -> Router<Arc<PgPool>> {
             "/devices/certs/{id}",
             axum::routing::delete(handlers::devices::revoke_cert),
         )
-        .route("/access-control", get(handlers::ssr::access_control_page))
-        .route("/gateway", get(handlers::ssr::gateway_page))
-        .route(
-            "/access",
-            get(|| async {
-                axum::response::Redirect::permanent("/admin/access-control?focus=gateway")
-            }),
-        )
-        .route(
-            "/gateway/routes/edit",
-            get(handlers::ssr::gateway_route_edit_page),
-        )
-        .route("/analytics", get(handlers::ssr::analytics_overview_page))
-        .route(
-            "/analytics/agents",
-            get(handlers::ssr::analytics_agents_page),
-        )
-        .route("/analytics/costs", get(handlers::ssr::analytics_costs_page))
-        .route(
-            "/analytics/requests",
-            get(handlers::ssr::analytics_requests_page),
-        )
-        .route(
-            "/api/analytics/requests.csv",
-            get(handlers::ssr::analytics_requests_csv),
-        )
-        .route(
-            "/analytics/sessions",
-            get(handlers::ssr::analytics_sessions_page),
-        )
-        .route(
-            "/analytics/content",
-            get(handlers::ssr::analytics_content_page),
-        )
-        .route(
-            "/analytics/conversations",
-            get(handlers::ssr::analytics_conversations_page),
-        )
-        .route("/analytics/tools", get(handlers::ssr::analytics_tools_page))
-        .route(
-            "/infrastructure/services",
-            get(handlers::ssr::infra_services_page),
-        )
-        .route(
-            "/infrastructure/database",
-            get(handlers::ssr::infra_database_page),
-        )
-        .route("/infrastructure/logs", get(handlers::ssr::infra_logs_page))
-        .route(
-            "/infrastructure/config",
-            get(handlers::ssr::infra_config_page),
-        )
-        .route("/mcp/access", get(handlers::ssr::mcp_access_page))
-        .route(
-            "/mcp-servers/{server_id}/access",
-            get(handlers::ssr::mcp_server_access_page),
-        )
-        .route("/mcp/tools", get(handlers::ssr::mcp_tools_page))
-        .route(
-            "/mcp/tools/{tool_name}",
-            get(handlers::ssr::mcp_tool_detail_page),
-        )
-        .route("/performance/traces", get(handlers::ssr::perf_traces_page))
-        .route(
-            "/performance/traces/{id}",
-            get(handlers::ssr::perf_trace_detail_page),
-        )
-        .route(
-            "/performance/benchmarks",
-            get(handlers::ssr::perf_benchmarks_page),
-        )
-        .route("/users/sessions", get(handlers::ssr::users_sessions_page))
-        .route("/users/ip-bans", get(handlers::ssr::users_ip_bans_page))
 }
 
-fn my_routes() -> Router<Arc<PgPool>> {
+fn catalog_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route("/my/marketplace", get(handlers::ssr::my_marketplace_page))
-        .route("/my/plugins", get(handlers::ssr::my_plugins_page))
-        .route("/browse/plugins", get(handlers::ssr::browse_plugins_page))
-        .route("/my/plugins/view", get(handlers::ssr::my_plugin_view_page))
-        .route("/my/plugins/edit", get(handlers::ssr::my_plugin_edit_page))
-        .route("/my/skills", get(handlers::ssr::my_skills_page))
-        .route("/my/skills/edit", get(handlers::ssr::my_skill_edit_page))
-        .route("/my/agents", get(handlers::ssr::my_agents_page))
-        .route("/my/agents/edit", get(handlers::ssr::my_agent_edit_page))
-        .route("/my/secrets", get(handlers::ssr::my_secrets_page))
-        .route("/my/mcp-servers", get(handlers::ssr::my_mcp_servers_page))
-        .route("/my/hooks", get(handlers::ssr::my_hooks_page))
+        .route("/catalog/agents", get(handlers::ssr::agents_page))
+        .route("/catalog/agents/edit", get(handlers::ssr::agent_edit_page))
         .route(
-            "/my/versions",
-            get(handlers::ssr::marketplace_versions_page),
-        )
-        .route("/my/activity", get(handlers::ssr::my_activity_page))
-}
-
-fn entity_routes() -> Router<Arc<PgPool>> {
-    Router::new()
-        .route("/skills", get(handlers::ssr::skills_page))
-        .route("/skills/edit", get(handlers::ssr::skill_edit_page))
-        .route("/skills/content", get(handlers::ssr::skills_content_page))
-        .route("/skills/files", get(handlers::ssr::skills_files_page))
-        .route("/skills/plugins", get(handlers::ssr::skills_plugins_page))
-        .route("/skills/contexts", get(handlers::ssr::skills_contexts_page))
-        .route("/agents", get(handlers::ssr::agents_page))
-        .route("/agents/edit", get(handlers::ssr::agent_edit_page))
-        .route("/agents/config", get(handlers::ssr::agent_config_page))
-        .route("/agents/messages", get(handlers::ssr::agent_messages_page))
-        .route("/agents/traces", get(handlers::ssr::agent_traces_page))
-        .route("/external-agents", get(handlers::ssr::external_agents_page))
-        .route("/hooks", get(handlers::ssr::hooks_page))
-        .route("/hooks/edit", get(handlers::ssr::hook_edit_page))
-        .route("/mcp-servers", get(handlers::ssr::mcp_servers_page))
-        .route("/mcp-servers/edit", get(handlers::ssr::mcp_edit_page))
-        .route("/plugins", get(handlers::ssr::plugins_page))
-        .route(
-            "/marketplace",
-            get(handlers::ssr::marketplace_versions_page),
-        )
-}
-
-fn management_routes() -> Router<Arc<PgPool>> {
-    Router::new()
-        .route(
-            "/management",
-            get(handlers::ssr::management_overview_page),
+            "/catalog/external-agents",
+            get(handlers::ssr::external_agents_page),
         )
         .route(
-            "/management/users",
-            get(handlers::ssr::users_page),
-        )
-        .route(
-            "/management/user",
-            get(handlers::ssr::user_detail_page),
-        )
-        .route(
-            "/management/departments",
-            get(handlers::ssr::management_departments_page),
-        )
-        .route(
-            "/management/departments/{id}",
-            get(handlers::ssr::management_department_detail_page),
-        )
-        .route(
-            "/management/devices",
-            get(handlers::ssr::management_devices_page),
-        )
-        .route(
-            "/management/skills",
+            "/catalog/skills",
             get(handlers::ssr::management_skills_page),
         )
+        .route("/catalog/skills/edit", get(handlers::ssr::skill_edit_page))
         .route(
-            "/management/marketplaces",
+            "/catalog/mcp-servers",
+            get(handlers::ssr::mcp_servers_page),
+        )
+        .route(
+            "/catalog/mcp-servers/edit",
+            get(handlers::ssr::mcp_edit_page),
+        )
+        .route("/catalog/plugins", get(handlers::ssr::plugins_page))
+        .route(
+            "/catalog/marketplaces",
             get(handlers::ssr::management_marketplaces_page),
         )
 }
 
-fn org_routes() -> Router<Arc<PgPool>> {
+fn governance_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route("/org/plugins", get(handlers::ssr::plugins_page))
-        .route("/org/skills", get(handlers::ssr::skills_page))
-        .route("/org/skills/edit", get(handlers::ssr::skill_edit_page))
-        .route("/org/agents", get(handlers::ssr::agents_page))
-        .route("/org/agents/edit", get(handlers::ssr::agent_edit_page))
-        .route("/org/mcp-servers", get(handlers::ssr::mcp_servers_page))
-        .route("/org/mcp-servers/edit", get(handlers::ssr::mcp_edit_page))
-        .route("/org/hooks", get(handlers::ssr::hooks_page))
-        .route("/org/hooks/edit", get(handlers::ssr::hook_edit_page))
-        .route("/org-marketplace", get(handlers::ssr::org_marketplace_page))
+        .route(
+            "/governance/policies",
+            get(handlers::ssr::governance_page),
+        )
+        .route(
+            "/governance/policies/{policy_id}",
+            get(handlers::ssr::governance_policy_edit_page),
+        )
+        .route(
+            "/governance/policies/{policy_id}/toggle",
+            post(handlers::ssr::governance_policy_toggle),
+        )
+        .route(
+            "/governance/hooks",
+            get(handlers::ssr::governance_hooks_page),
+        )
+}
+
+/// Read-only inspection of first-class entities. Detail pages are reused
+/// as-is from the prior IA; list handlers are slim placeholders that delegate
+/// to existing analytics handlers until the dedicated entity-list handlers
+/// land in step 7.
+fn entity_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route(
+            "/entities/requests",
+            get(handlers::ssr::analytics_requests_page),
+        )
+        .route(
+            "/entities/requests/{request_id}",
+            get(handlers::ssr::governance_audit_detail_page),
+        )
+        .route(
+            "/entities/sessions",
+            get(handlers::ssr::users_sessions_page),
+        )
+        .route(
+            "/entities/sessions/{session_id}",
+            get(handlers::ssr::session_detail_page),
+        )
+        .route(
+            "/entities/traces",
+            get(handlers::ssr::perf_traces_page),
+        )
+        .route(
+            "/entities/traces/{trace_id}",
+            get(handlers::ssr::perf_trace_detail_page),
+        )
+        .route(
+            "/entities/contexts",
+            get(handlers::ssr::skills_contexts_page),
+        )
+        .route(
+            "/entities/contexts/{context_id}",
+            get(handlers::ssr::context_detail_page),
+        )
+}
+
+fn account_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route("/profile", get(handlers::ssr::profile_page))
+        .route("/settings", get(handlers::ssr::settings_page))
+        .route("/setup", get(handlers::ssr::setup_page))
+        .route("/demo-register", get(handlers::ssr::demo_register_page))
+}
+
+fn api_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route("/auth/me", get(middleware::auth_me_handler))
+        .route(
+            "/api/conversations/{session_id}/raw",
+            get(handlers::ssr::conversations_raw),
+        )
+        .route("/api/chain/{id}", get(handlers::ssr::chain_envelope))
+        .route("/api/search/resolve", get(handlers::ssr::search_resolve))
 }
