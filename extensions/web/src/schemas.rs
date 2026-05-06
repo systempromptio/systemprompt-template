@@ -16,7 +16,6 @@ pub const SCHEMA_MANAGEMENT: &str = include_str!("../schema/12_management.sql");
 pub const SEED_OAUTH: &str = include_str!("../schema/seed_01_oauth.sql");
 pub const SEED_DASHBOARD: &str = include_str!("../schema/seed_02_dashboard.sql");
 pub const SEED_GAMIFICATION: &str = include_str!("../schema/seed_03_gamification.sql");
-pub const SEED_MARKETPLACE: &str = include_str!("../schema/seed_04_marketplace.sql");
 
 pub fn schema_definitions() -> Vec<SchemaDefinition> {
     vec![
@@ -35,6 +34,5 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::inline("", SEED_OAUTH),
         SchemaDefinition::inline("", SEED_DASHBOARD),
         SchemaDefinition::inline("", SEED_GAMIFICATION),
-        SchemaDefinition::inline("", SEED_MARKETPLACE),
     ]
 }

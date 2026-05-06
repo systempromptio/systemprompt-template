@@ -125,11 +125,7 @@ impl Extension for WebExtension {
 
         let tier_cache = admin::tier_enforcement::TierEnforcementCache::new();
 
-        let admin_api = admin::admin_router(
-            Arc::clone(&pool),
-            Arc::clone(&write_pool),
-            tier_cache.clone(),
-        );
+        let admin_api = admin::admin_router(Arc::clone(&pool), tier_cache);
         let webhook_api = admin::hooks_webhook_router(Arc::clone(&write_pool));
         let secrets_api = admin::secrets_router(Arc::clone(&write_pool));
         let cowork_api = admin::cowork_router(Arc::clone(&pool));
@@ -225,22 +221,3 @@ impl Extension for WebExtension {
     }
 }
 
-fn init_ai_service() -> Option<Arc<systemprompt::ai::AiService>> {
-    let config = systemprompt::models::Config::get().ok()?;
-    let services_config = systemprompt::loader::ConfigLoader::load().ok()?;
-
-    let db = tokio::task::block_in_place(|| {
-        tokio::runtime::Handle::current().block_on(Database::from_config(
-            &config.database_type,
-            &config.database_url,
-        ))
-    })
-    .ok()?;
-
-    let db_pool: systemprompt::database::DbPool = Arc::new(db);
-    let tool_provider = Arc::new(systemprompt::ai::NoopToolProvider::new());
-    let ai_service =
-        systemprompt::ai::AiService::new(db_pool, &services_config.ai, tool_provider, None).ok()?;
-    tracing::info!("AI service initialized for hook summary generation");
-    Some(Arc::new(ai_service))
-}

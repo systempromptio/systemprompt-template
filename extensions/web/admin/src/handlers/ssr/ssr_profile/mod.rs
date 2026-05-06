@@ -1,25 +1,18 @@
 mod analysis;
 mod archetype;
 mod data_loading;
-mod report;
 mod trends;
-
-use std::sync::Arc;
 
 use crate::repositories::{daily_summaries, profile_reports, session_analyses};
 use crate::templates::AdminTemplateEngine;
-use crate::tier_enforcement::{check_limit, TierEnforcementCache};
-use crate::tier_limits::{Feature, LimitCheck};
 use crate::types::{MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, State},
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    Json,
+    response::Response,
 };
 use serde_json::json;
 use sqlx::PgPool;
-use systemprompt::ai::AiService;
+use std::sync::Arc;
 
 const PROFILE_PERIOD_DAYS: i32 = 30;
 
@@ -129,99 +122,3 @@ fn build_profile_page_data(input: &ProfilePageInput<'_>) -> serde_json::Value {
     })
 }
 
-pub async fn handle_generate_profile_report(
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(ai_service): Extension<Option<Arc<AiService>>>,
-    Extension(tier_cache): Extension<TierEnforcementCache>,
-    State(pool): State<Arc<PgPool>>,
-) -> Response {
-    let check = check_limit(
-        &tier_cache,
-        &pool,
-        &user_ctx.user_id,
-        LimitCheck::FeatureAccess(Feature::AiDailySummaries),
-    )
-    .await;
-    if !check.allowed {
-        return (
-            StatusCode::FORBIDDEN,
-            Json(json!({"error": "feature_denied", "message": check.reason})),
-        )
-            .into_response();
-    }
-
-    let Some(ref ai) = ai_service else {
-        return (StatusCode::SERVICE_UNAVAILABLE, "AI service not available").into_response();
-    };
-
-    let user_id = user_ctx.user_id.as_str();
-    let (global, user_metrics) = tokio::join!(
-        daily_summaries::fetch_global_averages(pool.as_ref()),
-        profile_reports::fetch_user_aggregate_metrics(pool.as_ref(), user_id, PROFILE_PERIOD_DAYS),
-    );
-
-    let archetype_result = archetype::classify_archetype(&user_metrics, &global);
-    let (strengths, weaknesses) = analysis::compute_strengths_weaknesses(&user_metrics, &global);
-    let context = report::build_ai_context(
-        &user_metrics,
-        &global,
-        &archetype_result,
-        &strengths,
-        &weaknesses,
-    );
-
-    let ai_result = report::generate_ai_profile(ai, user_id, &context).await;
-
-    let Some(ai_report) = ai_result else {
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"error": "ai_failed", "message": "Failed to generate AI analysis. Please try again."})),
-        )
-            .into_response();
-    };
-
-    let input = build_profile_report_input(
-        &archetype_result,
-        &strengths,
-        &weaknesses,
-        ai_report,
-        &user_metrics,
-    );
-
-    match profile_reports::upsert_profile_report(pool.as_ref(), user_id, &input).await {
-        Ok(()) => Json(json!({"status": "ok"})).into_response(),
-        Err(e) => {
-            tracing::warn!(error = %e, "Failed to persist profile report");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({"error": "save_failed"})),
-            )
-                .into_response()
-        }
-    }
-}
-
-fn build_profile_report_input(
-    archetype_result: &archetype::ArchetypeResult,
-    strengths: &[analysis::MetricDeviation],
-    weaknesses: &[analysis::MetricDeviation],
-    ai_report: report::AiProfileReport,
-    user_metrics: &profile_reports::UserAggregateMetrics,
-) -> profile_reports::ProfileReportInput {
-    profile_reports::ProfileReportInput {
-        archetype: archetype_result.id.clone(),
-        archetype_description: archetype_result.description.clone(),
-        archetype_confidence: i16::from(archetype_result.confidence),
-        strengths: serde_json::to_value(strengths).unwrap_or(serde_json::Value::Array(vec![])),
-        weaknesses: serde_json::to_value(weaknesses).unwrap_or(serde_json::Value::Array(vec![])),
-        ai_narrative: Some(ai_report.narrative),
-        ai_style_analysis: Some(ai_report.style_analysis),
-        ai_comparison: Some(ai_report.comparison),
-        ai_patterns: Some(ai_report.patterns),
-        ai_improvements: Some(ai_report.improvements),
-        ai_tips: Some(ai_report.tips),
-        metrics_snapshot: serde_json::to_value(user_metrics)
-            .unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
-        period_days: PROFILE_PERIOD_DAYS,
-    }
-}

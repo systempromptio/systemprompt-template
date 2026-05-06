@@ -306,22 +306,8 @@ CREATE TABLE IF NOT EXISTS marketplace.paddle_webhook_events (
 CREATE INDEX IF NOT EXISTS idx_mpwe_event ON marketplace.paddle_webhook_events(event_id);
 CREATE INDEX IF NOT EXISTS idx_mpwe_type ON marketplace.paddle_webhook_events(event_type);
 
--- org_marketplace_sync_logs
-CREATE TABLE IF NOT EXISTS org_marketplace_sync_logs (
-    id BIGSERIAL PRIMARY KEY,
-    marketplace_id TEXT NOT NULL,
-    operation TEXT NOT NULL,
-    status TEXT NOT NULL,
-    commit_hash TEXT,
-    plugins_synced BIGINT NOT NULL DEFAULT 0,
-    errors BIGINT NOT NULL DEFAULT 0,
-    error_message TEXT,
-    triggered_by TEXT,
-    duration_ms BIGINT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_omsl_marketplace ON org_marketplace_sync_logs(marketplace_id);
-CREATE INDEX IF NOT EXISTS idx_omsl_created ON org_marketplace_sync_logs(created_at DESC);
+-- org_marketplace_sync_logs: removed (no GitHub sync — marketplaces are YAML).
+DROP TABLE IF EXISTS org_marketplace_sync_logs CASCADE;
 
 -- user_profile_reports from 049
 CREATE TABLE IF NOT EXISTS user_profile_reports (

@@ -12,7 +12,7 @@ use sqlx::PgPool;
 use crate::handlers::shared;
 use crate::repositories;
 use crate::types::{
-    MarketplacePlugin, MarketplaceQuery, SubmitRatingRequest, UpdateVisibilityRequest, UserContext,
+    MarketplacePlugin, MarketplaceQuery, UpdateVisibilityRequest, UserContext,
 };
 
 use super::responses::{MarketplaceListResponse, RulesResponse, UsersListResponse};
@@ -215,31 +215,6 @@ pub async fn marketplace_plugin_users_handler(
         Ok(users) => Json(UsersListResponse { users }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, plugin_id, "Failed to get plugin users");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
-    }
-}
-
-pub async fn submit_rating_handler(
-    State(pool): State<Arc<PgPool>>,
-    Path(plugin_id): Path<String>,
-    Json(body): Json<SubmitRatingRequest>,
-) -> Response {
-    if body.rating < 1 || body.rating > 5 {
-        return shared::error_response(StatusCode::BAD_REQUEST, "Rating must be between 1 and 5");
-    }
-    match repositories::upsert_rating(
-        &pool,
-        &plugin_id,
-        &body.user_id,
-        body.rating,
-        body.review.as_deref(),
-    )
-    .await
-    {
-        Ok(rating) => (StatusCode::CREATED, Json(rating)).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, plugin_id, "Failed to submit rating");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         }
     }

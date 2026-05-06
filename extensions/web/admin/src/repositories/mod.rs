@@ -48,7 +48,6 @@ pub use plugin_env::{
     delete_plugin_env_var, list_all_user_env_vars, list_plugin_env_vars, upsert_plugin_env_var,
 };
 pub use plugin_maps::build_entity_plugin_maps;
-pub(crate) use plugin_resolvers::read_skill_required_secrets;
 pub use plugins::{
     count_marketplace_items, list_all_skill_ids, list_plugin_skill_ids, list_plugins_for_roles,
     list_plugins_for_roles_full, update_plugin_skills, MarketplaceCounts,

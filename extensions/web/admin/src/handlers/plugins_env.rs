@@ -11,10 +11,9 @@ use systemprompt::config::ProfileBootstrap;
 
 use systemprompt::identifiers::UserId;
 
-use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::handlers::shared;
 use crate::repositories;
-use crate::types::{UpdatePluginEnvRequest, UserQuery};
+use crate::types::UserQuery;
 
 use super::responses::PluginEnvResponse;
 
@@ -77,55 +76,6 @@ pub async fn list_plugin_env_handler(
         missing_required,
     })
     .into_response()
-}
-
-pub async fn update_plugin_env_handler(
-    State(pool): State<Arc<PgPool>>,
-    Path(plugin_id): Path<String>,
-    headers: HeaderMap,
-    Query(query): Query<UserQuery>,
-    Json(body): Json<UpdatePluginEnvRequest>,
-) -> Response {
-    let default_user_id = UserId::new("admin");
-    let user_id = match super::extract_user_from_cookie(&headers) {
-        Ok(session) => UserId::new(&session.user_id),
-        Err(_) => query
-            .user_id
-            .as_ref()
-            .map_or_else(|| default_user_id.clone(), UserId::new),
-    };
-
-    for var in &body.variables {
-        if let Err(e) = repositories::upsert_plugin_env_var(
-            &pool,
-            &user_id,
-            &plugin_id,
-            &var.var_name,
-            &var.var_value,
-            var.is_secret,
-        )
-        .await
-        {
-            tracing::error!(error = %e, "Failed to upsert plugin env var");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal server error",
-            );
-        }
-    }
-
-    let p = Arc::clone(&pool);
-    let uid = user_id.clone();
-    let pid = plugin_id.clone();
-    tokio::spawn(async move {
-        activity::record(
-            &p,
-            NewActivity::entity_updated(&uid, ActivityEntity::Plugin, &pid, &pid),
-        )
-        .await;
-    });
-
-    StatusCode::NO_CONTENT.into_response()
 }
 
 fn load_plugin_variable_defs(

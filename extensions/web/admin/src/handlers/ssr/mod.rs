@@ -10,7 +10,6 @@ use systemprompt_web_shared::html_escape;
 pub const ACCESS_DENIED_HTML: &str = "<h1>Access Denied</h1><p>Admin access required.</p>";
 
 mod ssr_access_control;
-mod ssr_access_control_helpers;
 mod ssr_add_passkey;
 mod ssr_agents;
 pub mod ssr_analytics_requests;
@@ -59,7 +58,7 @@ pub use ssr_governance_audit_detail::governance_audit_detail_page;
 pub use ssr_governance_hooks::governance_hooks_page;
 pub use ssr_governance_policy_edit::{governance_policy_edit_page, governance_policy_toggle};
 pub use ssr_helpers::branding_context;
-pub use ssr_helpers::{render_page, render_typed_page};
+pub use ssr_helpers::render_page;
 pub use ssr_management::{
     management_department_detail_page, management_departments_page, management_devices_page,
     management_marketplaces_page, management_skills_page,
@@ -73,7 +72,7 @@ pub use ssr_search_resolve::search_resolve;
 pub use ssr_session_detail::session_detail_page;
 pub use ssr_settings::settings_page;
 pub use ssr_setup::setup_page;
-pub use ssr_skills::{skill_edit_page, skills_page};
+pub use ssr_skills::skill_edit_page;
 pub use ssr_skills_contexts::skills_contexts_page;
 pub use ssr_users::{user_detail_page, users_page};
 pub use ssr_users_sessions::users_sessions_page;

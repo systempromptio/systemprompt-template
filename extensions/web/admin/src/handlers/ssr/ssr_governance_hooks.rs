@@ -24,9 +24,9 @@ pub async fn governance_hooks_page(
     }
 
     let hook_rows: Vec<serde_json::Value> = Vec::new();
-    let total_hooks = 0_usize;
-    let system_hooks = 0_usize;
-    let enabled_hooks = 0_usize;
+    let total_hooks = 0usize;
+    let system_hooks = 0usize;
+    let enabled_hooks = 0usize;
 
     let data = json!({
         "page": "governance-hooks",

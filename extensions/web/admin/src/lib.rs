@@ -83,10 +83,8 @@ pub fn cowork_router(pool: Arc<PgPool>) -> Router {
 
 pub fn admin_router(
     read_pool: Arc<PgPool>,
-    write_pool: Arc<PgPool>,
     tier_cache: tier_enforcement::TierEnforcementCache,
 ) -> Router {
-    let _ = write_pool;
     let admin_only = routes::build_admin_only_routes(&read_pool, &read_pool);
     let auth_reads = routes::build_auth_read_routes(&read_pool);
 

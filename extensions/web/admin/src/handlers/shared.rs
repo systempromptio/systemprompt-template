@@ -33,6 +33,3 @@ pub fn get_profile_path() -> Result<PathBuf, Box<Response>> {
         })
 }
 
-pub fn normalize_user_id(raw: &str) -> &str {
-    raw.strip_suffix(".git").unwrap_or(raw)
-}
