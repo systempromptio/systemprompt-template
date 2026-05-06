@@ -39,10 +39,7 @@ pub use governance_grp::gateway::{
 };
 pub use dashboard::{get_dashboard_data, list_event_breakdown, list_events};
 pub use jobs::list_jobs;
-pub use marketplace::{
-    list_plugin_ratings, list_plugin_usage, list_plugin_users, list_visibility_rules,
-    set_visibility_rules, upsert_rating,
-};
+pub use marketplace::{list_plugin_ratings, list_visibility_rules, set_visibility_rules};
 pub use plugin_crud::{create_plugin, delete_plugin, find_plugin_detail, update_plugin};
 pub use plugin_env::{
     delete_plugin_env_var, list_all_user_env_vars, list_plugin_env_vars, upsert_plugin_env_var,

@@ -42,8 +42,8 @@ pub use hooks::{
 pub use hooks_export::{HookEventType, HookHandler, HooksFile, HttpHook, MatcherGroup};
 pub use jobs::JobSummary;
 pub use marketplace::{
-    MarketplacePlugin, MarketplaceQuery, PluginRating, PluginRatingAggregate, PluginUsageAggregate,
-    PluginUser, SubmitRatingRequest, UpdateVisibilityRequest, VisibilityRule, VisibilityRuleInput,
+    MarketplacePlugin, MarketplaceQuery, PluginRatingAggregate, UpdateVisibilityRequest,
+    VisibilityRule, VisibilityRuleInput,
 };
 pub use plugins_config::{
     AgentDetail, AgentInfo, AgentSkillInfo, HookCatalogEntry, HookDetail, HookOverview,

@@ -17,12 +17,7 @@ pub(super) fn css_assets(storage_css: &Path) -> Vec<AssetDefinition> {
     v.extend(syntax_css(storage_css));
     v.extend(feature_base_css(storage_css));
     v.extend(playbook_css(storage_css));
-    v.extend(admin_overview_css(storage_css));
     v
-}
-
-fn admin_overview_css(p: &Path) -> Vec<AssetDefinition> {
-    vec![css!(p, "overview-live.css")]
 }
 
 fn core_css(p: &Path) -> Vec<AssetDefinition> {
@@ -94,7 +89,6 @@ fn blog_css(p: &Path) -> Vec<AssetDefinition> {
         css!(p, "blog-provenance-header.css"),
         css!(p, "blog-workflow.css"),
         css!(p, "blog-provenance-details.css"),
-        css!(p, "blog-live-dashboard.css"),
         css!(p, "blog-responsive.css"),
         css!(p, "blog-code.css"),
         css!(p, "blog-layout-structure.css"),
