@@ -1,0 +1,135 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    <a href="{{back_url}}" class="back-link">&larr; {{back_label}}</a>
+
+    {{> components/page-header
+        title=title
+        subtitle="The persisted state of one AI conversation — every message, tool call, and tool result in order."}}
+
+    <section class="trace-detail__summary" aria-label="Context summary">
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Context</span>
+        <code class="code-inline" title="{{header.context_id}}">{{header.context_id}}</code>
+      </div>
+      {{#if header.name}}
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Name</span>
+        <span>{{header.name}}</span>
+      </div>
+      {{/if}}
+      {{#if header.user_url}}
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">User</span>
+        <a href="{{header.user_url}}">{{#if header.display_name}}{{header.display_name}}{{else}}{{header.user_id}}{{/if}}</a>
+      </div>
+      {{/if}}
+      {{#if header.session_url}}
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Session</span>
+        <a href="{{header.session_url}}" class="code-inline">{{header.session_id}}</a>
+      </div>
+      {{/if}}
+      {{#if header.created_at_local}}
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Created</span>
+        <span title="{{header.created_at}}">{{header.created_at_local}}</span>
+      </div>
+      {{/if}}
+      {{#if header.updated_at_local}}
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Updated</span>
+        <span>{{header.updated_at_local}}</span>
+      </div>
+      {{/if}}
+      {{#if kpis.model}}
+      <div class="trace-detail__field">
+        <span class="trace-detail__label">Model</span>
+        <span>{{kpis.model}}</span>
+      </div>
+      {{/if}}
+    </section>
+
+    <section class="kpi-strip" aria-label="Context KPIs">
+      <div class="kpi-card">
+        <span class="kpi-card__label">Requests</span>
+        <span class="kpi-card__value">{{kpis.request_count}}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Traces</span>
+        <span class="kpi-card__value">{{kpis.trace_count}}</span>
+      </div>
+      <div class="kpi-card{{#if kpis.error_count}} kpi-card--danger{{/if}}">
+        <span class="kpi-card__label">Errors</span>
+        <span class="kpi-card__value">{{kpis.error_count}}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Tokens</span>
+        <span class="kpi-card__value">{{kpis.total_tokens}}</span>
+        <span class="kpi-card__sub">{{kpis.total_input_tokens}} in / {{kpis.total_output_tokens}} out</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Cost</span>
+        <span class="kpi-card__value">{{kpis.total_cost_display}}</span>
+      </div>
+    </section>
+
+    <section class="overview-pane">
+      <h3 class="section-title">Conversation</h3>
+      {{#if has_transcript}}
+      <ol class="transcript">
+        {{#each transcript}}
+          <li class="transcript__entry transcript__entry--{{role}}">
+            <header class="transcript__head">
+              <span class="transcript__role">{{role}}</span>
+              <span class="transcript__time" title="{{ts_full}}">{{ts_local}}</span>
+              <a href="{{request_url}}" class="transcript__req code-inline" title="{{request_id}}">req</a>
+            </header>
+            {{#if is_tool}}
+              <div class="transcript__body">
+                <div class="transcript__tool-name"><strong>{{tool_name}}</strong></div>
+                {{#if tool_input_pretty}}
+                  <details><summary>Input</summary><pre class="code-block">{{tool_input_pretty}}</pre></details>
+                {{/if}}
+                {{#if tool_result_pretty}}
+                  <details><summary>Result</summary><pre class="code-block">{{tool_result_pretty}}</pre></details>
+                {{/if}}
+              </div>
+            {{else}}
+              <pre class="transcript__body code-block">{{content_preview}}</pre>
+            {{/if}}
+          </li>
+        {{/each}}
+      </ol>
+      {{else}}
+      <p class="text-tertiary">No messages or tool calls recorded for this context.</p>
+      {{/if}}
+    </section>
+
+    <section class="overview-pane">
+      <h3 class="section-title">Requests in this context ({{kpis.request_count}})</h3>
+      {{#if has_requests}}
+      <table class="data-table">
+        <thead><tr>
+          <th>Request</th><th>Created</th><th>Trace</th><th>Model</th><th>Status</th><th>Latency</th><th>Cost</th>
+        </tr></thead>
+        <tbody>
+        {{#each requests}}
+          <tr>
+            <td><a href="{{request_url}}" class="code-inline" title="{{id}}">{{id_short}}</a></td>
+            <td>{{created_at_local}}</td>
+            <td>{{#if trace_url}}<a href="{{trace_url}}" class="code-inline">{{trace_id_short}}</a>{{else}}—{{/if}}</td>
+            <td>{{model}}</td>
+            <td>{{#if is_error}}<span class="text-danger">{{status}}</span>{{else}}{{status}}{{/if}}</td>
+            <td>{{latency_display}}</td>
+            <td>{{cost_display}}</td>
+          </tr>
+        {{/each}}
+        </tbody>
+      </table>
+      {{else}}
+      <p class="text-tertiary">No requests recorded for this context.</p>
+      {{/if}}
+    </section>
+
+    {{/inline}}
+{{/layout}}

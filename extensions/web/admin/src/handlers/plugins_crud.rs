@@ -11,10 +11,9 @@ use sqlx::PgPool;
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::handlers::shared;
 use crate::repositories;
-use crate::types::{CreatePluginRequest, UpdatePluginRequest, UpdateSkillFileRequest, UserContext};
+use crate::types::{CreatePluginRequest, UpdatePluginRequest, UserContext};
 
 use super::resources::get_services_path;
-use super::responses::FilesListResponse;
 
 pub async fn get_plugin_detail_handler(Path(plugin_id): Path<String>) -> Response {
     let services_path = match get_services_path() {
@@ -126,70 +125,3 @@ pub async fn delete_plugin_handler(
     }
 }
 
-pub async fn list_skill_files_handler(
-    State(pool): State<Arc<PgPool>>,
-    Path(skill_id): Path<String>,
-) -> Response {
-    match repositories::list_skill_files(&pool, &skill_id).await {
-        Ok(files) => Json(FilesListResponse { files }).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to list skill files");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
-    }
-}
-
-pub async fn get_skill_file_handler(
-    State(pool): State<Arc<PgPool>>,
-    Path((skill_id, file_path)): Path<(String, String)>,
-) -> Response {
-    match repositories::find_skill_file(&pool, &skill_id, &file_path).await {
-        Ok(Some(file)) => Json(file).into_response(),
-        Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "File not found"),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to get skill file");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
-    }
-}
-
-pub async fn update_skill_file_handler(
-    State(pool): State<Arc<PgPool>>,
-    Path((skill_id, file_path)): Path<(String, String)>,
-    Json(body): Json<UpdateSkillFileRequest>,
-) -> Response {
-    let services_path = match shared::get_services_path() {
-        Ok(p) => p,
-        Err(r) => return *r,
-    };
-    match repositories::update_skill_file_content(
-        &pool,
-        &skill_id,
-        &file_path,
-        &body.content,
-        &services_path,
-    )
-    .await
-    {
-        Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "File not found"),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to update skill file");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
-    }
-}
-
-pub async fn sync_skill_files_handler(State(pool): State<Arc<PgPool>>) -> Response {
-    let services_path = match shared::get_services_path() {
-        Ok(p) => p,
-        Err(r) => return *r,
-    };
-    match repositories::sync_skill_files(&pool, &services_path).await {
-        Ok(result) => Json(result).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to sync skill files");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
-    }
-}

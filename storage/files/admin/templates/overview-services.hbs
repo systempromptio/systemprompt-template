@@ -2,97 +2,95 @@
     {{#*inline "content"}}
     {{> components/page-header
         title="Services &amp; tools"
-        subtitle="Upstream provider health and live MCP tool execution."}}
+        subtitle="Every entity that runs in this Enterprise Demo: are they enabled, are they busy, are they healthy."}}
 
     <section class="kpi-strip" aria-label="Services KPIs">
         <div class="kpi-card">
-            <span class="kpi-card__label">Providers</span>
-            <span class="kpi-card__value" data-kpi="providers">{{kpis.providers}}</span>
-            <span class="kpi-card__sub">active</span>
+            <span class="kpi-card__label">Entities</span>
+            <span class="kpi-card__value" data-kpi="total">{{kpis.total_entities}}</span>
+            <span class="kpi-card__sub">configured</span>
         </div>
         <div class="kpi-card">
-            <span class="kpi-card__label">Models</span>
-            <span class="kpi-card__value" data-kpi="models">{{kpis.models}}</span>
-            <span class="kpi-card__sub">in use</span>
+            <span class="kpi-card__label">Enabled</span>
+            <span class="kpi-card__value" data-kpi="enabled">{{kpis.enabled}}</span>
+            <span class="kpi-card__sub">running</span>
+        </div>
+        <div class="kpi-card{{#if kpis.disabled}} kpi-card--muted{{/if}}">
+            <span class="kpi-card__label">Disabled</span>
+            <span class="kpi-card__value" data-kpi="disabled">{{kpis.disabled}}</span>
+            <span class="kpi-card__sub">off</span>
         </div>
         <div class="kpi-card">
-            <span class="kpi-card__label">Throughput</span>
-            <span class="kpi-card__value" data-kpi="rpm">{{kpis.requests_per_min}}</span>
-            <span class="kpi-card__sub">requests / min</span>
+            <span class="kpi-card__label">Requests</span>
+            <span class="kpi-card__value" data-kpi="rpm">{{kpis.requests_1h}}</span>
+            <span class="kpi-card__sub">last 60 min</span>
         </div>
-        <div class="kpi-card">
-            <span class="kpi-card__label">Avg latency</span>
-            <span class="kpi-card__value" data-kpi="latency">{{kpis.avg_latency_display}}</span>
-            <span class="kpi-card__sub">across models</span>
-        </div>
-        <div class="kpi-card{{#if kpis.errors}} kpi-card--danger{{/if}}">
+        <div class="kpi-card{{#if kpis.errors_1h}} kpi-card--danger{{/if}}">
             <span class="kpi-card__label">Errors</span>
-            <span class="kpi-card__value" data-kpi="errors">{{kpis.errors}}</span>
+            <span class="kpi-card__value" data-kpi="errors">{{kpis.errors_1h}}</span>
             <span class="kpi-card__sub">last 60 min</span>
         </div>
     </section>
 
+    {{#each panels}}
     <section class="overview-pane">
-        <h3 class="section-title">Provider health</h3>
-        <div class="provider-grid">
-            {{#each providers}}
-            <div class="provider-card" data-provider="{{this.name}}">
-                <span class="provider-card__name">{{this.name}}</span>
-                <span class="provider-card__metric">{{this.calls}}</span>
-                <span class="provider-card__sub">{{this.avg_latency_display}}{{#if this.errors}} · <span class="text-danger">{{this.errors}} err</span>{{/if}}</span>
-            </div>
-            {{/each}}
-            {{#unless providers}}
-            <p class="text-tertiary">No upstream traffic in the last hour.</p>
-            {{/unless}}
-        </div>
-    </section>
+        <h3 class="section-title">
+            {{this.title}}
+            <span class="text-tertiary text-sm">
+                · {{this.enabled}} enabled{{#if this.disabled}} · {{this.disabled}} disabled{{/if}}
+            </span>
+        </h3>
+        <p class="text-tertiary text-sm">{{this.subtitle}}</p>
 
-    {{#if has_models}}
-    <section class="overview-pane">
-        <h3 class="section-title">Top models by traffic</h3>
+        {{#if this.has_rows}}
         {{#> components/data-table}}
             <thead><tr>
-                <th>Model</th>
-                <th>Provider</th>
-                <th class="col-num">Calls</th>
-                <th class="col-num">Latency</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th class="col-num">Calls (1h)</th>
                 <th class="col-num">Errors</th>
+                <th class="col-num">Latency</th>
+                <th>Last error</th>
+                <th></th>
             </tr></thead>
             <tbody>
-            {{#each models}}
+            {{#each this.rows}}
             <tr>
-                <td><code class="code-inline">{{this.model}}</code></td>
-                <td><span class="text-muted">{{this.provider}}</span></td>
-                <td class="col-num">{{this.calls}}</td>
-                <td class="col-num">{{this.avg_latency_display}}</td>
-                <td class="col-num">{{#if this.errors}}<span class="mcp-badge mcp-badge-danger">{{this.errors}}</span>{{else}}—{{/if}}</td>
+                <td>
+                    <a href="{{this.detail_url}}" class="link-plain">
+                        <code class="code-inline">{{this.name}}</code>
+                    </a>
+                </td>
+                <td>
+                    <span class="status-pill status-pill--{{this.status}}">{{this.status_label}}</span>
+                </td>
+                <td class="col-num">{{#if this.calls}}{{this.calls}}{{else}}—{{/if}}</td>
+                <td class="col-num">
+                    {{#if this.errors}}
+                        <a href="{{this.errors_url}}" class="mcp-badge mcp-badge-danger">{{this.errors}} {{this.errors_label}}</a>
+                    {{else}}—{{/if}}
+                </td>
+                <td class="col-num">{{#if this.p95}}{{this.p95}}{{else}}—{{/if}}</td>
+                <td><span class="text-muted">{{#if this.last_error}}{{this.last_error}}{{else}}—{{/if}}</span></td>
+                <td><a href="{{this.detail_url}}" class="text-sm">Open →</a></td>
             </tr>
             {{/each}}
             </tbody>
         {{/components/data-table}}
-    </section>
-    {{/if}}
+        {{else}}
+        <p class="text-tertiary">None configured.</p>
+        {{/if}}
 
-    <section class="overview-pane">
-        <h3 class="section-title">Live tool stream
-            <span class="live-dot" aria-hidden="true"></span>
-        </h3>
-        <ul class="live-ticker" id="services-ticker" data-max="50" aria-live="polite">
-            {{#each recent_requests}}
-            <li>
-                <span class="live-ticker__time">{{time}}</span>
-                <span class="live-ticker__msg">{{msg}}</span>
-                <span class="live-ticker__tag{{#if is_error}} live-ticker__tag--deny{{/if}}">{{#if is_error}}ERROR{{else}}REQ{{/if}}</span>
-            </li>
-            {{/each}}
-        </ul>
+        <p class="text-tertiary text-sm overview-help">
+            <a href="{{this.list_url}}">Manage {{this.title}} →</a>
+        </p>
     </section>
+    {{/each}}
 
     <p class="text-tertiary text-sm overview-help">
-        Deep-link: <a href="/admin/infrastructure/services">Services</a> ·
+        Deep-link: <a href="/admin/analytics/requests">All requests</a> ·
         <a href="/admin/mcp/tools">MCP tools</a> ·
-        <a href="/admin/analytics/requests">Requests</a>
+        <a href="/admin/infra/services">Infrastructure</a>
     </p>
     {{/inline}}
     {{#*inline "head_extra"}}

@@ -23,33 +23,10 @@ pub async fn governance_hooks_page(
         return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
     }
 
-    let services_path = match super::get_services_path() {
-        Ok(p) => p,
-        Err(r) => return *r,
-    };
-
-    let hooks = super::ssr_hooks::list_hooks_from_filesystem(&services_path);
-
-    let hook_rows: Vec<serde_json::Value> = hooks
-        .iter()
-        .map(|h| {
-            json!({
-                "id": h.id.as_str(),
-                "plugin_id": h.plugin_id,
-                "name": h.name,
-                "event": h.event,
-                "matcher": h.matcher,
-                "is_async": h.is_async,
-                "enabled": h.enabled,
-                "system": h.system,
-                "valid": !h.command.is_empty() && !h.event.is_empty(),
-            })
-        })
-        .collect();
-
-    let total_hooks = hook_rows.len();
-    let system_hooks = hooks.iter().filter(|h| h.system).count();
-    let enabled_hooks = hooks.iter().filter(|h| h.enabled).count();
+    let hook_rows: Vec<serde_json::Value> = Vec::new();
+    let total_hooks = 0_usize;
+    let system_hooks = 0_usize;
+    let enabled_hooks = 0_usize;
 
     let data = json!({
         "page": "governance-hooks",

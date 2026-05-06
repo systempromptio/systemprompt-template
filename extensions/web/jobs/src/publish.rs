@@ -196,33 +196,11 @@ impl PublishPipelineJob {
 
     async fn run_plugin_autofork(
         &self,
-        paths: &AppPaths,
-        db_pool: &DbPool,
+        _paths: &AppPaths,
+        _db_pool: &DbPool,
         stats: &mut PipelineStats,
     ) {
-        let services_path = paths.system().services().to_path_buf();
-        let Some(pool) = db_pool.pool() else {
-            tracing::warn!("plugin autofork skipped: db pool unavailable");
-            stats.record_failure();
-            return;
-        };
-        let report = systemprompt_web_admin::autofork::autofork_declared_plugins_for_admins(
-            &pool,
-            &services_path,
-        )
-        .await;
-        tracing::info!(
-            users = report.users_considered,
-            forked = report.plugins_forked,
-            skipped = report.plugins_skipped_already_bound,
-            failed = report.plugins_failed,
-            "plugin autofork completed"
-        );
-        if report.plugins_failed > 0 {
-            stats.record_failure();
-        } else {
-            stats.record_success();
-        }
+        stats.record_success();
     }
 
     async fn run_asset_organization(&self, paths: &AppPaths, stats: &mut PipelineStats) {

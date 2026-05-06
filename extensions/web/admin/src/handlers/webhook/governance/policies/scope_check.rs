@@ -5,7 +5,6 @@
 //! - id: scope_check
 //!   admin_only_prefixes:
 //!     - "mcp__systemprompt__"
-//!     - "mcp__skill-manager__"
 //! ```
 
 use std::borrow::Cow;
@@ -16,7 +15,7 @@ use super::super::policy::{Policy, PolicyContext, PolicyOutcome, PolicyRegistrat
 use crate::types::{SCOPE_ADMIN, SCOPE_UNKNOWN};
 
 const ID: &str = "scope_check";
-const DEFAULT_ADMIN_ONLY_PREFIXES: &[&str] = &["mcp__systemprompt__", "mcp__skill-manager__"];
+const DEFAULT_ADMIN_ONLY_PREFIXES: &[&str] = &["mcp__systemprompt__"];
 
 pub struct ScopeCheck {
     admin_only_prefixes: Vec<String>,
@@ -54,7 +53,7 @@ impl Policy for ScopeCheck {
     }
     fn description(&self) -> &'static str {
         "Block non-admin agents from calling tools whose name starts with an \
-         admin-only prefix (default: mcp__systemprompt__, mcp__skill-manager__)."
+         admin-only prefix (default: mcp__systemprompt__)."
     }
     fn evaluate(&self, ctx: &PolicyContext<'_>) -> PolicyOutcome {
         if ctx.agent_scope == SCOPE_ADMIN {

@@ -7,7 +7,6 @@ use axum::{
 };
 use sqlx::PgPool;
 
-use super::super::gamification;
 use super::super::handlers;
 use super::super::middleware;
 
@@ -72,10 +71,6 @@ fn build_admin_read_routes_inner(read_pool: &Arc<PgPool>) -> Router {
             get(handlers::entity_access::list_all_entity_access_handler),
         )
         .route(
-            "/org/marketplaces",
-            get(handlers::org_marketplaces::list_org_marketplaces_handler),
-        )
-        .route(
             "/management/departments",
             get(handlers::departments::list_departments_handler),
         )
@@ -108,10 +103,6 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             put(handlers::update_visibility_handler),
         )
         .route(
-            "/gamification/recalculate",
-            post(gamification::recalculate_handler),
-        )
-        .route(
             "/demo-register",
             post(handlers::demo_register::create_demo_user_handler),
         )
@@ -138,27 +129,6 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
         .route(
             "/access-control/bulk-template",
             post(handlers::entity_access::apply_template_handler),
-        )
-        .route(
-            "/org/marketplaces",
-            post(handlers::org_marketplaces::create_org_marketplace_handler),
-        )
-        .route(
-            "/org/marketplaces/{id}",
-            put(handlers::org_marketplaces::update_org_marketplace_handler)
-                .delete(handlers::org_marketplaces::delete_org_marketplace_handler),
-        )
-        .route(
-            "/org/marketplaces/{id}/plugins",
-            put(handlers::org_marketplaces::set_marketplace_plugins_handler),
-        )
-        .route(
-            "/org/marketplaces/{id}/sync",
-            post(handlers::org_marketplaces::sync_marketplace_handler),
-        )
-        .route(
-            "/org/marketplaces/{id}/publish",
-            post(handlers::org_marketplaces::publish_marketplace_handler),
         )
         .route(
             "/management/departments",
@@ -198,14 +168,6 @@ pub fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
         )
         .route("/skills", get(handlers::list_skills_handler))
         .route("/skills/{skill_id}", get(handlers::get_skill_handler))
-        .route(
-            "/skills/{skill_id}/files",
-            get(handlers::list_skill_files_handler),
-        )
-        .route(
-            "/skills/{skill_id}/files/{*file_path}",
-            get(handlers::get_skill_file_handler),
-        )
         .route("/agents", get(handlers::list_agents_handler))
         .route("/agents/{agent_id}", get(handlers::get_agent_handler))
         .route(
@@ -215,26 +177,6 @@ pub fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
         .route(
             "/marketplace-plugins/{plugin_id}/users",
             get(handlers::marketplace_plugin_users_handler),
-        )
-        .route(
-            "/skills/{skill_id}/base-content",
-            get(handlers::marketplace_upload::get_base_skill_content_handler),
-        )
-        .route(
-            "/marketplace-versions-summary",
-            get(handlers::marketplace_upload::marketplace_all_versions_handler),
-        )
-        .route(
-            "/gamification/user/{user_id}",
-            get(gamification::user_gamification_handler),
-        )
-        .route(
-            "/gamification/achievements",
-            get(gamification::achievements_handler),
-        )
-        .route(
-            "/gamification/leaderboard",
-            get(gamification::leaderboard_handler),
         )
         .with_state(Arc::clone(read_pool))
 }

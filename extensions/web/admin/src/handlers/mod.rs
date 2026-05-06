@@ -4,7 +4,6 @@ pub mod demo_register;
 pub mod departments;
 pub mod devices;
 pub mod entity_access;
-pub mod export_zip;
 pub mod gateway;
 pub mod gateway_access;
 pub mod gateway_catalog;
@@ -12,23 +11,16 @@ pub mod hooks_track;
 mod jobs;
 pub mod magic_link;
 mod marketplace;
-pub mod marketplace_git;
-pub mod marketplace_json;
-pub mod marketplace_upload;
-pub mod org_marketplaces;
 mod plugins;
 mod plugins_crud;
 mod plugins_env;
-mod plugins_import;
 mod plugins_skills;
 pub mod public_register;
 pub mod resources;
 pub mod responses;
 pub mod secrets;
 pub mod shared;
-pub mod sse;
 pub mod ssr;
-pub mod user_entities;
 mod users;
 mod webhook;
 
@@ -48,11 +40,9 @@ pub use plugins::{
 };
 pub use plugins_crud::{
     create_plugin_handler, delete_plugin_handler, get_plugin_detail_handler,
-    get_skill_file_handler, list_skill_files_handler, sync_skill_files_handler,
-    update_plugin_handler, update_skill_file_handler,
+    update_plugin_handler,
 };
 pub use plugins_env::{list_plugin_env_handler, update_plugin_env_handler};
-pub use plugins_import::import_plugin_handler;
 pub use plugins_skills::{
     delete_skill_handler, get_plugin_skills_handler, list_all_skills_handler,
     update_plugin_skills_handler,

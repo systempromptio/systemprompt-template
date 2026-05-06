@@ -202,7 +202,7 @@ prepare:
     # Workspace-level prepare (catches lib crates)
     cargo sqlx prepare --workspace
     # Per-crate prepare for binary/extension crates that cargo sqlx skips
-    EXTENSION_DIRS="extensions/cli/activity extensions/cli/slack extensions/web extensions/marketplace extensions/mcp/marketplace extensions/mcp/systemprompt"
+    EXTENSION_DIRS="extensions/cli/activity extensions/cli/slack extensions/web extensions/marketplace extensions/mcp/systemprompt"
     for dir in $EXTENSION_DIRS; do
         if [ -f "{{justfile_directory()}}/$dir/Cargo.toml" ]; then
             echo "  Preparing $dir..."
@@ -306,8 +306,7 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
         echo "  setup-local needs at least one AI provider API key"
         echo "================================================================"
         echo ""
-        echo "  The marketplace MCP server (skill-manager) will not start"
-        echo "  without at least one of: Anthropic, OpenAI, or Gemini."
+        echo "  The platform requires at least one of: Anthropic, OpenAI, or Gemini."
         echo "  Keys are written into the local profile at:"
         echo "    .systemprompt/profiles/local/secrets.json"
         echo ""

@@ -6,7 +6,6 @@ governance:
     enabled: true
     admin_only_prefixes:
     - mcp__systemprompt__
-    - mcp__skill-manager__
   - id: tool_blocklist
     enabled: true
     patterns:

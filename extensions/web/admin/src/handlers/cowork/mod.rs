@@ -45,7 +45,7 @@ pub(super) fn validate_cowork_jwt(headers: &HeaderMap) -> Result<UserId, Box<Res
         .jwt_issuer
         .clone();
 
-    let claims = validate_jwt_token(token, jwt_secret, &jwt_issuer, &[JwtAudience::Cowork])
+    let claims = validate_jwt_token(token, jwt_secret, &jwt_issuer, &[JwtAudience::Bridge])
         .map_err(|err| {
             tracing::warn!(error = %err, "Cowork JWT validation failed");
             shared::boxed_error_response(StatusCode::UNAUTHORIZED, "Invalid or expired token")

@@ -1,8 +1,7 @@
 //! ID kind resolution for the global header search bar.
 //!
-//! Determines whether an opaque id refers to a request (open audit detail) or
-//! a trace/session (open trace waterfall), and returns the canonical id to
-//! route to.
+//! Determines whether an opaque id refers to a request, trace, session, or
+//! context, and returns the canonical id for the matching detail page.
 
 use serde::Serialize;
 use sqlx::PgPool;
@@ -12,21 +11,26 @@ use sqlx::PgPool;
 pub enum ResolvedKind {
     Request,
     Trace,
+    Session,
+    Context,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ResolvedId {
     pub kind: ResolvedKind,
-    /// Canonical id to route to: `ai_requests.id` for `Request`, `session_id` for `Trace`.
+    /// Canonical id for the detail page route.
     pub id: String,
 }
 
-/// Resolve `id` against governance and request tables.
+/// Resolve `id` against the AI request, governance, and context tables.
 ///
-/// Order: an exact `ai_requests.id` / `ai_requests.request_id` hit, or a
-/// `governance_decisions.id` hit (which we map to its session's primary
-/// request) returns `Request`; a `trace_id` or bare `session_id` returns
-/// `Trace`.
+/// Lookup order — most specific first:
+///   1. `ai_requests.id` / `ai_requests.request_id`           → Request
+///   2. `governance_decisions.id`                              → Request (oldest in chain)
+///   3. `ai_requests.trace_id`                                 → Trace
+///   4. `ai_requests.context_id` or `user_contexts.context_id` → Context
+///   5. `ai_requests.session_id` / `governance_decisions.session_id` /
+///      `user_contexts.session_id`                             → Session
 pub async fn resolve_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, sqlx::Error> {
     if let Some(row) = sqlx::query!(
         r#"SELECT id AS "id!" FROM ai_requests
@@ -55,16 +59,36 @@ pub async fn resolve_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, s
     }
 
     if let Some(row) = sqlx::query!(
-        r#"SELECT session_id FROM ai_requests
-           WHERE trace_id = $1 AND session_id IS NOT NULL LIMIT 1"#,
+        r#"SELECT trace_id AS "trace_id!" FROM ai_requests
+           WHERE trace_id = $1 LIMIT 1"#,
         id,
     )
     .fetch_optional(pool)
     .await?
     {
-        if let Some(sid) = row.session_id {
-            return Ok(Some(ResolvedId { kind: ResolvedKind::Trace, id: sid }));
-        }
+        return Ok(Some(ResolvedId { kind: ResolvedKind::Trace, id: row.trace_id }));
+    }
+
+    if let Some(row) = sqlx::query!(
+        r#"SELECT context_id AS "context_id!" FROM user_contexts
+           WHERE context_id = $1 LIMIT 1"#,
+        id,
+    )
+    .fetch_optional(pool)
+    .await?
+    {
+        return Ok(Some(ResolvedId { kind: ResolvedKind::Context, id: row.context_id }));
+    }
+
+    if let Some(row) = sqlx::query!(
+        r#"SELECT context_id AS "context_id!" FROM ai_requests
+           WHERE context_id = $1 LIMIT 1"#,
+        id,
+    )
+    .fetch_optional(pool)
+    .await?
+    {
+        return Ok(Some(ResolvedId { kind: ResolvedKind::Context, id: row.context_id }));
     }
 
     if let Some(row) = sqlx::query!(
@@ -75,7 +99,7 @@ pub async fn resolve_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, s
     .fetch_optional(pool)
     .await?
     {
-        return Ok(Some(ResolvedId { kind: ResolvedKind::Trace, id: row.session_id }));
+        return Ok(Some(ResolvedId { kind: ResolvedKind::Session, id: row.session_id }));
     }
 
     if let Some(row) = sqlx::query!(
@@ -86,7 +110,18 @@ pub async fn resolve_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, s
     .fetch_optional(pool)
     .await?
     {
-        return Ok(Some(ResolvedId { kind: ResolvedKind::Trace, id: row.session_id }));
+        return Ok(Some(ResolvedId { kind: ResolvedKind::Session, id: row.session_id }));
+    }
+
+    if let Some(row) = sqlx::query!(
+        r#"SELECT session_id AS "session_id!" FROM user_contexts
+           WHERE session_id = $1 LIMIT 1"#,
+        id,
+    )
+    .fetch_optional(pool)
+    .await?
+    {
+        return Ok(Some(ResolvedId { kind: ResolvedKind::Session, id: row.session_id }));
     }
 
     Ok(None)

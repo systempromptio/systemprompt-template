@@ -5014,28 +5014,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "systemprompt-mcp-marketplace"
-version = "0.7.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum",
- "chrono",
- "rmcp",
- "schemars",
- "serde",
- "serde_json",
- "sqlx",
- "systemprompt",
- "systemprompt-mcp-shared",
- "systemprompt-security",
- "systemprompt-web-extension",
- "tokio",
- "tracing",
- "uuid",
-]
-
-[[package]]
 name = "systemprompt-mcp-shared"
 version = "0.7.0"
 dependencies = [

@@ -9,7 +9,6 @@ members = [
     "extensions/web/jobs",
     # MCP servers
     "extensions/mcp/systemprompt",
-    "extensions/mcp/marketplace",
     "extensions/mcp/shared",
 ]
 resolver = "2"
